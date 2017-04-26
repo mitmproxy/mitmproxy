@@ -245,8 +245,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 }).call(this,require('_process'))
 
-},{"./backends/websocket":3,"./components/ProxyApp":37,"./ducks/eventLog":48,"./ducks/index":50,"./urlState":59,"_process":1,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":"redux-logger","redux-thunk":"redux-thunk"}],3:[function(require,module,exports){
-'use strict';
+},{"./backends/websocket":3,"./components/ProxyApp":38,"./ducks/eventLog":50,"./ducks/index":52,"./urlState":61,"_process":1,"react":"react","react-dom":"react-dom","react-redux":"react-redux","redux":"redux","redux-logger":"redux-logger","redux-thunk":"redux-thunk"}],3:[function(require,module,exports){
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
@@ -261,7 +261,13 @@ var _createClass = function () { function defineProperties(target, props) { for 
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       */
 
 
-var _utils = require('../utils');
+var _utils = require("../utils");
+
+var _connection = require("../ducks/connection");
+
+var connectionActions = _interopRequireWildcard(_connection);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -277,7 +283,7 @@ var WebsocketBackend = function () {
     }
 
     _createClass(WebsocketBackend, [{
-        key: 'connect',
+        key: "connect",
         value: function connect() {
             var _this = this;
 
@@ -285,8 +291,8 @@ var WebsocketBackend = function () {
             this.socket.addEventListener('open', function () {
                 return _this.onOpen();
             });
-            this.socket.addEventListener('close', function () {
-                return _this.onClose();
+            this.socket.addEventListener('close', function (event) {
+                return _this.onClose(event);
             });
             this.socket.addEventListener('message', function (msg) {
                 return _this.onMessage(JSON.parse(msg.data));
@@ -296,20 +302,21 @@ var WebsocketBackend = function () {
             });
         }
     }, {
-        key: 'onOpen',
+        key: "onOpen",
         value: function onOpen() {
             this.fetchData("settings");
             this.fetchData("flows");
             this.fetchData("events");
+            this.store.dispatch(connectionActions.startFetching());
         }
     }, {
-        key: 'fetchData',
+        key: "fetchData",
         value: function fetchData(resource) {
             var _this2 = this;
 
             var queue = [];
             this.activeFetches[resource] = queue;
-            (0, _utils.fetchApi)('/' + resource).then(function (res) {
+            (0, _utils.fetchApi)("/" + resource).then(function (res) {
                 return res.json();
             }).then(function (json) {
                 // Make sure that we are not superseded yet by the server sending a RESET.
@@ -317,7 +324,7 @@ var WebsocketBackend = function () {
             });
         }
     }, {
-        key: 'onMessage',
+        key: "onMessage",
         value: function onMessage(msg) {
 
             if (msg.cmd === CMD_RESET) {
@@ -326,34 +333,39 @@ var WebsocketBackend = function () {
             if (msg.resource in this.activeFetches) {
                 this.activeFetches[msg.resource].push(msg);
             } else {
-                var type = (msg.resource + '_' + msg.cmd).toUpperCase();
+                var type = (msg.resource + "_" + msg.cmd).toUpperCase();
                 this.store.dispatch(_extends({ type: type }, msg));
             }
         }
     }, {
-        key: 'receive',
+        key: "receive",
         value: function receive(resource, data) {
             var _this3 = this;
 
-            var type = (resource + '_RECEIVE').toUpperCase();
+            var type = (resource + "_RECEIVE").toUpperCase();
             this.store.dispatch({ type: type, cmd: "receive", resource: resource, data: data });
             var queue = this.activeFetches[resource];
             delete this.activeFetches[resource];
             queue.forEach(function (msg) {
                 return _this3.onMessage(msg);
             });
+
+            if (Object.keys(this.activeFetches).length === 0) {
+                // We have fetched the last resource
+                this.store.dispatch(connectionActions.connectionEstablished());
+            }
         }
     }, {
-        key: 'onClose',
-        value: function onClose() {
-            // FIXME
-            console.error("onClose", arguments);
+        key: "onClose",
+        value: function onClose(closeEvent) {
+            this.store.dispatch(connectionActions.connectionError("Connection closed at " + new Date().toUTCString() + " with error code " + closeEvent.code + "."));
+            console.error("websocket connection closed", closeEvent);
         }
     }, {
-        key: 'onError',
+        key: "onError",
         value: function onError() {
             // FIXME
-            console.error("onError", arguments);
+            console.error("websocket connection errored", arguments);
         }
     }]);
 
@@ -362,7 +374,7 @@ var WebsocketBackend = function () {
 
 exports.default = WebsocketBackend;
 
-},{"../utils":60}],4:[function(require,module,exports){
+},{"../ducks/connection":49,"../utils":62}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -452,7 +464,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     updateEdit: _flow.updateEdit
 })(ContentView);
 
-},{"../ducks/ui/flow":52,"./ContentView/ContentViews":8,"./ContentView/MetaViews":10,"./ContentView/ShowFullContentButton":11,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],5:[function(require,module,exports){
+},{"../ducks/ui/flow":54,"./ContentView/ContentViews":8,"./ContentView/MetaViews":10,"./ContentView/ShowFullContentButton":11,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -629,7 +641,7 @@ exports.default = function (View) {
     }), _temp;
 };
 
-},{"../../flow/utils.js":58,"prop-types":"prop-types","react":"react"}],7:[function(require,module,exports){
+},{"../../flow/utils.js":60,"prop-types":"prop-types","react":"react"}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -875,7 +887,7 @@ exports.Edit = Edit;
 exports.ViewServer = ViewServer;
 exports.ViewImage = ViewImage;
 
-},{"../../ducks/ui/flow":52,"../../flow/utils":58,"./CodeEditor":5,"./ContentLoader":6,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],9:[function(require,module,exports){
+},{"../../ducks/ui/flow":54,"../../flow/utils":60,"./CodeEditor":5,"./ContentLoader":6,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],9:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -910,7 +922,7 @@ function DownloadContentButton(_ref) {
     );
 }
 
-},{"../../flow/utils":58,"prop-types":"prop-types"}],10:[function(require,module,exports){
+},{"../../flow/utils":60,"prop-types":"prop-types"}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -991,7 +1003,7 @@ function ContentTooLarge(_ref3) {
     );
 }
 
-},{"../../utils.js":60,"./DownloadContentButton":9,"./UploadContentButton":12,"react":"react"}],11:[function(require,module,exports){
+},{"../../utils.js":62,"./DownloadContentButton":9,"./UploadContentButton":12,"react":"react"}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1063,7 +1075,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     setShowFullContent: _flow.setShowFullContent
 })(ShowFullContentButton);
 
-},{"../../ducks/ui/flow":52,"../common/Button":40,"prop-types":"prop-types","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],12:[function(require,module,exports){
+},{"../../ducks/ui/flow":54,"../common/Button":41,"prop-types":"prop-types","react":"react","react-dom":"react-dom","react-redux":"react-redux"}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1096,7 +1108,7 @@ function UploadContentButton(_ref) {
         className: 'btn btn-default btn-xs' });
 }
 
-},{"../common/FileChooser":43,"prop-types":"prop-types"}],13:[function(require,module,exports){
+},{"../common/FileChooser":44,"prop-types":"prop-types"}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1172,7 +1184,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     setContentView: _flow.setContentView
 })(ViewSelector);
 
-},{"../../ducks/ui/flow":52,"../common/Dropdown":42,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],14:[function(require,module,exports){
+},{"../../ducks/ui/flow":54,"../common/Dropdown":43,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1303,7 +1315,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     toggleFilter: _eventLog.toggleFilter
 })(EventLog);
 
-},{"../ducks/eventLog":48,"./EventLog/EventList":15,"./common/ToggleButton":45,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],15:[function(require,module,exports){
+},{"../ducks/eventLog":50,"./EventLog/EventList":15,"./common/ToggleButton":46,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],15:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1459,7 +1471,7 @@ function LogIcon(_ref) {
 
 exports.default = (0, _AutoScroll2.default)(EventLogList);
 
-},{"../helpers/AutoScroll":46,"../helpers/VirtualScroll":47,"prop-types":"prop-types","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],16:[function(require,module,exports){
+},{"../helpers/AutoScroll":47,"../helpers/VirtualScroll":48,"prop-types":"prop-types","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1654,7 +1666,7 @@ FlowTable.defaultProps = {
 };
 exports.default = (0, _AutoScroll2.default)(FlowTable);
 
-},{"../filt/filt":57,"./FlowTable/FlowRow":18,"./FlowTable/FlowTableHead":19,"./helpers/AutoScroll":46,"./helpers/VirtualScroll":47,"prop-types":"prop-types","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],17:[function(require,module,exports){
+},{"../filt/filt":59,"./FlowTable/FlowRow":18,"./FlowTable/FlowTableHead":19,"./helpers/AutoScroll":47,"./helpers/VirtualScroll":48,"prop-types":"prop-types","react":"react","react-dom":"react-dom","shallowequal":"shallowequal"}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1821,7 +1833,7 @@ TimeColumn.headerName = 'Time';
 
 exports.default = [TLSColumn, IconColumn, PathColumn, MethodColumn, StatusColumn, SizeColumn, TimeColumn];
 
-},{"../../flow/utils.js":58,"../../utils.js":60,"classnames":"classnames","react":"react"}],18:[function(require,module,exports){
+},{"../../flow/utils.js":60,"../../utils.js":62,"classnames":"classnames","react":"react"}],18:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1882,7 +1894,7 @@ function FlowRow(_ref) {
 
 exports.default = (0, _utils.pure)(FlowRow);
 
-},{"../../utils":60,"./FlowColumns":17,"classnames":"classnames","prop-types":"prop-types","react":"react"}],19:[function(require,module,exports){
+},{"../../utils":62,"./FlowColumns":17,"classnames":"classnames","prop-types":"prop-types","react":"react"}],19:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -1950,7 +1962,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     setSort: _flows.setSort
 })(FlowTableHead);
 
-},{"../../ducks/flows":49,"./FlowColumns":17,"classnames":"classnames","prop-types":"prop-types","react":"react","react-redux":"react-redux"}],20:[function(require,module,exports){
+},{"../../ducks/flows":51,"./FlowColumns":17,"classnames":"classnames","prop-types":"prop-types","react":"react","react-redux":"react-redux"}],20:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2089,7 +2101,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     selectTab: _flow.selectTab
 })(FlowView);
 
-},{"../ducks/ui/flow":52,"./FlowView/Details":21,"./FlowView/Messages":23,"./FlowView/Nav":24,"./Prompt":36,"lodash":"lodash","react":"react","react-redux":"react-redux"}],21:[function(require,module,exports){
+},{"../ducks/ui/flow":54,"./FlowView/Details":21,"./FlowView/Messages":23,"./FlowView/Nav":24,"./Prompt":37,"lodash":"lodash","react":"react","react-redux":"react-redux"}],21:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2312,7 +2324,7 @@ function Details(_ref5) {
     );
 }
 
-},{"../../utils.js":60,"lodash":"lodash","react":"react"}],22:[function(require,module,exports){
+},{"../../utils.js":62,"lodash":"lodash","react":"react"}],22:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2556,7 +2568,7 @@ Headers.propTypes = {
 };
 exports.default = Headers;
 
-},{"../../utils":60,"../ValueEditor/ValueEditor":39,"prop-types":"prop-types","react":"react","react-dom":"react-dom"}],23:[function(require,module,exports){
+},{"../../utils":62,"../ValueEditor/ValueEditor":40,"prop-types":"prop-types","react":"react","react-dom":"react-dom"}],23:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -2922,7 +2934,7 @@ function ErrorView(_ref3) {
     );
 }
 
-},{"../../ducks/flows":49,"../../ducks/ui/flow":52,"../../flow/utils.js":58,"../../utils.js":60,"../ContentView":4,"../ContentView/ContentViewOptions":7,"../ValueEditor/ValidateEditor":38,"../ValueEditor/ValueEditor":39,"./Headers":22,"./ToggleEdit":25,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],24:[function(require,module,exports){
+},{"../../ducks/flows":51,"../../ducks/ui/flow":54,"../../flow/utils.js":60,"../../utils.js":62,"../ContentView":4,"../ContentView/ContentViewOptions":7,"../ValueEditor/ValidateEditor":39,"../ValueEditor/ValueEditor":40,"./Headers":22,"./ToggleEdit":25,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],24:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3065,7 +3077,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     stopEdit: _flow.stopEdit
 })(ToggleEdit);
 
-},{"../../ducks/ui/flow":52,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],26:[function(require,module,exports){
+},{"../../ducks/ui/flow":54,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],26:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3203,7 +3215,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     };
 })(Footer);
 
-},{"../utils.js":60,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],27:[function(require,module,exports){
+},{"../utils.js":62,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],27:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3243,6 +3255,10 @@ var _FlowMenu = require('./Header/FlowMenu');
 var _FlowMenu2 = _interopRequireDefault(_FlowMenu);
 
 var _header = require('../ducks/ui/header');
+
+var _ConnectionIndicator = require('./Header/ConnectionIndicator');
+
+var _ConnectionIndicator2 = _interopRequireDefault(_ConnectionIndicator);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -3306,10 +3322,11 @@ var Header = function (_Component) {
                                 } },
                             Entry.title
                         );
-                    })
+                    }),
+                    _react2.default.createElement(_ConnectionIndicator2.default, null)
                 ),
                 _react2.default.createElement(
-                    'menu',
+                    'div',
                     null,
                     _react2.default.createElement(Active, null)
                 )
@@ -3330,7 +3347,75 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     setActiveMenu: _header.setActiveMenu
 })(Header);
 
-},{"../ducks/ui/header":53,"./Header/FileMenu":28,"./Header/FlowMenu":31,"./Header/MainMenu":32,"./Header/OptionMenu":34,"classnames":"classnames","prop-types":"prop-types","react":"react","react-redux":"react-redux"}],28:[function(require,module,exports){
+},{"../ducks/ui/header":55,"./Header/ConnectionIndicator":28,"./Header/FileMenu":29,"./Header/FlowMenu":32,"./Header/MainMenu":33,"./Header/OptionMenu":35,"classnames":"classnames","prop-types":"prop-types","react":"react","react-redux":"react-redux"}],28:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _react = require("react");
+
+var _react2 = _interopRequireDefault(_react);
+
+var _reactRedux = require("react-redux");
+
+var _classnames = require("classnames");
+
+var _classnames2 = _interopRequireDefault(_classnames);
+
+var _connection = require("../../ducks/connection");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+ConnectionIndicator.propTypes = {
+    state: _react.PropTypes.symbol.isRequired,
+    message: _react.PropTypes.string
+
+};
+function ConnectionIndicator(_ref) {
+    var state = _ref.state,
+        message = _ref.message;
+
+    switch (state) {
+        case _connection.ConnectionState.INIT:
+            return _react2.default.createElement(
+                "span",
+                { className: "connection-indicator init" },
+                "connecting\u2026"
+            );
+        case _connection.ConnectionState.FETCHING:
+            return _react2.default.createElement(
+                "span",
+                { className: "connection-indicator fetching" },
+                "fetching data\u2026"
+            );
+        case _connection.ConnectionState.ESTABLISHED:
+            return _react2.default.createElement(
+                "span",
+                { className: "connection-indicator established" },
+                "connected"
+            );
+        case _connection.ConnectionState.ERROR:
+            return _react2.default.createElement(
+                "span",
+                { className: "connection-indicator error", title: message },
+                "connection lost"
+            );
+        case _connection.ConnectionState.OFFLINE:
+            return _react2.default.createElement(
+                "span",
+                { className: "connection-indicator offline" },
+                "offline"
+            );
+    }
+}
+
+exports.default = (0, _reactRedux.connect)(function (state) {
+    return state.connection;
+})(ConnectionIndicator);
+
+},{"../../ducks/connection":49,"classnames":"classnames","react":"react","react-redux":"react-redux"}],29:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3421,7 +3506,7 @@ exports.default = (0, _reactRedux.connect)(null, {
     saveFlows: flowsActions.download
 })(FileMenu);
 
-},{"../../ducks/flows":49,"../common/Dropdown":42,"../common/FileChooser":43,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],29:[function(require,module,exports){
+},{"../../ducks/flows":51,"../common/Dropdown":43,"../common/FileChooser":44,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],30:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3536,7 +3621,7 @@ FilterDocs.xhr = null;
 FilterDocs.doc = null;
 exports.default = FilterDocs;
 
-},{"../../utils":60,"react":"react"}],30:[function(require,module,exports){
+},{"../../utils":62,"react":"react"}],31:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -3741,7 +3826,7 @@ var FilterInput = function (_Component) {
 
 exports.default = FilterInput;
 
-},{"../../filt/filt":57,"../../utils.js":60,"./FilterDocs":29,"classnames":"classnames","prop-types":"prop-types","react":"react","react-dom":"react-dom"}],31:[function(require,module,exports){
+},{"../../filt/filt":59,"../../utils.js":62,"./FilterDocs":30,"classnames":"classnames","prop-types":"prop-types","react":"react","react-dom":"react-dom"}],32:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3908,7 +3993,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     revertFlow: flowsActions.revert
 })(FlowMenu);
 
-},{"../../ducks/flows":49,"../../flow/utils.js":58,"../common/Button":40,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],32:[function(require,module,exports){
+},{"../../ducks/flows":51,"../../flow/utils.js":60,"../common/Button":41,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],33:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -3977,7 +4062,7 @@ var HighlightInput = (0, _reactRedux.connect)(function (state) {
     };
 }, { onChange: _flows.setHighlight })(_FilterInput2.default);
 
-},{"../../ducks/flows":49,"../../ducks/settings":51,"./FilterInput":30,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],33:[function(require,module,exports){
+},{"../../ducks/flows":51,"../../ducks/settings":53,"./FilterInput":31,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],34:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4077,7 +4162,7 @@ exports.EventlogToggle = EventlogToggle = (0, _reactRedux.connect)(function (sta
     toggleVisibility: _eventLog.toggleVisibility
 })(EventlogToggle);
 
-},{"../../ducks/eventLog":48,"../../ducks/settings":51,"prop-types":"prop-types","react-redux":"react-redux"}],34:[function(require,module,exports){
+},{"../../ducks/eventLog":50,"../../ducks/settings":53,"prop-types":"prop-types","react-redux":"react-redux"}],35:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4187,7 +4272,7 @@ function OptionMenu() {
     );
 }
 
-},{"../common/DocsLink":41,"./MenuToggle":33,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],35:[function(require,module,exports){
+},{"../common/DocsLink":42,"./MenuToggle":34,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],36:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4294,7 +4379,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     updateFlow: flowsActions.update
 })(MainView);
 
-},{"../ducks/flows":49,"./FlowTable":16,"./FlowView":20,"./common/Splitter":44,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],36:[function(require,module,exports){
+},{"../ducks/flows":51,"./FlowTable":16,"./FlowView":20,"./common/Splitter":45,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],37:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4399,7 +4484,7 @@ function Prompt(_ref) {
     );
 }
 
-},{"../utils.js":60,"lodash":"lodash","prop-types":"prop-types","react":"react","react-dom":"react-dom"}],37:[function(require,module,exports){
+},{"../utils.js":62,"lodash":"lodash","prop-types":"prop-types","react":"react","react-dom":"react-dom"}],38:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4494,7 +4579,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     onKeyDown: _keyboard.onKeyDown
 })(ProxyAppMain);
 
-},{"../ducks/ui/keyboard":55,"./EventLog":14,"./Footer":26,"./Header":27,"./MainView":35,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],38:[function(require,module,exports){
+},{"../ducks/ui/keyboard":57,"./EventLog":14,"./Footer":26,"./Header":27,"./MainView":36,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],39:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4594,7 +4679,7 @@ ValidateEditor.propTypes = {
 };
 exports.default = ValidateEditor;
 
-},{"./ValueEditor":39,"classnames":"classnames","prop-types":"prop-types","react":"react"}],39:[function(require,module,exports){
+},{"./ValueEditor":40,"classnames":"classnames","prop-types":"prop-types","react":"react"}],40:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4811,7 +4896,7 @@ ValueEditor.defaultProps = {
 };
 exports.default = ValueEditor;
 
-},{"../../utils":60,"classnames":"classnames","lodash":"lodash","prop-types":"prop-types","react":"react"}],40:[function(require,module,exports){
+},{"../../utils":62,"classnames":"classnames","lodash":"lodash","prop-types":"prop-types","react":"react"}],41:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4859,7 +4944,7 @@ function Button(_ref) {
     );
 }
 
-},{"classnames":"classnames","prop-types":"prop-types","react":"react"}],41:[function(require,module,exports){
+},{"classnames":"classnames","prop-types":"prop-types","react":"react"}],42:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -4885,7 +4970,7 @@ function DocsLink(_ref) {
     );
 }
 
-},{"react":"react"}],42:[function(require,module,exports){
+},{"react":"react"}],43:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4998,7 +5083,7 @@ Dropdown.defaultProps = {
 };
 exports.default = Dropdown;
 
-},{"classnames":"classnames","prop-types":"prop-types","react":"react"}],43:[function(require,module,exports){
+},{"classnames":"classnames","prop-types":"prop-types","react":"react"}],44:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5054,7 +5139,7 @@ function FileChooser(_ref) {
     );
 }
 
-},{"prop-types":"prop-types","react":"react"}],44:[function(require,module,exports){
+},{"prop-types":"prop-types","react":"react"}],45:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5199,7 +5284,7 @@ var Splitter = function (_Component) {
 Splitter.defaultProps = { axis: 'x' };
 exports.default = Splitter;
 
-},{"classnames":"classnames","react":"react","react-dom":"react-dom"}],45:[function(require,module,exports){
+},{"classnames":"classnames","react":"react","react-dom":"react-dom"}],46:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5237,7 +5322,7 @@ function ToggleButton(_ref) {
     );
 }
 
-},{"prop-types":"prop-types","react":"react"}],46:[function(require,module,exports){
+},{"prop-types":"prop-types","react":"react"}],47:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5303,7 +5388,7 @@ exports.default = function (Component) {
     }(Component), _class.displayName = Component.name, _temp), Component);
 };
 
-},{"react":"react","react-dom":"react-dom"}],47:[function(require,module,exports){
+},{"react":"react","react-dom":"react-dom"}],48:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5382,7 +5467,65 @@ function calcVScroll(opts) {
     return { start: start, end: end, paddingTop: paddingTop, paddingBottom: paddingBottom };
 }
 
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = reducer;
+exports.startFetching = startFetching;
+exports.connectionEstablished = connectionEstablished;
+exports.connectionError = connectionError;
+exports.setOffline = setOffline;
+var ConnectionState = exports.ConnectionState = {
+    INIT: Symbol("init"),
+    FETCHING: Symbol("fetching"), // WebSocket is established, but still startFetching resources.
+    ESTABLISHED: Symbol("established"),
+    ERROR: Symbol("error"),
+    OFFLINE: Symbol("offline") };
+
+var defaultState = {
+    state: ConnectionState.INIT,
+    message: null
+};
+
+function reducer() {
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultState;
+    var action = arguments[1];
+
+    switch (action.type) {
+
+        case ConnectionState.ESTABLISHED:
+        case ConnectionState.FETCHING:
+        case ConnectionState.ERROR:
+        case ConnectionState.OFFLINE:
+            return {
+                state: action.type,
+                message: action.message
+            };
+
+        default:
+            return state;
+    }
+}
+
+function startFetching() {
+    return { type: ConnectionState.FETCHING };
+}
+
+function connectionEstablished() {
+    return { type: ConnectionState.ESTABLISHED };
+}
+
+function connectionError(message) {
+    return { type: ConnectionState.ERROR, message: message };
+}
+function setOffline() {
+    return { type: ConnectionState.OFFLINE };
+}
+
+},{}],50:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5468,7 +5611,7 @@ function add(message) {
     };
 }
 
-},{"./utils/store":56}],49:[function(require,module,exports){
+},{"./utils/store":58}],51:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -5772,30 +5915,34 @@ function select(id) {
     };
 }
 
-},{"../filt/filt":57,"../flow/utils":58,"../utils":60,"./utils/store":56}],50:[function(require,module,exports){
-'use strict';
+},{"../filt/filt":59,"../flow/utils":60,"../utils":62,"./utils/store":58}],52:[function(require,module,exports){
+"use strict";
 
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-var _redux = require('redux');
+var _redux = require("redux");
 
-var _eventLog = require('./eventLog');
+var _eventLog = require("./eventLog");
 
 var _eventLog2 = _interopRequireDefault(_eventLog);
 
-var _flows = require('./flows');
+var _flows = require("./flows");
 
 var _flows2 = _interopRequireDefault(_flows);
 
-var _settings = require('./settings');
+var _settings = require("./settings");
 
 var _settings2 = _interopRequireDefault(_settings);
 
-var _index = require('./ui/index');
+var _index = require("./ui/index");
 
 var _index2 = _interopRequireDefault(_index);
+
+var _connection = require("./connection");
+
+var _connection2 = _interopRequireDefault(_connection);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -5803,10 +5950,11 @@ exports.default = (0, _redux.combineReducers)({
     eventLog: _eventLog2.default,
     flows: _flows2.default,
     settings: _settings2.default,
+    connection: _connection2.default,
     ui: _index2.default
 });
 
-},{"./eventLog":48,"./flows":49,"./settings":51,"./ui/index":54,"redux":"redux"}],51:[function(require,module,exports){
+},{"./connection":49,"./eventLog":50,"./flows":51,"./settings":53,"./ui/index":56,"redux":"redux"}],53:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5850,7 +5998,7 @@ function update(settings) {
     return { type: REQUEST_UPDATE };
 }
 
-},{"../utils":60}],52:[function(require,module,exports){
+},{"../utils":62}],54:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -5910,7 +6058,7 @@ function reducer() {
     var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : defaultState;
     var action = arguments[1];
 
-    var wasInEditMode = !!state.modifiedFlow;
+    var wasInEditMode = state.modifiedFlow;
 
     var content = action.content || state.content;
     var isFullContentShown = content && content.length <= state.maxContentLines;
@@ -5966,13 +6114,13 @@ function reducer() {
             return _extends({}, state, {
                 tab: action.tab ? action.tab : 'request',
                 displayLarge: false,
-                showFullContent: state.contentView == 'Edit'
+                showFullContent: state.contentView === 'Edit'
             });
 
         case SET_CONTENT_VIEW:
             return _extends({}, state, {
                 contentView: action.contentView,
-                showFullContent: action.contentView == 'Edit'
+                showFullContent: action.contentView === 'Edit'
             });
 
         case SET_CONTENT:
@@ -6027,7 +6175,7 @@ function stopEdit(data, modifiedFlow) {
     return { type: flowsActions.UPDATE, data: data, diff: diff };
 }
 
-},{"../../utils":60,"../flows":49,"lodash":"lodash"}],53:[function(require,module,exports){
+},{"../../utils":62,"../flows":51,"lodash":"lodash"}],55:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6076,7 +6224,7 @@ function reducer() {
             // Deselect
             if (action.flowIds.length === 0 && state.isFlowSelected) {
                 var activeMenu = state.activeMenu;
-                if (activeMenu == 'Flow') {
+                if (activeMenu === 'Flow') {
                     activeMenu = 'Start';
                 }
                 return _extends({}, state, {
@@ -6094,7 +6242,7 @@ function setActiveMenu(activeMenu) {
     return { type: SET_ACTIVE_MENU, activeMenu: activeMenu };
 }
 
-},{"../flows":49}],54:[function(require,module,exports){
+},{"../flows":51}],56:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6119,7 +6267,7 @@ exports.default = (0, _redux.combineReducers)({
     header: _header2.default
 });
 
-},{"./flow":52,"./header":53,"redux":"redux"}],55:[function(require,module,exports){
+},{"./flow":54,"./header":55,"redux":"redux"}],57:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -6270,7 +6418,7 @@ function onKeyDown(e) {
     };
 }
 
-},{"../../utils":60,"../flows":49,"./flow":52}],56:[function(require,module,exports){
+},{"../../utils":62,"../flows":51,"./flow":54}],58:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -6540,7 +6688,7 @@ function defaultSort(a, b) {
     return 0;
 }
 
-},{}],57:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 "use strict";
 
 module.exports = function () {
@@ -8793,7 +8941,7 @@ module.exports = function () {
   };
 }();
 
-},{"../flow/utils.js":58}],58:[function(require,module,exports){
+},{"../flow/utils.js":60}],60:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -8908,7 +9056,7 @@ var isValidHttpVersion = exports.isValidHttpVersion = function isValidHttpVersio
     return isValidHttpVersion_regex.test(httpVersion);
 };
 
-},{"lodash":"lodash"}],59:[function(require,module,exports){
+},{"lodash":"lodash"}],61:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -9017,7 +9165,7 @@ function initialize(store) {
     });
 }
 
-},{"./ducks/eventLog":48,"./ducks/flows":49,"./ducks/ui/flow":52}],60:[function(require,module,exports){
+},{"./ducks/eventLog":50,"./ducks/flows":51,"./ducks/ui/flow":54}],62:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {

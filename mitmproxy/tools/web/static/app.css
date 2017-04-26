@@ -133,7 +133,7 @@ header {
   padding-top: 6px;
   background-color: white;
 }
-header menu {
+header > div {
   display: block;
   margin: 0;
   padding: 0;
@@ -247,6 +247,51 @@ header menu {
 }
 .filter-input .popover .popover-content tr:hover {
   background-color: rgba(193, 215, 235, 0.5) !important;
+}
+.connection-indicator {
+  display: inline;
+  padding: .2em .6em .3em;
+  font-size: 75%;
+  font-weight: bold;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em;
+  float: right;
+  margin: 5px;
+  opacity: 1;
+  transition: all 1s linear;
+}
+a.connection-indicator:hover,
+a.connection-indicator:focus {
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+.connection-indicator:empty {
+  display: none;
+}
+.btn .connection-indicator {
+  position: relative;
+  top: -1px;
+}
+.connection-indicator.init,
+.connection-indicator.fetching {
+  background-color: #5bc0de;
+}
+.connection-indicator.established {
+  background-color: #5cb85c;
+  opacity: 0;
+}
+.connection-indicator.error {
+  background-color: #d9534f;
+  transition: all 0.2s linear;
+}
+.connection-indicator.offline {
+  background-color: #f0ad4e;
+  opacity: 1;
 }
 .flow-table {
   width: 100%;
@@ -803,8 +848,11 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
   cursor: default;
   z-index: 4;
 }
-.CodeMirror-gutter-wrapper ::selection { background-color: transparent }
-.CodeMirror-gutter-wrapper ::-moz-selection { background-color: transparent }
+.CodeMirror-gutter-wrapper {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
 
 .CodeMirror-lines {
   cursor: text;
@@ -848,8 +896,6 @@ div.CodeMirror span.CodeMirror-nonmatchingbracket {color: #f22;}
 }
 
 .CodeMirror-widget {}
-
-.CodeMirror-rtl pre { direction: rtl; }
 
 .CodeMirror-code {
   outline: none;
