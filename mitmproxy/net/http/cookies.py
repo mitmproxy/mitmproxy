@@ -1,7 +1,7 @@
-import collections
 import email.utils
 import re
 import time
+from typing import Tuple, List, Iterable
 
 from mitmproxy.types import multidict
 
@@ -23,10 +23,7 @@ cookies to be set in a single header. Serialization follows RFC6265.
     http://tools.ietf.org/html/rfc2965
 """
 
-_cookie_params = set((
-    'expires', 'path', 'comment', 'max-age',
-    'secure', 'httponly', 'version',
-))
+_cookie_params = {'expires', 'path', 'comment', 'max-age', 'secure', 'httponly', 'version'}
 
 ESCAPE = re.compile(r"([\"\\])")
 
@@ -43,7 +40,8 @@ class CookieAttrs(multidict.MultiDict):
         return values[-1]
 
 
-SetCookie = collections.namedtuple("SetCookie", ["value", "attrs"])
+TSetCookie = Tuple[str, str, CookieAttrs]
+TPairs = List[List[str]]  # TODO: Should be List[Tuple[str,str]]?
 
 
 def _read_until(s, start, term):
@@ -131,15 +129,15 @@ def _read_cookie_pairs(s, off=0):
     return pairs, off
 
 
-def _read_set_cookie_pairs(s, off=0):
+def _read_set_cookie_pairs(s: str, off=0) -> Tuple[List[TPairs], int]:
     """
         Read pairs of lhs=rhs values from SetCookie headers while handling multiple cookies.
 
         off: start offset
         specials: attributes that are treated specially
     """
-    cookies = []
-    pairs = []
+    cookies = []  # type: List[TPairs]
+    pairs = []  # type: TPairs
 
     while True:
         lhs, off = _read_key(s, off, ";=,")
@@ -182,7 +180,7 @@ def _read_set_cookie_pairs(s, off=0):
     return cookies, off
 
 
-def _has_special(s):
+def _has_special(s: str) -> bool:
     for i in s:
         if i in '",;\\':
             return True
@@ -238,41 +236,44 @@ def format_cookie_header(lst):
     return _format_pairs(lst)
 
 
-def parse_set_cookie_header(line):
+def parse_set_cookie_header(line: str) -> List[TSetCookie]:
     """
-        Parse a Set-Cookie header value
+    Parse a Set-Cookie header value
 
-        Returns a list of (name, value, attrs) tuples, where attrs is a
+    Returns:
+        A list of (name, value, attrs) tuples, where attrs is a
         CookieAttrs dict of attributes. No attempt is made to parse attribute
         values - they are treated purely as strings.
     """
     cookie_pairs, off = _read_set_cookie_pairs(line)
-    cookies = [
-        (pairs[0][0], pairs[0][1], CookieAttrs(tuple(x) for x in pairs[1:]))
-        for pairs in cookie_pairs if pairs
-    ]
+    cookies = []
+    for pairs in cookie_pairs:
+        if pairs:
+            cookie, *attrs = pairs
+            cookies.append((
+                cookie[0],
+                cookie[1],
+                CookieAttrs(attrs)
+            ))
     return cookies
 
 
-def parse_set_cookie_headers(headers):
+def parse_set_cookie_headers(headers: Iterable[str]) -> List[TSetCookie]:
     rv = []
     for header in headers:
         cookies = parse_set_cookie_header(header)
-        if cookies:
-            for name, value, attrs in cookies:
-                rv.append((name, SetCookie(value, attrs)))
+        rv.extend(cookies)
     return rv
 
 
-def format_set_cookie_header(set_cookies):
+def format_set_cookie_header(set_cookies: List[TSetCookie]) -> str:
     """
         Formats a Set-Cookie header value.
     """
 
     rv = []
 
-    for set_cookie in set_cookies:
-        name, value, attrs = set_cookie
+    for name, value, attrs in set_cookies:
 
         pairs = [(name, value)]
         pairs.extend(
@@ -284,37 +285,36 @@ def format_set_cookie_header(set_cookies):
     return ", ".join(rv)
 
 
-def refresh_set_cookie_header(c, delta):
+def refresh_set_cookie_header(c: str, delta: int) -> str:
     """
     Args:
         c: A Set-Cookie string
         delta: Time delta in seconds
     Returns:
         A refreshed Set-Cookie string
+    Raises:
+        ValueError, if the cookie is invalid.
     """
+    cookies = parse_set_cookie_header(c)
+    for cookie in cookies:
+        name, value, attrs = cookie
+        if not name or not value:
+            raise ValueError("Invalid Cookie")
 
-    name, value, attrs = parse_set_cookie_header(c)[0]
-    if not name or not value:
-        raise ValueError("Invalid Cookie")
-
-    if "expires" in attrs:
-        e = email.utils.parsedate_tz(attrs["expires"])
-        if e:
-            f = email.utils.mktime_tz(e) + delta
-            attrs.set_all("expires", [email.utils.formatdate(f)])
-        else:
-            # This can happen when the expires tag is invalid.
-            # reddit.com sends a an expires tag like this: "Thu, 31 Dec
-            # 2037 23:59:59 GMT", which is valid RFC 1123, but not
-            # strictly correct according to the cookie spec. Browsers
-            # appear to parse this tolerantly - maybe we should too.
-            # For now, we just ignore this.
-            del attrs["expires"]
-
-    rv = format_set_cookie_header([(name, value, attrs)])
-    if not rv:
-        raise ValueError("Invalid Cookie")
-    return rv
+        if "expires" in attrs:
+            e = email.utils.parsedate_tz(attrs["expires"])
+            if e:
+                f = email.utils.mktime_tz(e) + delta
+                attrs.set_all("expires", [email.utils.formatdate(f)])
+            else:
+                # This can happen when the expires tag is invalid.
+                # reddit.com sends a an expires tag like this: "Thu, 31 Dec
+                # 2037 23:59:59 GMT", which is valid RFC 1123, but not
+                # strictly correct according to the cookie spec. Browsers
+                # appear to parse this tolerantly - maybe we should too.
+                # For now, we just ignore this.
+                del attrs["expires"]
+    return format_set_cookie_header(cookies)
 
 
 def get_expiration_ts(cookie_attrs):

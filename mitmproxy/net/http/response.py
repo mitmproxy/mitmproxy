@@ -131,7 +131,11 @@ class Response(message.Message):
 
     def _get_cookies(self):
         h = self.headers.get_all("set-cookie")
-        return tuple(cookies.parse_set_cookie_headers(h))
+        all_cookies = cookies.parse_set_cookie_headers(h)
+        return tuple(
+            (name, (value, attrs))
+            for name, value, attrs in all_cookies
+        )
 
     def _set_cookies(self, value):
         cookie_headers = []

@@ -206,7 +206,7 @@ def format_request_cookies(fields):
 
 
 def format_response_cookies(fields):
-    return format_cookies((c[0], c[1].value, c[1].attrs) for c in fields)
+    return format_cookies((c[0], c[1][0], c[1][1]) for c in fields)
 
 
 def name_value(obj):

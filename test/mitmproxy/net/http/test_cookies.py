@@ -283,6 +283,10 @@ def test_refresh_cookie():
     c = "foo/bar=bla"
     assert cookies.refresh_set_cookie_header(c, 0)
 
+    # https://github.com/mitmproxy/mitmproxy/issues/2250
+    c = ""
+    assert cookies.refresh_set_cookie_header(c, 60) == ""
+
 
 @mock.patch('time.time')
 def test_get_expiration_ts(*args):
