@@ -104,8 +104,6 @@ class OptManager:
         help: str,
         choices: typing.Optional[typing.Sequence[str]] = None
     ) -> None:
-        if name in self._options:
-            raise ValueError("Option %s already exists" % name)
         self._options[name] = _Option(name, typespec, default, help, choices)
 
     @contextlib.contextmanager

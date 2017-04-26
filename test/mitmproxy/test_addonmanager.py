@@ -76,6 +76,13 @@ def test_defaults():
     assert addons.default_addons()
 
 
+def test_loader():
+    with taddons.context() as tctx:
+        l = addonmanager.Loader(tctx.master)
+        l.add_option("custom_option", bool, False, "help")
+        l.add_option("custom_option", bool, False, "help")
+
+
 def test_simple():
     with taddons.context() as tctx:
         a = tctx.master.addons

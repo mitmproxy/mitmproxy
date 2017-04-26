@@ -38,12 +38,6 @@ class TM(optmanager.OptManager):
         self.add_option("one", typing.Optional[str], None, "help")
 
 
-def test_add_option():
-    o = TO()
-    with pytest.raises(ValueError, match="already exists"):
-        o.add_option("one", typing.Optional[int], None, "help")
-
-
 def test_defaults():
     o = TD2()
     defaults = {

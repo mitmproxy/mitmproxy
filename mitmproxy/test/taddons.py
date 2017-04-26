@@ -120,3 +120,9 @@ class context:
         self.configure(sc)
         self.master.addons.invoke_addon(sc, "tick")
         return sc.addons[0] if sc.addons else None
+
+    def invoke(self, addon, event, *args, **kwargs):
+        """
+            Recursively invoke an event on an addon and all its children.
+        """
+        return self.master.addons.invoke_addon(addon, event, *args, **kwargs)
