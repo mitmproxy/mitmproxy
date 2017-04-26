@@ -17,8 +17,9 @@ from mitmproxy import exceptions
 from mitmproxy import master
 from mitmproxy import io
 from mitmproxy import log
-from mitmproxy.addons import view
 from mitmproxy.addons import intercept
+from mitmproxy.addons import readfile
+from mitmproxy.addons import view
 from mitmproxy.tools.console import flowlist
 from mitmproxy.tools.console import flowview
 from mitmproxy.tools.console import grideditor
@@ -91,7 +92,12 @@ class ConsoleMaster(master.Master):
         signals.sig_add_log.connect(self.sig_add_log)
         self.addons.add(Logger())
         self.addons.add(*addons.default_addons())
-        self.addons.add(intercept.Intercept(), self.view, UnsupportedLog())
+        self.addons.add(
+            intercept.Intercept(),
+            self.view,
+            UnsupportedLog(),
+            readfile.ReadFile(),
+        )
 
         def sigint_handler(*args, **kwargs):
             self.prompt_for_exit()

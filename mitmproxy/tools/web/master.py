@@ -7,6 +7,7 @@ from mitmproxy import log
 from mitmproxy import master
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import intercept
+from mitmproxy.addons import readfile
 from mitmproxy.addons import termlog
 from mitmproxy.addons import view
 from mitmproxy.addons import termstatus
@@ -32,6 +33,7 @@ class WebMaster(master.Master):
         self.addons.add(*addons.default_addons())
         self.addons.add(
             intercept.Intercept(),
+            readfile.ReadFile(),
             self.view,
             self.events,
         )

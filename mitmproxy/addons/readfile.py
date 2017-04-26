@@ -1,17 +1,17 @@
 import os.path
+import sys
 import typing
 
-import sys
-
 from mitmproxy import ctx
-from mitmproxy import io
 from mitmproxy import exceptions
+from mitmproxy import io
 
 
 class ReadFile:
     """
         An addon that handles reading from file on startup.
     """
+
     def load_flows(self, fo: typing.IO[bytes]) -> int:
         cnt = 0
         freader = io.FlowReader(fo)
@@ -29,16 +29,13 @@ class ReadFile:
             return cnt
 
     def load_flows_from_path(self, path: str) -> int:
-        if path == "-":
-            return self.load_flows(sys.stdin.buffer)
-        else:
-            path = os.path.expanduser(path)
-            try:
-                with open(path, "rb") as f:
-                    return self.load_flows(f)
-            except IOError as e:
-                ctx.log.error("Cannot load flows: {}".format(e))
-                raise exceptions.FlowReadException(str(e)) from e
+        path = os.path.expanduser(path)
+        try:
+            with open(path, "rb") as f:
+                return self.load_flows(f)
+        except IOError as e:
+            ctx.log.error("Cannot load flows: {}".format(e))
+            raise exceptions.FlowReadException(str(e)) from e
 
     def running(self):
         if ctx.options.rfile:
@@ -48,3 +45,12 @@ class ReadFile:
                 raise exceptions.OptionsError(e) from e
             finally:
                 ctx.master.addons.trigger("processing_complete")
+
+
+class ReadFileStdin(ReadFile):
+    """Support the special case of "-" for reading from stdin"""
+    def load_flows_from_path(self, path: str) -> int:
+        if path == "-":
+            return self.load_flows(sys.stdin.buffer)
+        else:
+            return super().load_flows_from_path(path)
