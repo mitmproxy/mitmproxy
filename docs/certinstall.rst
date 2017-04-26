@@ -132,7 +132,7 @@ mitmproxy-ca-cert.cer Same file as .pem, but with an extension expected by some 
 Using a custom certificate
 --------------------------
 
-You can use your own certificate by passing the ``--cert [domain=]path_to_certificate`` option to
+You can use your own (leaf) certificate by passing the ``--cert [domain=]path_to_certificate`` option to
 mitmproxy. Mitmproxy then uses the provided certificate for interception of the
 specified domain instead of generating a certificate signed by its own CA.
 
