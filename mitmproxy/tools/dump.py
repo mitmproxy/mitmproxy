@@ -1,7 +1,7 @@
 from mitmproxy import addons
 from mitmproxy import options
 from mitmproxy import master
-from mitmproxy.addons import dumper, termlog, termstatus, readstdin, keepserving
+from mitmproxy.addons import dumper, termlog, termstatus, keepserving, readfile
 
 
 class ErrorCheck:
@@ -30,7 +30,7 @@ class DumpMaster(master.Master):
         if with_dumper:
             self.addons.add(dumper.Dumper())
         self.addons.add(
-            readstdin.ReadStdin(),
             keepserving.KeepServing(),
+            readfile.ReadFileStdin(),
             self.errorcheck
         )

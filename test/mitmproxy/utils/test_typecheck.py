@@ -79,3 +79,9 @@ def test_check_io():
     typecheck.check_type("foo", io.StringIO(), typing.IO[str])
     with pytest.raises(TypeError):
         typecheck.check_type("foo", "foo", typing.IO[str])
+
+
+def test_check_any():
+    typecheck.check_type("foo", 42, typing.Any)
+    typecheck.check_type("foo", object(), typing.Any)
+    typecheck.check_type("foo", None, typing.Any)

@@ -68,5 +68,7 @@ def check_type(name: str, value: typing.Any, typeinfo: typing.Any) -> None:
             return
         else:
             raise e
+    elif typename.startswith("typing.Any"):
+        return
     elif not isinstance(value, typeinfo):
         raise e
