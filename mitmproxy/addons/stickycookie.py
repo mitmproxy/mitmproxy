@@ -79,7 +79,7 @@ class StickyCookie:
                     ]
                     if all(match):
                         c = self.jar[(domain, port, path)]
-                        l.extend([cookies.format_cookie_header(c[name].items(multi=True)) for name in c.keys()])
+                        l.extend([cookies.format_cookie_header([c[name].items(multi=True)[0]]) for name in c.keys()])
             if l:
                 # FIXME: we need to formalise this...
                 flow.request.stickycookie = True
