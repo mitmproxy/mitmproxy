@@ -68,7 +68,6 @@ def test_simple():
         ctx.configure(d, flow_detail=4)
         flow = tflow.tflow()
         flow.request = tutils.treq()
-        flow.request.stickycookie = True
         flow.client_conn = mock.MagicMock()
         flow.client_conn.address[0] = "foo"
         flow.response = tutils.tresp(content=None)
