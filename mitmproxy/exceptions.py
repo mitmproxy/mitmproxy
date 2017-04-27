@@ -93,6 +93,10 @@ class SetServerNotAllowedException(MitmproxyException):
     pass
 
 
+class CommandError(Exception):
+    pass
+
+
 class OptionsError(MitmproxyException):
     pass
 

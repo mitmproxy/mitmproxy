@@ -26,6 +26,11 @@ def common_options(parser, opts):
         help="Show all options and their default values",
     )
     parser.add_argument(
+        '--commands',
+        action='store_true',
+        help="Show all commands and their signatures",
+    )
+    parser.add_argument(
         "--conf",
         type=str, dest="conf", default=CONFIG_PATH,
         metavar="PATH",

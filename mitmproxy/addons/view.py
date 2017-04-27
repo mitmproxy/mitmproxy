@@ -111,10 +111,8 @@ class View(collections.Sequence):
 
         self.default_order = OrderRequestStart(self)
         self.orders = dict(
-            time = OrderRequestStart(self),
-            method = OrderRequestMethod(self),
-            url = OrderRequestURL(self),
-            size = OrderKeySize(self),
+            time = OrderRequestStart(self), method = OrderRequestMethod(self),
+            url = OrderRequestURL(self), size = OrderKeySize(self),
         )
         self.order_key = self.default_order
         self.order_reversed = False
@@ -323,6 +321,26 @@ class View(collections.Sequence):
             self.set_reversed(ctx.options.console_order_reversed)
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
+
+    def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
+        if spec == "@focus":
+            return [self.focus.flow] if self.focus.flow else []
+        elif spec == "@shown":
+            return [i for i in self]
+        elif spec == "@hidden":
+            return [i for i in self._store.values() if i not in self._view]
+        elif spec == "@marked":
+            return [i for i in self._store.values() if i.marked]
+        elif spec == "@unmarked":
+            return [i for i in self._store.values() if not i.marked]
+        else:
+            filt = flowfilter.parse(spec)
+            if not filt:
+                raise exceptions.CommandError("Invalid flow filter: %s" % spec)
+            return [i for i in self._store.values() if filt(i)]
+
+    def load(self, l):
+        l.add_command("console.resolve", self.resolve)
 
     def request(self, f):
         self.add(f)

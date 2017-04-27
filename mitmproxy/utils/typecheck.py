@@ -7,6 +7,20 @@ def check_command_return_type(value: typing.Any, typeinfo: typing.Any) -> bool:
     types match, False otherwise. This function supports only those types
     required for command return values.
     """
+    typename = str(typeinfo)
+    if typename.startswith("typing.Sequence"):
+        try:
+            T = typeinfo.__args__[0]  # type: ignore
+        except AttributeError:
+            # Python 3.5.0
+            T = typeinfo.__parameters__[0]  # type: ignore
+        if not isinstance(value, (tuple, list)):
+            return False
+        for v in value:
+            if not check_command_return_type(v, T):
+                return False
+    elif not isinstance(value, typeinfo):
+        return False
     return True
 
 

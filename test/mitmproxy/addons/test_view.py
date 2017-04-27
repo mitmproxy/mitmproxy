@@ -130,6 +130,46 @@ def test_filter():
     assert len(v) == 4
 
 
+def test_resolve():
+    v = view.View()
+    with taddons.context(options=options.Options()) as tctx:
+        assert tctx.command(v.resolve, "@focus") == []
+        assert tctx.command(v.resolve, "@shown") == []
+        assert tctx.command(v.resolve, "@hidden") == []
+        assert tctx.command(v.resolve, "@marked") == []
+        assert tctx.command(v.resolve, "@unmarked") == []
+        assert tctx.command(v.resolve, "~m get") == []
+        v.request(tft(method="get"))
+        assert len(tctx.command(v.resolve, "~m get")) == 1
+        assert len(tctx.command(v.resolve, "@focus")) == 1
+        assert len(tctx.command(v.resolve, "@shown")) == 1
+        assert len(tctx.command(v.resolve, "@unmarked")) == 1
+        assert tctx.command(v.resolve, "@hidden") == []
+        assert tctx.command(v.resolve, "@marked") == []
+        v.request(tft(method="put"))
+        assert len(tctx.command(v.resolve, "@focus")) == 1
+        assert len(tctx.command(v.resolve, "@shown")) == 2
+        assert tctx.command(v.resolve, "@hidden") == []
+        assert tctx.command(v.resolve, "@marked") == []
+
+        v.request(tft(method="get"))
+        v.request(tft(method="put"))
+
+        f = flowfilter.parse("~m get")
+        v.set_filter(f)
+        v[0].marked = True
+
+        def m(l):
+            return [i.request.method for i in l]
+
+        assert m(tctx.command(v.resolve, "~m get")) == ["GET", "GET"]
+        assert m(tctx.command(v.resolve, "~m put")) == ["PUT", "PUT"]
+        assert m(tctx.command(v.resolve, "@shown")) == ["GET", "GET"]
+        assert m(tctx.command(v.resolve, "@hidden")) == ["PUT", "PUT"]
+        assert m(tctx.command(v.resolve, "@marked")) == ["GET"]
+        assert m(tctx.command(v.resolve, "@unmarked")) == ["PUT", "GET", "PUT"]
+
+
 def test_order():
     v = view.View()
     with taddons.context(options=options.Options()) as tctx:

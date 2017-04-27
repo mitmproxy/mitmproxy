@@ -6,6 +6,7 @@ import mitmproxy.options
 from mitmproxy import proxy
 from mitmproxy import addonmanager
 from mitmproxy import eventsequence
+from mitmproxy import command
 from mitmproxy.addons import script
 
 
@@ -126,3 +127,10 @@ class context:
             Recursively invoke an event on an addon and all its children.
         """
         return self.master.addons.invoke_addon(addon, event, *args, **kwargs)
+
+    def command(self, func, *args):
+        """
+            Invoke a command function within a command context, mimicing the actual command environment.
+        """
+        cmd = command.Command(self.master.commands, "test.command", func)
+        return cmd.call(args)

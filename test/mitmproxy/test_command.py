@@ -2,6 +2,7 @@ from mitmproxy import command
 from mitmproxy import master
 from mitmproxy import options
 from mitmproxy import proxy
+from mitmproxy import exceptions
 import pytest
 
 
@@ -29,7 +30,7 @@ def test_simple():
     a = TAddon()
     c.add("one.two", a.cmd1)
     assert(c.call("one.two foo") == "ret foo")
-    with pytest.raises(command.CommandError, match="Unknown"):
+    with pytest.raises(exceptions.CommandError, match="Unknown"):
         c.call("nonexistent")
-    with pytest.raises(command.CommandError, match="Invalid"):
+    with pytest.raises(exceptions.CommandError, match="Invalid"):
         c.call("")
