@@ -503,8 +503,6 @@ class _Connection:
         if cipher_list:
             try:
                 context.set_cipher_list(cipher_list)
-
-                # TODO: maybe change this to with newer pyOpenSSL APIs
                 context.set_tmp_ecdh(OpenSSL.crypto.get_elliptic_curve('prime256v1'))
             except SSL.Error as v:
                 raise exceptions.TlsException("SSL cipher specification error: %s" % str(v))
@@ -617,11 +615,6 @@ class TCPClient(_Connection):
                 raise self.ssl_verification_error
             else:
                 raise exceptions.TlsException("SSL handshake error: %s" % repr(v))
-        else:
-            # Fix for pre v1.0 OpenSSL, which doesn't throw an exception on
-            # certificate validation failure
-            if verification_mode == SSL.VERIFY_PEER and self.ssl_verification_error:
-                raise self.ssl_verification_error
 
         self.cert = certs.SSLCert(self.connection.get_peer_certificate())
 
