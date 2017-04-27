@@ -353,9 +353,7 @@ class FlowListBox(urwid.ListBox):
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
-        if key == ":":
-            signals.status_prompt_command.send()
-        elif key == "A":
+        if key == "A":
             for f in self.master.view:
                 if f.intercepted:
                     f.resume()

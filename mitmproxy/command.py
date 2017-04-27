@@ -37,7 +37,7 @@ class Command:
     def paramnames(self) -> typing.Sequence[str]:
         return [typename(i, False) for i in self.paramtypes]
 
-    def retname(self) -> typing.Sequence[str]:
+    def retname(self) -> str:
         return typename(self.returntype, True) if self.returntype else ""
 
     def signature_help(self) -> str:

@@ -18,6 +18,9 @@ class TAddon:
     def cmd2(self, foo: str) -> str:
         return 99
 
+    def empty(self) -> None:
+        pass
+
 
 class TestCommand:
     def test_call(self):
@@ -49,6 +52,9 @@ def test_simple():
         c.call("")
     with pytest.raises(exceptions.CommandError, match="Usage"):
         c.call("one.two too many args")
+
+    c.add("empty", a.empty)
+    c.call("empty")
 
 
 def test_typename():
