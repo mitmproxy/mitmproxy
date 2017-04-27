@@ -66,7 +66,7 @@ def common_options(parser, opts):
     opts.make_parser(parser, "scripts", metavar="SCRIPT", short="s")
     opts.make_parser(parser, "stickycookie", metavar="FILTER")
     opts.make_parser(parser, "stickyauth", metavar="FILTER")
-    opts.make_parser(parser, "streamfile", metavar="PATH", short="w")
+    opts.make_parser(parser, "save_stream_file", metavar="PATH", short="w")
     opts.make_parser(parser, "anticomp")
 
     # Proxy options
@@ -128,7 +128,7 @@ def mitmdump(opts):
         nargs="...",
         help="""
             Filter expression, equivalent to setting both the view_filter
-            and streamfile_filter options.
+            and save_stream_filter options.
         """
     )
     return parser

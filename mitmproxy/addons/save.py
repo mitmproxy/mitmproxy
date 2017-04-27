@@ -6,7 +6,7 @@ from mitmproxy import io
 from mitmproxy import ctx
 
 
-class StreamFile:
+class Save:
     def __init__(self):
         self.stream = None
         self.filt = None
@@ -23,24 +23,24 @@ class StreamFile:
 
     def configure(self, updated):
         # We're already streaming - stop the previous stream and restart
-        if "streamfile_filter" in updated:
-            if ctx.options.streamfile_filter:
-                self.filt = flowfilter.parse(ctx.options.streamfile_filter)
+        if "save_stream_filter" in updated:
+            if ctx.options.save_stream_filter:
+                self.filt = flowfilter.parse(ctx.options.save_stream_filter)
                 if not self.filt:
                     raise exceptions.OptionsError(
-                        "Invalid filter specification: %s" % ctx.options.streamfile_filter
+                        "Invalid filter specification: %s" % ctx.options.save_stream_filter
                     )
             else:
                 self.filt = None
-        if "streamfile" in updated:
+        if "save_stream_file" in updated:
             if self.stream:
                 self.done()
-            if ctx.options.streamfile:
-                if ctx.options.streamfile.startswith("+"):
-                    path = ctx.options.streamfile[1:]
+            if ctx.options.save_stream_file:
+                if ctx.options.save_stream_file.startswith("+"):
+                    path = ctx.options.save_stream_file[1:]
                     mode = "ab"
                 else:
-                    path = ctx.options.streamfile
+                    path = ctx.options.save_stream_file
                     mode = "wb"
                 self.start_stream_to_path(path, mode, self.filt)
 
