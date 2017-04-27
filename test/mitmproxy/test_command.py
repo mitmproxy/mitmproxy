@@ -12,6 +12,7 @@ import pytest
 
 class TAddon:
     def cmd1(self, foo: str) -> str:
+        """cmd1 help"""
         return "ret " + foo
 
     def cmd2(self, foo: str) -> str:
@@ -40,6 +41,7 @@ def test_simple():
     c = command.CommandManager(m)
     a = TAddon()
     c.add("one.two", a.cmd1)
+    assert c.commands["one.two"].help == "cmd1 help"
     assert(c.call("one.two foo") == "ret foo")
     with pytest.raises(exceptions.CommandError, match="Unknown"):
         c.call("nonexistent")

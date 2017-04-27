@@ -5,8 +5,8 @@ from mitmproxy.tools.console import signals
 
 
 class CommandEdit(urwid.Edit):
-    def __init__(self):
-        urwid.Edit.__init__(self, ":", "")
+    def __init__(self, partial):
+        urwid.Edit.__init__(self, ":", partial)
 
     def keypress(self, size, key):
         return urwid.Edit.keypress(self, size, key)

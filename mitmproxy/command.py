@@ -1,6 +1,8 @@
 import inspect
 import typing
 import shlex
+import textwrap
+
 from mitmproxy.utils import typecheck
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -25,12 +27,24 @@ class Command:
         self.manager = manager
         self.func = func
         sig = inspect.signature(self.func)
+        self.help = None
+        if func.__doc__:
+            txt = func.__doc__.strip()
+            self.help = "\n".join(textwrap.wrap(txt))
         self.paramtypes = [v.annotation for v in sig.parameters.values()]
         self.returntype = sig.return_annotation
 
+    def paramnames(self) -> typing.Sequence[str]:
+        return [typename(i, False) for i in self.paramtypes]
+
+    def retname(self) -> typing.Sequence[str]:
+        return typename(self.returntype, True) if self.returntype else ""
+
     def signature_help(self) -> str:
-        params = " ".join([typename(i, False) for i in self.paramtypes])
-        ret = " -> " + typename(self.returntype, True) if self.returntype else ""
+        params = " ".join(self.paramnames())
+        ret = self.retname()
+        if ret:
+            ret = " -> " + ret
         return "%s %s%s" % (self.path, params, ret)
 
     def call(self, args: typing.Sequence[str]):

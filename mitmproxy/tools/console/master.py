@@ -25,8 +25,8 @@ from mitmproxy.tools.console import flowview
 from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import help
 from mitmproxy.tools.console import options
+from mitmproxy.tools.console import commands
 from mitmproxy.tools.console import overlay
-from mitmproxy.tools.console import palettepicker
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import statusbar
@@ -358,15 +358,18 @@ class ConsoleMaster(master.Master):
             )
         )
 
-    def view_palette_picker(self):
+    def view_commands(self):
+        for i in self.view_stack:
+            if isinstance(i["body"], commands.Commands):
+                return
         signals.push_view_state.send(
             self,
             window = window.Window(
                 self,
-                palettepicker.PalettePicker(self),
+                commands.Commands(self),
                 None,
-                statusbar.StatusBar(self, palettepicker.footer),
-                palettepicker.help_context,
+                statusbar.StatusBar(self, commands.footer),
+                options.help_context,
             )
         )
 
