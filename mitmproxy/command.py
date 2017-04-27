@@ -44,7 +44,7 @@ class Command:
             Call the command with a set of arguments. At this point, all argumets are strings.
         """
         if len(self.paramtypes) != len(args):
-            raise CommandError("SIGNATURE")
+            raise CommandError("Usage: %s" % self.signature_help())
 
         args = [parsearg(args[i], self.paramtypes[i]) for i in range(len(args))]
 

@@ -94,7 +94,7 @@ class Loader:
         )
 
     def add_command(self, path: str, func: typing.Callable) -> None:
-        self.master.commands.add_command(path, func)
+        self.master.commands.add(path, func)
 
 
 def traverse(chain):

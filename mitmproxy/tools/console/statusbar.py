@@ -5,6 +5,7 @@ import urwid
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import pathedit
 from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import command
 import mitmproxy.tools.console.master # noqa
 
 
@@ -32,13 +33,15 @@ class PromptStub:
 
 class ActionBar(urwid.WidgetWrap):
 
-    def __init__(self):
+    def __init__(self, master):
         urwid.WidgetWrap.__init__(self, None)
+        self.master = master
         self.clear()
         signals.status_message.connect(self.sig_message)
         signals.status_prompt.connect(self.sig_prompt)
         signals.status_prompt_path.connect(self.sig_path_prompt)
         signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
+        signals.status_prompt_command.connect(self.sig_prompt_command)
 
         self.last_path = ""
 
@@ -65,6 +68,11 @@ class ActionBar(urwid.WidgetWrap):
         signals.focus.send(self, section="footer")
         self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
         self.prompting = PromptStub(callback, args)
+
+    def sig_prompt_command(self, sender):
+        signals.focus.send(self, section="footer")
+        self._w = command.CommandEdit()
+        self.prompting = command.CommandExecutor(self.master)
 
     def sig_path_prompt(self, sender, prompt, callback, args=()):
         signals.focus.send(self, section="footer")

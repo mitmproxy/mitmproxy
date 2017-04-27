@@ -24,6 +24,9 @@ status_prompt_path = blinker.Signal()
 # Prompt for a single keystroke
 status_prompt_onekey = blinker.Signal()
 
+# Prompt for a command
+status_prompt_command = blinker.Signal()
+
 # Call a callback in N seconds
 call_in = blinker.Signal()
 
