@@ -56,6 +56,8 @@ class Save:
         stream = io.FlowWriter(f)
         for i in flows:
             stream.add(i)
+        f.close()
+        ctx.log.alert("Saved %s flows." % len(flows))
 
     def load(self, l):
         l.add_command("save.file", self.save)

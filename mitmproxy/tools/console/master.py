@@ -39,6 +39,11 @@ EVENTLOG_SIZE = 10000
 class Logger:
     def log(self, evt):
         signals.add_log(evt.msg, evt.level)
+        if evt.level == "alert":
+            signals.status_message.send(
+                message=str(evt.msg),
+                expire=2
+            )
 
 
 class UnsupportedLog:
