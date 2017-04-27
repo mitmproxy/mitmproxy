@@ -39,7 +39,7 @@ def process_options(parser, opts, args):
     if args.version:
         print(debug.dump_system_info())
         sys.exit(0)
-    if args.quiet or args.options:
+    if args.quiet or args.options or args.commands:
         args.verbosity = 0
         args.flow_detail = 0
 
@@ -84,6 +84,13 @@ def run(MasterKlass, args, extra=None):  # pragma: no cover
         if args.options:
             print(optmanager.dump_defaults(opts))
             sys.exit(0)
+        if args.commands:
+            cmds = []
+            for c in master.commands.commands.values():
+                cmds.append(c.signature_help())
+            for i in sorted(cmds):
+                print(i)
+            sys.exit(0)
         opts.set(*args.setoptions)
         if extra:
             opts.update(**extra(args))
@@ -120,7 +127,7 @@ def mitmdump(args=None):  # pragma: no cover
             v = " ".join(args.filter_args)
             return dict(
                 view_filter = v,
-                streamfile_filter = v,
+                save_stream_filter = v,
             )
         return {}
 

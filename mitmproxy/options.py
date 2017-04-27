@@ -159,11 +159,11 @@ class Options(optmanager.OptManager):
             choices = [i.name.lower() for i in contentviews.views]
         )
         self.add_option(
-            "streamfile", Optional[str], None,
-            "Write flows to file. Prefix path with + to append."
+            "save_stream_file", Optional[str], None,
+            "Stream flows to file as they arrive. Prefix path with + to append."
         )
         self.add_option(
-            "streamfile_filter", Optional[str], None,
+            "save_stream_filter", Optional[str], None,
             "Filter which flows are written to file."
         )
         self.add_option(

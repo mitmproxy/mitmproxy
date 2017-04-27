@@ -288,7 +288,7 @@ class ConsoleMaster(master.Master):
             screen = self.ui,
             handle_mouse = self.options.console_mouse,
         )
-        self.ab = statusbar.ActionBar()
+        self.ab = statusbar.ActionBar(self)
 
         self.loop.set_alarm_in(0.01, self.ticker)
         self.loop.set_alarm_in(

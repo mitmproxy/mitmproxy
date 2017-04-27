@@ -1,21 +1,31 @@
 import os.path
+import typing
 
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import io
 from mitmproxy import ctx
+from mitmproxy import flow
 
 
-class StreamFile:
+class Save:
     def __init__(self):
         self.stream = None
         self.filt = None
         self.active_flows = set()  # type: Set[flow.Flow]
 
-    def start_stream_to_path(self, path, mode, flt):
+    def open_file(self, path):
+        if path.startswith("+"):
+            path = path[1:]
+            mode = "ab"
+        else:
+            mode = "wb"
         path = os.path.expanduser(path)
+        return open(path, mode)
+
+    def start_stream_to_path(self, path, flt):
         try:
-            f = open(path, mode)
+            f = self.open_file(path)
         except IOError as v:
             raise exceptions.OptionsError(str(v))
         self.stream = io.FilteredFlowWriter(f, flt)
@@ -23,26 +33,32 @@ class StreamFile:
 
     def configure(self, updated):
         # We're already streaming - stop the previous stream and restart
-        if "streamfile_filter" in updated:
-            if ctx.options.streamfile_filter:
-                self.filt = flowfilter.parse(ctx.options.streamfile_filter)
+        if "save_stream_filter" in updated:
+            if ctx.options.save_stream_filter:
+                self.filt = flowfilter.parse(ctx.options.save_stream_filter)
                 if not self.filt:
                     raise exceptions.OptionsError(
-                        "Invalid filter specification: %s" % ctx.options.streamfile_filter
+                        "Invalid filter specification: %s" % ctx.options.save_stream_filter
                     )
             else:
                 self.filt = None
-        if "streamfile" in updated:
+        if "save_stream_file" in updated:
             if self.stream:
                 self.done()
-            if ctx.options.streamfile:
-                if ctx.options.streamfile.startswith("+"):
-                    path = ctx.options.streamfile[1:]
-                    mode = "ab"
-                else:
-                    path = ctx.options.streamfile
-                    mode = "wb"
-                self.start_stream_to_path(path, mode, self.filt)
+            if ctx.options.save_stream_file:
+                self.start_stream_to_path(ctx.options.save_stream_file, self.filt)
+
+    def save(self, flows: typing.Sequence[flow.Flow], path: str) -> None:
+        try:
+            f = self.open_file(path)
+        except IOError as v:
+            raise exceptions.CommandError(v) from v
+        stream = io.FlowWriter(f)
+        for i in flows:
+            stream.add(i)
+
+    def load(self, l):
+        l.add_command("save.file", self.save)
 
     def tcp_start(self, flow):
         if self.stream:
@@ -64,8 +80,8 @@ class StreamFile:
 
     def done(self):
         if self.stream:
-            for flow in self.active_flows:
-                self.stream.add(flow)
+            for f in self.active_flows:
+                self.stream.add(f)
             self.active_flows = set([])
             self.stream.fo.close()
             self.stream = None

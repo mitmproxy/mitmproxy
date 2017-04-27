@@ -31,7 +31,7 @@ class _Option:
         help: str,
         choices: typing.Optional[typing.Sequence[str]]
     ) -> None:
-        typecheck.check_type(name, default, typespec)
+        typecheck.check_option_type(name, default, typespec)
         self.name = name
         self.typespec = typespec
         self._default = default
@@ -54,7 +54,7 @@ class _Option:
         return copy.deepcopy(v)
 
     def set(self, value: typing.Any) -> None:
-        typecheck.check_type(self.name, value, self.typespec)
+        typecheck.check_option_type(self.name, value, self.typespec)
         self.value = value
 
     def reset(self) -> None:

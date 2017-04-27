@@ -61,9 +61,9 @@ def test_lifecycle():
     a = addonmanager.AddonManager(m)
     a.add(TAddon("one"))
 
-    with pytest.raises(exceptions.AddonError):
+    with pytest.raises(exceptions.AddonManagerError):
         a.add(TAddon("one"))
-    with pytest.raises(exceptions.AddonError):
+    with pytest.raises(exceptions.AddonManagerError):
         a.remove(TAddon("nonexistent"))
 
     f = tflow.tflow()
@@ -81,6 +81,11 @@ def test_loader():
         l = addonmanager.Loader(tctx.master)
         l.add_option("custom_option", bool, False, "help")
         l.add_option("custom_option", bool, False, "help")
+
+        def cmd(a: str) -> str:
+            return "foo"
+
+        l.add_command("test.command", cmd)
 
 
 def test_simple():
