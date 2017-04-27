@@ -323,6 +323,9 @@ class View(collections.Sequence):
             self.focus_follow = ctx.options.console_focus_follow
 
     def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
+        """
+            Resolve a flow list specification to an actual list of flows.
+        """
         if spec == "@focus":
             return [self.focus.flow] if self.focus.flow else []
         elif spec == "@shown":

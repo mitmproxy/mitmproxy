@@ -24,9 +24,10 @@ from mitmproxy.tools.console import flowlist
 from mitmproxy.tools.console import flowview
 from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import help
+from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import options
+from mitmproxy.tools.console import commands
 from mitmproxy.tools.console import overlay
-from mitmproxy.tools.console import palettepicker
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import statusbar
@@ -75,6 +76,58 @@ class UnsupportedLog:
         signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
 
 
+class ConsoleCommands:
+    """
+        An addon that exposes console-specific commands.
+    """
+    def __init__(self, master):
+        self.master = master
+
+    def command(self) -> None:
+        """Prompt for a command."""
+        signals.status_prompt_command.send()
+
+    def view_commands(self) -> None:
+        """View the commands list."""
+        self.master.view_commands()
+
+    def view_options(self) -> None:
+        """View the options editor."""
+        self.master.view_options()
+
+    def view_help(self) -> None:
+        """View help."""
+        self.master.view_help()
+
+    def exit(self) -> None:
+        """Exit mitmproxy."""
+        raise urwid.ExitMainLoop
+
+    def view_pop(self) -> None:
+        """
+            Pop a view off the console stack. At the top level, this prompts the
+            user to exit mitmproxy.
+        """
+        signals.pop_view_state.send(self)
+
+    def load(self, l):
+        l.add_command("console.command", self.command)
+        l.add_command("console.exit", self.exit)
+        l.add_command("console.view.commands", self.view_commands)
+        l.add_command("console.view.help", self.view_help)
+        l.add_command("console.view.options", self.view_options)
+        l.add_command("console.view.pop", self.view_pop)
+
+
+def default_keymap(km):
+    km.add(":", "console.command")
+    km.add("?", "console.view.help")
+    km.add("C", "console.view.commands")
+    km.add("O", "console.view.options")
+    km.add("Q", "console.exit")
+    km.add("q", "console.view.pop")
+
+
 class ConsoleMaster(master.Master):
 
     def __init__(self, options, server):
@@ -84,6 +137,8 @@ class ConsoleMaster(master.Master):
         self.stream_path = None
         # This line is just for type hinting
         self.options = self.options  # type: Options
+        self.keymap = keymap.Keymap(self)
+        default_keymap(self.keymap)
         self.options.errored.connect(self.options_error)
 
         self.logbuffer = urwid.SimpleListWalker([])
@@ -102,6 +157,7 @@ class ConsoleMaster(master.Master):
             self.view,
             UnsupportedLog(),
             readfile.ReadFile(),
+            ConsoleCommands(self),
         )
 
         def sigint_handler(*args, **kwargs):
@@ -331,12 +387,13 @@ class ConsoleMaster(master.Master):
             )
         )
 
-    def view_help(self, helpctx):
+    def view_help(self):
+        hc = self.view_stack[0].helpctx
         signals.push_view_state.send(
             self,
             window = window.Window(
                 self,
-                help.HelpView(helpctx),
+                help.HelpView(hc),
                 None,
                 statusbar.StatusBar(self, help.footer),
                 None
@@ -358,15 +415,18 @@ class ConsoleMaster(master.Master):
             )
         )
 
-    def view_palette_picker(self):
+    def view_commands(self):
+        for i in self.view_stack:
+            if isinstance(i["body"], commands.Commands):
+                return
         signals.push_view_state.send(
             self,
             window = window.Window(
                 self,
-                palettepicker.PalettePicker(self),
+                commands.Commands(self),
                 None,
-                statusbar.StatusBar(self, palettepicker.footer),
-                palettepicker.help_context,
+                statusbar.StatusBar(self, commands.footer),
+                options.help_context,
             )
         )
 

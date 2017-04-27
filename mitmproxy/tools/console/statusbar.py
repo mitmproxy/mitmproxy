@@ -5,7 +5,7 @@ import urwid
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import pathedit
 from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import command
+from mitmproxy.tools.console import commandeditor
 import mitmproxy.tools.console.master # noqa
 
 
@@ -69,10 +69,10 @@ class ActionBar(urwid.WidgetWrap):
         self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
         self.prompting = PromptStub(callback, args)
 
-    def sig_prompt_command(self, sender):
+    def sig_prompt_command(self, sender, partial=""):
         signals.focus.send(self, section="footer")
-        self._w = command.CommandEdit()
-        self.prompting = command.CommandExecutor(self.master)
+        self._w = commandeditor.CommandEdit(partial)
+        self.prompting = commandeditor.CommandExecutor(self.master)
 
     def sig_path_prompt(self, sender, prompt, callback, args=()):
         signals.focus.send(self, section="footer")

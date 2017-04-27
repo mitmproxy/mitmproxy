@@ -12,10 +12,14 @@ import pytest
 
 class TAddon:
     def cmd1(self, foo: str) -> str:
+        """cmd1 help"""
         return "ret " + foo
 
     def cmd2(self, foo: str) -> str:
         return 99
+
+    def empty(self) -> None:
+        pass
 
 
 class TestCommand:
@@ -40,6 +44,7 @@ def test_simple():
     c = command.CommandManager(m)
     a = TAddon()
     c.add("one.two", a.cmd1)
+    assert c.commands["one.two"].help == "cmd1 help"
     assert(c.call("one.two foo") == "ret foo")
     with pytest.raises(exceptions.CommandError, match="Unknown"):
         c.call("nonexistent")
@@ -47,6 +52,9 @@ def test_simple():
         c.call("")
     with pytest.raises(exceptions.CommandError, match="Usage"):
         c.call("one.two too many args")
+
+    c.add("empty", a.empty)
+    c.call("empty")
 
 
 def test_typename():

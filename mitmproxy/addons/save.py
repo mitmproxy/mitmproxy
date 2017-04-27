@@ -49,6 +49,10 @@ class Save:
                 self.start_stream_to_path(ctx.options.save_stream_file, self.filt)
 
     def save(self, flows: typing.Sequence[flow.Flow], path: str) -> None:
+        """
+            Save flows to a file. If the path starts with a +, flows are
+            appended to the file, otherwise it is over-written.
+        """
         try:
             f = self.open_file(path)
         except IOError as v:

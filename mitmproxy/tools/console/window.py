@@ -82,30 +82,15 @@ class Window(urwid.Frame):
 
     def keypress(self, size, k):
         k = super().keypress(size, k)
-        if k == "?":
-            self.master.view_help(self.helpctx)
+        k = self.master.keymap.handle("", k)
+        if not k:
+            return
         elif k == "i":
             signals.status_prompt.send(
                 self,
                 prompt = "Intercept filter",
                 text = self.master.options.intercept,
                 callback = self.master.options.setter("intercept")
-            )
-        elif k == "O":
-            self.master.view_options()
-        elif k == "Q":
-            raise urwid.ExitMainLoop
-        elif k == "q":
-            signals.pop_view_state.send(self)
-        elif k == "R":
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Replay",
-                keys = (
-                    ("client", "c"),
-                    ("server", "s"),
-                ),
-                callback = self.handle_replay,
             )
         else:
             return k
