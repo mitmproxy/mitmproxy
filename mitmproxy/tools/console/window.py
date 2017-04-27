@@ -82,15 +82,4 @@ class Window(urwid.Frame):
 
     def keypress(self, size, k):
         k = super().keypress(size, k)
-        k = self.master.keymap.handle("", k)
-        if not k:
-            return
-        elif k == "i":
-            signals.status_prompt.send(
-                self,
-                prompt = "Intercept filter",
-                text = self.master.options.intercept,
-                callback = self.master.options.setter("intercept")
-            )
-        else:
-            return k
+        return self.master.keymap.handle("", k)

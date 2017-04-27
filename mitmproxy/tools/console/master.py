@@ -83,9 +83,9 @@ class ConsoleCommands:
     def __init__(self, master):
         self.master = master
 
-    def command(self) -> None:
+    def command(self, partial: str) -> None:
         """Prompt for a command."""
-        signals.status_prompt_command.send()
+        signals.status_prompt_command.send(partial=partial)
 
     def view_commands(self) -> None:
         """View the commands list."""
@@ -120,12 +120,13 @@ class ConsoleCommands:
 
 
 def default_keymap(km):
-    km.add(":", "console.command")
+    km.add(":", "console.command ''")
     km.add("?", "console.view.help")
     km.add("C", "console.view.commands")
     km.add("O", "console.view.options")
     km.add("Q", "console.exit")
     km.add("q", "console.view.pop")
+    km.add("i", "console.command 'set intercept='")
 
 
 class ConsoleMaster(master.Master):

@@ -7,6 +7,8 @@ import pytest
 def test_set():
     sa = core.Core()
     with taddons.context() as tctx:
+        tctx.master.addons.add(sa)
+
         assert not tctx.master.options.anticomp
         tctx.command(sa.set, "anticomp")
         assert tctx.master.options.anticomp

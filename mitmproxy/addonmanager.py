@@ -56,7 +56,7 @@ def safecall():
     try:
         with contextlib.redirect_stdout(stdout_replacement):
             yield
-    except exceptions.AddonHalt:
+    except (exceptions.AddonHalt, exceptions.OptionsError):
         raise
     except Exception as e:
         etype, value, tb = sys.exc_info()
