@@ -1,9 +1,10 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { formatSize } from '../utils.js'
 
 Footer.propTypes = {
-    settings: React.PropTypes.object.isRequired,
+    settings: PropTypes.object.isRequired,
 }
 
 function Footer({ settings }) {

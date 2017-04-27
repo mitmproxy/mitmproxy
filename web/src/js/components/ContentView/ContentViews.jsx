@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { setContentViewDescription, setContent } from '../../ducks/ui/flow'
 import ContentLoader from './ContentLoader'
@@ -21,7 +22,7 @@ function ViewImage({ flow, message }) {
 }
 
 Edit.propTypes = {
-    content: React.PropTypes.string.isRequired,
+    content: PropTypes.string.isRequired,
 }
 
 function Edit({ content, onChange }) {

@@ -1,5 +1,5 @@
 import { MessageUtils } from "../../flow/utils"
-import { PropTypes } from 'react'
+import PropTypes from 'prop-types'
 
 DownloadContentButton.propTypes = {
     flow: PropTypes.object.isRequired,

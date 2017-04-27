@@ -25,6 +25,7 @@
     "classnames": "^2.2.5",
     "lodash": "^4.17.4",
     "react": "^15.4.2",
+    "prop-types": "^15.5.0",
     "react-codemirror": "^0.3.0",
     "react-dom": "^15.4.2",
     "react-redux": "^5.0.2",

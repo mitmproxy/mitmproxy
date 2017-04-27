@@ -1953,7 +1953,7 @@ module.exports = (function() {
     function domain(regex){
         regex = new RegExp(regex, "i");
         function domainFilter(flow){
-            return flow.request && regex.test(flow.request.host);
+            return flow.request && (regex.test(flow.request.host) || regex.test(flow.request.pretty_host));
         }
         domainFilter.desc = "domain matches " + regex;
         return domainFilter;
