@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import * as ContentViews from './ContentView/ContentViews'
 import * as MetaViews from './ContentView/MetaViews'
@@ -11,8 +12,8 @@ ContentView.propTypes = {
     // It may seem a bit weird at the first glance:
     // Every view takes the flow and the message as props, e.g.
     // <Auto flow={flow} message={flow.request}/>
-    flow: React.PropTypes.object.isRequired,
-    message: React.PropTypes.object.isRequired,
+    flow: PropTypes.object.isRequired,
+    message: PropTypes.object.isRequired,
 }
 
 ContentView.isContentTooLarge = msg => msg.contentLength > 1024 * 1024 * (ContentViews.ViewImage.matches(msg) ? 10 : 0.2)
