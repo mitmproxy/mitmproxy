@@ -20,6 +20,27 @@ from mitmproxy.utils import typecheck
 unset = object()
 
 
+class Path(str):
+    def __init__(self, val=None):
+        self._val = val
+
+    def __str__(self):
+        return self._val
+
+    def __getitem__(self, key):
+        return self._val[key]
+
+    def __deepcopy__(self, memodict={}):
+        return Path(self._val)
+
+    def join_path(self, path):
+        return os.path.join(self._val, path)
+
+
+ruamel.yaml.SafeRepresenter.add_multi_representer(
+    Path, ruamel.yaml.SafeRepresenter.represent_str)
+
+
 class _Option:
     __slots__ = ("name", "typespec", "value", "_default", "choices", "help")
 
@@ -54,6 +75,8 @@ class _Option:
         return copy.deepcopy(v)
 
     def set(self, value: typing.Any) -> None:
+        if self.typespec == Path and type(value) == str:
+            value = Path(value)
         typecheck.check_type(self.name, value, self.typespec)
         self.value = value
 
@@ -280,7 +303,7 @@ class OptManager:
             raise exceptions.OptionsError("No such option %s" % optname)
         o = self._options[optname]
 
-        if o.typespec in (str, typing.Optional[str]):
+        if o.typespec in (str, typing.Optional[str], Path):
             return optstr
         elif o.typespec in (int, typing.Optional[int]):
             if optstr:
@@ -399,7 +422,7 @@ def dump_defaults(opts):
         if o.choices:
             txt += " Valid values are %s." % ", ".join(repr(c) for c in o.choices)
         else:
-            if o.typespec in (str, int, bool):
+            if o.typespec in (str, int, bool, Path):
                 t = o.typespec.__name__
             elif o.typespec == typing.Optional[str]:
                 t = "optional str"
