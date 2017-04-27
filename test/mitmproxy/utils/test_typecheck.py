@@ -85,3 +85,17 @@ def test_check_any():
     typecheck.check_option_type("foo", 42, typing.Any)
     typecheck.check_option_type("foo", object(), typing.Any)
     typecheck.check_option_type("foo", None, typing.Any)
+
+
+def test_check_command_return_type():
+    assert(typecheck.check_command_return_type("foo", str))
+    assert(typecheck.check_command_return_type(["foo"], typing.Sequence[str]))
+    assert(typecheck.check_command_return_type(None, None))
+    assert(not typecheck.check_command_return_type(["foo"], typing.Sequence[int]))
+    assert(not typecheck.check_command_return_type("foo", typing.Sequence[int]))
+
+    # Python 3.5 only defines __parameters__
+    m = mock.Mock()
+    m.__str__ = lambda self: "typing.Sequence"
+    m.__parameters__ = (int,)
+    typecheck.check_command_return_type([10], m)

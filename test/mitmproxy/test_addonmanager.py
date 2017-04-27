@@ -82,6 +82,11 @@ def test_loader():
         l.add_option("custom_option", bool, False, "help")
         l.add_option("custom_option", bool, False, "help")
 
+        def cmd(a: str) -> str:
+            return "foo"
+
+        l.add_command("test.command", cmd)
+
 
 def test_simple():
     with taddons.context() as tctx:

@@ -5,6 +5,7 @@ from mitmproxy.test import tflow
 from mitmproxy.addons import view
 from mitmproxy import flowfilter
 from mitmproxy import options
+from mitmproxy import exceptions
 from mitmproxy.test import taddons
 
 
@@ -130,6 +131,12 @@ def test_filter():
     assert len(v) == 4
 
 
+def test_load():
+    v = view.View()
+    with taddons.context(options=options.Options()) as tctx:
+        tctx.master.addons.add(v)
+
+
 def test_resolve():
     v = view.View()
     with taddons.context(options=options.Options()) as tctx:
@@ -168,6 +175,9 @@ def test_resolve():
         assert m(tctx.command(v.resolve, "@hidden")) == ["PUT", "PUT"]
         assert m(tctx.command(v.resolve, "@marked")) == ["GET"]
         assert m(tctx.command(v.resolve, "@unmarked")) == ["PUT", "GET", "PUT"]
+
+        with pytest.raises(exceptions.CommandError, match="Invalid flow filter"):
+            tctx.command(v.resolve, "~")
 
 
 def test_order():
