@@ -29,6 +29,12 @@ will be added to all responses passing through the proxy:
 >>> mitmdump -s add_header.py
 
 
+Examples
+--------
+
+A collection of addons that demonstrate popular features can be found at :src:`examples/simple`.
+
+
 Using classes
 -------------
 
