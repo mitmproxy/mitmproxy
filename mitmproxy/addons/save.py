@@ -1,9 +1,11 @@
 import os.path
+import typing
 
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import io
 from mitmproxy import ctx
+from mitmproxy import flow
 
 
 class Save:
@@ -12,10 +14,18 @@ class Save:
         self.filt = None
         self.active_flows = set()  # type: Set[flow.Flow]
 
-    def start_stream_to_path(self, path, mode, flt):
+    def open_file(self, path):
+        if path.startswith("+"):
+            path = path[1:]
+            mode = "ab"
+        else:
+            mode = "wb"
         path = os.path.expanduser(path)
+        return open(path, mode)
+
+    def start_stream_to_path(self, path, flt):
         try:
-            f = open(path, mode)
+            f = self.open_file(path)
         except IOError as v:
             raise exceptions.OptionsError(str(v))
         self.stream = io.FilteredFlowWriter(f, flt)
@@ -36,13 +46,19 @@ class Save:
             if self.stream:
                 self.done()
             if ctx.options.save_stream_file:
-                if ctx.options.save_stream_file.startswith("+"):
-                    path = ctx.options.save_stream_file[1:]
-                    mode = "ab"
-                else:
-                    path = ctx.options.save_stream_file
-                    mode = "wb"
-                self.start_stream_to_path(path, mode, self.filt)
+                self.start_stream_to_path(ctx.options.save_stream_file, self.filt)
+
+    def save(self, flows: typing.Sequence[flow.Flow], path: str) -> None:
+        try:
+            f = self.open_file(path)
+        except IOError as v:
+            raise exceptions.CommandError(v) from v
+        stream = io.FlowWriter(f)
+        for i in flows:
+            stream.add(i)
+
+    def load(self, l):
+        l.add_command("save.file", self.save)
 
     def tcp_start(self, flow):
         if self.stream:
@@ -64,8 +80,8 @@ class Save:
 
     def done(self):
         if self.stream:
-            for flow in self.active_flows:
-                self.stream.add(flow)
+            for f in self.active_flows:
+                self.stream.add(f)
             self.active_flows = set([])
             self.stream.fo.close()
             self.stream = None

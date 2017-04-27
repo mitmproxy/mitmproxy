@@ -19,6 +19,8 @@ def check_command_return_type(value: typing.Any, typeinfo: typing.Any) -> bool:
         for v in value:
             if not check_command_return_type(v, T):
                 return False
+    elif value is None and typeinfo is None:
+        return True
     elif not isinstance(value, typeinfo):
         return False
     return True

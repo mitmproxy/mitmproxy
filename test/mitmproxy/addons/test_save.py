@@ -7,6 +7,7 @@ from mitmproxy import io
 from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy.addons import save
+from mitmproxy.addons import view
 
 
 def test_configure(tmpdir):
@@ -40,6 +41,26 @@ def test_tcp(tmpdir):
         sa.tcp_end(tt)
         tctx.configure(sa, save_stream_file=None)
         assert rd(p)
+
+
+def test_save_command(tmpdir):
+    sa = save.Save()
+    with taddons.context() as tctx:
+        p = str(tmpdir.join("foo"))
+        sa.save([tflow.tflow(resp=True)], p)
+        assert len(rd(p)) == 1
+        sa.save([tflow.tflow(resp=True)], p)
+        assert len(rd(p)) == 1
+        sa.save([tflow.tflow(resp=True)], "+" + p)
+        assert len(rd(p)) == 2
+
+        with pytest.raises(exceptions.CommandError):
+            sa.save([tflow.tflow(resp=True)], str(tmpdir))
+
+        v = view.View()
+        tctx.master.addons.add(v)
+        tctx.master.addons.add(sa)
+        tctx.master.commands.call_args("save.file", ["@shown", p])
 
 
 def test_simple(tmpdir):

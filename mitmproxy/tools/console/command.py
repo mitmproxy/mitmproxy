@@ -1,6 +1,6 @@
 import urwid
 
-from mitmproxy import command
+from mitmproxy import exceptions
 from mitmproxy.tools.console import signals
 
 
@@ -17,10 +17,11 @@ class CommandExecutor:
         self.master = master
 
     def __call__(self, cmd):
-        try:
-            ret = self.master.commands.call(cmd)
-        except command.CommandError as v:
-            signals.status_message.send(message=str(v))
-        else:
-            if type(ret) == str:
-                signals.status_message.send(message=ret)
+        if cmd.strip():
+            try:
+                ret = self.master.commands.call(cmd)
+            except exceptions.CommandError as v:
+                signals.status_message.send(message=str(v))
+            else:
+                if type(ret) == str:
+                    signals.status_message.send(message=ret)

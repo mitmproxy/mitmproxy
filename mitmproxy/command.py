@@ -6,23 +6,17 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 
 
-def typename(t: type) -> str:
+def typename(t: type, ret: bool) -> str:
+    """
+        Translates a type to an explanatory string. Ifl ret is True, we're
+        looking at a return type, else we're looking at a parameter type.
+    """
     if t in (str, int, bool):
         return t.__name__
     if t == typing.Sequence[flow.Flow]:
-        return "[flow]"
+        return "[flow]" if ret else "flowspec"
     else:  # pragma: no cover
         raise NotImplementedError(t)
-
-
-def parsearg(spec: str, argtype: type) -> typing.Any:
-    """
-        Convert a string to a argument to the appropriate type.
-    """
-    if argtype == str:
-        return spec
-    else:
-        raise exceptions.CommandError("Unsupported argument type: %s" % argtype)
 
 
 class Command:
@@ -35,8 +29,8 @@ class Command:
         self.returntype = sig.return_annotation
 
     def signature_help(self) -> str:
-        params = " ".join([typename(i) for i in self.paramtypes])
-        ret = " -> " + typename(self.returntype) if self.returntype else ""
+        params = " ".join([typename(i, False) for i in self.paramtypes])
+        ret = " -> " + typename(self.returntype, True) if self.returntype else ""
         return "%s %s%s" % (self.path, params, ret)
 
     def call(self, args: typing.Sequence[str]):
@@ -46,10 +40,12 @@ class Command:
         if len(self.paramtypes) != len(args):
             raise exceptions.CommandError("Usage: %s" % self.signature_help())
 
-        args = [parsearg(args[i], self.paramtypes[i]) for i in range(len(args))]
+        pargs = []
+        for i in range(len(args)):
+            pargs.append(parsearg(self.manager, args[i], self.paramtypes[i]))
 
         with self.manager.master.handlecontext():
-            ret = self.func(*args)
+            ret = self.func(*pargs)
 
         if not typecheck.check_command_return_type(ret, self.returntype):
             raise exceptions.CommandError("Command returned unexpected data")
@@ -81,3 +77,15 @@ class CommandManager:
         if not len(parts) >= 1:
             raise exceptions.CommandError("Invalid command: %s" % cmdstr)
         return self.call_args(parts[0], parts[1:])
+
+
+def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
+    """
+        Convert a string to a argument to the appropriate type.
+    """
+    if argtype == str:
+        return spec
+    elif argtype == typing.Sequence[flow.Flow]:
+        return manager.call_args("console.resolve", [spec])
+    else:
+        raise exceptions.CommandError("Unsupported argument type: %s" % argtype)

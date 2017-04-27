@@ -145,7 +145,7 @@ class AddonManager:
         for a in traverse([addon]):
             name = _get_name(a)
             if name in self.lookup:
-                raise exceptions.AddonError(
+                raise exceptions.AddonManagerError(
                     "An addon called '%s' already exists." % name
                 )
         l = Loader(self.master)
@@ -175,7 +175,7 @@ class AddonManager:
         for a in traverse([addon]):
             n = _get_name(a)
             if n not in self.lookup:
-                raise exceptions.AddonError("No such addon: %s" % n)
+                raise exceptions.AddonManagerError("No such addon: %s" % n)
             self.chain = [i for i in self.chain if i is not a]
             del self.lookup[_get_name(a)]
         with self.master.handlecontext():
@@ -224,7 +224,7 @@ class AddonManager:
             func = getattr(a, name, None)
             if func:
                 if not callable(func):
-                    raise exceptions.AddonError(
+                    raise exceptions.AddonManagerError(
                         "Addon handler %s not callable" % name
                     )
                 func(*args, **kwargs)

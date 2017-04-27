@@ -101,7 +101,7 @@ class OptionsError(MitmproxyException):
     pass
 
 
-class AddonError(MitmproxyException):
+class AddonManagerError(MitmproxyException):
     pass
 
 
