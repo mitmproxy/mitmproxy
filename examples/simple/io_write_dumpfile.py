@@ -13,7 +13,7 @@ from mitmproxy import io, http
 class Writer:
     def __init__(self, path: str) -> None:
         if path == "-":
-            f = sys.stdout # type: io.TextIO
+            f = sys.stdout  # type: io.TextIO
         else:
             f = open(path, "wb")
         self.w = io.FlowWriter(f)
