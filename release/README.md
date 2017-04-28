@@ -8,7 +8,7 @@ Make sure run all these steps on the correct branch you want to create a new rel
 - Wait for tag CI to complete
 
 ## GitHub Release
-- Create release notice on Github [https://github.com/mitmproxy/mitmproxy/releases/new](here)
+- Create release notice on Github [here](https://github.com/mitmproxy/mitmproxy/releases/new)
 - Attach all files from the new release folder on https://snapshots.mitmproxy.org
 
 ## PyPi
