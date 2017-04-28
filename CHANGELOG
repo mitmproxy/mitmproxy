@@ -1,3 +1,19 @@
+28 April 2017: mitmproxy 2.0.2
+
+    * Fix mitmweb's Content-Security-Policy to work with Chrome 58+
+
+    * HTTP/2: actually use header normalization from hyper-h2
+
+
+15 March 2017: mitmproxy 2.0.1
+
+    * bump cryptography dependency
+
+    * bump pyparsing dependency
+
+    * HTTP/2: use header normalization from hyper-h2
+
+
 21 February 2017: mitmproxy 2.0
 
     * HTTP/2 is now enabled by default.
