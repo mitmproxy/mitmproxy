@@ -14,9 +14,11 @@ import urwid
 
 from mitmproxy import addons
 from mitmproxy import exceptions
+from mitmproxy import command
 from mitmproxy import master
 from mitmproxy import io
 from mitmproxy import log
+from mitmproxy import flow
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
@@ -82,27 +84,43 @@ class ConsoleCommands:
     """
     def __init__(self, master):
         self.master = master
+        self.started = False
 
-    def command(self, partial: str) -> None:
-        """Prompt for a command."""
+    @command.command("console.command")
+    def console_command(self, partial: str) -> None:
+        """
+        Prompt the user to edit a command with a (possilby empty) starting value.
+        """
         signals.status_prompt_command.send(partial=partial)
 
+    @command.command("console.view.commands")
     def view_commands(self) -> None:
         """View the commands list."""
         self.master.view_commands()
 
+    @command.command("console.view.options")
     def view_options(self) -> None:
         """View the options editor."""
         self.master.view_options()
 
+    @command.command("console.view.help")
     def view_help(self) -> None:
         """View help."""
         self.master.view_help()
 
+    @command.command("console.view.flow")
+    def view_flow(self, flow: flow.Flow) -> None:
+        """View a flow."""
+        if hasattr(flow, "request"):
+            # FIME: Also set focus?
+            self.master.view_flow(flow)
+
+    @command.command("console.exit")
     def exit(self) -> None:
         """Exit mitmproxy."""
         raise urwid.ExitMainLoop
 
+    @command.command("console.view.pop")
     def view_pop(self) -> None:
         """
             Pop a view off the console stack. At the top level, this prompts the
@@ -110,13 +128,13 @@ class ConsoleCommands:
         """
         signals.pop_view_state.send(self)
 
-    def load(self, l):
-        l.add_command("console.command", self.command)
-        l.add_command("console.exit", self.exit)
-        l.add_command("console.view.commands", self.view_commands)
-        l.add_command("console.view.help", self.view_help)
-        l.add_command("console.view.options", self.view_options)
-        l.add_command("console.view.pop", self.view_pop)
+    def running(self):
+        self.started = True
+
+    def configure(self, updated):
+        if self.started:
+            if "console_eventlog" in updated:
+                self.master.refresh_view()
 
 
 def default_keymap(km):
@@ -127,6 +145,14 @@ def default_keymap(km):
     km.add("Q", "console.exit")
     km.add("q", "console.view.pop")
     km.add("i", "console.command 'set intercept='")
+    km.add("W", "console.command 'set save_stream_file='")
+
+    km.add("F", "set console_focus_follow=toggle", context="flowlist")
+    km.add("v", "set console_order_reversed=toggle", context="flowlist")
+    km.add("f", "console.command 'set view_filter='", context="flowlist")
+    km.add("e", "set console_eventlog=toggle", context="flowlist")
+    km.add("w", "console.command 'save.file @shown '", context="flowlist")
+    km.add("enter", "console.view.flow @focus", context="flowlist")
 
 
 class ConsoleMaster(master.Master):
@@ -212,7 +238,7 @@ class ConsoleMaster(master.Master):
     def sig_replace_view_state(self, sender):
         """
             A view has been pushed onto the stack, and is intended to replace
-            the current view rather tha creating a new stack entry.
+            the current view rather than creating a new stack entry.
         """
         if len(self.view_stack) > 1:
             del self.view_stack[1]
@@ -244,8 +270,7 @@ class ConsoleMaster(master.Master):
         except ValueError as e:
             signals.add_log("Input error: %s" % e, "warn")
 
-    def toggle_eventlog(self):
-        self.options.console_eventlog = not self.options.console_eventlog
+    def refresh_view(self):
         self.view_flowlist()
         signals.replace_view_state.send(self)
 
@@ -389,7 +414,7 @@ class ConsoleMaster(master.Master):
         )
 
     def view_help(self):
-        hc = self.view_stack[0].helpctx
+        hc = self.view_stack[-1].helpctx
         signals.push_view_state.send(
             self,
             window = window.Window(
@@ -397,7 +422,8 @@ class ConsoleMaster(master.Master):
                 help.HelpView(hc),
                 None,
                 statusbar.StatusBar(self, help.footer),
-                None
+                None,
+                "help"
             )
         )
 
@@ -413,6 +439,7 @@ class ConsoleMaster(master.Master):
                 None,
                 statusbar.StatusBar(self, options.footer),
                 options.help_context,
+                "options"
             )
         )
 
@@ -427,7 +454,8 @@ class ConsoleMaster(master.Master):
                 commands.Commands(self),
                 None,
                 statusbar.StatusBar(self, commands.footer),
-                options.help_context,
+                commands.help_context,
+                "commands"
             )
         )
 
@@ -439,7 +467,8 @@ class ConsoleMaster(master.Master):
                 ge,
                 None,
                 statusbar.StatusBar(self, grideditor.base.FOOTER),
-                ge.make_help()
+                ge.make_help(),
+                "grideditor"
             )
         )
 
@@ -459,7 +488,8 @@ class ConsoleMaster(master.Master):
                 body,
                 None,
                 statusbar.StatusBar(self, flowlist.footer),
-                flowlist.help_context
+                flowlist.help_context,
+                "flowlist"
             )
         )
 
@@ -472,7 +502,8 @@ class ConsoleMaster(master.Master):
                 flowview.FlowView(self, self.view, flow, tab_offset),
                 flowview.FlowViewHeader(self, flow),
                 statusbar.StatusBar(self, flowview.footer),
-                flowview.help_context
+                flowview.help_context,
+                "flowview"
             )
         )
 

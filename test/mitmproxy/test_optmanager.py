@@ -381,6 +381,11 @@ def test_set():
     with pytest.raises(exceptions.OptionsError):
         opts.set("bool=wobble")
 
+    opts.set("bool=toggle")
+    assert opts.bool is False
+    opts.set("bool=toggle")
+    assert opts.bool is True
+
     opts.set("int=1")
     assert opts.int == 1
     with pytest.raises(exceptions.OptionsError):

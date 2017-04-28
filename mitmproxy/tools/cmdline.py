@@ -44,7 +44,7 @@ def common_options(parser, opts):
         help="""
             Set an option. When the value is omitted, booleans are set to true,
             strings and integers are set to None (if permitted), and sequences
-            are emptied.
+            are emptied. Boolean values can be true, false or toggle.
         """
     )
     parser.add_argument(

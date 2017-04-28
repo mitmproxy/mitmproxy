@@ -2,6 +2,7 @@ import inspect
 import typing
 import shlex
 import textwrap
+import functools
 
 from mitmproxy.utils import typecheck
 from mitmproxy import exceptions
@@ -15,8 +16,10 @@ def typename(t: type, ret: bool) -> str:
     """
     if t in (str, int, bool):
         return t.__name__
-    if t == typing.Sequence[flow.Flow]:
+    elif t == typing.Sequence[flow.Flow]:
         return "[flow]" if ret else "flowspec"
+    elif t == flow.Flow:
+        return "flow"
     else:  # pragma: no cover
         raise NotImplementedError(t)
 
@@ -72,6 +75,13 @@ class CommandManager:
         self.master = master
         self.commands = {}
 
+    def collect_commands(self, addon):
+        for i in dir(addon):
+            if not i.startswith("__"):
+                o = getattr(addon, i)
+                if hasattr(o, "command_path"):
+                    self.add(o.command_path, o)
+
     def add(self, path: str, func: typing.Callable):
         self.commands[path] = Command(self, path, func)
 
@@ -101,5 +111,22 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
         return spec
     elif argtype == typing.Sequence[flow.Flow]:
         return manager.call_args("console.resolve", [spec])
+    elif argtype == flow.Flow:
+        flows = manager.call_args("console.resolve", [spec])
+        if len(flows) != 1:
+            raise exceptions.CommandError(
+                "Command requires one flow, specification matched %s." % len(flows)
+            )
+        return flows[0]
     else:
         raise exceptions.CommandError("Unsupported argument type: %s" % argtype)
+
+
+def command(path):
+    def decorator(function):
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            return function(*args, **kwargs)
+        wrapper.__dict__["command_path"] = path
+        return wrapper
+    return decorator

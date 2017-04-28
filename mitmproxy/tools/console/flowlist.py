@@ -70,9 +70,6 @@ class LogBufferBox(urwid.ListBox):
             self.set_focus(len(self.master.logbuffer) - 1)
         elif key == "g":
             self.set_focus(0)
-        elif key == "F":
-            o = self.master.options
-            o.console_focus_follow = not o.console_focus_follow
         return urwid.ListBox.keypress(self, size, key)
 
 
@@ -106,9 +103,6 @@ class BodyPile(urwid.Pile):
             else:
                 self.widget_list[1].header = self.inactive_header
             key = None
-        elif key == "e":
-            self.master.toggle_eventlog()
-            key = None
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
         # So much for "closed for modification, but open for extension".
@@ -138,19 +132,6 @@ class FlowItem(urwid.WidgetWrap):
 
     def selectable(self):
         return True
-
-    def save_flows_prompt(self, k):
-        if k == "l":
-            signals.status_prompt_path.send(
-                prompt = "Save listed flows to",
-                callback = self.master.save_flows
-            )
-        else:
-            signals.status_prompt_path.send(
-                prompt = "Save this flow to",
-                callback = self.master.save_one_flow,
-                args = (self.flow,)
-            )
 
     def server_replay_prompt(self, k):
         a = self.master.addons.get("serverplayback")
@@ -223,23 +204,10 @@ class FlowItem(urwid.WidgetWrap):
             self.flow.revert()
             signals.flowlist_change.send(self)
             signals.status_message.send(message="Reverted.")
-        elif key == "w":
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Save",
-                keys = (
-                    ("listed flows", "l"),
-                    ("this flow", "t"),
-                ),
-                callback = self.save_flows_prompt,
-            )
         elif key == "X":
             if self.flow.killable:
                 self.flow.kill()
                 self.master.view.update(self.flow)
-        elif key == "enter":
-            if self.flow.request:
-                self.master.view_flow(self.flow)
         elif key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",
@@ -362,20 +330,12 @@ class FlowListBox(urwid.ListBox):
             self.master.view.clear()
         elif key == "Z":
             self.master.view.clear_not_marked()
-        elif key == "e":
-            self.master.toggle_eventlog()
         elif key == "g":
             if len(self.master.view):
                 self.master.view.focus.index = 0
         elif key == "G":
             if len(self.master.view):
                 self.master.view.focus.index = len(self.master.view) - 1
-        elif key == "f":
-            signals.status_prompt.send(
-                prompt = "Filter View",
-                text = self.master.options.view_filter,
-                callback = self.master.options.setter("view_filter")
-            )
         elif key == "L":
             signals.status_prompt_path.send(
                 self,
@@ -402,20 +362,5 @@ class FlowListBox(urwid.ListBox):
                 keys = orders,
                 callback = change_order
             )
-        elif key == "F":
-            o = self.master.options
-            o.console_focus_follow = not o.console_focus_follow
-        elif key == "v":
-            val = not self.master.options.console_order_reversed
-            self.master.options.console_order_reversed = val
-        elif key == "W":
-            if self.master.options.save_stream_file:
-                self.master.options.save_stream_file = None
-            else:
-                signals.status_prompt_path.send(
-                    self,
-                    prompt="Stream flows to",
-                    callback= lambda path: self.master.options.update(save_stream_file=path)
-                )
         else:
             return urwid.ListBox.keypress(self, size, key)
