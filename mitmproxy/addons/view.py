@@ -18,6 +18,7 @@ import sortedcontainers
 import mitmproxy.flow
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
+from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import http  # noqa
 
@@ -223,7 +224,7 @@ class View(collections.Sequence):
         self.filter = flt or matchall
         self._refilter()
 
-    def clear(self):
+    def clear(self) -> None:
         """
             Clears both the store and view.
         """
@@ -256,42 +257,20 @@ class View(collections.Sequence):
                     self.focus.flow = f
                 self.sig_view_add.send(self, flow=f)
 
-    def remove(self, f: mitmproxy.flow.Flow):
+    @command.command("view.remove")
+    def remove(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Removes the flow from the underlying store and the view.
         """
-        if f.id in self._store:
-            if f in self._view:
-                self._view.remove(f)
-                self.sig_view_remove.send(self, flow=f)
-            del self._store[f.id]
-            self.sig_store_remove.send(self, flow=f)
-
-    def update(self, f: mitmproxy.flow.Flow):
-        """
-            Updates a flow. If the flow is not in the state, it's ignored.
-        """
-        if f.id in self._store:
-            if self.filter(f):
-                if f not in self._view:
-                    self._base_add(f)
-                    if self.focus_follow:
-                        self.focus.flow = f
-                    self.sig_view_add.send(self, flow=f)
-                else:
-                    # This is a tad complicated. The sortedcontainers
-                    # implementation assumes that the order key is stable. If
-                    # it changes mid-way Very Bad Things happen. We detect when
-                    # this happens, and re-fresh the item.
-                    self.order_key.refresh(f)
-                    self.sig_view_update.send(self, flow=f)
-            else:
-                try:
+        for f in flows:
+            if f.id in self._store:
+                if f.killable:
+                    f.kill()
+                if f in self._view:
                     self._view.remove(f)
                     self.sig_view_remove.send(self, flow=f)
-                except ValueError:
-                    # The value was not in the view
-                    pass
+                del self._store[f.id]
+                self.sig_store_remove.send(self, flow=f)
 
     def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
         """
@@ -322,10 +301,13 @@ class View(collections.Sequence):
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
 
+    @command.command("view.resolve")
     def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
         """
             Resolve a flow list specification to an actual list of flows.
         """
+        if spec == "@all":
+            return [i for i in self._store.values()]
         if spec == "@focus":
             return [self.focus.flow] if self.focus.flow else []
         elif spec == "@shown":
@@ -342,26 +324,50 @@ class View(collections.Sequence):
                 raise exceptions.CommandError("Invalid flow filter: %s" % spec)
             return [i for i in self._store.values() if filt(i)]
 
-    def load(self, l):
-        l.add_command("console.resolve", self.resolve)
-
     def request(self, f):
         self.add(f)
 
     def error(self, f):
-        self.update(f)
+        self.update([f])
 
     def response(self, f):
-        self.update(f)
+        self.update([f])
 
     def intercept(self, f):
-        self.update(f)
+        self.update([f])
 
     def resume(self, f):
-        self.update(f)
+        self.update([f])
 
     def kill(self, f):
-        self.update(f)
+        self.update([f])
+
+    def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+        """
+            Updates a list of flows. If flow is not in the state, it's ignored.
+        """
+        for f in flows:
+            if f.id in self._store:
+                if self.filter(f):
+                    if f not in self._view:
+                        self._base_add(f)
+                        if self.focus_follow:
+                            self.focus.flow = f
+                        self.sig_view_add.send(self, flow=f)
+                    else:
+                        # This is a tad complicated. The sortedcontainers
+                        # implementation assumes that the order key is stable. If
+                        # it changes mid-way Very Bad Things happen. We detect when
+                        # this happens, and re-fresh the item.
+                        self.order_key.refresh(f)
+                        self.sig_view_update.send(self, flow=f)
+                else:
+                    try:
+                        self._view.remove(f)
+                        self.sig_view_remove.send(self, flow=f)
+                    except ValueError:
+                        # The value was not in the view
+                        pass
 
 
 class Focus:

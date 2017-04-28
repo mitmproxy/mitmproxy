@@ -65,7 +65,7 @@ def test_typename():
 
 class DummyConsole:
     def load(self, l):
-        l.add_command("console.resolve", self.resolve)
+        l.add_command("view.resolve", self.resolve)
 
     def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
         n = int(spec)

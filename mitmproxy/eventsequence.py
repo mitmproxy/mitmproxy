@@ -35,6 +35,7 @@ Events = frozenset([
     "load",
     "running",
     "tick",
+    "update",
 ])
 
 

@@ -147,11 +147,15 @@ def default_keymap(km):
     km.add("i", "console.command 'set intercept='")
     km.add("W", "console.command 'set save_stream_file='")
 
+    km.add("A", "flow.resume @all", context="flowlist")
+    km.add("a", "flow.resume @focus", context="flowlist")
+    km.add("d", "view.remove @focus", context="flowlist")
     km.add("F", "set console_focus_follow=toggle", context="flowlist")
     km.add("v", "set console_order_reversed=toggle", context="flowlist")
     km.add("f", "console.command 'set view_filter='", context="flowlist")
     km.add("e", "set console_eventlog=toggle", context="flowlist")
     km.add("w", "console.command 'save.file @shown '", context="flowlist")
+    km.add("z", "view.remove @all", context="flowlist")
     km.add("enter", "console.view.flow @focus", context="flowlist")
 
 

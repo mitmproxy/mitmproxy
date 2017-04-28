@@ -162,7 +162,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f = self.view.get_by_id(resp.body.decode())
         assert f
         assert f.id != "42"
-        self.view.remove(f)
+        self.view.remove([f])
 
     def test_flow_revert(self):
         f = self.view.get_by_id("42")

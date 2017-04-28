@@ -31,7 +31,7 @@ def test_order_refresh():
         v.add(tf)
         tf.request.timestamp_start = 1
         assert not sargs
-        v.update(tf)
+        v.update([tf])
         assert sargs
 
 
@@ -140,6 +140,7 @@ def test_load():
 def test_resolve():
     v = view.View()
     with taddons.context(options=options.Options()) as tctx:
+        assert tctx.command(v.resolve, "@all") == []
         assert tctx.command(v.resolve, "@focus") == []
         assert tctx.command(v.resolve, "@shown") == []
         assert tctx.command(v.resolve, "@hidden") == []
@@ -149,6 +150,7 @@ def test_resolve():
         v.request(tft(method="get"))
         assert len(tctx.command(v.resolve, "~m get")) == 1
         assert len(tctx.command(v.resolve, "@focus")) == 1
+        assert len(tctx.command(v.resolve, "@all")) == 1
         assert len(tctx.command(v.resolve, "@shown")) == 1
         assert len(tctx.command(v.resolve, "@unmarked")) == 1
         assert tctx.command(v.resolve, "@hidden") == []
@@ -156,6 +158,7 @@ def test_resolve():
         v.request(tft(method="put"))
         assert len(tctx.command(v.resolve, "@focus")) == 1
         assert len(tctx.command(v.resolve, "@shown")) == 2
+        assert len(tctx.command(v.resolve, "@all")) == 2
         assert tctx.command(v.resolve, "@hidden") == []
         assert tctx.command(v.resolve, "@marked") == []
 
@@ -175,6 +178,7 @@ def test_resolve():
         assert m(tctx.command(v.resolve, "@hidden")) == ["PUT", "PUT"]
         assert m(tctx.command(v.resolve, "@marked")) == ["GET"]
         assert m(tctx.command(v.resolve, "@unmarked")) == ["PUT", "GET", "PUT"]
+        assert m(tctx.command(v.resolve, "@all")) == ["GET", "PUT", "GET", "PUT"]
 
         with pytest.raises(exceptions.CommandError, match="Invalid flow filter"):
             tctx.command(v.resolve, "~")
@@ -230,14 +234,14 @@ def test_update():
     assert f in v
 
     f.request.method = "put"
-    v.update(f)
+    v.update([f])
     assert f not in v
 
     f.request.method = "get"
-    v.update(f)
+    v.update([f])
     assert f in v
 
-    v.update(f)
+    v.update([f])
     assert f in v
 
 
@@ -291,14 +295,14 @@ def test_signals():
     # An update that results in a flow being added to the view
     clearrec()
     v[0].request.method = "PUT"
-    v.update(v[0])
+    v.update([v[0]])
     assert rec_remove
     assert not any([rec_update, rec_refresh, rec_add])
 
     # An update that does not affect the view just sends update
     v.set_filter(flowfilter.parse("~m put"))
     clearrec()
-    v.update(v[0])
+    v.update([v[0]])
     assert rec_update
     assert not any([rec_remove, rec_refresh, rec_add])
 
@@ -307,7 +311,7 @@ def test_signals():
     v.set_filter(flowfilter.parse("~m get"))
     assert not len(v)
     clearrec()
-    v.update(f)
+    v.update([f])
     assert not any([rec_add, rec_update, rec_remove, rec_refresh])
 
 
@@ -333,7 +337,7 @@ def test_focus_follow():
         assert v.focus.flow.request.timestamp_start == 7
 
         mod.request.method = "GET"
-        v.update(mod)
+        v.update([mod])
         assert v.focus.index == 2
         assert v.focus.flow.request.timestamp_start == 6
 
@@ -374,15 +378,16 @@ def test_focus():
     assert f.index == 0
     f.index = 1
 
-    v.remove(v[1])
+    v.remove([v[1]])
+    v[1].intercept()
     assert f.index == 1
     assert f.flow is v[1]
 
-    v.remove(v[1])
+    v.remove([v[1]])
     assert f.index == 0
     assert f.flow is v[0]
 
-    v.remove(v[0])
+    v.remove([v[0]])
     assert f.index is None
     assert f.flow is None
 
@@ -413,7 +418,7 @@ def test_settings():
     v.settings[f]["foo"] = "bar"
     assert v.settings[f]["foo"] == "bar"
     assert len(list(v.settings)) == 1
-    v.remove(f)
+    v.remove([f])
     with pytest.raises(KeyError):
         v.settings[f]
     assert not v.settings.keys()
