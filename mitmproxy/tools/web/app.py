@@ -323,7 +323,7 @@ class FlowHandler(RequestHandler):
 class DuplicateFlow(RequestHandler):
     def post(self, flow_id):
         f = self.flow.copy()
-        self.view.add(f)
+        self.view.add([f])
         self.write(f.id)
 
 

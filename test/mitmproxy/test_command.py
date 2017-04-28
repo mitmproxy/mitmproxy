@@ -76,6 +76,10 @@ def test_parsearg():
     with taddons.context() as tctx:
         tctx.master.addons.add(DummyConsole())
         assert command.parsearg(tctx.master.commands, "foo", str) == "foo"
+        assert command.parsearg(tctx.master.commands, "1", int) == 1
+        with pytest.raises(exceptions.CommandError):
+            command.parsearg(tctx.master.commands, "foo", int)
+
         assert len(command.parsearg(
             tctx.master.commands, "2", typing.Sequence[flow.Flow]
         )) == 2

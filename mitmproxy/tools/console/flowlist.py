@@ -150,11 +150,7 @@ class FlowItem(urwid.WidgetWrap):
     def keypress(self, xxx_todo_changeme, key):
         (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
-        if key == "D":
-            cp = self.flow.copy()
-            self.master.view.add(cp)
-            self.master.view.focus.flow = cp
-        elif key == "m":
+        if key == "m":
             self.flow.marked = not self.flow.marked
             signals.flowlist_change.send(self)
         elif key == "r":
@@ -316,12 +312,6 @@ class FlowListBox(urwid.ListBox):
         key = common.shortcuts(key)
         if key == "Z":
             self.master.view.clear_not_marked()
-        elif key == "g":
-            if len(self.master.view):
-                self.master.view.focus.index = 0
-        elif key == "G":
-            if len(self.master.view):
-                self.master.view.focus.index = len(self.master.view) - 1
         elif key == "L":
             signals.status_prompt_path.send(
                 self,

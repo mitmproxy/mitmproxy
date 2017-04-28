@@ -244,18 +244,52 @@ class View(collections.Sequence):
         self._refilter()
         self.sig_store_refresh.send(self)
 
-    def add(self, f: mitmproxy.flow.Flow) -> None:
+    def add(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Adds a flow to the state. If the flow already exists, it is
             ignored.
         """
-        if f.id not in self._store:
-            self._store[f.id] = f
-            if self.filter(f):
-                self._base_add(f)
-                if self.focus_follow:
-                    self.focus.flow = f
-                self.sig_view_add.send(self, flow=f)
+        for f in flows:
+            if f.id not in self._store:
+                self._store[f.id] = f
+                if self.filter(f):
+                    self._base_add(f)
+                    if self.focus_follow:
+                        self.focus.flow = f
+                    self.sig_view_add.send(self, flow=f)
+
+    def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
+        """
+        Get flow with the given id from the store.
+        Returns None if the flow is not found.
+        """
+        return self._store.get(flow_id)
+
+    @command.command("view.go")
+    def go(self, dst: int) -> None:
+        """
+            Go to a specified offset. Positive offests are from the beginning of
+            the view, negative from the end of the view, so that 0 is the first
+            flow, -1 is the last flow.
+        """
+        if dst < 0:
+            dst = len(self) + dst
+        if dst < 0:
+            dst = 0
+        if dst > len(self) - 1:
+            dst = len(self) - 1
+        self.focus.flow = self[dst]
+
+    @command.command("view.duplicate")
+    def duplicate(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+        """
+            Duplicates the specified flows, and sets the focus to the first
+            duplicate.
+        """
+        dups = [f.copy() for f in flows]
+        if dups:
+            self.add(dups)
+            self.focus.flow = dups[0]
 
     @command.command("view.remove")
     def remove(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
@@ -271,35 +305,6 @@ class View(collections.Sequence):
                     self.sig_view_remove.send(self, flow=f)
                 del self._store[f.id]
                 self.sig_store_remove.send(self, flow=f)
-
-    def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
-        """
-        Get flow with the given id from the store.
-        Returns None if the flow is not found.
-        """
-        return self._store.get(flow_id)
-
-    # Event handlers
-    def configure(self, updated):
-        if "view_filter" in updated:
-            filt = None
-            if ctx.options.view_filter:
-                filt = flowfilter.parse(ctx.options.view_filter)
-                if not filt:
-                    raise exceptions.OptionsError(
-                        "Invalid interception filter: %s" % ctx.options.view_filter
-                    )
-            self.set_filter(filt)
-        if "console_order" in updated:
-            if ctx.options.console_order not in self.orders:
-                raise exceptions.OptionsError(
-                    "Unknown flow order: %s" % ctx.options.console_order
-                )
-            self.set_order(self.orders[ctx.options.console_order])
-        if "console_order_reversed" in updated:
-            self.set_reversed(ctx.options.console_order_reversed)
-        if "console_focus_follow" in updated:
-            self.focus_follow = ctx.options.console_focus_follow
 
     @command.command("view.resolve")
     def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
@@ -324,8 +329,30 @@ class View(collections.Sequence):
                 raise exceptions.CommandError("Invalid flow filter: %s" % spec)
             return [i for i in self._store.values() if filt(i)]
 
+    # Event handlers
+    def configure(self, updated):
+        if "view_filter" in updated:
+            filt = None
+            if ctx.options.view_filter:
+                filt = flowfilter.parse(ctx.options.view_filter)
+                if not filt:
+                    raise exceptions.OptionsError(
+                        "Invalid interception filter: %s" % ctx.options.view_filter
+                    )
+            self.set_filter(filt)
+        if "console_order" in updated:
+            if ctx.options.console_order not in self.orders:
+                raise exceptions.OptionsError(
+                    "Unknown flow order: %s" % ctx.options.console_order
+                )
+            self.set_order(self.orders[ctx.options.console_order])
+        if "console_order_reversed" in updated:
+            self.set_reversed(ctx.options.console_order_reversed)
+        if "console_focus_follow" in updated:
+            self.focus_follow = ctx.options.console_focus_follow
+
     def request(self, f):
-        self.add(f)
+        self.add([f])
 
     def error(self, f):
         self.update([f])

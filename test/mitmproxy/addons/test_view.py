@@ -4,7 +4,6 @@ from mitmproxy.test import tflow
 
 from mitmproxy.addons import view
 from mitmproxy import flowfilter
-from mitmproxy import options
 from mitmproxy import exceptions
 from mitmproxy.test import taddons
 
@@ -26,9 +25,9 @@ def test_order_refresh():
     v.sig_view_refresh.connect(save)
 
     tf = tflow.tflow(resp=True)
-    with taddons.context(options=options.Options()) as tctx:
+    with taddons.context() as tctx:
         tctx.configure(v, console_order="time")
-        v.add(tf)
+        v.add([tf])
         tf.request.timestamp_start = 1
         assert not sargs
         v.update([tf])
@@ -133,13 +132,13 @@ def test_filter():
 
 def test_load():
     v = view.View()
-    with taddons.context(options=options.Options()) as tctx:
+    with taddons.context() as tctx:
         tctx.master.addons.add(v)
 
 
 def test_resolve():
     v = view.View()
-    with taddons.context(options=options.Options()) as tctx:
+    with taddons.context() as tctx:
         assert tctx.command(v.resolve, "@all") == []
         assert tctx.command(v.resolve, "@focus") == []
         assert tctx.command(v.resolve, "@shown") == []
@@ -184,9 +183,46 @@ def test_resolve():
             tctx.command(v.resolve, "~")
 
 
+def test_go():
+    v = view.View()
+    with taddons.context():
+        v.add([
+            tflow.tflow(),
+            tflow.tflow(),
+            tflow.tflow(),
+            tflow.tflow(),
+            tflow.tflow(),
+        ])
+        assert v.focus.index == 0
+        v.go(-1)
+        assert v.focus.index == 4
+        v.go(0)
+        assert v.focus.index == 0
+        v.go(1)
+        assert v.focus.index == 1
+        v.go(999)
+        assert v.focus.index == 4
+        v.go(-999)
+        assert v.focus.index == 0
+
+
+def test_duplicate():
+    v = view.View()
+    with taddons.context():
+        f = [
+            tflow.tflow(),
+            tflow.tflow(),
+        ]
+        v.add(f)
+        assert len(v) == 2
+        v.duplicate(f)
+        assert len(v) == 4
+        assert v.focus.index == 2
+
+
 def test_order():
     v = view.View()
-    with taddons.context(options=options.Options()) as tctx:
+    with taddons.context() as tctx:
         v.request(tft(method="get", start=1))
         v.request(tft(method="put", start=2))
         v.request(tft(method="get", start=3))
@@ -280,7 +316,7 @@ def test_signals():
     assert not any([rec_add, rec_update, rec_remove, rec_refresh])
 
     # Simple add
-    v.add(tft())
+    v.add([tft()])
     assert rec_add
     assert not any([rec_update, rec_remove, rec_refresh])
 
@@ -317,22 +353,22 @@ def test_signals():
 
 def test_focus_follow():
     v = view.View()
-    with taddons.context(options=options.Options()) as tctx:
+    with taddons.context() as tctx:
         tctx.configure(v, console_focus_follow=True, view_filter="~m get")
 
-        v.add(tft(start=5))
+        v.add([tft(start=5)])
         assert v.focus.index == 0
 
-        v.add(tft(start=4))
+        v.add([tft(start=4)])
         assert v.focus.index == 0
         assert v.focus.flow.request.timestamp_start == 4
 
-        v.add(tft(start=7))
+        v.add([tft(start=7)])
         assert v.focus.index == 2
         assert v.focus.flow.request.timestamp_start == 7
 
         mod = tft(method="put", start=6)
-        v.add(mod)
+        v.add([mod])
         assert v.focus.index == 2
         assert v.focus.flow.request.timestamp_start == 7
 
@@ -345,7 +381,7 @@ def test_focus_follow():
 def test_focus():
     # Special case - initialising with a view that already contains data
     v = view.View()
-    v.add(tft())
+    v.add([tft()])
     f = view.Focus(v)
     assert f.index is 0
     assert f.flow is v[0]
@@ -356,7 +392,7 @@ def test_focus():
     assert f.index is None
     assert f.flow is None
 
-    v.add(tft(start=1))
+    v.add([tft(start=1)])
     assert f.index == 0
     assert f.flow is v[0]
 
@@ -366,11 +402,11 @@ def test_focus():
     with pytest.raises(ValueError):
         f.__setattr__("index", 99)
 
-    v.add(tft(start=0))
+    v.add([tft(start=0)])
     assert f.index == 1
     assert f.flow is v[1]
 
-    v.add(tft(start=2))
+    v.add([tft(start=2)])
     assert f.index == 1
     assert f.flow is v[1]
 
@@ -391,10 +427,12 @@ def test_focus():
     assert f.index is None
     assert f.flow is None
 
-    v.add(tft(method="get", start=0))
-    v.add(tft(method="get", start=1))
-    v.add(tft(method="put", start=2))
-    v.add(tft(method="get", start=3))
+    v.add([
+        tft(method="get", start=0),
+        tft(method="get", start=1),
+        tft(method="put", start=2),
+        tft(method="get", start=3),
+    ])
 
     f.flow = v[2]
     assert f.flow.request.method == "PUT"
@@ -414,7 +452,7 @@ def test_settings():
 
     with pytest.raises(KeyError):
         v.settings[f]
-    v.add(f)
+    v.add([f])
     v.settings[f]["foo"] = "bar"
     assert v.settings[f]["foo"] == "bar"
     assert len(list(v.settings)) == 1
@@ -423,7 +461,7 @@ def test_settings():
         v.settings[f]
     assert not v.settings.keys()
 
-    v.add(f)
+    v.add([f])
     v.settings[f]["foo"] = "bar"
     assert v.settings.keys()
     v.clear()
@@ -432,7 +470,7 @@ def test_settings():
 
 def test_configure():
     v = view.View()
-    with taddons.context(options=options.Options()) as tctx:
+    with taddons.context() as tctx:
         tctx.configure(v, view_filter="~q")
         with pytest.raises(Exception, match="Invalid interception filter"):
             tctx.configure(v, view_filter="~~")
