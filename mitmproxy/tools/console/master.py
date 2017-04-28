@@ -144,6 +144,7 @@ def default_keymap(km):
     km.add("v", "set console_order_reversed=toggle", context="flowlist")
     km.add("f", "console.command 'set view_filter='", context="flowlist")
     km.add("e", "set console_eventlog=toggle", context="flowlist")
+    km.add("w", "console.command 'save.file @shown '", context="flowlist")
 
 
 class ConsoleMaster(master.Master):

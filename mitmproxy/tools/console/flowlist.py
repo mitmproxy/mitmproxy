@@ -133,18 +133,6 @@ class FlowItem(urwid.WidgetWrap):
     def selectable(self):
         return True
 
-    def save_flows_prompt(self, k):
-        if k == "l":
-            signals.status_prompt_path.send(
-                prompt = "Save listed flows to",
-                callback = self.master.save_flows
-            )
-        else:
-            signals.status_prompt_path.send(
-                prompt = "Save this flow to",
-                callback = self.master.save_one_flow,
-                args = (self.flow,)
-            )
 
     def server_replay_prompt(self, k):
         a = self.master.addons.get("serverplayback")
@@ -217,16 +205,6 @@ class FlowItem(urwid.WidgetWrap):
             self.flow.revert()
             signals.flowlist_change.send(self)
             signals.status_message.send(message="Reverted.")
-        elif key == "w":
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Save",
-                keys = (
-                    ("listed flows", "l"),
-                    ("this flow", "t"),
-                ),
-                callback = self.save_flows_prompt,
-            )
         elif key == "X":
             if self.flow.killable:
                 self.flow.kill()
