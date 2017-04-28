@@ -50,3 +50,14 @@ def test_kill():
         assert f.killable
         sa.kill([f])
         assert not f.killable
+
+
+def test_revert():
+    sa = core.Core()
+    with taddons.context():
+        f = tflow.tflow()
+        f.backup()
+        f.request.content = b"bar"
+        assert f.modified()
+        sa.revert([f])
+        assert not f.modified()
