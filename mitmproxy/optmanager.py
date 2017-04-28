@@ -293,6 +293,8 @@ class OptManager:
             else:
                 return None
         elif o.typespec == bool:
+            if optstr == "toggle":
+                return not o.current()
             if not optstr or optstr == "true":
                 return True
             elif optstr == "false":

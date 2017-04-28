@@ -82,9 +82,12 @@ class ConsoleCommands:
     """
     def __init__(self, master):
         self.master = master
+        self.started = False
 
     def command(self, partial: str) -> None:
-        """Prompt for a command."""
+        """
+        Prompt the user to edit a command with a (possilby empty) starting value.
+        """
         signals.status_prompt_command.send(partial=partial)
 
     def view_commands(self) -> None:
@@ -118,6 +121,14 @@ class ConsoleCommands:
         l.add_command("console.view.options", self.view_options)
         l.add_command("console.view.pop", self.view_pop)
 
+    def running(self):
+        self.started = True
+
+    def configure(self, updated):
+        if self.started:
+            if "console_eventlog" in updated:
+                self.master.refresh_view()
+
 
 def default_keymap(km):
     km.add(":", "console.command ''")
@@ -127,6 +138,12 @@ def default_keymap(km):
     km.add("Q", "console.exit")
     km.add("q", "console.view.pop")
     km.add("i", "console.command 'set intercept='")
+    km.add("W", "console.command 'set save_stream_file='")
+
+    km.add("F", "set console_focus_follow=toggle", context="flowlist")
+    km.add("v", "set console_order_reversed=toggle", context="flowlist")
+    km.add("f", "console.command 'set view_filter='", context="flowlist")
+    km.add("e", "set console_eventlog=toggle", context="flowlist")
 
 
 class ConsoleMaster(master.Master):
@@ -212,7 +229,7 @@ class ConsoleMaster(master.Master):
     def sig_replace_view_state(self, sender):
         """
             A view has been pushed onto the stack, and is intended to replace
-            the current view rather tha creating a new stack entry.
+            the current view rather than creating a new stack entry.
         """
         if len(self.view_stack) > 1:
             del self.view_stack[1]
@@ -244,8 +261,7 @@ class ConsoleMaster(master.Master):
         except ValueError as e:
             signals.add_log("Input error: %s" % e, "warn")
 
-    def toggle_eventlog(self):
-        self.options.console_eventlog = not self.options.console_eventlog
+    def refresh_view(self):
         self.view_flowlist()
         signals.replace_view_state.send(self)
 
@@ -389,7 +405,7 @@ class ConsoleMaster(master.Master):
         )
 
     def view_help(self):
-        hc = self.view_stack[0].helpctx
+        hc = self.view_stack[-1].helpctx
         signals.push_view_state.send(
             self,
             window = window.Window(
@@ -397,7 +413,8 @@ class ConsoleMaster(master.Master):
                 help.HelpView(hc),
                 None,
                 statusbar.StatusBar(self, help.footer),
-                None
+                None,
+                "help"
             )
         )
 
@@ -413,6 +430,7 @@ class ConsoleMaster(master.Master):
                 None,
                 statusbar.StatusBar(self, options.footer),
                 options.help_context,
+                "options"
             )
         )
 
@@ -427,7 +445,8 @@ class ConsoleMaster(master.Master):
                 commands.Commands(self),
                 None,
                 statusbar.StatusBar(self, commands.footer),
-                options.help_context,
+                commands.help_context,
+                "commands"
             )
         )
 
@@ -439,7 +458,8 @@ class ConsoleMaster(master.Master):
                 ge,
                 None,
                 statusbar.StatusBar(self, grideditor.base.FOOTER),
-                ge.make_help()
+                ge.make_help(),
+                "grideditor"
             )
         )
 
@@ -459,7 +479,8 @@ class ConsoleMaster(master.Master):
                 body,
                 None,
                 statusbar.StatusBar(self, flowlist.footer),
-                flowlist.help_context
+                flowlist.help_context,
+                "flowlist"
             )
         )
 
@@ -472,7 +493,8 @@ class ConsoleMaster(master.Master):
                 flowview.FlowView(self, self.view, flow, tab_offset),
                 flowview.FlowViewHeader(self, flow),
                 statusbar.StatusBar(self, flowview.footer),
-                flowview.help_context
+                flowview.help_context,
+                "flowview"
             )
         )
 

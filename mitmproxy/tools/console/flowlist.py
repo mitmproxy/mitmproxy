@@ -70,9 +70,6 @@ class LogBufferBox(urwid.ListBox):
             self.set_focus(len(self.master.logbuffer) - 1)
         elif key == "g":
             self.set_focus(0)
-        elif key == "F":
-            o = self.master.options
-            o.console_focus_follow = not o.console_focus_follow
         return urwid.ListBox.keypress(self, size, key)
 
 
@@ -105,9 +102,6 @@ class BodyPile(urwid.Pile):
                 self.widget_list[1].header = self.active_header
             else:
                 self.widget_list[1].header = self.inactive_header
-            key = None
-        elif key == "e":
-            self.master.toggle_eventlog()
             key = None
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
@@ -362,20 +356,12 @@ class FlowListBox(urwid.ListBox):
             self.master.view.clear()
         elif key == "Z":
             self.master.view.clear_not_marked()
-        elif key == "e":
-            self.master.toggle_eventlog()
         elif key == "g":
             if len(self.master.view):
                 self.master.view.focus.index = 0
         elif key == "G":
             if len(self.master.view):
                 self.master.view.focus.index = len(self.master.view) - 1
-        elif key == "f":
-            signals.status_prompt.send(
-                prompt = "Filter View",
-                text = self.master.options.view_filter,
-                callback = self.master.options.setter("view_filter")
-            )
         elif key == "L":
             signals.status_prompt_path.send(
                 self,
@@ -402,20 +388,5 @@ class FlowListBox(urwid.ListBox):
                 keys = orders,
                 callback = change_order
             )
-        elif key == "F":
-            o = self.master.options
-            o.console_focus_follow = not o.console_focus_follow
-        elif key == "v":
-            val = not self.master.options.console_order_reversed
-            self.master.options.console_order_reversed = val
-        elif key == "W":
-            if self.master.options.save_stream_file:
-                self.master.options.save_stream_file = None
-            else:
-                signals.status_prompt_path.send(
-                    self,
-                    prompt="Stream flows to",
-                    callback= lambda path: self.master.options.update(save_stream_file=path)
-                )
         else:
             return urwid.ListBox.keypress(self, size, key)
