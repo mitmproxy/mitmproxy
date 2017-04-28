@@ -30,6 +30,14 @@ class ServerPlayback:
                 l.append(i)
         ctx.master.addons.trigger("update", [])
 
+    @command.command("replay.server.file")
+    def load_file(self, path: str) -> None:
+        try:
+            flows = io.read_flows_from_paths([path])
+        except exceptions.FlowReadException as e:
+            raise exceptions.CommandError(str(e))
+        self.load_flows(flows)
+
     @command.command("replay.server.stop")
     def clear(self) -> None:
         """

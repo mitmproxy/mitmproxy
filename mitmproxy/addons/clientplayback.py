@@ -35,6 +35,14 @@ class ClientPlayback:
         self.flows = flows
         ctx.master.addons.trigger("update", [])
 
+    @command.command("replay.client.file")
+    def load_file(self, path: str) -> None:
+        try:
+            flows = io.read_flows_from_paths([path])
+        except exceptions.FlowReadException as e:
+            raise exceptions.CommandError(str(e))
+        self.flows = flows
+
     def configure(self, updated):
         if not self.configured and ctx.options.client_replay:
             self.configured = True

@@ -48,6 +48,16 @@ class TestClientPlayback:
             cp.stop_replay()
             assert not cp.flows
 
+    def test_load_file(self, tmpdir):
+        cp = clientplayback.ClientPlayback()
+        with taddons.context():
+            fpath = str(tmpdir.join("flows"))
+            tdump(fpath, [tflow.tflow(resp=True)])
+            cp.load_file(fpath)
+            assert cp.flows
+            with pytest.raises(exceptions.CommandError):
+                cp.load_file("/nonexistent")
+
     def test_configure(self, tmpdir):
         cp = clientplayback.ClientPlayback()
         with taddons.context() as tctx:
