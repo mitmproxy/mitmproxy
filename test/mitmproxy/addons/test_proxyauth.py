@@ -133,7 +133,7 @@ def test_check():
             f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
                 "einstein", "foo"
             )
-            assert not up.check(f)
+        assert not up.check(f)
 
 
 def test_authenticate():
