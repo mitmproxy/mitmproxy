@@ -14,7 +14,7 @@ class ViewSwapCase(contentviews.View):
     prompt = ("swap case text", "z")
     content_types = ["text/plain"]
 
-    def __call__(self, data: bytes, **metadata) -> Tuple[str,Iterable[List[Tuple[str, AnyStr]]]]:
+    def __call__(self, data: bytes, **metadata) -> Tuple[str, Iterable[List[Tuple[str, AnyStr]]]]:
         return "case-swapped text", contentviews.format_text(data.swapcase())
 
 
