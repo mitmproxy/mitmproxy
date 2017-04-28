@@ -133,7 +133,6 @@ class FlowItem(urwid.WidgetWrap):
     def selectable(self):
         return True
 
-
     def server_replay_prompt(self, k):
         a = self.master.addons.get("serverplayback")
         if k == "a":
@@ -209,9 +208,6 @@ class FlowItem(urwid.WidgetWrap):
             if self.flow.killable:
                 self.flow.kill()
                 self.master.view.update(self.flow)
-        elif key == "enter":
-            if self.flow.request:
-                self.master.view_flow(self.flow)
         elif key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",

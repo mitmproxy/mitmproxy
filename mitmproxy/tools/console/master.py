@@ -17,6 +17,7 @@ from mitmproxy import exceptions
 from mitmproxy import master
 from mitmproxy import io
 from mitmproxy import log
+from mitmproxy import flow
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
@@ -102,6 +103,12 @@ class ConsoleCommands:
         """View help."""
         self.master.view_help()
 
+    def view_flow(self, flow: flow.Flow) -> None:
+        """View a flow."""
+        if hasattr(flow, "request"):
+            # FIME: Also set focus?
+            self.master.view_flow(flow)
+
     def exit(self) -> None:
         """Exit mitmproxy."""
         raise urwid.ExitMainLoop
@@ -120,6 +127,7 @@ class ConsoleCommands:
         l.add_command("console.view.help", self.view_help)
         l.add_command("console.view.options", self.view_options)
         l.add_command("console.view.pop", self.view_pop)
+        l.add_command("console.view.flow", self.view_flow)
 
     def running(self):
         self.started = True
@@ -145,6 +153,7 @@ def default_keymap(km):
     km.add("f", "console.command 'set view_filter='", context="flowlist")
     km.add("e", "set console_eventlog=toggle", context="flowlist")
     km.add("w", "console.command 'save.file @shown '", context="flowlist")
+    km.add("enter", "console.view.flow @focus", context="flowlist")
 
 
 class ConsoleMaster(master.Master):

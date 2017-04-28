@@ -15,8 +15,10 @@ def typename(t: type, ret: bool) -> str:
     """
     if t in (str, int, bool):
         return t.__name__
-    if t == typing.Sequence[flow.Flow]:
+    elif t == typing.Sequence[flow.Flow]:
         return "[flow]" if ret else "flowspec"
+    elif t == flow.Flow:
+        return "flow"
     else:  # pragma: no cover
         raise NotImplementedError(t)
 
@@ -101,5 +103,12 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
         return spec
     elif argtype == typing.Sequence[flow.Flow]:
         return manager.call_args("console.resolve", [spec])
+    elif argtype == flow.Flow:
+        flows = manager.call_args("console.resolve", [spec])
+        if len(flows) != 1:
+            raise exceptions.CommandError(
+                "Command requires one flow, specification matched %s." % len(flows)
+            )
+        return flows[0]
     else:
         raise exceptions.CommandError("Unsupported argument type: %s" % argtype)

@@ -61,6 +61,7 @@ def test_typename():
     assert command.typename(str, True) == "str"
     assert command.typename(typing.Sequence[flow.Flow], True) == "[flow]"
     assert command.typename(typing.Sequence[flow.Flow], False) == "flowspec"
+    assert command.typename(flow.Flow, False) == "flow"
 
 
 class DummyConsole:
@@ -68,7 +69,8 @@ class DummyConsole:
         l.add_command("console.resolve", self.resolve)
 
     def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
-        return [tflow.tflow(resp=True)]
+        n = int(spec)
+        return [tflow.tflow(resp=True)] * n
 
 
 def test_parsearg():
@@ -76,7 +78,12 @@ def test_parsearg():
         tctx.master.addons.add(DummyConsole())
         assert command.parsearg(tctx.master.commands, "foo", str) == "foo"
         assert len(command.parsearg(
-            tctx.master.commands, "~b", typing.Sequence[flow.Flow]
-        )) == 1
+            tctx.master.commands, "2", typing.Sequence[flow.Flow]
+        )) == 2
+        assert command.parsearg(tctx.master.commands, "1", flow.Flow)
+        with pytest.raises(exceptions.CommandError):
+            command.parsearg(tctx.master.commands, "2", flow.Flow)
+        with pytest.raises(exceptions.CommandError):
+            command.parsearg(tctx.master.commands, "0", flow.Flow)
         with pytest.raises(exceptions.CommandError):
             command.parsearg(tctx.master.commands, "foo", Exception)
