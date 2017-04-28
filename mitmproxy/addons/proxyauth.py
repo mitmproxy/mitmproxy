@@ -114,7 +114,6 @@ class ProxyAuth:
             if conn:
                 conn.search(parts[1][1:], '('+parts[0]+username+')', attributes=['objectclass'])
                 if ctx.options.proxyauth.split(":")[3] in conn.entries[0]['objectclass']:
-                    conn.unbind()
                     return username, password
 
         return None
@@ -135,6 +134,7 @@ class ProxyAuth:
             self.nonanonymous = False
             self.singleuser = None
             self.htpasswd = None
+            self.ldapserver = None
             if ctx.options.proxyauth:
                 if ctx.options.proxyauth == "any":
                     self.nonanonymous = True
