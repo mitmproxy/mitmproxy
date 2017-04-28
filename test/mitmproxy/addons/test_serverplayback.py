@@ -16,6 +16,17 @@ def tdump(path, flows):
         w.add(i)
 
 
+def test_load_file(tmpdir):
+    s = serverplayback.ServerPlayback()
+    with taddons.context():
+        fpath = str(tmpdir.join("flows"))
+        tdump(fpath, [tflow.tflow(resp=True)])
+        s.load_file(fpath)
+        assert s.flowmap
+        with pytest.raises(exceptions.CommandError):
+            s.load_file("/nonexistent")
+
+
 def test_config(tmpdir):
     s = serverplayback.ServerPlayback()
     with taddons.context() as tctx:
