@@ -1,4 +1,5 @@
 import binascii
+import ldap3
 
 import pytest
 
@@ -40,6 +41,13 @@ def test_configure():
         assert up.nonanonymous
         ctx.configure(up, proxyauth=None)
         assert not up.nonanonymous
+
+        ctx.configure(up, proxyauth="ldap:ldap.forumsys.com:uid=?,dc=example,dc=com:person")
+        assert up.ldapserver
+        ctx.configure(up, proxyauth="ldaps:ldap.forumsys.com:uid=?,dc=example,dc=com:person")
+        assert up.ldapserver
+        with pytest.raises(exceptions.OptionsError):
+            ctx.configure(up, proxyauth="ldapldap.forumsys.com:uid=?dc=example,dc=com:person")
 
         with pytest.raises(exceptions.OptionsError):
             ctx.configure(
@@ -108,6 +116,24 @@ def test_check():
             "test", "foo"
         )
         assert not up.check(f)
+
+        ctx.configure(
+            up,
+            proxyauth="ldap:ldap.forumsys.com:uid=?,dc=example,dc=com:person"
+        )
+        f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
+            "einstein", "password"
+        )
+        assert up.check(f)
+        f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
+            "", ""
+        )
+        assert not up.check(f)
+        with pytest.raises(ldap3.core.exceptions.LDAPBindError):
+            f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
+                "einstein", "foo"
+            )
+            assert not up.check(f)
 
 
 def test_authenticate():
