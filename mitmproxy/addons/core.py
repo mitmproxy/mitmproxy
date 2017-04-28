@@ -1,8 +1,10 @@
 from mitmproxy import ctx
 from mitmproxy import exceptions
+from mitmproxy import command
 
 
 class Core:
+    @command.command("set")
     def set(self, spec: str) -> None:
         """
             Set an option of the form "key[=value]". When the value is omitted,
@@ -14,6 +16,3 @@ class Core:
             ctx.options.set(spec)
         except exceptions.OptionsError as e:
             raise exceptions.CommandError(e) from e
-
-    def load(self, l):
-        l.add_command("set", self.set)

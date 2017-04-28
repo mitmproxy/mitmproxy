@@ -14,6 +14,7 @@ import urwid
 
 from mitmproxy import addons
 from mitmproxy import exceptions
+from mitmproxy import command
 from mitmproxy import master
 from mitmproxy import io
 from mitmproxy import log
@@ -85,49 +86,47 @@ class ConsoleCommands:
         self.master = master
         self.started = False
 
-    def command(self, partial: str) -> None:
+    @command.command("console.command")
+    def console_command(self, partial: str) -> None:
         """
         Prompt the user to edit a command with a (possilby empty) starting value.
         """
         signals.status_prompt_command.send(partial=partial)
 
+    @command.command("console.view.commands")
     def view_commands(self) -> None:
         """View the commands list."""
         self.master.view_commands()
 
+    @command.command("console.view.options")
     def view_options(self) -> None:
         """View the options editor."""
         self.master.view_options()
 
+    @command.command("console.view.help")
     def view_help(self) -> None:
         """View help."""
         self.master.view_help()
 
+    @command.command("console.view.flow")
     def view_flow(self, flow: flow.Flow) -> None:
         """View a flow."""
         if hasattr(flow, "request"):
             # FIME: Also set focus?
             self.master.view_flow(flow)
 
+    @command.command("console.exit")
     def exit(self) -> None:
         """Exit mitmproxy."""
         raise urwid.ExitMainLoop
 
+    @command.command("console.view.pop")
     def view_pop(self) -> None:
         """
             Pop a view off the console stack. At the top level, this prompts the
             user to exit mitmproxy.
         """
         signals.pop_view_state.send(self)
-
-    def load(self, l):
-        l.add_command("console.command", self.command)
-        l.add_command("console.exit", self.exit)
-        l.add_command("console.view.commands", self.view_commands)
-        l.add_command("console.view.help", self.view_help)
-        l.add_command("console.view.options", self.view_options)
-        l.add_command("console.view.pop", self.view_pop)
-        l.add_command("console.view.flow", self.view_flow)
 
     def running(self):
         self.started = True

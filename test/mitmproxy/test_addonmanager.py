@@ -4,6 +4,7 @@ from mitmproxy import addons
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
 from mitmproxy import options
+from mitmproxy import command
 from mitmproxy import master
 from mitmproxy import proxy
 from mitmproxy.test import taddons
@@ -17,6 +18,10 @@ class TAddon:
         self.custom_called = False
         if addons:
             self.addons = addons
+
+    @command.command("test.command")
+    def testcommand(self) -> str:
+        return "here"
 
     def __repr__(self):
         return "Addon(%s)" % self.name
@@ -36,6 +41,12 @@ class THalt:
 class AOption:
     def load(self, l):
         l.add_option("custom_option", bool, False, "help")
+
+
+def test_command():
+    with taddons.context() as tctx:
+        tctx.master.addons.add(TAddon("test"))
+        assert tctx.master.commands.call("test.command") == "here"
 
 
 def test_halt():

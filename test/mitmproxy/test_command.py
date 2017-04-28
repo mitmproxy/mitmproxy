@@ -39,22 +39,21 @@ class TestCommand:
 
 
 def test_simple():
-    o = options.Options()
-    m = master.Master(o, proxy.DummyServer(o))
-    c = command.CommandManager(m)
-    a = TAddon()
-    c.add("one.two", a.cmd1)
-    assert c.commands["one.two"].help == "cmd1 help"
-    assert(c.call("one.two foo") == "ret foo")
-    with pytest.raises(exceptions.CommandError, match="Unknown"):
-        c.call("nonexistent")
-    with pytest.raises(exceptions.CommandError, match="Invalid"):
-        c.call("")
-    with pytest.raises(exceptions.CommandError, match="Usage"):
-        c.call("one.two too many args")
+    with taddons.context() as tctx:
+        c = command.CommandManager(tctx.master)
+        a = TAddon()
+        c.add("one.two", a.cmd1)
+        assert c.commands["one.two"].help == "cmd1 help"
+        assert(c.call("one.two foo") == "ret foo")
+        with pytest.raises(exceptions.CommandError, match="Unknown"):
+            c.call("nonexistent")
+        with pytest.raises(exceptions.CommandError, match="Invalid"):
+            c.call("")
+        with pytest.raises(exceptions.CommandError, match="Usage"):
+            c.call("one.two too many args")
 
-    c.add("empty", a.empty)
-    c.call("empty")
+        c.add("empty", a.empty)
+        c.call("empty")
 
 
 def test_typename():
@@ -87,3 +86,33 @@ def test_parsearg():
             command.parsearg(tctx.master.commands, "0", flow.Flow)
         with pytest.raises(exceptions.CommandError):
             command.parsearg(tctx.master.commands, "foo", Exception)
+
+
+class TDec:
+    @command.command("cmd1")
+    def cmd1(self, foo: str) -> str:
+        """cmd1 help"""
+        return "ret " + foo
+
+    @command.command("cmd2")
+    def cmd2(self, foo: str) -> str:
+        return 99
+
+    @command.command("empty")
+    def empty(self) -> None:
+        pass
+
+
+def test_decorator():
+    with taddons.context() as tctx:
+        c = command.CommandManager(tctx.master)
+        a = TDec()
+        c.collect_commands(a)
+        assert "cmd1" in c.commands
+        assert c.call("cmd1 bar") == "ret bar"
+        assert "empty" in c.commands
+        assert c.call("empty") is None
+
+    with taddons.context() as tctx:
+        tctx.master.addons.add(a)
+        assert tctx.master.commands.call("cmd1 bar") == "ret bar"

@@ -2,6 +2,7 @@ import inspect
 import typing
 import shlex
 import textwrap
+import functools
 
 from mitmproxy.utils import typecheck
 from mitmproxy import exceptions
@@ -74,6 +75,13 @@ class CommandManager:
         self.master = master
         self.commands = {}
 
+    def collect_commands(self, addon):
+        for i in dir(addon):
+            if not i.startswith("__"):
+                o = getattr(addon, i)
+                if hasattr(o, "command_path"):
+                    self.add(o.command_path, o)
+
     def add(self, path: str, func: typing.Callable):
         self.commands[path] = Command(self, path, func)
 
@@ -112,3 +120,13 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
         return flows[0]
     else:
         raise exceptions.CommandError("Unsupported argument type: %s" % argtype)
+
+
+def command(path):
+    def decorator(function):
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            return function(*args, **kwargs)
+        wrapper.__dict__["command_path"] = path
+        return wrapper
+    return decorator
