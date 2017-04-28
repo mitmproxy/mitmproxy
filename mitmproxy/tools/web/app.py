@@ -122,7 +122,7 @@ class RequestHandler(tornado.web.RequestHandler):
         self.add_header(
             "Content-Security-Policy",
             "default-src 'self'; "
-            "connect-src 'self' ws://* ; "
+            "connect-src 'self' ws:; "
             "style-src   'self' 'unsafe-inline'"
         )
 
