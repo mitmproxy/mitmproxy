@@ -1,6 +1,5 @@
 import urwid
 
-from mitmproxy import exceptions
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.addons import view
@@ -150,13 +149,7 @@ class FlowItem(urwid.WidgetWrap):
     def keypress(self, xxx_todo_changeme, key):
         (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
-        if key == "r":
-            try:
-                self.master.replay_request(self.flow)
-            except exceptions.ReplayException as e:
-                signals.add_log("Replay error: %s" % e, "warn")
-            signals.flowlist_change.send(self)
-        elif key == "S":
+        if key == "S":
             def stop_server_playback(response):
                 if response == "y":
                     self.master.options.server_replay = []
@@ -186,10 +179,6 @@ class FlowItem(urwid.WidgetWrap):
             self.flow.revert()
             signals.flowlist_change.send(self)
             signals.status_message.send(message="Reverted.")
-        elif key == "X":
-            if self.flow.killable:
-                self.flow.kill()
-                self.master.view.update(self.flow)
         elif key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",
@@ -303,9 +292,7 @@ class FlowListBox(urwid.ListBox):
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
-        if key == "Z":
-            self.master.view.clear_not_marked()
-        elif key == "L":
+        if key == "L":
             signals.status_prompt_path.send(
                 self,
                 prompt = "Load flows",

@@ -52,3 +52,26 @@ class Core:
         for i in flows:
             i.marked = not i.marked
         ctx.master.addons.trigger("update", flows)
+
+    @command.command("flow.replay")
+    def replay(self, f: flow.Flow) -> None:
+        """
+            Replay an HTTP flow request.
+        """
+        try:
+            ctx.master.replay_request(f)  # type: ignore
+        except exceptions.ReplayException as e:
+            raise exceptions.CommandError("Replay error: %s" % e) from e
+        ctx.master.addons.trigger("update", [f])
+
+    @command.command("flow.kill")
+    def kill(self, flows: typing.Sequence[flow.Flow]) -> None:
+        """
+            Kill running flows.
+        """
+        updated = []
+        for f in flows:
+            if f.killable:
+                f.kill()
+                updated.append(f)
+        ctx.master.addons.trigger("update", updated)
