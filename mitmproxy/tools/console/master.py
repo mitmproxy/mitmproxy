@@ -78,7 +78,7 @@ class UnsupportedLog:
         signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
 
 
-class ConsoleCommands:
+class ConsoleAddon:
     """
         An addon that exposes console-specific commands.
     """
@@ -131,6 +131,10 @@ class ConsoleCommands:
     def running(self):
         self.started = True
 
+    def update(self, flows):
+        if not flows:
+            signals.update_settings.send(self)
+
     def configure(self, updated):
         if self.started:
             if "console_eventlog" in updated:
@@ -151,14 +155,20 @@ def default_keymap(km):
     km.add("a", "flow.resume @focus", context="flowlist")
     km.add("d", "view.remove @focus", context="flowlist")
     km.add("D", "view.duplicate @focus", context="flowlist")
+    km.add("e", "set console_eventlog=toggle", context="flowlist")
+    km.add("f", "console.command 'set view_filter='", context="flowlist")
     km.add("F", "set console_focus_follow=toggle", context="flowlist")
     km.add("g", "view.go 0", context="flowlist")
     km.add("G", "view.go -1", context="flowlist")
+    km.add("m", "flow.mark.toggle @focus", context="flowlist")
+    km.add("r", "replay.client @focus", context="flowlist")
+    km.add("S", "console.command 'replay.server '")
     km.add("v", "set console_order_reversed=toggle", context="flowlist")
-    km.add("f", "console.command 'set view_filter='", context="flowlist")
-    km.add("e", "set console_eventlog=toggle", context="flowlist")
+    km.add("U", "flow.mark @all false", context="flowlist")
     km.add("w", "console.command 'save.file @shown '", context="flowlist")
+    km.add("X", "flow.kill @focus", context="flowlist")
     km.add("z", "view.remove @all", context="flowlist")
+    km.add("Z", "view.remove @hidden", context="flowlist")
     km.add("enter", "console.view.flow @focus", context="flowlist")
 
 
@@ -191,7 +201,7 @@ class ConsoleMaster(master.Master):
             self.view,
             UnsupportedLog(),
             readfile.ReadFile(),
-            ConsoleCommands(self),
+            ConsoleAddon(self),
         )
 
         def sigint_handler(*args, **kwargs):

@@ -1,6 +1,5 @@
 import urwid
 
-from mitmproxy import exceptions
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.addons import view
@@ -133,14 +132,6 @@ class FlowItem(urwid.WidgetWrap):
     def selectable(self):
         return True
 
-    def server_replay_prompt(self, k):
-        a = self.master.addons.get("serverplayback")
-        if k == "a":
-            a.load([i.copy() for i in self.master.view])
-        elif k == "t":
-            a.load([self.flow.copy()])
-        signals.update_settings.send(self)
-
     def mouse_event(self, size, event, button, col, row, focus):
         if event == "mouse press" and button == 1:
             if self.flow.request:
@@ -150,53 +141,13 @@ class FlowItem(urwid.WidgetWrap):
     def keypress(self, xxx_todo_changeme, key):
         (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
-        if key == "m":
-            self.flow.marked = not self.flow.marked
-            signals.flowlist_change.send(self)
-        elif key == "r":
-            try:
-                self.master.replay_request(self.flow)
-            except exceptions.ReplayException as e:
-                signals.add_log("Replay error: %s" % e, "warn")
-            signals.flowlist_change.send(self)
-        elif key == "S":
-            def stop_server_playback(response):
-                if response == "y":
-                    self.master.options.server_replay = []
-            a = self.master.addons.get("serverplayback")
-            if a.count():
-                signals.status_prompt_onekey.send(
-                    prompt = "Stop current server replay?",
-                    keys = (
-                        ("yes", "y"),
-                        ("no", "n"),
-                    ),
-                    callback = stop_server_playback,
-                )
-            else:
-                signals.status_prompt_onekey.send(
-                    prompt = "Server Replay",
-                    keys = (
-                        ("all flows", "a"),
-                        ("this flow", "t"),
-                    ),
-                    callback = self.server_replay_prompt,
-                )
-        elif key == "U":
-            for f in self.master.view:
-                f.marked = False
-            signals.flowlist_change.send(self)
-        elif key == "V":
+        if key == "V":
             if not self.flow.modified():
                 signals.status_message.send(message="Flow not modified.")
                 return
             self.flow.revert()
             signals.flowlist_change.send(self)
             signals.status_message.send(message="Reverted.")
-        elif key == "X":
-            if self.flow.killable:
-                self.flow.kill()
-                self.master.view.update(self.flow)
         elif key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",
@@ -310,9 +261,7 @@ class FlowListBox(urwid.ListBox):
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
-        if key == "Z":
-            self.master.view.clear_not_marked()
-        elif key == "L":
+        if key == "L":
             signals.status_prompt_path.send(
                 self,
                 prompt = "Load flows",

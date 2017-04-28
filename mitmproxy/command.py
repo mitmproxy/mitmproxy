@@ -109,7 +109,16 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     """
     if argtype == str:
         return spec
-    if argtype == int:
+    elif argtype == bool:
+        if spec == "true":
+            return True
+        elif spec == "false":
+            return False
+        else:
+            raise exceptions.CommandError(
+                "Booleans are 'true' or 'false', got %s" % spec
+            )
+    elif argtype == int:
         try:
             return int(spec)
         except ValueError as e:

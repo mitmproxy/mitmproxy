@@ -22,6 +22,7 @@ def test_config(tmpdir):
         fpath = str(tmpdir.join("flows"))
         tdump(fpath, [tflow.tflow(resp=True)])
         tctx.configure(s, server_replay=[fpath])
+        s.configured = False
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(s, server_replay=[str(tmpdir)])
 
