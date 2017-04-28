@@ -29,3 +29,26 @@ class Core:
         for f in intercepted:
             f.resume()
         ctx.master.addons.trigger("update", intercepted)
+
+    # FIXME: this will become view.mark later
+    @command.command("flow.mark")
+    def mark(self, flows: typing.Sequence[flow.Flow], val: bool) -> None:
+        """
+            Mark flows.
+        """
+        updated = []
+        for i in flows:
+            if i.marked != val:
+                i.marked = val
+                updated.append(i)
+        ctx.master.addons.trigger("update", updated)
+
+    # FIXME: this will become view.mark.toggle later
+    @command.command("flow.mark.toggle")
+    def mark_toggle(self, flows: typing.Sequence[flow.Flow]) -> None:
+        """
+            Mark flows.
+        """
+        for i in flows:
+            i.marked = not i.marked
+        ctx.master.addons.trigger("update", flows)

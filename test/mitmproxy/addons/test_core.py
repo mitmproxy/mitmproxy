@@ -26,3 +26,17 @@ def test_resume():
         f.intercept()
         sa.resume([f])
         assert not f.reply.state == "taken"
+
+
+def test_mark():
+    sa = core.Core()
+    with taddons.context():
+        f = tflow.tflow()
+        assert not f.marked
+        sa.mark([f], True)
+        assert f.marked
+
+        sa.mark_toggle([f])
+        assert not f.marked
+        sa.mark_toggle([f])
+        assert f.marked

@@ -150,10 +150,7 @@ class FlowItem(urwid.WidgetWrap):
     def keypress(self, xxx_todo_changeme, key):
         (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
-        if key == "m":
-            self.flow.marked = not self.flow.marked
-            signals.flowlist_change.send(self)
-        elif key == "r":
+        if key == "r":
             try:
                 self.master.replay_request(self.flow)
             except exceptions.ReplayException as e:
@@ -182,10 +179,6 @@ class FlowItem(urwid.WidgetWrap):
                     ),
                     callback = self.server_replay_prompt,
                 )
-        elif key == "U":
-            for f in self.master.view:
-                f.marked = False
-            signals.flowlist_change.send(self)
         elif key == "V":
             if not self.flow.modified():
                 signals.status_message.send(message="Flow not modified.")
