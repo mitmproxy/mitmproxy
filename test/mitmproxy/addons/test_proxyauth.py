@@ -46,8 +46,12 @@ def test_configure():
         assert up.ldapserver
         ctx.configure(up, proxyauth="ldaps:ldap.forumsys.com:uid=?,dc=example,dc=com:person")
         assert up.ldapserver
+
         with pytest.raises(exceptions.OptionsError):
-            ctx.configure(up, proxyauth="ldapldap.forumsys.com:uid=?dc=example,dc=com:person")
+            ctx.configure(up, proxyauth="ldap:ldap.forumsys.comuid=?dc=example,dc=com:person")
+
+        with pytest.raises(exceptions.OptionsError):
+            ctx.configure(up, proxyauth="ldapssssssss:ldap.forumsys.com:uid=?,dc=example,dc=com:person")
 
         with pytest.raises(exceptions.OptionsError):
             ctx.configure(

@@ -112,7 +112,7 @@ class ProxyAuth:
                     password,
                     auto_bind=True)
             if conn:
-                conn.search(parts[1][1:], '('+parts[0]+username+')', attributes=['objectclass'])
+                conn.search(parts[1][1:], '(' + parts[0] + username + ')', attributes=['objectclass'])
                 if ctx.options.proxyauth.split(":")[3] in conn.entries[0]['objectclass']:
                     return username, password
 
@@ -156,6 +156,10 @@ class ProxyAuth:
                         server = ldap3.Server(parts[1], use_ssl=True)
                     elif parts[0] == "ldap":
                         server = ldap3.Server(parts[1])
+                    else:
+                        raise exceptions.OptionsError(
+                            "Invalid ldap specfication on the first part"
+                        )
                     self.ldapserver = server
                 else:
                     parts = ctx.options.proxyauth.split(':')
