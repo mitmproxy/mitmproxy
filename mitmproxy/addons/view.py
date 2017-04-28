@@ -18,6 +18,7 @@ import sortedcontainers
 import mitmproxy.flow
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
+from mitmproxy import command
 from mitmproxy import ctx
 from mitmproxy import http  # noqa
 
@@ -223,7 +224,7 @@ class View(collections.Sequence):
         self.filter = flt or matchall
         self._refilter()
 
-    def clear(self):
+    def clear(self) -> None:
         """
             Clears both the store and view.
         """
@@ -243,55 +244,19 @@ class View(collections.Sequence):
         self._refilter()
         self.sig_store_refresh.send(self)
 
-    def add(self, f: mitmproxy.flow.Flow) -> None:
+    def add(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Adds a flow to the state. If the flow already exists, it is
             ignored.
         """
-        if f.id not in self._store:
-            self._store[f.id] = f
-            if self.filter(f):
-                self._base_add(f)
-                if self.focus_follow:
-                    self.focus.flow = f
-                self.sig_view_add.send(self, flow=f)
-
-    def remove(self, f: mitmproxy.flow.Flow):
-        """
-            Removes the flow from the underlying store and the view.
-        """
-        if f.id in self._store:
-            if f in self._view:
-                self._view.remove(f)
-                self.sig_view_remove.send(self, flow=f)
-            del self._store[f.id]
-            self.sig_store_remove.send(self, flow=f)
-
-    def update(self, f: mitmproxy.flow.Flow):
-        """
-            Updates a flow. If the flow is not in the state, it's ignored.
-        """
-        if f.id in self._store:
-            if self.filter(f):
-                if f not in self._view:
+        for f in flows:
+            if f.id not in self._store:
+                self._store[f.id] = f
+                if self.filter(f):
                     self._base_add(f)
                     if self.focus_follow:
                         self.focus.flow = f
                     self.sig_view_add.send(self, flow=f)
-                else:
-                    # This is a tad complicated. The sortedcontainers
-                    # implementation assumes that the order key is stable. If
-                    # it changes mid-way Very Bad Things happen. We detect when
-                    # this happens, and re-fresh the item.
-                    self.order_key.refresh(f)
-                    self.sig_view_update.send(self, flow=f)
-            else:
-                try:
-                    self._view.remove(f)
-                    self.sig_view_remove.send(self, flow=f)
-                except ValueError:
-                    # The value was not in the view
-                    pass
 
     def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
         """
@@ -299,6 +264,70 @@ class View(collections.Sequence):
         Returns None if the flow is not found.
         """
         return self._store.get(flow_id)
+
+    @command.command("view.go")
+    def go(self, dst: int) -> None:
+        """
+            Go to a specified offset. Positive offests are from the beginning of
+            the view, negative from the end of the view, so that 0 is the first
+            flow, -1 is the last flow.
+        """
+        if dst < 0:
+            dst = len(self) + dst
+        if dst < 0:
+            dst = 0
+        if dst > len(self) - 1:
+            dst = len(self) - 1
+        self.focus.flow = self[dst]
+
+    @command.command("view.duplicate")
+    def duplicate(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+        """
+            Duplicates the specified flows, and sets the focus to the first
+            duplicate.
+        """
+        dups = [f.copy() for f in flows]
+        if dups:
+            self.add(dups)
+            self.focus.flow = dups[0]
+
+    @command.command("view.remove")
+    def remove(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+        """
+            Removes the flow from the underlying store and the view.
+        """
+        for f in flows:
+            if f.id in self._store:
+                if f.killable:
+                    f.kill()
+                if f in self._view:
+                    self._view.remove(f)
+                    self.sig_view_remove.send(self, flow=f)
+                del self._store[f.id]
+                self.sig_store_remove.send(self, flow=f)
+
+    @command.command("view.resolve")
+    def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
+        """
+            Resolve a flow list specification to an actual list of flows.
+        """
+        if spec == "@all":
+            return [i for i in self._store.values()]
+        if spec == "@focus":
+            return [self.focus.flow] if self.focus.flow else []
+        elif spec == "@shown":
+            return [i for i in self]
+        elif spec == "@hidden":
+            return [i for i in self._store.values() if i not in self._view]
+        elif spec == "@marked":
+            return [i for i in self._store.values() if i.marked]
+        elif spec == "@unmarked":
+            return [i for i in self._store.values() if not i.marked]
+        else:
+            filt = flowfilter.parse(spec)
+            if not filt:
+                raise exceptions.CommandError("Invalid flow filter: %s" % spec)
+            return [i for i in self._store.values() if filt(i)]
 
     # Event handlers
     def configure(self, updated):
@@ -322,46 +351,50 @@ class View(collections.Sequence):
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
 
-    def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
-        """
-            Resolve a flow list specification to an actual list of flows.
-        """
-        if spec == "@focus":
-            return [self.focus.flow] if self.focus.flow else []
-        elif spec == "@shown":
-            return [i for i in self]
-        elif spec == "@hidden":
-            return [i for i in self._store.values() if i not in self._view]
-        elif spec == "@marked":
-            return [i for i in self._store.values() if i.marked]
-        elif spec == "@unmarked":
-            return [i for i in self._store.values() if not i.marked]
-        else:
-            filt = flowfilter.parse(spec)
-            if not filt:
-                raise exceptions.CommandError("Invalid flow filter: %s" % spec)
-            return [i for i in self._store.values() if filt(i)]
-
-    def load(self, l):
-        l.add_command("console.resolve", self.resolve)
-
     def request(self, f):
-        self.add(f)
+        self.add([f])
 
     def error(self, f):
-        self.update(f)
+        self.update([f])
 
     def response(self, f):
-        self.update(f)
+        self.update([f])
 
     def intercept(self, f):
-        self.update(f)
+        self.update([f])
 
     def resume(self, f):
-        self.update(f)
+        self.update([f])
 
     def kill(self, f):
-        self.update(f)
+        self.update([f])
+
+    def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+        """
+            Updates a list of flows. If flow is not in the state, it's ignored.
+        """
+        for f in flows:
+            if f.id in self._store:
+                if self.filter(f):
+                    if f not in self._view:
+                        self._base_add(f)
+                        if self.focus_follow:
+                            self.focus.flow = f
+                        self.sig_view_add.send(self, flow=f)
+                    else:
+                        # This is a tad complicated. The sortedcontainers
+                        # implementation assumes that the order key is stable. If
+                        # it changes mid-way Very Bad Things happen. We detect when
+                        # this happens, and re-fresh the item.
+                        self.order_key.refresh(f)
+                        self.sig_view_update.send(self, flow=f)
+                else:
+                    try:
+                        self._view.remove(f)
+                        self.sig_view_remove.send(self, flow=f)
+                    except ValueError:
+                        # The value was not in the view
+                        pass
 
 
 class Focus:

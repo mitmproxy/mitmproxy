@@ -65,7 +65,7 @@ def test_typename():
 
 class DummyConsole:
     def load(self, l):
-        l.add_command("console.resolve", self.resolve)
+        l.add_command("view.resolve", self.resolve)
 
     def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
         n = int(spec)
@@ -76,6 +76,10 @@ def test_parsearg():
     with taddons.context() as tctx:
         tctx.master.addons.add(DummyConsole())
         assert command.parsearg(tctx.master.commands, "foo", str) == "foo"
+        assert command.parsearg(tctx.master.commands, "1", int) == 1
+        with pytest.raises(exceptions.CommandError):
+            command.parsearg(tctx.master.commands, "foo", int)
+
         assert len(command.parsearg(
             tctx.master.commands, "2", typing.Sequence[flow.Flow]
         )) == 2

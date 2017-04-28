@@ -23,8 +23,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         m = webmaster.WebMaster(o, proxy.DummyServer(), with_termlog=False)
         f = tflow.tflow(resp=True)
         f.id = "42"
-        m.view.add(f)
-        m.view.add(tflow.tflow(err=True))
+        m.view.add([f])
+        m.view.add([tflow.tflow(err=True)])
         m.add_log("test log", "info")
         self.master = m
         self.view = m.view
@@ -78,7 +78,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
         # restore
         for f in flows:
-            self.view.add(f)
+            self.view.add([f])
         self.events.data = events
 
     def test_resume(self):
@@ -110,7 +110,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert self.fetch("/flows/42", method="DELETE").code == 200
 
         assert not self.view.get_by_id("42")
-        self.view.add(f)
+        self.view.add([f])
 
         assert self.fetch("/flows/1234", method="DELETE").code == 404
 
@@ -162,7 +162,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f = self.view.get_by_id(resp.body.decode())
         assert f
         assert f.id != "42"
-        self.view.remove(f)
+        self.view.remove([f])
 
     def test_flow_revert(self):
         f = self.view.get_by_id("42")

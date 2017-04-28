@@ -109,10 +109,15 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     """
     if argtype == str:
         return spec
+    if argtype == int:
+        try:
+            return int(spec)
+        except ValueError as e:
+            raise exceptions.CommandError("Expected an integer, got %s." % spec)
     elif argtype == typing.Sequence[flow.Flow]:
-        return manager.call_args("console.resolve", [spec])
+        return manager.call_args("view.resolve", [spec])
     elif argtype == flow.Flow:
-        flows = manager.call_args("console.resolve", [spec])
+        flows = manager.call_args("view.resolve", [spec])
         if len(flows) != 1:
             raise exceptions.CommandError(
                 "Command requires one flow, specification matched %s." % len(flows)

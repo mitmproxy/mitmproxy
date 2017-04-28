@@ -150,18 +150,7 @@ class FlowItem(urwid.WidgetWrap):
     def keypress(self, xxx_todo_changeme, key):
         (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
-        if key == "a":
-            self.flow.resume()
-            self.master.view.update(self.flow)
-        elif key == "d":
-            if self.flow.killable:
-                self.flow.kill()
-            self.master.view.remove(self.flow)
-        elif key == "D":
-            cp = self.flow.copy()
-            self.master.view.add(cp)
-            self.master.view.focus.flow = cp
-        elif key == "m":
+        if key == "m":
             self.flow.marked = not self.flow.marked
             signals.flowlist_change.send(self)
         elif key == "r":
@@ -222,14 +211,14 @@ class FlowItem(urwid.WidgetWrap):
                 callback = common.export_to_clip_or_file,
                 args = (None, self.flow, common.ask_save_path)
             )
-        elif key == "C":
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Export to clipboard",
-                keys = [(e[0], e[1]) for e in export.EXPORTERS],
-                callback = common.export_to_clip_or_file,
-                args = (None, self.flow, common.copy_to_clipboard_or_prompt)
-            )
+        # elif key == "C":
+        #     signals.status_prompt_onekey.send(
+        #         self,
+        #         prompt = "Export to clipboard",
+        #         keys = [(e[0], e[1]) for e in export.EXPORTERS],
+        #         callback = common.export_to_clip_or_file,
+        #         args = (None, self.flow, common.copy_to_clipboard_or_prompt)
+        #     )
         elif key == "b":
             common.ask_save_body(None, self.flow)
         else:
@@ -321,21 +310,8 @@ class FlowListBox(urwid.ListBox):
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
-        if key == "A":
-            for f in self.master.view:
-                if f.intercepted:
-                    f.resume()
-                    self.master.view.update(f)
-        elif key == "z":
-            self.master.view.clear()
-        elif key == "Z":
+        if key == "Z":
             self.master.view.clear_not_marked()
-        elif key == "g":
-            if len(self.master.view):
-                self.master.view.focus.index = 0
-        elif key == "G":
-            if len(self.master.view):
-                self.master.view.focus.index = len(self.master.view) - 1
         elif key == "L":
             signals.status_prompt_path.send(
                 self,

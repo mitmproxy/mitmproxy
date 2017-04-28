@@ -1,6 +1,9 @@
+import typing
+
 from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import command
+from mitmproxy import flow
 
 
 class Core:
@@ -16,3 +19,13 @@ class Core:
             ctx.options.set(spec)
         except exceptions.OptionsError as e:
             raise exceptions.CommandError(e) from e
+
+    @command.command("flow.resume")
+    def resume(self, flows: typing.Sequence[flow.Flow]) -> None:
+        """
+            Resume flows if they are intercepted.
+        """
+        intercepted = [i for i in flows if i.intercepted]
+        for f in intercepted:
+            f.resume()
+        ctx.master.addons.trigger("update", intercepted)
