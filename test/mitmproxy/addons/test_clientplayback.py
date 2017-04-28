@@ -26,7 +26,7 @@ class TestClientPlayback:
         with taddons.context() as tctx:
             assert cp.count() == 0
             f = tflow.tflow(resp=True)
-            cp.load([f])
+            cp.start_replay([f])
             assert cp.count() == 1
             RP = "mitmproxy.proxy.protocol.http_replay.RequestReplayThread"
             with mock.patch(RP) as rp:
@@ -44,13 +44,20 @@ class TestClientPlayback:
             cp.tick()
             assert cp.current_thread is None
 
+            cp.start_replay([f])
+            cp.stop_replay()
+            assert not cp.flows
+
     def test_configure(self, tmpdir):
         cp = clientplayback.ClientPlayback()
         with taddons.context() as tctx:
             path = str(tmpdir.join("flows"))
             tdump(path, [tflow.tflow()])
             tctx.configure(cp, client_replay=[path])
+            cp.configured = False
             tctx.configure(cp, client_replay=[])
+            cp.configured = False
             tctx.configure(cp)
+            cp.configured = False
             with pytest.raises(exceptions.OptionsError):
                 tctx.configure(cp, client_replay=["nonexistent"])

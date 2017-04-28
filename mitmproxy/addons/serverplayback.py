@@ -1,11 +1,14 @@
 import hashlib
 import urllib
+import typing
 from typing import Any  # noqa
 from typing import List  # noqa
 
 from mitmproxy import ctx
+from mitmproxy import flow
 from mitmproxy import exceptions
 from mitmproxy import io
+from mitmproxy import command
 
 
 class ServerPlayback:
@@ -13,15 +16,27 @@ class ServerPlayback:
         self.flowmap = {}
         self.stop = False
         self.final_flow = None
+        self.configured = False
 
-    def load_flows(self, flows):
+    @command.command("replay.server")
+    def load_flows(self, flows: typing.Sequence[flow.Flow]) -> None:
+        """
+            Replay server responses from flows.
+        """
+        self.flowmap = {}
         for i in flows:
-            if i.response:
+            if i.response:  # type: ignore
                 l = self.flowmap.setdefault(self._hash(i), [])
                 l.append(i)
+        ctx.master.addons.trigger("update", [])
 
-    def clear(self):
+    @command.command("replay.server.stop")
+    def clear(self) -> None:
+        """
+            Stop server replay.
+        """
         self.flowmap = {}
+        ctx.master.addons.trigger("update", [])
 
     def count(self):
         return sum([len(i) for i in self.flowmap.values()])
@@ -90,14 +105,13 @@ class ServerPlayback:
                 return ret
 
     def configure(self, updated):
-        if "server_replay" in updated:
-            self.clear()
-            if ctx.options.server_replay:
-                try:
-                    flows = io.read_flows_from_paths(ctx.options.server_replay)
-                except exceptions.FlowReadException as e:
-                    raise exceptions.OptionsError(str(e))
-                self.load_flows(flows)
+        if not self.configured and ctx.options.server_replay:
+            self.configured = True
+            try:
+                flows = io.read_flows_from_paths(ctx.options.server_replay)
+            except exceptions.FlowReadException as e:
+                raise exceptions.OptionsError(str(e))
+            self.load_flows(flows)
 
     def tick(self):
         if self.stop and not self.final_flow.live:

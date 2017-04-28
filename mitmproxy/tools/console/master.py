@@ -78,7 +78,7 @@ class UnsupportedLog:
         signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
 
 
-class ConsoleCommands:
+class ConsoleAddon:
     """
         An addon that exposes console-specific commands.
     """
@@ -131,6 +131,10 @@ class ConsoleCommands:
     def running(self):
         self.started = True
 
+    def update(self, flows):
+        if not flows:
+            signals.update_settings.send(self)
+
     def configure(self, updated):
         if self.started:
             if "console_eventlog" in updated:
@@ -157,7 +161,8 @@ def default_keymap(km):
     km.add("g", "view.go 0", context="flowlist")
     km.add("G", "view.go -1", context="flowlist")
     km.add("m", "flow.mark.toggle @focus", context="flowlist")
-    km.add("r", "flow.replay @focus", context="flowlist")
+    km.add("r", "replay.client @focus", context="flowlist")
+    km.add("S", "console.command 'replay.server '")
     km.add("v", "set console_order_reversed=toggle", context="flowlist")
     km.add("U", "flow.mark @all false", context="flowlist")
     km.add("w", "console.command 'save.file @shown '", context="flowlist")
@@ -196,7 +201,7 @@ class ConsoleMaster(master.Master):
             self.view,
             UnsupportedLog(),
             readfile.ReadFile(),
-            ConsoleCommands(self),
+            ConsoleAddon(self),
         )
 
         def sigint_handler(*args, **kwargs):

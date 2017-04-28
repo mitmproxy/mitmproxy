@@ -132,14 +132,6 @@ class FlowItem(urwid.WidgetWrap):
     def selectable(self):
         return True
 
-    def server_replay_prompt(self, k):
-        a = self.master.addons.get("serverplayback")
-        if k == "a":
-            a.load([i.copy() for i in self.master.view])
-        elif k == "t":
-            a.load([self.flow.copy()])
-        signals.update_settings.send(self)
-
     def mouse_event(self, size, event, button, col, row, focus):
         if event == "mouse press" and button == 1:
             if self.flow.request:
@@ -149,30 +141,7 @@ class FlowItem(urwid.WidgetWrap):
     def keypress(self, xxx_todo_changeme, key):
         (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
-        if key == "S":
-            def stop_server_playback(response):
-                if response == "y":
-                    self.master.options.server_replay = []
-            a = self.master.addons.get("serverplayback")
-            if a.count():
-                signals.status_prompt_onekey.send(
-                    prompt = "Stop current server replay?",
-                    keys = (
-                        ("yes", "y"),
-                        ("no", "n"),
-                    ),
-                    callback = stop_server_playback,
-                )
-            else:
-                signals.status_prompt_onekey.send(
-                    prompt = "Server Replay",
-                    keys = (
-                        ("all flows", "a"),
-                        ("this flow", "t"),
-                    ),
-                    callback = self.server_replay_prompt,
-                )
-        elif key == "V":
+        if key == "V":
             if not self.flow.modified():
                 signals.status_message.send(message="Flow not modified.")
                 return
