@@ -141,13 +141,7 @@ class FlowItem(urwid.WidgetWrap):
     def keypress(self, xxx_todo_changeme, key):
         (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
-        if key == "|":
-            signals.status_prompt_path.send(
-                prompt = "Send flow to script",
-                callback = self.master.run_script_once,
-                args = (self.flow,)
-            )
-        elif key == "E":
+        if key == "E":
             signals.status_prompt_onekey.send(
                 self,
                 prompt = "Export to file",

@@ -2,9 +2,13 @@ import os
 import importlib
 import time
 import sys
+import typing
 
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
+from mitmproxy import flow
+from mitmproxy import command
+from mitmproxy import eventsequence
 from mitmproxy import ctx
 
 
@@ -34,10 +38,13 @@ class Script:
     def __init__(self, path):
         self.name = "scriptmanager:" + path
         self.path = path
+        self.fullpath = os.path.expanduser(path)
         self.ns = None
 
         self.last_load = 0
         self.last_mtime = 0
+        if not os.path.isfile(self.fullpath):
+            raise exceptions.OptionsError("No such script: %s" % path)
 
     @property
     def addons(self):
@@ -45,12 +52,12 @@ class Script:
 
     def tick(self):
         if time.time() - self.last_load > self.ReloadInterval:
-            mtime = os.stat(self.path).st_mtime
+            mtime = os.stat(self.fullpath).st_mtime
             if mtime > self.last_mtime:
                 ctx.log.info("Loading script: %s" % self.path)
                 if self.ns:
                     ctx.master.addons.remove(self.ns)
-                self.ns = load_script(ctx, self.path)
+                self.ns = load_script(ctx, self.fullpath)
                 if self.ns:
                     # We're already running, so we have to explicitly register and
                     # configure the addon
@@ -76,9 +83,25 @@ class ScriptLoader:
     def running(self):
         self.is_running = True
 
-    def run_once(self, command, flows):
-        # Returning once we have proper commands
-        raise NotImplementedError
+    @command.command("script.run")
+    def script_run(self, flows: typing.Sequence[flow.Flow], path: str) -> None:
+        """
+            Run a script on the specified flows. The script is loaded with
+            default options, and all lifecycle events for each flow are
+            simulated.
+        """
+        try:
+            s = Script(path)
+            l = addonmanager.Loader(ctx.master)
+            ctx.master.addons.invoke_addon(s, "load", l)
+            ctx.master.addons.invoke_addon(s, "configure", ctx.options.keys())
+            # Script is loaded on the first tick
+            ctx.master.addons.invoke_addon(s, "tick")
+            for f in flows:
+                for evt, arg in eventsequence.iterate(f):
+                    ctx.master.addons.invoke_addon(s, evt, arg)
+        except exceptions.OptionsError as e:
+            raise exceptions.CommandError("Error running script: %s" % e) from e
 
     def configure(self, updated):
         if "scripts" in updated:
