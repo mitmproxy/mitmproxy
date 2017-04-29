@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 
 from mitmproxy.utils import typecheck
+from mitmproxy import command
 
 
 class TBase:
@@ -93,9 +94,19 @@ def test_check_command_return_type():
     assert(typecheck.check_command_return_type(None, None))
     assert(not typecheck.check_command_return_type(["foo"], typing.Sequence[int]))
     assert(not typecheck.check_command_return_type("foo", typing.Sequence[int]))
+    assert(typecheck.check_command_return_type([["foo", b"bar"]], command.Cuts))
+    assert(not typecheck.check_command_return_type(["foo", b"bar"], command.Cuts))
+    assert(not typecheck.check_command_return_type([["foo", 22]], command.Cuts))
 
     # Python 3.5 only defines __parameters__
     m = mock.Mock()
     m.__str__ = lambda self: "typing.Sequence"
     m.__parameters__ = (int,)
+
     typecheck.check_command_return_type([10], m)
+
+    # Python 3.5 only defines __union_params__
+    m = mock.Mock()
+    m.__str__ = lambda self: "typing.Union"
+    m.__union_params__ = (int,)
+    assert not typecheck.check_command_return_type([22], m)

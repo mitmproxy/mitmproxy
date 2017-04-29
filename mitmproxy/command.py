@@ -9,6 +9,11 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 
 
+Cuts = typing.Sequence[
+    typing.Sequence[typing.Union[str, bytes]]
+]
+
+
 def typename(t: type, ret: bool) -> str:
     """
         Translates a type to an explanatory string. Ifl ret is True, we're
@@ -18,6 +23,8 @@ def typename(t: type, ret: bool) -> str:
         return t.__name__
     elif t == typing.Sequence[flow.Flow]:
         return "[flow]" if ret else "flowspec"
+    elif t == Cuts:
+        return "[cuts]" if ret else "cutspec"
     elif t == flow.Flow:
         return "flow"
     else:  # pragma: no cover
@@ -125,6 +132,8 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
             raise exceptions.CommandError("Expected an integer, got %s." % spec)
     elif argtype == typing.Sequence[flow.Flow]:
         return manager.call_args("view.resolve", [spec])
+    elif argtype == Cuts:
+        return manager.call_args("cut", [spec])
     elif argtype == flow.Flow:
         flows = manager.call_args("view.resolve", [spec])
         if len(flows) != 1:

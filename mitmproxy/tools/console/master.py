@@ -151,6 +151,7 @@ def default_keymap(km):
 
     km.add("A", "flow.resume @all", context="flowlist")
     km.add("a", "flow.resume @focus", context="flowlist")
+    km.add("b", "console.command 'cut.save s.content|@focus '", context="flowlist")
     km.add("d", "view.remove @focus", context="flowlist")
     km.add("D", "view.duplicate @focus", context="flowlist")
     km.add("e", "set console_eventlog=toggle", context="flowlist")
