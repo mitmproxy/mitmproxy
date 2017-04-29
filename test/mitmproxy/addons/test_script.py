@@ -9,9 +9,6 @@ from mitmproxy.test import tutils
 from mitmproxy.test import taddons
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
-from mitmproxy import options
-from mitmproxy import proxy
-from mitmproxy import master
 from mitmproxy.addons import script
 
 
@@ -48,9 +45,9 @@ def test_script_print_stdout():
 
 class TestScript:
     def test_notfound(self):
-        with taddons.context() as tctx:
-            sc = script.Script("nonexistent")
-            tctx.master.addons.add(sc)
+        with taddons.context():
+            with pytest.raises(exceptions.OptionsError):
+                script.Script("nonexistent")
 
     def test_simple(self):
         with taddons.context() as tctx:
@@ -136,25 +133,45 @@ class TestCutTraceback:
 
 
 class TestScriptLoader:
-    def test_simple(self):
-        o = options.Options(scripts=[])
-        m = master.Master(o, proxy.DummyServer())
-        sc = script.ScriptLoader()
-        sc.running()
-        m.addons.add(sc)
-        assert len(m.addons) == 1
-        o.update(
-            scripts = [
-                tutils.test_data.path(
-                    "mitmproxy/data/addonscripts/recorder/recorder.py"
-                )
-            ]
+    def test_script_run(self):
+        rp = tutils.test_data.path(
+            "mitmproxy/data/addonscripts/recorder/recorder.py"
         )
-        assert len(m.addons) == 1
-        assert len(sc.addons) == 1
-        o.update(scripts = [])
-        assert len(m.addons) == 1
-        assert len(sc.addons) == 0
+        sc = script.ScriptLoader()
+        with taddons.context() as tctx:
+            sc.script_run([tflow.tflow(resp=True)], rp)
+            debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
+            assert debug == [
+                'recorder load', 'recorder running', 'recorder configure',
+                'recorder tick',
+                'recorder requestheaders', 'recorder request',
+                'recorder responseheaders', 'recorder response'
+            ]
+
+    def test_script_run_nonexistent(self):
+        sc = script.ScriptLoader()
+        with taddons.context():
+            with pytest.raises(exceptions.CommandError):
+                sc.script_run([tflow.tflow(resp=True)], "/nonexistent")
+
+    def test_simple(self):
+        sc = script.ScriptLoader()
+        with taddons.context() as tctx:
+            tctx.master.addons.add(sc)
+            sc.running()
+            assert len(tctx.master.addons) == 1
+            tctx.master.options.update(
+                scripts = [
+                    tutils.test_data.path(
+                        "mitmproxy/data/addonscripts/recorder/recorder.py"
+                    )
+                ]
+            )
+            assert len(tctx.master.addons) == 1
+            assert len(sc.addons) == 1
+            tctx.master.options.update(scripts = [])
+            assert len(tctx.master.addons) == 1
+            assert len(sc.addons) == 0
 
     def test_dupes(self):
         sc = script.ScriptLoader()
@@ -165,13 +182,6 @@ class TestScriptLoader:
                     sc,
                     scripts = ["one", "one"]
                 )
-
-    def test_nonexistent(self):
-        sc = script.ScriptLoader()
-        with taddons.context() as tctx:
-            tctx.master.addons.add(sc)
-            tctx.configure(sc, scripts = ["nonexistent"])
-            tctx.master.has_log("nonexistent: file not found")
 
     def test_order(self):
         rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder")

@@ -13,10 +13,8 @@ import traceback
 import urwid
 
 from mitmproxy import addons
-from mitmproxy import exceptions
 from mitmproxy import command
 from mitmproxy import master
-from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import flow
 from mitmproxy.addons import intercept
@@ -170,6 +168,7 @@ def default_keymap(km):
     km.add("X", "flow.kill @focus", context="flowlist")
     km.add("z", "view.remove @all", context="flowlist")
     km.add("Z", "view.remove @hidden", context="flowlist")
+    km.add("|", "console.command 'script.run @focus '", context="flowlist")
     km.add("enter", "console.view.flow @focus", context="flowlist")
 
 
@@ -280,30 +279,9 @@ class ConsoleMaster(master.Master):
         self.loop.widget = window
         self.loop.draw_screen()
 
-    def run_script_once(self, command, f):
-        sc = self.addons.get("scriptloader")
-        try:
-            with self.handlecontext():
-                sc.run_once(command, [f])
-        except ValueError as e:
-            signals.add_log("Input error: %s" % e, "warn")
-
     def refresh_view(self):
         self.view_flowlist()
         signals.replace_view_state.send(self)
-
-    def _readflows(self, path):
-        """
-        Utitility function that reads a list of flows
-        or prints an error to the UI if that fails.
-        Returns
-            - None, if there was an error.
-            - a list of flows, otherwise.
-        """
-        try:
-            return io.read_flows_from_paths(path)
-        except exceptions.FlowReadException as e:
-            signals.status_message.send(message=str(e))
 
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
@@ -524,31 +502,6 @@ class ConsoleMaster(master.Master):
                 "flowview"
             )
         )
-
-    def _write_flows(self, path, flows):
-        with open(path, "wb") as f:
-            fw = io.FlowWriter(f)
-            for i in flows:
-                fw.add(i)
-
-    def save_one_flow(self, path, flow):
-        return self._write_flows(path, [flow])
-
-    def save_flows(self, path):
-        return self._write_flows(path, self.view)
-
-    def load_flows_callback(self, path):
-        ret = self.load_flows_path(path)
-        return ret or "Flows loaded from %s" % path
-
-    def load_flows_path(self, path):
-        reterr = None
-        try:
-            master.Master.load_flows_file(self, path)
-        except exceptions.FlowReadException as e:
-            reterr = str(e)
-        signals.flowlist_change.send(self)
-        return reterr
 
     def quit(self, a):
         if a != "n":
