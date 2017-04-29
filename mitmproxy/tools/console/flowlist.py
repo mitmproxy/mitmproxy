@@ -141,14 +141,7 @@ class FlowItem(urwid.WidgetWrap):
     def keypress(self, xxx_todo_changeme, key):
         (maxcol,) = xxx_todo_changeme
         key = common.shortcuts(key)
-        if key == "V":
-            if not self.flow.modified():
-                signals.status_message.send(message="Flow not modified.")
-                return
-            self.flow.revert()
-            signals.flowlist_change.send(self)
-            signals.status_message.send(message="Reverted.")
-        elif key == "|":
+        if key == "|":
             signals.status_prompt_path.send(
                 prompt = "Send flow to script",
                 callback = self.master.run_script_once,

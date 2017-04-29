@@ -63,4 +63,19 @@ class Core:
             if f.killable:
                 f.kill()
                 updated.append(f)
+        ctx.log.alert("Killed %s flows." % len(updated))
+        ctx.master.addons.trigger("update", updated)
+
+    # FIXME: this will become view.revert later
+    @command.command("flow.revert")
+    def revert(self, flows: typing.Sequence[flow.Flow]) -> None:
+        """
+            Revert flow changes.
+        """
+        updated = []
+        for f in flows:
+            if f.modified():
+                f.revert()
+                updated.append(f)
+        ctx.log.alert("Reverted %s flows." % len(updated))
         ctx.master.addons.trigger("update", updated)
