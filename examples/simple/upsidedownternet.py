@@ -2,11 +2,11 @@
 This script rotates all images passing through the proxy by 180 degrees.
 """
 import io
-
 from PIL import Image
+from mitmproxy import http
 
 
-def response(flow):
+def response(flow: http.HTTPFlow) -> None:
     if flow.response.headers.get("content-type", "").startswith("image"):
         s = io.BytesIO(flow.response.content)
         img = Image.open(s).rotate(180)

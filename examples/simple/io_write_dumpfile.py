@@ -7,18 +7,18 @@ to multiple files in parallel.
 """
 import random
 import sys
-from mitmproxy import io
+from mitmproxy import io, http
 
 
 class Writer:
-    def __init__(self, path):
+    def __init__(self, path: str) -> None:
         if path == "-":
-            f = sys.stdout
+            f = sys.stdout  # type: io.TextIO
         else:
             f = open(path, "wb")
         self.w = io.FlowWriter(f)
 
-    def response(self, flow):
+    def response(self, flow: http.HTTPFlow) -> None:
         if random.choice([True, False]):
             self.w.add(flow)
 

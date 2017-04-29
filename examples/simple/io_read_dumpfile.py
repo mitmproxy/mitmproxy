@@ -8,6 +8,7 @@ from mitmproxy.exceptions import FlowReadException
 import pprint
 import sys
 
+
 with open(sys.argv[1], "rb") as logfile:
     freader = io.FlowReader(logfile)
     pp = pprint.PrettyPrinter(indent=4)

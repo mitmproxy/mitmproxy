@@ -1,4 +1,7 @@
-def request(flow):
+from mitmproxy import http
+
+
+def request(flow: http.HTTPFlow) -> None:
     if flow.request.urlencoded_form:
         # If there's already a form, one can just add items to the dict:
         flow.request.urlencoded_form["mitmproxy"] = "rocks"
