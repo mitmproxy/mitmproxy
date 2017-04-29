@@ -1,7 +1,7 @@
-import React, { PropTypes } from "react"
+import React from "react"
+import PropTypes from "prop-types"
 import { connect } from "react-redux"
-import classnames from "classnames"
-import {ConnectionState} from "../../ducks/connection"
+import { ConnectionState } from "../../ducks/connection"
 
 
 ConnectionIndicator.propTypes = {
@@ -10,7 +10,7 @@ ConnectionIndicator.propTypes = {
 
 }
 function ConnectionIndicator({ state, message }) {
-    switch(state){
+    switch (state) {
         case ConnectionState.INIT:
             return <span className="connection-indicator init">connecting…</span>;
         case ConnectionState.FETCHING:
@@ -18,7 +18,8 @@ function ConnectionIndicator({ state, message }) {
         case ConnectionState.ESTABLISHED:
             return <span className="connection-indicator established">connected</span>;
         case ConnectionState.ERROR:
-            return <span className="connection-indicator error" title={message}>connection lost</span>;
+            return <span className="connection-indicator error"
+                         title={message}>connection lost</span>;
         case ConnectionState.OFFLINE:
             return <span className="connection-indicator offline">offline</span>;
     }

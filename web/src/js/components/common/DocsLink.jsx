@@ -1,4 +1,4 @@
-import { PropTypes } from 'react'
+import PropTypes from "prop-types"
 
 DocsLink.propTypes = {
     resource: PropTypes.string.isRequired,

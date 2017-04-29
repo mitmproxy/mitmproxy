@@ -3358,19 +3358,19 @@ var _react = require("react");
 
 var _react2 = _interopRequireDefault(_react);
 
+var _propTypes = require("prop-types");
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
 var _reactRedux = require("react-redux");
-
-var _classnames = require("classnames");
-
-var _classnames2 = _interopRequireDefault(_classnames);
 
 var _connection = require("../../ducks/connection");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 ConnectionIndicator.propTypes = {
-    state: _react.PropTypes.symbol.isRequired,
-    message: _react.PropTypes.string
+    state: _propTypes2.default.symbol.isRequired,
+    message: _propTypes2.default.string
 
 };
 function ConnectionIndicator(_ref) {
@@ -3399,7 +3399,8 @@ function ConnectionIndicator(_ref) {
         case _connection.ConnectionState.ERROR:
             return _react2.default.createElement(
                 "span",
-                { className: "connection-indicator error", title: message },
+                { className: "connection-indicator error",
+                    title: message },
                 "connection lost"
             );
         case _connection.ConnectionState.OFFLINE:
@@ -3415,7 +3416,7 @@ exports.default = (0, _reactRedux.connect)(function (state) {
     return state.connection;
 })(ConnectionIndicator);
 
-},{"../../ducks/connection":49,"classnames":"classnames","react":"react","react-redux":"react-redux"}],29:[function(require,module,exports){
+},{"../../ducks/connection":49,"prop-types":"prop-types","react":"react","react-redux":"react-redux"}],29:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -4952,10 +4953,14 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = DocsLink;
 
-var _react = require("react");
+var _propTypes = require("prop-types");
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 DocsLink.propTypes = {
-    resource: _react.PropTypes.string.isRequired
+    resource: _propTypes2.default.string.isRequired
 };
 
 function DocsLink(_ref) {
@@ -4970,7 +4975,7 @@ function DocsLink(_ref) {
     );
 }
 
-},{"react":"react"}],43:[function(require,module,exports){
+},{"prop-types":"prop-types"}],43:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
