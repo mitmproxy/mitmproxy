@@ -7,6 +7,33 @@ from mitmproxy.test import tflow
 import pytest
 
 
+def test_extract():
+    tf = tflow.tflow(resp=True)
+    tests = [
+        ["q.method", "GET"],
+        ["q.scheme", "http"],
+        ["q.host", "address"],
+        ["q.port", "22"],
+        ["q.path", "/path"],
+        ["q.url", "http://address:22/path"],
+        ["q.text", "content"],
+        ["q.content", b"content"],
+        ["q.raw_content", b"content"],
+        ["q.header[header]", "qvalue"],
+
+        ["s.status_code", "200"],
+        ["s.reason", "OK"],
+        ["s.text", "message"],
+        ["s.content", b"message"],
+        ["s.raw_content", b"message"],
+        ["s.header[header-response]", "svalue"],
+    ]
+    for t in tests:
+        ret = cut.extract(t[0], tf)
+        if ret != t[1]:
+            raise AssertionError("Expected %s, got %s", t[1], ret)
+
+
 def test_parse_cutspec():
     tests = [
         ("", None, True),
@@ -71,9 +98,9 @@ def test_cut_file(tmpdir):
 
         v.add([tflow.tflow(resp=True)])
         tctx.command(c.save, "q.method|@all", f)
-        assert qr(f) == b"GET\nGET"
-        tctx.command(c.save, "q.method,q.path|@all", f)
-        assert qr(f) == b"GET, /path\nGET, /path"
+        assert qr(f).splitlines() == [b"GET", b"GET"]
+        tctx.command(c.save, "q.method,q.content|@all", f)
+        assert qr(f).splitlines() == [b"GET,content", b"GET,content"]
 
 
 def test_cut():
