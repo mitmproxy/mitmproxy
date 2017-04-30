@@ -7,6 +7,7 @@ from mitmproxy.addons import core_option_validation
 from mitmproxy.addons import core
 from mitmproxy.addons import cut
 from mitmproxy.addons import disable_h2c
+from mitmproxy.addons import export
 from mitmproxy.addons import onboarding
 from mitmproxy.addons import proxyauth
 from mitmproxy.addons import replace
@@ -31,6 +32,7 @@ def default_addons():
         clientplayback.ClientPlayback(),
         cut.Cut(),
         disable_h2c.DisableH2C(),
+        export.Export(),
         onboarding.Onboarding(),
         proxyauth.ProxyAuth(),
         replace.Replace(),

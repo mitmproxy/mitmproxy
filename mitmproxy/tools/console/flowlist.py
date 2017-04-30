@@ -3,7 +3,6 @@ import urwid
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.addons import view
-from mitmproxy import export
 import mitmproxy.tools.console.master # noqa
 
 
@@ -140,25 +139,7 @@ class FlowItem(urwid.WidgetWrap):
 
     def keypress(self, xxx_todo_changeme, key):
         (maxcol,) = xxx_todo_changeme
-        key = common.shortcuts(key)
-        if key == "E":
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Export to file",
-                keys = [(e[0], e[1]) for e in export.EXPORTERS],
-                callback = common.export_to_clip_or_file,
-                args = (None, self.flow, common.ask_save_path)
-            )
-        # elif key == "C":
-        #     signals.status_prompt_onekey.send(
-        #         self,
-        #         prompt = "Export to clipboard",
-        #         keys = [(e[0], e[1]) for e in export.EXPORTERS],
-        #         callback = common.export_to_clip_or_file,
-        #         args = (None, self.flow, common.copy_to_clipboard_or_prompt)
-        #     )
-        else:
-            return key
+        return common.shortcuts(key)
 
 
 class FlowListWalker(urwid.ListWalker):
@@ -246,13 +227,7 @@ class FlowListBox(urwid.ListBox):
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
-        if key == "L":
-            signals.status_prompt_path.send(
-                self,
-                prompt = "Load flows",
-                callback = self.master.load_flows_callback
-            )
-        elif key == "M":
+        if key == "M":
             self.master.view.toggle_marked()
         elif key == "n":
             signals.status_prompt_onekey.send(

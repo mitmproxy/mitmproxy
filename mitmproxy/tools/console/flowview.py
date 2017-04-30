@@ -8,7 +8,6 @@ import urwid
 
 from mitmproxy import contentviews
 from mitmproxy import exceptions
-from mitmproxy import export
 from mitmproxy import http
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http import status_codes
@@ -619,29 +618,31 @@ class FlowView(tabs.Tabs):
                 )
             )
         elif key == "E":
-            if self.tab_offset == TAB_REQ:
-                scope = "q"
-            else:
-                scope = "s"
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Export to file",
-                keys = [(e[0], e[1]) for e in export.EXPORTERS],
-                callback = common.export_to_clip_or_file,
-                args = (scope, self.flow, common.ask_save_path)
-            )
+            pass
+            # if self.tab_offset == TAB_REQ:
+            #     scope = "q"
+            # else:
+            #     scope = "s"
+            # signals.status_prompt_onekey.send(
+            #     self,
+            #     prompt = "Export to file",
+            #     keys = [(e[0], e[1]) for e in export.EXPORTERS],
+            #     callback = common.export_to_clip_or_file,
+            #     args = (scope, self.flow, common.ask_save_path)
+            # )
         elif key == "C":
-            if self.tab_offset == TAB_REQ:
-                scope = "q"
-            else:
-                scope = "s"
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Export to clipboard",
-                keys = [(e[0], e[1]) for e in export.EXPORTERS],
-                callback = common.export_to_clip_or_file,
-                args = (scope, self.flow, common.copy_to_clipboard_or_prompt)
-            )
+            pass
+            # if self.tab_offset == TAB_REQ:
+            #     scope = "q"
+            # else:
+            #     scope = "s"
+            # signals.status_prompt_onekey.send(
+            #     self,
+            #     prompt = "Export to clipboard",
+            #     keys = [(e[0], e[1]) for e in export.EXPORTERS],
+            #     callback = common.export_to_clip_or_file,
+            #     args = (scope, self.flow, common.copy_to_clipboard_or_prompt)
+            # )
         elif key == "x":
             conn.content = None
             signals.flow_change.send(self, flow=self.flow)

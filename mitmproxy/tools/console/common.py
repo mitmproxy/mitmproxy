@@ -9,7 +9,6 @@ import urwid.util
 import mitmproxy.net
 from functools import lru_cache
 from mitmproxy.tools.console import signals
-from mitmproxy import export
 from mitmproxy.utils import human
 
 try:
@@ -306,28 +305,6 @@ def ask_save_body(scope, flow):
         signals.status_message.send(message="No content.")
 
 
-def export_to_clip_or_file(key, scope, flow, writer):
-    """
-    Export selected flow to clipboard or a file.
-
-    key:    _c_ontent, _h_eaders+content, _u_rl,
-            cu_r_l_command, _p_ython_code,
-            _l_ocust_code, locust_t_ask
-    scope:  None, _a_ll, re_q_uest, re_s_ponse
-    writer: copy_to_clipboard_or_prompt, ask_save_path
-    """
-
-    for _, exp_key, exporter in export.EXPORTERS:
-        if key == exp_key:
-            if exporter is None:  # 'c' & 'h'
-                if scope is None:
-                    ask_scope_and_callback(flow, handle_flow_data, key, writer)
-                else:
-                    handle_flow_data(scope, flow, key, writer)
-            else:  # other keys
-                writer(exporter(flow))
-
-
 @lru_cache(maxsize=800)
 def raw_format_flow(f, flow):
     f = dict(f)
@@ -418,13 +395,16 @@ def raw_format_flow(f, flow):
 
 
 def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
+    acked = False
+    if f.reply and f.reply.state == "committed":
+        acked = True
     d = dict(
         focus=focus,
         extended=extended,
         max_url_len=max_url_len,
 
         intercepted = f.intercepted,
-        acked = f.reply.state == "committed",
+        acked = acked,
 
         req_timestamp = f.request.timestamp_start,
         req_is_replay = f.request.is_replay,

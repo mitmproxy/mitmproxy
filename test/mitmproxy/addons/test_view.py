@@ -5,6 +5,7 @@ from mitmproxy.test import tflow
 from mitmproxy.addons import view
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
+from mitmproxy import io
 from mitmproxy.test import taddons
 
 
@@ -130,10 +131,28 @@ def test_filter():
     assert len(v) == 4
 
 
-def test_load():
+def tdump(path, flows):
+    w = io.FlowWriter(open(path, "wb"))
+    for i in flows:
+        w.add(i)
+
+
+def test_load(tmpdir):
+    path = str(tmpdir.join("path"))
     v = view.View()
     with taddons.context() as tctx:
         tctx.master.addons.add(v)
+        tdump(
+            path,
+            [
+                tflow.tflow(resp=True),
+                tflow.tflow(resp=True)
+            ]
+        )
+        v.load_file(path)
+        assert len(v) == 2
+        v.load_file(path)
+        assert len(v) == 4
 
 
 def test_resolve():
