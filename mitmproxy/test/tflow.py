@@ -174,7 +174,7 @@ def tserver_conn():
         id=str(uuid.uuid4()),
         address=("address", 22),
         source_address=("address", 22),
-        ip_address=None,
+        ip_address=("192.168.0.1", 22),
         cert=None,
         timestamp_start=1,
         timestamp_tcp_setup=2,
@@ -183,7 +183,7 @@ def tserver_conn():
         ssl_established=False,
         sni="address",
         alpn_proto_negotiated=None,
-        tls_version=None,
+        tls_version="TLSv1.2",
         via=None,
     ))
     c.reply = controller.DummyReply()

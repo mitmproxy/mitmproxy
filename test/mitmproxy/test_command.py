@@ -7,6 +7,7 @@ from mitmproxy import proxy
 from mitmproxy import exceptions
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
+import io
 import pytest
 
 
@@ -55,21 +56,33 @@ def test_simple():
         c.add("empty", a.empty)
         c.call("empty")
 
+        fp = io.StringIO()
+        c.dump(fp)
+        assert fp.getvalue()
+
 
 def test_typename():
     assert command.typename(str, True) == "str"
     assert command.typename(typing.Sequence[flow.Flow], True) == "[flow]"
     assert command.typename(typing.Sequence[flow.Flow], False) == "flowspec"
+
+    assert command.typename(command.Cuts, False) == "cutspec"
+    assert command.typename(command.Cuts, True) == "[cuts]"
+
     assert command.typename(flow.Flow, False) == "flow"
 
 
 class DummyConsole:
     def load(self, l):
         l.add_command("view.resolve", self.resolve)
+        l.add_command("cut", self.cut)
 
     def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
         n = int(spec)
         return [tflow.tflow(resp=True)] * n
+
+    def cut(self, spec: str) -> command.Cuts:
+        return [["test"]]
 
 
 def test_parsearg():
@@ -96,6 +109,10 @@ def test_parsearg():
             command.parsearg(tctx.master.commands, "0", flow.Flow)
         with pytest.raises(exceptions.CommandError):
             command.parsearg(tctx.master.commands, "foo", Exception)
+
+        assert command.parsearg(
+            tctx.master.commands, "foo", command.Cuts
+        ) == [["test"]]
 
 
 class TDec:

@@ -19,6 +19,16 @@ def check_command_return_type(value: typing.Any, typeinfo: typing.Any) -> bool:
         for v in value:
             if not check_command_return_type(v, T):
                 return False
+    elif typename.startswith("typing.Union"):
+        try:
+            types = typeinfo.__args__  # type: ignore
+        except AttributeError:
+            # Python 3.5.x
+            types = typeinfo.__union_params__  # type: ignore
+        for T in types:
+            checks = [check_command_return_type(value, T) for T in types]
+            if not any(checks):
+                return False
     elif value is None and typeinfo is None:
         return True
     elif not isinstance(value, typeinfo):

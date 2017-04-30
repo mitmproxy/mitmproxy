@@ -25,9 +25,10 @@ def always_str(str_or_bytes: Optional[AnyStr], *decode_args) -> Optional[str]:
         raise TypeError("Expected str or bytes, but got {}.".format(type(str_or_bytes).__name__))
 
 
-# Translate control characters to "safe" characters. This implementation initially
-# replaced them with the matching control pictures (http://unicode.org/charts/PDF/U2400.pdf),
-# but that turned out to render badly with monospace fonts. We are back to "." therefore.
+# Translate control characters to "safe" characters. This implementation
+# initially replaced them with the matching control pictures
+# (http://unicode.org/charts/PDF/U2400.pdf), but that turned out to render badly
+# with monospace fonts. We are back to "." therefore.
 _control_char_trans = {
     x: ord(".")  # x + 0x2400 for unicode control group pictures
     for x in range(32)

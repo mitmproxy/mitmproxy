@@ -157,8 +157,6 @@ class FlowItem(urwid.WidgetWrap):
         #         callback = common.export_to_clip_or_file,
         #         args = (None, self.flow, common.copy_to_clipboard_or_prompt)
         #     )
-        elif key == "b":
-            common.ask_save_body(None, self.flow)
         else:
             return key
 

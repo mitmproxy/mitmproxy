@@ -3,10 +3,16 @@ import typing
 import shlex
 import textwrap
 import functools
+import sys
 
 from mitmproxy.utils import typecheck
 from mitmproxy import exceptions
 from mitmproxy import flow
+
+
+Cuts = typing.Sequence[
+    typing.Sequence[typing.Union[str, bytes]]
+]
 
 
 def typename(t: type, ret: bool) -> str:
@@ -18,6 +24,8 @@ def typename(t: type, ret: bool) -> str:
         return t.__name__
     elif t == typing.Sequence[flow.Flow]:
         return "[flow]" if ret else "flowspec"
+    elif t == Cuts:
+        return "[cuts]" if ret else "cutspec"
     elif t == flow.Flow:
         return "flow"
     else:  # pragma: no cover
@@ -102,6 +110,15 @@ class CommandManager:
             raise exceptions.CommandError("Invalid command: %s" % cmdstr)
         return self.call_args(parts[0], parts[1:])
 
+    def dump(self, out=sys.stdout) -> None:
+        cmds = list(self.commands.values())
+        cmds.sort(key=lambda x: x.signature_help())
+        for c in cmds:
+            for hl in (c.help or "").splitlines():
+                print("# " + hl, file=out)
+            print(c.signature_help(), file=out)
+            print(file=out)
+
 
 def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     """
@@ -125,6 +142,8 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
             raise exceptions.CommandError("Expected an integer, got %s." % spec)
     elif argtype == typing.Sequence[flow.Flow]:
         return manager.call_args("view.resolve", [spec])
+    elif argtype == Cuts:
+        return manager.call_args("cut", [spec])
     elif argtype == flow.Flow:
         flows = manager.call_args("view.resolve", [spec])
         if len(flows) != 1:
