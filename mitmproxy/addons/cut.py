@@ -1,3 +1,4 @@
+import io
 import csv
 import typing
 from mitmproxy import command
@@ -6,6 +7,8 @@ from mitmproxy import flow
 from mitmproxy import ctx
 from mitmproxy import certs
 from mitmproxy.utils import strutils
+
+import pyperclip
 
 
 def headername(spec: str):
@@ -124,3 +127,25 @@ class Cut:
                         [strutils.always_str(c) or "" for c in r]  # type: ignore
                     )
             ctx.log.alert("Saved %s cuts as CSV." % len(cuts))
+
+    @command.command("cut.clip")
+    def clip(self, cuts: command.Cuts) -> None:
+        """
+            Send cuts to the system clipboard.
+        """
+        fp = io.StringIO(newline="")
+        if len(cuts) == 1 and len(cuts[0]) == 1:
+            v = cuts[0][0]
+            if isinstance(v, bytes):
+                fp.write(strutils.always_str(v))
+            else:
+                fp.write("utf8")
+            ctx.log.alert("Clipped single cut.")
+        else:
+            writer = csv.writer(fp)
+            for r in cuts:
+                writer.writerow(
+                    [strutils.always_str(c) or "" for c in r]  # type: ignore
+                )
+            ctx.log.alert("Clipped %s cuts as CSV." % len(cuts))
+        pyperclip.copy(fp.getvalue())
