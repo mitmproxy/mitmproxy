@@ -9,7 +9,6 @@ import urwid.util
 import mitmproxy.net
 from functools import lru_cache
 from mitmproxy.tools.console import signals
-from mitmproxy import export
 from mitmproxy.utils import human
 
 try:
@@ -304,28 +303,6 @@ def ask_save_body(scope, flow):
         )
     else:
         signals.status_message.send(message="No content.")
-
-
-def export_to_clip_or_file(key, scope, flow, writer):
-    """
-    Export selected flow to clipboard or a file.
-
-    key:    _c_ontent, _h_eaders+content, _u_rl,
-            cu_r_l_command, _p_ython_code,
-            _l_ocust_code, locust_t_ask
-    scope:  None, _a_ll, re_q_uest, re_s_ponse
-    writer: copy_to_clipboard_or_prompt, ask_save_path
-    """
-
-    for _, exp_key, exporter in export.EXPORTERS:
-        if key == exp_key:
-            if exporter is None:  # 'c' & 'h'
-                if scope is None:
-                    ask_scope_and_callback(flow, handle_flow_data, key, writer)
-                else:
-                    handle_flow_data(scope, flow, key, writer)
-            else:  # other keys
-                writer(exporter(flow))
 
 
 @lru_cache(maxsize=800)

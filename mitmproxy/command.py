@@ -24,6 +24,8 @@ def typename(t: type, ret: bool) -> str:
         return t.__name__
     elif t == typing.Sequence[flow.Flow]:
         return "[flow]" if ret else "flowspec"
+    elif t == typing.Sequence[str]:
+        return "[str]"
     elif t == Cuts:
         return "[cuts]" if ret else "cutspec"
     elif t == flow.Flow:

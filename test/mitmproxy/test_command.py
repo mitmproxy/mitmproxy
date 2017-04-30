@@ -70,6 +70,7 @@ def test_typename():
     assert command.typename(command.Cuts, True) == "[cuts]"
 
     assert command.typename(flow.Flow, False) == "flow"
+    assert command.typename(typing.Sequence[str], False) == "[str]"
 
 
 class DummyConsole:

@@ -1,6 +1,8 @@
+import typing
 import urwid
 
 from mitmproxy import exceptions
+from mitmproxy import flow
 from mitmproxy.tools.console import signals
 
 
@@ -23,5 +25,14 @@ class CommandExecutor:
             except exceptions.CommandError as v:
                 signals.status_message.send(message=str(v))
             else:
-                if type(ret) == str:
-                    signals.status_message.send(message=ret)
+                if ret:
+                    if type(ret) == typing.Sequence[flow.Flow]:
+                        signals.status_message.send(
+                            message="Command returned %s flows" % len(ret)
+                        )
+                    elif len(str(ret)) < 50:
+                        signals.status_message.send(message=str(ret))
+                    else:
+                        signals.status_message.send(
+                            message="Command returned too much data to display."
+                        )

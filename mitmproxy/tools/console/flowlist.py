@@ -2,8 +2,8 @@ import urwid
 
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import master
 from mitmproxy.addons import view
-from mitmproxy import export
 import mitmproxy.tools.console.master # noqa
 
 
@@ -140,25 +140,7 @@ class FlowItem(urwid.WidgetWrap):
 
     def keypress(self, xxx_todo_changeme, key):
         (maxcol,) = xxx_todo_changeme
-        key = common.shortcuts(key)
-        if key == "E":
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Export to file",
-                keys = [(e[0], e[1]) for e in export.EXPORTERS],
-                callback = common.export_to_clip_or_file,
-                args = (None, self.flow, common.ask_save_path)
-            )
-        # elif key == "C":
-        #     signals.status_prompt_onekey.send(
-        #         self,
-        #         prompt = "Export to clipboard",
-        #         keys = [(e[0], e[1]) for e in export.EXPORTERS],
-        #         callback = common.export_to_clip_or_file,
-        #         args = (None, self.flow, common.copy_to_clipboard_or_prompt)
-        #     )
-        else:
-            return key
+        return common.shortcuts(key)
 
 
 class FlowListWalker(urwid.ListWalker):
@@ -203,9 +185,7 @@ class FlowListWalker(urwid.ListWalker):
 
 class FlowListBox(urwid.ListBox):
 
-    def __init__(
-        self, master: "mitmproxy.tools.console.master.ConsoleMaster"
-    ) -> None:
+    def __init__(self, master: master.ConsoleMaster) -> None:
         self.master = master  # type: "mitmproxy.tools.console.master.ConsoleMaster"
         super().__init__(FlowListWalker(master))
 
