@@ -20,10 +20,10 @@ Make sure run all these steps on the correct branch you want to create a new rel
   - Update the dependencies in [alpine/requirements.txt](https://github.com/mitmproxy/docker-releases/commit/3d6a9989fde068ad0aea257823ac3d7986ff1613#diff-9b7e0eea8ae74688b1ac13ea080549ba)
     * Creating a fresh venv, pip-installing the new wheel in there, and then export all packages:
     * `virtualenv -ppython3.5 venv && source venv/bin/activate && pip install mitmproxy && pip freeze`
-- Update `latest` tag [here](https://hub.docker.com/r/mitmproxy/mitmproxy/~/settings/automated-builds/)
-- Tag the commit with the correct version
-    * `2.0.0` for new major versions
-    * `2.0.2` for new patch versions
+  - Tag the commit with the correct version
+    * `2.0.0` for new major versions
+    * `2.0.2` for new patch versions
     * `2.0` always points to the latest patch version of the `2.0.x` series (update tag + force push)
+- Update `latest` tag [here](https://hub.docker.com/r/mitmproxy/mitmproxy/~/settings/automated-builds/)
 
 After everything is done, you might want to bump the version on master in [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) if you just created a major release.
