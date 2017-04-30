@@ -7,7 +7,6 @@ from mitmproxy import options
 from mitmproxy import controller
 from mitmproxy import eventsequence
 from mitmproxy import exceptions
-from mitmproxy import connections
 from mitmproxy import command
 from mitmproxy import http
 from mitmproxy import log
@@ -78,9 +77,6 @@ class Master:
         self.start()
         try:
             while not self.should_exit.is_set():
-                # Don't choose a very small timeout in Python 2:
-                # https://github.com/mitmproxy/mitmproxy/issues/443
-                # TODO: Lower the timeout value if we move to Python 3.
                 self.tick(0.1)
         finally:
             self.shutdown()
@@ -108,22 +104,6 @@ class Master:
         self.server.shutdown()
         self.should_exit.set()
         self.addons.trigger("done")
-
-    def create_request(self, method, url):
-        """
-        Create a new artificial and minimalist request also adds it to flowlist.
-
-        Raises:
-            ValueError, if the url is malformed.
-        """
-        req = http.HTTPRequest.make(method, url)
-        c = connections.ClientConnection.make_dummy(("", 0))
-        s = connections.ServerConnection.make_dummy((req.host, req.port))
-
-        f = http.HTTPFlow(c, s)
-        f.request = req
-        self.load_flow(f)
-        return f
 
     def load_flow(self, f):
         """
