@@ -2,7 +2,6 @@ import urwid
 
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
-from mitmproxy.addons import view
 import mitmproxy.tools.console.master # noqa
 
 
@@ -190,62 +189,6 @@ class FlowListBox(urwid.ListBox):
         self.master = master  # type: "mitmproxy.tools.console.master.ConsoleMaster"
         super().__init__(FlowListWalker(master))
 
-    def get_method_raw(self, k):
-        if k:
-            self.get_url(k)
-
-    def get_method(self, k):
-        if k == "e":
-            signals.status_prompt.send(
-                self,
-                prompt = "Method",
-                text = "",
-                callback = self.get_method_raw
-            )
-        else:
-            method = ""
-            for i in common.METHOD_OPTIONS:
-                if i[1] == k:
-                    method = i[0].upper()
-            self.get_url(method)
-
-    def get_url(self, method):
-        signals.status_prompt.send(
-            prompt = "URL",
-            text = "http://www.example.com/",
-            callback = self.new_request,
-            args = (method,)
-        )
-
-    def new_request(self, url, method):
-        try:
-            f = self.master.create_request(method, url)
-        except ValueError as e:
-            signals.status_message.send(message = "Invalid URL: " + str(e))
-            return
-        self.master.view.focus.flow = f
-
     def keypress(self, size, key):
         key = common.shortcuts(key)
-        if key == "M":
-            self.master.view.toggle_marked()
-        elif key == "n":
-            signals.status_prompt_onekey.send(
-                prompt = "Method",
-                keys = common.METHOD_OPTIONS,
-                callback = self.get_method
-            )
-        elif key == "o":
-            orders = [(i[1], i[0]) for i in view.orders]
-            lookup = dict([(i[0], i[1]) for i in view.orders])
-
-            def change_order(k):
-                self.master.options.console_order = lookup[k]
-
-            signals.status_prompt_onekey.send(
-                prompt = "Order",
-                keys = orders,
-                callback = change_order
-            )
-        else:
-            return urwid.ListBox.keypress(self, size, key)
+        return urwid.ListBox.keypress(self, size, key)

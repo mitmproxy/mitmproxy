@@ -189,6 +189,18 @@ def default_keymap(km):
     km.add("l", "console.command cut.clip ", context="flowlist")
     km.add("L", "console.command view.load ", context="flowlist")
     km.add("m", "flow.mark.toggle @focus", context="flowlist")
+    km.add("M", "view.marked.toggle", context="flowlist")
+    km.add(
+        "n",
+        "console.command view.create get https://google.com",
+        context="flowlist"
+    )
+    km.add(
+        "o",
+        "console.choose Order view.order.options "
+        "set console_order={choice}",
+        context="flowlist"
+    )
     km.add("r", "replay.client @focus", context="flowlist")
     km.add("S", "console.command 'replay.server '")
     km.add("v", "set console_order_reversed=toggle", context="flowlist")

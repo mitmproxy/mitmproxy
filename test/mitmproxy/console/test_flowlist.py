@@ -1,4 +1,3 @@
-from unittest import mock
 import urwid
 
 import mitmproxy.tools.console.flowlist as flowlist
@@ -13,13 +12,6 @@ class TestFlowlist:
             opts["verbosity"] = 1
         o = options.Options(**opts)
         return console.master.ConsoleMaster(o, proxy.DummyServer())
-
-    def test_new_request(self):
-        m = self.mkmaster()
-        x = flowlist.FlowListBox(m)
-        with mock.patch('mitmproxy.tools.console.signals.status_message.send') as mock_thing:
-            x.new_request("nonexistent url", "GET")
-        mock_thing.assert_called_once_with(message="Invalid URL: No hostname given")
 
     def test_logbuffer_set_focus(self):
         m = self.mkmaster()

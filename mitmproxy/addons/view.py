@@ -19,6 +19,7 @@ import mitmproxy.flow
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
 from mitmproxy import command
+from mitmproxy import connections
 from mitmproxy import ctx
 from mitmproxy import io
 from mitmproxy import http  # noqa
@@ -201,7 +202,18 @@ class View(collections.Sequence):
         self.sig_view_refresh.send(self)
 
     # API
-    def toggle_marked(self):
+    @command.command("view.order.options")
+    def order_options(self) -> typing.Sequence[str]:
+        """
+            A list of all the orders we support.
+        """
+        return list(sorted(self.orders.keys()))
+
+    @command.command("view.marked.toggle")
+    def toggle_marked(self) -> None:
+        """
+            Toggle whether to show marked views only.
+        """
         self.show_marked = not self.show_marked
         self._refilter()
 
@@ -340,6 +352,16 @@ class View(collections.Sequence):
             if not filt:
                 raise exceptions.CommandError("Invalid flow filter: %s" % spec)
             return [i for i in self._store.values() if filt(i)]
+
+    @command.command("view.create")
+    def create(self, method: str, url: str) -> None:
+        req = http.HTTPRequest.make(method.upper(), url)
+        c = connections.ClientConnection.make_dummy(("", 0))
+        s = connections.ServerConnection.make_dummy((req.host, req.port))
+        f = http.HTTPFlow(c, s)
+        f.request = req
+        f.request.headers["Host"] = req.host
+        self.add([f])
 
     # Event handlers
     def configure(self, updated):

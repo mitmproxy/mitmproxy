@@ -113,10 +113,6 @@ class TestFlowMaster:
         with pytest.raises(Exception, match="live"):
             fm.replay_request(f)
 
-    def test_create_flow(self):
-        fm = master.Master(None, DummyServer())
-        assert fm.create_request("GET", "http://example.com/")
-
     def test_all(self):
         s = tservers.TestState()
         fm = master.Master(None, DummyServer())

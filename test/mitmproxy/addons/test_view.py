@@ -137,6 +137,22 @@ def tdump(path, flows):
         w.add(i)
 
 
+def test_create():
+    v = view.View()
+    with taddons.context():
+        v.create("get", "http://foo.com")
+        assert len(v) == 1
+        assert v[0].request.url == "http://foo.com/"
+        v.create("get", "http://foo.com")
+        assert len(v) == 2
+
+
+def test_orders():
+    v = view.View()
+    with taddons.context():
+        assert v.order_options()
+
+
 def test_load(tmpdir):
     path = str(tmpdir.join("path"))
     v = view.View()
