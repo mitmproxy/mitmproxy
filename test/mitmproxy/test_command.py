@@ -1,9 +1,6 @@
 import typing
 from mitmproxy import command
 from mitmproxy import flow
-from mitmproxy import master
-from mitmproxy import options
-from mitmproxy import proxy
 from mitmproxy import exceptions
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
@@ -19,24 +16,41 @@ class TAddon:
     def cmd2(self, foo: str) -> str:
         return 99
 
+    def cmd3(self, foo: int) -> int:
+        return foo
+
     def empty(self) -> None:
         pass
 
+    def varargs(self, one: str, *var: typing.Sequence[str]) -> typing.Sequence[str]:
+        return list(var)
+
 
 class TestCommand:
+    def test_varargs(self):
+        with taddons.context() as tctx:
+            cm = command.CommandManager(tctx.master)
+            a = TAddon()
+            c = command.Command(cm, "varargs", a.varargs)
+            assert c.signature_help() == "varargs str *str -> [str]"
+            assert c.call(["one", "two", "three"]) == ["two", "three"]
+            with pytest.raises(exceptions.CommandError):
+                c.call(["one", "two", 3])
+
     def test_call(self):
-        o = options.Options()
-        m = master.Master(o, proxy.DummyServer(o))
-        cm = command.CommandManager(m)
+        with taddons.context() as tctx:
+            cm = command.CommandManager(tctx.master)
+            a = TAddon()
+            c = command.Command(cm, "cmd.path", a.cmd1)
+            assert c.call(["foo"]) == "ret foo"
+            assert c.signature_help() == "cmd.path str -> str"
 
-        a = TAddon()
-        c = command.Command(cm, "cmd.path", a.cmd1)
-        assert c.call(["foo"]) == "ret foo"
-        assert c.signature_help() == "cmd.path str -> str"
+            c = command.Command(cm, "cmd.two", a.cmd2)
+            with pytest.raises(exceptions.CommandError):
+                c.call(["foo"])
 
-        c = command.Command(cm, "cmd.two", a.cmd2)
-        with pytest.raises(exceptions.CommandError):
-            c.call(["foo"])
+            c = command.Command(cm, "cmd.three", a.cmd3)
+            assert c.call(["1"]) == 1
 
 
 def test_simple():
@@ -74,14 +88,12 @@ def test_typename():
 
 
 class DummyConsole:
-    def load(self, l):
-        l.add_command("view.resolve", self.resolve)
-        l.add_command("cut", self.cut)
-
+    @command.command("view.resolve")
     def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
         n = int(spec)
         return [tflow.tflow(resp=True)] * n
 
+    @command.command("cut")
     def cut(self, spec: str) -> command.Cuts:
         return [["test"]]
 
@@ -114,6 +126,13 @@ def test_parsearg():
         assert command.parsearg(
             tctx.master.commands, "foo", command.Cuts
         ) == [["test"]]
+
+        assert command.parsearg(
+            tctx.master.commands, "foo", typing.Sequence[str]
+        ) == ["foo"]
+        assert command.parsearg(
+            tctx.master.commands, "foo, bar", typing.Sequence[str]
+        ) == ["foo", "bar"]
 
 
 class TDec:

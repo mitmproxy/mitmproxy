@@ -9,9 +9,11 @@ import subprocess
 import sys
 import tempfile
 import traceback
+import typing
 
 import urwid
 
+from mitmproxy import ctx
 from mitmproxy import addons
 from mitmproxy import command
 from mitmproxy import master
@@ -84,12 +86,31 @@ class ConsoleAddon:
         self.master = master
         self.started = False
 
+    @command.command("console.choose")
+    def console_choose(
+        self, prompt: str, choicecmd: str, *cmd: typing.Sequence[str]
+    ) -> None:
+        """
+            Prompt the user to choose from a list of strings returned by a
+            command, then invoke another command with all occurances of {choice}
+            replaced by the choice the user made.
+        """
+        choices = ctx.master.commands.call_args(choicecmd, [])
+
+        def callback(opt):
+            repl = " ".join(cmd)
+            repl = repl.replace("{choice}", opt)
+            self.master.commands.call(repl)
+
+        self.master.overlay(overlay.Chooser(choicecmd, choices, "", callback))
+        ctx.log.info(choices)
+
     @command.command("console.command")
-    def console_command(self, partial: str) -> None:
+    def console_command(self, *partial: typing.Sequence[str]) -> None:
         """
         Prompt the user to edit a command with a (possilby empty) starting value.
         """
-        signals.status_prompt_command.send(partial=partial)
+        signals.status_prompt_command.send(partial=" ".join(partial) + " ")  # type: ignore
 
     @command.command("console.view.commands")
     def view_commands(self) -> None:
@@ -146,16 +167,21 @@ def default_keymap(km):
     km.add("O", "console.view.options")
     km.add("Q", "console.exit")
     km.add("q", "console.view.pop")
-    km.add("i", "console.command 'set intercept='")
-    km.add("W", "console.command 'set save_stream_file='")
+    km.add("i", "console.command set intercept=")
+    km.add("W", "console.command set save_stream_file=")
 
     km.add("A", "flow.resume @all", context="flowlist")
     km.add("a", "flow.resume @focus", context="flowlist")
-    km.add("b", "console.command 'cut.save s.content|@focus '", context="flowlist")
+    km.add("b", "console.command cut.save s.content|@focus ''", context="flowlist")
     km.add("d", "view.remove @focus", context="flowlist")
     km.add("D", "view.duplicate @focus", context="flowlist")
     km.add("e", "set console_eventlog=toggle", context="flowlist")
-    km.add("E", "console.command 'export.file curl @focus '", context="flowlist")
+    km.add(
+        "E",
+        "console.choose Format export.formats "
+        "console.command export.file {choice} @focus ''",
+        context="flowlist"
+    )
     km.add("f", "console.command 'set view_filter='", context="flowlist")
     km.add("F", "set console_focus_follow=toggle", context="flowlist")
     km.add("g", "view.go 0", context="flowlist")

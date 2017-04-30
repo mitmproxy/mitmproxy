@@ -88,25 +88,26 @@ def test_check_any():
     typecheck.check_option_type("foo", None, typing.Any)
 
 
-def test_check_command_return_type():
-    assert(typecheck.check_command_return_type("foo", str))
-    assert(typecheck.check_command_return_type(["foo"], typing.Sequence[str]))
-    assert(typecheck.check_command_return_type(None, None))
-    assert(not typecheck.check_command_return_type(["foo"], typing.Sequence[int]))
-    assert(not typecheck.check_command_return_type("foo", typing.Sequence[int]))
-    assert(typecheck.check_command_return_type([["foo", b"bar"]], command.Cuts))
-    assert(not typecheck.check_command_return_type(["foo", b"bar"], command.Cuts))
-    assert(not typecheck.check_command_return_type([["foo", 22]], command.Cuts))
+def test_check_command_type():
+    assert(typecheck.check_command_type("foo", str))
+    assert(typecheck.check_command_type(["foo"], typing.Sequence[str]))
+    assert(not typecheck.check_command_type(["foo", 1], typing.Sequence[str]))
+    assert(typecheck.check_command_type(None, None))
+    assert(not typecheck.check_command_type(["foo"], typing.Sequence[int]))
+    assert(not typecheck.check_command_type("foo", typing.Sequence[int]))
+    assert(typecheck.check_command_type([["foo", b"bar"]], command.Cuts))
+    assert(not typecheck.check_command_type(["foo", b"bar"], command.Cuts))
+    assert(not typecheck.check_command_type([["foo", 22]], command.Cuts))
 
     # Python 3.5 only defines __parameters__
     m = mock.Mock()
     m.__str__ = lambda self: "typing.Sequence"
     m.__parameters__ = (int,)
 
-    typecheck.check_command_return_type([10], m)
+    typecheck.check_command_type([10], m)
 
     # Python 3.5 only defines __union_params__
     m = mock.Mock()
     m.__str__ = lambda self: "typing.Union"
     m.__union_params__ = (int,)
-    assert not typecheck.check_command_return_type([22], m)
+    assert not typecheck.check_command_type([22], m)

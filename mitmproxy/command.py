@@ -1,3 +1,6 @@
+"""
+    This module manges and invokes typed commands.
+"""
 import inspect
 import typing
 import shlex
@@ -17,10 +20,10 @@ Cuts = typing.Sequence[
 
 def typename(t: type, ret: bool) -> str:
     """
-        Translates a type to an explanatory string. Ifl ret is True, we're
+        Translates a type to an explanatory string. If ret is True, we're
         looking at a return type, else we're looking at a parameter type.
     """
-    if t in (str, int, bool):
+    if issubclass(t, (str, int, bool)):
         return t.__name__
     elif t == typing.Sequence[flow.Flow]:
         return "[flow]" if ret else "flowspec"
@@ -44,11 +47,20 @@ class Command:
         if func.__doc__:
             txt = func.__doc__.strip()
             self.help = "\n".join(textwrap.wrap(txt))
+
+        self.has_positional = False
+        for i in sig.parameters.values():
+            # This is the kind for *args paramters
+            if i.kind == i.VAR_POSITIONAL:
+                self.has_positional = True
         self.paramtypes = [v.annotation for v in sig.parameters.values()]
         self.returntype = sig.return_annotation
 
     def paramnames(self) -> typing.Sequence[str]:
-        return [typename(i, False) for i in self.paramtypes]
+        v = [typename(i, False) for i in self.paramtypes]
+        if self.has_positional:
+            v[-1] = "*" + v[-1][1:-1]
+        return v
 
     def retname(self) -> str:
         return typename(self.returntype, True) if self.returntype else ""
@@ -64,17 +76,31 @@ class Command:
         """
             Call the command with a set of arguments. At this point, all argumets are strings.
         """
-        if len(self.paramtypes) != len(args):
+        if not self.has_positional and (len(self.paramtypes) != len(args)):
             raise exceptions.CommandError("Usage: %s" % self.signature_help())
+
+        remainder = []  # type: typing.Sequence[str]
+        if self.has_positional:
+            remainder = args[len(self.paramtypes) - 1:]
+            args = args[:len(self.paramtypes) - 1]
 
         pargs = []
         for i in range(len(args)):
-            pargs.append(parsearg(self.manager, args[i], self.paramtypes[i]))
+            if typecheck.check_command_type(args[i], self.paramtypes[i]):
+                pargs.append(args[i])
+            else:
+                pargs.append(parsearg(self.manager, args[i], self.paramtypes[i]))
+
+        if remainder:
+            if typecheck.check_command_type(remainder, self.paramtypes[-1]):
+                pargs.extend(remainder)
+            else:
+                raise exceptions.CommandError("Invalid value type.")
 
         with self.manager.master.handlecontext():
             ret = self.func(*pargs)
 
-        if not typecheck.check_command_return_type(ret, self.returntype):
+        if not typecheck.check_command_type(ret, self.returntype):
             raise exceptions.CommandError("Command returned unexpected data")
 
         return ret
@@ -126,7 +152,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     """
         Convert a string to a argument to the appropriate type.
     """
-    if argtype == str:
+    if issubclass(argtype, str):
         return spec
     elif argtype == bool:
         if spec == "true":
@@ -137,7 +163,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
             raise exceptions.CommandError(
                 "Booleans are 'true' or 'false', got %s" % spec
             )
-    elif argtype == int:
+    elif issubclass(argtype, int):
         try:
             return int(spec)
         except ValueError as e:
@@ -153,6 +179,8 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
                 "Command requires one flow, specification matched %s." % len(flows)
             )
         return flows[0]
+    elif argtype == typing.Sequence[str]:
+        return [i.strip() for i in spec.split(",")]
     else:
         raise exceptions.CommandError("Unsupported argument type: %s" % argtype)
 

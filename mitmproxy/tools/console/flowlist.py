@@ -2,7 +2,6 @@ import urwid
 
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import master
 from mitmproxy.addons import view
 import mitmproxy.tools.console.master # noqa
 
@@ -185,7 +184,9 @@ class FlowListWalker(urwid.ListWalker):
 
 class FlowListBox(urwid.ListBox):
 
-    def __init__(self, master: master.ConsoleMaster) -> None:
+    def __init__(
+        self, master: "mitmproxy.tools.console.master.ConsoleMaster"
+    ) -> None:
         self.master = master  # type: "mitmproxy.tools.console.master.ConsoleMaster"
         super().__init__(FlowListWalker(master))
 
