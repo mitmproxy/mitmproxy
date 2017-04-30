@@ -20,6 +20,7 @@ from mitmproxy import flowfilter
 from mitmproxy import exceptions
 from mitmproxy import command
 from mitmproxy import ctx
+from mitmproxy import io
 from mitmproxy import http  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
@@ -264,6 +265,17 @@ class View(collections.Sequence):
         Returns None if the flow is not found.
         """
         return self._store.get(flow_id)
+
+    @command.command("view.load")
+    def load_file(self, path: str) -> None:
+        """
+            Load flows into the view, without processing them with addons.
+        """
+        for i in io.FlowReader(open(path, "rb")).stream():
+            # Do this to get a new ID, so we can load the same file N times and
+            # get new flows each time. It would be more efficient to just have a
+            # .newid() method or something.
+            self.add([i.copy()])
 
     @command.command("view.go")
     def go(self, dst: int) -> None:

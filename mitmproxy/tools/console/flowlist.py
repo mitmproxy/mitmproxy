@@ -227,13 +227,7 @@ class FlowListBox(urwid.ListBox):
 
     def keypress(self, size, key):
         key = common.shortcuts(key)
-        if key == "L":
-            signals.status_prompt_path.send(
-                self,
-                prompt = "Load flows",
-                callback = self.master.load_flows_callback
-            )
-        elif key == "M":
+        if key == "M":
             self.master.view.toggle_marked()
         elif key == "n":
             signals.status_prompt_onekey.send(

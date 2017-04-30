@@ -155,22 +155,6 @@ class _MultiDict(MutableMapping, metaclass=ABCMeta):
         else:
             return super().items()
 
-    def collect(self):
-        """
-            Returns a list of (key, value) tuples, where values are either
-            singular if there is only one matching item for a key, or a list
-            if there are more than one. The order of the keys matches the order
-            in the underlying fields list.
-        """
-        coll = []
-        for key in self:
-            values = self.get_all(key)
-            if len(values) == 1:
-                coll.append([key, values[0]])
-            else:
-                coll.append([key, values])
-        return coll
-
 
 class MultiDict(_MultiDict, serializable.Serializable):
     def __init__(self, fields=()):

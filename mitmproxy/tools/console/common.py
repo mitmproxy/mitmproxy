@@ -395,13 +395,16 @@ def raw_format_flow(f, flow):
 
 
 def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
+    acked = False
+    if f.reply and f.reply.state == "committed":
+        acked = True
     d = dict(
         focus=focus,
         extended=extended,
         max_url_len=max_url_len,
 
         intercepted = f.intercepted,
-        acked = f.reply.state == "committed",
+        acked = acked,
 
         req_timestamp = f.request.timestamp_start,
         req_is_replay = f.request.is_replay,
