@@ -7,6 +7,7 @@ from mitmproxy import proxy
 from mitmproxy import exceptions
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
+import io
 import pytest
 
 
@@ -54,6 +55,10 @@ def test_simple():
 
         c.add("empty", a.empty)
         c.call("empty")
+
+        fp = io.StringIO()
+        c.dump(fp)
+        assert fp.getvalue()
 
 
 def test_typename():

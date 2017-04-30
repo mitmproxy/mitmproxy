@@ -85,11 +85,7 @@ def run(MasterKlass, args, extra=None):  # pragma: no cover
             print(optmanager.dump_defaults(opts))
             sys.exit(0)
         if args.commands:
-            cmds = []
-            for c in master.commands.commands.values():
-                cmds.append(c.signature_help())
-            for i in sorted(cmds):
-                print(i)
+            master.commands.dump()
             sys.exit(0)
         opts.set(*args.setoptions)
         if extra:

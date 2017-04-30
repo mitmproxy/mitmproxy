@@ -3,6 +3,7 @@ import typing
 import shlex
 import textwrap
 import functools
+import sys
 
 from mitmproxy.utils import typecheck
 from mitmproxy import exceptions
@@ -108,6 +109,15 @@ class CommandManager:
         if not len(parts) >= 1:
             raise exceptions.CommandError("Invalid command: %s" % cmdstr)
         return self.call_args(parts[0], parts[1:])
+
+    def dump(self, out=sys.stdout) -> None:
+        cmds = list(self.commands.values())
+        cmds.sort(key=lambda x: x.signature_help())
+        for c in cmds:
+            for hl in (c.help or "").splitlines():
+                print("# " + hl, file=out)
+            print(c.signature_help(), file=out)
+            print(file=out)
 
 
 def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
