@@ -14,23 +14,24 @@
     "unmockedModulePathPatterns": [
       "react"
     ],
-    "coverageDirectory":"./coverage",
+    "coverageDirectory": "./coverage",
     "collectCoverage": true,
     "coveragePathIgnorePatterns": [
-        "<rootDir>/src/js/filt/filt.js"
+      "<rootDir>/src/js/filt/filt.js"
     ]
   },
   "dependencies": {
     "bootstrap": "^3.3.7",
     "classnames": "^2.2.5",
     "lodash": "^4.17.4",
-    "react": "^15.4.2",
     "prop-types": "^15.5.0",
+    "react": "^15.4.2",
     "react-codemirror": "^0.3.0",
     "react-dom": "^15.4.2",
     "react-redux": "^5.0.2",
     "redux": "^3.6.0",
     "redux-logger": "^2.8.1",
+    "redux-mock-store": "^1.2.3",
     "redux-thunk": "^2.2.0",
     "shallowequal": "^0.2.2"
   },

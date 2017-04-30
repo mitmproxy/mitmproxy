@@ -3,64 +3,77 @@ import initialize from '../urlState'
 import reduceFlows from '../ducks/flows'
 import reduceUI from '../ducks/ui/index'
 import reduceEventLog from '../ducks/eventLog'
+import * as flowsActions from '../ducks/flows'
 
-import * as flowsAction from '../ducks/flows'
-import * as uiFlowAction from '../ducks/ui/flow'
-import * as eventLogAction from '../ducks/eventLog'
+import configureStore from 'redux-mock-store'
 
-import {createStore} from './ducks/tutils'
+const mockStore = configureStore()
 
-
-describe('test updateStoreFromUrl and updateUrlFromStore', () => {
-
-    let store = createStore({
-        flows: reduceFlows,
-        ui: reduceUI,
-        eventLog: reduceEventLog
-    })
-
+describe('updateStoreFromUrl', () => {
     history.replaceState = jest.fn()
+    let initialState = {
+            flows:    reduceFlows(undefined, {}),
+            ui:       reduceUI(undefined, {}),
+            eventLog: reduceEventLog(undefined, {})
+    }
 
     it('should handle search query', () => {
         window.location.hash = "#/flows?s=foo"
-        let setFilter = jest.spyOn(flowsAction, 'setFilter')
-
+        let store = mockStore(initialState)
         initialize(store)
-        expect(setFilter).toBeCalledWith('foo')
+        expect(store.getActions()).toEqual([{ filter: "foo", type: "FLOWS_SET_FILTER" }])
     })
 
     it('should handle highlight query', () => {
         window.location.hash = "#/flows?h=foo"
-        let setHighlight = jest.spyOn(flowsAction, 'setHighlight')
-
+        let store = mockStore(initialState)
         initialize(store)
-        expect(setHighlight).toBeCalledWith('foo')
+        expect(store.getActions()).toEqual([{ highlight: "foo", type: "FLOWS_SET_HIGHLIGHT" }])
     })
 
     it('should handle show event log', () => {
         window.location.hash = "#/flows?e=true"
-        let toggleVisibility = jest.spyOn(eventLogAction, 'toggleVisibility')
-
+        let store = mockStore(initialState)
         initialize(store)
-        expect(toggleVisibility).toHaveBeenCalled()
-    })
+        expect(store.getActions()).toEqual([{ type: "EVENTS_TOGGLE_VISIBILITY" }]) })
 
     it('should handle unimplemented query argument', () => {
         window.location.hash = "#/flows?foo=bar"
         console.error = jest.fn()
-
+        let store = mockStore(initialState)
         initialize(store)
         expect(console.error).toBeCalledWith("unimplemented query arg: foo=bar")
     })
 
     it('should select flow and tab', () => {
         window.location.hash = "#/flows/123/request"
-        let select      = jest.spyOn(flowsAction, 'select'),
-            selectTab   = jest.spyOn(uiFlowAction, 'selectTab')
-
+        let store = mockStore(initialState)
         initialize(store)
-        expect(select).toBeCalledWith('123')
-        expect(selectTab).toBeCalledWith('request')
+        expect(store.getActions()).toEqual([
+            {
+                flowIds: ["123"],
+                type: "FLOWS_SELECT"
+            },
+            {
+                tab: "request",
+                type: "UI_FLOWVIEW_SET_TAB"
+            }
+        ])
     })
+})
 
+describe('updateUrlFromStore', () => {
+    history.replaceState = jest.fn()
+    let flows = reduceFlows(undefined, flowsActions.select(123)),
+    initialState = {
+        flows:    reduceFlows(flows, flowsActions.setFilter('~u foo')),
+        ui:       reduceUI(undefined, {}),
+        eventLog: reduceEventLog(undefined, {})
+    }
+
+    it('should update url', () => {
+        let store = mockStore(initialState)
+        initialize(store)
+        expect(history.replaceState).toBeCalledWith(undefined, '', '/#/flows/123/request?s=~u foo')
+    })
 })

@@ -78,6 +78,6 @@ function updateUrlFromStore(store) {
 }
 
 export default function initialize(store) {
-    updateStoreFromUrl(store)
     store.subscribe(() => updateUrlFromStore(store))
+    updateStoreFromUrl(store)
 }
