@@ -7,6 +7,7 @@ from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 import pytest
+from unittest import mock
 
 
 def test_extract():
@@ -99,6 +100,26 @@ def test_headername():
 def qr(f):
     with open(f, "rb") as fp:
         return fp.read()
+
+
+def test_cut_clip():
+    v = view.View()
+    c = cut.Cut()
+    with taddons.context() as tctx:
+        tctx.master.addons.add(v, c)
+        v.add([tflow.tflow(resp=True)])
+
+        with mock.patch('pyperclip.copy') as pc:
+            tctx.command(c.clip, "q.method|@all")
+            assert pc.called
+
+        with mock.patch('pyperclip.copy') as pc:
+            tctx.command(c.clip, "q.content|@all")
+            assert pc.called
+
+        with mock.patch('pyperclip.copy') as pc:
+            tctx.command(c.clip, "q.method,q.content|@all")
+            assert pc.called
 
 
 def test_cut_file(tmpdir):
