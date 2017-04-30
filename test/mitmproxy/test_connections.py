@@ -99,7 +99,7 @@ class TestServerConnection:
         c.alpn_proto_negotiated = b'h2'
         assert 'address:22' in repr(c)
         assert 'ALPN' in repr(c)
-        assert 'TLS: foobar' in repr(c)
+        assert 'TLSv1.2: foobar' in repr(c)
 
         c.sni = None
         c.tls_established = True

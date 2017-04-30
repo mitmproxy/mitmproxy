@@ -2,8 +2,10 @@
 from mitmproxy.addons import cut
 from mitmproxy.addons import view
 from mitmproxy import exceptions
+from mitmproxy import certs
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 import pytest
 
 
@@ -27,11 +29,30 @@ def test_extract():
         ["s.content", b"message"],
         ["s.raw_content", b"message"],
         ["s.header[header-response]", "svalue"],
+
+        ["cc.address.port", "22"],
+        ["cc.address.host", "address"],
+        ["cc.tls_version", "TLSv1.2"],
+        ["cc.sni", "address"],
+        ["cc.ssl_established", "false"],
+
+        ["sc.address.port", "22"],
+        ["sc.address.host", "address"],
+        ["sc.ip_address.host", "192.168.0.1"],
+        ["sc.tls_version", "TLSv1.2"],
+        ["sc.sni", "address"],
+        ["sc.ssl_established", "false"],
     ]
     for t in tests:
         ret = cut.extract(t[0], tf)
         if ret != t[1]:
-            raise AssertionError("Expected %s, got %s", t[1], ret)
+            raise AssertionError("%s: Expected %s, got %s" % (t[0], t[1], ret))
+
+    with open(tutils.test_data.path("mitmproxy/net/data/text_cert"), "rb") as f:
+        d = f.read()
+    c1 = certs.SSLCert.from_pem(d)
+    tf.server_conn.cert = c1
+    assert "CERTIFICATE" in cut.extract("sc.cert", tf)
 
 
 def test_parse_cutspec():
@@ -123,9 +144,9 @@ def test_cut():
         assert c.cut("s.reason|@all") == [["OK"]]
         assert c.cut("s.content|@all") == [[b"message"]]
         assert c.cut("s.header[header-response]|@all") == [["svalue"]]
-
+        assert c.cut("moo") == [[""]]
         with pytest.raises(exceptions.CommandError):
-            assert c.cut("moo") == [["svalue"]]
+            assert c.cut("__dict__") == [[""]]
 
     v = view.View()
     c = cut.Cut()

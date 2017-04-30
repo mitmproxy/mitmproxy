@@ -4,6 +4,7 @@ from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import ctx
+from mitmproxy import certs
 from mitmproxy.utils import strutils
 
 
@@ -13,30 +14,43 @@ def headername(spec: str):
     return spec[len("header["):-1].strip()
 
 
+flow_shortcuts = {
+    "q": "request",
+    "s": "response",
+    "cc": "client_conn",
+    "sc": "server_conn",
+}
+
+
+def is_addr(v):
+    return isinstance(v, tuple) and len(v) > 1
+
+
 def extract(cut: str, f: flow.Flow) -> typing.Union[str, bytes]:
-    if cut.startswith("q."):
-        req = getattr(f, "request", None)
-        if not req:
-            return ""
-        rem = cut[len("q."):]
-        if rem in ["method", "scheme", "host", "port", "path", "url", "text"]:
-            return str(getattr(req, rem))
-        elif rem in ["content", "raw_content"]:
-            return getattr(req, rem)
-        elif rem.startswith("header["):
-            return req.headers.get(headername(rem), "")
-    elif cut.startswith("s."):
-        resp = getattr(f, "response", None)
-        if not resp:
-            return ""
-        rem = cut[len("s."):]
-        if rem in ["status_code", "reason", "text"]:
-            return str(getattr(resp, rem))
-        elif rem in ["content", "raw_content"]:
-            return getattr(resp, rem)
-        elif rem.startswith("header["):
-            return resp.headers.get(headername(rem), "")
-    raise exceptions.CommandError("Invalid cut specification: %s" % cut)
+    path = cut.split(".")
+    current = f  # type: typing.Any
+    for i, spec in enumerate(path):
+        if spec.startswith("_"):
+            raise exceptions.CommandError("Can't access internal attribute %s" % spec)
+        if isinstance(current, flow.Flow):
+            spec = flow_shortcuts.get(spec, spec)
+
+        part = getattr(current, spec, None)
+        if i == len(path) - 1:
+            if spec == "port" and is_addr(current):
+                return str(current[1])
+            if spec == "host" and is_addr(current):
+                return str(current[0])
+            elif spec.startswith("header["):
+                return current.headers.get(headername(spec), "")
+            elif isinstance(part, bytes):
+                return part
+            elif isinstance(part, bool):
+                return "true" if part else "false"
+            elif isinstance(part, certs.SSLCert):
+                return part.to_pem().decode("ascii")
+        current = part
+    return str(current or "")
 
 
 def parse_cutspec(s: str) -> typing.Tuple[str, typing.Sequence[str]]:
@@ -60,21 +74,16 @@ class Cut:
     @command.command("cut")
     def cut(self, cutspec: str) -> command.Cuts:
         """
-            Resolve a cut specification of the form "cuts|flowspec". The
-            flowspec is optional, and if it is not specified, it is assumed to
-            be @all. The cuts are a comma-separated list of cut snippets.
-
-            HTTP requests: q.method, q.scheme, q.host, q.port, q.path, q.url,
-            q.header[key], q.content, q.text, q.raw_content
-
-            HTTP responses: s.status_code, s.reason, s.header[key], s.content,
-            s.text, s.raw_content
-
-            Client connections: cc.address, cc.sni, cc.cipher_name,
-            cc.alpn_proto, cc.tls_version
-
-            Server connections: sc.address, sc.ip, sc.cert, sc.sni,
-            sc.alpn_proto, sc.tls_version
+            Resolve a cut specification of the form "cuts|flowspec". The cuts
+            are a comma-separated list of cut snippets. Cut snippets are
+            attribute paths from the base of the flow object, with a few
+            conveniences - "q", "s", "cc" and "sc" are shortcuts for request,
+            response, client_conn and server_conn, "port" and "host" retrieve
+            parts of an address tuple, ".header[key]" retrieves a header value.
+            Return values converted sensibly: SSL certicates are converted to PEM
+            format, bools are "true" or "false", "bytes" are preserved, and all
+            other values are converted to strings. The flowspec is optional, and
+            if it is not specified, it is assumed to be @all.
         """
         flowspec, cuts = parse_cutspec(cutspec)
         flows = ctx.master.commands.call_args("view.resolve", [flowspec])
@@ -88,11 +97,9 @@ class Cut:
         """
             Save cuts to file. If there are multiple rows or columns, the format
             is UTF-8 encoded CSV. If there is exactly one row and one column,
-            the data is written to file as-is, with raw bytes preserved.
-
-                cut.save resp.content|@focus /tmp/foo
-
-                cut.save req.host,resp.header[content-type]|@focus /tmp/foo
+            the data is written to file as-is, with raw bytes preserved. If the
+            path is prefixed with a "+", values are appended if there is an
+            existing file.
         """
         append = False
         if path.startswith("+"):
@@ -108,6 +115,7 @@ class Cut:
                     fp.write(v)
                 else:
                     fp.write(v.encode("utf8"))
+            ctx.log.alert("Saved single cut.")
         else:
             with open(path, "a" if append else "w", newline='', encoding="utf8") as fp:
                 writer = csv.writer(fp)
@@ -115,4 +123,4 @@ class Cut:
                     writer.writerow(
                         [strutils.always_str(c) or "" for c in r]  # type: ignore
                     )
-        ctx.log.alert("Saved %s cuts." % len(cuts))
+            ctx.log.alert("Saved %s cuts as CSV." % len(cuts))
