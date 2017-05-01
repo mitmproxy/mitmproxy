@@ -122,8 +122,6 @@ TAB_RESP = 1
 
 
 class FlowDetails(tabs.Tabs):
-    highlight_color = "focusfield"
-
     def __init__(self, master, tab_offset):
         self.master = master
         super().__init__([], tab_offset)
@@ -288,14 +286,7 @@ class FlowDetails(tabs.Tabs):
         self.view.settings[self.flow][(self.tab_offset, "prettyview")] = view.name.lower()
 
     def keypress(self, size, key):
-        conn = None  # type: Optional[Union[http.HTTPRequest, http.HTTPResponse]]
-        if self.tab_offset == TAB_REQ:
-            conn = self.flow.request
-        elif self.tab_offset == TAB_RESP:
-            conn = self.flow.response
-
         key = super().keypress(size, key)
-
         key = common.shortcuts(key)
         if key in ("up", "down", "page up", "page down"):
             # Pass scroll events to the wrapped widget
@@ -313,38 +304,9 @@ class FlowDetails(tabs.Tabs):
                     self.change_this_display_mode
                 )
             )
-        elif key == "z":
-            self.flow.backup()
-            enc = conn.headers.get("content-encoding", "identity")
-            if enc != "identity":
-                try:
-                    conn.decode()
-                except ValueError:
-                    signals.status_message.send(
-                        message = "Could not decode - invalid data?"
-                    )
-            else:
-                signals.status_prompt_onekey.send(
-                    prompt = "Select encoding: ",
-                    keys = (
-                        ("gzip", "z"),
-                        ("deflate", "d"),
-                        ("brotli", "b"),
-                    ),
-                    callback = self.encode_callback,
-                    args = (conn,)
-                )
         else:
             # Key is not handled here.
             return key
-
-    def encode_callback(self, key, conn):
-        encoding_map = {
-            "z": "gzip",
-            "d": "deflate",
-            "b": "br",
-        }
-        conn.encode(encoding_map[key])
 
 
 class FlowView(urwid.Frame):

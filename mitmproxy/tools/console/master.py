@@ -318,6 +318,12 @@ def default_keymap(km):
         ["flowview"]
     )
     km.add("p", "view.focus.prev", ["flowview"])
+    km.add(
+        "z",
+        "console.choose \"Part\" request,response "
+        "flow.encode.toggle @focus {choice}",
+        ["flowview"]
+    )
 
 
 class ConsoleMaster(master.Master):
