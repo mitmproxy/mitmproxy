@@ -353,6 +353,8 @@ class View(collections.Sequence):
             the view, negative from the end of the view, so that 0 is the first
             flow, -1 is the last flow.
         """
+        if len(self) == 0:
+            return
         if dst < 0:
             dst = len(self) + dst
         if dst < 0:

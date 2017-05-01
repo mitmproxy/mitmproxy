@@ -221,6 +221,7 @@ def test_resolve():
 def test_movement():
     v = view.View()
     with taddons.context():
+        v.go(0)
         v.add([
             tflow.tflow(),
             tflow.tflow(),

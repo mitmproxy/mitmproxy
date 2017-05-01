@@ -271,7 +271,6 @@ class FlowDetails(tabs.Tabs):
 
     def keypress(self, size, key):
         key = super().keypress(size, key)
-        key = common.shortcuts(key)
         return self._w.keypress(size, key)
 
 

@@ -214,10 +214,10 @@ class OptionsList(urwid.ListBox):
                     foc.opt.name,
                     self.master.options.default(foc.opt.name)
                 )
-            elif key == "g":
+            elif key == "m_start":
                 self.set_focus(0)
                 self.walker._modified()
-            elif key == "G":
+            elif key == "m_end":
                 self.set_focus(len(self.walker.opts) - 1)
                 self.walker._modified()
             elif key == "l":
@@ -299,7 +299,6 @@ class Options(urwid.Pile):
         self.master = master
 
     def keypress(self, size, key):
-        key = common.shortcuts(key)
         if key == "tab":
             self.focus_position = (
                 self.focus_position + 1
