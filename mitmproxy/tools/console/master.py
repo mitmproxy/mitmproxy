@@ -83,6 +83,16 @@ class ConsoleAddon:
         self.master = master
         self.started = False
 
+    @command.command("console.options.reset.current")
+    def options_reset_current(self) -> None:
+        """
+            Reset the current option in the options editor.
+        """
+        if self.master.window.focus.keyctx != "options":
+            raise exceptions.CommandError("Not viewing options.")
+        name = self.master.window.windows["options"].current_name()
+        self.master.commands.call("options.reset.one %s" % name)
+
     @command.command("console.nav.start")
     def nav_start(self) -> None:
         """
@@ -433,6 +443,11 @@ def default_keymap(km):
         "flow.encode.toggle @focus {choice}",
         ["flowview"]
     )
+
+    km.add("L", "console.command options.load ", ["options"])
+    km.add("S", "console.command options.save ", ["options"])
+    km.add("D", "options.reset", ["options"])
+    km.add("d", "console.options.reset.current", ["options"])
 
 
 class ConsoleMaster(master.Master):
