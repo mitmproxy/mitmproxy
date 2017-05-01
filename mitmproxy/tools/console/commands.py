@@ -120,6 +120,12 @@ class CommandsList(urwid.ListBox):
         if key == "enter":
             foc, idx = self.get_focus()
             signals.status_prompt_command.send(partial=foc.cmd.path + " ")
+        elif key == "m_start":
+            self.set_focus(0)
+            self.walker._modified()
+        elif key == "m_end":
+            self.set_focus(len(self.walker.cmds) - 1)
+            self.walker._modified()
         return super().keypress(size, key)
 
 
@@ -159,7 +165,6 @@ class Commands(urwid.Pile):
         self.master = master
 
     def keypress(self, size, key):
-        key = common.shortcuts(key)
         if key == "tab":
             self.focus_position = (
                 self.focus_position + 1

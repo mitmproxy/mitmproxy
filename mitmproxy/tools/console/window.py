@@ -76,6 +76,8 @@ class Window(urwid.Frame):
         self.call(self.focus, "view_popping")
 
     def push(self, wname):
+        if self.primary_stack and self.primary_stack[-1] == wname:
+            return
         self.primary_stack.append(wname)
         self.body = urwid.AttrWrap(
             self.windows[wname], "background"

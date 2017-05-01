@@ -113,7 +113,6 @@ class Select(urwid.ListBox):
         if key == "enter" or key == " ":
             self.get_focus()[0].option.activate()
             return None
-        key = common.shortcuts(key)
         if key in self.keymap:
             self.keymap[key].activate()
             self.set_focus(self.options.index(self.keymap[key]))
