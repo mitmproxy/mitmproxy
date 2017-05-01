@@ -27,6 +27,7 @@ class Window(urwid.Frame):
         signals.focus.connect(self.sig_focus)
 
         self.master.view.focus.sig_change.connect(self.focus_changed)
+        signals.flow_change.connect(self.flow_changed)
 
         signals.pop_view_state.connect(self.pop)
         signals.push_view_state.connect(self.push)
@@ -49,6 +50,11 @@ class Window(urwid.Frame):
         f = getattr(v, name, None)
         if f:
             f(*args, **kwargs)
+
+    def flow_changed(self, sender, flow):
+        if self.master.view.focus.flow:
+            if flow.id == self.master.view.focus.flow.id:
+                self.focus_changed()
 
     def focus_changed(self, *args, **kwargs):
         """

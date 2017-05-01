@@ -218,7 +218,7 @@ def test_resolve():
             tctx.command(v.resolve, "~")
 
 
-def test_go():
+def test_movement():
     v = view.View()
     with taddons.context():
         v.add([
@@ -238,6 +238,11 @@ def test_go():
         v.go(999)
         assert v.focus.index == 4
         v.go(-999)
+        assert v.focus.index == 0
+
+        v.focus_next()
+        assert v.focus.index == 1
+        v.focus_prev()
         assert v.focus.index == 0
 
 

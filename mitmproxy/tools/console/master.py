@@ -74,7 +74,8 @@ class UnsupportedLog:
 
 class ConsoleAddon:
     """
-        An addon that exposes console-specific commands.
+        An addon that exposes console-specific commands, and hooks into required
+        events.
     """
     def __init__(self, master):
         self.master = master
@@ -109,24 +110,24 @@ class ConsoleAddon:
     @command.command("console.view.commands")
     def view_commands(self) -> None:
         """View the commands list."""
-        self.master.view_commands()
+        self.master.switch_view("commands")
 
     @command.command("console.view.options")
     def view_options(self) -> None:
         """View the options editor."""
-        self.master.view_options()
+        self.master.switch_view("options")
 
     @command.command("console.view.help")
     def view_help(self) -> None:
         """View help."""
-        self.master.view_help()
+        self.master.switch_view("help")
 
     @command.command("console.view.flow")
     def view_flow(self, flow: flow.Flow) -> None:
         """View a flow."""
         if hasattr(flow, "request"):
             # FIME: Also set focus?
-            self.master.view_flow(flow)
+            self.master.switch_view("flowview")
 
     @command.command("console.exit")
     def exit(self) -> None:
@@ -187,6 +188,8 @@ class ConsoleAddon:
     def update(self, flows):
         if not flows:
             signals.update_settings.send(self)
+        for f in flows:
+            signals.flow_change.send(self, flow=f)
 
     def configure(self, updated):
         if self.started:
@@ -195,67 +198,70 @@ class ConsoleAddon:
 
 
 def default_keymap(km):
-    km.add(":", "console.command ''")
-    km.add("?", "console.view.help")
-    km.add("C", "console.view.commands")
-    km.add("O", "console.view.options")
-    km.add("Q", "console.exit")
-    km.add("q", "console.view.pop")
-    km.add("i", "console.command set intercept=")
-    km.add("W", "console.command set save_stream_file=")
+    km.add(":", "console.command ''", ["global"])
+    km.add("?", "console.view.help", ["global"])
+    km.add("C", "console.view.commands", ["global"])
+    km.add("O", "console.view.options", ["global"])
+    km.add("Q", "console.exit", ["global"])
+    km.add("q", "console.view.pop", ["global"])
+    km.add("i", "console.command set intercept=", ["global"])
+    km.add("W", "console.command set save_stream_file=", ["global"])
 
-    km.add("A", "flow.resume @all", context="flowlist")
-    km.add("a", "flow.resume @focus", context="flowlist")
-    km.add("b", "console.command cut.save s.content|@focus ''", context="flowlist")
-    km.add("d", "view.remove @focus", context="flowlist")
-    km.add("D", "view.duplicate @focus", context="flowlist")
-    km.add("e", "set console_eventlog=toggle", context="flowlist")
+    km.add("A", "flow.resume @all", ["flowlist", "flowview"])
+    km.add("a", "flow.resume @focus", ["flowlist", "flowview"])
+    km.add(
+        "b", "console.command cut.save s.content|@focus ''",
+        ["flowlist", "flowview"]
+    )
+    km.add("d", "view.remove @focus", ["flowlist", "flowview"])
+    km.add("D", "view.duplicate @focus", ["flowlist", "flowview"])
+    km.add("e", "set console_eventlog=toggle", ["flowlist"])
     km.add(
         "E",
         "console.choose Format export.formats "
         "console.command export.file {choice} @focus ''",
-        context="flowlist"
+        ["flowlist", "flowview"]
     )
-    km.add("f", "console.command 'set view_filter='", context="flowlist")
-    km.add("F", "set console_focus_follow=toggle", context="flowlist")
-    km.add("g", "view.go 0", context="flowlist")
-    km.add("G", "view.go -1", context="flowlist")
-    km.add("l", "console.command cut.clip ", context="flowlist")
-    km.add("L", "console.command view.load ", context="flowlist")
-    km.add("m", "flow.mark.toggle @focus", context="flowlist")
-    km.add("M", "view.marked.toggle", context="flowlist")
+    km.add("f", "console.command 'set view_filter='", ["flowlist"])
+    km.add("F", "set console_focus_follow=toggle", ["flowlist"])
+    km.add("g", "view.go 0", ["flowlist"])
+    km.add("G", "view.go -1", ["flowlist"])
+    km.add("l", "console.command cut.clip ", ["flowlist", "flowview"])
+    km.add("L", "console.command view.load ", ["flowlist"])
+    km.add("m", "flow.mark.toggle @focus", ["flowlist"])
+    km.add("M", "view.marked.toggle", ["flowlist"])
     km.add(
         "n",
         "console.command view.create get https://google.com",
-        context="flowlist"
+        ["flowlist"]
     )
     km.add(
         "o",
         "console.choose Order view.order.options "
         "set console_order={choice}",
-        context="flowlist"
+        ["flowlist"]
     )
-    km.add("r", "replay.client @focus", context="flowlist")
-    km.add("S", "console.command 'replay.server '")
-    km.add("v", "set console_order_reversed=toggle", context="flowlist")
-    km.add("U", "flow.mark @all false", context="flowlist")
-    km.add("w", "console.command 'save.file @shown '", context="flowlist")
-    km.add("V", "flow.revert @focus", context="flowlist")
-    km.add("X", "flow.kill @focus", context="flowlist")
-    km.add("z", "view.remove @all", context="flowlist")
-    km.add("Z", "view.remove @hidden", context="flowlist")
-    km.add("|", "console.command 'script.run @focus '", context="flowlist")
-    km.add("enter", "console.view.flow @focus", context="flowlist")
+    km.add("r", "replay.client @focus", ["flowlist", "flowview"])
+    km.add("S", "console.command 'replay.server '", ["flowlist"])
+    km.add("v", "set console_order_reversed=toggle", ["flowlist"])
+    km.add("U", "flow.mark @all false", ["flowlist"])
+    km.add("w", "console.command 'save.file @shown '", ["flowlist"])
+    km.add("V", "flow.revert @focus", ["flowlist", "flowview"])
+    km.add("X", "flow.kill @focus", ["flowlist"])
+    km.add("z", "view.remove @all", ["flowlist"])
+    km.add("Z", "view.remove @hidden", ["flowlist"])
+    km.add("|", "console.command 'script.run @focus '", ["flowlist", "flowview"])
+    km.add("enter", "console.view.flow @focus", ["flowlist"])
 
     km.add(
         "e",
         "console.choose Part console.edit.focus.options "
         "console.edit.focus {choice}",
-        context="flowview"
+        ["flowview"]
     )
-
-    km.add(" ", "view.focus.next", context="flowview")
-    km.add("X", "console.edit.focus.query", context="flowview")
+    km.add("w", "console.command 'save.file @focus '", ["flowview"])
+    km.add(" ", "view.focus.next", ["flowview"])
+    km.add("p", "view.focus.prev", ["flowview"])
 
 
 class ConsoleMaster(master.Master):
@@ -263,7 +269,6 @@ class ConsoleMaster(master.Master):
     def __init__(self, options, server):
         super().__init__(options, server)
         self.view = view.View()  # type: view.View
-        self.view.sig_view_update.connect(signals.flow_change.send)
         self.stream_path = None
         # This line is just for type hinting
         self.options = self.options  # type: Options
@@ -434,7 +439,7 @@ class ConsoleMaster(master.Master):
         self.loop.set_alarm_in(0.01, self.ticker)
         self.loop.set_alarm_in(
             0.0001,
-            lambda *args: self.view_flowlist()
+            lambda *args: self.switch_view("flowlist")
         )
 
         self.start()
@@ -465,21 +470,6 @@ class ConsoleMaster(master.Master):
 
     def switch_view(self, name):
         self.window.push(name)
-
-    def view_help(self):
-        self.window.push("help")
-
-    def view_options(self):
-        self.window.push("options")
-
-    def view_commands(self):
-        self.window.push("commands")
-
-    def view_flowlist(self):
-        self.window.push("flowlist")
-
-    def view_flow(self, flow, tab_offset=0):
-        self.window.push("flowview")
 
     def quit(self, a):
         if a != "n":

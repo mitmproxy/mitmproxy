@@ -7,7 +7,6 @@ from typing import Optional, Union  # noqa
 import urwid
 
 from mitmproxy import contentviews
-from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
@@ -285,26 +284,9 @@ class FlowDetails(tabs.Tabs):
             ]
         return searchable.Searchable(txt)
 
-    def view_flow(self, flow):
-        signals.pop_view_state.send(self)
-        self.master.view_flow(flow, self.tab_offset)
-
-    def _view_nextprev_flow(self, idx, flow):
-        if not self.view.inbounds(idx):
-            signals.status_message.send(message="No more flows")
-            return
-        self.view_flow(self.view[idx])
-
-    def view_next_flow(self, flow):
-        return self._view_nextprev_flow(self.view.index(flow) + 1, flow)
-
-    def view_prev_flow(self, flow):
-        return self._view_nextprev_flow(self.view.index(flow) - 1, flow)
-
     def change_this_display_mode(self, t):
         view = contentviews.get(t)
         self.view.settings[self.flow][(self.tab_offset, "prettyview")] = view.name.lower()
-        signals.flow_change.send(self, flow=self.flow)
 
     def keypress(self, size, key):
         conn = None  # type: Optional[Union[http.HTTPRequest, http.HTTPResponse]]
@@ -319,69 +301,8 @@ class FlowDetails(tabs.Tabs):
         if key in ("up", "down", "page up", "page down"):
             # Pass scroll events to the wrapped widget
             self._w.keypress(size, key)
-        elif key == "a":
-            self.flow.resume()
-            self.master.view.update(self.flow)
-        elif key == "A":
-            for f in self.view:
-                if f.intercepted:
-                    f.resume()
-                    self.master.view.update(self.flow)
-        elif key == "d":
-            if self.flow.killable:
-                self.flow.kill()
-            self.view.remove(self.flow)
-            if not self.view.focus.flow:
-                self.master.view_flowlist()
-            else:
-                self.view_flow(self.view.focus.flow)
-        elif key == "D":
-            cp = self.flow.copy()
-            self.master.view.add(cp)
-            self.master.view.focus.flow = cp
-            self.view_flow(cp)
-            signals.status_message.send(message="Duplicated.")
-        elif key == "p":
-            self.view_prev_flow(self.flow)
-        elif key == "r":
-            try:
-                self.master.replay_request(self.flow)
-            except exceptions.ReplayException as e:
-                signals.add_log("Replay error: %s" % e, "warn")
-            signals.flow_change.send(self, flow = self.flow)
-        elif key == "V":
-            if self.flow.modified():
-                self.flow.revert()
-                signals.flow_change.send(self, flow = self.flow)
-                signals.status_message.send(message="Reverted.")
-            else:
-                signals.status_message.send(message="Flow not modified.")
-        elif key == "W":
-            signals.status_prompt_path.send(
-                prompt = "Save this flow",
-                callback = self.master.save_one_flow,
-                args = (self.flow,)
-            )
-        elif key == "|":
-            signals.status_prompt_path.send(
-                prompt = "Send flow to script",
-                callback = self.master.run_script_once,
-                args = (self.flow,)
-            )
-        elif key in set("bfgmxvzEC") and not conn:
-            signals.status_message.send(
-                message = "Tab to the request or response",
-                expire = 1
-            )
-            return
-        elif key == "b":
-            if self.tab_offset == TAB_REQ:
-                common.ask_save_body("q", self.flow)
-            else:
-                common.ask_save_body("s", self.flow)
         elif key == "f":
             self.view.settings[self.flow][(self.tab_offset, "fullcontents")] = True
-            signals.flow_change.send(self, flow = self.flow)
             signals.status_message.send(message="Loading all body data...")
         elif key == "m":
             opts = [i.name.lower() for i in contentviews.views]
@@ -393,35 +314,6 @@ class FlowDetails(tabs.Tabs):
                     self.change_this_display_mode
                 )
             )
-        elif key == "E":
-            pass
-            # if self.tab_offset == TAB_REQ:
-            #     scope = "q"
-            # else:
-            #     scope = "s"
-            # signals.status_prompt_onekey.send(
-            #     self,
-            #     prompt = "Export to file",
-            #     keys = [(e[0], e[1]) for e in export.EXPORTERS],
-            #     callback = common.export_to_clip_or_file,
-            #     args = (scope, self.flow, common.ask_save_path)
-            # )
-        elif key == "C":
-            pass
-            # if self.tab_offset == TAB_REQ:
-            #     scope = "q"
-            # else:
-            #     scope = "s"
-            # signals.status_prompt_onekey.send(
-            #     self,
-            #     prompt = "Export to clipboard",
-            #     keys = [(e[0], e[1]) for e in export.EXPORTERS],
-            #     callback = common.export_to_clip_or_file,
-            #     args = (scope, self.flow, common.copy_to_clipboard_or_prompt)
-            # )
-        elif key == "x":
-            conn.content = None
-            signals.flow_change.send(self, flow=self.flow)
         elif key == "v":
             if conn.raw_content:
                 t = conn.headers.get("content-type")
@@ -452,7 +344,6 @@ class FlowDetails(tabs.Tabs):
                     callback = self.encode_callback,
                     args = (conn,)
                 )
-            signals.flow_change.send(self, flow = self.flow)
         else:
             # Key is not handled here.
             return key
@@ -464,7 +355,6 @@ class FlowDetails(tabs.Tabs):
             "b": "br",
         }
         conn.encode(encoding_map[key])
-        signals.flow_change.send(self, flow = self.flow)
 
 
 class FlowView(urwid.Frame):

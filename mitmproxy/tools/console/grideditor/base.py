@@ -478,12 +478,12 @@ class FocusEditor(urwid.WidgetWrap):
         """
         raise NotImplementedError
 
-    def set_data_update(self, flow, vals):
-        self.set_data(flow, vals)
-        signals.flow_change.send(self, flow = flow)
-
-    def set_data(self, flow, vals):
+    def set_data(self, vals, flow):
         """
             Set the current data on the flow.
         """
-        signals.flow_change.send(self, flow = self.flow)
+        raise NotImplementedError
+
+    def set_data_update(self, vals, flow):
+        self.set_data(vals, flow)
+        signals.flow_change.send(self, flow = flow)
