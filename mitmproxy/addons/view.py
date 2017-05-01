@@ -296,6 +296,45 @@ class View(collections.Sequence):
         """
         return self._store.get(flow_id)
 
+    @command.command("view.getval")
+    def getvalue(self, f: mitmproxy.flow.Flow, key: str, default: str) -> str:
+        """
+            Get a value from the settings store for the specified flow.
+        """
+        return self.settings[f].get(key, default)
+
+    @command.command("view.setval.toggle")
+    def setvalue_toggle(
+        self,
+        flows: typing.Sequence[mitmproxy.flow.Flow],
+        key: str
+    ) -> None:
+        """
+            Toggle a boolean value in the settings store, seting the value to
+            the string "true" or "false".
+        """
+        updated = []
+        for f in flows:
+            current = self.settings[f].get("key", "false")
+            self.settings[f][key] = "false" if current == "true" else "true"
+            updated.append(f)
+        ctx.master.addons.trigger("update", updated)
+
+    @command.command("view.setval")
+    def setvalue(
+        self,
+        flows: typing.Sequence[mitmproxy.flow.Flow],
+        key: str, value: str
+    ) -> None:
+        """
+            Set a value in the settings store for the specified flows.
+        """
+        updated = []
+        for f in flows:
+            self.settings[f][key] = value
+            updated.append(f)
+        ctx.master.addons.trigger("update", updated)
+
     @command.command("view.load")
     def load_file(self, path: str) -> None:
         """
