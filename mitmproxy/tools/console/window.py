@@ -1,21 +1,103 @@
 import urwid
-
 from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import statusbar
+from mitmproxy.tools.console import flowlist
+from mitmproxy.tools.console import flowview
+from mitmproxy.tools.console import commands
+from mitmproxy.tools.console import options
+from mitmproxy.tools.console import overlay
+from mitmproxy.tools.console import help
+from mitmproxy.tools.console import grideditor
 
 
 class Window(urwid.Frame):
-
-    def __init__(self, master, body, header, footer, helpctx, keyctx):
-        urwid.Frame.__init__(
-            self,
-            urwid.AttrWrap(body, "background"),
-            header = urwid.AttrWrap(header, "background") if header else None,
-            footer = urwid.AttrWrap(footer, "background") if footer else None
+    def __init__(self, master):
+        super().__init__(
+            None,
+            header = None,
+            footer = statusbar.StatusBar(master, ""),
         )
         self.master = master
-        self.helpctx = helpctx
-        self.keyctx = keyctx
+        self.primary_stack = []
+        self.master.view.sig_view_refresh.connect(self.view_changed)
+        self.master.view.sig_view_add.connect(self.view_changed)
+        self.master.view.sig_view_remove.connect(self.view_changed)
+        self.master.view.sig_view_update.connect(self.view_changed)
+        self.master.view.focus.sig_change.connect(self.view_changed)
         signals.focus.connect(self.sig_focus)
+
+        self.master.view.focus.sig_change.connect(self.focus_changed)
+        signals.flow_change.connect(self.flow_changed)
+
+        signals.pop_view_state.connect(self.pop)
+        signals.push_view_state.connect(self.push)
+        self.windows = dict(
+            flowlist = flowlist.FlowListBox(self.master),
+            flowview = flowview.FlowView(self.master),
+            commands = commands.Commands(self.master),
+            options = options.Options(self.master),
+            help = help.HelpView(None),
+            edit_focus_query = grideditor.QueryEditor(self.master),
+            edit_focus_cookies = grideditor.CookieEditor(self.master),
+            edit_focus_setcookies = grideditor.SetCookieEditor(self.master),
+            edit_focus_form = grideditor.RequestFormEditor(self.master),
+            edit_focus_path = grideditor.PathEditor(self.master),
+            edit_focus_request_headers = grideditor.RequestHeaderEditor(self.master),
+            edit_focus_response_headers = grideditor.ResponseHeaderEditor(self.master),
+        )
+
+    def call(self, v, name, *args, **kwargs):
+        f = getattr(v, name, None)
+        if f:
+            f(*args, **kwargs)
+
+    def flow_changed(self, sender, flow):
+        if self.master.view.focus.flow:
+            if flow.id == self.master.view.focus.flow.id:
+                self.focus_changed()
+
+    def focus_changed(self, *args, **kwargs):
+        """
+            Triggered when the focus changes - either when it's modified, or
+            when it changes to a different flow altogether.
+        """
+        self.call(self.focus, "focus_changed")
+
+    def view_changed(self, *args, **kwargs):
+        """
+            Triggered when the view list has changed.
+        """
+        self.call(self.focus, "view_changed")
+
+    def view_popping(self, *args, **kwargs):
+        """
+            Triggered when the view list has changed.
+        """
+        self.call(self.focus, "view_popping")
+
+    def push(self, wname):
+        self.primary_stack.append(wname)
+        self.body = urwid.AttrWrap(
+            self.windows[wname], "background"
+        )
+        self.view_changed()
+        self.focus_changed()
+
+    def pop(self, *args, **kwargs):
+        if isinstance(self.master.loop.widget, overlay.SimpleOverlay):
+            self.master.loop.widget = self
+        else:
+            if len(self.primary_stack) > 1:
+                self.view_popping()
+                self.primary_stack.pop()
+                self.body = urwid.AttrWrap(
+                    self.windows[self.primary_stack[-1]],
+                    "background",
+                )
+                self.view_changed()
+                self.focus_changed()
+            else:
+                self.master.prompt_for_exit()
 
     def sig_focus(self, sender, section):
         self.focus_position = section
@@ -37,50 +119,8 @@ class Window(urwid.Frame):
                 return False
             return True
 
-    def handle_replay(self, k):
-        if k == "c":
-            creplay = self.master.addons.get("clientplayback")
-            if self.master.options.client_replay and creplay.count():
-                def stop_client_playback_prompt(a):
-                    if a != "n":
-                        self.master.options.client_replay = None
-                signals.status_prompt_onekey.send(
-                    self,
-                    prompt = "Stop current client replay?",
-                    keys = (
-                        ("yes", "y"),
-                        ("no", "n"),
-                    ),
-                    callback = stop_client_playback_prompt
-                )
-            else:
-                signals.status_prompt_path.send(
-                    self,
-                    prompt = "Client replay path",
-                    callback = lambda x: self.master.options.setter("client_replay")([x])
-                )
-        elif k == "s":
-            a = self.master.addons.get("serverplayback")
-            if a.count():
-                def stop_server_playback(response):
-                    if response == "y":
-                        self.master.options.server_replay = []
-                signals.status_prompt_onekey.send(
-                    self,
-                    prompt = "Stop current server replay?",
-                    keys = (
-                        ("yes", "y"),
-                        ("no", "n"),
-                    ),
-                    callback = stop_server_playback
-                )
-            else:
-                signals.status_prompt_path.send(
-                    self,
-                    prompt = "Server playback path",
-                    callback = lambda x: self.master.options.setter("server_replay")([x])
-                )
-
     def keypress(self, size, k):
-        k = super().keypress(size, k)
-        return self.master.keymap.handle(self.keyctx, k)
+        if self.focus.keyctx:
+            k = self.master.keymap.handle(self.focus.keyctx, k)
+        if k:
+            return super().keypress(size, k)

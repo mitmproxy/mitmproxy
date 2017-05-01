@@ -16,10 +16,9 @@ class Highlight(urwid.AttrMap):
 
 class Searchable(urwid.ListBox):
 
-    def __init__(self, view, contents):
+    def __init__(self, contents):
         self.walker = urwid.SimpleFocusListWalker(contents)
         urwid.ListBox.__init__(self, self.walker)
-        self.view = view
         self.search_offset = 0
         self.current_highlight = None
         self.search_term = None

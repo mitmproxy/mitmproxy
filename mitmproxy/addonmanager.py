@@ -6,6 +6,7 @@ import sys
 from mitmproxy import exceptions
 from mitmproxy import eventsequence
 from mitmproxy import controller
+from mitmproxy import flow
 from . import ctx
 import pprint
 
@@ -214,6 +215,9 @@ class AddonManager:
 
             if isinstance(message.reply, controller.DummyReply):
                 message.reply.mark_reset()
+
+        if isinstance(message, flow.Flow):
+            self.trigger("update", [message])
 
     def invoke_addon(self, addon, name, *args, **kwargs):
         """

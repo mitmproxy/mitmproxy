@@ -16,19 +16,14 @@ import urwid
 from mitmproxy import ctx
 from mitmproxy import addons
 from mitmproxy import command
+from mitmproxy import exceptions
 from mitmproxy import master
 from mitmproxy import log
 from mitmproxy import flow
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
-from mitmproxy.tools.console import flowlist
-from mitmproxy.tools.console import flowview
-from mitmproxy.tools.console import grideditor
-from mitmproxy.tools.console import help
 from mitmproxy.tools.console import keymap
-from mitmproxy.tools.console import options
-from mitmproxy.tools.console import commands
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
@@ -80,7 +75,8 @@ class UnsupportedLog:
 
 class ConsoleAddon:
     """
-        An addon that exposes console-specific commands.
+        An addon that exposes console-specific commands, and hooks into required
+        events.
     """
     def __init__(self, master):
         self.master = master
@@ -88,6 +84,27 @@ class ConsoleAddon:
 
     @command.command("console.choose")
     def console_choose(
+        self, prompt: str, choices: typing.Sequence[str], *cmd: typing.Sequence[str]
+    ) -> None:
+        """
+            Prompt the user to choose from a specified list of strings, then
+            invoke another command with all occurances of {choice} replaced by
+            the choice the user made.
+        """
+        def callback(opt):
+            # We're now outside of the call context...
+            repl = " ".join(cmd)
+            repl = repl.replace("{choice}", opt)
+            try:
+                self.master.commands.call(repl)
+            except exceptions.CommandError as e:
+                signals.status_message.send(message=str(e))
+
+        self.master.overlay(overlay.Chooser(prompt, choices, "", callback))
+        ctx.log.info(choices)
+
+    @command.command("console.choose.cmd")
+    def console_choose_cmd(
         self, prompt: str, choicecmd: str, *cmd: typing.Sequence[str]
     ) -> None:
         """
@@ -98,11 +115,15 @@ class ConsoleAddon:
         choices = ctx.master.commands.call_args(choicecmd, [])
 
         def callback(opt):
+            # We're now outside of the call context...
             repl = " ".join(cmd)
             repl = repl.replace("{choice}", opt)
-            self.master.commands.call(repl)
+            try:
+                self.master.commands.call(repl)
+            except exceptions.CommandError as e:
+                signals.status_message.send(message=str(e))
 
-        self.master.overlay(overlay.Chooser(choicecmd, choices, "", callback))
+        self.master.overlay(overlay.Chooser(prompt, choices, "", callback))
         ctx.log.info(choices)
 
     @command.command("console.command")
@@ -115,24 +136,24 @@ class ConsoleAddon:
     @command.command("console.view.commands")
     def view_commands(self) -> None:
         """View the commands list."""
-        self.master.view_commands()
+        self.master.switch_view("commands")
 
     @command.command("console.view.options")
     def view_options(self) -> None:
         """View the options editor."""
-        self.master.view_options()
+        self.master.switch_view("options")
 
     @command.command("console.view.help")
     def view_help(self) -> None:
         """View help."""
-        self.master.view_help()
+        self.master.switch_view("help")
 
     @command.command("console.view.flow")
     def view_flow(self, flow: flow.Flow) -> None:
         """View a flow."""
         if hasattr(flow, "request"):
             # FIME: Also set focus?
-            self.master.view_flow(flow)
+            self.master.switch_view("flowview")
 
     @command.command("console.exit")
     def exit(self) -> None:
@@ -147,71 +168,156 @@ class ConsoleAddon:
         """
         signals.pop_view_state.send(self)
 
+    @command.command("console.bodyview")
+    def bodyview(self, f: flow.Flow, part: str) -> None:
+        """
+            Spawn an external viewer for a flow request or response body based
+            on the detected MIME type. We use the mailcap system to find the
+            correct viewier, and fall back to the programs in $PAGER or $EDITOR
+            if necessary.
+        """
+        fpart = getattr(f, part)
+        if not fpart:
+            raise exceptions.CommandError("Could not view part %s." % part)
+        t = fpart.headers.get("content-type")
+        content = fpart.get_content(strict=False)
+        if not content:
+            raise exceptions.CommandError("No content to view.")
+        self.master.spawn_external_viewer(content, t)
+
+    @command.command("console.edit.focus.options")
+    def edit_focus_options(self) -> typing.Sequence[str]:
+        return [
+            "cookies",
+            "form",
+            "path",
+            "method",
+            "query",
+            "reason",
+            "request-headers",
+            "response-headers",
+            "status_code",
+            "set-cookies",
+            "url",
+        ]
+
+    @command.command("console.edit.focus")
+    def edit_focus(self, part: str) -> None:
+        """
+            Edit the query of the current focus.
+        """
+        if part == "cookies":
+            self.master.switch_view("edit_focus_cookies")
+        elif part == "form":
+            self.master.switch_view("edit_focus_form")
+        elif part == "path":
+            self.master.switch_view("edit_focus_path")
+        elif part == "query":
+            self.master.switch_view("edit_focus_query")
+        elif part == "request-headers":
+            self.master.switch_view("edit_focus_request_headers")
+        elif part == "response-headers":
+            self.master.switch_view("edit_focus_response_headers")
+        elif part == "set-cookies":
+            self.master.switch_view("edit_focus_setcookies")
+        elif part in ["url", "method", "status_code", "reason"]:
+            self.master.commands.call(
+                "console.command flow.set @focus %s " % part
+            )
+
     def running(self):
         self.started = True
 
     def update(self, flows):
         if not flows:
             signals.update_settings.send(self)
+        for f in flows:
+            signals.flow_change.send(self, flow=f)
 
     def configure(self, updated):
         if self.started:
             if "console_eventlog" in updated:
-                self.master.refresh_view()
+                pass
 
 
 def default_keymap(km):
-    km.add(":", "console.command ''")
-    km.add("?", "console.view.help")
-    km.add("C", "console.view.commands")
-    km.add("O", "console.view.options")
-    km.add("Q", "console.exit")
-    km.add("q", "console.view.pop")
-    km.add("i", "console.command set intercept=")
-    km.add("W", "console.command set save_stream_file=")
+    km.add(":", "console.command ''", ["global"])
+    km.add("?", "console.view.help", ["global"])
+    km.add("C", "console.view.commands", ["global"])
+    km.add("O", "console.view.options", ["global"])
+    km.add("Q", "console.exit", ["global"])
+    km.add("q", "console.view.pop", ["global"])
+    km.add("i", "console.command set intercept=", ["global"])
+    km.add("W", "console.command set save_stream_file=", ["global"])
 
-    km.add("A", "flow.resume @all", context="flowlist")
-    km.add("a", "flow.resume @focus", context="flowlist")
-    km.add("b", "console.command cut.save s.content|@focus ''", context="flowlist")
-    km.add("d", "view.remove @focus", context="flowlist")
-    km.add("D", "view.duplicate @focus", context="flowlist")
-    km.add("e", "set console_eventlog=toggle", context="flowlist")
+    km.add("A", "flow.resume @all", ["flowlist", "flowview"])
+    km.add("a", "flow.resume @focus", ["flowlist", "flowview"])
+    km.add(
+        "b", "console.command cut.save s.content|@focus ''",
+        ["flowlist", "flowview"]
+    )
+    km.add("d", "view.remove @focus", ["flowlist", "flowview"])
+    km.add("D", "view.duplicate @focus", ["flowlist", "flowview"])
+    km.add("e", "set console_eventlog=toggle", ["flowlist"])
     km.add(
         "E",
-        "console.choose Format export.formats "
+        "console.choose.cmd Format export.formats "
         "console.command export.file {choice} @focus ''",
-        context="flowlist"
+        ["flowlist", "flowview"]
     )
-    km.add("f", "console.command 'set view_filter='", context="flowlist")
-    km.add("F", "set console_focus_follow=toggle", context="flowlist")
-    km.add("g", "view.go 0", context="flowlist")
-    km.add("G", "view.go -1", context="flowlist")
-    km.add("l", "console.command cut.clip ", context="flowlist")
-    km.add("L", "console.command view.load ", context="flowlist")
-    km.add("m", "flow.mark.toggle @focus", context="flowlist")
-    km.add("M", "view.marked.toggle", context="flowlist")
+    km.add("f", "console.command 'set view_filter='", ["flowlist"])
+    km.add("F", "set console_focus_follow=toggle", ["flowlist"])
+    km.add("g", "view.go 0", ["flowlist"])
+    km.add("G", "view.go -1", ["flowlist"])
+    km.add("l", "console.command cut.clip ", ["flowlist", "flowview"])
+    km.add("L", "console.command view.load ", ["flowlist"])
+    km.add("m", "flow.mark.toggle @focus", ["flowlist"])
+    km.add("M", "view.marked.toggle", ["flowlist"])
     km.add(
         "n",
         "console.command view.create get https://google.com",
-        context="flowlist"
+        ["flowlist"]
     )
     km.add(
         "o",
-        "console.choose Order view.order.options "
+        "console.choose.cmd Order view.order.options "
         "set console_order={choice}",
-        context="flowlist"
+        ["flowlist"]
     )
-    km.add("r", "replay.client @focus", context="flowlist")
-    km.add("S", "console.command 'replay.server '")
-    km.add("v", "set console_order_reversed=toggle", context="flowlist")
-    km.add("U", "flow.mark @all false", context="flowlist")
-    km.add("w", "console.command 'save.file @shown '", context="flowlist")
-    km.add("V", "flow.revert @focus", context="flowlist")
-    km.add("X", "flow.kill @focus", context="flowlist")
-    km.add("z", "view.remove @all", context="flowlist")
-    km.add("Z", "view.remove @hidden", context="flowlist")
-    km.add("|", "console.command 'script.run @focus '", context="flowlist")
-    km.add("enter", "console.view.flow @focus", context="flowlist")
+    km.add("r", "replay.client @focus", ["flowlist", "flowview"])
+    km.add("S", "console.command 'replay.server '", ["flowlist"])
+    km.add("v", "set console_order_reversed=toggle", ["flowlist"])
+    km.add("U", "flow.mark @all false", ["flowlist"])
+    km.add("w", "console.command 'save.file @shown '", ["flowlist"])
+    km.add("V", "flow.revert @focus", ["flowlist", "flowview"])
+    km.add("X", "flow.kill @focus", ["flowlist"])
+    km.add("z", "view.remove @all", ["flowlist"])
+    km.add("Z", "view.remove @hidden", ["flowlist"])
+    km.add("|", "console.command 'script.run @focus '", ["flowlist", "flowview"])
+    km.add("enter", "console.view.flow @focus", ["flowlist"])
+
+    km.add(
+        "e",
+        "console.choose.cmd Part console.edit.focus.options "
+        "console.edit.focus {choice}",
+        ["flowview"]
+    )
+    km.add("w", "console.command 'save.file @focus '", ["flowview"])
+    km.add(" ", "view.focus.next", ["flowview"])
+    km.add(
+        "o",
+        "console.choose.cmd Order view.order.options "
+        "set console_order={choice}",
+        ["flowlist"]
+    )
+
+    km.add(
+        "v",
+        "console.choose \"View Part\" request,response "
+        "console.bodyview @focus {choice}",
+        ["flowview"]
+    )
+    km.add("p", "view.focus.prev", ["flowview"])
 
 
 class ConsoleMaster(master.Master):
@@ -219,7 +325,6 @@ class ConsoleMaster(master.Master):
     def __init__(self, options, server):
         super().__init__(options, server)
         self.view = view.View()  # type: view.View
-        self.view.sig_view_update.connect(signals.flow_change.send)
         self.stream_path = None
         # This line is just for type hinting
         self.options = self.options  # type: Options
@@ -232,9 +337,6 @@ class ConsoleMaster(master.Master):
         self.view_stack = []
 
         signals.call_in.connect(self.sig_call_in)
-        signals.pop_view_state.connect(self.sig_pop_view_state)
-        signals.replace_view_state.connect(self.sig_replace_view_state)
-        signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
         self.addons.add(Logger())
         self.addons.add(*addons.default_addons())
@@ -250,6 +352,9 @@ class ConsoleMaster(master.Master):
             self.prompt_for_exit()
 
         signal.signal(signal.SIGINT, sigint_handler)
+
+        self.ab = None
+        self.window = None
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
@@ -293,37 +398,6 @@ class ConsoleMaster(master.Master):
         def cb(*_):
             return callback(*args)
         self.loop.set_alarm_in(seconds, cb)
-
-    def sig_replace_view_state(self, sender):
-        """
-            A view has been pushed onto the stack, and is intended to replace
-            the current view rather than creating a new stack entry.
-        """
-        if len(self.view_stack) > 1:
-            del self.view_stack[1]
-
-    def sig_pop_view_state(self, sender):
-        """
-            Pop the top view off the view stack. If no more views will be left
-            after this, prompt for exit.
-        """
-        if len(self.view_stack) > 1:
-            self.view_stack.pop()
-            self.loop.widget = self.view_stack[-1]
-        else:
-            self.prompt_for_exit()
-
-    def sig_push_view_state(self, sender, window):
-        """
-            Push a new view onto the view stack.
-        """
-        self.view_stack.append(window)
-        self.loop.widget = window
-        self.loop.draw_screen()
-
-    def refresh_view(self):
-        self.view_flowlist()
-        signals.replace_view_state.send(self)
 
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
@@ -413,12 +487,15 @@ class ConsoleMaster(master.Master):
             screen = self.ui,
             handle_mouse = self.options.console_mouse,
         )
+
         self.ab = statusbar.ActionBar(self)
+        self.window = window.Window(self)
+        self.loop.widget = self.window
 
         self.loop.set_alarm_in(0.01, self.ticker)
         self.loop.set_alarm_in(
             0.0001,
-            lambda *args: self.view_flowlist()
+            lambda *args: self.switch_view("flowlist")
         )
 
         self.start()
@@ -439,111 +516,16 @@ class ConsoleMaster(master.Master):
     def shutdown(self):
         raise urwid.ExitMainLoop
 
+    def sig_exit_overlay(self, *args, **kwargs):
+        self.loop.widget = self.window
+
     def overlay(self, widget, **kwargs):
-        signals.push_view_state.send(
-            self,
-            window = overlay.SimpleOverlay(
-                self,
-                widget,
-                self.loop.widget,
-                widget.width,
-                **kwargs
-            )
+        self.loop.widget = overlay.SimpleOverlay(
+            self, widget, self.loop.widget, widget.width, **kwargs
         )
 
-    def view_help(self):
-        hc = self.view_stack[-1].helpctx
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                help.HelpView(hc),
-                None,
-                statusbar.StatusBar(self, help.footer),
-                None,
-                "help"
-            )
-        )
-
-    def view_options(self):
-        for i in self.view_stack:
-            if isinstance(i["body"], options.Options):
-                return
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                options.Options(self),
-                None,
-                statusbar.StatusBar(self, options.footer),
-                options.help_context,
-                "options"
-            )
-        )
-
-    def view_commands(self):
-        for i in self.view_stack:
-            if isinstance(i["body"], commands.Commands):
-                return
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                commands.Commands(self),
-                None,
-                statusbar.StatusBar(self, commands.footer),
-                commands.help_context,
-                "commands"
-            )
-        )
-
-    def view_grideditor(self, ge):
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                ge,
-                None,
-                statusbar.StatusBar(self, grideditor.base.FOOTER),
-                ge.make_help(),
-                "grideditor"
-            )
-        )
-
-    def view_flowlist(self):
-        if self.ui.started:
-            self.ui.clear()
-
-        if self.options.console_eventlog:
-            body = flowlist.BodyPile(self)
-        else:
-            body = flowlist.FlowListBox(self)
-
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                body,
-                None,
-                statusbar.StatusBar(self, flowlist.footer),
-                flowlist.help_context,
-                "flowlist"
-            )
-        )
-
-    def view_flow(self, flow, tab_offset=0):
-        self.view.focus.flow = flow
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                flowview.FlowView(self, self.view, flow, tab_offset),
-                flowview.FlowViewHeader(self, flow),
-                statusbar.StatusBar(self, flowview.footer),
-                flowview.help_context,
-                "flowview"
-            )
-        )
+    def switch_view(self, name):
+        self.window.push(name)
 
     def quit(self, a):
         if a != "n":

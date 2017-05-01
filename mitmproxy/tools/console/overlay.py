@@ -84,7 +84,7 @@ class Chooser(urwid.WidgetWrap):
         self.choices = choices
         self.callback = callback
         choicewidth = max([len(i) for i in choices])
-        self.width = max(choicewidth, len(title) + 5)
+        self.width = max(choicewidth, len(title)) + 5
         self.walker = ChooserListWalker(choices, current)
         super().__init__(
             urwid.AttrWrap(

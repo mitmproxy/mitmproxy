@@ -143,6 +143,7 @@ class ActionBar(urwid.WidgetWrap):
 
 
 class StatusBar(urwid.WidgetWrap):
+    keyctx = ""
 
     def __init__(
         self, master: "mitmproxy.tools.console.master.ConsoleMaster", helptext

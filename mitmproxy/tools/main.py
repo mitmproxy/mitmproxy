@@ -99,7 +99,7 @@ def run(MasterKlass, args, extra=None):  # pragma: no cover
     except exceptions.OptionsError as e:
         print("%s: %s" % (sys.argv[0], e), file=sys.stderr)
         sys.exit(1)
-    except (KeyboardInterrupt, RuntimeError):
+    except (KeyboardInterrupt, RuntimeError) as e:
         pass
     return master
 

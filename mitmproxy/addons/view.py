@@ -202,6 +202,24 @@ class View(collections.Sequence):
         self.sig_view_refresh.send(self)
 
     # API
+    @command.command("view.focus.next")
+    def focus_next(self) -> None:
+        """
+            Set focus to the next flow.
+        """
+        idx = self.focus.index + 1
+        if self.inbounds(idx):
+            self.focus.flow = self[idx]
+
+    @command.command("view.focus.prev")
+    def focus_prev(self) -> None:
+        """
+            Set focus to the previous flow.
+        """
+        idx = self.focus.index - 1
+        if self.inbounds(idx):
+            self.focus.flow = self[idx]
+
     @command.command("view.order.options")
     def order_options(self) -> typing.Sequence[str]:
         """
@@ -314,6 +332,7 @@ class View(collections.Sequence):
         if dups:
             self.add(dups)
             self.focus.flow = dups[0]
+            ctx.log.alert("Duplicated %s flows" % len(dups))
 
     @command.command("view.remove")
     def remove(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
