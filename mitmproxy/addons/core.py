@@ -153,3 +153,62 @@ class Core:
 
         ctx.master.addons.trigger("update", updated)
         ctx.log.alert("Set %s on  %s flows." % (spec, len(updated)))
+
+    @command.command("flow.decode")
+    def decode(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
+        """
+            Decode flows.
+        """
+        updated = []
+        for f in flows:
+            p = getattr(f, part, None)
+            if p:
+                p.decode()
+                updated.append(f)
+        ctx.master.addons.trigger("update", updated)
+        ctx.log.alert("Decoded %s flows." % len(updated))
+
+    @command.command("flow.encode.toggle")
+    def encode_toggle(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
+        """
+            Toggle flow encoding on and off, using deflate for encoding.
+        """
+        updated = []
+        for f in flows:
+            p = getattr(f, part, None)
+            if p:
+                current_enc = p.headers.get("content-encoding", "identity")
+                if current_enc == "identity":
+                    p.encode("deflate")
+                else:
+                    p.decode()
+                updated.append(f)
+        ctx.master.addons.trigger("update", updated)
+        ctx.log.alert("Toggled encoding on %s flows." % len(updated))
+
+    @command.command("flow.encode")
+    def encode(self, flows: typing.Sequence[flow.Flow], part: str, enc: str) -> None:
+        """
+            Encode flows with a specified encoding.
+        """
+        if enc not in self.encode_options():
+            raise exceptions.CommandError("Invalid encoding format: %s" % enc)
+
+        updated = []
+        for f in flows:
+            p = getattr(f, part, None)
+            if p:
+                current_enc = p.headers.get("content-encoding", "identity")
+                if current_enc == "identity":
+                    p.encode(enc)
+                    updated.append(f)
+        ctx.master.addons.trigger("update", updated)
+        ctx.log.alert("Encoded %s flows." % len(updated))
+
+    @command.command("flow.encode.options")
+    def encode_options(self) -> typing.Sequence[str]:
+        """
+            The possible values for an encoding specification.
+
+        """
+        return ["gzip", "deflate", "br"]

@@ -100,3 +100,31 @@ def test_flow_set():
         assert f.response.reason != "foo"
         sa.flow_set([f], "reason", "foo")
         assert f.response.reason == "foo"
+
+
+def test_encoding():
+    sa = core.Core()
+    with taddons.context():
+        f = tflow.tflow()
+        assert sa.encode_options()
+        sa.encode([f], "request", "deflate")
+        assert f.request.headers["content-encoding"] == "deflate"
+
+        sa.encode([f], "request", "br")
+        assert f.request.headers["content-encoding"] == "deflate"
+
+        sa.decode([f], "request")
+        assert "content-encoding" not in f.request.headers
+
+        sa.encode([f], "request", "br")
+        assert f.request.headers["content-encoding"] == "br"
+
+        sa.encode_toggle([f], "request")
+        assert "content-encoding" not in f.request.headers
+        sa.encode_toggle([f], "request")
+        assert f.request.headers["content-encoding"] == "deflate"
+        sa.encode_toggle([f], "request")
+        assert "content-encoding" not in f.request.headers
+
+        with pytest.raises(exceptions.CommandError):
+            sa.encode([f], "request", "invalid")
