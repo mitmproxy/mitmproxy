@@ -22,13 +22,8 @@ from mitmproxy import flow
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
-from mitmproxy.tools.console import flowlist
-from mitmproxy.tools.console import flowview
 from mitmproxy.tools.console import grideditor
-from mitmproxy.tools.console import help
 from mitmproxy.tools.console import keymap
-from mitmproxy.tools.console import options
-from mitmproxy.tools.console import commands
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
@@ -102,7 +97,7 @@ class ConsoleAddon:
             repl = repl.replace("{choice}", opt)
             self.master.commands.call(repl)
 
-        self.master.overlay(overlay.Chooser(choicecmd, choices, "", callback))
+        self.master.overlay(overlay.Chooser(prompt, choices, "", callback))
         ctx.log.info(choices)
 
     @command.command("console.command")
@@ -147,6 +142,38 @@ class ConsoleAddon:
         """
         signals.pop_view_state.send(self)
 
+    @command.command("console.edit.focus.options")
+    def edit_focus_options(self) -> typing.Sequence[str]:
+        return [
+            "cookies",
+            "form",
+            "path",
+            "query",
+            "request-headers",
+            "response-headers",
+            "set-cookies",
+        ]
+
+    @command.command("console.edit.focus")
+    def edit_focus(self, part: str) -> None:
+        """
+            Edit the query of the current focus.
+        """
+        if part == "cookies":
+            self.master.switch_view("edit_focus_cookies")
+        elif part == "form":
+            self.master.switch_view("edit_focus_form")
+        elif part == "path":
+            self.master.switch_view("edit_focus_path")
+        elif part == "query":
+            self.master.switch_view("edit_focus_query")
+        elif part == "request-headers":
+            self.master.switch_view("edit_focus_request_headers")
+        elif part == "response-headers":
+            self.master.switch_view("edit_focus_response_headers")
+        elif part == "set-cookies":
+            self.master.switch_view("edit_focus_setcookies")
+
     def running(self):
         self.started = True
 
@@ -157,7 +184,7 @@ class ConsoleAddon:
     def configure(self, updated):
         if self.started:
             if "console_eventlog" in updated:
-                self.master.refresh_view()
+                pass
 
 
 def default_keymap(km):
@@ -213,6 +240,16 @@ def default_keymap(km):
     km.add("|", "console.command 'script.run @focus '", context="flowlist")
     km.add("enter", "console.view.flow @focus", context="flowlist")
 
+    km.add(
+        "t",
+        "console.choose Part console.edit.focus.options "
+        "console.edit.focus {choice}",
+        context="flowlist"
+    )
+
+    km.add(" ", "view.focus.next", context="flowview")
+    km.add("X", "console.edit.focus.query", context="flowview")
+
 
 class ConsoleMaster(master.Master):
 
@@ -232,9 +269,6 @@ class ConsoleMaster(master.Master):
         self.view_stack = []
 
         signals.call_in.connect(self.sig_call_in)
-        signals.pop_view_state.connect(self.sig_pop_view_state)
-        signals.replace_view_state.connect(self.sig_replace_view_state)
-        signals.push_view_state.connect(self.sig_push_view_state)
         signals.sig_add_log.connect(self.sig_add_log)
         self.addons.add(Logger())
         self.addons.add(*addons.default_addons())
@@ -250,6 +284,9 @@ class ConsoleMaster(master.Master):
             self.prompt_for_exit()
 
         signal.signal(signal.SIGINT, sigint_handler)
+
+        self.ab = None
+        self.window = None
 
     def __setattr__(self, name, value):
         self.__dict__[name] = value
@@ -293,37 +330,6 @@ class ConsoleMaster(master.Master):
         def cb(*_):
             return callback(*args)
         self.loop.set_alarm_in(seconds, cb)
-
-    def sig_replace_view_state(self, sender):
-        """
-            A view has been pushed onto the stack, and is intended to replace
-            the current view rather than creating a new stack entry.
-        """
-        if len(self.view_stack) > 1:
-            del self.view_stack[1]
-
-    def sig_pop_view_state(self, sender):
-        """
-            Pop the top view off the view stack. If no more views will be left
-            after this, prompt for exit.
-        """
-        if len(self.view_stack) > 1:
-            self.view_stack.pop()
-            self.loop.widget = self.view_stack[-1]
-        else:
-            self.prompt_for_exit()
-
-    def sig_push_view_state(self, sender, window):
-        """
-            Push a new view onto the view stack.
-        """
-        self.view_stack.append(window)
-        self.loop.widget = window
-        self.loop.draw_screen()
-
-    def refresh_view(self):
-        self.view_flowlist()
-        signals.replace_view_state.send(self)
 
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
@@ -413,7 +419,10 @@ class ConsoleMaster(master.Master):
             screen = self.ui,
             handle_mouse = self.options.console_mouse,
         )
+
         self.ab = statusbar.ActionBar(self)
+        self.window = window.Window(self)
+        self.loop.widget = self.window
 
         self.loop.set_alarm_in(0.01, self.ticker)
         self.loop.set_alarm_in(
@@ -439,63 +448,25 @@ class ConsoleMaster(master.Master):
     def shutdown(self):
         raise urwid.ExitMainLoop
 
+    def sig_exit_overlay(self, *args, **kwargs):
+        self.loop.widget = self.window
+
     def overlay(self, widget, **kwargs):
-        signals.push_view_state.send(
-            self,
-            window = overlay.SimpleOverlay(
-                self,
-                widget,
-                self.loop.widget,
-                widget.width,
-                **kwargs
-            )
+        self.loop.widget = overlay.SimpleOverlay(
+            self, widget, self.loop.widget, widget.width, **kwargs
         )
+
+    def switch_view(self, name):
+        self.window.push(name)
 
     def view_help(self):
-        hc = self.view_stack[-1].helpctx
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                help.HelpView(hc),
-                None,
-                statusbar.StatusBar(self, help.footer),
-                None,
-                "help"
-            )
-        )
+        self.window.push("help")
 
     def view_options(self):
-        for i in self.view_stack:
-            if isinstance(i["body"], options.Options):
-                return
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                options.Options(self),
-                None,
-                statusbar.StatusBar(self, options.footer),
-                options.help_context,
-                "options"
-            )
-        )
+        self.window.push("options")
 
     def view_commands(self):
-        for i in self.view_stack:
-            if isinstance(i["body"], commands.Commands):
-                return
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                commands.Commands(self),
-                None,
-                statusbar.StatusBar(self, commands.footer),
-                commands.help_context,
-                "commands"
-            )
-        )
+        self.window.push("commands")
 
     def view_grideditor(self, ge):
         signals.push_view_state.send(
@@ -511,39 +482,10 @@ class ConsoleMaster(master.Master):
         )
 
     def view_flowlist(self):
-        if self.ui.started:
-            self.ui.clear()
-
-        if self.options.console_eventlog:
-            body = flowlist.BodyPile(self)
-        else:
-            body = flowlist.FlowListBox(self)
-
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                body,
-                None,
-                statusbar.StatusBar(self, flowlist.footer),
-                flowlist.help_context,
-                "flowlist"
-            )
-        )
+        self.window.push("flowlist")
 
     def view_flow(self, flow, tab_offset=0):
-        self.view.focus.flow = flow
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                flowview.FlowView(self, self.view, flow, tab_offset),
-                flowview.FlowViewHeader(self, flow),
-                statusbar.StatusBar(self, flowview.footer),
-                flowview.help_context,
-                "flowview"
-            )
-        )
+        self.window.push("flowview")
 
     def quit(self, a):
         if a != "n":

@@ -183,4 +183,4 @@ def flowdetails(state, flow: http.HTTPFlow):
         text.append(urwid.Text([("head", "Timing:")]))
         text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
-    return searchable.Searchable(state, text)
+    return searchable.Searchable(text)

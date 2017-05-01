@@ -146,6 +146,8 @@ class CommandHelp(urwid.Frame):
 
 
 class Commands(urwid.Pile):
+    keyctx = "commands"
+
     def __init__(self, master):
         oh = CommandHelp(master)
         super().__init__(

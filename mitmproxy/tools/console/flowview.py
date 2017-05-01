@@ -9,11 +9,9 @@ import urwid
 from mitmproxy import contentviews
 from mitmproxy import exceptions
 from mitmproxy import http
-from mitmproxy.net.http import Headers
 from mitmproxy.net.http import status_codes
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
-from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import signals
@@ -106,49 +104,51 @@ class FlowViewHeader(urwid.WidgetWrap):
     def __init__(
         self,
         master: "mitmproxy.tools.console.master.ConsoleMaster",
-        f: http.HTTPFlow
     ) -> None:
         self.master = master
-        self.flow = f
-        self._w = common.format_flow(
-            f,
-            False,
-            extended=True,
-            hostheader=self.master.options.showhost
-        )
-        signals.flow_change.connect(self.sig_flow_change)
+        self.focus_changed()
 
-    def sig_flow_change(self, sender, flow):
-        if flow == self.flow:
+    def focus_changed(self):
+        if self.master.view.focus.flow:
             self._w = common.format_flow(
-                flow,
+                self.master.view.focus.flow,
                 False,
                 extended=True,
                 hostheader=self.master.options.showhost
             )
+        else:
+            self._w = urwid.Pile([])
 
 
 TAB_REQ = 0
 TAB_RESP = 1
 
 
-class FlowView(tabs.Tabs):
+class FlowDetails(tabs.Tabs):
     highlight_color = "focusfield"
 
-    def __init__(self, master, view, flow, tab_offset):
-        self.master, self.view, self.flow = master, view, flow
-        super().__init__(
-            [
+    def __init__(self, master, tab_offset):
+        self.master = master
+        super().__init__([], tab_offset)
+        self.show()
+        self.last_displayed_body = None
+
+    def focus_changed(self):
+        if self.master.view.focus.flow:
+            self.tabs = [
                 (self.tab_request, self.view_request),
                 (self.tab_response, self.view_response),
                 (self.tab_details, self.view_details),
-            ],
-            tab_offset
-        )
-
+            ]
         self.show()
-        self.last_displayed_body = None
-        signals.flow_change.connect(self.sig_flow_change)
+
+    @property
+    def view(self):
+        return self.master.view
+
+    @property
+    def flow(self):
+        return self.master.view.focus.flow
 
     def tab_request(self):
         if self.flow.intercepted and not self.flow.response:
@@ -173,10 +173,6 @@ class FlowView(tabs.Tabs):
 
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
-
-    def sig_flow_change(self, sender, flow):
-        if flow == self.flow:
-            self.show()
 
     def content_view(self, viewmode, message):
         if message.raw_content is None:
@@ -288,7 +284,7 @@ class FlowView(tabs.Tabs):
                     ]
                 )
             ]
-        return searchable.Searchable(self.view, txt)
+        return searchable.Searchable(txt)
 
     def set_method_raw(self, m):
         if m:
@@ -330,44 +326,6 @@ class FlowView(tabs.Tabs):
         self.flow.response.reason = reason
         signals.flow_change.send(self, flow = self.flow)
 
-    def set_headers(self, fields, conn):
-        conn.headers = Headers(fields)
-        signals.flow_change.send(self, flow = self.flow)
-
-    def set_query(self, lst, conn):
-        conn.query = lst
-        signals.flow_change.send(self, flow = self.flow)
-
-    def set_path_components(self, lst, conn):
-        conn.path_components = lst
-        signals.flow_change.send(self, flow = self.flow)
-
-    def set_form(self, lst, conn):
-        conn.urlencoded_form = lst
-        signals.flow_change.send(self, flow = self.flow)
-
-    def edit_form(self, conn):
-        self.master.view_grideditor(
-            grideditor.URLEncodedFormEditor(
-                self.master,
-                conn.urlencoded_form.items(multi=True),
-                self.set_form,
-                conn
-            )
-        )
-
-    def edit_form_confirm(self, key, conn):
-        if key == "y":
-            self.edit_form(conn)
-
-    def set_cookies(self, lst, conn):
-        conn.cookies = lst
-        signals.flow_change.send(self, flow = self.flow)
-
-    def set_setcookies(self, data, conn):
-        conn.cookies = data
-        signals.flow_change.send(self, flow = self.flow)
-
     def edit(self, part):
         if self.tab_offset == TAB_REQ:
             message = self.flow.request
@@ -377,24 +335,6 @@ class FlowView(tabs.Tabs):
             message = self.flow.response
 
         self.flow.backup()
-        if message == self.flow.request and part == "c":
-            self.master.view_grideditor(
-                grideditor.CookieEditor(
-                    self.master,
-                    message.cookies.items(multi=True),
-                    self.set_cookies,
-                    message
-                )
-            )
-        if message == self.flow.response and part == "c":
-            self.master.view_grideditor(
-                grideditor.SetCookieEditor(
-                    self.master,
-                    message.cookies.items(multi=True),
-                    self.set_setcookies,
-                    message
-                )
-            )
         if part == "r":
             # Fix an issue caused by some editors when editing a
             # request/response body. Many editors make it hard to save a
@@ -404,46 +344,6 @@ class FlowView(tabs.Tabs):
             # from an editor.
             c = self.master.spawn_editor(message.get_content(strict=False) or b"")
             message.content = c.rstrip(b"\n")
-        elif part == "f":
-            if not message.urlencoded_form and message.raw_content:
-                signals.status_prompt_onekey.send(
-                    prompt = "Existing body is not a URL-encoded form. Clear and edit?",
-                    keys = [
-                        ("yes", "y"),
-                        ("no", "n"),
-                    ],
-                    callback = self.edit_form_confirm,
-                    args = (message,)
-                )
-            else:
-                self.edit_form(message)
-        elif part == "h":
-            self.master.view_grideditor(
-                grideditor.HeaderEditor(
-                    self.master,
-                    message.headers.fields,
-                    self.set_headers,
-                    message
-                )
-            )
-        elif part == "p":
-            p = message.path_components
-            self.master.view_grideditor(
-                grideditor.PathEditor(
-                    self.master,
-                    p,
-                    self.set_path_components,
-                    message
-                )
-            )
-        elif part == "q":
-            self.master.view_grideditor(
-                grideditor.QueryEditor(
-                    self.master,
-                    message.query.items(multi=True),
-                    self.set_query, message
-                )
-            )
         elif part == "u":
             signals.status_prompt.send(
                 prompt = "URL",
@@ -499,12 +399,6 @@ class FlowView(tabs.Tabs):
             conn = self.flow.response
 
         key = super().keypress(size, key)
-
-        # Special case: Space moves over to the next flow.
-        # We need to catch that before applying common.shortcuts()
-        if key == " ":
-            self.view_next_flow(self.flow)
-            return
 
         key = common.shortcuts(key)
         if key in ("up", "down", "page up", "page down"):
@@ -689,3 +583,18 @@ class FlowView(tabs.Tabs):
         }
         conn.encode(encoding_map[key])
         signals.flow_change.send(self, flow = self.flow)
+
+
+class FlowView(urwid.Frame):
+    keyctx = "flowview"
+
+    def __init__(self, master):
+        super().__init__(
+            FlowDetails(master, 0),
+            header = FlowViewHeader(master),
+        )
+        self.master = master
+
+    def focus_changed(self, *args, **kwargs):
+        self.body.focus_changed()
+        self.header.focus_changed()

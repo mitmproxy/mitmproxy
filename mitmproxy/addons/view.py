@@ -202,6 +202,15 @@ class View(collections.Sequence):
         self.sig_view_refresh.send(self)
 
     # API
+    @command.command("view.focus.next")
+    def focus_next(self) -> None:
+        """
+            A list of all the orders we support.
+        """
+        idx = self.focus.index + 1
+        if self.inbounds(idx):
+            self.focus.flow = self[idx]
+
     @command.command("view.order.options")
     def order_options(self) -> typing.Sequence[str]:
         """

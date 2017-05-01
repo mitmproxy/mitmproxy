@@ -252,13 +252,12 @@ FIRST_WIDTH_MAX = 40
 FIRST_WIDTH_MIN = 20
 
 
-class GridEditor(urwid.WidgetWrap):
-    title = None  # type: str
-    columns = None  # type: Sequence[Column]
-
+class BaseGridEditor(urwid.WidgetWrap):
     def __init__(
             self,
             master: "mitmproxy.tools.console.master.ConsoleMaster",
+            title,
+            columns,
             value: Any,
             callback: Callable[..., None],
             *cb_args,
@@ -266,6 +265,8 @@ class GridEditor(urwid.WidgetWrap):
     ) -> None:
         value = self.data_in(copy.deepcopy(value))
         self.master = master
+        self.title = title
+        self.columns = columns
         self.value = value
         self.callback = callback
         self.cb_args = cb_args
@@ -307,6 +308,13 @@ class GridEditor(urwid.WidgetWrap):
         signals.footer_help.send(self, helptext="")
         self.show_empty_msg()
 
+    def view_popping(self):
+        res = []
+        for i in self.walker.lst:
+            if not i[1] and any([x for x in i[0]]):
+                res.append(i[0])
+        self.callback(self.data_out(res), *self.cb_args, **self.cb_kwargs)
+
     def show_empty_msg(self):
         if self.walker.lst:
             self._w.set_footer(None)
@@ -339,14 +347,7 @@ class GridEditor(urwid.WidgetWrap):
 
         key = common.shortcuts(key)
         column = self.columns[self.walker.focus_col]
-        if key in ["q", "esc"]:
-            res = []
-            for i in self.walker.lst:
-                if not i[1] and any([x for x in i[0]]):
-                    res.append(i[0])
-            self.callback(self.data_out(res), *self.cb_args, **self.cb_kwargs)
-            signals.pop_view_state.send(self)
-        elif key == "g":
+        if key == "g":
             self.walker.set_focus(0)
         elif key == "G":
             self.walker.set_focus(len(self.walker.lst) - 1)
@@ -415,3 +416,74 @@ class GridEditor(urwid.WidgetWrap):
             )
         )
         return text
+
+
+class GridEditor(urwid.WidgetWrap):
+    title = None  # type: str
+    columns = None  # type: Sequence[Column]
+
+    def __init__(
+            self,
+            master: "mitmproxy.tools.console.master.ConsoleMaster",
+            value: Any,
+            callback: Callable[..., None],
+            *cb_args,
+            **cb_kwargs
+    ) -> None:
+        super().__init__(
+            master,
+            value,
+            self.title,
+            self.columns,
+            callback,
+            *cb_args,
+            **cb_kwargs
+        )
+
+
+class FocusEditor(urwid.WidgetWrap):
+    """
+        A specialised GridEditor that edits the current focused flow.
+    """
+    keyctx = "grideditor"
+
+    def __init__(self, master):
+        self.master = master
+        self.focus_changed()
+
+    def focus_changed(self):
+        if self.master.view.focus.flow:
+            self._w = BaseGridEditor(
+                self.master.view.focus.flow,
+                self.title,
+                self.columns,
+                self.get_data(self.master.view.focus.flow),
+                self.set_data_update,
+                self.master.view.focus.flow,
+            )
+        else:
+            self._w = urwid.Pile([])
+
+    def call(self, v, name, *args, **kwargs):
+        f = getattr(v, name, None)
+        if f:
+            f(*args, **kwargs)
+
+    def view_popping(self):
+        self.call(self._w, "view_popping")
+
+    def get_data(self, flow):
+        """
+            Retrieve the data to edit from the current flow.
+        """
+        raise NotImplementedError
+
+    def set_data_update(self, flow, vals):
+        self.set_data(flow, vals)
+        signals.flow_change.send(self, flow = flow)
+
+    def set_data(self, flow, vals):
+        """
+            Set the current data on the flow.
+        """
+        signals.flow_change.send(self, flow = self.flow)

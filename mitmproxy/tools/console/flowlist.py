@@ -1,7 +1,6 @@
 import urwid
 
 from mitmproxy.tools.console import common
-from mitmproxy.tools.console import signals
 import mitmproxy.tools.console.master # noqa
 
 
@@ -145,14 +144,8 @@ class FlowListWalker(urwid.ListWalker):
 
     def __init__(self, master):
         self.master = master
-        self.master.view.sig_view_refresh.connect(self.sig_mod)
-        self.master.view.sig_view_add.connect(self.sig_mod)
-        self.master.view.sig_view_remove.connect(self.sig_mod)
-        self.master.view.sig_view_update.connect(self.sig_mod)
-        self.master.view.focus.sig_change.connect(self.sig_mod)
-        signals.flowlist_change.connect(self.sig_mod)
 
-    def sig_mod(self, *args, **kwargs):
+    def view_changed(self):
         self._modified()
 
     def get_focus(self):
@@ -164,7 +157,6 @@ class FlowListWalker(urwid.ListWalker):
     def set_focus(self, index):
         if self.master.view.inbounds(index):
             self.master.view.focus.index = index
-            signals.flowlist_change.send(self)
 
     def get_next(self, pos):
         pos = pos + 1
@@ -182,6 +174,7 @@ class FlowListWalker(urwid.ListWalker):
 
 
 class FlowListBox(urwid.ListBox):
+    keyctx = "flowlist"
 
     def __init__(
         self, master: "mitmproxy.tools.console.master.ConsoleMaster"
@@ -192,3 +185,6 @@ class FlowListBox(urwid.ListBox):
     def keypress(self, size, key):
         key = common.shortcuts(key)
         return urwid.ListBox.keypress(self, size, key)
+
+    def view_changed(self):
+        self.body.view_changed()
