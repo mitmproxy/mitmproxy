@@ -9,7 +9,6 @@ import urwid
 from mitmproxy import contentviews
 from mitmproxy import exceptions
 from mitmproxy import http
-from mitmproxy.net.http import status_codes
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import overlay
@@ -286,90 +285,6 @@ class FlowDetails(tabs.Tabs):
             ]
         return searchable.Searchable(txt)
 
-    def set_method_raw(self, m):
-        if m:
-            self.flow.request.method = m
-            signals.flow_change.send(self, flow = self.flow)
-
-    def edit_method(self, m):
-        if m == "e":
-            signals.status_prompt.send(
-                prompt = "Method",
-                text = self.flow.request.method,
-                callback = self.set_method_raw
-            )
-        else:
-            for i in common.METHOD_OPTIONS:
-                if i[1] == m:
-                    self.flow.request.method = i[0].upper()
-            signals.flow_change.send(self, flow = self.flow)
-
-    def set_url(self, url):
-        request = self.flow.request
-        try:
-            request.url = str(url)
-        except ValueError:
-            return "Invalid URL."
-        signals.flow_change.send(self, flow = self.flow)
-
-    def set_resp_status_code(self, status_code):
-        try:
-            status_code = int(status_code)
-        except ValueError:
-            return None
-        self.flow.response.status_code = status_code
-        if status_code in status_codes.RESPONSES:
-            self.flow.response.reason = status_codes.RESPONSES[status_code]
-        signals.flow_change.send(self, flow = self.flow)
-
-    def set_resp_reason(self, reason):
-        self.flow.response.reason = reason
-        signals.flow_change.send(self, flow = self.flow)
-
-    def edit(self, part):
-        if self.tab_offset == TAB_REQ:
-            message = self.flow.request
-        else:
-            if not self.flow.response:
-                self.flow.response = http.HTTPResponse.make(200, b"")
-            message = self.flow.response
-
-        self.flow.backup()
-        if part == "r":
-            # Fix an issue caused by some editors when editing a
-            # request/response body. Many editors make it hard to save a
-            # file without a terminating newline on the last line. When
-            # editing message bodies, this can cause problems. For now, I
-            # just strip the newlines off the end of the body when we return
-            # from an editor.
-            c = self.master.spawn_editor(message.get_content(strict=False) or b"")
-            message.content = c.rstrip(b"\n")
-        elif part == "u":
-            signals.status_prompt.send(
-                prompt = "URL",
-                text = message.url,
-                callback = self.set_url
-            )
-        elif part == "m" and message == self.flow.request:
-            signals.status_prompt_onekey.send(
-                prompt = "Method",
-                keys = common.METHOD_OPTIONS,
-                callback = self.edit_method
-            )
-        elif part == "o":
-            signals.status_prompt.send(
-                prompt = "Code",
-                text = str(message.status_code),
-                callback = self.set_resp_status_code
-            )
-        elif part == "m" and message == self.flow.response:
-            signals.status_prompt.send(
-                prompt = "Message",
-                text = message.reason,
-                callback = self.set_resp_reason
-            )
-        signals.flow_change.send(self, flow = self.flow)
-
     def view_flow(self, flow):
         signals.pop_view_state.send(self)
         self.master.view_flow(flow, self.tab_offset)
@@ -453,39 +368,6 @@ class FlowDetails(tabs.Tabs):
                 callback = self.master.run_script_once,
                 args = (self.flow,)
             )
-        elif key == "e":
-            if self.tab_offset == TAB_REQ:
-                signals.status_prompt_onekey.send(
-                    prompt="Edit request",
-                    keys=(
-                        ("cookies", "c"),
-                        ("query", "q"),
-                        ("path", "p"),
-                        ("url", "u"),
-                        ("header", "h"),
-                        ("form", "f"),
-                        ("raw body", "r"),
-                        ("method", "m"),
-                    ),
-                    callback=self.edit
-                )
-            elif self.tab_offset == TAB_RESP:
-                signals.status_prompt_onekey.send(
-                    prompt="Edit response",
-                    keys=(
-                        ("cookies", "c"),
-                        ("code", "o"),
-                        ("message", "m"),
-                        ("header", "h"),
-                        ("raw body", "r"),
-                    ),
-                    callback=self.edit
-                )
-            else:
-                signals.status_message.send(
-                    message="Tab to the request or response",
-                    expire=1
-                )
         elif key in set("bfgmxvzEC") and not conn:
             signals.status_message.send(
                 message = "Tab to the request or response",

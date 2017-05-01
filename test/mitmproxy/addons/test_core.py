@@ -61,3 +61,42 @@ def test_revert():
         assert f.modified()
         sa.revert([f])
         assert not f.modified()
+
+
+def test_flow_set():
+    sa = core.Core()
+    with taddons.context():
+        f = tflow.tflow(resp=True)
+        assert sa.flow_set_options()
+
+        with pytest.raises(exceptions.CommandError):
+            sa.flow_set([f], "flibble", "post")
+
+        assert f.request.method != "post"
+        sa.flow_set([f], "method", "post")
+        assert f.request.method == "POST"
+
+        assert f.request.host != "testhost"
+        sa.flow_set([f], "host", "testhost")
+        assert f.request.host == "testhost"
+
+        assert f.request.path != "/test/path"
+        sa.flow_set([f], "path", "/test/path")
+        assert f.request.path == "/test/path"
+
+        assert f.request.url != "http://foo.com/bar"
+        sa.flow_set([f], "url", "http://foo.com/bar")
+        assert f.request.url == "http://foo.com/bar"
+        with pytest.raises(exceptions.CommandError):
+            sa.flow_set([f], "url", "oink")
+
+        assert f.response.status_code != 404
+        sa.flow_set([f], "status_code", "404")
+        assert f.response.status_code == 404
+        assert f.response.reason == "Not Found"
+        with pytest.raises(exceptions.CommandError):
+            sa.flow_set([f], "status_code", "oink")
+
+        assert f.response.reason != "foo"
+        sa.flow_set([f], "reason", "foo")
+        assert f.response.reason == "foo"

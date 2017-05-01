@@ -4,6 +4,7 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import command
 from mitmproxy import flow
+from mitmproxy.net.http import status_codes
 
 
 class Core:
@@ -79,3 +80,76 @@ class Core:
                 updated.append(f)
         ctx.log.alert("Reverted %s flows." % len(updated))
         ctx.master.addons.trigger("update", updated)
+
+    @command.command("flow.set.options")
+    def flow_set_options(self) -> typing.Sequence[str]:
+        return [
+            "host",
+            "status_code",
+            "method",
+            "path",
+            "url",
+            "reason",
+        ]
+
+    @command.command("flow.set")
+    def flow_set(
+        self,
+        flows: typing.Sequence[flow.Flow], spec: str, sval: str
+    ) -> None:
+        """
+            Quickly set a number of common values on flows.
+        """
+        opts = self.flow_set_options()
+        if spec not in opts:
+            raise exceptions.CommandError(
+                "Set spec must be one of: %s." % ", ".join(opts)
+            )
+
+        val = sval  # type: typing.Union[int, str]
+        if spec == "status_code":
+            try:
+                val = int(val)
+            except ValueError as v:
+                raise exceptions.CommandError(
+                    "Status code is not an integer: %s" % val
+                ) from v
+
+        updated = []
+        for f in flows:
+            req = getattr(f, "request", None)
+            rupdate = True
+            if req:
+                if spec == "method":
+                    req.method = val
+                elif spec == "host":
+                    req.host = val
+                elif spec == "path":
+                    req.path = val
+                elif spec == "url":
+                    try:
+                        req.url = val
+                    except ValueError as e:
+                        raise exceptions.CommandError(
+                            "URL %s is invalid: %s" % (repr(val), e)
+                        ) from e
+                else:
+                    self.rupdate = False
+
+            resp = getattr(f, "response", None)
+            supdate = True
+            if resp:
+                if spec == "status_code":
+                    resp.status_code = val
+                    if val in status_codes.RESPONSES:
+                        resp.reason = status_codes.RESPONSES[int(val)]
+                elif spec == "reason":
+                    resp.reason = val
+                else:
+                    supdate = False
+
+            if rupdate or supdate:
+                updated.append(f)
+
+        ctx.master.addons.trigger("update", updated)
+        ctx.log.alert("Set %s on  %s flows." % (spec, len(updated)))

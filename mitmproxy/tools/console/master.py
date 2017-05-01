@@ -22,7 +22,6 @@ from mitmproxy import flow
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
-from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import palettes
@@ -148,10 +147,14 @@ class ConsoleAddon:
             "cookies",
             "form",
             "path",
+            "method",
             "query",
+            "reason",
             "request-headers",
             "response-headers",
+            "status_code",
             "set-cookies",
+            "url",
         ]
 
     @command.command("console.edit.focus")
@@ -173,6 +176,10 @@ class ConsoleAddon:
             self.master.switch_view("edit_focus_response_headers")
         elif part == "set-cookies":
             self.master.switch_view("edit_focus_setcookies")
+        elif part in ["url", "method", "status_code", "reason"]:
+            self.master.commands.call(
+                "console.command flow.set @focus %s " % part
+            )
 
     def running(self):
         self.started = True
@@ -241,10 +248,10 @@ def default_keymap(km):
     km.add("enter", "console.view.flow @focus", context="flowlist")
 
     km.add(
-        "t",
+        "e",
         "console.choose Part console.edit.focus.options "
         "console.edit.focus {choice}",
-        context="flowlist"
+        context="flowview"
     )
 
     km.add(" ", "view.focus.next", context="flowview")
@@ -467,19 +474,6 @@ class ConsoleMaster(master.Master):
 
     def view_commands(self):
         self.window.push("commands")
-
-    def view_grideditor(self, ge):
-        signals.push_view_state.send(
-            self,
-            window = window.Window(
-                self,
-                ge,
-                None,
-                statusbar.StatusBar(self, grideditor.base.FOOTER),
-                ge.make_help(),
-                "grideditor"
-            )
-        )
 
     def view_flowlist(self):
         self.window.push("flowlist")
