@@ -1,13 +1,14 @@
 import abc
 from . import actions, exceptions
 from mitmproxy.utils import strutils
+import typing  # noqa
 
 LOG_TRUNCATE = 1024
 
 
 class Message:
     __metaclass__ = abc.ABCMeta
-    logattrs = []
+    logattrs = []  # type: typing.List[str]
 
     def __init__(self, tokens):
         track = set([])

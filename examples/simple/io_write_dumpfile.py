@@ -8,12 +8,13 @@ to multiple files in parallel.
 import random
 import sys
 from mitmproxy import io, http
+import typing  # noqa
 
 
 class Writer:
     def __init__(self, path: str) -> None:
         if path == "-":
-            f = sys.stdout  # type: io.TextIO
+            f = sys.stdout  # type: typing.IO[typing.Any]
         else:
             f = open(path, "wb")
         self.w = io.FlowWriter(f)

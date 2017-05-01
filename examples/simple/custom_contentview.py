@@ -3,7 +3,10 @@ This example shows how one can add a custom contentview to mitmproxy.
 The content view API is explained in the mitmproxy.contentviews module.
 """
 from mitmproxy import contentviews
-from typing import Tuple, Iterable, AnyStr, List
+import typing
+
+
+CVIEWSWAPCASE = typing.Tuple[str, typing.Iterable[typing.List[typing.Tuple[str, typing.AnyStr]]]]
 
 
 class ViewSwapCase(contentviews.View):
@@ -14,7 +17,7 @@ class ViewSwapCase(contentviews.View):
     prompt = ("swap case text", "z")
     content_types = ["text/plain"]
 
-    def __call__(self, data: bytes, **metadata) -> Tuple[str, Iterable[List[Tuple[str, AnyStr]]]]:
+    def __call__(self, data: typing.AnyStr, **metadata) -> CVIEWSWAPCASE:
         return "case-swapped text", contentviews.format_text(data.swapcase())
 
 
