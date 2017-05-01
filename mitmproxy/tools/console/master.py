@@ -29,6 +29,7 @@ from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import statusbar
 from mitmproxy.tools.console import window
+from mitmproxy import contentviews
 from mitmproxy.utils import strutils
 
 EVENTLOG_SIZE = 10000
@@ -225,6 +226,46 @@ class ConsoleAddon:
                 "console.command flow.set @focus %s " % part
             )
 
+    @command.command("console.flowview.mode.set")
+    def flowview_mode_set(self) -> None:
+        """
+            Set the display mode for the current flow view.
+        """
+        if self.master.window.focus.keyctx != "flowview":
+            raise exceptions.CommandError("Not viewing a flow.")
+        fv = self.master.window.windows["flowview"]
+        idx = fv.body.tab_offset
+
+        def callback(opt):
+            try:
+                self.master.commands.call_args(
+                    "view.setval",
+                    ["@focus", "flowview_mode_%s" % idx, opt]
+                )
+            except exceptions.CommandError as e:
+                signals.status_message.send(message=str(e))
+
+        opts = [i.name.lower() for i in contentviews.views]
+        self.master.overlay(overlay.Chooser("Mode", opts, "", callback))
+
+    @command.command("console.flowview.mode")
+    def flowview_mode(self) -> str:
+        """
+            Get the display mode for the current flow view.
+        """
+        if self.master.window.focus.keyctx != "flowview":
+            raise exceptions.CommandError("Not viewing a flow.")
+        fv = self.master.window.windows["flowview"]
+        idx = fv.body.tab_offset
+        return self.master.commands.call_args(
+            "view.getval",
+            [
+                "@focus",
+                "flowview_mode_%s" % idx,
+                self.master.options.default_contentview,
+            ]
+        )
+
     def running(self):
         self.started = True
 
@@ -265,7 +306,7 @@ def default_keymap(km):
         "console.command export.file {choice} @focus ''",
         ["flowlist", "flowview"]
     )
-    km.add("f", "console.command 'set view_filter='", ["flowlist"])
+    km.add("f", "console.command set view_filter=", ["flowlist"])
     km.add("F", "set console_focus_follow=toggle", ["flowlist"])
     km.add("g", "view.go 0", ["flowlist"])
     km.add("G", "view.go -1", ["flowlist"])
@@ -285,15 +326,15 @@ def default_keymap(km):
         ["flowlist"]
     )
     km.add("r", "replay.client @focus", ["flowlist", "flowview"])
-    km.add("S", "console.command 'replay.server '", ["flowlist"])
+    km.add("S", "console.command replay.server ", ["flowlist"])
     km.add("v", "set console_order_reversed=toggle", ["flowlist"])
     km.add("U", "flow.mark @all false", ["flowlist"])
-    km.add("w", "console.command 'save.file @shown '", ["flowlist"])
+    km.add("w", "console.command save.file @shown ", ["flowlist"])
     km.add("V", "flow.revert @focus", ["flowlist", "flowview"])
     km.add("X", "flow.kill @focus", ["flowlist"])
     km.add("z", "view.remove @all", ["flowlist"])
     km.add("Z", "view.remove @hidden", ["flowlist"])
-    km.add("|", "console.command 'script.run @focus '", ["flowlist", "flowview"])
+    km.add("|", "console.command script.run @focus ", ["flowlist", "flowview"])
     km.add("enter", "console.view.flow @focus", ["flowlist"])
 
     km.add(
@@ -302,7 +343,8 @@ def default_keymap(km):
         "console.edit.focus {choice}",
         ["flowview"]
     )
-    km.add("w", "console.command 'save.file @focus '", ["flowview"])
+    km.add("f", "view.setval.toggle @focus fullcontents", ["flowview"])
+    km.add("w", "console.command save.file @focus ", ["flowview"])
     km.add(" ", "view.focus.next", ["flowview"])
     km.add(
         "o",
@@ -318,6 +360,7 @@ def default_keymap(km):
         ["flowview"]
     )
     km.add("p", "view.focus.prev", ["flowview"])
+    km.add("m", "console.flowview.mode.set", ["flowview"])
     km.add(
         "z",
         "console.choose \"Part\" request,response "

@@ -260,6 +260,21 @@ def test_duplicate():
         assert v.focus.index == 2
 
 
+def test_setgetval():
+    v = view.View()
+    with taddons.context():
+        f = tflow.tflow()
+        v.add([f])
+        v.setvalue([f], "key", "value")
+        assert v.getvalue(f, "key", "default") == "value"
+        assert v.getvalue(f, "unknow", "default") == "default"
+
+        v.setvalue_toggle([f], "key")
+        assert v.getvalue(f, "key", "default") == "true"
+        v.setvalue_toggle([f], "key")
+        assert v.getvalue(f, "key", "default") == "false"
+
+
 def test_order():
     v = view.View()
     with taddons.context() as tctx:

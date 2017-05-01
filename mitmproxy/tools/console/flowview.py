@@ -9,7 +9,6 @@ from mitmproxy import contentviews
 from mitmproxy import http
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowdetailview
-from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import tabs
@@ -117,14 +116,10 @@ class FlowViewHeader(urwid.WidgetWrap):
             self._w = urwid.Pile([])
 
 
-TAB_REQ = 0
-TAB_RESP = 1
-
-
 class FlowDetails(tabs.Tabs):
-    def __init__(self, master, tab_offset):
+    def __init__(self, master):
         self.master = master
-        super().__init__([], tab_offset)
+        super().__init__([])
         self.show()
         self.last_displayed_body = None
 
@@ -174,9 +169,8 @@ class FlowDetails(tabs.Tabs):
             msg, body = "", [urwid.Text([("error", "[content missing]")])]
             return msg, body
         else:
-            s = self.view.settings[self.flow]
-            full = s.get((self.tab_offset, "fullcontents"), False)
-            if full:
+            full = self.master.commands.call("view.getval @focus fullcontents false")
+            if full == "true":
                 limit = sys.maxsize
             else:
                 limit = contentviews.VIEW_CUTOFF
@@ -232,12 +226,6 @@ class FlowDetails(tabs.Tabs):
 
         return description, text_objects
 
-    def viewmode_get(self):
-        return self.view.settings[self.flow].get(
-            (self.tab_offset, "prettyview"),
-            self.master.options.default_contentview
-        )
-
     def conn_text(self, conn):
         if conn:
             txt = common.format_keyvals(
@@ -245,7 +233,7 @@ class FlowDetails(tabs.Tabs):
                 key = "header",
                 val = "text"
             )
-            viewmode = self.viewmode_get()
+            viewmode = self.master.commands.call("console.flowview.mode")
             msg, body = self.content_view(viewmode, conn)
 
             cols = [
@@ -281,32 +269,10 @@ class FlowDetails(tabs.Tabs):
             ]
         return searchable.Searchable(txt)
 
-    def change_this_display_mode(self, t):
-        view = contentviews.get(t)
-        self.view.settings[self.flow][(self.tab_offset, "prettyview")] = view.name.lower()
-
     def keypress(self, size, key):
         key = super().keypress(size, key)
         key = common.shortcuts(key)
-        if key in ("up", "down", "page up", "page down"):
-            # Pass scroll events to the wrapped widget
-            self._w.keypress(size, key)
-        elif key == "f":
-            self.view.settings[self.flow][(self.tab_offset, "fullcontents")] = True
-            signals.status_message.send(message="Loading all body data...")
-        elif key == "m":
-            opts = [i.name.lower() for i in contentviews.views]
-            self.master.overlay(
-                overlay.Chooser(
-                    "display mode",
-                    opts,
-                    self.viewmode_get(),
-                    self.change_this_display_mode
-                )
-            )
-        else:
-            # Key is not handled here.
-            return key
+        return self._w.keypress(size, key)
 
 
 class FlowView(urwid.Frame):
@@ -314,7 +280,7 @@ class FlowView(urwid.Frame):
 
     def __init__(self, master):
         super().__init__(
-            FlowDetails(master, 0),
+            FlowDetails(master),
             header = FlowViewHeader(master),
         )
         self.master = master
