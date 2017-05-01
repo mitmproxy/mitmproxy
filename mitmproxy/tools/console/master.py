@@ -16,6 +16,7 @@ import urwid
 from mitmproxy import ctx
 from mitmproxy import addons
 from mitmproxy import command
+from mitmproxy import exceptions
 from mitmproxy import master
 from mitmproxy import log
 from mitmproxy import flow
@@ -83,6 +84,27 @@ class ConsoleAddon:
 
     @command.command("console.choose")
     def console_choose(
+        self, prompt: str, choices: typing.Sequence[str], *cmd: typing.Sequence[str]
+    ) -> None:
+        """
+            Prompt the user to choose from a specified list of strings, then
+            invoke another command with all occurances of {choice} replaced by
+            the choice the user made.
+        """
+        def callback(opt):
+            # We're now outside of the call context...
+            repl = " ".join(cmd)
+            repl = repl.replace("{choice}", opt)
+            try:
+                self.master.commands.call(repl)
+            except exceptions.CommandError as e:
+                signals.status_message.send(message=str(e))
+
+        self.master.overlay(overlay.Chooser(prompt, choices, "", callback))
+        ctx.log.info(choices)
+
+    @command.command("console.choose.cmd")
+    def console_choose_cmd(
         self, prompt: str, choicecmd: str, *cmd: typing.Sequence[str]
     ) -> None:
         """
@@ -93,9 +115,13 @@ class ConsoleAddon:
         choices = ctx.master.commands.call_args(choicecmd, [])
 
         def callback(opt):
+            # We're now outside of the call context...
             repl = " ".join(cmd)
             repl = repl.replace("{choice}", opt)
-            self.master.commands.call(repl)
+            try:
+                self.master.commands.call(repl)
+            except exceptions.CommandError as e:
+                signals.status_message.send(message=str(e))
 
         self.master.overlay(overlay.Chooser(prompt, choices, "", callback))
         ctx.log.info(choices)
@@ -141,6 +167,23 @@ class ConsoleAddon:
             user to exit mitmproxy.
         """
         signals.pop_view_state.send(self)
+
+    @command.command("console.bodyview")
+    def bodyview(self, f: flow.Flow, part: str) -> None:
+        """
+            Spawn an external viewer for a flow request or response body based
+            on the detected MIME type. We use the mailcap system to find the
+            correct viewier, and fall back to the programs in $PAGER or $EDITOR
+            if necessary.
+        """
+        fpart = getattr(f, part)
+        if not fpart:
+            raise exceptions.CommandError("Could not view part %s." % part)
+        t = fpart.headers.get("content-type")
+        content = fpart.get_content(strict=False)
+        if not content:
+            raise exceptions.CommandError("No content to view.")
+        self.master.spawn_external_viewer(content, t)
 
     @command.command("console.edit.focus.options")
     def edit_focus_options(self) -> typing.Sequence[str]:
@@ -218,7 +261,7 @@ def default_keymap(km):
     km.add("e", "set console_eventlog=toggle", ["flowlist"])
     km.add(
         "E",
-        "console.choose Format export.formats "
+        "console.choose.cmd Format export.formats "
         "console.command export.file {choice} @focus ''",
         ["flowlist", "flowview"]
     )
@@ -237,7 +280,7 @@ def default_keymap(km):
     )
     km.add(
         "o",
-        "console.choose Order view.order.options "
+        "console.choose.cmd Order view.order.options "
         "set console_order={choice}",
         ["flowlist"]
     )
@@ -255,12 +298,25 @@ def default_keymap(km):
 
     km.add(
         "e",
-        "console.choose Part console.edit.focus.options "
+        "console.choose.cmd Part console.edit.focus.options "
         "console.edit.focus {choice}",
         ["flowview"]
     )
     km.add("w", "console.command 'save.file @focus '", ["flowview"])
     km.add(" ", "view.focus.next", ["flowview"])
+    km.add(
+        "o",
+        "console.choose.cmd Order view.order.options "
+        "set console_order={choice}",
+        ["flowlist"]
+    )
+
+    km.add(
+        "v",
+        "console.choose \"View Part\" request,response "
+        "console.bodyview @focus {choice}",
+        ["flowview"]
+    )
     km.add("p", "view.focus.prev", ["flowview"])
 
 

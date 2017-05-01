@@ -1,5 +1,4 @@
 import math
-import os
 import sys
 from functools import lru_cache
 from typing import Optional, Union  # noqa
@@ -314,15 +313,6 @@ class FlowDetails(tabs.Tabs):
                     self.change_this_display_mode
                 )
             )
-        elif key == "v":
-            if conn.raw_content:
-                t = conn.headers.get("content-type")
-                if "EDITOR" in os.environ or "PAGER" in os.environ:
-                    self.master.spawn_external_viewer(conn.get_content(strict=False), t)
-                else:
-                    signals.status_message.send(
-                        message = "Error! Set $EDITOR or $PAGER."
-                    )
         elif key == "z":
             self.flow.backup()
             enc = conn.headers.get("content-encoding", "identity")
