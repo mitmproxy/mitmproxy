@@ -8,6 +8,8 @@ from mitmproxy.tools.console import grideditor
 
 
 class SimpleOverlay(urwid.Overlay):
+    keyctx = "overlay"
+
     def __init__(self, master, widget, parent, width, valign="middle"):
         self.widget = widget
         self.master = master

@@ -80,15 +80,41 @@ class ConsoleAddon:
         self.master = master
         self.started = False
 
+    @command.command("console.layout.options")
+    def layout_options(self) -> typing.Sequence[str]:
+        """
+            Returns the valid options for console layout. Use these by setting
+            the console_layout option.
+        """
+        return ["single", "vertical", "horizontal"]
+
+    @command.command("console.layout.cycle")
+    def layout_cycle(self) -> None:
+        """
+            Cycle through the console layout options.
+        """
+        opts = self.layout_options()
+        off = self.layout_options().index(ctx.options.console_layout)
+        ctx.options.update(
+            console_layout = opts[(off + 1) % len(opts)]
+        )
+
+    @command.command("console.panes.next")
+    def panes_next(self) -> None:
+        """
+            Go to the next layout pane.
+        """
+        self.master.window.switch()
+
     @command.command("console.options.reset.current")
     def options_reset_current(self) -> None:
         """
             Reset the current option in the options editor.
         """
-        if self.master.window.focus.keyctx != "options":
+        fv = self.master.window.current("options")
+        if not fv:
             raise exceptions.CommandError("Not viewing options.")
-        name = self.master.window.windows["options"].current_name()
-        self.master.commands.call("options.reset.one %s" % name)
+        self.master.commands.call("options.reset.one %s" % fv.current_name())
 
     @command.command("console.nav.start")
     def nav_start(self) -> None:
@@ -301,9 +327,9 @@ class ConsoleAddon:
         """
             Set the display mode for the current flow view.
         """
-        if self.master.window.focus.keyctx != "flowview":
+        fv = self.master.window.current("flowview")
+        if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
-        fv = self.master.window.windows["flowview"]
         idx = fv.body.tab_offset
 
         def callback(opt):
@@ -323,9 +349,9 @@ class ConsoleAddon:
         """
             Get the display mode for the current flow view.
         """
-        if self.master.window.focus.keyctx != "flowview":
+        fv = self.master.window.any("flowview")
+        if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
-        fv = self.master.window.windows["flowview"]
         idx = fv.body.tab_offset
         return self.master.commands.call_args(
             "view.getval",
@@ -345,11 +371,6 @@ class ConsoleAddon:
         for f in flows:
             signals.flow_change.send(self, flow=f)
 
-    def configure(self, updated):
-        if self.started:
-            if "console_eventlog" in updated:
-                pass
-
 
 def default_keymap(km):
     km.add(":", "console.command ''", ["global"])
@@ -359,6 +380,9 @@ def default_keymap(km):
     km.add("E", "console.view.eventlog", ["global"])
     km.add("Q", "console.exit", ["global"])
     km.add("q", "console.view.pop", ["global"])
+    km.add("-", "console.layout.cycle", ["global"])
+    km.add("shift tab", "console.panes.next", ["global"])
+    km.add("P", "console.view.flow @focus", ["global"])
 
     km.add("g", "console.nav.start", ["global"])
     km.add("G", "console.nav.end", ["global"])
@@ -372,7 +396,6 @@ def default_keymap(km):
 
     km.add("i", "console.command set intercept=", ["global"])
     km.add("W", "console.command set save_stream_file=", ["global"])
-
     km.add("A", "flow.resume @all", ["flowlist", "flowview"])
     km.add("a", "flow.resume @focus", ["flowlist", "flowview"])
     km.add(
@@ -637,13 +660,8 @@ class ConsoleMaster(master.Master):
     def shutdown(self):
         raise urwid.ExitMainLoop
 
-    def sig_exit_overlay(self, *args, **kwargs):
-        self.loop.widget = self.window
-
     def overlay(self, widget, **kwargs):
-        self.loop.widget = overlay.SimpleOverlay(
-            self, widget, self.loop.widget, widget.width, **kwargs
-        )
+        self.window.set_overlay(widget, **kwargs)
 
     def switch_view(self, name):
         self.window.push(name)
