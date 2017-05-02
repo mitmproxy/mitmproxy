@@ -35,10 +35,10 @@ class Searchable(urwid.ListBox):
             self.find_next(False)
         elif key == "N":
             self.find_next(True)
-        elif key == "g":
+        elif key == "m_start":
             self.set_focus(0)
             self.walker._modified()
-        elif key == "G":
+        elif key == "m_end":
             self.set_focus(len(self.walker) - 1)
             self.walker._modified()
         else:

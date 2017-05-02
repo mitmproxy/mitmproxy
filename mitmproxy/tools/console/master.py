@@ -83,6 +83,62 @@ class ConsoleAddon:
         self.master = master
         self.started = False
 
+    @command.command("console.nav.start")
+    def nav_start(self) -> None:
+        """
+            Go to the start of a list or scrollable.
+        """
+        self.master.inject_key("m_start")
+
+    @command.command("console.nav.end")
+    def nav_end(self) -> None:
+        """
+            Go to the end of a list or scrollable.
+        """
+        self.master.inject_key("m_end")
+
+    @command.command("console.nav.up")
+    def nav_up(self) -> None:
+        """
+            Go up.
+        """
+        self.master.inject_key("up")
+
+    @command.command("console.nav.down")
+    def nav_down(self) -> None:
+        """
+            Go down.
+        """
+        self.master.inject_key("down")
+
+    @command.command("console.nav.pageup")
+    def nav_pageup(self) -> None:
+        """
+            Go up.
+        """
+        self.master.inject_key("page up")
+
+    @command.command("console.nav.pagedown")
+    def nav_pagedown(self) -> None:
+        """
+            Go down.
+        """
+        self.master.inject_key("page down")
+
+    @command.command("console.nav.left")
+    def nav_left(self) -> None:
+        """
+            Go left.
+        """
+        self.master.inject_key("left")
+
+    @command.command("console.nav.right")
+    def nav_right(self) -> None:
+        """
+            Go right.
+        """
+        self.master.inject_key("right")
+
     @command.command("console.choose")
     def console_choose(
         self, prompt: str, choices: typing.Sequence[str], *cmd: typing.Sequence[str]
@@ -101,7 +157,7 @@ class ConsoleAddon:
             except exceptions.CommandError as e:
                 signals.status_message.send(message=str(e))
 
-        self.master.overlay(overlay.Chooser(prompt, choices, "", callback))
+        self.master.overlay(overlay.Chooser(self.master, prompt, choices, "", callback))
         ctx.log.info(choices)
 
     @command.command("console.choose.cmd")
@@ -124,7 +180,7 @@ class ConsoleAddon:
             except exceptions.CommandError as e:
                 signals.status_message.send(message=str(e))
 
-        self.master.overlay(overlay.Chooser(prompt, choices, "", callback))
+        self.master.overlay(overlay.Chooser(self.master, prompt, choices, "", callback))
         ctx.log.info(choices)
 
     @command.command("console.command")
@@ -246,7 +302,7 @@ class ConsoleAddon:
                 signals.status_message.send(message=str(e))
 
         opts = [i.name.lower() for i in contentviews.views]
-        self.master.overlay(overlay.Chooser("Mode", opts, "", callback))
+        self.master.overlay(overlay.Chooser(self.master, "Mode", opts, "", callback))
 
     @command.command("console.flowview.mode")
     def flowview_mode(self) -> str:
@@ -288,6 +344,17 @@ def default_keymap(km):
     km.add("O", "console.view.options", ["global"])
     km.add("Q", "console.exit", ["global"])
     km.add("q", "console.view.pop", ["global"])
+
+    km.add("g", "console.nav.start", ["global"])
+    km.add("G", "console.nav.end", ["global"])
+    km.add("k", "console.nav.up", ["global"])
+    km.add("j", "console.nav.down", ["global"])
+    km.add("l", "console.nav.right", ["global"])
+    km.add("h", "console.nav.left", ["global"])
+    km.add(" ", "console.nav.pagedown", ["global"])
+    km.add("ctrl f", "console.nav.pagedown", ["global"])
+    km.add("ctrl b", "console.nav.pageup", ["global"])
+
     km.add("i", "console.command set intercept=", ["global"])
     km.add("W", "console.command set save_stream_file=", ["global"])
 
@@ -308,9 +375,7 @@ def default_keymap(km):
     )
     km.add("f", "console.command set view_filter=", ["flowlist"])
     km.add("F", "set console_focus_follow=toggle", ["flowlist"])
-    km.add("g", "view.go 0", ["flowlist"])
-    km.add("G", "view.go -1", ["flowlist"])
-    km.add("l", "console.command cut.clip ", ["flowlist", "flowview"])
+    km.add("ctrl l", "console.command cut.clip ", ["flowlist", "flowview"])
     km.add("L", "console.command view.load ", ["flowlist"])
     km.add("m", "flow.mark.toggle @focus", ["flowlist"])
     km.add("M", "view.marked.toggle", ["flowlist"])
@@ -361,6 +426,7 @@ def default_keymap(km):
     )
     km.add("p", "view.focus.prev", ["flowview"])
     km.add("m", "console.flowview.mode.set", ["flowview"])
+    km.add("tab", "console.nav.right", ["flowview"])
     km.add(
         "z",
         "console.choose \"Part\" request,response "
@@ -522,6 +588,9 @@ class ConsoleMaster(master.Master):
         if changed:
             self.loop.draw_screen()
         self.loop.set_alarm_in(0.01, self.ticker)
+
+    def inject_key(self, key):
+        self.loop.process_input([key])
 
     def run(self):
         self.ui = urwid.raw_display.Screen()

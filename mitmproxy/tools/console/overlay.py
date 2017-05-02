@@ -80,7 +80,8 @@ class ChooserListWalker(urwid.ListWalker):
 
 
 class Chooser(urwid.WidgetWrap):
-    def __init__(self, title, choices, current, callback):
+    def __init__(self, master, title, choices, current, callback):
+        self.master = master
         self.choices = choices
         self.callback = callback
         choicewidth = max([len(i) for i in choices])
@@ -103,7 +104,7 @@ class Chooser(urwid.WidgetWrap):
         return True
 
     def keypress(self, size, key):
-        key = common.shortcuts(key)
+        key = self.master.keymap.handle("chooser", key)
         if key == "enter":
             self.callback(self.choices[self.walker.index])
             signals.pop_view_state.send(self)
