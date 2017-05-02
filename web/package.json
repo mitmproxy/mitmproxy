@@ -18,7 +18,8 @@
     "collectCoverage": true,
     "coveragePathIgnorePatterns": [
       "<rootDir>/src/js/filt/filt.js"
-    ]
+    ],
+    "collectCoverageFrom" : ["src/js/**/*.{js,jsx}"]
   },
   "dependencies": {
     "bootstrap": "^3.3.7",
