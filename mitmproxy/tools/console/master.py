@@ -31,8 +31,6 @@ from mitmproxy.tools.console import window
 from mitmproxy import contentviews
 from mitmproxy.utils import strutils
 
-EVENTLOG_SIZE = 10000
-
 
 class Logger:
     def log(self, evt):
@@ -166,8 +164,9 @@ class ConsoleAddon:
             except exceptions.CommandError as e:
                 signals.status_message.send(message=str(e))
 
-        self.master.overlay(overlay.Chooser(self.master, prompt, choices, "", callback))
-        ctx.log.info(choices)
+        self.master.overlay(
+            overlay.Chooser(self.master, prompt, choices, "", callback)
+        )
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
@@ -189,8 +188,9 @@ class ConsoleAddon:
             except exceptions.CommandError as e:
                 signals.status_message.send(message=str(e))
 
-        self.master.overlay(overlay.Chooser(self.master, prompt, choices, "", callback))
-        ctx.log.info(choices)
+        self.master.overlay(
+            overlay.Chooser(self.master, prompt, choices, "", callback)
+        )
 
     @command.command("console.command")
     def console_command(self, *partial: typing.Sequence[str]) -> None:
@@ -208,6 +208,11 @@ class ConsoleAddon:
     def view_options(self) -> None:
         """View the options editor."""
         self.master.switch_view("options")
+
+    @command.command("console.view.eventlog")
+    def view_eventlog(self) -> None:
+        """View the options editor."""
+        self.master.switch_view("eventlog")
 
     @command.command("console.view.help")
     def view_help(self) -> None:
@@ -351,6 +356,7 @@ def default_keymap(km):
     km.add("?", "console.view.help", ["global"])
     km.add("C", "console.view.commands", ["global"])
     km.add("O", "console.view.options", ["global"])
+    km.add("E", "console.view.eventlog", ["global"])
     km.add("Q", "console.exit", ["global"])
     km.add("q", "console.view.pop", ["global"])
 
@@ -375,9 +381,8 @@ def default_keymap(km):
     )
     km.add("d", "view.remove @focus", ["flowlist", "flowview"])
     km.add("D", "view.duplicate @focus", ["flowlist", "flowview"])
-    km.add("e", "set console_eventlog=toggle", ["flowlist"])
     km.add(
-        "E",
+        "e",
         "console.choose.cmd Format export.formats "
         "console.command export.file {choice} @focus ''",
         ["flowlist", "flowview"]
@@ -461,8 +466,6 @@ class ConsoleMaster(master.Master):
         default_keymap(self.keymap)
         self.options.errored.connect(self.options_error)
 
-        self.logbuffer = urwid.SimpleListWalker([])
-
         self.view_stack = []
 
         signals.call_in.connect(self.sig_call_in)
@@ -508,19 +511,10 @@ class ConsoleMaster(master.Master):
     def sig_add_log(self, sender, e, level):
         if self.options.verbosity < log.log_tier(level):
             return
-
         if level in ("error", "warn"):
             signals.status_message.send(
                 message = "{}: {}".format(level.title(), e)
             )
-            e = urwid.Text((level, str(e)))
-        else:
-            e = urwid.Text(str(e))
-        self.logbuffer.append(e)
-        if len(self.logbuffer) > EVENTLOG_SIZE:
-            self.logbuffer.pop(0)
-        if self.options.console_focus_follow:
-            self.logbuffer.set_focus(len(self.logbuffer) - 1)
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
@@ -621,12 +615,9 @@ class ConsoleMaster(master.Master):
 
         self.window = window.Window(self)
         self.loop.widget = self.window
+        self.window.refresh()
 
         self.loop.set_alarm_in(0.01, self.ticker)
-        self.loop.set_alarm_in(
-            0.0001,
-            lambda *args: self.switch_view("flowlist")
-        )
 
         self.start()
         try:
@@ -660,6 +651,3 @@ class ConsoleMaster(master.Master):
     def quit(self, a):
         if a != "n":
             self.shutdown()
-
-    def clear_events(self):
-        self.logbuffer[:] = []

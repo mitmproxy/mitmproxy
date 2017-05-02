@@ -8,6 +8,7 @@ from mitmproxy.tools.console import options
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import help
 from mitmproxy.tools.console import grideditor
+from mitmproxy.tools.console import eventlog
 
 
 class Window(urwid.Frame):
@@ -19,7 +20,6 @@ class Window(urwid.Frame):
             footer = urwid.AttrWrap(self.statusbar, "background")
         )
         self.master = master
-        self.primary_stack = []
         self.master.view.sig_view_refresh.connect(self.view_changed)
         self.master.view.sig_view_add.connect(self.view_changed)
         self.master.view.sig_view_remove.connect(self.view_changed)
@@ -38,13 +38,23 @@ class Window(urwid.Frame):
             commands = commands.Commands(self.master),
             options = options.Options(self.master),
             help = help.HelpView(None),
+            eventlog = eventlog.EventLog(self.master),
+
             edit_focus_query = grideditor.QueryEditor(self.master),
             edit_focus_cookies = grideditor.CookieEditor(self.master),
             edit_focus_setcookies = grideditor.SetCookieEditor(self.master),
             edit_focus_form = grideditor.RequestFormEditor(self.master),
             edit_focus_path = grideditor.PathEditor(self.master),
             edit_focus_request_headers = grideditor.RequestHeaderEditor(self.master),
-            edit_focus_response_headers = grideditor.ResponseHeaderEditor(self.master),
+            edit_focus_response_headers = grideditor.ResponseHeaderEditor(
+                self.master
+            ),
+        )
+        self.primary_stack = ["flowlist"]
+
+    def refresh(self):
+        self.body = urwid.AttrWrap(
+            self.windows[self.primary_stack[-1]], "background"
         )
 
     def call(self, v, name, *args, **kwargs):
@@ -80,9 +90,7 @@ class Window(urwid.Frame):
         if self.primary_stack and self.primary_stack[-1] == wname:
             return
         self.primary_stack.append(wname)
-        self.body = urwid.AttrWrap(
-            self.windows[wname], "background"
-        )
+        self.refresh()
         self.view_changed()
         self.focus_changed()
 
@@ -93,10 +101,7 @@ class Window(urwid.Frame):
             if len(self.primary_stack) > 1:
                 self.view_popping()
                 self.primary_stack.pop()
-                self.body = urwid.AttrWrap(
-                    self.windows[self.primary_stack[-1]],
-                    "background",
-                )
+                self.refresh()
                 self.view_changed()
                 self.focus_changed()
             else:

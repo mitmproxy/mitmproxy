@@ -34,8 +34,8 @@ class PromptStub:
 class ActionBar(urwid.WidgetWrap):
 
     def __init__(self, master):
-        urwid.WidgetWrap.__init__(self, None)
         self.master = master
+        urwid.WidgetWrap.__init__(self, None)
         self.clear()
         signals.status_message.connect(self.sig_message)
         signals.status_prompt.connect(self.sig_prompt)
@@ -151,7 +151,7 @@ class StatusBar(urwid.WidgetWrap):
         self.master = master
         self.helptext = helptext
         self.ib = urwid.WidgetWrap(urwid.Text(""))
-        self.ab = ActionBar(self)
+        self.ab = ActionBar(self.master)
         super().__init__(urwid.Pile([self.ib, self.ab]))
         signals.update_settings.connect(self.sig_update)
         signals.flowlist_change.connect(self.sig_update)
