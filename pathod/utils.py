@@ -1,6 +1,7 @@
 import os
 import sys
 from mitmproxy.utils import data as mdata
+import typing  # noqa
 
 
 class MemBool:
@@ -9,10 +10,10 @@ class MemBool:
         Truth-checking with a memory, for use in chained if statements.
     """
 
-    def __init__(self):
-        self.v = None
+    def __init__(self) -> None:
+        self.v = None  # type: typing.Optional[bool]
 
-    def __call__(self, v):
+    def __call__(self, v: bool) -> bool:
         self.v = v
         return bool(v)
 

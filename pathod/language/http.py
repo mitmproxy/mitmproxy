@@ -54,7 +54,7 @@ class Method(base.OptionsOrValue):
 
 
 class _HeaderMixin:
-    unique_name = None
+    unique_name = None  # type: ignore
 
     def format_header(self, key, value):
         return [key, b": ", value, b"\r\n"]
@@ -143,7 +143,7 @@ class _HTTPMessage(message.Message):
 
 
 class Response(_HTTPMessage):
-    unique_name = None
+    unique_name = None  # type: ignore
     comps = (
         Header,
         ShortcutContentType,

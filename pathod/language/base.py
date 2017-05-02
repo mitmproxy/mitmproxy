@@ -3,10 +3,9 @@ import os
 import abc
 import functools
 import pyparsing as pp
-
 from mitmproxy.utils import strutils
 from mitmproxy.utils import human
-
+import typing  # noqa
 from . import generators, exceptions
 
 
@@ -84,7 +83,7 @@ class Token:
         return None
 
     @property
-    def unique_name(self):
+    def unique_name(self) -> typing.Optional[str]:
         """
             Controls uniqueness constraints for tokens. No two tokens with the
             same name will be allowed. If no uniquness should be applied, this
@@ -334,7 +333,7 @@ class OptionsOrValue(_Component):
         Can be any of a specified set of options, or a value specifier.
     """
     preamble = ""
-    options = []
+    options = []  # type: typing.List[str]
 
     def __init__(self, value):
         # If it's a string, we were passed one of the options, so we lower-case
@@ -376,7 +375,7 @@ class OptionsOrValue(_Component):
 
 
 class Integer(_Component):
-    bounds = (None, None)
+    bounds = (None, None)  # type: typing.Tuple[typing.Union[int, None], typing.Union[int , None]]
     preamble = ""
 
     def __init__(self, value):
@@ -442,7 +441,7 @@ class FixedLengthValue(Value):
         A value component lead by an optional preamble.
     """
     preamble = ""
-    length = None
+    length = None  # type: typing.Optional[int]
 
     def __init__(self, value):
         Value.__init__(self, value)
@@ -511,7 +510,7 @@ class IntField(_Component):
     """
         An integer field, where values can optionally specified by name.
     """
-    names = {}
+    names = {}  # type: typing.Dict[str, int]
     max = 16
     preamble = ""
 
@@ -546,7 +545,7 @@ class NestedMessage(Token):
         A nested message, as an escaped string with a preamble.
     """
     preamble = ""
-    nest_type = None
+    nest_type = None  # type: ignore
 
     def __init__(self, value):
         Token.__init__(self)
