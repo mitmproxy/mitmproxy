@@ -107,10 +107,10 @@ class ProxyAuth:
             dn = ctx.options.proxyauth.split(":")[2]
             parts = dn.split("?")
             conn = ldap3.Connection(
-                    self.ldapserver,
-                    parts[0] + username + parts[1],
-                    password,
-                    auto_bind=True)
+                self.ldapserver,
+                parts[0] + username + parts[1],
+                password,
+                auto_bind=True)
             if conn:
                 conn.search(parts[1][1:], '(' + parts[0] + username + ')', attributes=['objectclass'])
                 if ctx.options.proxyauth.split(":")[3] in conn.entries[0]['objectclass']:
