@@ -253,6 +253,7 @@ FIRST_WIDTH_MIN = 20
 
 
 class BaseGridEditor(urwid.WidgetWrap):
+
     def __init__(
             self,
             master: "mitmproxy.tools.console.master.ConsoleMaster",
@@ -345,15 +346,14 @@ class BaseGridEditor(urwid.WidgetWrap):
                 self._w.keypress(size, key)
             return None
 
-        key = common.shortcuts(key)
         column = self.columns[self.walker.focus_col]
-        if key == "g":
+        if key == "m_start":
             self.walker.set_focus(0)
-        elif key == "G":
+        elif key == "m_end":
             self.walker.set_focus(len(self.walker.lst) - 1)
-        elif key in ["h", "left"]:
+        elif key == "left":
             self.walker.left()
-        elif key in ["l", "right"]:
+        elif key == "right":
             self.walker.right()
         elif key == "tab":
             self.walker.tab_next()

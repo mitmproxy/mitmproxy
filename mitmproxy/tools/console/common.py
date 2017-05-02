@@ -77,20 +77,6 @@ def format_keyvals(lst, key="key", val="text", indent=0):
     return ret
 
 
-def shortcuts(k):
-    if k == " ":
-        k = "page down"
-    elif k == "ctrl f":
-        k = "page down"
-    elif k == "ctrl b":
-        k = "page up"
-    elif k == "j":
-        k = "down"
-    elif k == "k":
-        k = "up"
-    return k
-
-
 def fcol(s, attr):
     s = str(s)
     return (

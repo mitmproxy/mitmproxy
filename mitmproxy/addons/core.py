@@ -4,6 +4,7 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import command
 from mitmproxy import flow
+from mitmproxy import optmanager
 from mitmproxy.net.http import status_codes
 
 
@@ -212,3 +213,47 @@ class Core:
 
         """
         return ["gzip", "deflate", "br"]
+
+    @command.command("options.load")
+    def options_load(self, path: str) -> None:
+        """
+            Load options from a file.
+        """
+        try:
+            optmanager.load_paths(ctx.options, path)
+        except (OSError, exceptions.OptionsError) as e:
+            raise exceptions.CommandError(
+                "Could not load options - %s" % e
+            ) from e
+
+    @command.command("options.save")
+    def options_save(self, path: str) -> None:
+        """
+            Save options to a file.
+        """
+        try:
+            optmanager.save(ctx.options, path)
+        except OSError as e:
+            raise exceptions.CommandError(
+                "Could not save options - %s" % e
+            ) from e
+
+    @command.command("options.reset")
+    def options_reset(self) -> None:
+        """
+            Reset all options to defaults.
+        """
+        ctx.options.reset()
+
+    @command.command("options.reset.one")
+    def options_reset_one(self, name: str) -> None:
+        """
+            Reset one option to its default value.
+        """
+        if name not in ctx.options:
+            raise exceptions.CommandError("No such option: %s" % name)
+        setattr(
+            ctx.options,
+            name,
+            ctx.options.default(name),
+        )

@@ -58,13 +58,12 @@ class LogBufferBox(urwid.ListBox):
             super().set_focus(index)
 
     def keypress(self, size, key):
-        key = common.shortcuts(key)
         if key == "z":
             self.master.clear_events()
             key = None
-        elif key == "G":
+        elif key == "m_end":
             self.set_focus(len(self.master.logbuffer) - 1)
-        elif key == "g":
+        elif key == "m_start":
             self.set_focus(0)
         return urwid.ListBox.keypress(self, size, key)
 
@@ -136,8 +135,7 @@ class FlowItem(urwid.WidgetWrap):
                 return True
 
     def keypress(self, xxx_todo_changeme, key):
-        (maxcol,) = xxx_todo_changeme
-        return common.shortcuts(key)
+        return key
 
 
 class FlowListWalker(urwid.ListWalker):
@@ -183,7 +181,10 @@ class FlowListBox(urwid.ListBox):
         super().__init__(FlowListWalker(master))
 
     def keypress(self, size, key):
-        key = common.shortcuts(key)
+        if key == "m_start":
+            self.master.commands.call("view.go 0")
+        elif key == "m_end":
+            self.master.commands.call("view.go -1")
         return urwid.ListBox.keypress(self, size, key)
 
     def view_changed(self):
