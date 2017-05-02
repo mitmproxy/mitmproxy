@@ -27,7 +27,6 @@ from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import statusbar
 from mitmproxy.tools.console import window
 from mitmproxy import contentviews
 from mitmproxy.utils import strutils
@@ -483,7 +482,6 @@ class ConsoleMaster(master.Master):
 
         signal.signal(signal.SIGINT, sigint_handler)
 
-        self.ab = None
         self.window = None
 
     def __setattr__(self, name, value):
@@ -621,7 +619,6 @@ class ConsoleMaster(master.Master):
             handle_mouse = self.options.console_mouse,
         )
 
-        self.ab = statusbar.ActionBar(self)
         self.window = window.Window(self)
         self.loop.widget = self.window
 

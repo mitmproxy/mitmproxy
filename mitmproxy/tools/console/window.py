@@ -12,10 +12,11 @@ from mitmproxy.tools.console import grideditor
 
 class Window(urwid.Frame):
     def __init__(self, master):
+        self.statusbar = statusbar.StatusBar(master, "")
         super().__init__(
             None,
             header = None,
-            footer = statusbar.StatusBar(master, ""),
+            footer = urwid.AttrWrap(self.statusbar, "background")
         )
         self.master = master
         self.primary_stack = []

@@ -150,7 +150,7 @@ def test_options(tmpdir):
 
         sa.options_save(p)
         with pytest.raises(exceptions.CommandError):
-            sa.options_save("/nonexistent")
+            sa.options_save("/")
 
         sa.options_reset()
         assert tctx.options.stickyauth is None

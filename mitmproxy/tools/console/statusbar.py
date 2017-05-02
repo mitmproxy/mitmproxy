@@ -151,7 +151,8 @@ class StatusBar(urwid.WidgetWrap):
         self.master = master
         self.helptext = helptext
         self.ib = urwid.WidgetWrap(urwid.Text(""))
-        super().__init__(urwid.Pile([self.ib, self.master.ab]))
+        self.ab = ActionBar(self)
+        super().__init__(urwid.Pile([self.ib, self.ab]))
         signals.update_settings.connect(self.sig_update)
         signals.flowlist_change.connect(self.sig_update)
         signals.footer_help.connect(self.sig_footer_help)
@@ -167,7 +168,7 @@ class StatusBar(urwid.WidgetWrap):
         self.redraw()
 
     def keypress(self, *args, **kwargs):
-        return self.master.ab.keypress(*args, **kwargs)
+        return self.ab.keypress(*args, **kwargs)
 
     def get_status(self):
         r = []

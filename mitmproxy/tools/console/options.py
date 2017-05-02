@@ -219,6 +219,7 @@ class OptionsList(urwid.ListBox):
                 elif foc.opt.choices:
                     self.master.overlay(
                         overlay.Chooser(
+                            self.master,
                             foc.opt.name,
                             foc.opt.choices,
                             foc.opt.current(),

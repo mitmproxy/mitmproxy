@@ -27,7 +27,7 @@ def flowdetails(state, flow: http.HTTPFlow):
         text.append(urwid.Text([("head", "Metadata:")]))
         text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 
-    if sc is not None:
+    if sc is not None and sc.ip_address:
         text.append(urwid.Text([("head", "Server Connection:")]))
         parts = [
             ["Address", human.format_address(sc.address)],
