@@ -12,10 +12,11 @@ from mitmproxy.tools.console import grideditor
 
 class Window(urwid.Frame):
     def __init__(self, master):
+        self.statusbar = statusbar.StatusBar(master, "")
         super().__init__(
             None,
             header = None,
-            footer = statusbar.StatusBar(master, ""),
+            footer = urwid.AttrWrap(self.statusbar, "background")
         )
         self.master = master
         self.primary_stack = []
@@ -76,6 +77,8 @@ class Window(urwid.Frame):
         self.call(self.focus, "view_popping")
 
     def push(self, wname):
+        if self.primary_stack and self.primary_stack[-1] == wname:
+            return
         self.primary_stack.append(wname)
         self.body = urwid.AttrWrap(
             self.windows[wname], "background"

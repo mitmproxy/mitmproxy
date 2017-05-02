@@ -152,7 +152,7 @@ class TestScriptLoader:
         sc = script.ScriptLoader()
         with taddons.context():
             with pytest.raises(exceptions.CommandError):
-                sc.script_run([tflow.tflow(resp=True)], "/nonexistent")
+                sc.script_run([tflow.tflow(resp=True)], "/")
 
     def test_simple(self):
         sc = script.ScriptLoader()

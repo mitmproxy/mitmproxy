@@ -187,12 +187,6 @@ class OptionsList(urwid.ListBox):
         except exceptions.OptionsError as e:
             signals.status_message.send(message=str(e))
 
-    def load_config(self, path):
-        try:
-            optmanager.load_paths(self.master.options, path)
-        except exceptions.OptionsError as e:
-            signals.status_message.send(message=str(e))
-
     def keypress(self, size, key):
         if self.walker.editing:
             if key == "enter":
@@ -207,29 +201,12 @@ class OptionsList(urwid.ListBox):
             elif key == "esc":
                 self.walker.stop_editing()
         else:
-            if key == "d":
-                foc, idx = self.get_focus()
-                setattr(
-                    self.master.options,
-                    foc.opt.name,
-                    self.master.options.default(foc.opt.name)
-                )
-            elif key == "g":
+            if key == "m_start":
                 self.set_focus(0)
                 self.walker._modified()
-            elif key == "G":
+            elif key == "m_end":
                 self.set_focus(len(self.walker.opts) - 1)
                 self.walker._modified()
-            elif key == "l":
-                signals.status_prompt_path.send(
-                    prompt = "Load config from",
-                    callback = self.load_config
-                )
-            elif key == "w":
-                signals.status_prompt_path.send(
-                    prompt = "Save config to",
-                    callback = self.save_config
-                )
             elif key == "enter":
                 foc, idx = self.get_focus()
                 if foc.opt.typespec == bool:
@@ -242,6 +219,7 @@ class OptionsList(urwid.ListBox):
                 elif foc.opt.choices:
                     self.master.overlay(
                         overlay.Chooser(
+                            self.master,
                             foc.opt.name,
                             foc.opt.choices,
                             foc.opt.current(),
@@ -290,24 +268,25 @@ class Options(urwid.Pile):
 
     def __init__(self, master):
         oh = OptionHelp(master)
+        self.optionslist = OptionsList(master)
         super().__init__(
             [
-                OptionsList(master),
+                self.optionslist,
                 (HELP_HEIGHT, oh),
             ]
         )
         self.master = master
 
+    def current_name(self):
+        foc, idx = self.optionslist.get_focus()
+        return foc.opt.name
+
     def keypress(self, size, key):
-        key = common.shortcuts(key)
         if key == "tab":
             self.focus_position = (
                 self.focus_position + 1
             ) % len(self.widget_list)
             self.widget_list[1].set_active(self.focus_position == 1)
-            key = None
-        elif key == "D":
-            self.master.options.reset()
             key = None
 
         # This is essentially a copypasta from urwid.Pile's keypress handler.
