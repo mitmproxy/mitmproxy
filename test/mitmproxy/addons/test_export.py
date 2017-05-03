@@ -45,11 +45,11 @@ def tcp_flow():
 
 class TestExportCurlCommand:
     def test_get(self, get_request):
-        result = """curl -H 'header:qvalue' -H 'content-length:7' 'http://address:22/path?a=foo&a=bar&b=baz'"""
+        result = """curl -H 'header:qvalue' -H 'content-length:0' 'http://address:22/path?a=foo&a=bar&b=baz'"""
         assert export.curl_command(get_request) == result
 
     def test_post(self, post_request):
-        result = "curl -X POST 'http://address:22/path' --data-binary '{}'".format(
+        result = "curl -H 'content-length:256' -X POST 'http://address:22/path' --data-binary '{}'".format(
             str(bytes(range(256)))[2:-1]
         )
         assert export.curl_command(post_request) == result

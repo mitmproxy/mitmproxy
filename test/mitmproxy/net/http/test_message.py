@@ -117,6 +117,14 @@ class TestMessageContentEncoding:
         assert r.content == b"message"
         assert r.raw_content != b"message"
 
+    def test_update_content_length_header(self):
+        r = tutils.tresp()
+        assert int(r.headers["content-length"]) == 7
+        r.encode("gzip")
+        assert int(r.headers["content-length"]) == 27
+        r.decode()
+        assert int(r.headers["content-length"]) == 7
+
     def test_modify(self):
         r = tutils.tresp()
         assert "content-encoding" not in r.headers
