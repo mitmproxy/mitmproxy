@@ -108,7 +108,7 @@ def mitmproxy(opts):
     parser = argparse.ArgumentParser(usage="%(prog)s [options]")
     common_options(parser, opts)
 
-    opts.make_parser(parser, "console_eventlog")
+    opts.make_parser(parser, "console_layout")
     group = parser.add_argument_group(
         "Filters",
         "See help in mitmproxy for filter expression syntax."

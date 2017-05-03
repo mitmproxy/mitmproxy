@@ -31,8 +31,6 @@ from mitmproxy.tools.console import window
 from mitmproxy import contentviews
 from mitmproxy.utils import strutils
 
-EVENTLOG_SIZE = 10000
-
 
 class Logger:
     def log(self, evt):
@@ -82,15 +80,41 @@ class ConsoleAddon:
         self.master = master
         self.started = False
 
+    @command.command("console.layout.options")
+    def layout_options(self) -> typing.Sequence[str]:
+        """
+            Returns the valid options for console layout. Use these by setting
+            the console_layout option.
+        """
+        return ["single", "vertical", "horizontal"]
+
+    @command.command("console.layout.cycle")
+    def layout_cycle(self) -> None:
+        """
+            Cycle through the console layout options.
+        """
+        opts = self.layout_options()
+        off = self.layout_options().index(ctx.options.console_layout)
+        ctx.options.update(
+            console_layout = opts[(off + 1) % len(opts)]
+        )
+
+    @command.command("console.panes.next")
+    def panes_next(self) -> None:
+        """
+            Go to the next layout pane.
+        """
+        self.master.window.switch()
+
     @command.command("console.options.reset.current")
     def options_reset_current(self) -> None:
         """
             Reset the current option in the options editor.
         """
-        if self.master.window.focus.keyctx != "options":
+        fv = self.master.window.current("options")
+        if not fv:
             raise exceptions.CommandError("Not viewing options.")
-        name = self.master.window.windows["options"].current_name()
-        self.master.commands.call("options.reset.one %s" % name)
+        self.master.commands.call("options.reset.one %s" % fv.current_name())
 
     @command.command("console.nav.start")
     def nav_start(self) -> None:
@@ -166,8 +190,9 @@ class ConsoleAddon:
             except exceptions.CommandError as e:
                 signals.status_message.send(message=str(e))
 
-        self.master.overlay(overlay.Chooser(self.master, prompt, choices, "", callback))
-        ctx.log.info(choices)
+        self.master.overlay(
+            overlay.Chooser(self.master, prompt, choices, "", callback)
+        )
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
@@ -189,8 +214,9 @@ class ConsoleAddon:
             except exceptions.CommandError as e:
                 signals.status_message.send(message=str(e))
 
-        self.master.overlay(overlay.Chooser(self.master, prompt, choices, "", callback))
-        ctx.log.info(choices)
+        self.master.overlay(
+            overlay.Chooser(self.master, prompt, choices, "", callback)
+        )
 
     @command.command("console.command")
     def console_command(self, *partial: typing.Sequence[str]) -> None:
@@ -208,6 +234,11 @@ class ConsoleAddon:
     def view_options(self) -> None:
         """View the options editor."""
         self.master.switch_view("options")
+
+    @command.command("console.view.eventlog")
+    def view_eventlog(self) -> None:
+        """View the options editor."""
+        self.master.switch_view("eventlog")
 
     @command.command("console.view.help")
     def view_help(self) -> None:
@@ -296,9 +327,9 @@ class ConsoleAddon:
         """
             Set the display mode for the current flow view.
         """
-        if self.master.window.focus.keyctx != "flowview":
+        fv = self.master.window.current("flowview")
+        if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
-        fv = self.master.window.windows["flowview"]
         idx = fv.body.tab_offset
 
         def callback(opt):
@@ -318,9 +349,9 @@ class ConsoleAddon:
         """
             Get the display mode for the current flow view.
         """
-        if self.master.window.focus.keyctx != "flowview":
+        fv = self.master.window.any("flowview")
+        if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
-        fv = self.master.window.windows["flowview"]
         idx = fv.body.tab_offset
         return self.master.commands.call_args(
             "view.getval",
@@ -340,19 +371,18 @@ class ConsoleAddon:
         for f in flows:
             signals.flow_change.send(self, flow=f)
 
-    def configure(self, updated):
-        if self.started:
-            if "console_eventlog" in updated:
-                pass
-
 
 def default_keymap(km):
     km.add(":", "console.command ''", ["global"])
     km.add("?", "console.view.help", ["global"])
     km.add("C", "console.view.commands", ["global"])
     km.add("O", "console.view.options", ["global"])
+    km.add("E", "console.view.eventlog", ["global"])
     km.add("Q", "console.exit", ["global"])
     km.add("q", "console.view.pop", ["global"])
+    km.add("-", "console.layout.cycle", ["global"])
+    km.add("shift tab", "console.panes.next", ["global"])
+    km.add("P", "console.view.flow @focus", ["global"])
 
     km.add("g", "console.nav.start", ["global"])
     km.add("G", "console.nav.end", ["global"])
@@ -366,7 +396,6 @@ def default_keymap(km):
 
     km.add("i", "console.command set intercept=", ["global"])
     km.add("W", "console.command set save_stream_file=", ["global"])
-
     km.add("A", "flow.resume @all", ["flowlist", "flowview"])
     km.add("a", "flow.resume @focus", ["flowlist", "flowview"])
     km.add(
@@ -375,9 +404,8 @@ def default_keymap(km):
     )
     km.add("d", "view.remove @focus", ["flowlist", "flowview"])
     km.add("D", "view.duplicate @focus", ["flowlist", "flowview"])
-    km.add("e", "set console_eventlog=toggle", ["flowlist"])
     km.add(
-        "E",
+        "e",
         "console.choose.cmd Format export.formats "
         "console.command export.file {choice} @focus ''",
         ["flowlist", "flowview"]
@@ -461,8 +489,6 @@ class ConsoleMaster(master.Master):
         default_keymap(self.keymap)
         self.options.errored.connect(self.options_error)
 
-        self.logbuffer = urwid.SimpleListWalker([])
-
         self.view_stack = []
 
         signals.call_in.connect(self.sig_call_in)
@@ -508,19 +534,10 @@ class ConsoleMaster(master.Master):
     def sig_add_log(self, sender, e, level):
         if self.options.verbosity < log.log_tier(level):
             return
-
         if level in ("error", "warn"):
             signals.status_message.send(
                 message = "{}: {}".format(level.title(), e)
             )
-            e = urwid.Text((level, str(e)))
-        else:
-            e = urwid.Text(str(e))
-        self.logbuffer.append(e)
-        if len(self.logbuffer) > EVENTLOG_SIZE:
-            self.logbuffer.pop(0)
-        if self.options.console_focus_follow:
-            self.logbuffer.set_focus(len(self.logbuffer) - 1)
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
@@ -621,12 +638,9 @@ class ConsoleMaster(master.Master):
 
         self.window = window.Window(self)
         self.loop.widget = self.window
+        self.window.refresh()
 
         self.loop.set_alarm_in(0.01, self.ticker)
-        self.loop.set_alarm_in(
-            0.0001,
-            lambda *args: self.switch_view("flowlist")
-        )
 
         self.start()
         try:
@@ -646,13 +660,8 @@ class ConsoleMaster(master.Master):
     def shutdown(self):
         raise urwid.ExitMainLoop
 
-    def sig_exit_overlay(self, *args, **kwargs):
-        self.loop.widget = self.window
-
     def overlay(self, widget, **kwargs):
-        self.loop.widget = overlay.SimpleOverlay(
-            self, widget, self.loop.widget, widget.width, **kwargs
-        )
+        self.window.set_overlay(widget, **kwargs)
 
     def switch_view(self, name):
         self.window.push(name)
@@ -660,6 +669,3 @@ class ConsoleMaster(master.Master):
     def quit(self, a):
         if a != "n":
             self.shutdown()
-
-    def clear_events(self):
-        self.logbuffer[:] = []

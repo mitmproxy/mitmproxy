@@ -47,68 +47,6 @@ footer = [
 ]
 
 
-class LogBufferBox(urwid.ListBox):
-
-    def __init__(self, master):
-        self.master = master
-        urwid.ListBox.__init__(self, master.logbuffer)
-
-    def set_focus(self, index):
-        if 0 <= index < len(self.master.logbuffer):
-            super().set_focus(index)
-
-    def keypress(self, size, key):
-        if key == "z":
-            self.master.clear_events()
-            key = None
-        elif key == "m_end":
-            self.set_focus(len(self.master.logbuffer) - 1)
-        elif key == "m_start":
-            self.set_focus(0)
-        return urwid.ListBox.keypress(self, size, key)
-
-
-class BodyPile(urwid.Pile):
-
-    def __init__(self, master):
-        h = urwid.Text("Event log")
-        h = urwid.Padding(h, align="left", width=("relative", 100))
-
-        self.inactive_header = urwid.AttrWrap(h, "heading_inactive")
-        self.active_header = urwid.AttrWrap(h, "heading")
-
-        urwid.Pile.__init__(
-            self,
-            [
-                FlowListBox(master),
-                urwid.Frame(
-                    LogBufferBox(master),
-                    header = self.inactive_header
-                )
-            ]
-        )
-        self.master = master
-
-    def keypress(self, size, key):
-        if key == "tab":
-            self.focus_position = (
-                self.focus_position + 1) % len(self.widget_list)
-            if self.focus_position == 1:
-                self.widget_list[1].header = self.active_header
-            else:
-                self.widget_list[1].header = self.inactive_header
-            key = None
-
-        # This is essentially a copypasta from urwid.Pile's keypress handler.
-        # So much for "closed for modification, but open for extension".
-        item_rows = None
-        if len(size) == 2:
-            item_rows = self.get_item_rows(size, focus = True)
-        i = self.widget_list.index(self.focus_item)
-        tsize = self.get_item_size(size, i, True, item_rows)
-        return self.focus_item.keypress(tsize, key)
-
-
 class FlowItem(urwid.WidgetWrap):
 
     def __init__(self, master, flow):

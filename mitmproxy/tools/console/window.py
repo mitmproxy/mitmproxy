@@ -8,6 +8,64 @@ from mitmproxy.tools.console import options
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import help
 from mitmproxy.tools.console import grideditor
+from mitmproxy.tools.console import eventlog
+
+
+class WindowStack:
+    def __init__(self, master, base):
+        self.master = master
+        self.windows = dict(
+            flowlist = flowlist.FlowListBox(master),
+            flowview = flowview.FlowView(master),
+            commands = commands.Commands(master),
+            options = options.Options(master),
+            help = help.HelpView(None),
+            eventlog = eventlog.EventLog(master),
+
+            edit_focus_query = grideditor.QueryEditor(master),
+            edit_focus_cookies = grideditor.CookieEditor(master),
+            edit_focus_setcookies = grideditor.SetCookieEditor(master),
+            edit_focus_form = grideditor.RequestFormEditor(master),
+            edit_focus_path = grideditor.PathEditor(master),
+            edit_focus_request_headers = grideditor.RequestHeaderEditor(master),
+            edit_focus_response_headers = grideditor.ResponseHeaderEditor(master),
+        )
+        self.stack = [base]
+        self.overlay = None
+
+    def set_overlay(self, o, **kwargs):
+        self.overlay = overlay.SimpleOverlay(self, o, self.top(), o.width, **kwargs)
+
+    @property
+    def topwin(self):
+        return self.windows[self.stack[-1]]
+
+    def top(self):
+        if self.overlay:
+            return self.overlay
+        return self.topwin
+
+    def push(self, wname):
+        if self.stack[-1] == wname:
+            return
+        self.stack.append(wname)
+
+    def pop(self, *args, **kwargs):
+        """
+            Pop off the stack, return True if we're already at the top.
+        """
+        if self.overlay:
+            self.overlay = None
+        elif len(self.stack) > 1:
+            self.call("view_popping")
+            self.stack.pop()
+        else:
+            return True
+
+    def call(self, name, *args, **kwargs):
+        f = getattr(self.topwin, name, None)
+        if f:
+            f(*args, **kwargs)
 
 
 class Window(urwid.Frame):
@@ -19,38 +77,51 @@ class Window(urwid.Frame):
             footer = urwid.AttrWrap(self.statusbar, "background")
         )
         self.master = master
-        self.primary_stack = []
         self.master.view.sig_view_refresh.connect(self.view_changed)
         self.master.view.sig_view_add.connect(self.view_changed)
         self.master.view.sig_view_remove.connect(self.view_changed)
         self.master.view.sig_view_update.connect(self.view_changed)
         self.master.view.focus.sig_change.connect(self.view_changed)
-        signals.focus.connect(self.sig_focus)
-
         self.master.view.focus.sig_change.connect(self.focus_changed)
-        signals.flow_change.connect(self.flow_changed)
 
+        signals.focus.connect(self.sig_focus)
+        signals.flow_change.connect(self.flow_changed)
         signals.pop_view_state.connect(self.pop)
         signals.push_view_state.connect(self.push)
-        self.windows = dict(
-            flowlist = flowlist.FlowListBox(self.master),
-            flowview = flowview.FlowView(self.master),
-            commands = commands.Commands(self.master),
-            options = options.Options(self.master),
-            help = help.HelpView(None),
-            edit_focus_query = grideditor.QueryEditor(self.master),
-            edit_focus_cookies = grideditor.CookieEditor(self.master),
-            edit_focus_setcookies = grideditor.SetCookieEditor(self.master),
-            edit_focus_form = grideditor.RequestFormEditor(self.master),
-            edit_focus_path = grideditor.PathEditor(self.master),
-            edit_focus_request_headers = grideditor.RequestHeaderEditor(self.master),
-            edit_focus_response_headers = grideditor.ResponseHeaderEditor(self.master),
-        )
 
-    def call(self, v, name, *args, **kwargs):
-        f = getattr(v, name, None)
-        if f:
-            f(*args, **kwargs)
+        self.master.options.subscribe(self.configure, ["console_layout"])
+        self.pane = 0
+        self.stacks = [
+            WindowStack(master, "flowlist"),
+            WindowStack(master, "eventlog")
+        ]
+
+    def focus_stack(self):
+        return self.stacks[self.pane]
+
+    def configure(self, otions, updated):
+        self.refresh()
+
+    def refresh(self):
+        """
+            Redraw the layout.
+        """
+        c = self.master.options.console_layout
+
+        w = None
+        if c == "single":
+            w = self.stacks[0].top()
+        elif c == "vertical":
+            w = urwid.Pile(
+                [i.top() for i in self.stacks]
+            )
+        else:
+            w = urwid.Columns(
+                [i.top() for i in self.stacks], dividechars=1
+            )
+        self.body = urwid.AttrWrap(w, "background")
+        if c == "single":
+            self.pane = 0
 
     def flow_changed(self, sender, flow):
         if self.master.view.focus.flow:
@@ -62,48 +133,73 @@ class Window(urwid.Frame):
             Triggered when the focus changes - either when it's modified, or
             when it changes to a different flow altogether.
         """
-        self.call(self.focus, "focus_changed")
+        for i in self.stacks:
+            i.call("focus_changed")
 
     def view_changed(self, *args, **kwargs):
         """
             Triggered when the view list has changed.
         """
-        self.call(self.focus, "view_changed")
+        for i in self.stacks:
+            i.call("view_changed")
 
-    def view_popping(self, *args, **kwargs):
+    def set_overlay(self, o, **kwargs):
         """
-            Triggered when the view list has changed.
+            Set an overlay on the currently focused stack.
         """
-        self.call(self.focus, "view_popping")
+        self.focus_stack().set_overlay(o, **kwargs)
+        self.refresh()
 
     def push(self, wname):
-        if self.primary_stack and self.primary_stack[-1] == wname:
-            return
-        self.primary_stack.append(wname)
-        self.body = urwid.AttrWrap(
-            self.windows[wname], "background"
-        )
+        """
+            Push a window onto the currently focused stack.
+        """
+        self.focus_stack().push(wname)
+        self.refresh()
         self.view_changed()
         self.focus_changed()
 
     def pop(self, *args, **kwargs):
-        if isinstance(self.master.loop.widget, overlay.SimpleOverlay):
-            self.master.loop.widget = self
+        """
+            Pop a window from the currently focused stack. If there is only one
+            window on the stack, this prompts for exit.
+        """
+        if self.focus_stack().pop():
+            self.master.prompt_for_exit()
         else:
-            if len(self.primary_stack) > 1:
-                self.view_popping()
-                self.primary_stack.pop()
-                self.body = urwid.AttrWrap(
-                    self.windows[self.primary_stack[-1]],
-                    "background",
-                )
-                self.view_changed()
-                self.focus_changed()
-            else:
-                self.master.prompt_for_exit()
+            self.refresh()
+            self.view_changed()
+            self.focus_changed()
+
+    def current(self, keyctx):
+        """
+
+            Returns the top window of the current stack, IF the current focus
+            has a matching key context.
+        """
+        t = self.focus_stack().topwin
+        if t.keyctx == keyctx:
+            return t
+
+    def any(self, keyctx):
+        """
+            Returns the top window of either stack if they match the context.
+        """
+        for t in [x.topwin for x in self.stacks]:
+            if t.keyctx == keyctx:
+                return t
 
     def sig_focus(self, sender, section):
         self.focus_position = section
+
+    def switch(self):
+        """
+            Switch between the two panes.
+        """
+        if self.master.options.console_layout == "single":
+            self.pane = 0
+        else:
+            self.pane = (self.pane + 1) % len(self.stacks)
 
     def mouse_event(self, *args, **kwargs):
         # args: (size, event, button, col, row)
@@ -123,7 +219,10 @@ class Window(urwid.Frame):
             return True
 
     def keypress(self, size, k):
-        if self.focus.keyctx:
-            k = self.master.keymap.handle(self.focus.keyctx, k)
-        if k:
+        if self.focus_part == "footer":
             return super().keypress(size, k)
+        else:
+            fs = self.focus_stack().top()
+            k = fs.keypress(size, k)
+            if k:
+                return self.master.keymap.handle(fs.keyctx, k)

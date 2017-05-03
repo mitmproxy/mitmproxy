@@ -48,6 +48,3 @@ flowlist_change = blinker.Signal()
 # Pop and push view state onto a stack
 pop_view_state = blinker.Signal()
 push_view_state = blinker.Signal()
-
-# Exits overlay if there is one
-exit_overlay = blinker.Signal()

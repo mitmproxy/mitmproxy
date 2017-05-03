@@ -21,6 +21,11 @@ view_orders = [
     "url",
     "size",
 ]
+console_layouts = [
+    "single",
+    "vertical",
+    "horizontal",
+]
 
 APP_HOST = "mitm.it"
 APP_PORT = 80
@@ -371,8 +376,9 @@ class Options(optmanager.OptManager):
 
         # Console options
         self.add_option(
-            "console_eventlog", bool, False,
-            "Show event log."
+            "console_layout", str, "single",
+            "Console layout.",
+            choices=sorted(console_layouts),
         )
         self.add_option(
             "console_focus_follow", bool, False,
