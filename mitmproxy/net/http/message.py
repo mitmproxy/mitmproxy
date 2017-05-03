@@ -226,8 +226,9 @@ class Message(serializable.Serializable):
         Raises:
             ValueError, when the content-encoding is invalid and strict is True.
         """
-        self.raw_content = self.get_content(strict)
+        decoded = self.get_content(strict)
         self.headers.pop("content-encoding", None)
+        self.content = decoded
 
     def encode(self, e):
         """
