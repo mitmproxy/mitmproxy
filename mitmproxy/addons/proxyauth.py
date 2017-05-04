@@ -1,5 +1,6 @@
 import binascii
 import weakref
+import ldap3
 from typing import Optional
 from typing import MutableMapping  # noqa
 from typing import Tuple
@@ -46,11 +47,12 @@ class ProxyAuth:
         self.nonanonymous = False
         self.htpasswd = None
         self.singleuser = None
+        self.ldapserver = None
         self.authenticated = weakref.WeakKeyDictionary()  # type: MutableMapping[connections.ClientConnection, Tuple[str, str]]
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def enabled(self) -> bool:
-        return any([self.nonanonymous, self.htpasswd, self.singleuser])
+        return any([self.nonanonymous, self.htpasswd, self.singleuser, self.ldapserver])
 
     def is_proxy_auth(self) -> bool:
         """
@@ -99,7 +101,20 @@ class ProxyAuth:
         elif self.htpasswd:
             if self.htpasswd.check_password(username, password):
                 return username, password
-
+        elif self.ldapserver:
+            if not username or not password:
+                return None
+            dn = ctx.options.proxyauth.split(":")[2]
+            parts = dn.split("?")
+            conn = ldap3.Connection(
+                self.ldapserver,
+                parts[0] + username + parts[1],
+                password,
+                auto_bind=True)
+            if conn:
+                conn.search(parts[1][1:], '(' + parts[0] + username + ')', attributes=['objectclass'])
+                if ctx.options.proxyauth.split(":")[3] in conn.entries[0]['objectclass']:
+                    return username, password
         return None
 
     def authenticate(self, f: http.HTTPFlow) -> bool:
@@ -118,6 +133,7 @@ class ProxyAuth:
             self.nonanonymous = False
             self.singleuser = None
             self.htpasswd = None
+            self.ldapserver = None
             if ctx.options.proxyauth:
                 if ctx.options.proxyauth == "any":
                     self.nonanonymous = True
@@ -129,6 +145,21 @@ class ProxyAuth:
                         raise exceptions.OptionsError(
                             "Could not open htpasswd file: %s" % p
                         )
+                elif ctx.options.proxyauth.startswith("ldap"):
+                    parts = ctx.options.proxyauth.split(":")
+                    if len(parts) != 4:
+                        raise exceptions.OptionsError(
+                            "Invalid ldap specification"
+                        )
+                    if parts[0] == "ldaps":
+                        server = ldap3.Server(parts[1], use_ssl=True)
+                    elif parts[0] == "ldap":
+                        server = ldap3.Server(parts[1])
+                    else:
+                        raise exceptions.OptionsError(
+                            "Invalid ldap specfication on the first part"
+                        )
+                    self.ldapserver = server
                 else:
                     parts = ctx.options.proxyauth.split(':')
                     if len(parts) != 2:

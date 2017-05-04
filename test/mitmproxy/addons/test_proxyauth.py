@@ -1,4 +1,5 @@
 import binascii
+import ldap3
 
 import pytest
 
@@ -41,6 +42,20 @@ def test_configure():
         ctx.configure(up, proxyauth=None)
         assert not up.nonanonymous
 
+        ctx.configure(up, proxyauth="ldap:fake_server:fake_dn:fake_group")
+        assert up.ldapserver
+
+        ctx.configure(up, proxyauth="ldap:fake_server:uid=?,dc=example,dc=com:person")
+        assert up.ldapserver
+        ctx.configure(up, proxyauth="ldaps:fake_server.com:uid=?,dc=example,dc=com:person")
+        assert up.ldapserver
+
+        with pytest.raises(exceptions.OptionsError):
+            ctx.configure(up, proxyauth="ldap:fake_serveruid=?dc=example,dc=com:person")
+
+        with pytest.raises(exceptions.OptionsError):
+            ctx.configure(up, proxyauth="ldapssssssss:fake_server.com:uid=?,dc=example,dc=com:person")
+
         with pytest.raises(exceptions.OptionsError):
             ctx.configure(
                 up,
@@ -67,7 +82,7 @@ def test_configure():
             ctx.configure(up, proxyauth="any", mode="socks5")
 
 
-def test_check():
+def test_check(monkeypatch):
     up = proxyauth.ProxyAuth()
     with taddons.context() as ctx:
         ctx.configure(up, proxyauth="any", mode="regular")
@@ -106,6 +121,27 @@ def test_check():
         assert up.check(f)
         f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
             "test", "foo"
+        )
+        assert not up.check(f)
+
+        ctx.configure(
+            up,
+            proxyauth="ldap:fake-server:cn=?,ou=test,o=lab:test"
+        )
+        conn = ldap3.Connection("fake-server", user="cn=user0,ou=test,o=lab", password="password", client_strategy=ldap3.MOCK_SYNC)
+        conn.bind()
+        conn.strategy.add_entry('cn=user0,ou=test,o=lab', {'userPassword': 'test0', 'sn': 'user0_sn', 'revision': 0, 'objectClass': 'test'})
+
+        def conn_mp(ldap, user, password, **kwargs):
+            return conn
+
+        monkeypatch.setattr(ldap3, "Connection", conn_mp)
+        f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
+            "user0", "test0"
+        )
+        assert up.check(f)
+        f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
+            "", ""
         )
         assert not up.check(f)
 

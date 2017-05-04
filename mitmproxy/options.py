@@ -204,8 +204,12 @@ class Options(optmanager.OptManager):
             """
             Require proxy authentication. Value may be "any" to require
             authenticaiton but accept any credentials, start with "@" to specify
-            a path to an Apache htpasswd file, or be of the form
-            "username:password".
+            a path to an Apache htpasswd file, be of the form
+            "username:password", or be of the form
+            "ldap[s]:url_server_ldap:dn:group", the dn must include "?", which will be
+            the username prompted, and the group is the group the user must belong to
+            an example would be
+            "ldap:ldap.forumsys.com:uid=?,dc=example,dc=com:person".
             """
         )
         self.add_option(
