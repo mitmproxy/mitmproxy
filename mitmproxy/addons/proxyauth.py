@@ -115,7 +115,6 @@ class ProxyAuth:
                 conn.search(parts[1][1:], '(' + parts[0] + username + ')', attributes=['objectclass'])
                 if ctx.options.proxyauth.split(":")[3] in conn.entries[0]['objectclass']:
                     return username, password
-
         return None
 
     def authenticate(self, f: http.HTTPFlow) -> bool:
