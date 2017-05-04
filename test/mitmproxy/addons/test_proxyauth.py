@@ -2,7 +2,6 @@ import binascii
 import ldap3
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 
 from mitmproxy import exceptions
 from mitmproxy.addons import proxyauth
@@ -45,7 +44,6 @@ def test_configure():
 
         ctx.configure(up, proxyauth="ldap:fake_server:fake_dn:fake_group")
         assert up.ldapserver
-
 
         ctx.configure(up, proxyauth="ldap:fake_server:uid=?,dc=example,dc=com:person")
         assert up.ldapserver
@@ -126,7 +124,6 @@ def test_check(monkeypatch):
         )
         assert not up.check(f)
 
-
         ctx.configure(
             up,
             proxyauth="ldap:fake-server:cn=?,ou=test,o=lab:test"
@@ -134,8 +131,10 @@ def test_check(monkeypatch):
         conn = ldap3.Connection("fake-server", user="cn=user0,ou=test,o=lab", password="password", client_strategy=ldap3.MOCK_SYNC)
         conn.bind()
         conn.strategy.add_entry('cn=user0,ou=test,o=lab', {'userPassword': 'test0', 'sn': 'user0_sn', 'revision': 0, 'objectClass': 'test'})
+
         def conn_mp(ldap, user, password, **kwargs):
             return conn
+
         monkeypatch.setattr(ldap3, "Connection", conn_mp)
         f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
             "user0", "test0"
