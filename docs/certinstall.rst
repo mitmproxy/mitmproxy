@@ -24,7 +24,7 @@ something like this:
 Click on the relevant icon, follow the setup instructions for the platform
 you're on and you are good to go.
 
-For iOS version 10.3 or up, you need to make sure `mitmproxy` is enabled in `Certificate Trust Settings`, you can check it by going to `Settings > General > About > Certificate Trust Settings`
+For iOS version 10.3 or up, you need to make sure ``mitmproxy`` is enabled in ``Certificate Trust Settings``, you can check it by going to ``Settings > General > About > Certificate Trust Settings``
 
 Installing the mitmproxy CA certificate manually
 ------------------------------------------------
