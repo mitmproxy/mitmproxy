@@ -14,19 +14,14 @@ class ViewSwapCase(contentviews.View):
 
     # We don't have a good solution for the keyboard shortcut yet -
     # you manually need to find a free letter. Contributions welcome :)
-    prompt = ("swap case text", "z")
+    prompt = ("swap case text", "t")
     content_types = ["text/plain"]
 
     def __call__(self, data: typing.AnyStr, **metadata) -> CVIEWSWAPCASE:
-        return "case-swapped text", contentviews.format_text(data.swapcase())
+        return "text", contentviews.format_text(data.swapcase())
 
 
 view = ViewSwapCase()
 
 
-def load(l):
-    contentviews.add(view)
-
-
-def done():
-    contentviews.remove(view)
+contentviews.add(view)
