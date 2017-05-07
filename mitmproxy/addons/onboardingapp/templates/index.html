@@ -6,7 +6,6 @@ function changeTo(device) {
     if (device == "apple") {
         var text = `<h3>Apple: How to install on macOS / OSX</h3>
                       <ul>
-                        <li>Download PEM file (from above link)</li>
                         <li>Double-click the PEM file</li>
                         <li>The "Keychain Access" applications opens</li>
                         <li>Find the new certificate "mitmproxy" in the list</li>
@@ -14,20 +13,42 @@ function changeTo(device) {
                         <li>A dialog window openes up</li>
                         <li>Change "Secure Socket Layer (SSL)" to "Always Trust"</li>
                         <li>Close the dialog window (and enter your password if prompted)</li>
-                        <li>For iOS version 10.3 or up, you need to make sure mitmproxy is enabled in <br>
-                            Certificate Trust Settings, you can check it by going to <br>
+                        <li>For iOS version 10.3 or up, you need to make sure mitmproxy is enabled in<br>
+                            Certificate Trust Settings, you can check it by going to<br>
                             Settings > General > About > Certificate Trust Settings</li>
                         <li>Done!</li>
                       </ul>`;
     }
     else if (device == "windows") {
-        var text = `<h3>Windows: How to install</h3>`;
+        var text = `<h3>Windows: How to install on Windows</h3>
+                      <ul>
+                        <li>Double-click the P12 file</li>
+                        <li>Select Store Location for Current User and click Next</li>
+                        <li>Click Next</li>
+                        <li>Leave the Password column blank and click Next</li>
+                        <li>Select Place all certificates in the following store</li>
+                        <li>Click Browse and select Trusted Root Certification Authorities</li>
+                        <li>Click Next and then click Finish</li>
+                        <li>Click Yes if prompted for confirmation</li>
+                        <li>Done!</li>
+                      </ul>`;
     }
     else if (device == "android") {
-        var text = `<h3>Android: How to install</h3>`;
+        var text = `<h3>Android: How to install on Android</h3>
+                      <ul>
+                        <li>Open your device's Settings app</li>
+                        <li>Under "Credential storage," tap Install from storage</li>
+                        <li>Under "Open from," tap where you saved the certificate</li>
+                        <li>Tap the file</li>
+                        <li>If prompted, enter the key store password and tap OK</li>
+                        <li>Type a name for the certificate</li>
+                        <li>Pick VPN and apps or Wi-Fi</li>
+                        <li>Tap OK</li>
+                        <li>Done!</li>
+                      </ul>`;
     }
     else if (device == "asterisk") {
-        var text = `<h3>others</h3>`;
+        var text = "";
     }
     document.getElementById("dynamic").innerHTML = text;
 }
