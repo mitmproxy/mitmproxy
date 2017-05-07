@@ -14,18 +14,20 @@ function changeTo(device) {
                         <li>A dialog window openes up</li>
                         <li>Change "Secure Socket Layer (SSL)" to "Always Trust"</li>
                         <li>Close the dialog window (and enter your password if prompted)</li>
-                        <li>Go to Settings > General > About > Certificate Trust Settings and enable full trust for your certificate</li>
+                        <li>For iOS version 10.3 or up, you need to make sure mitmproxy is enabled in <br>
+                            Certificate Trust Settings, you can check it by going to <br>
+                            Settings > General > About > Certificate Trust Settings</li>
                         <li>Done!</li>
                       </ul>`;
     }
     else if (device == "windows") {
-        var text = "hi";
+        var text = `<h3>Windows: How to install</h3>`;
     }
     else if (device == "android") {
-        var text = "hi";
+        var text = `<h3>Android: How to install</h3>`;
     }
     else if (device == "asterisk") {
-        var text = "hi";
+        var text = `<h3>others</h3>`;
     }
     document.getElementById("dynamic").innerHTML = text;
 }
