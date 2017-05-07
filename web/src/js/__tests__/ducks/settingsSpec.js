@@ -1,4 +1,3 @@
-jest.unmock('../../ducks/settings')
 jest.mock('../../utils')
 
 import reduceSettings, * as SettingsActions from '../../ducks/settings'

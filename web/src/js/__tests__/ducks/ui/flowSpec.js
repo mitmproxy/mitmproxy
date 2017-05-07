@@ -1,7 +1,3 @@
-jest.unmock('../../../ducks/ui/flow')
-jest.unmock('../../../ducks/flows')
-jest.unmock('lodash')
-
 import _ from 'lodash'
 import reducer, {
                     startEdit,

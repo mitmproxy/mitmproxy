@@ -1,5 +1,3 @@
-jest.unmock('../../../ducks/utils/store')
-
 import reduceStore, * as storeActions from '../../../ducks/utils/store'
 
 describe('store reducer', () => {

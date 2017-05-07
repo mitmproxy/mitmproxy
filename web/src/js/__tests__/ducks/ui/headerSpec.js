@@ -1,6 +1,3 @@
-jest.unmock('../../../ducks/ui/header')
-jest.unmock('../../../ducks/flows')
-
 import reducer, { setActiveMenu } from '../../../ducks/ui/header'
 import * as flowActions from '../../../ducks/flows'
 

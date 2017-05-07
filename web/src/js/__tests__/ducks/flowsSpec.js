@@ -1,11 +1,10 @@
-jest.unmock('../../ducks/flows');
 jest.mock('../../utils')
 
 import reduceFlows from "../../ducks/flows"
 import * as flowActions from "../../ducks/flows"
 import reduceStore from "../../ducks/utils/store"
-import {fetchApi} from "../../utils"
-import {createStore} from "./tutils"
+import { fetchApi } from "../../utils"
+import { createStore } from "./tutils"
 
 describe('flow reducer', () => {
     let state = undefined
@@ -104,7 +103,7 @@ describe('flow reducer', () => {
 
 describe('flows actions', () => {
 
-    let store = createStore({reduceFlows})
+    let store = createStore({ reduceFlows })
 
     let tflow = { id: 1 }
     it('should handle resume action', () => {
