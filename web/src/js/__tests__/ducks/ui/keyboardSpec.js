@@ -23,65 +23,74 @@ describe('onKeyDown', () => {
             return onKeyDown({ keyCode, shiftKey, ctrlKey, preventDefault: jest.fn() })
     }
 
+    afterEach(() => {
+        store.clearActions()
+        fetchApi.mockClear()
+    });
+
     it('should handle cursor up', () => {
         store.getState().flows = reduceFlows(flows, flowsActions.select(2))
         store.dispatch(createKeyEvent(Key.K))
         expect(store.getActions()).toEqual([{ flowIds: [1], type: flowsActions.SELECT }])
 
+        store.clearActions()
         store.dispatch(createKeyEvent(Key.UP))
-        expect(store.getActions().pop()).toEqual({ flowIds: [1], type: flowsActions.SELECT })
+        expect(store.getActions()).toEqual([{ flowIds: [1], type: flowsActions.SELECT }])
     })
 
     it('should handle cursor down', () => {
         store.dispatch(createKeyEvent(Key.J))
-        expect(store.getActions().pop()).toEqual({ flowIds: [3], type: flowsActions.SELECT })
+        expect(store.getActions()).toEqual([{ flowIds: [3], type: flowsActions.SELECT }])
 
+        store.clearActions()
         store.dispatch(createKeyEvent(Key.DOWN))
-        expect(store.getActions().pop()).toEqual({ flowIds: [3], type: flowsActions.SELECT })
+        expect(store.getActions()).toEqual([{ flowIds: [3], type: flowsActions.SELECT }])
     })
 
     it('should handle page down', () => {
         store.dispatch(createKeyEvent(Key.SPACE))
-        expect(store.getActions().pop()).toEqual({ flowIds: [12], type: flowsActions.SELECT })
+        expect(store.getActions()).toEqual([{ flowIds: [12], type: flowsActions.SELECT }])
 
         store.getState().flows = reduceFlows(flows, flowsActions.select(1))
+        store.clearActions()
         store.dispatch(createKeyEvent(Key.PAGE_DOWN))
-        expect(store.getActions().pop()).toEqual({ flowIds: [11], type: flowsActions.SELECT })
+        expect(store.getActions()).toEqual([{ flowIds: [11], type: flowsActions.SELECT }])
     })
 
     it('should handle page up', () => {
         store.getState().flows = reduceFlows(flows, flowsActions.select(11))
         store.dispatch(createKeyEvent(Key.PAGE_UP))
-        expect(store.getActions().pop()).toEqual({ flowIds: [1], type: flowsActions.SELECT })
+        expect(store.getActions()).toEqual([{ flowIds: [1], type: flowsActions.SELECT }])
     })
 
     it('should handle select first', () => {
         store.dispatch(createKeyEvent(Key.HOME))
-        expect(store.getActions().pop()).toEqual({ flowIds: [1], type: flowsActions.SELECT })
+        expect(store.getActions()).toEqual([{ flowIds: [1], type: flowsActions.SELECT }])
     })
 
     it('should handle select last', () => {
         store.getState().flows = reduceFlows(flows, flowsActions.select(1))
         store.dispatch(createKeyEvent(Key.END))
-        expect(store.getActions().pop()).toEqual({ flowIds: [12], type: flowsActions.SELECT })
+        expect(store.getActions()).toEqual([{ flowIds: [12], type: flowsActions.SELECT }])
     })
 
     it('should handle deselect', () => {
         store.dispatch(createKeyEvent(Key.ESC))
-        expect(store.getActions().pop()).toEqual({ flowIds: [], type: flowsActions.SELECT })
+        expect(store.getActions()).toEqual([{ flowIds: [], type: flowsActions.SELECT }])
     })
 
     it('should handle switch to left tab', () => {
         store.dispatch(createKeyEvent(Key.LEFT))
-        expect(store.getActions().pop()).toEqual({ tab: 'details', type: UIActions.SET_TAB })
+        expect(store.getActions()).toEqual([{ tab: 'details', type: UIActions.SET_TAB }])
     })
 
     it('should handle switch to right tab', () => {
         store.dispatch(createKeyEvent(Key.TAB))
-        expect(store.getActions().pop()).toEqual({ tab: 'response', type: UIActions.SET_TAB })
+        expect(store.getActions()).toEqual([{ tab: 'response', type: UIActions.SET_TAB }])
 
+        store.clearActions()
         store.dispatch(createKeyEvent(Key.RIGHT))
-        expect(store.getActions().pop()).toEqual({ tab: 'response', type: UIActions.SET_TAB })
+        expect(store.getActions()).toEqual([{ tab: 'response', type: UIActions.SET_TAB }])
     })
 
     it('should handle delete action', () => {
@@ -131,7 +140,6 @@ describe('onKeyDown', () => {
     })
 
     it('should stop on some action with no flow is selected', () => {
-        fetchApi.mockClear()
         store.getState().flows = reduceFlows(undefined, {})
         store.dispatch(createKeyEvent(Key.LEFT))
         store.dispatch(createKeyEvent(Key.TAB))
