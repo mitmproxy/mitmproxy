@@ -112,7 +112,7 @@ setup(
         'contentviews': [
         ],
         'examples': [
-            "beautifulsoup4>=4.6,<4.7",
+            "beautifulsoup4>=4.4.1, <4.7",
             "Pillow>=3.2, <4.2",
         ]
     }
