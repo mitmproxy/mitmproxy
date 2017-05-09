@@ -2,7 +2,7 @@
   "name": "mitmproxy",
   "private": true,
   "scripts": {
-    "test": "jest",
+    "test": "jest --coverage",
     "build": "gulp prod",
     "start": "gulp"
   },
@@ -15,7 +15,6 @@
       "react"
     ],
     "coverageDirectory": "./coverage",
-    "collectCoverage": true,
     "coveragePathIgnorePatterns": [
       "<rootDir>/src/js/filt/filt.js"
     ],
