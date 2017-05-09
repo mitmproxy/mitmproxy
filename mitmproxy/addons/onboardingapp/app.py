@@ -44,6 +44,19 @@ class PEM(tornado.web.RequestHandler):
     def filename(self):
         return config.CONF_BASENAME + "-ca-cert.pem"
 
+    def head(self):
+        p = os.path.join(self.request.master.options.cadir, self.filename)
+        p = os.path.expanduser(p)
+        with open(p, "rb") as f:
+            content_length = len(f.read())
+
+        self.set_header("Content-Type", "application/x-x509-ca-cert")
+        self.set_header(
+            "Content-Disposition",
+            "inline; filename={}".format(
+                self.filename))
+        self.set_header("Content-Length", content_length)
+
     def get(self):
         p = os.path.join(self.request.master.options.cadir, self.filename)
         p = os.path.expanduser(p)
@@ -62,6 +75,20 @@ class P12(tornado.web.RequestHandler):
     @property
     def filename(self):
         return config.CONF_BASENAME + "-ca-cert.p12"
+
+    def head(self):
+        p = os.path.join(self.request.master.options.cadir, self.filename)
+        p = os.path.expanduser(p)
+        with open(p, "rb") as f:
+            content_length = len(f.read())
+
+        self.set_header("Content-Type", "application/x-pkcs12")
+        self.set_header(
+            "Content-Disposition",
+            "inline; filename={}".format(
+                self.filename))
+
+        self.set_header("Content-Length", content_length)
 
     def get(self):
         p = os.path.join(self.request.master.options.cadir, self.filename)
