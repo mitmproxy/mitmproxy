@@ -1,3 +1,5 @@
+import pytest
+
 from mitmproxy.addons import onboarding
 from mitmproxy.test import taddons
 from mitmproxy import options
@@ -13,20 +15,21 @@ class TestApp(tservers.HTTPProxyTest):
             tctx.configure(self.addons()[0])
             assert self.app("/").status_code == 200
 
-    def test_cert(self):
+    @pytest.mark.parametrize("ext", ["pem", "p12"])
+    def test_cert(self, ext):
         with taddons.context() as tctx:
             tctx.configure(self.addons()[0])
-            for ext in ["pem", "p12"]:
-                resp = self.app("/cert/%s" % ext)
-                assert resp.status_code == 200
-                assert resp.content
+            resp = self.app("/cert/%s" % ext)
+            assert resp.status_code == 200
+            assert resp.content
 
-    def test_head(self):
+    @pytest.mark.parametrize("ext", ["pem", "p12"])
+    def test_head(self, ext):
         with taddons.context() as tctx:
             tctx.configure(self.addons()[0])
             p = self.pathoc()
-            for ext in ["pem", "p12"]:
-                with p.connect():
-                    resp = p.request("head:'http://%s/cert/%s'" % (options.APP_HOST, ext))
-                    assert resp.status_code == 200
-                    assert not resp.content
+            with p.connect():
+                resp = p.request("head:'http://%s/cert/%s'" % (options.APP_HOST, ext))
+                assert resp.status_code == 200
+                assert "Content-Length" in resp.headers
+                assert not resp.content
