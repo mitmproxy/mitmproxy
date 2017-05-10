@@ -71,7 +71,7 @@ setup(
         "hyperframe>=5.0, <6",
         "jsbeautifier>=1.6.3, <1.7",
         "kaitaistruct>=0.7, <0.8",
-        "ldap3>=2.2.0, <=2.2.3",
+        "ldap3>=2.2,<2.3",
         "passlib>=1.6.5, <1.8",
         "pyasn1>=0.1.9, <0.3",
         "pyOpenSSL>=16.0, <17.1",
@@ -96,7 +96,7 @@ setup(
         'dev': [
             "Flask>=0.10.1, <0.13",
             "flake8>=3.2.1, <3.4",
-            "mypy>=0.501, <0.502",
+            "mypy>=0.511,<0.512",
             "rstcheck>=2.2, <4.0",
             "tox>=2.3, <3",
             "pytest>=3, <3.1",
@@ -112,7 +112,7 @@ setup(
         'contentviews': [
         ],
         'examples': [
-            "beautifulsoup4>=4.4.1, <4.6",
+            "beautifulsoup4>=4.6,<4.7",
             "Pillow>=3.2, <4.2",
         ]
     }
