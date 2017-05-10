@@ -1,6 +1,3 @@
-jest.unmock('redux')
-jest.unmock('redux-thunk')
-
 import { combineReducers, applyMiddleware, createStore as createReduxStore } from 'redux'
 import thunk from 'redux-thunk'
 

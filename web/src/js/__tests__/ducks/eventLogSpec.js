@@ -1,5 +1,3 @@
-jest.unmock('../../ducks/eventLog')
-
 import reduceEventLog, * as eventLogActions from '../../ducks/eventLog'
 import reduceStore from '../../ducks/utils/store'
 
