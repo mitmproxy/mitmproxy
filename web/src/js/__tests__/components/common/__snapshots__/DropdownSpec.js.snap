@@ -1,0 +1,162 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Dropdown Component should handle open/close action 1`] = `
+<div
+  className="dropup"
+>
+  <a
+    className="foo"
+    href="#"
+    onClick={[Function]}
+  />
+  <ul
+    className="dropdown-menu"
+    role="menu"
+  >
+    <li>
+       
+      <a
+        href="#"
+      >
+        1
+      </a>
+       
+    </li>
+    <li>
+       
+      <hr
+        className="divider"
+      />
+       
+    </li>
+    <li>
+       
+      <a
+        href="#"
+      >
+        2
+      </a>
+       
+    </li>
+  </ul>
+</div>
+`;
+
+exports[`Dropdown Component should handle open/close action 2`] = `
+<div
+  className="dropup"
+>
+  <a
+    className="foo"
+    href="#"
+    onClick={[Function]}
+  />
+  <ul
+    className="dropdown-menu"
+    role="menu"
+  >
+    <li>
+       
+      <a
+        href="#"
+      >
+        1
+      </a>
+       
+    </li>
+    <li>
+       
+      <hr
+        className="divider"
+      />
+       
+    </li>
+    <li>
+       
+      <a
+        href="#"
+      >
+        2
+      </a>
+       
+    </li>
+  </ul>
+</div>
+`;
+
+exports[`Dropdown Component should render correctly 1`] = `
+<div
+  className="dropup"
+>
+  <a
+    className="foo"
+    href="#"
+    onClick={[Function]}
+  />
+  <ul
+    className="dropdown-menu"
+    role="menu"
+  >
+    <li>
+       
+      <a
+        href="#"
+      >
+        1
+      </a>
+       
+    </li>
+    <li>
+       
+      <hr
+        className="divider"
+      />
+       
+    </li>
+    <li>
+       
+      <a
+        href="#"
+      >
+        2
+      </a>
+       
+    </li>
+  </ul>
+</div>
+`;
+
+exports[`Dropdown Component should render correctly 2`] = `
+<div
+  className="dropdown"
+>
+  <a
+    className="foo"
+    href="#"
+    onClick={[Function]}
+  />
+  <ul
+    className="dropdown-menu"
+    role="menu"
+  >
+    <li>
+       
+      <a
+        href="#"
+      >
+        1
+      </a>
+       
+    </li>
+    <li>
+       
+      <a
+        href="#"
+      >
+        2
+      </a>
+       
+    </li>
+  </ul>
+</div>
+`;
