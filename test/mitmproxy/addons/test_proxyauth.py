@@ -2,7 +2,7 @@ import binascii
 
 import pytest
 
-import mock
+from unittest import mock
 from mitmproxy import exceptions
 from mitmproxy.addons import proxyauth
 from mitmproxy.test import taddons
