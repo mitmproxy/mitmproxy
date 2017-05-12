@@ -75,6 +75,8 @@ def convert_018_019(data):
     data["client_conn"]["cipher_name"] = None
     data["client_conn"]["tls_version"] = None
     data["server_conn"]["alpn_proto_negotiated"] = None
+    if data["server_conn"]["via"]:
+        data["server_conn"]["via"]["alpn_proto_negotiated"] = None
     data["mode"] = "regular"
     data["metadata"] = dict()
     data["version"] = (0, 19)
@@ -96,6 +98,13 @@ def convert_100_200(data):
     data["server_conn"]["source_address"] = data["server_conn"]["source_address"]["address"]
     if data["server_conn"]["ip_address"]:
         data["server_conn"]["ip_address"] = data["server_conn"]["ip_address"]["address"]
+
+    if data["server_conn"]["via"]:
+        data["server_conn"]["via"]["address"] = data["server_conn"]["via"]["address"]["address"]
+        data["server_conn"]["via"]["source_address"] = data["server_conn"]["via"]["source_address"]["address"]
+        if data["server_conn"]["via"]["ip_address"]:
+            data["server_conn"]["via"]["ip_address"] = data["server_conn"]["via"]["ip_address"]["address"]
+
     return data
 
 
@@ -129,6 +138,14 @@ def convert_4_5(data):
     )
     data["client_conn"]["id"] = client_connections.setdefault(client_conn_key, str(uuid.uuid4()))
     data["server_conn"]["id"] = server_connections.setdefault(server_conn_key, str(uuid.uuid4()))
+
+    if data["server_conn"]["via"]:
+        server_conn_key = (
+            data["server_conn"]["via"]["timestamp_start"],
+            *data["server_conn"]["via"]["source_address"]
+        )
+        data["server_conn"]["via"]["id"] = server_connections.setdefault(server_conn_key, str(uuid.uuid4()))
+
     return data
 
 
@@ -142,7 +159,7 @@ def _convert_dict_keys(o: Any) -> Any:
 def _convert_dict_vals(o: dict, values_to_convert: dict) -> dict:
     for k, v in values_to_convert.items():
         if not o or k not in o:
-            continue
+            continue  # pragma: no cover
         if v is True:
             o[k] = strutils.always_str(o[k])
         else:

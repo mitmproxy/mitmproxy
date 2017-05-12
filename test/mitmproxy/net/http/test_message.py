@@ -48,6 +48,12 @@ class TestMessageData:
 
         assert data != 0
 
+    def test_serializable(self):
+        data1 = tutils.tresp(timestamp_start=42, timestamp_end=42).data
+        data2 = tutils.tresp().data.from_state(data1.get_state())  # ResponseData.from_state()
+
+        assert data1 == data2
+
 
 class TestMessage:
 

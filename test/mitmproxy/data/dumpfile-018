@@ -1,4 +1,4 @@
-5243:5:error;0:~11:intercepted;5:false!6:marked;5:false!2:id;36:55367415-10f5-4938-b69f-8a523394f947;7:request;396:10:stickyauth;5:false!7:content;0:,15:timestamp_start;18:1482157523.9086578^9:is_replay;5:false!4:path;1:/,4:host;15:www.example.com,17:first_line_format;8:relative;12:stickycookie;5:false!12:http_version;8:HTTP/1.1,6:method;3:GET,4:port;3:443#13:timestamp_end;18:1482157523.9086578^6:scheme;5:https,7:headers;82:29:10:User-Agent,11:curl/7.35.0,]26:4:Host,15:www.example.com,]15:6:Accept,3:*/*,]]}8:response;1851:6:reason;2:OK,12:http_version;8:HTTP/1.1,13:timestamp_end;17:1482157524.361187^11:status_code;3:200#7:content;1270:<!doctype html>
+7816:4:type;4:http;2:id;36:55367415-10f5-4938-b69f-8a523394f947;8:response;1851:15:timestamp_start;17:1482157524.361187^12:http_version;8:HTTP/1.1,7:content;1270:<!doctype html>
 <html>
 <head>
     <title>Example Domain</title>
@@ -48,7 +48,7 @@
 </div>
 </body>
 </html>
-,7:headers;410:25:13:Accept-Ranges,5:bytes,]35:13:Cache-Control,14:max-age=604800,]28:12:Content-Type,9:text/html,]40:4:Date,29:Mon, 19 Dec 2016 14:25:24 GMT,]22:4:Etag,11:"359670651",]43:7:Expires,29:Mon, 26 Dec 2016 14:25:24 GMT,]50:13:Last-Modified,29:Fri, 09 Aug 2013 23:54:35 GMT,]27:6:Server,14:ECS (iad/18CB),]26:4:Vary,15:Accept-Encoding,]16:7:X-Cache,3:HIT,]25:17:x-ec-custom-error,1:1,]25:14:Content-Length,4:1270,]]15:timestamp_start;17:1482157524.361187^}4:type;4:http;11:server_conn;2570:15:ssl_established;4:true!7:address;58:7:address;25:15:www.example.com;3:443#]8:use_ipv6;5:false!}10:ip_address;56:7:address;23:13:93.184.216.34;3:443#]8:use_ipv6;5:false!}3:via;0:~14:source_address;57:7:address;24:12:10.67.53.133;5:52775#]8:use_ipv6;5:false!}13:timestamp_end;0:~4:cert;2122:-----BEGIN CERTIFICATE-----
+,13:timestamp_end;17:1482157524.361187^11:status_code;3:200#6:reason;2:OK,7:headers;410:25:13:Accept-Ranges,5:bytes,]35:13:Cache-Control,14:max-age=604800,]28:12:Content-Type,9:text/html,]40:4:Date,29:Mon, 19 Dec 2016 14:25:24 GMT,]22:4:Etag,11:"359670651",]43:7:Expires,29:Mon, 26 Dec 2016 14:25:24 GMT,]50:13:Last-Modified,29:Fri, 09 Aug 2013 23:54:35 GMT,]27:6:Server,14:ECS (iad/18CB),]26:4:Vary,15:Accept-Encoding,]16:7:X-Cache,3:HIT,]25:17:x-ec-custom-error,1:1,]25:14:Content-Length,4:1270,]]}7:request;396:9:is_replay;5:false!17:first_line_format;8:relative;4:port;3:443#7:content;0:,12:stickycookie;5:false!6:method;3:GET,7:headers;82:29:10:User-Agent,11:curl/7.35.0,]26:4:Host,15:www.example.com,]15:6:Accept,3:*/*,]]15:timestamp_start;18:1482157523.9086578^12:http_version;8:HTTP/1.1,13:timestamp_end;18:1482157523.9086578^4:path;1:/,10:stickyauth;5:false!4:host;15:www.example.com,6:scheme;5:https,}7:version;13:1:0#2:18#1:2#]5:error;0:~11:intercepted;5:false!11:server_conn;5143:10:ip_address;56:8:use_ipv6;5:false!7:address;23:13:93.184.216.34;3:443#]}15:timestamp_start;18:1482157523.9086578^19:timestamp_tcp_setup;18:1482157524.0081189^15:ssl_established;4:true!14:source_address;57:8:use_ipv6;5:false!7:address;24:12:10.67.53.133;5:52775#]}19:timestamp_ssl_setup;17:1482157524.260993^4:cert;2122:-----BEGIN CERTIFICATE-----
 MIIF8jCCBNqgAwIBAgIQDmTF+8I2reFLFyrrQceMsDANBgkqhkiG9w0BAQsFADBw
 MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
 d3cuZGlnaWNlcnQuY29tMS8wLQYDVQQDEyZEaWdpQ2VydCBTSEEyIEhpZ2ggQXNz
@@ -82,4 +82,38 @@ ieqRbcuFjmqfyPmUv1U9QoI4TQikpw7TZU0zYZANP4C/gj4Ry48/znmUaRvy2kvI
 l7gRQ21qJTK5suoiYoYNo3J9T+pXPGU7Lydz/HwW+w0DpArtAaukI8aNX4ohFUKS
 wDSiIIWIWJiJGbEeIO0TIFwEVWTOnbNl/faPXpk5IRXicapqiII=
 -----END CERTIFICATE-----
-,15:timestamp_start;18:1482157523.9086578^3:sni;15:www.example.com;19:timestamp_ssl_setup;17:1482157524.260993^19:timestamp_tcp_setup;18:1482157524.0081189^}11:client_conn;216:15:ssl_established;4:true!7:address;53:7:address;20:9:127.0.0.1;5:52774#]8:use_ipv6;5:false!}10:clientcert;0:~13:timestamp_end;0:~15:timestamp_start;18:1482157522.8949482^19:timestamp_ssl_setup;18:1482157523.9086578^}7:version;13:1:0#2:18#1:2#]}
+,13:timestamp_end;0:~3:via;2570:15:ssl_established;4:true!19:timestamp_tcp_setup;18:1482157524.0081189^19:timestamp_ssl_setup;17:1482157524.260993^3:via;0:~3:sni;15:www.example.com;10:ip_address;56:8:use_ipv6;5:false!7:address;23:13:93.184.216.34;3:443#]}15:timestamp_start;18:1482157523.9086578^14:source_address;57:8:use_ipv6;5:false!7:address;24:12:10.67.53.133;5:52775#]}4:cert;2122:-----BEGIN CERTIFICATE-----
+MIIF8jCCBNqgAwIBAgIQDmTF+8I2reFLFyrrQceMsDANBgkqhkiG9w0BAQsFADBw
+MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
+d3cuZGlnaWNlcnQuY29tMS8wLQYDVQQDEyZEaWdpQ2VydCBTSEEyIEhpZ2ggQXNz
+dXJhbmNlIFNlcnZlciBDQTAeFw0xNTExMDMwMDAwMDBaFw0xODExMjgxMjAwMDBa
+MIGlMQswCQYDVQQGEwJVUzETMBEGA1UECBMKQ2FsaWZvcm5pYTEUMBIGA1UEBxML
+TG9zIEFuZ2VsZXMxPDA6BgNVBAoTM0ludGVybmV0IENvcnBvcmF0aW9uIGZvciBB
+c3NpZ25lZCBOYW1lcyBhbmQgTnVtYmVyczETMBEGA1UECxMKVGVjaG5vbG9neTEY
+MBYGA1UEAxMPd3d3LmV4YW1wbGUub3JnMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+MIIBCgKCAQEAs0CWL2FjPiXBl61lRfvvE0KzLJmG9LWAC3bcBjgsH6NiVVo2dt6u
+Xfzi5bTm7F3K7srfUBYkLO78mraM9qizrHoIeyofrV/n+pZZJauQsPjCPxMEJnRo
+D8Z4KpWKX0LyDu1SputoI4nlQ/htEhtiQnuoBfNZxF7WxcxGwEsZuS1KcXIkHl5V
+RJOreKFHTaXcB1qcZ/QRaBIv0yhxvK1yBTwWddT4cli6GfHcCe3xGMaSL328Fgs3
+jYrvG29PueB6VJi/tbbPu6qTfwp/H1brqdjh29U52Bhb0fJkM9DWxCP/Cattcc7a
+z8EXnCO+LK8vkhw/kAiJWPKx4RBvgy73nwIDAQABo4ICUDCCAkwwHwYDVR0jBBgw
+FoAUUWj/kK8CB3U8zNllZGKiErhZcjswHQYDVR0OBBYEFKZPYB4fLdHn8SOgKpUW
+5Oia6m5IMIGBBgNVHREEejB4gg93d3cuZXhhbXBsZS5vcmeCC2V4YW1wbGUuY29t
+ggtleGFtcGxlLmVkdYILZXhhbXBsZS5uZXSCC2V4YW1wbGUub3Jngg93d3cuZXhh
+bXBsZS5jb22CD3d3dy5leGFtcGxlLmVkdYIPd3d3LmV4YW1wbGUubmV0MA4GA1Ud
+DwEB/wQEAwIFoDAdBgNVHSUEFjAUBggrBgEFBQcDAQYIKwYBBQUHAwIwdQYDVR0f
+BG4wbDA0oDKgMIYuaHR0cDovL2NybDMuZGlnaWNlcnQuY29tL3NoYTItaGEtc2Vy
+dmVyLWc0LmNybDA0oDKgMIYuaHR0cDovL2NybDQuZGlnaWNlcnQuY29tL3NoYTIt
+aGEtc2VydmVyLWc0LmNybDBMBgNVHSAERTBDMDcGCWCGSAGG/WwBATAqMCgGCCsG
+AQUFBwIBFhxodHRwczovL3d3dy5kaWdpY2VydC5jb20vQ1BTMAgGBmeBDAECAjCB
+gwYIKwYBBQUHAQEEdzB1MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5kaWdpY2Vy
+dC5jb20wTQYIKwYBBQUHMAKGQWh0dHA6Ly9jYWNlcnRzLmRpZ2ljZXJ0LmNvbS9E
+aWdpQ2VydFNIQTJIaWdoQXNzdXJhbmNlU2VydmVyQ0EuY3J0MAwGA1UdEwEB/wQC
+MAAwDQYJKoZIhvcNAQELBQADggEBAISomhGn2L0LJn5SJHuyVZ3qMIlRCIdvqe0Q
+6ls+C8ctRwRO3UU3x8q8OH+2ahxlQmpzdC5al4XQzJLiLjiJ2Q1p+hub8MFiMmVP
+PZjb2tZm2ipWVuMRM+zgpRVM6nVJ9F3vFfUSHOb4/JsEIUvPY+d8/Krc+kPQwLvy
+ieqRbcuFjmqfyPmUv1U9QoI4TQikpw7TZU0zYZANP4C/gj4Ry48/znmUaRvy2kvI
+l7gRQ21qJTK5suoiYoYNo3J9T+pXPGU7Lydz/HwW+w0DpArtAaukI8aNX4ohFUKS
+wDSiIIWIWJiJGbEeIO0TIFwEVWTOnbNl/faPXpk5IRXicapqiII=
+-----END CERTIFICATE-----
+,13:timestamp_end;0:~7:address;58:8:use_ipv6;5:false!7:address;25:15:www.example.com;3:443#]}}7:address;58:8:use_ipv6;5:false!7:address;25:15:www.example.com;3:443#]}3:sni;15:www.example.com;}11:client_conn;216:15:timestamp_start;18:1482157522.8949482^15:ssl_established;4:true!13:timestamp_end;0:~10:clientcert;0:~7:address;53:8:use_ipv6;5:false!7:address;20:9:127.0.0.1;5:52774#]}19:timestamp_ssl_setup;18:1482157523.9086578^}6:marked;5:false!}
