@@ -206,10 +206,11 @@ class Options(optmanager.OptManager):
             authenticaiton but accept any credentials, start with "@" to specify
             a path to an Apache htpasswd file, be of the form
             "username:password", or be of the form
-            "ldap[s]:url_server_ldap:dn:group", the dn must include "?", which will be
-            the username prompted, and the group is the group the user must belong to
+            "ldap[s]:url_server_ldap:dn_auth:password:dn_subtree",
+            the dn_auth & password is the dn/pass used to authenticate
+            the dn subtree is the subtree that we will search to find the username
             an example would be
-            "ldap:ldap.forumsys.com:uid=?,dc=example,dc=com:person".
+            "ldap:localhost:cn=default,dc=example,dc=com:password:ou=application,dc=example,dc=com".
             """
         )
         self.add_option(

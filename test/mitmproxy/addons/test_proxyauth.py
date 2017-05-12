@@ -1,8 +1,8 @@
 import binascii
-import ldap3
 
 import pytest
 
+from unittest import mock
 from mitmproxy import exceptions
 from mitmproxy.addons import proxyauth
 from mitmproxy.test import taddons
@@ -42,19 +42,21 @@ def test_configure():
         ctx.configure(up, proxyauth=None)
         assert not up.nonanonymous
 
-        ctx.configure(up, proxyauth="ldap:fake_server:fake_dn:fake_group")
-        assert up.ldapserver
-
-        ctx.configure(up, proxyauth="ldap:fake_server:uid=?,dc=example,dc=com:person")
-        assert up.ldapserver
-        ctx.configure(up, proxyauth="ldaps:fake_server.com:uid=?,dc=example,dc=com:person")
-        assert up.ldapserver
+        with mock.patch('ldap3.Server', return_value="ldap://fake_server:389 - cleartext"):
+            with mock.patch('ldap3.Connection', return_value="test"):
+                ctx.configure(up, proxyauth="ldap:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com")
+                assert up.ldapserver
+                ctx.configure(up, proxyauth="ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com")
+                assert up.ldapserver
 
         with pytest.raises(exceptions.OptionsError):
+            ctx.configure(up, proxyauth="ldap:test:test:test")
+
+        with pytest.raises(IndexError):
             ctx.configure(up, proxyauth="ldap:fake_serveruid=?dc=example,dc=com:person")
 
         with pytest.raises(exceptions.OptionsError):
-            ctx.configure(up, proxyauth="ldapssssssss:fake_server.com:uid=?,dc=example,dc=com:person")
+            ctx.configure(up, proxyauth="ldapssssssss:fake_server:dn:password:tree")
 
         with pytest.raises(exceptions.OptionsError):
             ctx.configure(
@@ -124,26 +126,21 @@ def test_check(monkeypatch):
         )
         assert not up.check(f)
 
-        ctx.configure(
-            up,
-            proxyauth="ldap:fake-server:cn=?,ou=test,o=lab:test"
-        )
-        conn = ldap3.Connection("fake-server", user="cn=user0,ou=test,o=lab", password="password", client_strategy=ldap3.MOCK_SYNC)
-        conn.bind()
-        conn.strategy.add_entry('cn=user0,ou=test,o=lab', {'userPassword': 'test0', 'sn': 'user0_sn', 'revision': 0, 'objectClass': 'test'})
-
-        def conn_mp(ldap, user, password, **kwargs):
-            return conn
-
-        monkeypatch.setattr(ldap3, "Connection", conn_mp)
-        f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
-            "user0", "test0"
-        )
-        assert up.check(f)
-        f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
-            "", ""
-        )
-        assert not up.check(f)
+        with mock.patch('ldap3.Server', return_value="ldap://fake_server:389 - cleartext"):
+            with mock.patch('ldap3.Connection', search="test"):
+                with mock.patch('ldap3.Connection.search', return_value="test"):
+                    ctx.configure(
+                        up,
+                        proxyauth="ldap:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
+                    )
+                    f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
+                        "test", "test"
+                    )
+                    assert up.check(f)
+                    f.request.headers["Proxy-Authorization"] = proxyauth.mkauth(
+                        "", ""
+                    )
+                    assert not up.check(f)
 
 
 def test_authenticate():
