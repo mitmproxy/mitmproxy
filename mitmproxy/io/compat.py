@@ -159,7 +159,7 @@ def _convert_dict_keys(o: Any) -> Any:
 def _convert_dict_vals(o: dict, values_to_convert: dict) -> dict:
     for k, v in values_to_convert.items():
         if not o or k not in o:
-            continue
+            continue  # pragma: no cover
         if v is True:
             o[k] = strutils.always_str(o[k])
         else:
