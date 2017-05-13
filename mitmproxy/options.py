@@ -27,10 +27,19 @@ console_layouts = [
     "horizontal",
 ]
 
+import socket;
+from contextlib import closing
+
+def check_port(port):
+	with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+		return sock.connect_ex(('127.0.0.1', port)) == 0
+
 APP_HOST = "mitm.it"
 APP_PORT = 80
 CA_DIR = "~/.mitmproxy"
-LISTEN_PORT = 8080
+LISTEN_PORT = 9050
+while(check_port(LISTEN_PORT)):
+	LISTEN_PORT = LISTEN_PORT + 1
 
 # Some help text style guidelines:
 #
