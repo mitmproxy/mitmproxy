@@ -21,7 +21,7 @@ export default function FileChooser({ icon, text, className, title, onOpenFile }
                 ref={ref => fileInput = ref}
                 className="hidden"
                 type="file"
-                onChange={e => { e.preventDefault(); if(e.target.files.length > 0) onOpenFile(e.target.files[0]); fileInput = "";}}
+                onChange={e => { e.preventDefault(); if(e.target.files.length > 0) onOpenFile(e.target.files[0]); fileInput.value="";}}
             />
         </a>
     )
