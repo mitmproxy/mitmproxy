@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ValidateEditor Component should be render correctly 1`] = `
+<div
+  className="inline-input editable has-success"
+  contentEditable={undefined}
+  dangerouslySetInnerHTML={
+    Object {
+      "__html": "foo",
+    }
+  }
+  onBlur={[Function]}
+  onClick={[Function]}
+  onFocus={[Function]}
+  onInput={[Function]}
+  onKeyDown={[Function]}
+  onMouseDown={[Function]}
+  onPaste={[Function]}
+  tabIndex={0}
+/>
+`;
