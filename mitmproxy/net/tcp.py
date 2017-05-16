@@ -847,6 +847,7 @@ class TCPServer:
     def __init__(self, address):
         self.address = address
         self.__is_shut_down = threading.Event()
+        self.__is_shut_down.set()
         self.__shutdown_request = False
 
         if self.address == 'localhost':
