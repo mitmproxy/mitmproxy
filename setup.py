@@ -104,7 +104,7 @@ setup(
             "pytest-timeout>=1.0.0, <2",
             "pytest-xdist>=1.14, <2",
             "pytest-faulthandler>=1.3.0, <2",
-            "sphinx>=1.3.5, <1.6",
+            "sphinx>=1.3.5, <1.7",
             "sphinx-autobuild>=0.5.2, <0.7",
             "sphinxcontrib-documentedlist>=0.5.0, <0.7",
             "sphinx_rtd_theme>=0.1.9, <0.3",
