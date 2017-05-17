@@ -520,7 +520,7 @@ class _Connection:
                 def alpn_select_callback(conn_, options):
                     if alpn_select in options:
                         return bytes(alpn_select)
-                    else:  # pragma no cover
+                    else:  # pragma: no cover
                         return options[0]
                 context.set_alpn_select_callback(alpn_select_callback)
             elif alpn_select_callback is not None and alpn_select is None:
