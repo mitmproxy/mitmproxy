@@ -529,10 +529,10 @@ class TestTimeOut(tservers.ServerTestBase):
 class TestCryptographyALPN:
 
     def test_has_alpn(self):
-        if 'OPENSSL_ALPN' in os.environ:
+        if os.environ.get("OPENSSL") == "with-alpn":
             assert tcp.HAS_ALPN
             assert SSL._lib.Cryptography_HAS_ALPN
-        elif 'OPENSSL_OLD' in os.environ:
+        elif os.environ.get("OPENSSL") == "old":
             assert not tcp.HAS_ALPN
             assert not SSL._lib.Cryptography_HAS_ALPN
 

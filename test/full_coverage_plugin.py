@@ -63,7 +63,7 @@ def pytest_runtestloop(session):
     if sys.platform == 'darwin':
         cov.exclude('pragma: osx no cover')
 
-    if 'OPENSSL_OLD' in os.environ:
+    if os.environ.get("OPENSSL") == "old":
         cov.exclude('pragma: openssl-old no cover')
 
     yield
