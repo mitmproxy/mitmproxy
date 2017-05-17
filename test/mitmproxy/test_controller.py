@@ -176,6 +176,8 @@ class TestDummyReply:
         reply = controller.DummyReply()
         reply.ack()
         reply.take()
+        with pytest.raises(ControlException):
+            reply.mark_reset()
         reply.commit()
         reply.mark_reset()
         assert reply.state == "committed"

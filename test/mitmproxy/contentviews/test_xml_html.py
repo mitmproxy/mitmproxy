@@ -11,6 +11,13 @@ def test_simple():
     v = full_eval(xml_html.ViewXmlHtml())
     assert v(b"foo") == ('XML', [[('text', 'foo')]])
     assert v(b"<html></html>") == ('HTML', [[('text', '<html></html>')]])
+    assert v(b"<>") == ('XML', [[('text', '<>')]])
+    assert v(b"<p") == ('XML', [[('text', '<p')]])
+
+    with open(data.path("simple.html")) as f:
+        input = f.read()
+    tokens = xml_html.tokenize(input)
+    assert str(next(tokens)) == "Tag(<!DOCTYPE html>)"
 
 
 @pytest.mark.parametrize("filename", [
@@ -18,6 +25,7 @@ def test_simple():
     "cdata.xml",
     "comment.xml",
     "inline.html",
+    "test.html"
 ])
 def test_format_xml(filename):
     path = data.path(filename)
