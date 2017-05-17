@@ -9,23 +9,28 @@ from mitmproxy.test import tutils
 
 class TestContentView(contentviews.View):
     name = "test"
-    prompt = ("t", "test")
+    prompt = ("test", "t")
     content_types = ["test/123"]
 
 
 def test_add_remove():
     tcv = TestContentView()
     contentviews.add(tcv)
+    assert tcv in contentviews.views
 
     # repeated addition causes exception
-    with pytest.raises(ContentViewException):
+    with pytest.raises(ContentViewException, match="Duplicate view"):
         contentviews.add(tcv)
 
+    tcv2 = TestContentView()
+    tcv2.name = "test2"
+    tcv2.prompt = ("test2", "t")
     # Same shortcut doesn't work either.
-    with pytest.raises(ContentViewException):
-        contentviews.add(TestContentView())
+    with pytest.raises(ContentViewException, match="Duplicate view shortcut"):
+        contentviews.add(tcv2)
 
     contentviews.remove(tcv)
+    assert tcv not in contentviews.views
 
 
 def test_get_content_view():
@@ -43,6 +48,7 @@ def test_get_content_view():
         headers=Headers(content_type="application/json")
     )
     assert desc == "JSON"
+    assert list(lines)
 
     desc, lines, err = contentviews.get_content_view(
         contentviews.get("JSON"),
@@ -84,3 +90,4 @@ def test_get_message_content_view():
 
 def test_get_by_shortcut():
     assert contentviews.get_by_shortcut("s")
+    assert not contentviews.get_by_shortcut("b")
