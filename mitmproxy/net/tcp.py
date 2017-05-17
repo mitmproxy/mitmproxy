@@ -524,9 +524,11 @@ class _Connection:
                         return options[0]
                 context.set_alpn_select_callback(alpn_select_callback)
             elif alpn_select_callback is not None and alpn_select is None:
+                if not callable(alpn_select_callback):
+                    raise exceptions.TlsException("ALPN error: alpn_select_callback must be a function.")
                 context.set_alpn_select_callback(alpn_select_callback)
             elif alpn_select_callback is not None and alpn_select is not None:
-                raise exceptions.TlsException("ALPN error: only define alpn_select (string) OR alpn_select_callback (method).")
+                raise exceptions.TlsException("ALPN error: only define alpn_select (string) OR alpn_select_callback (function).")
 
         return context
 
