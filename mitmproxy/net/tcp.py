@@ -511,7 +511,7 @@ class _Connection:
         if log_ssl_key:
             context.set_info_callback(log_ssl_key)
 
-        if HAS_ALPN:
+        if HAS_ALPN:  # pragma: openssl-old no cover
             if alpn_protos is not None:
                 # advertise application layer protocols
                 context.set_alpn_protos(alpn_protos)
@@ -671,11 +671,11 @@ class TCPClient(_Connection):
                 if self.spoof_source_address:
                     try:
                         if not sock.getsockopt(socket.SOL_IP, socket.IP_TRANSPARENT):
-                            sock.setsockopt(socket.SOL_IP, socket.IP_TRANSPARENT, 1)
+                            sock.setsockopt(socket.SOL_IP, socket.IP_TRANSPARENT, 1)  # pragma: windows no cover  pragma: osx no cover
                     except Exception as e:
                         # socket.IP_TRANSPARENT might not be available on every OS and Python version
                         raise exceptions.TcpException(
-                            "Failed to spoof the source address: " + e.strerror
+                            "Failed to spoof the source address: " + str(e)
                         )
                 sock.connect(sa)
                 return sock
@@ -688,7 +688,7 @@ class TCPClient(_Connection):
         if err is not None:
             raise err
         else:
-            raise socket.error("getaddrinfo returns an empty list")
+            raise socket.error("getaddrinfo returns an empty list")  # pragma: no cover
 
     def connect(self):
         try:
@@ -711,7 +711,7 @@ class TCPClient(_Connection):
         return self.connection.gettimeout()
 
     def get_alpn_proto_negotiated(self):
-        if HAS_ALPN and self.ssl_established:
+        if HAS_ALPN and self.ssl_established:  # pragma: openssl-old no cover
             return self.connection.get_alpn_proto_negotiated()
         else:
             return b""
@@ -818,7 +818,7 @@ class BaseHandler(_Connection):
         self.connection.settimeout(n)
 
     def get_alpn_proto_negotiated(self):
-        if HAS_ALPN and self.ssl_established:
+        if HAS_ALPN and self.ssl_established:  # pragma: openssl-old no cover
             return self.connection.get_alpn_proto_negotiated()
         else:
             return b""
@@ -852,7 +852,7 @@ class TCPServer:
         self.__is_shut_down.set()
         self.__shutdown_request = False
 
-        if self.address == 'localhost':
+        if self.address[0] == 'localhost':
             raise socket.error("Binding to 'localhost' is prohibited. Please use '::1' or '127.0.0.1' directly.")
 
         try:

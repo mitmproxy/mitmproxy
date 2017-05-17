@@ -18,13 +18,13 @@ matrix:
       language: generic
       env: TOXENV=py35 BDIST=1
     - python: 3.5
-      env: TOXENV=py35 OPENSSL_OLD
+      env: TOXENV=py35 OPENSSL_OLD=""
       addons:
         apt:
           packages:
             - libssl-dev
     - python: 3.5
-      env: TOXENV=py35 BDIST=1 OPENSSL_ALPN
+      env: TOXENV=py35 BDIST=1 OPENSSL_ALPN=""
       addons:
         apt:
           sources:
@@ -34,7 +34,7 @@ matrix:
           packages:
             - libssl-dev
     - python: 3.6
-      env: TOXENV=py36 OPENSSL_ALPN
+      env: TOXENV=py36 OPENSSL_ALPN=""
       addons:
         apt:
           sources:

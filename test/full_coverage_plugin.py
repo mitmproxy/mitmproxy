@@ -1,6 +1,7 @@
 import os
 import configparser
 import pytest
+import sys
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -58,6 +59,12 @@ def pytest_runtestloop(session):
 
     if os.name == 'nt':
         cov.exclude('pragma: windows no cover')
+
+    if sys.platform == 'darwin':
+        cov.exclude('pragma: osx no cover')
+
+    if 'OPENSSL_OLD' in os.environ:
+        cov.exclude('pragma: openssl-old no cover')
 
     yield
 
