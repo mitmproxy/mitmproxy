@@ -27,7 +27,7 @@ describe('ValueEditor Component', () => {
     it('should handle reset', () => {
         valueEditor.reset()
         expect(valueEditor.input.innerHTML).toEqual(
-            _.escape("<script>foo</script>")
+            "&lt;script&gt;foo&lt;/script&gt;"
         )
     })
 
