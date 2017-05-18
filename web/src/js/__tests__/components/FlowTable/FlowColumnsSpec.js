@@ -59,7 +59,6 @@ describe('FlowColumns Components', () => {
     })
 
     it('should render pathColumn', () => {
-        // error
         let pathColumn = renderer.create(<Columns.PathColumn flow={tFlow}/>),
             tree = pathColumn.toJSON()
         expect(tree).toMatchSnapshot()

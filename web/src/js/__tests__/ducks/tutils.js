@@ -10,9 +10,9 @@ export function createStore(parts) {
 
 export function TFlow(intercepted=false, marked=false, modified=false) {
     return {
-        intercepted : intercepted,
-        marked : marked,
-        modified: modified,
+        intercepted ,
+        marked,
+        modified,
         id: "foo",
         request: {
             scheme: 'http',

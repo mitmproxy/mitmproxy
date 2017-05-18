@@ -7,7 +7,7 @@ describe('ValidateEditor Component', () => {
     let validateFn = jest.fn( content => content.length == 3),
         doneFn = jest.fn()
 
-    it('should be render correctly', () => {
+    it('should render correctly', () => {
         let validateEditor = renderer.create(
             <ValidateEditor content="foo" onDone={doneFn} isValid={validateFn}/>
         ),
