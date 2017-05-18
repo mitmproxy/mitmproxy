@@ -1,0 +1,156 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FlowColumns Components should render IconColumn 1`] = `
+<td
+  className="col-icon"
+>
+  <div
+    className="resource-icon resource-icon-document"
+  />
+</td>
+`;
+
+exports[`FlowColumns Components should render IconColumn 2`] = `
+<td
+  className="col-icon"
+>
+  <div
+    className="resource-icon resource-icon-not-modified"
+  />
+</td>
+`;
+
+exports[`FlowColumns Components should render IconColumn 3`] = `
+<td
+  className="col-icon"
+>
+  <div
+    className="resource-icon resource-icon-redirect"
+  />
+</td>
+`;
+
+exports[`FlowColumns Components should render IconColumn 4`] = `
+<td
+  className="col-icon"
+>
+  <div
+    className="resource-icon resource-icon-image"
+  />
+</td>
+`;
+
+exports[`FlowColumns Components should render IconColumn 5`] = `
+<td
+  className="col-icon"
+>
+  <div
+    className="resource-icon resource-icon-js"
+  />
+</td>
+`;
+
+exports[`FlowColumns Components should render IconColumn 6`] = `
+<td
+  className="col-icon"
+>
+  <div
+    className="resource-icon resource-icon-css"
+  />
+</td>
+`;
+
+exports[`FlowColumns Components should render IconColumn 7`] = `
+<td
+  className="col-icon"
+>
+  <div
+    className="resource-icon resource-icon-plain"
+  />
+</td>
+`;
+
+exports[`FlowColumns Components should render IconColumn 8`] = `
+<td
+  className="col-icon"
+>
+  <div
+    className="resource-icon resource-icon-plain"
+  />
+</td>
+`;
+
+exports[`FlowColumns Components should render MethodColumn 1`] = `
+<td
+  className="col-method"
+>
+  GET
+</td>
+`;
+
+exports[`FlowColumns Components should render SizeColumn 1`] = `
+<td
+  className="col-size"
+>
+  100b
+</td>
+`;
+
+exports[`FlowColumns Components should render StatusColumn 1`] = `
+<td
+  className="col-status"
+/>
+`;
+
+exports[`FlowColumns Components should render TLSColumn 1`] = `
+<td
+  className="col-tls col-tls-http"
+/>
+`;
+
+exports[`FlowColumns Components should render TimeColumn 1`] = `
+<td
+  className="col-time"
+>
+  2min
+</td>
+`;
+
+exports[`FlowColumns Components should render TimeColumn 2`] = `
+<td
+  className="col-time"
+>
+  ...
+</td>
+`;
+
+exports[`FlowColumns Components should render pathColumn 1`] = `
+<td
+  className="col-path"
+>
+  <i
+    className="fa fa-fw fa-repeat pull-right"
+  />
+  <i
+    className="fa fa-fw fa-exclamation pull-right"
+  />
+  http://undefined:undefinedundefined
+</td>
+`;
+
+exports[`FlowColumns Components should render pathColumn 2`] = `
+<td
+  className="col-path"
+>
+  <i
+    className="fa fa-fw fa-repeat pull-right"
+  />
+  <i
+    className="fa fa-fw fa-pause pull-right"
+  />
+  <i
+    className="fa fa-fw fa-times pull-right"
+  />
+  http://undefined:undefinedundefined
+</td>
+`;
