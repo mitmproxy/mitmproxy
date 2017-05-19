@@ -2,6 +2,8 @@ import struct
 from typing import Optional  # noqa
 from typing import Union
 
+from OpenSSL import SSL
+
 import construct
 from mitmproxy import exceptions
 from mitmproxy.contrib import tls_parser
@@ -541,12 +543,13 @@ class TlsLayer(base.Layer):
                         ciphers_server.append(CIPHER_ID_NAME_MAP[id])
                 ciphers_server = ':'.join(ciphers_server)
 
+            verify_options = self.config.openssl_verification_mode_server if self.server_sni else SSL.VERIFY_NONE
             self.server_conn.establish_ssl(
                 self.config.client_certs,
                 self.server_sni,
                 method=self.config.openssl_method_server,
                 options=self.config.openssl_options_server,
-                verify_options=self.config.openssl_verification_mode_server,
+                verify_options=verify_options,
                 ca_path=self.config.options.ssl_verify_upstream_trusted_cadir,
                 ca_pemfile=self.config.options.ssl_verify_upstream_trusted_ca,
                 cipher_list=ciphers_server,
