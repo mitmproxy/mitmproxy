@@ -5,7 +5,7 @@ exports[`FlowColumns Components should render IconColumn 1`] = `
   className="col-icon"
 >
   <div
-    className="resource-icon resource-icon-document"
+    className="resource-icon resource-icon-plain"
   />
 </td>
 `;
@@ -92,7 +92,7 @@ exports[`FlowColumns Components should render SizeColumn 1`] = `
 <td
   className="col-size"
 >
-  100b
+  14b
 </td>
 `;
 
@@ -112,7 +112,7 @@ exports[`FlowColumns Components should render TimeColumn 1`] = `
 <td
   className="col-time"
 >
-  2min
+  415322h
 </td>
 `;
 
@@ -129,12 +129,9 @@ exports[`FlowColumns Components should render pathColumn 1`] = `
   className="col-path"
 >
   <i
-    className="fa fa-fw fa-repeat pull-right"
-  />
-  <i
     className="fa fa-fw fa-exclamation pull-right"
   />
-  http://undefined:undefinedundefined
+  http://address:22/path
 </td>
 `;
 
@@ -143,14 +140,11 @@ exports[`FlowColumns Components should render pathColumn 2`] = `
   className="col-path"
 >
   <i
-    className="fa fa-fw fa-repeat pull-right"
-  />
-  <i
     className="fa fa-fw fa-pause pull-right"
   />
   <i
     className="fa fa-fw fa-times pull-right"
   />
-  http://undefined:undefinedundefined
+  http://address:22/path
 </td>
 `;
