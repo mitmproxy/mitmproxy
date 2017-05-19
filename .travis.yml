@@ -1,10 +1,15 @@
 sudo: false
 language: python
 
+branches:
+  except:
+    - requires-io-master
+
 env:
   global:
     - CI_DEPS=codecov>=2.0.5
     - CI_COMMANDS=codecov
+
 git:
   depth: 10000
 
@@ -104,4 +109,3 @@ cache:
   directories:
     - $HOME/.pyenv
     - $HOME/.cache/pip
-    # - $HOME/build/mitmproxy/mitmproxy/.tox

@@ -1,6 +1,10 @@
 version: '{build}'
 build: off  # Not a C# project
 
+branches:
+  except:
+    - requires-io-master
+
 environment:
   CI_DEPS: codecov>=2.0.5
   CI_COMMANDS: codecov
