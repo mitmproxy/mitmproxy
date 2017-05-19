@@ -1,5 +1,6 @@
 import json as _json
 from unittest import mock
+import os
 
 import tornado.testing
 from tornado import httpclient
@@ -11,7 +12,6 @@ from mitmproxy import options
 from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
 from mitmproxy.tools.web import master as webmaster
-
 
 def json(resp: httpclient.HTTPResponse):
     return _json.loads(resp.body.decode())
@@ -275,3 +275,13 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         # trigger on_close by opening a second connection.
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
+
+    def test_generate_tflow_js(self):
+        tflow_json = _json.dumps(
+            app.flow_to_json(tflow.tflow(resp=True, err=True)), indent=4, sort_keys=True
+        )
+        web_root = os.path.join(os.getcwd(), 'web')
+        tflow_path = os.path.join(web_root, 'src/js/__tests__/ducks/_tflow.js')
+        content = """export default function(){{\n    return {tflow_json}\n}}""".format(tflow_json=tflow_json)
+        with open(tflow_path, 'w') as f:
+            f.write(content)
