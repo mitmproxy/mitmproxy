@@ -13,6 +13,7 @@ from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
 from mitmproxy.tools.web import master as webmaster
 
+
 def json(resp: httpclient.HTTPResponse):
     return _json.loads(resp.body.decode())
 
