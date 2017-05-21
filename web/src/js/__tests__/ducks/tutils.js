@@ -7,3 +7,5 @@ export function createStore(parts) {
         applyMiddleware(...[thunk])
     )
 }
+
+export { default as TFlow } from './_tflow'

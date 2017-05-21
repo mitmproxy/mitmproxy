@@ -1,11 +1,11 @@
 import React from 'react'
 import renderer from 'react-test-renderer'
 import * as Columns from '../../../components/FlowTable/FlowColumns'
-import _tflow from '../../ducks/_tflow'
+import { TFlow } from '../../ducks/tutils'
 
 describe('FlowColumns Components', () => {
 
-    let tflow = _tflow()
+    let tflow = TFlow()
     it('should render TLSColumn', () => {
         let tlsColumn = renderer.create(<Columns.TLSColumn flow={tflow}/>),
             tree = tlsColumn.toJSON()
@@ -28,25 +28,25 @@ describe('FlowColumns Components', () => {
         tree = iconColumn.toJSON()
         expect(tree).toMatchSnapshot()
         // image
-        let imageFlow = _tflow()
+        let imageFlow = TFlow()
         imageFlow.response.headers = [['Content-Type', 'image/jpeg']]
         iconColumn = renderer.create(<Columns.IconColumn flow={imageFlow}/>)
         tree = iconColumn.toJSON()
         expect(tree).toMatchSnapshot()
         // javascript
-        let jsFlow = _tflow()
+        let jsFlow = TFlow()
         jsFlow.response.headers = [['Content-Type', 'application/x-javascript']]
         iconColumn = renderer.create(<Columns.IconColumn flow={jsFlow}/>)
         tree = iconColumn.toJSON()
         expect(tree).toMatchSnapshot()
         // css
-        let cssFlow = _tflow()
+        let cssFlow = TFlow()
         cssFlow.response.headers = [['Content-Type', 'text/css']]
         iconColumn = renderer.create(<Columns.IconColumn flow={cssFlow}/>)
         tree = iconColumn.toJSON()
         expect(tree).toMatchSnapshot()
         // default
-        let fooFlow = _tflow()
+        let fooFlow = TFlow()
         fooFlow.response.headers = [['Content-Type', 'foo']]
         iconColumn = renderer.create(<Columns.IconColumn flow={fooFlow}/>)
         tree = iconColumn.toJSON()
@@ -83,7 +83,7 @@ describe('FlowColumns Components', () => {
     })
 
     it('should render SizeColumn', () => {
-        tflow = _tflow()
+        tflow = TFlow()
         let sizeColumn = renderer.create(<Columns.SizeColumn flow={tflow}/>),
             tree = sizeColumn.toJSON()
         expect(tree).toMatchSnapshot()

@@ -112,7 +112,7 @@ exports[`FlowColumns Components should render TimeColumn 1`] = `
 <td
   className="col-time"
 >
-  415322h
+  415381h
 </td>
 `;
 

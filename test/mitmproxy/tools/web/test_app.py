@@ -281,7 +281,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         tflow_json = _json.dumps(
             app.flow_to_json(tflow.tflow(resp=True, err=True)), indent=4, sort_keys=True
         )
-        web_root = os.path.join(os.getcwd(), 'web')
+        here = os.path.abspath(os.path.dirname(__file__))
+        web_root = os.path.join(here, os.pardir, os.pardir, os.pardir, os.pardir, 'web')
         tflow_path = os.path.join(web_root, 'src/js/__tests__/ducks/_tflow.js')
         content = """export default function(){{\n    return {tflow_json}\n}}""".format(tflow_json=tflow_json)
         with open(tflow_path, 'w') as f:
