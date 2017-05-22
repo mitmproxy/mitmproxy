@@ -96,10 +96,10 @@ setup(
         'dev': [
             "Flask>=0.10.1, <0.13",
             "flake8>=3.2.1, <3.4",
-            "mypy>=0.501, <0.502",
+            "mypy>=0.511,<0.512",
             "rstcheck>=2.2, <4.0",
             "tox>=2.3, <3",
-            "pytest>=3, <3.1",
+            "pytest>=3.1,<3.2",
             "pytest-cov>=2.2.1, <3",
             "pytest-timeout>=1.0.0, <2",
             "pytest-xdist>=1.14, <2",
