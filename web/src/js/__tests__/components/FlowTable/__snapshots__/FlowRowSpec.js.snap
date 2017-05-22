@@ -1,0 +1,47 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FlowRow Component should render correctly 1`] = `
+<tr
+  className="has-request has-response"
+  onClick={[Function]}
+>
+  <td
+    className="col-tls col-tls-http"
+  />
+  <td
+    className="col-icon"
+  >
+    <div
+      className="resource-icon resource-icon-plain"
+    />
+  </td>
+  <td
+    className="col-path"
+  >
+    <i
+      className="fa fa-fw fa-exclamation pull-right"
+    />
+    http://address:22/path
+  </td>
+  <td
+    className="col-method"
+  >
+    GET
+  </td>
+  <td
+    className="col-status"
+  >
+    200
+  </td>
+  <td
+    className="col-size"
+  >
+    14b
+  </td>
+  <td
+    className="col-time"
+  >
+    415381h
+  </td>
+</tr>
+`;
