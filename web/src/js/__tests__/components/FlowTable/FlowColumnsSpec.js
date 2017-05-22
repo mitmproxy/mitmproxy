@@ -45,6 +45,12 @@ describe('FlowColumns Components', () => {
         iconColumn = renderer.create(<Columns.IconColumn flow={cssFlow}/>)
         tree = iconColumn.toJSON()
         expect(tree).toMatchSnapshot()
+        // html
+        let htmlFlow = TFlow()
+        htmlFlow.response.headers = [['Content-Type', 'text/html']]
+        iconColumn = renderer.create(<Columns.IconColumn flow={htmlFlow}/>)
+        tree = iconColumn.toJSON()
+        expect(tree).toMatchSnapshot()
         // default
         let fooFlow = TFlow()
         fooFlow.response.headers = [['Content-Type', 'foo']]

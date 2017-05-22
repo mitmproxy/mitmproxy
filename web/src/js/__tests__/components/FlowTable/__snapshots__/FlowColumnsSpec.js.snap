@@ -65,12 +65,22 @@ exports[`FlowColumns Components should render IconColumn 7`] = `
   className="col-icon"
 >
   <div
-    className="resource-icon resource-icon-plain"
+    className="resource-icon resource-icon-document"
   />
 </td>
 `;
 
 exports[`FlowColumns Components should render IconColumn 8`] = `
+<td
+  className="col-icon"
+>
+  <div
+    className="resource-icon resource-icon-plain"
+  />
+</td>
+`;
+
+exports[`FlowColumns Components should render IconColumn 9`] = `
 <td
   className="col-icon"
 >
