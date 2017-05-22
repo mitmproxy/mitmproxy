@@ -12,7 +12,7 @@ FlowTableHead.propTypes = {
     sortColumn: PropTypes.string,
 }
 
-function FlowTableHead({ sortColumn, sortDesc, setSort }) {
+export function FlowTableHead({ sortColumn, sortDesc, setSort }) {
     const sortType = sortDesc ? 'sort-desc' : 'sort-asc'
 
     return (
