@@ -2888,6 +2888,12 @@ jest-environment-node@^19.0.0:
     jest-mock "^19.0.0"
     jest-util "^19.0.0"
 
+jest-fetch-mock@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/jest-fetch-mock/-/jest-fetch-mock-1.1.1.tgz#7548b6d0c0c77071e9f8652fcb4f8d537e988d1f"
+  dependencies:
+    whatwg-fetch "1.0.0"
+
 jest-file-exists@^19.0.0:
   version "19.0.0"
   resolved "https://registry.yarnpkg.com/jest-file-exists/-/jest-file-exists-19.0.0.tgz#cca2e587a11ec92e24cfeab3f8a94d657f3fceb8"
@@ -5179,6 +5185,10 @@ whatwg-encoding@^1.0.1:
   resolved "https://registry.yarnpkg.com/whatwg-encoding/-/whatwg-encoding-1.0.1.tgz#3c6c451a198ee7aec55b1ec61d0920c67801a5f4"
   dependencies:
     iconv-lite "0.4.13"
+
+whatwg-fetch@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/whatwg-fetch/-/whatwg-fetch-1.0.0.tgz#01c2ac4df40e236aaa18480e3be74bd5c8eb798e"
 
 whatwg-fetch@>=0.10.0:
   version "2.0.2"
