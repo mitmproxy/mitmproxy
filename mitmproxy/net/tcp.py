@@ -502,7 +502,7 @@ class _Connection:
         # Cipher List
         if cipher_list:
             try:
-                context.set_cipher_list(cipher_list)
+                context.set_cipher_list(cipher_list.encode())
                 context.set_tmp_ecdh(OpenSSL.crypto.get_elliptic_curve('prime256v1'))
             except SSL.Error as v:
                 raise exceptions.TlsException("SSL cipher specification error: %s" % str(v))
