@@ -864,6 +864,8 @@ class TCPServer:
             self.socket.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
             self.socket.bind(self.address)
         except socket.error:
+            if self.socket:
+                self.socket.close()
             self.socket = None
 
         if not self.socket:
