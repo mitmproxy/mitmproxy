@@ -83,7 +83,11 @@ class RequestReplayThread(basethread.BaseThread):
 
                 server.wfile.write(http1.assemble_request(r))
                 server.wfile.flush()
+
+                if self.f.server_conn:
+                    self.f.server_conn.close()
                 self.f.server_conn = server
+
                 self.f.response = http.HTTPResponse.wrap(
                     http1.read_response(
                         server.rfile,

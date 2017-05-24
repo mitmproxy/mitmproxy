@@ -569,7 +569,9 @@ class TCPClient(_Connection):
         # Make sure to close the real socket, not the SSL proxy.
         # OpenSSL is really good at screwing up, i.e. when trying to recv from a failed connection,
         # it tries to renegotiate...
-        if isinstance(self.connection, SSL.Connection):
+        if not self.connection:
+            return
+        elif isinstance(self.connection, SSL.Connection):
             close_socket(self.connection._socket)
         else:
             close_socket(self.connection)
