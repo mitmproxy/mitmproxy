@@ -13,8 +13,7 @@ from mitmproxy.tools import cmdline  # noqa
 from mitmproxy import exceptions  # noqa
 from mitmproxy import options  # noqa
 from mitmproxy import optmanager  # noqa
-from mitmproxy.proxy import config  # noqa
-from mitmproxy.proxy import server  # noqa
+from mitmproxy import proxy
 from mitmproxy.utils import version_check  # noqa
 from mitmproxy.utils import debug  # noqa
 
@@ -49,15 +48,7 @@ def process_options(parser, opts, args):
             adict[n] = getattr(args, n)
     opts.merge(adict)
 
-    pconf = config.ProxyConfig(opts)
-    if opts.server:
-        try:
-            return server.ProxyServer(pconf)
-        except exceptions.ServerException as v:
-            print(str(v), file=sys.stderr)
-            sys.exit(1)
-    else:
-        return server.DummyServer(pconf)
+    return proxy.config.ProxyConfig(opts)
 
 
 def run(MasterKlass, args, extra=None):  # pragma: no cover
@@ -74,7 +65,16 @@ def run(MasterKlass, args, extra=None):  # pragma: no cover
     master = None
     try:
         unknown = optmanager.load_paths(opts, args.conf)
-        server = process_options(parser, opts, args)
+        pconf = process_options(parser, opts, args)
+        if pconf.options.server:
+            try:
+                server = proxy.server.ProxyServer(pconf)
+            except exceptions.ServerException as v:
+                print(str(v), file=sys.stderr)
+                sys.exit(1)
+        else:
+            server = proxy.server.DummyServer(pconf)
+
         master = MasterKlass(opts, server)
         master.addons.trigger("configure", opts.keys())
         master.addons.trigger("tick")
