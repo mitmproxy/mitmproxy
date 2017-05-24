@@ -54,9 +54,9 @@ class _TServer(tcp.TCPServer):
             raw_key = self.ssl.get(
                 "key",
                 tutils.test_data.path("mitmproxy/net/data/server.key"))
-            key = OpenSSL.crypto.load_privatekey(
-                OpenSSL.crypto.FILETYPE_PEM,
-                open(raw_key, "rb").read())
+            with open(raw_key) as f:
+                raw_key = f.read()
+            key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw_key)
             if self.ssl.get("v3_only", False):
                 method = OpenSSL.SSL.SSLv3_METHOD
                 options = OpenSSL.SSL.OP_NO_SSLv2 | OpenSSL.SSL.OP_NO_TLSv1
@@ -64,7 +64,8 @@ class _TServer(tcp.TCPServer):
                 method = OpenSSL.SSL.SSLv23_METHOD
                 options = None
             h.convert_to_ssl(
-                cert, key,
+                cert,
+                key,
                 method=method,
                 options=options,
                 handle_sni=getattr(h, "handle_sni", None),
