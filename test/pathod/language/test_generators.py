@@ -14,16 +14,14 @@ def test_randomgenerator():
 
 def test_filegenerator(tmpdir):
     f = tmpdir.join("foo")
-    f.write(b"x" * 10000)
+    f.write(b"abcdefghijklmnopqrstuvwxyz" * 1000)
     g = generators.FileGenerator(str(f))
-    assert len(g) == 10000
-    assert g[0] == b"x"
-    assert g[-1] == b"x"
-    assert g[0:5] == b"xxxxx"
+    assert len(g) == 26000
+    assert g[0] == b"a"
+    assert g[2:7] == b"cdefg"
     assert len(g[1:10]) == 9
-    assert len(g[10000:10001]) == 0
+    assert len(g[26000:26001]) == 0
     assert repr(g)
-    g.close()
 
 
 def test_transform_generator():

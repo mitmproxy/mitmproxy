@@ -2,7 +2,6 @@ import os
 import requests
 import pytest
 
-from mitmproxy.test import tutils
 from pathod import test
 from pathod.pathod import SSLOptions, CA_CERT_NAME
 
@@ -27,7 +26,7 @@ class TestDaemonManual:
         d = test.Daemon(ssl=True, ssloptions=ssloptions)
         rsp = requests.get(
             "https://localhost:%s/p/202:da" % d.port,
-            verify=os.path.join(d.thread.server.ssloptions.confdir, CA_CERT_NAME))
+            verify=os.path.expanduser(os.path.join(d.thread.server.ssloptions.confdir, CA_CERT_NAME)))
         assert rsp.ok
         assert rsp.status_code == 202
         d.shutdown()
