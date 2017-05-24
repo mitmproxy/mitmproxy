@@ -32,8 +32,7 @@ class TestProcessProxyOptions:
         opts = options.Options()
         cmdline.common_options(parser, opts)
         args = parser.parse_args(args=args)
-        main.process_options(parser, opts, args)
-        pconf = config.ProxyConfig(opts)
+        pconf = main.process_options(parser, opts, args)
         return parser, pconf
 
     def assert_noerr(self, *args):

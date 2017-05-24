@@ -202,7 +202,7 @@ class TestApplySettings(net_tservers.ServerTestBase):
         def handle(self):
             # check settings acknowledgement
             assert self.rfile.read(9) == codecs.decode('000000040100000000', 'hex_codec')
-            self.wfile.write("OK")
+            self.wfile.write(b"OK")
             self.wfile.flush()
             self.rfile.safe_read(9)  # just to keep the connection alive a bit longer
 

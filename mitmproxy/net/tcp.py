@@ -569,7 +569,9 @@ class TCPClient(_Connection):
         # Make sure to close the real socket, not the SSL proxy.
         # OpenSSL is really good at screwing up, i.e. when trying to recv from a failed connection,
         # it tries to renegotiate...
-        if isinstance(self.connection, SSL.Connection):
+        if not self.connection:
+            return
+        elif isinstance(self.connection, SSL.Connection):
             close_socket(self.connection._socket)
         else:
             close_socket(self.connection)
@@ -674,6 +676,8 @@ class TCPClient(_Connection):
                             sock.setsockopt(socket.SOL_IP, socket.IP_TRANSPARENT, 1)  # pragma: windows no cover  pragma: osx no cover
                     except Exception as e:
                         # socket.IP_TRANSPARENT might not be available on every OS and Python version
+                        if sock is not None:
+                            sock.close()
                         raise exceptions.TcpException(
                             "Failed to spoof the source address: " + str(e)
                         )
@@ -864,6 +868,8 @@ class TCPServer:
             self.socket.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
             self.socket.bind(self.address)
         except socket.error:
+            if self.socket:
+                self.socket.close()
             self.socket = None
 
         if not self.socket:

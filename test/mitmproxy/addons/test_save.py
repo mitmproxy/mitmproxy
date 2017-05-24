@@ -26,8 +26,9 @@ def test_configure(tmpdir):
 
 
 def rd(p):
-    x = io.FlowReader(open(p, "rb"))
-    return list(x.stream())
+    with open(p, "rb") as f:
+        x = io.FlowReader(f)
+        return list(x.stream())
 
 
 def test_tcp(tmpdir):

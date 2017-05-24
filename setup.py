@@ -61,8 +61,9 @@ setup(
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
         "blinker>=1.4, <1.5",
-        "click>=6.2, <7",
+        "brotlipy>=0.5.1, <0.7",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
+        "click>=6.2, <7",
         "construct>=2.8, <2.9",
         "cryptography>=1.4, <1.9",
         "cssutils>=1.0.1, <1.1",
@@ -79,37 +80,29 @@ setup(
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <3",
         "ruamel.yaml>=0.13.2, <0.15",
+        "sortedcontainers>=1.5.4, <1.6",
         "tornado>=4.3, <4.6",
         "urwid>=1.3.1, <1.4",
-        "brotlipy>=0.5.1, <0.7",
-        "sortedcontainers>=1.5.4, <1.6",
-        # transitive from cryptography, we just blacklist here.
-        # https://github.com/pypa/setuptools/issues/861
-        "setuptools>=11.3, !=29.0.0",
     ],
     extras_require={
         ':sys_platform == "win32"': [
             "pydivert>=2.0.3, <2.1",
         ],
-        ':sys_platform != "win32"': [
-        ],
         'dev': [
-            "Flask>=0.10.1, <0.13",
             "flake8>=3.2.1, <3.4",
+            "Flask>=0.10.1, <0.13",
             "mypy>=0.501, <0.502",
-            "rstcheck>=2.2, <4.0",
-            "tox>=2.3, <3",
-            "pytest>=3, <3.1",
             "pytest-cov>=2.2.1, <3",
+            "pytest-faulthandler>=1.3.0, <2",
             "pytest-timeout>=1.0.0, <2",
             "pytest-xdist>=1.14, <2",
-            "pytest-faulthandler>=1.3.0, <2",
-            "sphinx>=1.3.5, <1.7",
-            "sphinx-autobuild>=0.5.2, <0.7",
-            "sphinxcontrib-documentedlist>=0.5.0, <0.7",
+            "pytest>=3.1, <4",
+            "rstcheck>=2.2, <4.0",
             "sphinx_rtd_theme>=0.1.9, <0.3",
-        ],
-        'contentviews': [
+            "sphinx-autobuild>=0.5.2, <0.7",
+            "sphinx>=1.3.5, <1.7",
+            "sphinxcontrib-documentedlist>=0.5.0, <0.7",
+            "tox>=2.3, <3",
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.7",

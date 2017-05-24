@@ -48,6 +48,8 @@ class ProxyServer(tcp.TCPServer):
             if config.options.mode == "transparent":
                 platform.init_transparent_mode()
         except Exception as e:
+            if self.socket:
+                self.socket.close()
             raise exceptions.ServerException(
                 'Error starting proxy server: ' + repr(e)
             ) from e

@@ -133,7 +133,7 @@ class ProxyTestBase:
 
     @classmethod
     def teardown_class(cls):
-        # perf: we want to run tests in parallell
+        # perf: we want to run tests in parallel
         # should this ever cause an error, travis should catch it.
         # shutil.rmtree(cls.cadir)
         cls.proxy.shutdown()
