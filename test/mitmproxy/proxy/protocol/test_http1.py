@@ -65,6 +65,7 @@ class TestExpectHeader(tservers.HTTPProxyTest):
         assert resp.status_code == 200
 
         client.finish()
+        client.close()
 
 
 class TestHeadContentLength(tservers.HTTPProxyTest):
