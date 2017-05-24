@@ -140,16 +140,17 @@ class TestServerConnection:
         assert d.last_log()
 
         c.finish()
+        c.close()
         d.shutdown()
 
     def test_terminate_error(self):
         d = test.Daemon()
         c = connections.ServerConnection((d.IFACE, d.port))
         c.connect()
+        c.close()
         c.connection = mock.Mock()
         c.connection.recv = mock.Mock(return_value=False)
         c.connection.flush = mock.Mock(side_effect=exceptions.TcpDisconnect)
-        c.finish()
         d.shutdown()
 
     def test_sni(self):
@@ -194,22 +195,25 @@ class TestClientConnectionTLS:
             s = socket.create_connection(address)
             s = ctx.wrap_socket(s, server_hostname=sni)
             s.send(b'foobar')
-            s.shutdown(socket.SHUT_RDWR)
+            s.close()
         threading.Thread(target=client_run).start()
 
         connection, client_address = sock.accept()
         c = connections.ClientConnection(connection, client_address, None)
 
         cert = tutils.test_data.path("mitmproxy/net/data/server.crt")
+        with open(tutils.test_data.path("mitmproxy/net/data/server.key")) as f:
+            raw_key = f.read()
         key = OpenSSL.crypto.load_privatekey(
             OpenSSL.crypto.FILETYPE_PEM,
-            open(tutils.test_data.path("mitmproxy/net/data/server.key"), "rb").read())
+            raw_key)
         c.convert_to_ssl(cert, key)
         assert c.connected()
         assert c.sni == sni
         assert c.tls_established
         assert c.rfile.read(6) == b'foobar'
         c.finish()
+        sock.close()
 
 
 class TestServerConnectionTLS(tservers.ServerTestBase):
@@ -222,7 +226,7 @@ class TestServerConnectionTLS(tservers.ServerTestBase):
     @pytest.mark.parametrize("clientcert", [
         None,
         tutils.test_data.path("mitmproxy/data/clientcert"),
-        os.path.join(tutils.test_data.path("mitmproxy/data/clientcert"), "client.pem"),
+        tutils.test_data.path("mitmproxy/data/clientcert/client.pem"),
     ])
     def test_tls(self, clientcert):
         c = connections.ServerConnection(("127.0.0.1", self.port))

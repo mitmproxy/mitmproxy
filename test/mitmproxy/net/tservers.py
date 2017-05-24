@@ -16,9 +16,6 @@ class _ServerThread(threading.Thread):
     def run(self):
         self.server.serve_forever()
 
-    def shutdown(self):
-        self.server.shutdown()
-
 
 class _TServer(tcp.TCPServer):
 
@@ -104,7 +101,7 @@ class ServerTestBase:
 
     @classmethod
     def teardown_class(cls):
-        cls.server.shutdown()
+        cls.server.server.shutdown()
 
     def teardown(self):
         self.server.server.wait_for_silence()
