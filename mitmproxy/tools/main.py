@@ -1,6 +1,8 @@
 from __future__ import print_function  # this is here for the version check to work on Python 2.
 import sys
 
+# This must be at the very top, before importing anything else that might break!
+# Keep all other imports below with the 'noqa' magic comment.
 if sys.version_info < (3, 5):
     print("#" * 49, file=sys.stderr)
     print("# mitmproxy only supports Python 3.5 and above! #", file=sys.stderr)
@@ -13,7 +15,7 @@ from mitmproxy.tools import cmdline  # noqa
 from mitmproxy import exceptions  # noqa
 from mitmproxy import options  # noqa
 from mitmproxy import optmanager  # noqa
-from mitmproxy import proxy
+from mitmproxy import proxy  # noqa
 from mitmproxy.utils import version_check  # noqa
 from mitmproxy.utils import debug  # noqa
 

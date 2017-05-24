@@ -1,8 +1,6 @@
 import os
 import pytest
 import OpenSSL
-import functools
-from contextlib import contextmanager
 
 import mitmproxy.net.tcp
 
