@@ -202,12 +202,14 @@ class TestMisc:
             e.parseString("m@1")
 
         s = base.Settings(staticdir=str(tmpdir))
-        tmpdir.join("path").write_binary(b"a" * 20, ensure=True)
+        with open(str(tmpdir.join("path")), 'wb') as f:
+            f.write(b"a" * 20)
         v = e.parseString("m<path")[0]
         with pytest.raises(Exception, match="Invalid value length"):
             v.values(s)
 
-        tmpdir.join("path2").write_binary(b"a" * 4, ensure=True)
+        with open(str(tmpdir.join("path2")), 'wb') as f:
+            f.write(b"a" * 4)
         v = e.parseString("m<path2")[0]
         assert v.values(s)
 

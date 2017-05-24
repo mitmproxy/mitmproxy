@@ -91,3 +91,7 @@ class FileGenerator:
 
     def __repr__(self):
         return "<%s" % self.path
+
+    def close(self):
+        self.map.close()
+        self.fp.close()

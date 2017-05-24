@@ -132,9 +132,10 @@ def test_filter():
 
 
 def tdump(path, flows):
-    w = io.FlowWriter(open(path, "wb"))
-    for i in flows:
-        w.add(i)
+    with open(path, "wb") as f:
+        w = io.FlowWriter(f)
+        for i in flows:
+            w.add(i)
 
 
 def test_create():

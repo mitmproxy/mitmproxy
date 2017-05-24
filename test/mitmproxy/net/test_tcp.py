@@ -34,7 +34,7 @@ class ClientCipherListHandler(tcp.BaseHandler):
     sni = None
 
     def handle(self):
-        self.wfile.write("%s" % self.connection.get_cipher_list())
+        self.wfile.write(str(self.connection.get_cipher_list()).encode())
         self.wfile.flush()
 
 
@@ -391,14 +391,15 @@ class TestSNI(tservers.ServerTestBase):
 class TestServerCipherList(tservers.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
-        cipher_list='AES256-GCM-SHA384'
+        cipher_list=b'AES256-GCM-SHA384'
     )
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl(sni="foo.com")
-            assert c.rfile.readline() == b"['AES256-GCM-SHA384']"
+            expected = b"['AES256-GCM-SHA384']"
+            assert c.rfile.read(len(expected) + 2) == expected
 
 
 class TestServerCurrentCipher(tservers.ServerTestBase):
@@ -424,7 +425,7 @@ class TestServerCurrentCipher(tservers.ServerTestBase):
 class TestServerCipherListError(tservers.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
-        cipher_list='bogus'
+        cipher_list=b'bogus'
     )
 
     def test_echo(self):
@@ -632,6 +633,7 @@ class TestTCPServer:
         with s.handler_counter:
             with pytest.raises(exceptions.Timeout):
                 s.wait_for_silence()
+            s.shutdown()
 
 
 class TestFileLike:

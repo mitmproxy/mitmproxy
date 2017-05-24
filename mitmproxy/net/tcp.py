@@ -676,6 +676,8 @@ class TCPClient(_Connection):
                             sock.setsockopt(socket.SOL_IP, socket.IP_TRANSPARENT, 1)  # pragma: windows no cover  pragma: osx no cover
                     except Exception as e:
                         # socket.IP_TRANSPARENT might not be available on every OS and Python version
+                        if sock is not None:
+                            sock.close()
                         raise exceptions.TcpException(
                             "Failed to spoof the source address: " + str(e)
                         )

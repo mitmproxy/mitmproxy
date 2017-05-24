@@ -23,9 +23,7 @@ def test_filegenerator(tmpdir):
     assert len(g[1:10]) == 9
     assert len(g[10000:10001]) == 0
     assert repr(g)
-    # remove all references to FileGenerator instance to close the file
-    # handle.
-    del g
+    g.close()
 
 
 def test_transform_generator():
