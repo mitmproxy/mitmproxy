@@ -1,7 +1,7 @@
+import os
 import string
 import random
 import mmap
-
 import sys
 
 DATATYPES = dict(
@@ -74,24 +74,20 @@ class RandomGenerator:
 
 
 class FileGenerator:
-
     def __init__(self, path):
         self.path = path
-        self.fp = open(path, "rb")
-        self.map = mmap.mmap(self.fp.fileno(), 0, access=mmap.ACCESS_READ)
 
     def __len__(self):
-        return len(self.map)
+        return os.path.getsize(self.path)
 
     def __getitem__(self, x):
-        if isinstance(x, slice):
-            return self.map.__getitem__(x)
-        # A slice of length 1 returns a byte object (not an integer)
-        return self.map.__getitem__(slice(x, x + 1 or self.map.size()))
+        with open(self.path, mode="rb") as f:
+            if isinstance(x, slice):
+                with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mapped:
+                    return mapped.__getitem__(x)
+            else:
+                f.seek(x)
+                return f.read(1)
 
     def __repr__(self):
         return "<%s" % self.path
-
-    def close(self):
-        self.map.close()
-        self.fp.close()

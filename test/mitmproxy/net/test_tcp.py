@@ -391,7 +391,7 @@ class TestSNI(tservers.ServerTestBase):
 class TestServerCipherList(tservers.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
-        cipher_list=b'AES256-GCM-SHA384'
+        cipher_list='AES256-GCM-SHA384'
     )
 
     def test_echo(self):

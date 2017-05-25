@@ -216,7 +216,8 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
     anchors = []
     for patt, spec in args.anchors:
         if os.path.isfile(spec):
-            data = open(spec).read()
+            with open(spec) as f:
+                data = f.read()
             spec = data
         try:
             arex = re.compile(patt)
