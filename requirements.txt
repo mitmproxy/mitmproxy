@@ -1,1 +1,1 @@
--e .[dev,examples,contentviews]
+-e .[dev,examples]
