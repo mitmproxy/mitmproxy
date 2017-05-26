@@ -6,5 +6,6 @@ wget -N https://raw.githubusercontent.com/kaitai-io/kaitai_struct_formats/master
 wget -N https://raw.githubusercontent.com/kaitai-io/kaitai_struct_formats/master/image/gif.ksy
 wget -N https://raw.githubusercontent.com/kaitai-io/kaitai_struct_formats/master/image/jpeg.ksy
 wget -N https://raw.githubusercontent.com/kaitai-io/kaitai_struct_formats/master/image/png.ksy
+wget -N https://raw.githubusercontent.com/mitmproxy/mitmproxy/master/mitmproxy/contrib/tls_client_hello.py
 
 kaitai-struct-compiler --target python --opaque-types=true *.ksy

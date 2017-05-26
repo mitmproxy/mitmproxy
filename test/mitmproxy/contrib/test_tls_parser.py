@@ -1,4 +1,6 @@
-from mitmproxy.contrib import tls_parser
+import io
+from kaitaistruct import KaitaiStream
+from mitmproxy.contrib.kaitaistruct import tls_client_hello
 
 
 def test_parse_chrome():
@@ -12,18 +14,20 @@ def test_parse_chrome():
         "00000000001200000010000e000c02683208687474702f312e3175500000000b00020100000a00080006001d00"
         "170018"
     )
-    c = tls_parser.ClientHello.parse(data)
+
+    c = tls_client_hello.TlsClientHello(KaitaiStream(io.BytesIO(data)))
     assert c.version.major == 3
     assert c.version.minor == 3
 
     alpn = [a for a in c.extensions.extensions if a.type == 16]
     assert len(alpn) == 1
-    assert alpn[0].alpn_protocols == [b"h2", b"http/1.1"]
+    assert alpn[0].body.alpn_protocols[0].name == b"h2"
+    assert alpn[0].body.alpn_protocols[1].name == b"http/1.1"
 
     sni = [a for a in c.extensions.extensions if a.type == 0]
     assert len(sni) == 1
-    assert sni[0].server_names[0].name_type == 0
-    assert sni[0].server_names[0].host_name == b"example.com"
+    assert sni[0].body.server_names[0].name_type == 0
+    assert sni[0].body.server_names[0].host_name == b"example.com"
 
 
 def test_parse_no_extensions():
@@ -32,7 +36,8 @@ def test_parse_no_extensions():
         "78e1bb6d22e8bbd5b6b0a3a59760ad354e91ba20d353001a0035002f000a000500040009000300060008006000"
         "61006200640100"
     )
-    c = tls_parser.ClientHello.parse(data)
+
+    c = tls_client_hello.TlsClientHello(KaitaiStream(io.BytesIO(data)))
     assert c.version.major == 3
     assert c.version.minor == 1
-    assert c.extensions is None
+    assert c.extensions == []

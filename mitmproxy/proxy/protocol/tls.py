@@ -1,10 +1,11 @@
 import struct
 from typing import Optional  # noqa
 from typing import Union
+import io
 
-import construct
+from kaitaistruct import KaitaiStream
 from mitmproxy import exceptions
-from mitmproxy.contrib import tls_parser
+from mitmproxy.contrib.kaitaistruct import tls_client_hello
 from mitmproxy.proxy.protocol import base
 from mitmproxy.net import check
 
@@ -263,7 +264,7 @@ def get_client_hello(client_conn):
 class TlsClientHello:
 
     def __init__(self, raw_client_hello):
-        self._client_hello = tls_parser.ClientHello.parse(raw_client_hello)
+        self._client_hello = tls_client_hello.TlsClientHello(KaitaiStream(io.BytesIO(raw_client_hello)))
 
     def raw(self):
         return self._client_hello
@@ -278,12 +279,12 @@ class TlsClientHello:
             for extension in self._client_hello.extensions.extensions:
                 is_valid_sni_extension = (
                     extension.type == 0x00 and
-                    len(extension.server_names) == 1 and
-                    extension.server_names[0].name_type == 0 and
-                    check.is_valid_host(extension.server_names[0].host_name)
+                    len(extension.body.server_names) == 1 and
+                    extension.body.server_names[0].name_type == 0 and
+                    check.is_valid_host(extension.body.server_names[0].host_name)
                 )
                 if is_valid_sni_extension:
-                    return extension.server_names[0].host_name.decode("idna")
+                    return extension.body.server_names[0].host_name.decode("idna")
         return None
 
     @property
@@ -291,7 +292,7 @@ class TlsClientHello:
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 if extension.type == 0x10:
-                    return list(extension.alpn_protocols)
+                    return list(extension.body.alpn_protocols)
         return []
 
     @classmethod
@@ -310,7 +311,7 @@ class TlsClientHello:
 
         try:
             return cls(raw_client_hello)
-        except construct.ConstructError as e:
+        except EOFError as e:
             raise exceptions.TlsProtocolException(
                 'Cannot parse Client Hello: %s, Raw Client Hello: %s' %
                 (repr(e), raw_client_hello.encode("hex"))
@@ -518,7 +519,8 @@ class TlsLayer(base.Layer):
                     # We only support http/1.1 and h2.
                     # If the server only supports spdy (next to http/1.1), it may select that
                     # and mitmproxy would enter TCP passthrough mode, which we want to avoid.
-                    alpn = [x for x in self._client_hello.alpn_protocols if not (x.startswith(b"h2-") or x.startswith(b"spdy"))]
+                    alpn = [x.name for x in self._client_hello.alpn_protocols if
+                            not (x.name.startswith(b"h2-") or x.name.startswith(b"spdy"))]
                 if alpn and b"h2" in alpn and not self.config.options.http2:
                     alpn.remove(b"h2")
 
@@ -537,8 +539,8 @@ class TlsLayer(base.Layer):
             if not ciphers_server and self._client_tls:
                 ciphers_server = []
                 for id in self._client_hello.cipher_suites:
-                    if id in CIPHER_ID_NAME_MAP.keys():
-                        ciphers_server.append(CIPHER_ID_NAME_MAP[id])
+                    if id.cipher_suite in CIPHER_ID_NAME_MAP.keys():
+                        ciphers_server.append(CIPHER_ID_NAME_MAP[id.cipher_suite])
                 ciphers_server = ':'.join(ciphers_server)
 
             self.server_conn.establish_ssl(
