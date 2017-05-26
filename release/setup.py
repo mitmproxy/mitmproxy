@@ -6,7 +6,7 @@ setup(
     py_modules=["rtool"],
     install_requires=[
         "click>=6.2, <7.0",
-        "twine>=1.6.5, <1.9",
+        "twine>=1.6.5, <1.10",
         "pysftp==0.2.8",
         "cryptography>=1.6, <1.9",
     ],
