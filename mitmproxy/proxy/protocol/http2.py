@@ -206,14 +206,15 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_stream_reset(self, eid, event, is_server, other_conn):
-        self.streams[eid].kill()
-        if eid in self.streams and event.error_code == h2.errors.ErrorCodes.CANCEL:
-            if is_server:
-                other_stream_id = self.streams[eid].client_stream_id
-            else:
-                other_stream_id = self.streams[eid].server_stream_id
-            if other_stream_id is not None:
-                self.connections[other_conn].safe_reset_stream(other_stream_id, event.error_code)
+        if eid in self.streams:
+            self.streams[eid].kill()
+            if event.error_code == h2.errors.ErrorCodes.CANCEL:
+                if is_server:
+                    other_stream_id = self.streams[eid].client_stream_id
+                else:
+                    other_stream_id = self.streams[eid].server_stream_id
+                if other_stream_id is not None:
+                    self.connections[other_conn].safe_reset_stream(other_stream_id, event.error_code)
         return True
 
     def _handle_remote_settings_changed(self, event, other_conn):
