@@ -6,7 +6,9 @@ import pyparsing as pp
 from mitmproxy.utils import strutils
 from mitmproxy.utils import human
 import typing  # noqa
-from . import generators, exceptions
+from . import generators
+from . import exceptions
+from . import message  # noqa
 
 
 class Settings:
@@ -375,7 +377,7 @@ class OptionsOrValue(_Component):
 
 
 class Integer(_Component):
-    bounds = (None, None)  # type: typing.Tuple[typing.Union[int, None], typing.Union[int , None]]
+    bounds = (None, None)  # type: typing.Tuple[typing.Optional[int], typing.Optional[int]]
     preamble = ""
 
     def __init__(self, value):
@@ -545,7 +547,7 @@ class NestedMessage(Token):
         A nested message, as an escaped string with a preamble.
     """
     preamble = ""
-    nest_type = None  # type: ignore
+    nest_type = None  # type: typing.Optional[typing.Type[message.Message]]
 
     def __init__(self, value):
         Token.__init__(self)

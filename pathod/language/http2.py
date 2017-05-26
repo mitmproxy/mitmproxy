@@ -1,8 +1,8 @@
 import pyparsing as pp
+
 from mitmproxy.net import http
 from mitmproxy.net.http import user_agents, Headers
 from . import base, message
-
 
 """
     Normal HTTP requests:
@@ -41,7 +41,9 @@ def get_header(val, headers):
 
 
 class _HeaderMixin:
-    unique_name = None  # type: ignore
+    @property
+    def unique_name(self):
+        return None
 
     def values(self, settings):
         return (
@@ -146,7 +148,7 @@ class Times(base.Integer):
 
 
 class Response(_HTTP2Message):
-    unique_name = None  # type: ignore
+    unique_name = None
     comps = (
         Header,
         Body,

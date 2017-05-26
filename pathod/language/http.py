@@ -54,7 +54,9 @@ class Method(base.OptionsOrValue):
 
 
 class _HeaderMixin:
-    unique_name = None  # type: ignore
+    @property
+    def unique_name(self):
+        return None
 
     def format_header(self, key, value):
         return [key, b": ", value, b"\r\n"]

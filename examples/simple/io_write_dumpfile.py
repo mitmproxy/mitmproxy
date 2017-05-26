@@ -13,15 +13,15 @@ import typing  # noqa
 
 class Writer:
     def __init__(self, path: str) -> None:
-        if path == "-":
-            f = sys.stdout  # type: typing.IO[typing.Any]
-        else:
-            f = open(path, "wb")
-        self.w = io.FlowWriter(f)
+        self.f = open(path, "wb")  # type: typing.IO[bytes]
+        self.w = io.FlowWriter(self.f)
 
     def response(self, flow: http.HTTPFlow) -> None:
         if random.choice([True, False]):
             self.w.add(flow)
+
+    def done(self):
+        self.f.close()
 
 
 addons = [Writer(sys.argv[1])]
