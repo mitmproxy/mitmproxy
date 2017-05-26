@@ -1,20 +1,21 @@
 # Default view cutoff *in lines*
-
-from typing import Iterable, AnyStr, List
-from typing import Mapping
-from typing import Tuple
+import typing
 
 VIEW_CUTOFF = 512
 
 KEY_MAX = 30
 
+TTextType = typing.Union[str, bytes]  # FIXME: This should be either bytes or str ultimately.
+TViewLine = typing.List[typing.Tuple[str, TTextType]]
+TViewResult = typing.Tuple[str, typing.Iterator[TViewLine]]
+
 
 class View:
     name = None  # type: str
-    prompt = None  # type: Tuple[str,str]
-    content_types = []  # type: List[str]
+    prompt = None  # type: typing.Tuple[str,str]
+    content_types = []  # type: typing.List[str]
 
-    def __call__(self, data: bytes, **metadata):
+    def __call__(self, data: bytes, **metadata) -> TViewResult:
         """
         Transform raw data into human-readable output.
 
@@ -38,8 +39,8 @@ class View:
 
 
 def format_dict(
-        d: Mapping[AnyStr, AnyStr]
-) -> Iterable[List[Tuple[str, AnyStr]]]:
+        d: typing.Mapping[TTextType, TTextType]
+) -> typing.Iterator[TViewLine]:
     """
     Helper function that transforms the given dictionary into a list of
         ("key",   key  )
@@ -49,7 +50,10 @@ def format_dict(
     max_key_len = max(len(k) for k in d.keys())
     max_key_len = min(max_key_len, KEY_MAX)
     for key, value in d.items():
-        key += b":" if isinstance(key, bytes) else u":"
+        if isinstance(key, bytes):
+            key += b":"
+        else:
+            key += ":"
         key = key.ljust(max_key_len + 2)
         yield [
             ("header", key),
@@ -57,7 +61,7 @@ def format_dict(
         ]
 
 
-def format_text(text: AnyStr) -> Iterable[List[Tuple[str, AnyStr]]]:
+def format_text(text: TTextType) -> typing.Iterator[TViewLine]:
     """
     Helper function that transforms bytes into the view output format.
     """

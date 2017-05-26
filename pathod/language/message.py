@@ -1,7 +1,10 @@
 import abc
-from . import actions, exceptions
-from mitmproxy.utils import strutils
 import typing  # noqa
+
+import pyparsing as pp
+
+from mitmproxy.utils import strutils
+from . import actions, exceptions, base
 
 LOG_TRUNCATE = 1024
 
@@ -96,3 +99,46 @@ class Message:
 
     def __repr__(self):
         return self.spec()
+
+
+class NestedMessage(base.Token):
+    """
+        A nested message, as an escaped string with a preamble.
+    """
+    preamble = ""
+    nest_type = None  # type: typing.Optional[typing.Type[Message]]
+
+    def __init__(self, value):
+        super().__init__()
+        self.value = value
+        try:
+            self.parsed = self.nest_type(
+                self.nest_type.expr().parseString(
+                    value.val.decode(),
+                    parseAll=True
+                )
+            )
+        except pp.ParseException as v:
+            raise exceptions.ParseException(v.msg, v.line, v.col)
+
+    @classmethod
+    def expr(cls):
+        e = pp.Literal(cls.preamble).suppress()
+        e = e + base.TokValueLiteral.expr()
+        return e.setParseAction(lambda x: cls(*x))
+
+    def values(self, settings):
+        return [
+            self.value.get_generator(settings),
+        ]
+
+    def spec(self):
+        return "%s%s" % (self.preamble, self.value.spec())
+
+    def freeze(self, settings):
+        f = self.parsed.freeze(settings).spec()
+        return self.__class__(
+            base.TokValueLiteral(
+                strutils.bytes_to_escaped_str(f.encode(), escape_single_quotes=True)
+            )
+        )

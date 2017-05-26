@@ -50,7 +50,7 @@ class _Action(base.Token):
 
 
 class PauseAt(_Action):
-    unique_name = None  # type: ignore
+    unique_name = None
 
     def __init__(self, offset, seconds):
         _Action.__init__(self, offset)
