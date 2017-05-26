@@ -9,7 +9,7 @@ ConnectionIndicator.propTypes = {
     message: PropTypes.string,
 
 }
-function ConnectionIndicator({ state, message }) {
+export function ConnectionIndicator({ state, message }) {
     switch (state) {
         case ConnectionState.INIT:
             return <span className="connection-indicator init">connecting…</span>;
