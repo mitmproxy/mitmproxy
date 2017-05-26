@@ -236,7 +236,7 @@ class WebsocketFrame(message.Message):
         return ":".join([i.spec() for i in self.tokens])
 
 
-class NestedFrame(base.NestedMessage):
+class NestedFrame(message.NestedMessage):
     preamble = "f"
     nest_type = WebsocketFrame
 

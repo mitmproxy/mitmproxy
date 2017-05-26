@@ -253,7 +253,7 @@ class Response(_HTTPMessage):
         return ":".join([i.spec() for i in self.tokens])
 
 
-class NestedResponse(base.NestedMessage):
+class NestedResponse(message.NestedMessage):
     preamble = "s"
     nest_type = Response
 
