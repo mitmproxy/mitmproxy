@@ -344,6 +344,8 @@ class FUrl(_Rex):
 
     @only(http.HTTPFlow)
     def __call__(self, f):
+        if not f.request:
+            return False
         return self.re.search(f.request.pretty_url)
 
 
