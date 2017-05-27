@@ -3,9 +3,7 @@ import renderer from 'react-test-renderer'
 import ConnectedIndicator, { ConnectionIndicator } from '../../../components/Header/ConnectionIndicator'
 import { ConnectionState } from '../../../ducks/connection'
 import { Provider } from 'react-redux'
-import configureStore from 'redux-mock-store'
-
-const mockStore = configureStore()
+import { TStore } from '../../ducks/tutils'
 
 describe('ConnectionIndicator Component', () => {
 
@@ -45,7 +43,7 @@ describe('ConnectionIndicator Component', () => {
     })
 
     it('should connect to state', () => {
-        let store = mockStore({ connection: {state: ConnectionState.INIT} }),
+        let store = TStore(),
             provider = renderer.create(
             <Provider store={store}>
                 <ConnectedIndicator/>
