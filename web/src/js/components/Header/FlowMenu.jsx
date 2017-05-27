@@ -17,7 +17,7 @@ FlowMenu.propTypes = {
     revertFlow: PropTypes.func.isRequired
 }
 
-function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
+export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
     if (!flow)
         return <div/>
     return (
