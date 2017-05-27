@@ -25,7 +25,6 @@
   "dependencies": {
     "bootstrap": "^3.3.7",
     "classnames": "^2.2.5",
-    "jest-fetch-mock": "^1.1.1",
     "lodash": "^4.17.4",
     "prop-types": "^15.5.0",
     "react": "^15.4.2",
