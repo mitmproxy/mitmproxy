@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`FilterDocs Component should render correctly 1`] = `
+exports[`FilterInput Component should render correctly 1`] = `
 <div
   className="filter-input input-group"
 >
