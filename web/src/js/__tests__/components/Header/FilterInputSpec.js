@@ -6,7 +6,7 @@ import TestUtil from 'react-dom/test-utils'
 import ReactDOM from 'react-dom'
 import { Key } from '../../../utils'
 
-describe('FilterDocs Component', () => {
+describe('FilterInput Component', () => {
     it('should render correctly', () => {
         let filterInput = renderer.create(<FilterInput type='foo' color='red' placeholder='bar'/>),
             tree = filterInput.toJSON()
