@@ -1,0 +1,145 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OptionMenu Component should render correctly 1`] = `
+<div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={false}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          HTTP/2.0
+        </label>
+      </div>
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={false}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          WebSockets
+        </label>
+      </div>
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={false}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          Raw TCP
+        </label>
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      Protocol Support
+    </div>
+  </div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={true}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          Disable Caching 
+          <a
+            href="http://docs.mitmproxy.org/en/stable/features/anticache.html"
+            target="_blank"
+          >
+            <i
+              className="fa fa-question-circle"
+            />
+          </a>
+        </label>
+      </div>
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={false}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          Disable Compression 
+          <i
+            className="fa fa-question-circle"
+            title="Do not forward Accept-Encoding headers to the server to force an uncompressed response."
+          />
+        </label>
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      HTTP Options
+    </div>
+  </div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={false}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          Use Host Header 
+          <i
+            className="fa fa-question-circle"
+            title="Use the Host header to construct URLs for display."
+          />
+        </label>
+      </div>
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={true}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          Display Event Log
+        </label>
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      View Options
+    </div>
+  </div>
+</div>
+`;

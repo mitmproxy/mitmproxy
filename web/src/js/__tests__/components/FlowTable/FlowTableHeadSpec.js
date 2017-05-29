@@ -2,9 +2,8 @@ import React from 'react'
 import renderer from 'react-test-renderer'
 import ConnectedHead, { FlowTableHead } from '../../../components/FlowTable/FlowTableHead'
 import { Provider } from 'react-redux'
-import configureStore from 'redux-mock-store'
+import { TStore } from '../../ducks/tutils'
 
-const mockStore = configureStore()
 
 describe('FlowTableHead Component', () => {
     let sortFn = jest.fn(),
@@ -21,7 +20,7 @@ describe('FlowTableHead Component', () => {
     })
 
     it('should connect to state', () => {
-        let store = mockStore({ flows: {sort: {desc: true, column: 'PathColumn'}} }),
+        let store = TStore(),
             provider = renderer.create(
                 <Provider store={store}>
                     <ConnectedHead/>

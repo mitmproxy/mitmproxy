@@ -17,7 +17,7 @@ FileMenu.onNewClick = (e, clearFlows) => {
         clearFlows()
 }
 
-function FileMenu ({clearFlows, loadFlows, saveFlows}) {
+export function FileMenu ({clearFlows, loadFlows, saveFlows}) {
      return (
         <Dropdown className="pull-left" btnClass="special" text="mitmproxy">
             <a href="#" onClick={e => FileMenu.onNewClick(e, clearFlows)}>
