@@ -634,7 +634,12 @@ class TCPClient(_Connection):
             if self.cert.cn:
                 crt["subject"] = [[["commonName", self.cert.cn.decode("ascii", "strict")]]]
             if sni:
-                hostname = sni
+                # SNI hostnames allow support of IDN by using ASCII-Compatible Encoding
+                # Conversion algorithm is in RFC 3490 which is implemented by idna codec
+                # https://docs.python.org/3/library/codecs.html#text-encodings
+                # https://tools.ietf.org/html/rfc6066#section-3
+                # https://tools.ietf.org/html/rfc4985#section-3
+                hostname = sni.encode("idna").decode("ascii")
             else:
                 hostname = "no-hostname"
             match_hostname(crt, hostname)
