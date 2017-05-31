@@ -26,7 +26,6 @@
     "bootstrap": "^3.3.7",
     "classnames": "^2.2.5",
     "lodash": "^4.17.4",
-    "mock-xmlhttprequest": "^1.1.0",
     "prop-types": "^15.5.0",
     "react": "^15.4.2",
     "react-codemirror": "^0.3.0",
