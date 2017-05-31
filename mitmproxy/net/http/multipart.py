@@ -21,12 +21,12 @@ def decode(hdrs, content):
         r = []
 
         for i in content.split(b"--" + boundary):
-            parts = i.splitlines()
+            parts = i.split(b'\r\n\r\n', 2)
             if len(parts) > 1 and parts[0][0:2] != b"--":
-                match = rx.search(parts[1])
+                match = rx.search(parts[0])
                 if match:
                     key = match.group(1)
-                    value = b"".join(parts[3 + parts[2:].index(b""):])
+                    value = parts[1][0:len(parts[1] - 2)]
                     r.append((key, value))
         return r
     return []
