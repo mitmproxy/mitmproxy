@@ -199,17 +199,6 @@ exports[`Request Component should render correctly 1`] = `
       </tbody>
     </table>
     <hr />
-    <div
-      className="contentview"
-    >
-      <div
-        className="text-center"
-      >
-        <i
-          className="fa fa-spinner fa-spin"
-        />
-      </div>
-    </div>
   </article>
   <footer>
     <div
@@ -473,17 +462,6 @@ exports[`Response Component should render correctly 1`] = `
       </tbody>
     </table>
     <hr />
-    <div
-      className="contentview"
-    >
-      <div
-        className="text-center"
-      >
-        <i
-          className="fa fa-spinner fa-spin"
-        />
-      </div>
-    </div>
   </article>
   <footer>
     <div

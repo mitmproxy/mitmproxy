@@ -1,3 +1,4 @@
+jest.mock('../../../components/ContentView')
 import React from 'react'
 import renderer from 'react-test-renderer'
 import TestUtils from 'react-dom/test-utils'
@@ -10,20 +11,12 @@ import ContentView from '../../../components/ContentView'
 import ContentViewOptions from '../../../components/ContentView/ContentViewOptions'
 import Headers from '../../../components/FlowView/Headers'
 import ValueEditor from '../../../components/ValueEditor/ValueEditor'
-import mockXMLHttpRequest from 'mock-xmlhttprequest'
 
-global.XMLHttpRequest = mockXMLHttpRequest
 global.fetch = jest.fn()
 
 let tflow = new TFlow(),
     store = TStore()
 store.getState().ui.flow.modifiedFlow = false
-
-mockXMLHttpRequest.onSend = xhr => {
-    let response = {result: 'success'},
-        responseHeaders = {'Content-Type': 'application/json'}
-    xhr.respond(200, responseHeaders, JSON.stringify(response))
-}
 
 describe('Request Component', () => {
 
