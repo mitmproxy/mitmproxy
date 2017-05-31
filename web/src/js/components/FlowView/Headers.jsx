@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom'
 import ValueEditor from '../ValueEditor/ValueEditor'
 import { Key } from '../../utils'
 
-class HeaderEditor extends Component {
+export class HeaderEditor extends Component {
 
     constructor(props) {
         super(props)

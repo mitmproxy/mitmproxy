@@ -2,6 +2,7 @@ import React  from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames'
+import _ from 'lodash'
 
 NavAction.propTypes = {
     icon: PropTypes.string.isRequired,
@@ -9,7 +10,7 @@ NavAction.propTypes = {
     onClick: PropTypes.func.isRequired,
 }
 
-function NavAction({ icon, title, onClick }) {
+export function NavAction({ icon, title, onClick }) {
     return (
         <a title={title}
             href="#"
