@@ -57,7 +57,7 @@ test_script:
         "Install InstallBuilder..."
         Start-Process $ibSetup "--mode unattended --unattendedmodeui none" -Wait
         "Run InstallBuilder..."
-        & 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise $ibVersion\bin\builder-cli.exe' `
+        & "C:\Program Files (x86)\BitRock InstallBuilder Enterprise $ibVersion\bin\builder-cli.exe" `
           build `
           .\release\installbuilder\mitmproxy.xml `
           windows `
