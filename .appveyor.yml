@@ -44,19 +44,20 @@ test_script:
         ($Env:TOXENV -match "py35") -and !$Env:APPVEYOR_PULL_REQUEST_NUMBER -and
         (($Env:APPVEYOR_REPO_BRANCH -In ("master", "pyinstaller")) -or ($Env:APPVEYOR_REPO_TAG -match "true"))
       ) {
+        echo "Decrypt license..."
         tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
         $ibSetup = "C:\projects\mitmproxy\release\installbuilder-installer.exe"
         $ibVersion = "17.4.0"
         if (!(Test-Path $ibSetup)) {
-          "Download InstallBuilder..."
+          echo "Download InstallBuilder..."
           (New-Object System.Net.WebClient).DownloadFile(
             "https://installbuilder.bitrock.com/installbuilder-enterprise-$ibVersion-windows-installer.exe",
             $ibSetup
           )
         }
-        "Install InstallBuilder..."
+        echo "Install InstallBuilder..."
         Start-Process $ibSetup "--mode unattended --unattendedmodeui none" -Wait
-        "Run InstallBuilder..."
+        echo "Run InstallBuilder..."
         & "C:\Program Files (x86)\BitRock InstallBuilder Enterprise $ibVersion\bin\builder-cli.exe" `
           build `
           .\release\installbuilder\mitmproxy.xml `
@@ -64,6 +65,7 @@ test_script:
           --license .\release\installbuilder\license.xml `
           --setvars project.version=$Env:VERSION `
           --verbose
+        echo "Installer build completed."
       }
 
 deploy_script:
