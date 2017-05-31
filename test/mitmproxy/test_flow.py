@@ -7,7 +7,7 @@ from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy.proxy import config
 from mitmproxy.io import tnetstring
-from mitmproxy.exceptions import FlowReadException
+from mitmproxy.exceptions import FlowReadException, ReplayException, ControlException
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy.proxy.server import DummyServer
@@ -102,15 +102,19 @@ class TestFlowMaster:
         fm = master.Master(None, DummyServer())
         f = tflow.tflow(resp=True)
         f.request.content = None
-        with pytest.raises(Exception, match="missing"):
+        with pytest.raises(ReplayException, match="missing"):
+            fm.replay_request(f)
+
+        f.request = None
+        with pytest.raises(ReplayException, match="request"):
             fm.replay_request(f)
 
         f.intercepted = True
-        with pytest.raises(Exception, match="intercepted"):
+        with pytest.raises(ReplayException, match="intercepted"):
             fm.replay_request(f)
 
         f.live = True
-        with pytest.raises(Exception, match="live"):
+        with pytest.raises(ReplayException, match="live"):
             fm.replay_request(f)
 
     def test_all(self):
@@ -131,6 +135,10 @@ class TestFlowMaster:
 
         f.error = flow.Error("msg")
         fm.addons.handle_lifecycle("error", f)
+
+        fm.tell("foo", f)
+        with pytest.raises(ControlException):
+            fm.tick(timeout=1)
 
         fm.shutdown()
 

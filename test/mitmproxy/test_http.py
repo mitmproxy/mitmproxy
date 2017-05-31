@@ -4,7 +4,7 @@ from mitmproxy.test import tflow
 from mitmproxy.net.http import Headers
 import mitmproxy.io
 from mitmproxy import flowfilter
-from mitmproxy.exceptions import Kill
+from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy import flow
 from mitmproxy import http
 
@@ -170,16 +170,31 @@ class TestHTTPFlow:
         assert not f == f2
         f2.error = flow.Error("e2")
         assert not f == f2
+        f2.backup()
+        f2.intercept()  # to change the state
         f.set_state(f2.get_state())
         assert f.get_state() == f2.get_state()
 
     def test_kill(self):
+        f = tflow.tflow()
+        with pytest.raises(ControlException):
+            f.intercept()
+            f.resume()
+            f.kill()
+
         f = tflow.tflow()
         f.intercept()
         assert f.killable
         f.kill()
         assert not f.killable
         assert f.reply.value == Kill
+
+    def test_intercept(self):
+        f = tflow.tflow()
+        f.intercept()
+        assert f.reply.state == "taken"
+        f.intercept()
+        assert f.reply.state == "taken"
 
     def test_resume(self):
         f = tflow.tflow()

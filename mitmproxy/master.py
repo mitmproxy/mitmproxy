@@ -147,13 +147,13 @@ class Master:
             raise exceptions.ReplayException(
                 "Can't replay intercepted flow."
             )
-        if f.request.raw_content is None:
-            raise exceptions.ReplayException(
-                "Can't replay flow with missing content."
-            )
         if not f.request:
             raise exceptions.ReplayException(
                 "Can't replay flow with missing request."
+            )
+        if f.request.raw_content is None:
+            raise exceptions.ReplayException(
+                "Can't replay flow with missing content."
             )
 
         f.backup()
