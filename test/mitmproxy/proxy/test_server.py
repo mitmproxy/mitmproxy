@@ -1,27 +1,26 @@
 import os
 import socket
 import time
-import pytest
 from unittest import mock
 
-from mitmproxy.test import tutils
-from mitmproxy import options
-from mitmproxy.addons import script
-from mitmproxy.addons import proxyauth
-from mitmproxy import http
-from mitmproxy.proxy.config import HostMatcher
+import pytest
+
 import mitmproxy.net.http
-from mitmproxy.net import tcp
-from mitmproxy.net import socks
 from mitmproxy import certs
 from mitmproxy import exceptions
+from mitmproxy import http
+from mitmproxy import options
+from mitmproxy.addons import proxyauth
+from mitmproxy.addons import script
+from mitmproxy.net import socks
+from mitmproxy.net import tcp
 from mitmproxy.net.http import http1
+from mitmproxy.proxy.config import HostMatcher
+from mitmproxy.test import tutils
 from pathod import pathoc
 from pathod import pathod
-
 from .. import tservers
 from ...conftest import skip_appveyor
-
 
 """
     Note that the choice of response code in these tests matters more than you

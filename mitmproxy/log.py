@@ -4,6 +4,9 @@ class LogEntry:
         self.msg = msg
         self.level = level
 
+    def __repr__(self):
+        return "LogEntry({}, {})".format(self.msg, self.level)
+
 
 class Log:
     """
