@@ -62,7 +62,7 @@ class SafeH2Connection(connection.H2Connection):
                 raise_zombie(self.lock.release)
                 max_outbound_frame_size = self.max_outbound_frame_size
                 frame_chunk = chunk[position:position + max_outbound_frame_size]
-                if self.local_flow_control_window(stream_id) < len(frame_chunk):
+                if self.local_flow_control_window(stream_id) < len(frame_chunk):  # pragma: no cover
                     self.lock.release()
                     time.sleep(0.1)
                     continue
@@ -183,12 +183,12 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_data_received(self, eid, event, source_conn):
-        bsl = self.config.options.body_size_limit
+        bsl = self.config.options._processed.get("body_size_limit")
         if bsl and self.streams[eid].queued_data_length > bsl:
             self.streams[eid].kill()
             self.connections[source_conn].safe_reset_stream(
                 event.stream_id,
-                h2.errors.REFUSED_STREAM
+                h2.errors.ErrorCodes.REFUSED_STREAM
             )
             self.log("HTTP body too large. Limit is {}.".format(bsl), "info")
         else:
@@ -206,14 +206,15 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_stream_reset(self, eid, event, is_server, other_conn):
-        self.streams[eid].kill()
-        if eid in self.streams and event.error_code == h2.errors.CANCEL:
-            if is_server:
-                other_stream_id = self.streams[eid].client_stream_id
-            else:
-                other_stream_id = self.streams[eid].server_stream_id
-            if other_stream_id is not None:
-                self.connections[other_conn].safe_reset_stream(other_stream_id, event.error_code)
+        if eid in self.streams:
+            self.streams[eid].kill()
+            if event.error_code == h2.errors.ErrorCodes.CANCEL:
+                if is_server:
+                    other_stream_id = self.streams[eid].client_stream_id
+                else:
+                    other_stream_id = self.streams[eid].server_stream_id
+                if other_stream_id is not None:
+                    self.connections[other_conn].safe_reset_stream(other_stream_id, event.error_code)
         return True
 
     def _handle_remote_settings_changed(self, event, other_conn):
@@ -228,7 +229,7 @@ class Http2Layer(base.Layer):
             event.last_stream_id,
             event.additional_data), "info")
 
-        if event.error_code != h2.errors.NO_ERROR:
+        if event.error_code != h2.errors.ErrorCodes.NO_ERROR:
             # Something terrible has happened - kill everything!
             self.connections[self.client_conn].close_connection(
                 error_code=event.error_code,
@@ -362,7 +363,7 @@ class Http2Layer(base.Layer):
             self._kill_all_streams()
 
 
-def detect_zombie_stream(func):
+def detect_zombie_stream(func):  # pragma: no cover
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         self.raise_zombie()
@@ -454,7 +455,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         else:
             return self.request_data_finished
 
-    def raise_zombie(self, pre_command=None):
+    def raise_zombie(self, pre_command=None):  # pragma: no cover
         connection_closed = self.h2_connection.state_machine.state == h2.connection.ConnectionState.CLOSED
         if self.zombie is not None or connection_closed:
             if pre_command is not None:
@@ -626,7 +627,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             self.log(repr(e), "info")
         except exceptions.SetServerNotAllowedException as e:  # pragma: no cover
             self.log("Changing the Host server for HTTP/2 connections not allowed: {}".format(e), "info")
-        except exceptions.Kill:
+        except exceptions.Kill:  # pragma: no cover
             self.log("Connection killed", "info")
 
         self.kill()

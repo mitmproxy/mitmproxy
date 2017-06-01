@@ -1,4 +1,5 @@
 import io
+import uuid
 
 from mitmproxy.net import websockets
 from mitmproxy.test import tutils
@@ -70,6 +71,7 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
         handshake_flow.response = resp
 
     f = websocket.WebSocketFlow(client_conn, server_conn, handshake_flow)
+    handshake_flow.metadata['websocket_flow'] = f
 
     if messages is True:
         messages = [
@@ -145,6 +147,7 @@ def tclient_conn():
     @return: mitmproxy.proxy.connection.ClientConnection
     """
     c = connections.ClientConnection.from_state(dict(
+        id=str(uuid.uuid4()),
         address=("address", 22),
         clientcert=None,
         mitmcert=None,
@@ -168,9 +171,10 @@ def tserver_conn():
     @return: mitmproxy.proxy.connection.ServerConnection
     """
     c = connections.ServerConnection.from_state(dict(
+        id=str(uuid.uuid4()),
         address=("address", 22),
         source_address=("address", 22),
-        ip_address=None,
+        ip_address=("192.168.0.1", 22),
         cert=None,
         timestamp_start=1,
         timestamp_tcp_setup=2,
@@ -179,7 +183,7 @@ def tserver_conn():
         ssl_established=False,
         sni="address",
         alpn_proto_negotiated=None,
-        tls_version=None,
+        tls_version="TLSv1.2",
         via=None,
     ))
     c.reply = controller.DummyReply()

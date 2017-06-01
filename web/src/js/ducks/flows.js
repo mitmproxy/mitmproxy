@@ -1,5 +1,6 @@
 import { fetchApi } from "../utils"
-import reduceStore, * as storeActions from "./utils/store"
+import reduceStore from "./utils/store"
+import * as storeActions from "./utils/store"
 import Filt from "../filt/filt"
 import { RequestUtils } from "../flow/utils"
 
@@ -29,8 +30,6 @@ export default function reduce(state = defaultState, action) {
         case UPDATE:
         case REMOVE:
         case RECEIVE:
-            // FIXME: Update state.selected on REMOVE:
-            // The selected flow may have been removed, we need to select the next one in the view.
             let storeAction = storeActions[action.cmd](
                 action.data,
                 makeFilter(state.filter),
@@ -152,22 +151,20 @@ export function setSort(column, desc) {
     return { type: SET_SORT, sort: { column, desc } }
 }
 
-export function selectRelative(shift) {
-    return (dispatch, getState) => {
-        let currentSelectionIndex = getState().flows.viewIndex[getState().flows.selected[0]]
-        let minIndex              = 0
-        let maxIndex              = getState().flows.view.length - 1
-        let newIndex
-        if (currentSelectionIndex === undefined) {
-            newIndex = (shift < 0) ? minIndex : maxIndex
-        } else {
-            newIndex = currentSelectionIndex + shift
-            newIndex = window.Math.max(newIndex, minIndex)
-            newIndex = window.Math.min(newIndex, maxIndex)
-        }
-        let flow = getState().flows.view[newIndex]
-        dispatch(select(flow ? flow.id : undefined))
+export function selectRelative(flows, shift) {
+    let currentSelectionIndex = flows.viewIndex[flows.selected[0]]
+    let minIndex = 0
+    let maxIndex = flows.view.length - 1
+    let newIndex
+    if (currentSelectionIndex === undefined) {
+        newIndex = (shift < 0) ? minIndex : maxIndex
+    } else {
+        newIndex = currentSelectionIndex + shift
+        newIndex = window.Math.max(newIndex, minIndex)
+        newIndex = window.Math.min(newIndex, maxIndex)
     }
+    let flow = flows.view[newIndex]
+    return select(flow ? flow.id : undefined)
 }
 
 
@@ -212,7 +209,7 @@ export function uploadContent(flow, file, type) {
     const body = new FormData()
     file       = new window.Blob([file], { type: 'plain/text' })
     body.append('file', file)
-    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content`, { method: 'post', body })
+    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content`, { method: 'POST', body })
 }
 
 
@@ -228,7 +225,7 @@ export function download() {
 export function upload(file) {
     const body = new FormData()
     body.append('file', file)
-    return dispatch => fetchApi('/flows/dump', { method: 'post', body })
+    return dispatch => fetchApi('/flows/dump', { method: 'POST', body })
 }
 
 

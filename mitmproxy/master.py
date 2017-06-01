@@ -1,21 +1,17 @@
-import os
 import threading
 import contextlib
 import queue
-import sys
 
 from mitmproxy import addonmanager
 from mitmproxy import options
 from mitmproxy import controller
 from mitmproxy import eventsequence
 from mitmproxy import exceptions
-from mitmproxy import connections
+from mitmproxy import command
 from mitmproxy import http
 from mitmproxy import log
-from mitmproxy import io
 from mitmproxy.proxy.protocol import http_replay
 from mitmproxy.types import basethread
-import mitmproxy.net.http
 
 from . import ctx as mitmproxy_ctx
 
@@ -38,10 +34,12 @@ class Master:
     """
     def __init__(self, opts, server):
         self.options = opts or options.Options()
+        self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
         self.server = server
+        self.first_tick = True
         channel = controller.Channel(self.event_queue, self.should_exit)
         server.set_channel(channel)
 
@@ -53,11 +51,13 @@ class Master:
             return
         mitmproxy_ctx.master = self
         mitmproxy_ctx.log = log.Log(self)
+        mitmproxy_ctx.options = self.options
         try:
             yield
         finally:
             mitmproxy_ctx.master = None
             mitmproxy_ctx.log = None
+            mitmproxy_ctx.options = None
 
     def tell(self, mtype, m):
         m.reply = controller.DummyReply()
@@ -67,8 +67,7 @@ class Master:
         """
             level: debug, info, warn, error
         """
-        with self.handlecontext():
-            self.addons("log", log.LogEntry(e, level))
+        self.addons.trigger("log", log.LogEntry(e, level))
 
     def start(self):
         self.should_exit.clear()
@@ -78,16 +77,15 @@ class Master:
         self.start()
         try:
             while not self.should_exit.is_set():
-                # Don't choose a very small timeout in Python 2:
-                # https://github.com/mitmproxy/mitmproxy/issues/443
-                # TODO: Lower the timeout value if we move to Python 3.
                 self.tick(0.1)
         finally:
             self.shutdown()
 
     def tick(self, timeout):
-        with self.handlecontext():
-            self.addons("tick")
+        if self.first_tick:
+            self.first_tick = False
+            self.addons.trigger("running")
+        self.addons.trigger("tick")
         changed = False
         try:
             mtype, obj = self.event_queue.get(timeout=timeout)
@@ -95,18 +93,7 @@ class Master:
                 raise exceptions.ControlException(
                     "Unknown event %s" % repr(mtype)
                 )
-            handle_func = getattr(self, mtype)
-            if not callable(handle_func):
-                raise exceptions.ControlException(
-                    "Handler %s not callable" % mtype
-                )
-            if not handle_func.__dict__.get("__handler"):
-                raise exceptions.ControlException(
-                    "Handler function %s is not decorated with controller.handler" % (
-                        handle_func
-                    )
-                )
-            handle_func(obj)
+            self.addons.handle_lifecycle(mtype, obj)
             self.event_queue.task_done()
             changed = True
         except queue.Empty:
@@ -116,72 +103,20 @@ class Master:
     def shutdown(self):
         self.server.shutdown()
         self.should_exit.set()
-        self.addons.done()
-
-    def create_request(self, method, scheme, host, port, path):
-        """
-            this method creates a new artificial and minimalist request also adds it to flowlist
-        """
-        c = connections.ClientConnection.make_dummy(("", 0))
-        s = connections.ServerConnection.make_dummy((host, port))
-
-        f = http.HTTPFlow(c, s)
-        headers = mitmproxy.net.http.Headers()
-
-        req = http.HTTPRequest(
-            "absolute",
-            method,
-            scheme,
-            host,
-            port,
-            path,
-            b"HTTP/1.1",
-            headers,
-            b""
-        )
-        f.request = req
-        self.load_flow(f)
-        return f
+        self.addons.trigger("done")
 
     def load_flow(self, f):
         """
         Loads a flow
         """
         if isinstance(f, http.HTTPFlow):
-            if self.server and self.options.mode == "reverse":
+            if self.server and self.options.mode.startswith("reverse:"):
                 f.request.host = self.server.config.upstream_server.address[0]
                 f.request.port = self.server.config.upstream_server.address[1]
                 f.request.scheme = self.server.config.upstream_server.scheme
         f.reply = controller.DummyReply()
         for e, o in eventsequence.iterate(f):
-            getattr(self, e)(o)
-
-    def load_flows(self, fr: io.FlowReader) -> int:
-        """
-            Load flows from a FlowReader object.
-        """
-        cnt = 0
-        for i in fr.stream():
-            cnt += 1
-            self.load_flow(i)
-        return cnt
-
-    def load_flows_file(self, path: str) -> int:
-        path = os.path.expanduser(path)
-        try:
-            if path == "-":
-                try:
-                    sys.stdin.buffer.read(0)
-                except Exception as e:
-                    raise IOError("Cannot read from stdin: {}".format(e))
-                freader = io.FlowReader(sys.stdin.buffer)
-                return self.load_flows(freader)
-            else:
-                with open(path, "rb") as f:
-                    freader = io.FlowReader(f)
-                    return self.load_flows(freader)
-        except IOError as v:
-            raise exceptions.FlowReadException(v.strerror)
+            self.addons.handle_lifecycle(e, o)
 
     def replay_request(
             self,
@@ -212,13 +147,13 @@ class Master:
             raise exceptions.ReplayException(
                 "Can't replay intercepted flow."
             )
-        if f.request.raw_content is None:
-            raise exceptions.ReplayException(
-                "Can't replay flow with missing content."
-            )
         if not f.request:
             raise exceptions.ReplayException(
                 "Can't replay flow with missing request."
+            )
+        if f.request.raw_content is None:
+            raise exceptions.ReplayException(
+                "Can't replay flow with missing content."
             )
 
         f.backup()
@@ -237,87 +172,3 @@ class Master:
         if block:
             rt.join()
         return rt
-
-    @controller.handler
-    def log(self, l):
-        pass
-
-    @controller.handler
-    def clientconnect(self, root_layer):
-        pass
-
-    @controller.handler
-    def clientdisconnect(self, root_layer):
-        pass
-
-    @controller.handler
-    def serverconnect(self, server_conn):
-        pass
-
-    @controller.handler
-    def serverdisconnect(self, server_conn):
-        pass
-
-    @controller.handler
-    def next_layer(self, top_layer):
-        pass
-
-    @controller.handler
-    def http_connect(self, f):
-        pass
-
-    @controller.handler
-    def error(self, f):
-        pass
-
-    @controller.handler
-    def requestheaders(self, f):
-        pass
-
-    @controller.handler
-    def request(self, f):
-        pass
-
-    @controller.handler
-    def responseheaders(self, f):
-        pass
-
-    @controller.handler
-    def response(self, f):
-        pass
-
-    @controller.handler
-    def websocket_handshake(self, f):
-        pass
-
-    @controller.handler
-    def websocket_start(self, flow):
-        pass
-
-    @controller.handler
-    def websocket_message(self, flow):
-        pass
-
-    @controller.handler
-    def websocket_error(self, flow):
-        pass
-
-    @controller.handler
-    def websocket_end(self, flow):
-        pass
-
-    @controller.handler
-    def tcp_start(self, flow):
-        pass
-
-    @controller.handler
-    def tcp_message(self, flow):
-        pass
-
-    @controller.handler
-    def tcp_error(self, flow):
-        pass
-
-    @controller.handler
-    def tcp_end(self, flow):
-        pass

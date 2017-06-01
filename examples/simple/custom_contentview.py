@@ -13,14 +13,14 @@ class ViewSwapCase(contentviews.View):
     prompt = ("swap case text", "z")
     content_types = ["text/plain"]
 
-    def __call__(self, data: bytes, **metadata):
+    def __call__(self, data, **metadata) -> contentviews.TViewResult:
         return "case-swapped text", contentviews.format_text(data.swapcase())
 
 
 view = ViewSwapCase()
 
 
-def start():
+def load(l):
     contentviews.add(view)
 
 

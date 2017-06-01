@@ -128,6 +128,7 @@ def is_inline_text(a: Token, b: Token, c: Token) -> bool:
     if isinstance(a, Tag) and isinstance(b, Text) and isinstance(c, Tag):
         if a.is_opening and "\n" not in b.data and c.is_closing and a.tag == c.tag:
             return True
+    return False
 
 
 def is_inline(prev2: Token, prev1: Token, t: Token, next1: Token, next2: Token) -> bool:
@@ -140,6 +141,7 @@ def is_inline(prev2: Token, prev1: Token, t: Token, next1: Token, next2: Token) 
                 return True  # <div></div> (start tag)
         if isinstance(prev1, Tag) and prev1.is_opening and t.is_closing and prev1.tag == t.tag:
             return True  # <div></div> (end tag)
+    return False
 
 
 class ElementStack:

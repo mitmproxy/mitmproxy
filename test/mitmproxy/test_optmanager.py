@@ -1,56 +1,54 @@
 import copy
-import os
 import pytest
+import typing
+import argparse
 
 from mitmproxy import options
 from mitmproxy import optmanager
 from mitmproxy import exceptions
-from mitmproxy.test import tutils
 
 
 class TO(optmanager.OptManager):
-    def __init__(self, one=None, two=None):
-        self.one = one
-        self.two = two
+    def __init__(self):
         super().__init__()
+        self.add_option("one", typing.Optional[int], None, "help")
+        self.add_option("two", typing.Optional[int], 2, "help")
+        self.add_option("bool", bool, False, "help")
+        self.add_option("required_int", int, 2, "help")
 
 
 class TD(optmanager.OptManager):
-    def __init__(self, *, one="done", two="dtwo", three="error"):
-        self.one = one
-        self.two = two
-        self.three = three
+    def __init__(self):
         super().__init__()
+        self.add_option("one", str, "done", "help")
+        self.add_option("two", str, "dtwo", "help")
 
 
 class TD2(TD):
-    def __init__(self, *, three="dthree", four="dfour", **kwargs):
-        self.three = three
-        self.four = four
-        super().__init__(three=three, **kwargs)
+    def __init__(self):
+        super().__init__()
+        self.add_option("three", str, "dthree", "help")
+        self.add_option("four", str, "dfour", "help")
 
 
 class TM(optmanager.OptManager):
-    def __init__(self, one="one", two=["foo"], three=None):
-        self.one = one
-        self.two = two
-        self.three = three
+    def __init__(self):
         super().__init__()
+        self.add_option("two", typing.Sequence[str], ["foo"], "help")
+        self.add_option("one", typing.Optional[str], None, "help")
 
 
 def test_defaults():
-    assert TD2.default("one") == "done"
-    assert TD2.default("two") == "dtwo"
-    assert TD2.default("three") == "dthree"
-    assert TD2.default("four") == "dfour"
-
     o = TD2()
-    assert o._defaults == {
+    defaults = {
         "one": "done",
         "two": "dtwo",
         "three": "dthree",
         "four": "dfour",
     }
+    for k, v in defaults.items():
+        assert o.default(k) == v
+
     assert not o.has_changed("one")
     newvals = dict(
         one="xone",
@@ -64,25 +62,33 @@ def test_defaults():
         assert v == getattr(o, k)
     o.reset()
     assert not o.has_changed("one")
-    for k, v in o._defaults.items():
-        assert v == getattr(o, k)
+
+    for k in o.keys():
+        assert not o.has_changed(k)
+
+
+def test_required_int():
+    o = TO()
+    with pytest.raises(exceptions.OptionsError):
+        o.parse_setval("required_int", None)
 
 
 def test_options():
-    o = TO(two="three")
-    assert o.keys() == set(["one", "two"])
+    o = TO()
+    assert o.keys() == {"bool", "one", "two", "required_int"}
 
     assert o.one is None
-    assert o.two == "three"
-    o.one = "one"
-    assert o.one == "one"
+    assert o.two == 2
+    o.one = 1
+    assert o.one == 1
 
     with pytest.raises(TypeError):
         TO(nonexistent = "value")
-    with pytest.raises(Exception, match="No such option"):
+    with pytest.raises(Exception, match="Unknown options"):
         o.nonexistent = "value"
-    with pytest.raises(Exception, match="No such option"):
+    with pytest.raises(Exception, match="Unknown options"):
         o.update(nonexistent = "value")
+    assert o.update_known(nonexistent = "value") == {"nonexistent": "value"}
 
     rec = []
 
@@ -91,33 +97,37 @@ def test_options():
 
     o.changed.connect(sub)
 
-    o.one = "ninety"
+    o.one = 90
     assert len(rec) == 1
-    assert rec[-1].one == "ninety"
+    assert rec[-1].one == 90
 
-    o.update(one="oink")
+    o.update(one=3)
     assert len(rec) == 2
-    assert rec[-1].one == "oink"
+    assert rec[-1].one == 3
 
 
 def test_setter():
-    o = TO(two="three")
+    o = TO()
     f = o.setter("two")
-    f("xxx")
-    assert o.two == "xxx"
+    f(99)
+    assert o.two == 99
     with pytest.raises(Exception, match="No such option"):
         o.setter("nonexistent")
 
 
 def test_toggler():
-    o = TO(two=True)
-    f = o.toggler("two")
+    o = TO()
+    f = o.toggler("bool")
+    assert o.bool is False
     f()
-    assert o.two is False
+    assert o.bool is True
     f()
-    assert o.two is True
+    assert o.bool is False
     with pytest.raises(Exception, match="No such option"):
         o.toggler("nonexistent")
+
+    with pytest.raises(Exception, match="boolean options"):
+        o.toggler("one")
 
 
 class Rec():
@@ -131,20 +141,47 @@ class Rec():
 def test_subscribe():
     o = TO()
     r = Rec()
+
+    # pytest.raises keeps a reference here that interferes with the cleanup test
+    # further down.
+    try:
+        o.subscribe(r, ["unknown"])
+    except exceptions.OptionsError:
+        pass
+    else:
+        raise AssertionError
+
+    assert len(o.changed.receivers) == 0
+
     o.subscribe(r, ["two"])
-    o.one = "foo"
+    o.one = 2
     assert not r.called
-    o.two = "foo"
+    o.two = 3
     assert r.called
 
     assert len(o.changed.receivers) == 1
     del r
-    o.two = "bar"
+    o.two = 4
     assert len(o.changed.receivers) == 0
+
+    class binder:
+        def __init__(self):
+            self.o = TO()
+            self.called = False
+            self.o.subscribe(self.bound, ["two"])
+
+        def bound(self, *args, **kwargs):
+            self.called = True
+
+    t = binder()
+    t.o.one = 3
+    assert not t.called
+    t.o.two = 3
+    assert t.called
 
 
 def test_rollback():
-    o = TO(one="two")
+    o = TO()
 
     rec = []
 
@@ -157,88 +194,115 @@ def test_rollback():
         recerr.append(kwargs)
 
     def err(opts, updated):
-        if opts.one == "ten":
+        if opts.one == 10:
+            raise exceptions.OptionsError()
+        if opts.bool is True:
             raise exceptions.OptionsError()
 
     o.changed.connect(sub)
     o.changed.connect(err)
     o.errored.connect(errsub)
 
-    o.one = "ten"
+    assert o.one is None
+    with pytest.raises(exceptions.OptionsError):
+        o.one = 10
+    assert o.one is None
+    with pytest.raises(exceptions.OptionsError):
+        o.bool = True
+    assert o.bool is False
     assert isinstance(recerr[0]["exc"], exceptions.OptionsError)
-    assert o.one == "two"
-    assert len(rec) == 2
-    assert rec[0].one == "ten"
-    assert rec[1].one == "two"
+    assert o.one is None
+    assert o.bool is False
+    assert len(rec) == 4
+    assert rec[0].one == 10
+    assert rec[1].one is None
+    assert rec[2].bool is True
+    assert rec[3].bool is False
+
+    with pytest.raises(exceptions.OptionsError):
+        with o.rollback({"one"}, reraise=True):
+            raise exceptions.OptionsError()
 
 
-def test_repr():
-    assert repr(TO()) == "test.mitmproxy.test_optmanager.TO({'one': None, 'two': None})"
-    assert repr(TO(one='x' * 60)) == """test.mitmproxy.test_optmanager.TO({
-    'one': 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-    'two': None
-})"""
+def test_simple():
+    assert repr(TO())
+    assert "one" in TO()
 
 
 def test_serialize():
     o = TD2()
     o.three = "set"
-    assert "dfour" in o.serialize(None, defaults=True)
+    assert "dfour" in optmanager.serialize(o, None, defaults=True)
 
-    data = o.serialize(None)
+    data = optmanager.serialize(o, None)
     assert "dfour" not in data
 
     o2 = TD2()
-    o2.load(data)
+    optmanager.load(o2, data)
     assert o2 == o
 
     t = """
         unknown: foo
     """
-    data = o.serialize(t)
+    data = optmanager.serialize(o, t)
     o2 = TD2()
-    o2.load(data)
+    optmanager.load(o2, data)
     assert o2 == o
 
     t = "invalid: foo\ninvalid"
     with pytest.raises(Exception, match="Config error"):
-        o2.load(t)
+        optmanager.load(o2, t)
 
     t = "invalid"
     with pytest.raises(Exception, match="Config error"):
-        o2.load(t)
+        optmanager.load(o2, t)
 
     t = ""
-    o2.load(t)
-
-    with pytest.raises(exceptions.OptionsError, matches='No such option: foobar'):
-        o2.load("foobar: '123'")
+    optmanager.load(o2, t)
+    assert optmanager.load(o2, "foobar: '123'") == {"foobar": "123"}
 
 
 def test_serialize_defaults():
     o = options.Options()
-    assert o.serialize(None, defaults=True)
+    assert optmanager.serialize(o, None, defaults=True)
 
 
-def test_saving():
+def test_saving(tmpdir):
     o = TD2()
     o.three = "set"
-    with tutils.tmpdir() as tdir:
-        dst = os.path.join(tdir, "conf")
-        o.save(dst, defaults=True)
+    dst = str(tmpdir.join("conf"))
+    optmanager.save(o, dst, defaults=True)
 
-        o2 = TD2()
-        o2.load_paths(dst)
-        o2.three = "foo"
-        o2.save(dst, defaults=True)
+    o2 = TD2()
+    optmanager.load_paths(o2, dst)
+    o2.three = "foo"
+    optmanager.save(o2, dst, defaults=True)
 
-        o.load_paths(dst)
-        assert o.three == "foo"
+    optmanager.load_paths(o, dst)
+    assert o.three == "foo"
 
-        with open(dst, 'a') as f:
-            f.write("foobar: '123'")
-        with pytest.raises(exceptions.OptionsError, matches=''):
-            o.load_paths(dst)
+    with open(dst, 'a') as f:
+        f.write("foobar: '123'")
+    assert optmanager.load_paths(o, dst) == {"foobar": "123"}
+
+    with open(dst, 'a') as f:
+        f.write("'''")
+    with pytest.raises(exceptions.OptionsError):
+        optmanager.load_paths(o, dst)
+
+    with open(dst, 'wb') as f:
+        f.write(b"\x01\x02\x03")
+    with pytest.raises(exceptions.OptionsError):
+        optmanager.load_paths(o, dst)
+    with pytest.raises(exceptions.OptionsError):
+        optmanager.save(o, dst)
+
+    with open(dst, 'wb') as f:
+        f.write(b"\xff\xff\xff")
+    with pytest.raises(exceptions.OptionsError):
+        optmanager.load_paths(o, dst)
+    with pytest.raises(exceptions.OptionsError):
+        optmanager.save(o, dst)
 
 
 def test_merge():
@@ -249,3 +313,93 @@ def test_merge():
     assert m.one == "two"
     m.merge(dict(two=["bar"]))
     assert m.two == ["foo", "bar"]
+
+
+def test_option():
+    o = optmanager._Option("test", int, 1, "help", None)
+    assert o.current() == 1
+    with pytest.raises(TypeError):
+        o.set("foo")
+    with pytest.raises(TypeError):
+        optmanager._Option("test", str, 1, "help", None)
+
+    o2 = optmanager._Option("test", int, 1, "help", None)
+    assert o2 == o
+    o2.set(5)
+    assert o2 != o
+
+
+def test_dump_defaults():
+    o = options.Options()
+    assert optmanager.dump_defaults(o)
+
+
+class TTypes(optmanager.OptManager):
+    def __init__(self):
+        super().__init__()
+        self.add_option("str", str, "str", "help")
+        self.add_option("optstr", typing.Optional[str], "optstr", "help", "help")
+        self.add_option("bool", bool, False, "help")
+        self.add_option("bool_on", bool, True, "help")
+        self.add_option("int", int, 0, "help")
+        self.add_option("optint", typing.Optional[int], 0, "help")
+        self.add_option("seqstr", typing.Sequence[str], [], "help")
+        self.add_option("unknown", float, 0.0, "help")
+
+
+def test_make_parser():
+    parser = argparse.ArgumentParser()
+    opts = TTypes()
+    opts.make_parser(parser, "str", short="a")
+    opts.make_parser(parser, "bool", short="b")
+    opts.make_parser(parser, "int", short="c")
+    opts.make_parser(parser, "seqstr", short="d")
+    opts.make_parser(parser, "bool_on", short="e")
+    with pytest.raises(ValueError):
+        opts.make_parser(parser, "unknown")
+
+
+def test_set():
+    opts = TTypes()
+
+    opts.set("str=foo")
+    assert opts.str == "foo"
+    with pytest.raises(TypeError):
+        opts.set("str")
+
+    opts.set("optstr=foo")
+    assert opts.optstr == "foo"
+    opts.set("optstr")
+    assert opts.optstr is None
+
+    opts.set("bool=false")
+    assert opts.bool is False
+    opts.set("bool")
+    assert opts.bool is True
+    opts.set("bool=true")
+    assert opts.bool is True
+    with pytest.raises(exceptions.OptionsError):
+        opts.set("bool=wobble")
+
+    opts.set("bool=toggle")
+    assert opts.bool is False
+    opts.set("bool=toggle")
+    assert opts.bool is True
+
+    opts.set("int=1")
+    assert opts.int == 1
+    with pytest.raises(exceptions.OptionsError):
+        opts.set("int=wobble")
+    opts.set("optint")
+    assert opts.optint is None
+
+    assert opts.seqstr == []
+    opts.set("seqstr=foo")
+    assert opts.seqstr == ["foo"]
+    opts.set("seqstr=bar")
+    assert opts.seqstr == ["foo", "bar"]
+    opts.set("seqstr")
+    assert opts.seqstr == []
+
+    with pytest.raises(exceptions.OptionsError):
+        opts.set("nonexistent=wobble")

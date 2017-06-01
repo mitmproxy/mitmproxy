@@ -1,4 +1,5 @@
-import React, { PropTypes, Component } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { setContentView } from '../../ducks/ui/flow';
 import Dropdown from '../common/Dropdown'

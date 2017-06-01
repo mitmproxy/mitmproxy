@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import ReactDOM from 'react-dom'
 import shallowEqual from 'shallowequal'
 import AutoScroll from '../helpers/AutoScroll'
@@ -83,7 +84,12 @@ class EventLogList extends Component {
 }
 
 function LogIcon({ event }) {
-    const icon = { web: 'html5', debug: 'bug' }[event.level] || 'info'
+    const icon = {
+      web: 'html5',
+      debug: 'bug',
+      warn: 'exclamation-triangle',
+      error: 'ban'
+    }[event.level] || 'info'
     return <i className={`fa fa-fw fa-${icon}`}></i>
 }
 

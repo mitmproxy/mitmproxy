@@ -30,7 +30,7 @@ export default function reducer(state = defaultState, action) {
             // Deselect
             if (action.flowIds.length === 0 && state.isFlowSelected) {
                 let activeMenu = state.activeMenu
-                if (activeMenu == 'Flow') {
+                if (activeMenu === 'Flow') {
                     activeMenu = 'Start'
                 }
                 return {

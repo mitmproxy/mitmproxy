@@ -22,7 +22,7 @@ to interact with the secured resources.
 
 ================== ======================
 command-line       ``-t FILTER``
-mitmproxy shortcut :kbd:`o` then :kbd:`t`
+mitmproxy shortcut :kbd:`O` then :kbd:`t`
 ================== ======================
 
 
@@ -37,5 +37,5 @@ replay of HTTP Digest authentication.
 
 ================== ======================
 command-line       ``-u FILTER``
-mitmproxy shortcut :kbd:`o` then :kbd:`A`
+mitmproxy shortcut :kbd:`O` then :kbd:`A`
 ================== ======================

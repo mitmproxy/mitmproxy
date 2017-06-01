@@ -1,0 +1,86 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FileMenu Component should render correctly 1`] = `
+<div
+  className="dropdown pull-left"
+>
+  <a
+    className="special"
+    href="#"
+    onClick={[Function]}
+  >
+    mitmproxy
+  </a>
+  <ul
+    className="dropdown-menu"
+    role="menu"
+  >
+    <li>
+       
+      <a
+        href="#"
+        onClick={[Function]}
+      >
+        <i
+          className="fa fa-fw fa-file"
+        />
+         New
+      </a>
+       
+    </li>
+    <li>
+       
+      <a
+        className={undefined}
+        href="#"
+        onClick={[Function]}
+        title={undefined}
+      >
+        <i
+          className="fa fa-fw fa-folder-open"
+        />
+         Open...
+        <input
+          className="hidden"
+          onChange={[Function]}
+          type="file"
+        />
+      </a>
+       
+    </li>
+    <li>
+       
+      <a
+        href="#"
+        onClick={[Function]}
+      >
+        <i
+          className="fa fa-fw fa-floppy-o"
+        />
+         Save...
+      </a>
+       
+    </li>
+    <li>
+       
+      <hr
+        className="divider"
+      />
+       
+    </li>
+    <li>
+       
+      <a
+        href="http://mitm.it/"
+        target="_blank"
+      >
+        <i
+          className="fa fa-fw fa-external-link"
+        />
+         Install Certificates...
+      </a>
+       
+    </li>
+  </ul>
+</div>
+`;

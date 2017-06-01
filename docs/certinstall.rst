@@ -24,6 +24,9 @@ something like this:
 Click on the relevant icon, follow the setup instructions for the platform
 you're on and you are good to go.
 
+For iOS version 10.3 or up, you need to make sure ``mitmproxy`` is enabled in 
+``Certificate Trust Settings``, you can check it by going to 
+``Settings > General > About > Certificate Trust Settings``.
 
 Installing the mitmproxy CA certificate manually
 ------------------------------------------------
@@ -132,7 +135,7 @@ mitmproxy-ca-cert.cer Same file as .pem, but with an extension expected by some 
 Using a custom certificate
 --------------------------
 
-You can use your own certificate by passing the ``--cert [domain=]path_to_certificate`` option to
+You can use your own (leaf) certificate by passing the ``--cert [domain=]path_to_certificate`` option to
 mitmproxy. Mitmproxy then uses the provided certificate for interception of the
 specified domain instead of generating a certificate signed by its own CA.
 

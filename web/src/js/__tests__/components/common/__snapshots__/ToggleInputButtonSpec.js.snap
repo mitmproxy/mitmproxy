@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ToggleInputButton Component should render correctly 1`] = `
+<div
+  className="input-group toggle-input-btn"
+>
+  <span
+    className="input-group-btn"
+    onClick={[Function]}
+  >
+    <div
+      className="btn btn-primary"
+    >
+      <span
+        className="fa fa-check-square-o"
+      />
+       
+      foo
+    </div>
+  </span>
+  <input
+    className="form-control"
+    disabled={true}
+    onChange={[Function]}
+    onKeyDown={[Function]}
+    placeholder="bar"
+    type="text"
+    value=""
+  />
+</div>
+`;

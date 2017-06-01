@@ -11,8 +11,8 @@ from OpenSSL import SSL
 
 from mitmproxy import certs
 from mitmproxy.net import tcp
-from mitmproxy.test import tutils
 from mitmproxy import exceptions
+from mitmproxy.test import tutils
 
 from . import tservers
 from ...conftest import requires_alpn
@@ -34,7 +34,7 @@ class ClientCipherListHandler(tcp.BaseHandler):
     sni = None
 
     def handle(self):
-        self.wfile.write("%s" % self.connection.get_cipher_list())
+        self.wfile.write(str(self.connection.get_cipher_list()).encode())
         self.wfile.flush()
 
 
@@ -398,7 +398,8 @@ class TestServerCipherList(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl(sni="foo.com")
-            assert c.rfile.readline() == b"['AES256-GCM-SHA384']"
+            expected = b"['AES256-GCM-SHA384']"
+            assert c.rfile.read(len(expected) + 2) == expected
 
 
 class TestServerCurrentCipher(tservers.ServerTestBase):
@@ -424,7 +425,7 @@ class TestServerCurrentCipher(tservers.ServerTestBase):
 class TestServerCipherListError(tservers.ServerTestBase):
     handler = ClientCipherListHandler
     ssl = dict(
-        cipher_list='bogus'
+        cipher_list=b'bogus'
     )
 
     def test_echo(self):
@@ -529,10 +530,10 @@ class TestTimeOut(tservers.ServerTestBase):
 class TestCryptographyALPN:
 
     def test_has_alpn(self):
-        if 'OPENSSL_ALPN' in os.environ:
+        if os.environ.get("OPENSSL") == "with-alpn":
             assert tcp.HAS_ALPN
             assert SSL._lib.Cryptography_HAS_ALPN
-        elif 'OPENSSL_OLD' in os.environ:
+        elif os.environ.get("OPENSSL") == "old":
             assert not tcp.HAS_ALPN
             assert not SSL._lib.Cryptography_HAS_ALPN
 
@@ -603,12 +604,36 @@ class TestDHParams(tservers.ServerTestBase):
             assert ret[0] == "DHE-RSA-AES256-SHA"
 
 
-class TestTCPClient:
+class TestTCPClient(tservers.ServerTestBase):
 
     def test_conerr(self):
         c = tcp.TCPClient(("127.0.0.1", 0))
-        with pytest.raises(exceptions.TcpException):
+        with pytest.raises(exceptions.TcpException, match="Error connecting"):
             c.connect()
+
+    def test_timeout(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        with c.create_connection(timeout=20) as conn:
+            assert conn.gettimeout() == 20
+
+    def test_spoof_address(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port), spoof_source_address=("127.0.0.1", 0))
+        with pytest.raises(exceptions.TcpException, match="Failed to spoof"):
+            c.connect()
+
+
+class TestTCPServer:
+
+    def test_binderr(self):
+        with pytest.raises(socket.error, match="prohibited"):
+            tcp.TCPServer(("localhost", 8080))
+
+    def test_wait_for_silence(self):
+        s = tcp.TCPServer(("127.0.0.1", 0))
+        with s.handler_counter:
+            with pytest.raises(exceptions.Timeout):
+                s.wait_for_silence()
+            s.shutdown()
 
 
 class TestFileLike:
@@ -783,25 +808,24 @@ class TestSSLKeyLogger(tservers.ServerTestBase):
         cipher_list="AES256-SHA"
     )
 
-    def test_log(self):
+    def test_log(self, tmpdir):
         testval = b"echo!\n"
         _logfun = tcp.log_ssl_key
 
-        with tutils.tmpdir() as d:
-            logfile = os.path.join(d, "foo", "bar", "logfile")
-            tcp.log_ssl_key = tcp.SSLKeyLogger(logfile)
+        logfile = str(tmpdir.join("foo", "bar", "logfile"))
+        tcp.log_ssl_key = tcp.SSLKeyLogger(logfile)
 
-            c = tcp.TCPClient(("127.0.0.1", self.port))
-            with c.connect():
-                c.convert_to_ssl()
-                c.wfile.write(testval)
-                c.wfile.flush()
-                assert c.rfile.readline() == testval
-                c.finish()
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        with c.connect():
+            c.convert_to_ssl()
+            c.wfile.write(testval)
+            c.wfile.flush()
+            assert c.rfile.readline() == testval
+            c.finish()
 
-                tcp.log_ssl_key.close()
-                with open(logfile, "rb") as f:
-                    assert f.read().count(b"CLIENT_RANDOM") == 2
+            tcp.log_ssl_key.close()
+            with open(logfile, "rb") as f:
+                assert f.read().count(b"CLIENT_RANDOM") == 2
 
         tcp.log_ssl_key = _logfun
 
@@ -812,7 +836,7 @@ class TestSSLKeyLogger(tservers.ServerTestBase):
         assert not tcp.SSLKeyLogger.create_logfun(False)
 
 
-class TestSSLInvalidMethod(tservers.ServerTestBase):
+class TestSSLInvalid(tservers.ServerTestBase):
     handler = EchoHandler
     ssl = True
 
@@ -822,3 +846,13 @@ class TestSSLInvalidMethod(tservers.ServerTestBase):
         with c.connect():
             with pytest.raises(exceptions.TlsException):
                 c.convert_to_ssl(method=fake_ssl_method)
+
+    def test_alpn_error(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        with c.connect():
+            if tcp.HAS_ALPN:
+                with pytest.raises(exceptions.TlsException, match="must be a function"):
+                    c.create_ssl_context(alpn_select_callback="foo")
+
+                with pytest.raises(exceptions.TlsException, match="ALPN error"):
+                    c.create_ssl_context(alpn_select="foo", alpn_select_callback="bar")

@@ -54,7 +54,9 @@ class Method(base.OptionsOrValue):
 
 
 class _HeaderMixin:
-    unique_name = None
+    @property
+    def unique_name(self):
+        return None
 
     def format_header(self, key, value):
         return [key, b": ", value, b"\r\n"]
@@ -143,7 +145,7 @@ class _HTTPMessage(message.Message):
 
 
 class Response(_HTTPMessage):
-    unique_name = None
+    unique_name = None  # type: ignore
     comps = (
         Header,
         ShortcutContentType,
@@ -251,7 +253,7 @@ class Response(_HTTPMessage):
         return ":".join([i.spec() for i in self.tokens])
 
 
-class NestedResponse(base.NestedMessage):
+class NestedResponse(message.NestedMessage):
     preamble = "s"
     nest_type = Response
 

@@ -1,46 +1,85 @@
 {% extends "frame.html" %}
 {% block body %}
 
+<script>
+function changeTo(device) {
+    if (device == "apple") {
+        var text = `<h3>Apple: How to install on macOS / OSX</h3>
+                      <ul>
+                        <li>Double-click the PEM file</li>
+                        <li>The "Keychain Access" applications opens</li>
+                        <li>Find the new certificate "mitmproxy" in the list</li>
+                        <li>Double-click the "mitmproxy" entry</li>
+                        <li>A dialog window openes up</li>
+                        <li>Change "Secure Socket Layer (SSL)" to "Always Trust"</li>
+                        <li>Close the dialog window (and enter your password if prompted)</li>
+                        <li>For iOS version 10.3 or up, you need to make sure mitmproxy is enabled in<br>
+                            Certificate Trust Settings, you can check it by going to<br>
+                            Settings > General > About > Certificate Trust Settings</li>
+                        <li>Done!</li>
+                      </ul>`;
+    }
+    else if (device == "windows") {
+        var text = `<h3>Windows: How to install on Windows</h3>
+                      <ul>
+                        <li>Double-click the P12 file</li>
+                        <li>Select Store Location for Current User and click Next</li>
+                        <li>Click Next</li>
+                        <li>Leave the Password column blank and click Next</li>
+                        <li>Select Place all certificates in the following store</li>
+                        <li>Click Browse and select Trusted Root Certification Authorities</li>
+                        <li>Click Next and then click Finish</li>
+                        <li>Click Yes if prompted for confirmation</li>
+                        <li>Done!</li>
+                      </ul>`;
+    }
+    else if (device == "android") {
+        var text = `<h3>Android: How to install on Android</h3>
+                      <ul>
+                        <li>Open your device's Settings app</li>
+                        <li>Under "Credential storage," tap Install from storage</li>
+                        <li>Under "Open from," tap where you saved the certificate</li>
+                        <li>Tap the file</li>
+                        <li>If prompted, enter the key store password and tap OK</li>
+                        <li>Type a name for the certificate</li>
+                        <li>Pick VPN and apps</li>
+                        <li>Tap OK</li>
+                        <li>Done!</li>
+                      </ul>`;
+    }
+    else if (device == "asterisk") {
+        var text = "";
+    }
+    document.getElementById("dynamic").innerHTML = text;
+}
+</script>
+
 <center>
 <h2> Click to install the mitmproxy certificate: </h2>
 </center>
 <div id="certbank" class="row">
     <div class="col-md-3">
-        <a href="/cert/pem"><i class="fa fa-apple fa-5x"></i></a>
+        <a onclick="changeTo('apple')" href="/cert/pem"><i class="fa fa-apple fa-5x"></i></a>
         <p>Apple</p>
     </div>
     <div class="col-md-3">
-        <a href="/cert/p12"><i class="fa fa-windows fa-5x"></i></a>
+        <a onclick="changeTo('windows')" href="/cert/p12"><i class="fa fa-windows fa-5x"></i></a>
         <p>Windows</p>
     </div>
     <div class="col-md-3">
-        <a href="/cert/pem"><i class="fa fa-android fa-5x"></i></a>
+        <a onclick="changeTo('android')" href="/cert/pem"><i class="fa fa-android fa-5x"></i></a>
         <p>Android</p>
     </div>
     <div class="col-md-3">
-        <a href="/cert/pem"><i class="fa fa-asterisk fa-5x"></i></a>
+        <a onclick="changeTo('asterisk')" href="/cert/pem"><i class="fa fa-asterisk fa-5x"></i></a>
         <p>Other</p>
     </div>
 </div>
 
 <hr/>
 
-<div class="text-left">
-  <h3>Apple: How to install on macOS / OSX</h3>
-  <ul>
-    <li>Download PEM file (from above link)</li>
-    <li>Double-click the PEM file</li>
-    <li>The "Keychain Access" applications opens</li>
-    <li>Find the new certificate "mitmproxy" in the list</li>
-    <li>Double-click the "mitmproxy" entry</li>
-    <li>A dialog window openes up</li>
-    <li>Change "Secure Socket Layer (SSL)" to "Always Trust"</li>
-    <li>Close the dialog window (and enter your password if prompted)</li>
-    <li>Done!</li>
-  </ul>
+<div class="text-left" id="dynamic">
 </div>
-
-
 
 <hr/>
 

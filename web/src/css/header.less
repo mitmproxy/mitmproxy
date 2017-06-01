@@ -1,5 +1,7 @@
 @import (reference) '../../node_modules/bootstrap/less/variables.less';
 @import (reference) '../../node_modules/bootstrap/less/mixins/grid.less';
+@import (reference) "../../node_modules/bootstrap/less/mixins/labels.less";
+@import (reference) "../../node_modules/bootstrap/less/labels.less";
 
 @menu-height: 85px;
 
@@ -7,7 +9,7 @@ header {
     padding-top: 6px;
     background-color: white;
     @separator-color: lighten(grey, 15%);
-    menu {
+    > div {
         display: block;
         margin: 0;
         padding: 0;
@@ -45,7 +47,6 @@ header {
     }
 }
 
-
 .menu-entry {
     text-align: left;
     height: (@menu-height - @menu-legend-height)/3;
@@ -62,7 +63,6 @@ header {
         vertical-align: middle;
     }
 }
-
 
 .menu-legend {
     height: @menu-legend-height;
@@ -106,9 +106,17 @@ header {
 
 .filter-input .popover {
     top: 27px;
+    left: 43px;
     display: block;
     max-width: none;
     opacity: 0.9;
+
+    @media (max-width: @screen-xs-max) {
+
+        top: 16px;
+        left: 29px;
+        right: 2px;
+    }
 
     .popover-content {
         max-height: 500px;
@@ -120,5 +128,29 @@ header {
                 background-color: hsla(209, 52%, 84%, 0.5) !important;
             }
         }
+    }
+}
+
+.connection-indicator {
+    .label();
+    float: right;
+    margin: 5px;
+    opacity: 1;
+    transition: all 1s linear;
+
+    &.init, &.fetching {
+        background-color: @label-info-bg;
+    }
+    &.established {
+        background-color: @label-success-bg;
+        opacity: 0;
+    }
+    &.error {
+        background-color: @label-danger-bg;
+        transition: all 0.2s linear;
+    }
+    &.offline {
+        background-color: @label-warning-bg;
+        opacity: 1;
     }
 }

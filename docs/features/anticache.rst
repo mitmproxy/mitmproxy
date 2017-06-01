@@ -11,5 +11,5 @@ sure you capture an HTTP exchange in its totality. It's also often used during
 
 ================== ======================
 command-line       ``--anticache``
-mitmproxy shortcut :kbd:`o` then :kbd:`a`
+mitmproxy shortcut :kbd:`O` then :kbd:`a`
 ================== ======================

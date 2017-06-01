@@ -4,6 +4,7 @@
  *  An alternative backend may use the REST API only to host static instances.
  */
 import { fetchApi } from "../utils"
+import * as connectionActions from "../ducks/connection"
 
 const CMD_RESET = 'reset'
 
@@ -17,7 +18,7 @@ export default class WebsocketBackend {
     connect() {
         this.socket = new WebSocket(location.origin.replace('http', 'ws') + '/updates')
         this.socket.addEventListener('open', () => this.onOpen())
-        this.socket.addEventListener('close', () => this.onClose())
+        this.socket.addEventListener('close', event => this.onClose(event))
         this.socket.addEventListener('message', msg => this.onMessage(JSON.parse(msg.data)))
         this.socket.addEventListener('error', error => this.onError(error))
     }
@@ -26,6 +27,7 @@ export default class WebsocketBackend {
         this.fetchData("settings")
         this.fetchData("flows")
         this.fetchData("events")
+        this.store.dispatch(connectionActions.startFetching())
     }
 
     fetchData(resource) {
@@ -59,15 +61,22 @@ export default class WebsocketBackend {
         let queue = this.activeFetches[resource]
         delete this.activeFetches[resource]
         queue.forEach(msg => this.onMessage(msg))
+
+        if(Object.keys(this.activeFetches).length === 0) {
+            // We have fetched the last resource
+            this.store.dispatch(connectionActions.connectionEstablished())
+        }
     }
 
-    onClose() {
-        // FIXME
-        console.error("onClose", arguments)
+    onClose(closeEvent) {
+        this.store.dispatch(connectionActions.connectionError(
+            `Connection closed at ${new Date().toUTCString()} with error code ${closeEvent.code}.`
+        ))
+        console.error("websocket connection closed", closeEvent)
     }
 
     onError() {
         // FIXME
-        console.error("onError", arguments)
+        console.error("websocket connection errored", arguments)
     }
 }

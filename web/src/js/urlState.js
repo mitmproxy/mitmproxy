@@ -15,7 +15,7 @@ const Query = {
     SHOW_EVENTLOG: "e"
 };
 
-function updateStoreFromUrl(store) {
+export function updateStoreFromUrl(store) {
     const [path, query]   = window.location.hash.substr(1).split("?", 2)
     const path_components = path.substr(1).split("/")
 
@@ -50,7 +50,7 @@ function updateStoreFromUrl(store) {
     }
 }
 
-function updateUrlFromStore(store) {
+export function updateUrlFromStore(store) {
     const state    = store.getState()
     let query      = {
         [Query.SEARCH]: state.flows.filter,

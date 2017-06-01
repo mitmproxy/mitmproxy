@@ -1,0 +1,546 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Error Component should render correctly 1`] = `
+<section
+  className="error"
+>
+  <div
+    className="alert alert-warning"
+  >
+    error
+    <div>
+      <small>
+        2017-05-21 12:38:32.481
+      </small>
+    </div>
+  </div>
+</section>
+`;
+
+exports[`Request Component should render correctly 1`] = `
+<section
+  className="request"
+>
+  <article>
+    <div
+      className="edit-flow-container"
+    >
+      <a
+        className="edit-flow"
+        onClick={[Function]}
+        title="Edit Flow"
+      >
+        <i
+          className="fa fa-pencil"
+        />
+      </a>
+    </div>
+    <div
+      className="first-line request-line"
+    >
+      <div>
+        <div
+          className="inline-input readonly"
+          contentEditable={undefined}
+          dangerouslySetInnerHTML={
+            Object {
+              "__html": "GET",
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onInput={[Function]}
+          onKeyDown={[Function]}
+          onMouseDown={[Function]}
+          onPaste={[Function]}
+          tabIndex={undefined}
+        />
+         
+        <div
+          className="inline-input readonly has-success"
+          contentEditable={undefined}
+          dangerouslySetInnerHTML={
+            Object {
+              "__html": "http://address:22/path",
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onInput={[Function]}
+          onKeyDown={[Function]}
+          onMouseDown={[Function]}
+          onPaste={[Function]}
+          tabIndex={undefined}
+        />
+         
+        <div
+          className="inline-input readonly has-success"
+          contentEditable={undefined}
+          dangerouslySetInnerHTML={
+            Object {
+              "__html": "HTTP/1.1",
+            }
+          }
+          onBlur={[Function]}
+          onClick={[Function]}
+          onFocus={[Function]}
+          onInput={[Function]}
+          onKeyDown={[Function]}
+          onMouseDown={[Function]}
+          onPaste={[Function]}
+          tabIndex={undefined}
+        />
+      </div>
+    </div>
+    <table
+      className="header-table"
+    >
+      <tbody>
+        <tr>
+          <td
+            className="header-name"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "header",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+            <span
+              className="header-colon"
+            >
+              :
+            </span>
+          </td>
+          <td
+            className="header-value"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "qvalue",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+          </td>
+        </tr>
+        <tr>
+          <td
+            className="header-name"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "content-length",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+            <span
+              className="header-colon"
+            >
+              :
+            </span>
+          </td>
+          <td
+            className="header-value"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "7",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <hr />
+  </article>
+  <footer>
+    <div
+      className="view-options"
+    >
+      <div
+        className="dropup pull-left"
+      >
+        <a
+          className="btn btn-default btn-xs"
+          href="#"
+          onClick={[Function]}
+        >
+          <span>
+             
+            <b>
+              View:
+            </b>
+             
+            auto
+             
+            <span
+              className="caret"
+            />
+             
+          </span>
+        </a>
+        <ul
+          className="dropdown-menu"
+          role="menu"
+        >
+          <li>
+             
+            <a
+              href="#"
+              onClick={[Function]}
+            >
+              auto
+            </a>
+             
+          </li>
+          <li>
+             
+            <a
+              href="#"
+              onClick={[Function]}
+            >
+              raw
+            </a>
+             
+          </li>
+          <li>
+             
+            <a
+              href="#"
+              onClick={[Function]}
+            >
+              text
+            </a>
+             
+          </li>
+        </ul>
+      </div>
+       
+      <a
+        className="btn btn-default btn-xs"
+        href="/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/request/content"
+        title="Download the content of the flow."
+      >
+        <i
+          className="fa fa-download"
+        />
+      </a>
+       
+       
+      <span>
+        foo
+      </span>
+    </div>
+  </footer>
+</section>
+`;
+
+exports[`Response Component should render correctly 1`] = `
+<section
+  className="response"
+>
+  <article>
+    <div
+      className="edit-flow-container"
+    >
+      <a
+        className="edit-flow"
+        onClick={[Function]}
+        title="Edit Flow"
+      >
+        <i
+          className="fa fa-pencil"
+        />
+      </a>
+    </div>
+    <div
+      className="first-line response-line"
+    >
+      <div
+        className="inline-input readonly has-success"
+        contentEditable={undefined}
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "HTTP/1.1",
+          }
+        }
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onInput={[Function]}
+        onKeyDown={[Function]}
+        onMouseDown={[Function]}
+        onPaste={[Function]}
+        tabIndex={undefined}
+      />
+       
+      <div
+        className="inline-input readonly has-success"
+        contentEditable={undefined}
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "200",
+          }
+        }
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onInput={[Function]}
+        onKeyDown={[Function]}
+        onMouseDown={[Function]}
+        onPaste={[Function]}
+        tabIndex={undefined}
+      />
+       
+      <div
+        className="inline-input readonly"
+        contentEditable={undefined}
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "OK",
+          }
+        }
+        onBlur={[Function]}
+        onClick={[Function]}
+        onFocus={[Function]}
+        onInput={[Function]}
+        onKeyDown={[Function]}
+        onMouseDown={[Function]}
+        onPaste={[Function]}
+        tabIndex={undefined}
+      />
+    </div>
+    <table
+      className="header-table"
+    >
+      <tbody>
+        <tr>
+          <td
+            className="header-name"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "header-response",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+            <span
+              className="header-colon"
+            >
+              :
+            </span>
+          </td>
+          <td
+            className="header-value"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "svalue",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+          </td>
+        </tr>
+        <tr>
+          <td
+            className="header-name"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "content-length",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+            <span
+              className="header-colon"
+            >
+              :
+            </span>
+          </td>
+          <td
+            className="header-value"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "7",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <hr />
+  </article>
+  <footer>
+    <div
+      className="view-options"
+    >
+      <div
+        className="dropup pull-left"
+      >
+        <a
+          className="btn btn-default btn-xs"
+          href="#"
+          onClick={[Function]}
+        >
+          <span>
+             
+            <b>
+              View:
+            </b>
+             
+            auto
+             
+            <span
+              className="caret"
+            />
+             
+          </span>
+        </a>
+        <ul
+          className="dropdown-menu"
+          role="menu"
+        >
+          <li>
+             
+            <a
+              href="#"
+              onClick={[Function]}
+            >
+              auto
+            </a>
+             
+          </li>
+          <li>
+             
+            <a
+              href="#"
+              onClick={[Function]}
+            >
+              raw
+            </a>
+             
+          </li>
+          <li>
+             
+            <a
+              href="#"
+              onClick={[Function]}
+            >
+              text
+            </a>
+             
+          </li>
+        </ul>
+      </div>
+       
+      <a
+        className="btn btn-default btn-xs"
+        href="/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/response/content"
+        title="Download the content of the flow."
+      >
+        <i
+          className="fa fa-download"
+        />
+      </a>
+       
+       
+      <span>
+        foo
+      </span>
+    </div>
+  </footer>
+</section>
+`;

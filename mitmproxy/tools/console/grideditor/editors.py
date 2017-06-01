@@ -1,5 +1,7 @@
 import re
+
 import urwid
+
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy.addons import script
@@ -10,18 +12,24 @@ from mitmproxy.tools.console.grideditor import col_bytes
 from mitmproxy.tools.console.grideditor import col_subgrid
 from mitmproxy.tools.console import signals
 from mitmproxy.net.http import user_agents
+from mitmproxy.net.http import Headers
 
 
-class QueryEditor(base.GridEditor):
+class QueryEditor(base.FocusEditor):
     title = "Editing query"
     columns = [
         col_text.Column("Key"),
         col_text.Column("Value")
     ]
 
+    def get_data(self, flow):
+        return flow.request.query.items(multi=True)
 
-class HeaderEditor(base.GridEditor):
-    title = "Editing headers"
+    def set_data(self, vals, flow):
+        flow.request.query = vals
+
+
+class HeaderEditor(base.FocusEditor):
     columns = [
         col_bytes.Column("Key"),
         col_bytes.Column("Value")
@@ -62,32 +70,38 @@ class HeaderEditor(base.GridEditor):
             return True
 
 
-class URLEncodedFormEditor(base.GridEditor):
+class RequestHeaderEditor(HeaderEditor):
+    title = "Editing request headers"
+
+    def get_data(self, flow):
+        return flow.request.headers.fields
+
+    def set_data(self, vals, flow):
+        flow.request.headers = Headers(vals)
+
+
+class ResponseHeaderEditor(HeaderEditor):
+    title = "Editing response headers"
+
+    def get_data(self, flow):
+        return flow.response.headers.fields
+
+    def set_data(self, vals, flow):
+        flow.response.headers = Headers(vals)
+
+
+class RequestFormEditor(base.FocusEditor):
     title = "Editing URL-encoded form"
     columns = [
         col_text.Column("Key"),
         col_text.Column("Value")
     ]
 
+    def get_data(self, flow):
+        return flow.request.urlencoded_form.items(multi=True)
 
-class ReplaceEditor(base.GridEditor):
-    title = "Editing replacement patterns"
-    columns = [
-        col_text.Column("Filter"),
-        col_text.Column("Regex"),
-        col_text.Column("Replacement"),
-    ]
-
-    def is_error(self, col, val):
-        if col == 0:
-            if not flowfilter.parse(val):
-                return "Invalid filter specification."
-        elif col == 1:
-            try:
-                re.compile(val)
-            except re.error:
-                return "Invalid regular expression."
-        return False
+    def set_data(self, vals, flow):
+        flow.request.urlencoded_form = vals
 
 
 class SetHeadersEditor(base.GridEditor):
@@ -140,7 +154,7 @@ class SetHeadersEditor(base.GridEditor):
             return True
 
 
-class PathEditor(base.GridEditor):
+class PathEditor(base.FocusEditor):
     # TODO: Next row on enter?
 
     title = "Editing URL path components"
@@ -153,6 +167,12 @@ class PathEditor(base.GridEditor):
 
     def data_out(self, data):
         return [i[0] for i in data]
+
+    def get_data(self, flow):
+        return self.data_in(flow.request.path_components)
+
+    def set_data(self, vals, flow):
+        flow.request.path_components = self.data_out(vals)
 
 
 class ScriptEditor(base.GridEditor):
@@ -187,12 +207,18 @@ class HostPatternEditor(base.GridEditor):
         return [i[0] for i in data]
 
 
-class CookieEditor(base.GridEditor):
+class CookieEditor(base.FocusEditor):
     title = "Editing request Cookie header"
     columns = [
         col_text.Column("Name"),
         col_text.Column("Value"),
     ]
+
+    def get_data(self, flow):
+        return flow.request.cookies.items(multi=True)
+
+    def set_data(self, vals, flow):
+        flow.request.cookies = vals
 
 
 class CookieAttributeEditor(base.GridEditor):
@@ -215,7 +241,7 @@ class CookieAttributeEditor(base.GridEditor):
         return ret
 
 
-class SetCookieEditor(base.GridEditor):
+class SetCookieEditor(base.FocusEditor):
     title = "Editing response SetCookie header"
     columns = [
         col_text.Column("Name"),
@@ -239,3 +265,29 @@ class SetCookieEditor(base.GridEditor):
                 ]
             )
         return vals
+
+    def get_data(self, flow):
+        return self.data_in(flow.response.cookies.items(multi=True))
+
+    def set_data(self, vals, flow):
+        flow.response.cookies = self.data_out(vals)
+
+
+class OptionsEditor(base.GridEditor):
+    title = None  # type: str
+    columns = [
+        col_text.Column("")
+    ]
+
+    def __init__(self, master, name, vals):
+        self.name = name
+        super().__init__(master, [[i] for i in vals], self.callback)
+
+    def callback(self, vals):
+        try:
+            setattr(self.master.options, self.name, [i[0] for i in vals])
+        except exceptions.OptionsError as v:
+            signals.status_message.send(message=str(v))
+
+    def is_error(self, col, val):
+        pass

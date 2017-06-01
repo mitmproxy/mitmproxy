@@ -1,8 +1,6 @@
 import os
 import pytest
 import OpenSSL
-import functools
-from contextlib import contextmanager
 
 import mitmproxy.net.tcp
 
@@ -32,21 +30,3 @@ skip_appveyor = pytest.mark.skipif(
 def disable_alpn(monkeypatch):
     monkeypatch.setattr(mitmproxy.net.tcp, 'HAS_ALPN', False)
     monkeypatch.setattr(OpenSSL.SSL._lib, 'Cryptography_HAS_ALPN', False)
-
-
-################################################################################
-# TODO: remove this wrapper when pytest 3.1.0 is released
-original_pytest_raises = pytest.raises
-
-
-@contextmanager
-@functools.wraps(original_pytest_raises)
-def raises(exc, *args, **kwargs):
-    with original_pytest_raises(exc, *args, **kwargs) as exc_info:
-        yield
-    if 'match' in kwargs:
-        assert exc_info.match(kwargs['match'])
-
-
-pytest.raises = raises
-################################################################################

@@ -140,8 +140,8 @@ class WebSocketLayer(base.Layer):
 
     def __call__(self):
         self.flow = WebSocketFlow(self.client_conn, self.server_conn, self.handshake_flow, self)
-        self.flow.metadata['websocket_handshake'] = self.handshake_flow
-        self.handshake_flow.metadata['websocket_flow'] = self.flow
+        self.flow.metadata['websocket_handshake'] = self.handshake_flow.id
+        self.handshake_flow.metadata['websocket_flow'] = self.flow.id
         self.channel.ask("websocket_start", self.flow)
 
         client = self.client_conn.connection

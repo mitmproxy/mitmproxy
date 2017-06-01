@@ -1,5 +1,5 @@
 import re
-from typing import Optional
+from typing import Optional, Union  # noqa
 
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import encoding
@@ -8,13 +8,12 @@ from mitmproxy.net.http import headers
 
 
 class MessageData(serializable.Serializable):
+    content = None  # type: bytes
+
     def __eq__(self, other):
         if isinstance(other, MessageData):
             return self.__dict__ == other.__dict__
         return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
     def set_state(self, state):
         for k, v in state.items():
@@ -34,13 +33,12 @@ class MessageData(serializable.Serializable):
 
 
 class Message(serializable.Serializable):
+    data = None  # type: MessageData
+
     def __eq__(self, other):
         if isinstance(other, Message):
             return self.data == other.data
         return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
     def get_state(self):
         return self.data.get_state()
@@ -165,6 +163,7 @@ class Message(serializable.Serializable):
         ct = headers.parse_content_type(self.headers.get("content-type", ""))
         if ct:
             return ct[2].get("charset")
+        return None
 
     def _guess_encoding(self) -> str:
         enc = self._get_content_type_charset()
@@ -227,8 +226,9 @@ class Message(serializable.Serializable):
         Raises:
             ValueError, when the content-encoding is invalid and strict is True.
         """
-        self.raw_content = self.get_content(strict)
+        decoded = self.get_content(strict)
         self.headers.pop("content-encoding", None)
+        self.content = decoded
 
     def encode(self, e):
         """

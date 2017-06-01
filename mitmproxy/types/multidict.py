@@ -4,7 +4,7 @@ from collections.abc import MutableMapping
 from mitmproxy.types import serializable
 
 
-class _MultiDict(MutableMapping, serializable.Serializable, metaclass=ABCMeta):
+class _MultiDict(MutableMapping, metaclass=ABCMeta):
     def __repr__(self):
         fields = (
             repr(field)
@@ -66,9 +66,6 @@ class _MultiDict(MutableMapping, serializable.Serializable, metaclass=ABCMeta):
         if isinstance(other, MultiDict):
             return self.fields == other.fields
         return False
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
     def get_all(self, key):
         """
@@ -158,34 +155,8 @@ class _MultiDict(MutableMapping, serializable.Serializable, metaclass=ABCMeta):
         else:
             return super().items()
 
-    def collect(self):
-        """
-            Returns a list of (key, value) tuples, where values are either
-            singular if there is only one matching item for a key, or a list
-            if there are more than one. The order of the keys matches the order
-            in the underlying fields list.
-        """
-        coll = []
-        for key in self:
-            values = self.get_all(key)
-            if len(values) == 1:
-                coll.append([key, values[0]])
-            else:
-                coll.append([key, values])
-        return coll
 
-    def get_state(self):
-        return self.fields
-
-    def set_state(self, state):
-        self.fields = tuple(tuple(x) for x in state)
-
-    @classmethod
-    def from_state(cls, state):
-        return cls(state)
-
-
-class MultiDict(_MultiDict):
+class MultiDict(_MultiDict, serializable.Serializable):
     def __init__(self, fields=()):
         super().__init__()
         self.fields = tuple(
@@ -199,6 +170,16 @@ class MultiDict(_MultiDict):
     @staticmethod
     def _kconv(key):
         return key
+
+    def get_state(self):
+        return self.fields
+
+    def set_state(self, state):
+        self.fields = tuple(tuple(x) for x in state)
+
+    @classmethod
+    def from_state(cls, state):
+        return cls(state)
 
 
 class MultiDictView(_MultiDict):
@@ -230,3 +211,6 @@ class MultiDictView(_MultiDict):
     @fields.setter
     def fields(self, value):
         self._setter(value)
+
+    def copy(self):
+        return MultiDict(self.fields)

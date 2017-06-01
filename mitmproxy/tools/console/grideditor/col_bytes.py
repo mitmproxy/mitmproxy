@@ -9,7 +9,7 @@ from mitmproxy.utils import strutils
 
 def read_file(filename: str, callback: Callable[..., None], escaped: bool) -> Optional[str]:
     if not filename:
-        return
+        return None
 
     filename = os.path.expanduser(filename)
     try:
@@ -26,6 +26,7 @@ def read_file(filename: str, callback: Callable[..., None], escaped: bool) -> Op
     # TODO: Refactor the status_prompt_path signal so that we
     # can raise exceptions here and return the content instead.
     callback(d)
+    return None
 
 
 class Column(base.Column):
@@ -68,7 +69,7 @@ class Column(base.Column):
 
 
 class Display(base.Cell):
-    def __init__(self, data: bytes):
+    def __init__(self, data: bytes) -> None:
         self.data = data
         escaped = strutils.bytes_to_escaped_str(data)
         w = urwid.Text(escaped, wrap="any")
@@ -79,7 +80,7 @@ class Display(base.Cell):
 
 
 class Edit(base.Cell):
-    def __init__(self, data: bytes):
+    def __init__(self, data: bytes) -> None:
         data = strutils.bytes_to_escaped_str(data)
         w = urwid.Edit(edit_text=data, wrap="any", multiline=True)
         w = urwid.AttrWrap(w, "editfield")

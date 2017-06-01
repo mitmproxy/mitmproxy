@@ -1,23 +1,205 @@
 import urwid
-
 from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import statusbar
+from mitmproxy.tools.console import flowlist
+from mitmproxy.tools.console import flowview
+from mitmproxy.tools.console import commands
+from mitmproxy.tools.console import options
+from mitmproxy.tools.console import overlay
+from mitmproxy.tools.console import help
+from mitmproxy.tools.console import grideditor
+from mitmproxy.tools.console import eventlog
+
+
+class WindowStack:
+    def __init__(self, master, base):
+        self.master = master
+        self.windows = dict(
+            flowlist = flowlist.FlowListBox(master),
+            flowview = flowview.FlowView(master),
+            commands = commands.Commands(master),
+            options = options.Options(master),
+            help = help.HelpView(None),
+            eventlog = eventlog.EventLog(master),
+
+            edit_focus_query = grideditor.QueryEditor(master),
+            edit_focus_cookies = grideditor.CookieEditor(master),
+            edit_focus_setcookies = grideditor.SetCookieEditor(master),
+            edit_focus_form = grideditor.RequestFormEditor(master),
+            edit_focus_path = grideditor.PathEditor(master),
+            edit_focus_request_headers = grideditor.RequestHeaderEditor(master),
+            edit_focus_response_headers = grideditor.ResponseHeaderEditor(master),
+        )
+        self.stack = [base]
+        self.overlay = None
+
+    def set_overlay(self, o, **kwargs):
+        self.overlay = overlay.SimpleOverlay(self, o, self.top(), o.width, **kwargs)
+
+    @property
+    def topwin(self):
+        return self.windows[self.stack[-1]]
+
+    def top(self):
+        if self.overlay:
+            return self.overlay
+        return self.topwin
+
+    def push(self, wname):
+        if self.stack[-1] == wname:
+            return
+        self.stack.append(wname)
+
+    def pop(self, *args, **kwargs):
+        """
+            Pop off the stack, return True if we're already at the top.
+        """
+        if self.overlay:
+            self.overlay = None
+        elif len(self.stack) > 1:
+            self.call("view_popping")
+            self.stack.pop()
+        else:
+            return True
+
+    def call(self, name, *args, **kwargs):
+        f = getattr(self.topwin, name, None)
+        if f:
+            f(*args, **kwargs)
 
 
 class Window(urwid.Frame):
-
-    def __init__(self, master, body, header, footer, helpctx):
-        urwid.Frame.__init__(
-            self,
-            urwid.AttrWrap(body, "background"),
-            header = urwid.AttrWrap(header, "background") if header else None,
-            footer = urwid.AttrWrap(footer, "background") if footer else None
+    def __init__(self, master):
+        self.statusbar = statusbar.StatusBar(master, "")
+        super().__init__(
+            None,
+            header = None,
+            footer = urwid.AttrWrap(self.statusbar, "background")
         )
         self.master = master
-        self.helpctx = helpctx
+        self.master.view.sig_view_refresh.connect(self.view_changed)
+        self.master.view.sig_view_add.connect(self.view_changed)
+        self.master.view.sig_view_remove.connect(self.view_changed)
+        self.master.view.sig_view_update.connect(self.view_changed)
+        self.master.view.focus.sig_change.connect(self.view_changed)
+        self.master.view.focus.sig_change.connect(self.focus_changed)
+
         signals.focus.connect(self.sig_focus)
+        signals.flow_change.connect(self.flow_changed)
+        signals.pop_view_state.connect(self.pop)
+        signals.push_view_state.connect(self.push)
+
+        self.master.options.subscribe(self.configure, ["console_layout"])
+        self.pane = 0
+        self.stacks = [
+            WindowStack(master, "flowlist"),
+            WindowStack(master, "eventlog")
+        ]
+
+    def focus_stack(self):
+        return self.stacks[self.pane]
+
+    def configure(self, otions, updated):
+        self.refresh()
+
+    def refresh(self):
+        """
+            Redraw the layout.
+        """
+        c = self.master.options.console_layout
+
+        w = None
+        if c == "single":
+            w = self.stacks[0].top()
+        elif c == "vertical":
+            w = urwid.Pile(
+                [i.top() for i in self.stacks]
+            )
+        else:
+            w = urwid.Columns(
+                [i.top() for i in self.stacks], dividechars=1
+            )
+        self.body = urwid.AttrWrap(w, "background")
+        if c == "single":
+            self.pane = 0
+
+    def flow_changed(self, sender, flow):
+        if self.master.view.focus.flow:
+            if flow.id == self.master.view.focus.flow.id:
+                self.focus_changed()
+
+    def focus_changed(self, *args, **kwargs):
+        """
+            Triggered when the focus changes - either when it's modified, or
+            when it changes to a different flow altogether.
+        """
+        for i in self.stacks:
+            i.call("focus_changed")
+
+    def view_changed(self, *args, **kwargs):
+        """
+            Triggered when the view list has changed.
+        """
+        for i in self.stacks:
+            i.call("view_changed")
+
+    def set_overlay(self, o, **kwargs):
+        """
+            Set an overlay on the currently focused stack.
+        """
+        self.focus_stack().set_overlay(o, **kwargs)
+        self.refresh()
+
+    def push(self, wname):
+        """
+            Push a window onto the currently focused stack.
+        """
+        self.focus_stack().push(wname)
+        self.refresh()
+        self.view_changed()
+        self.focus_changed()
+
+    def pop(self, *args, **kwargs):
+        """
+            Pop a window from the currently focused stack. If there is only one
+            window on the stack, this prompts for exit.
+        """
+        if self.focus_stack().pop():
+            self.master.prompt_for_exit()
+        else:
+            self.refresh()
+            self.view_changed()
+            self.focus_changed()
+
+    def current(self, keyctx):
+        """
+
+            Returns the top window of the current stack, IF the current focus
+            has a matching key context.
+        """
+        t = self.focus_stack().topwin
+        if t.keyctx == keyctx:
+            return t
+
+    def any(self, keyctx):
+        """
+            Returns the top window of either stack if they match the context.
+        """
+        for t in [x.topwin for x in self.stacks]:
+            if t.keyctx == keyctx:
+                return t
 
     def sig_focus(self, sender, section):
         self.focus_position = section
+
+    def switch(self):
+        """
+            Switch between the two panes.
+        """
+        if self.master.options.console_layout == "single":
+            self.pane = 0
+        else:
+            self.pane = (self.pane + 1) % len(self.stacks)
 
     def mouse_event(self, *args, **kwargs):
         # args: (size, event, button, col, row)
@@ -36,76 +218,11 @@ class Window(urwid.Frame):
                 return False
             return True
 
-    def handle_replay(self, k):
-        if k == "c":
-            creplay = self.master.addons.get("clientplayback")
-            if self.master.options.client_replay and creplay.count():
-                def stop_client_playback_prompt(a):
-                    if a != "n":
-                        self.master.options.client_replay = None
-                signals.status_prompt_onekey.send(
-                    self,
-                    prompt = "Stop current client replay?",
-                    keys = (
-                        ("yes", "y"),
-                        ("no", "n"),
-                    ),
-                    callback = stop_client_playback_prompt
-                )
-            else:
-                signals.status_prompt_path.send(
-                    self,
-                    prompt = "Client replay path",
-                    callback = lambda x: self.master.options.setter("client_replay")([x])
-                )
-        elif k == "s":
-            a = self.master.addons.get("serverplayback")
-            if a.count():
-                def stop_server_playback(response):
-                    if response == "y":
-                        self.master.options.server_replay = []
-                signals.status_prompt_onekey.send(
-                    self,
-                    prompt = "Stop current server replay?",
-                    keys = (
-                        ("yes", "y"),
-                        ("no", "n"),
-                    ),
-                    callback = stop_server_playback
-                )
-            else:
-                signals.status_prompt_path.send(
-                    self,
-                    prompt = "Server playback path",
-                    callback = lambda x: self.master.options.setter("server_replay")([x])
-                )
-
     def keypress(self, size, k):
-        k = super().keypress(size, k)
-        if k == "?":
-            self.master.view_help(self.helpctx)
-        elif k == "i":
-            signals.status_prompt.send(
-                self,
-                prompt = "Intercept filter",
-                text = self.master.options.intercept,
-                callback = self.master.options.setter("intercept")
-            )
-        elif k == "O":
-            self.master.view_options()
-        elif k == "Q":
-            raise urwid.ExitMainLoop
-        elif k == "q":
-            signals.pop_view_state.send(self)
-        elif k == "R":
-            signals.status_prompt_onekey.send(
-                self,
-                prompt = "Replay",
-                keys = (
-                    ("client", "c"),
-                    ("server", "s"),
-                ),
-                callback = self.handle_replay,
-            )
+        if self.focus_part == "footer":
+            return super().keypress(size, k)
         else:
-            return k
+            fs = self.focus_stack().top()
+            k = fs.keypress(size, k)
+            if k:
+                return self.master.keymap.handle(fs.keyctx, k)

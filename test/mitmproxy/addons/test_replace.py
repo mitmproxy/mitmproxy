@@ -1,11 +1,8 @@
-import os.path
 import pytest
-from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 
-from .. import tservers
 from mitmproxy.addons import replace
 from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 class TestReplace:
@@ -22,11 +19,11 @@ class TestReplace:
     def test_configure(self):
         r = replace.Replace()
         with taddons.context() as tctx:
-            tctx.configure(r, replacements=[("one", "two", "three")])
+            tctx.configure(r, replacements=["one/two/three"])
             with pytest.raises(Exception, match="Invalid filter pattern"):
-                tctx.configure(r, replacements=[("~b", "two", "three")])
+                tctx.configure(r, replacements=["/~b/two/three"])
             with pytest.raises(Exception, match="Invalid regular expression"):
-                tctx.configure(r, replacements=[("foo", "+", "three")])
+                tctx.configure(r, replacements=["/foo/+/three"])
             tctx.configure(r, replacements=["/a/b/c/"])
 
     def test_simple(self):
@@ -34,9 +31,9 @@ class TestReplace:
         with taddons.context() as tctx:
             tctx.configure(
                 r,
-                replacements = [
-                    ("~q", "foo", "bar"),
-                    ("~s", "foo", "bar"),
+                replacements=[
+                    "/~q/foo/bar",
+                    "/~s/foo/bar",
                 ]
             )
             f = tflow.tflow()
@@ -49,55 +46,57 @@ class TestReplace:
             r.response(f)
             assert f.response.content == b"bar"
 
-
-class TestUpstreamProxy(tservers.HTTPUpstreamProxyTest):
-    ssl = False
-
     def test_order(self):
-        sa = replace.Replace()
-        self.proxy.tmaster.addons.add(sa)
-
-        self.proxy.tmaster.options.replacements = [
-            ("~q", "foo", "bar"),
-            ("~q", "bar", "baz"),
-            ("~q", "foo", "oh noes!"),
-            ("~s", "baz", "ORLY")
-        ]
-        p = self.pathoc()
-        with p.connect():
-            req = p.request("get:'%s/p/418:b\"foo\"'" % self.server.urlbase)
-        assert req.content == b"ORLY"
-        assert req.status_code == 418
+        r = replace.Replace()
+        with taddons.context() as tctx:
+            tctx.configure(
+                r,
+                replacements=[
+                    "/foo/bar",
+                    "/bar/baz",
+                    "/foo/oh noes!",
+                    "/bar/oh noes!",
+                ]
+            )
+            f = tflow.tflow()
+            f.request.content = b"foo"
+            r.request(f)
+            assert f.request.content == b"baz"
 
 
 class TestReplaceFile:
-    def test_simple(self):
-        r = replace.ReplaceFile()
-        with tutils.tmpdir() as td:
-            rp = os.path.join(td, "replacement")
-            with open(rp, "w") as f:
-                f.write("bar")
-            with taddons.context() as tctx:
+    def test_simple(self, tmpdir):
+        r = replace.Replace()
+        with taddons.context() as tctx:
+            tmpfile = tmpdir.join("replacement")
+            tmpfile.write("bar")
+            tctx.configure(
+                r,
+                replacements=["/~q/foo/@" + str(tmpfile)]
+            )
+            f = tflow.tflow()
+            f.request.content = b"foo"
+            r.request(f)
+            assert f.request.content == b"bar"
+
+    def test_nonexistent(self, tmpdir):
+        r = replace.Replace()
+        with taddons.context() as tctx:
+            with pytest.raises(Exception, match="Invalid file path"):
                 tctx.configure(
                     r,
-                    replacement_files = [
-                        ("~q", "foo", rp),
-                        ("~s", "foo", rp),
-                        ("~b nonexistent", "nonexistent", "nonexistent"),
-                    ]
+                    replacements=["/~q/foo/@nonexistent"]
                 )
-                f = tflow.tflow()
-                f.request.content = b"foo"
-                r.request(f)
-                assert f.request.content == b"bar"
 
-                f = tflow.tflow(resp=True)
-                f.response.content = b"foo"
-                r.response(f)
-                assert f.response.content == b"bar"
-
-                f = tflow.tflow()
-                f.request.content = b"nonexistent"
-                assert not tctx.master.event_log
-                r.request(f)
-                assert tctx.master.event_log
+            tmpfile = tmpdir.join("replacement")
+            tmpfile.write("bar")
+            tctx.configure(
+                r,
+                replacements=["/~q/foo/@" + str(tmpfile)]
+            )
+            tmpfile.remove()
+            f = tflow.tflow()
+            f.request.content = b"foo"
+            assert not tctx.master.logs
+            r.request(f)
+            assert tctx.master.logs

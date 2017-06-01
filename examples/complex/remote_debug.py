@@ -14,6 +14,6 @@ Usage:
 """
 
 
-def start():
+def load(l):
     import pydevd
     pydevd.settrace("localhost", port=5678, stdoutToServer=True, stderrToServer=True)

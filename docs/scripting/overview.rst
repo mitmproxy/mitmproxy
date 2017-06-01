@@ -29,6 +29,12 @@ will be added to all responses passing through the proxy:
 >>> mitmdump -s add_header.py
 
 
+Examples
+--------
+
+A collection of addons that demonstrate popular features can be found at :src:`examples/simple`.
+
+
 Using classes
 -------------
 
@@ -54,24 +60,8 @@ and is replaced by the class instance.
 Handling arguments
 ------------------
 
-Scripts can handle their own command-line arguments, just like any other Python
-program. Let's build on the example above to do something slightly more
-sophisticated - replace one value with another in all responses. Mitmproxy's
-`HTTPRequest <api.html#mitmproxy.models.http.HTTPRequest>`_ and `HTTPResponse
-<api.html#mitmproxy.models.http.HTTPResponse>`_ objects have a handy `replace
-<api.html#mitmproxy.models.http.HTTPResponse.replace>`_ method that takes care
-of all the details for us.
 
-.. literalinclude:: ../../examples/simple/script_arguments.py
-   :caption: :src:`examples/simple/script_arguments.py`
-   :language: python
-
-We can now call this script on the command-line like this:
-
->>> mitmdump -dd -s "./script_arguments.py html faketml"
-
-Whenever a handler is called, mitpmroxy rewrites the script environment so that
-it sees its own arguments as if it was invoked from the command-line.
+FIXME
 
 
 Logging and the context

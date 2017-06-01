@@ -1,11 +1,11 @@
 import re
 import codecs
-from typing import AnyStr, Optional
+from typing import AnyStr, Optional, cast
 
 
 def always_bytes(str_or_bytes: Optional[AnyStr], *encode_args) -> Optional[bytes]:
     if isinstance(str_or_bytes, bytes) or str_or_bytes is None:
-        return str_or_bytes
+        return cast(Optional[bytes], str_or_bytes)
     elif isinstance(str_or_bytes, str):
         return str_or_bytes.encode(*encode_args)
     else:
@@ -18,16 +18,17 @@ def always_str(str_or_bytes: Optional[AnyStr], *decode_args) -> Optional[str]:
         str_or_bytes unmodified, if
     """
     if isinstance(str_or_bytes, str) or str_or_bytes is None:
-        return str_or_bytes
+        return cast(Optional[str], str_or_bytes)
     elif isinstance(str_or_bytes, bytes):
         return str_or_bytes.decode(*decode_args)
     else:
         raise TypeError("Expected str or bytes, but got {}.".format(type(str_or_bytes).__name__))
 
 
-# Translate control characters to "safe" characters. This implementation initially
-# replaced them with the matching control pictures (http://unicode.org/charts/PDF/U2400.pdf),
-# but that turned out to render badly with monospace fonts. We are back to "." therefore.
+# Translate control characters to "safe" characters. This implementation
+# initially replaced them with the matching control pictures
+# (http://unicode.org/charts/PDF/U2400.pdf), but that turned out to render badly
+# with monospace fonts. We are back to "." therefore.
 _control_char_trans = {
     x: ord(".")  # x + 0x2400 for unicode control group pictures
     for x in range(32)

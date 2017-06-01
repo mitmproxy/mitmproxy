@@ -3,11 +3,11 @@ import os
 import abc
 import functools
 import pyparsing as pp
-
 from mitmproxy.utils import strutils
 from mitmproxy.utils import human
-
-from . import generators, exceptions
+import typing  # noqa
+from . import generators
+from . import exceptions
 
 
 class Settings:
@@ -84,7 +84,7 @@ class Token:
         return None
 
     @property
-    def unique_name(self):
+    def unique_name(self) -> typing.Optional[str]:
         """
             Controls uniqueness constraints for tokens. No two tokens with the
             same name will be allowed. If no uniquness should be applied, this
@@ -334,7 +334,7 @@ class OptionsOrValue(_Component):
         Can be any of a specified set of options, or a value specifier.
     """
     preamble = ""
-    options = []
+    options = []  # type: typing.List[str]
 
     def __init__(self, value):
         # If it's a string, we were passed one of the options, so we lower-case
@@ -376,7 +376,7 @@ class OptionsOrValue(_Component):
 
 
 class Integer(_Component):
-    bounds = (None, None)
+    bounds = (None, None)  # type: typing.Tuple[typing.Optional[int], typing.Optional[int]]
     preamble = ""
 
     def __init__(self, value):
@@ -442,7 +442,7 @@ class FixedLengthValue(Value):
         A value component lead by an optional preamble.
     """
     preamble = ""
-    length = None
+    length = None  # type: typing.Optional[int]
 
     def __init__(self, value):
         Value.__init__(self, value)
@@ -511,7 +511,7 @@ class IntField(_Component):
     """
         An integer field, where values can optionally specified by name.
     """
-    names = {}
+    names = {}  # type: typing.Dict[str, int]
     max = 16
     preamble = ""
 
@@ -538,43 +538,3 @@ class IntField(_Component):
 
     def spec(self):
         return "%s%s" % (self.preamble, self.origvalue)
-
-
-class NestedMessage(Token):
-
-    """
-        A nested message, as an escaped string with a preamble.
-    """
-    preamble = ""
-    nest_type = None
-
-    def __init__(self, value):
-        Token.__init__(self)
-        self.value = value
-        try:
-            self.parsed = self.nest_type(
-                self.nest_type.expr().parseString(
-                    value.val.decode(),
-                    parseAll=True
-                )
-            )
-        except pp.ParseException as v:
-            raise exceptions.ParseException(v.msg, v.line, v.col)
-
-    @classmethod
-    def expr(cls):
-        e = pp.Literal(cls.preamble).suppress()
-        e = e + TokValueLiteral.expr()
-        return e.setParseAction(lambda x: cls(*x))
-
-    def values(self, settings):
-        return [
-            self.value.get_generator(settings),
-        ]
-
-    def spec(self):
-        return "%s%s" % (self.preamble, self.value.spec())
-
-    def freeze(self, settings):
-        f = self.parsed.freeze(settings).spec()
-        return self.__class__(TokValueLiteral(strutils.bytes_to_escaped_str(f.encode(), escape_single_quotes=True)))

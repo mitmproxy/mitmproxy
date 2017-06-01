@@ -26,7 +26,7 @@ const defaultState = {
 }
 
 export default function reducer(state = defaultState, action) {
-    let wasInEditMode = !!(state.modifiedFlow)
+    let wasInEditMode = state.modifiedFlow
 
     let content = action.content || state.content
     let isFullContentShown = content && content.length <= state.maxContentLines
@@ -89,14 +89,14 @@ export default function reducer(state = defaultState, action) {
                 ...state,
                 tab: action.tab ? action.tab : 'request',
                 displayLarge: false,
-                showFullContent: state.contentView == 'Edit'
+                showFullContent: state.contentView === 'Edit'
             }
 
         case SET_CONTENT_VIEW:
             return {
                 ...state,
                 contentView: action.contentView,
-                showFullContent: action.contentView == 'Edit'
+                showFullContent: action.contentView === 'Edit'
             }
 
         case SET_CONTENT:
@@ -145,9 +145,10 @@ export function setShowFullContent() {
 }
 
 export function setContent(content){
-    return { type: SET_CONTENT, content}
+    return { type: SET_CONTENT, content }
 }
 
-export function stopEdit(flow, modifiedFlow) {
-    return flowsActions.update(flow, getDiff(flow, modifiedFlow))
+export function stopEdit(data, modifiedFlow) {
+    let diff = getDiff(data, modifiedFlow)
+    return {type: flowsActions.UPDATE, data, diff }
 }

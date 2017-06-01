@@ -1,10 +1,15 @@
 sudo: false
 language: python
 
+branches:
+  except:
+    - requires-io-master
+
 env:
   global:
     - CI_DEPS=codecov>=2.0.5
     - CI_COMMANDS=codecov
+
 git:
   depth: 10000
 
@@ -18,13 +23,13 @@ matrix:
       language: generic
       env: TOXENV=py35 BDIST=1
     - python: 3.5
-      env: TOXENV=py35 OPENSSL_OLD
+      env: TOXENV=py35 OPENSSL=old
       addons:
         apt:
           packages:
             - libssl-dev
     - python: 3.5
-      env: TOXENV=py35 BDIST=1 OPENSSL_ALPN
+      env: TOXENV=py35 BDIST=1 OPENSSL=with-alpn
       addons:
         apt:
           sources:
@@ -34,7 +39,7 @@ matrix:
           packages:
             - libssl-dev
     - python: 3.6
-      env: TOXENV=py36 OPENSSL_ALPN
+      env: TOXENV=py36 OPENSSL=with-alpn
       addons:
         apt:
           sources:
@@ -47,6 +52,19 @@ matrix:
       env: TOXENV=individual_coverage
     - python: 3.5
       env: TOXENV=docs
+    - language: node_js
+      node_js: "node"
+      before_install:
+          - curl -o- -L https://yarnpkg.com/install.sh | bash
+          - export PATH=$HOME/.yarn/bin:$PATH
+      install:
+          - cd web && yarn
+          - yarn global add codecov
+      script: npm test && codecov
+      cache:
+          yarn: true
+          directories:
+              - web/node_modules
 
 install:
   - |
@@ -91,4 +109,3 @@ cache:
   directories:
     - $HOME/.pyenv
     - $HOME/.cache/pip
-    # - $HOME/build/mitmproxy/mitmproxy/.tox

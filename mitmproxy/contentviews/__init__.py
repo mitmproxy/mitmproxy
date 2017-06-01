@@ -25,7 +25,7 @@ from . import (
     auto, raw, hex, json, xml_html, html_outline, wbxml, javascript, css,
     urlencoded, multipart, image, query, protobuf
 )
-from .base import View, VIEW_CUTOFF, KEY_MAX, format_text, format_dict
+from .base import View, VIEW_CUTOFF, KEY_MAX, format_text, format_dict, TViewResult
 
 views = []  # type: List[View]
 content_types_map = {}  # type: Dict[str, List[View]]
@@ -36,12 +36,14 @@ def get(name: str) -> Optional[View]:
     for i in views:
         if i.name.lower() == name.lower():
             return i
+    return None
 
 
 def get_by_shortcut(c: str) -> Optional[View]:
     for i in views:
         if i.prompt[1] == c:
             return i
+    return None
 
 
 def add(view: View) -> None:
@@ -176,7 +178,7 @@ add(query.ViewQuery())
 add(protobuf.ViewProtobuf())
 
 __all__ = [
-    "View", "VIEW_CUTOFF", "KEY_MAX", "format_text", "format_dict",
+    "View", "VIEW_CUTOFF", "KEY_MAX", "format_text", "format_dict", "TViewResult",
     "get", "get_by_shortcut", "add", "remove",
     "get_content_view", "get_message_content_view",
 ]

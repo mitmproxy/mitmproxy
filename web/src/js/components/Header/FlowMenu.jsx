@@ -1,4 +1,5 @@
-import React, { PropTypes } from "react"
+import React  from "react"
+import PropTypes from 'prop-types'
 import { connect } from "react-redux"
 import Button from "../common/Button"
 import { MessageUtils } from "../../flow/utils.js"
@@ -16,7 +17,7 @@ FlowMenu.propTypes = {
     revertFlow: PropTypes.func.isRequired
 }
 
-function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
+export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
     if (!flow)
         return <div/>
     return (

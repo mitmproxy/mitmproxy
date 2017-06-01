@@ -69,8 +69,8 @@ class Response(message.Message):
     def make(
             cls,
             status_code: int=200,
-            content: AnyStr=b"",
-            headers: Union[Dict[AnyStr, AnyStr], Iterable[Tuple[bytes, bytes]]]=()
+            content: Union[bytes, str]=b"",
+            headers: Union[Dict[str, AnyStr], Iterable[Tuple[bytes, bytes]]]=()
     ):
         """
         Simplified API for creating response objects.
@@ -129,6 +129,21 @@ class Response(message.Message):
     def reason(self, reason):
         self.data.reason = strutils.always_bytes(reason, "ISO-8859-1", "surrogateescape")
 
+    def _get_cookies(self):
+        h = self.headers.get_all("set-cookie")
+        all_cookies = cookies.parse_set_cookie_headers(h)
+        return tuple(
+            (name, (value, attrs))
+            for name, value, attrs in all_cookies
+        )
+
+    def _set_cookies(self, value):
+        cookie_headers = []
+        for k, v in value:
+            header = cookies.format_set_cookie_header([(k, v[0], v[1])])
+            cookie_headers.append(header)
+        self.headers.set_all("set-cookie", cookie_headers)
+
     @property
     def cookies(self) -> multidict.MultiDictView:
         """
@@ -145,17 +160,6 @@ class Response(message.Message):
             self._get_cookies,
             self._set_cookies
         )
-
-    def _get_cookies(self):
-        h = self.headers.get_all("set-cookie")
-        return tuple(cookies.parse_set_cookie_headers(h))
-
-    def _set_cookies(self, value):
-        cookie_headers = []
-        for k, v in value:
-            header = cookies.format_set_cookie_header([(k, v[0], v[1])])
-            cookie_headers.append(header)
-        self.headers.set_all("set-cookie", cookie_headers)
 
     @cookies.setter
     def cookies(self, value):

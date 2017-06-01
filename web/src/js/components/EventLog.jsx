@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { toggleFilter, toggleVisibility } from '../ducks/eventLog'
 import ToggleButton from './common/ToggleButton'
@@ -55,7 +56,7 @@ class EventLog extends Component {
                 <div onMouseDown={this.onDragStart}>
                     Eventlog
                     <div className="pull-right">
-                        {['debug', 'info', 'web'].map(type => (
+                        {['debug', 'info', 'web', 'warn', 'error'].map(type => (
                             <ToggleButton key={type} text={type} checked={filters[type]} onToggle={() => toggleFilter(type)}/>
                         ))}
                         <i onClick={close} className="fa fa-close"></i>

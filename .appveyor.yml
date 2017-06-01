@@ -1,6 +1,10 @@
 version: '{build}'
 build: off  # Not a C# project
 
+branches:
+  except:
+    - requires-io-master
+
 environment:
   CI_DEPS: codecov>=2.0.5
   CI_COMMANDS: codecov
@@ -40,22 +44,28 @@ test_script:
         ($Env:TOXENV -match "py35") -and !$Env:APPVEYOR_PULL_REQUEST_NUMBER -and
         (($Env:APPVEYOR_REPO_BRANCH -In ("master", "pyinstaller")) -or ($Env:APPVEYOR_REPO_TAG -match "true"))
       ) {
+        echo "Decrypt license..."
         tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
-        if (!(Test-Path "C:\projects\mitmproxy\release\installbuilder-installer.exe")) {
-          "Download InstallBuilder..."
+        $ibSetup = "C:\projects\mitmproxy\release\installbuilder-installer.exe"
+        $ibVersion = "17.4.0"
+        if (!(Test-Path $ibSetup)) {
+          echo "Download InstallBuilder..."
           (New-Object System.Net.WebClient).DownloadFile(
-            "https://installbuilder.bitrock.com/installbuilder-enterprise-17.1.0-windows-installer.exe",
-            "C:\projects\mitmproxy\release\installbuilder-installer.exe"
+            "https://installbuilder.bitrock.com/installbuilder-enterprise-$ibVersion-windows-installer.exe",
+            $ibSetup
           )
         }
-        Start-Process "C:\projects\mitmproxy\release\installbuilder-installer.exe" "--mode unattended --unattendedmodeui none" -Wait
-        & 'C:\Program Files (x86)\BitRock InstallBuilder Enterprise 17.1.0\bin\builder-cli.exe' `
+        echo "Install InstallBuilder..."
+        Start-Process $ibSetup "--mode unattended --unattendedmodeui none" -Wait
+        echo "Run InstallBuilder..."
+        & "C:\Program Files (x86)\BitRock InstallBuilder Enterprise $ibVersion\bin\builder-cli.exe" `
           build `
           .\release\installbuilder\mitmproxy.xml `
           windows `
           --license .\release\installbuilder\license.xml `
           --setvars project.version=$Env:VERSION `
           --verbose
+        echo "Installer build completed."
       }
 
 deploy_script:

@@ -38,17 +38,21 @@ def _test_decoded_attr(message, attr):
 
 
 class TestMessageData:
-    def test_eq_ne(self):
+    def test_eq(self):
         data = tutils.tresp(timestamp_start=42, timestamp_end=42).data
         same = tutils.tresp(timestamp_start=42, timestamp_end=42).data
         assert data == same
-        assert not data != same
 
         other = tutils.tresp(content=b"foo").data
-        assert not data == other
         assert data != other
 
         assert data != 0
+
+    def test_serializable(self):
+        data1 = tutils.tresp(timestamp_start=42, timestamp_end=42).data
+        data2 = tutils.tresp().data.from_state(data1.get_state())  # ResponseData.from_state()
+
+        assert data1 == data2
 
 
 class TestMessage:
@@ -61,10 +65,8 @@ class TestMessage:
         resp = tutils.tresp(timestamp_start=42, timestamp_end=42)
         same = tutils.tresp(timestamp_start=42, timestamp_end=42)
         assert resp == same
-        assert not resp != same
 
         other = tutils.tresp(timestamp_start=0, timestamp_end=0)
-        assert not resp == other
         assert resp != other
 
         assert resp != 0
@@ -120,6 +122,14 @@ class TestMessageContentEncoding:
         assert r.raw_content != b"message"
         assert r.content == b"message"
         assert r.raw_content != b"message"
+
+    def test_update_content_length_header(self):
+        r = tutils.tresp()
+        assert int(r.headers["content-length"]) == 7
+        r.encode("gzip")
+        assert int(r.headers["content-length"]) == 27
+        r.decode()
+        assert int(r.headers["content-length"]) == 7
 
     def test_modify(self):
         r = tutils.tresp()

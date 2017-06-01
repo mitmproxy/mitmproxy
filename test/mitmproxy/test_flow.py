@@ -3,35 +3,19 @@ import pytest
 
 from mitmproxy.test import tflow
 import mitmproxy.io
-from mitmproxy import flowfilter, options
-from mitmproxy.contrib import tnetstring
-from mitmproxy.exceptions import FlowReadException
+from mitmproxy import flowfilter
+from mitmproxy import options
+from mitmproxy.proxy import config
+from mitmproxy.io import tnetstring
+from mitmproxy.exceptions import FlowReadException, ReplayException, ControlException
 from mitmproxy import flow
 from mitmproxy import http
-from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy.server import DummyServer
 from mitmproxy import master
 from . import tservers
 
 
 class TestSerialize:
-
-    def _treader(self):
-        sio = io.BytesIO()
-        w = mitmproxy.io.FlowWriter(sio)
-        for i in range(3):
-            f = tflow.tflow(resp=True)
-            w.add(f)
-        for i in range(3):
-            f = tflow.tflow(err=True)
-            w.add(f)
-        f = tflow.ttcpflow()
-        w.add(f)
-        f = tflow.ttcpflow(err=True)
-        w.add(f)
-
-        sio.seek(0)
-        return mitmproxy.io.FlowReader(sio)
 
     def test_roundtrip(self):
         sio = io.BytesIO()
@@ -50,27 +34,6 @@ class TestSerialize:
         assert f2.get_state() == f.get_state()
         assert f2.request == f.request
         assert f2.marked
-
-    def test_load_flows(self):
-        r = self._treader()
-        s = tservers.TestState()
-        fm = master.Master(None, DummyServer())
-        fm.addons.add(s)
-        fm.load_flows(r)
-        assert len(s.flows) == 6
-
-    def test_load_flows_reverse(self):
-        r = self._treader()
-        s = tservers.TestState()
-        opts = options.Options(
-            mode="reverse",
-            upstream_server="https://use-this-domain"
-        )
-        conf = ProxyConfig(opts)
-        fm = master.Master(opts, DummyServer(conf))
-        fm.addons.add(s)
-        fm.load_flows(r)
-        assert s.flows[0].request.host == "use-this-domain"
 
     def test_filter(self):
         sio = io.BytesIO()
@@ -123,44 +86,59 @@ class TestSerialize:
 
 
 class TestFlowMaster:
+    def test_load_flow_reverse(self):
+        s = tservers.TestState()
+        opts = options.Options(
+            mode="reverse:https://use-this-domain"
+        )
+        conf = config.ProxyConfig(opts)
+        fm = master.Master(opts, DummyServer(conf))
+        fm.addons.add(s)
+        f = tflow.tflow(resp=True)
+        fm.load_flow(f)
+        assert s.flows[0].request.host == "use-this-domain"
 
     def test_replay(self):
         fm = master.Master(None, DummyServer())
         f = tflow.tflow(resp=True)
         f.request.content = None
-        with pytest.raises(Exception, match="missing"):
+        with pytest.raises(ReplayException, match="missing"):
+            fm.replay_request(f)
+
+        f.request = None
+        with pytest.raises(ReplayException, match="request"):
             fm.replay_request(f)
 
         f.intercepted = True
-        with pytest.raises(Exception, match="intercepted"):
+        with pytest.raises(ReplayException, match="intercepted"):
             fm.replay_request(f)
 
         f.live = True
-        with pytest.raises(Exception, match="live"):
+        with pytest.raises(ReplayException, match="live"):
             fm.replay_request(f)
-
-    def test_create_flow(self):
-        fm = master.Master(None, DummyServer())
-        assert fm.create_request("GET", "http", "example.com", 80, "/")
 
     def test_all(self):
         s = tservers.TestState()
         fm = master.Master(None, DummyServer())
         fm.addons.add(s)
         f = tflow.tflow(req=None)
-        fm.clientconnect(f.client_conn)
+        fm.addons.handle_lifecycle("clientconnect", f.client_conn)
         f.request = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
-        fm.request(f)
+        fm.addons.handle_lifecycle("request", f)
         assert len(s.flows) == 1
 
         f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
-        fm.response(f)
+        fm.addons.handle_lifecycle("response", f)
         assert len(s.flows) == 1
 
-        fm.clientdisconnect(f.client_conn)
+        fm.addons.handle_lifecycle("clientdisconnect", f.client_conn)
 
         f.error = flow.Error("msg")
-        fm.error(f)
+        fm.addons.handle_lifecycle("error", f)
+
+        fm.tell("foo", f)
+        with pytest.raises(ControlException):
+            fm.tick(timeout=1)
 
         fm.shutdown()
 

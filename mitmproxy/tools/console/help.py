@@ -4,7 +4,6 @@ import urwid
 
 from mitmproxy import flowfilter
 from mitmproxy.tools.console import common
-from mitmproxy.tools.console import signals
 
 from mitmproxy import version
 
@@ -15,6 +14,7 @@ footer = [
 
 
 class HelpView(urwid.ListBox):
+    keyctx = "help"
 
     def __init__(self, help_context):
         self.help_context = help_context or []
@@ -84,14 +84,8 @@ class HelpView(urwid.ListBox):
         return text
 
     def keypress(self, size, key):
-        key = common.shortcuts(key)
-        if key == "q":
-            signals.pop_view_state.send(self)
-            return None
-        elif key == "?":
-            key = None
-        elif key == "g":
+        if key == "m_start":
             self.set_focus(0)
-        elif key == "G":
+        elif key == "m_end":
             self.set_focus(len(self.body.contents))
         return urwid.ListBox.keypress(self, size, key)

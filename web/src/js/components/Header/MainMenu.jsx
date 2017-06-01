@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from "react"
+import React, { Component } from "react"
+import PropTypes from 'prop-types'
 import { connect } from "react-redux"
 import FilterInput from "./FilterInput"
 import { update as updateSettings } from "../../ducks/settings"
@@ -16,6 +17,10 @@ export default function MainMenu() {
     )
 }
 
+export function setIntercept(intercept) {
+    updateSettings({ intercept })
+}
+
 const InterceptInput = connect(
     state => ({
         value: state.settings.intercept || '',
@@ -23,7 +28,7 @@ const InterceptInput = connect(
         type: 'pause',
         color: 'hsl(208, 56%, 53%)'
     }),
-    { onChange: intercept => updateSettings({ intercept }) }
+    { onChange: setIntercept }
 )(FilterInput);
 
 const FlowFilterInput = connect(

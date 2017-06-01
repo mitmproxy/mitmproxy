@@ -1,0 +1,17 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ToggleEdit Component should render correctly 1`] = `
+<div
+  className="edit-flow-container"
+>
+  <a
+    className="edit-flow"
+    onClick={[Function]}
+    title="Finish Edit"
+  >
+    <i
+      className="fa fa-check"
+    />
+  </a>
+</div>
+`;

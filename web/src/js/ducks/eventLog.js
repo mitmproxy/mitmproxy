@@ -8,7 +8,7 @@ export const TOGGLE_FILTER     = 'EVENTS_TOGGLE_FILTER'
 
 const defaultState = {
     visible: false,
-    filters: { debug: false, info: true, web: true },
+    filters: { debug: false, info: true, web: true, warn: true, error: true },
     ...reduceStore(undefined, {}),
 }
 

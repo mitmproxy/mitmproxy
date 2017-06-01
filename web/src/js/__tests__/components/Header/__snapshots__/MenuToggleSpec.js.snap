@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EventlogToggle Component should render and connect to state 1`] = `
+<div
+  className="menu-entry"
+>
+  <label>
+    <input
+      checked={true}
+      onChange={[Function]}
+      type="checkbox"
+    />
+    Display Event Log
+  </label>
+</div>
+`;
+
+exports[`MenuToggle Component should render correctly 1`] = `
+<div
+  className="menu-entry"
+>
+  <label>
+    <input
+      checked={true}
+      onChange={[Function]}
+      type="checkbox"
+    />
+    <p>
+      foo children
+    </p>
+  </label>
+</div>
+`;
+
+exports[`SettingToggle Component should render and connect to state 1`] = `
+<div
+  className="menu-entry"
+>
+  <label>
+    <input
+      checked={true}
+      onChange={[Function]}
+      type="checkbox"
+    />
+    <p>
+      foo children
+    </p>
+  </label>
+</div>
+`;

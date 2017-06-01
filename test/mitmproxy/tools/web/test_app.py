@@ -1,5 +1,6 @@
 import json as _json
 from unittest import mock
+import os
 
 import tornado.testing
 from tornado import httpclient
@@ -23,8 +24,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         m = webmaster.WebMaster(o, proxy.DummyServer(), with_termlog=False)
         f = tflow.tflow(resp=True)
         f.id = "42"
-        m.view.add(f)
-        m.view.add(tflow.tflow(err=True))
+        m.view.add([f])
+        m.view.add([tflow.tflow(err=True)])
         m.add_log("test log", "info")
         self.master = m
         self.view = m.view
@@ -78,12 +79,11 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
         # restore
         for f in flows:
-            self.view.add(f)
+            self.view.add([f])
         self.events.data = events
 
     def test_resume(self):
         for f in self.view:
-            f.reply.handle()
             f.intercept()
 
         assert self.fetch(
@@ -95,7 +95,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def test_kill(self):
         for f in self.view:
             f.backup()
-            f.reply.handle()
             f.intercept()
 
         assert self.fetch("/flows/42/kill", method="POST").code == 200
@@ -109,11 +108,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f = self.view.get_by_id("42")
         assert f
 
-        f.reply.handle()
         assert self.fetch("/flows/42", method="DELETE").code == 200
 
         assert not self.view.get_by_id("42")
-        self.view.add(f)
+        self.view.add([f])
 
         assert self.fetch("/flows/1234", method="DELETE").code == 404
 
@@ -165,7 +163,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f = self.view.get_by_id(resp.body.decode())
         assert f
         assert f.id != "42"
-        self.view.remove(f)
+        self.view.remove([f])
 
     def test_flow_revert(self):
         f = self.view.get_by_id("42")
@@ -278,3 +276,20 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         # trigger on_close by opening a second connection.
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
+
+    def test_generate_tflow_js(self):
+        _tflow = app.flow_to_json(tflow.tflow(resp=True, err=True))
+        # Set some value as constant, so that _tflow.js would not change every time.
+        _tflow['client_conn']['id'] = "4a18d1a0-50a1-48dd-9aa6-d45d74282939"
+        _tflow['id'] = "d91165be-ca1f-4612-88a9-c0f8696f3e29"
+        _tflow['error']['timestamp'] = 1495370312.4814785
+        _tflow['response']['timestamp_end'] = 1495370312.4814625
+        _tflow['response']['timestamp_start'] = 1495370312.481462
+        _tflow['server_conn']['id'] = "f087e7b2-6d0a-41a8-a8f0-e1a4761395f8"
+        tflow_json = _json.dumps(_tflow, indent=4, sort_keys=True)
+        here = os.path.abspath(os.path.dirname(__file__))
+        web_root = os.path.join(here, os.pardir, os.pardir, os.pardir, os.pardir, 'web')
+        tflow_path = os.path.join(web_root, 'src/js/__tests__/ducks/_tflow.js')
+        content = """export default function(){{\n    return {tflow_json}\n}}""".format(tflow_json=tflow_json)
+        with open(tflow_path, 'w') as f:
+            f.write(content)

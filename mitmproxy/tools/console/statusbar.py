@@ -2,11 +2,11 @@ import os.path
 
 import urwid
 
-import mitmproxy.net.http.url
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import pathedit
 from mitmproxy.tools.console import signals
-from mitmproxy.utils import human
+from mitmproxy.tools.console import commandeditor
+import mitmproxy.tools.console.master # noqa
 
 
 class PromptPath:
@@ -33,13 +33,15 @@ class PromptStub:
 
 class ActionBar(urwid.WidgetWrap):
 
-    def __init__(self):
+    def __init__(self, master):
+        self.master = master
         urwid.WidgetWrap.__init__(self, None)
         self.clear()
         signals.status_message.connect(self.sig_message)
         signals.status_prompt.connect(self.sig_prompt)
         signals.status_prompt_path.connect(self.sig_path_prompt)
         signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
+        signals.status_prompt_command.connect(self.sig_prompt_command)
 
         self.last_path = ""
 
@@ -66,6 +68,11 @@ class ActionBar(urwid.WidgetWrap):
         signals.focus.send(self, section="footer")
         self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
         self.prompting = PromptStub(callback, args)
+
+    def sig_prompt_command(self, sender, partial=""):
+        signals.focus.send(self, section="footer")
+        self._w = commandeditor.CommandEdit(partial)
+        self.prompting = commandeditor.CommandExecutor(self.master)
 
     def sig_path_prompt(self, sender, prompt, callback, args=()):
         signals.focus.send(self, section="footer")
@@ -136,23 +143,32 @@ class ActionBar(urwid.WidgetWrap):
 
 
 class StatusBar(urwid.WidgetWrap):
+    keyctx = ""
 
-    def __init__(self, master: "mitmproxy.console.master.ConsoleMaster", helptext):
+    def __init__(
+        self, master: "mitmproxy.tools.console.master.ConsoleMaster", helptext
+    ) -> None:
         self.master = master
         self.helptext = helptext
         self.ib = urwid.WidgetWrap(urwid.Text(""))
-        super().__init__(urwid.Pile([self.ib, self.master.ab]))
+        self.ab = ActionBar(self.master)
+        super().__init__(urwid.Pile([self.ib, self.ab]))
         signals.update_settings.connect(self.sig_update)
         signals.flowlist_change.connect(self.sig_update)
+        signals.footer_help.connect(self.sig_footer_help)
         master.options.changed.connect(self.sig_update)
         master.view.focus.sig_change.connect(self.sig_update)
+        self.redraw()
+
+    def sig_footer_help(self, sender, helptext):
+        self.helptext = helptext
         self.redraw()
 
     def sig_update(self, sender, updated=None):
         self.redraw()
 
     def keypress(self, *args, **kwargs):
-        return self.master.ab.keypress(*args, **kwargs)
+        return self.ab.keypress(*args, **kwargs)
 
     def get_status(self):
         r = []
@@ -188,10 +204,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "i"))
             r.append(":%s]" % self.master.options.intercept)
-        if self.master.options.filter:
+        if self.master.options.view_filter:
             r.append("[")
             r.append(("heading_key", "f"))
-            r.append(":%s]" % self.master.options.filter)
+            r.append(":%s]" % self.master.options.view_filter)
         if self.master.options.stickycookie:
             r.append("[")
             r.append(("heading_key", "t"))
@@ -204,7 +220,7 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "M"))
             r.append(":%s]" % self.master.options.default_contentview)
-        if self.master.options.console_order:
+        if self.master.options.has_changed("console_order"):
             r.append("[")
             r.append(("heading_key", "o"))
             r.append(":%s]" % self.master.options.console_order)
@@ -220,34 +236,25 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("norefresh")
         if self.master.options.replay_kill_extra:
             opts.append("killextra")
-        if self.master.options.no_upstream_cert:
+        if not self.master.options.upstream_cert:
             opts.append("no-upstream-cert")
         if self.master.options.console_focus_follow:
             opts.append("following")
         if self.master.options.stream_large_bodies:
-            opts.append(
-                "stream:%s" % human.pretty_size(
-                    self.master.options.stream_large_bodies
-                )
-            )
+            opts.append(self.master.options.stream_large_bodies)
 
         if opts:
             r.append("[%s]" % (":".join(opts)))
 
-        if self.master.options.mode in ["reverse", "upstream"]:
-            dst = self.master.server.config.upstream_server
-            r.append("[dest:%s]" % mitmproxy.net.http.url.unparse(
-                dst.scheme,
-                dst.address[0],
-                dst.address[1],
-            ))
+        if self.master.options.mode != "regular":
+            r.append("[%s]" % self.master.options.mode)
         if self.master.options.scripts:
             r.append("[")
             r.append(("heading_key", "s"))
             r.append("cripts:%s]" % len(self.master.options.scripts))
 
-        if self.master.options.streamfile:
-            r.append("[W:%s]" % self.master.options.streamfile)
+        if self.master.options.save_stream_file:
+            r.append("[W:%s]" % self.master.options.save_stream_file)
 
         return r
 
@@ -290,11 +297,6 @@ class StatusBar(urwid.WidgetWrap):
             ),
         ]), "heading")
         self.ib._w = status
-
-    def update(self, text):
-        self.helptext = text
-        self.redraw()
-        self.master.loop.draw_screen()
 
     def selectable(self):
         return True

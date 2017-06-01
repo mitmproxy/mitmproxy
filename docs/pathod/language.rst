@@ -23,7 +23,7 @@ HTTP Request
         mode if the server responds correctly. Apart from that, websocket
         requests are just like any other, and all aspects of the request
         can be over-ridden.
-    * - h\:\ :ref:`VALUE`\ =\ :ref:`VALUE`\
+    * - h\ :ref:`VALUE`\ =\ :ref:`VALUE`\
       - Set a header.
     * - r
       - Set the **raw** flag on this response. Pathod will not calculate a
@@ -73,7 +73,7 @@ HTTP Response
     * - m\ :ref:`VALUE`
       - HTTP Reason message. Automatically chosen according to the response
         code if not specified. (HTTP/1 only)
-    * - h\:\ :ref:`VALUE`\ =\ :ref:`VALUE`\
+    * - h\ :ref:`VALUE`\ =\ :ref:`VALUE`\
       - Set a header.
     * - r
       - Set the **raw** flag on this response. Pathod will not calculate a

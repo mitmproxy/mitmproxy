@@ -17,6 +17,7 @@ from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import version
+import mitmproxy.tools.web.master # noqa
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
@@ -121,7 +122,7 @@ class RequestHandler(tornado.web.RequestHandler):
         self.add_header(
             "Content-Security-Policy",
             "default-src 'self'; "
-            "connect-src 'self' ws://* ; "
+            "connect-src 'self' ws:; "
             "style-src   'self' 'unsafe-inline'"
         )
 
@@ -230,7 +231,8 @@ class DumpFlows(RequestHandler):
     def post(self):
         self.view.clear()
         bio = BytesIO(self.filecontents)
-        self.master.load_flows(io.FlowReader(bio))
+        for i in io.FlowReader(bio).stream():
+            self.master.load_flow(i)
         bio.close()
 
 
@@ -244,7 +246,7 @@ class ResumeFlows(RequestHandler):
     def post(self):
         for f in self.view:
             f.resume()
-            self.view.update(f)
+            self.view.update([f])
 
 
 class KillFlows(RequestHandler):
@@ -252,27 +254,27 @@ class KillFlows(RequestHandler):
         for f in self.view:
             if f.killable:
                 f.kill()
-                self.view.update(f)
+                self.view.update([f])
 
 
 class ResumeFlow(RequestHandler):
     def post(self, flow_id):
         self.flow.resume()
-        self.view.update(self.flow)
+        self.view.update([self.flow])
 
 
 class KillFlow(RequestHandler):
     def post(self, flow_id):
         if self.flow.killable:
             self.flow.kill()
-            self.view.update(self.flow)
+            self.view.update([self.flow])
 
 
 class FlowHandler(RequestHandler):
     def delete(self, flow_id):
         if self.flow.killable:
             self.flow.kill()
-        self.view.remove(self.flow)
+        self.view.remove([self.flow])
 
     def put(self, flow_id):
         flow = self.flow
@@ -315,13 +317,13 @@ class FlowHandler(RequestHandler):
         except APIError:
             flow.revert()
             raise
-        self.view.update(flow)
+        self.view.update([flow])
 
 
 class DuplicateFlow(RequestHandler):
     def post(self, flow_id):
         f = self.flow.copy()
-        self.view.add(f)
+        self.view.add([f])
         self.write(f.id)
 
 
@@ -329,14 +331,14 @@ class RevertFlow(RequestHandler):
     def post(self, flow_id):
         if self.flow.modified():
             self.flow.revert()
-            self.view.update(self.flow)
+            self.view.update([self.flow])
 
 
 class ReplayFlow(RequestHandler):
     def post(self, flow_id):
         self.flow.backup()
         self.flow.response = None
-        self.view.update(self.flow)
+        self.view.update([self.flow])
 
         try:
             self.master.replay_request(self.flow)
@@ -349,7 +351,7 @@ class FlowContent(RequestHandler):
         self.flow.backup()
         message = getattr(self.flow, message)
         message.content = self.filecontents
-        self.view.update(self.flow)
+        self.view.update([self.flow])
 
     def get(self, flow_id, message):
         message = getattr(self.flow, message)
@@ -408,7 +410,7 @@ class Settings(RequestHandler):
             mode=str(self.master.options.mode),
             intercept=self.master.options.intercept,
             showhost=self.master.options.showhost,
-            no_upstream_cert=self.master.options.no_upstream_cert,
+            upstream_cert=self.master.options.upstream_cert,
             rawtcp=self.master.options.rawtcp,
             http2=self.master.options.http2,
             websocket=self.master.options.websocket,
@@ -420,12 +422,13 @@ class Settings(RequestHandler):
             contentViews=[v.name.replace(' ', '_') for v in contentviews.views],
             listen_host=self.master.options.listen_host,
             listen_port=self.master.options.listen_port,
+            server=self.master.options.server,
         ))
 
     def put(self):
         update = self.json
         option_whitelist = {
-            "intercept", "showhost", "no_upstream_cert",
+            "intercept", "showhost", "upstream_cert",
             "rawtcp", "http2", "websocket", "anticache", "anticomp",
             "stickycookie", "stickyauth", "stream_large_bodies"
         }

@@ -110,8 +110,8 @@ class TestStickyCookie:
             f.response.headers["Set-Cookie"] = c2
             sc.response(f)
             googlekey = list(sc.jar.keys())[0]
-            assert len(sc.jar[googlekey].keys()) == 1
-            assert list(sc.jar[googlekey]["somecookie"].items())[0][1] == "newvalue"
+            assert len(sc.jar[googlekey]) == 1
+            assert sc.jar[googlekey]["somecookie"] == "newvalue"
 
     def test_response_delete(self):
         sc = stickycookie.StickyCookie()

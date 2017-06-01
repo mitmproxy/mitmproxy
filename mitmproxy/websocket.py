@@ -2,18 +2,19 @@ import time
 from typing import List, Optional
 
 from mitmproxy import flow
-from mitmproxy.http import HTTPFlow
 from mitmproxy.net import websockets
 from mitmproxy.types import serializable
 from mitmproxy.utils import strutils
 
 
 class WebSocketMessage(serializable.Serializable):
-    def __init__(self, type: int, from_client: bool, content: bytes, timestamp: Optional[int]=None):
+    def __init__(
+        self, type: int, from_client: bool, content: bytes, timestamp: Optional[int]=None
+    ) -> None:
         self.type = type
         self.from_client = from_client
         self.content = content
-        self.timestamp = timestamp or time.time()  # type: int
+        self.timestamp = timestamp or int(time.time())  # type: int
 
     @classmethod
     def from_state(cls, state):
@@ -44,17 +45,42 @@ class WebSocketFlow(flow.Flow):
         self.close_code = '(status code missing)'
         self.close_message = '(message missing)'
         self.close_reason = 'unknown status code'
+
+        if handshake_flow:
+            self.client_key = websockets.get_client_key(handshake_flow.request.headers)
+            self.client_protocol = websockets.get_protocol(handshake_flow.request.headers)
+            self.client_extensions = websockets.get_extensions(handshake_flow.request.headers)
+            self.server_accept = websockets.get_server_accept(handshake_flow.response.headers)
+            self.server_protocol = websockets.get_protocol(handshake_flow.response.headers)
+            self.server_extensions = websockets.get_extensions(handshake_flow.response.headers)
+        else:
+            self.client_key = ''
+            self.client_protocol = ''
+            self.client_extensions = ''
+            self.server_accept = ''
+            self.server_protocol = ''
+            self.server_extensions = ''
+
         self.handshake_flow = handshake_flow
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
-    _stateobject_attributes.update(
+    # mypy doesn't support update with kwargs
+    _stateobject_attributes.update(dict(
         messages=List[WebSocketMessage],
         close_sender=str,
         close_code=str,
         close_message=str,
         close_reason=str,
-        handshake_flow=HTTPFlow,
-    )
+        client_key=str,
+        client_protocol=str,
+        client_extensions=str,
+        server_accept=str,
+        server_protocol=str,
+        server_extensions=str,
+        # Do not include handshake_flow, to prevent recursive serialization!
+        # Since mitmproxy-console currently only displays HTTPFlows,
+        # dumping the handshake_flow will include the WebSocketFlow too.
+    ))
 
     @classmethod
     def from_state(cls, state):
@@ -64,30 +90,6 @@ class WebSocketFlow(flow.Flow):
 
     def __repr__(self):
         return "<WebSocketFlow ({} messages)>".format(len(self.messages))
-
-    @property
-    def client_key(self):
-        return websockets.get_client_key(self.handshake_flow.request.headers)
-
-    @property
-    def client_protocol(self):
-        return websockets.get_protocol(self.handshake_flow.request.headers)
-
-    @property
-    def client_extensions(self):
-        return websockets.get_extensions(self.handshake_flow.request.headers)
-
-    @property
-    def server_accept(self):
-        return websockets.get_server_accept(self.handshake_flow.response.headers)
-
-    @property
-    def server_protocol(self):
-        return websockets.get_protocol(self.handshake_flow.response.headers)
-
-    @property
-    def server_extensions(self):
-        return websockets.get_extensions(self.handshake_flow.response.headers)
 
     def message_info(self, message: WebSocketMessage) -> str:
         return "{client} {direction} WebSocket {type} message {direction} {server}{endpoint}".format(

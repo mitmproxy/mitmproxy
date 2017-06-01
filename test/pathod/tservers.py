@@ -1,3 +1,4 @@
+import os
 import tempfile
 import re
 import shutil
@@ -13,6 +14,7 @@ from pathod import language
 from pathod import pathoc
 from pathod import pathod
 from pathod import test
+from pathod.pathod import CA_CERT_NAME
 
 
 def treader(bytes):
@@ -72,7 +74,7 @@ class DaemonTests:
                 self.d.port,
                 path
             ),
-            verify=False,
+            verify=os.path.join(self.d.thread.server.ssloptions.confdir, CA_CERT_NAME),
             params=params
         )
         return resp

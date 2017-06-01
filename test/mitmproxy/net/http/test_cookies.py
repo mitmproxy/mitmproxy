@@ -269,6 +269,9 @@ def test_refresh_cookie():
     c = "MOO=BAR; Expires=Tue, 08-Mar-2011 00:20:38 GMT; Path=foo.com; Secure"
     assert "00:21:38" in cookies.refresh_set_cookie_header(c, 60)
 
+    c = "rfoo=bar; Domain=reddit.com; expires=Thu, 31 Dec 2037; Path=/"
+    assert "expires" not in cookies.refresh_set_cookie_header(c, 60)
+
     c = "foo,bar"
     with pytest.raises(ValueError):
         cookies.refresh_set_cookie_header(c, 60)
@@ -282,6 +285,10 @@ def test_refresh_cookie():
     assert cookies.refresh_set_cookie_header(c, 0)
     c = "foo/bar=bla"
     assert cookies.refresh_set_cookie_header(c, 0)
+
+    # https://github.com/mitmproxy/mitmproxy/issues/2250
+    c = ""
+    assert cookies.refresh_set_cookie_header(c, 60) == ""
 
 
 @mock.patch('time.time')

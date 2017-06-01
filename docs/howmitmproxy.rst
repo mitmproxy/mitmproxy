@@ -43,7 +43,7 @@ client connects to the proxy and makes a request that looks like this:
 
     CONNECT example.com:443 HTTP/1.1
 
-A conventional proxy can neither view nor manipulate an TLS-encrypted data
+A conventional proxy can neither view nor manipulate a TLS-encrypted data
 stream, so a CONNECT request simply asks the proxy to open a pipe between the
 client and server. The proxy here is just a facilitator - it blindly forwards
 data in both directions without knowing anything about the contents. The
@@ -63,7 +63,7 @@ exactly this attack, by allowing a trusted third-party to cryptographically sign
 a server's certificates to verify that they are legit. If this signature doesn't
 match or is from a non-trusted party, a secure client will simply drop the
 connection and refuse to proceed. Despite the many shortcomings of the CA system
-as it exists today, this is usually fatal to attempts to MITM an TLS connection
+as it exists today, this is usually fatal to attempts to MITM a TLS connection
 for analysis. Our answer to this conundrum is to become a trusted Certificate
 Authority ourselves. Mitmproxy includes a full CA implementation that generates
 interception certificates on the fly. To get the client to trust these
@@ -143,7 +143,7 @@ Lets put all of this together into the complete explicitly proxied HTTPS flow.
 2. Mitmproxy responds with a ``200 Connection Established``, as if it has set up the CONNECT pipe.
 3. The client believes it's talking to the remote server, and initiates the TLS connection.
    It uses SNI to indicate the hostname it is connecting to.
-4. Mitmproxy connects to the server, and establishes an TLS connection using the SNI hostname
+4. Mitmproxy connects to the server, and establishes a TLS connection using the SNI hostname
    indicated by the client.
 5. The server responds with the matching certificate, which contains the CN and SAN values
    needed to generate the interception certificate.
@@ -217,7 +217,7 @@ explicit HTTPS connections to establish the CN and SANs, and cope with SNI.
    destination was.
 3. The client believes it's talking to the remote server, and initiates the TLS connection.
    It uses SNI to indicate the hostname it is connecting to.
-4. Mitmproxy connects to the server, and establishes an TLS connection using the SNI hostname
+4. Mitmproxy connects to the server, and establishes a TLS connection using the SNI hostname
    indicated by the client.
 5. The server responds with the matching certificate, which contains the CN and SAN values
    needed to generate the interception certificate.

@@ -1,5 +1,7 @@
+import io
 import pytest
 
+from mitmproxy.io import tnetstring
 from mitmproxy import flowfilter
 from mitmproxy.test import tflow
 
@@ -14,8 +16,6 @@ class TestWebSocketFlow:
         b = f2.get_state()
         del a["id"]
         del b["id"]
-        del a["handshake_flow"]["id"]
-        del b["handshake_flow"]["id"]
         assert a == b
         assert not f == f2
         assert f is not f2
@@ -60,3 +60,14 @@ class TestWebSocketFlow:
         assert 'WebSocketFlow' in repr(f)
         assert 'binary message: ' in repr(f.messages[0])
         assert 'text message: ' in repr(f.messages[1])
+
+    def test_serialize(self):
+        b = io.BytesIO()
+        d = tflow.twebsocketflow().get_state()
+        tnetstring.dump(d, b)
+        assert b.getvalue()
+
+        b = io.BytesIO()
+        d = tflow.twebsocketflow().handshake_flow.get_state()
+        tnetstring.dump(d, b)
+        assert b.getvalue()

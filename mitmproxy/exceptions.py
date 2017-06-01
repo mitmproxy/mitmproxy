@@ -93,15 +93,22 @@ class SetServerNotAllowedException(MitmproxyException):
     pass
 
 
+class CommandError(Exception):
+    pass
+
+
 class OptionsError(MitmproxyException):
     pass
 
 
-class AddonError(MitmproxyException):
+class AddonManagerError(MitmproxyException):
     pass
 
 
 class AddonHalt(MitmproxyException):
+    """
+        Raised by addons to signal that no further handlers should handle this event.
+    """
     pass
 
 

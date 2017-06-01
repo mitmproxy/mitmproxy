@@ -3,14 +3,16 @@ import traceback
 
 from mitmproxy import exceptions
 from mitmproxy import connections
+from mitmproxy import controller  # noqa
 from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import platform
-from mitmproxy.proxy import ProxyConfig
+from mitmproxy.proxy import config
 from mitmproxy.proxy import modes
 from mitmproxy.proxy import root_context
 from mitmproxy.net import tcp
 from mitmproxy.net.http import http1
+from mitmproxy.utils import human
 
 
 class DummyServer:
@@ -34,7 +36,7 @@ class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
 
-    def __init__(self, config: ProxyConfig):
+    def __init__(self, config: config.ProxyConfig) -> None:
         """
             Raises ServerException if there's a startup problem.
         """
@@ -46,10 +48,12 @@ class ProxyServer(tcp.TCPServer):
             if config.options.mode == "transparent":
                 platform.init_transparent_mode()
         except Exception as e:
+            if self.socket:
+                self.socket.close()
             raise exceptions.ServerException(
                 'Error starting proxy server: ' + repr(e)
             ) from e
-        self.channel = None
+        self.channel = None  # type: controller.Channel
 
     def set_channel(self, channel):
         self.channel = channel
@@ -67,8 +71,7 @@ class ProxyServer(tcp.TCPServer):
 class ConnectionHandler:
 
     def __init__(self, client_conn, client_address, config, channel):
-        self.config = config
-        """@type: mitmproxy.proxy.config.ProxyConfig"""
+        self.config = config  # type: config.ProxyConfig
         self.client_conn = connections.ClientConnection(
             client_conn,
             client_address,
@@ -85,14 +88,14 @@ class ConnectionHandler:
         )
 
         mode = self.config.options.mode
-        if mode == "upstream":
+        if mode.startswith("upstream:"):
             return modes.HttpUpstreamProxy(
                 root_ctx,
                 self.config.upstream_server.address
             )
         elif mode == "transparent":
             return modes.TransparentProxy(root_ctx)
-        elif mode == "reverse":
+        elif mode.startswith("reverse:"):
             server_tls = self.config.upstream_server.scheme == "https"
             return modes.ReverseProxy(
                 root_ctx,
@@ -152,5 +155,5 @@ class ConnectionHandler:
         self.client_conn.finish()
 
     def log(self, msg, level):
-        msg = "{}: {}".format(repr(self.client_conn.address), msg)
+        msg = "{}: {}".format(human.format_address(self.client_conn.address), msg)
         self.channel.tell("log", log.LogEntry(msg, level))

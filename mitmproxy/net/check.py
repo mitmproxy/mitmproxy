@@ -29,5 +29,5 @@ def is_valid_host(host: bytes) -> bool:
         return False
 
 
-def is_valid_port(port):
+def is_valid_port(port: int) -> bool:
     return 0 <= port <= 65535

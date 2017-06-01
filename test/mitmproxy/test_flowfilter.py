@@ -209,6 +209,9 @@ class TestMatchingHTTPFlow:
         assert self.q("~u address:22/path", q)
         assert not self.q("~u moo/path", q)
 
+        q.request = None
+        assert not self.q("~u address", q)
+
         assert self.q("~u address", s)
         assert self.q("~u address:22/path", s)
         assert not self.q("~u moo/path", s)

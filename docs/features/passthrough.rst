@@ -23,7 +23,7 @@ How it works
 
 ================== ======================
 command-line       ``--ignore regex``
-mitmproxy shortcut :kbd:`o` then :kbd:`I`
+mitmproxy shortcut :kbd:`O` then :kbd:`I`
 ================== ======================
 
 

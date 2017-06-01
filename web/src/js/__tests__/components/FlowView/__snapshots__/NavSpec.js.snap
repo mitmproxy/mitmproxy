@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Nav Component should render correctly 1`] = `
+<nav
+  className="nav-tabs nav-tabs-sm"
+>
+  <a
+    className="active"
+    href="#"
+    onClick={[Function]}
+  >
+    Foo
+  </a>
+  <a
+    className=""
+    href="#"
+    onClick={[Function]}
+  >
+    Bar
+  </a>
+</nav>
+`;
+
+exports[`NavAction Component should render correctly 1`] = `
+<a
+  className="nav-action"
+  href="#"
+  onClick={[Function]}
+  title="bar"
+>
+  <i
+    className="fa fa-fw foo"
+  />
+</a>
+`;

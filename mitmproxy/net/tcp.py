@@ -502,9 +502,7 @@ class _Connection:
         # Cipher List
         if cipher_list:
             try:
-                context.set_cipher_list(cipher_list)
-
-                # TODO: maybe change this to with newer pyOpenSSL APIs
+                context.set_cipher_list(cipher_list.encode())
                 context.set_tmp_ecdh(OpenSSL.crypto.get_elliptic_curve('prime256v1'))
             except SSL.Error as v:
                 raise exceptions.TlsException("SSL cipher specification error: %s" % str(v))
@@ -513,7 +511,7 @@ class _Connection:
         if log_ssl_key:
             context.set_info_callback(log_ssl_key)
 
-        if HAS_ALPN:
+        if HAS_ALPN:  # pragma: openssl-old no cover
             if alpn_protos is not None:
                 # advertise application layer protocols
                 context.set_alpn_protos(alpn_protos)
@@ -522,13 +520,15 @@ class _Connection:
                 def alpn_select_callback(conn_, options):
                     if alpn_select in options:
                         return bytes(alpn_select)
-                    else:  # pragma no cover
+                    else:  # pragma: no cover
                         return options[0]
                 context.set_alpn_select_callback(alpn_select_callback)
             elif alpn_select_callback is not None and alpn_select is None:
+                if not callable(alpn_select_callback):
+                    raise exceptions.TlsException("ALPN error: alpn_select_callback must be a function.")
                 context.set_alpn_select_callback(alpn_select_callback)
             elif alpn_select_callback is not None and alpn_select is not None:
-                raise exceptions.TlsException("ALPN error: only define alpn_select (string) OR alpn_select_callback (method).")
+                raise exceptions.TlsException("ALPN error: only define alpn_select (string) OR alpn_select_callback (function).")
 
         return context
 
@@ -569,7 +569,9 @@ class TCPClient(_Connection):
         # Make sure to close the real socket, not the SSL proxy.
         # OpenSSL is really good at screwing up, i.e. when trying to recv from a failed connection,
         # it tries to renegotiate...
-        if isinstance(self.connection, SSL.Connection):
+        if not self.connection:
+            return
+        elif isinstance(self.connection, SSL.Connection):
             close_socket(self.connection._socket)
         else:
             close_socket(self.connection)
@@ -617,11 +619,6 @@ class TCPClient(_Connection):
                 raise self.ssl_verification_error
             else:
                 raise exceptions.TlsException("SSL handshake error: %s" % repr(v))
-        else:
-            # Fix for pre v1.0 OpenSSL, which doesn't throw an exception on
-            # certificate validation failure
-            if verification_mode == SSL.VERIFY_PEER and self.ssl_verification_error:
-                raise self.ssl_verification_error
 
         self.cert = certs.SSLCert(self.connection.get_peer_certificate())
 
@@ -676,11 +673,13 @@ class TCPClient(_Connection):
                 if self.spoof_source_address:
                     try:
                         if not sock.getsockopt(socket.SOL_IP, socket.IP_TRANSPARENT):
-                            sock.setsockopt(socket.SOL_IP, socket.IP_TRANSPARENT, 1)
+                            sock.setsockopt(socket.SOL_IP, socket.IP_TRANSPARENT, 1)  # pragma: windows no cover  pragma: osx no cover
                     except Exception as e:
                         # socket.IP_TRANSPARENT might not be available on every OS and Python version
+                        if sock is not None:
+                            sock.close()
                         raise exceptions.TcpException(
-                            "Failed to spoof the source address: " + e.strerror
+                            "Failed to spoof the source address: " + str(e)
                         )
                 sock.connect(sa)
                 return sock
@@ -693,7 +692,7 @@ class TCPClient(_Connection):
         if err is not None:
             raise err
         else:
-            raise socket.error("getaddrinfo returns an empty list")
+            raise socket.error("getaddrinfo returns an empty list")  # pragma: no cover
 
     def connect(self):
         try:
@@ -716,7 +715,7 @@ class TCPClient(_Connection):
         return self.connection.gettimeout()
 
     def get_alpn_proto_negotiated(self):
-        if HAS_ALPN and self.ssl_established:
+        if HAS_ALPN and self.ssl_established:  # pragma: openssl-old no cover
             return self.connection.get_alpn_proto_negotiated()
         else:
             return b""
@@ -823,7 +822,7 @@ class BaseHandler(_Connection):
         self.connection.settimeout(n)
 
     def get_alpn_proto_negotiated(self):
-        if HAS_ALPN and self.ssl_established:
+        if HAS_ALPN and self.ssl_established:  # pragma: openssl-old no cover
             return self.connection.get_alpn_proto_negotiated()
         else:
             return b""
@@ -854,9 +853,10 @@ class TCPServer:
     def __init__(self, address):
         self.address = address
         self.__is_shut_down = threading.Event()
+        self.__is_shut_down.set()
         self.__shutdown_request = False
 
-        if self.address == 'localhost':
+        if self.address[0] == 'localhost':
             raise socket.error("Binding to 'localhost' is prohibited. Please use '::1' or '127.0.0.1' directly.")
 
         try:
@@ -868,6 +868,8 @@ class TCPServer:
             self.socket.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
             self.socket.bind(self.address)
         except socket.error:
+            if self.socket:
+                self.socket.close()
             self.socket = None
 
         if not self.socket:

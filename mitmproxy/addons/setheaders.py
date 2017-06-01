@@ -1,5 +1,6 @@
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
+from mitmproxy import ctx
 
 
 def parse_setheader(s):
@@ -43,21 +44,11 @@ class SetHeaders:
     def __init__(self):
         self.lst = []
 
-    def configure(self, options, updated):
-        """
-            options.setheaders is a tuple of (fpatt, header, value)
-
-            fpatt: String specifying a filter pattern.
-            header: Header name.
-            value: Header value string
-        """
+    def configure(self, updated):
         if "setheaders" in updated:
             self.lst = []
-            for shead in options.setheaders:
-                if isinstance(shead, str):
-                    fpatt, header, value = parse_setheader(shead)
-                else:
-                    fpatt, header, value = shead
+            for shead in ctx.options.setheaders:
+                fpatt, header, value = parse_setheader(shead)
 
                 flt = flowfilter.parse(fpatt)
                 if not flt:

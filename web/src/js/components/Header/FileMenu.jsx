@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import FileChooser from '../common/FileChooser'
 import Dropdown, {Divider} from '../common/Dropdown'
@@ -16,7 +17,7 @@ FileMenu.onNewClick = (e, clearFlows) => {
         clearFlows()
 }
 
-function FileMenu ({clearFlows, loadFlows, saveFlows}) {
+export function FileMenu ({clearFlows, loadFlows, saveFlows}) {
      return (
         <Dropdown className="pull-left" btnClass="special" text="mitmproxy">
             <a href="#" onClick={e => FileMenu.onNewClick(e, clearFlows)}>

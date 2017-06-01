@@ -7,15 +7,9 @@ from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
 
-class Options(options.Options):
-    def __init__(self, *, intercept=None, **kwargs):
-        self.intercept = intercept
-        super().__init__(**kwargs)
-
-
 def test_simple():
     r = intercept.Intercept()
-    with taddons.context(options=Options()) as tctx:
+    with taddons.context(options=options.Options()) as tctx:
         assert not r.filt
         tctx.configure(r, intercept="~q")
         assert r.filt
@@ -35,6 +29,5 @@ def test_simple():
         assert not f.intercepted
 
         f = tflow.tflow(resp=True)
-        f.reply._state = "handled"
         r.response(f)
         assert f.intercepted

@@ -1,0 +1,245 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FlowMenu Component should connect to state 1`] = `
+<div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="[r]eplay flow"
+      >
+        <i
+          className="fa fa-fw fa-repeat text-primary"
+        />
+        Replay
+      </div>
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="[D]uplicate flow"
+      >
+        <i
+          className="fa fa-fw fa-copy text-info"
+        />
+        Duplicate
+      </div>
+      <div
+        className="btn btn-default"
+        disabled={true}
+        onClick={false}
+        title="revert changes to flow [V]"
+      >
+        <i
+          className="fa fa-fw fa-history text-warning"
+        />
+        Revert
+      </div>
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="[d]elete flow"
+      >
+        <i
+          className="fa fa-fw fa-trash text-danger"
+        />
+        Delete
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      Flow Modification
+    </div>
+  </div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="download"
+      >
+        <i
+          className="fa fa-fw fa-download"
+        />
+        Download
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      Export
+    </div>
+  </div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="btn btn-default"
+        disabled={true}
+        onClick={false}
+        title="[a]ccept intercepted flow"
+      >
+        <i
+          className="fa fa-fw fa-play text-success"
+        />
+        Resume
+      </div>
+      <div
+        className="btn btn-default"
+        disabled={true}
+        onClick={false}
+        title="kill intercepted flow [x]"
+      >
+        <i
+          className="fa fa-fw fa-times text-danger"
+        />
+        Abort
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      Interception
+    </div>
+  </div>
+</div>
+`;
+
+exports[`FlowMenu Component should render correctly with flow 1`] = `
+<div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="[r]eplay flow"
+      >
+        <i
+          className="fa fa-fw fa-repeat text-primary"
+        />
+        Replay
+      </div>
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="[D]uplicate flow"
+      >
+        <i
+          className="fa fa-fw fa-copy text-info"
+        />
+        Duplicate
+      </div>
+      <div
+        className="btn btn-default"
+        disabled={false}
+        onClick={[Function]}
+        title="revert changes to flow [V]"
+      >
+        <i
+          className="fa fa-fw fa-history text-warning"
+        />
+        Revert
+      </div>
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="[d]elete flow"
+      >
+        <i
+          className="fa fa-fw fa-trash text-danger"
+        />
+        Delete
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      Flow Modification
+    </div>
+  </div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="download"
+      >
+        <i
+          className="fa fa-fw fa-download"
+        />
+        Download
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      Export
+    </div>
+  </div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="btn btn-default"
+        disabled={false}
+        onClick={[Function]}
+        title="[a]ccept intercepted flow"
+      >
+        <i
+          className="fa fa-fw fa-play text-success"
+        />
+        Resume
+      </div>
+      <div
+        className="btn btn-default"
+        disabled={false}
+        onClick={[Function]}
+        title="kill intercepted flow [x]"
+      >
+        <i
+          className="fa fa-fw fa-times text-danger"
+        />
+        Abort
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      Interception
+    </div>
+  </div>
+</div>
+`;
+
+exports[`FlowMenu Component should render correctly without flow 1`] = `<div />`;

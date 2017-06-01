@@ -1,23 +1,50 @@
 import typing
 
 
-def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
+def check_command_type(value: typing.Any, typeinfo: typing.Any) -> bool:
     """
-    This function checks if the provided value is an instance of typeinfo
-    and raises a TypeError otherwise.
-
-    The following types from the typing package have specialized support:
-
-    - Union
-    - Tuple
-    - IO
+    Check if the provided value is an instance of typeinfo. Returns True if the
+    types match, False otherwise. This function supports only those types
+    required for command return values.
     """
-    # If we realize that we need to extend this list substantially, it may make sense
-    # to use typeguard for this, but right now it's not worth the hassle for 16 lines of code.
+    typename = str(typeinfo)
+    if typename.startswith("typing.Sequence"):
+        try:
+            T = typeinfo.__args__[0]  # type: ignore
+        except AttributeError:
+            # Python 3.5.0
+            T = typeinfo.__parameters__[0]  # type: ignore
+        if not isinstance(value, (tuple, list)):
+            return False
+        for v in value:
+            if not check_command_type(v, T):
+                return False
+    elif typename.startswith("typing.Union"):
+        try:
+            types = typeinfo.__args__  # type: ignore
+        except AttributeError:
+            # Python 3.5.x
+            types = typeinfo.__union_params__  # type: ignore
+        for T in types:
+            checks = [check_command_type(value, T) for T in types]
+            if not any(checks):
+                return False
+    elif value is None and typeinfo is None:
+        return True
+    elif not isinstance(value, typeinfo):
+        return False
+    return True
 
+
+def check_option_type(name: str, value: typing.Any, typeinfo: typing.Any) -> None:
+    """
+    Check if the provided value is an instance of typeinfo and raises a
+    TypeError otherwise. This function supports only those types required for
+    options.
+    """
     e = TypeError("Expected {} for {}, but got {}.".format(
         typeinfo,
-        attr_name,
+        name,
         type(value)
     ))
 
@@ -25,14 +52,14 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
 
     if typename.startswith("typing.Union"):
         try:
-            types = typeinfo.__args__
+            types = typeinfo.__args__  # type: ignore
         except AttributeError:
             # Python 3.5.x
-            types = typeinfo.__union_params__
+            types = typeinfo.__union_params__  # type: ignore
 
         for T in types:
             try:
-                check_type(attr_name, value, T)
+                check_option_type(name, value, T)
             except TypeError:
                 pass
             else:
@@ -40,42 +67,34 @@ def check_type(attr_name: str, value: typing.Any, typeinfo: type) -> None:
         raise e
     elif typename.startswith("typing.Tuple"):
         try:
-            types = typeinfo.__args__
+            types = typeinfo.__args__  # type: ignore
         except AttributeError:
             # Python 3.5.x
-            types = typeinfo.__tuple_params__
+            types = typeinfo.__tuple_params__  # type: ignore
 
         if not isinstance(value, (tuple, list)):
             raise e
         if len(types) != len(value):
             raise e
         for i, (x, T) in enumerate(zip(value, types)):
-            check_type("{}[{}]".format(attr_name, i), x, T)
+            check_option_type("{}[{}]".format(name, i), x, T)
         return
     elif typename.startswith("typing.Sequence"):
         try:
-            T = typeinfo.__args__[0]
+            T = typeinfo.__args__[0]  # type: ignore
         except AttributeError:
             # Python 3.5.0
-            T = typeinfo.__parameters__[0]
-
+            T = typeinfo.__parameters__[0]  # type: ignore
         if not isinstance(value, (tuple, list)):
             raise e
         for v in value:
-            check_type(attr_name, v, T)
+            check_option_type(name, v, T)
     elif typename.startswith("typing.IO"):
         if hasattr(value, "read"):
             return
         else:
             raise e
+    elif typename.startswith("typing.Any"):
+        return
     elif not isinstance(value, typeinfo):
         raise e
-
-
-def get_arg_type_from_constructor_annotation(cls: type, attr: str) -> typing.Optional[type]:
-    """
-    Returns the first type annotation for attr in the class hierarchy.
-    """
-    for c in cls.mro():
-        if attr in getattr(c.__init__, "__annotations__", ()):
-            return c.__init__.__annotations__[attr]

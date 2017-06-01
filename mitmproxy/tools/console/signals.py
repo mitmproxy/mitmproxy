@@ -24,11 +24,17 @@ status_prompt_path = blinker.Signal()
 # Prompt for a single keystroke
 status_prompt_onekey = blinker.Signal()
 
+# Prompt for a command
+status_prompt_command = blinker.Signal()
+
 # Call a callback in N seconds
 call_in = blinker.Signal()
 
 # Focus the body, footer or header of the main window
 focus = blinker.Signal()
+
+# Set the mini help text in the footer of the main window
+footer_help = blinker.Signal()
 
 # Fired when settings change
 update_settings = blinker.Signal()
@@ -42,4 +48,3 @@ flowlist_change = blinker.Signal()
 # Pop and push view state onto a stack
 pop_view_state = blinker.Signal()
 push_view_state = blinker.Signal()
-replace_view_state = blinker.Signal()

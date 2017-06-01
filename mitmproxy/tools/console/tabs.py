@@ -27,6 +27,7 @@ class Tabs(urwid.WidgetWrap):
         self.tab_offset = tab_offset
         self.tabs = tabs
         self.show()
+        self._w = urwid.Pile([])
 
     def change_tab(self, offset):
         self.tab_offset = offset
@@ -34,13 +35,16 @@ class Tabs(urwid.WidgetWrap):
 
     def keypress(self, size, key):
         n = len(self.tabs)
-        if key in ["tab", "l"]:
+        if key == "right":
             self.change_tab((self.tab_offset + 1) % n)
-        elif key == "h":
+        elif key == "left":
             self.change_tab((self.tab_offset - 1) % n)
         return self._w.keypress(size, key)
 
     def show(self):
+        if not self.tabs:
+            return
+
         headers = []
         for i in range(len(self.tabs)):
             txt = self.tabs[i][0]()

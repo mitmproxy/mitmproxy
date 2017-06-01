@@ -9,5 +9,4 @@ class ConcurrentClass:
         time.sleep(0.1)
 
 
-def start():
-    return ConcurrentClass()
+addons = [ConcurrentClass()]

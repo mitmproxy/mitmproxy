@@ -1,9 +1,5 @@
-from io import BytesIO
-import tempfile
-import os
 import time
-import shutil
-from contextlib import contextmanager
+from io import BytesIO
 
 from mitmproxy.utils import data
 from mitmproxy.net import tcp
@@ -11,18 +7,6 @@ from mitmproxy.net import http
 
 
 test_data = data.Data(__name__).push("../../test/")
-
-
-@contextmanager
-def tmpdir(*args, **kwargs):
-    orig_workdir = os.getcwd()
-    temp_workdir = tempfile.mkdtemp(*args, **kwargs)
-    os.chdir(temp_workdir)
-
-    yield temp_workdir
-
-    os.chdir(orig_workdir)
-    shutil.rmtree(temp_workdir)
 
 
 def treader(bytes):

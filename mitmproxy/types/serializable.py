@@ -1,4 +1,5 @@
 import abc
+import uuid
 
 
 class Serializable(metaclass=abc.ABCMeta):
@@ -29,4 +30,7 @@ class Serializable(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def copy(self):
-        return self.from_state(self.get_state())
+        state = self.get_state()
+        if isinstance(state, dict) and "id" in state:
+            state["id"] = str(uuid.uuid4())
+        return self.from_state(state)

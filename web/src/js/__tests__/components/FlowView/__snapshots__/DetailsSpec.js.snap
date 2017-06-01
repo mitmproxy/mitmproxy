@@ -1,0 +1,274 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CertificateInfo Component should render correctly 1`] = `<div />`;
+
+exports[`ConnectionInfo Component should render correctly 1`] = `
+<table
+  className="connection-table"
+>
+  <tbody>
+    <tr>
+      <td>
+        Address:
+      </td>
+      <td>
+        address:22
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <abbr
+          title="TLS Server Name Indication"
+        >
+          TLS SNI:
+        </abbr>
+      </td>
+      <td>
+        address
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;
+
+exports[`Details Component should render correctly 1`] = `
+<section
+  className="detail"
+>
+  <h4>
+    Client Connection
+  </h4>
+  <table
+    className="connection-table"
+  >
+    <tbody>
+      <tr>
+        <td>
+          Address:
+        </td>
+        <td>
+          address:22
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <abbr
+            title="TLS Server Name Indication"
+          >
+            TLS SNI:
+          </abbr>
+        </td>
+        <td>
+          address
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h4>
+    Server Connection
+  </h4>
+  <table
+    className="connection-table"
+  >
+    <tbody>
+      <tr>
+        <td>
+          Address:
+        </td>
+        <td>
+          address:22
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <abbr
+            title="TLS Server Name Indication"
+          >
+            TLS SNI:
+          </abbr>
+        </td>
+        <td>
+          address
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div />
+  <div>
+    <h4>
+      Timing
+    </h4>
+    <table
+      className="timing-table"
+    >
+      <tbody>
+        <tr />
+        <tr />
+        <tr>
+          <td>
+            Server conn. initiated
+            :
+          </td>
+          <td>
+            1970-01-01 00:00:01.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Client conn. established
+            :
+          </td>
+          <td>
+            1970-01-01 00:00:01.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Server conn. TCP handshake
+            :
+          </td>
+          <td>
+            1970-01-01 00:00:02.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Client conn. SSL handshake
+            :
+          </td>
+          <td>
+            1970-01-01 00:00:02.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Server conn. SSL handshake
+            :
+          </td>
+          <td>
+            1970-01-01 00:00:03.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            First response byte
+            :
+          </td>
+          <td>
+            2017-05-21 12:38:32.481
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Response complete
+            :
+          </td>
+          <td>
+            2017-05-21 12:38:32.481
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+`;
+
+exports[`TimeStamp Component should render correctly 1`] = `
+<tr>
+  <td>
+    foo
+    :
+  </td>
+  <td>
+    2017-01-01 00:00:00.000
+    <span
+      className="text-muted"
+    >
+      (
+      2min
+      )
+    </span>
+  </td>
+</tr>
+`;
+
+exports[`TimeStamp Component should render correctly 2`] = `<tr />`;
+
+exports[`Timing Component should render correctly 1`] = `
+<div>
+  <h4>
+    Timing
+  </h4>
+  <table
+    className="timing-table"
+  >
+    <tbody>
+      <tr />
+      <tr />
+      <tr>
+        <td>
+          Server conn. initiated
+          :
+        </td>
+        <td>
+          1970-01-01 00:00:01.000
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Client conn. established
+          :
+        </td>
+        <td>
+          1970-01-01 00:00:01.000
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Server conn. TCP handshake
+          :
+        </td>
+        <td>
+          1970-01-01 00:00:02.000
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Client conn. SSL handshake
+          :
+        </td>
+        <td>
+          1970-01-01 00:00:02.000
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Server conn. SSL handshake
+          :
+        </td>
+        <td>
+          1970-01-01 00:00:03.000
+        </td>
+      </tr>
+      <tr>
+        <td>
+          First response byte
+          :
+        </td>
+        <td>
+          2017-05-21 12:38:32.481
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Response complete
+          :
+        </td>
+        <td>
+          2017-05-21 12:38:32.481
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;
