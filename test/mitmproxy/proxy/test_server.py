@@ -1009,6 +1009,40 @@ class TestUpstreamProxySSL(
         assert len(self.chain[0].tmaster.state.flows) == 0
         assert len(self.chain[1].tmaster.state.flows) == 1
 
+    def test_connect_https_to_http(self):
+        """
+        https://github.com/mitmproxy/mitmproxy/issues/2329
+
+        Client <- HTTPS -> Proxy <- HTTP -> Proxy <- HTTPS -> Server
+        """
+        self.proxy.tmaster.addons.add(RewriteToHttp())
+        self.chain[1].tmaster.addons.add(RewriteToHttps())
+        p = self.pathoc()
+        with p.connect():
+            resp = p.request("get:'/p/418'")
+
+        assert self.proxy.tmaster.state.flows[0].client_conn.tls_established
+        assert not self.proxy.tmaster.state.flows[0].server_conn.tls_established
+        assert not self.chain[1].tmaster.state.flows[0].client_conn.tls_established
+        assert self.chain[1].tmaster.state.flows[0].server_conn.tls_established
+        assert resp.status_code == 418
+
+
+class RewriteToHttp:
+    def http_connect(self, f):
+        f.request.scheme = "http"
+
+    def request(self, f):
+        f.request.scheme = "http"
+
+
+class RewriteToHttps:
+    def http_connect(self, f):
+        f.request.scheme = "https"
+
+    def request(self, f):
+        f.request.scheme = "https"
+
 
 class UpstreamProxyChanger:
     def __init__(self, addr):

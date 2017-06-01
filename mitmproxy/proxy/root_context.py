@@ -70,8 +70,16 @@ class RootContext:
                 top_layer.server_tls,
                 top_layer.server_conn.address[0]
             )
-        if isinstance(top_layer, protocol.ServerConnectionMixin) or isinstance(top_layer, protocol.UpstreamConnectLayer):
+        if isinstance(top_layer, protocol.ServerConnectionMixin):
             return protocol.TlsLayer(top_layer, client_tls, client_tls)
+        if isinstance(top_layer, protocol.UpstreamConnectLayer):
+            # if the user manually sets a scheme for connect requests, we use this to decide if we
+            # want TLS or not.
+            if top_layer.connect_request.scheme:
+                tls = top_layer.connect_request.scheme == "https"
+            else:
+                tls = client_tls
+            return protocol.TlsLayer(top_layer, client_tls, tls)
 
         # 3. In Http Proxy mode and Upstream Proxy mode, the next layer is fixed.
         if isinstance(top_layer, protocol.TlsLayer):
