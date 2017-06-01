@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
-@author: David Shaw, david.shaw.aw@gmail.com
+@author: David Shaw, shawd@vmware.com
 
 Inspired by EAS Inspector for Fiddler
 https://easinspectorforfiddler.codeplex.com
