@@ -1,27 +1,26 @@
 import os
 import socket
 import time
-import pytest
 from unittest import mock
 
-from mitmproxy.test import tutils
-from mitmproxy import options
-from mitmproxy.addons import script
-from mitmproxy.addons import proxyauth
-from mitmproxy import http
-from mitmproxy.proxy.config import HostMatcher
+import pytest
+
 import mitmproxy.net.http
-from mitmproxy.net import tcp
-from mitmproxy.net import socks
 from mitmproxy import certs
 from mitmproxy import exceptions
+from mitmproxy import http
+from mitmproxy import options
+from mitmproxy.addons import proxyauth
+from mitmproxy.addons import script
+from mitmproxy.net import socks
+from mitmproxy.net import tcp
 from mitmproxy.net.http import http1
+from mitmproxy.proxy.config import HostMatcher
+from mitmproxy.test import tutils
 from pathod import pathoc
 from pathod import pathod
-
 from .. import tservers
 from ...conftest import skip_appveyor
-
 
 """
     Note that the choice of response code in these tests matters more than you
@@ -1008,6 +1007,40 @@ class TestUpstreamProxySSL(
         assert req.status_code == 418
         assert len(self.chain[0].tmaster.state.flows) == 0
         assert len(self.chain[1].tmaster.state.flows) == 1
+
+    def test_connect_https_to_http(self):
+        """
+        https://github.com/mitmproxy/mitmproxy/issues/2329
+
+        Client <- HTTPS -> Proxy <- HTTP -> Proxy <- HTTPS -> Server
+        """
+        self.proxy.tmaster.addons.add(RewriteToHttp())
+        self.chain[1].tmaster.addons.add(RewriteToHttps())
+        p = self.pathoc()
+        with p.connect():
+            resp = p.request("get:'/p/418'")
+
+        assert self.proxy.tmaster.state.flows[0].client_conn.tls_established
+        assert not self.proxy.tmaster.state.flows[0].server_conn.tls_established
+        assert not self.chain[1].tmaster.state.flows[0].client_conn.tls_established
+        assert self.chain[1].tmaster.state.flows[0].server_conn.tls_established
+        assert resp.status_code == 418
+
+
+class RewriteToHttp:
+    def http_connect(self, f):
+        f.request.scheme = "http"
+
+    def request(self, f):
+        f.request.scheme = "http"
+
+
+class RewriteToHttps:
+    def http_connect(self, f):
+        f.request.scheme = "https"
+
+    def request(self, f):
+        f.request.scheme = "https"
 
 
 class UpstreamProxyChanger:

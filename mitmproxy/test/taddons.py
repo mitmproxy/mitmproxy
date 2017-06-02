@@ -17,6 +17,8 @@ class TestAddons(addonmanager.AddonManager):
     def trigger(self, event, *args, **kwargs):
         if event == "log":
             self.master.logs.append(args[0])
+        elif event == "tick" and not args and not kwargs:
+            pass
         else:
             self.master.events.append((event, args, kwargs))
         super().trigger(event, *args, **kwargs)
