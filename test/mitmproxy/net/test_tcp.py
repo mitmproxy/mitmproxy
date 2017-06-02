@@ -387,6 +387,13 @@ class TestSNI(tservers.ServerTestBase):
             assert c.sni == "foo.com"
             assert c.rfile.readline() == b"foo.com"
 
+    def test_idn(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        with c.connect():
+            c.convert_to_ssl(sni="mitmproxyäöüß.example.com")
+            assert c.ssl_established
+            assert "doesn't match" not in str(c.ssl_verification_error)
+
 
 class TestServerCipherList(tservers.ServerTestBase):
     handler = ClientCipherListHandler
