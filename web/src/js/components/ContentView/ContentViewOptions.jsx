@@ -4,7 +4,6 @@ import { connect } from 'react-redux'
 import ViewSelector from './ViewSelector'
 import UploadContentButton from './UploadContentButton'
 import DownloadContentButton from './DownloadContentButton'
-import { uploadContent } from '../../ducks/flows'
 
 ContentViewOptions.propTypes = {
     flow: PropTypes.object.isRequired,
@@ -29,8 +28,5 @@ export default connect(
     state => ({
         contentViewDescription: state.ui.flow.viewDescription,
         readonly: !state.ui.flow.modifiedFlow,
-    }),
-    {
-        uploadContent: uploadContent
-    }
+    })
 )(ContentViewOptions)
