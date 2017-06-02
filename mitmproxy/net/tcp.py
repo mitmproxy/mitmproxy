@@ -634,7 +634,11 @@ class TCPClient(_Connection):
             if self.cert.cn:
                 crt["subject"] = [[["commonName", self.cert.cn.decode("ascii", "strict")]]]
             if sni:
-                hostname = sni
+                # IDN?
+                if crt["subject"][0][0][1].startswith('xn--'):
+                    hostname = sni.encode("idna").decode("ascii", "strict")
+                else:
+                    hostname = sni
             else:
                 hostname = "no-hostname"
             match_hostname(crt, hostname)
