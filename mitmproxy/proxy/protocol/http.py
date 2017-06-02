@@ -273,7 +273,10 @@ class HttpLayer(base.Layer):
                 self.send_response(http.expect_continue_response)
                 request.headers.pop("expect")
 
-            request.data.content = b"".join(self.read_request_body(request))
+            if f.request.stream:
+                f.request.data.content = None
+            else:
+                f.request.data.content = b"".join(self.read_request_body(request))
             request.timestamp_end = time.time()
         except exceptions.HttpException as e:
             # We optimistically guess there might be an HTTP client on the
@@ -327,7 +330,13 @@ class HttpLayer(base.Layer):
                 )
 
                 def get_response():
-                    self.send_request(f.request)
+                    if f.request.stream:
+                        self.send_request_headers(f.request)
+                        chunks = self.read_request_body(f.request)
+                        self.send_request_body(f.request, chunks)
+                    else:
+                        self.send_request(f.request)
+
                     f.response = self.read_response_headers()
 
                 try:
