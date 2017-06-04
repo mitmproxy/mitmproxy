@@ -30,7 +30,7 @@ def assert_utf8_env():
             file=sys.stderr
         )
         print(
-            "Set your LANG enviroment variable to something like en_US.UTF-8",
+            "Set your LANG environment variable to something like en_US.UTF-8",
             file=sys.stderr
         )
         sys.exit(1)
@@ -111,6 +111,12 @@ def mitmproxy(args=None):  # pragma: no cover
         print("Error: mitmproxy's console interface is not supported on Windows. "
               "You can run mitmdump or mitmweb instead.", file=sys.stderr)
         sys.exit(1)
+
+    if not sys.stdout.isatty():
+        print("Error: mitmproxy's console interface requires a tty. "
+              "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
+        sys.exit(1)
+
     assert_utf8_env()
 
     from mitmproxy.tools import console
