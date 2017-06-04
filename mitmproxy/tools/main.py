@@ -112,11 +112,6 @@ def mitmproxy(args=None):  # pragma: no cover
               "You can run mitmdump or mitmweb instead.", file=sys.stderr)
         sys.exit(1)
 
-    if not sys.stdout.isatty():
-        print("Error: mitmproxy's console interface requires a tty. "
-              "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
-        sys.exit(1)
-
     assert_utf8_env()
 
     from mitmproxy.tools import console
