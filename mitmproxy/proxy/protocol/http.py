@@ -333,6 +333,8 @@ class HttpLayer(base.Layer):
                     if f.request.stream:
                         self.send_request_headers(f.request)
                         chunks = self.read_request_body(f.request)
+                        if callable(f.request.stream):
+                            chunks = f.request.stream(chunks)
                         self.send_request_body(f.request, chunks)
                     else:
                         self.send_request(f.request)
