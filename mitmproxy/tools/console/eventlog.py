@@ -23,7 +23,7 @@ class EventLog(urwid.ListBox):
 
     def keypress(self, size, key):
         if key == "z":
-            self.master.clear_events()
+            self.clear_events()
             key = None
         elif key == "m_end":
             self.set_focus(len(self.walker) - 1)
