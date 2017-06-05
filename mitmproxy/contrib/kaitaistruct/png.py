@@ -34,9 +34,11 @@ class Png(KaitaiStruct):
         self.ihdr = self._root.IhdrChunk(self._io, self, self._root)
         self.ihdr_crc = self._io.read_bytes(4)
         self.chunks = []
-        while not self._io.is_eof():
-            self.chunks.append(self._root.Chunk(self._io, self, self._root))
-
+        while True:
+            _ = self._root.Chunk(self._io, self, self._root)
+            self.chunks.append(_)
+            if  ((_.type == u"IEND") or (self._io.is_eof())) :
+                break
 
     class Rgb(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
