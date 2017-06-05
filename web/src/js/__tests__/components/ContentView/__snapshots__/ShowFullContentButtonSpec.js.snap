@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ShowFullContentButton Component should connect to state 1`] = `null`;
+
+exports[`ShowFullContentButton Component should render correctly 1`] = `
+<div>
+  <div
+    className="view-all-content-btn btn-xs btn btn-default"
+    disabled={undefined}
+    onClick={[Function]}
+    title={undefined}
+  >
+    Show full content
+  </div>
+  <span
+    className="pull-right"
+  >
+     
+    10
+    /
+    20
+     are visible   
+  </span>
+</div>
+`;
