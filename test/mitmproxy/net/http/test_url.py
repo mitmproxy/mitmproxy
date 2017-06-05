@@ -61,6 +61,10 @@ def test_unparse():
     assert url.unparse("http", "foo.com", 80, "/bar") == "http://foo.com/bar"
     assert url.unparse("https", "foo.com", 80, "") == "https://foo.com:80"
     assert url.unparse("https", "foo.com", 443, "") == "https://foo.com"
+    assert url.unparse("http", "foo.com", None, "") == "http://foo.com:<unknown-port>"
+    assert url.unparse("http", None, 1234, "") == "http://<unknown-host>:1234"
+    assert url.unparse("http", None, None, "") == "http://<unknown-host>:<unknown-port>"
+    assert url.unparse(None, None, None, None) == "<unknown-scheme>://<unknown-host>:<unknown-port>"
 
 
 surrogates = bytes(range(256)).decode("utf8", "surrogateescape")

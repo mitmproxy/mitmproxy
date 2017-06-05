@@ -68,13 +68,9 @@ class Request(message.Message):
         self.data = RequestData(*args, **kwargs)
 
     def __repr__(self):
-        if self.host and self.port:
-            hostport = "{}:{}".format(self.host, self.port)
-        else:
-            hostport = ""
         path = self.path or ""
         return "Request({} {}{})".format(
-            self.method, hostport, path
+            self.method, mitmproxy.net.http.url.hostport(self.scheme, self.host, self.port), path
         )
 
     @classmethod
@@ -283,7 +279,7 @@ class Request(message.Message):
         The URL string, constructed from the request's URL components
         """
         if self.first_line_format == "authority":
-            return "%s:%d" % (self.host, self.port)
+            return "{}:{}".format(self.host, self.port)
         return mitmproxy.net.http.url.unparse(self.scheme, self.host, self.port, self.path)
 
     @url.setter
