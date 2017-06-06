@@ -26,11 +26,11 @@ describe('ContentTooLarge Components', () => {
         let clickFn = jest.fn(),
             uploadContentFn = jest.fn(),
             contentTooLarge = renderer.create(<ContentTooLarge
-            flow={tflow}
-            message={tflow.response}
-            onClick={clickFn}
-            uploadContent={uploadContentFn}
-        />),
+                flow={tflow}
+                message={tflow.response}
+                onClick={clickFn}
+                uploadContent={uploadContentFn}
+            />),
             tree = contentTooLarge.toJSON()
         expect(tree).toMatchSnapshot()
     })
