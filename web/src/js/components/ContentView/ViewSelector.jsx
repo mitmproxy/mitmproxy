@@ -11,7 +11,7 @@ ViewSelector.propTypes = {
     setContentView: PropTypes.func.isRequired
 }
 
-function ViewSelector ({contentViews, activeView, setContentView}){
+export function ViewSelector ({contentViews, activeView, setContentView}){
     let inner = <span> <b>View:</b> {activeView.toLowerCase()} <span className="caret"></span> </span>
 
     return (
