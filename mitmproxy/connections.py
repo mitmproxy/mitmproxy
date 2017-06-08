@@ -164,6 +164,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         source_address: Local IP address or client's source IP address.
         ssl_established: True if TLS is established, False otherwise
         cert: The certificate presented by the remote during the TLS handshake
+        mimtcert: The certificate presented by mitmproxy to the client
         sni: Server Name Indication sent by the proxy during the TLS handshake
         alpn_proto_negotiated: The negotiated application protocol
         tls_version: TLS version
@@ -232,6 +233,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         source_address=tuple,
         ssl_established=bool,
         cert=certs.SSLCert,
+        mitmcert=certs.SSLCert,
         sni=str,
         alpn_proto_negotiated=bytes,
         tls_version=str,
@@ -254,6 +256,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             address=address,
             ip_address=address,
             cert=None,
+            mitmcert=None,
             sni=None,
             alpn_proto_negotiated=None,
             tls_version=None,
