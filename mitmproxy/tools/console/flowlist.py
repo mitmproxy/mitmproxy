@@ -1,6 +1,7 @@
 import urwid
 
 from mitmproxy.tools.console import common
+from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master # noqa
 
 
@@ -109,7 +110,7 @@ class FlowListWalker(urwid.ListWalker):
         return f, pos
 
 
-class FlowListBox(urwid.ListBox):
+class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
     title = "Flows"
     keyctx = "flowlist"
 

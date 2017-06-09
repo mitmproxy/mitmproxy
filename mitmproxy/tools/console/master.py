@@ -322,6 +322,40 @@ class ConsoleAddon:
                 "console.command flow.set @focus %s " % part
             )
 
+    def _grideditor(self):
+        gewidget = self.master.window.current("grideditor")
+        if not gewidget:
+            raise exceptions.CommandError("Not in a grideditor.")
+        return gewidget.key_responder()
+
+    @command.command("console.grideditor.add")
+    def grideditor_add(self) -> None:
+        """
+            Add a row after the cursor.
+        """
+        self._grideditor().cmd_add()
+
+    @command.command("console.grideditor.insert")
+    def grideditor_insert(self) -> None:
+        """
+            Insert a row before the cursor.
+        """
+        self._grideditor().cmd_insert()
+
+    @command.command("console.grideditor.next")
+    def grideditor_next(self) -> None:
+        """
+            Go to next cell.
+        """
+        self._grideditor().cmd_next()
+
+    @command.command("console.grideditor.delete")
+    def grideditor_delete(self) -> None:
+        """
+            Delete row
+        """
+        self._grideditor().cmd_delete()
+
     @command.command("console.flowview.mode.set")
     def flowview_mode_set(self) -> None:
         """
@@ -349,7 +383,7 @@ class ConsoleAddon:
         """
             Get the display mode for the current flow view.
         """
-        fv = self.master.window.any("flowview")
+        fv = self.master.window.current_window("flowview")
         if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
@@ -475,6 +509,11 @@ def default_keymap(km):
     km.add("S", "console.command options.save ", ["options"])
     km.add("D", "options.reset", ["options"])
     km.add("d", "console.options.reset.current", ["options"])
+
+    km.add("a", "console.grideditor.add", ["grideditor"])
+    km.add("A", "console.grideditor.insert", ["grideditor"])
+    km.add("tab", "console.grideditor.next", ["grideditor"])
+    km.add("d", "console.grideditor.delete", ["grideditor"])
 
 
 class ConsoleMaster(master.Master):

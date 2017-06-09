@@ -2,6 +2,7 @@ import urwid
 import blinker
 import textwrap
 from mitmproxy.tools.console import common
+from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
 
 HELP_HEIGHT = 5
@@ -151,7 +152,7 @@ class CommandHelp(urwid.Frame):
         self.set_body(self.widget(txt))
 
 
-class Commands(urwid.Pile):
+class Commands(urwid.Pile, layoutwidget.LayoutWidget):
     title = "Commands"
     keyctx = "commands"
 

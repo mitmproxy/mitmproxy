@@ -12,6 +12,7 @@ from typing import Set # noqa
 import urwid
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master # noqa
 
 FOOTER = [
@@ -58,6 +59,7 @@ class Column(metaclass=abc.ABCMeta):
 
 
 class GridRow(urwid.WidgetWrap):
+
     def __init__(
             self,
             focused: Optional[int],
@@ -253,6 +255,7 @@ FIRST_WIDTH_MIN = 20
 
 
 class BaseGridEditor(urwid.WidgetWrap):
+    keyctx = "grideditor"
 
     def __init__(
             self,
@@ -346,14 +349,6 @@ class BaseGridEditor(urwid.WidgetWrap):
             self.walker.left()
         elif key == "right":
             self.walker.right()
-        elif key == "tab":
-            self.walker.tab_next()
-        elif key == "a":
-            self.walker.add()
-        elif key == "A":
-            self.walker.insert()
-        elif key == "d":
-            self.walker.delete_focus()
         elif column.keypress(key, self) and not self.handle_key(key):
             return self._w.keypress(size, key)
 
@@ -408,10 +403,23 @@ class BaseGridEditor(urwid.WidgetWrap):
         )
         return text
 
+    def cmd_next(self):
+        self.walker.tab_next()
 
-class GridEditor(urwid.WidgetWrap):
+    def cmd_add(self):
+        self.walker.add()
+
+    def cmd_insert(self):
+        self.walker.insert()
+
+    def cmd_delete(self):
+        self.walker.delete_focus()
+
+
+class GridEditor(BaseGridEditor):
     title = None  # type: str
     columns = None  # type: Sequence[Column]
+    keyctx = "grideditor"
 
     def __init__(
             self,
@@ -423,16 +431,16 @@ class GridEditor(urwid.WidgetWrap):
     ) -> None:
         super().__init__(
             master,
-            value,
             self.title,
             self.columns,
+            value,
             callback,
             *cb_args,
             **cb_kwargs
         )
 
 
-class FocusEditor(urwid.WidgetWrap):
+class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     """
         A specialised GridEditor that edits the current focused flow.
     """
@@ -442,26 +450,10 @@ class FocusEditor(urwid.WidgetWrap):
         self.master = master
         self.focus_changed()
 
-    def focus_changed(self):
-        if self.master.view.focus.flow:
-            self._w = BaseGridEditor(
-                self.master.view.focus.flow,
-                self.title,
-                self.columns,
-                self.get_data(self.master.view.focus.flow),
-                self.set_data_update,
-                self.master.view.focus.flow,
-            )
-        else:
-            self._w = urwid.Pile([])
-
     def call(self, v, name, *args, **kwargs):
         f = getattr(v, name, None)
         if f:
             f(*args, **kwargs)
-
-    def view_popping(self):
-        self.call(self._w, "view_popping")
 
     def get_data(self, flow):
         """
@@ -478,3 +470,22 @@ class FocusEditor(urwid.WidgetWrap):
     def set_data_update(self, vals, flow):
         self.set_data(vals, flow)
         signals.flow_change.send(self, flow = flow)
+
+    def key_responder(self):
+        return self._w
+
+    def view_popping(self):
+        self.call(self._w, "view_popping")
+
+    def focus_changed(self):
+        if self.master.view.focus.flow:
+            self._w = BaseGridEditor(
+                self.master.view.focus.flow,
+                self.title,
+                self.columns,
+                self.get_data(self.master.view.focus.flow),
+                self.set_data_update,
+                self.master.view.focus.flow,
+            )
+        else:
+            self._w = urwid.Pile([])

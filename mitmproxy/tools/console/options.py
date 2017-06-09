@@ -7,6 +7,7 @@ from typing import Optional, Sequence
 from mitmproxy import exceptions
 from mitmproxy import optmanager
 from mitmproxy.tools.console import common
+from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import overlay
 
@@ -263,7 +264,7 @@ class OptionHelp(urwid.Frame):
         self.set_body(self.widget(txt))
 
 
-class Options(urwid.Pile):
+class Options(urwid.Pile, layoutwidget.LayoutWidget):
     title = "Options"
     keyctx = "options"
 

@@ -4,6 +4,7 @@ import urwid
 
 from mitmproxy import flowfilter
 from mitmproxy.tools.console import common
+from mitmproxy.tools.console import layoutwidget
 
 from mitmproxy import version
 
@@ -13,7 +14,7 @@ footer = [
 ]
 
 
-class HelpView(urwid.ListBox):
+class HelpView(urwid.ListBox, layoutwidget.LayoutWidget):
     title = "Help"
     keyctx = "help"
 

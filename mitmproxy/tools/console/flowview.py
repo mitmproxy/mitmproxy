@@ -8,6 +8,7 @@ import urwid
 from mitmproxy import contentviews
 from mitmproxy import http
 from mitmproxy.tools.console import common
+from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import signals
@@ -274,7 +275,7 @@ class FlowDetails(tabs.Tabs):
         return self._w.keypress(size, key)
 
 
-class FlowView(urwid.Frame):
+class FlowView(urwid.Frame, layoutwidget.LayoutWidget):
     keyctx = "flowview"
     title = "Flow Details"
 

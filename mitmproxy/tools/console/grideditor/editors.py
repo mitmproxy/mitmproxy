@@ -1,11 +1,9 @@
-import re
 
 import urwid
 
 from mitmproxy import exceptions
-from mitmproxy import flowfilter
-from mitmproxy.addons import script
 from mitmproxy.tools.console import common
+from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console.grideditor import base
 from mitmproxy.tools.console.grideditor import col_text
 from mitmproxy.tools.console.grideditor import col_bytes
@@ -104,56 +102,6 @@ class RequestFormEditor(base.FocusEditor):
         flow.request.urlencoded_form = vals
 
 
-class SetHeadersEditor(base.GridEditor):
-    title = "Editing header set patterns"
-    columns = [
-        col_text.Column("Filter"),
-        col_text.Column("Header"),
-        col_text.Column("Value"),
-    ]
-
-    def is_error(self, col, val):
-        if col == 0:
-            if not flowfilter.parse(val):
-                return "Invalid filter specification"
-        return False
-
-    def make_help(self):
-        h = super().make_help()
-        text = [
-            urwid.Text([("text", "Special keys:\n")])
-        ]
-        keys = [
-            ("U", "add User-Agent header"),
-        ]
-        text.extend(
-            common.format_keyvals(keys, key="key", val="text", indent=4)
-        )
-        text.append(urwid.Text([("text", "\n")]))
-        text.extend(h)
-        return text
-
-    def set_user_agent(self, k):
-        ua = user_agents.get_by_shortcut(k)
-        if ua:
-            self.walker.add_value(
-                [
-                    ".*",
-                    b"User-Agent",
-                    ua[2].encode()
-                ]
-            )
-
-    def handle_key(self, key):
-        if key == "U":
-            signals.status_prompt_onekey.send(
-                prompt="Add User-Agent header:",
-                keys=[(i[0], i[1]) for i in user_agents.UASTRINGS],
-                callback=self.set_user_agent,
-            )
-            return True
-
-
 class PathEditor(base.FocusEditor):
     # TODO: Next row on enter?
 
@@ -173,38 +121,6 @@ class PathEditor(base.FocusEditor):
 
     def set_data(self, vals, flow):
         flow.request.path_components = self.data_out(vals)
-
-
-class ScriptEditor(base.GridEditor):
-    title = "Editing scripts"
-    columns = [
-        col_text.Column("Command"),
-    ]
-
-    def is_error(self, col, val):
-        try:
-            script.parse_command(val)
-        except exceptions.OptionsError as e:
-            return str(e)
-
-
-class HostPatternEditor(base.GridEditor):
-    title = "Editing host patterns"
-    columns = [
-        col_text.Column("Regex (matched on hostname:port / ip:port)")
-    ]
-
-    def is_error(self, col, val):
-        try:
-            re.compile(val, re.IGNORECASE)
-        except re.error as e:
-            return "Invalid regex: %s" % str(e)
-
-    def data_in(self, data):
-        return [[i] for i in data]
-
-    def data_out(self, data):
-        return [i[0] for i in data]
 
 
 class CookieEditor(base.FocusEditor):
@@ -273,7 +189,7 @@ class SetCookieEditor(base.FocusEditor):
         flow.response.cookies = self.data_out(vals)
 
 
-class OptionsEditor(base.GridEditor):
+class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
     title = None  # type: str
     columns = [
         col_text.Column("")
