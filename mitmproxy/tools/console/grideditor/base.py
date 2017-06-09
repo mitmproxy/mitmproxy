@@ -280,12 +280,6 @@ class BaseGridEditor(urwid.WidgetWrap):
                 first_width = max(len(r), first_width)
         self.first_width = min(first_width, FIRST_WIDTH_MAX)
 
-        title = None
-        if self.title:
-            title = urwid.Text(self.title)
-            title = urwid.Padding(title, align="left", width=("relative", 100))
-            title = urwid.AttrWrap(title, "heading")
-
         headings = []
         for i, col in enumerate(self.columns):
             c = urwid.Text(col.heading)
@@ -301,10 +295,7 @@ class BaseGridEditor(urwid.WidgetWrap):
 
         self.walker = GridWalker(self.value, self)
         self.lb = GridListBox(self.walker)
-        w = urwid.Frame(
-            self.lb,
-            header=urwid.Pile([title, h]) if title else None
-        )
+        w = urwid.Frame(self.lb)
         super().__init__(w)
         signals.footer_help.send(self, helptext="")
         self.show_empty_msg()
