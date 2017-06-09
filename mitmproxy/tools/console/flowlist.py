@@ -110,6 +110,7 @@ class FlowListWalker(urwid.ListWalker):
 
 
 class FlowListBox(urwid.ListBox):
+    title = "Flows"
     keyctx = "flowlist"
 
     def __init__(

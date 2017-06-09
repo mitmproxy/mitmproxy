@@ -152,6 +152,7 @@ class CommandHelp(urwid.Frame):
 
 
 class Commands(urwid.Pile):
+    title = "Commands"
     keyctx = "commands"
 
     def __init__(self, master):

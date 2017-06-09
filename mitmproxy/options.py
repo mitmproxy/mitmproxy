@@ -386,6 +386,10 @@ class Options(optmanager.OptManager):
             choices=sorted(console_layouts),
         )
         self.add_option(
+            "console_layout_headers", bool, True,
+            "Show layout comonent headers",
+        )
+        self.add_option(
             "console_focus_follow", bool, False,
             "Focus follows new flows."
         )

@@ -10,6 +10,7 @@ class LogBufferWalker(urwid.SimpleListWalker):
 
 class EventLog(urwid.ListBox):
     keyctx = "eventlog"
+    title = "Events"
 
     def __init__(self, master):
         self.walker = LogBufferWalker([])

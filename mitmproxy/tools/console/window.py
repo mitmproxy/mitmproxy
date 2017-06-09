@@ -11,6 +11,17 @@ from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import eventlog
 
 
+class Header(urwid.Frame):
+    def __init__(self, widget, title, focus):
+        super().__init__(
+            widget,
+            header = urwid.AttrWrap(
+                urwid.Text(title),
+                "heading" if focus else "heading_inactive"
+            )
+        )
+
+
 class WindowStack:
     def __init__(self, master, base):
         self.master = master
@@ -90,6 +101,7 @@ class Window(urwid.Frame):
         signals.push_view_state.connect(self.push)
 
         self.master.options.subscribe(self.configure, ["console_layout"])
+        self.master.options.subscribe(self.configure, ["console_layout_headers"])
         self.pane = 0
         self.stacks = [
             WindowStack(master, "flowlist"),
@@ -107,21 +119,31 @@ class Window(urwid.Frame):
             Redraw the layout.
         """
         c = self.master.options.console_layout
+        if c == "single":
+            self.pane = 0
+
+        def wrap(w, idx):
+            if self.master.options.console_layout_headers and hasattr(w, "title"):
+                return Header(w, w.title, self.pane == idx)
+            else:
+                return w
 
         w = None
         if c == "single":
-            w = self.stacks[0].top()
+            w = wrap(self.stacks[0].top(), 0)
         elif c == "vertical":
             w = urwid.Pile(
-                [i.top() for i in self.stacks]
+                [
+                    wrap(s.top(), i) for i, s in enumerate(self.stacks)
+                ]
             )
         else:
             w = urwid.Columns(
-                [i.top() for i in self.stacks], dividechars=1
+                [wrap(s.top(), i) for i, s in enumerate(self.stacks)],
+                dividechars=1
             )
+
         self.body = urwid.AttrWrap(w, "background")
-        if c == "single":
-            self.pane = 0
 
     def flow_changed(self, sender, flow):
         if self.master.view.focus.flow:
@@ -200,6 +222,7 @@ class Window(urwid.Frame):
             self.pane = 0
         else:
             self.pane = (self.pane + 1) % len(self.stacks)
+        self.refresh()
 
     def mouse_event(self, *args, **kwargs):
         # args: (size, event, button, col, row)

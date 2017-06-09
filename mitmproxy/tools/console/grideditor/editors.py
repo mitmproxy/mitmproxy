@@ -16,7 +16,7 @@ from mitmproxy.net.http import Headers
 
 
 class QueryEditor(base.FocusEditor):
-    title = "Editing query"
+    title = "Edit Query"
     columns = [
         col_text.Column("Key"),
         col_text.Column("Value")
@@ -71,7 +71,7 @@ class HeaderEditor(base.FocusEditor):
 
 
 class RequestHeaderEditor(HeaderEditor):
-    title = "Editing request headers"
+    title = "Edit Request Headers"
 
     def get_data(self, flow):
         return flow.request.headers.fields
@@ -81,7 +81,7 @@ class RequestHeaderEditor(HeaderEditor):
 
 
 class ResponseHeaderEditor(HeaderEditor):
-    title = "Editing response headers"
+    title = "Edit Response Headers"
 
     def get_data(self, flow):
         return flow.response.headers.fields
@@ -91,7 +91,7 @@ class ResponseHeaderEditor(HeaderEditor):
 
 
 class RequestFormEditor(base.FocusEditor):
-    title = "Editing URL-encoded form"
+    title = "Edit URL-encoded Form"
     columns = [
         col_text.Column("Key"),
         col_text.Column("Value")
@@ -157,7 +157,7 @@ class SetHeadersEditor(base.GridEditor):
 class PathEditor(base.FocusEditor):
     # TODO: Next row on enter?
 
-    title = "Editing URL path components"
+    title = "Edit Path Components"
     columns = [
         col_text.Column("Component"),
     ]
@@ -208,7 +208,7 @@ class HostPatternEditor(base.GridEditor):
 
 
 class CookieEditor(base.FocusEditor):
-    title = "Editing request Cookie header"
+    title = "Edit Cookies"
     columns = [
         col_text.Column("Name"),
         col_text.Column("Value"),
@@ -242,7 +242,7 @@ class CookieAttributeEditor(base.GridEditor):
 
 
 class SetCookieEditor(base.FocusEditor):
-    title = "Editing response SetCookie header"
+    title = "Edit SetCookie Header"
     columns = [
         col_text.Column("Name"),
         col_text.Column("Value"),
