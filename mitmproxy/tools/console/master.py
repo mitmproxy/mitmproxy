@@ -356,6 +356,28 @@ class ConsoleAddon:
         """
         self._grideditor().cmd_delete()
 
+    @command.command("console.grideditor.readfile")
+    def grideditor_readfile(self, path: str) -> None:
+        """
+            Read a file into the currrent cell.
+        """
+        self._grideditor().cmd_read_file(path)
+
+    @command.command("console.grideditor.readfile_escaped")
+    def grideditor_readfile_escaped(self, path: str) -> None:
+        """
+            Read a file containing a Python-style escaped stringinto the
+            currrent cell.
+        """
+        self._grideditor().cmd_read_file_escaped(path)
+
+    @command.command("console.grideditor.editor")
+    def grideditor_editor(self) -> None:
+        """
+            Spawn an external editor on the current cell.
+        """
+        self._grideditor().cmd_spawn_editor()
+
     @command.command("console.flowview.mode.set")
     def flowview_mode_set(self) -> None:
         """
@@ -514,6 +536,9 @@ def default_keymap(km):
     km.add("A", "console.grideditor.insert", ["grideditor"])
     km.add("tab", "console.grideditor.next", ["grideditor"])
     km.add("d", "console.grideditor.delete", ["grideditor"])
+    km.add("r", "console.command console.grideditor.readfile", ["grideditor"])
+    km.add("R", "console.command console.grideditor.readfile_escaped", ["grideditor"])
+    km.add("e", "console.grideditor.editor", ["grideditor"])
 
 
 class ConsoleMaster(master.Master):

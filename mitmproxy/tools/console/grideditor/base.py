@@ -1,15 +1,11 @@
 import abc
 import copy
-from typing import Any
-from typing import Callable
-from typing import Container
-from typing import Iterable
-from typing import Optional
-from typing import Sequence
-from typing import Tuple
-from typing import Set # noqa
-
+import os
+import typing
 import urwid
+
+from mitmproxy.utils import strutils
+from mitmproxy import exceptions
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import layoutwidget
@@ -22,6 +18,21 @@ FOOTER = [
 FOOTER_EDITING = [
     ('heading_key', "esc"), ":stop editing ",
 ]
+
+
+def read_file(filename: str, escaped: bool) -> typing.AnyStr:
+    filename = os.path.expanduser(filename)
+    try:
+        with open(filename, "r" if escaped else "rb") as f:
+            d = f.read()
+    except IOError as v:
+        raise exceptions.CommandError(v)
+    if escaped:
+        try:
+            d = strutils.escaped_str_to_bytes(d)
+        except ValueError:
+            raise exceptions.CommandError("Invalid Python-style string encoding.")
+    return d
 
 
 class Cell(urwid.WidgetWrap):
@@ -51,10 +62,10 @@ class Column(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def blank(self) -> Any:
+    def blank(self) -> typing.Any:
         pass
 
-    def keypress(self, key: str, editor: "GridEditor") -> Optional[str]:
+    def keypress(self, key: str, editor: "GridEditor") -> typing.Optional[str]:
         return key
 
 
@@ -62,10 +73,10 @@ class GridRow(urwid.WidgetWrap):
 
     def __init__(
             self,
-            focused: Optional[int],
+            focused: typing.Optional[int],
             editing: bool,
             editor: "GridEditor",
-            values: Tuple[Iterable[bytes], Container[int]]
+            values: typing.Tuple[typing.Iterable[bytes], typing.Container[int]]
     ) -> None:
         self.focused = focused
         self.editor = editor
@@ -118,7 +129,7 @@ class GridWalker(urwid.ListWalker):
 
     def __init__(
             self,
-            lst: Iterable[list],
+            lst: typing.Iterable[list],
             editor: "GridEditor"
     ) -> None:
         self.lst = [(i, set()) for i in lst]  # type: Sequence[Tuple[Any, Set]]
@@ -262,8 +273,8 @@ class BaseGridEditor(urwid.WidgetWrap):
             master: "mitmproxy.tools.console.master.ConsoleMaster",
             title,
             columns,
-            value: Any,
-            callback: Callable[..., None],
+            value: typing.Any,
+            callback: typing.Callable[..., None],
             *cb_args,
             **cb_kwargs
     ) -> None:
@@ -352,20 +363,20 @@ class BaseGridEditor(urwid.WidgetWrap):
         elif column.keypress(key, self) and not self.handle_key(key):
             return self._w.keypress(size, key)
 
-    def data_out(self, data: Sequence[list]) -> Any:
+    def data_out(self, data: typing.Sequence[list]) -> typing.Any:
         """
             Called on raw list data, before data is returned through the
             callback.
         """
         return data
 
-    def data_in(self, data: Any) -> Iterable[list]:
+    def data_in(self, data: typing.Any) -> typing.Iterable[list]:
         """
             Called to prepare provided data.
         """
         return data
 
-    def is_error(self, col: int, val: Any) -> Optional[str]:
+    def is_error(self, col: int, val: typing.Any) -> typing.Optional[str]:
         """
             Return None, or a string error message.
         """
@@ -415,6 +426,19 @@ class BaseGridEditor(urwid.WidgetWrap):
     def cmd_delete(self):
         self.walker.delete_focus()
 
+    def cmd_read_file(self, path):
+        self.walker.set_current_value(read_file(path, False))
+
+    def cmd_read_file_escaped(self, path):
+        self.walker.set_current_value(read_file(path, True))
+
+    def cmd_spawn_editor(self):
+        o = self.walker.get_current_value()
+        if o is not None:
+            n = self.master.spawn_editor(o)
+            n = strutils.clean_hanging_newline(n)
+            self.walker.set_current_value(n)
+
 
 class GridEditor(BaseGridEditor):
     title = None  # type: str
@@ -424,8 +448,8 @@ class GridEditor(BaseGridEditor):
     def __init__(
             self,
             master: "mitmproxy.tools.console.master.ConsoleMaster",
-            value: Any,
-            callback: Callable[..., None],
+            value: typing.Any,
+            callback: typing.Callable[..., None],
             *cb_args,
             **cb_kwargs
     ) -> None:
@@ -480,7 +504,7 @@ class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     def focus_changed(self):
         if self.master.view.focus.flow:
             self._w = BaseGridEditor(
-                self.master.view.focus.flow,
+                self.master,
                 self.title,
                 self.columns,
                 self.get_data(self.master.view.focus.flow),
