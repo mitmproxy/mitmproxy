@@ -39,7 +39,6 @@ class HeaderEditor(base.FocusEditor):
             urwid.Text([("text", "Special keys:\n")])
         ]
         keys = [
-            ("U", "add User-Agent header"),
         ]
         text.extend(
             common.format_keyvals(keys, key="key", val="text", indent=4)
@@ -47,25 +46,6 @@ class HeaderEditor(base.FocusEditor):
         text.append(urwid.Text([("text", "\n")]))
         text.extend(h)
         return text
-
-    def set_user_agent(self, k):
-        ua = user_agents.get_by_shortcut(k)
-        if ua:
-            self.walker.add_value(
-                [
-                    b"User-Agent",
-                    ua[2].encode()
-                ]
-            )
-
-    def handle_key(self, key):
-        if key == "U":
-            signals.status_prompt_onekey.send(
-                prompt="Add User-Agent header:",
-                keys=[(i[0], i[1]) for i in user_agents.UASTRINGS],
-                callback=self.set_user_agent,
-            )
-            return True
 
 
 class RequestHeaderEditor(HeaderEditor):

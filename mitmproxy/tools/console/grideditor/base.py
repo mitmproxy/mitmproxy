@@ -309,7 +309,8 @@ class BaseGridEditor(urwid.WidgetWrap):
 
         self.walker = GridWalker(self.value, self)
         self.lb = GridListBox(self.walker)
-        w = urwid.Frame(self.lb)
+        w = urwid.Frame(self.lb, header=h)
+
         super().__init__(w)
         signals.footer_help.send(self, helptext="")
         self.show_empty_msg()
