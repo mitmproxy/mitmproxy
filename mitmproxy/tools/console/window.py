@@ -135,24 +135,26 @@ class Window(urwid.Frame):
         if c == "single":
             self.pane = 0
 
-        def wrap(w, idx):
-            if self.master.options.console_layout_headers and hasattr(w, "title"):
-                return Header(w, w.title, self.pane == idx)
+        def wrapped(idx):
+            window = self.stacks[idx].top_window()
+            widget = self.stacks[idx].top_widget()
+            if self.master.options.console_layout_headers and window.title:
+                return Header(widget, window.title, self.pane == idx)
             else:
-                return w
+                return widget
 
         w = None
         if c == "single":
-            w = wrap(self.stacks[0].top_widget(), 0)
+            w = wrapped(0)
         elif c == "vertical":
             w = urwid.Pile(
                 [
-                    wrap(s.top_widget(), i) for i, s in enumerate(self.stacks)
+                    wrapped(i) for i, s in enumerate(self.stacks)
                 ]
             )
         else:
             w = urwid.Columns(
-                [wrap(s.top_widget(), i) for i, s in enumerate(self.stacks)],
+                [wrapped(i) for i, s in enumerate(self.stacks)],
                 dividechars=1
             )
 

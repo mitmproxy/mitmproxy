@@ -5,6 +5,8 @@ class LayoutWidget:
         All top-level layout widgets and all widgets that may be set in an
         overlay must comply with this API.
     """
+    # Title is only required for windows, not overlay components
+    title = None
     keyctx = ""
 
     def key_responder(self):
