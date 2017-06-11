@@ -194,10 +194,6 @@ class FlowDetails(tabs.Tabs):
             ]
         return searchable.Searchable(txt)
 
-    def keypress(self, size, key):
-        key = super().keypress(size, key)
-        return self._w.keypress(size, key)
-
 
 class FlowView(urwid.Frame, layoutwidget.LayoutWidget):
     keyctx = "flowview"
