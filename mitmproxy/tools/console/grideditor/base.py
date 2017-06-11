@@ -294,18 +294,20 @@ class BaseGridEditor(urwid.WidgetWrap):
                 first_width = max(len(r), first_width)
         self.first_width = min(first_width, FIRST_WIDTH_MAX)
 
-        headings = []
-        for i, col in enumerate(self.columns):
-            c = urwid.Text(col.heading)
-            if i == 0 and len(self.columns) > 1:
-                headings.append(("fixed", first_width + 2, c))
-            else:
-                headings.append(c)
-        h = urwid.Columns(
-            headings,
-            dividechars=2
-        )
-        h = urwid.AttrWrap(h, "heading")
+        h = None
+        if any(col.heading for col in self.columns):
+            headings = []
+            for i, col in enumerate(self.columns):
+                c = urwid.Text(col.heading)
+                if i == 0 and len(self.columns) > 1:
+                    headings.append(("fixed", first_width + 2, c))
+                else:
+                    headings.append(c)
+            h = urwid.Columns(
+                headings,
+                dividechars=2
+            )
+            h = urwid.AttrWrap(h, "heading")
 
         self.walker = GridWalker(self.value, self)
         self.lb = GridListBox(self.walker)
@@ -329,9 +331,9 @@ class BaseGridEditor(urwid.WidgetWrap):
             self._w.set_footer(
                 urwid.Text(
                     [
-                        ("highlight", "No values. Press "),
-                        ("key", "a"),
-                        ("highlight", " to add some."),
+                        ("highlight", "No values - you should add some. Press "),
+                        ("key", "?"),
+                        ("highlight", " for help."),
                     ]
                 )
             )
