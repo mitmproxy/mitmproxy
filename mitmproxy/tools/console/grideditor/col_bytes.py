@@ -15,7 +15,7 @@ class Column(base.Column):
         return b""
 
     def keypress(self, key, editor):
-        if key in ["enter"]:
+        if key in ["m_select"]:
             editor.walker.start_edit()
         else:
             return key

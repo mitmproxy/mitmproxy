@@ -99,7 +99,7 @@ class CommandsList(urwid.ListBox):
         super().__init__(self.walker)
 
     def keypress(self, size, key):
-        if key == "enter":
+        if key == "m_select":
             foc, idx = self.get_focus()
             signals.status_prompt_command.send(partial=foc.cmd.path + " ")
         elif key == "m_start":
@@ -148,7 +148,7 @@ class Commands(urwid.Pile, layoutwidget.LayoutWidget):
         self.master = master
 
     def keypress(self, size, key):
-        if key == "tab":
+        if key == "m_next":
             self.focus_position = (
                 self.focus_position + 1
             ) % len(self.widget_list)

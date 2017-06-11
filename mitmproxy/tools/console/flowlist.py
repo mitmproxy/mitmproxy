@@ -82,6 +82,8 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
             self.master.commands.call("view.go 0")
         elif key == "m_end":
             self.master.commands.call("view.go -1")
+        elif key == "m_select":
+            self.master.commands.call("console.view.flow @focus")
         return urwid.ListBox.keypress(self, size, key)
 
     def view_changed(self):

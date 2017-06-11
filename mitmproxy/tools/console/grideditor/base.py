@@ -6,18 +6,9 @@ import urwid
 
 from mitmproxy.utils import strutils
 from mitmproxy import exceptions
-from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master # noqa
-
-FOOTER = [
-    ('heading_key', "enter"), ":edit ",
-    ('heading_key', "q"), ":back ",
-]
-FOOTER_EDITING = [
-    ('heading_key', "esc"), ":stop editing ",
-]
 
 
 def read_file(filename: str, escaped: bool) -> typing.AnyStr:
@@ -197,12 +188,10 @@ class GridWalker(urwid.ListWalker):
             self.edit_row = GridRow(
                 self.focus_col, True, self.editor, self.lst[self.focus]
             )
-            signals.footer_help.send(self, helptext=FOOTER_EDITING)
             self._modified()
 
     def stop_edit(self):
         if self.edit_row:
-            signals.footer_help.send(self, helptext=FOOTER)
             try:
                 val = self.edit_row.edit_col.get_data()
             except ValueError:
@@ -262,7 +251,6 @@ class GridListBox(urwid.ListBox):
 
 
 FIRST_WIDTH_MAX = 40
-FIRST_WIDTH_MIN = 20
 
 
 class BaseGridEditor(urwid.WidgetWrap):
@@ -315,7 +303,6 @@ class BaseGridEditor(urwid.WidgetWrap):
         w = urwid.Frame(self.lb, header=h)
 
         super().__init__(w)
-        signals.footer_help.send(self, helptext="")
         self.show_empty_msg()
 
     def layout_popping(self):
@@ -344,7 +331,7 @@ class BaseGridEditor(urwid.WidgetWrap):
 
     def keypress(self, size, key):
         if self.walker.edit_row:
-            if key in ["esc"]:
+            if key == "esc":
                 self.walker.stop_edit()
             elif key == "tab":
                 pf, pfc = self.walker.focus, self.walker.focus_col
@@ -358,6 +345,8 @@ class BaseGridEditor(urwid.WidgetWrap):
         column = self.columns[self.walker.focus_col]
         if key == "m_start":
             self.walker.set_focus(0)
+        elif key == "m_next":
+            self.walker.tab_next()
         elif key == "m_end":
             self.walker.set_focus(len(self.walker.lst) - 1)
         elif key == "left":
@@ -388,38 +377,6 @@ class BaseGridEditor(urwid.WidgetWrap):
 
     def handle_key(self, key):
         return False
-
-    def make_help(self):
-        text = [
-            urwid.Text([("text", "Editor control:\n")])
-        ]
-        keys = [
-            ("A", "insert row before cursor"),
-            ("a", "add row after cursor"),
-            ("d", "delete row"),
-            ("e", "spawn external editor on current field"),
-            ("q", "save changes and exit editor"),
-            ("r", "read value from file"),
-            ("R", "read unescaped value from file"),
-            ("esc", "save changes and exit editor"),
-            ("tab", "next field"),
-            ("enter", "edit field"),
-        ]
-        text.extend(
-            common.format_keyvals(keys, key="key", val="text", indent=4)
-        )
-        text.append(
-            urwid.Text(
-                [
-                    "\n",
-                    ("text", "Values are escaped Python-style strings.\n"),
-                ]
-            )
-        )
-        return text
-
-    def cmd_next(self):
-        self.walker.tab_next()
 
     def cmd_add(self):
         self.walker.add()

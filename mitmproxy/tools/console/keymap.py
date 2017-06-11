@@ -6,6 +6,7 @@ from mitmproxy.tools.console import commandeditor
 SupportedContexts = {
     "chooser",
     "commands",
+    "eventlog",
     "flowlist",
     "flowview",
     "global",

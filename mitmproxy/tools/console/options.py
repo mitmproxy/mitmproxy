@@ -176,8 +176,10 @@ class OptionsList(urwid.ListBox):
                 except exceptions.OptionsError as v:
                     signals.status_message.send(message=str(v))
                 self.walker.stop_editing()
+                return None
             elif key == "esc":
                 self.walker.stop_editing()
+                return None
         else:
             if key == "m_start":
                 self.set_focus(0)
@@ -185,7 +187,7 @@ class OptionsList(urwid.ListBox):
             elif key == "m_end":
                 self.set_focus(len(self.walker.opts) - 1)
                 self.walker._modified()
-            elif key == "enter":
+            elif key == "m_select":
                 foc, idx = self.get_focus()
                 if foc.opt.typespec == bool:
                     self.master.options.toggler(foc.opt.name)()
@@ -261,7 +263,7 @@ class Options(urwid.Pile, layoutwidget.LayoutWidget):
         return foc.opt.name
 
     def keypress(self, size, key):
-        if key == "tab":
+        if key == "m_next":
             self.focus_position = (
                 self.focus_position + 1
             ) % len(self.widget_list)

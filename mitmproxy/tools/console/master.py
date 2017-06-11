@@ -131,6 +131,20 @@ class ConsoleAddon:
         """
         self.master.inject_key("m_end")
 
+    @command.command("console.nav.next")
+    def nav_next(self) -> None:
+        """
+            Go to the next navigatable item.
+        """
+        self.master.inject_key("m_next")
+
+    @command.command("console.nav.select")
+    def nav_select(self) -> None:
+        """
+            Select a navigable item for viewing or editing.
+        """
+        self.master.inject_key("m_select")
+
     @command.command("console.nav.up")
     def nav_up(self) -> None:
         """
@@ -343,13 +357,6 @@ class ConsoleAddon:
         """
         self._grideditor().cmd_insert()
 
-    @command.command("console.grideditor.next")
-    def grideditor_next(self) -> None:
-        """
-            Go to next cell.
-        """
-        self._grideditor().cmd_next()
-
     @command.command("console.grideditor.delete")
     def grideditor_delete(self) -> None:
         """
@@ -418,6 +425,13 @@ class ConsoleAddon:
                 self.master.options.default_contentview,
             ]
         )
+
+    @command.command("console.eventlog.clear")
+    def eventlog_clear(self) -> None:
+        """
+            Clear the event log.
+        """
+        signals.sig_clear_log.send(self)
 
     def running(self):
         self.started = True

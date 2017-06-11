@@ -18,16 +18,14 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         self.master = master
         urwid.ListBox.__init__(self, self.walker)
         signals.sig_add_log.connect(self.sig_add_log)
+        signals.sig_clear_log.connect(self.sig_clear_log)
 
     def set_focus(self, index):
         if 0 <= index < len(self.walker):
             super().set_focus(index)
 
     def keypress(self, size, key):
-        if key == "z":
-            self.clear_events()
-            key = None
-        elif key == "m_end":
+        if key == "m_end":
             self.set_focus(len(self.walker) - 1)
         elif key == "m_start":
             self.set_focus(0)
@@ -45,5 +43,5 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         if self.master.options.console_focus_follow:
             self.walker.set_focus(len(self.walker) - 1)
 
-    def clear_events(self):
+    def sig_clear_log(self, sender):
         self.walker[:] = []

@@ -35,7 +35,9 @@ class Tabs(urwid.WidgetWrap):
 
     def keypress(self, size, key):
         n = len(self.tabs)
-        if key == "right":
+        if key == "m_next":
+            self.change_tab((self.tab_offset + 1) % n)
+        elif key == "right":
             self.change_tab((self.tab_offset + 1) % n)
         elif key == "left":
             self.change_tab((self.tab_offset - 1) % n)

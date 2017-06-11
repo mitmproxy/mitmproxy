@@ -3,7 +3,6 @@ import os.path
 import urwid
 
 from mitmproxy.tools.console import common
-from mitmproxy.tools.console import pathedit
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import commandeditor
 import mitmproxy.tools.console.master # noqa
@@ -39,16 +38,12 @@ class ActionBar(urwid.WidgetWrap):
         self.clear()
         signals.status_message.connect(self.sig_message)
         signals.status_prompt.connect(self.sig_prompt)
-        signals.status_prompt_path.connect(self.sig_path_prompt)
         signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
         signals.status_prompt_command.connect(self.sig_prompt_command)
-
-        self.last_path = ""
 
         self.prompting = None
 
         self.onekey = False
-        self.pathprompt = False
 
     def sig_message(self, sender, message, expire=1):
         if self.prompting:
@@ -73,15 +68,6 @@ class ActionBar(urwid.WidgetWrap):
         signals.focus.send(self, section="footer")
         self._w = commandeditor.CommandEdit(partial)
         self.prompting = commandeditor.CommandExecutor(self.master)
-
-    def sig_path_prompt(self, sender, prompt, callback, args=()):
-        signals.focus.send(self, section="footer")
-        self._w = pathedit.PathEdit(
-            self.prep_prompt(prompt),
-            os.path.dirname(self.last_path)
-        )
-        self.pathprompt = True
-        self.prompting = PromptPath(callback, args)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
         """
@@ -128,13 +114,10 @@ class ActionBar(urwid.WidgetWrap):
     def prompt_done(self):
         self.prompting = None
         self.onekey = False
-        self.pathprompt = False
         signals.status_message.send(message="")
         signals.focus.send(self, section="body")
 
     def prompt_execute(self, txt):
-        if self.pathprompt:
-            self.last_path = txt
         p = self.prompting
         self.prompt_done()
         msg = p(txt)

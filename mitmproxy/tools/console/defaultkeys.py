@@ -17,6 +17,8 @@ def map(km):
     km.add("j", "console.nav.down", ["global"], "Down")
     km.add("l", "console.nav.right", ["global"], "Right")
     km.add("h", "console.nav.left", ["global"], "Left")
+    km.add("tab", "console.nav.next", ["global"], "Next")
+    km.add("enter", "console.nav.select", ["global"], "Select")
     km.add(" ", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl f", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl b", "console.nav.pageup", ["global"], "Page up")
@@ -78,7 +80,6 @@ def map(km):
         ["flowlist", "flowview"],
         "Run a script on this flow"
     )
-    km.add("enter", "console.view.flow @focus", ["flowlist"], "View this flow")
 
     km.add(
         "e",
@@ -105,7 +106,6 @@ def map(km):
     )
     km.add("p", "view.focus.prev", ["flowview"], "Go to previous flow")
     km.add("m", "console.flowview.mode.set", ["flowview"], "Set flow view mode")
-    km.add("tab", "console.nav.right", ["flowview"], "Go to next tab")
     km.add(
         "z",
         "console.choose \"Part\" request,response "
@@ -121,7 +121,6 @@ def map(km):
 
     km.add("a", "console.grideditor.add", ["grideditor"], "Add a row after cursor")
     km.add("A", "console.grideditor.insert", ["grideditor"], "Insert a row before cursor")
-    km.add("tab", "console.grideditor.next", ["grideditor"], "Go to next field")
     km.add("d", "console.grideditor.delete", ["grideditor"], "Delete this row")
     km.add(
         "r",
@@ -136,3 +135,5 @@ def map(km):
         "Read a Python-style escaped string from file"
     )
     km.add("e", "console.grideditor.editor", ["grideditor"], "Edit in external editor")
+
+    km.add("z", "console.eventlog.clear", ["eventlog"], "Clear")

@@ -6,6 +6,21 @@ from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import tabs
 
 
+class CListBox(urwid.ListBox):
+    def __init__(self, contents):
+        self.length = len(contents)
+        contents = contents[:] + [urwid.Text(["\n"])] * 5
+        super().__init__(contents)
+
+    def keypress(self, size, key):
+        if key == "m_end":
+            self.set_focus(self.length - 1)
+        elif key == "m_start":
+            self.set_focus(0)
+        else:
+            return super().keypress(size, key)
+
+
 class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
     title = "Help"
     keyctx = "help"
@@ -54,7 +69,7 @@ class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
 
         text.extend(self.format_keys(self.master.keymap.list("global")))
 
-        return urwid.ListBox(text)
+        return CListBox(text)
 
     def filtexp_title(self):
         return "Filter Expressions"
@@ -83,7 +98,7 @@ class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
         text.extend(
             common.format_keyvals(examples, key="key", val="text", indent=4)
         )
-        return urwid.ListBox(text)
+        return CListBox(text)
 
     def layout_pushed(self, prev):
         """
