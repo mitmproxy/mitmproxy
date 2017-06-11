@@ -426,6 +426,13 @@ class ConsoleAddon:
             ]
         )
 
+    @command.command("console.eventlog.clear")
+    def eventlog_clear(self) -> None:
+        """
+            Clear the event log.
+        """
+        signals.sig_clear_log.send(self)
+
     def running(self):
         self.started = True
 

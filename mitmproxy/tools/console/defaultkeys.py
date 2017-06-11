@@ -135,3 +135,5 @@ def map(km):
         "Read a Python-style escaped string from file"
     )
     km.add("e", "console.grideditor.editor", ["grideditor"], "Edit in external editor")
+
+    km.add("z", "console.eventlog.clear", ["eventlog"], "Clear")

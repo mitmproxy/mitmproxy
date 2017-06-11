@@ -1,6 +1,9 @@
 import blinker
 
-# Show a status message in the action bar
+# Clear the eventlog
+sig_clear_log = blinker.Signal()
+
+# Add an entry to the eventlog
 sig_add_log = blinker.Signal()
 
 

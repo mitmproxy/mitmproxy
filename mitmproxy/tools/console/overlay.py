@@ -118,6 +118,8 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         if key == "m_select":
             self.callback(self.choices[self.walker.index])
             signals.pop_view_state.send(self)
+        elif key == "esc":
+            signals.pop_view_state.send(self)
         return super().keypress(size, key)
 
 
