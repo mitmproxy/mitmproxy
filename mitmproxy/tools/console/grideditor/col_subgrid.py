@@ -26,7 +26,7 @@ class Column(base.Column):
                 expire=1000
             )
             return
-        elif key in ["enter"]:
+        elif key == "m_select":
             editor.master.view_grideditor(
                 self.subeditor(
                     editor.master,

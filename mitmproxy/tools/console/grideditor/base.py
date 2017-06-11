@@ -6,7 +6,6 @@ import urwid
 
 from mitmproxy.utils import strutils
 from mitmproxy import exceptions
-from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master # noqa
@@ -252,7 +251,6 @@ class GridListBox(urwid.ListBox):
 
 
 FIRST_WIDTH_MAX = 40
-FIRST_WIDTH_MIN = 20
 
 
 class BaseGridEditor(urwid.WidgetWrap):

@@ -115,7 +115,7 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
 
     def keypress(self, size, key):
         key = self.master.keymap.handle("chooser", key)
-        if key == "enter":
+        if key == "m_select":
             self.callback(self.choices[self.walker.index])
             signals.pop_view_state.send(self)
         return super().keypress(size, key)

@@ -138,6 +138,13 @@ class ConsoleAddon:
         """
         self.master.inject_key("m_next")
 
+    @command.command("console.nav.select")
+    def nav_select(self) -> None:
+        """
+            Select a navigable item for viewing or editing.
+        """
+        self.master.inject_key("m_select")
+
     @command.command("console.nav.up")
     def nav_up(self) -> None:
         """

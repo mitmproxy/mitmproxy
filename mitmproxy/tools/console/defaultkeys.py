@@ -18,6 +18,7 @@ def map(km):
     km.add("l", "console.nav.right", ["global"], "Right")
     km.add("h", "console.nav.left", ["global"], "Left")
     km.add("tab", "console.nav.next", ["global"], "Next")
+    km.add("enter", "console.nav.select", ["global"], "Select")
     km.add(" ", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl f", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl b", "console.nav.pageup", ["global"], "Page up")
@@ -79,7 +80,6 @@ def map(km):
         ["flowlist", "flowview"],
         "Run a script on this flow"
     )
-    km.add("enter", "console.view.flow @focus", ["flowlist"], "View this flow")
 
     km.add(
         "e",

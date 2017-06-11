@@ -99,7 +99,7 @@ class CommandsList(urwid.ListBox):
         super().__init__(self.walker)
 
     def keypress(self, size, key):
-        if key == "enter":
+        if key == "m_select":
             foc, idx = self.get_focus()
             signals.status_prompt_command.send(partial=foc.cmd.path + " ")
         elif key == "m_start":

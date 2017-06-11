@@ -114,13 +114,10 @@ class ActionBar(urwid.WidgetWrap):
     def prompt_done(self):
         self.prompting = None
         self.onekey = False
-        self.pathprompt = False
         signals.status_message.send(message="")
         signals.focus.send(self, section="body")
 
     def prompt_execute(self, txt):
-        if self.pathprompt:
-            self.last_path = txt
         p = self.prompting
         self.prompt_done()
         msg = p(txt)
