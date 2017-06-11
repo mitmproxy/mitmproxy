@@ -15,7 +15,10 @@ SupportedContexts = {
 }
 
 
-Binding = collections.namedtuple("Binding", ["key", "command", "contexts"])
+Binding = collections.namedtuple(
+    "Binding",
+    ["key", "command", "contexts", "help"]
+)
 
 
 class Keymap:
@@ -24,7 +27,7 @@ class Keymap:
         self.keys = {}
         self.bindings = []
 
-    def add(self, key: str, command: str, contexts: typing.Sequence[str]) -> None:
+    def add(self, key: str, command: str, contexts: typing.Sequence[str], help="") -> None:
         """
             Add a key to the key map. If context is empty, it's considered to be
             a global binding.
@@ -35,7 +38,7 @@ class Keymap:
             if c not in SupportedContexts:
                 raise ValueError("Unsupported context: %s" % c)
 
-        b = Binding(key=key, command=command, contexts=contexts)
+        b = Binding(key=key, command=command, contexts=contexts, help=help)
         self.bindings.append(b)
         self.bind(b)
 

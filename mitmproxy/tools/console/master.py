@@ -23,6 +23,7 @@ from mitmproxy import flow
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
+from mitmproxy.tools.console import defaultkeys
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import palettes
@@ -428,119 +429,6 @@ class ConsoleAddon:
             signals.flow_change.send(self, flow=f)
 
 
-def default_keymap(km):
-    km.add(":", "console.command ''", ["global"])
-    km.add("?", "console.view.help", ["global"])
-    km.add("C", "console.view.commands", ["global"])
-    km.add("O", "console.view.options", ["global"])
-    km.add("E", "console.view.eventlog", ["global"])
-    km.add("Q", "console.exit", ["global"])
-    km.add("q", "console.view.pop", ["global"])
-    km.add("-", "console.layout.cycle", ["global"])
-    km.add("shift tab", "console.panes.next", ["global"])
-    km.add("P", "console.view.flow @focus", ["global"])
-
-    km.add("g", "console.nav.start", ["global"])
-    km.add("G", "console.nav.end", ["global"])
-    km.add("k", "console.nav.up", ["global"])
-    km.add("j", "console.nav.down", ["global"])
-    km.add("l", "console.nav.right", ["global"])
-    km.add("h", "console.nav.left", ["global"])
-    km.add(" ", "console.nav.pagedown", ["global"])
-    km.add("ctrl f", "console.nav.pagedown", ["global"])
-    km.add("ctrl b", "console.nav.pageup", ["global"])
-
-    km.add("i", "console.command set intercept=", ["global"])
-    km.add("W", "console.command set save_stream_file=", ["global"])
-    km.add("A", "flow.resume @all", ["flowlist", "flowview"])
-    km.add("a", "flow.resume @focus", ["flowlist", "flowview"])
-    km.add(
-        "b", "console.command cut.save s.content|@focus ''",
-        ["flowlist", "flowview"]
-    )
-    km.add("d", "view.remove @focus", ["flowlist", "flowview"])
-    km.add("D", "view.duplicate @focus", ["flowlist", "flowview"])
-    km.add(
-        "e",
-        "console.choose.cmd Format export.formats "
-        "console.command export.file {choice} @focus ''",
-        ["flowlist", "flowview"]
-    )
-    km.add("f", "console.command set view_filter=", ["flowlist"])
-    km.add("F", "set console_focus_follow=toggle", ["flowlist"])
-    km.add("ctrl l", "console.command cut.clip ", ["flowlist", "flowview"])
-    km.add("L", "console.command view.load ", ["flowlist"])
-    km.add("m", "flow.mark.toggle @focus", ["flowlist"])
-    km.add("M", "view.marked.toggle", ["flowlist"])
-    km.add(
-        "n",
-        "console.command view.create get https://google.com",
-        ["flowlist"]
-    )
-    km.add(
-        "o",
-        "console.choose.cmd Order view.order.options "
-        "set console_order={choice}",
-        ["flowlist"]
-    )
-    km.add("r", "replay.client @focus", ["flowlist", "flowview"])
-    km.add("S", "console.command replay.server ", ["flowlist"])
-    km.add("v", "set console_order_reversed=toggle", ["flowlist"])
-    km.add("U", "flow.mark @all false", ["flowlist"])
-    km.add("w", "console.command save.file @shown ", ["flowlist"])
-    km.add("V", "flow.revert @focus", ["flowlist", "flowview"])
-    km.add("X", "flow.kill @focus", ["flowlist"])
-    km.add("z", "view.remove @all", ["flowlist"])
-    km.add("Z", "view.remove @hidden", ["flowlist"])
-    km.add("|", "console.command script.run @focus ", ["flowlist", "flowview"])
-    km.add("enter", "console.view.flow @focus", ["flowlist"])
-
-    km.add(
-        "e",
-        "console.choose.cmd Part console.edit.focus.options "
-        "console.edit.focus {choice}",
-        ["flowview"]
-    )
-    km.add("f", "view.setval.toggle @focus fullcontents", ["flowview"])
-    km.add("w", "console.command save.file @focus ", ["flowview"])
-    km.add(" ", "view.focus.next", ["flowview"])
-    km.add(
-        "o",
-        "console.choose.cmd Order view.order.options "
-        "set console_order={choice}",
-        ["flowlist"]
-    )
-
-    km.add(
-        "v",
-        "console.choose \"View Part\" request,response "
-        "console.bodyview @focus {choice}",
-        ["flowview"]
-    )
-    km.add("p", "view.focus.prev", ["flowview"])
-    km.add("m", "console.flowview.mode.set", ["flowview"])
-    km.add("tab", "console.nav.right", ["flowview"])
-    km.add(
-        "z",
-        "console.choose \"Part\" request,response "
-        "flow.encode.toggle @focus {choice}",
-        ["flowview"]
-    )
-
-    km.add("L", "console.command options.load ", ["options"])
-    km.add("S", "console.command options.save ", ["options"])
-    km.add("D", "options.reset", ["options"])
-    km.add("d", "console.options.reset.current", ["options"])
-
-    km.add("a", "console.grideditor.add", ["grideditor"])
-    km.add("A", "console.grideditor.insert", ["grideditor"])
-    km.add("tab", "console.grideditor.next", ["grideditor"])
-    km.add("d", "console.grideditor.delete", ["grideditor"])
-    km.add("r", "console.command console.grideditor.readfile", ["grideditor"])
-    km.add("R", "console.command console.grideditor.readfile_escaped", ["grideditor"])
-    km.add("e", "console.grideditor.editor", ["grideditor"])
-
-
 class ConsoleMaster(master.Master):
 
     def __init__(self, options, server):
@@ -556,7 +444,7 @@ class ConsoleMaster(master.Master):
         # This line is just for type hinting
         self.options = self.options  # type: Options
         self.keymap = keymap.Keymap(self)
-        default_keymap(self.keymap)
+        defaultkeys.map(self.keymap)
         self.options.errored.connect(self.options_error)
 
         self.view_stack = []
