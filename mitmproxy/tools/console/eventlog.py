@@ -1,5 +1,6 @@
 import urwid
 from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import layoutwidget
 
 EVENTLOG_SIZE = 10000
 
@@ -8,7 +9,7 @@ class LogBufferWalker(urwid.SimpleListWalker):
     pass
 
 
-class EventLog(urwid.ListBox):
+class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
     keyctx = "eventlog"
     title = "Events"
 

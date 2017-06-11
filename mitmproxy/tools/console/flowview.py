@@ -8,6 +8,7 @@ import urwid
 from mitmproxy import contentviews
 from mitmproxy import http
 from mitmproxy.tools.console import common
+from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import signals
@@ -17,82 +18,6 @@ import mitmproxy.tools.console.master # noqa
 
 class SearchError(Exception):
     pass
-
-
-def _mkhelp():
-    text = []
-    keys = [
-        ("A", "accept all intercepted flows"),
-        ("a", "accept this intercepted flow"),
-        ("b", "save request/response body"),
-        ("C", "export flow to clipboard"),
-        ("D", "duplicate flow"),
-        ("d", "delete flow"),
-        ("e", "edit request/response"),
-        ("f", "load full body data"),
-        ("m", "change body display mode for this entity\n(default mode can be changed in the options)"),
-        (None,
-         common.highlight_key("automatic", "a") +
-         [("text", ": automatic detection")]
-         ),
-        (None,
-         common.highlight_key("hex", "e") +
-         [("text", ": Hex")]
-         ),
-        (None,
-         common.highlight_key("html", "h") +
-         [("text", ": HTML")]
-         ),
-        (None,
-         common.highlight_key("image", "i") +
-         [("text", ": Image")]
-         ),
-        (None,
-         common.highlight_key("javascript", "j") +
-         [("text", ": JavaScript")]
-         ),
-        (None,
-         common.highlight_key("json", "s") +
-         [("text", ": JSON")]
-         ),
-        (None,
-         common.highlight_key("urlencoded", "u") +
-         [("text", ": URL-encoded data")]
-         ),
-        (None,
-         common.highlight_key("raw", "r") +
-         [("text", ": raw data")]
-         ),
-        (None,
-         common.highlight_key("xml", "x") +
-         [("text", ": XML")]
-         ),
-        ("E", "export flow to file"),
-        ("r", "replay request"),
-        ("V", "revert changes to request"),
-        ("v", "view body in external viewer"),
-        ("w", "save all flows matching current view filter"),
-        ("W", "save this flow"),
-        ("x", "delete body"),
-        ("z", "encode/decode a request/response"),
-        ("tab", "next tab"),
-        ("h, l", "previous tab, next tab"),
-        ("space", "next flow"),
-        ("|", "run script on this flow"),
-        ("/", "search (case sensitive)"),
-        ("n", "repeat search forward"),
-        ("N", "repeat search backwards"),
-    ]
-    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
-    return text
-
-
-help_context = _mkhelp()
-
-footer = [
-    ('heading_key', "?"), ":help ",
-    ('heading_key', "q"), ":back ",
-]
 
 
 class FlowViewHeader(urwid.WidgetWrap):
@@ -274,7 +199,7 @@ class FlowDetails(tabs.Tabs):
         return self._w.keypress(size, key)
 
 
-class FlowView(urwid.Frame):
+class FlowView(urwid.Frame, layoutwidget.LayoutWidget):
     keyctx = "flowview"
     title = "Flow Details"
 

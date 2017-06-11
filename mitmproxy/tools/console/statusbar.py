@@ -146,22 +146,16 @@ class StatusBar(urwid.WidgetWrap):
     keyctx = ""
 
     def __init__(
-        self, master: "mitmproxy.tools.console.master.ConsoleMaster", helptext
+        self, master: "mitmproxy.tools.console.master.ConsoleMaster"
     ) -> None:
         self.master = master
-        self.helptext = helptext
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         self.ab = ActionBar(self.master)
         super().__init__(urwid.Pile([self.ib, self.ab]))
         signals.update_settings.connect(self.sig_update)
         signals.flowlist_change.connect(self.sig_update)
-        signals.footer_help.connect(self.sig_footer_help)
         master.options.changed.connect(self.sig_update)
         master.view.focus.sig_change.connect(self.sig_update)
-        self.redraw()
-
-    def sig_footer_help(self, sender, helptext):
-        self.helptext = helptext
         self.redraw()
 
     def sig_update(self, sender, updated=None):
@@ -288,13 +282,7 @@ class StatusBar(urwid.WidgetWrap):
         t.extend(self.get_status())
         status = urwid.AttrWrap(urwid.Columns([
             urwid.Text(t),
-            urwid.Text(
-                [
-                    self.helptext,
-                    boundaddr
-                ],
-                align="right"
-            ),
+            urwid.Text(boundaddr, align="right"),
         ]), "heading")
         self.ib._w = status
 

@@ -1,17 +1,14 @@
 import abc
 import copy
-from typing import Any
-from typing import Callable
-from typing import Container
-from typing import Iterable
-from typing import Optional
-from typing import Sequence
-from typing import Tuple
-from typing import Set # noqa
-
+import os
+import typing
 import urwid
+
+from mitmproxy.utils import strutils
+from mitmproxy import exceptions
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master # noqa
 
 FOOTER = [
@@ -21,6 +18,21 @@ FOOTER = [
 FOOTER_EDITING = [
     ('heading_key', "esc"), ":stop editing ",
 ]
+
+
+def read_file(filename: str, escaped: bool) -> typing.AnyStr:
+    filename = os.path.expanduser(filename)
+    try:
+        with open(filename, "r" if escaped else "rb") as f:
+            d = f.read()
+    except IOError as v:
+        raise exceptions.CommandError(v)
+    if escaped:
+        try:
+            d = strutils.escaped_str_to_bytes(d)
+        except ValueError:
+            raise exceptions.CommandError("Invalid Python-style string encoding.")
+    return d
 
 
 class Cell(urwid.WidgetWrap):
@@ -50,27 +62,28 @@ class Column(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def blank(self) -> Any:
+    def blank(self) -> typing.Any:
         pass
 
-    def keypress(self, key: str, editor: "GridEditor") -> Optional[str]:
+    def keypress(self, key: str, editor: "GridEditor") -> typing.Optional[str]:
         return key
 
 
 class GridRow(urwid.WidgetWrap):
+
     def __init__(
             self,
-            focused: Optional[int],
+            focused: typing.Optional[int],
             editing: bool,
             editor: "GridEditor",
-            values: Tuple[Iterable[bytes], Container[int]]
+            values: typing.Tuple[typing.Iterable[bytes], typing.Container[int]]
     ) -> None:
         self.focused = focused
         self.editor = editor
-        self.edit_col = None  # type: Optional[Cell]
+        self.edit_col = None  # type: typing.Optional[Cell]
 
         errors = values[1]
-        self.fields = []  # type: Sequence[Any]
+        self.fields = []  # type: typing.Sequence[typing.Any]
         for i, v in enumerate(values[0]):
             if focused == i and editing:
                 self.edit_col = self.editor.columns[i].Edit(v)
@@ -116,14 +129,14 @@ class GridWalker(urwid.ListWalker):
 
     def __init__(
             self,
-            lst: Iterable[list],
+            lst: typing.Iterable[list],
             editor: "GridEditor"
     ) -> None:
-        self.lst = [(i, set()) for i in lst]  # type: Sequence[Tuple[Any, Set]]
+        self.lst = [(i, set()) for i in lst]  # type: typing.Sequence[typing.Tuple[typing.Any, typing.Set]]
         self.editor = editor
         self.focus = 0
         self.focus_col = 0
-        self.edit_row = None  # type: Optional[GridRow]
+        self.edit_row = None  # type: typing.Optional[GridRow]
 
     def _modified(self):
         self.editor.show_empty_msg()
@@ -253,14 +266,16 @@ FIRST_WIDTH_MIN = 20
 
 
 class BaseGridEditor(urwid.WidgetWrap):
+    title = ""
+    keyctx = "grideditor"
 
     def __init__(
             self,
             master: "mitmproxy.tools.console.master.ConsoleMaster",
             title,
             columns,
-            value: Any,
-            callback: Callable[..., None],
+            value: typing.Any,
+            callback: typing.Callable[..., None],
             *cb_args,
             **cb_kwargs
     ) -> None:
@@ -280,36 +295,30 @@ class BaseGridEditor(urwid.WidgetWrap):
                 first_width = max(len(r), first_width)
         self.first_width = min(first_width, FIRST_WIDTH_MAX)
 
-        title = None
-        if self.title:
-            title = urwid.Text(self.title)
-            title = urwid.Padding(title, align="left", width=("relative", 100))
-            title = urwid.AttrWrap(title, "heading")
-
-        headings = []
-        for i, col in enumerate(self.columns):
-            c = urwid.Text(col.heading)
-            if i == 0 and len(self.columns) > 1:
-                headings.append(("fixed", first_width + 2, c))
-            else:
-                headings.append(c)
-        h = urwid.Columns(
-            headings,
-            dividechars=2
-        )
-        h = urwid.AttrWrap(h, "heading")
+        h = None
+        if any(col.heading for col in self.columns):
+            headings = []
+            for i, col in enumerate(self.columns):
+                c = urwid.Text(col.heading)
+                if i == 0 and len(self.columns) > 1:
+                    headings.append(("fixed", first_width + 2, c))
+                else:
+                    headings.append(c)
+            h = urwid.Columns(
+                headings,
+                dividechars=2
+            )
+            h = urwid.AttrWrap(h, "heading")
 
         self.walker = GridWalker(self.value, self)
         self.lb = GridListBox(self.walker)
-        w = urwid.Frame(
-            self.lb,
-            header=urwid.Pile([title, h]) if title else None
-        )
+        w = urwid.Frame(self.lb, header=h)
+
         super().__init__(w)
         signals.footer_help.send(self, helptext="")
         self.show_empty_msg()
 
-    def view_popping(self):
+    def layout_popping(self):
         res = []
         for i in self.walker.lst:
             if not i[1] and any([x for x in i[0]]):
@@ -323,9 +332,9 @@ class BaseGridEditor(urwid.WidgetWrap):
             self._w.set_footer(
                 urwid.Text(
                     [
-                        ("highlight", "No values. Press "),
-                        ("key", "a"),
-                        ("highlight", " to add some."),
+                        ("highlight", "No values - you should add some. Press "),
+                        ("key", "?"),
+                        ("highlight", " for help."),
                     ]
                 )
             )
@@ -355,31 +364,23 @@ class BaseGridEditor(urwid.WidgetWrap):
             self.walker.left()
         elif key == "right":
             self.walker.right()
-        elif key == "tab":
-            self.walker.tab_next()
-        elif key == "a":
-            self.walker.add()
-        elif key == "A":
-            self.walker.insert()
-        elif key == "d":
-            self.walker.delete_focus()
         elif column.keypress(key, self) and not self.handle_key(key):
             return self._w.keypress(size, key)
 
-    def data_out(self, data: Sequence[list]) -> Any:
+    def data_out(self, data: typing.Sequence[list]) -> typing.Any:
         """
             Called on raw list data, before data is returned through the
             callback.
         """
         return data
 
-    def data_in(self, data: Any) -> Iterable[list]:
+    def data_in(self, data: typing.Any) -> typing.Iterable[list]:
         """
             Called to prepare provided data.
         """
         return data
 
-    def is_error(self, col: int, val: Any) -> Optional[str]:
+    def is_error(self, col: int, val: typing.Any) -> typing.Optional[str]:
         """
             Return None, or a string error message.
         """
@@ -417,31 +418,57 @@ class BaseGridEditor(urwid.WidgetWrap):
         )
         return text
 
+    def cmd_next(self):
+        self.walker.tab_next()
 
-class GridEditor(urwid.WidgetWrap):
+    def cmd_add(self):
+        self.walker.add()
+
+    def cmd_insert(self):
+        self.walker.insert()
+
+    def cmd_delete(self):
+        self.walker.delete_focus()
+
+    def cmd_read_file(self, path):
+        self.walker.set_current_value(read_file(path, False))
+
+    def cmd_read_file_escaped(self, path):
+        self.walker.set_current_value(read_file(path, True))
+
+    def cmd_spawn_editor(self):
+        o = self.walker.get_current_value()
+        if o is not None:
+            n = self.master.spawn_editor(o)
+            n = strutils.clean_hanging_newline(n)
+            self.walker.set_current_value(n)
+
+
+class GridEditor(BaseGridEditor):
     title = None  # type: str
-    columns = None  # type: Sequence[Column]
+    columns = None  # type: typing.Sequence[Column]
+    keyctx = "grideditor"
 
     def __init__(
             self,
             master: "mitmproxy.tools.console.master.ConsoleMaster",
-            value: Any,
-            callback: Callable[..., None],
+            value: typing.Any,
+            callback: typing.Callable[..., None],
             *cb_args,
             **cb_kwargs
     ) -> None:
         super().__init__(
             master,
-            value,
             self.title,
             self.columns,
+            value,
             callback,
             *cb_args,
             **cb_kwargs
         )
 
 
-class FocusEditor(urwid.WidgetWrap):
+class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     """
         A specialised GridEditor that edits the current focused flow.
     """
@@ -451,26 +478,10 @@ class FocusEditor(urwid.WidgetWrap):
         self.master = master
         self.focus_changed()
 
-    def focus_changed(self):
-        if self.master.view.focus.flow:
-            self._w = BaseGridEditor(
-                self.master.view.focus.flow,
-                self.title,
-                self.columns,
-                self.get_data(self.master.view.focus.flow),
-                self.set_data_update,
-                self.master.view.focus.flow,
-            )
-        else:
-            self._w = urwid.Pile([])
-
     def call(self, v, name, *args, **kwargs):
         f = getattr(v, name, None)
         if f:
             f(*args, **kwargs)
-
-    def view_popping(self):
-        self.call(self._w, "view_popping")
 
     def get_data(self, flow):
         """
@@ -487,3 +498,22 @@ class FocusEditor(urwid.WidgetWrap):
     def set_data_update(self, vals, flow):
         self.set_data(vals, flow)
         signals.flow_change.send(self, flow = flow)
+
+    def key_responder(self):
+        return self._w
+
+    def layout_popping(self):
+        self.call(self._w, "layout_popping")
+
+    def focus_changed(self):
+        if self.master.view.focus.flow:
+            self._w = BaseGridEditor(
+                self.master,
+                self.title,
+                self.columns,
+                self.get_data(self.master.view.focus.flow),
+                self.set_data_update,
+                self.master.view.focus.flow,
+            )
+        else:
+            self._w = urwid.Pile([])

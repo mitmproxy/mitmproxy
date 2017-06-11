@@ -6,7 +6,7 @@ from typing import Optional, Sequence
 
 from mitmproxy import exceptions
 from mitmproxy import optmanager
-from mitmproxy.tools.console import common
+from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import overlay
 
@@ -18,28 +18,6 @@ def can_edit_inplace(opt):
         return False
     if opt.typespec in [str, int, Optional[str], Optional[int]]:
         return True
-
-
-footer = [
-    ('heading_key', "enter"), ":edit ",
-    ('heading_key', "?"), ":help ",
-]
-
-
-def _mkhelp():
-    text = []
-    keys = [
-        ("enter", "edit option"),
-        ("D", "reset all to defaults"),
-        ("d", "reset this option to default"),
-        ("l", "load options from file"),
-        ("w", "save options to file"),
-    ]
-    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
-    return text
-
-
-help_context = _mkhelp()
 
 
 def fcol(s, width, attr):
@@ -263,7 +241,7 @@ class OptionHelp(urwid.Frame):
         self.set_body(self.widget(txt))
 
 
-class Options(urwid.Pile):
+class Options(urwid.Pile, layoutwidget.LayoutWidget):
     title = "Options"
     keyctx = "options"
 
