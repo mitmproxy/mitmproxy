@@ -6,7 +6,6 @@ from typing import Optional, Sequence
 
 from mitmproxy import exceptions
 from mitmproxy import optmanager
-from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import overlay

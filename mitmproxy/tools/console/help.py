@@ -1,35 +1,67 @@
-import platform
-
 import urwid
 
 from mitmproxy import flowfilter
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
-
-from mitmproxy import version
-
-footer = [
-    ("heading", 'mitmproxy {} (Python {}) '.format(version.VERSION, platform.python_version())),
-    ('heading_key', "q"), ":back ",
-]
+from mitmproxy.tools.console import tabs
 
 
-class HelpView(urwid.ListBox, layoutwidget.LayoutWidget):
+class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
     title = "Help"
     keyctx = "help"
 
-    def __init__(self, help_context):
-        urwid.ListBox.__init__(
-            self,
-            self.helptext()
+    def __init__(self, master):
+        self.master = master
+        self.helpctx = ""
+        super().__init__(
+            [
+                [self.keybindings_title, self.keybindings],
+                [self.filtexp_title, self.filtexp],
+            ]
         )
 
-    def helptext(self):
+    def keybindings_title(self):
+        return "Key Bindings"
+
+    def format_keys(self, binds):
+        kvs = []
+        for b in binds:
+            k = b.key
+            if b.key == " ":
+                k = "space"
+            kvs.append((k, b.command))
+        return common.format_keyvals(kvs)
+
+    def keybindings(self):
+        text = [
+            urwid.Text(
+                [
+                    ("title", "Keybindings for this view")
+                ]
+            )
+        ]
+        if self.helpctx:
+            text.extend(self.format_keys(self.master.keymap.list(self.helpctx)))
+
+        text.append(
+            urwid.Text(
+                [
+                    "\n",
+                    ("title", "Global Keybindings"),
+                ]
+            )
+        )
+
+        text.extend(self.format_keys(self.master.keymap.list("global")))
+
+        return urwid.ListBox(text)
+
+    def filtexp_title(self):
+        return "Filter Expressions"
+
+    def filtexp(self):
         text = []
-
-        text.append(urwid.Text([("head", "\n\nFilter expressions:\n")]))
         text.extend(common.format_keyvals(flowfilter.help, key="key", val="text", indent=4))
-
         text.append(
             urwid.Text(
                 [
@@ -51,11 +83,11 @@ class HelpView(urwid.ListBox, layoutwidget.LayoutWidget):
         text.extend(
             common.format_keyvals(examples, key="key", val="text", indent=4)
         )
-        return text
+        return urwid.ListBox(text)
 
-    def keypress(self, size, key):
-        if key == "m_start":
-            self.set_focus(0)
-        elif key == "m_end":
-            self.set_focus(len(self.body.contents))
-        return urwid.ListBox.keypress(self, size, key)
+    def layout_pushed(self, prev):
+        """
+            We are just about to push a window onto the stack.
+        """
+        self.helpctx = prev.keyctx
+        self.show()

@@ -49,6 +49,11 @@ class Keymap:
             return self.keys[context].get(key, None)
         return None
 
+    def list(self, context: str) -> typing.Sequence[Binding]:
+        b = [b for b in self.bindings if context in b.contexts]
+        b.sort(key=lambda x: x.key)
+        return b
+
     def handle(self, context: str, key: str) -> typing.Optional[str]:
         """
             Returns the key if it has not been handled, or None.

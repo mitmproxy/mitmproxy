@@ -35,8 +35,8 @@ class SimpleOverlay(urwid.Overlay, layoutwidget.LayoutWidget):
     def view_changed(self):
         return self.widget.view_changed()
 
-    def view_popping(self):
-        return self.widget.view_popping()
+    def layout_popping(self):
+        return self.widget.layout_popping()
 
 
 class Choice(urwid.WidgetWrap):
@@ -157,5 +157,5 @@ class OptionsOverlay(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     def key_responder(self):
         return self.ge.key_responder()
 
-    def view_popping(self):
-        return self.ge.view_popping()
+    def layout_popping(self):
+        return self.ge.layout_popping()

@@ -80,10 +80,10 @@ class GridRow(urwid.WidgetWrap):
     ) -> None:
         self.focused = focused
         self.editor = editor
-        self.edit_col = None  # type: Optional[Cell]
+        self.edit_col = None  # type: typing.Optional[Cell]
 
         errors = values[1]
-        self.fields = []  # type: Sequence[Any]
+        self.fields = []  # type: typing.Sequence[typing.Any]
         for i, v in enumerate(values[0]):
             if focused == i and editing:
                 self.edit_col = self.editor.columns[i].Edit(v)
@@ -132,11 +132,11 @@ class GridWalker(urwid.ListWalker):
             lst: typing.Iterable[list],
             editor: "GridEditor"
     ) -> None:
-        self.lst = [(i, set()) for i in lst]  # type: Sequence[Tuple[Any, Set]]
+        self.lst = [(i, set()) for i in lst]  # type: typing.Sequence[typing.Tuple[typing.Any, typing.Set]]
         self.editor = editor
         self.focus = 0
         self.focus_col = 0
-        self.edit_row = None  # type: Optional[GridRow]
+        self.edit_row = None  # type: typing.Optional[GridRow]
 
     def _modified(self):
         self.editor.show_empty_msg()
@@ -266,6 +266,7 @@ FIRST_WIDTH_MIN = 20
 
 
 class BaseGridEditor(urwid.WidgetWrap):
+    title = ""
     keyctx = "grideditor"
 
     def __init__(
@@ -317,7 +318,7 @@ class BaseGridEditor(urwid.WidgetWrap):
         signals.footer_help.send(self, helptext="")
         self.show_empty_msg()
 
-    def view_popping(self):
+    def layout_popping(self):
         res = []
         for i in self.walker.lst:
             if not i[1] and any([x for x in i[0]]):
@@ -445,7 +446,7 @@ class BaseGridEditor(urwid.WidgetWrap):
 
 class GridEditor(BaseGridEditor):
     title = None  # type: str
-    columns = None  # type: Sequence[Column]
+    columns = None  # type: typing.Sequence[Column]
     keyctx = "grideditor"
 
     def __init__(
@@ -501,8 +502,8 @@ class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     def key_responder(self):
         return self._w
 
-    def view_popping(self):
-        self.call(self._w, "view_popping")
+    def layout_popping(self):
+        self.call(self._w, "layout_popping")
 
     def focus_changed(self):
         if self.master.view.focus.flow:

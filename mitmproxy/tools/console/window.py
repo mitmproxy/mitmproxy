@@ -30,7 +30,7 @@ class WindowStack:
             flowview = flowview.FlowView(master),
             commands = commands.Commands(master),
             options = options.Options(master),
-            help = help.HelpView(None),
+            help = help.HelpView(master),
             eventlog = eventlog.EventLog(master),
 
             edit_focus_query = grideditor.QueryEditor(master),
@@ -66,20 +66,21 @@ class WindowStack:
     def push(self, wname):
         if self.stack[-1] == wname:
             return
+        prev = self.top_window()
         self.stack.append(wname)
+        self.call("layout_pushed", prev)
 
     def pop(self, *args, **kwargs):
         """
             Pop off the stack, return True if we're already at the top.
         """
-        if self.overlay:
-            self.call("view_popping")
-            self.overlay = None
-        elif len(self.stack) > 1:
-            self.call("view_popping")
-            self.stack.pop()
-        else:
+        if not self.overlay and len(self.stack) == 1:
             return True
+        self.call("layout_popping")
+        if self.overlay:
+            self.overlay = None
+        else:
+            self.stack.pop()
 
     def call(self, name, *args, **kwargs):
         """

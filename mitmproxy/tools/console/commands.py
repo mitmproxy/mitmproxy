@@ -1,7 +1,6 @@
 import urwid
 import blinker
 import textwrap
-from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
 

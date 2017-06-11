@@ -5,7 +5,6 @@ from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master # noqa
 
 
-
 class FlowItem(urwid.WidgetWrap):
 
     def __init__(self, master, flow):

@@ -6,7 +6,7 @@ class LayoutWidget:
         overlay must comply with this API.
     """
     # Title is only required for windows, not overlay components
-    title = None
+    title = ""
     keyctx = ""
 
     def key_responder(self):
@@ -29,8 +29,14 @@ class LayoutWidget:
         """
         pass
 
-    def view_popping(self):
+    def layout_popping(self):
         """
             We are just about to pop a window off the stack, or exit an overlay.
+        """
+        pass
+
+    def layout_pushed(self, prev):
+        """
+            We have just pushed a window onto the stack.
         """
         pass
