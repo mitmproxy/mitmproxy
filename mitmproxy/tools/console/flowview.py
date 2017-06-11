@@ -276,6 +276,7 @@ class FlowDetails(tabs.Tabs):
 
 class FlowView(urwid.Frame):
     keyctx = "flowview"
+    title = "Flow Details"
 
     def __init__(self, master):
         super().__init__(

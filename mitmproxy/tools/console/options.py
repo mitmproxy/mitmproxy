@@ -264,6 +264,7 @@ class OptionHelp(urwid.Frame):
 
 
 class Options(urwid.Pile):
+    title = "Options"
     keyctx = "options"
 
     def __init__(self, master):

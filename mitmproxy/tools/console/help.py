@@ -14,6 +14,7 @@ footer = [
 
 
 class HelpView(urwid.ListBox):
+    title = "Help"
     keyctx = "help"
 
     def __init__(self, help_context):

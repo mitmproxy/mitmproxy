@@ -109,6 +109,7 @@ def mitmproxy(opts):
     common_options(parser, opts)
 
     opts.make_parser(parser, "console_layout")
+    opts.make_parser(parser, "console_layout_headers")
     group = parser.add_argument_group(
         "Filters",
         "See help in mitmproxy for filter expression syntax."
