@@ -131,6 +131,13 @@ class ConsoleAddon:
         """
         self.master.inject_key("m_end")
 
+    @command.command("console.nav.next")
+    def nav_next(self) -> None:
+        """
+            Go to the next navigatable item.
+        """
+        self.master.inject_key("m_next")
+
     @command.command("console.nav.up")
     def nav_up(self) -> None:
         """
@@ -342,13 +349,6 @@ class ConsoleAddon:
             Insert a row before the cursor.
         """
         self._grideditor().cmd_insert()
-
-    @command.command("console.grideditor.next")
-    def grideditor_next(self) -> None:
-        """
-            Go to next cell.
-        """
-        self._grideditor().cmd_next()
 
     @command.command("console.grideditor.delete")
     def grideditor_delete(self) -> None:

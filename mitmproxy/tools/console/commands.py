@@ -148,7 +148,7 @@ class Commands(urwid.Pile, layoutwidget.LayoutWidget):
         self.master = master
 
     def keypress(self, size, key):
-        if key == "tab":
+        if key == "m_next":
             self.focus_position = (
                 self.focus_position + 1
             ) % len(self.widget_list)
