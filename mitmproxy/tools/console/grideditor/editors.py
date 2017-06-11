@@ -1,8 +1,5 @@
 
-import urwid
-
 from mitmproxy import exceptions
-from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console.grideditor import base
 from mitmproxy.tools.console.grideditor import col_text
@@ -31,20 +28,6 @@ class HeaderEditor(base.FocusEditor):
         col_bytes.Column("Key"),
         col_bytes.Column("Value")
     ]
-
-    def make_help(self):
-        h = super().make_help()
-        text = [
-            urwid.Text([("text", "Special keys:\n")])
-        ]
-        keys = [
-        ]
-        text.extend(
-            common.format_keyvals(keys, key="key", val="text", indent=4)
-        )
-        text.append(urwid.Text([("text", "\n")]))
-        text.extend(h)
-        return text
 
 
 class RequestHeaderEditor(HeaderEditor):

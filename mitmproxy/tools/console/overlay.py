@@ -2,7 +2,6 @@ import math
 
 import urwid
 
-from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import layoutwidget
@@ -121,15 +120,6 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
             signals.pop_view_state.send(self)
         return super().keypress(size, key)
 
-    def make_help(self):
-        text = []
-        keys = [
-            ("enter", "choose option"),
-            ("esc", "exit chooser"),
-        ]
-        text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
-        return text
-
 
 class OptionsOverlay(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     keyctx = "grideditor"
@@ -150,9 +140,6 @@ class OptionsOverlay(urwid.WidgetWrap, layoutwidget.LayoutWidget):
             )
         )
         self.width = math.ceil(cols * 0.8)
-
-    def make_help(self):
-        return self.ge.make_help()
 
     def key_responder(self):
         return self.ge.key_responder()
