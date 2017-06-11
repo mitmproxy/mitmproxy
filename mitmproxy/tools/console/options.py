@@ -21,28 +21,6 @@ def can_edit_inplace(opt):
         return True
 
 
-footer = [
-    ('heading_key', "enter"), ":edit ",
-    ('heading_key', "?"), ":help ",
-]
-
-
-def _mkhelp():
-    text = []
-    keys = [
-        ("enter", "edit option"),
-        ("D", "reset all to defaults"),
-        ("d", "reset this option to default"),
-        ("l", "load options from file"),
-        ("w", "save options to file"),
-    ]
-    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
-    return text
-
-
-help_context = _mkhelp()
-
-
 def fcol(s, width, attr):
     s = str(s)
     return (

@@ -19,7 +19,6 @@ class HelpView(urwid.ListBox, layoutwidget.LayoutWidget):
     keyctx = "help"
 
     def __init__(self, help_context):
-        self.help_context = help_context or []
         urwid.ListBox.__init__(
             self,
             self.helptext()
@@ -27,37 +26,6 @@ class HelpView(urwid.ListBox, layoutwidget.LayoutWidget):
 
     def helptext(self):
         text = []
-        text.append(urwid.Text([("head", "This view:\n")]))
-        text.extend(self.help_context)
-
-        text.append(urwid.Text([("head", "\n\nMovement:\n")]))
-        keys = [
-            ("j, k", "down, up"),
-            ("h, l", "left, right (in some contexts)"),
-            ("g, G", "go to beginning, end"),
-            ("space", "page down"),
-            ("pg up/down", "page up/down"),
-            ("ctrl+b/ctrl+f", "page up/down"),
-            ("arrows", "up, down, left, right"),
-        ]
-        text.extend(
-            common.format_keyvals(
-                keys,
-                key="key",
-                val="text",
-                indent=4))
-
-        text.append(urwid.Text([("head", "\n\nGlobal keys:\n")]))
-        keys = [
-            ("i", "set interception pattern"),
-            ("O", "options"),
-            ("q", "quit / return to previous page"),
-            ("Q", "quit without confirm prompt"),
-            ("R", "replay of requests/responses from file"),
-        ]
-        text.extend(
-            common.format_keyvals(keys, key="key", val="text", indent=4)
-        )
 
         text.append(urwid.Text([("head", "\n\nFilter expressions:\n")]))
         text.extend(common.format_keyvals(flowfilter.help, key="key", val="text", indent=4))

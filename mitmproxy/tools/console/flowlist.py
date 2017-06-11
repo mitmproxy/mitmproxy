@@ -5,48 +5,6 @@ from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master # noqa
 
 
-def _mkhelp():
-    text = []
-    keys = [
-        ("A", "accept all intercepted flows"),
-        ("a", "accept this intercepted flow"),
-        ("b", "save request/response body"),
-        ("C", "export flow to clipboard"),
-        ("d", "delete flow"),
-        ("D", "duplicate flow"),
-        ("e", "toggle eventlog"),
-        ("E", "export flow to file"),
-        ("f", "filter view"),
-        ("F", "toggle follow flow list"),
-        ("L", "load saved flows"),
-        ("m", "toggle flow mark"),
-        ("M", "toggle marked flow view"),
-        ("n", "create a new request"),
-        ("o", "set flow order"),
-        ("r", "replay request"),
-        ("S", "server replay request/s"),
-        ("U", "unmark all marked flows"),
-        ("v", "reverse flow order"),
-        ("V", "revert changes to request"),
-        ("w", "save flows "),
-        ("W", "stream flows to file"),
-        ("X", "kill and delete flow, even if it's mid-intercept"),
-        ("z", "clear flow list or eventlog"),
-        ("Z", "clear unmarked flows"),
-        ("tab", "tab between eventlog and flow list"),
-        ("enter", "view flow"),
-        ("|", "run script on this flow"),
-    ]
-    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
-    return text
-
-
-help_context = _mkhelp()
-
-footer = [
-    ('heading_key', "?"), ":help ",
-]
-
 
 class FlowItem(urwid.WidgetWrap):
 

@@ -8,24 +8,6 @@ from mitmproxy.tools.console import signals
 HELP_HEIGHT = 5
 
 
-footer = [
-    ('heading_key', "enter"), ":edit ",
-    ('heading_key', "?"), ":help ",
-]
-
-
-def _mkhelp():
-    text = []
-    keys = [
-        ("enter", "execute command"),
-    ]
-    text.extend(common.format_keyvals(keys, key="key", val="text", indent=4))
-    return text
-
-
-help_context = _mkhelp()
-
-
 def fcol(s, width, attr):
     s = str(s)
     return (

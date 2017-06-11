@@ -94,7 +94,7 @@ class WindowStack:
 
 class Window(urwid.Frame):
     def __init__(self, master):
-        self.statusbar = statusbar.StatusBar(master, "")
+        self.statusbar = statusbar.StatusBar(master)
         super().__init__(
             None,
             header = None,
