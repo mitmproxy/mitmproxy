@@ -10,13 +10,15 @@ from mitmproxy.net.http import status_codes
 
 class Core:
     @command.command("set")
-    def set(self, spec: str) -> None:
+    def set(self, *spec: typing.Sequence[str]) -> None:
         """
             Set an option of the form "key[=value]". When the value is omitted,
             booleans are set to true, strings and integers are set to None (if
             permitted), and sequences are emptied. Boolean values can be true,
-            false or toggle.
+            false or toggle. If multiple specs are passed, they are joined
+            into one separated by spaces.
         """
+        spec = " ".join(spec)
         try:
             ctx.options.set(spec)
         except exceptions.OptionsError as e:

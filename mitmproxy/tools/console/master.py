@@ -238,7 +238,7 @@ class ConsoleAddon:
         """
         Prompt the user to edit a command with a (possilby empty) starting value.
         """
-        signals.status_prompt_command.send(partial=" ".join(partial) + " ")  # type: ignore
+        signals.status_prompt_command.send(partial=" ".join(partial))  # type: ignore
 
     @command.command("console.view.commands")
     def view_commands(self) -> None:
