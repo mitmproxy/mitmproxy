@@ -9,13 +9,13 @@ import rootReducer from './ducks/index'
 import { add as addLog } from './ducks/eventLog'
 import useUrlState from './urlState'
 import WebSocketBackend from './backends/websocket'
+import { logger } from 'redux-logger'
 
 
 const middlewares = [thunk];
 
 if (process.env.NODE_ENV !== 'production') {
-  const createLogger = require('redux-logger');
-  middlewares.push(createLogger());
+  middlewares.push(logger);
 }
 
 // logger must be last
