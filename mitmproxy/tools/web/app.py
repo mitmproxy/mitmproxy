@@ -17,7 +17,6 @@ from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import version
-from mitmproxy import options
 from mitmproxy import optmanager
 import mitmproxy.tools.web.master # noqa
 
