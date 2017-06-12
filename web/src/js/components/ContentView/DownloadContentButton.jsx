@@ -1,3 +1,4 @@
+import React from 'react'
 import { MessageUtils } from "../../flow/utils"
 import PropTypes from 'prop-types'
 

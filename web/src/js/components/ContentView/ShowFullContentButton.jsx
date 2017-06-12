@@ -12,7 +12,7 @@ ShowFullContentButton.propTypes = {
         showFullContent: PropTypes.bool.isRequired
 }
 
-function ShowFullContentButton ( {setShowFullContent, showFullContent, visibleLines, contentLines} ){
+export function ShowFullContentButton ( {setShowFullContent, showFullContent, visibleLines, contentLines} ){
 
     return (
         !showFullContent &&

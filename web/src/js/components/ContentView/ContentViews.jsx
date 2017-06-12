@@ -30,7 +30,7 @@ function Edit({ content, onChange }) {
 }
 Edit = ContentLoader(Edit)
 
-class ViewServer extends Component {
+export class PureViewServer extends Component {
     static propTypes  = {
         showFullContent: PropTypes.bool.isRequired,
         maxLines: PropTypes.number.isRequired,
@@ -85,7 +85,7 @@ class ViewServer extends Component {
 
 }
 
-ViewServer = connect(
+const ViewServer = connect(
     state => ({
         showFullContent: state.ui.flow.showFullContent,
         maxLines: state.ui.flow.maxContentLines
@@ -94,6 +94,6 @@ ViewServer = connect(
         setContentViewDescription,
         setContent
     }
-)(ContentLoader(ViewServer))
+)(ContentLoader(PureViewServer))
 
 export { Edit, ViewServer, ViewImage }
