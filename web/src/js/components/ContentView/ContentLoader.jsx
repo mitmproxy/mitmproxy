@@ -55,7 +55,7 @@ export default function withContentLoader(View) {
                 return this.setState({request: undefined, content: ""})
             }
 
-            let requestUrl = MessageUtils.getContentURL(props.flow, props.message, (View.name == 'ViewServer' ? props.contentView : undefined))
+            let requestUrl = MessageUtils.getContentURL(props.flow, props.message, props.contentView)
 
             // We use XMLHttpRequest instead of fetch() because fetch() is not (yet) abortable.
             let request = new XMLHttpRequest();
