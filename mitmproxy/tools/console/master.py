@@ -189,7 +189,7 @@ class ConsoleAddon:
 
     @command.command("console.choose")
     def console_choose(
-        self, prompt: str, choices: typing.Sequence[str], *cmd: typing.Sequence[str]
+        self, prompt: str, choices: typing.Sequence[str], *cmd: str
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
@@ -211,7 +211,7 @@ class ConsoleAddon:
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
-        self, prompt: str, choicecmd: str, *cmd: typing.Sequence[str]
+        self, prompt: str, choicecmd: str, *cmd: str
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
@@ -234,7 +234,7 @@ class ConsoleAddon:
         )
 
     @command.command("console.command")
-    def console_command(self, *partial: typing.Sequence[str]) -> None:
+    def console_command(self, *partial: str) -> None:
         """
         Prompt the user to edit a command with a (possilby empty) starting value.
         """

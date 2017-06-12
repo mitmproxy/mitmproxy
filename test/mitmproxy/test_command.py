@@ -22,7 +22,7 @@ class TAddon:
     def empty(self) -> None:
         pass
 
-    def varargs(self, one: str, *var: typing.Sequence[str]) -> typing.Sequence[str]:
+    def varargs(self, one: str, *var: str) -> typing.Sequence[str]:
         return list(var)
 
 

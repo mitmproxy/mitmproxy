@@ -10,7 +10,7 @@ from mitmproxy.net.http import status_codes
 
 class Core:
     @command.command("set")
-    def set(self, *spec: typing.Sequence[str]) -> None:
+    def set(self, *spec: str) -> None:
         """
             Set an option of the form "key[=value]". When the value is omitted,
             booleans are set to true, strings and integers are set to None (if
@@ -18,9 +18,9 @@ class Core:
             false or toggle. If multiple specs are passed, they are joined
             into one separated by spaces.
         """
-        spec = " ".join(spec)
+        strspec = " ".join(spec)
         try:
-            ctx.options.set(spec)
+            ctx.options.set(strspec)
         except exceptions.OptionsError as e:
             raise exceptions.CommandError(e) from e
 
