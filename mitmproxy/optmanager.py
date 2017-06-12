@@ -416,6 +416,20 @@ def dump_defaults(opts):
     return ruamel.yaml.round_trip_dump(s)
 
 
+def dump_dicts(opts):
+    """
+        Dumps the options into a list of dict object.
+
+        Return: A list like: [ { name: "anticahce", type: "bool", default: false, value: true, help: "help text"}]
+    """
+    options_list = []
+    for k in sorted(opts.keys()):
+        o = opts._options[k]
+        option = {'name': k, 'type': o.typespec.__name__, 'default': o.default, 'value': o.current(), 'help': o.help.strip()}
+        options_list.append(option)
+    return options_list
+
+
 def parse(text):
     if not text:
         return {}
