@@ -6,6 +6,7 @@ import { Provider } from 'react-redux'
 import { startEdit, stopEdit } from '../../../ducks/ui/flow'
 import { TFlow, TStore } from '../../ducks/tutils'
 
+global.fetch = jest.fn()
 let tflow = new TFlow()
 
 describe('ToggleEdit Component', () => {
@@ -24,7 +25,7 @@ describe('ToggleEdit Component', () => {
 
     it('should handle click on stopEdit', () => {
         tree.children[0].props.onClick()
-        expect(store.getActions()).toEqual([stopEdit(tflow, true)])
+        expect(fetch).toBeCalled()
     })
 
     it('should handle click on startEdit', () => {
