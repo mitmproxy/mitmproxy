@@ -240,6 +240,11 @@ class ConsoleAddon:
         """
         signals.status_prompt_command.send(partial=" ".join(partial))  # type: ignore
 
+    @command.command("console.view.keybindings")
+    def view_keybindings(self) -> None:
+        """View the commands list."""
+        self.master.switch_view("keybindings")
+
     @command.command("console.view.commands")
     def view_commands(self) -> None:
         """View the commands list."""

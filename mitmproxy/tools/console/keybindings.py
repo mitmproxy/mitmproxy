@@ -2,36 +2,28 @@ import urwid
 import blinker
 import textwrap
 from mitmproxy.tools.console import layoutwidget
-from mitmproxy.tools.console import signals
 
 HELP_HEIGHT = 5
 
-command_focus_change = blinker.Signal()
+
+keybinding_focus_change = blinker.Signal()
 
 
-class CommandItem(urwid.WidgetWrap):
-    def __init__(self, walker, cmd, focused):
-        self.walker, self.cmd, self.focused = walker, cmd, focused
+class KeyItem(urwid.WidgetWrap):
+    def __init__(self, walker, binding, focused):
+        self.walker, self.binding, self.focused = walker, binding, focused
         super().__init__(None)
         self._w = self.get_widget()
 
     def get_widget(self):
+        cmd = textwrap.dedent(self.binding.command).strip()
         parts = [
-            ("focus", ">> " if self.focused else "   "),
-            ("title", self.cmd.path),
-            ("text", " "),
-            ("text", " ".join(self.cmd.paramnames())),
+            (4, urwid.Text([("focus", ">> " if self.focused else "   ")])),
+            (10, urwid.Text([("title", self.binding.key)])),
+            (12, urwid.Text([("highlight", "\n".join(self.binding.contexts))])),
+            urwid.Text([("text", cmd)]),
         ]
-        if self.cmd.returntype:
-            parts.append([
-                ("title", " -> "),
-                ("text", self.cmd.retname()),
-            ])
-
-        return urwid.AttrMap(
-            urwid.Padding(urwid.Text(parts)),
-            "text"
-        )
+        return urwid.Columns(parts)
 
     def get_edit_text(self):
         return self._w[1].get_edit_text()
@@ -43,34 +35,33 @@ class CommandItem(urwid.WidgetWrap):
         return key
 
 
-class CommandListWalker(urwid.ListWalker):
+class KeyListWalker(urwid.ListWalker):
     def __init__(self, master):
         self.master = master
 
         self.index = 0
         self.focusobj = None
-        self.cmds = list(master.commands.commands.values())
-        self.cmds.sort(key=lambda x: x.signature_help())
+        self.bindings = list(master.keymap.list("all"))
         self.set_focus(0)
 
     def get_edit_text(self):
         return self.focus_obj.get_edit_text()
 
     def _get(self, pos):
-        cmd = self.cmds[pos]
-        return CommandItem(self, cmd, pos == self.index)
+        binding = self.bindings[pos]
+        return KeyItem(self, binding, pos == self.index)
 
     def get_focus(self):
         return self.focus_obj, self.index
 
     def set_focus(self, index):
-        cmd = self.cmds[index]
+        binding = self.bindings[index]
         self.index = index
         self.focus_obj = self._get(self.index)
-        command_focus_change.send(cmd.help or "")
+        keybinding_focus_change.send(binding.help or "")
 
     def get_next(self, pos):
-        if pos >= len(self.cmds) - 1:
+        if pos >= len(self.bindings) - 1:
             return None, None
         pos = pos + 1
         return self._get(pos), pos
@@ -82,34 +73,34 @@ class CommandListWalker(urwid.ListWalker):
         return self._get(pos), pos
 
 
-class CommandsList(urwid.ListBox):
+class KeyList(urwid.ListBox):
     def __init__(self, master):
         self.master = master
-        self.walker = CommandListWalker(master)
+        self.walker = KeyListWalker(master)
         super().__init__(self.walker)
 
     def keypress(self, size, key):
         if key == "m_select":
             foc, idx = self.get_focus()
-            signals.status_prompt_command.send(partial=foc.cmd.path + " ")
+            # Act here
         elif key == "m_start":
             self.set_focus(0)
             self.walker._modified()
         elif key == "m_end":
-            self.set_focus(len(self.walker.cmds) - 1)
+            self.set_focus(len(self.walker.bindings) - 1)
             self.walker._modified()
         return super().keypress(size, key)
 
 
-class CommandHelp(urwid.Frame):
+class KeyHelp(urwid.Frame):
     def __init__(self, master):
         self.master = master
         super().__init__(self.widget(""))
         self.set_active(False)
-        command_focus_change.connect(self.sig_mod)
+        keybinding_focus_change.connect(self.sig_mod)
 
     def set_active(self, val):
-        h = urwid.Text("Command Help")
+        h = urwid.Text("Key Binding Help")
         style = "heading" if val else "heading_inactive"
         self.header = urwid.AttrWrap(h, style)
 
@@ -123,15 +114,15 @@ class CommandHelp(urwid.Frame):
         self.set_body(self.widget(txt))
 
 
-class Commands(urwid.Pile, layoutwidget.LayoutWidget):
-    title = "Commands"
-    keyctx = "commands"
+class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
+    title = "Key Bindings"
+    keyctx = "keybindings"
 
     def __init__(self, master):
-        oh = CommandHelp(master)
+        oh = KeyHelp(master)
         super().__init__(
             [
-                CommandsList(master),
+                KeyList(master),
                 (HELP_HEIGHT, oh),
             ]
         )

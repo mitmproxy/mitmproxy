@@ -30,7 +30,7 @@ class FlowItem(urwid.WidgetWrap):
                 self.master.commands.call("console.view.flow @focus")
                 return True
 
-    def keypress(self, xxx_todo_changeme, key):
+    def keypress(self, size, key):
         return key
 
 

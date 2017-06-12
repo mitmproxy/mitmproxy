@@ -265,7 +265,7 @@ def test_duplicate():
 def test_remove():
     v = view.View()
     with taddons.context():
-        f = [tflow.tflow(), tflow.tflow() ]
+        f = [tflow.tflow(), tflow.tflow()]
         v.add(f)
         assert len(v) == 2
         v.remove(f)

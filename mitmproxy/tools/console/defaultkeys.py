@@ -3,6 +3,7 @@ def map(km):
     km.add(":", "console.command ''", ["global"], "Command prompt")
     km.add("?", "console.view.help", ["global"], "View help")
     km.add("C", "console.view.commands", ["global"], "View commands")
+    km.add("K", "console.view.keybindings", ["global"], "View key bindings")
     km.add("O", "console.view.options", ["global"], "View options")
     km.add("E", "console.view.eventlog", ["global"], "View event log")
     km.add("Q", "console.exit", ["global"], "Exit immediately")

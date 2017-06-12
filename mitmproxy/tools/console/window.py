@@ -4,6 +4,7 @@ from mitmproxy.tools.console import statusbar
 from mitmproxy.tools.console import flowlist
 from mitmproxy.tools.console import flowview
 from mitmproxy.tools.console import commands
+from mitmproxy.tools.console import keybindings
 from mitmproxy.tools.console import options
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import help
@@ -29,6 +30,7 @@ class WindowStack:
             flowlist = flowlist.FlowListBox(master),
             flowview = flowview.FlowView(master),
             commands = commands.Commands(master),
+            keybindings = keybindings.KeyBindings(master),
             options = options.Options(master),
             help = help.HelpView(master),
             eventlog = eventlog.EventLog(master),
