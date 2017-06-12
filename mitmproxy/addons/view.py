@@ -389,6 +389,8 @@ class View(collections.Sequence):
                     self.sig_view_remove.send(self, flow=f)
                 del self._store[f.id]
                 self.sig_store_remove.send(self, flow=f)
+        if len(flows) > 1:
+            ctx.log.alert("Removed %s flows" % len(flows))
 
     @command.command("view.resolve")
     def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:

@@ -262,6 +262,16 @@ def test_duplicate():
         assert v.focus.index == 2
 
 
+def test_remove():
+    v = view.View()
+    with taddons.context():
+        f = [tflow.tflow(), tflow.tflow() ]
+        v.add(f)
+        assert len(v) == 2
+        v.remove(f)
+        assert len(v) == 0
+
+
 def test_setgetval():
     v = view.View()
     with taddons.context():
