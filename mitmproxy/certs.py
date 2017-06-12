@@ -266,6 +266,12 @@ class CertStore:
         with open(os.path.join(path, basename + "-ca-cert.p12"), "wb") as f:
             p12 = OpenSSL.crypto.PKCS12()
             p12.set_certificate(ca)
+            f.write(p12.export())
+
+        # Dump the certificate and key in a PKCS12 format for Windows devices
+        with open(os.path.join(path, basename + "-ca.p12"), "wb") as f:
+            p12 = OpenSSL.crypto.PKCS12()
+            p12.set_certificate(ca)
             p12.set_privatekey(key)
             f.write(p12.export())
 
