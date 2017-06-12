@@ -36,8 +36,10 @@ def map(km):
     km.add("D", "view.duplicate @focus", ["flowlist", "flowview"], "Duplicate flow")
     km.add(
         "e",
-        "console.choose.cmd Format export.formats "
-        "console.command export.file {choice} @focus ''",
+        """
+        console.choose.cmd Format export.formats
+        console.command export.file {choice} @focus ''
+        """,
         ["flowlist", "flowview"],
         "Export this flow to file"
     )
@@ -60,8 +62,10 @@ def map(km):
     )
     km.add(
         "o",
-        "console.choose.cmd Order view.order.options "
-        "set console_order={choice}",
+        """
+        console.choose.cmd Order view.order.options
+        set console_order={choice}
+        """,
         ["flowlist"],
         "Set flow list order"
     )
@@ -83,8 +87,10 @@ def map(km):
 
     km.add(
         "e",
-        "console.choose.cmd Part console.edit.focus.options "
-        "console.edit.focus {choice}",
+        """
+        console.choose.cmd Part console.edit.focus.options
+        console.edit.focus {choice}
+        """,
         ["flowview"],
         "Edit a flow component"
     )
@@ -99,8 +105,10 @@ def map(km):
 
     km.add(
         "v",
-        "console.choose \"View Part\" request,response "
-        "console.bodyview @focus {choice}",
+        """
+        console.choose "View Part" request,response
+        console.bodyview @focus {choice}
+        """,
         ["flowview"],
         "View flow body in an external viewer"
     )
@@ -108,8 +116,10 @@ def map(km):
     km.add("m", "console.flowview.mode.set", ["flowview"], "Set flow view mode")
     km.add(
         "z",
-        "console.choose \"Part\" request,response "
-        "flow.encode.toggle @focus {choice}",
+        """
+        console.choose "Part" request,response
+        flow.encode.toggle @focus {choice}
+        """,
         ["flowview"],
         "Encode/decode flow body"
     )
