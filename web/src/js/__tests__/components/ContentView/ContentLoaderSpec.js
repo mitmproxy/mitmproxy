@@ -1,12 +1,11 @@
 import React from 'react'
 import renderer from 'react-test-renderer'
-import ContentLoaderGenerator from '../../../components/ContentView/ContentLoader'
+import withContentLoader from '../../../components/ContentView/ContentLoader'
 import { TFlow } from '../../ducks/tutils'
 import TestUtils from 'react-dom/test-utils'
 import mockXMLHttpRequest from 'mock-xmlhttprequest'
 
 global.XMLHttpRequest = mockXMLHttpRequest
-
 class tComponent extends React.Component {
     constructor(props, context){
         super(props, context)
@@ -17,7 +16,7 @@ class tComponent extends React.Component {
 }
 
 let tflow = new TFlow(),
-    ContentLoader = ContentLoaderGenerator(tComponent)
+    ContentLoader = withContentLoader(tComponent)
 
 describe('ContentLoader Component', () => {
     it('should render correctly', () => {
