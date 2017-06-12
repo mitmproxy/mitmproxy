@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
-import * as ContentViews from './ContentView/ContentViews'
+import { Edit, ViewServer, ViewImage } from './ContentView/ContentViews'
 import * as MetaViews from './ContentView/MetaViews'
 import ShowFullContentButton from './ContentView/ShowFullContentButton'
 
@@ -16,7 +16,7 @@ ContentView.propTypes = {
     message: PropTypes.object.isRequired,
 }
 
-ContentView.isContentTooLarge = msg => msg.contentLength > 1024 * 1024 * (ContentViews.ViewImage.matches(msg) ? 10 : 0.2)
+ContentView.isContentTooLarge = msg => msg.contentLength > 1024 * 1024 * (ViewImage.matches(msg) ? 10 : 0.2)
 
 function ContentView(props) {
     const { flow, message, contentView, isDisplayLarge, displayLarge, onContentChange, readonly } = props
@@ -33,10 +33,15 @@ function ContentView(props) {
         return <MetaViews.ContentTooLarge {...props} onClick={displayLarge}/>
     }
 
-    const View = ContentViews[contentView] || ContentViews['ViewServer']
+    let view;
+    if(contentView === "Edit") {
+        view = <Edit flow={flow} message={message} onChange={onContentChange}/>
+    } else {
+        view = <ViewServer flow={flow} message={message} contentView={contentView}/>
+    }
     return (
         <div className="contentview">
-            <View flow={flow} message={message} contentView={contentView} readonly={readonly} onChange={onContentChange}/>
+            {view}
             <ShowFullContentButton/>
         </div>
     )

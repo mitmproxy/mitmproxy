@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { setContentViewDescription, setContent } from '../../ducks/ui/flow'
-import ContentLoader from './ContentLoader'
+import withContentLoader from './ContentLoader'
 import { MessageUtils } from '../../flow/utils'
 import CodeEditor from './CodeEditor'
 
@@ -28,7 +28,7 @@ Edit.propTypes = {
 function Edit({ content, onChange }) {
     return <CodeEditor content={content} onChange={onChange}/>
 }
-Edit = ContentLoader(Edit)
+Edit = withContentLoader(Edit)
 
 export class PureViewServer extends Component {
     static propTypes  = {
@@ -94,6 +94,6 @@ const ViewServer = connect(
         setContentViewDescription,
         setContent
     }
-)(ContentLoader(PureViewServer))
+)(withContentLoader(PureViewServer))
 
 export { Edit, ViewServer, ViewImage }
