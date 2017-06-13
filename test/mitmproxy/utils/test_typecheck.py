@@ -111,3 +111,11 @@ def test_check_command_type():
     m.__str__ = lambda self: "typing.Union"
     m.__union_params__ = (int,)
     assert not typecheck.check_command_type([22], m)
+
+
+def test_typesec_to_str():
+    assert(typecheck.typespec_to_str(str)) == "str"
+    assert(typecheck.typespec_to_str(typing.Sequence[str])) == "Sequence"
+    assert(typecheck.typespec_to_str(typing.Optional[str])) == "Union"
+    with pytest.raises(NotImplementedError):
+        typecheck.typespec_to_str(dict)
