@@ -438,7 +438,6 @@ class ConsoleAddon:
             )
         except ValueError as v:
             raise exceptions.CommandError(v)
-        signals.keybindings_change.send(self)
 
     @command.command("console.key.unbind")
     def key_unbind(self, contexts: typing.Sequence[str], key: str) -> None:
@@ -447,6 +446,26 @@ class ConsoleAddon:
         """
         try:
             self.master.keymap.remove(key, contexts)
+        except ValueError as v:
+            raise exceptions.CommandError(v)
+
+    def _keyfocus(self):
+        kwidget = self.master.window.current("keybindings")
+        if not kwidget:
+            raise exceptions.CommandError("Not viewing key bindings.")
+        f = kwidget.focus()
+        if not f:
+            raise exceptions.CommandError("No key binding focused")
+        return f
+
+    @command.command("console.key.unbind.focus")
+    def key_unbind_focus(self) -> None:
+        """
+            Un-bind the shortcut key currently focused in the key binding viewer.
+        """
+        b = self._keyfocus()
+        try:
+            self.master.keymap.remove(b.key, b.contexts)
         except ValueError as v:
             raise exceptions.CommandError(v)
 

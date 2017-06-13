@@ -1,5 +1,6 @@
 import typing
 from mitmproxy.tools.console import commandeditor
+from mitmproxy.tools.console import signals
 
 
 Contexts = {
@@ -63,11 +64,12 @@ class Keymap:
                 if help:
                     b.help = help
                 self.bind(b)
-                return
-
-        b = Binding(key=key, command=command, contexts=contexts, help=help)
-        self.bindings.append(b)
-        self.bind(b)
+                break
+        else:
+            b = Binding(key=key, command=command, contexts=contexts, help=help)
+            self.bindings.append(b)
+            self.bind(b)
+        signals.keybindings_change.send(self)
 
     def remove(self, key: str, contexts: typing.Sequence[str]) -> None:
         """
@@ -80,7 +82,9 @@ class Keymap:
                 self.unbind(b)
                 b.contexts = [x for x in b.contexts if x != c]
                 if b.contexts:
+                    self.bindings.append(b)
                     self.bind(b)
+        signals.keybindings_change.send(self)
 
     def bind(self, binding: Binding) -> None:
         for c in binding.contexts:

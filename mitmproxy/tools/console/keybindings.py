@@ -49,6 +49,7 @@ class KeyListWalker(urwid.ListWalker):
     def sig_modified(self, sender):
         self.bindings = list(self.master.keymap.list("all"))
         self._modified()
+        self.set_focus(min(self.index, len(self.bindings) - 1))
 
     def get_edit_text(self):
         return self.focus_obj.get_edit_text()
@@ -133,6 +134,12 @@ class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
             ]
         )
         self.master = master
+
+    def focus(self):
+        if self.focus_position != 0:
+            return None
+        f = self.widget_list[0]
+        return f.walker.get_focus()[0].binding
 
     def keypress(self, size, key):
         if key == "m_next":

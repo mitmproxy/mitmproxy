@@ -158,3 +158,9 @@ def map(km):
         ["keybindings"],
         "Add a key binding"
     )
+    km.add(
+        "d",
+        "console.key.unbind.focus",
+        ["keybindings"],
+        "Unbind the currently focused key binding"
+    )
