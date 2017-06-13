@@ -425,14 +425,7 @@ def dump_dicts(opts):
     options_list = []
     for k in sorted(opts.keys()):
         o = opts._options[k]
-        if o.typespec in (str, int, bool):
-            t = o.typespec.__name__
-        elif o.typespec == typing.Optional[str]:
-            t = 'Union'
-        elif o.typespec == typing.Sequence[str]:
-            t = 'Sequence'
-        else:
-            raise NotImplementedError
+        t = typecheck.typespec_to_str(o.typespec)
         option = {
             'name': k,
             'type': t,

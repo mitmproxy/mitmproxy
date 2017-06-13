@@ -98,3 +98,15 @@ def check_option_type(name: str, value: typing.Any, typeinfo: typing.Any) -> Non
         return
     elif not isinstance(value, typeinfo):
         raise e
+
+
+def typespec_to_str(typespec: typing.Any) -> str:
+    if typespec in (str, int, bool):
+        t = typespec.__name__
+    elif typespec == typing.Optional[str]:
+        t = 'Union'
+    elif typespec == typing.Sequence[str]:
+        t = 'Sequence'
+    else:
+        raise NotImplementedError
+    return t
