@@ -4,6 +4,11 @@ from unittest import mock
 import pytest
 
 
+def test_binding():
+    b = keymap.Binding("space", "cmd", ["options"], "")
+    assert b.keyspec() == " "
+
+
 def test_bind():
     with taddons.context() as tctx:
         km = keymap.Keymap(tctx.master)

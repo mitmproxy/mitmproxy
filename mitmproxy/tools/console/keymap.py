@@ -1,5 +1,4 @@
 import typing
-import collections
 from mitmproxy.tools.console import commandeditor
 
 
@@ -16,10 +15,17 @@ SupportedContexts = {
 }
 
 
-Binding = collections.namedtuple(
-    "Binding",
-    ["key", "command", "contexts", "help"]
-)
+class Binding:
+    def __init__(self, key, command, contexts, help):
+        self.key, self.command, self.contexts = key, command, contexts
+        self.help = help
+
+    def keyspec(self):
+        """
+            Translate the key spec from a convenient user specification to one
+            Urwid understands.
+        """
+        return self.key.replace("space", " ")
 
 
 class Keymap:
@@ -46,7 +52,7 @@ class Keymap:
     def bind(self, binding):
         for c in binding.contexts:
             d = self.keys.setdefault(c, {})
-            d[binding.key] = binding.command
+            d[binding.keyspec()] = binding.command
 
     def get(self, context: str, key: str) -> typing.Optional[str]:
         if context in self.keys:

@@ -20,7 +20,7 @@ def map(km):
     km.add("h", "console.nav.left", ["global"], "Left")
     km.add("tab", "console.nav.next", ["global"], "Next")
     km.add("enter", "console.nav.select", ["global"], "Select")
-    km.add(" ", "console.nav.pagedown", ["global"], "Page down")
+    km.add("space", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl f", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl b", "console.nav.pageup", ["global"], "Page up")
 
@@ -102,7 +102,7 @@ def map(km):
         "Toggle viewing full contents on this flow",
     )
     km.add("w", "console.command save.file @focus ", ["flowview"], "Save flow to file")
-    km.add(" ", "view.focus.next", ["flowview"], "Go to next flow")
+    km.add("space", "view.focus.next", ["flowview"], "Go to next flow")
 
     km.add(
         "v",
