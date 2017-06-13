@@ -128,7 +128,7 @@ def map(km):
     km.add("L", "console.command options.load ", ["options"], "Load from file")
     km.add("S", "console.command options.save ", ["options"], "Save to file")
     km.add("D", "options.reset", ["options"], "Reset all options")
-    km.add("d", "console.options.reset.current", ["options"], "Reset this option")
+    km.add("d", "console.options.reset.focus", ["options"], "Reset this option")
 
     km.add("a", "console.grideditor.add", ["grideditor"], "Add a row after cursor")
     km.add("A", "console.grideditor.insert", ["grideditor"], "Insert a row before cursor")
@@ -163,4 +163,10 @@ def map(km):
         "console.key.unbind.focus",
         ["keybindings"],
         "Unbind the currently focused key binding"
+    )
+    km.add(
+        "x",
+        "console.key.execute.focus",
+        ["keybindings"],
+        "Execute the currently focused key binding"
     )

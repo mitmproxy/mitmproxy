@@ -86,7 +86,7 @@ class ConsoleAddon:
         """
         self.master.window.switch()
 
-    @command.command("console.options.reset.current")
+    @command.command("console.options.reset.focus")
     def options_reset_current(self) -> None:
         """
             Reset the current option in the options editor.
@@ -468,6 +468,14 @@ class ConsoleAddon:
             self.master.keymap.remove(b.key, b.contexts)
         except ValueError as v:
             raise exceptions.CommandError(v)
+
+    @command.command("console.key.execute.focus")
+    def key_execute_focus(self) -> None:
+        """
+            Execute the currently focused key binding.
+        """
+        b = self._keyfocus()
+        self.console_command(b.command)
 
     def running(self):
         self.started = True
