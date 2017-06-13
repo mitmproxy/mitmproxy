@@ -2,6 +2,7 @@ import urwid
 import blinker
 import textwrap
 from mitmproxy.tools.console import layoutwidget
+from mitmproxy.tools.console import signals
 
 HELP_HEIGHT = 5
 
@@ -43,6 +44,12 @@ class KeyListWalker(urwid.ListWalker):
         self.focusobj = None
         self.bindings = list(master.keymap.list("all"))
         self.set_focus(0)
+        signals.keybindings_change.connect(self.sig_modified)
+
+    def sig_modified(self, sender):
+        self.bindings = list(self.master.keymap.list("all"))
+        self.set_focus(min(self.index, len(self.bindings) - 1))
+        self._modified()
 
     def get_edit_text(self):
         return self.focus_obj.get_edit_text()
@@ -127,6 +134,12 @@ class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
             ]
         )
         self.master = master
+
+    def focus(self):
+        if self.focus_position != 0:
+            return None
+        f = self.widget_list[0]
+        return f.walker.get_focus()[0].binding
 
     def keypress(self, size, key):
         if key == "m_next":

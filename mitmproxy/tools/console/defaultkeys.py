@@ -1,6 +1,6 @@
 
 def map(km):
-    km.add(":", "console.command ''", ["global"], "Command prompt")
+    km.add(":", "console.command ", ["global"], "Command prompt")
     km.add("?", "console.view.help", ["global"], "View help")
     km.add("C", "console.view.commands", ["global"], "View commands")
     km.add("K", "console.view.keybindings", ["global"], "View key bindings")
@@ -20,7 +20,7 @@ def map(km):
     km.add("h", "console.nav.left", ["global"], "Left")
     km.add("tab", "console.nav.next", ["global"], "Next")
     km.add("enter", "console.nav.select", ["global"], "Select")
-    km.add(" ", "console.nav.pagedown", ["global"], "Page down")
+    km.add("space", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl f", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl b", "console.nav.pageup", ["global"], "Page up")
 
@@ -102,7 +102,7 @@ def map(km):
         "Toggle viewing full contents on this flow",
     )
     km.add("w", "console.command save.file @focus ", ["flowview"], "Save flow to file")
-    km.add(" ", "view.focus.next", ["flowview"], "Go to next flow")
+    km.add("space", "view.focus.next", ["flowview"], "Go to next flow")
 
     km.add(
         "v",
@@ -128,7 +128,7 @@ def map(km):
     km.add("L", "console.command options.load ", ["options"], "Load from file")
     km.add("S", "console.command options.save ", ["options"], "Save to file")
     km.add("D", "options.reset", ["options"], "Reset all options")
-    km.add("d", "console.options.reset.current", ["options"], "Reset this option")
+    km.add("d", "console.options.reset.focus", ["options"], "Reset this option")
 
     km.add("a", "console.grideditor.add", ["grideditor"], "Add a row after cursor")
     km.add("A", "console.grideditor.insert", ["grideditor"], "Insert a row before cursor")
@@ -148,3 +148,31 @@ def map(km):
     km.add("e", "console.grideditor.editor", ["grideditor"], "Edit in external editor")
 
     km.add("z", "console.eventlog.clear", ["eventlog"], "Clear")
+
+    km.add(
+        "a",
+        """
+        console.choose.cmd "Context" console.key.contexts
+        console.command console.key.bind {choice}
+        """,
+        ["keybindings"],
+        "Add a key binding"
+    )
+    km.add(
+        "d",
+        "console.key.unbind.focus",
+        ["keybindings"],
+        "Unbind the currently focused key binding"
+    )
+    km.add(
+        "x",
+        "console.key.execute.focus",
+        ["keybindings"],
+        "Execute the currently focused key binding"
+    )
+    km.add(
+        "enter",
+        "console.key.edit.focus",
+        ["keybindings"],
+        "Edit the currently focused key binding"
+    )

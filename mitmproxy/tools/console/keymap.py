@@ -1,9 +1,9 @@
 import typing
-import collections
 from mitmproxy.tools.console import commandeditor
+from mitmproxy.tools.console import signals
 
 
-SupportedContexts = {
+Contexts = {
     "chooser",
     "commands",
     "eventlog",
@@ -12,59 +12,113 @@ SupportedContexts = {
     "global",
     "grideditor",
     "help",
+    "keybindings",
     "options",
 }
 
 
-Binding = collections.namedtuple(
-    "Binding",
-    ["key", "command", "contexts", "help"]
-)
+class Binding:
+    def __init__(self, key, command, contexts, help):
+        self.key, self.command, self.contexts = key, command, sorted(contexts)
+        self.help = help
+
+    def keyspec(self):
+        """
+            Translate the key spec from a convenient user specification to one
+            Urwid understands.
+        """
+        return self.key.replace("space", " ")
+
+    def sortkey(self):
+        return self.key + ",".join(self.contexts)
 
 
 class Keymap:
     def __init__(self, master):
         self.executor = commandeditor.CommandExecutor(master)
         self.keys = {}
+        for c in Contexts:
+            self.keys[c] = {}
         self.bindings = []
 
-    def add(self, key: str, command: str, contexts: typing.Sequence[str], help="") -> None:
-        """
-            Add a key to the key map. If context is empty, it's considered to be
-            a global binding.
-        """
+    def _check_contexts(self, contexts):
         if not contexts:
             raise ValueError("Must specify at least one context.")
         for c in contexts:
-            if c not in SupportedContexts:
+            if c not in Contexts:
                 raise ValueError("Unsupported context: %s" % c)
 
-        b = Binding(key=key, command=command, contexts=contexts, help=help)
-        self.bindings.append(b)
-        self.bind(b)
+    def add(
+        self,
+        key: str,
+        command: str,
+        contexts: typing.Sequence[str],
+        help=""
+    ) -> None:
+        """
+            Add a key to the key map.
+        """
+        self._check_contexts(contexts)
 
-    def bind(self, binding):
+        for b in self.bindings:
+            if b.key == key and b.command.strip() == command.strip():
+                b.contexts = sorted(list(set(b.contexts + contexts)))
+                if help:
+                    b.help = help
+                self.bind(b)
+                break
+        else:
+            self.remove(key, contexts)
+            b = Binding(key=key, command=command, contexts=contexts, help=help)
+            self.bindings.append(b)
+            self.bind(b)
+        signals.keybindings_change.send(self)
+
+    def remove(self, key: str, contexts: typing.Sequence[str]) -> None:
+        """
+            Remove a key from the key map.
+        """
+        self._check_contexts(contexts)
+        for c in contexts:
+            b = self.get(c, key)
+            if b:
+                self.unbind(b)
+                b.contexts = [x for x in b.contexts if x != c]
+                if b.contexts:
+                    self.bindings.append(b)
+                    self.bind(b)
+        signals.keybindings_change.send(self)
+
+    def bind(self, binding: Binding) -> None:
         for c in binding.contexts:
-            d = self.keys.setdefault(c, {})
-            d[binding.key] = binding.command
+            self.keys[c][binding.keyspec()] = binding
 
-    def get(self, context: str, key: str) -> typing.Optional[str]:
+    def unbind(self, binding: Binding) -> None:
+        """
+            Unbind also removes the binding from the list.
+        """
+        for c in binding.contexts:
+            del self.keys[c][binding.keyspec()]
+            self.bindings = [b for b in self.bindings if b != binding]
+
+    def get(self, context: str, key: str) -> typing.Optional[Binding]:
         if context in self.keys:
             return self.keys[context].get(key, None)
         return None
 
     def list(self, context: str) -> typing.Sequence[Binding]:
-        b = [b for b in self.bindings if context in b.contexts or context == "all"]
-        b.sort(key=lambda x: x.key)
-        return b
+        b = [x for x in self.bindings if context in x.contexts or context == "all"]
+        single = [x for x in b if len(x.key.split()) == 1]
+        multi = [x for x in b if len(x.key.split()) != 1]
+        single.sort(key=lambda x: x.sortkey())
+        multi.sort(key=lambda x: x.sortkey())
+        return single + multi
 
     def handle(self, context: str, key: str) -> typing.Optional[str]:
         """
             Returns the key if it has not been handled, or None.
         """
-        cmd = self.get(context, key)
-        if not cmd:
-            cmd = self.get("global", key)
-        if cmd:
-            return self.executor(cmd)
+        b = self.get(context, key) or self.get("global", key)
+        if b:
+            return self.executor(b.command)
         return key

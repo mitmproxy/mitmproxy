@@ -74,7 +74,8 @@ class Command:
 
     def call(self, args: typing.Sequence[str]):
         """
-            Call the command with a set of arguments. At this point, all argumets are strings.
+            Call the command with a list of arguments. At this point, all
+            arguments are strings.
         """
         if not self.has_positional and (len(self.paramtypes) != len(args)):
             raise exceptions.CommandError("Usage: %s" % self.signature_help())
