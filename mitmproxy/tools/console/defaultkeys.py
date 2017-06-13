@@ -1,6 +1,6 @@
 
 def map(km):
-    km.add(":", "console.command ''", ["global"], "Command prompt")
+    km.add(":", "console.command ", ["global"], "Command prompt")
     km.add("?", "console.view.help", ["global"], "View help")
     km.add("C", "console.view.commands", ["global"], "View commands")
     km.add("K", "console.view.keybindings", ["global"], "View key bindings")

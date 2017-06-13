@@ -60,9 +60,12 @@ class Keymap:
         return None
 
     def list(self, context: str) -> typing.Sequence[Binding]:
-        b = [b for b in self.bindings if context in b.contexts or context == "all"]
-        b.sort(key=lambda x: x.key)
-        return b
+        b = [x for x in self.bindings if context in x.contexts or context == "all"]
+        single = [x for x in b if len(x.key.split()) == 1]
+        multi = [x for x in b if len(x.key.split()) != 1]
+        single.sort(key=lambda x: x.key)
+        multi.sort(key=lambda x: x.key)
+        return single + multi
 
     def handle(self, context: str, key: str) -> typing.Optional[str]:
         """
