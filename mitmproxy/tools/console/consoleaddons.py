@@ -8,7 +8,6 @@ from mitmproxy.tools.console import overlay
 from mitmproxy import contentviews
 from mitmproxy.utils import strutils
 from mitmproxy.tools.console import signals
-import urwid
 
 
 class Logger:
@@ -253,7 +252,7 @@ class ConsoleAddon:
     @command.command("console.exit")
     def exit(self) -> None:
         """Exit mitmproxy."""
-        raise urwid.ExitMainLoop
+        self.master.shutdown()
 
     @command.command("console.view.pop")
     def view_pop(self) -> None:
