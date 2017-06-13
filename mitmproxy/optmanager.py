@@ -432,6 +432,8 @@ def parse(text):
             raise exceptions.OptionsError("Could not parse options.")
     if isinstance(data, str):
         raise exceptions.OptionsError("Config error - no keys found.")
+    elif data is None:
+        return {}
     return data
 
 

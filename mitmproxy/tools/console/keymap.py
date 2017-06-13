@@ -54,7 +54,7 @@ class Keymap:
         return None
 
     def list(self, context: str) -> typing.Sequence[Binding]:
-        b = [b for b in self.bindings if context in b.contexts]
+        b = [b for b in self.bindings if context in b.contexts or context == "all"]
         b.sort(key=lambda x: x.key)
         return b
 

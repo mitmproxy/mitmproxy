@@ -59,7 +59,7 @@ class Command:
     def paramnames(self) -> typing.Sequence[str]:
         v = [typename(i, False) for i in self.paramtypes]
         if self.has_positional:
-            v[-1] = "*" + v[-1][1:-1]
+            v[-1] = "*" + v[-1]
         return v
 
     def retname(self) -> str:
@@ -92,7 +92,11 @@ class Command:
                 pargs.append(parsearg(self.manager, args[i], self.paramtypes[i]))
 
         if remainder:
-            if typecheck.check_command_type(remainder, self.paramtypes[-1]):
+            chk = typecheck.check_command_type(
+                remainder,
+                typing.Sequence[self.paramtypes[-1]]  # type: ignore
+            )
+            if chk:
                 pargs.extend(remainder)
             else:
                 raise exceptions.CommandError("Invalid value type.")

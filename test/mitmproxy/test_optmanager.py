@@ -257,6 +257,10 @@ def test_serialize():
     with pytest.raises(Exception, match="Config error"):
         optmanager.load(o2, t)
 
+    t = "# a comment"
+    optmanager.load(o2, t)
+    assert optmanager.load(o2, "foobar: '123'") == {"foobar": "123"}
+
     t = ""
     optmanager.load(o2, t)
     assert optmanager.load(o2, "foobar: '123'") == {"foobar": "123"}

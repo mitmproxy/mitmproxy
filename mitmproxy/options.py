@@ -394,7 +394,7 @@ class Options(optmanager.OptManager):
             "Focus follows new flows."
         )
         self.add_option(
-            "console_palette", str, "dark",
+            "console_palette", str, "solarized_dark",
             "Color palette.",
             choices=sorted(console_palettes),
         )
