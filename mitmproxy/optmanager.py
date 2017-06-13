@@ -420,12 +420,27 @@ def dump_dicts(opts):
     """
         Dumps the options into a list of dict object.
 
-        Return: A list like: [ { name: "anticahce", type: "bool", default: false, value: true, help: "help text"}]
+        Return: A list like: [ { name: "anticache", type: "bool", default: false, value: true, help: "help text"} ]
     """
     options_list = []
     for k in sorted(opts.keys()):
         o = opts._options[k]
-        option = {'name': k, 'type': o.typespec.__name__, 'default': o.default, 'value': o.current(), 'help': o.help.strip()}
+        if o.typespec in (str, int, bool):
+            t = o.typespec.__name__
+        elif o.typespec == typing.Optional[str]:
+            t = 'Union'
+        elif o.typespec == typing.Sequence[str]:
+            t = 'Sequence'
+        else:
+            raise NotImplementedError
+        option = {
+            'name': k,
+            'type': t,
+            'default': o.default,
+            'value': o.current(),
+            'help': o.help,
+            'choices': o.choices
+        }
         options_list.append(option)
     return options_list
 
