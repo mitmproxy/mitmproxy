@@ -48,8 +48,8 @@ class KeyListWalker(urwid.ListWalker):
 
     def sig_modified(self, sender):
         self.bindings = list(self.master.keymap.list("all"))
-        self._modified()
         self.set_focus(min(self.index, len(self.bindings) - 1))
+        self._modified()
 
     def get_edit_text(self):
         return self.focus_obj.get_edit_text()

@@ -19,7 +19,7 @@ Contexts = {
 
 class Binding:
     def __init__(self, key, command, contexts, help):
-        self.key, self.command, self.contexts = key, command, contexts
+        self.key, self.command, self.contexts = key, command, sorted(contexts)
         self.help = help
 
     def keyspec(self):
@@ -28,6 +28,9 @@ class Binding:
             Urwid understands.
         """
         return self.key.replace("space", " ")
+
+    def sortkey(self):
+        return self.key + ",".join(self.contexts)
 
 
 class Keymap:
@@ -56,16 +59,16 @@ class Keymap:
             Add a key to the key map.
         """
         self._check_contexts(contexts)
-        self.remove(key, contexts)
 
         for b in self.bindings:
-            if b.key == key and b.command == command:
-                b.contexts = list(set(b.contexts + contexts))
+            if b.key == key and b.command.strip() == command.strip():
+                b.contexts = sorted(list(set(b.contexts + contexts)))
                 if help:
                     b.help = help
                 self.bind(b)
                 break
         else:
+            self.remove(key, contexts)
             b = Binding(key=key, command=command, contexts=contexts, help=help)
             self.bindings.append(b)
             self.bind(b)
@@ -107,8 +110,8 @@ class Keymap:
         b = [x for x in self.bindings if context in x.contexts or context == "all"]
         single = [x for x in b if len(x.key.split()) == 1]
         multi = [x for x in b if len(x.key.split()) != 1]
-        single.sort(key=lambda x: x.key)
-        multi.sort(key=lambda x: x.key)
+        single.sort(key=lambda x: x.sortkey())
+        multi.sort(key=lambda x: x.sortkey())
         return single + multi
 
     def handle(self, context: str, key: str) -> typing.Optional[str]:
