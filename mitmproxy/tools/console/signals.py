@@ -48,3 +48,6 @@ flowlist_change = blinker.Signal()
 # Pop and push view state onto a stack
 pop_view_state = blinker.Signal()
 push_view_state = blinker.Signal()
+
+# Fired when the key bindings change
+keybindings_change = blinker.Signal()

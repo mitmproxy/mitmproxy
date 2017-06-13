@@ -4,10 +4,12 @@ from mitmproxy import ctx
 from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
-from mitmproxy.tools.console import overlay
 from mitmproxy import contentviews
 from mitmproxy.utils import strutils
+
+from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import keymap
 
 
 class Logger:
@@ -414,6 +416,39 @@ class ConsoleAddon:
             Clear the event log.
         """
         signals.sig_clear_log.send(self)
+
+    @command.command("console.key.contexts")
+    def key_contexts(self) -> typing.Sequence[str]:
+        """
+            The available contexts for key binding.
+        """
+        return list(sorted(keymap.Contexts))
+
+    @command.command("console.key.bind")
+    def key_bind(self, context: str, key: str, command: str) -> None:
+        """
+            Bind a shortcut key.
+        """
+        try:
+            self.master.keymap.add(
+                key,
+                command,
+                [context],
+                command
+            )
+        except ValueError as v:
+            raise exceptions.CommandError(v)
+        signals.keybindings_change.send(self)
+
+    @command.command("console.key.unbind")
+    def key_unbind(self, contexts: typing.Sequence[str], key: str) -> None:
+        """
+            Un-bind a shortcut key.
+        """
+        try:
+            self.master.keymap.remove(key, contexts)
+        except ValueError as v:
+            raise exceptions.CommandError(v)
 
     def running(self):
         self.started = True

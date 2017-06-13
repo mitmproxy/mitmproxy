@@ -148,3 +148,13 @@ def map(km):
     km.add("e", "console.grideditor.editor", ["grideditor"], "Edit in external editor")
 
     km.add("z", "console.eventlog.clear", ["eventlog"], "Clear")
+
+    km.add(
+        "a",
+        """
+        console.choose.cmd "Context" console.key.contexts
+        console.command console.key.bind {choice}
+        """,
+        ["keybindings"],
+        "Add a key binding"
+    )

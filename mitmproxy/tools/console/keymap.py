@@ -2,7 +2,7 @@ import typing
 from mitmproxy.tools.console import commandeditor
 
 
-SupportedContexts = {
+Contexts = {
     "chooser",
     "commands",
     "eventlog",
@@ -11,6 +11,7 @@ SupportedContexts = {
     "global",
     "grideditor",
     "help",
+    "keybindings",
     "options",
 }
 
@@ -32,29 +33,68 @@ class Keymap:
     def __init__(self, master):
         self.executor = commandeditor.CommandExecutor(master)
         self.keys = {}
+        for c in Contexts:
+            self.keys[c] = {}
         self.bindings = []
 
-    def add(self, key: str, command: str, contexts: typing.Sequence[str], help="") -> None:
-        """
-            Add a key to the key map. If context is empty, it's considered to be
-            a global binding.
-        """
+    def _check_contexts(self, contexts):
         if not contexts:
             raise ValueError("Must specify at least one context.")
         for c in contexts:
-            if c not in SupportedContexts:
+            if c not in Contexts:
                 raise ValueError("Unsupported context: %s" % c)
+
+    def add(
+        self,
+        key: str,
+        command: str,
+        contexts: typing.Sequence[str],
+        help=""
+    ) -> None:
+        """
+            Add a key to the key map.
+        """
+        self._check_contexts(contexts)
+        self.remove(key, contexts)
+
+        for b in self.bindings:
+            if b.key == key and b.command == command:
+                b.contexts = list(set(b.contexts + contexts))
+                if help:
+                    b.help = help
+                self.bind(b)
+                return
 
         b = Binding(key=key, command=command, contexts=contexts, help=help)
         self.bindings.append(b)
         self.bind(b)
 
-    def bind(self, binding):
-        for c in binding.contexts:
-            d = self.keys.setdefault(c, {})
-            d[binding.keyspec()] = binding.command
+    def remove(self, key: str, contexts: typing.Sequence[str]) -> None:
+        """
+            Remove a key from the key map.
+        """
+        self._check_contexts(contexts)
+        for c in contexts:
+            b = self.get(c, key)
+            if b:
+                self.unbind(b)
+                b.contexts = [x for x in b.contexts if x != c]
+                if b.contexts:
+                    self.bind(b)
 
-    def get(self, context: str, key: str) -> typing.Optional[str]:
+    def bind(self, binding: Binding) -> None:
+        for c in binding.contexts:
+            self.keys[c][binding.keyspec()] = binding
+
+    def unbind(self, binding: Binding) -> None:
+        """
+            Unbind also removes the binding from the list.
+        """
+        for c in binding.contexts:
+            del self.keys[c][binding.keyspec()]
+            self.bindings = [b for b in self.bindings if b != binding]
+
+    def get(self, context: str, key: str) -> typing.Optional[Binding]:
         if context in self.keys:
             return self.keys[context].get(key, None)
         return None
@@ -71,9 +111,7 @@ class Keymap:
         """
             Returns the key if it has not been handled, or None.
         """
-        cmd = self.get(context, key)
-        if not cmd:
-            cmd = self.get("global", key)
-        if cmd:
-            return self.executor(cmd)
+        b = self.get(context, key) or self.get("global", key)
+        if b:
+            return self.executor(b.command)
         return key
