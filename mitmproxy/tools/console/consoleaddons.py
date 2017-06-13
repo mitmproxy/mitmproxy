@@ -425,16 +425,16 @@ class ConsoleAddon:
         return list(sorted(keymap.Contexts))
 
     @command.command("console.key.bind")
-    def key_bind(self, context: str, key: str, command: str) -> None:
+    def key_bind(self, contexts: typing.Sequence[str], key: str, *command: str) -> None:
         """
             Bind a shortcut key.
         """
         try:
             self.master.keymap.add(
                 key,
-                command,
-                [context],
-                command
+                " ".join(command),
+                contexts,
+                ""
             )
         except ValueError as v:
             raise exceptions.CommandError(v)
@@ -476,6 +476,19 @@ class ConsoleAddon:
         """
         b = self._keyfocus()
         self.console_command(b.command)
+
+    @command.command("console.key.edit.focus")
+    def key_edit_focus(self) -> None:
+        """
+            Execute the currently focused key binding.
+        """
+        b = self._keyfocus()
+        self.console_command(
+            "console.key.bind",
+            ",".join(b.contexts),
+            b.key,
+            b.command,
+        )
 
     def running(self):
         self.started = True

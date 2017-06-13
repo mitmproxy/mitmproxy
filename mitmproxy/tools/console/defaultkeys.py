@@ -170,3 +170,9 @@ def map(km):
         ["keybindings"],
         "Execute the currently focused key binding"
     )
+    km.add(
+        "enter",
+        "console.key.edit.focus",
+        ["keybindings"],
+        "Edit the currently focused key binding"
+    )
