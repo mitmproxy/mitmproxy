@@ -7,7 +7,7 @@
 	<Properties>
 		<DisplayName>Mitmproxy</DisplayName>
 		<PublisherDisplayName>Maximilian Hils</PublisherDisplayName>
-		<Logo>Assets\logo.150x150.png</Logo>
+		<Logo>Assets\logo.44x44.png</Logo>
 	</Properties>
 	<Resources>
 		<Resource Language="en-us" />
@@ -24,16 +24,10 @@
 				Square150x150Logo="Assets\logo.150x150.png" Square44x44Logo="Assets\logo.44x44.png"/>
 			<Extensions>
 				<uap3:Extension Executable="mitmweb.exe" Category="windows.appExecutionAlias" EntryPoint="Windows.FullTrustApplication">
-					<uap3:AppExecutionAlias><desktop:ExecutionAlias Alias="mitmweb.exe" /><desktop:ExecutionAlias Alias="mitmproxy.exe" /></uap3:AppExecutionAlias>
-				</uap3:Extension>
-			</Extensions>
-		</Application>
-		<Application Id="mitmdump" Executable="mitmdump.exe" EntryPoint="Windows.FullTrustApplication">
-			<uap3:VisualElements AppListEntry="none" DisplayName="Mitmdump" Description="mitmdump is the command-line companion to mitmproxy. It provides tcpdump-like functionality to let you view, record, and programmatically transform HTTP traffic." BackgroundColor="#333333" 
-				Square150x150Logo="Assets\logo.150x150.png" Square44x44Logo="Assets\logo.44x44.png"/>
-			<Extensions>
-				<uap3:Extension Executable="mitmdump.exe" Category="windows.appExecutionAlias" EntryPoint="Windows.FullTrustApplication">
-					<uap3:AppExecutionAlias><desktop:ExecutionAlias Alias="mitmdump.exe" /></uap3:AppExecutionAlias>
+					<uap3:AppExecutionAlias>
+						<desktop:ExecutionAlias Alias="mitmweb.exe" />
+						<desktop:ExecutionAlias Alias="mitmproxy.exe" />
+					</uap3:AppExecutionAlias>
 				</uap3:Extension>
 			</Extensions>
 		</Application>
