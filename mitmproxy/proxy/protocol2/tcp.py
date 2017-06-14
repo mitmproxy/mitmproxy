@@ -1,45 +1,44 @@
-import functools
+import typing
 from warnings import warn
 
-from mitmproxy.proxy.protocol2 import events
+from mitmproxy.proxy.protocol2 import events, commands
 from mitmproxy.proxy.protocol2.context import ClientServerContext
-from mitmproxy.proxy.protocol2.events import TEventGenerator
 from mitmproxy.proxy.protocol2.layer import Layer
-from mitmproxy.proxy.protocol2.utils import defer, only
-from mitmproxy.proxy.protocol2.utils import exit_on_close
+from mitmproxy.proxy.protocol2.utils import expect
 
 
 class TCPLayer(Layer):
-    context = None  # type: ClientServerContext
+    """
+    Simple TCP layer that just relays messages right now.
+    """
+    context: ClientServerContext = None
+
+    # this is like a mini state machine.
+    state: typing.Callable[[events.Event], commands.TCommandGenerator]
 
     def __init__(self, context: ClientServerContext):
         super().__init__(context)
         self.state = self.start
 
-    def handle_event(self, event: events.Event) -> TEventGenerator:
+    def handle(self, event: events.Event) -> commands.TCommandGenerator:
         yield from self.state(event)
 
-    @only(events.Start)
-    def start(self, _) -> TEventGenerator:
+    @expect(events.Start)
+    def start(self, _) -> commands.TCommandGenerator:
         if not self.context.server.connected:
-            yield events.OpenConnection(self.context.server)
-            self.state = self.wait_for_open
-        else:
-            self.state = self.relay_messages
-
-    @defer(events.ReceiveData)
-    @exit_on_close
-    @only(events.OpenConnection)
-    def wait_for_open(self, _) -> TEventGenerator:
+            print(r"open connection...")
+            ok = yield commands.OpenConnection(self.context.server)
+            print(r"connection opened! \o/", ok)
         self.state = self.relay_messages
-        yield from []
 
-    @only(events.ReceiveData, events.CloseConnection)
-    def relay_messages(self, event: events.Event) -> TEventGenerator:
+    @expect(events.ReceiveData, events.CloseConnection)
+    def relay_messages(self, event: events.Event) -> commands.TCommandGenerator:
         if isinstance(event, events.ReceiveClientData):
-            yield events.SendData(self.context.server, event.data)
+            yield commands.SendData(self.context.server, event.data)
+
         elif isinstance(event, events.ReceiveServerData):
-            yield events.SendData(self.context.client, event.data)
+            yield commands.SendData(self.context.client, event.data)
+
         elif isinstance(event, events.CloseConnection):
             warn("unimplemented: tcp.relay_message:close")
             # TODO: close other connection here.

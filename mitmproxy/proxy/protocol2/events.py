@@ -1,64 +1,90 @@
 """
-The only way for layers to do IO is to emit events indicating what should be done.
-For example, a layer may first emit a OpenConnection event and then a SendData event.
-Likewise, layers only receive IO via events.
+When IO actions occur at the proxy server, they are passed down to layers as events.
+Events represent the only way for layers to receive new data from sockets.
+The counterpart to events are commands.
 """
-from typing import Iterable
+import typing
 
+from mitmproxy.proxy.protocol2 import commands
 from mitmproxy.proxy.protocol2.context import Connection
 
 
 class Event:
+    """
+    Base class for all events.
+    """
+
     def __repr__(self):
-        return "{}({})".format(type(self).__name__, repr(self.__dict__))
-
-
-TEventGenerator = Iterable[Event]
+        return f"{type(self).__name__}({repr(self.__dict__)})"
 
 
 class Start(Event):
     """
     Every layer initially receives a start event.
-    This is useful to emit events on startup, which otherwise would not be possible.
+    This is useful to emit events on startup.
     """
     pass
 
 
 class ConnectionEvent(Event):
     """
-    All events involving IO connections.
+    All events involving connection IO.
     """
+    connection: Connection
 
     def __init__(self, connection: Connection):
         self.connection = connection
 
 
-class OpenConnection(ConnectionEvent):
-    pass
-
-
 class CloseConnection(ConnectionEvent):
     """
-    (this would be send by proxy and by layers. keep it that way?)
+    Remote has closed a connection.
     """
     pass
-
-
-class SendData(ConnectionEvent):
-    def __init__(self, connection: Connection, data: bytes) -> None:
-        super().__init__(connection)
-        self.data = data
 
 
 class ReceiveData(ConnectionEvent):
+    """
+    Remote has sent some data.
+    """
+
     def __init__(self, connection: Connection, data: bytes) -> None:
         super().__init__(connection)
         self.data = data
 
 
 class ReceiveClientData(ReceiveData):
+    """
+    Client has sent data.
+    These subclasses simplify code for simple layers with one server and one client.
+    """
     pass
 
 
 class ReceiveServerData(ReceiveData):
     pass
+
+
+class CommandReply(Event):
+    """
+    Emitted when a command has been finished, e.g.
+    when the master has replied or when we have established a server connection.
+    """
+    command: commands.Command
+    reply: typing.Any
+
+    def __init__(self, command: commands.Command, reply: typing.Any):
+        self.command = command
+        self.reply = reply
+
+    def __new__(cls, *args, **kwargs):
+        if cls is CommandReply:
+            raise TypeError("CommandReply may not be instantiated directly.")
+        return super().__new__(cls)
+
+
+class OpenConnectionReply(CommandReply):
+    reply: bool
+
+    def __init__(self, command: commands.Command, ok: bool):
+        super().__init__(command, ok)

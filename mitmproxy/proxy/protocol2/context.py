@@ -2,11 +2,11 @@ class Connection:
     """
     Connections exposed to the layers only contain metadata, no socket objects.
     """
-    address = None  # type: tuple
-    connected = None  # type: bool
+    address: tuple
+    connected: bool
 
     def __repr__(self):
-        return "{}({})".format(type(self).__name__, repr(self.__dict__))
+        return f"{type(self).__name__}({repr(self.__dict__)})"
 
 
 class Client(Connection):
@@ -32,7 +32,7 @@ class Context:
     lookup did in the previous implementation.
     """
 
-    client = None  # type: Client
+    client: Client
 
     def __init__(self, client: Client) -> None:
         self.client = client
@@ -43,7 +43,7 @@ class ClientServerContext(Context):
     In most cases, there's also only exactly one server.
     """
 
-    server = None  # type: Server
+    server: Server
 
     def __init__(self, client: Client, server: Server) -> None:
         super().__init__(client)
