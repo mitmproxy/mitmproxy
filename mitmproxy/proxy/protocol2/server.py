@@ -1,3 +1,4 @@
+# This is outdated, only the async version is kept up to date.
 """
 Minimal server implementation based on https://docs.python.org/3/library/selectors.html#examples.
 May be worth to replace this with something asyncio-based to overcome the issues outlined by the
@@ -8,7 +9,7 @@ import selectors
 import socket
 from typing import MutableMapping
 
-from mitmproxy.proxy.protocol2 import events
+from mitmproxy.proxy.protocol2 import events, commands
 from mitmproxy.proxy.protocol2.context import Connection
 from mitmproxy.proxy.protocol2.context import Context, Client
 from mitmproxy.proxy.protocol2.events import Event
@@ -30,7 +31,7 @@ class ConnectionHandler:
 
         layer = ReverseProxy(context, ("example.com", 80))
 
-        self.server_event(layer, events.OpenConnection(client))
+        # self.server_event(layer, commands.OpenConnection(client))
 
         callback = functools.partial(self.read, layer, client)
 
@@ -57,7 +58,7 @@ class ConnectionHandler:
         layer_events = layer.handle_event(event)
         for event in layer_events:
             print("<<", event)
-            if isinstance(event, events.OpenConnection):
+            if isinstance(event, commands.OpenConnection):
                 # FIXME: This is blocking!
                 sock = socket.create_connection(event.connection.address)
                 sock.setblocking(False)
@@ -70,7 +71,7 @@ class ConnectionHandler:
                     callback
                 )
                 self.connections[event.connection] = sock
-            elif isinstance(event, events.SendData):
+            elif isinstance(event, commands.SendData):
                 # FIXME: This may fail.
                 self.connections[event.connection].sendall(event.data)
             else:
@@ -106,11 +107,3 @@ class TCPServer:
 if __name__ == '__main__':
     s = TCPServer(('', 8080))
     s.run()
-
-"""
-1) full async
-uh?
-2) notifier
-
-3) thread per connection
-"""

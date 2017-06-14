@@ -7,6 +7,7 @@ from typing import Optional
 from mitmproxy.proxy.protocol2 import events
 
 
+# This is not used at the moment.
 class Buffer:
     def __init__(self):
         self._buffer = bytearray()
@@ -43,7 +44,7 @@ class Buffer:
         return bytes(chunk)
 
 
-def only(*event_types):
+def expect(*event_types):
     """
     Only allow the given event type.
     If another event is passed, a TypeError is raised.
@@ -55,13 +56,15 @@ def only(*event_types):
             if isinstance(event, event_types):
                 yield from f(self, event)
             else:
-                raise TypeError("Invalid event type: Expected {}, got {}".format(event_types, event))
+                raise TypeError(
+                    "Invalid event type: Expected {}, got {}".format(event_types, event))
 
         return wrapper
 
     return decorator
 
 
+# not used at the moment. We may not need this at all if the blocking yield continues to work as expected.
 def defer(*event_types):
     """
     Queue up the events matching the specified event type and emit them immediately
@@ -87,6 +90,7 @@ def defer(*event_types):
     return decorator
 
 
+# not used at the moment.
 def exit_on_close(f):
     """
     Stop all further interaction once a single close event has been observed.
