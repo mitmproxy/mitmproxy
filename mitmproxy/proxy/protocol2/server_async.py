@@ -1,9 +1,17 @@
+"""
+Proxy Server Implementation using asyncio.
+The very high level overview is as follows:
+
+    - Spawn one coroutine per client connection and create a reverse proxy layer to example.com
+    - Process any commands from layer (such as opening a server connection)
+    - Wait for any IO and send it as events to top layer.
+"""
 import asyncio
 import collections
 import socket
 from typing import MutableMapping
 
-from mitmproxy.proxy.protocol2 import events
+from mitmproxy.proxy.protocol2 import events, commands
 from mitmproxy.proxy.protocol2.context import Client, Context
 from mitmproxy.proxy.protocol2.context import Connection
 from mitmproxy.proxy.protocol2.reverse_proxy import ReverseProxy
@@ -19,9 +27,11 @@ class ConnectionHandler:
         self.context = Context(self.client)
 
         self.layer = ReverseProxy(self.context, ("example.com", 443))
+        # self.layer = ReverseProxy(self.context, ("example.com", 80))
 
-        self.transports = {}  # type: MutableMapping[Connection, StreamIO]
-        self.transports[self.client] = StreamIO(reader, writer)
+        self.transports: MutableMapping[Connection, StreamIO] = {
+            self.client: StreamIO(reader, writer)
+        }
 
         self.lock = asyncio.Lock()
 
@@ -29,12 +39,13 @@ class ConnectionHandler:
         await self.server_event(events.Start())
         await self.handle_connection(self.client)
 
-        for connection in self.transports:
-            # FIXME: dictionary is changing size during iteration
+        print("client connection done, closing transports!")
+
+        for connection in list(self.transports):
             await self.close(connection)
 
         # TODO: teardown all other conns.
-        print("client connection done!")
+        print("transports closed!")
 
     async def close(self, connection):
         print("Closing", connection)
@@ -47,9 +58,6 @@ class ConnectionHandler:
         io.w.close()
 
     async def handle_connection(self, connection):
-        connection.connected = True
-        if connection != self.client:
-            await self.server_event(events.OpenConnection(connection))
         reader, writer = self.transports[connection]
         while True:
             try:
@@ -63,27 +71,30 @@ class ConnectionHandler:
                     await self.server_event(events.ReceiveServerData(connection, data))
             else:
                 connection.connected = False
-                await self.close(connection)
+                if connection in self.transports:
+                    await self.close(connection)
                 await self.server_event(events.CloseConnection(connection))
                 break
 
-    async def open_connection(self, event: events.OpenConnection):
+    async def open_connection(self, command: commands.OpenConnection):
         reader, writer = await asyncio.open_connection(
-            *event.connection.address
+            *command.connection.address
         )
-        self.transports[event.connection] = StreamIO(reader, writer)
-        await self.handle_connection(event.connection)
+        self.transports[command.connection] = StreamIO(reader, writer)
+        command.connection.connected = True
+        await self.server_event(events.OpenConnectionReply(command, "success"))
+        await self.handle_connection(command.connection)
 
     async def server_event(self, event: events.Event):
-        print("*", event)
+        print("*", type(event).__name__)
         async with self.lock:
             print("<#", event)
             layer_events = self.layer.handle_event(event)
             for event in layer_events:
                 print("<<", event)
-                if isinstance(event, events.OpenConnection):
+                if isinstance(event, commands.OpenConnection):
                     asyncio.ensure_future(self.open_connection(event))
-                elif isinstance(event, events.SendData):
+                elif isinstance(event, commands.SendData):
                     self.transports[event.connection].w.write(event.data)
                 else:
                     raise NotImplementedError("Unexpected event: {}".format(event))
