@@ -79,9 +79,9 @@ class TLSLayer(Layer):
             else:
                 yield commands.SendData(conn, data)
 
-    @expect(events.CloseConnection, events.ReceiveData)
+    @expect(events.ConnectionClosed, events.DataReceived)
     def establish_tls(self, event: events.Event) -> commands.TCommandGenerator:
-        if isinstance(event, events.ReceiveData):
+        if isinstance(event, events.DataReceived):
             self.tls[event.connection].bio_write(event.data)
             try:
                 self.tls[event.connection].do_handshake()
@@ -100,15 +100,15 @@ class TLSLayer(Layer):
                 self.child_layer = TCPLayer(self.context)
                 yield from self.child_layer.handle_event(events.Start())
                 self.state = self.relay_messages
-                yield from self.state(events.ReceiveData(self.context.server, b""))
-                yield from self.state(events.ReceiveData(self.context.client, b""))
+                yield from self.state(events.DataReceived(self.context.server, b""))
+                yield from self.state(events.DataReceived(self.context.client, b""))
 
-        elif isinstance(event, events.CloseConnection):
+        elif isinstance(event, events.ConnectionClosed):
             warn("unimplemented: tls.establish_tls:close")
 
-    @expect(events.CloseConnection, events.ReceiveData)
+    @expect(events.ConnectionClosed, events.DataReceived)
     def relay_messages(self, event: events.Event) -> commands.TCommandGenerator:
-        if isinstance(event, events.ReceiveData):
+        if isinstance(event, events.DataReceived):
             if event.data:
                 self.tls[event.connection].bio_write(event.data)
                 yield from self.tls_interact(event.connection)
@@ -119,9 +119,9 @@ class TLSLayer(Layer):
                 except (SSL.WantReadError, SSL.ZeroReturnError):
                     return
                 if event.connection == self.context.client:
-                    event_for_child = events.ReceiveClientData(self.context.client, plaintext)
+                    event_for_child = events.ClientDataReceived(self.context.client, plaintext)
                 else:
-                    event_for_child = events.ReceiveServerData(self.context.server, plaintext)
+                    event_for_child = events.ServerDataReceived(self.context.server, plaintext)
 
                 for event_from_child in self.child_layer.handle_event(event_for_child):
                     if isinstance(event_from_child, commands.SendData):
@@ -129,5 +129,5 @@ class TLSLayer(Layer):
                         yield from self.tls_interact(event_from_child.connection)
                     else:
                         yield event_from_child
-        elif isinstance(event, events.CloseConnection):
+        elif isinstance(event, events.ConnectionClosed):
             warn("unimplemented: tls.relay_messages:close")
