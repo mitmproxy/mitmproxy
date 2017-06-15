@@ -31,14 +31,14 @@ class TCPLayer(Layer):
             print(r"connection opened! \o/", ok)
         self.state = self.relay_messages
 
-    @expect(events.ReceiveData, events.CloseConnection)
+    @expect(events.DataReceived, events.ConnectionClosed)
     def relay_messages(self, event: events.Event) -> commands.TCommandGenerator:
-        if isinstance(event, events.ReceiveClientData):
+        if isinstance(event, events.ClientDataReceived):
             yield commands.SendData(self.context.server, event.data)
 
-        elif isinstance(event, events.ReceiveServerData):
+        elif isinstance(event, events.ServerDataReceived):
             yield commands.SendData(self.context.client, event.data)
 
-        elif isinstance(event, events.CloseConnection):
+        elif isinstance(event, events.ConnectionClosed):
             warn("unimplemented: tcp.relay_message:close")
             # TODO: close other connection here.

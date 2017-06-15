@@ -26,8 +26,8 @@ class ConnectionHandler:
         self.client = Client(addr)
         self.context = Context(self.client)
 
-        self.layer = ReverseProxy(self.context, ("example.com", 443))
-        # self.layer = ReverseProxy(self.context, ("example.com", 80))
+        # self.layer = ReverseProxy(self.context, ("example.com", 443))
+        self.layer = ReverseProxy(self.context, ("example.com", 80))
 
         self.transports: MutableMapping[Connection, StreamIO] = {
             self.client: StreamIO(reader, writer)
@@ -66,14 +66,14 @@ class ConnectionHandler:
                 data = b""
             if data:
                 if connection == self.client:
-                    await self.server_event(events.ReceiveClientData(connection, data))
+                    await self.server_event(events.ClientDataReceived(connection, data))
                 else:
-                    await self.server_event(events.ReceiveServerData(connection, data))
+                    await self.server_event(events.ServerDataReceived(connection, data))
             else:
                 connection.connected = False
                 if connection in self.transports:
                     await self.close(connection)
-                await self.server_event(events.CloseConnection(connection))
+                await self.server_event(events.ConnectionClosed(connection))
                 break
 
     async def open_connection(self, command: commands.OpenConnection):
@@ -89,15 +89,21 @@ class ConnectionHandler:
         print("*", type(event).__name__)
         async with self.lock:
             print("<#", event)
-            layer_events = self.layer.handle_event(event)
-            for event in layer_events:
-                print("<<", event)
-                if isinstance(event, commands.OpenConnection):
-                    asyncio.ensure_future(self.open_connection(event))
-                elif isinstance(event, commands.SendData):
-                    self.transports[event.connection].w.write(event.data)
+            layer_commands = self.layer.handle_event(event)
+            for command in layer_commands:
+                print("<<", command)
+                if isinstance(command, commands.OpenConnection):
+                    asyncio.ensure_future(self.open_connection(command))
+                elif isinstance(command, commands.SendData):
+                    self.transports[command.connection].w.write(command.data)
+                elif isinstance(command, commands.Hook):
+                    # TODO: pass to master here.
+                    print(f"~ {command.name}: {command.data}")
+                    asyncio.ensure_future(
+                        self.server_event(events.HookReply(command, "hook reply"))
+                    )
                 else:
-                    raise NotImplementedError("Unexpected event: {}".format(event))
+                    raise NotImplementedError("Unexpected event: {}".format(command))
             print("#>")
 
 
