@@ -100,7 +100,7 @@ def exit_on_close(f):
     @functools.wraps(f)
     def wrapper(self, event: events.Event):
         nonlocal closed
-        if isinstance(event, events.CloseConnection):
+        if isinstance(event, events.ConnectionClosed):
             closed = True
         if not closed:
             yield from f(self, event)
