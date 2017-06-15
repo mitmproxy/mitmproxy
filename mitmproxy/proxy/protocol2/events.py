@@ -36,14 +36,14 @@ class ConnectionEvent(Event):
         self.connection = connection
 
 
-class CloseConnection(ConnectionEvent):
+class ConnectionClosed(ConnectionEvent):
     """
     Remote has closed a connection.
     """
     pass
 
 
-class ReceiveData(ConnectionEvent):
+class DataReceived(ConnectionEvent):
     """
     Remote has sent some data.
     """
@@ -53,7 +53,7 @@ class ReceiveData(ConnectionEvent):
         self.data = data
 
 
-class ReceiveClientData(ReceiveData):
+class ClientDataReceived(DataReceived):
     """
     Client has sent data.
     These subclasses simplify code for simple layers with one server and one client.
@@ -61,7 +61,7 @@ class ReceiveClientData(ReceiveData):
     pass
 
 
-class ReceiveServerData(ReceiveData):
+class ServerDataReceived(DataReceived):
     pass
 
 
@@ -84,7 +84,16 @@ class CommandReply(Event):
 
 
 class OpenConnectionReply(CommandReply):
-    reply: bool
+    command: commands.OpenConnection
+    reply: str
 
-    def __init__(self, command: commands.Command, ok: bool):
+    def __init__(self, command: commands.OpenConnection, ok: str):
         super().__init__(command, ok)
+
+
+class HookReply(CommandReply):
+    command: commands.Hook
+    reply: typing.Any
+
+    def __init__(self, command: commands.Hook, reply: typing.Any):
+        super().__init__(command, reply)
