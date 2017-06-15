@@ -46,12 +46,12 @@ class ConnectionHandler:
     def read(self, layer: Layer, conn: Connection, sock: socket.socket, mask: int):
         data = sock.recv(4096)
         if data:
-            self.server_event(layer, events.ReceiveData(conn, data))
+            self.server_event(layer, events.DataReceived(conn, data))
         else:
             # TODO: Needs proper teardown.
             self.sel.unregister(sock)
             sock.close()
-            self.server_event(layer, events.CloseConnection(conn))
+            self.server_event(layer, events.ConnectionClosed(conn))
 
     def server_event(self, layer: Layer, event: Event):
         print(">>", event)
