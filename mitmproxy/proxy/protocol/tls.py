@@ -539,8 +539,8 @@ class TlsLayer(base.Layer):
             if not ciphers_server and self._client_tls:
                 ciphers_server = []
                 for id in self._client_hello.cipher_suites:
-                    if id.cipher_suite in CIPHER_ID_NAME_MAP.keys():
-                        ciphers_server.append(CIPHER_ID_NAME_MAP[id.cipher_suite])
+                    if id in CIPHER_ID_NAME_MAP.keys():
+                        ciphers_server.append(CIPHER_ID_NAME_MAP[id])
                 ciphers_server = ':'.join(ciphers_server)
 
             self.server_conn.establish_ssl(

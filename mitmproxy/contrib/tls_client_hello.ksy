@@ -59,14 +59,9 @@ types:
         type: u2
       
       - id: cipher_suites
-        type: cipher_suite
+        type: u2
         repeat: expr
         repeat-expr: len/2
-  
-  cipher_suite:
-    seq:
-      - id: cipher_suite
-        type: u2
 
   compression_methods:
     seq:
