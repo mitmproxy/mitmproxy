@@ -27,6 +27,9 @@ class Layer(metaclass=ABCMeta):
         self._paused = None
         self._paused_event_queue: typing.Deque[events.Event] = collections.deque()
 
+    def _debug(self, x):
+        pass # print(x)
+
     @abstractmethod
     def handle(self, event: Event) -> commands.TCommandGenerator:
         """Handle a proxy server event"""
@@ -38,13 +41,13 @@ class Layer(metaclass=ABCMeta):
             # did we just receive the reply we were waiting for?
             pause_finished = (
                 isinstance(event, events.CommandReply) and
-                event.command == self._paused.command
+                event.command is self._paused.command
             )
             if pause_finished:
                 yield from self.__continue(event)
             else:
                 self._paused_event_queue.append(event)
-                print("Paused Event Queue: " + repr(self._paused_event_queue))
+                self._debug("Paused Event Queue: " + repr(self._paused_event_queue))
         else:
             command_generator = self.handle(event)
             yield from self.__process(command_generator)
@@ -62,7 +65,7 @@ class Layer(metaclass=ABCMeta):
 
         while command:
             if command.blocking is True:
-                print("start pausing")
+                self._debug("start pausing")
                 command.blocking = self  # assign to our layer so that higher layers don't block.
                 self._paused = Paused(
                     command,
@@ -76,14 +79,14 @@ class Layer(metaclass=ABCMeta):
 
     def __continue(self, event: events.CommandReply):
         """continue processing events after being paused"""
-        print("continue")
+        self._debug("continue")
         command_generator = self._paused.generator
         self._paused = None
         yield from self.__process(command_generator, event.reply)
 
         while not self._paused and self._paused_event_queue:
             event = self._paused_event_queue.popleft()
-            print(f"<# Paused event: {event}")
+            self._debug(f"<# Paused event: {event}")
             command_generator = self.handle(event)
             yield from self.__process(command_generator)
-            print("#>")
+            self._debug("#>")
