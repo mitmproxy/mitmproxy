@@ -26,9 +26,7 @@ class TCPLayer(Layer):
     @expect(events.Start)
     def start(self, _) -> commands.TCommandGenerator:
         if not self.context.server.connected:
-            print(r"open connection...")
             ok = yield commands.OpenConnection(self.context.server)
-            print(r"connection opened! \o/", ok)
         self.state = self.relay_messages
 
     @expect(events.DataReceived, events.ConnectionClosed)
