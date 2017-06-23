@@ -443,6 +443,14 @@ class Options(RequestHandler):
     def get(self):
         self.write(optmanager.dump_dicts(self.master.options))
 
+    def put(self):
+        update = self.json
+        try:
+            self.master.options.update(**update)
+        except (KeyError, TypeError) as err:
+            raise APIError(400, "{}".format(err))
+
+
 
 class Application(tornado.web.Application):
     def __init__(self, master, debug):
