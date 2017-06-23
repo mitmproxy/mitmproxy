@@ -28,6 +28,14 @@ class Command:
     def __repr__(self):
         return f"{type(self).__name__}({repr(self.__dict__)})"
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return all(
+                self.__dict__[k] == other.__dict__[k]
+                for k in self.__dict__ if k != "blocking"
+            )
+        return False
+
 
 class ConnectionCommand(Command):
     """
