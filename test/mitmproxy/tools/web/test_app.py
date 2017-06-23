@@ -258,6 +258,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert type(j) == list
         assert type(j[0]) == dict
 
+    def test_option_update(self):
+        assert self.put_json("/options", {"anticache": True}).code == 200
+        assert self.put_json("/options", {"wtf": True}).code == 400
+
     def test_err(self):
         with mock.patch("mitmproxy.tools.web.app.IndexHandler.get") as f:
             f.side_effect = RuntimeError

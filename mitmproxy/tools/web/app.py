@@ -451,7 +451,6 @@ class Options(RequestHandler):
             raise APIError(400, "{}".format(err))
 
 
-
 class Application(tornado.web.Application):
     def __init__(self, master, debug):
         self.master = master
