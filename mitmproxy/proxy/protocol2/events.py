@@ -17,6 +17,11 @@ class Event:
     def __repr__(self):
         return f"{type(self).__name__}({repr(self.__dict__)})"
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        return False
+
 
 class Start(Event):
     """
