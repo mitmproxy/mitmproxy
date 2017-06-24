@@ -9,6 +9,7 @@ def test_ico(h, f):
     if h.startswith(b"\x00\x00\x01\x00"):
         return "ico"
 
+
 imghdr.tests.append(test_ico)
 
 
