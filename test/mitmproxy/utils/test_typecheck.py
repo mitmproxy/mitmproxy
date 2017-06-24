@@ -115,7 +115,7 @@ def test_check_command_type():
 
 def test_typesec_to_str():
     assert(typecheck.typespec_to_str(str)) == "str"
-    assert(typecheck.typespec_to_str(typing.Sequence[str])) == "Sequence"
-    assert(typecheck.typespec_to_str(typing.Optional[str])) == "Union"
+    assert(typecheck.typespec_to_str(typing.Sequence[str])) == "sequence of str"
+    assert(typecheck.typespec_to_str(typing.Optional[str])) == "optional str"
     with pytest.raises(NotImplementedError):
         typecheck.typespec_to_str(dict)
