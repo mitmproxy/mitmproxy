@@ -167,3 +167,26 @@ def test_parse_gif(filename, metadata):
 def test_parse_jpeg(filename, metadata):
     with open(tutils.test_data.path(filename), 'rb') as f:
         assert metadata == image_parser.parse_jpeg(f.read())
+
+
+@pytest.mark.parametrize("filename, metadata", {
+    "mitmproxy/data/image.ico": [
+        ('Format', 'ICO'),
+        ('Number of images', '3'),
+        ('Image 1', "Size: {} x {}\n"
+                    "{: >18}Bits per pixel: {}\n"
+                    "{: >18}PNG: {}".format(48, 48, '', 24, '', False)
+         ),
+        ('Image 2', "Size: {} x {}\n"
+                    "{: >18}Bits per pixel: {}\n"
+                    "{: >18}PNG: {}".format(32, 32, '', 24, '', False)
+         ),
+        ('Image 3', "Size: {} x {}\n"
+                    "{: >18}Bits per pixel: {}\n"
+                    "{: >18}PNG: {}".format(16, 16, '', 24, '', False)
+         )
+    ]
+}.items())
+def test_ico(filename, metadata):
+    with open(tutils.test_data.path(filename), 'rb') as f:
+        assert metadata == image_parser.parse_ico(f.read())
