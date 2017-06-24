@@ -17,6 +17,7 @@ from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import version
+from mitmproxy import optmanager
 import mitmproxy.tools.web.master # noqa
 
 
@@ -438,6 +439,18 @@ class Settings(RequestHandler):
         self.master.options.update(**update)
 
 
+class Options(RequestHandler):
+    def get(self):
+        self.write(optmanager.dump_dicts(self.master.options))
+
+    def put(self):
+        update = self.json
+        try:
+            self.master.options.update(**update)
+        except (KeyError, TypeError) as err:
+            raise APIError(400, "{}".format(err))
+
+
 class Application(tornado.web.Application):
     def __init__(self, master, debug):
         self.master = master
@@ -462,6 +475,7 @@ class Application(tornado.web.Application):
                 FlowContentView),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
+            (r"/options", Options)
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

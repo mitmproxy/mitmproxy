@@ -338,6 +338,11 @@ def test_dump_defaults():
     assert optmanager.dump_defaults(o)
 
 
+def test_dump_dicts():
+    o = options.Options()
+    assert optmanager.dump_dicts(o)
+
+
 class TTypes(optmanager.OptManager):
     def __init__(self):
         super().__init__()

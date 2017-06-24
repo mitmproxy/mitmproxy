@@ -401,19 +401,34 @@ def dump_defaults(opts):
         if o.choices:
             txt += " Valid values are %s." % ", ".join(repr(c) for c in o.choices)
         else:
-            if o.typespec in (str, int, bool):
-                t = o.typespec.__name__
-            elif o.typespec == typing.Optional[str]:
-                t = "optional str"
-            elif o.typespec == typing.Sequence[str]:
-                t = "sequence of str"
-            else:  # pragma: no cover
-                raise NotImplementedError
+            t = typecheck.typespec_to_str(o.typespec)
             txt += " Type %s." % t
 
         txt = "\n".join(textwrap.wrap(txt))
-        s.yaml_set_comment_before_after_key(k, before = "\n" + txt)
+        s.yaml_set_comment_before_after_key(k, before="\n" + txt)
     return ruamel.yaml.round_trip_dump(s)
+
+
+def dump_dicts(opts):
+    """
+        Dumps the options into a list of dict object.
+
+        Return: A list like: [ { name: "anticache", type: "bool", default: false, value: true, help: "help text"} ]
+    """
+    options_list = []
+    for k in sorted(opts.keys()):
+        o = opts._options[k]
+        t = typecheck.typespec_to_str(o.typespec)
+        option = {
+            'name': k,
+            'type': t,
+            'default': o.default,
+            'value': o.current(),
+            'help': o.help,
+            'choices': o.choices
+        }
+        options_list.append(option)
+    return options_list
 
 
 def parse(text):
