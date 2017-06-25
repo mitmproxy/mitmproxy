@@ -174,7 +174,7 @@ class Dumper:
             # This aligns the HTTP response code with the HTTP request method:
             # 127.0.0.1:59519: GET http://example.com/
             #               << 304 Not Modified 0b
-            arrows = " " * (len(repr(flow.client_conn.address)) - 2) + arrows
+            arrows = " " * (len(human.format_address(flow.client_conn.address)) - 2) + arrows
 
         line = "{replay}{arrows} {code} {reason} {size}".format(
             replay=replay,
@@ -224,7 +224,7 @@ class Dumper:
     def websocket_error(self, f):
         self.echo(
             "Error in WebSocket connection to {}: {}".format(
-                repr(f.server_conn.address), f.error
+                human.format_address(f.server_conn.address), f.error
             ),
             fg="red"
         )
@@ -247,7 +247,7 @@ class Dumper:
     def tcp_error(self, f):
         self.echo(
             "Error in TCP connection to {}: {}".format(
-                repr(f.server_conn.address), f.error
+                human.format_address(f.server_conn.address), f.error
             ),
             fg="red"
         )
@@ -257,8 +257,8 @@ class Dumper:
             message = f.messages[-1]
             direction = "->" if message.from_client else "<-"
             self.echo("{client} {direction} tcp {direction} {server}".format(
-                client=repr(f.client_conn.address),
-                server=repr(f.server_conn.address),
+                client=human.format_address(f.client_conn.address),
+                server=human.format_address(f.server_conn.address),
                 direction=direction,
             ))
             if ctx.options.flow_detail >= 3:
