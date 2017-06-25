@@ -5,7 +5,7 @@ import { toggleFilter, toggleVisibility } from '../ducks/eventLog'
 import ToggleButton from './common/ToggleButton'
 import EventList from './EventLog/EventList'
 
-class EventLog extends Component {
+export class EventLog extends Component {
 
     static propTypes = {
         filters: PropTypes.object.isRequired,
