@@ -162,7 +162,7 @@ class Master:
         f.response = None
         f.error = None
 
-        if f.request.http_version == "HTTP/2.0":
+        if f.request.http_version == "HTTP/2.0":  # https://github.com/mitmproxy/mitmproxy/issues/2197
             f.request.http_version = "HTTP/1.1"
             host = f.request.headers.pop(":authority")
             f.request.headers.insert(0, "host", host)
