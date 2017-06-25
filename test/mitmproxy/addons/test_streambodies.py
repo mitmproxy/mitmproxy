@@ -29,3 +29,8 @@ def test_simple():
         f = tflow.tflow(resp=True)
         f.response.headers["content-length"] = "invalid"
         tctx.cycle(sa, f)
+
+        f = tflow.twebsocketflow()
+        assert not f.stream
+        sa.websocket_start(f)
+        assert f.stream

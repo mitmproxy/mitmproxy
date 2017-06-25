@@ -155,7 +155,13 @@ class TestSimple(_WebSocketTest):
         wfile.write(bytes(frame))
         wfile.flush()
 
-    def test_simple(self):
+    @pytest.mark.parametrize('streaming', [True, False])
+    def test_simple(self, streaming):
+        class Stream:
+            def websocket_start(self, f):
+                f.stream = streaming
+
+        self.master.addons.add(Stream())
         self.setup_connection()
 
         frame = websockets.Frame.from_file(self.client.rfile)
@@ -328,3 +334,32 @@ class TestInvalidFrame(_WebSocketTest):
         frame = websockets.Frame.from_file(self.client.rfile)
         assert frame.header.opcode == 15
         assert frame.payload == b'foobar'
+
+
+class TestStreaming(_WebSocketTest):
+
+    @classmethod
+    def handle_websockets(cls, rfile, wfile):
+        wfile.write(bytes(websockets.Frame(opcode=websockets.OPCODE.TEXT, payload=b'server-foobar')))
+        wfile.flush()
+
+    @pytest.mark.parametrize('streaming', [True, False])
+    def test_streaming(self, streaming):
+        class Stream:
+            def websocket_start(self, f):
+                f.stream = streaming
+
+        self.master.addons.add(Stream())
+        self.setup_connection()
+
+        frame = None
+        if not streaming:
+            with pytest.raises(exceptions.TcpDisconnect):  # Reader.safe_read get nothing as result
+                frame = websockets.Frame.from_file(self.client.rfile)
+            assert frame is None
+
+        else:
+            frame = websockets.Frame.from_file(self.client.rfile)
+
+            assert frame
+            assert self.master.state.flows[1].messages == []  # Message not appended as the final frame isn't received
