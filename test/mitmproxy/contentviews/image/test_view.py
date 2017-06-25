@@ -9,8 +9,7 @@ def test_view_image():
         "mitmproxy/data/image.png",
         "mitmproxy/data/image.gif",
         "mitmproxy/data/all.jpeg",
-        # https://bugs.python.org/issue21574
-        # "mitmproxy/data/image.ico",
+        "mitmproxy/data/image.ico",
     ]:
         with open(tutils.test_data.path(img), "rb") as f:
             viewname, lines = v(f.read())

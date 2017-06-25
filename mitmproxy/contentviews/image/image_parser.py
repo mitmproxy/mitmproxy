@@ -6,6 +6,7 @@ from kaitaistruct import KaitaiStream
 from mitmproxy.contrib.kaitaistruct import png
 from mitmproxy.contrib.kaitaistruct import gif
 from mitmproxy.contrib.kaitaistruct import jpeg
+from mitmproxy.contrib.kaitaistruct import ico
 
 Metadata = typing.List[typing.Tuple[str, str]]
 
@@ -77,4 +78,26 @@ def parse_jpeg(data: bytes) -> Metadata:
                 for field in segment.data.body.data.body.ifd0.fields:
                     if field.data is not None:
                         parts.append((field.tag._name_, field.data.decode('UTF-8').strip('\x00')))
+    return parts
+
+
+def parse_ico(data: bytes) -> Metadata:
+    img = ico.Ico(KaitaiStream(io.BytesIO(data)))
+    parts = [
+        ('Format', 'ICO'),
+        ('Number of images', str(img.num_images)),
+    ]
+
+    for i, image in enumerate(img.images):
+        parts.append(
+            (
+                'Image {}'.format(i + 1), "Size: {} x {}\n"
+                                          "{: >18}Bits per pixel: {}\n"
+                                          "{: >18}PNG: {}".format(256 if not image.width else image.width,
+                                                                  256 if not image.height else image.height,
+                                                                  '', image.bpp,
+                                                                  '', image.is_png)
+            )
+        )
+
     return parts
