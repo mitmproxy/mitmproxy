@@ -1,0 +1,79 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FlowTable Component should render correctly 1`] = `
+<div
+  className="flow-table"
+  onScroll={[Function]}
+>
+  <table>
+    <thead
+      style={
+        Object {
+          "transform": "translateY(undefinedpx)",
+        }
+      }
+    >
+      <tr>
+        <th
+          className="col-tls"
+          onClick={[Function]}
+        >
+          
+        </th>
+        <th
+          className="col-icon"
+          onClick={[Function]}
+        >
+          
+        </th>
+        <th
+          className="col-path sort-desc"
+          onClick={[Function]}
+        >
+          Path
+        </th>
+        <th
+          className="col-method"
+          onClick={[Function]}
+        >
+          Method
+        </th>
+        <th
+          className="col-status"
+          onClick={[Function]}
+        >
+          Status
+        </th>
+        <th
+          className="col-size"
+          onClick={[Function]}
+        >
+          Size
+        </th>
+        <th
+          className="col-time"
+          onClick={[Function]}
+        >
+          Time
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        style={
+          Object {
+            "height": 0,
+          }
+        }
+      />
+      <tr
+        style={
+          Object {
+            "height": 0,
+          }
+        }
+      />
+    </tbody>
+  </table>
+</div>
+`;
