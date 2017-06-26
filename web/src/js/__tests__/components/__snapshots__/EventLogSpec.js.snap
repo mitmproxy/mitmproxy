@@ -1,0 +1,76 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EventLog Component should connect to state and render correctly 1`] = `
+<div
+  className="eventlog"
+  style={
+    Object {
+      "height": 200,
+    }
+  }
+>
+  <div
+    onMouseDown={[Function]}
+  >
+    Eventlog
+    <div
+      className="pull-right"
+    >
+      <div
+        className="btn btn-toggle btn-primary"
+        onClick={[Function]}
+      >
+        <i
+          className="fa fa-fw fa-check-square-o"
+        />
+         
+        debug
+      </div>
+      <div
+        className="btn btn-toggle btn-primary"
+        onClick={[Function]}
+      >
+        <i
+          className="fa fa-fw fa-check-square-o"
+        />
+         
+        info
+      </div>
+      <div
+        className="btn btn-toggle btn-default"
+        onClick={[Function]}
+      >
+        <i
+          className="fa fa-fw fa-square-o"
+        />
+         
+        web
+      </div>
+      <div
+        className="btn btn-toggle btn-primary"
+        onClick={[Function]}
+      >
+        <i
+          className="fa fa-fw fa-check-square-o"
+        />
+         
+        warn
+      </div>
+      <div
+        className="btn btn-toggle btn-primary"
+        onClick={[Function]}
+      >
+        <i
+          className="fa fa-fw fa-check-square-o"
+        />
+         
+        error
+      </div>
+      <i
+        className="fa fa-close"
+        onClick={[Function]}
+      />
+    </div>
+  </div>
+</div>
+`;
