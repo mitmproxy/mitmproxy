@@ -11,6 +11,7 @@ describe('ContentView Component', () => {
     let store = TStore()
 
     it('should render correctly', () => {
+        store.getState().ui.flow.contentView = 'Edit'
         let tflow = TFlow(),
             provider = renderer.create(
             <Provider store={store}>

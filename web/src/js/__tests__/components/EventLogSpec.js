@@ -3,7 +3,7 @@ jest.mock('../../components/EventLog/EventList')
 import React from 'react'
 import renderer from 'react-test-renderer'
 import TestUtils from 'react-dom/test-utils'
-import ConnectedComponent, { EventLog } from '../../components/EventLog'
+import EventLog, { PureEventLog } from '../../components/EventLog'
 import { Provider } from 'react-redux'
 import { TStore } from '../ducks/tutils'
 
@@ -14,7 +14,7 @@ describe('EventLog Component', () => {
     let store = TStore(),
         provider = renderer.create(
         <Provider store={store}>
-            <ConnectedComponent/>
+            <EventLog/>
         </Provider>),
         tree = provider.toJSON()
 
@@ -22,14 +22,14 @@ describe('EventLog Component', () => {
         expect(tree).toMatchSnapshot()
     })
 
-    it('should handl toggleFilter', () => {
+    it('should handle toggleFilter', () => {
         let debugToggleButton = tree.children[0].children[1].children[0]
         debugToggleButton.props.onClick()
     })
 
     provider = TestUtils.renderIntoDocument(
-        <Provider store={store}><ConnectedComponent/></Provider>)
-    let eventLog = TestUtils.findRenderedComponentWithType(provider, EventLog),
+        <Provider store={store}><EventLog/></Provider>)
+    let eventLog = TestUtils.findRenderedComponentWithType(provider, PureEventLog),
         mockEvent = { preventDefault: jest.fn() }
 
     it('should handle DragStart', () => {
