@@ -92,8 +92,8 @@ class OpenConnectionReply(CommandReply):
     command: commands.OpenConnection
     reply: str
 
-    def __init__(self, command: commands.OpenConnection, ok: str):
-        super().__init__(command, ok)
+    def __init__(self, command: commands.OpenConnection, err: typing.Optional[str]):
+        super().__init__(command, err)
 
 
 class HookReply(CommandReply):
