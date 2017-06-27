@@ -82,7 +82,7 @@ class ConnectionHandler:
         )
         self.transports[command.connection] = StreamIO(reader, writer)
         command.connection.connected = True
-        await self.server_event(events.OpenConnectionReply(command, "success"))
+        await self.server_event(events.OpenConnectionReply(command, None))
         await self.handle_connection(command.connection)
 
     async def server_event(self, event: events.Event):
