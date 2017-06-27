@@ -118,10 +118,8 @@ class TLSLayer(Layer):
                     plaintext = self.tls[event.connection].recv(4096)
                 except (SSL.WantReadError, SSL.ZeroReturnError):
                     return
-                if event.connection == self.context.client:
-                    event_for_child = events.ClientDataReceived(self.context.client, plaintext)
-                else:
-                    event_for_child = events.ServerDataReceived(self.context.server, plaintext)
+
+                event_for_child = events.DataReceived(self.context.server, plaintext)
 
                 for event_from_child in self.child_layer.handle_event(event_for_child):
                     if isinstance(event_from_child, commands.SendData):

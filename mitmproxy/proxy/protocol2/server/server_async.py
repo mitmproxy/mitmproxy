@@ -65,10 +65,7 @@ class ConnectionHandler:
             except socket.error:
                 data = b""
             if data:
-                if connection == self.client:
-                    await self.server_event(events.ClientDataReceived(connection, data))
-                else:
-                    await self.server_event(events.ServerDataReceived(connection, data))
+                await self.server_event(events.DataReceived(connection, data))
             else:
                 connection.connected = False
                 if connection in self.transports:
