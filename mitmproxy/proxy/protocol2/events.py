@@ -58,18 +58,6 @@ class DataReceived(ConnectionEvent):
         self.data = data
 
 
-class ClientDataReceived(DataReceived):
-    """
-    Client has sent data.
-    These subclasses simplify code for simple layers with one server and one client.
-    """
-    pass
-
-
-class ServerDataReceived(DataReceived):
-    pass
-
-
 class CommandReply(Event):
     """
     Emitted when a command has been finished, e.g.
