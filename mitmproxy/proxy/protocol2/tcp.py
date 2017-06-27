@@ -59,7 +59,8 @@ class TCPLayer(Layer):
 
         elif isinstance(event, events.ConnectionClosed):
             # close everything
-            yield commands.CloseConnection(self.context.client)
+            if event.connection == self.context.server:
+                yield commands.CloseConnection(self.context.client)
             if not self.ignore:
                 yield commands.Hook("tcp_end", self.flow)
             self._handle_event = self.done
