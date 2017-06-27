@@ -40,11 +40,12 @@ class HTTPLayer(Layer):
         self.flow_events = [[], []]
 
     @expect(events.Start, events.DataReceived, events.ConnectionClosed)
-    def handle(self, event: events.Event) -> commands.TCommandGenerator:
-        if isinstance(event, events.ClientDataReceived):
-            self.client_conn.receive_data(event.data)
-        elif isinstance(event, events.ServerDataReceived):
-            self.server_conn.receive_data(event.data)
+    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+        if isinstance(event, events.DataReceived):
+            if event.connection == self.context.client:
+                self.client_conn.receive_data(event.data)
+            else:
+                self.server_conn.receive_data(event.data)
         elif isinstance(event, events.ConnectionClosed):
             return warn("unimplemented: http.handle:close")
 
