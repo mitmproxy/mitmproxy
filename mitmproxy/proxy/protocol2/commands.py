@@ -60,7 +60,7 @@ class OpenConnection(ConnectionCommand):
 class CloseConnection(ConnectionCommand):
     """
     Close a connection. If the client connection is closed,
-    the entire operation is stopped and all other connections will be closed as well.
+    all other connections will ultimately be closed during cleanup.
     """
 
 
