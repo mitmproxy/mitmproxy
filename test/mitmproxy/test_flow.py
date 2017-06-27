@@ -1,7 +1,8 @@
 import io
+from unittest import mock
 import pytest
 
-from mitmproxy.test import tflow
+from mitmproxy.test import tflow, tutils
 import mitmproxy.io
 from mitmproxy import flowfilter
 from mitmproxy import options
@@ -10,6 +11,7 @@ from mitmproxy.io import tnetstring
 from mitmproxy.exceptions import FlowReadException, ReplayException, ControlException
 from mitmproxy import flow
 from mitmproxy import http
+from mitmproxy.net import http as net_http
 from mitmproxy.proxy.server import DummyServer
 from mitmproxy import master
 from . import tservers
@@ -99,7 +101,9 @@ class TestFlowMaster:
         assert s.flows[0].request.host == "use-this-domain"
 
     def test_replay(self):
-        fm = master.Master(None, DummyServer())
+        opts = options.Options()
+        conf = config.ProxyConfig(opts)
+        fm = master.Master(opts, DummyServer(conf))
         f = tflow.tflow(resp=True)
         f.request.content = None
         with pytest.raises(ReplayException, match="missing"):
@@ -116,6 +120,14 @@ class TestFlowMaster:
         f.live = True
         with pytest.raises(ReplayException, match="live"):
             fm.replay_request(f)
+
+        req = tutils.treq(headers=net_http.Headers(((b":authority", b"foo"), (b"header", b"qvalue"), (b"content-length", b"7"))))
+        f = tflow.tflow(req=req)
+        f.request.http_version = "HTTP/2.0"
+        with mock.patch('mitmproxy.proxy.protocol.http_replay.RequestReplayThread.run'):
+            rt = fm.replay_request(f)
+            assert rt.f.request.http_version == "HTTP/1.1"
+            assert ":authority" not in rt.f.request.headers
 
     def test_all(self):
         s = tservers.TestState()
