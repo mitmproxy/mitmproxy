@@ -31,7 +31,7 @@ class Layer(metaclass=ABCMeta):
         pass  # print(x)
 
     @abstractmethod
-    def handle(self, event: Event) -> commands.TCommandGenerator:
+    def _handle_event(self, event: Event) -> commands.TCommandGenerator:
         """Handle a proxy server event"""
         if False:
             yield None
@@ -49,7 +49,7 @@ class Layer(metaclass=ABCMeta):
                 self._paused_event_queue.append(event)
                 self._debug("Paused Event Queue: " + repr(self._paused_event_queue))
         else:
-            command_generator = self.handle(event)
+            command_generator = self._handle_event(event)
             yield from self.__process(command_generator)
 
     def __process(self, command_generator: commands.TCommandGenerator, send=None):
@@ -87,6 +87,6 @@ class Layer(metaclass=ABCMeta):
         while not self._paused and self._paused_event_queue:
             event = self._paused_event_queue.popleft()
             self._debug(f"<# Paused event: {event}")
-            command_generator = self.handle(event)
+            command_generator = self._handle_event(event)
             yield from self.__process(command_generator)
             self._debug("#>")

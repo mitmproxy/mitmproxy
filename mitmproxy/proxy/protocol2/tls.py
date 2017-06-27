@@ -30,7 +30,7 @@ class TLSLayer(Layer):
         self.server_tls = server_tls
         self.tls: MutableMapping[Connection, SSL.Connection] = {}
 
-    def handle(self, event: events.Event) -> commands.TCommandGenerator:
+    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
         yield from self.state(event)
 
     @expect(events.Start)

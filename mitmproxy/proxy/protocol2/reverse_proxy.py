@@ -3,7 +3,6 @@ from mitmproxy.proxy.protocol2.context import ClientServerContext, Context, Serv
 from mitmproxy.proxy.protocol2.events import Event
 from mitmproxy.proxy.protocol2.http import HTTPLayer
 from mitmproxy.proxy.protocol2.layer import Layer
-from mitmproxy.proxy.protocol2.tls import TLSLayer
 
 
 class ReverseProxy(Layer):
@@ -15,5 +14,5 @@ class ReverseProxy(Layer):
         # self.child_layer = TCPLayer(self.child_context, True, True)
         self.child_layer = HTTPLayer(self.child_context)
 
-    def handle(self, event: Event) -> TCommandGenerator:
+    def _handle_event(self, event: Event) -> TCommandGenerator:
         yield from self.child_layer.handle_event(event)

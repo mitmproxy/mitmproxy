@@ -1,9 +1,42 @@
+import difflib
 import itertools
+import re
 import typing
 
 from mitmproxy.proxy.protocol2 import commands
 from mitmproxy.proxy.protocol2 import events
 from mitmproxy.proxy.protocol2 import layer
+
+TPlaybook = typing.List[typing.Union[commands.Command, events.Event]]
+
+
+def _eq(
+        a: typing.Union[commands.Command, events.Event],
+        b: typing.Union[commands.Command, events.Event]
+) -> bool:
+    """Compare two commands/events, and possibly update placeholders."""
+    if type(a) != type(b):
+        return False
+
+    a = a.__dict__
+    b = b.__dict__
+    # we can assume a.keys() == b.keys()
+    for k in a:
+        if k == "blocking":
+            continue
+        x, y = a[k], b[k]
+
+        # if there's a placeholder, make it x.
+        if isinstance(y, Placeholder):
+            x, y = y, x
+        if isinstance(x, Placeholder):
+            if x.obj is None:
+                x.obj = y
+            x = x.obj
+        if x != y:
+            return False
+
+    return True
 
 
 class playbook:
@@ -27,7 +60,9 @@ class playbook:
     assert x2 == []
     """
     layer: layer.Layer
-    playbook: typing.List[typing.Union[commands.Command, events.Event]]
+    playbook: TPlaybook
+    _asserted: int
+    actual: TPlaybook
 
     def __init__(
             self,
@@ -41,6 +76,8 @@ class playbook:
 
         self.layer = layer
         self.playbook = playbook
+        self.actual = []
+        self._asserted = 0
 
     def __rshift__(self, e):
         """Add an event to send"""
@@ -58,27 +95,55 @@ class playbook:
 
     def __bool__(self):
         """Determine if playbook is correct."""
-        actual = []
-        for i, x in enumerate(self.playbook):
+        for i, x in list(enumerate(self.playbook))[self._asserted:]:
             if isinstance(x, commands.Command):
                 pass
             else:
                 if isinstance(x, events.CommandReply):
-                    if isinstance(x.command, int):
-                        x.command = actual[i + x.command]
+                    if isinstance(x.command, int) and 0 <= i + x.command < len(self.actual):
+                        x.command = self.actual[i + x.command]
 
-                actual.append(x)
-                actual.extend(
+                self.actual.append(x)
+                self.actual.extend(
                     self.layer.handle_event(x)
                 )
+        self._asserted = len(self.playbook)
 
-        if actual != self.playbook:
-            # print debug info
-            for a, e in itertools.zip_longest(actual, self.playbook):
-                if a == e:
-                    print(f"= {e}")
-                else:
-                    print(f"✓ {e}")
-                    print(f"✗ {a}")
+        success = all(
+            _eq(e, a)
+                for e, a in itertools.zip_longest(self.playbook, self.actual)
+        )
+        if not success:
+            def _str(x):
+                # add arrows to diff
+                ret = f"{'>' if isinstance(x, events.Event) else '<'} {x}"
+                # remove "blocking" attr which is also ignored during equality checks.
+                return re.sub(r", 'blocking': <.+?>", "", ret)
+
+            diff = difflib.ndiff(
+                [_str(x) for x in self.playbook],
+                [_str(x) for x in self.actual]
+            )
+            print("✗ Playbook mismatch:")
+            print("\n".join(diff))
             return False
-        return True
+        else:
+            return True
+
+    def __del__(self):
+        if self._asserted < len(self.playbook):
+            raise RuntimeError("Unfinished playbook!")
+
+
+class Placeholder:
+    """Placeholder value in playbooks, so that flows can be referenced before they are initialized."""
+
+    def __init__(self):
+        self.obj = None
+
+    def __call__(self):
+        """Get the actual object"""
+        return self.obj
+
+    def __repr__(self):
+        return repr(self.obj)
