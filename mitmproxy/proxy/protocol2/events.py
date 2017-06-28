@@ -58,10 +58,10 @@ class CommandReply(Event):
     Emitted when a command has been finished, e.g.
     when the master has replied or when we have established a server connection.
     """
-    command: commands.Command
+    command: typing.Union[commands.Command, int]
     reply: typing.Any
 
-    def __init__(self, command: commands.Command, reply: typing.Any):
+    def __init__(self, command: typing.Union[commands.Command, int], reply: typing.Any):
         self.command = command
         self.reply = reply
 
@@ -72,16 +72,20 @@ class CommandReply(Event):
 
 
 class OpenConnectionReply(CommandReply):
-    command: commands.OpenConnection
+    command: typing.Union[commands.OpenConnection, int]
     reply: str
 
-    def __init__(self, command: commands.OpenConnection, err: typing.Optional[str]):
+    def __init__(
+            self,
+            command: typing.Union[commands.OpenConnection, int],
+            err: typing.Optional[str]
+    ):
         super().__init__(command, err)
 
 
 class HookReply(CommandReply):
-    command: commands.Hook
+    command: typing.Union[commands.Hook, int]
     reply: typing.Any
 
-    def __init__(self, command: commands.Hook, reply: typing.Any):
+    def __init__(self, command: typing.Union[commands.Hook, int], reply: typing.Any):
         super().__init__(command, reply)
