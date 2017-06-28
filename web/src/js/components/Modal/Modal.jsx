@@ -11,7 +11,7 @@ class PureModal extends Component {
 
     render() {
         const { activeModal, hideModal } = this.props
-        const ActiveModal = _.find(ModalList, m => m.name === activeModal )
+        const ActiveModal = ModalList.find(m => m.name === activeModal )
         return(
             activeModal ?
                 <div>

@@ -36,7 +36,7 @@ export function FileMenu ({clearFlows, loadFlows, saveFlows, openModal}) {
                 &nbsp;Save...
             </a>
 
-            <a href="#" onClick={e => { openModal('OptionModal') }}>
+            <a href="#" onClick={e => { e.preventDefault(); openModal(); }}>
                 <i className="fa fa-fw fa-cog"></i>
                 &nbsp;Options
             </a>
@@ -57,6 +57,6 @@ export default connect(
         clearFlows: flowsActions.clear,
         loadFlows: flowsActions.upload,
         saveFlows: flowsActions.download,
-        openModal: modalActions.setActiveModal,
+        openModal: () => modalActions.setActiveModal('OptionModal'),
     }
 )(FileMenu)

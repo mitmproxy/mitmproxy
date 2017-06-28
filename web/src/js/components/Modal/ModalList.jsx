@@ -1,3 +1,3 @@
 import OptionModal from './OptionModal'
 
-export default [ OptionModal, EmptyModal ]
+export default [ OptionModal ]
