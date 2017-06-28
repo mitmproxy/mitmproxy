@@ -8,13 +8,20 @@ describe('FileMenu Component', () => {
     let clearFn = jest.fn(),
         loadFn = jest.fn(),
         saveFn = jest.fn(),
+        openModalFn = jest.fn(),
         mockEvent = {
             preventDefault: jest.fn(),
             target: { files: ["foo", "bar "] }
         },
         createNodeMock = () => { return { click: jest.fn() }},
         fileMenu = renderer.create(
-            <FileMenu clearFlows={clearFn} loadFlows={loadFn} saveFlows={saveFn}/>, { createNodeMock }),
+            <FileMenu
+                clearFlows={clearFn}
+                loadFlows={loadFn}
+                saveFlows={saveFn}
+                openModal={openModalFn}
+            />,
+            { createNodeMock }),
         tree = fileMenu.toJSON()
 
     it('should render correctly', () => {
@@ -41,5 +48,11 @@ describe('FileMenu Component', () => {
         let a = ul.children[2].children[1]
         a.props.onClick(mockEvent)
         expect(saveFn).toBeCalled()
+    })
+
+    it('should open optionModal', () => {
+        let a = ul.children[3].children[1]
+        a.props.onClick(mockEvent)
+        expect(openModalFn).toBeCalled()
     })
 })
