@@ -12,10 +12,6 @@ class TCPLayer(Layer):
     Simple TCP layer that just relays messages right now.
     """
     context: ClientServerContext = None
-
-    # this is like a mini state machine.
-    state: typing.Callable[[events.Event], commands.TCommandGenerator]
-
     ignore: bool
     flow: tcp.TCPFlow
 
@@ -67,4 +63,4 @@ class TCPLayer(Layer):
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def done(self, _):
-        pass
+        yield from ()
