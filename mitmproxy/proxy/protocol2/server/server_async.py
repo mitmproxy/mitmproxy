@@ -11,6 +11,7 @@ import collections
 import socket
 from typing import MutableMapping
 
+from mitmproxy import controller
 from mitmproxy.proxy.protocol2 import events, commands
 from mitmproxy.proxy.protocol2.context import Client, Context
 from mitmproxy.proxy.protocol2.context import Connection
@@ -20,11 +21,12 @@ StreamIO = collections.namedtuple('StreamIO', ['r', 'w'])
 
 
 class ConnectionHandler:
-    def __init__(self, reader, writer):
+    def __init__(self, event_queue, reader, writer):
         addr = writer.get_extra_info('peername')
 
         self.client = Client(addr)
         self.context = Context(self.client)
+        self.event_queue = event_queue
 
         # self.layer = ReverseProxy(self.context, ("localhost", 443))
         self.layer = ReverseProxy(self.context, ("localhost", 80))
@@ -34,6 +36,10 @@ class ConnectionHandler:
         }
 
         self.lock = asyncio.Lock()
+
+    @classmethod
+    async def handle(cls, reader, writer):
+        await cls(reader, writer).handle_client()
 
     async def handle_client(self):
         await self.server_event(events.Start())
@@ -86,7 +92,16 @@ class ConnectionHandler:
         await self.server_event(events.OpenConnectionReply(command, None))
         await self.handle_connection(command.connection)
 
-    async def server_event(self, event: events.Event):
+    async def handle_hook(self, hook: commands.Hook) -> None:
+        # TODO: temporary glue code - let's see how many years it survives.
+        hook.data.reply = controller.Reply(hook.data)
+        q = asyncio.Queue()
+        hook.data.reply.q = q
+        self.event_queue.put((hook.name, hook.data))
+        reply = await q.get()
+        await self.server_event(events.HookReply(hook, reply))
+
+    async def server_event(self, event: events.Event) -> None:
         print("*", type(event).__name__)
         async with self.lock:
             print("<#", event)
@@ -98,10 +113,9 @@ class ConnectionHandler:
                 elif isinstance(command, commands.SendData):
                     self.transports[command.connection].w.write(command.data)
                 elif isinstance(command, commands.Hook):
-                    # TODO: pass to master here.
                     print(f"~ {command.name}: {command.data}")
                     asyncio.ensure_future(
-                        self.server_event(events.HookReply(command, None))
+                        self.handle_hook(command)
                     )
                 elif isinstance(command, commands.CloseConnection):
                     asyncio.ensure_future(
@@ -111,16 +125,10 @@ class ConnectionHandler:
                     raise NotImplementedError(f"Unexpected event: {command}")
             print("#>")
 
-
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
-
-    async def handle(reader, writer):
-        await ConnectionHandler(reader, writer).handle_client()
-
-
-    coro = asyncio.start_server(handle, '127.0.0.1', 8080, loop=loop)
+    coro = asyncio.start_server(ConnectionHandler.handle, '127.0.0.1', 8080, loop=loop)
     server = loop.run_until_complete(coro)
 
     # Serve requests until Ctrl+C is pressed
