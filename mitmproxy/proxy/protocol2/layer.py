@@ -27,8 +27,8 @@ class Layer(metaclass=ABCMeta):
         self._paused = None
         self._paused_event_queue: typing.Deque[events.Event] = collections.deque()
 
-    def _debug(self, x):
-        pass  # print(x)
+    def _debug(self, *args):
+        pass  # print(*args)
 
     @abstractmethod
     def _handle_event(self, event: Event) -> commands.TCommandGenerator:
