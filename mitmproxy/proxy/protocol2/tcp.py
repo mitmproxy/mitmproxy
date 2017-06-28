@@ -33,6 +33,8 @@ class TCPLayer(Layer):
                     self.flow.error = flow.Error(err)
                     yield commands.Hook("tcp_error", self.flow)
                 yield commands.CloseConnection(self.context.client)
+                self._handle_event = self.done
+                return
         self._handle_event = self.relay_messages
 
     _handle_event = start
