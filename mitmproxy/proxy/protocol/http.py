@@ -329,20 +329,8 @@ class HttpLayer(base.Layer):
                     f.request.scheme
                 )
 
-                def get_response():
-                    if f.request.stream:
-                        self.send_request_headers(f.request)
-                        chunks = self.read_request_body(f.request)
-                        if callable(f.request.stream):
-                            chunks = f.request.stream(chunks)
-                        self.send_request_body(f.request, chunks)
-                    else:
-                        self.send_request(f.request)
-
-                    f.response = self.read_response_headers()
-
                 try:
-                    get_response()
+                    self.send_request_headers(f.request)
                 except exceptions.NetlibException as e:
                     self.log(
                         "server communication error: %s" % repr(e),
@@ -368,7 +356,19 @@ class HttpLayer(base.Layer):
 
                     self.disconnect()
                     self.connect()
-                    get_response()
+                    self.send_request_headers(f.request)
+
+                # This is taken out of the try except block because when streaming
+                # we can't send the request body while retrying as the generator gets exhausted
+                if f.request.stream:
+                    chunks = self.read_request_body(f.request)
+                    if callable(f.request.stream):
+                        chunks = f.request.stream(chunks)
+                    self.send_request_body(f.request, chunks)
+                else:
+                    self.send_request_body(f.request, [f.request.data.content])
+
+                f.response = self.read_response_headers()
 
                 # call the appropriate script hook - this is an opportunity for
                 # an inline script to set f.stream = True
