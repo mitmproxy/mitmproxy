@@ -10,6 +10,7 @@ from mitmproxy.addons import cut
 from mitmproxy.addons import disable_h2c
 from mitmproxy.addons import export
 from mitmproxy.addons import onboarding
+from mitmproxy.addons import proxyserver
 from mitmproxy.addons import proxyauth
 from mitmproxy.addons import script
 from mitmproxy.addons import serverplayback
@@ -39,6 +40,7 @@ def default_addons():
         export.Export(),
         onboarding.Onboarding(),
         proxyauth.ProxyAuth(),
+        proxyserver.Proxyserver(),
         script.ScriptLoader(),
         serverplayback.ServerPlayback(),
         mapremote.MapRemote(),
