@@ -52,11 +52,19 @@ class Script:
 
     def tick(self):
         if time.time() - self.last_load > self.ReloadInterval:
-            mtime = os.stat(self.fullpath).st_mtime
+            try:
+                mtime = os.stat(self.fullpath).st_mtime
+            except FileNotFoundError:
+                scripts = ctx.options.scripts
+                scripts.remove(self.path)
+                ctx.options.update(scripts=scripts)
+                return
+
             if mtime > self.last_mtime:
                 ctx.log.info("Loading script: %s" % self.path)
                 if self.ns:
                     ctx.master.addons.remove(self.ns)
+                    del sys.modules[self.ns.__name__]
                 self.ns = load_script(ctx, self.fullpath)
                 if self.ns:
                     # We're already running, so we have to explicitly register and
