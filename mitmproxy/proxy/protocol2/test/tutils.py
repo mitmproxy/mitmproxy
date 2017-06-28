@@ -100,8 +100,8 @@ class playbook:
                 pass
             else:
                 if isinstance(x, events.CommandReply):
-                    if isinstance(x.command, int) and 0 <= i + x.command < len(self.actual):
-                        x.command = self.actual[i + x.command]
+                    if isinstance(x.command, int) and abs(x.command) < len(self.actual):
+                        x.command = self.actual[x.command]
 
                 self.actual.append(x)
                 self.actual.extend(
@@ -116,9 +116,7 @@ class playbook:
         if not success:
             def _str(x):
                 # add arrows to diff
-                ret = f"{'>' if isinstance(x, events.Event) else '<'} {x}"
-                # remove "blocking" attr which is also ignored during equality checks.
-                return re.sub(r", 'blocking': <.+?>", "", ret)
+                return f"{'>' if isinstance(x, events.Event) else '<'} {x}"
 
             diff = difflib.ndiff(
                 [_str(x) for x in self.playbook],

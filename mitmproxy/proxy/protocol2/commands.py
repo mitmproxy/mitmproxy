@@ -26,7 +26,9 @@ class Command:
     """
 
     def __repr__(self):
-        return f"{type(self).__name__}({repr(self.__dict__)})"
+        x = self.__dict__.copy()
+        x.pop("blocking", None)
+        return f"{type(self).__name__}({repr(x)})"
 
 
 class ConnectionCommand(Command):
