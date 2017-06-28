@@ -1,6 +1,7 @@
 import traceback
 import sys
 import time
+import os
 import pytest
 
 from unittest import mock
@@ -182,6 +183,20 @@ class TestScriptLoader:
                     sc,
                     scripts = ["one", "one"]
                 )
+
+    def test_script_deletion(self):
+        tdir = tutils.test_data.path("mitmproxy/data/addonscripts/")
+        with open(tdir + "/dummy.py", 'w') as f:
+            f.write("\n")
+        with taddons.context() as tctx:
+            sl = script.ScriptLoader()
+            tctx.master.addons.add(sl)
+            tctx.configure(sl, scripts=[tutils.test_data.path("mitmproxy/data/addonscripts/dummy.py")])
+
+            os.remove(tutils.test_data.path("mitmproxy/data/addonscripts/dummy.py"))
+            tctx.invoke(sl, "tick")
+            assert not tctx.options.scripts
+            assert not sl.addons
 
     def test_order(self):
         rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder")
