@@ -32,6 +32,9 @@ export function TStore(){
             },
             header: {
                 tab: 'Start'
+            },
+            modal: {
+                activeModal: undefined
             }
         },
         settings: {
@@ -47,7 +50,8 @@ export function TStore(){
             sort: {
                 desc: true,
                 column: 'PathColumn'
-            }
+            },
+            view: [ tflow ]
         },
         connection: {
             state: ConnectionState.ESTABLISHED
