@@ -21,39 +21,43 @@ exports[`Modal Component should render correctly 2`] = `
       <div
         className="modal-content"
       >
-        <div
-          className="modal-header"
-        >
-          <button
-            className="close"
-            data-dismiss="modal"
-            onClick={[Function]}
-            type="button"
-          >
-            <i
-              className="fa fa-fw fa-times"
-            />
-          </button>
+        <div>
           <div
-            className="modal-title"
+            className="modal-header"
           >
-            <h4>
-              Options
-            </h4>
+            <button
+              className="close"
+              data-dismiss="modal"
+              onClick={[Function]}
+              type="button"
+            >
+              <i
+                className="fa fa-fw fa-times"
+              />
+            </button>
+            <div
+              className="modal-title"
+            >
+              <h4>
+                Options
+              </h4>
+            </div>
           </div>
-        </div>
-        <div
-          className="modal-body"
-        />
-        <div
-          className="modal-footer"
-        >
-          <button
-            className="btn btn-primary"
-            type="button"
+          <div
+            className="modal-body"
           >
-            Save Changes
-          </button>
+            ...
+          </div>
+          <div
+            className="modal-footer"
+          >
+            <button
+              className="btn btn-primary"
+              type="button"
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </div>
