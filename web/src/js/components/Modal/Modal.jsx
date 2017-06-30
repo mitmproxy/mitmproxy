@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import * as modalAction from '../../ducks/ui/modal'
 import ModalList from './ModalList'
 
 class PureModal extends Component {
@@ -10,15 +9,10 @@ class PureModal extends Component {
     }
 
     render() {
-        const { activeModal, hideModal } = this.props
+        const { activeModal } = this.props
         const ActiveModal = ModalList.find(m => m.name === activeModal )
         return(
-            activeModal ?
-                <div>
-                    <div className="modal-backdrop fade in"></div>
-                    <ActiveModal hideModal={ hideModal }/>
-                </div>
-                : <div/>
+            activeModal ? <ActiveModal/> : <div/>
         )
     }
 }
@@ -26,8 +20,5 @@ class PureModal extends Component {
 export default connect(
     state => ({
         activeModal: state.ui.modal.activeModal
-    }),
-    {
-        hideModal: modalAction.hideModal
-    }
+    })
 )(PureModal)
