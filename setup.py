@@ -74,7 +74,7 @@ setup(
         "ldap3>=2.2.0, <2.3",
         "passlib>=1.6.5, <1.8",
         "pyasn1>=0.1.9, <0.3",
-        "pyOpenSSL>=16.0, <17.1",
+        "pyOpenSSL>=17.1,<17.2",
         "pyparsing>=2.1.3, <2.3",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <3",
