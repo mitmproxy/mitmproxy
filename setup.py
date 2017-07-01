@@ -105,7 +105,7 @@ setup(
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.7",
-            "Pillow>=3.2, <4.2",
+            "Pillow>=4.2,<4.3",
         ]
     }
 )
