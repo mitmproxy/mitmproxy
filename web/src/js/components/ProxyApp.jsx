@@ -7,6 +7,7 @@ import MainView from './MainView'
 import Header from './Header'
 import EventLog from './EventLog'
 import Footer from './Footer'
+import Modal from './Modal/Modal'
 
 class ProxyAppMain extends Component {
 
@@ -28,6 +29,7 @@ class ProxyAppMain extends Component {
                     <EventLog key="eventlog"/>
                 )}
                 <Footer />
+                <Modal/>
             </div>
         )
     }

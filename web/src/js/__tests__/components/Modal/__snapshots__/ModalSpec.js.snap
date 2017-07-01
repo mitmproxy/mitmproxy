@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Modal Component should render correctly 1`] = `<div />`;
+
+exports[`Modal Component should render correctly 2`] = `
+<div>
+  <div
+    className="modal-backdrop fade in"
+  />
+  <div
+    aria-labelledby="options"
+    className="modal modal-visible"
+    id="optionsModal"
+    role="dialog"
+    tabIndex="-1"
+  >
+    <div
+      className="modal-dialog modal-lg"
+      role="document"
+    >
+      <div
+        className="modal-content"
+      >
+        <div>
+          <div
+            className="modal-header"
+          >
+            <button
+              className="close"
+              data-dismiss="modal"
+              onClick={[Function]}
+              type="button"
+            >
+              <i
+                className="fa fa-fw fa-times"
+              />
+            </button>
+            <div
+              className="modal-title"
+            >
+              <h4>
+                Options
+              </h4>
+            </div>
+          </div>
+          <div
+            className="modal-body"
+          >
+            ...
+          </div>
+          <div
+            className="modal-footer"
+          >
+            <button
+              className="btn btn-primary"
+              type="button"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

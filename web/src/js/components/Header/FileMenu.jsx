@@ -4,11 +4,13 @@ import { connect } from 'react-redux'
 import FileChooser from '../common/FileChooser'
 import Dropdown, {Divider} from '../common/Dropdown'
 import * as flowsActions from '../../ducks/flows'
+import * as modalActions from '../../ducks/ui/modal'
 
 FileMenu.propTypes = {
     clearFlows: PropTypes.func.isRequired,
     loadFlows: PropTypes.func.isRequired,
-    saveFlows: PropTypes.func.isRequired
+    saveFlows: PropTypes.func.isRequired,
+    openModal: PropTypes.func.isRequired,
 }
 
 FileMenu.onNewClick = (e, clearFlows) => {
@@ -17,7 +19,7 @@ FileMenu.onNewClick = (e, clearFlows) => {
         clearFlows()
 }
 
-export function FileMenu ({clearFlows, loadFlows, saveFlows}) {
+export function FileMenu ({clearFlows, loadFlows, saveFlows, openModal}) {
      return (
         <Dropdown className="pull-left" btnClass="special" text="mitmproxy">
             <a href="#" onClick={e => FileMenu.onNewClick(e, clearFlows)}>
@@ -32,6 +34,11 @@ export function FileMenu ({clearFlows, loadFlows, saveFlows}) {
             <a href="#" onClick={e =>{ e.preventDefault(); saveFlows();}}>
                 <i className="fa fa-fw fa-floppy-o"></i>
                 &nbsp;Save...
+            </a>
+
+            <a href="#" onClick={e => { e.preventDefault(); openModal(); }}>
+                <i className="fa fa-fw fa-cog"></i>
+                &nbsp;Options
             </a>
 
             <Divider/>
@@ -50,5 +57,6 @@ export default connect(
         clearFlows: flowsActions.clear,
         loadFlows: flowsActions.upload,
         saveFlows: flowsActions.download,
+        openModal: () => modalActions.setActiveModal('OptionModal'),
     }
 )(FileMenu)
