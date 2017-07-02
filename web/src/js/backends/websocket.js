@@ -27,6 +27,7 @@ export default class WebsocketBackend {
         this.fetchData("settings")
         this.fetchData("flows")
         this.fetchData("events")
+        this.fetchData("options")
         this.store.dispatch(connectionActions.startFetching())
     }
 

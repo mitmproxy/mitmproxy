@@ -1,6 +1,8 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import * as modalAction from '../../ducks/ui/modal'
+import { SettingsToggle } from '../Header/MenuToggle'
+import { OptionsToggle } from './OptionTypes'
 
 class PureOptionModal extends Component {
 
@@ -26,7 +28,9 @@ class PureOptionModal extends Component {
                 </div>
 
                 <div className="modal-body">
-                    ...
+                    <OptionsToggle option="http2">HTTP/2.0</OptionsToggle>
+                    <OptionsToggle option="anticache">Anticache</OptionsToggle>
+                    <OptionsToggle option="anticomp">Anticomp</OptionsToggle>
                 </div>
 
                 <div className="modal-footer">
