@@ -413,22 +413,21 @@ def dump_dicts(opts):
     """
         Dumps the options into a list of dict object.
 
-        Return: A list like: [ { name: "anticache", type: "bool", default: false, value: true, help: "help text"} ]
+        Return: A list like: { "anticache": { type: "bool", default: false, value: true, help: "help text"} }
     """
-    options_list = []
+    options_dict = {}
     for k in sorted(opts.keys()):
         o = opts._options[k]
         t = typecheck.typespec_to_str(o.typespec)
         option = {
-            'name': k,
             'type': t,
             'default': o.default,
             'value': o.current(),
             'help': o.help,
             'choices': o.choices
         }
-        options_list.append(option)
-    return options_list
+        options_dict[k] = option
+    return options_dict
 
 
 def parse(text):
