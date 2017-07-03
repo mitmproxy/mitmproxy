@@ -4,11 +4,17 @@ HTTP Streaming
 ==============
 
 By default, mitmproxy will read the entire request/response, perform any indicated
-manipulations on it and then send the (possibly modified) request or response to
-the server or the client respectively. In some cases this is undesirable and you may wish to "stream"
+manipulations on it and then send the (possibly modified) message to
+the other party. In some cases this is undesirable and you may wish to "stream"
 the request/response. When streaming is enabled, the request/response is
 not buffered on the proxy but directly sent to the server/client instead.
-Though, HTTP headers are still fully buffered before being sent.
+HTTP headers are still fully buffered before being sent.
+
+Request Streaming
+-----------------
+
+Request streaming can be used to incrementally stream a request body to the server
+before it has been fully received by the proxy. This is useful for large file uploads.
 
 Response Streaming
 ------------------
@@ -16,13 +22,6 @@ Response Streaming
 By using mitmproxy's streaming feature, response contents can be passed to the client incrementally
 before they have been fully received by the proxy. This is especially useful for large binary files
 such as videos, where buffering the whole file slows down the client's browser.
-
-Request Streaming
------------------
-
-As the name suggests, request streaming feature can be used to stream request body to the server incrementally
-before it has been fully received by the proxy. This may be useful for large file uploads.
-
 
 On the command-line
 -------------------
@@ -95,8 +94,8 @@ command-line       ``--set stream_websockets=true``
 Implementation Details
 ----------------------
 When WebSocket streaming is enabled, portions of the code which may perform changes to the WebSocket message payloads will not have
-any effect on the actual payload sent to the server as the frames are sent as and when the arrive.
-Though the message payload will be stored in the WebSocket Flow unlike request/response streaming where the body is not stored.
+any effect on the actual payload sent to the server as the frames are immediately forwarded to the server.
+In contrast to HTTP streaming, where the body is not stored, the message payload will still be stored in the WebSocket Flow.
 
 .. seealso::
 
