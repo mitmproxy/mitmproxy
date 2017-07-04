@@ -55,6 +55,7 @@ class WebSocketLayer(base.Layer):
             return self._handle_unknown_frame(frame, source_conn, other_conn, is_server)
 
     def _handle_data_frame(self, frame, source_conn, other_conn, is_server):
+
         fb = self.server_frame_buffer if is_server else self.client_frame_buffer
         fb.append(frame)
 
@@ -70,43 +71,51 @@ class WebSocketLayer(base.Layer):
             self.flow.messages.append(websocket_message)
             self.channel.ask("websocket_message", self.flow)
 
-            def get_chunk(payload):
-                if len(payload) == length:
-                    # message has the same length, we can reuse the same sizes
-                    pos = 0
-                    for s in original_chunk_sizes:
-                        yield payload[pos:pos + s]
-                        pos += s
+            if not self.flow.stream:
+                def get_chunk(payload):
+                    if len(payload) == length:
+                        # message has the same length, we can reuse the same sizes
+                        pos = 0
+                        for s in original_chunk_sizes:
+                            yield payload[pos:pos + s]
+                            pos += s
+                    else:
+                        # just re-chunk everything into 4kB frames
+                        # header len = 4 bytes without masking key and 8 bytes with masking key
+                        chunk_size = 4092 if is_server else 4088
+                        chunks = range(0, len(payload), chunk_size)
+                        for i in chunks:
+                            yield payload[i:i + chunk_size]
+
+                frms = [
+                    websockets.Frame(
+                        payload=chunk,
+                        opcode=frame.header.opcode,
+                        mask=(False if is_server else 1),
+                        masking_key=(b'' if is_server else os.urandom(4)))
+                    for chunk in get_chunk(websocket_message.content)
+                ]
+
+                if len(frms) > 0:
+                    frms[-1].header.fin = True
                 else:
-                    # just re-chunk everything into 10kB frames
-                    chunk_size = 10240
-                    chunks = range(0, len(payload), chunk_size)
-                    for i in chunks:
-                        yield payload[i:i + chunk_size]
+                    frms.append(websockets.Frame(
+                        fin=True,
+                        opcode=websockets.OPCODE.CONTINUE,
+                        mask=(False if is_server else 1),
+                        masking_key=(b'' if is_server else os.urandom(4))))
 
-            frms = [
-                websockets.Frame(
-                    payload=chunk,
-                    opcode=frame.header.opcode,
-                    mask=(False if is_server else 1),
-                    masking_key=(b'' if is_server else os.urandom(4)))
-                for chunk in get_chunk(websocket_message.content)
-            ]
+                frms[0].header.opcode = message_type
+                frms[0].header.rsv1 = compressed_message
 
-            if len(frms) > 0:
-                frms[-1].header.fin = True
+                for frm in frms:
+                    other_conn.send(bytes(frm))
+
             else:
-                frms.append(websockets.Frame(
-                    fin=True,
-                    opcode=websockets.OPCODE.CONTINUE,
-                    mask=(False if is_server else 1),
-                    masking_key=(b'' if is_server else os.urandom(4))))
+                other_conn.send(bytes(frame))
 
-            frms[0].header.opcode = message_type
-            frms[0].header.rsv1 = compressed_message
-
-            for frm in frms:
-                other_conn.send(bytes(frm))
+        elif self.flow.stream:
+            other_conn.send(bytes(frame))
 
         return True
 

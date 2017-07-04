@@ -22,6 +22,16 @@ class Http1Layer(httpbase._HttpTransmissionLayer):
             self.config.options._processed.get("body_size_limit")
         )
 
+    def send_request_headers(self, request):
+        headers = http1.assemble_request_head(request)
+        self.server_conn.wfile.write(headers)
+        self.server_conn.wfile.flush()
+
+    def send_request_body(self, request, chunks):
+        for chunk in http1.assemble_body(request.headers, chunks):
+            self.server_conn.wfile.write(chunk)
+            self.server_conn.wfile.flush()
+
     def send_request(self, request):
         self.server_conn.wfile.write(http1.assemble_request(request))
         self.server_conn.wfile.flush()

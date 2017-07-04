@@ -33,7 +33,7 @@
     features/passthrough
     features/proxyauth
     features/reverseproxy
-    features/responsestreaming
+    features/streaming
     features/socksproxy
     features/sticky
     features/tcpproxy
