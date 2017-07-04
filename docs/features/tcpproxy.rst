@@ -28,4 +28,4 @@ feature.
 .. seealso::
 
     - :ref:`passthrough`
-    - :ref:`responsestreaming`
+    - :ref:`streaming`
