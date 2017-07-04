@@ -155,6 +155,13 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
+            "stream_websockets", bool, False,
+            """
+            Stream WebSocket messages between client and server.
+            Messages are captured and cannot be modified.
+            """
+        )
+        self.add_option(
             "verbosity", int, 2,
             "Log verbosity."
         )

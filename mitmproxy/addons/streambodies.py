@@ -2,7 +2,6 @@ from mitmproxy.net.http import http1
 from mitmproxy import exceptions
 from mitmproxy import ctx
 from mitmproxy.utils import human
-from mitmproxy import websocket
 
 
 class StreamBodies:
@@ -18,13 +17,6 @@ class StreamBodies:
 
     def run(self, f, is_request):
         if self.max_size:
-            if isinstance(f, websocket.WebSocketFlow):
-                f.stream = True
-                ctx.log.info("Streaming WebSocket message {client} - {server}".format(
-                    client=human.format_address(f.client_conn.address),
-                    server=human.format_address(f.server_conn.address))
-                )
-                return
             r = f.request if is_request else f.response
             try:
                 expected_size = http1.expected_http_body_size(
@@ -45,4 +37,9 @@ class StreamBodies:
         self.run(f, False)
 
     def websocket_start(self, f):
-        self.run(f, False)
+        if ctx.options.stream_websockets:
+            f.stream = True
+            ctx.log.info("Streaming WebSocket messages between {client} and {server}".format(
+                client=human.format_address(f.client_conn.address),
+                server=human.format_address(f.server_conn.address))
+            )
