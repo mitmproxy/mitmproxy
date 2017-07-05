@@ -42,6 +42,36 @@ export function TStore(){
             anticache: true,
             anticomp: false
         },
+        options: {
+            booleanOption: {
+                choices: null,
+                default: false,
+                help: "foo",
+                type: "bool",
+                value: false
+            },
+            strOption: {
+                choices: null,
+                default: null,
+                help: "foo",
+                type: "str",
+                value: "str content"
+            },
+            intOption: {
+                choices: null,
+                default: 0,
+                help: "foo",
+                type: "int",
+                value: 1
+            },
+            choiceOption: {
+                choices: ['a', 'b', 'c'],
+                default: 'a',
+                help: "foo",
+                type: "str",
+                value: "b"
+            },
+        },
         flows: {
             selected: ["d91165be-ca1f-4612-88a9-c0f8696f3e29"],
             byId: {"d91165be-ca1f-4612-88a9-c0f8696f3e29": tflow},

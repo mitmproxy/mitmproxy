@@ -255,8 +255,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_options(self):
         j = json(self.fetch("/options"))
-        assert type(j) == list
-        assert type(j[0]) == dict
+        assert type(j) == dict
+        assert type(j['anticache']) == dict
 
     def test_option_update(self):
         assert self.put_json("/options", {"anticache": True}).code == 200
@@ -275,11 +275,31 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client = yield websocket.websocket_connect(ws_url)
         self.master.options.anticomp = True
 
-        response = yield ws_client.read_message()
-        assert _json.loads(response) == {
+        r1 = yield ws_client.read_message()
+        r2 = yield ws_client.read_message()
+        j1 = _json.loads(r1)
+        j2 = _json.loads(r2)
+        print(j1)
+        response = dict()
+        response[j1['resource']] = j1
+        response[j2['resource']] = j2
+        assert response['settings'] == {
             "resource": "settings",
             "cmd": "update",
             "data": {"anticomp": True},
+        }
+        assert response['options'] == {
+            "resource": "options",
+            "cmd": "update",
+            "data": {
+                "anticomp": {
+                    "value": True,
+                    "choices": None,
+                    "default": False,
+                    "help": "Try to convince servers to send us un-compressed data.",
+                    "type": "bool",
+                }
+            }
         }
         ws_client.close()
 

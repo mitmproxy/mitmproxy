@@ -341,6 +341,7 @@ def test_dump_defaults():
 def test_dump_dicts():
     o = options.Options()
     assert optmanager.dump_dicts(o)
+    assert optmanager.dump_dicts(o, ['http2', 'anticomp'])
 
 
 class TTypes(optmanager.OptManager):
