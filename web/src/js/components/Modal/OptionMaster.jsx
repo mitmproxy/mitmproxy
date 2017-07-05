@@ -1,6 +1,4 @@
 import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { update as updateOptions } from '../../ducks/options'
 
 PureBooleanOption.PropTypes = {
     value: PropTypes.bool.isRequired,
@@ -9,16 +7,14 @@ PureBooleanOption.PropTypes = {
 
 function PureBooleanOption({ value, onChange, name, help}) {
         return (
-            <div className="menu-entry">
                 <label>
+                    { name }
                     <input type="checkbox"
                             checked={value}
                             onChange={onChange}
                             title={help}
                     />
-                    { name }
                 </label>
-            </div>
         )
 }
 
@@ -30,7 +26,6 @@ PureStringOption.PropTypes = {
 function PureStringOption( { value, onChange, name, help }) {
     let onKeyDown = (e) => {e.stopPropagation()}
     return (
-        <div className="menu-entry">
             <label>
                 { name }
                 <input type="text"
@@ -40,7 +35,6 @@ function PureStringOption( { value, onChange, name, help }) {
                         onKeyDown={onKeyDown}
                 />
             </label>
-        </div>
     )
 }
 
@@ -52,7 +46,6 @@ PureNumberOption.PropTypes = {
 function PureNumberOption( {value, onChange, name, help }) {
     let onKeyDown = (e) => {e.stopPropagation()}
     return (
-        <div className="menu-entry">
             <label>
                 { name }
                 <input type="number"
@@ -62,7 +55,6 @@ function PureNumberOption( {value, onChange, name, help }) {
                         onKeyDown={onKeyDown}
                 />
             </label>
-        </div>
     )
 }
 
@@ -73,16 +65,14 @@ PureChoicesOption.PropTypes = {
 
 function PureChoicesOption( { value, onChange, name, help, choices }) {
     return (
-        <div className="menu-entry">
             <label htmlFor="">
                 { name }
                 <select name={name} onChange={onChange} title={help} selected={value}>
-                    { choices.map(choice => (
-                        <option value={choice}> {choice} </option>
+                    { choices.map((choice, index) => (
+                        <option key={index} value={choice}> {choice} </option>
                     ))}
                 </select>
             </label>
-        </div>
     )
 }
 
@@ -94,45 +84,36 @@ const OptionTypes = {
     "sequence of str": PureStringOption,
 }
 
-Wrapper.displayName = 'OptionWrapper'
-
-
-function Wrapper({option, options, updateOptions, ...props}) {
-    let optionObj = options[option],
-        WrappedComponent = null
-    if (optionObj.choices) {
+export default function OptionMaster({option, name, updateOptions, ...props}) {
+    let WrappedComponent = null
+    if (option.choices) {
         WrappedComponent = PureChoicesOption
     } else {
-        WrappedComponent = OptionTypes[optionObj.type]
+        WrappedComponent = OptionTypes[option.type]
     }
 
     let onChange = (e) => {
-        switch (optionObj.type) {
+        switch (option.type) {
             case 'bool' :
-                updateOptions({[option]: !optionObj.value})
+                updateOptions({[name]: !option.value})
                 break
             case 'int':
-                updateOptions({[option]: parseInt(e.target.value)})
+                updateOptions({[name]: parseInt(e.target.value)})
                 break
             default:
-                updateOptions({[option]: e.target.value})
+                updateOptions({[name]: e.target.value})
         }
     }
-    return <WrappedComponent
-        children={props.children}
-        value={optionObj.value}
-        onChange={onChange}
-        name={option}
-        help={optionObj.help}
-        choices={optionObj.choices}
-    />
+    return (
+        <div className="menu-entry">
+            <WrappedComponent
+                children={props.children}
+                value={option.value}
+                onChange={onChange}
+                name={name}
+                help={option.help}
+                choices={option.choices}
+            />
+        </div>
+    )
 }
-
-export default connect(
-    state => ({
-        options: state.options,
-    }),
-    {
-        updateOptions,
-    }
-)(Wrapper)
