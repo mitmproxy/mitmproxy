@@ -255,8 +255,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_options(self):
         j = json(self.fetch("/options"))
-        assert type(j) == list
-        assert type(j[0]) == dict
+        assert type(j) == dict
+        assert type(j['anticache']) == dict
 
     def test_option_update(self):
         assert self.put_json("/options", {"anticache": True}).code == 200

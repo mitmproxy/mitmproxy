@@ -409,14 +409,15 @@ def dump_defaults(opts):
     return ruamel.yaml.round_trip_dump(s)
 
 
-def dump_dicts(opts):
+def dump_dicts(opts, keys: typing.List[str]=None):
     """
         Dumps the options into a list of dict object.
 
         Return: A list like: { "anticache": { type: "bool", default: false, value: true, help: "help text"} }
     """
     options_dict = {}
-    for k in sorted(opts.keys()):
+    keys = keys if keys else opts.keys()
+    for k in sorted(keys):
         o = opts._options[k]
         t = typecheck.typespec_to_str(o.typespec)
         option = {
