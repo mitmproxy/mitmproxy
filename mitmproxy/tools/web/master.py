@@ -5,6 +5,7 @@ import tornado.ioloop
 from mitmproxy import addons
 from mitmproxy import log
 from mitmproxy import master
+from mitmproxy import optmanager
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
@@ -29,6 +30,7 @@ class WebMaster(master.Master):
         self.events.sig_refresh.connect(self._sig_events_refresh)
 
         self.options.changed.connect(self._sig_options_update)
+        self.options.changed.connect(self._sig_settings_update)
 
         self.addons.add(*addons.default_addons())
         self.addons.add(
@@ -86,6 +88,14 @@ class WebMaster(master.Master):
         )
 
     def _sig_options_update(self, options, updated):
+        options_dict = optmanager.dump_dicts(options, updated)
+        app.ClientConnection.broadcast(
+            resource="options",
+            cmd="update",
+            data=options_dict
+        )
+
+    def _sig_settings_update(self, options, updated):
         app.ClientConnection.broadcast(
             resource="settings",
             cmd="update",
