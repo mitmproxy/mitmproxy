@@ -272,7 +272,7 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
-            "listen_host", str, "",
+            "listen_host", str, "127.0.0.1",
             "Address to bind proxy to."
         )
         self.add_option(
