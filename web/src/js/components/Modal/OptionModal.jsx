@@ -1,18 +1,17 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import * as modalAction from '../../ducks/ui/modal'
-import { SettingsToggle } from '../Header/MenuToggle'
-import { OptionsToggle } from './OptionTypes'
+import Option from './OptionMaster'
 
 class PureOptionModal extends Component {
 
     constructor(props, context) {
         super(props, context)
-        this.state = { title: 'Options',  }
+        this.state = { title: 'Options' }
     }
 
     render() {
-        const { hideModal } = this.props
+        const { hideModal, options } = this.props
         const { title } = this.state
         return (
             <div>
@@ -28,9 +27,11 @@ class PureOptionModal extends Component {
                 </div>
 
                 <div className="modal-body">
-                    <OptionsToggle option="http2">HTTP/2.0</OptionsToggle>
-                    <OptionsToggle option="anticache">Anticache</OptionsToggle>
-                    <OptionsToggle option="anticomp">Anticomp</OptionsToggle>
+                    {
+                        Object.keys(options).sort().map((key) => (
+                            <Option option={key}/>
+                        ))
+                    }
                 </div>
 
                 <div className="modal-footer">
@@ -43,7 +44,7 @@ class PureOptionModal extends Component {
 
 export default connect(
     state => ({
-
+        options: state.options
     }),
     { hideModal: modalAction.hideModal }
 )(PureOptionModal)
