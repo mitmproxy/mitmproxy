@@ -289,7 +289,7 @@ class CertStore:
             privatekey = self.default_privatekey
         self.add_cert(
             CertStoreEntry(cert, privatekey, path),
-            bytes(spec, "utf8")
+            bytes(spec, "utf-8")
         )
 
     def add_cert(self, entry, *names):
