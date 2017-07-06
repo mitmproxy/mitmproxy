@@ -113,7 +113,7 @@ class ProxyConfig:
                     "Certificate file does not exist: %s" % cert
                 )
             try:
-                self.certstore.add_cert_file(spec, cert)
+                self.certstore.add_cert_file(bytes(spec, "utf-8"), cert)
             except crypto.Error:
                 raise exceptions.OptionsError(
                     "Invalid certificate format: %s" % cert
