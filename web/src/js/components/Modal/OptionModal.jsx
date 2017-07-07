@@ -28,6 +28,7 @@ class PureOptionModal extends Component {
                 </div>
 
                 <div className="modal-body">
+                    <div className="container-fluid">
                     {
                         Object.keys(options).sort()
                             .map((key, index) => {
@@ -41,10 +42,10 @@ class PureOptionModal extends Component {
                                     />)
                             })
                     }
+                    </div>
                 </div>
 
                 <div className="modal-footer">
-                    <button type="button" className="btn btn-primary">Save Changes</button>
                 </div>
             </div>
         )
