@@ -47,94 +47,113 @@ exports[`Modal Component should render correctly 2`] = `
             className="modal-body"
           >
             <div
-              className="menu-entry"
+              className="container-fluid"
             >
-              <label>
-                booleanOption
-                <input
-                  checked={false}
-                  onChange={[Function]}
-                  title="foo"
-                  type="checkbox"
-                />
-              </label>
-            </div>
-            <div
-              className="menu-entry"
-            >
-              <label
-                htmlFor=""
+              <div
+                className="row"
               >
-                choiceOption
-                <select
-                  name="choiceOption"
-                  onChange={[Function]}
-                  selected="b"
-                  title="foo"
+                <div
+                  className="col-sm-8"
                 >
-                  <option
-                    value="a"
+                  booleanOption
+                </div>
+                <div
+                  className="col-sm-4"
+                >
+                  <input
+                    checked={false}
+                    onChange={[Function]}
+                    title="foo"
+                    type="checkbox"
+                  />
+                </div>
+              </div>
+              <div
+                className="row"
+              >
+                <div
+                  className="col-sm-8"
+                >
+                  choiceOption
+                </div>
+                <div
+                  className="col-sm-4"
+                >
+                  <select
+                    name="choiceOption"
+                    onChange={[Function]}
+                    selected="b"
+                    title="foo"
                   >
-                     
-                    a
-                     
-                  </option>
-                  <option
-                    value="b"
-                  >
-                     
-                    b
-                     
-                  </option>
-                  <option
-                    value="c"
-                  >
-                     
-                    c
-                     
-                  </option>
-                </select>
-              </label>
-            </div>
-            <div
-              className="menu-entry"
-            >
-              <label>
-                intOption
-                <input
-                  onChange={[Function]}
-                  onKeyDown={[Function]}
-                  title="foo"
-                  type="number"
-                  value={1}
-                />
-              </label>
-            </div>
-            <div
-              className="menu-entry"
-            >
-              <label>
-                strOption
-                <input
-                  onChange={[Function]}
-                  onKeyDown={[Function]}
-                  title="foo"
-                  type="text"
-                  value="str content"
-                />
-              </label>
+                    <option
+                      value="a"
+                    >
+                       
+                      a
+                       
+                    </option>
+                    <option
+                      value="b"
+                    >
+                       
+                      b
+                       
+                    </option>
+                    <option
+                      value="c"
+                    >
+                       
+                      c
+                       
+                    </option>
+                  </select>
+                </div>
+              </div>
+              <div
+                className="row"
+              >
+                <div
+                  className="col-sm-8"
+                >
+                  intOption
+                </div>
+                <div
+                  className="col-sm-4"
+                >
+                  <input
+                    onChange={[Function]}
+                    onKeyDown={[Function]}
+                    title="foo"
+                    type="number"
+                    value={1}
+                  />
+                </div>
+              </div>
+              <div
+                className="row"
+              >
+                <div
+                  className="col-sm-8"
+                >
+                  strOption
+                </div>
+                <div
+                  className="col-sm-4"
+                >
+                  <input
+                    onChange={[Function]}
+                    onKeyDown={[Function]}
+                    title="foo"
+                    type="text"
+                    value="str content"
+                  />
+                </div>
+              </div>
             </div>
           </div>
           <div
             className="modal-footer"
-          >
-            <button
-              className="btn btn-primary"
-              type="button"
-            >
-              Save Changes
-            </button>
-          </div>
+          />
         </div>
       </div>
     </div>
