@@ -98,7 +98,7 @@ setup(
             "pytest>=3.1, <4",
             "rstcheck>=2.2, <4.0",
             "sphinx_rtd_theme>=0.1.9, <0.3",
-            "sphinx-autobuild>=0.7,<0.8",
+            "sphinx-autobuild>=0.5.2, <0.8",
             "sphinx>=1.3.5, <1.7",
             "sphinxcontrib-documentedlist>=0.5.0, <0.7",
             "tox>=2.3, <3",
