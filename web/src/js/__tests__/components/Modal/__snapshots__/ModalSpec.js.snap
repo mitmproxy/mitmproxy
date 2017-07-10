@@ -62,8 +62,11 @@ exports[`Modal Component should render correctly 2`] = `
                 >
                   <input
                     checked={false}
+                    onBlur={[Function]}
                     onChange={[Function]}
-                    title="foo"
+                    onFocus={[Function]}
+                    onMouseLeave={[Function]}
+                    onMouseOver={[Function]}
                     type="checkbox"
                   />
                 </div>
@@ -81,9 +84,12 @@ exports[`Modal Component should render correctly 2`] = `
                 >
                   <select
                     name="choiceOption"
+                    onBlur={[Function]}
                     onChange={[Function]}
+                    onFocus={[Function]}
+                    onMouseLeave={[Function]}
+                    onMouseOver={[Function]}
                     selected="b"
-                    title="foo"
                   >
                     <option
                       value="a"
@@ -121,9 +127,12 @@ exports[`Modal Component should render correctly 2`] = `
                   className="col-sm-4"
                 >
                   <input
+                    onBlur={[Function]}
                     onChange={[Function]}
+                    onFocus={[Function]}
                     onKeyDown={[Function]}
-                    title="foo"
+                    onMouseLeave={[Function]}
+                    onMouseOver={[Function]}
                     type="number"
                     value={1}
                   />
@@ -141,9 +150,12 @@ exports[`Modal Component should render correctly 2`] = `
                   className="col-sm-4"
                 >
                   <input
+                    onBlur={[Function]}
                     onChange={[Function]}
+                    onFocus={[Function]}
                     onKeyDown={[Function]}
-                    title="foo"
+                    onMouseLeave={[Function]}
+                    onMouseOver={[Function]}
                     type="text"
                     value="str content"
                   />
