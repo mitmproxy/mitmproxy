@@ -12,8 +12,8 @@ class ReverseProxy(Layer):
         server = Server(server_addr)
         self.child_context = ClientServerContext(context.client, server)
         # self.child_layer = TLSLayer(self.child_context, True, True)
-        self.child_layer = TCPLayer(self.child_context, False)
-        # self.child_layer = HTTPLayer(self.child_context)
+        # self.child_layer = TCPLayer(self.child_context, False)
+        self.child_layer = HTTPLayer(self.child_context)
 
     def _handle_event(self, event: Event) -> TCommandGenerator:
         yield from self.child_layer.handle_event(event)
