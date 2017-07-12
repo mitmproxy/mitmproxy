@@ -8,6 +8,7 @@ The counterpart to commands are events.
 """
 import typing
 
+from mitmproxy import log
 from mitmproxy.proxy.protocol2.context import Connection
 
 
@@ -77,6 +78,11 @@ class Hook(Command):
     def __init__(self, name: str, data: typing.Any) -> None:
         self.name = name
         self.data = data
+
+
+class Log(Hook):
+    def __init__(self, *args, level="info"):
+        super().__init__("log", log.LogEntry(repr(args), level))
 
 
 TCommandGenerator = typing.Generator[Command, typing.Any, None]
