@@ -83,5 +83,7 @@ class Proxyserver:
             self.loop.call_soon_threadsafe(lambda: asyncio.ensure_future(self.start()))
 
     def request(self, flow):
-        print("Changing port...")
-        ctx.options.listen_port += 1
+        pass
+        # test live options changes.
+        # print("Changing port...")
+        # ctx.options.listen_port += 1
