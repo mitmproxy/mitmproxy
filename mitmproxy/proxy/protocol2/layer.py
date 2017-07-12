@@ -8,6 +8,7 @@ from abc import ABCMeta, abstractmethod
 from mitmproxy.proxy.protocol2 import commands, events
 from mitmproxy.proxy.protocol2.context import Context
 from mitmproxy.proxy.protocol2.events import Event
+from mitmproxy.proxy.protocol2.utils import expect
 
 
 class Paused(typing.NamedTuple):
