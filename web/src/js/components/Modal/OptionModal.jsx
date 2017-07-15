@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import * as modalAction from '../../ducks/ui/modal'
-import { update as updateOptions } from '../../ducks/options'
 import Option from './OptionMaster'
 
 class PureOptionModal extends Component {
@@ -37,7 +36,6 @@ class PureOptionModal extends Component {
                                     <Option
                                         key={index}
                                         name={key}
-                                        updateOptions={updateOptions}
                                         option={option}
                                     />)
                             })
@@ -58,6 +56,5 @@ export default connect(
     }),
     {
         hideModal: modalAction.hideModal,
-        updateOptions: updateOptions,
     }
 )(PureOptionModal)
