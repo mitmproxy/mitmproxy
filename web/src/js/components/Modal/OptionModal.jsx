@@ -1,7 +1,22 @@
-import React, { Component } from 'react'
-import { connect } from 'react-redux'
-import * as modalAction from '../../ducks/ui/modal'
-import Option from './OptionMaster'
+import React, { Component } from "react"
+import { connect } from "react-redux"
+import * as modalAction from "../../ducks/ui/modal"
+import Option from "./Option"
+
+function PureOptionHelp({help}){
+    return <div className="small text-muted">{help}</div>;
+}
+const OptionHelp = connect((state, {name}) => ({
+    help: state.options[name].help,
+}))(PureOptionHelp);
+
+function PureOptionError({error}){
+    if(!error) return null;
+    return <div className="small text-danger">{error}</div>;
+}
+const OptionError = connect((state, {name}) => ({
+    error: state.ui.optionsEditor[name] && state.ui.optionsEditor[name].error
+}))(PureOptionError);
 
 class PureOptionModal extends Component {
 
@@ -28,18 +43,20 @@ class PureOptionModal extends Component {
 
                 <div className="modal-body">
                     <div className="container-fluid">
-                    {
-                        Object.keys(options).sort()
-                            .map((key, index) => {
-                                let option = options[key];
-                                return (
-                                    <Option
-                                        key={index}
-                                        name={key}
-                                        option={option}
-                                    />)
-                            })
-                    }
+                        {
+                            options.map(name =>
+                                <div key={name} className="row">
+                                    <div className="col-xs-6">
+                                        {name}
+                                        <OptionHelp name={name}/>
+                                    </div>
+                                    <div className="col-xs-6">
+                                        <Option name={name}/>
+                                        <OptionError name={name}/>
+                                    </div>
+                                </div>
+                            )
+                        }
                     </div>
                 </div>
 
@@ -52,7 +69,7 @@ class PureOptionModal extends Component {
 
 export default connect(
     state => ({
-        options: state.options
+        options: Object.keys(state.options)
     }),
     {
         hideModal: modalAction.hideModal,

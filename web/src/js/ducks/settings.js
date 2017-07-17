@@ -3,7 +3,6 @@ import { fetchApi } from '../utils'
 export const RECEIVE        = 'SETTINGS_RECEIVE'
 export const UPDATE         = 'SETTINGS_UPDATE'
 export const REQUEST_UPDATE = 'REQUEST_UPDATE'
-export const UNKNOWN_CMD    = 'SETTINGS_UNKNOWN_CMD'
 
 const defaultState = {
 

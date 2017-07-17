@@ -1,14 +1,12 @@
-import { fetchApi } from '../utils'
-import  * as optionActions from './ui/option'
+import { fetchApi } from "../utils"
+import * as optionsEditorActions from "./ui/optionsEditor"
+import _ from "lodash"
 
-export const RECEIVE        = 'OPTIONS_RECEIVE'
-export const UPDATE         = 'OPTIONS_UPDATE'
+export const RECEIVE = 'OPTIONS_RECEIVE'
+export const UPDATE = 'OPTIONS_UPDATE'
 export const REQUEST_UPDATE = 'REQUEST_UPDATE'
-export const UNKNOWN_CMD    = 'OPTIONS_UNKNOWN_CMD'
 
-const defaultState = {
-
-}
+const defaultState = {}
 
 export default function reducer(state = defaultState, action) {
     switch (action.type) {
@@ -27,18 +25,23 @@ export default function reducer(state = defaultState, action) {
     }
 }
 
-export function update(options) {
+
+let sendUpdate = (option, value, dispatch) => {
+    fetchApi.put('/options', { [option]: value }).then(response => {
+        if (response.status === 200) {
+            dispatch(optionsEditorActions.updateSuccess(option))
+        } else {
+            response.text().then(error => {
+                dispatch(optionsEditorActions.updateError(option, error))
+            })
+        }
+    })
+}
+sendUpdate = _.throttle(sendUpdate, 700, { leading: true, trailing: true })
+
+export function update(option, value) {
     return dispatch => {
-        let option = Object.keys(options)[0]
-        dispatch({ type: optionActions.OPTION_UPDATE_START, option, value: options[option] })
-        fetchApi.put('/options', options).then(response => {
-            if (response.status === 200) {
-                dispatch({ type: optionActions.OPTION_UPDATE_SUCCESS, option})
-            } else {
-                response.text().then( text => {
-                    dispatch({type: optionActions.OPTION_UPDATE_ERROR, error: text, option})
-                })
-            }
-        })
+        dispatch(optionsEditorActions.startUpdate(option, value))
+        sendUpdate(option, value, dispatch);
     }
 }
