@@ -10,14 +10,12 @@ PureBooleanOption.PropTypes = {
 }
 
 function PureBooleanOption({ value, onChange, ...props}) {
-        let onMouseEnter = () => { props.onMouseEnter() },
-            onMouseLeave = () => { props.onMouseLeave() }
         return (
                 <input type="checkbox"
                         checked={value}
                         onChange={onChange}
-                        onMouseOver={onMouseEnter}
-                        onMouseLeave={onMouseLeave}
+                        onMouseOver={props.onMouseEnter}
+                        onMouseLeave={props.onMouseLeave}
                 />
         )
 }
@@ -28,11 +26,7 @@ PureStringOption.PropTypes = {
 }
 
 function PureStringOption( { value, onChange, ...props }) {
-    let onKeyDown = (e) => {e.stopPropagation()},
-        onFocus = () => { props.onFocus() },
-        onBlur = () => { props.onBlur() },
-        onMouseEnter = () => { props.onMouseEnter() },
-        onMouseLeave = () => { props.onMouseLeave() }
+    let onKeyDown = (e) => {e.stopPropagation()}
     return (
         <div className={classnames('input-group', {'has-error': props.error})}>
             <input type="text"
@@ -40,10 +34,10 @@ function PureStringOption( { value, onChange, ...props }) {
                     className='form-control'
                     onChange={onChange}
                     onKeyDown={onKeyDown}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
-                    onMouseOver={onMouseEnter}
-                    onMouseLeave={onMouseLeave}
+                    onFocus={props.onFocus}
+                    onBlur={props.onBlur}
+                    onMouseOver={props.onMouseEnter}
+                    onMouseLeave={props.onMouseLeave}
             />
         </div>
     )
@@ -55,11 +49,7 @@ PureNumberOption.PropTypes = {
 }
 
 function PureNumberOption( {value, onChange, ...props }) {
-    let onKeyDown = (e) => {e.stopPropagation()},
-        onFocus = () => { props.onFocus() },
-        onBlur = () => { props.onBlur() },
-        onMouseEnter = () => { props.onMouseEnter() },
-        onMouseLeave = () => { props.onMouseLeave() }
+    let onKeyDown = (e) => {e.stopPropagation()}
 
     return (
             <input type="number"
@@ -67,10 +57,10 @@ function PureNumberOption( {value, onChange, ...props }) {
                     value={value}
                     onChange={onChange}
                     onKeyDown={onKeyDown}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
-                    onMouseOver={onMouseEnter}
-                    onMouseLeave={onMouseLeave}
+                    onFocus={props.onFocus}
+                    onBlur={props.onBlur}
+                    onMouseOver={props.onMouseEnter}
+                    onMouseLeave={props.onMouseLeave}
             />
     )
 }
@@ -81,20 +71,16 @@ PureChoicesOption.PropTypes = {
 }
 
 function PureChoicesOption( { value, onChange, name, choices, ...props}) {
-    let onFocus = () => { props.onFocus() },
-        onBlur = () => { props.onBlur() },
-        onMouseEnter = () => { props.onMouseEnter() },
-        onMouseLeave = () => { props.onMouseLeave() }
     return (
             <select
                 name={name}
                 className="form-control"
                 onChange={onChange}
                 selected={value}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                onMouseOver={onMouseEnter}
-                onMouseLeave={onMouseLeave}
+                onFocus={props.onFocus}
+                onBlur={props.onBlur}
+                onMouseOver={props.onMouseEnter}
+                onMouseLeave={props.onMouseLeave}
             >
                 { choices.map((choice, index) => (
                     <option key={index} value={choice}> {choice} </option>
@@ -112,8 +98,6 @@ class PureStringSequenceOption extends Component {
         this.onBlur = this.onBlur.bind(this)
         this.onKeyDown = this.onKeyDown.bind(this)
         this.onChange = this.onChange.bind(this)
-        this.onMouseEnter = this.onMouseEnter.bind(this)
-        this.onMouseLeave = this.onMouseLeave.bind(this)
     }
 
     onFocus() {
@@ -124,14 +108,6 @@ class PureStringSequenceOption extends Component {
     onBlur() {
         this.setState( {focus: false, height: 1})
         this.props.onBlur()
-    }
-
-    onMouseEnter() {
-        this.props.onMouseEnter()
-    }
-
-    onMouseLeave() {
-        this.props.onMouseLeave()
     }
 
     onKeyDown(e) {
@@ -146,7 +122,7 @@ class PureStringSequenceOption extends Component {
 
     render() {
         const {height, value} = this.state
-        const {error} = this.props
+        const {error, onMouseEnter, onMouseLeave} = this.props
         return (
             <div className={classnames('input-group', {'has-error': error})}>
             <textarea
@@ -157,8 +133,8 @@ class PureStringSequenceOption extends Component {
                 onKeyDown={this.onKeyDown}
                 onFocus={this.onFocus}
                 onBlur={this.onBlur}
-                onMouseEnter={this.onMouseEnter}
-                onMouseLeave={this.onMouseLeave}
+                onMouseEnter={onMouseEnter}
+                onMouseLeave={onMouseLeave}
             />
             </div>
         )
@@ -183,7 +159,6 @@ class OptionMaster extends Component {
                 mousefocus: false,
                 focus: false,
                 error: false,
-
         }
         if (props.option.choices) {
             this.WrappedComponent = PureChoicesOption
@@ -198,17 +173,12 @@ class OptionMaster extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.option.value !== this.state.option.value){
-           this.setState({ error: true })
-        }
-        else{
-            this.setState({ option: nextProps.option, error: false })
-        }
+        this.setState({ option: nextProps.option })
     }
 
     onChange(e) {
         const { option, name } = this.state
-        this.setState({ option: {...option, value: e.target.value}})
+        const { updateOptions } = this.props
         switch (option.type) {
             case 'bool' :
                 updateOptions({[name]: !option.value})
@@ -242,9 +212,11 @@ class OptionMaster extends Component {
     }
 
     render() {
-        const { name, children } = this.props
-        const { option, focus, mousefocus, error } = this.state
+        const { name, children, client_options } = this.props
+        const { option, focus, mousefocus } = this.state
         const WrappedComponent = this.WrappedComponent
+        let error = (name in client_options) ? client_options[name].error : false,
+            value = (name in client_options) ? client_options[name].value : option.value
         return (
             <div className="row">
                 <div className="col-sm-8">
@@ -253,7 +225,7 @@ class OptionMaster extends Component {
                 <div className="col-sm-4">
                     <WrappedComponent
                         children={children}
-                        value={option.value}
+                        value={value}
                         onChange={this.onChange}
                         name={name}
                         choices={option.choices}
@@ -276,8 +248,10 @@ class OptionMaster extends Component {
 }
 
 export default connect(
-    null,
+    state => ({
+        client_options: state.ui.option
+    }),
     {
-        updateOptions: updateOptions
+       updateOptions
     }
 )(OptionMaster)
