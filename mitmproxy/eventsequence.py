@@ -1,7 +1,8 @@
 import typing
 
-from mitmproxy import controller, flow
+from mitmproxy import controller
 from mitmproxy import http
+from mitmproxy import flow
 from mitmproxy import tcp
 from mitmproxy import websocket
 
@@ -10,21 +11,25 @@ Events = frozenset([
     "clientdisconnect",
     "serverconnect",
     "serverdisconnect",
+    # TCP
     "tcp_start",
     "tcp_message",
     "tcp_error",
     "tcp_end",
+    # HTTP
     "http_connect",
     "request",
     "requestheaders",
     "response",
     "responseheaders",
     "error",
+    # WebSocket
     "websocket_handshake",
     "websocket_start",
     "websocket_message",
     "websocket_error",
     "websocket_end",
+    # misc
     "next_layer",
     "configure",
     "done",
@@ -75,11 +80,11 @@ def _iterate_tcp(f: tcp.TCPFlow):
 
 TEventGenerator = typing.Iterator[typing.Tuple[str, typing.Any]]
 
-_iterate_map: typing.Dict[flow.Flow, typing.Callable[[flow.Flow], TEventGenerator]] = {
+_iterate_map = {
     http.HTTPFlow: _iterate_http,
     websocket.WebSocketFlow: _iterate_websocket,
     tcp.TCPFlow: _iterate_tcp
-}
+}  # type: typing.Dict[flow.Flow, typing.Callable[[flow.Flow], TEventGenerator]]
 
 
 def iterate(f: flow.Flow) -> TEventGenerator:

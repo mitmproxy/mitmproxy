@@ -2,7 +2,6 @@ import argparse
 import os
 
 from mitmproxy import options
-from mitmproxy import version
 
 
 CONFIG_PATH = os.path.join(options.CA_DIR, "config.yaml")

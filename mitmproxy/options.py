@@ -209,15 +209,11 @@ class Options(optmanager.OptManager):
         self.add_option(
             "proxyauth", Optional[str], None,
             """
-            Require proxy authentication. Value may be "any" to require
-            authenticaiton but accept any credentials, start with "@" to specify
-            a path to an Apache htpasswd file, be of the form
-            "username:password", or be of the form
-            "ldap[s]:url_server_ldap:dn_auth:password:dn_subtree",
-            the dn_auth & password is the dn/pass used to authenticate
-            the dn subtree is the subtree that we will search to find the username
-            an example would be
-            "ldap:localhost:cn=default,dc=example,dc=com:password:ou=application,dc=example,dc=com".
+            Require proxy authentication. Format:
+            "username:pass",
+            "any" to accept any user/pass combination,
+            "@path" to use an Apache htpasswd file,
+            or "ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" for LDAP authentication.
             """
         )
         self.add_option(
@@ -288,7 +284,7 @@ class Options(optmanager.OptManager):
             """
             Mode can be "regular", "transparent", "socks5", "reverse:SPEC",
             or "upstream:SPEC". For reverse and upstream proxy modes, SPEC
-            is proxy specification in the form of "http[s]://host[:port]".
+            is host specification in the form of "http[s]://host[:port]".
             """
         )
         self.add_option(
@@ -311,9 +307,8 @@ class Options(optmanager.OptManager):
         self.add_option(
             "http2_priority", bool, False,
             """
-            PRIORITY forwarding for HTTP/2 connections. PRIORITY forwarding is
-            disabled by default, because some webservers fail to implement the
-            RFC properly.
+            PRIORITY forwarding for HTTP/2 connections. Disabled by default to ensure compatibility
+            with misbehaving servers.
             """
         )
         self.add_option(
@@ -337,7 +332,7 @@ class Options(optmanager.OptManager):
         self.add_option(
             "upstream_auth", Optional[str], None,
             """
-            Add HTTP Basic authentcation to upstream proxy and reverse proxy
+            Add HTTP Basic authentication to upstream proxy and reverse proxy
             requests. Format: username:password.
             """
         )
