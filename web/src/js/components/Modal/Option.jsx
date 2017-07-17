@@ -16,11 +16,16 @@ BooleanOption.PropTypes = {
 }
 function BooleanOption({ value, onChange, ...props }) {
     return (
-        <input type="checkbox"
-               checked={value}
-               onChange={e => onChange(e.target.checked)}
-               {...props}
-        />
+        <div className="checkbox">
+            <label>
+                <input type="checkbox"
+                       checked={value}
+                       onChange={e => onChange(e.target.checked)}
+                       {...props}
+                />
+                Enable
+            </label>
+        </div>
     )
 }
 
@@ -36,6 +41,14 @@ function StringOption({ value, onChange, ...props }) {
                {...props}
         />
     )
+}
+function Optional(Component) {
+    return function ({ onChange, ...props }) {
+        return <Component
+            onChange={x => onChange(x ? x : null)}
+            {...props}
+        />
+    }
 }
 
 NumberOption.PropTypes = {
@@ -81,7 +94,7 @@ function StringSequenceOption({ value, onChange, ...props }) {
     return <textarea
         rows={height}
         value={value.join("\n")}
-        onChange={e => onChange(e.target.value.split("\n"))}
+        onChange={e => onChange(e.target.value.split("\n").filter(x => x.trim()))}
         {...props}
     />
 }
@@ -90,24 +103,28 @@ const Options = {
     "bool": BooleanOption,
     "str": StringOption,
     "int": NumberOption,
-    "optional str": StringOption,
+    "optional str": Optional(StringOption),
     "sequence of str": StringSequenceOption,
 }
 
-function PureOption({ choices, type, value, onChange }) {
+function PureOption({ choices, type, value, onChange, name }) {
+    let Opt, props = {}
     if (choices) {
-        return <ChoicesOption
-            value={value}
-            onChange={onChange}
-            choices={choices}
-            onKeyDown={stopPropagation}
-        />
+        Opt = ChoicesOption;
+        props.choices = choices
+    } else {
+        Opt = Options[type]
     }
-    const Opt = Options[type]
+    if (Opt !== BooleanOption) {
+        props.className = "form-control"
+    }
+
     return <Opt
+        name={name}
         value={value}
         onChange={onChange}
         onKeyDown={stopPropagation}
+        {...props}
     />
 }
 export default connect(

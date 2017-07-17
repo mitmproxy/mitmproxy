@@ -4,7 +4,7 @@ import * as modalAction from "../../ducks/ui/modal"
 import Option from "./Option"
 
 function PureOptionHelp({help}){
-    return <div className="small text-muted">{help}</div>;
+    return <div className="help-block small">{help}</div>;
 }
 const OptionHelp = connect((state, {name}) => ({
     help: state.options[name].help,
@@ -42,12 +42,12 @@ class PureOptionModal extends Component {
                 </div>
 
                 <div className="modal-body">
-                    <div className="container-fluid">
+                    <div className="form-horizontal">
                         {
                             options.map(name =>
-                                <div key={name} className="row">
+                                <div key={name} className="form-group">
                                     <div className="col-xs-6">
-                                        {name}
+                                        <label htmlFor={name}>{name}</label>
                                         <OptionHelp name={name}/>
                                     </div>
                                     <div className="col-xs-6">
