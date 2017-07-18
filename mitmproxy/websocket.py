@@ -45,6 +45,7 @@ class WebSocketFlow(flow.Flow):
         self.close_code = '(status code missing)'
         self.close_message = '(message missing)'
         self.close_reason = 'unknown status code'
+        self.stream = False
 
         if handshake_flow:
             self.client_key = websockets.get_client_key(handshake_flow.request.headers)

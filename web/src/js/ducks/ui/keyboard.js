@@ -1,6 +1,7 @@
 import { Key } from "../../utils"
 import { selectTab } from "./flow"
 import * as flowsActions from "../flows"
+import * as modalActions from "./modal"
 
 
 export function onKeyDown(e) {
@@ -46,7 +47,11 @@ export function onKeyDown(e) {
                 break
 
             case Key.ESC:
-                dispatch(flowsActions.select(null))
+                if(getState().ui.modal.activeModal){
+                    dispatch(modalActions.hideModal())
+                } else {
+                    dispatch(flowsActions.select(null))
+                }
                 break
 
             case Key.LEFT: {

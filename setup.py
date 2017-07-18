@@ -74,7 +74,7 @@ setup(
         "ldap3>=2.2.0, <2.3",
         "passlib>=1.6.5, <1.8",
         "pyasn1>=0.1.9, <0.3",
-        "pyOpenSSL>=16.0, <17.1",
+        "pyOpenSSL>=16.0,<17.2",
         "pyparsing>=2.1.3, <2.3",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <3",
@@ -98,14 +98,14 @@ setup(
             "pytest>=3.1, <4",
             "rstcheck>=2.2, <4.0",
             "sphinx_rtd_theme>=0.1.9, <0.3",
-            "sphinx-autobuild>=0.5.2, <0.7",
+            "sphinx-autobuild>=0.5.2, <0.8",
             "sphinx>=1.3.5, <1.7",
             "sphinxcontrib-documentedlist>=0.5.0, <0.7",
             "tox>=2.3, <3",
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.7",
-            "Pillow>=3.2, <4.2",
+            "Pillow>=3.2,<4.3",
         ]
     }
 )

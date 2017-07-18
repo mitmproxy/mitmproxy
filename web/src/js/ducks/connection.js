@@ -1,6 +1,6 @@
 export const ConnectionState = {
     INIT: Symbol("init"),
-    FETCHING: Symbol("fetching"), // WebSocket is established, but still startFetching resources.
+    FETCHING: Symbol("fetching"), // WebSocket is established, but still fetching resources.
     ESTABLISHED: Symbol("established"),
     ERROR: Symbol("error"),
     OFFLINE: Symbol("offline"), // indicates that there is no live (websocket) backend.
