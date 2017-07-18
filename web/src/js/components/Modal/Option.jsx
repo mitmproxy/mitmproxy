@@ -3,6 +3,7 @@ import PropTypes from "prop-types"
 import { connect } from "react-redux"
 import { update as updateOptions } from "../../ducks/options"
 import { Key } from "../../utils"
+import classnames from 'classnames'
 
 const stopPropagation = e => {
     if (e.keyCode !== Key.ESC) {
@@ -93,7 +94,7 @@ function StringSequenceOption({ value, onChange, ...props }) {
     const height = Math.max(value.length, 1)
     return <textarea
         rows={height}
-        value={value.join("\n")}
+        value={value.join('\n')}
         onChange={e => onChange(e.target.value.split("\n").filter(x => x.trim()))}
         {...props}
     />
@@ -107,7 +108,7 @@ const Options = {
     "sequence of str": StringSequenceOption,
 }
 
-function PureOption({ choices, type, value, onChange, name }) {
+function PureOption({ choices, type, value, onChange, name, error }) {
     let Opt, props = {}
     if (choices) {
         Opt = ChoicesOption;
@@ -119,13 +120,15 @@ function PureOption({ choices, type, value, onChange, name }) {
         props.className = "form-control"
     }
 
-    return <Opt
-        name={name}
-        value={value}
-        onChange={onChange}
-        onKeyDown={stopPropagation}
-        {...props}
-    />
+    return <div className={classnames({'has-error':error})}>
+                <Opt
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    onKeyDown={stopPropagation}
+                    {...props}
+                />
+            </div>
 }
 export default connect(
     (state, { name }) => ({

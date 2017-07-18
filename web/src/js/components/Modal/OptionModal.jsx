@@ -69,7 +69,7 @@ class PureOptionModal extends Component {
 
 export default connect(
     state => ({
-        options: Object.keys(state.options)
+        options: Object.keys(state.options).sort()
     }),
     {
         hideModal: modalAction.hideModal,
