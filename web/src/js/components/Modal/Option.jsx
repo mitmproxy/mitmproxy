@@ -95,7 +95,7 @@ function StringSequenceOption({ value, onChange, ...props }) {
     return <textarea
         rows={height}
         value={value.join('\n')}
-        onChange={e => onChange(e.target.value.split("\n").filter(x => x.trim()))}
+        onChange={e => onChange(e.target.value.split("\n"))}
         {...props}
     />
 }
