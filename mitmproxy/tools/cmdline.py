@@ -2,7 +2,6 @@ import argparse
 import os
 
 from mitmproxy import options
-from mitmproxy import version
 
 
 CONFIG_PATH = os.path.join(options.CA_DIR, "config.yaml")
@@ -12,13 +11,8 @@ def common_options(parser, opts):
     parser.add_argument(
         '--version',
         action='store_true',
+        help="show version number and exit",
         dest='version',
-    )
-    parser.add_argument(
-        '--shortversion',
-        action='version',
-        help="show program's short version number and exit",
-        version=version.VERSION
     )
     parser.add_argument(
         '--options',
