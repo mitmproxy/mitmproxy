@@ -84,7 +84,7 @@ _iterate_map = {
     http.HTTPFlow: _iterate_http,
     websocket.WebSocketFlow: _iterate_websocket,
     tcp.TCPFlow: _iterate_tcp
-}  # type: typing.Dict[flow.Flow, typing.Callable[[flow.Flow], TEventGenerator]]
+}  # type: typing.Dict[typing.Type[flow.Flow], typing.Callable[[flow.Flow], TEventGenerator]]
 
 
 def iterate(f: flow.Flow) -> TEventGenerator:
