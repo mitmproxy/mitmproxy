@@ -24,12 +24,14 @@ def load_script(actx, path):
     # the fullname is not unique among scripts, so if there already is an existing script with said
     # fullname, remove it.
     sys.modules.pop(fullname, None)
-    loader = importlib.machinery.SourceFileLoader(fullname, path)
     try:
         oldpath = sys.path
         sys.path.insert(0, os.path.dirname(path))
         with addonmanager.safecall():
-            m = loader.load_module()
+            loader = importlib.machinery.SourceFileLoader(fullname, path)
+            spec = importlib.util.spec_from_loader(fullname, loader=loader)
+            m = importlib.util.module_from_spec(spec)
+            loader.exec_module(m)
             if not getattr(m, "name", None):
                 m.name = path
             return m
