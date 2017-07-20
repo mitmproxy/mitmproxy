@@ -14,7 +14,7 @@ export default function reducer(state = defaultState, action) {
             return {
                 ...state,
                 [action.option]: {
-                    isUpdate: true,
+                    isUpdating: true,
                     value: action.value,
                     error: false,
                 }

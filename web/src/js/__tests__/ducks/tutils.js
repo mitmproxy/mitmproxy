@@ -35,6 +35,12 @@ export function TStore(){
             },
             modal: {
                 activeModal: undefined
+            },
+            optionsEditor: {
+                booleanOption: { isUpdating: true, error: false },
+                strOption: { error: true },
+                intOption: {},
+                choiceOption: {},
             }
         },
         settings: {

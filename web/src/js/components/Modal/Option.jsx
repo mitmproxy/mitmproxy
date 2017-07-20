@@ -70,7 +70,7 @@ ChoicesOption.PropTypes = {
     value: PropTypes.string.isRequired,
     onChange: PropTypes.func.isRequired,
 }
-function ChoicesOption({ value, onChange, choices, ...props }) {
+export function ChoicesOption({ value, onChange, choices, ...props }) {
     return (
         <select
             onChange={(e) => onChange(e.target.value)}
@@ -100,7 +100,7 @@ function StringSequenceOption({ value, onChange, ...props }) {
     />
 }
 
-const Options = {
+export const Options = {
     "bool": BooleanOption,
     "str": StringOption,
     "int": NumberOption,

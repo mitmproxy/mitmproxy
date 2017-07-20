@@ -47,117 +47,165 @@ exports[`Modal Component should render correctly 2`] = `
             className="modal-body"
           >
             <div
-              className="container-fluid"
+              className="form-horizontal"
             >
               <div
-                className="row"
+                className="form-group"
               >
                 <div
-                  className="col-sm-8"
+                  className="col-xs-6"
                 >
-                  booleanOption
-                </div>
-                <div
-                  className="col-sm-4"
-                >
-                  <input
-                    checked={false}
-                    onBlur={[Function]}
-                    onChange={[Function]}
-                    onFocus={[Function]}
-                    onMouseLeave={[Function]}
-                    onMouseOver={[Function]}
-                    type="checkbox"
-                  />
-                </div>
-              </div>
-              <div
-                className="row"
-              >
-                <div
-                  className="col-sm-8"
-                >
-                  choiceOption
-                </div>
-                <div
-                  className="col-sm-4"
-                >
-                  <select
-                    name="choiceOption"
-                    onBlur={[Function]}
-                    onChange={[Function]}
-                    onFocus={[Function]}
-                    onMouseLeave={[Function]}
-                    onMouseOver={[Function]}
-                    selected="b"
+                  <label
+                    htmlFor="booleanOption"
                   >
-                    <option
-                      value="a"
+                    booleanOption
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    foo
+                  </div>
+                </div>
+                <div
+                  className="col-xs-6"
+                >
+                  <div
+                    className=""
+                  >
+                    <div
+                      className="checkbox"
                     >
-                       
-                      a
-                       
-                    </option>
-                    <option
-                      value="b"
-                    >
-                       
-                      b
-                       
-                    </option>
-                    <option
-                      value="c"
-                    >
-                       
-                      c
-                       
-                    </option>
-                  </select>
+                      <label>
+                        <input
+                          checked={false}
+                          name="booleanOption"
+                          onChange={[Function]}
+                          onKeyDown={[Function]}
+                          type="checkbox"
+                        />
+                        Enable
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div
-                className="row"
+                className="form-group"
               >
                 <div
-                  className="col-sm-8"
+                  className="col-xs-6"
                 >
-                  intOption
+                  <label
+                    htmlFor="choiceOption"
+                  >
+                    choiceOption
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    foo
+                  </div>
                 </div>
                 <div
-                  className="col-sm-4"
+                  className="col-xs-6"
                 >
-                  <input
-                    onBlur={[Function]}
-                    onChange={[Function]}
-                    onFocus={[Function]}
-                    onKeyDown={[Function]}
-                    onMouseLeave={[Function]}
-                    onMouseOver={[Function]}
-                    type="number"
-                    value={1}
-                  />
+                  <div
+                    className=""
+                  >
+                    <select
+                      className="form-control"
+                      name="choiceOption"
+                      onChange={[Function]}
+                      onKeyDown={[Function]}
+                      selected="b"
+                    >
+                      <option
+                        value="a"
+                      >
+                        a
+                      </option>
+                      <option
+                        value="b"
+                      >
+                        b
+                      </option>
+                      <option
+                        value="c"
+                      >
+                        c
+                      </option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div
-                className="row"
+                className="form-group"
               >
                 <div
-                  className="col-sm-8"
+                  className="col-xs-6"
                 >
-                  strOption
+                  <label
+                    htmlFor="intOption"
+                  >
+                    intOption
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    foo
+                  </div>
                 </div>
                 <div
-                  className="col-sm-4"
+                  className="col-xs-6"
                 >
-                  <input
-                    onBlur={[Function]}
-                    onChange={[Function]}
-                    onFocus={[Function]}
-                    onKeyDown={[Function]}
-                    onMouseLeave={[Function]}
-                    onMouseOver={[Function]}
-                    type="text"
-                    value="str content"
+                  <div
+                    className=""
+                  >
+                    <input
+                      className="form-control"
+                      name="intOption"
+                      onChange={[Function]}
+                      onKeyDown={[Function]}
+                      type="number"
+                      value={1}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                className="form-group"
+              >
+                <div
+                  className="col-xs-6"
+                >
+                  <label
+                    htmlFor="strOption"
+                  >
+                    strOption
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    foo
+                  </div>
+                </div>
+                <div
+                  className="col-xs-6"
+                >
+                  <div
+                    className="has-error"
+                  >
+                    <input
+                      className="form-control"
+                      name="strOption"
+                      onChange={[Function]}
+                      onKeyDown={[Function]}
+                      type="text"
+                      value="str content"
+                    />
+                  </div>
+                  <div
+                    className="small text-danger"
                   />
                 </div>
               </div>

@@ -25,7 +25,7 @@ export default function reducer(state = defaultState, action) {
     }
 }
 
-let sendUpdate = (option, value, dispatch) => {
+export function pureSendUpdate (option, value, dispatch) {
     fetchApi.put('/options', { [option]: value }).then(response => {
         if (response.status === 200) {
             dispatch(optionsEditorActions.updateSuccess(option))
@@ -36,7 +36,7 @@ let sendUpdate = (option, value, dispatch) => {
         }
     })
 }
-sendUpdate = _.throttle(sendUpdate, 700, { leading: true, trailing: true })
+let sendUpdate = _.throttle(pureSendUpdate, 700, { leading: true, trailing: true })
 
 export function update(option, value) {
     return dispatch => {
