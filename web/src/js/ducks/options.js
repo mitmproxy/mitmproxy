@@ -1,13 +1,12 @@
-import { fetchApi } from '../utils'
+import { fetchApi } from "../utils"
+import * as optionsEditorActions from "./ui/optionsEditor"
+import _ from "lodash"
 
-export const RECEIVE        = 'OPTIONS_RECEIVE'
-export const UPDATE         = 'OPTIONS_UPDATE'
+export const RECEIVE = 'OPTIONS_RECEIVE'
+export const UPDATE = 'OPTIONS_UPDATE'
 export const REQUEST_UPDATE = 'REQUEST_UPDATE'
-export const UNKNOWN_CMD    = 'OPTIONS_UNKNOWN_CMD'
 
-const defaultState = {
-
-}
+const defaultState = {}
 
 export default function reducer(state = defaultState, action) {
     switch (action.type) {
@@ -26,7 +25,22 @@ export default function reducer(state = defaultState, action) {
     }
 }
 
-export function update(options) {
-    fetchApi.put('/options', options)
-    return { type: REQUEST_UPDATE }
+export function pureSendUpdate (option, value, dispatch) {
+    fetchApi.put('/options', { [option]: value }).then(response => {
+        if (response.status === 200) {
+            dispatch(optionsEditorActions.updateSuccess(option))
+        } else {
+            response.text().then(error => {
+                dispatch(optionsEditorActions.updateError(option, error))
+            })
+        }
+    })
+}
+let sendUpdate = _.throttle(pureSendUpdate, 700, { leading: true, trailing: true })
+
+export function update(option, value) {
+    return dispatch => {
+        dispatch(optionsEditorActions.startUpdate(option, value))
+        sendUpdate(option, value, dispatch);
+    }
 }

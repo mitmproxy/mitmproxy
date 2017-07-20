@@ -6,6 +6,7 @@ import reduceFlows from '../../../ducks/flows'
 import reduceUI from '../../../ducks/ui/index'
 import * as flowsActions from '../../../ducks/flows'
 import * as UIActions from '../../../ducks/ui/flow'
+import * as modalActions from '../../../ducks/ui/modal'
 import configureStore from 'redux-mock-store'
 import thunk from 'redux-thunk'
 import { fetchApi } from '../../../utils'
@@ -152,6 +153,12 @@ describe('onKeyDown', () => {
         store.dispatch(createKeyEvent(Key.BACKSPACE, false, true))
         store.dispatch(createKeyEvent(0))
         expect(fetchApi).not.toBeCalled()
+    })
+
+    it('should close modal', () => {
+        store.getState().ui.modal.activeModal = true
+        store.dispatch(createKeyEvent(Key.ESC))
+        expect(store.getActions()).toEqual([ {type: modalActions.HIDE_MODAL} ])
     })
 
 })

@@ -47,94 +47,173 @@ exports[`Modal Component should render correctly 2`] = `
             className="modal-body"
           >
             <div
-              className="menu-entry"
+              className="form-horizontal"
             >
-              <label>
-                booleanOption
-                <input
-                  checked={false}
-                  onChange={[Function]}
-                  title="foo"
-                  type="checkbox"
-                />
-              </label>
-            </div>
-            <div
-              className="menu-entry"
-            >
-              <label
-                htmlFor=""
+              <div
+                className="form-group"
               >
-                choiceOption
-                <select
-                  name="choiceOption"
-                  onChange={[Function]}
-                  selected="b"
-                  title="foo"
+                <div
+                  className="col-xs-6"
                 >
-                  <option
-                    value="a"
+                  <label
+                    htmlFor="booleanOption"
                   >
-                     
-                    a
-                     
-                  </option>
-                  <option
-                    value="b"
+                    booleanOption
+                  </label>
+                  <div
+                    className="help-block small"
                   >
-                     
-                    b
-                     
-                  </option>
-                  <option
-                    value="c"
+                    foo
+                  </div>
+                </div>
+                <div
+                  className="col-xs-6"
+                >
+                  <div
+                    className=""
                   >
-                     
-                    c
-                     
-                  </option>
-                </select>
-              </label>
-            </div>
-            <div
-              className="menu-entry"
-            >
-              <label>
-                intOption
-                <input
-                  onChange={[Function]}
-                  onKeyDown={[Function]}
-                  title="foo"
-                  type="number"
-                  value={1}
-                />
-              </label>
-            </div>
-            <div
-              className="menu-entry"
-            >
-              <label>
-                strOption
-                <input
-                  onChange={[Function]}
-                  onKeyDown={[Function]}
-                  title="foo"
-                  type="text"
-                  value="str content"
-                />
-              </label>
+                    <div
+                      className="checkbox"
+                    >
+                      <label>
+                        <input
+                          checked={false}
+                          name="booleanOption"
+                          onChange={[Function]}
+                          onKeyDown={[Function]}
+                          type="checkbox"
+                        />
+                        Enable
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="form-group"
+              >
+                <div
+                  className="col-xs-6"
+                >
+                  <label
+                    htmlFor="choiceOption"
+                  >
+                    choiceOption
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    foo
+                  </div>
+                </div>
+                <div
+                  className="col-xs-6"
+                >
+                  <div
+                    className=""
+                  >
+                    <select
+                      className="form-control"
+                      name="choiceOption"
+                      onChange={[Function]}
+                      onKeyDown={[Function]}
+                      selected="b"
+                    >
+                      <option
+                        value="a"
+                      >
+                        a
+                      </option>
+                      <option
+                        value="b"
+                      >
+                        b
+                      </option>
+                      <option
+                        value="c"
+                      >
+                        c
+                      </option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="form-group"
+              >
+                <div
+                  className="col-xs-6"
+                >
+                  <label
+                    htmlFor="intOption"
+                  >
+                    intOption
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    foo
+                  </div>
+                </div>
+                <div
+                  className="col-xs-6"
+                >
+                  <div
+                    className=""
+                  >
+                    <input
+                      className="form-control"
+                      name="intOption"
+                      onChange={[Function]}
+                      onKeyDown={[Function]}
+                      type="number"
+                      value={1}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div
+                className="form-group"
+              >
+                <div
+                  className="col-xs-6"
+                >
+                  <label
+                    htmlFor="strOption"
+                  >
+                    strOption
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    foo
+                  </div>
+                </div>
+                <div
+                  className="col-xs-6"
+                >
+                  <div
+                    className="has-error"
+                  >
+                    <input
+                      className="form-control"
+                      name="strOption"
+                      onChange={[Function]}
+                      onKeyDown={[Function]}
+                      type="text"
+                      value="str content"
+                    />
+                  </div>
+                  <div
+                    className="small text-danger"
+                  />
+                </div>
+              </div>
             </div>
           </div>
           <div
             className="modal-footer"
-          >
-            <button
-              className="btn btn-primary"
-              type="button"
-            >
-              Save Changes
-            </button>
-          </div>
+          />
         </div>
       </div>
     </div>

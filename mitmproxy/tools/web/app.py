@@ -447,7 +447,7 @@ class Options(RequestHandler):
         update = self.json
         try:
             self.master.options.update(**update)
-        except (KeyError, TypeError) as err:
+        except Exception as err:
             raise APIError(400, "{}".format(err))
 
 
