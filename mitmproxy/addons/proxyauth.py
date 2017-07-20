@@ -61,7 +61,10 @@ class ProxyAuth:
             - True, if authentication is done as if mitmproxy is a proxy
             - False, if authentication is done as if mitmproxy is a HTTP server
         """
-        return ctx.options.mode in ("regular", "upstream")
+        if ctx.options.mode == "regular" or "upstream" in ctx.options.mode:
+            return True
+        else:
+            return False
 
     def which_auth_header(self) -> str:
         if self.is_proxy_auth():
