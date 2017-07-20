@@ -79,6 +79,7 @@ def common_options(parser, opts):
     opts.make_parser(group, "upstream_auth", metavar="USER:PASS")
     opts.make_parser(group, "proxyauth", metavar="SPEC")
     opts.make_parser(group, "rawtcp")
+    opts.make_parser(group, "keep_host_header")
 
     # Proxy SSL options
     group = parser.add_argument_group("SSL")
