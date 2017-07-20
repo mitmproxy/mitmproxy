@@ -30,6 +30,30 @@ def test_load_script():
         assert not ns
 
 
+def test_load_fullname():
+    """
+    Test that loading two scripts at locations a/foo.py and b/foo.py works.
+    This only succeeds if they get assigned different basenames.
+
+    """
+    with taddons.context() as tctx:
+        ns = script.load_script(
+            tctx.ctx(),
+            tutils.test_data.path(
+                "mitmproxy/data/addonscripts/addon.py"
+            )
+        )
+        assert ns.addons
+        ns2 = script.load_script(
+            tctx.ctx(),
+            tutils.test_data.path(
+                "mitmproxy/data/addonscripts/same_filename/addon.py"
+            )
+        )
+        assert ns.name != ns2.name
+        assert not hasattr(ns2, "addons")
+
+
 def test_script_print_stdout():
     with taddons.context() as tctx:
         with mock.patch('mitmproxy.ctx.log.warn') as mock_warn:

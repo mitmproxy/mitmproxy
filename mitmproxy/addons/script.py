@@ -1,5 +1,6 @@
 import os
-import importlib
+import importlib.util
+import importlib.machinery
 import time
 import sys
 import typing
@@ -16,7 +17,14 @@ def load_script(actx, path):
     if not os.path.exists(path):
         ctx.log.info("No such file: %s" % path)
         return
-    loader = importlib.machinery.SourceFileLoader(os.path.basename(path), path)
+
+    fullname = "__mitmproxy_script__.{}".format(
+        os.path.splitext(os.path.basename(path))[0]
+    )
+    # the fullname is not unique among scripts, so if there already is an existing script with said
+    # fullname, remove it.
+    sys.modules.pop(fullname, None)
+    loader = importlib.machinery.SourceFileLoader(fullname, path)
     try:
         oldpath = sys.path
         sys.path.insert(0, os.path.dirname(path))
@@ -64,7 +72,6 @@ class Script:
                 ctx.log.info("Loading script: %s" % self.path)
                 if self.ns:
                     ctx.master.addons.remove(self.ns)
-                    del sys.modules[self.ns.__name__]
                 self.ns = load_script(ctx, self.fullpath)
                 if self.ns:
                     # We're already running, so we have to explicitly register and
