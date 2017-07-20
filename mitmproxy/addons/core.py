@@ -112,7 +112,7 @@ class Core:
         val = sval  # type: typing.Union[int, str]
         if spec == "status_code":
             try:
-                val = int(val)
+                val = int(val)  # type: ignore
             except ValueError as v:
                 raise exceptions.CommandError(
                     "Status code is not an integer: %s" % val
@@ -145,7 +145,7 @@ class Core:
                 if spec == "status_code":
                     resp.status_code = val
                     if val in status_codes.RESPONSES:
-                        resp.reason = status_codes.RESPONSES[int(val)]
+                        resp.reason = status_codes.RESPONSES[val]  # type: ignore
                 elif spec == "reason":
                     resp.reason = val
                 else:

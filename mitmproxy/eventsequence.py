@@ -1,8 +1,8 @@
 import typing
 
 from mitmproxy import controller
-from mitmproxy import http
 from mitmproxy import flow
+from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
 
@@ -40,8 +40,10 @@ Events = frozenset([
     "update",
 ])
 
+TEventGenerator = typing.Iterator[typing.Tuple[str, typing.Any]]
 
-def _iterate_http(f: http.HTTPFlow):
+
+def _iterate_http(f: http.HTTPFlow) -> TEventGenerator:
     if f.request:
         yield "requestheaders", f
         yield "request", f
@@ -52,7 +54,7 @@ def _iterate_http(f: http.HTTPFlow):
         yield "error", f
 
 
-def _iterate_websocket(f: websocket.WebSocketFlow):
+def _iterate_websocket(f: websocket.WebSocketFlow) -> TEventGenerator:
     messages = f.messages
     f.messages = []
     f.reply = controller.DummyReply()
@@ -65,7 +67,7 @@ def _iterate_websocket(f: websocket.WebSocketFlow):
     yield "websocket_end", f
 
 
-def _iterate_tcp(f: tcp.TCPFlow):
+def _iterate_tcp(f: tcp.TCPFlow) -> TEventGenerator:
     messages = f.messages
     f.messages = []
     f.reply = controller.DummyReply()
@@ -78,19 +80,17 @@ def _iterate_tcp(f: tcp.TCPFlow):
     yield "tcp_end", f
 
 
-TEventGenerator = typing.Iterator[typing.Tuple[str, typing.Any]]
-
 _iterate_map = {
     http.HTTPFlow: _iterate_http,
     websocket.WebSocketFlow: _iterate_websocket,
-    tcp.TCPFlow: _iterate_tcp
-}  # type: typing.Dict[typing.Type[flow.Flow], typing.Callable[[flow.Flow], TEventGenerator]]
+    tcp.TCPFlow: _iterate_tcp,
+}  # type: typing.Dict[typing.Type[flow.Flow], typing.Callable[[typing.Any], TEventGenerator]]
 
 
 def iterate(f: flow.Flow) -> TEventGenerator:
     try:
         e = _iterate_map[type(f)]
-    except KeyError as e:
-        raise TypeError("Unknown flow type: {}".format(f)) from e
+    except KeyError as err:
+        raise TypeError("Unknown flow type: {}".format(f)) from err
     else:
         yield from e(f)

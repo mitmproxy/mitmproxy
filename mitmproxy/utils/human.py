@@ -71,7 +71,7 @@ def format_address(address: tuple) -> str:
     """
     try:
         host = ipaddress.ip_address(address[0])
-        if host.version == 4:
+        if isinstance(host, ipaddress.IPv4Address):
             return "{}:{}".format(str(host), address[1])
         # If IPv6 is mapped to IPv4
         elif host.ipv4_mapped:
