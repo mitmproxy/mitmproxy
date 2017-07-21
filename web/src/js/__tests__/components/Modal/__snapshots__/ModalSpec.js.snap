@@ -136,6 +136,17 @@ exports[`Modal Component should render correctly 2`] = `
                       </option>
                     </select>
                   </div>
+                  <div
+                    className="small"
+                  >
+                    Default: 
+                    <strong>
+                       
+                      a
+                       
+                    </strong>
+                     
+                  </div>
                 </div>
               </div>
               <div
@@ -169,6 +180,17 @@ exports[`Modal Component should render correctly 2`] = `
                       type="number"
                       value={1}
                     />
+                  </div>
+                  <div
+                    className="small"
+                  >
+                    Default: 
+                    <strong>
+                       
+                      0
+                       
+                    </strong>
+                     
                   </div>
                 </div>
               </div>
@@ -207,6 +229,17 @@ exports[`Modal Component should render correctly 2`] = `
                   <div
                     className="small text-danger"
                   />
+                  <div
+                    className="small"
+                  >
+                    Default: 
+                    <strong>
+                       
+                      null
+                       
+                    </strong>
+                     
+                  </div>
                 </div>
               </div>
             </div>
