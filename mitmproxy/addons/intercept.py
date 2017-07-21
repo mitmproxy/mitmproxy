@@ -26,7 +26,7 @@ class Intercept:
                 self.filt(f),
                 not f.request.is_replay,
             ])
-            if should_intercept and ctx.options.intercept_active == True:
+            if should_intercept and ctx.options.intercept_active:
                 f.intercept()
 
     # Handlers
