@@ -10,6 +10,7 @@ The View:
 """
 import collections
 import typing
+import os
 
 import blinker
 import sortedcontainers
@@ -339,6 +340,7 @@ class View(collections.Sequence):
         """
             Load flows into the view, without processing them with addons.
         """
+        path = os.path.expanduser(path)
         try:
             with open(path, "rb") as f:
                 for i in io.FlowReader(f).stream():
