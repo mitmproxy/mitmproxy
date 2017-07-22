@@ -215,6 +215,7 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
 
     anchors = []
     for patt, spec in args.anchors:
+        spec = os.path.expanduser(spec)
         if os.path.isfile(spec):
             with open(spec) as f:
                 data = f.read()
