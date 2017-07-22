@@ -19,7 +19,7 @@ const OptionError = connect((state, {name}) => ({
     error: state.ui.optionsEditor[name] && state.ui.optionsEditor[name].error
 }))(PureOptionError);
 
-function PureOptionDefault({value, defaultVal}){
+export function PureOptionDefault({value, defaultVal}){
     if( value === defaultVal ) {
         return null
     } else {
