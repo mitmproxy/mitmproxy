@@ -64,7 +64,7 @@ setup(
         "brotlipy>=0.5.1, <0.8",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "click>=6.2, <7",
-        "cryptography>=1.4, <1.10",
+        "cryptography>=2.0,<2.1",
         "cssutils>=1.0.1, <1.1",
         "h2>=3.0, <4",
         "html2text>=2016.1.8, <=2016.9.19",
@@ -74,7 +74,7 @@ setup(
         "ldap3>=2.2.0, <2.3",
         "passlib>=1.6.5, <1.8",
         "pyasn1>=0.1.9, <0.3",
-        "pyOpenSSL>=16.0,<17.2",
+        "pyOpenSSL>=17.2,<17.3",
         "pyparsing>=2.1.3, <2.3",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <3",
