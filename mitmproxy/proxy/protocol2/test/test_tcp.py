@@ -88,36 +88,6 @@ def test_simple_explicit(tctx):
     assert list(layer.handle_event(events.HookReply(tcp_end, None))) == []
 
 
-r'''
-def test_simple_alternate_syntax(tctx):
-    """
-    Some alternate syntax experimentations:
-        - no asserts, evaluate when we reach a command or the end.
-        - use <= for final statement
-        - If the final statement is a hook, its data is returned.
-          This replaces placeholders (we must do partial matching on the first <= hook though)
-    """
-    playbook = tutils.playbook(tcp.TCPLayer(tctx))
-
-    flow = (playbook
-        << commands.Hook("tcp_start", mock.Mock())
-        >> events.HookReply(-1, None)
-        << commands.OpenConnection(tctx.server)
-        >> events.OpenConnectionReply(-1, None)
-        >> events.DataReceived(tctx.client, b"hello!")
-        <= commands.Hook("tcp_message", None))
-    assert flow.messages[0].content == b"hello!"
-    (playbook
-        >> events.HookReply(-1, None)
-        << commands.SendData(tctx.server, b"hello!")
-        >> events.ConnectionClosed(tctx.server)
-        << commands.CloseConnection(tctx.client)
-        << commands.Hook("tcp_end", flow)
-        >> events.HookReply(-1, None)
-        <= None)
-'''
-
-
 def test_receive_data_before_server_connected(tctx):
     """
     assert that data received before a server connection is established
@@ -135,18 +105,26 @@ def test_receive_data_before_server_connected(tctx):
         >> events.HookReply(-1, None)
         << commands.SendData(tctx.server, b"hello!")
     )
+    assert f().messages
 
 
 def test_receive_data_after_server_disconnected(tctx):
     """
-    this should just be discarded.
+    data received after a connection has been closed should just be discarded.
     """
+    f = tutils.Placeholder()
     assert (
-        tutils.playbook(tcp.TCPLayer(tctx, True))
+        tutils.playbook(tcp.TCPLayer(tctx))
+        << commands.Hook("tcp_start", f)
+        >> events.HookReply(-1, None)
         << commands.OpenConnection(tctx.server)
         >> events.OpenConnectionReply(-1, None)
         >> events.ConnectionClosed(tctx.server)
         << commands.CloseConnection(tctx.client)
+        << commands.Hook("tcp_end", f)
+        >> events.HookReply(-1, None)
         >> events.DataReceived(tctx.client, b"i'm late")
         << None
     )
+    # not included here as it has not been sent to the server.
+    assert not f().messages
