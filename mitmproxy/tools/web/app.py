@@ -451,6 +451,22 @@ class Options(RequestHandler):
             raise APIError(400, "{}".format(err))
 
 
+class DumpOptions(RequestHandler):
+    def get(self):
+        self.set_header("Content-Disposition", "attachment; filename=options")
+        self.set_header("Content-Type", "application/octet-stream")
+
+        data = optmanager.save(self.master.options)
+        self.write(data)
+
+    def post(self):
+        try:
+            data = optmanager.parse(self.filecontents)
+            self.master.options.update(**data)
+        except Exception as err:
+            raise APIError(400, "{}".format(err))
+
+
 class Application(tornado.web.Application):
     def __init__(self, master, debug):
         self.master = master
@@ -475,7 +491,8 @@ class Application(tornado.web.Application):
                 FlowContentView),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
-            (r"/options", Options)
+            (r"/options", Options),
+            (r"/options/dump", DumpOptions)
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
