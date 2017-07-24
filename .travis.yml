@@ -23,32 +23,10 @@ matrix:
       language: generic
       env: TOXENV=py35 BDIST=1
     - python: 3.5
-      env: TOXENV=py35 OPENSSL=old
-      addons:
-        apt:
-          packages:
-            - libssl-dev
-    - python: 3.5
-      env: TOXENV=py35 BDIST=1 OPENSSL=with-alpn
-      addons:
-        apt:
-          sources:
-            # Debian sid currently holds OpenSSL 1.1.0
-            # change this with future releases!
-            - debian-sid
-          packages:
-            - libssl-dev
+      env: TOXENV=py35 BDIST=1
     - python: 3.6
-      env: TOXENV=py36 OPENSSL=with-alpn
-      addons:
-        apt:
-          sources:
-            # Debian sid currently holds OpenSSL 1.1.0
-            # change this with future releases!
-            - debian-sid
-          packages:
-            - libssl-dev
-    - python: 3.5
+      env: TOXENV=py36
+    - python: 3.6
       env: TOXENV=individual_coverage
     - python: 3.5
       env: TOXENV=docs
@@ -73,9 +51,9 @@ install:
       brew update || brew update
       brew outdated pyenv || brew upgrade pyenv
       eval "$(pyenv init -)"
-      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.5.2
-      pyenv global 3.5.2
-      pyenv shell 3.5.2
+      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.5.3
+      pyenv global 3.5.3
+      pyenv shell 3.5.3
       pip install -U pip setuptools wheel virtualenv
     fi
   - pip install tox
