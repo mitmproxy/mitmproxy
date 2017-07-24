@@ -285,6 +285,10 @@ def test_saving(tmpdir):
     optmanager.load_paths(o, dst)
     assert o.three == "foo"
 
+    o2 = TD2()
+    o2.three = "foo"
+    assert(optmanager.save(o2, None, defaults=False)) == "three: foo\n"
+
     with open(dst, 'a') as f:
         f.write("foobar: '123'")
     assert optmanager.load_paths(o, dst) == {"foobar": "123"}

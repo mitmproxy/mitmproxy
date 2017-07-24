@@ -263,6 +263,18 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert self.put_json("/options", {"wtf": True}).code == 400
         assert self.put_json("/options", {"anticache": "foo"}).code == 400
 
+    def test_option_dump(self):
+        resp = self.fetch("/options/dump")
+        assert b"http2: false" in resp.body
+
+        assert self.fetch("/options/dump", method="POST", body=b"http2: true").code == 200
+        j = json(self.fetch("/options"))
+        assert j["http2"]["value"]
+
+        resp = self.fetch("/options/dump", method="POST", body=b"wtf: true")
+        assert resp.code == 400
+        assert resp.body == b"'Unknown options: wtf'"
+
     def test_err(self):
         with mock.patch("mitmproxy.tools.web.app.IndexHandler.get") as f:
             f.side_effect = RuntimeError
@@ -279,7 +291,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         r2 = yield ws_client.read_message()
         j1 = _json.loads(r1)
         j2 = _json.loads(r2)
-        print(j1)
         response = dict()
         response[j1['resource']] = j1
         response[j2['resource']] = j2
