@@ -1,9 +1,9 @@
+import copy
 import difflib
 import itertools
-import re
 import typing
 
-import copy
+import re
 
 from mitmproxy.proxy.protocol2 import commands
 from mitmproxy.proxy.protocol2 import events
@@ -64,58 +64,46 @@ class playbook:
     """
     layer: layer.Layer
     """The base layer"""
-    playbook: TPlaybook
+    expected: TPlaybook
     """expected command/event sequence"""
     actual: TPlaybook
     """actual command/event sequence"""
-    _final: bool
-    """True if no << or >> operation has been called on this."""
+    _errored: bool
+    """used to check if playbook as been fully asserted"""
 
     def __init__(
             self,
             layer,
-            playbook=None,
+            expected=None,
     ):
-        if playbook is None:
-            playbook = [
+        if expected is None:
+            expected = [
                 events.Start()
             ]
 
         self.layer = layer
-        self.playbook = playbook
+        self.expected = expected
         self.actual = []
-        self._final = True
-
-    def _copy_with(self, entry: TPlaybookEntry):
-        self._final = False
-        p = playbook(
-            self.layer,
-            self.playbook + [entry]
-        )
-        p.actual = self.actual.copy()
-        return p
+        self._errored = False
 
     def __rshift__(self, e):
         """Add an event to send"""
         assert isinstance(e, events.Event)
-        return self._copy_with(e)
+        self.expected.append(e)
+        return self
 
     def __lshift__(self, c):
         """Add an expected command"""
         if c is None:
             return self
         assert isinstance(c, commands.Command)
-        return self._copy_with(c)
+        self.expected.append(c)
+        return self
 
     def __bool__(self):
         """Determine if playbook is correct."""
-
-        self.layer = copy.deepcopy(self.layer)
-        self.playbook = copy.deepcopy(self.playbook)
-        self.actual = copy.deepcopy(self.actual)
-
         already_asserted = len(self.actual)
-        for i, x in enumerate(self.playbook[already_asserted:], already_asserted):
+        for i, x in enumerate(self.expected[already_asserted:], already_asserted):
             if isinstance(x, commands.Command):
                 pass
             else:
@@ -130,26 +118,29 @@ class playbook:
 
         success = all(
             _eq(e, a)
-            for e, a in itertools.zip_longest(self.playbook, self.actual)
+                for e, a in itertools.zip_longest(self.expected, self.actual)
         )
         if not success:
-            def _str(x):
-                # add arrows to diff
-                return f"{'>' if isinstance(x, events.Event) else '<'} {x}"
+            self._errored = True
 
-            diff = difflib.ndiff(
-                [_str(x) for x in self.playbook],
+            def _str(x):
+                x_str = re.sub(r'Placeholder\((.*?)\)', r'\1', str(x))
+                return f"{'>' if isinstance(x, events.Event) else '<'} {x_str}"
+
+            diff = "\n".join(difflib.ndiff(
+                [_str(x) for x in self.expected],
                 [_str(x) for x in self.actual]
-            )
-            print("✗ Playbook mismatch:")
-            print("\n".join(diff))
-            return False
+            ))
+            raise AssertionError(f"Playbook mismatch!\n{diff}")
         else:
             return True
 
     def __del__(self):
-        if self._final and len(self.actual) < len(self.playbook):
+        if not self._errored and len(self.actual) < len(self.expected):
             raise RuntimeError("Unfinished playbook!")
+
+    def fork(self):
+        return copy.deepcopy(self)
 
 
 class Placeholder:
@@ -163,4 +154,4 @@ class Placeholder:
         return self.obj
 
     def __repr__(self):
-        return f"P({repr(self.obj)})"
+        return f"Placeholder({repr(self.obj)})"
