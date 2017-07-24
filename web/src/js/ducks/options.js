@@ -5,6 +5,7 @@ import _ from "lodash"
 export const RECEIVE = 'OPTIONS_RECEIVE'
 export const UPDATE = 'OPTIONS_UPDATE'
 export const REQUEST_UPDATE = 'REQUEST_UPDATE'
+export const SAVE = 'OPTION_SAVE'
 
 const defaultState = {}
 
@@ -43,4 +44,15 @@ export function update(option, value) {
         dispatch(optionsEditorActions.startUpdate(option, value))
         sendUpdate(option, value, dispatch);
     }
+}
+
+export function download() {
+    window.location = '/options/dump'
+    return { type: SAVE }
+}
+
+export function upload(file) {
+    const body = new FormData()
+    body.append('file', file)
+    return dispatch => fetchApi('/options/dump', { method: 'POST', body })
 }

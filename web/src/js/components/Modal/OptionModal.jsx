@@ -1,7 +1,9 @@
 import React, { Component } from "react"
 import { connect } from "react-redux"
 import * as modalAction from "../../ducks/ui/modal"
+import * as optionAction from "../../ducks/options"
 import Option from "./Option"
+import FileChooser from '../../components/common/FileChooser'
 import _ from "lodash"
 
 function PureOptionHelp({help}){
@@ -52,7 +54,7 @@ class PureOptionModal extends Component {
     }
 
     render() {
-        const { hideModal, options } = this.props
+        const { hideModal, options, download, upload } = this.props
         const { title } = this.state
         return (
             <div>
@@ -88,6 +90,17 @@ class PureOptionModal extends Component {
                 </div>
 
                 <div className="modal-footer">
+                    <button type="button" className="btn btn-default" onClick={download}>
+                        <i className="fa fa-download"></i>
+                        Download
+                    </button>
+
+                    <FileChooser
+                        icon="fa-upload"
+                        onOpenFile={file => {upload(file); alert('Option configuration loaded!')}}
+                        text="Load"
+                        className="btn btn-primary"
+                    />
                 </div>
             </div>
         )
@@ -100,5 +113,7 @@ export default connect(
     }),
     {
         hideModal: modalAction.hideModal,
+        download: optionAction.download,
+        upload: optionAction.upload,
     }
 )(PureOptionModal)
