@@ -208,6 +208,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
 
     reqs = []
     for r in args.requests:
+        r = os.path.expanduser(r)
         if os.path.isfile(r):
             with open(r) as f:
                 r = f.read()

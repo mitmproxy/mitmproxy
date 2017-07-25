@@ -10,6 +10,7 @@ The View:
 """
 import collections
 import typing
+import os
 
 import blinker
 import sortedcontainers
@@ -339,12 +340,17 @@ class View(collections.Sequence):
         """
             Load flows into the view, without processing them with addons.
         """
-        with open(path, "rb") as f:
-            for i in io.FlowReader(f).stream():
-                # Do this to get a new ID, so we can load the same file N times and
-                # get new flows each time. It would be more efficient to just have a
-                # .newid() method or something.
-                self.add([i.copy()])
+        path = os.path.expanduser(path)
+        try:
+            with open(path, "rb") as f:
+                for i in io.FlowReader(f).stream():
+                    # Do this to get a new ID, so we can load the same file N times and
+                    # get new flows each time. It would be more efficient to just have a
+                    # .newid() method or something.
+                    self.add([i.copy()])
+        except IOError as e:
+            ctx.log.error(e.strerror)
+            return
 
     @command.command("view.go")
     def go(self, dst: int) -> None:

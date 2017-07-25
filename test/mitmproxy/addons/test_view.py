@@ -170,6 +170,10 @@ def test_load(tmpdir):
         assert len(v) == 2
         v.load_file(path)
         assert len(v) == 4
+        try:
+            v.load_file("nonexistent_file_path")
+        except IOError:
+            assert False
 
 
 def test_resolve():

@@ -75,7 +75,7 @@ class RandomGenerator:
 
 class FileGenerator:
     def __init__(self, path):
-        self.path = path
+        self.path = os.path.expanduser(path)
 
     def __len__(self):
         return os.path.getsize(self.path)

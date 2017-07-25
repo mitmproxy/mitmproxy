@@ -518,6 +518,7 @@ def save(opts, path, defaults=False):
 
         Raises OptionsError if the existing data is corrupt.
     """
+    path = os.path.expanduser(path)
     if os.path.exists(path) and os.path.isfile(path):
         with open(path, "rt", encoding="utf8") as f:
             try:
