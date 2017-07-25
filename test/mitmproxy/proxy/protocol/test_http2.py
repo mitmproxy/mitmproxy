@@ -17,7 +17,6 @@ from mitmproxy.net.http import http1, http2
 from pathod.language import generators
 
 from ... import tservers
-from ....conftest import requires_alpn
 
 import logging
 logging.getLogger("hyper.packages.hpack.hpack").setLevel(logging.WARNING)
@@ -203,7 +202,6 @@ class _Http2Test(_Http2TestBase, _Http2ServerBase):
         _Http2ServerBase.teardown_class()
 
 
-@requires_alpn
 class TestSimple(_Http2Test):
     request_body_buffer = b''
 
@@ -286,7 +284,6 @@ class TestSimple(_Http2Test):
         assert response_body_buffer == b'response body'
 
 
-@requires_alpn
 class TestRequestWithPriority(_Http2Test):
 
     @classmethod
@@ -368,7 +365,6 @@ class TestRequestWithPriority(_Http2Test):
         assert resp.headers.get('priority_weight', None) == expected_priority[2]
 
 
-@requires_alpn
 class TestPriority(_Http2Test):
 
     @classmethod
@@ -453,7 +449,6 @@ class TestPriority(_Http2Test):
         assert self.priority_data == expected_priority
 
 
-@requires_alpn
 class TestStreamResetFromServer(_Http2Test):
 
     @classmethod
@@ -504,7 +499,6 @@ class TestStreamResetFromServer(_Http2Test):
         assert self.master.state.flows[0].response is None
 
 
-@requires_alpn
 class TestBodySizeLimit(_Http2Test):
 
     @classmethod
@@ -554,7 +548,6 @@ class TestBodySizeLimit(_Http2Test):
         assert len(self.master.state.flows) == 0
 
 
-@requires_alpn
 class TestPushPromise(_Http2Test):
 
     @classmethod
@@ -723,7 +716,6 @@ class TestPushPromise(_Http2Test):
         # the other two bodies might not be transmitted before the reset
 
 
-@requires_alpn
 class TestConnectionLost(_Http2Test):
 
     @classmethod
@@ -765,7 +757,6 @@ class TestConnectionLost(_Http2Test):
             assert self.master.state.flows[0].response is None
 
 
-@requires_alpn
 class TestMaxConcurrentStreams(_Http2Test):
 
     @classmethod
@@ -826,7 +817,6 @@ class TestMaxConcurrentStreams(_Http2Test):
             assert b"Stream-ID " in flow.response.content
 
 
-@requires_alpn
 class TestConnectionTerminated(_Http2Test):
 
     @classmethod
@@ -867,7 +857,6 @@ class TestConnectionTerminated(_Http2Test):
         assert connection_terminated_event.additional_data == b'foobar'
 
 
-@requires_alpn
 class TestRequestStreaming(_Http2Test):
 
     @classmethod
@@ -926,7 +915,6 @@ class TestRequestStreaming(_Http2Test):
             assert connection_terminated_event is None
 
 
-@requires_alpn
 class TestResponseStreaming(_Http2Test):
 
     @classmethod

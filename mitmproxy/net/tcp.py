@@ -14,17 +14,11 @@ from typing import Optional  # noqa
 from mitmproxy.utils import strutils
 
 import certifi
-import OpenSSL
 from OpenSSL import SSL
 
 from mitmproxy import certs
-from mitmproxy.utils import version_check
 from mitmproxy import exceptions
 from mitmproxy.types import basethread
-
-# This is a rather hackish way to make sure that
-# the latest version of pyOpenSSL is actually installed.
-version_check.check_pyopenssl_version()
 
 socket_fileobject = socket.SocketIO
 
@@ -33,7 +27,6 @@ socket_fileobject = socket.SocketIO
 IPPROTO_IPV6 = getattr(socket, "IPPROTO_IPV6", 41)
 
 EINTR = 4
-HAS_ALPN = SSL._lib.Cryptography_HAS_ALPN
 
 # To enable all SSL methods use: SSLv23
 # then add options to disable certain methods
@@ -503,7 +496,6 @@ class _Connection:
         if cipher_list:
             try:
                 context.set_cipher_list(cipher_list.encode())
-                context.set_tmp_ecdh(OpenSSL.crypto.get_elliptic_curve('prime256v1'))
             except SSL.Error as v:
                 raise exceptions.TlsException("SSL cipher specification error: %s" % str(v))
 
@@ -511,24 +503,23 @@ class _Connection:
         if log_ssl_key:
             context.set_info_callback(log_ssl_key)
 
-        if HAS_ALPN:  # pragma: openssl-old no cover
-            if alpn_protos is not None:
-                # advertise application layer protocols
-                context.set_alpn_protos(alpn_protos)
-            elif alpn_select is not None and alpn_select_callback is None:
-                # select application layer protocol
-                def alpn_select_callback(conn_, options):
-                    if alpn_select in options:
-                        return bytes(alpn_select)
-                    else:  # pragma: no cover
-                        return options[0]
-                context.set_alpn_select_callback(alpn_select_callback)
-            elif alpn_select_callback is not None and alpn_select is None:
-                if not callable(alpn_select_callback):
-                    raise exceptions.TlsException("ALPN error: alpn_select_callback must be a function.")
-                context.set_alpn_select_callback(alpn_select_callback)
-            elif alpn_select_callback is not None and alpn_select is not None:
-                raise exceptions.TlsException("ALPN error: only define alpn_select (string) OR alpn_select_callback (function).")
+        if alpn_protos is not None:
+            # advertise application layer protocols
+            context.set_alpn_protos(alpn_protos)
+        elif alpn_select is not None and alpn_select_callback is None:
+            # select application layer protocol
+            def alpn_select_callback(conn_, options):
+                if alpn_select in options:
+                    return bytes(alpn_select)
+                else:  # pragma: no cover
+                    return options[0]
+            context.set_alpn_select_callback(alpn_select_callback)
+        elif alpn_select_callback is not None and alpn_select is None:
+            if not callable(alpn_select_callback):
+                raise exceptions.TlsException("ALPN error: alpn_select_callback must be a function.")
+            context.set_alpn_select_callback(alpn_select_callback)
+        elif alpn_select_callback is not None and alpn_select is not None:
+            raise exceptions.TlsException("ALPN error: only define alpn_select (string) OR alpn_select_callback (function).")
 
         return context
 
@@ -720,7 +711,7 @@ class TCPClient(_Connection):
         return self.connection.gettimeout()
 
     def get_alpn_proto_negotiated(self):
-        if HAS_ALPN and self.ssl_established:  # pragma: openssl-old no cover
+        if self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
             return b""
@@ -827,7 +818,7 @@ class BaseHandler(_Connection):
         self.connection.settimeout(n)
 
     def get_alpn_proto_negotiated(self):
-        if HAS_ALPN and self.ssl_established:  # pragma: openssl-old no cover
+        if self.ssl_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
             return b""
