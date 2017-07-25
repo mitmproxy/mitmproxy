@@ -3,7 +3,6 @@ import queue
 import time
 import socket
 import random
-import os
 import threading
 import pytest
 from unittest import mock
@@ -15,7 +14,6 @@ from mitmproxy import exceptions
 from mitmproxy.test import tutils
 
 from . import tservers
-from ...conftest import requires_alpn
 
 
 class EchoHandler(tcp.BaseHandler):
@@ -534,36 +532,18 @@ class TestTimeOut(tservers.ServerTestBase):
                 c.rfile.read(10)
 
 
-class TestCryptographyALPN:
-
-    def test_has_alpn(self):
-        if os.environ.get("OPENSSL") == "with-alpn":
-            assert tcp.HAS_ALPN
-            assert SSL._lib.Cryptography_HAS_ALPN
-        elif os.environ.get("OPENSSL") == "old":
-            assert not tcp.HAS_ALPN
-            assert not SSL._lib.Cryptography_HAS_ALPN
-
-
 class TestALPNClient(tservers.ServerTestBase):
     handler = ALPNHandler
     ssl = dict(
         alpn_select=b"bar"
     )
 
-    @requires_alpn
-    @pytest.mark.parametrize('has_alpn,alpn_protos, expected_negotiated, expected_response', [
-        (True, [b"foo", b"bar", b"fasel"], b'bar', b'bar'),
-        (True, [], b'', b'NONE'),
-        (True, None, b'', b'NONE'),
-        (False, [b"foo", b"bar", b"fasel"], b'', b'NONE'),
-        (False, [], b'', b'NONE'),
-        (False, None, b'', b'NONE'),
+    @pytest.mark.parametrize('alpn_protos, expected_negotiated, expected_response', [
+        ([b"foo", b"bar", b"fasel"], b'bar', b'bar'),
+        ([], b'', b'NONE'),
+        (None, b'', b'NONE'),
     ])
-    def test_alpn(self, monkeypatch, has_alpn, alpn_protos, expected_negotiated, expected_response):
-        monkeypatch.setattr(tcp, 'HAS_ALPN', has_alpn)
-        monkeypatch.setattr(SSL._lib, 'Cryptography_HAS_ALPN', has_alpn)
-
+    def test_alpn(self, monkeypatch, alpn_protos, expected_negotiated, expected_response):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl(alpn_protos=alpn_protos)
@@ -574,7 +554,7 @@ class TestALPNClient(tservers.ServerTestBase):
 class TestNoSSLNoALPNClient(tservers.ServerTestBase):
     handler = ALPNHandler
 
-    def test_no_ssl_no_alpn(self, disable_alpn):
+    def test_no_ssl_no_alpn(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             assert c.get_alpn_proto_negotiated() == b""
@@ -857,9 +837,8 @@ class TestSSLInvalid(tservers.ServerTestBase):
     def test_alpn_error(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            if tcp.HAS_ALPN:
-                with pytest.raises(exceptions.TlsException, match="must be a function"):
-                    c.create_ssl_context(alpn_select_callback="foo")
+            with pytest.raises(exceptions.TlsException, match="must be a function"):
+                c.create_ssl_context(alpn_select_callback="foo")
 
-                with pytest.raises(exceptions.TlsException, match="ALPN error"):
-                    c.create_ssl_context(alpn_select="foo", alpn_select_callback="bar")
+            with pytest.raises(exceptions.TlsException, match="ALPN error"):
+                c.create_ssl_context(alpn_select="foo", alpn_select_callback="bar")

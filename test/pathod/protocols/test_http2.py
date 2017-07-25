@@ -11,8 +11,6 @@ from ...mitmproxy.net import tservers as net_tservers
 
 from pathod.protocols.http2 import HTTP2StateProtocol, TCPHandler
 
-from ...conftest import requires_alpn
-
 
 class TestTCPHandlerWrapper:
     def test_wrapped(self):
@@ -68,7 +66,6 @@ class TestProtocol:
         assert mock_server_method.called
 
 
-@requires_alpn
 class TestCheckALPNMatch(net_tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(
@@ -83,7 +80,6 @@ class TestCheckALPNMatch(net_tservers.ServerTestBase):
             assert protocol.check_alpn()
 
 
-@requires_alpn
 class TestCheckALPNMismatch(net_tservers.ServerTestBase):
     handler = EchoHandler
     ssl = dict(

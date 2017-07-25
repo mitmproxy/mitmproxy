@@ -223,14 +223,6 @@ class Pathoc(tcp.TCPClient):
         self.ws_framereader = None
 
         if self.use_http2:
-            if not tcp.HAS_ALPN:  # pragma: no cover
-                log.write_raw(
-                    self.fp,
-                    "HTTP/2 requires ALPN support. "
-                    "Please use OpenSSL >= 1.0.2. "
-                    "Pathoc might not be working as expected without ALPN.",
-                    timestamp=False
-                )
             self.protocol = http2.HTTP2StateProtocol(self, dump_frames=self.http2_framedump)
         else:
             self.protocol = net_http.http1

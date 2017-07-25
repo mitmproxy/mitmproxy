@@ -16,7 +16,6 @@ from mitmproxy import exceptions  # noqa
 from mitmproxy import options  # noqa
 from mitmproxy import optmanager  # noqa
 from mitmproxy import proxy  # noqa
-from mitmproxy.utils import version_check  # noqa
 from mitmproxy.utils import debug  # noqa
 
 
@@ -58,7 +57,6 @@ def run(MasterKlass, args, extra=None):  # pragma: no cover
         extra: Extra argument processing callable which returns a dict of
         options.
     """
-    version_check.check_pyopenssl_version()
     debug.register_info_dumpers()
 
     opts = options.Options()
