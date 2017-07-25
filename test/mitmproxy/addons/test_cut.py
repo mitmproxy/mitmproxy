@@ -32,7 +32,7 @@ def test_extract():
         ["s.header[header-response]", "svalue"],
 
         ["cc.address.port", "22"],
-        ["cc.address.host", "address"],
+        ["cc.address.host", "127.0.0.1"],
         ["cc.tls_version", "TLSv1.2"],
         ["cc.sni", "address"],
         ["cc.ssl_established", "false"],

@@ -225,11 +225,11 @@ class TestMatchingHTTPFlow:
 
     def test_src(self):
         q = self.req()
-        assert self.q("~src address", q)
+        assert self.q("~src 127.0.0.1", q)
         assert not self.q("~src foobar", q)
         assert self.q("~src :22", q)
         assert not self.q("~src :99", q)
-        assert self.q("~src address:22", q)
+        assert self.q("~src 127.0.0.1:22", q)
 
         q.client_conn.address = None
         assert not self.q('~src address:22', q)
@@ -315,11 +315,11 @@ class TestMatchingTCPFlow:
 
     def test_src(self):
         f = self.flow()
-        assert self.q("~src address", f)
+        assert self.q("~src 127.0.0.1", f)
         assert not self.q("~src foobar", f)
         assert self.q("~src :22", f)
         assert not self.q("~src :99", f)
-        assert self.q("~src address:22", f)
+        assert self.q("~src 127.0.0.1:22", f)
 
     def test_dst(self):
         f = self.flow()
@@ -440,11 +440,11 @@ class TestMatchingWebSocketFlow:
 
     def test_src(self):
         f = self.flow()
-        assert self.q("~src address", f)
+        assert self.q("~src 127.0.0.1", f)
         assert not self.q("~src foobar", f)
         assert self.q("~src :22", f)
         assert not self.q("~src :99", f)
-        assert self.q("~src address:22", f)
+        assert self.q("~src 127.0.0.1:22", f)
 
     def test_dst(self):
         f = self.flow()
@@ -524,7 +524,7 @@ class TestMatchingDummyFlow:
 
         assert not self.q("~s", f)
 
-        assert self.q("~src address", f)
+        assert self.q("~src 127.0.0.1", f)
         assert not self.q("~src nonexistent", f)
 
         assert not self.q("~tcp", f)
