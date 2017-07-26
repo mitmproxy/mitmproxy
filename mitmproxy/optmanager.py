@@ -512,15 +512,14 @@ def serialize(opts, text, defaults=False):
     return ruamel.yaml.round_trip_dump(data)
 
 
-def save(opts, path=None, defaults=False):
+def save(opts, path, defaults=False):
     """
-        If the path is given, save to path, otherwise return the serialized data.
-
-        If the destination file exists, modify it in-place.
+        Save to path. If the destination file exists, modify it in-place.
 
         Raises OptionsError if the existing data is corrupt.
     """
-    if path and os.path.exists(path) and os.path.isfile(path):
+    path = os.path.expanduser(path)
+    if os.path.exists(path) and os.path.isfile(path):
         with open(path, "rt", encoding="utf8") as f:
             try:
                 data = f.read()
@@ -531,9 +530,5 @@ def save(opts, path=None, defaults=False):
     else:
         data = ""
     data = serialize(opts, data, defaults)
-
-    if path:
-        with open(path, "wt", encoding="utf8") as f:
-            f.write(data)
-    else:
-        return data
+    with open(path, "wt", encoding="utf8") as f:
+        f.write(data)

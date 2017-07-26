@@ -21,7 +21,8 @@ from mitmproxy import optmanager
 from mitmproxy import options
 import mitmproxy.tools.web.master # noqa
 
-CONFIG_PATH = os.path.expanduser(os.path.join(options.CA_DIR, 'config.yaml'))
+CONFIG_PATH = os.path.join(options.CA_DIR, 'config.yaml')
+
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
     """
