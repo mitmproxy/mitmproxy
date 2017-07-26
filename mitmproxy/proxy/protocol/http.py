@@ -217,16 +217,17 @@ class HttpLayer(base.Layer):
         return False
 
     def handle_upstream_connect(self, f):
-        self.establish_server_connection(
-            f.request.host,
-            f.request.port,
-            f.request.scheme
-        )
-        self.send_request(f.request)
-        f.response = self.read_response_headers()
-        f.response.data.content = b"".join(
-            self.read_response_body(f.request, f.response)
-        )
+        if not f.response:
+            self.establish_server_connection(
+                f.request.host,
+                f.request.port,
+                f.request.scheme
+            )
+            self.send_request(f.request)
+            f.response = self.read_response_headers()
+            f.response.data.content = b"".join(
+                self.read_response_body(f.request, f.response)
+            )
         self.send_response(f.response)
         if is_ok(f.response.status_code):
             layer = UpstreamConnectLayer(self, f.request)
