@@ -18,7 +18,7 @@ exports[`BooleanOption Component should render correctly 1`] = `
 exports[`ChoiceOption Component should render correctly 1`] = `
 <select
   onChange={[Function]}
-  selected="a"
+  value="a"
 >
   <option
     value="a"

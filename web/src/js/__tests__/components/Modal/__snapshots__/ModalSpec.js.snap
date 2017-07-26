@@ -117,7 +117,7 @@ exports[`Modal Component should render correctly 2`] = `
                       name="choiceOption"
                       onChange={[Function]}
                       onKeyDown={[Function]}
-                      selected="b"
+                      value="b"
                     >
                       <option
                         value="a"
@@ -246,34 +246,7 @@ exports[`Modal Component should render correctly 2`] = `
           </div>
           <div
             className="modal-footer"
-          >
-            <button
-              className="btn btn-default"
-              onClick={[Function]}
-              type="button"
-            >
-              <i
-                className="fa fa-download"
-              />
-              Download
-            </button>
-            <a
-              className="btn btn-primary"
-              href="#"
-              onClick={[Function]}
-              title={undefined}
-            >
-              <i
-                className="fa fa-fw fa-upload"
-              />
-              Load
-              <input
-                className="hidden"
-                onChange={[Function]}
-                type="file"
-              />
-            </a>
-          </div>
+          />
         </div>
       </div>
     </div>

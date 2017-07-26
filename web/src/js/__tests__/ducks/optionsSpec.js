@@ -49,3 +49,18 @@ describe('sendUpdate', () => {
         ])
     })
 })
+
+describe('dump', () => {
+
+    it('should dump options', () => {
+        global.fetch = jest.fn()
+        store.dispatch(OptionsActions.dump())
+        expect(fetch).toBeCalledWith(
+            '/options/dump?_xsrf=undefined',
+            {
+                credentials: "same-origin",
+                method: "POST"
+            }
+        )
+    })
+})
