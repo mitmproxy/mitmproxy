@@ -18,8 +18,10 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import version
 from mitmproxy import optmanager
+from mitmproxy import options
 import mitmproxy.tools.web.master # noqa
 
+CONFIG_PATH = os.path.expanduser(os.path.join(options.CA_DIR, 'config.yaml'))
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
     """
@@ -452,17 +454,9 @@ class Options(RequestHandler):
 
 
 class DumpOptions(RequestHandler):
-    def get(self):
-        self.set_header("Content-Disposition", "attachment; filename=options")
-        self.set_header("Content-Type", "application/octet-stream")
-
-        data = optmanager.save(self.master.options)
-        self.write(data)
-
     def post(self):
         try:
-            data = optmanager.parse(self.filecontents)
-            self.master.options.update(**data)
+            optmanager.save(self.master.options, CONFIG_PATH)
         except Exception as err:
             raise APIError(400, "{}".format(err))
 
