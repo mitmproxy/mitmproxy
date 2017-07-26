@@ -217,6 +217,8 @@ class HttpLayer(base.Layer):
         return False
 
     def handle_upstream_connect(self, f):
+        # if the user specifies a response in the http_connect hook, we do not connect upstream here.
+        # https://github.com/mitmproxy/mitmproxy/pull/2473
         if not f.response:
             self.establish_server_connection(
                 f.request.host,
