@@ -44,3 +44,7 @@ export function update(option, value) {
         sendUpdate(option, value, dispatch);
     }
 }
+
+export function save() {
+    return dispatch => fetchApi('/options/save', { method: 'POST' })
+}

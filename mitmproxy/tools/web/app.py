@@ -18,6 +18,7 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import version
 from mitmproxy import optmanager
+from mitmproxy.tools.cmdline import CONFIG_PATH
 import mitmproxy.tools.web.master # noqa
 
 
@@ -451,6 +452,14 @@ class Options(RequestHandler):
             raise APIError(400, "{}".format(err))
 
 
+class SaveOptions(RequestHandler):
+    def post(self):
+        try:
+            optmanager.save(self.master.options, CONFIG_PATH, True)
+        except Exception as err:
+            raise APIError(400, "{}".format(err))
+
+
 class Application(tornado.web.Application):
     def __init__(self, master, debug):
         self.master = master
@@ -475,7 +484,8 @@ class Application(tornado.web.Application):
                 FlowContentView),
             (r"/settings", Settings),
             (r"/clear", ClearAll),
-            (r"/options", Options)
+            (r"/options", Options),
+            (r"/options/save", SaveOptions)
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),

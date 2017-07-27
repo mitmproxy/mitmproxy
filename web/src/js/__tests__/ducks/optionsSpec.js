@@ -49,3 +49,18 @@ describe('sendUpdate', () => {
         ])
     })
 })
+
+describe('save', () => {
+
+    it('should dump options', () => {
+        global.fetch = jest.fn()
+        store.dispatch(OptionsActions.save())
+        expect(fetch).toBeCalledWith(
+            '/options/save?_xsrf=undefined',
+            {
+                credentials: "same-origin",
+                method: "POST"
+            }
+        )
+    })
+})

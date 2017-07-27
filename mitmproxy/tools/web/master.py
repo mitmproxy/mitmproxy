@@ -125,7 +125,6 @@ class WebMaster(master.Master):
                     "No web browser found. Please open a browser and point it to {}".format(web_url),
                     "info"
                 )
-
         try:
             iol.start()
         except KeyboardInterrupt:

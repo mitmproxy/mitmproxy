@@ -74,7 +74,7 @@ export function ChoicesOption({ value, onChange, choices, ...props }) {
     return (
         <select
             onChange={(e) => onChange(e.target.value)}
-            selected={value}
+            value={value}
             {...props}
         >
             { choices.map(

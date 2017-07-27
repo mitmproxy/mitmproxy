@@ -1,7 +1,9 @@
 import React, { Component } from "react"
 import { connect } from "react-redux"
 import * as modalAction from "../../ducks/ui/modal"
+import * as optionAction from "../../ducks/options"
 import Option from "./Option"
+import _ from "lodash"
 
 function PureOptionHelp({help}){
     return <div className="help-block small">{help}</div>;
@@ -18,11 +20,40 @@ const OptionError = connect((state, {name}) => ({
     error: state.ui.optionsEditor[name] && state.ui.optionsEditor[name].error
 }))(PureOptionError);
 
+export function PureOptionDefault({value, defaultVal}){
+    if( value === defaultVal ) {
+        return null
+    } else {
+        if (typeof(defaultVal) === 'boolean') {
+            defaultVal = defaultVal ? 'true' : 'false'
+        } else if (Array.isArray(defaultVal)){
+            if (_.isEmpty(_.compact(value)) && // filter the empty string in array
+                _.isEmpty(defaultVal)){
+                return null
+            }
+            defaultVal = '[ ]'
+        } else if (defaultVal === ''){
+            defaultVal = '\"\"'
+        } else if (defaultVal === null){
+            defaultVal = 'null'
+        }
+        return <div className="small">Default: <strong> {defaultVal} </strong> </div>
+    }
+}
+const OptionDefault = connect((state, {name}) => ({
+    value: state.options[name].value,
+    defaultVal: state.options[name].default
+}))(PureOptionDefault)
+
 class PureOptionModal extends Component {
 
     constructor(props, context) {
         super(props, context)
         this.state = { title: 'Options' }
+    }
+
+    componentWillUnmount(){
+        this.props.save()
     }
 
     render() {
@@ -53,6 +84,7 @@ class PureOptionModal extends Component {
                                     <div className="col-xs-6">
                                         <Option name={name}/>
                                         <OptionError name={name}/>
+                                        <OptionDefault name={name}/>
                                     </div>
                                 </div>
                             )
@@ -73,5 +105,6 @@ export default connect(
     }),
     {
         hideModal: modalAction.hideModal,
+        save: optionAction.save,
     }
 )(PureOptionModal)
