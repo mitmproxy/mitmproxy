@@ -50,13 +50,13 @@ describe('sendUpdate', () => {
     })
 })
 
-describe('dump', () => {
+describe('save', () => {
 
     it('should dump options', () => {
         global.fetch = jest.fn()
-        store.dispatch(OptionsActions.dump())
+        store.dispatch(OptionsActions.save())
         expect(fetch).toBeCalledWith(
-            '/options/dump?_xsrf=undefined',
+            '/options/save?_xsrf=undefined',
             {
                 credentials: "same-origin",
                 method: "POST"

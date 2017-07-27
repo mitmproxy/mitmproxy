@@ -45,6 +45,6 @@ export function update(option, value) {
     }
 }
 
-export function dump() {
-    return dispatch => fetchApi('/options/dump', { method: 'POST' })
+export function save() {
+    return dispatch => fetchApi('/options/save', { method: 'POST' })
 }

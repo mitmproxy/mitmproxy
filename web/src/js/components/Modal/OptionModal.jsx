@@ -52,15 +52,18 @@ class PureOptionModal extends Component {
         this.state = { title: 'Options' }
     }
 
+    componentWillUnmount(){
+        this.props.save()
+    }
+
     render() {
-        const { hideModal, options, dump } = this.props
+        const { hideModal, options } = this.props
         const { title } = this.state
         return (
             <div>
                 <div className="modal-header">
                     <button type="button" className="close" data-dismiss="modal" onClick={() => {
                         hideModal()
-                        dump()
                     }}>
                         <i className="fa fa-fw fa-times"></i>
                     </button>
@@ -102,6 +105,6 @@ export default connect(
     }),
     {
         hideModal: modalAction.hideModal,
-        dump: optionAction.dump,
+        save: optionAction.save,
     }
 )(PureOptionModal)
