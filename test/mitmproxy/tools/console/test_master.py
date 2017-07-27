@@ -1,20 +1,12 @@
-import pytest
+import urwid
 
+from mitmproxy import options
+from mitmproxy import proxy
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.tools import console
-from mitmproxy import proxy
-from mitmproxy import options
 from mitmproxy.tools.console import common
 from ... import tservers
-import urwid
-from unittest import mock
-
-
-@pytest.fixture(scope="module", autouse=True)
-def definitely_atty():
-    with mock.patch("sys.stdout.isatty", lambda: True):
-        yield
 
 
 def test_format_keyvals():
