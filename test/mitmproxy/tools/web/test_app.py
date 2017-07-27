@@ -263,8 +263,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert self.put_json("/options", {"wtf": True}).code == 400
         assert self.put_json("/options", {"anticache": "foo"}).code == 400
 
-    def test_option_dump(self):
-        assert self.fetch("/options/dump", method="POST").code == 200
+    def test_option_save(self):
+        assert self.fetch("/options/save", method="POST").code == 200
 
     def test_err(self):
         with mock.patch("mitmproxy.tools.web.app.IndexHandler.get") as f:

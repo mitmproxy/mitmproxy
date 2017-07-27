@@ -125,13 +125,6 @@ class WebMaster(master.Master):
                     "No web browser found. Please open a browser and point it to {}".format(web_url),
                     "info"
                 )
-        unknown_opts = optmanager.load_paths(app.CONFIG_PATH)
-        if unknown_opts == {}:
-            self.add_log(
-                "Load options configuration from {}.".format(app.CONFIG_PATH),
-                "info"
-            )
-
         try:
             iol.start()
         except KeyboardInterrupt:
