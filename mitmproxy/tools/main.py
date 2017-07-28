@@ -16,7 +16,7 @@ from mitmproxy import exceptions  # noqa
 from mitmproxy import options  # noqa
 from mitmproxy import optmanager  # noqa
 from mitmproxy import proxy  # noqa
-from mitmproxy import log
+from mitmproxy import log   # noqa
 from mitmproxy.utils import debug  # noqa
 
 
