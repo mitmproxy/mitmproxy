@@ -28,7 +28,7 @@ def test_options():
 class TestMaster(tservers.MasterTest):
     def mkmaster(self, **opts):
         if "verbosity" not in opts:
-            opts["verbosity"] = 1
+            opts["verbosity"] = 'warn'
         o = options.Options(**opts)
         m = console.master.ConsoleMaster(o, proxy.DummyServer())
         m.addons.trigger("configure", o.keys())
