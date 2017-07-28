@@ -71,7 +71,7 @@ setup(
         "hyperframe>=5.0, <6",
         "jsbeautifier>=1.6.3, <1.7",
         "kaitaistruct>=0.7, <0.8",
-        "ldap3>=2.2.0, <2.3",
+        "ldap3>=2.2.0, <2.4",
         "passlib>=1.6.5, <1.8",
         "pyasn1>=0.3.1, <0.4",
         "pyOpenSSL>=17.2,<17.3",
@@ -88,7 +88,7 @@ setup(
             "pydivert>=2.0.3, <2.1",
         ],
         'dev': [
-            "flake8>=3.2.1, <3.4",
+            "flake8>=3.2.1, <3.5",
             "Flask>=0.10.1, <0.13",
             "mypy>=0.521,<0.522",
             "pytest-cov>=2.2.1, <3",
