@@ -87,7 +87,7 @@ class ConsoleMaster(master.Master):
         )
 
     def sig_add_log(self, sender, e, level):
-        if self.options.verbosity < log.log_tier(level):
+        if log.log_tier(self.options.verbosity) < log.log_tier(level):
             return
         if level in ("error", "warn"):
             signals.status_message.send(

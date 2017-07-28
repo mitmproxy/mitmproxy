@@ -16,6 +16,7 @@ from mitmproxy import exceptions  # noqa
 from mitmproxy import options  # noqa
 from mitmproxy import optmanager  # noqa
 from mitmproxy import proxy  # noqa
+from mitmproxy import log
 from mitmproxy.utils import debug  # noqa
 
 
@@ -40,7 +41,7 @@ def process_options(parser, opts, args):
         print(debug.dump_system_info())
         sys.exit(0)
     if args.quiet or args.options or args.commands:
-        args.verbosity = 0
+        args.verbosity = 'error'
         args.flow_detail = 0
 
     adict = {}
@@ -79,7 +80,7 @@ def run(MasterKlass, args, extra=None):  # pragma: no cover
         master.addons.trigger("configure", opts.keys())
         master.addons.trigger("tick")
         remaining = opts.update_known(**unknown)
-        if remaining and opts.verbosity > 1:
+        if remaining and log.log_tier(opts.verbosity) > 1:
             print("Ignored options: %s" % remaining)
         if args.options:
             print(optmanager.dump_defaults(opts))

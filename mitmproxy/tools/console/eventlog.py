@@ -1,6 +1,8 @@
 import urwid
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import layoutwidget
+from mitmproxy import ctx
+from mitmproxy import log
 
 EVENTLOG_SIZE = 10000
 
@@ -32,6 +34,8 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         return urwid.ListBox.keypress(self, size, key)
 
     def sig_add_log(self, sender, e, level):
+        if log.log_tier(ctx.options.verbosity) < log.log_tier(level):
+            return
         txt = "%s: %s" % (level, str(e))
         if level in ("error", "warn"):
             e = urwid.Text((level, txt))
