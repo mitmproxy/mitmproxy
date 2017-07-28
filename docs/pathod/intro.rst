@@ -3,6 +3,7 @@
 Pathology 101
 =============
 
+.. _pathod:
 
 pathod
 ------
@@ -83,15 +84,14 @@ distinguish them from crafted responses. For example, a request to:
 
 .. _pathoc:
 
-
 pathoc
 ------
 
 Pathoc is a perverse HTTP daemon designed to let you craft almost any
 conceivable HTTP request, including ones that creatively violate the standards.
 HTTP requests are specified using a :ref:`small, terse language <language>`,
-which pathod shares with its server-side twin pathod. To view pathoc's complete
-range of options, use the command-line help:
+which pathoc shares with its server-side twin :ref:`pathod`. To view pathoc's
+complete range of options, use the command-line help:
 
 >>> pathoc --help
 
