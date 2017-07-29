@@ -3,6 +3,7 @@ import importlib.util
 import importlib.machinery
 import time
 import sys
+import types
 import typing
 
 from mitmproxy import addonmanager
@@ -13,28 +14,23 @@ from mitmproxy import eventsequence
 from mitmproxy import ctx
 
 
-def load_script(actx, path):
-    if not os.path.exists(path):
-        ctx.log.info("No such file: %s" % path)
-        return
-
+def load_script(path: str) -> types.ModuleType:
     fullname = "__mitmproxy_script__.{}".format(
         os.path.splitext(os.path.basename(path))[0]
     )
     # the fullname is not unique among scripts, so if there already is an existing script with said
     # fullname, remove it.
     sys.modules.pop(fullname, None)
+    oldpath = sys.path
+    sys.path.insert(0, os.path.dirname(path))
     try:
-        oldpath = sys.path
-        sys.path.insert(0, os.path.dirname(path))
-        with addonmanager.safecall():
-            loader = importlib.machinery.SourceFileLoader(fullname, path)
-            spec = importlib.util.spec_from_loader(fullname, loader=loader)
-            m = importlib.util.module_from_spec(spec)
-            loader.exec_module(m)
-            if not getattr(m, "name", None):
-                m.name = path
-            return m
+        loader = importlib.machinery.SourceFileLoader(fullname, path)
+        spec = importlib.util.spec_from_loader(fullname, loader=loader)
+        m = importlib.util.module_from_spec(spec)
+        loader.exec_module(m)
+        if not getattr(m, "name", None):
+            m.name = path  # type: ignore
+        return m
     finally:
         sys.path[:] = oldpath
 
@@ -65,7 +61,7 @@ class Script:
             try:
                 mtime = os.stat(self.fullpath).st_mtime
             except FileNotFoundError:
-                scripts = ctx.options.scripts
+                scripts = list(ctx.options.scripts)
                 scripts.remove(self.path)
                 ctx.options.update(scripts=scripts)
                 return
@@ -74,7 +70,9 @@ class Script:
                 ctx.log.info("Loading script: %s" % self.path)
                 if self.ns:
                     ctx.master.addons.remove(self.ns)
-                self.ns = load_script(ctx, self.fullpath)
+                self.ns = None
+                with addonmanager.safecall():
+                    self.ns = load_script(self.fullpath)
                 if self.ns:
                     # We're already running, so we have to explicitly register and
                     # configure the addon

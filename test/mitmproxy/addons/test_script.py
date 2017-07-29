@@ -1,6 +1,5 @@
 import traceback
 import sys
-import time
 import os
 import pytest
 
@@ -14,20 +13,17 @@ from mitmproxy.addons import script
 
 
 def test_load_script():
-    with taddons.context() as tctx:
-        ns = script.load_script(
-            tctx.ctx(),
-            tutils.test_data.path(
-                "mitmproxy/data/addonscripts/recorder/recorder.py"
-            )
+    ns = script.load_script(
+        tutils.test_data.path(
+            "mitmproxy/data/addonscripts/recorder/recorder.py"
         )
-        assert ns.addons
+    )
+    assert ns.addons
 
-        ns = script.load_script(
-            tctx.ctx(),
+    with pytest.raises(FileNotFoundError):
+        script.load_script(
             "nonexistent"
         )
-        assert not ns
 
 
 def test_load_fullname():
@@ -36,22 +32,19 @@ def test_load_fullname():
     This only succeeds if they get assigned different basenames.
 
     """
-    with taddons.context() as tctx:
-        ns = script.load_script(
-            tctx.ctx(),
-            tutils.test_data.path(
-                "mitmproxy/data/addonscripts/addon.py"
-            )
+    ns = script.load_script(
+        tutils.test_data.path(
+            "mitmproxy/data/addonscripts/addon.py"
         )
-        assert ns.addons
-        ns2 = script.load_script(
-            tctx.ctx(),
-            tutils.test_data.path(
-                "mitmproxy/data/addonscripts/same_filename/addon.py"
-            )
+    )
+    assert ns.addons
+    ns2 = script.load_script(
+        tutils.test_data.path(
+            "mitmproxy/data/addonscripts/same_filename/addon.py"
         )
-        assert ns.name != ns2.name
-        assert not hasattr(ns2, "addons")
+    )
+    assert ns.name != ns2.name
+    assert not hasattr(ns2, "addons")
 
 
 def test_script_print_stdout():
@@ -59,7 +52,6 @@ def test_script_print_stdout():
         with mock.patch('mitmproxy.ctx.log.warn') as mock_warn:
             with addonmanager.safecall():
                 ns = script.load_script(
-                    tctx.ctx(),
                     tutils.test_data.path(
                         "mitmproxy/data/addonscripts/print.py"
                     )
@@ -103,11 +95,13 @@ class TestScript:
             sc = script.Script(str(f))
             tctx.configure(sc)
             sc.tick()
-            for _ in range(3):
-                sc.last_load, sc.last_mtime = 0, 0
-                sc.tick()
-                time.sleep(0.1)
-            tctx.master.has_log("Loading")
+            assert tctx.master.has_log("Loading")
+            tctx.master.clear()
+            assert not tctx.master.has_log("Loading")
+
+            sc.last_load, sc.last_mtime = 0, 0
+            sc.tick()
+            assert tctx.master.has_log("Loading")
 
     def test_exception(self):
         with taddons.context() as tctx:
@@ -121,8 +115,8 @@ class TestScript:
             f = tflow.tflow(resp=True)
             tctx.master.addons.trigger("request", f)
 
-            tctx.master.has_log("ValueError: Error!")
-            tctx.master.has_log("error.py")
+            assert tctx.master.has_log("ValueError: Error!")
+            assert tctx.master.has_log("error.py")
 
     def test_addon(self):
         with taddons.context() as tctx:
