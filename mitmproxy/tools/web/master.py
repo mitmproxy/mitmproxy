@@ -13,7 +13,7 @@ from mitmproxy.addons import termlog
 from mitmproxy.addons import view
 from mitmproxy.addons import termstatus
 from mitmproxy.options import Options  # noqa
-from mitmproxy.tools.web import app
+from mitmproxy.tools.web import app, webaddons
 
 
 class WebMaster(master.Master):
@@ -34,6 +34,7 @@ class WebMaster(master.Master):
 
         self.addons.add(*addons.default_addons())
         self.addons.add(
+            webaddons.WebOptions(),
             intercept.Intercept(),
             readfile.ReadFile(),
             self.view,
