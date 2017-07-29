@@ -32,11 +32,6 @@ class ConsoleMaster(master.Master):
     def __init__(self, opts):
         super().__init__(opts)
 
-        if not sys.stdout.isatty():
-            print("Error: mitmproxy's console interface requires a tty. "
-                  "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
-            sys.exit(1)
-
         self.view = view.View()  # type: view.View
         self.stream_path = None
         self.keymap = keymap.Keymap(self)

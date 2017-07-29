@@ -1,7 +1,8 @@
 import argparse
-from mitmproxy.tools import cmdline
-from mitmproxy.tools import main
+
 from mitmproxy import options
+from mitmproxy.tools import cmdline, web, dump, console
+from mitmproxy.tools import main
 
 
 def test_common():
@@ -14,17 +15,20 @@ def test_common():
 
 def test_mitmproxy():
     opts = options.Options()
+    console.master.ConsoleMaster(opts)
     ap = cmdline.mitmproxy(opts)
     assert ap
 
 
 def test_mitmdump():
     opts = options.Options()
+    dump.DumpMaster(opts)
     ap = cmdline.mitmdump(opts)
     assert ap
 
 
 def test_mitmweb():
     opts = options.Options()
+    web.master.WebMaster(opts)
     ap = cmdline.mitmweb(opts)
     assert ap
