@@ -117,13 +117,12 @@ class TcpMixin:
 
     def _ignore_on(self):
         assert not hasattr(self, "_ignore_backup")
-        self._ignore_backup = self.config.check_ignore
-        self.config.check_ignore = HostMatcher(
-            [".+:%s" % self.server.port] + self.config.check_ignore.patterns)
+        self._ignore_backup = self.options.ignore_hosts
+        self.options.ignore_hosts = [".+:%s" % self.server.port] + self.options.ignore_hosts
 
     def _ignore_off(self):
         assert hasattr(self, "_ignore_backup")
-        self.config.check_ignore = self._ignore_backup
+        self.options.ignore_hosts = self._ignore_backup
         del self._ignore_backup
 
     def test_ignore(self):
@@ -163,13 +162,12 @@ class TcpMixin:
 
     def _tcpproxy_on(self):
         assert not hasattr(self, "_tcpproxy_backup")
-        self._tcpproxy_backup = self.config.check_tcp
-        self.config.check_tcp = HostMatcher(
-            [".+:%s" % self.server.port] + self.config.check_tcp.patterns)
+        self._tcpproxy_backup = self.options.tcp_hosts
+        self.options.tcp_hosts = [".+:%s" % self.server.port] + self.options.tcp_hosts
 
     def _tcpproxy_off(self):
         assert hasattr(self, "_tcpproxy_backup")
-        self.config.check_tcp = self._tcpproxy_backup
+        self.options.tcp_hosts = self._tcpproxy_backup
         del self._tcpproxy_backup
 
     def test_tcp(self):
@@ -194,7 +192,8 @@ class TcpMixin:
             i2_cert = certs.SSLCert(i2.sslinfo.certchain[0])
             n_cert = certs.SSLCert(n.sslinfo.certchain[0])
 
-            assert i_cert == i2_cert == n_cert
+            assert i_cert == i2_cert
+            assert i_cert != n_cert
 
         # Make sure that TCP messages are in the event log.
         # Re-enable and fix this when we start keeping TCPFlows in the state.
@@ -353,22 +352,22 @@ class TestHTTPS(tservers.HTTPProxyTest, CommonMixin, TcpMixin):
 
     def test_clientcert_file(self):
         try:
-            self.config.client_certs = os.path.join(
+            self.options.client_certs = os.path.join(
                 tutils.test_data.path("mitmproxy/data/clientcert"), "client.pem")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
         finally:
-            self.config.client_certs = None
+            self.options.client_certs = None
 
     def test_clientcert_dir(self):
         try:
-            self.config.client_certs = tutils.test_data.path("mitmproxy/data/clientcert")
+            self.options.client_certs = tutils.test_data.path("mitmproxy/data/clientcert")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
         finally:
-            self.config.client_certs = None
+            self.options.client_certs = None
 
     def test_error_post_connect(self):
         p = self.pathoc()
@@ -412,7 +411,7 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
             return p.request("get:/p/242")
 
     def test_verification_w_cadir(self):
-        self.config.options.update(
+        self.options.update(
             ssl_insecure=False,
             ssl_verify_upstream_trusted_cadir=tutils.test_data.path(
                 "mitmproxy/data/servercert/"
@@ -422,7 +421,7 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
         assert self._request().status_code == 242
 
     def test_verification_w_pemfile(self):
-        self.config.options.update(
+        self.options.update(
             ssl_insecure=False,
             ssl_verify_upstream_trusted_cadir=None,
             ssl_verify_upstream_trusted_ca=tutils.test_data.path(
@@ -458,7 +457,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
         return opts
 
     def test_no_verification_w_bad_cert(self):
-        self.config.options.ssl_insecure = True
+        self.options.ssl_insecure = True
         r = self._request()
         assert r.status_code == 242
 
@@ -466,7 +465,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
         # We only test for a single invalid cert here.
         # Actual testing of different root-causes (invalid hostname, expired, ...)
         # is done in mitmproxy.net.
-        self.config.options.ssl_insecure = False
+        self.options.ssl_insecure = False
         r = self._request()
         assert r.status_code == 502
         assert b"Certificate Verification Error" in r.raw_content
@@ -493,7 +492,7 @@ class TestReverse(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
     reverse = True
 
     def test_host_header(self):
-        self.config.options.keep_host_header = True
+        self.options.keep_host_header = True
         p = self.pathoc()
         with p.connect():
             resp = p.request("get:/p/200:h'Host'='example.com'")
@@ -503,7 +502,7 @@ class TestReverse(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
         assert req.host_header == "example.com"
 
     def test_overridden_host_header(self):
-        self.config.options.keep_host_header = False  # default value
+        self.options.keep_host_header = False  # default value
         p = self.pathoc()
         with p.connect():
             resp = p.request("get:/p/200:h'Host'='example.com'")

@@ -76,7 +76,8 @@ def run(MasterKlass, args, extra=None):  # pragma: no cover
         else:
             server = proxy.server.DummyServer(pconf)
 
-        master = MasterKlass(opts, server)
+        master = MasterKlass(opts)
+        master.server = server
         master.addons.trigger("configure", opts.keys())
         master.addons.trigger("tick")
         remaining = opts.update_known(**unknown)

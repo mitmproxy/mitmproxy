@@ -6,7 +6,6 @@ from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy import command
 from mitmproxy import master
-from mitmproxy import proxy
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
@@ -51,7 +50,7 @@ def test_command():
 
 def test_halt():
     o = options.Options()
-    m = master.Master(o, proxy.DummyServer(o))
+    m = master.Master(o)
     a = addonmanager.AddonManager(m)
     halt = THalt()
     end = TAddon("end")
@@ -68,7 +67,7 @@ def test_halt():
 
 def test_lifecycle():
     o = options.Options()
-    m = master.Master(o, proxy.DummyServer(o))
+    m = master.Master(o)
     a = addonmanager.AddonManager(m)
     a.add(TAddon("one"))
 
@@ -128,7 +127,7 @@ def test_simple():
 
 def test_load_option():
     o = options.Options()
-    m = master.Master(o, proxy.DummyServer(o))
+    m = master.Master(o)
     a = addonmanager.AddonManager(m)
     a.add(AOption())
     assert "custom_option" in m.options._options
@@ -136,7 +135,7 @@ def test_load_option():
 
 def test_nesting():
     o = options.Options()
-    m = master.Master(o, proxy.DummyServer(o))
+    m = master.Master(o)
     a = addonmanager.AddonManager(m)
 
     a.add(

@@ -1,7 +1,6 @@
 import urwid
 
 from mitmproxy import options
-from mitmproxy import proxy
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.tools import console
@@ -30,7 +29,7 @@ class TestMaster(tservers.MasterTest):
         if "verbosity" not in opts:
             opts["verbosity"] = 'warn'
         o = options.Options(**opts)
-        m = console.master.ConsoleMaster(o, proxy.DummyServer())
+        m = console.master.ConsoleMaster(o)
         m.addons.trigger("configure", o.keys())
         return m
 

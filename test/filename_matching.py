@@ -22,7 +22,7 @@ def check_src_files_have_test():
 def check_test_files_have_src():
     unknown_test_files = []
 
-    excluded = ['test/mitmproxy/data/', 'test/mitmproxy/net/data/', '/tservers.py']
+    excluded = ['test/mitmproxy/data/', 'test/mitmproxy/net/data/', '/tservers.py', '/conftest.py']
     test_files = glob.glob('test/mitmproxy/**/*.py', recursive=True) + glob.glob('test/pathod/**/*.py', recursive=True)
     test_files = [f for f in test_files if os.path.basename(f) != '__init__.py']
     test_files = [f for f in test_files if not any(os.path.normpath(p) in f for p in excluded)]

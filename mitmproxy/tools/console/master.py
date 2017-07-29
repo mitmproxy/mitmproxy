@@ -15,6 +15,7 @@ import urwid
 from mitmproxy import addons
 from mitmproxy import master
 from mitmproxy import log
+from mitmproxy import options  # noqa
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
@@ -28,8 +29,8 @@ from mitmproxy.tools.console import window
 
 class ConsoleMaster(master.Master):
 
-    def __init__(self, options, server):
-        super().__init__(options, server)
+    def __init__(self, opts):
+        super().__init__(opts)
 
         if not sys.stdout.isatty():
             print("Error: mitmproxy's console interface requires a tty. "
@@ -38,8 +39,6 @@ class ConsoleMaster(master.Master):
 
         self.view = view.View()  # type: view.View
         self.stream_path = None
-        # This line is just for type hinting
-        self.options = self.options  # type: Options
         self.keymap = keymap.Keymap(self)
         defaultkeys.map(self.keymap)
         self.options.errored.connect(self.options_error)
@@ -160,10 +159,10 @@ class ConsoleMaster(master.Master):
         self.ui.start()
         os.unlink(name)
 
-    def set_palette(self, options, updated):
+    def set_palette(self, opts, updated):
         self.ui.register_palette(
-            palettes.palettes[options.console_palette].palette(
-                options.console_palette_transparent
+            palettes.palettes[opts.console_palette].palette(
+                opts.console_palette_transparent
             )
         )
         self.ui.clear()

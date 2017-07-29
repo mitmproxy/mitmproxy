@@ -1,12 +1,11 @@
-import sys
 import contextlib
+import sys
 
 import mitmproxy.master
 import mitmproxy.options
-from mitmproxy import proxy
 from mitmproxy import addonmanager
-from mitmproxy import eventsequence
 from mitmproxy import command
+from mitmproxy import eventsequence
 from mitmproxy.addons import script
 
 
@@ -59,10 +58,11 @@ class context:
         handlers can run as they would within mitmproxy. The context also
         provides a number of helper methods for common testing scenarios.
     """
-    def __init__(self, master = None, options = None):
+
+    def __init__(self, master=None, options=None):
         options = options or mitmproxy.options.Options()
         self.master = master or RecordingMaster(
-            options, proxy.DummyServer(options)
+            options
         )
         self.options = self.master.options
         self.wrapped = None
