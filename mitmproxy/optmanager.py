@@ -170,6 +170,9 @@ class OptManager:
     def keys(self):
         return set(self._options.keys())
 
+    def items(self):
+        return self._options.items()
+
     def __contains__(self, k):
         return k in self._options
 

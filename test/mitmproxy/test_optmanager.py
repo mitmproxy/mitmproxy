@@ -229,6 +229,10 @@ def test_simple():
     assert "one" in TO()
 
 
+def test_items():
+    assert TO().items()
+
+
 def test_serialize():
     o = TD2()
     o.three = "set"
