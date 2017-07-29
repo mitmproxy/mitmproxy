@@ -13,10 +13,12 @@ def test_simple():
         assert not r.filt
         tctx.configure(r, intercept="~q")
         assert r.filt
+        assert tctx.options.intercept_active
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(r, intercept="~~")
         tctx.configure(r, intercept=None)
         assert not r.filt
+        assert not tctx.options.intercept_active
 
         tctx.configure(r, intercept="~s")
 
@@ -30,4 +32,14 @@ def test_simple():
 
         f = tflow.tflow(resp=True)
         r.response(f)
+        assert f.intercepted
+
+        tctx.configure(r, intercept_active=False)
+        f = tflow.tflow(resp=True)
+        tctx.cycle(r, f)
+        assert not f.intercepted
+
+        tctx.configure(r, intercept_active=True)
+        f = tflow.tflow(resp=True)
+        tctx.cycle(r, f)
         assert f.intercepted

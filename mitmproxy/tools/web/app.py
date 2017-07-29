@@ -410,6 +410,7 @@ class Settings(RequestHandler):
         self.write(dict(
             version=version.VERSION,
             mode=str(self.master.options.mode),
+            intercept_active=self.master.options.intercept_active,
             intercept=self.master.options.intercept,
             showhost=self.master.options.showhost,
             upstream_cert=self.master.options.upstream_cert,

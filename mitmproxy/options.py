@@ -386,6 +386,11 @@ class Options(optmanager.OptManager):
         )
 
         self.add_option(
+            "intercept_active", bool, False,
+            "Intercept toggle"
+        )
+
+        self.add_option(
             "intercept", Optional[str], None,
             "Intercept filter expression."
         )
