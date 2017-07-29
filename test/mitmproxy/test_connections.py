@@ -29,7 +29,7 @@ class TestClientConnection:
 
     def test_repr(self):
         c = tflow.tclient_conn()
-        assert 'address:22' in repr(c)
+        assert '127.0.0.1:22' in repr(c)
         assert 'ALPN' in repr(c)
         assert 'TLS' not in repr(c)
 

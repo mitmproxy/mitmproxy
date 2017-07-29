@@ -148,7 +148,7 @@ def tclient_conn():
     """
     c = connections.ClientConnection.from_state(dict(
         id=str(uuid.uuid4()),
-        address=("address", 22),
+        address=("127.0.0.1", 22),
         clientcert=None,
         mitmcert=None,
         ssl_established=False,

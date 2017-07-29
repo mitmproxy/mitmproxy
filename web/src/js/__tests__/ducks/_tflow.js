@@ -2,7 +2,7 @@ export default function(){
     return {
     "client_conn": {
         "address": [
-            "address",
+            "127.0.0.1",
             22
         ],
         "alpn_proto_negotiated": "http/1.1",

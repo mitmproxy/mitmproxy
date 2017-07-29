@@ -12,7 +12,7 @@ exports[`ConnectionInfo Component should render correctly 1`] = `
         Address:
       </td>
       <td>
-        address:22
+        127.0.0.1:22
       </td>
     </tr>
     <tr>
@@ -47,7 +47,7 @@ exports[`Details Component should render correctly 1`] = `
           Address:
         </td>
         <td>
-          address:22
+          127.0.0.1:22
         </td>
       </tr>
       <tr>

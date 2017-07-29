@@ -2,6 +2,7 @@ import os.path
 import threading
 import tempfile
 import sys
+from unittest import mock
 
 import mitmproxy.platform
 from mitmproxy.proxy.config import ProxyConfig
@@ -23,10 +24,13 @@ class MasterTest:
 
     def cycle(self, master, content):
         f = tflow.tflow(req=tutils.treq(content=content))
-        master.addons.handle_lifecycle("clientconnect", f.client_conn)
+        layer = mock.Mock("mitmproxy.proxy.protocol.base.Layer")
+        layer.client_conn = f.client_conn
+        layer.reply = controller.DummyReply()
+        master.addons.handle_lifecycle("clientconnect", layer)
         for i in eventsequence.iterate(f):
             master.addons.handle_lifecycle(*i)
-        master.addons.handle_lifecycle("clientdisconnect", f.client_conn)
+        master.addons.handle_lifecycle("clientdisconnect", layer)
         return f
 
     def dummy_cycle(self, master, n, content):
