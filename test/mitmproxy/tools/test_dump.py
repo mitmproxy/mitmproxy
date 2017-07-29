@@ -12,7 +12,7 @@ from .. import tservers
 
 class TestDumpMaster(tservers.MasterTest):
     def mkmaster(self, flt, **opts):
-        o = options.Options(view_filter=flt, verbosity=-1, flow_detail=0, **opts)
+        o = options.Options(view_filter=flt, verbosity='error', flow_detail=0, **opts)
         m = dump.DumpMaster(o, proxy.DummyServer(), with_termlog=False, with_dumper=False)
         return m
 

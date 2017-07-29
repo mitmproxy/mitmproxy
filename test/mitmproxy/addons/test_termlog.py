@@ -16,7 +16,7 @@ class TestTermLog:
     ])
     def test_output(self, outfile, expected_out, expected_err, capfd):
         t = termlog.TermLog(outfile=outfile)
-        with taddons.context(options=Options(verbosity=2)) as tctx:
+        with taddons.context(options=Options(verbosity='info')) as tctx:
             tctx.configure(t)
             t.log(log.LogEntry("one", "info"))
             t.log(log.LogEntry("two", "debug"))

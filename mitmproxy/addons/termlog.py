@@ -20,7 +20,7 @@ class TermLog:
         else:
             outfile = self.outfile or realstdout
 
-        if ctx.options.verbosity >= log.log_tier(e.level):
+        if log.log_tier(ctx.options.verbosity) >= log.log_tier(e.level):
             click.secho(
                 e.msg,
                 file=outfile,

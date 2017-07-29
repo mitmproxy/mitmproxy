@@ -27,6 +27,14 @@ console_layouts = [
     "horizontal",
 ]
 
+log_verbosity = [
+    "error",
+    "warn",
+    "info",
+    "alert",
+    "debug",
+]
+
 APP_HOST = "mitm.it"
 APP_PORT = 80
 CA_DIR = "~/.mitmproxy"
@@ -162,8 +170,9 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
-            "verbosity", int, 2,
-            "Log verbosity."
+            "verbosity", str, 'info',
+            "Log verbosity.",
+            choices=log_verbosity
         )
         self.add_option(
             "default_contentview", str, "auto",
