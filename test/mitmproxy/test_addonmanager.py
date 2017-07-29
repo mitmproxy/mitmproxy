@@ -117,6 +117,11 @@ def test_simple():
         a.trigger("tick")
         tctx.master.has_log("not callable")
 
+        tctx.master.clear()
+        a.get("one").tick = addons
+        a.trigger("tick")
+        assert not tctx.master.has_log("not callable")
+
         a.remove(a.get("one"))
         assert not a.get("one")
 

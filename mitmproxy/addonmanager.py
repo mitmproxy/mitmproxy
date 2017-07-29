@@ -1,3 +1,4 @@
+import types
 import typing
 import traceback
 import contextlib
@@ -229,11 +230,18 @@ class AddonManager:
         for a in traverse([addon]):
             func = getattr(a, name, None)
             if func:
-                if not callable(func):
+                if callable(func):
+                    func(*args, **kwargs)
+                elif isinstance(func, types.ModuleType):
+                    # we gracefully exclude module imports with the same name as hooks.
+                    # For example, a user may have "from mitmproxy import log" in an addon,
+                    # which has the same name as the "log" hook. In this particular case,
+                    # we end up in an error loop because we "log" this error.
+                    pass
+                else:
                     raise exceptions.AddonManagerError(
-                        "Addon handler %s not callable" % name
+                        "Addon handler {} ({}) not callable".format(name, a)
                     )
-                func(*args, **kwargs)
 
     def trigger(self, name, *args, **kwargs):
         """
