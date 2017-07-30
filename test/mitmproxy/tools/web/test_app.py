@@ -322,5 +322,5 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         web_root = os.path.join(here, os.pardir, os.pardir, os.pardir, os.pardir, 'web')
         tflow_path = os.path.join(web_root, 'src/js/__tests__/ducks/_tflow.js')
         content = """export default function(){{\n    return {tflow_json}\n}}""".format(tflow_json=tflow_json)
-        with open(tflow_path, 'w') as f:
+        with open(tflow_path, 'w', newline="\n") as f:
             f.write(content)
