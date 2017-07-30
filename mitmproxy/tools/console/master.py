@@ -15,7 +15,6 @@ import urwid
 from mitmproxy import addons
 from mitmproxy import master
 from mitmproxy import log
-from mitmproxy import options  # noqa
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
@@ -172,6 +171,11 @@ class ConsoleMaster(master.Master):
         self.loop.process_input([key])
 
     def run(self):
+        if not sys.stdout.isatty():
+            print("Error: mitmproxy's console interface requires a tty. "
+                  "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
+            sys.exit(1)
+
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
         self.set_palette(self.options, None)
