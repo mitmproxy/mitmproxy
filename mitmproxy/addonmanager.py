@@ -86,7 +86,18 @@ class Loader:
         choices: typing.Optional[typing.Sequence[str]] = None
     ) -> None:
         if name in self.master.options:
-            ctx.log.warn("Over-riding existing option %s" % name)
+            existing = self.master.options._options[name]
+            same_signature = (
+                existing.name == name and
+                existing.typespec == typespec and
+                existing.default == default and
+                existing.help == help and
+                existing.choices == choices
+            )
+            if same_signature:
+                return
+            else:
+                ctx.log.warn("Over-riding existing option %s" % name)
         self.master.options.add_option(
             name,
             typespec,
