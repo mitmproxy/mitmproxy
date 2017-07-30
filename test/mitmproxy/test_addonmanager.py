@@ -115,7 +115,7 @@ def test_simple():
         a.add(TAddon("one"))
         a.trigger("done")
         a.trigger("tick")
-        tctx.master.has_log("not callable")
+        assert tctx.master.has_log("not callable")
 
         tctx.master.clear()
         a.get("one").tick = addons
