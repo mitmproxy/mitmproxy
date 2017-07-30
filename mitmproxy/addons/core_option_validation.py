@@ -19,11 +19,9 @@ class CoreOptionValidation:
                 "then the upstream certificate is not retrieved before generating "
                 "the client certificate chain."
             )
-        if "body_size_limit" in updated and opts.body_size_limit:
+        if "body_size_limit" in updated:
             try:
-                opts._processed["body_size_limit"] = human.parse_size(
-                    opts.body_size_limit
-                )
+                human.parse_size(opts.body_size_limit)
             except ValueError as e:
                 raise exceptions.OptionsError(
                     "Invalid body size limit specification: %s" %

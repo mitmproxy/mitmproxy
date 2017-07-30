@@ -1,6 +1,8 @@
 import datetime
 import ipaddress
 import time
+import functools
+import typing
 
 SIZE_TABLE = [
     ("b", 1024 ** 0),
@@ -25,7 +27,14 @@ def pretty_size(size):
     return "%s%s" % (size, SIZE_TABLE[0][0])
 
 
-def parse_size(s):
+@functools.lru_cache()
+def parse_size(s: typing.Optional[str]) -> typing.Optional[int]:
+    """
+    Parse a size with an optional k/m/... suffix.
+    Invalid values raise a ValueError. For added convenience, passing `None` returns `None`.
+    """
+    if s is None:
+        return None
     try:
         return int(s)
     except ValueError:

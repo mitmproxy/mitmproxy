@@ -1,6 +1,7 @@
 from mitmproxy import http
 from mitmproxy.proxy.protocol import http as httpbase
 from mitmproxy.net.http import http1
+from mitmproxy.utils import human
 
 
 class Http1Layer(httpbase._HttpTransmissionLayer):
@@ -19,7 +20,7 @@ class Http1Layer(httpbase._HttpTransmissionLayer):
         return http1.read_body(
             self.client_conn.rfile,
             expected_size,
-            self.config.options._processed.get("body_size_limit")
+            human.parse_size(self.config.options.body_size_limit)
         )
 
     def send_request_headers(self, request):
@@ -45,7 +46,7 @@ class Http1Layer(httpbase._HttpTransmissionLayer):
         return http1.read_body(
             self.server_conn.rfile,
             expected_size,
-            self.config.options._processed.get("body_size_limit")
+            human.parse_size(self.config.options.body_size_limit)
         )
 
     def send_response_headers(self, response):

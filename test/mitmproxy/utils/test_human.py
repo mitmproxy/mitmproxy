@@ -22,6 +22,7 @@ def test_parse_size():
         human.parse_size("1f")
     with pytest.raises(ValueError):
         human.parse_size("ak")
+    assert human.parse_size(None) is None
 
 
 def test_pretty_size():

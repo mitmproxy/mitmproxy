@@ -94,7 +94,6 @@ class OptManager:
         self.__dict__["_options"] = {}
         self.__dict__["changed"] = blinker.Signal()
         self.__dict__["errored"] = blinker.Signal()
-        self.__dict__["_processed"] = {}
 
     def add_option(
         self,

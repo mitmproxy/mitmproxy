@@ -507,9 +507,6 @@ class TestBodySizeLimit(_Http2Test):
     def test_body_size_limit(self):
         self.options.body_size_limit = "20"
 
-        # FIXME: This should not be required?
-        self.options._processed["body_size_limit"] = 20
-
         h2_conn = self.setup_connection()
 
         self._send_request(
