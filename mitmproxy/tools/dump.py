@@ -18,11 +18,10 @@ class DumpMaster(master.Master):
     def __init__(
         self,
         options: options.Options,
-        server,
         with_termlog=True,
         with_dumper=True,
     ) -> None:
-        master.Master.__init__(self, options, server)
+        super().__init__(options)
         self.errorcheck = ErrorCheck()
         if with_termlog:
             self.addons.add(termlog.TermLog(), termstatus.TermStatus())

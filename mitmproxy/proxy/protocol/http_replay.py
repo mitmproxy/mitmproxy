@@ -1,9 +1,15 @@
+import queue
+import threading
+import typing
+
 from mitmproxy import log
 from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import flow
+from mitmproxy import options
 from mitmproxy import connections
+from mitmproxy.net import server_spec
 from mitmproxy.net.http import http1
 from mitmproxy.types import basethread
 
@@ -14,12 +20,19 @@ from mitmproxy.types import basethread
 class RequestReplayThread(basethread.BaseThread):
     name = "RequestReplayThread"
 
-    def __init__(self, config, f, event_queue, should_exit):
+    def __init__(
+            self,
+            opts: options.Options,
+            f: http.HTTPFlow,
+            event_queue: typing.Optional[queue.Queue],
+            should_exit: threading.Event
+    ) -> None:
         """
             event_queue can be a queue or None, if no scripthooks should be
             processed.
         """
-        self.config, self.f = config, f
+        self.options = opts
+        self.f = f
         f.live = True
         if event_queue:
             self.channel = controller.Channel(event_queue, should_exit)
@@ -31,7 +44,7 @@ class RequestReplayThread(basethread.BaseThread):
 
     def run(self):
         r = self.f.request
-        bsl = self.config.options._processed.get("body_size_limit")
+        bsl = self.options._processed.get("body_size_limit")
         first_line_format_backup = r.first_line_format
         server = None
         try:
@@ -45,9 +58,9 @@ class RequestReplayThread(basethread.BaseThread):
 
             if not self.f.response:
                 # In all modes, we directly connect to the server displayed
-                if self.config.options.mode.startswith("upstream:"):
-                    server_address = self.config.upstream_server.address
-                    server = connections.ServerConnection(server_address, (self.config.options.listen_host, 0))
+                if self.options.mode.startswith("upstream:"):
+                    server_address = server_spec.parse_with_mode(self.options.mode)[1].address
+                    server = connections.ServerConnection(server_address, (self.options.listen_host, 0))
                     server.connect()
                     if r.scheme == "https":
                         connect_request = http.make_connect_request((r.data.host, r.port))
@@ -61,7 +74,7 @@ class RequestReplayThread(basethread.BaseThread):
                         if resp.status_code != 200:
                             raise exceptions.ReplayException("Upstream server refuses CONNECT request")
                         server.establish_ssl(
-                            self.config.client_certs,
+                            self.options.client_certs,
                             sni=self.f.server_conn.sni
                         )
                         r.first_line_format = "relative"
@@ -71,12 +84,12 @@ class RequestReplayThread(basethread.BaseThread):
                     server_address = (r.host, r.port)
                     server = connections.ServerConnection(
                         server_address,
-                        (self.config.options.listen_host, 0)
+                        (self.options.listen_host, 0)
                     )
                     server.connect()
                     if r.scheme == "https":
                         server.establish_ssl(
-                            self.config.client_certs,
+                            self.options.client_certs,
                             sni=self.f.server_conn.sni
                         )
                     r.first_line_format = "relative"

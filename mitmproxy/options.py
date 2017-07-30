@@ -516,24 +516,6 @@ class Options(optmanager.OptManager):
             "Limit which flows are displayed."
         )
 
-        # Web options
-        self.add_option(
-            "web_open_browser", bool, True,
-            "Start a browser."
-        )
-        self.add_option(
-            "web_debug", bool, False,
-            "Mitmweb debugging."
-        )
-        self.add_option(
-            "web_port", int, 8081,
-            "Mitmweb port."
-        )
-        self.add_option(
-            "web_iface", str, "127.0.0.1",
-            "Mitmweb interface."
-        )
-
         # Dump options
         self.add_option(
             "flow_detail", int, 1,

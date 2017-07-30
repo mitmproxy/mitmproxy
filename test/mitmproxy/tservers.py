@@ -69,9 +69,10 @@ class TestState:
 
 class TestMaster(taddons.RecordingMaster):
 
-    def __init__(self, opts, config):
-        s = ProxyServer(config)
-        super().__init__(opts, s)
+    def __init__(self, opts):
+        super().__init__(opts)
+        config = ProxyConfig(opts)
+        self.server = ProxyServer(config)
 
     def clear_addons(self, addons):
         self.addons.clear()
@@ -129,9 +130,8 @@ class ProxyTestBase:
             ssl=cls.ssl,
             ssloptions=cls.ssloptions)
 
-        opts = cls.get_options()
-        cls.config = ProxyConfig(opts)
-        tmaster = cls.masterclass(opts, cls.config)
+        cls.options = cls.get_options()
+        tmaster = cls.masterclass(cls.options)
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
 
@@ -338,19 +338,16 @@ class ChainProxyTest(ProxyTestBase):
 
     @classmethod
     def setup_class(cls):
+        # We need to initialize the chain first so that the normal server gets a correct config.
         cls.chain = []
-        super().setup_class()
         for _ in range(cls.n):
             opts = cls.get_options()
-            config = ProxyConfig(opts)
-            tmaster = cls.masterclass(opts, config)
+            tmaster = cls.masterclass(opts)
             proxy = ProxyThread(tmaster)
             proxy.start()
             cls.chain.insert(0, proxy)
 
-        # Patch the orginal proxy to upstream mode
-        opts = cls.get_options()
-        cls.config = cls.proxy.tmaster.config = cls.proxy.tmaster.server.config = ProxyConfig(opts)
+        super().setup_class()
 
     @classmethod
     def teardown_class(cls):

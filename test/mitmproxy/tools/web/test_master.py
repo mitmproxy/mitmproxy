@@ -1,7 +1,5 @@
 from mitmproxy.tools.web import master
-from mitmproxy import proxy
 from mitmproxy import options
-from mitmproxy.proxy.config import ProxyConfig
 
 from ... import tservers
 
@@ -9,8 +7,7 @@ from ... import tservers
 class TestWebMaster(tservers.MasterTest):
     def mkmaster(self, **opts):
         o = options.Options(**opts)
-        c = ProxyConfig(o)
-        return master.WebMaster(o, proxy.DummyServer(c))
+        return master.WebMaster(o)
 
     def test_basic(self):
         m = self.mkmaster()

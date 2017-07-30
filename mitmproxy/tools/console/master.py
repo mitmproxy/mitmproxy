@@ -28,18 +28,11 @@ from mitmproxy.tools.console import window
 
 class ConsoleMaster(master.Master):
 
-    def __init__(self, options, server):
-        super().__init__(options, server)
-
-        if not sys.stdout.isatty():
-            print("Error: mitmproxy's console interface requires a tty. "
-                  "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
-            sys.exit(1)
+    def __init__(self, opts):
+        super().__init__(opts)
 
         self.view = view.View()  # type: view.View
         self.stream_path = None
-        # This line is just for type hinting
-        self.options = self.options  # type: Options
         self.keymap = keymap.Keymap(self)
         defaultkeys.map(self.keymap)
         self.options.errored.connect(self.options_error)
@@ -160,10 +153,10 @@ class ConsoleMaster(master.Master):
         self.ui.start()
         os.unlink(name)
 
-    def set_palette(self, options, updated):
+    def set_palette(self, opts, updated):
         self.ui.register_palette(
-            palettes.palettes[options.console_palette].palette(
-                options.console_palette_transparent
+            palettes.palettes[opts.console_palette].palette(
+                opts.console_palette_transparent
             )
         )
         self.ui.clear()
@@ -178,6 +171,11 @@ class ConsoleMaster(master.Master):
         self.loop.process_input([key])
 
     def run(self):
+        if not sys.stdout.isatty():
+            print("Error: mitmproxy's console interface requires a tty. "
+                  "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
+            sys.exit(1)
+
         self.ui = urwid.raw_display.Screen()
         self.ui.set_terminal_properties(256)
         self.set_palette(self.options, None)

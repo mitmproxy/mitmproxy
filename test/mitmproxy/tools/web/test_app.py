@@ -7,7 +7,6 @@ from tornado import httpclient
 from tornado import websocket
 
 from mitmproxy import exceptions
-from mitmproxy import proxy
 from mitmproxy import options
 from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
@@ -21,7 +20,7 @@ def json(resp: httpclient.HTTPResponse):
 class TestApp(tornado.testing.AsyncHTTPTestCase):
     def get_app(self):
         o = options.Options(http2=False)
-        m = webmaster.WebMaster(o, proxy.DummyServer(), with_termlog=False)
+        m = webmaster.WebMaster(o, with_termlog=False)
         f = tflow.tflow(resp=True)
         f.id = "42"
         m.view.add([f])
@@ -323,5 +322,5 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         web_root = os.path.join(here, os.pardir, os.pardir, os.pardir, os.pardir, 'web')
         tflow_path = os.path.join(web_root, 'src/js/__tests__/ducks/_tflow.js')
         content = """export default function(){{\n    return {tflow_json}\n}}""".format(tflow_json=tflow_json)
-        with open(tflow_path, 'w') as f:
+        with open(tflow_path, 'w', newline="\n") as f:
             f.write(content)

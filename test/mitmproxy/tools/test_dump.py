@@ -1,7 +1,6 @@
 import pytest
 from unittest import mock
 
-from mitmproxy import proxy
 from mitmproxy import log
 from mitmproxy import controller
 from mitmproxy import options
@@ -13,7 +12,7 @@ from .. import tservers
 class TestDumpMaster(tservers.MasterTest):
     def mkmaster(self, flt, **opts):
         o = options.Options(view_filter=flt, verbosity='error', flow_detail=0, **opts)
-        m = dump.DumpMaster(o, proxy.DummyServer(), with_termlog=False, with_dumper=False)
+        m = dump.DumpMaster(o, with_termlog=False, with_dumper=False)
         return m
 
     def test_has_error(self):
@@ -27,12 +26,12 @@ class TestDumpMaster(tservers.MasterTest):
     def test_addons_termlog(self, termlog):
         with mock.patch('sys.stdout'):
             o = options.Options()
-            m = dump.DumpMaster(o, proxy.DummyServer(), with_termlog=termlog)
+            m = dump.DumpMaster(o, with_termlog=termlog)
             assert (m.addons.get('termlog') is not None) == termlog
 
     @pytest.mark.parametrize("dumper", [False, True])
     def test_addons_dumper(self, dumper):
         with mock.patch('sys.stdout'):
             o = options.Options()
-            m = dump.DumpMaster(o, proxy.DummyServer(), with_dumper=dumper)
+            m = dump.DumpMaster(o, with_dumper=dumper)
             assert (m.addons.get('dumper') is not None) == dumper

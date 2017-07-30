@@ -6,13 +6,11 @@ from mitmproxy.test import tflow, tutils
 import mitmproxy.io
 from mitmproxy import flowfilter
 from mitmproxy import options
-from mitmproxy.proxy import config
 from mitmproxy.io import tnetstring
 from mitmproxy.exceptions import FlowReadException, ReplayException, ControlException
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy.net import http as net_http
-from mitmproxy.proxy.server import DummyServer
 from mitmproxy import master
 from . import tservers
 
@@ -93,8 +91,7 @@ class TestFlowMaster:
         opts = options.Options(
             mode="reverse:https://use-this-domain"
         )
-        conf = config.ProxyConfig(opts)
-        fm = master.Master(opts, DummyServer(conf))
+        fm = master.Master(opts)
         fm.addons.add(s)
         f = tflow.tflow(resp=True)
         fm.load_flow(f)
@@ -102,8 +99,7 @@ class TestFlowMaster:
 
     def test_replay(self):
         opts = options.Options()
-        conf = config.ProxyConfig(opts)
-        fm = master.Master(opts, DummyServer(conf))
+        fm = master.Master(opts)
         f = tflow.tflow(resp=True)
         f.request.content = None
         with pytest.raises(ReplayException, match="missing"):
@@ -131,7 +127,7 @@ class TestFlowMaster:
 
     def test_all(self):
         s = tservers.TestState()
-        fm = master.Master(None, DummyServer())
+        fm = master.Master(None)
         fm.addons.add(s)
         f = tflow.tflow(req=None)
         fm.addons.handle_lifecycle("clientconnect", f.client_conn)

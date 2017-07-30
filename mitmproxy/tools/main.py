@@ -1,22 +1,25 @@
 from __future__ import print_function  # this is here for the version check to work on Python 2.
+
 import sys
 
-# This must be at the very top, before importing anything else that might break!
-# Keep all other imports below with the 'noqa' magic comment.
 if sys.version_info < (3, 5):
+    # This must be before any mitmproxy imports, as they already break!
+    # Keep all other imports below with the 'noqa' magic comment.
     print("#" * 49, file=sys.stderr)
     print("# mitmproxy only supports Python 3.5 and above! #", file=sys.stderr)
     print("#" * 49, file=sys.stderr)
 
+import argparse  # noqa
 import os  # noqa
 import signal  # noqa
+import typing  # noqa
 
 from mitmproxy.tools import cmdline  # noqa
-from mitmproxy import exceptions  # noqa
+from mitmproxy import exceptions, master  # noqa
 from mitmproxy import options  # noqa
 from mitmproxy import optmanager  # noqa
 from mitmproxy import proxy  # noqa
-from mitmproxy import log   # noqa
+from mitmproxy import log  # noqa
 from mitmproxy.utils import debug  # noqa
 
 
@@ -53,7 +56,12 @@ def process_options(parser, opts, args):
     return proxy.config.ProxyConfig(opts)
 
 
-def run(MasterKlass, args, extra=None):  # pragma: no cover
+def run(
+        master_cls: typing.Type[master.Master],
+        make_parser: typing.Callable[[options.Options], argparse.ArgumentParser],
+        arguments: typing.Sequence[str],
+        extra=typing.Callable[[typing.Any], dict]
+):  # pragma: no cover
     """
         extra: Extra argument processing callable which returns a dict of
         options.
@@ -61,12 +69,14 @@ def run(MasterKlass, args, extra=None):  # pragma: no cover
     debug.register_info_dumpers()
 
     opts = options.Options()
-    parser = cmdline.mitmdump(opts)
-    args = parser.parse_args(args)
-    master = None
+    master = master_cls(opts)
+
+    parser = make_parser(opts)
+    args = parser.parse_args(arguments)
     try:
         unknown = optmanager.load_paths(opts, args.conf)
         pconf = process_options(parser, opts, args)
+        server = None  # type: typing.Any
         if pconf.options.server:
             try:
                 server = proxy.server.ProxyServer(pconf)
@@ -76,7 +86,7 @@ def run(MasterKlass, args, extra=None):  # pragma: no cover
         else:
             server = proxy.server.DummyServer(pconf)
 
-        master = MasterKlass(opts, server)
+        master.server = server
         master.addons.trigger("configure", opts.keys())
         master.addons.trigger("tick")
         remaining = opts.update_known(**unknown)
@@ -114,7 +124,7 @@ def mitmproxy(args=None):  # pragma: no cover
     assert_utf8_env()
 
     from mitmproxy.tools import console
-    run(console.master.ConsoleMaster, args)
+    run(console.master.ConsoleMaster, cmdline.mitmproxy, args)
 
 
 def mitmdump(args=None):  # pragma: no cover
@@ -124,16 +134,16 @@ def mitmdump(args=None):  # pragma: no cover
         if args.filter_args:
             v = " ".join(args.filter_args)
             return dict(
-                view_filter = v,
-                save_stream_filter = v,
+                view_filter=v,
+                save_stream_filter=v,
             )
         return {}
 
-    m = run(dump.DumpMaster, args, extra)
+    m = run(dump.DumpMaster, cmdline.mitmdump, args, extra)
     if m and m.errorcheck.has_errored:
         sys.exit(1)
 
 
 def mitmweb(args=None):  # pragma: no cover
     from mitmproxy.tools import web
-    run(web.master.WebMaster, args)
+    run(web.master.WebMaster, cmdline.mitmweb, args)

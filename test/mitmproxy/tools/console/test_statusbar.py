@@ -1,4 +1,4 @@
-from mitmproxy import options, proxy
+from mitmproxy import options
 from mitmproxy.tools.console import statusbar, master
 
 
@@ -26,7 +26,7 @@ def test_statusbar(monkeypatch):
         scripts=["nonexistent"],
         save_stream_file="foo",
     )
-    m = master.ConsoleMaster(o, proxy.DummyServer())
+    m = master.ConsoleMaster(o)
     monkeypatch.setattr(m.addons.get("clientplayback"), "count", lambda: 42)
     monkeypatch.setattr(m.addons.get("serverplayback"), "count", lambda: 42)
 

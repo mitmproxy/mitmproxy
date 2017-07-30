@@ -10,6 +10,7 @@ from mitmproxy import exceptions
 from mitmproxy import command
 from mitmproxy import http
 from mitmproxy import log
+from mitmproxy.net import server_spec
 from mitmproxy.proxy.protocol import http_replay
 from mitmproxy.types import basethread
 
@@ -32,16 +33,25 @@ class Master:
     """
         The master handles mitmproxy's main event loop.
     """
-    def __init__(self, opts, server):
-        self.options = opts or options.Options()
+    def __init__(self, opts):
+        self.options = opts or options.Options()  # type: options.Options
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
         self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
-        self.server = server
+        self._server = None
         self.first_tick = True
-        channel = controller.Channel(self.event_queue, self.should_exit)
-        server.set_channel(channel)
+
+    @property
+    def server(self):
+        return self._server
+
+    @server.setter
+    def server(self, server):
+        server.set_channel(
+            controller.Channel(self.event_queue, self.should_exit)
+        )
+        self._server = server
 
     @contextlib.contextmanager
     def handlecontext(self):
@@ -71,7 +81,8 @@ class Master:
 
     def start(self):
         self.should_exit.clear()
-        ServerThread(self.server).start()
+        if self.server:
+            ServerThread(self.server).start()
 
     def run(self):
         self.start()
@@ -101,7 +112,8 @@ class Master:
         return changed
 
     def shutdown(self):
-        self.server.shutdown()
+        if self.server:
+            self.server.shutdown()
         self.should_exit.set()
         self.addons.trigger("done")
 
@@ -110,10 +122,10 @@ class Master:
         Loads a flow
         """
         if isinstance(f, http.HTTPFlow):
-            if self.server and self.options.mode.startswith("reverse:"):
-                f.request.host = self.server.config.upstream_server.address[0]
-                f.request.port = self.server.config.upstream_server.address[1]
-                f.request.scheme = self.server.config.upstream_server.scheme
+            if self.options.mode.startswith("reverse:"):
+                _, upstream_spec = server_spec.parse_with_mode(self.options.mode)
+                f.request.host, f.request.port = upstream_spec.address
+                f.request.scheme = upstream_spec.scheme
         f.reply = controller.DummyReply()
         for e, o in eventsequence.iterate(f):
             self.addons.handle_lifecycle(e, o)
@@ -168,7 +180,7 @@ class Master:
             f.request.headers.insert(0, "host", host)
 
         rt = http_replay.RequestReplayThread(
-            self.server.config,
+            self.options,
             f,
             self.event_queue,
             self.should_exit

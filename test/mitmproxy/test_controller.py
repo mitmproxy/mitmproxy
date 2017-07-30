@@ -30,7 +30,8 @@ class TestMaster:
             assert ctx.master.should_exit.is_set()
 
     def test_server_simple(self):
-        m = master.Master(None, proxy.DummyServer(None))
+        m = master.Master(None)
+        m.server = proxy.DummyServer()
         m.start()
         m.shutdown()
         m.start()

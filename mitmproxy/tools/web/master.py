@@ -13,12 +13,12 @@ from mitmproxy.addons import termlog
 from mitmproxy.addons import view
 from mitmproxy.addons import termstatus
 from mitmproxy.options import Options  # noqa
-from mitmproxy.tools.web import app
+from mitmproxy.tools.web import app, webaddons
 
 
 class WebMaster(master.Master):
-    def __init__(self, options, server, with_termlog=True):
-        super().__init__(options, server)
+    def __init__(self, options, with_termlog=True):
+        super().__init__(options)
         self.view = view.View()
         self.view.sig_view_add.connect(self._sig_view_add)
         self.view.sig_view_remove.connect(self._sig_view_remove)
@@ -34,6 +34,7 @@ class WebMaster(master.Master):
 
         self.addons.add(*addons.default_addons())
         self.addons.add(
+            webaddons.WebAddon(),
             intercept.Intercept(),
             readfile.ReadFile(),
             self.view,
@@ -44,8 +45,6 @@ class WebMaster(master.Master):
         self.app = app.Application(
             self, self.options.web_debug
         )
-        # This line is just for type hinting
-        self.options = self.options  # type: Options
 
     def _sig_view_add(self, view, flow):
         app.ClientConnection.broadcast(

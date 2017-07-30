@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Any
+import typing
 
 from OpenSSL import SSL, crypto
 
@@ -42,10 +42,11 @@ class ProxyConfig:
         self.certstore = None  # type: certs.CertStore
         self.client_certs = None  # type: str
         self.openssl_verification_mode_server = None  # type: int
+        self.upstream_server = None  # type: typing.Optional[server_spec.ServerSpec]
         self.configure(options, set(options.keys()))
         options.changed.connect(self.configure)
 
-    def configure(self, options: moptions.Options, updated: Any) -> None:
+    def configure(self, options: moptions.Options, updated: typing.Any) -> None:
         if options.add_upstream_certs_to_client_chain and not options.ssl_insecure:
             raise exceptions.OptionsError(
                 "The verify-upstream-cert requires certificate verification to be disabled. "
@@ -58,8 +59,10 @@ class ProxyConfig:
         else:
             self.openssl_verification_mode_server = SSL.VERIFY_PEER
 
-        self.check_ignore = HostMatcher(options.ignore_hosts)
-        self.check_tcp = HostMatcher(options.tcp_hosts)
+        if "ignore_hosts" in updated:
+            self.check_ignore = HostMatcher(options.ignore_hosts)
+        if "tcp_hosts" in updated:
+            self.check_tcp = HostMatcher(options.tcp_hosts)
 
         self.openssl_method_client, self.openssl_options_client = \
             tcp.sslversion_choices[options.ssl_version_client]

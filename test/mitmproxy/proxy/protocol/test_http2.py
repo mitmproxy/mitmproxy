@@ -8,7 +8,6 @@ import pytest
 import h2
 
 from mitmproxy import options
-from mitmproxy.proxy.config import ProxyConfig
 
 import mitmproxy.net
 from ...net import tservers as net_tservers
@@ -89,10 +88,8 @@ class _Http2TestBase:
 
     @classmethod
     def setup_class(cls):
-        opts = cls.get_options()
-        cls.config = ProxyConfig(opts)
-
-        tmaster = tservers.TestMaster(opts, cls.config)
+        cls.options = cls.get_options()
+        tmaster = tservers.TestMaster(cls.options)
         cls.proxy = tservers.ProxyThread(tmaster)
         cls.proxy.start()
 
@@ -319,7 +316,7 @@ class TestRequestWithPriority(_Http2Test):
         (False, (None, None, None), (None, None, None)),
     ])
     def test_request_with_priority(self, http2_priority_enabled, priority, expected_priority):
-        self.config.options.http2_priority = http2_priority_enabled
+        self.options.http2_priority = http2_priority_enabled
 
         h2_conn = self.setup_connection()
 
@@ -397,7 +394,7 @@ class TestPriority(_Http2Test):
         (False, (True, 42424242, 42), []),
     ])
     def test_priority(self, prioritize_before, http2_priority_enabled, priority, expected_priority):
-        self.config.options.http2_priority = http2_priority_enabled
+        self.options.http2_priority = http2_priority_enabled
         self.__class__.priority_data = []
 
         h2_conn = self.setup_connection()
@@ -508,8 +505,10 @@ class TestBodySizeLimit(_Http2Test):
         return True
 
     def test_body_size_limit(self):
-        self.config.options.body_size_limit = "20"
-        self.config.options._processed["body_size_limit"] = 20
+        self.options.body_size_limit = "20"
+
+        # FIXME: This should not be required?
+        self.options._processed["body_size_limit"] = 20
 
         h2_conn = self.setup_connection()
 
