@@ -1,4 +1,4 @@
-class WebOptions:
+class WebAddon:
     def load(self, loader):
         loader.add_option(
             "web_open_browser", bool, True,
@@ -6,13 +6,13 @@ class WebOptions:
         )
         loader.add_option(
             "web_debug", bool, False,
-            "Mitmweb debugging."
+            "Enable mitmweb debugging."
         )
         loader.add_option(
             "web_port", int, 8081,
-            "Mitmweb port."
+            "Web UI port."
         )
         loader.add_option(
             "web_iface", str, "127.0.0.1",
-            "Mitmweb interface."
+            "Web UI interface."
         )

@@ -34,7 +34,7 @@ class WebMaster(master.Master):
 
         self.addons.add(*addons.default_addons())
         self.addons.add(
-            webaddons.WebOptions(),
+            webaddons.WebAddon(),
             intercept.Intercept(),
             readfile.ReadFile(),
             self.view,
