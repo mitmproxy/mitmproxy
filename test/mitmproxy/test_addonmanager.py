@@ -91,7 +91,15 @@ def test_loader():
     with taddons.context() as tctx:
         l = addonmanager.Loader(tctx.master)
         l.add_option("custom_option", bool, False, "help")
+        assert "custom_option" in l.master.options
+
+        # calling this again with the same signature is a no-op.
         l.add_option("custom_option", bool, False, "help")
+        assert not tctx.master.has_log("Over-riding existing option")
+
+        # a different signature should emit a warning though.
+        l.add_option("custom_option", bool, True, "help")
+        assert tctx.master.has_log("Over-riding existing option")
 
         def cmd(a: str) -> str:
             return "foo"
