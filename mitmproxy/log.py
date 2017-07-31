@@ -7,6 +7,9 @@ class LogEntry:
     def __repr__(self):
         return "LogEntry({}, {})".format(self.msg, self.level)
 
+    def __eq__(self, other):
+        return self.level == other.level and self.msg == other.msg
+
 
 class Log:
     """

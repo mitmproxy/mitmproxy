@@ -1,1 +1,2 @@
+-e git+https://github.com/ujjwal96/wsproto.git@patch-1#egg=wsproto
 -e .[dev,examples]
