@@ -1,13 +1,16 @@
 import typing
 from warnings import warn
+from unittest import mock
 
 import sys
 
 import h11
+from mitmproxy.net import http
 from mitmproxy.proxy.protocol2 import events, commands, websocket
 from mitmproxy.proxy.protocol2.context import ClientServerContext
 from mitmproxy.proxy.protocol2.layer import Layer
 from mitmproxy.proxy.protocol2.utils import expect
+from mitmproxy.net import websockets
 
 
 class HTTPLayer(Layer):
@@ -22,7 +25,7 @@ class HTTPLayer(Layer):
     def __init__(self, context: ClientServerContext):
         super().__init__(context)
         self.state = self.read_request_headers
-
+        self.flow = mock.Mock("mitmproxy.http.HTTPFlow")
         self.client_conn = h11.Connection(h11.SERVER)
         self.server_conn = h11.Connection(h11.CLIENT)
 
@@ -63,6 +66,7 @@ class HTTPLayer(Layer):
             if self.client_conn.client_is_waiting_for_100_continue:
                 raise NotImplementedError()
 
+            self.flow.request.headers = http.Headers(event.headers)
             self.flow_events[0].append(event)
             self.state = self.read_request_body
             yield from self.read_request_body()  # there may already be further events.
@@ -108,9 +112,9 @@ class HTTPLayer(Layer):
             self.state = self.read_response_body
             yield from self.read_response_body()  # there may already be further events.
         elif isinstance(event, h11.InformationalResponse):
-            if event.status_code == 101:
-                # FIXME: check if this is actually WebSocket
-                child_layer = websocket.WebsocketLayer(self.context, None)
+            self.flow.response.headers = http.Headers(event.headers)
+            if event.status_code == 101 and websockets.check_handshake(self.flow.response.headers):
+                child_layer = websocket.WebsocketLayer(self.context, self.flow)
                 yield from child_layer.handle_event(events.Start())
                 self._handle_event = child_layer.handle_event
                 return
