@@ -60,7 +60,7 @@ def run(
         master_cls: typing.Type[master.Master],
         make_parser: typing.Callable[[options.Options], argparse.ArgumentParser],
         arguments: typing.Sequence[str],
-        extra=typing.Callable[[typing.Any], dict]
+        extra: typing.Callable[[typing.Any], dict] = None
 ):  # pragma: no cover
     """
         extra: Extra argument processing callable which returns a dict of
