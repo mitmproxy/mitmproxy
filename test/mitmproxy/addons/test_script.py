@@ -1,15 +1,16 @@
-import traceback
-import sys
 import os
+import sys
+import traceback
+from unittest import mock
+
 import pytest
 
-from unittest import mock
-from mitmproxy.test import tflow
-from mitmproxy.test import tutils
-from mitmproxy.test import taddons
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
 from mitmproxy.addons import script
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 
 
 def test_load_script():
@@ -215,6 +216,20 @@ class TestScriptLoader:
             tctx.invoke(sl, "tick")
             assert not tctx.options.scripts
             assert not sl.addons
+
+    def test_load_err(self):
+        sc = script.ScriptLoader()
+        with taddons.context() as tctx:
+            tctx.configure(sc, scripts=[
+                tutils.test_data.path("mitmproxy/data/addonscripts/load_error.py")
+            ])
+            try:
+                tctx.invoke(sc, "tick")
+            except ValueError:
+                pass  # this is expected and normally guarded.
+            # on the next tick we should not fail however.
+            tctx.invoke(sc, "tick")
+            assert len(tctx.master.addons) == 0
 
     def test_order(self):
         rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder")

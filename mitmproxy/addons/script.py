@@ -72,11 +72,12 @@ class Script:
                     ctx.master.addons.remove(self.ns)
                 self.ns = None
                 with addonmanager.safecall():
-                    self.ns = load_script(self.fullpath)
+                    ns = load_script(self.fullpath)
+                    ctx.master.addons.register(ns)
+                    self.ns = ns
                 if self.ns:
                     # We're already running, so we have to explicitly register and
                     # configure the addon
-                    ctx.master.addons.register(self.ns)
                     ctx.master.addons.invoke_addon(self.ns, "running")
                     ctx.master.addons.invoke_addon(
                         self.ns,
