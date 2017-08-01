@@ -107,15 +107,6 @@ class ConsoleAddon:
             "console_mouse", bool, True,
             "Console mouse interaction."
         )
-        loader.add_option(
-            "console_order", str, "time",
-            "Flow sort order.",
-            choices=view_orders,
-        )
-        loader.add_option(
-            "console_order_reversed", bool, False,
-            "Reverse the sorting order."
-        )
 
     @command.command("console.layout.options")
     def layout_options(self) -> typing.Sequence[str]:

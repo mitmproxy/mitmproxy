@@ -199,10 +199,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "M"))
             r.append(":%s]" % self.master.options.default_contentview)
-        if self.master.options.has_changed("console_order"):
+        if self.master.options.has_changed("view_order"):
             r.append("[")
             r.append(("heading_key", "o"))
-            r.append(":%s]" % self.master.options.console_order)
+            r.append(":%s]" % self.master.options.view_order)
 
         opts = []
         if self.master.options.anticache:
@@ -244,7 +244,7 @@ class StatusBar(urwid.WidgetWrap):
         else:
             offset = self.master.view.focus.index + 1
 
-        if self.master.options.console_order_reversed:
+        if self.master.options.view_order_reversed:
             arrow = common.SYMBOL_UP
         else:
             arrow = common.SYMBOL_DOWN
