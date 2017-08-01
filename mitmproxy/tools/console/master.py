@@ -59,7 +59,7 @@ class ConsoleMaster(master.Master):
         self.window = None
 
     def __setattr__(self, name, value):
-        self.__dict__[name] = value
+        super().__setattr__(name, value)
         signals.update_settings.send(self)
 
     def options_error(self, opts, exc):
