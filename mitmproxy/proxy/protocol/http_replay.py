@@ -12,6 +12,7 @@ from mitmproxy import connections
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import http1
 from mitmproxy.types import basethread
+from mitmproxy.utils import human
 
 
 # TODO: Doesn't really belong into mitmproxy.proxy.protocol...
@@ -44,7 +45,7 @@ class RequestReplayThread(basethread.BaseThread):
 
     def run(self):
         r = self.f.request
-        bsl = self.options._processed.get("body_size_limit")
+        bsl = human.parse_size(self.options.body_size_limit)
         first_line_format_backup = r.first_line_format
         server = None
         try:

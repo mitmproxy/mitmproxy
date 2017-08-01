@@ -17,6 +17,7 @@ import mitmproxy.net.http
 from mitmproxy.net import tcp
 from mitmproxy.types import basethread
 from mitmproxy.net.http import http2, headers
+from mitmproxy.utils import human
 
 
 class SafeH2Connection(connection.H2Connection):
@@ -183,7 +184,7 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_data_received(self, eid, event, source_conn):
-        bsl = self.config.options._processed.get("body_size_limit")
+        bsl = human.parse_size(self.config.options.body_size_limit)
         if bsl and self.streams[eid].queued_data_length > bsl:
             self.streams[eid].kill()
             self.connections[source_conn].safe_reset_stream(
