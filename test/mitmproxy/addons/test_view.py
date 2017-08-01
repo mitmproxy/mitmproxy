@@ -7,6 +7,10 @@ from mitmproxy import flowfilter
 from mitmproxy import exceptions
 from mitmproxy import io
 from mitmproxy.test import taddons
+from mitmproxy import options
+from mitmproxy.tools.console.master import ConsoleMaster
+
+m = ConsoleMaster(options.Options())
 
 
 def tft(*, method="get", start=0):
@@ -26,7 +30,7 @@ def test_order_refresh():
     v.sig_view_refresh.connect(save)
 
     tf = tflow.tflow(resp=True)
-    with taddons.context() as tctx:
+    with taddons.context(m) as tctx:
         tctx.configure(v, console_order="time")
         v.add([tf])
         tf.request.timestamp_start = 1
@@ -293,7 +297,7 @@ def test_setgetval():
 
 def test_order():
     v = view.View()
-    with taddons.context() as tctx:
+    with taddons.context(m) as tctx:
         v.request(tft(method="get", start=1))
         v.request(tft(method="put", start=2))
         v.request(tft(method="get", start=3))
@@ -424,7 +428,7 @@ def test_signals():
 
 def test_focus_follow():
     v = view.View()
-    with taddons.context() as tctx:
+    with taddons.context(m) as tctx:
         tctx.configure(v, console_focus_follow=True, view_filter="~m get")
 
         v.add([tft(start=5)])
@@ -541,7 +545,7 @@ def test_settings():
 
 def test_configure():
     v = view.View()
-    with taddons.context() as tctx:
+    with taddons.context(m) as tctx:
         tctx.configure(v, view_filter="~q")
         with pytest.raises(Exception, match="Invalid interception filter"):
             tctx.configure(v, view_filter="~~")
