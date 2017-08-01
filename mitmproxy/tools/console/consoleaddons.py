@@ -11,9 +11,6 @@ from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import keymap
 
-# We redefine these here for now to avoid importing Urwid-related guff on
-# platforms that don't support it, and circular imports. We can do better using
-# a lazy checker down the track.
 console_palettes = [
     "lowlight",
     "lowdark",
