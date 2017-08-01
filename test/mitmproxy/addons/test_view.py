@@ -7,10 +7,7 @@ from mitmproxy import flowfilter
 from mitmproxy import exceptions
 from mitmproxy import io
 from mitmproxy.test import taddons
-from mitmproxy import options
-from mitmproxy.tools.console.master import ConsoleMaster
-
-m = ConsoleMaster(options.Options())
+from mitmproxy.tools.console import consoleaddons
 
 
 def tft(*, method="get", start=0):
@@ -30,8 +27,8 @@ def test_order_refresh():
     v.sig_view_refresh.connect(save)
 
     tf = tflow.tflow(resp=True)
-    with taddons.context(m) as tctx:
-        tctx.configure(v, console_order="time")
+    with taddons.context() as tctx:
+        tctx.configure(v, view_order="time")
         v.add([tf])
         tf.request.timestamp_start = 1
         assert not sargs
@@ -297,19 +294,19 @@ def test_setgetval():
 
 def test_order():
     v = view.View()
-    with taddons.context(m) as tctx:
+    with taddons.context() as tctx:
         v.request(tft(method="get", start=1))
         v.request(tft(method="put", start=2))
         v.request(tft(method="get", start=3))
         v.request(tft(method="put", start=4))
         assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
 
-        tctx.configure(v, console_order="method")
+        tctx.configure(v, view_order="method")
         assert [i.request.method for i in v] == ["GET", "GET", "PUT", "PUT"]
         v.set_reversed(True)
         assert [i.request.method for i in v] == ["PUT", "PUT", "GET", "GET"]
 
-        tctx.configure(v, console_order="time")
+        tctx.configure(v, view_order="time")
         assert [i.request.timestamp_start for i in v] == [4, 3, 2, 1]
 
         v.set_reversed(False)
@@ -428,7 +425,9 @@ def test_signals():
 
 def test_focus_follow():
     v = view.View()
-    with taddons.context(m) as tctx:
+    with taddons.context() as tctx:
+        console_addon = consoleaddons.ConsoleAddon(tctx.master)
+        tctx.configure(console_addon)
         tctx.configure(v, console_focus_follow=True, view_filter="~m get")
 
         v.add([tft(start=5)])
@@ -545,16 +544,18 @@ def test_settings():
 
 def test_configure():
     v = view.View()
-    with taddons.context(m) as tctx:
+    with taddons.context() as tctx:
         tctx.configure(v, view_filter="~q")
         with pytest.raises(Exception, match="Invalid interception filter"):
             tctx.configure(v, view_filter="~~")
 
-        tctx.configure(v, console_order="method")
+        tctx.configure(v, view_order="method")
         with pytest.raises(Exception, match="Unknown flow order"):
-            tctx.configure(v, console_order="no")
+            tctx.configure(v, view_order="no")
 
-        tctx.configure(v, console_order_reversed=True)
+        tctx.configure(v, view_order_reversed=True)
 
+        console_addon = consoleaddons.ConsoleAddon(tctx.master)
+        tctx.configure(console_addon)
         tctx.configure(v, console_focus_follow=True)
         assert v.focus_follow
