@@ -4,6 +4,11 @@ class LogEntry:
         self.msg = msg
         self.level = level
 
+    def __eq__(self, other):
+        if isinstance(other, LogEntry):
+            return self.__dict__ == other.__dict__
+        return False
+
     def __repr__(self):
         return "LogEntry({}, {})".format(self.msg, self.level)
 
