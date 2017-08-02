@@ -480,10 +480,8 @@ class SSLCert(serializable.Serializable):
                 except PyAsn1Error:
                     continue
                 for i in dec[0]:
-                    if i[0] is None and isinstance(i[1], univ.OctetString) and not isinstance(i[1], char.IA5String):
-                        # This would give back the IP address: b'.'.join([str(e).encode() for e in i[1].asNumbers()])
-                        continue
-                    else:
+                    if i[0].hasValue():
                         e = i[0].asOctets()
-                    altnames.append(e)
+                        altnames.append(e)
+
         return altnames
