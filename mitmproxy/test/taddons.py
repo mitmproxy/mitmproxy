@@ -105,8 +105,8 @@ class context:
             Options object with the given keyword arguments, then calls the
             configure method on the addon with the updated value.
         """
-        loader = addonmanager.Loader(self.master)
-        self.master.addons.invoke_addon(addon, "load", loader)
+        if addon not in self.master.addons:
+            self.master.addons.register(addon)
         with self.options.rollback(kwargs.keys(), reraise=True):
             self.options.update(**kwargs)
             self.master.addons.invoke_addon(

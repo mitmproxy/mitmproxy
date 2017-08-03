@@ -1,5 +1,5 @@
 from mitmproxy import options
-from mitmproxy.tools.console import statusbar, master
+from mitmproxy.tools.console import statusbar, master, consoleaddons
 
 
 def test_statusbar(monkeypatch):
@@ -25,6 +25,7 @@ def test_statusbar(monkeypatch):
         save_stream_file="foo",
     )
     m = master.ConsoleMaster(o)
+    m.options.update(view_order='url', console_focus_follow=True)
     monkeypatch.setattr(m.addons.get("clientplayback"), "count", lambda: 42)
     monkeypatch.setattr(m.addons.get("serverplayback"), "count", lambda: 42)
 

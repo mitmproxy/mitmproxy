@@ -202,6 +202,10 @@ class AddonManager:
     def __str__(self):
         return pprint.pformat([str(i) for i in self.chain])
 
+    def __contains__(self, item):
+        name = _get_name(item)
+        return name in self.lookup
+
     def handle_lifecycle(self, name, message):
         """
             Handle a lifecycle event.

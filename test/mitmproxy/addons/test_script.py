@@ -260,9 +260,6 @@ class TestScriptLoader:
 
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
-                'a load',
-                'b load',
-                'c load',
                 'c configure',
                 'a configure',
                 'b configure',
@@ -280,9 +277,6 @@ class TestScriptLoader:
 
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
-                'c load',
-                'a load',
-                'b load',
                 'c done',
                 'b done',
                 'a configure',
