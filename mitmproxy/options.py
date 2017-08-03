@@ -173,7 +173,7 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "server", bool, True,
-            "Start a proxy server."
+            "Start a proxy server. Enabled by default."
         )
         self.add_option(
             "server_replay_nopop", bool, False,
@@ -406,8 +406,9 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "rawtcp", bool, False,
-            "Enable/disable experimental raw TCP support. "
-            "Disabled by default. "
+            "Enable/disable experimental raw TCP support. TCP connections starting with non-ascii "
+            "bytes are treated as if they would match tcp_hosts. The heuristic is very rough, use "
+            "with caution. Disabled by default. "
         )
 
         self.add_option(
