@@ -10,11 +10,11 @@ from OpenSSL import SSL
 
 from mitmproxy.certs import CertStore
 from mitmproxy.proxy.protocol.tls import DEFAULT_CLIENT_CIPHERS
-from mitmproxy.proxy.protocol2 import events, commands
-from mitmproxy.proxy.protocol2.context import ClientServerContext, Connection
-from mitmproxy.proxy.protocol2.layer import Layer
-from mitmproxy.proxy.protocol2.tcp import TCPLayer
-from mitmproxy.proxy.protocol2.utils import expect
+from mitmproxy.proxy2 import events, commands
+from mitmproxy.proxy2.context import ClientServerContext, Connection
+from mitmproxy.proxy2.layer import Layer
+from mitmproxy.proxy2.layers.tcp import TCPLayer
+from mitmproxy.proxy2.utils import expect
 
 
 class TLSLayer(Layer):
