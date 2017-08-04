@@ -28,7 +28,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         addr = writer.get_extra_info('peername')
 
         self.client = Client(addr)
-        self.context = Context(self.client)
+        self.context = Context(self.client, None)
 
         # self.layer = ReverseProxy(self.context, ("localhost", 443))
         self.layer = ReverseProxy(self.context, ("localhost", 8000))
