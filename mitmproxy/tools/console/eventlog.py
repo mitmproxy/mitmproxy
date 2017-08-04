@@ -1,6 +1,7 @@
 import urwid
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import layoutwidget
+from mitmproxy.tools.console import consoleaddons
 from mitmproxy import ctx
 from mitmproxy import log
 
@@ -21,6 +22,9 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         urwid.ListBox.__init__(self, self.walker)
         signals.sig_add_log.connect(self.sig_add_log)
         signals.sig_clear_log.connect(self.sig_clear_log)
+
+    def load(self, loader):
+        consoleaddons.common_options(loader)
 
     def set_focus(self, index):
         if 0 <= index < len(self.walker):

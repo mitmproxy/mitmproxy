@@ -23,6 +23,7 @@ from mitmproxy import connections
 from mitmproxy import ctx
 from mitmproxy import io
 from mitmproxy import http  # noqa
+from mitmproxy.tools.console import consoleaddons
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -146,6 +147,8 @@ class View(collections.Sequence):
         self.settings = Settings(self)
 
     def load(self, loader):
+
+        consoleaddons.common_options(loader)
         loader.add_option(
             "view_order", str, "time",
             "Flow sort order.",
