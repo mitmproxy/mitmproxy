@@ -1,6 +1,6 @@
 from mitmproxy import tcp, flow
 from mitmproxy.proxy2 import commands, events
-from mitmproxy.proxy2.context import ClientServerContext
+from mitmproxy.proxy2.context import Context
 from mitmproxy.proxy2.layer import Layer
 from mitmproxy.proxy2.utils import expect
 
@@ -9,11 +9,11 @@ class TCPLayer(Layer):
     """
     Simple TCP layer that just relays messages right now.
     """
-    context: ClientServerContext = None
+    context: Context = None
     ignore: bool
     flow: tcp.TCPFlow
 
-    def __init__(self, context: ClientServerContext, ignore: bool = False):
+    def __init__(self, context: Context, ignore: bool = False):
         super().__init__(context)
         self.ignore = ignore
         self.flow = None

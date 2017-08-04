@@ -11,19 +11,19 @@ from OpenSSL import SSL
 from mitmproxy.certs import CertStore
 from mitmproxy.proxy.protocol.tls import DEFAULT_CLIENT_CIPHERS
 from mitmproxy.proxy2 import events, commands
-from mitmproxy.proxy2.context import ClientServerContext, Connection
+from mitmproxy.proxy2.context import Context, Connection
 from mitmproxy.proxy2.layer import Layer
 from mitmproxy.proxy2.layers.tcp import TCPLayer
 from mitmproxy.proxy2.utils import expect
 
 
 class TLSLayer(Layer):
-    context: ClientServerContext = None
+    context: Context = None
     client_tls: bool = None  # FIXME: not yet used.
     server_tls: bool = None
     child_layer: Layer = None
 
-    def __init__(self, context: ClientServerContext, client_tls: bool, server_tls: bool):
+    def __init__(self, context: Context, client_tls: bool, server_tls: bool):
         super().__init__(context)
         self.state = self.start
         self.client_tls = client_tls

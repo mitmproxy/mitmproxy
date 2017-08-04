@@ -7,7 +7,7 @@ import h11
 from mitmproxy.net import http
 from mitmproxy.net import websockets
 from mitmproxy.proxy2 import events, commands
-from mitmproxy.proxy2.context import ClientServerContext
+from mitmproxy.proxy2.context import Context
 from mitmproxy.proxy2.layer import Layer
 from mitmproxy.proxy2.layers import websocket
 from mitmproxy.proxy2.utils import expect
@@ -17,12 +17,12 @@ class HTTPLayer(Layer):
     """
     Simple TCP layer that just relays messages right now.
     """
-    context: ClientServerContext = None
+    context: Context = None
 
     # this is like a mini state machine.
     state: typing.Callable[[events.Event], commands.TCommandGenerator]
 
-    def __init__(self, context: ClientServerContext):
+    def __init__(self, context: Context):
         super().__init__(context)
         self.state = self.read_request_headers
         self.flow = mock.Mock()

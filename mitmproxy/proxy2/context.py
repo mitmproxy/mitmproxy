@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 class Connection:
     """
     Connections exposed to the layers only contain metadata, no socket objects.
@@ -33,18 +36,12 @@ class Context:
     """
 
     client: Client
+    server: Optional[Server]
 
-    def __init__(self, client: Client) -> None:
+    def __init__(
+            self,
+            client: Client,
+            server: Optional[Server],
+    ) -> None:
         self.client = client
-
-
-class ClientServerContext(Context):
-    """
-    In most cases, there's also only exactly one server.
-    """
-
-    server: Server
-
-    def __init__(self, client: Client, server: Server) -> None:
-        super().__init__(client)
         self.server = server
