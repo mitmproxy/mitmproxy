@@ -5,8 +5,8 @@ The counterpart to events are commands.
 """
 import typing
 
-from mitmproxy.proxy.protocol2 import commands
-from mitmproxy.proxy.protocol2.context import Connection
+from mitmproxy.proxy2 import commands
+from mitmproxy.proxy2.context import Connection
 
 
 class Event:
