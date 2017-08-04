@@ -1,16 +1,16 @@
-import typing
-from warnings import warn
-from unittest import mock
-
 import sys
+import typing
+from unittest import mock
+from warnings import warn
 
 import h11
 from mitmproxy.net import http
-from mitmproxy.proxy.protocol2 import events, commands, websocket
-from mitmproxy.proxy.protocol2.context import ClientServerContext
-from mitmproxy.proxy.protocol2.layer import Layer
-from mitmproxy.proxy.protocol2.utils import expect
 from mitmproxy.net import websockets
+from mitmproxy.proxy2 import events, commands
+from mitmproxy.proxy2.context import ClientServerContext
+from mitmproxy.proxy2.layer import Layer
+from mitmproxy.proxy2.layers import websocket
+from mitmproxy.proxy2.utils import expect
 
 
 class HTTPLayer(Layer):
@@ -25,7 +25,7 @@ class HTTPLayer(Layer):
     def __init__(self, context: ClientServerContext):
         super().__init__(context)
         self.state = self.read_request_headers
-        self.flow = mock.Mock("mitmproxy.http.HTTPFlow")
+        self.flow = mock.Mock()
         self.client_conn = h11.Connection(h11.SERVER)
         self.server_conn = h11.Connection(h11.CLIENT)
 

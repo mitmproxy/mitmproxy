@@ -1,6 +1,6 @@
 import pytest
 
-from mitmproxy.proxy.protocol2 import context
+from mitmproxy.proxy2 import context
 
 
 @pytest.fixture

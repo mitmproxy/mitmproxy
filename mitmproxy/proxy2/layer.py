@@ -5,10 +5,8 @@ import collections
 import typing
 from abc import ABCMeta, abstractmethod
 
-from mitmproxy.proxy.protocol2 import commands, events
-from mitmproxy.proxy.protocol2.context import Context
-from mitmproxy.proxy.protocol2.events import Event
-from mitmproxy.proxy.protocol2.utils import expect
+from mitmproxy.proxy2 import commands, events
+from mitmproxy.proxy2.context import Context
 
 
 class Paused(typing.NamedTuple):
@@ -32,12 +30,12 @@ class Layer(metaclass=ABCMeta):
         pass  # print(*args)
 
     @abstractmethod
-    def _handle_event(self, event: Event) -> commands.TCommandGenerator:
+    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
         """Handle a proxy server event"""
         if False:
             yield None
 
-    def handle_event(self, event: Event) -> commands.TCommandGenerator:
+    def handle_event(self, event: events. Event) -> commands.TCommandGenerator:
         if self._paused:
             # did we just receive the reply we were waiting for?
             pause_finished = (

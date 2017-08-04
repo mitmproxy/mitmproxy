@@ -4,7 +4,7 @@ Utility decorators that help build state machines
 import functools
 from typing import Optional
 
-from mitmproxy.proxy.protocol2 import events
+from mitmproxy.proxy2 import events
 
 
 # This is not used at the moment.

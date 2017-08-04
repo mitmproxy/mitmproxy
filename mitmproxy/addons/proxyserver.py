@@ -3,9 +3,9 @@ import queue
 import threading
 
 from mitmproxy import ctx, controller, log
-from mitmproxy.proxy.protocol2 import commands
-from mitmproxy.proxy.protocol2 import events
-from mitmproxy.proxy.protocol2.server import server_async
+from mitmproxy.proxy2 import commands
+from mitmproxy.proxy2 import events
+from mitmproxy.proxy2 import server
 
 
 class AsyncReply(controller.Reply):
@@ -19,7 +19,7 @@ class AsyncReply(controller.Reply):
         self.submit(self.q.get_nowait())
 
 
-class ProxyConnectionHandler(server_async.ConnectionHandler):
+class ProxyConnectionHandler(server.ConnectionHandler):
     event_queue: queue.Queue
     loop: asyncio.AbstractEventLoop
 

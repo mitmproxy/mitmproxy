@@ -1,7 +1,6 @@
-from . import tutils
-from .. import commands
-from .. import events
-from .. import tcp
+from mitmproxy.proxy2 import commands, events
+from mitmproxy.proxy2.layers import tcp
+from mitmproxy.proxy2.test import tutils
 
 
 def test_open_connection(tctx):
