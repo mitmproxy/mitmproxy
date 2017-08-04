@@ -1,8 +1,8 @@
 from mitmproxy import websocket, http, flow
-from mitmproxy.proxy.protocol2 import events, commands
-from mitmproxy.proxy.protocol2.context import ClientServerContext
-from mitmproxy.proxy.protocol2.layer import Layer
-from mitmproxy.proxy.protocol2.utils import expect
+from mitmproxy.proxy2 import events, commands
+from mitmproxy.proxy2.context import ClientServerContext
+from mitmproxy.proxy2.layer import Layer
+from mitmproxy.proxy2.utils import expect
 from wsproto import connection as wsconn
 from wsproto import events as wsevents
 

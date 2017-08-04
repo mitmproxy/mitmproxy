@@ -9,7 +9,7 @@ The counterpart to commands are events.
 import typing
 
 from mitmproxy import log
-from mitmproxy.proxy.protocol2.context import Connection
+from mitmproxy.proxy2.context import Connection
 
 
 class Command:

@@ -2,9 +2,9 @@ import typing
 
 import pytest
 
-from mitmproxy.proxy.protocol2 import events, commands
-from mitmproxy.proxy.protocol2.layer import Layer
-from mitmproxy.proxy.protocol2.test import tutils
+from mitmproxy.proxy2 import events, commands
+from mitmproxy.proxy2.layer import Layer
+from mitmproxy.proxy2.test import tutils
 
 
 class TEvent(events.Event):
