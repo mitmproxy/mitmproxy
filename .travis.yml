@@ -16,7 +16,7 @@ git:
 matrix:
   fast_finish: true
   include:
-    - python: 3.5
+    - python: 3.6
       env: TOXENV=lint
     - os: osx
       osx_image: xcode7.3
@@ -28,7 +28,7 @@ matrix:
       env: TOXENV=py36
     - python: 3.6
       env: TOXENV=individual_coverage
-    - python: 3.5
+    - python: 3.6
       env: TOXENV=docs
     - language: node_js
       node_js: "node"
