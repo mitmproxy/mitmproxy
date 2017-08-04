@@ -1,6 +1,6 @@
 from mitmproxy import websocket, http, flow
 from mitmproxy.proxy2 import events, commands
-from mitmproxy.proxy2.context import ClientServerContext
+from mitmproxy.proxy2.context import Context
 from mitmproxy.proxy2.layer import Layer
 from mitmproxy.proxy2.utils import expect
 from wsproto import connection as wsconn
@@ -11,10 +11,10 @@ class WebsocketLayer(Layer):
     """
     Simple TCP layer that just relays messages right now.
     """
-    context: ClientServerContext = None
+    context: Context = None
     flow: websocket.WebSocketFlow
 
-    def __init__(self, context: ClientServerContext, handshake_flow: http.HTTPFlow):
+    def __init__(self, context: Context, handshake_flow: http.HTTPFlow):
         super().__init__(context)
         self.flow = websocket.WebSocketFlow(context.client, context.server, handshake_flow)
         assert context.server.connected
