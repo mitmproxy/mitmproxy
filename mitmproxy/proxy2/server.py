@@ -11,10 +11,9 @@ import asyncio
 import socket
 import typing
 
-from mitmproxy.proxy.protocol2 import events, commands
-from mitmproxy.proxy.protocol2.context import Client, Context
-from mitmproxy.proxy.protocol2.context import Connection
-from mitmproxy.proxy.protocol2.reverse_proxy import ReverseProxy
+from mitmproxy.proxy2 import events, commands
+from mitmproxy.proxy2.context import Client, Context, Connection
+from mitmproxy.proxy2.layers.modes import ReverseProxy
 
 
 class StreamIO(typing.NamedTuple):

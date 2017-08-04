@@ -1,9 +1,8 @@
-from mitmproxy.proxy.protocol2.commands import TCommandGenerator
-from mitmproxy.proxy.protocol2.context import ClientServerContext, Context, Server
-from mitmproxy.proxy.protocol2.events import Event
-from mitmproxy.proxy.protocol2.http import HTTPLayer
-from mitmproxy.proxy.protocol2.layer import Layer
-from mitmproxy.proxy.protocol2.tcp import TCPLayer
+from mitmproxy.proxy2 import events
+from mitmproxy.proxy2.commands import TCommandGenerator
+from mitmproxy.proxy2.context import Context, Server, ClientServerContext
+from mitmproxy.proxy2.layer import Layer
+from mitmproxy.proxy2.layers.http import HTTPLayer
 
 
 class ReverseProxy(Layer):
@@ -15,5 +14,5 @@ class ReverseProxy(Layer):
         # self.child_layer = TCPLayer(self.child_context, False)
         self.child_layer = HTTPLayer(self.child_context)
 
-    def _handle_event(self, event: Event) -> TCommandGenerator:
+    def _handle_event(self, event: events.Event) -> TCommandGenerator:
         yield from self.child_layer.handle_event(event)

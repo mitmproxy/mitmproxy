@@ -1,10 +1,8 @@
-import typing
-
 from mitmproxy import tcp, flow
-from mitmproxy.proxy.protocol2 import events, commands
-from mitmproxy.proxy.protocol2.context import ClientServerContext
-from mitmproxy.proxy.protocol2.layer import Layer
-from mitmproxy.proxy.protocol2.utils import expect
+from mitmproxy.proxy2 import commands, events
+from mitmproxy.proxy2.context import ClientServerContext
+from mitmproxy.proxy2.layer import Layer
+from mitmproxy.proxy2.utils import expect
 
 
 class TCPLayer(Layer):

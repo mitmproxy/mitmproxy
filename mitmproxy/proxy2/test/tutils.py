@@ -3,9 +3,9 @@ import difflib
 import itertools
 import typing
 
-from mitmproxy.proxy.protocol2 import commands
-from mitmproxy.proxy.protocol2 import events
-from mitmproxy.proxy.protocol2 import layer
+from mitmproxy.proxy2 import commands
+from mitmproxy.proxy2 import events
+from mitmproxy.proxy2 import layer
 
 TPlaybookEntry = typing.Union[commands.Command, events.Event]
 TPlaybook = typing.List[TPlaybookEntry]

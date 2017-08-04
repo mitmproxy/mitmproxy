@@ -2,10 +2,9 @@ from unittest import mock
 
 import pytest
 
-from . import tutils
-from .. import commands
-from .. import events
-from .. import websocket
+from mitmproxy.proxy2 import commands, events
+from mitmproxy.proxy2.layers import websocket
+from mitmproxy.proxy2.test import tutils
 from mitmproxy.test import tflow
 
 
