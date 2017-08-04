@@ -48,7 +48,7 @@ def common_options(parser, opts):
     )
     parser.add_argument(
         "-v", "--verbose",
-        action="store_const", dest="verbose", const=3,
+        action="store_const", dest="verbose", const='debug',
         help="Increase log verbosity."
     )
 

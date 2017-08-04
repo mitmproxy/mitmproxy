@@ -4,29 +4,6 @@ from mitmproxy import optmanager
 from mitmproxy import contentviews
 from mitmproxy.net import tcp
 
-# We redefine these here for now to avoid importing Urwid-related guff on
-# platforms that don't support it, and circular imports. We can do better using
-# a lazy checker down the track.
-console_palettes = [
-    "lowlight",
-    "lowdark",
-    "light",
-    "dark",
-    "solarized_light",
-    "solarized_dark"
-]
-view_orders = [
-    "time",
-    "method",
-    "url",
-    "size",
-]
-console_layouts = [
-    "single",
-    "vertical",
-    "horizontal",
-]
-
 log_verbosity = [
     "error",
     "warn",
@@ -472,43 +449,6 @@ class Options(optmanager.OptManager):
         self.add_option(
             "intercept", Optional[str], None,
             "Intercept filter expression."
-        )
-
-        # Console options
-        self.add_option(
-            "console_layout", str, "single",
-            "Console layout.",
-            choices=sorted(console_layouts),
-        )
-        self.add_option(
-            "console_layout_headers", bool, True,
-            "Show layout comonent headers",
-        )
-        self.add_option(
-            "console_focus_follow", bool, False,
-            "Focus follows new flows."
-        )
-        self.add_option(
-            "console_palette", str, "solarized_dark",
-            "Color palette.",
-            choices=sorted(console_palettes),
-        )
-        self.add_option(
-            "console_palette_transparent", bool, False,
-            "Set transparent background for palette."
-        )
-        self.add_option(
-            "console_mouse", bool, True,
-            "Console mouse interaction."
-        )
-        self.add_option(
-            "console_order", str, "time",
-            "Flow sort order.",
-            choices=view_orders,
-        )
-        self.add_option(
-            "console_order_reversed", bool, False,
-            "Reverse the sorting order."
         )
 
         self.add_option(

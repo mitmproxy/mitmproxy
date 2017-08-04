@@ -11,6 +11,26 @@ from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import keymap
 
+console_palettes = [
+    "lowlight",
+    "lowdark",
+    "light",
+    "dark",
+    "solarized_light",
+    "solarized_dark"
+]
+view_orders = [
+    "time",
+    "method",
+    "url",
+    "size",
+]
+console_layouts = [
+    "single",
+    "vertical",
+    "horizontal",
+]
+
 
 class Logger:
     def log(self, evt):
@@ -59,6 +79,34 @@ class ConsoleAddon:
     def __init__(self, master):
         self.master = master
         self.started = False
+
+    def load(self, loader):
+        loader.add_option(
+            "console_layout", str, "single",
+            "Console layout.",
+            choices=sorted(console_layouts),
+        )
+        loader.add_option(
+            "console_layout_headers", bool, True,
+            "Show layout comonent headers",
+        )
+        loader.add_option(
+            "console_focus_follow", bool, False,
+            "Focus follows new flows."
+        )
+        loader.add_option(
+            "console_palette", str, "solarized_dark",
+            "Color palette.",
+            choices=sorted(console_palettes),
+        )
+        loader.add_option(
+            "console_palette_transparent", bool, False,
+            "Set transparent background for palette."
+        )
+        loader.add_option(
+            "console_mouse", bool, True,
+            "Console mouse interaction."
+        )
 
     @command.command("console.layout.options")
     def layout_options(self) -> typing.Sequence[str]:

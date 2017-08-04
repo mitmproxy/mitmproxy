@@ -1,5 +1,5 @@
 from mitmproxy import options
-from mitmproxy.tools.console import statusbar, master
+from mitmproxy.tools.console import statusbar, master, consoleaddons
 
 
 def test_statusbar(monkeypatch):
@@ -13,20 +13,19 @@ def test_statusbar(monkeypatch):
         stickycookie="~dst example.com",
         stickyauth="~dst example.com",
         default_contentview="javascript",
-        console_order="url",
         anticache=True,
         anticomp=True,
         showhost=True,
         refresh_server_playback=False,
         replay_kill_extra=True,
         upstream_cert=False,
-        console_focus_follow=True,
         stream_large_bodies="3m",
         mode="transparent",
         scripts=["nonexistent"],
         save_stream_file="foo",
     )
     m = master.ConsoleMaster(o)
+    m.options.update(view_order='url', console_focus_follow=True)
     monkeypatch.setattr(m.addons.get("clientplayback"), "count", lambda: 42)
     monkeypatch.setattr(m.addons.get("serverplayback"), "count", lambda: 42)
 
