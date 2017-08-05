@@ -1,5 +1,5 @@
 from mitmproxy import options
-from mitmproxy.tools.console import statusbar, master, consoleaddons
+from mitmproxy.tools.console import statusbar, master
 
 
 def test_statusbar(monkeypatch):

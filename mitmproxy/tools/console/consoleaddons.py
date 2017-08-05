@@ -529,6 +529,7 @@ class ConsoleAddon:
         for f in flows:
             signals.flow_change.send(self, flow=f)
 
+
 def common_options(loader):
     loader.add_option(
         "console_layout", str, "single",
