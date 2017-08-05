@@ -1,4 +1,6 @@
-from typing import Optional
+from typing import Optional, List
+
+from mitmproxy.options import Options
 
 
 class Connection:
@@ -37,11 +39,16 @@ class Context:
 
     client: Client
     server: Optional[Server]
+    options: Options
+    layers: List["mitmproxy.proxy2.layer.Layer"]
 
     def __init__(
             self,
             client: Client,
             server: Optional[Server],
+            options: Options,
     ) -> None:
         self.client = client
         self.server = server
+        self.options = options
+        self.layers = []

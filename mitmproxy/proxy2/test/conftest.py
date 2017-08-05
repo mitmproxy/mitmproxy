@@ -1,5 +1,6 @@
 import pytest
 
+from mitmproxy import options
 from mitmproxy.proxy2 import context
 
 
@@ -7,5 +8,6 @@ from mitmproxy.proxy2 import context
 def tctx():
     return context.Context(
         context.Client("client"),
-        context.Server("server")
+        context.Server("server"),
+        options.Options()
     )

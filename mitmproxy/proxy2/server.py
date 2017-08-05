@@ -11,6 +11,7 @@ import asyncio
 import socket
 import typing
 
+from mitmproxy import options
 from mitmproxy.proxy2 import events, commands
 from mitmproxy.proxy2.context import Client, Context, Connection
 from mitmproxy.proxy2.layers.modes import ReverseProxy
@@ -24,11 +25,11 @@ class StreamIO(typing.NamedTuple):
 class ConnectionHandler(metaclass=abc.ABCMeta):
     transports: typing.MutableMapping[Connection, StreamIO]
 
-    def __init__(self, reader, writer):
+    def __init__(self, reader, writer, options):
         addr = writer.get_extra_info('peername')
 
         self.client = Client(addr)
-        self.context = Context(self.client, None)
+        self.context = Context(self.client, None, options)
 
         # self.layer = ReverseProxy(self.context, ("localhost", 443))
         self.layer = ReverseProxy(self.context, ("localhost", 8000))
@@ -134,7 +135,7 @@ if __name__ == "__main__":
 
 
     async def handle(reader, writer):
-        await SimpleConnectionHandler(reader, writer).handle_client()
+        await SimpleConnectionHandler(reader, writer, options.Options()).handle_client()
 
 
     coro = asyncio.start_server(handle, '127.0.0.1', 8080, loop=loop)
