@@ -23,10 +23,10 @@ class ProxyConnectionHandler(server.ConnectionHandler):
     event_queue: queue.Queue
     loop: asyncio.AbstractEventLoop
 
-    def __init__(self, event_queue, loop, r, w):
+    def __init__(self, event_queue, loop, r, w, options):
         self.event_queue = event_queue
         self.loop = loop
-        super().__init__(r, w)
+        super().__init__(r, w, options)
 
     async def handle_hook(self, hook: commands.Hook) -> None:
         q = asyncio.Queue()
@@ -41,6 +41,7 @@ class ProxyConnectionHandler(server.ConnectionHandler):
         x.reply = controller.DummyReply()
         self.event_queue.put(("log",  x))
 
+
 class Proxyserver:
     """
     This addon runs the actual proxy server.
@@ -51,6 +52,7 @@ class Proxyserver:
         self.loop = asyncio.get_event_loop()
         self.listen_port = None
         self.event_queue = None
+        self.options = ctx.options
         self._lock = asyncio.Lock()
 
     def running(self):
@@ -73,7 +75,13 @@ class Proxyserver:
             )
 
     async def handle_connection(self, r, w):
-        await ProxyConnectionHandler(self.event_queue, self.loop, r, w).handle_client()
+        await ProxyConnectionHandler(
+            self.event_queue,
+            self.loop,
+            r,
+            w,
+            self.options
+        ).handle_client()
 
     def configure(self, updated):
         if "listen_port" in updated:
