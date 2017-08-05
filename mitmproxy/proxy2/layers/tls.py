@@ -10,25 +10,23 @@ from OpenSSL import SSL
 
 from mitmproxy.certs import CertStore
 from mitmproxy.proxy.protocol.tls import DEFAULT_CLIENT_CIPHERS
-from mitmproxy.proxy2 import events, commands
+from mitmproxy.proxy2 import events, commands, layer
 from mitmproxy.proxy2.context import Context, Connection
-from mitmproxy.proxy2.layer import Layer
-from mitmproxy.proxy2.layers.tcp import TCPLayer
 from mitmproxy.proxy2.utils import expect
 
 
-class TLSLayer(Layer):
-    context: Context = None
-    client_tls: bool = None  # FIXME: not yet used.
-    server_tls: bool = None
-    child_layer: Layer = None
+class TLSLayer(layer.Layer):
+    client_tls: bool  # FIXME: not yet used.
+    server_tls: bool
+    child_layer: layer.Layer = None
+    tls: MutableMapping[Connection, SSL.Connection]
 
     def __init__(self, context: Context, client_tls: bool, server_tls: bool):
         super().__init__(context)
         self.state = self.start
         self.client_tls = client_tls
         self.server_tls = server_tls
-        self.tls: MutableMapping[Connection, SSL.Connection] = {}
+        self.tls = {}
 
     def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
         yield from self.state(event)
@@ -97,7 +95,7 @@ class TLSLayer(Layer):
 
             if both_handshakes_done:
                 print("both handshakes done")
-                self.child_layer = TCPLayer(self.context)
+                self.child_layer = layer.NextLayer(self.context)
                 yield from self.child_layer.handle_event(events.Start())
                 self.state = self.relay_messages
                 yield from self.state(events.DataReceived(self.context.server, b""))
