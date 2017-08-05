@@ -31,8 +31,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self.client = Client(addr)
         self.context = Context(self.client, None, options)
 
-        # self.layer = ReverseProxy(self.context, ("localhost", 443))
-        self.layer = ReverseProxy(self.context, ("localhost", 8000))
+        if options.mode.startswith("reverse:"):
+            self.layer = ReverseProxy(self.context)
+        else:
+            raise NotImplementedError("Mode not implemented.")
 
         self.transports = {
             self.client: StreamIO(reader, writer)

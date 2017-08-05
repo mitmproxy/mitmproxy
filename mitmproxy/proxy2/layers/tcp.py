@@ -9,7 +9,7 @@ class TCPLayer(Layer):
     """
     Simple TCP layer that just relays messages right now.
     """
-    context: Context = None
+    context: Context
     ignore: bool
     flow: tcp.TCPFlow
 
