@@ -52,10 +52,11 @@ class Proxyserver:
         self.loop = asyncio.get_event_loop()
         self.listen_port = None
         self.event_queue = None
-        self.options = ctx.options
+        self.options = None
         self._lock = asyncio.Lock()
 
     def running(self):
+        self.options = ctx.options
         self.event_queue = ctx.master.event_queue
         threading.Thread(target=self.loop.run_forever, daemon=True).start()
 
