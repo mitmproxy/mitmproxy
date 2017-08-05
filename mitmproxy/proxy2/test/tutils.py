@@ -138,7 +138,8 @@ class playbook:
         # Playbooks are only executed on assert (which signals that the playbook is partially
         # complete), so we need to signal if someone forgets to assert and playbooks aren't
         # evaluated.
-        if not self._errored and len(self.actual) < len(self.expected):
+        is_final_destruct = not hasattr(self, "_errored")
+        if is_final_destruct or (not self._errored and len(self.actual) < len(self.expected)):
             raise RuntimeError("Unfinished playbook!")
 
     def fork(self):
