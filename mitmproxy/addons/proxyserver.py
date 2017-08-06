@@ -33,8 +33,9 @@ class ProxyConnectionHandler(server.ConnectionHandler):
         submit = lambda x: self.loop.call_soon_threadsafe(lambda: q.put_nowait(x))
         hook.data.reply = AsyncReply(submit, hook.data)
         self.event_queue.put((hook.name, hook.data))
-        reply = await q.get()
-        self.server_event(events.HookReply(hook, reply))
+        await q.get()
+        if hook.blocking:
+            self.server_event(events.HookReply(hook, None))
 
     def _debug(self, *args):
         x = log.LogEntry(" ".join(str(x) for x in args), "warn")
