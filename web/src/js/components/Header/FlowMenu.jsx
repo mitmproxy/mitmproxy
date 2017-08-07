@@ -4,6 +4,7 @@ import { connect } from "react-redux"
 import Button from "../common/Button"
 import { MessageUtils } from "../../flow/utils.js"
 import * as flowsActions from "../../ducks/flows"
+import HideInStatic from "../common/HideInStatic";
 
 FlowMenu.title = 'Flow'
 
@@ -22,7 +23,7 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
         return <div/>
     return (
         <div>
-            <div className="menu-group">
+            <HideInStatic className="menu-group">
                 <div className="menu-content">
                     <Button title="[r]eplay flow" icon="fa-repeat text-primary"
                             onClick={() => replayFlow(flow)}>
@@ -42,7 +43,8 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
                     </Button>
                 </div>
                 <div className="menu-legend">Flow Modification</div>
-            </div>
+            </HideInStatic>
+
             <div className="menu-group">
                 <div className="menu-content">
                     <Button title="download" icon="fa-download"
@@ -52,7 +54,8 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
                 </div>
                 <div className="menu-legend">Export</div>
             </div>
-            <div className="menu-group">
+
+            <HideInStatic className="menu-group">
                 <div className="menu-content">
                     <Button disabled={!flow || !flow.intercepted} title="[a]ccept intercepted flow"
                             icon="fa-play text-success" onClick={() => resumeFlow(flow)}>
@@ -64,7 +67,7 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
                     </Button>
                 </div>
                 <div className="menu-legend">Interception</div>
-            </div>
+            </HideInStatic>
 
 
         </div>

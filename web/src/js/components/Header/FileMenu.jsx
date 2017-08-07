@@ -5,6 +5,7 @@ import FileChooser from '../common/FileChooser'
 import Dropdown, {Divider} from '../common/Dropdown'
 import * as flowsActions from '../../ducks/flows'
 import * as modalActions from '../../ducks/ui/modal'
+import HideInStatic from "../common/HideInStatic";
 
 FileMenu.propTypes = {
     clearFlows: PropTypes.func.isRequired,
@@ -40,7 +41,6 @@ export function FileMenu ({clearFlows, loadFlows, saveFlows, openModal}) {
                 <i className="fa fa-fw fa-cog"></i>
                 &nbsp;Options
             </a>
-
             <Divider/>
 
             <a href="http://mitm.it/" target="_blank">
