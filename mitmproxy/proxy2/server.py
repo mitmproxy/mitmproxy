@@ -73,7 +73,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         reader, writer = self.transports[connection]
         while True:
             try:
-                data = await reader.read(4096)
+                data = await reader.read(65535)
             except socket.error:
                 data = b""
             if data:
@@ -129,7 +129,8 @@ class SimpleConnectionHandler(ConnectionHandler):
     """Simple handler that does not process any hooks."""
 
     async def handle_hook(self, hook: commands.Hook) -> None:
-        self.server_event(events.HookReply(hook, None))
+        if hook.blocking:
+            self.server_event(events.HookReply(hook, None))
 
 
 if __name__ == "__main__":

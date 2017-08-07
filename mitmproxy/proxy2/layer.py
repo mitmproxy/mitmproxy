@@ -108,6 +108,9 @@ class NextLayer(Layer):
         self.events = []
         self.layer = None
 
+    def __repr__(self):
+        return f"NextLayer:{repr(self.layer)}"
+
     def _handle_event(self, event: mevents.Event):
         self.events.append(event)
 
