@@ -107,20 +107,24 @@ exports[`OptionMenu Component should render correctly 1`] = `
       className="menu-content"
     >
       <div
-        className="menu-entry"
+        className={undefined}
       >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Use Host Header 
-          <i
-            className="fa fa-question-circle"
-            title="Use the Host header to construct URLs for display."
-          />
-        </label>
+        <div
+          className="menu-entry"
+        >
+          <label>
+            <input
+              checked={false}
+              onChange={[Function]}
+              type="checkbox"
+            />
+            Use Host Header 
+            <i
+              className="fa fa-question-circle"
+              title="Use the Host header to construct URLs for display."
+            />
+          </label>
+        </div>
       </div>
       <div
         className="menu-entry"
