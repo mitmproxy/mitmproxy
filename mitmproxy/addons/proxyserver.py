@@ -29,6 +29,8 @@ class ProxyConnectionHandler(server.ConnectionHandler):
         super().__init__(r, w, options)
 
     async def handle_hook(self, hook: commands.Hook) -> None:
+        if isinstance(hook, commands.Log):
+            return  # FIXME: these are already logged at the server, the "real" log messes up order.
         q = asyncio.Queue()
         submit = lambda x: self.loop.call_soon_threadsafe(lambda: q.put_nowait(x))
         hook.data.reply = AsyncReply(submit, hook.data)

@@ -33,7 +33,7 @@ class HTTPLayer(Layer):
         def log_event(orig):
             def next_event():
                 e = orig()
-                print(e, file=sys.__stdout__)
+                yield commands.Log(str(e))
                 return e
 
             return next_event
@@ -46,6 +46,8 @@ class HTTPLayer(Layer):
 
     @expect(events.Start, events.DataReceived, events.ConnectionClosed)
     def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+        if isinstance(event, events.Start):
+            return
         if isinstance(event, events.DataReceived):
             if event.connection == self.context.client:
                 self.client_conn.receive_data(event.data)
@@ -57,7 +59,7 @@ class HTTPLayer(Layer):
         yield from self.state()
 
     def read_request_headers(self):
-        event = self.client_conn.next_event()
+        event = yield from self.client_conn.next_event()
         if event is h11.NEED_DATA:
             return
         elif isinstance(event, h11.Request):
@@ -75,7 +77,7 @@ class HTTPLayer(Layer):
 
     def read_request_body(self):
         while True:
-            event = self.client_conn.next_event()
+            event = yield from self.client_conn.next_event()
             if event is h11.NEED_DATA:
                 return
             elif isinstance(event, h11.Data):
@@ -102,7 +104,7 @@ class HTTPLayer(Layer):
         self.state = self.read_response_headers
 
     def read_response_headers(self):
-        event = self.server_conn.next_event()
+        event = yield from self.server_conn.next_event()
         if event is h11.NEED_DATA:
             return
         elif isinstance(event, h11.Response):
@@ -123,7 +125,7 @@ class HTTPLayer(Layer):
 
     def read_response_body(self):
         while True:
-            event = self.server_conn.next_event()
+            event = yield from self.server_conn.next_event()
             if event is h11.NEED_DATA:
                 return
             elif isinstance(event, h11.Data):
