@@ -81,8 +81,16 @@ class Hook(Command):
 
 
 class Log(Hook):
+    blocking = False
+
+    # this is more of a hack at the moment.
     def __init__(self, *args, level="info"):
-        super().__init__("log", log.LogEntry(repr(args), level))
+        if len(args) == 1:
+            args = args[0]
+        super().__init__("log", log.LogEntry(str(args), level))
+
+    def __repr__(self):
+        return f"Log: {self.data.msg}"
 
 
 TCommandGenerator = typing.Generator[Command, typing.Any, None]
