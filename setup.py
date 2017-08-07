@@ -12,11 +12,14 @@ here = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
-VERSION = runpy.run_path(os.path.join(here, "mitmproxy", "version.py"))["VERSION"]
+# https://packaging.python.org/guides/single-sourcing-package-version/
+version = {}
+with open(os.path.join(here, "mitmproxy", "version.py")) as f:
+    exec(f.read(), version)
 
 setup(
     name="mitmproxy",
-    version=VERSION,
+    version=version['VERSION'],
     description="An interactive, SSL-capable, man-in-the-middle HTTP proxy for penetration testers and software developers.",
     long_description=long_description,
     url="http://mitmproxy.org",
