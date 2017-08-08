@@ -72,17 +72,9 @@ exports[`FileMenu Component should render correctly 1`] = `
         />
          Options
       </a>
-       
-    </li>
-    <li>
-       
       <hr
         className="divider"
       />
-       
-    </li>
-    <li>
-       
       <a
         href="http://mitm.it/"
         target="_blank"

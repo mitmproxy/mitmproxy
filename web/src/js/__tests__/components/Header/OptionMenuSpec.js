@@ -4,8 +4,6 @@ import { Provider } from 'react-redux'
 import OptionMenu from '../../../components/Header/OptionMenu'
 import { TStore } from '../../ducks/tutils'
 
-global.MITMWEB_STATIC = false
-
 describe('OptionMenu Component', () => {
     it('should render correctly', () => {
         let store = TStore(),
