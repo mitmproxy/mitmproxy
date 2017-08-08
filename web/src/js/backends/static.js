@@ -21,34 +21,16 @@ export default class StaticBackend {
    }
 
    fetchData(resource) {
-       let queue = []
-       this.activeFetches[resource] = queue
        fetchApi(`/${resource}`)
            .then(res => res.json())
            .then(json => {
-               if (this.activeFetches[resource] === queue)
-                   this.receive(resource, json)
+               this.receive(resource, json)
            })
-   }
-
-   onMessage(msg) {
-       if (msg.cmd === CMD_RESET) {
-           return this.fetchData(msg.resource)
-       }
-       if (msg.resource in this.activeFetches) {
-           this.activeFetches[msg.resource].push(msg)
-       } else {
-           let type = `${msg.resource}_${msg.cmd}`.toUpperCase()
-           this.store.dispatch({ type, ...msg})
-       }
    }
 
    receive(resource, data) {
        let type = `${resource}_RECEIVE`.toUpperCase()
        this.store.dispatch({ type, cmd: "receive", resource, data })
-       let queue = this.activeFetches[resource]
-       delete this.activeFetches[resource]
-       queue.forEach(msg => this.onMessage(msg))
    }
 
 }
