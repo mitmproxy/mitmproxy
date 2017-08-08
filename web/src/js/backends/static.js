@@ -4,11 +4,8 @@
  */
 import { fetchApi } from "../utils"
 
-const CMD_RESET = 'reset'
-
 export default class StaticBackend {
    constructor(store) {
-       this.activeFetches = {}
        this.store = store
        this.onOpen()
    }

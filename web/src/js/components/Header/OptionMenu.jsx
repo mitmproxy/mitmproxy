@@ -19,9 +19,7 @@ export default function OptionMenu() {
                 </div>
                 <div className="menu-legend">Protocol Support</div>
             </div>
-            </HideInStatic>
 
-            <HideInStatic>
             <div className="menu-group">
                 <div className="menu-content">
                     <SettingsToggle setting="anticache">
