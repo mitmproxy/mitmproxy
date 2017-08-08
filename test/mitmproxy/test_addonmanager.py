@@ -137,6 +137,8 @@ def test_simple():
         a.trigger("custom")
         assert ta.custom_called
 
+        assert ta in a
+
 
 def test_load_option():
     o = options.Options()
