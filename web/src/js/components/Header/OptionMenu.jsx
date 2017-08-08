@@ -3,12 +3,14 @@ import PropTypes from 'prop-types'
 import { connect } from "react-redux"
 import { SettingsToggle, EventlogToggle } from "./MenuToggle"
 import DocsLink from "../common/DocsLink"
+import HideInStatic from "../common/HideInStatic";
 
 OptionMenu.title = 'Options'
 
 export default function OptionMenu() {
     return (
         <div>
+            <HideInStatic>
             <div className="menu-group">
                 <div className="menu-content">
                     <SettingsToggle setting="http2">HTTP/2.0</SettingsToggle>
@@ -17,6 +19,7 @@ export default function OptionMenu() {
                 </div>
                 <div className="menu-legend">Protocol Support</div>
             </div>
+
             <div className="menu-group">
                 <div className="menu-content">
                     <SettingsToggle setting="anticache">
@@ -29,12 +32,17 @@ export default function OptionMenu() {
                 </div>
                 <div className="menu-legend">HTTP Options</div>
             </div>
+            </HideInStatic>
+
             <div className="menu-group">
                 <div className="menu-content">
+                    <HideInStatic>
                     <SettingsToggle setting="showhost">
                         Use Host Header <i className="fa fa-question-circle"
                                            title="Use the Host header to construct URLs for display."></i>
                     </SettingsToggle>
+                    </HideInStatic>
+
                     <EventlogToggle/>
                 </div>
                 <div className="menu-legend">View Options</div>

@@ -9,6 +9,7 @@ import rootReducer from './ducks/index'
 import { add as addLog } from './ducks/eventLog'
 import useUrlState from './urlState'
 import WebSocketBackend from './backends/websocket'
+import StaticBackend from './backends/static'
 import { logger } from 'redux-logger'
 
 
@@ -25,7 +26,11 @@ const store = createStore(
 )
 
 useUrlState(store)
-window.backend = new WebSocketBackend(store)
+if (MITMWEB_STATIC) {
+    window.backend = new StaticBackend(store)
+} else {
+    window.backend = new WebSocketBackend(store)
+}
 
 window.addEventListener('error', msg => {
     store.dispatch(addLog(msg))

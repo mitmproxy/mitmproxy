@@ -7,7 +7,6 @@ import { TFlow, TStore }from '../../ducks/tutils'
 import { MessageUtils } from "../../../flow/utils"
 import { Provider } from 'react-redux'
 
-
 describe('FlowMenu Component', () => {
     let actions = {
         resumeFlow: jest.fn(),
