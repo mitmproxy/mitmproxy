@@ -10,16 +10,19 @@ OptionMenu.title = 'Options'
 export default function OptionMenu() {
     return (
         <div>
-            <HideInStatic className="menu-group">
+            <HideInStatic>
+            <div className="menu-group">
                 <div className="menu-content">
                     <SettingsToggle setting="http2">HTTP/2.0</SettingsToggle>
                     <SettingsToggle setting="websocket">WebSockets</SettingsToggle>
                     <SettingsToggle setting="rawtcp">Raw TCP</SettingsToggle>
                 </div>
                 <div className="menu-legend">Protocol Support</div>
+            </div>
             </HideInStatic>
 
-            <HideInStatic className="menu-group">
+            <HideInStatic>
+            <div className="menu-group">
                 <div className="menu-content">
                     <SettingsToggle setting="anticache">
                         Disable Caching <DocsLink resource="features/anticache.html"/>
@@ -30,6 +33,7 @@ export default function OptionMenu() {
                     </SettingsToggle>
                 </div>
                 <div className="menu-legend">HTTP Options</div>
+            </div>
             </HideInStatic>
 
             <div className="menu-group">

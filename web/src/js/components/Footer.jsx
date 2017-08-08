@@ -2,6 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { formatSize } from '../utils.js'
+import HideInStatic from '../components/common/HideInStatic'
 
 Footer.propTypes = {
     settings: PropTypes.object.isRequired,
@@ -49,13 +50,14 @@ function Footer({ settings }) {
                 <span className="label label-success">stream: {formatSize(stream_large_bodies)}</span>
             )}
             <div className="pull-right">
-                { MITMWEB_STATIC ?
-                    (<span className="label label-primary" title="static">Static</span>):
+                <HideInStatic>
+                {
                     server && (
                     <span className="label label-primary" title="HTTP Proxy Server Address">
                         {listen_host||"*"}:{listen_port}
                     </span>)
                 }
+                </HideInStatic>
             <span className="label label-info" title="Mitmproxy Version">
             v{version}
             </span>

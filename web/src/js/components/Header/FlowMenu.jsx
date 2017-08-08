@@ -23,7 +23,8 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
         return <div/>
     return (
         <div>
-            <HideInStatic className="menu-group">
+            <HideInStatic>
+            <div className="menu-group">
                 <div className="menu-content">
                     <Button title="[r]eplay flow" icon="fa-repeat text-primary"
                             onClick={() => replayFlow(flow)}>
@@ -43,6 +44,7 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
                     </Button>
                 </div>
                 <div className="menu-legend">Flow Modification</div>
+            </div>
             </HideInStatic>
 
             <div className="menu-group">
@@ -55,7 +57,8 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
                 <div className="menu-legend">Export</div>
             </div>
 
-            <HideInStatic className="menu-group">
+            <HideInStatic>
+            <div className="menu-group">
                 <div className="menu-content">
                     <Button disabled={!flow || !flow.intercepted} title="[a]ccept intercepted flow"
                             icon="fa-play text-success" onClick={() => resumeFlow(flow)}>
@@ -67,6 +70,7 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
                     </Button>
                 </div>
                 <div className="menu-legend">Interception</div>
+            </div>
             </HideInStatic>
 
 

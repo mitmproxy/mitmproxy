@@ -37,6 +37,7 @@ export function FileMenu ({clearFlows, loadFlows, saveFlows, openModal}) {
                 &nbsp;Save...
             </a>
 
+            <HideInStatic>
             <a href="#" onClick={e => { e.preventDefault(); openModal(); }}>
                 <i className="fa fa-fw fa-cog"></i>
                 &nbsp;Options
@@ -47,6 +48,7 @@ export function FileMenu ({clearFlows, loadFlows, saveFlows, openModal}) {
                 <i className="fa fa-fw fa-external-link"></i>
                 &nbsp;Install Certificates...
             </a>
+            </HideInStatic>
         </Dropdown>
     )
 }
