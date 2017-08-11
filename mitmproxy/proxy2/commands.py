@@ -20,9 +20,9 @@ class Command:
     blocking: bool = False
     """
     Determines if the command blocks until it has been completed.
-    
+
     Example:
-    
+
         reply = yield Hook("requestheaders", flow)
     """
 

@@ -32,8 +32,11 @@ class ProxyConnectionHandler(server.ConnectionHandler):
         if isinstance(hook, commands.Log):
             return  # FIXME: these are already logged at the server, the "real" log messes up order.
         q = asyncio.Queue()
-        submit = lambda x: self.loop.call_soon_threadsafe(lambda: q.put_nowait(x))
-        hook.data.reply = AsyncReply(submit, hook.data)
+
+        hook.data.reply = AsyncReply(
+            lambda x: self.loop.call_soon_threadsafe(lambda: q.put_nowait(x)),
+            hook.data
+        )
         self.event_queue.put((hook.name, hook.data))
         await q.get()
         if hook.blocking:
@@ -42,7 +45,7 @@ class ProxyConnectionHandler(server.ConnectionHandler):
     def _debug(self, *args):
         x = log.LogEntry(" ".join(str(x) for x in args), "warn")
         x.reply = controller.DummyReply()
-        self.event_queue.put(("log",  x))
+        self.event_queue.put(("log", x))
 
 
 class Proxyserver:
