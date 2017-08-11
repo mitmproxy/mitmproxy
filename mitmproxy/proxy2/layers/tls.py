@@ -1,5 +1,6 @@
 import os
 from enum import Enum
+import struct
 from typing import MutableMapping, Generator, Optional
 
 from OpenSSL import SSL
@@ -7,7 +8,7 @@ from OpenSSL import SSL
 from mitmproxy import exceptions
 from mitmproxy.certs import CertStore
 from mitmproxy.proxy.protocol import TlsClientHello
-from mitmproxy.proxy.protocol.tls import DEFAULT_CLIENT_CIPHERS
+from mitmproxy.proxy.protocol import tls
 from mitmproxy.proxy2 import context
 from mitmproxy.proxy2 import layer, commands, events
 from mitmproxy.proxy2.utils import expect
@@ -20,6 +21,33 @@ class ConnectionState(Enum):
     WAIT_FOR_OPENCONNECTION = 4
     NEGOTIATING = 5
     ESTABLISHED = 6
+
+
+def get_client_hello(client_conn):
+    """
+    Read all records from client buffer that contain the initial client hello message.
+
+    client_conn:
+        bytearray
+
+    Returns:
+        The raw handshake packet bytes, without TLS record header(s).
+    """
+    client_hello = b""
+    client_hello_size = 1
+    offset = 0
+    while len(client_hello) < client_hello_size:
+        record_header = client_conn[offset:5]
+        if not tls.is_tls_record_magic(record_header) or len(record_header) != 5:
+            raise exceptions.TlsProtocolException('Expected TLS record, got "%s" instead.' % record_header)
+        record_size = struct.unpack("!H", record_header[3:])[0] + 5
+        record_body = client_conn[offset + 5: record_size]
+        if len(record_body) != record_size - 5:
+            raise exceptions.TlsProtocolException("Unexpected EOF in TLS handshake: %s" % record_body)
+        client_hello += record_body
+        offset += record_size
+        client_hello_size = struct.unpack("!I", b'\x00' + client_hello[1:4])[0] + 4
+    return client_hello
 
 
 class TLSLayer(layer.Layer):
@@ -147,26 +175,15 @@ class TLSLayer(layer.Layer):
 
     def parse_client_hello(self):
         # Check if ClientHello is complete
-        # FIXME: temporary mock
-        class Rfile:
-            def __init__(self, data):
-                self.data = data
-
-            def peek(self, n):
-                return self.data[:n]
-
-        class CCon:
-            def __init__(self, data):
-                self.rfile = Rfile(data)
-
         try:
-            self.client_hello = TlsClientHello.from_client_conn(
-                CCon(
-                    self.recv_buffer[self.context.client]
-                )
-            )
+            client_hello = get_client_hello(self.recv_buffer[self.context.client])[4:]
+            self.client_hello = TlsClientHello(client_hello)
         except exceptions.TlsProtocolException:
             return False
+        except EOFError as e:
+            raise exceptions.TlsProtocolException(
+                f'Cannot parse Client Hello: {e}, Raw Client Hello: {client_hello}'
+            )
         else:
             return True
 
@@ -277,7 +294,7 @@ class TLSLayer(layer.Layer):
         ).get_cert(b"example.com", (b"example.com",))
         context.use_privatekey(privkey)
         context.use_certificate(cert.x509)
-        context.set_cipher_list(DEFAULT_CLIENT_CIPHERS)
+        context.set_cipher_list(tls.DEFAULT_CLIENT_CIPHERS)
         self.tls[client] = SSL.Connection(context)
         self.tls[client].set_accept_state()
 
