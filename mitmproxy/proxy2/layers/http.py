@@ -1,4 +1,3 @@
-import sys
 import typing
 from unittest import mock
 from warnings import warn

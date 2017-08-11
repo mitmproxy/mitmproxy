@@ -136,10 +136,8 @@ class SimpleConnectionHandler(ConnectionHandler):
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
-
     async def handle(reader, writer):
         await SimpleConnectionHandler(reader, writer, options.Options()).handle_client()
-
 
     coro = asyncio.start_server(handle, '127.0.0.1', 8080, loop=loop)
     server = loop.run_until_complete(coro)
