@@ -116,7 +116,7 @@ class playbook:
 
         success = all(
             _eq(e, a)
-                for e, a in itertools.zip_longest(self.expected, self.actual)
+            for e, a in itertools.zip_longest(self.expected, self.actual)
         )
         if not success:
             self._errored = True
