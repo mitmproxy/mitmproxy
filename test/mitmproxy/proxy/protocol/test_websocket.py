@@ -234,7 +234,7 @@ class TestPing(_WebSocketTest):
         assert frame.header.opcode == websockets.OPCODE.PONG
         assert frame.payload == b'foobar'
 
-        wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.TEXT, payload=b'pong-received')))
+        wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.PONG, payload=b'done')))
         wfile.flush()
 
     def test_ping(self):
@@ -244,12 +244,12 @@ class TestPing(_WebSocketTest):
         assert frame.header.opcode == websockets.OPCODE.PING
         assert frame.payload == b'foobar'
 
-        self.client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.PONG, payload=frame.payload)))
+        self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.PONG, payload=frame.payload)))
         self.client.wfile.flush()
 
         frame = websockets.Frame.from_file(self.client.rfile)
-        assert frame.header.opcode == websockets.OPCODE.TEXT
-        assert frame.payload == b'pong-received'
+        assert frame.header.opcode == websockets.OPCODE.PONG
+        assert frame.payload == b'done'
 
 
 class TestPong(_WebSocketTest):
