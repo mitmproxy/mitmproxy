@@ -49,7 +49,14 @@ export var MessageUtils = {
         } else if (message === flow.response) {
             message = "response";
         }
-        return `/flows/${flow.id}/${message}/content` +  (view ? `/${view}` : '');
+        if (global.MITMWEB_STATIC) {
+            let url = view ?
+                `/flows/${flow.id}/${message}/content/${view}` :
+                `/flows/${flow.id}/${message}/_content`
+            return url;
+        } else {
+            return `/flows/${flow.id}/${message}/content` + (view ? `/${view}` : '');
+        }
     }
 };
 

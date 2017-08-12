@@ -81,7 +81,21 @@ function getCookie(name) {
 }
 const xsrf = `_xsrf=${getCookie("_xsrf")}`;
 
+
 export function fetchApi(url, options={}) {
+    if (global.MITMWEB_STATIC) {
+        let path = url.split('/'),
+            filename = path.pop()
+        filename = '_' + filename
+        path.push(filename)
+        let new_url = path.join('/')
+        return _fetchApi(new_url, options)
+    } else {
+        return _fetchApi(url, options)
+    }
+}
+
+function _fetchApi(url, options={}) {
     if (options.method && options.method !== "GET") {
         if (url.indexOf("?") === -1) {
             url += "?" + xsrf;
@@ -96,7 +110,7 @@ export function fetchApi(url, options={}) {
     });
 }
 
-fetchApi.put = (url, json, options) => fetchApi(
+fetchApi.put = (url, json, options) => _fetchApi(
     url,
     {
         method: "PUT",
