@@ -164,19 +164,19 @@ class TestSimple(_WebSocketTest):
         frame = websockets.Frame.from_file(self.client.rfile)
         assert frame.payload == b'server-foobar'
 
-        self.client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.TEXT, payload=b'self.client-foobar')))
+        self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.TEXT, payload=b'self.client-foobar')))
         self.client.wfile.flush()
 
         frame = websockets.Frame.from_file(self.client.rfile)
         assert frame.payload == b'self.client-foobar'
 
-        self.client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.BINARY, payload=b'\xde\xad\xbe\xef')))
+        self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.BINARY, payload=b'\xde\xad\xbe\xef')))
         self.client.wfile.flush()
 
         frame = websockets.Frame.from_file(self.client.rfile)
         assert frame.payload == b'\xde\xad\xbe\xef'
 
-        self.client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE)))
+        self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.CLOSE)))
         self.client.wfile.flush()
 
         assert len(self.master.state.flows) == 2
@@ -213,13 +213,13 @@ class TestSimpleTLS(_WebSocketTest):
         frame = websockets.Frame.from_file(self.client.rfile)
         assert frame.payload == b'server-foobar'
 
-        self.client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.TEXT, payload=b'self.client-foobar')))
+        self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.TEXT, payload=b'self.client-foobar')))
         self.client.wfile.flush()
 
         frame = websockets.Frame.from_file(self.client.rfile)
         assert frame.payload == b'self.client-foobar'
 
-        self.client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE)))
+        self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.CLOSE)))
         self.client.wfile.flush()
 
 
@@ -266,7 +266,7 @@ class TestPong(_WebSocketTest):
     def test_pong(self):
         self.setup_connection()
 
-        self.client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.PING, payload=b'foobar')))
+        self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.PING, payload=b'foobar')))
         self.client.wfile.flush()
 
         frame = websockets.Frame.from_file(self.client.rfile)
@@ -289,7 +289,7 @@ class TestClose(_WebSocketTest):
     def test_close(self):
         self.setup_connection()
 
-        self.client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE)))
+        self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.CLOSE)))
         self.client.wfile.flush()
 
         websockets.Frame.from_file(self.client.rfile)
@@ -299,7 +299,7 @@ class TestClose(_WebSocketTest):
     def test_close_payload_1(self):
         self.setup_connection()
 
-        self.client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE, payload=b'\00\42')))
+        self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.CLOSE, payload=b'\00\42')))
         self.client.wfile.flush()
 
         websockets.Frame.from_file(self.client.rfile)
@@ -309,7 +309,7 @@ class TestClose(_WebSocketTest):
     def test_close_payload_2(self):
         self.setup_connection()
 
-        self.client.wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.CLOSE, payload=b'\00\42foobar')))
+        self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.CLOSE, payload=b'\00\42foobar')))
         self.client.wfile.flush()
 
         websockets.Frame.from_file(self.client.rfile)
