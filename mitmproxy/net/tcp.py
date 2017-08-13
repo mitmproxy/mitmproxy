@@ -855,6 +855,8 @@ class TCPServer:
         if self.address[0] == 'localhost':
             raise socket.error("Binding to 'localhost' is prohibited. Please use '::1' or '127.0.0.1' directly.")
 
+        self.socket = None
+
         try:
             # First try to bind an IPv6 socket, with possible IPv4 if the OS supports it.
             # This allows us to accept connections for ::1 and 127.0.0.1 on the same socket.
