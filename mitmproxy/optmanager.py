@@ -150,12 +150,16 @@ class OptManager:
         self.changed.connect(_call, weak=False)
 
     def __eq__(self, other):
-        return self._options == other._options
+        if isinstance(other, OptManager):
+            return self._options == other._options
+        return False
 
-    def __copy__(self):
+    def __deepcopy__(self, memodict = None):
         o = OptManager()
-        o.__dict__["_options"] = copy.deepcopy(self._options)
+        o.__dict__["_options"] = copy.deepcopy(self._options, memodict)
         return o
+
+    __copy__ = __deepcopy__
 
     def __getattr__(self, attr):
         if attr in self._options:

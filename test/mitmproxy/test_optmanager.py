@@ -73,6 +73,11 @@ def test_required_int():
         o.parse_setval("required_int", None)
 
 
+def test_deepcopy():
+    o = TD()
+    copy.deepcopy(o)
+
+
 def test_options():
     o = TO()
     assert o.keys() == {"bool", "one", "two", "required_int"}
@@ -244,6 +249,7 @@ def test_serialize():
     o2 = TD2()
     optmanager.load(o2, data)
     assert o2 == o
+    assert not o == 42
 
     t = """
         unknown: foo

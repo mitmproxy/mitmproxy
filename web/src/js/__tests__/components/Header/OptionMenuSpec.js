@@ -4,7 +4,6 @@ import { Provider } from 'react-redux'
 import OptionMenu from '../../../components/Header/OptionMenu'
 import { TStore } from '../../ducks/tutils'
 
-
 describe('OptionMenu Component', () => {
     it('should render correctly', () => {
         let store = TStore(),

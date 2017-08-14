@@ -20,7 +20,7 @@ from mitmproxy import options  # noqa
 from mitmproxy import optmanager  # noqa
 from mitmproxy import proxy  # noqa
 from mitmproxy import log  # noqa
-from mitmproxy.utils import debug  # noqa
+from mitmproxy.utils import debug, arg_check  # noqa
 
 
 def assert_utf8_env():
@@ -72,7 +72,17 @@ def run(
     master = master_cls(opts)
 
     parser = make_parser(opts)
-    args = parser.parse_args(arguments)
+
+    # To make migration from 2.x to 3.0 bearable.
+    if "-R" in sys.argv and sys.argv[sys.argv.index("-R") + 1].startswith("http"):
+        print("-R is used for specifying replacements.\n"
+              "To use mitmproxy in reverse mode please use --mode reverse:SPEC instead")
+
+    try:
+        args = parser.parse_args(arguments)
+    except SystemExit:
+        arg_check.check()
+        sys.exit(1)
     try:
         unknown = optmanager.load_paths(opts, args.conf)
         pconf = process_options(parser, opts, args)

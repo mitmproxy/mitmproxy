@@ -58,7 +58,7 @@ def convert_017_018(data):
     # convert_unicode needs to be called for every dual release and the first py3-only release
     data = convert_unicode(data)
 
-    data["server_conn"]["ip_address"] = data["server_conn"].pop("peer_address")
+    data["server_conn"]["ip_address"] = data["server_conn"].pop("peer_address", None)
     data["marked"] = False
     data["version"] = (0, 18)
     return data
