@@ -86,7 +86,7 @@ export function fetchApi(url, options={}) {
     if (global.MITMWEB_STATIC) {
         let path = url.split('/'),
             filename = path.pop()
-        filename = '_' + filename
+        filename += '.json'
         path.push(filename)
         let new_url = path.join('/')
         return _fetchApi(new_url, options)

@@ -41,7 +41,7 @@ class StaticViewer:
                 self.flows.add(i)
 
     def save_flows(self) -> None:
-        with open(os.path.join(self.path, '_flows'), 'w') as file:
+        with open(os.path.join(self.path, 'flows.json'), 'w') as file:
             flows = []
             for f in self.flows:
                 flows.append(flow_to_json(f))
@@ -54,8 +54,8 @@ class StaticViewer:
                 path = os.path.join(self.path, 'flows', f.id, m)
                 if not os.path.exists(path):
                     os.makedirs(path)
-                with open(os.path.join(path, '_content'), 'wb') as file:
-                    file.write(message.raw_content)
+                with open(os.path.join(path, 'content.json'), 'wb') as content_file:
+                    content_file.write(message.raw_content)
 
                 # content_view
                 view_path = os.path.join(path, 'content')
@@ -64,11 +64,11 @@ class StaticViewer:
                 description, lines, error = contentviews.get_message_content_view(
                     'Auto', message
                 )
-                with open(os.path.join(view_path, 'Auto'), 'w') as file:
+                with open(os.path.join(view_path, 'Auto.json'), 'w') as view_file:
                     json.dump(dict(
                         lines=list(lines),
                         description=description
-                    ), file)
+                    ), view_file)
 
     def save_static(self) -> None:
         """
@@ -100,5 +100,5 @@ class StaticViewer:
         static.close()
 
     def save_filter_help(self) -> None:
-        with open(os.path.join(self.path, '_filter-help'), 'w') as file:
+        with open(os.path.join(self.path, 'filter-help.json'), 'w') as file:
             json.dump(dict(commands=flowfilter.help), file)
