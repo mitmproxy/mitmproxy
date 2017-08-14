@@ -4,7 +4,7 @@ import pytest
 
 from mitmproxy.proxy2 import events, commands
 from mitmproxy.proxy2.layer import Layer
-from mitmproxy.proxy2.test import tutils
+from . import tutils
 
 
 class TEvent(events.Event):
