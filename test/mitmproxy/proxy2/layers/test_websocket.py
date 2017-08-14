@@ -4,8 +4,8 @@ import pytest
 
 from mitmproxy.proxy2 import commands, events
 from mitmproxy.proxy2.layers import websocket
-from mitmproxy.proxy2.test import tutils
 from mitmproxy.test import tflow
+from .. import tutils
 
 
 @pytest.fixture
@@ -74,12 +74,10 @@ def test_ping_pong(tctx, ws_playbook):
         >> events.HookReply(-1, None)
         >> events.DataReceived(tctx.client, b'\x89\x80\x10\x11\x12\x13')  # Ping
         << commands.Log("info", "Websocket PING received ")
-        >> events.HookReply(-1, None)
         << commands.SendData(tctx.server, b'\x89\x80\x10\x11\x12\x13')
         << commands.SendData(tctx.client, b'\x8a\x00')
         >> events.DataReceived(tctx.server, b'\x8a\x00')  # Pong
         << commands.Log("info", "Websocket PONG received ")
-        >> events.HookReply(-1, None)
     )
 
 
@@ -134,7 +132,6 @@ def test_connection_closed(tctx, ws_playbook):
         >> events.HookReply(-1, None)
         >> events.ConnectionClosed(tctx.server)
         << commands.Log("error", "Connection closed abnormally")
-        >> events.HookReply(-1, None)
         << commands.CloseConnection(tctx.client)
         << commands.Hook("websocket_error", f)
         >> events.HookReply(-1, None)
