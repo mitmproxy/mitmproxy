@@ -89,7 +89,6 @@ class OpenConnectionReply(CommandReply):
 
 class HookReply(CommandReply):
     command: typing.Union[commands.Hook, int]
-    reply: typing.Any
 
-    def __init__(self, command: typing.Union[commands.Hook, int], reply: typing.Any):
-        super().__init__(command, reply)
+    def __init__(self, command: typing.Union[commands.Hook, int]):
+        super().__init__(command, None)

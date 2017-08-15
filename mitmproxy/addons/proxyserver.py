@@ -40,7 +40,7 @@ class ProxyConnectionHandler(server.ConnectionHandler):
         self.event_queue.put((hook.name, hook.data))
         await q.get()
         if hook.blocking:
-            self.server_event(events.HookReply(hook, None))
+            self.server_event(events.HookReply(hook))
 
     def _debug(self, *args):
         x = log.LogEntry(" ".join(str(x) for x in args), "warn")

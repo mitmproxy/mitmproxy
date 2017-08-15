@@ -119,7 +119,7 @@ def test_client_tls(tctx: context.Context):
     data = tutils.Placeholder()
     assert (
         playbook
-        >> events.HookReply(-1, None)
+        >> events.HookReply(-1)
         << commands.Log("PlainSendData(client, b'hello world')")
         << commands.SendData(tctx.client, data)
     )
