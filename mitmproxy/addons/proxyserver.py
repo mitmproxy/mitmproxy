@@ -58,6 +58,13 @@ class Proxyserver:
         self.options = None
         self._lock = asyncio.Lock()
 
+    def load(self, loader):
+        loader.add_option(
+            "connection_strategy", str, "eager",
+            "Determine when server connections should be established.",
+            choices=("eager", "lazy")
+        )
+
     def running(self):
         self.options = ctx.options
         self.event_queue = ctx.master.event_queue
