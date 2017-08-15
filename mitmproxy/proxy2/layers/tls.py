@@ -18,7 +18,6 @@ class ConnectionState(Enum):
     NO_TLS = 1
     WAIT_FOR_CLIENTHELLO = 2
     WAIT_FOR_SERVER_TLS = 3
-    WAIT_FOR_OPENCONNECTION = 4
     NEGOTIATING = 5
     ESTABLISHED = 6
 
@@ -96,38 +95,35 @@ class TLSLayer(layer.Layer):
         /:   NO_TLS
         WCH: WAIT_FOR_CLIENTHELLO
         WST: WAIT_FOR_SERVER_TLS
-        WOC: WAIT_FOR_OPENCONNECTION
         N:   NEGOTIATING
         E:   ESTABLISHED
 
-    +------------+          +---+             +------------+          +---+<--+
-    |Client State|--------->| / |             |Server State|--------->+ / |   |
-    +------------+  no tls  +---+             +------------+  no tls  +---+   |
-      |                                         |server tls             |     |
-      |client tls                               |          OpenConn(TLS)|     |OpenConn(no TLS)
-      v                                         v                       v     |
-      +------------------------------+          +-------------------->+---+   |
-      |  no server tls               |          |  no client tls      | N |   |
-      |                              |          |                  +->+---+-->+
-      |server tls                    v          |client tls        |    |     |
-      v                      +---->+---+        |                  |    |     |
-    +---+                    |     | N |        v                  |    v     |
-    |WCH|                    |  +->+---+      +---+                |  +---+   |
-    +---+                    |  |    |        |WCH|                |  | E |-->+
-      |                      |  |    v        +---+                |  +---+   |
-      |ClientHello arrives   |  |  +---+        |                  |          |
-      |                      |  |  | E |        |ClientHello       +<----+    |
-      +----------------------+  |  +---+        |arrives           |     |    |
-      |  no server info needed  |               v                  |     |    |
-      |                         |               +------------------+     |    |
-      |server info needed       |               | already connected      |    |
-      v                         |               | or server info needed  |    |
-    +---+                       |               |                        |    |
-    |WST|-----------------------+               |not needed              |    |
-    +---+  server tls established               v                   (TLS)|    |(no TLS)
-           (or errored)                       +---+                      |    |
-                                              |WOC+--------------------->+----+
-                                              +---+            OpenConn
+    +------------+          +---+                             +------------+
+    |Client State|--------> | / |                             |Server State|
+    +------------+ no tls   +---+                server tls,  +------------+   server tls,
+      |                                          client tls       | | |       no client tls
+      v client tls                              +-----------------+ | +--------------------+
+                                                |                   |                      |
+      +------------------------------+          |                   | no server tls        |
+      |  no server tls               |          v                   v                      v
+      |                              v                                   OpenConn(TLS)
+      v server tls                            +---+  not needed   +--------------------> +---+
+                             +---> +---+      |WCH+-------------> | / |                  | N | <-+
+    +---+                    |     | N |      +---+               +---+ <--------------------+   |
+    |WCH|                    |  +> +---+        |                       OpenConn(No TLS)   |     |
+    +---+                    |  |    |          |                   ^                      |     |
+      |                      |  |    v          | already connec-   |       handshake done v     |
+      |ClientHello arrives   |  |  +---+        | ted or server     |                            |
+      |                      |  |  | E |        | info needed       |   OpenConn(No TLS) +---+   |
+      +----------------------+  |  +---+        |                   +--------------------+ E |   |
+      |  no server info needed  |               |                                        +---+   |
+      |                         |               |                                                |
+      v server info needed      |               +------------------------------------------------+
+                                |
+    +---+                       |
+    |WST|-----------------------+
+    +---+  server tls established
+           (or errored)
     """
     tls: MutableMapping[context.Connection, SSL.Connection]
     state: MutableMapping[context.Connection, ConnectionState]
@@ -175,33 +171,18 @@ class TLSLayer(layer.Layer):
         if self.state[send_command.connection] == ConnectionState.NO_TLS:
             yield send_command
         else:
+            yield commands.Log(f"Plain{send_command}")
             self.tls[send_command.connection].sendall(send_command.data)
             yield from self.tls_interact(send_command.connection)
 
     def event_to_child(self, event: events.Event) -> commands.TCommandGenerator:
         for command in self.child_layer.handle_event(event):
             if isinstance(command, commands.SendData):
-                yield commands.Log(f"Plain{command}")
                 yield from self.send(command)
             elif isinstance(command, commands.OpenConnection):
                 raise NotImplementedError()
             else:
                 yield command
-
-    def recv(self, recv_event: events.DataReceived) -> Generator[commands.Command, None, bytes]:
-        if self.state[recv_event.connection] == ConnectionState.NO_TLS:
-            return recv_event.data
-        else:
-            if recv_event.data:
-                self.tls[recv_event.connection].bio_write(recv_event.data)
-            yield from self.tls_interact(recv_event.connection)
-
-            recvd = bytearray()
-            while True:
-                try:
-                    recvd.extend(self.tls[recv_event.connection].recv(65535))
-                except (SSL.WantReadError, SSL.ZeroReturnError):
-                    return bytes(recvd)
 
     def parse_client_hello(self):
         # Check if ClientHello is complete
@@ -228,7 +209,7 @@ class TLSLayer(layer.Layer):
             elif state is ConnectionState.NEGOTIATING:
                 yield from self.process_negotiate(event)
             elif state is ConnectionState.NO_TLS:
-                yield from self.process_relay(event)
+                yield from self.event_to_child(event)
             elif state is ConnectionState.ESTABLISHED:
                 yield from self.process_relay(event)
             else:
@@ -244,8 +225,6 @@ class TLSLayer(layer.Layer):
 
         if event.connection == client and self.parse_client_hello():
             self._debug("SNI", self.client_hello.sni)
-            if self.context.server.sni is True:
-                self.context.server.sni = self.client_hello.sni.encode("idna")
 
             client_tls_requires_server_connection = (
                 self.context.server.tls and
@@ -263,7 +242,7 @@ class TLSLayer(layer.Layer):
             if not self.context.server.connected:
                 # We are only in the WAIT_FOR_CLIENTHELLO branch if we have two TLS conns.
                 assert self.context.server.tls
-                self.state[server] = ConnectionState.WAIT_FOR_OPENCONNECTION
+                self.state[server] = ConnectionState.NO_TLS
             else:
                 yield from self.start_server_tls()
             if client_tls_requires_server_connection:
@@ -292,9 +271,19 @@ class TLSLayer(layer.Layer):
                 yield from self.start_client_tls()
 
     def process_relay(self, event: events.DataReceived):
-        plaintext = yield from self.recv(event)
+        if event.data:
+            self.tls[event.connection].bio_write(event.data)
+        yield from self.tls_interact(event.connection)
+
+        plaintext = bytearray()
+        while True:
+            try:
+                plaintext.extend(self.tls[event.connection].recv(65535))
+            except (SSL.WantReadError, SSL.ZeroReturnError):
+                break
+
         if plaintext:
-            evt = events.DataReceived(event.connection, plaintext)
+            evt = events.DataReceived(event.connection, bytes(plaintext))
             yield commands.Log(f"Plain{evt}")
             yield from self.event_to_child(evt)
 
@@ -305,6 +294,11 @@ class TLSLayer(layer.Layer):
         self.tls[server] = SSL.Connection(ssl_context)
 
         if server.sni:
+            if server.sni is True:
+                if self.client_hello:
+                    server.sni = self.client_hello.sni.encode("idna")
+                else:
+                    server.sni = server.address[0].encode("idna")
             self.tls[server].set_tlsext_host_name(server.sni)
         # FIXME: Handle ALPN
         self.tls[server].set_connect_state()
