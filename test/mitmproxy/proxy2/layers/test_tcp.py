@@ -25,11 +25,11 @@ def test_open_connection_err(tctx):
     assert (
         tutils.playbook(tcp.TCPLayer(tctx))
         << commands.Hook("tcp_start", f)
-        >> events.HookReply(-1, None)
+        >> events.HookReply(-1)
         << commands.OpenConnection(tctx.server)
         >> events.OpenConnectionReply(-1, "Connect call failed")
         << commands.Hook("tcp_error", f)
-        >> events.HookReply(-1, None)
+        >> events.HookReply(-1)
         << commands.CloseConnection(tctx.client)
     )
 
@@ -42,21 +42,21 @@ def test_simple(tctx):
     assert (
         playbook
         << commands.Hook("tcp_start", f)
-        >> events.HookReply(-1, None)
+        >> events.HookReply(-1)
         << commands.OpenConnection(tctx.server)
         >> events.OpenConnectionReply(-1, None)
         >> events.DataReceived(tctx.client, b"hello!")
         << commands.Hook("tcp_message", f)
-        >> events.HookReply(-1, None)
+        >> events.HookReply(-1)
         << commands.SendData(tctx.server, b"hello!")
         >> events.DataReceived(tctx.server, b"hi")
         << commands.Hook("tcp_message", f)
-        >> events.HookReply(-1, None)
+        >> events.HookReply(-1)
         << commands.SendData(tctx.client, b"hi")
         >> events.ConnectionClosed(tctx.server)
         << commands.CloseConnection(tctx.client)
         << commands.Hook("tcp_end", f)
-        >> events.HookReply(-1, None)
+        >> events.HookReply(-1)
         >> events.ConnectionClosed(tctx.client)
         << None
     )
@@ -72,19 +72,19 @@ def test_simple_explicit(tctx):
     tcp_start, = layer.handle_event(events.Start())
     flow = tcp_start.data
     assert tutils._eq(tcp_start, commands.Hook("tcp_start", flow))
-    open_conn, = layer.handle_event(events.HookReply(tcp_start, None))
+    open_conn, = layer.handle_event(events.HookReply(tcp_start))
     assert tutils._eq(open_conn, commands.OpenConnection(tctx.server))
     assert list(layer.handle_event(events.OpenConnectionReply(open_conn, None))) == []
     tcp_msg, = layer.handle_event(events.DataReceived(tctx.client, b"hello!"))
     assert tutils._eq(tcp_msg, commands.Hook("tcp_message", flow))
     assert flow.messages[0].content == b"hello!"
 
-    send, = layer.handle_event(events.HookReply(tcp_msg, None))
+    send, = layer.handle_event(events.HookReply(tcp_msg))
     assert tutils._eq(send, commands.SendData(tctx.server, b"hello!"))
     close, tcp_end = layer.handle_event(events.ConnectionClosed(tctx.server))
     assert tutils._eq(close, commands.CloseConnection(tctx.client))
     assert tutils._eq(tcp_end, commands.Hook("tcp_end", flow))
-    assert list(layer.handle_event(events.HookReply(tcp_end, None))) == []
+    assert list(layer.handle_event(events.HookReply(tcp_end))) == []
 
 
 def test_receive_data_before_server_connected(tctx):
@@ -96,12 +96,12 @@ def test_receive_data_before_server_connected(tctx):
     assert (
         tutils.playbook(tcp.TCPLayer(tctx))
         << commands.Hook("tcp_start", f)
-        >> events.HookReply(-1, None)
+        >> events.HookReply(-1)
         << commands.OpenConnection(tctx.server)
         >> events.DataReceived(tctx.client, b"hello!")
         >> events.OpenConnectionReply(-2, None)
         << commands.Hook("tcp_message", f)
-        >> events.HookReply(-1, None)
+        >> events.HookReply(-1)
         << commands.SendData(tctx.server, b"hello!")
     )
     assert f().messages
@@ -115,13 +115,13 @@ def test_receive_data_after_server_disconnected(tctx):
     assert (
         tutils.playbook(tcp.TCPLayer(tctx))
         << commands.Hook("tcp_start", f)
-        >> events.HookReply(-1, None)
+        >> events.HookReply(-1)
         << commands.OpenConnection(tctx.server)
         >> events.OpenConnectionReply(-1, None)
         >> events.ConnectionClosed(tctx.server)
         << commands.CloseConnection(tctx.client)
         << commands.Hook("tcp_end", f)
-        >> events.HookReply(-1, None)
+        >> events.HookReply(-1)
         >> events.DataReceived(tctx.client, b"i'm late")
         << None
     )

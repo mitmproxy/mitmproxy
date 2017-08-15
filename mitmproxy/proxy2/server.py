@@ -130,7 +130,7 @@ class SimpleConnectionHandler(ConnectionHandler):
 
     async def handle_hook(self, hook: commands.Hook) -> None:
         if hook.blocking:
-            self.server_event(events.HookReply(hook, None))
+            self.server_event(events.HookReply(hook))
 
 
 if __name__ == "__main__":
