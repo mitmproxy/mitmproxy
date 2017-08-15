@@ -1,7 +1,7 @@
 import os
-from enum import Enum
 import struct
-from typing import MutableMapping, Generator, Optional
+from enum import Enum
+from typing import MutableMapping, Generator, Optional, Iterable, Iterator
 
 from OpenSSL import SSL
 
@@ -23,31 +23,61 @@ class ConnectionState(Enum):
     ESTABLISHED = 6
 
 
-def get_client_hello(client_conn):
+def is_tls_handshake_record(d: bytes) -> bool:
     """
-    Read all records from client buffer that contain the initial client hello message.
-
-    client_conn:
-        bytearray
-
     Returns:
-        The raw handshake packet bytes, without TLS record header(s).
+        True, if the passed bytes start with the TLS record magic bytes
+        False, otherwise.
+    """
+    # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2.
+    # TLS 1.3 mandates legacy_record_version to be 0x0301.
+    # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
+    return (
+        len(d) >= 3 and
+        d[0] == 0x16 and
+        d[1] == 0x03 and
+        0x0 <= d[2] <= 0x03
+    )
+
+
+def handshake_record_contents(data: bytes) -> Iterator[bytes]:
+    """
+    Returns a generator that yields the bytes contained in each handshake record.
+    This will raise an error on the first non-handshake record, so fully exhausting this
+    generator is a bad idea.
+    """
+    offset = 0
+    while True:
+        if len(data) < offset + 5:
+            return
+        record_header = data[offset:offset + 5]
+        if not is_tls_handshake_record(record_header):
+            raise ValueError(f"Expected TLS record, got {record_header} instead.")
+        record_size = struct.unpack("!H", record_header[3:])[0]
+        if record_size == 0:
+            raise ValueError("Record must not be empty.")
+        offset += 5
+
+        if len(data) < offset + record_size:
+            return
+        record_body = data[offset:offset + record_size]
+        yield record_body
+        offset += record_size
+
+
+def get_client_hello(data: bytes) -> Optional[bytes]:
+    """
+    Read all TLS records that contain the initial ClientHello.
+    Returns the raw handshake packet bytes, without TLS record headers.
     """
     client_hello = b""
-    client_hello_size = 1
-    offset = 0
-    while len(client_hello) < client_hello_size:
-        record_header = client_conn[offset:5]
-        if not tls.is_tls_record_magic(record_header) or len(record_header) != 5:
-            raise exceptions.TlsProtocolException('Expected TLS record, got "%s" instead.' % record_header)
-        record_size = struct.unpack("!H", record_header[3:])[0] + 5
-        record_body = client_conn[offset + 5: record_size]
-        if len(record_body) != record_size - 5:
-            raise exceptions.TlsProtocolException("Unexpected EOF in TLS handshake: %s" % record_body)
-        client_hello += record_body
-        offset += record_size
-        client_hello_size = struct.unpack("!I", b'\x00' + client_hello[1:4])[0] + 4
-    return client_hello
+    for d in handshake_record_contents(data):
+        client_hello += d
+        if len(client_hello) >= 4:
+            client_hello_size = struct.unpack("!I", b'\x00' + client_hello[1:4])[0] + 4
+            if len(client_hello) >= client_hello_size:
+                return client_hello[:client_hello_size]
+    return None
 
 
 class TLSLayer(layer.Layer):
