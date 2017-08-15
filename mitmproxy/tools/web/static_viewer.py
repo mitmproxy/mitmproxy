@@ -54,7 +54,7 @@ class StaticViewer:
                 path = os.path.join(self.path, 'flows', f.id, m)
                 if not os.path.exists(path):
                     os.makedirs(path)
-                with open(os.path.join(path, 'content.json'), 'wb') as content_file:
+                with open(os.path.join(path, '_content'), 'wb') as content_file:
                     content_file.write(message.raw_content)
 
                 # content_view
