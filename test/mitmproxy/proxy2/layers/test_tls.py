@@ -1,6 +1,10 @@
+import ssl
+
 import pytest
 
+from mitmproxy.proxy2 import context, events, commands
 from mitmproxy.proxy2.layers import tls
+from test.mitmproxy.proxy2 import tutils
 
 
 def test_is_tls_handshake_record():
@@ -54,3 +58,70 @@ def test_get_client_hello():
 
     incomplete = split_over_two_records[:42]
     assert tls.get_client_hello(incomplete) is None
+
+
+class SSLTest:
+    """Helper container for Python's builtin SSL object."""
+    def __init__(self):
+        self.inc = ssl.MemoryBIO()
+        self.out = ssl.MemoryBIO()
+        self.ctx = ssl.SSLContext()
+        self.obj = self.ctx.wrap_bio(self.inc, self.out, server_side=False)
+        try:
+            self.obj.do_handshake()
+        except ssl.SSLWantReadError:
+            pass
+
+
+def test_client_tls(tctx: context.Context):
+    """Test TLS with client only"""
+    layer = tls.TLSLayer(tctx)
+    playbook = tutils.playbook(layer)
+    tctx.client.tls = True
+    tssl = SSLTest()
+
+    # Handshake
+    assert playbook
+    assert layer.state[tctx.client] == tls.ConnectionState.NEGOTIATING
+    assert layer.state[tctx.server] == tls.ConnectionState.NO_TLS
+
+    def interact():
+        data = tutils.Placeholder()
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, tssl.out.read())
+            << commands.SendData(tctx.client, data)
+        )
+        tssl.inc.write(data())
+
+    # Send ClientHello, receive ServerHello
+    interact()
+    with pytest.raises(ssl.SSLWantReadError):
+        tssl.obj.do_handshake()
+    # Finish Handshake
+    interact()
+    tssl.obj.do_handshake()
+
+    assert layer.state[tctx.client] == tls.ConnectionState.ESTABLISHED
+    assert layer.state[tctx.server] == tls.ConnectionState.NO_TLS
+
+    # Echo
+    tssl.obj.write(b"Hello World")
+    nextl = tutils.Placeholder()
+    assert (
+        playbook
+        >> events.DataReceived(tctx.client, tssl.out.read())
+        << commands.Log(
+            "PlainDataReceived(client, b'Hello World')")
+        << commands.Hook("next_layer", nextl)
+    )
+    nextl().layer = tutils.EchoLayer(nextl().context)
+    data = tutils.Placeholder()
+    assert (
+        playbook
+        >> events.HookReply(-1, None)
+        << commands.Log("PlainSendData(client, b'hello world')")
+        << commands.SendData(tctx.client, data)
+    )
+    tssl.inc.write(data())
+    assert tssl.obj.read() == b"hello world"

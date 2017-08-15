@@ -1,3 +1,4 @@
+import collections
 import copy
 import difflib
 import itertools
@@ -6,14 +7,15 @@ import typing
 from mitmproxy.proxy2 import commands
 from mitmproxy.proxy2 import events
 from mitmproxy.proxy2 import layer
+from mitmproxy.proxy2.layer import Layer
 
 TPlaybookEntry = typing.Union[commands.Command, events.Event]
 TPlaybook = typing.List[TPlaybookEntry]
 
 
 def _eq(
-        a: typing.Union[commands.Command, events.Event],
-        b: typing.Union[commands.Command, events.Event]
+        a: TPlaybookEntry,
+        b: TPlaybookEntry
 ) -> bool:
     """Compare two commands/events, and possibly update placeholders."""
     if type(a) != type(b):
@@ -38,6 +40,20 @@ def _eq(
             return False
 
     return True
+
+
+def eq(
+        a: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]],
+        b: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]]
+):
+    """
+    Compare an indiviual event/command or a list of events/commands.
+    """
+    if isinstance(a, collections.Iterable) and isinstance(b, collections.Iterable):
+        return all(
+            _eq(x, y) for x, y in itertools.zip_longest(a, b)
+        )
+    return _eq(a, b)
 
 
 class playbook:
@@ -114,11 +130,7 @@ class playbook:
                     self.layer.handle_event(x)
                 )
 
-        success = all(
-            _eq(e, a)
-            for e, a in itertools.zip_longest(self.expected, self.actual)
-        )
-        if not success:
+        if not eq(self.expected, self.actual):
             self._errored = True
 
             def _str(x):
@@ -174,3 +186,10 @@ class Placeholder:
 
     def __repr__(self):
         return f"Placeholder:{repr(self.obj)}"
+
+
+class EchoLayer(Layer):
+    """Echo layer that sends all data back to the client in lowercase."""
+    def _handle_event(self, event: events.Event):
+        if isinstance(event, events.DataReceived):
+            yield commands.SendData(event.connection, event.data.lower())
