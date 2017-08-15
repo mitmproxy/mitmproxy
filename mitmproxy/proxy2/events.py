@@ -52,6 +52,10 @@ class DataReceived(ConnectionEvent):
         super().__init__(connection)
         self.data = data
 
+    def __repr__(self):
+        target = type(self.connection).__name__.lower()
+        return f"DataReceived({target}, {self.data})"
+
 
 class CommandReply(Event):
     """

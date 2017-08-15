@@ -52,6 +52,10 @@ class SendData(ConnectionCommand):
         super().__init__(connection)
         self.data = data
 
+    def __repr__(self):
+        target = type(self.connection).__name__.lower()
+        return f"SendData({target}, {self.data})"
+
 
 class OpenConnection(ConnectionCommand):
     """
