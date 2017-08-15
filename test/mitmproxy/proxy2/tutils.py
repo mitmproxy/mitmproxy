@@ -135,7 +135,9 @@ class playbook:
 
             def _str(x):
                 arrow = ">" if isinstance(x, events.Event) else "<"
-                x = str(x).replace('Placeholder:', '')
+                x = str(x)\
+                    .replace('Placeholder:None', '<unset placeholder>')\
+                    .replace('Placeholder:', '')
                 return f"{arrow} {x}"
 
             diff = "\n".join(difflib.ndiff(
