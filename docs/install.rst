@@ -85,8 +85,8 @@ libraries. This was tested on a fully patched installation of Ubuntu 16.04.
 
 .. code:: bash
 
-   sudo apt-get install python3-dev python3-pip libffi-dev libssl-dev
-   sudo pip3 install mitmproxy  # or pip3 install --user mitmproxy
+   sudo apt-get install python3-pip
+   sudo pip3 install mitmproxy
 
 On older Ubuntu versions, e.g., **12.04** and **14.04**, you may need to install
 a newer version of Python. mitmproxy requires Python 3.5 or higher. Please take
@@ -104,8 +104,8 @@ libraries. This was tested on a fully patched installation of Fedora 24.
 
 .. code:: bash
 
-   sudo dnf install make gcc redhat-rpm-config python3-devel python3-pip libffi-devel openssl-devel
-   sudo pip3 install mitmproxy  # or pip3 install --user mitmproxy
+   sudo dnf install python3-pip
+   sudo pip3 install mitmproxy
 
 Make sure to have an up-to-date version of pip by running ``pip3 install -U pip``.
 
@@ -121,7 +121,7 @@ You can check you Python version by running ``python3 --version``.
 
 .. code:: bash
 
-   sudo zypper install python3-pip python3-devel libffi-devel openssl-devel gcc-c++
+   sudo zypper install python3-pip
    sudo pip3 install mitmproxy
 
 
