@@ -145,6 +145,21 @@ class View(collections.Sequence):
         self.focus = Focus(self)
         self.settings = Settings(self)
 
+    def load(self, loader):
+        loader.add_option(
+            "view_order", str, "time",
+            "Flow sort order.",
+            choices=list(map(lambda c: c[1], orders)),
+        )
+        loader.add_option(
+            "view_order_reversed", bool, False,
+            "Reverse the sorting order."
+        )
+        loader.add_option(
+            "console_focus_follow", bool, False,
+            "Focus follows new flows."
+        )
+
     def store_count(self):
         return len(self._store)
 
@@ -442,14 +457,14 @@ class View(collections.Sequence):
                         "Invalid interception filter: %s" % ctx.options.view_filter
                     )
             self.set_filter(filt)
-        if "console_order" in updated:
-            if ctx.options.console_order not in self.orders:
+        if "view_order" in updated:
+            if ctx.options.view_order not in self.orders:
                 raise exceptions.OptionsError(
-                    "Unknown flow order: %s" % ctx.options.console_order
+                    "Unknown flow order: %s" % ctx.options.view_order
                 )
-            self.set_order(self.orders[ctx.options.console_order])
-        if "console_order_reversed" in updated:
-            self.set_reversed(ctx.options.console_order_reversed)
+            self.set_order(self.orders[ctx.options.view_order])
+        if "view_order_reversed" in updated:
+            self.set_reversed(ctx.options.view_order_reversed)
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
 
