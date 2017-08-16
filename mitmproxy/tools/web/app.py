@@ -5,7 +5,6 @@ import os.path
 import re
 from io import BytesIO
 
-import mitmproxy.addons.view
 import mitmproxy.flow
 import tornado.escape
 import tornado.web
@@ -149,7 +148,7 @@ class RequestHandler(tornado.web.RequestHandler):
             return self.request.body
 
     @property
-    def view(self) -> mitmproxy.addons.view.View:
+    def view(self) -> "mitmproxy.addons.view.View":
         return self.application.master.view
 
     @property

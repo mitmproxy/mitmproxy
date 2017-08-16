@@ -14,6 +14,7 @@ from mitmproxy.addons import replace
 from mitmproxy.addons import script
 from mitmproxy.addons import serverplayback
 from mitmproxy.addons import setheaders
+from mitmproxy.addons import static_viewer
 from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
 from mitmproxy.addons import streambodies
@@ -39,6 +40,7 @@ def default_addons():
         script.ScriptLoader(),
         serverplayback.ServerPlayback(),
         setheaders.SetHeaders(),
+        static_viewer.StaticViewer(),
         stickyauth.StickyAuth(),
         stickycookie.StickyCookie(),
         streambodies.StreamBodies(),
