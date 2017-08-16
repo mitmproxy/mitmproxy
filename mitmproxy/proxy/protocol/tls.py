@@ -292,7 +292,7 @@ class TlsClientHello:
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 if extension.type == 0x10:
-                    return list(extension.body.alpn_protocols)
+                    return list(x.name for x in extension.body.alpn_protocols)
         return []
 
     @classmethod
@@ -519,8 +519,8 @@ class TlsLayer(base.Layer):
                     # We only support http/1.1 and h2.
                     # If the server only supports spdy (next to http/1.1), it may select that
                     # and mitmproxy would enter TCP passthrough mode, which we want to avoid.
-                    alpn = [x.name for x in self._client_hello.alpn_protocols if
-                            not (x.name.startswith(b"h2-") or x.name.startswith(b"spdy"))]
+                    alpn = [x for x in self._client_hello.alpn_protocols if
+                            not (x.startswith(b"h2-") or x.startswith(b"spdy"))]
                 if alpn and b"h2" in alpn and not self.config.options.http2:
                     alpn.remove(b"h2")
 
