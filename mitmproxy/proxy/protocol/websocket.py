@@ -1,10 +1,10 @@
 import socket
 from OpenSSL import SSL
 
-import typing
 from wsproto import events
 from wsproto.connection import ConnectionType, WSConnection
 from wsproto.extensions import PerMessageDeflate
+from wsproto.frame_protocol import Opcode
 
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -12,6 +12,7 @@ from mitmproxy.proxy.protocol import base
 from mitmproxy.net import tcp
 from mitmproxy.net import websockets
 from mitmproxy.websocket import WebSocketFlow, WebSocketMessage
+from mitmproxy.utils import strutils
 
 
 class WebSocketLayer(base.Layer):
@@ -47,21 +48,21 @@ class WebSocketLayer(base.Layer):
         self.client_frame_buffer = []
         self.server_frame_buffer = []
 
-        self.connections = {}  # type: typing.Dict[object, WSConnection]
+        self.connections = {}  # type: Dict[object, WSConnection]
 
         extensions = []
         if 'Sec-WebSocket-Extensions' in handshake_flow.response.headers:
             if PerMessageDeflate.name in handshake_flow.response.headers['Sec-WebSocket-Extensions']:
-                extensions = [
-                    websockets.make_extension(handshake_flow.response.headers['Sec-WebSocket-Extensions'])
-                ]
-
+                extensions = [PerMessageDeflate()]
         self.connections[self.client_conn] = WSConnection(ConnectionType.SERVER,
                                                           extensions=extensions)
         self.connections[self.server_conn] = WSConnection(ConnectionType.CLIENT,
                                                           host=handshake_flow.request.host,
                                                           resource=handshake_flow.request.path,
                                                           extensions=extensions)
+        if extensions:
+            for conn in self.connections.values():
+                conn.extensions[0].finalize(conn, handshake_flow.response.headers['Sec-WebSocket-Extensions'])
 
         data = self.connections[self.server_conn].bytes_to_send()
         self.connections[self.client_conn].receive_bytes(data)
@@ -80,13 +81,11 @@ class WebSocketLayer(base.Layer):
             return self._handle_ping_received(event, source_conn, other_conn, is_server)
         elif isinstance(event, events.PongReceived):
             return self._handle_pong_received(event, source_conn, other_conn, is_server)
-        elif isinstance(event, events.ConnectionFailed):
-            return self._handle_connection_failed(event)
         elif isinstance(event, events.ConnectionClosed):
             return self._handle_connection_closed(event, source_conn, other_conn, is_server)
 
         # fail-safe for unhandled events
-        return True
+        return True  # pragma: no cover
 
     def _handle_data_received(self, event, source_conn, other_conn, is_server):
         fb = self.server_frame_buffer if is_server else self.client_frame_buffer
@@ -94,8 +93,8 @@ class WebSocketLayer(base.Layer):
 
         if event.message_finished:
             original_chunk_sizes = [len(f) for f in fb]
-            message_type = 0x01 if isinstance(event, events.TextReceived) else 0x02
-            if message_type == 0x01:
+            message_type = Opcode.TEXT if isinstance(event, events.TextReceived) else Opcode.BINARY
+            if message_type == Opcode.TEXT:
                 payload = ''.join(fb)
             else:
                 payload = b''.join(fb)
@@ -124,8 +123,7 @@ class WebSocketLayer(base.Layer):
 
                 for chunk, final in get_chunk(websocket_message.content):
                     self.connections[other_conn].send_data(chunk, final)
-
-                other_conn.send(self.connections[other_conn].bytes_to_send())
+                    other_conn.send(self.connections[other_conn].bytes_to_send())
 
             else:
                 self.connections[other_conn].send_data(event.data, event.message_finished)
@@ -145,7 +143,7 @@ class WebSocketLayer(base.Layer):
         self.log(
             "Ping Received from {}".format("server" if is_server else "client"),
             "info",
-            [str(event.payload)]
+            [strutils.bytes_to_escaped_str(bytes(event.payload))]
         )
         return True
 
@@ -153,7 +151,7 @@ class WebSocketLayer(base.Layer):
         self.log(
             "Pong Received from {}".format("server" if is_server else "client"),
             "info",
-            [str(event.payload)]
+            [strutils.bytes_to_escaped_str(bytes(event.payload))]
         )
         return True
 
@@ -167,9 +165,6 @@ class WebSocketLayer(base.Layer):
         source_conn.send(self.connections[source_conn].bytes_to_send())
 
         return False
-
-    def _handle_connection_failed(self, event):
-        raise exceptions.TcpException(repr(event))
 
     def __call__(self):
         self.flow = WebSocketFlow(self.client_conn, self.server_conn, self.handshake_flow, self)
@@ -192,11 +187,12 @@ class WebSocketLayer(base.Layer):
                     self.connections[source_conn].receive_bytes(bytes(frame))
                     source_conn.send(self.connections[source_conn].bytes_to_send())
 
+                    if close_received:
+                        return
+
                     for event in self.connections[source_conn].events():
                         if not self._handle_event(event, source_conn, other_conn, is_server):
-                            if close_received:
-                                break
-                            else:
+                            if not close_received:
                                 close_received = True
         except (socket.error, exceptions.TcpException, SSL.Error) as e:
             s = 'server' if is_server else 'client'

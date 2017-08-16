@@ -14,7 +14,6 @@ from .utils import get_extensions
 from .utils import get_protocol
 from .utils import get_client_key
 from .utils import get_server_accept
-from .utils import make_extension
 
 __all__ = [
     "FrameHeader",
@@ -33,5 +32,4 @@ __all__ = [
     "get_protocol",
     "get_client_key",
     "get_server_accept",
-    "make_extension"
 ]

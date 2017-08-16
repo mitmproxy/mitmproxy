@@ -3,11 +3,10 @@ Collection of WebSocket protocol utility functions (RFC6455)
 Spec: https://tools.ietf.org/html/rfc6455
 """
 
+
 import base64
 import hashlib
 import os
-
-from wsproto.extensions import PerMessageDeflate
 
 from mitmproxy.net import http
 from mitmproxy.utils import strutils
@@ -89,26 +88,3 @@ def get_client_key(headers):
 
 def get_server_accept(headers):
     return headers.get("sec-websocket-accept", None)
-
-
-def make_extension(extension):
-    name, *params = extension.split(';')
-    if name == 'permessage-deflate':
-        args = {
-            "client_no_context_takeover": False,
-            "server_no_context_takeover": False,
-            "client_max_window_bits": None,
-            "server_max_window_bits": None
-        }
-
-        for param in params:
-            if param.startswith('client_no_context_takeover'):
-                args["client_no_context_takeover"] = True
-            elif param.startswith('server_no_context_takeover'):
-                args["server_no_context_takeover"] = True
-            elif param.startswith('client_max_window_bits'):
-                args["client_max_window_bits"] = int(param.split('=', 1)[1].strip())
-            elif param.startswith('server_max_window_bits'):
-                args["server_max_window_bits"] = int(param.split('=', 1)[1].strip())
-
-        return PerMessageDeflate(**args)
