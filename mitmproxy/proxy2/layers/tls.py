@@ -1,11 +1,10 @@
 import os
 import struct
 from enum import Enum
-from typing import MutableMapping, Generator, Optional, Iterable, Iterator
+from typing import MutableMapping, Optional, Iterator
 
 from OpenSSL import SSL
 
-from mitmproxy import exceptions
 from mitmproxy.certs import CertStore
 from mitmproxy.proxy.protocol import TlsClientHello
 from mitmproxy.proxy.protocol import tls
@@ -153,8 +152,8 @@ class TLSLayer(layer.Layer):
             self.state[client] = ConnectionState.WAIT_FOR_CLIENTHELLO
             self.state[server] = ConnectionState.WAIT_FOR_CLIENTHELLO
         elif client.tls:
-            yield from self.start_client_tls()
             self.state[server] = ConnectionState.NO_TLS
+            yield from self.start_client_tls()
         elif server.tls and server.connected:
             self.state[client] = ConnectionState.NO_TLS
             yield from self.start_server_tls()
@@ -186,17 +185,11 @@ class TLSLayer(layer.Layer):
 
     def parse_client_hello(self):
         # Check if ClientHello is complete
-        try:
-            client_hello = get_client_hello(self.recv_buffer[self.context.client])[4:]
-            self.client_hello = TlsClientHello(client_hello)
-        except exceptions.TlsProtocolException:
-            return False
-        except EOFError as e:
-            raise exceptions.TlsProtocolException(
-                f'Cannot parse Client Hello: {e}, Raw Client Hello: {client_hello}'
-            )
-        else:
+        client_hello = get_client_hello(self.recv_buffer[self.context.client])
+        if client_hello:
+            self.client_hello = TlsClientHello(client_hello[4:])
             return True
+        return False
 
     def process(self, event: events.Event):
         if isinstance(event, events.DataReceived):
@@ -235,20 +228,19 @@ class TLSLayer(layer.Layer):
                     not self.client_hello.sni
                 )
             )
-
-            if client_tls_requires_server_connection and not self.context.server.connected:
-                yield commands.OpenConnection(self.context.server)
-
-            if not self.context.server.connected:
-                # We are only in the WAIT_FOR_CLIENTHELLO branch if we have two TLS conns.
-                assert self.context.server.tls
-                self.state[server] = ConnectionState.NO_TLS
-            else:
-                yield from self.start_server_tls()
+            # What do we do with the client connection now?
             if client_tls_requires_server_connection:
                 self.state[client] = ConnectionState.WAIT_FOR_SERVER_TLS
             else:
                 yield from self.start_client_tls()
+
+            # What do we do with the server connection now?
+            if client_tls_requires_server_connection and not self.context.server.connected:
+                yield commands.OpenConnection(self.context.server)
+            if not self.context.server.connected:
+                self.state[server] = ConnectionState.NO_TLS
+            else:
+                yield from self.start_server_tls()
 
     def process_negotiate(self, event: events.DataReceived):
         # bio_write errors for b"", so we need to check first if we actually received something.
@@ -291,16 +283,23 @@ class TLSLayer(layer.Layer):
         server = self.context.server
 
         ssl_context = SSL.Context(SSL.SSLv23_METHOD)
+
+        if self.client_hello:
+            alpn = [
+                x for x in self.client_hello.alpn_protocols
+                if not (x.startswith(b"h2-") or x.startswith(b"spdy"))
+            ]
+            ssl_context.set_alpn_protos(alpn)
+
         self.tls[server] = SSL.Connection(ssl_context)
 
         if server.sni:
             if server.sni is True:
-                if self.client_hello:
+                if self.client_hello and self.client_hello.sni:
                     server.sni = self.client_hello.sni.encode("idna")
                 else:
                     server.sni = server.address[0].encode("idna")
             self.tls[server].set_tlsext_host_name(server.sni)
-        # FIXME: Handle ALPN
         self.tls[server].set_connect_state()
 
         self.state[server] = ConnectionState.NEGOTIATING
@@ -312,6 +311,7 @@ class TLSLayer(layer.Layer):
     def start_client_tls(self):
         # FIXME
         client = self.context.client
+        server = self.context.server
         context = SSL.Context(SSL.SSLv23_METHOD)
         cert, privkey, cert_chain = CertStore.from_store(
             os.path.expanduser("~/.mitmproxy"), "mitmproxy"
@@ -319,6 +319,16 @@ class TLSLayer(layer.Layer):
         context.use_privatekey(privkey)
         context.use_certificate(cert.x509)
         context.set_cipher_list(tls.DEFAULT_CLIENT_CIPHERS)
+
+        if self.state[server] == ConnectionState.ESTABLISHED:
+            alpn_for_client = self.tls[server].get_alpn_proto_negotiated()
+
+            def alpn_select_callback(conn_, options):
+                if alpn_for_client in options:
+                    return alpn_for_client
+
+            context.set_alpn_select_callback(alpn_select_callback)
+
         self.tls[client] = SSL.Connection(context)
         self.tls[client].set_accept_state()
 

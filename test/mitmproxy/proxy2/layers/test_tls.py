@@ -64,14 +64,21 @@ def test_get_client_hello():
 class SSLTest:
     """Helper container for Python's builtin SSL object."""
 
-    def __init__(self, server_side=False):
+    def __init__(self, server_side=False, alpn=None):
         self.inc = ssl.MemoryBIO()
         self.out = ssl.MemoryBIO()
         self.ctx = ssl.SSLContext()
+        if alpn:
+            self.ctx.set_alpn_protocols(alpn)
         if server_side:
             # FIXME: Replace hardcoded location
             self.ctx.load_cert_chain(os.path.expanduser("~/.mitmproxy/mitmproxy-ca.pem"))
-        self.obj = self.ctx.wrap_bio(self.inc, self.out, server_side=server_side)
+        self.obj = self.ctx.wrap_bio(
+            self.inc,
+            self.out,
+            server_hostname=None if server_side else "example.com",
+            server_side=server_side,
+        )
 
 
 def test_no_tls(tctx: context.Context):
@@ -211,3 +218,117 @@ def test_server_tls(tctx):
 
     # Echo
     echo(playbook, tssl, tctx.server)
+
+
+def _test_tls_client_server(tctx, alpn):
+    layer = tls.TLSLayer(tctx)
+    playbook = tutils.playbook(layer)
+    tctx.client.tls = True
+    tctx.server.tls = True
+    tssl_client = SSLTest(alpn=alpn)
+
+    # Handshake
+    assert playbook
+    assert layer.state[tctx.client] == tls.ConnectionState.WAIT_FOR_CLIENTHELLO
+    assert layer.state[tctx.server] == tls.ConnectionState.WAIT_FOR_CLIENTHELLO
+
+    with pytest.raises(ssl.SSLWantReadError):
+        tssl_client.obj.do_handshake()
+    client_hello = tssl_client.out.read()
+    assert (
+        playbook
+        >> events.DataReceived(tctx.client, client_hello[:42])
+        << None
+    )
+    # Still waiting...
+    assert layer.state[tctx.client] == tls.ConnectionState.WAIT_FOR_CLIENTHELLO
+    assert layer.state[tctx.server] == tls.ConnectionState.WAIT_FOR_CLIENTHELLO
+
+    # Finish sending ClientHello
+    playbook >> events.DataReceived(tctx.client, client_hello[42:])
+    return playbook, tssl_client
+
+
+def test_tls_client_server_no_server_conn(tctx):
+    """
+    Here we test the scenario where a server connection is _not_ required
+    to establish TLS with the client. After determining this when parsing the ClientHello,
+    we only establish a connection with the client. The server connection may ultimately
+    be established when OpenConnection is called.
+    """
+    playbook, _ = _test_tls_client_server(tctx, None)
+    data = tutils.Placeholder()
+    assert (
+        playbook
+        << commands.SendData(tctx.client, data)
+    )
+    assert data()
+    assert playbook.layer.state[tctx.client] == tls.ConnectionState.NEGOTIATING
+    assert playbook.layer.state[tctx.server] == tls.ConnectionState.NO_TLS
+
+
+def test_tls_client_server_alpn(tctx):
+    """
+    Here we test the scenario where a server connection is required (e.g. because of ALPN negotation)
+    to establish TLS with the client.
+    """
+    tssl_server = SSLTest(server_side=True, alpn=["foo", "bar"])
+
+    playbook, tssl_client = _test_tls_client_server(tctx, ["qux", "foo"])
+
+    # We should now get instructed to open a server connection.
+    assert (
+        playbook
+        << commands.OpenConnection(tctx.server)
+    )
+    tctx.server.connected = True
+    data = tutils.Placeholder()
+    assert (
+        playbook
+        >> events.OpenConnectionReply(-1, None)
+        << commands.SendData(tctx.server, data)
+    )
+    assert playbook.layer.state[tctx.client] == tls.ConnectionState.WAIT_FOR_SERVER_TLS
+    assert playbook.layer.state[tctx.server] == tls.ConnectionState.NEGOTIATING
+
+    # Establish TLS with the server...
+    tssl_server.inc.write(data())
+    with pytest.raises(ssl.SSLWantReadError):
+        tssl_server.obj.do_handshake()
+    data = tutils.Placeholder()
+    assert (
+        playbook
+        >> events.DataReceived(tctx.server, tssl_server.out.read())
+        << commands.SendData(tctx.server, data)
+    )
+    tssl_server.inc.write(data())
+    tssl_server.obj.do_handshake()
+    data = tutils.Placeholder()
+    assert (
+        playbook
+        >> events.DataReceived(tctx.server, tssl_server.out.read())
+        << commands.SendData(tctx.client, data)
+    )
+
+    assert playbook.layer.state[tctx.client] == tls.ConnectionState.NEGOTIATING
+    assert playbook.layer.state[tctx.server] == tls.ConnectionState.ESTABLISHED
+
+    # Server TLS is established, we can now reply to the client handshake...
+    tssl_client.inc.write(data())
+    with pytest.raises(ssl.SSLWantReadError):
+        tssl_client.obj.do_handshake()
+    data = tutils.Placeholder()
+    assert (
+        playbook
+        >> events.DataReceived(tctx.client, tssl_client.out.read())
+        << commands.SendData(tctx.client, data)
+    )
+    tssl_client.inc.write(data())
+    tssl_client.obj.do_handshake()
+
+    # Both handshakes completed!
+    assert playbook.layer.state[tctx.client] == tls.ConnectionState.ESTABLISHED
+    assert playbook.layer.state[tctx.server] == tls.ConnectionState.ESTABLISHED
+
+    assert tssl_client.obj.selected_alpn_protocol() == "foo"
+    assert tssl_server.obj.selected_alpn_protocol() == "foo"
