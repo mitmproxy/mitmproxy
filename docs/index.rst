@@ -22,6 +22,15 @@
 
 .. toctree::
     :hidden:
+    :caption: Protocols
+
+    protocols/http1
+    protocols/http2
+    protocols/websocket
+    protocols/tcpproxy
+
+.. toctree::
+    :hidden:
     :caption: Features
 
     features/anticache
@@ -36,7 +45,6 @@
     features/streaming
     features/socksproxy
     features/sticky
-    features/tcpproxy
     features/upstreamproxy
     features/upstreamcerts
 

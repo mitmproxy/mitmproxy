@@ -13,7 +13,7 @@ mechanism:
   away. Note that mitmproxy's "Limit" option is often the better alternative here, as it is
   not affected by the limitations listed below.
 
-If you want to peek into (SSL-protected) non-HTTP connections, check out the :ref:`tcpproxy`
+If you want to peek into (SSL-protected) non-HTTP connections, check out the :ref:`tcp_proxy`
 feature.
 If you want to ignore traffic from mitmproxy's processing because of large response bodies,
 take a look at the :ref:`streaming` feature.
@@ -88,7 +88,7 @@ Here are some other examples for ignore patterns:
 
 .. seealso::
 
-    - :ref:`tcpproxy`
+    - :ref:`tcp_proxy`
     - :ref:`streaming`
     - mitmproxy's "Limit" feature
 

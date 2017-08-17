@@ -211,7 +211,7 @@ TCP Events
 ----------
 
 These events are called only if the connection is in :ref:`TCP mode
-<tcpproxy>`. So, for instance, TCP events are not called for ordinary HTTP/S
+<tcp_proxy>`. So, for instance, TCP events are not called for ordinary HTTP/S
 connections.
 
 .. list-table::
