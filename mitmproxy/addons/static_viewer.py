@@ -42,24 +42,27 @@ def save_flows(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
 
 
 def save_flows_content(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
-    for flow in flows:
+    for f in flows:
         for m in ('request', 'response'):
-            message = getattr(flow, m)
-            message_path = path / "flows" / flow.id / m
+            message = getattr(f, m)
+            message_path = path / "flows" / f.id / m
             os.makedirs(str(message_path / "content"), exist_ok=True)
 
-            with open(str(message_path / '_content'), 'wb') as f:
+            with open(str(message_path / '_content'), 'wb') as content_file:
                 # don't use raw_content here as this is served with a default content type
-                if not message:
-                    # skip missing message
-                    continue
-                f.write(message.content)
+                if message:
+                    content_file.write(message.content)
+                else:
+                    content_file.write(b'No content.')
 
             # content_view
             t = time.time()
-            description, lines, error = contentviews.get_message_content_view(
-                'Auto', message
-            )
+            if message:
+                description, lines, error = contentviews.get_message_content_view(
+                    'Auto', message
+                )
+            else:
+                description, lines = 'No content.', []
             if time.time() - t > 0.1:
                 ctx.log(
                     "Slow content view: {} took {}s".format(
@@ -68,10 +71,10 @@ def save_flows_content(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) ->
                     ),
                     "info"
                 )
-            with open(str(message_path / "content" / "Auto.json"), "w") as f:
+            with open(str(message_path / "content" / "Auto.json"), "w") as content_view_file:
                 json.dump(
                     dict(lines=list(lines), description=description),
-                    f
+                    content_view_file
                 )
 
 
