@@ -234,6 +234,8 @@ class Dumper:
             message = f.messages[-1]
             self.echo(f.message_info(message))
             if ctx.options.flow_detail >= 3:
+                message = message.from_state(message.get_state())
+                message.content = message.content.encode() if isinstance(message.content, str) else message.content
                 self._echo_message(message)
 
     def websocket_end(self, f):

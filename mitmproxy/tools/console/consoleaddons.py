@@ -49,7 +49,7 @@ class UnsupportedLog:
     def websocket_message(self, f):
         message = f.messages[-1]
         signals.add_log(f.message_info(message), "info")
-        signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+        signals.add_log(message.content if isinstance(message.content, str) else strutils.bytes_to_escaped_str(message.content), "debug")
 
     def websocket_end(self, f):
         signals.add_log("WebSocket connection closed by {}: {} {}, {}".format(
