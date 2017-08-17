@@ -1,1 +1,2 @@
+-e git+https://github.com/python-hyper/wsproto.git#egg=wsproto
 -e .[dev,examples]
