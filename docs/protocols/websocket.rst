@@ -15,3 +15,8 @@ provides an easy-to-use event-based API.
 
 mitmproxy fully supports the compression extension for WebSocket messages,
 provided by wsproto.
+
+If an endpoint sends a PING to mitmproxy, a PONG will be sent back immediately
+(with the same payload if present). To keep the other connection alive, a new
+PING (without a payload) is sent to the other endpoint. Unsolicited PONG's are
+not forwarded. All PING's and PONG's are logged (with payload if present).
