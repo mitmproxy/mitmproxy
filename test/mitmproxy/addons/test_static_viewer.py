@@ -1,4 +1,5 @@
 import json
+from unittest import mock
 
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
@@ -32,9 +33,11 @@ def test_save_flows(tmpdir):
     assert tmpdir.join('flows.json').read() == json.dumps([flow_to_json(f) for f in flows])
 
 
-def test_save_flows_content(tmpdir):
+@mock.patch('mitmproxy.ctx.log')
+def test_save_flows_content(ctx, tmpdir):
     flows = [tflow.tflow(req=True, resp=None), tflow.tflow(req=True, resp=True)]
-    static_viewer.save_flows_content(tmpdir, flows)
+    with mock.patch('time.time', mock.Mock(side_effect=[1, 2, 2] * 4)):
+        static_viewer.save_flows_content(tmpdir, flows)
     flows_path = tmpdir.join('flows')
     assert len(flows_path.listdir()) == len(flows)
     for p in flows_path.listdir():
