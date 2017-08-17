@@ -24,17 +24,17 @@ def save_static(path: pathlib.Path) -> None:
     shutil.copytree(str(web_dir / "static"), str(path / "static"))
     shutil.copyfile(str(web_dir / 'templates' / 'index.html'), str(path / "index.html"))
 
-    with open(web_dir / "static" / "static.js", "w") as f:
+    with open(str(path / "static" / "static.js"), "w") as f:
         f.write("MITMWEB_STATIC = true;")
 
 
 def save_filter_help(path: pathlib.Path) -> None:
-    with open(path / 'filter-help.json', 'w') as f:
+    with open(str(path / 'filter-help.json'), 'w') as f:
         json.dump(dict(commands=flowfilter.help), f)
 
 
 def save_flows(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
-    with open(path / 'flows.json', 'w') as f:
+    with open(str(path / 'flows.json'), 'w') as f:
         json.dump(
             [flow_to_json(f) for f in flows],
             f
@@ -42,14 +42,17 @@ def save_flows(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
 
 
 def save_flows_content(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
-    for f in flows:
+    for flow in flows:
         for m in ('request', 'response'):
-            message = getattr(f, m)
-            message_path = path / "flows" / f.id / m
+            message = getattr(flow, m)
+            message_path = path / "flows" / flow.id / m
             os.makedirs(str(message_path / "content"), exist_ok=True)
 
-            with open(message_path / '_content', 'wb') as f:
+            with open(str(message_path / '_content'), 'wb') as f:
                 # don't use raw_content here as this is served with a default content type
+                if not message:
+                    # skip missing message
+                    continue
                 f.write(message.content)
 
             # content_view
@@ -65,7 +68,7 @@ def save_flows_content(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) ->
                     ),
                     "info"
                 )
-            with open(message_path / "content" / "Auto.json", "w") as f:
+            with open(str(message_path / "content" / "Auto.json"), "w") as f:
                 json.dump(
                     dict(lines=list(lines), description=description),
                     f
