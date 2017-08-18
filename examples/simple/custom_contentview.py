@@ -21,8 +21,10 @@ view = ViewSwapCase()
 
 
 def start():
+    old_view = contentviews.get(view.name)
+    if old_view is not None:
+        contentviews.remove(old_view)
     contentviews.add(view)
-
 
 def done():
     contentviews.remove(view)
