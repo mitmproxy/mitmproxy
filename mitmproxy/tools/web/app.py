@@ -478,7 +478,7 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/_content", FlowContent),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data", FlowContent),
             (
                 r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",
                 FlowContentView),

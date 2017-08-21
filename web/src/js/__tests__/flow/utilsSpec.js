@@ -25,15 +25,15 @@ describe('MessageUtils', () => {
         let msg = "foo", view = "bar",
             flow = { request: msg, id: 1}
         expect(utils.MessageUtils.getContentURL(flow, msg, view)).toEqual(
-            "/flows/1/request/content/bar.json"
+            "./flows/1/request/content/bar.json"
         )
         expect(utils.MessageUtils.getContentURL(flow, msg, '')).toEqual(
-            "/flows/1/request/_content"
+            "./flows/1/request/content.data"
         )
         // response
         flow = {response: msg, id: 2}
         expect(utils.MessageUtils.getContentURL(flow, msg, view)).toEqual(
-            "/flows/2/response/content/bar.json"
+            "./flows/2/response/content/bar.json"
         )
     })
 })

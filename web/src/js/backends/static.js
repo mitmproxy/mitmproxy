@@ -16,7 +16,7 @@ export default class StaticBackend {
    }
 
    fetchData(resource) {
-       fetchApi(`/${resource}`)
+       fetchApi(`./${resource}`)
            .then(res => res.json())
            .then(json => {
                this.receive(resource, json)

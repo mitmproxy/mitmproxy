@@ -5,7 +5,7 @@ import * as modalActions from "./modal"
 
 
 export function onKeyDown(e) {
-    console.debug("onKeyDown", e)
+    //console.debug("onKeyDown", e)
     if (e.ctrlKey) {
         return () => {
         }

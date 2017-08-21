@@ -49,7 +49,7 @@ export var MessageUtils = {
         } else if (message === flow.response) {
             message = "response";
         }
-        return `/flows/${flow.id}/${message}/` + (view ? `content/${view}.json` : '_content');
+        return `./flows/${flow.id}/${message}/` + (view ? `content/${view}.json` : 'content.data');
     }
 };
 

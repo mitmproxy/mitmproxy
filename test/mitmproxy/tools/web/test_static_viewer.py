@@ -43,9 +43,9 @@ def test_save_flows_content(ctx, tmpdir):
     for p in flows_path.listdir():
         assert p.join('request').check(dir=1)
         assert p.join('response').check(dir=1)
-        assert p.join('request/_content').check(file=1)
+        assert p.join('request/content.data').check(file=1)
         assert p.join('request/content').check(dir=1)
-        assert p.join('response/_content').check(file=1)
+        assert p.join('response/content.data').check(file=1)
         assert p.join('response/content').check(dir=1)
         assert p.join('request/content/Auto.json').check(file=1)
         assert p.join('response/content/Auto.json').check(file=1)

@@ -72,8 +72,12 @@ export function updateUrlFromStore(store) {
     if (queryStr) {
         url += "?" + queryStr
     }
+    let pathname = window.location.pathname
+    if(pathname === "blank") {
+        pathname = "/" // this happens in tests...
+    }
     if (window.location.hash.substr(1) !== url) {
-        history.replaceState(undefined, "", `/#${url}`)
+        history.replaceState(undefined, "", `${pathname}#${url}`)
     }
 }
 
