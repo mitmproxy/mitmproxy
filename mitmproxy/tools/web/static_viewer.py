@@ -11,7 +11,7 @@ from mitmproxy import flowfilter
 from mitmproxy import io, flow
 from mitmproxy.tools.web.app import flow_to_json
 
-web_dir = pathlib.Path(__file__).absolute().parent.parent / "tools" / "web"
+web_dir = pathlib.Path(__file__).absolute().parent
 
 
 def save_static(path: pathlib.Path) -> None:
