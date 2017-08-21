@@ -54,7 +54,7 @@ exports[`ContentTooLarge Components should render correctly 1`] = `
      
     <a
       className="btn btn-default btn-xs"
-      href="/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/response/content"
+      href="/flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/response/_content"
       title="Download the content of the flow."
     >
       <i

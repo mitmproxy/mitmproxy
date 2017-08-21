@@ -12,6 +12,7 @@ from mitmproxy.addons import readfile
 from mitmproxy.addons import termlog
 from mitmproxy.addons import view
 from mitmproxy.addons import termstatus
+from mitmproxy.addons import static_viewer
 from mitmproxy.options import Options  # noqa
 from mitmproxy.tools.web import app, webaddons
 
@@ -37,6 +38,7 @@ class WebMaster(master.Master):
             webaddons.WebAddon(),
             intercept.Intercept(),
             readfile.ReadFile(),
+            static_viewer.StaticViewer(),
             self.view,
             self.events,
         )

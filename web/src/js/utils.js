@@ -88,6 +88,8 @@ export function fetchApi(url, options={}) {
         } else {
             url += "&" + xsrf;
         }
+    } else {
+        url += '.json'
     }
 
     return fetch(url, {
