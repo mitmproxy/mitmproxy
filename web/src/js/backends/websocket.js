@@ -34,7 +34,7 @@ export default class WebsocketBackend {
     fetchData(resource) {
         let queue = []
         this.activeFetches[resource] = queue
-        fetchApi(`/${resource}`)
+        fetchApi(`./${resource}`)
             .then(res => res.json())
             .then(json => {
                 // Make sure that we are not superseded yet by the server sending a RESET.

@@ -48,7 +48,7 @@ def save_flows_content(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) ->
             message_path = path / "flows" / f.id / m
             os.makedirs(str(message_path / "content"), exist_ok=True)
 
-            with open(str(message_path / '_content'), 'wb') as content_file:
+            with open(str(message_path / 'content.data'), 'wb') as content_file:
                 # don't use raw_content here as this is served with a default content type
                 if message:
                     content_file.write(message.content)
