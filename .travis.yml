@@ -24,6 +24,7 @@ matrix:
       env: TOXENV=py35 BDIST=1
     - python: 3.5
       env: TOXENV=py35 BDIST=1
+      dist: precise
     - python: 3.6
       env: TOXENV=py36
     - python: 3.6
