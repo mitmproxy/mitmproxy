@@ -84,7 +84,7 @@ gulp.task("styles-app-prod", function () {
     styles(conf.css.app, false);
 });
 gulp.task("styles-vendor-prod", function () {
-    styles(conf.css.app, false);
+    styles(conf.css.vendor, false);
 });
 
 
