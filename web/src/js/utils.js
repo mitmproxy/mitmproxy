@@ -91,6 +91,9 @@ export function fetchApi(url, options={}) {
     } else {
         url += '.json'
     }
+    if (url.startsWith("/")) {
+        url = "." + url;
+    }
 
     return fetch(url, {
         credentials: 'same-origin',
