@@ -1,0 +1,18 @@
+/* line comment */
+navigation { color: blue }
+
+menu {
+    /* line comment inside */
+    border: 2px
+}
+
+/* block
+ comment */
+sidebar { color: red }
+
+invisible {
+    /* block
+     * comment
+     * inside */
+    color: #eee
+}
