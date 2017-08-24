@@ -1,6 +1,7 @@
+import io
 import re
 import codecs
-from typing import AnyStr, Optional, cast
+from typing import AnyStr, Optional, cast, Iterable, Tuple
 
 
 def always_bytes(str_or_bytes: Optional[AnyStr], *encode_args) -> Optional[bytes]:
@@ -141,3 +142,87 @@ def hexdump(s):
             False
         ))
         yield (offset, x, part_repr)
+
+
+def _move_to_private_code_plane(matchobj):
+    return chr(ord(matchobj.group(0)) + 0xE000)
+
+
+def _restore_from_private_code_plane(matchobj):
+    return chr(ord(matchobj.group(0)) - 0xE000)
+
+
+NO_ESCAPE = r"(?<!\\)(?:\\\\)*"
+
+
+def split_special_areas(
+        data: str,
+        area_delimiter: Iterable[Tuple[str, str]],
+):
+    """
+    Split a string of code into a [code, special area, code, special area, ..., code] list.
+
+    For example,
+
+    >>> split_special_areas(
+    >>>     "test /* don't modify me */ foo",
+    >>>     [(r"/\*", r"\*/")])  # (left delimiter regex, right delimiter regex)
+    ["test ", "/* don't modify me */", " foo"]
+
+    "".join(split_special_areas(x, ...)) == x always holds true.
+    """
+    patterns = "|".join(
+        r"{lchar}.*?{rchar}".format(
+            lchar=a,
+            rchar=b,
+        ) for (a, b) in area_delimiter)
+    return re.split(
+        "({})".format(patterns),
+        data,
+        re.MULTILINE
+    )
+
+
+def escape_special_areas(
+        data: str,
+        area_delimiter: Iterable[Tuple[str, str]],
+        control_characters,
+):
+    """
+    Escape all control characters present in special areas with UTF8 symbols
+    in the private use plane (U+E000 t+ ord(char)).
+    This is useful so that one can then use regex replacements on the resulting string without
+    interfering with special areas.
+
+    control_characters must be 0 < ord(x) < 256.
+
+    Example:
+
+    >>> print(x)
+    if (true) { console.log('{}'); }
+    >>> x = escape_special_areas(x, "{", [("'", "'")])
+    >>> print(x)
+    if (true) { console.log('�}'); }
+    >>> x = re.sub(r"\s*{\s*", " {\n    ", x)
+    >>> x = unescape_special_areas(x, "{", [("'", "'")])
+    >>> print(x)
+    if (true) {
+        console.log('{}'); }
+    """
+    buf = io.StringIO()
+    parts = split_special_areas(data, area_delimiter)
+    rex = re.compile(r"[{}]".format(control_characters))
+    for i, x in enumerate(parts):
+        if i % 2:
+            x = rex.sub(_move_to_private_code_plane, x)
+        buf.write(x)
+    return buf.getvalue()
+
+
+def unescape_special_areas(data: str):
+    """
+    Invert escape_special_areas.
+
+    x == unescape_special_areas(escape_special_areas(x)) always holds true.
+    """
+    return re.sub(r"[\ue000-\ue0ff]", _restore_from_private_code_plane, data)

@@ -96,3 +96,25 @@ def test_clean_hanging_newline():
 
 def test_hexdump():
     assert list(strutils.hexdump(b"one\0" * 10))
+
+
+ESCAPE_QUOTES = [
+    ("'", strutils.NO_ESCAPE + "'"),
+    ('"', strutils.NO_ESCAPE + '"')
+]
+
+
+def test_split_special_areas():
+    assert strutils.split_special_areas("foo", ESCAPE_QUOTES) == ["foo"]
+    assert strutils.split_special_areas("foo 'bar' baz", ESCAPE_QUOTES) == ["foo ", "'bar'", " baz"]
+    assert strutils.split_special_areas(
+        """foo 'b\\'a"r' baz""",
+        ESCAPE_QUOTES
+    ) == ["foo ", "'b\\'a\"r'", " baz"]
+
+
+def test_escape_special_areas():
+    assert strutils.escape_special_areas('foo "bar" baz', ESCAPE_QUOTES, "*") == 'foo "bar" baz'
+    esc = strutils.escape_special_areas('foo "b*r" b*z', ESCAPE_QUOTES, "*")
+    assert esc == 'foo "b\ue02ar" b*z'
+    assert strutils.unescape_special_areas(esc) == 'foo "b*r" b*z'
