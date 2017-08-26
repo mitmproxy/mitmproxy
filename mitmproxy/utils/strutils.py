@@ -172,14 +172,14 @@ def split_special_areas(
     "".join(split_special_areas(x, ...)) == x always holds true.
     """
     patterns = "|".join(
-        r"{lchar}.*?{rchar}".format(
+        r"{lchar}[\s\S]*?{rchar}".format(
             lchar=a,
             rchar=b,
         ) for (a, b) in area_delimiter)
     return re.split(
         "({})".format(patterns),
         data,
-        re.MULTILINE
+        flags=re.MULTILINE
     )
 
 

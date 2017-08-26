@@ -111,6 +111,14 @@ def test_split_special_areas():
         """foo 'b\\'a"r' baz""",
         ESCAPE_QUOTES
     ) == ["foo ", "'b\\'a\"r'", " baz"]
+    assert strutils.split_special_areas(
+        "foo\n/*bar\nbaz*/\nqux",
+        [(r'/\*', r'\*/')]
+    ) == ["foo\n", "/*bar\nbaz*/", "\nqux"]
+    assert strutils.split_special_areas(
+        "foo\n//bar\nbaz",
+        [(r'//', r'$')]
+    ) == ["foo\n", "//bar", "\nbaz"]
 
 
 def test_escape_special_areas():
