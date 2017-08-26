@@ -65,7 +65,6 @@ setup(
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "click>=6.2, <7",
         "cryptography>=2.0,<2.1",
-        "cssutils>=1.0.1, <1.1",
         "h2>=3.0, <4",
         "html2text>=2016.1.8, <=2016.9.19",
         "hyperframe>=5.0, <6",

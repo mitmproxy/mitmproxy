@@ -1,29 +1,42 @@
+import pytest
+
 from mitmproxy.contentviews import css
 from mitmproxy.test import tutils
 from . import full_eval
 
-try:
-    import cssutils
-except:
-    cssutils = None
+data = tutils.test_data.push("mitmproxy/contentviews/test_css_data/")
 
 
-def test_view_css():
+@pytest.mark.parametrize("filename", [
+    "animation-keyframe.css",
+    "blank-lines-and-spaces.css",
+    "block-comment.css",
+    "empty-rule.css",
+    "import-directive.css",
+    "indentation.css",
+    "media-directive.css",
+    "quoted-string.css",
+    "selectors.css",
+    "simple.css",
+])
+def test_beautify(filename):
+    path = data.path(filename)
+    with open(path) as f:
+        input = f.read()
+    with open("-formatted.".join(path.rsplit(".", 1))) as f:
+        expected = f.read()
+    formatted = css.beautify(input)
+    assert formatted == expected
+
+
+def test_simple():
     v = full_eval(css.ViewCSS())
-
-    with open(tutils.test_data.path('mitmproxy/data/1.css'), 'r') as fp:
-        fixture_1 = fp.read()
-
-    result = v('a')
-
-    if cssutils:
-        assert len(list(result[1])) == 0
-    else:
-        assert len(list(result[1])) == 1
-
-    result = v(fixture_1)
-
-    if cssutils:
-        assert len(list(result[1])) > 1
-    else:
-        assert len(list(result[1])) == 1
+    assert v(b"#foo{color:red}") == ('CSS', [
+        [('text', '#foo {')],
+        [('text', '    color: red')],
+        [('text', '}')]
+    ])
+    assert v(b"") == ('CSS', [[('text', '')]])
+    assert v(b"console.log('not really css')") == (
+        'CSS', [[('text', "console.log('not really css')")]]
+    )

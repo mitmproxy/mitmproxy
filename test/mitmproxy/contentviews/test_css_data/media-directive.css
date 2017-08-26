@@ -1,0 +1,7 @@
+@import "subs.css";
+@import "print-main.css" print;
+@media print {
+  body { font-size: 10pt }
+  nav { color: blue; }
+}
+h1 {color: red; }
