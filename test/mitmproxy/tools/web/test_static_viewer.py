@@ -26,6 +26,12 @@ def test_save_filter_help(tmpdir):
     assert f.read() == json.dumps(dict(commands=flowfilter.help))
 
 
+def test_save_settings(tmpdir):
+    static_viewer.save_settings(tmpdir)
+    f = tmpdir.join('/settings.json')
+    assert f.check(file=1)
+
+
 def test_save_flows(tmpdir):
     flows = [tflow.tflow(req=True, resp=None), tflow.tflow(req=True, resp=True)]
     static_viewer.save_flows(tmpdir, flows)
