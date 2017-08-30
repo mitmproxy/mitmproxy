@@ -5,7 +5,6 @@ import os.path
 import re
 from io import BytesIO
 
-import mitmproxy.addons.view
 import mitmproxy.flow
 import tornado.escape
 import tornado.web
@@ -149,7 +148,7 @@ class RequestHandler(tornado.web.RequestHandler):
             return self.request.body
 
     @property
-    def view(self) -> mitmproxy.addons.view.View:
+    def view(self) -> "mitmproxy.addons.view.View":
         return self.application.master.view
 
     @property
@@ -466,10 +465,10 @@ class Application(tornado.web.Application):
         self.master = master
         handlers = [
             (r"/", IndexHandler),
-            (r"/filter-help", FilterHelp),
+            (r"/filter-help(?:\.json)?", FilterHelp),
             (r"/updates", ClientConnection),
-            (r"/events", Events),
-            (r"/flows", Flows),
+            (r"/events(?:\.json)?", Events),
+            (r"/flows(?:\.json)?", Flows),
             (r"/flows/dump", DumpFlows),
             (r"/flows/resume", ResumeFlows),
             (r"/flows/kill", KillFlows),
@@ -479,13 +478,13 @@ class Application(tornado.web.Application):
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
             (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content", FlowContent),
+            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data", FlowContent),
             (
-                r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)",
+                r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",
                 FlowContentView),
-            (r"/settings", Settings),
+            (r"/settings(?:\.json)?", Settings),
             (r"/clear", ClearAll),
-            (r"/options", Options),
+            (r"/options(?:\.json)?", Options),
             (r"/options/save", SaveOptions)
         ]
         settings = dict(

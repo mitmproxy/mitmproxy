@@ -12,8 +12,7 @@ from mitmproxy.addons import readfile
 from mitmproxy.addons import termlog
 from mitmproxy.addons import view
 from mitmproxy.addons import termstatus
-from mitmproxy.options import Options  # noqa
-from mitmproxy.tools.web import app, webaddons
+from mitmproxy.tools.web import app, webaddons, static_viewer
 
 
 class WebMaster(master.Master):
@@ -37,6 +36,7 @@ class WebMaster(master.Master):
             webaddons.WebAddon(),
             intercept.Intercept(),
             readfile.ReadFile(),
+            static_viewer.StaticViewer(),
             self.view,
             self.events,
         )
@@ -128,6 +128,10 @@ class WebMaster(master.Master):
             iol.start()
         except KeyboardInterrupt:
             self.shutdown()
+
+    def shutdown(self):
+        tornado.ioloop.IOLoop.instance().stop()
+        super().shutdown()
 
 
 def open_browser(url: str) -> bool:

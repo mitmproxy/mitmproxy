@@ -23,5 +23,4 @@ class TestClientHello:
         )
         c = TlsClientHello(data)
         assert c.sni == 'example.com'
-        assert c.alpn_protocols[0].name == b'h2'
-        assert c.alpn_protocols[1].name == b'http/1.1'
+        assert c.alpn_protocols == [b'h2', b'http/1.1']

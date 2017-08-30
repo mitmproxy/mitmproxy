@@ -155,6 +155,10 @@ class View(collections.Sequence):
             "view_order_reversed", bool, False,
             "Reverse the sorting order."
         )
+        loader.add_option(
+            "console_focus_follow", bool, False,
+            "Focus follows new flows."
+        )
 
     def store_count(self):
         return len(self._store)

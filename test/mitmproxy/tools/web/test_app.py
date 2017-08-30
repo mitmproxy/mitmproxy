@@ -186,7 +186,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f.response.headers["Content-Encoding"] = "ran\x00dom"
         f.response.headers["Content-Disposition"] = 'inline; filename="filename.jpg"'
 
-        r = self.fetch("/flows/42/response/content")
+        r = self.fetch("/flows/42/response/content.data")
         assert r.body == b"message"
         assert r.headers["Content-Encoding"] == "random"
         assert r.headers["Content-Disposition"] == 'attachment; filename="filename.jpg"'
@@ -194,17 +194,17 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         del f.response.headers["Content-Disposition"]
         f.request.path = "/foo/bar.jpg"
         assert self.fetch(
-            "/flows/42/response/content"
+            "/flows/42/response/content.data"
         ).headers["Content-Disposition"] == 'attachment; filename=bar.jpg'
 
         f.response.content = b""
-        assert self.fetch("/flows/42/response/content").code == 400
+        assert self.fetch("/flows/42/response/content.data").code == 400
 
         f.revert()
 
     def test_update_flow_content(self):
         assert self.fetch(
-            "/flows/42/request/content",
+            "/flows/42/request/content.data",
             method="POST",
             body="new"
         ).code == 200
@@ -222,7 +222,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             b'--somefancyboundary--\r\n'
         )
         assert self.fetch(
-            "/flows/42/request/content",
+            "/flows/42/request/content.data",
             method="POST",
             headers={"Content-Type": 'multipart/form-data; boundary="somefancyboundary"'},
             body=body

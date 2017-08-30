@@ -22,6 +22,12 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         signals.sig_add_log.connect(self.sig_add_log)
         signals.sig_clear_log.connect(self.sig_clear_log)
 
+    def load(self, loader):
+        loader.add_option(
+            "console_focus_follow", bool, False,
+            "Focus follows new flows."
+        )
+
     def set_focus(self, index):
         if 0 <= index < len(self.walker):
             super().set_focus(index)

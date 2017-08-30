@@ -555,7 +555,5 @@ def test_configure():
 
         tctx.configure(v, view_order_reversed=True)
 
-        console_addon = consoleaddons.ConsoleAddon(tctx.master)
-        tctx.configure(console_addon)
         tctx.configure(v, console_focus_follow=True)
         assert v.focus_follow

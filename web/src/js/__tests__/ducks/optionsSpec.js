@@ -56,7 +56,7 @@ describe('save', () => {
         global.fetch = jest.fn()
         store.dispatch(OptionsActions.save())
         expect(fetch).toBeCalledWith(
-            '/options/save?_xsrf=undefined',
+            './options/save?_xsrf=undefined',
             {
                 credentials: "same-origin",
                 method: "POST"

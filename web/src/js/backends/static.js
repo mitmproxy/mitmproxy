@@ -11,14 +11,12 @@ export default class StaticBackend {
    }
 
    onOpen() {
-        this.fetchData("settings")
         this.fetchData("flows")
-        this.fetchData("events")
-        this.fetchData("options")
+        // this.fetchData("events") # TODO: Add events log to static viewer.
    }
 
    fetchData(resource) {
-       fetchApi(`/${resource}`)
+       fetchApi(`./${resource}`)
            .then(res => res.json())
            .then(json => {
                this.receive(resource, json)
