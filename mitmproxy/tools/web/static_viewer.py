@@ -9,6 +9,7 @@ from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import flowfilter
 from mitmproxy import io, flow
+from mitmproxy import version
 from mitmproxy.tools.web.app import flow_to_json
 
 web_dir = pathlib.Path(__file__).absolute().parent
@@ -31,6 +32,11 @@ def save_static(path: pathlib.Path) -> None:
 def save_filter_help(path: pathlib.Path) -> None:
     with open(str(path / 'filter-help.json'), 'w') as f:
         json.dump(dict(commands=flowfilter.help), f)
+
+
+def save_settings(path: pathlib.Path) -> None:
+    with open(str(path / 'settings.json'), 'w') as f:
+        json.dump(dict(version=version.VERSION), f)
 
 
 def save_flows(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
