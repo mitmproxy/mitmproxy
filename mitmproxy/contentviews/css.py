@@ -14,10 +14,10 @@ A custom CSS prettifier. Compared to other prettifiers, its main features are:
 """
 
 CSS_SPECIAL_AREAS = (
-    ("'", strutils.NO_ESCAPE + "'"),
-    ('"', strutils.NO_ESCAPE + '"'),
-    (r"/\*", r"\*/"),
-    ("//", "$")
+    "'" + strutils.SINGLELINE_CONTENT + strutils.NO_ESCAPE + "'",
+    '"' + strutils.SINGLELINE_CONTENT + strutils.NO_ESCAPE + '"',
+    r"/\*" + strutils.MULTILINE_CONTENT + "\*/",
+    "//" + strutils.SINGLELINE_CONTENT + "$"
 )
 CSS_SPECIAL_CHARS = "{};:"
 
