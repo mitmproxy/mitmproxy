@@ -198,7 +198,7 @@ def get_SQLi_data(new_body: str, original_body: str, request_URL: str, injection
     }
     for dbms, regexes in DBMS_ERRORS.items():
         for regex in regexes:
-            if re.search(regex.lower(), new_body) and not re.search(regex.lower(), original_body):
+            if re.search(regex, new_body, re.IGNORECASE) and not re.search(regex, original_body, re.IGNORECASE):
                 return SQLiData(request_URL,
                                 injection_point,
                                 regex,
