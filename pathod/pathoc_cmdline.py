@@ -3,7 +3,7 @@ import argparse
 import os
 import os.path
 
-from mitmproxy.net import tcp
+from mitmproxy.net import tls
 from mitmproxy import version
 from mitmproxy.net.http import user_agents
 from . import pathoc, language
@@ -111,7 +111,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
     )
     group.add_argument(
         "--ssl-version", dest="ssl_version", type=str, default="secure",
-        choices=tcp.sslversion_choices.keys(),
+        choices=tls.VERSION_CHOICES.keys(),
         help="Set supported SSL/TLS versions. "
              "SSLv2, SSLv3 and 'all' are INSECURE. Defaults to secure, which is TLS1.0+."
     )
@@ -162,7 +162,7 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
 
     args = parser.parse_args(argv[1:])
 
-    args.ssl_version, args.ssl_options = tcp.sslversion_choices[args.ssl_version]
+    args.ssl_version, args.ssl_options = tls.VERSION_CHOICES[args.ssl_version]
 
     args.port = None
     if ":" in args.host:

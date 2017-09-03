@@ -7,7 +7,7 @@ from OpenSSL import SSL, crypto
 from mitmproxy import exceptions
 from mitmproxy import options as moptions
 from mitmproxy import certs
-from mitmproxy.net import tcp
+from mitmproxy.net import tls
 from mitmproxy.net import server_spec
 
 CONF_BASENAME = "mitmproxy"
@@ -65,9 +65,9 @@ class ProxyConfig:
             self.check_tcp = HostMatcher(options.tcp_hosts)
 
         self.openssl_method_client, self.openssl_options_client = \
-            tcp.sslversion_choices[options.ssl_version_client]
+            tls.VERSION_CHOICES[options.ssl_version_client]
         self.openssl_method_server, self.openssl_options_server = \
-            tcp.sslversion_choices[options.ssl_version_server]
+            tls.VERSION_CHOICES[options.ssl_version_server]
 
         certstore_path = os.path.expanduser(options.cadir)
         if not os.path.exists(os.path.dirname(certstore_path)):

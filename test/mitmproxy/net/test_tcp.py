@@ -789,40 +789,6 @@ class TestPeekSSL(TestPeek):
             return conn.pop()
 
 
-class TestSSLKeyLogger(tservers.ServerTestBase):
-    handler = EchoHandler
-    ssl = dict(
-        cipher_list="AES256-SHA"
-    )
-
-    def test_log(self, tmpdir):
-        testval = b"echo!\n"
-        _logfun = tcp.log_ssl_key
-
-        logfile = str(tmpdir.join("foo", "bar", "logfile"))
-        tcp.log_ssl_key = tcp.SSLKeyLogger(logfile)
-
-        c = tcp.TCPClient(("127.0.0.1", self.port))
-        with c.connect():
-            c.convert_to_ssl()
-            c.wfile.write(testval)
-            c.wfile.flush()
-            assert c.rfile.readline() == testval
-            c.finish()
-
-            tcp.log_ssl_key.close()
-            with open(logfile, "rb") as f:
-                assert f.read().count(b"CLIENT_RANDOM") == 2
-
-        tcp.log_ssl_key = _logfun
-
-    def test_create_logfun(self):
-        assert isinstance(
-            tcp.SSLKeyLogger.create_logfun("test"),
-            tcp.SSLKeyLogger)
-        assert not tcp.SSLKeyLogger.create_logfun(False)
-
-
 class TestSSLInvalid(tservers.ServerTestBase):
     handler = EchoHandler
     ssl = True

@@ -2,7 +2,7 @@ from typing import Optional, Sequence
 
 from mitmproxy import optmanager
 from mitmproxy import contentviews
-from mitmproxy.net import tcp
+from mitmproxy.net import tls
 
 log_verbosity = [
     "error",
@@ -408,7 +408,7 @@ class Options(optmanager.OptManager):
             Set supported SSL/TLS versions for client connections. SSLv2, SSLv3
             and 'all' are INSECURE. Defaults to secure, which is TLS1.0+.
             """,
-            choices=list(tcp.sslversion_choices.keys()),
+            choices=list(tls.VERSION_CHOICES.keys()),
         )
         self.add_option(
             "ssl_version_server", str, "secure",
@@ -416,7 +416,7 @@ class Options(optmanager.OptManager):
             Set supported SSL/TLS versions for server connections. SSLv2, SSLv3
             and 'all' are INSECURE. Defaults to secure, which is TLS1.0+.
             """,
-            choices=list(tcp.sslversion_choices.keys()),
+            choices=list(tls.VERSION_CHOICES.keys()),
         )
         self.add_option(
             "ssl_insecure", bool, False,
