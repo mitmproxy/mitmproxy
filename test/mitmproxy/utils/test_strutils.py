@@ -99,8 +99,8 @@ def test_hexdump():
 
 
 ESCAPE_QUOTES = [
-    ("'", strutils.NO_ESCAPE + "'"),
-    ('"', strutils.NO_ESCAPE + '"')
+    "'" + strutils.SINGLELINE_CONTENT + strutils.NO_ESCAPE + "'",
+    '"' + strutils.SINGLELINE_CONTENT + strutils.NO_ESCAPE + '"'
 ]
 
 
@@ -113,11 +113,11 @@ def test_split_special_areas():
     ) == ["foo ", "'b\\'a\"r'", " baz"]
     assert strutils.split_special_areas(
         "foo\n/*bar\nbaz*/\nqux",
-        [(r'/\*', r'\*/')]
+        [r'/\*[\s\S]+?\*/']
     ) == ["foo\n", "/*bar\nbaz*/", "\nqux"]
     assert strutils.split_special_areas(
         "foo\n//bar\nbaz",
-        [(r'//', r'$')]
+        [r'//.+$']
     ) == ["foo\n", "//bar", "\nbaz"]
 
 

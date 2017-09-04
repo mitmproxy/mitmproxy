@@ -68,7 +68,6 @@ setup(
         "h2>=3.0, <4",
         "html2text>=2016.1.8, <=2016.9.19",
         "hyperframe>=5.0, <6",
-        "jsbeautifier>=1.6.3, <1.7",
         "kaitaistruct>=0.7, <0.8",
         "ldap3>=2.2.0, <2.4",
         "passlib>=1.6.5, <1.8",
