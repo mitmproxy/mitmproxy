@@ -5,8 +5,6 @@ import sys
 import threading
 import time
 import traceback
-from ssl import match_hostname
-from ssl import CertificateError
 
 from typing import Optional  # noqa
 
@@ -365,9 +363,12 @@ class TCPClient(_Connection):
         self.source_address = source_address
         self.cert = None
         self.server_certs = []
-        self.ssl_verification_error = None  # type: Optional[exceptions.InvalidCertificateException]
         self.sni = None
         self.spoof_source_address = spoof_source_address
+
+    @property
+    def ssl_verification_error(self) -> Optional[exceptions.InvalidCertificateException]:
+        return getattr(self.connection, "cert_error", None)
 
     def close(self):
         # Make sure to close the real socket, not the SSL proxy.
@@ -380,29 +381,8 @@ class TCPClient(_Connection):
         else:
             close_socket(self.connection)
 
-    def create_ssl_context(self, **sslctx_kwargs):
-        def store_err(e):
-            self.ssl_verification_error = e
-
-        return tls.create_client_context(
-            verify_error_callback=store_err,
-            **sslctx_kwargs,
-        )
-
     def convert_to_ssl(self, sni=None, alpn_protos=None, **sslctx_kwargs):
-        """
-            cert: Path to a file containing both client cert and private key.
-
-            options: A bit field consisting of OpenSSL.SSL.OP_* values
-            verify_options: A bit field consisting of OpenSSL.SSL.VERIFY_* values
-            ca_path: Path to a directory of trusted CA certificates prepared using the c_rehash tool
-            ca_pemfile: Path to a PEM formatted trusted CA certificate
-        """
-        verification_mode = sslctx_kwargs.get('verify_options', None)
-        if verification_mode == SSL.VERIFY_PEER and not sni:
-            raise exceptions.TlsException("Cannot validate certificate hostname without SNI")
-
-        context = self.create_ssl_context(
+        context = tls.create_client_context(
             alpn_protos=alpn_protos,
             sni=sni,
             **sslctx_kwargs
@@ -425,33 +405,6 @@ class TCPClient(_Connection):
         # Keep all server certificates in a list
         for i in self.connection.get_peer_cert_chain():
             self.server_certs.append(certs.SSLCert(i))
-
-        # Validate TLS Hostname
-        try:
-            crt = dict(
-                subjectAltName=[("DNS", x.decode("ascii", "strict")) for x in self.cert.altnames]
-            )
-            if self.cert.cn:
-                crt["subject"] = [[["commonName", self.cert.cn.decode("ascii", "strict")]]]
-            if sni:
-                # SNI hostnames allow support of IDN by using ASCII-Compatible Encoding
-                # Conversion algorithm is in RFC 3490 which is implemented by idna codec
-                # https://docs.python.org/3/library/codecs.html#text-encodings
-                # https://tools.ietf.org/html/rfc6066#section-3
-                # https://tools.ietf.org/html/rfc4985#section-3
-                hostname = sni.encode("idna").decode("ascii")
-            else:
-                hostname = "no-hostname"
-            match_hostname(crt, hostname)
-        except (ValueError, CertificateError) as e:
-            self.ssl_verification_error = exceptions.InvalidCertificateException(
-                "Certificate Verification Error for {}: {}".format(
-                    sni or repr(self.address),
-                    str(e)
-                )
-            )
-            if verification_mode == SSL.VERIFY_PEER:
-                raise self.ssl_verification_error
 
         self.ssl_established = True
         self.rfile.set_descriptor(self.connection)
@@ -538,28 +491,13 @@ class BaseHandler(_Connection):
         self.server = server
         self.clientcert = None
 
-    def create_ssl_context(self, **kwargs):
-        if kwargs.get("request_client_cert", None) is True:
-            def store_clientcert(cert):
-                self.clientcert = cert
-
-            kwargs["request_client_cert"] = store_clientcert
-
-        def store_err(e):
-            self.ssl_verification_error = e
-
-        return tls.create_server_context(
-            **kwargs,
-            verify_error_callback=store_err,
-        )
-
     def convert_to_ssl(self, cert, key, **sslctx_kwargs):
         """
         Convert connection to SSL.
         For a list of parameters, see tls.create_server_context(...)
         """
 
-        context = self.create_ssl_context(
+        context = tls.create_server_context(
             cert=cert,
             key=key,
             **sslctx_kwargs)
@@ -570,6 +508,9 @@ class BaseHandler(_Connection):
         except SSL.Error as v:
             raise exceptions.TlsException("SSL handshake error: %s" % repr(v))
         self.ssl_established = True
+        cert = self.connection.get_peer_certificate()
+        if cert:
+            self.clientcert = certs.SSLCert(cert)
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
 
