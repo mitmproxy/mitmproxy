@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 import threading
-from mitmproxy.net import tcp
+from mitmproxy.net import tcp, tls
 from mitmproxy import certs as mcerts
 from mitmproxy.net import websockets
 from mitmproxy import version
@@ -37,8 +37,8 @@ class SSLOptions:
         sans=(),
         not_after_connect=None,
         request_client_cert=False,
-        ssl_version=tcp.SSL_DEFAULT_METHOD,
-        ssl_options=tcp.SSL_DEFAULT_OPTIONS,
+        ssl_version=tls.DEFAULT_METHOD,
+        ssl_options=tls.DEFAULT_OPTIONS,
         ciphers=None,
         certs=None,
         alpn_select=b'h2',
