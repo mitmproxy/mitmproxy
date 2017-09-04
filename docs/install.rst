@@ -14,13 +14,30 @@ Once installation is complete, you can run :ref:`mitmproxy`, :ref:`mitmdump` or
 Installation on macOS
 ---------------------
 
-You can use Homebrew to install everything:
+The recommended way to install mitmproxy on macOS is to use `Homebrew`_:
 
 .. code:: bash
 
     brew install mitmproxy
 
-Or you can download the pre-built binary packages from our `releases`_.
+Alternatively you can download our :ref:`binary-packages` from our `releases`_
+page.
+
+
+.. _install-linux:
+
+Installation on Linux
+---------------------
+
+The recommended way to install mitmproxy on Linux is to download our
+:ref:`binary-packages` from our `releases`_ page.
+
+Some Linux distributions and their community provide mitmproxy packages via
+their native package repositories (e.g., Arch Linux, Debian, Ubuntu, Kali Linux,
+OpenSUSE, etc.). While we do encourage seeing mitmproxy in a great variety of
+repositories and distributions, we are not maintaining or involved with their
+downstream packaging efforts. If you are looking for the latest version or have
+other problems, please contact the repository maintainers directly.
 
 
 .. _install-windows:
@@ -28,116 +45,94 @@ Or you can download the pre-built binary packages from our `releases`_.
 Installation on Windows
 -----------------------
 
-The recommended way to install mitmproxy on Windows is to use the installer
-provided at `mitmproxy.org`_. After installation, you'll find shortcuts for
-:ref:`mitmweb` (the web-based interface) and :ref:`mitmdump` in the start menu.
-Both executables are  added to your PATH and can be invoked from the command
-line.
+The recommended way to install mitmproxy on Windows is to download our
+:ref:`binary-packages` from our `releases`_ page.
+
+After installation, you'll find shortcuts for :ref:`mitmweb` (the web-based
+interface) and :ref:`mitmdump` in the start menu. Both executables are added to
+your PATH and can be invoked from the command line.
 
 .. note::
-    Mitmproxy's console interface is not supported on Windows, but you can use
-    mitmweb (the web-based interface) and mitmdump.
+    The console interface is not supported on Windows, but you can
+    use `mitmweb` (the web-based interface) and `mitmdump`.
 
-.. _install-linux:
-
-Installation on Linux
----------------------
-
-The recommended way to run mitmproxy on Linux is to use the pre-built binaries
-provided at `releases`_.
-
-Our pre-built binaries provide you with the latest version of mitmproxy, a
-self-contained Python 3.5 environment and a recent version of OpenSSL that
-supports HTTP/2. Of course, you can also install mitmproxy from source if you
-prefer that (see :ref:`install-advanced`).
 
 .. _install-advanced:
 
 Advanced Installation
 ---------------------
 
+.. _binary-packages:
+
+Self-contained Pre-built Binary Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+For some platforms we provide pre-built binary packages containing ready-to-run
+executables. This includes a self-contained Python 3 environment, a recent
+OpenSSL that support ALPN and HTTP/2, and other dependencies that would
+otherwise we cumbersome to compile and install.
+
+Please be advised that we do not updates these binaries after the initial
+release. This means we do not include security-related updates of our
+dependencies in already released mitmproxy versions. If there is a severe issue,
+we might consider releasing a bugfix release of mitmproxy and corresponding
+binary packages.
+
+We only support the latest version of mitmproxy with bugfix and security updates
+through regular minor releases.
+
+
 .. _install-docker:
 
 Docker Images
 ^^^^^^^^^^^^^
 
-You can also use the official mitmproxy images from `DockerHub`_. That being
-said, our portable binaries are just as easy to install and even easier to use. 😊
+You can use the official mitmproxy images from `DockerHub`_. The same security
+considerations apply as for our binary packages.
 
 
-.. _install-arch:
+.. _install-linux-pip3:
 
-Installation on Arch Linux
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Installation on Linux via pip3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-mitmproxy has been added into the [community] repository. Use pacman to install it:
-
->>> sudo pacman -S mitmproxy
-
-
-.. _install-source-ubuntu:
-
-Installation from Source on Ubuntu
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Ubuntu comes with Python but we need to install pip3, python3-dev and several
-libraries. This was tested on a fully patched installation of Ubuntu 16.04.
+Please make sure to install Python 3.5 (or higher) and pip3 for your
+distribtion. If your distribution does not provide a suitable Python version,
+you can use `pyenv`_ to get a recent Python environment.
 
 .. code:: bash
 
-   sudo apt-get install python3-pip
-   sudo pip3 install mitmproxy
+    sudo apt install python3-pip # Debian 8 or higher, Ubuntu 16.04 or higher
+    sudo dnf install python3-pip # Fedora 24 or higher
+    sudo pacman -S python-pip # Arch Linux
 
-On older Ubuntu versions, e.g., **12.04** and **14.04**, you may need to install
-a newer version of Python. mitmproxy requires Python 3.5 or higher. Please take
-a look at pyenv_. Make sure to have an up-to-date version of pip by running
-``pip3 install -U pip``.
-
-
-.. _install-source-fedora:
-
-Installation from Source on Fedora
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Fedora comes with Python but we need to install pip3, python3-dev and several
-libraries. This was tested on a fully patched installation of Fedora 24.
+Please make sure to upgrade pip3 itself:
 
 .. code:: bash
 
-   sudo dnf install python3-pip
-   sudo pip3 install mitmproxy
+    sudo pip3 install -U pip
 
-Make sure to have an up-to-date version of pip by running ``pip3 install -U pip``.
-
-
-.. _install-source-opensuse:
-
-Installation from Source on openSUSE
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-This was tested on a fully patched installation of openSUSE Tumbleweed.
-Please note that openSUSE Leap 42.2 only comes with Python 3.4.x, whereas mitmproxy requires Python 3.5 or above.
-You can check you Python version by running ``python3 --version``.
+Now you can install mitmproxy via pip3:
 
 .. code:: bash
 
-   sudo zypper install python3-pip
-   sudo pip3 install mitmproxy
+    sudo pip3 install mitmproxy
 
 
-.. _install-source-windows:
+.. _install-windows-pip3:
 
-Installation from Source on Windows
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Installation on Windows via pip3
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note::
-    Mitmproxy's console interface is not supported on Windows, but you can use
-    mitmweb (the web-based interface) and mitmdump.
+    The console interface is not supported on Windows, but you can
+    use `mitmweb` (the web-based interface) and `mitmdump`.
 
-First, install the latest version of Python 3.5 or later from the `Python
-website`_. During installation, make sure to select `Add Python to PATH`.
+First, install the latest version of Python 3.5 or higher from the `Python
+website`_. During installation, make sure to select `Add Python to PATH`. There
+are no other dependencies on Windows.
 
-Mitmproxy has no other dependencies on Windows. You can now install mitmproxy by running
+Now you can install mitmproxy via pip3:
 
 .. code:: powershell
 
@@ -145,22 +140,20 @@ Mitmproxy has no other dependencies on Windows. You can now install mitmproxy by
 
 
 
-.. _install-dev-version:
+.. _install-from-source:
 
-Latest Development Version
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Installation from Source Code
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you would like to install mitmproxy directly from the master branch on GitHub
-or would like to get set up to contribute to the project, install the
-dependencies as you would for a regular installation from source. Then see the
-project's README_ on GitHub. You can check your system information
-by running: ``mitmproxy --version``
+If you would like to install mitmproxy directly from source code or the GitHub
+master branch, please see the our README_ on GitHub.
 
 
 .. _README: https://github.com/mitmproxy/mitmproxy/blob/master/README.rst
-.. _releases: https://github.com/mitmproxy/mitmproxy/releases
+.. _releases: https://github.com/mitmproxy/mitmproxy/releases/latest
 .. _mitmproxy.org: https://mitmproxy.org/
 .. _`Python website`: https://www.python.org/downloads/windows/
 .. _pip: https://pip.pypa.io/en/latest/installing.html
 .. _pyenv: https://github.com/yyuu/pyenv
 .. _DockerHub: https://hub.docker.com/r/mitmproxy/mitmproxy/
+.. _Homebrew: https://brew.sh/
