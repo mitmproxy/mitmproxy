@@ -548,7 +548,7 @@ class TlsLayer(base.Layer):
                 self.server_sni,
                 method=self.config.openssl_method_server,
                 options=self.config.openssl_options_server,
-                verify_options=self.config.openssl_verification_mode_server,
+                verify=self.config.openssl_verification_mode_server,
                 ca_path=self.config.options.ssl_verify_upstream_trusted_cadir,
                 ca_pemfile=self.config.options.ssl_verify_upstream_trusted_ca,
                 cipher_list=ciphers_server,

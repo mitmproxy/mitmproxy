@@ -1,7 +1,9 @@
 import json as _json
+import logging
 from unittest import mock
 import os
 
+import pytest
 import tornado.testing
 from tornado import httpclient
 from tornado import websocket
@@ -13,10 +15,22 @@ from mitmproxy.tools.web import app
 from mitmproxy.tools.web import master as webmaster
 
 
+@pytest.fixture(scope="module")
+def no_tornado_logging():
+    logging.getLogger('tornado.access').disabled = True
+    logging.getLogger('tornado.application').disabled = True
+    logging.getLogger('tornado.general').disabled = True
+    yield
+    logging.getLogger('tornado.access').disabled = False
+    logging.getLogger('tornado.application').disabled = False
+    logging.getLogger('tornado.general').disabled = False
+
+
 def json(resp: httpclient.HTTPResponse):
     return _json.loads(resp.body.decode())
 
 
+@pytest.mark.usefixtures("no_tornado_logging")
 class TestApp(tornado.testing.AsyncHTTPTestCase):
     def get_app(self):
         o = options.Options(http2=False)

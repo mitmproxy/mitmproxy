@@ -468,7 +468,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
         self.options.ssl_insecure = False
         r = self._request()
         assert r.status_code == 502
-        assert b"Certificate Verification Error" in r.raw_content
+        assert b"Certificate verification error" in r.raw_content
 
 
 class TestHTTPSNoCommonName(tservers.HTTPProxyTest):

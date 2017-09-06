@@ -206,7 +206,7 @@ class TestInvalidTrustFile(tservers.ServerTestBase):
             with pytest.raises(exceptions.TlsException):
                 c.convert_to_ssl(
                     sni="example.mitmproxy.org",
-                    verify_options=SSL.VERIFY_PEER,
+                    verify=SSL.VERIFY_PEER,
                     ca_pemfile=tutils.test_data.path("mitmproxy/net/data/verificationcerts/generate.py")
                 )
 
@@ -236,7 +236,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
     def test_mode_none_should_pass(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            c.convert_to_ssl(verify_options=SSL.VERIFY_NONE)
+            c.convert_to_ssl(verify=SSL.VERIFY_NONE)
 
             # Verification errors should be saved even if connection isn't aborted
             assert c.ssl_verification_error
@@ -252,7 +252,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
             with pytest.raises(exceptions.InvalidCertificateException):
                 c.convert_to_ssl(
                     sni="example.mitmproxy.org",
-                    verify_options=SSL.VERIFY_PEER,
+                    verify=SSL.VERIFY_PEER,
                     ca_pemfile=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
                 )
 
@@ -276,9 +276,19 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
         with c.connect():
             with pytest.raises(exceptions.TlsException):
                 c.convert_to_ssl(
-                    verify_options=SSL.VERIFY_PEER,
+                    verify=SSL.VERIFY_PEER,
                     ca_pemfile=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
                 )
+
+    def test_mode_none_should_pass_without_sni(self):
+        c = tcp.TCPClient(("127.0.0.1", self.port))
+        with c.connect():
+            c.convert_to_ssl(
+                verify=SSL.VERIFY_NONE,
+                ca_path=tutils.test_data.path("mitmproxy/net/data/verificationcerts/")
+            )
+
+            assert "'no-hostname' doesn't match" in str(c.ssl_verification_error)
 
     def test_should_fail(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -286,7 +296,7 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
             with pytest.raises(exceptions.InvalidCertificateException):
                 c.convert_to_ssl(
                     sni="mitmproxy.org",
-                    verify_options=SSL.VERIFY_PEER,
+                    verify=SSL.VERIFY_PEER,
                     ca_pemfile=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
                 )
             assert c.ssl_verification_error
@@ -305,7 +315,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
         with c.connect():
             c.convert_to_ssl(
                 sni="example.mitmproxy.org",
-                verify_options=SSL.VERIFY_PEER,
+                verify=SSL.VERIFY_PEER,
                 ca_pemfile=tutils.test_data.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
             )
 
@@ -321,7 +331,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
         with c.connect():
             c.convert_to_ssl(
                 sni="example.mitmproxy.org",
-                verify_options=SSL.VERIFY_PEER,
+                verify=SSL.VERIFY_PEER,
                 ca_path=tutils.test_data.path("mitmproxy/net/data/verificationcerts/")
             )
 
@@ -774,10 +784,7 @@ class TestPeek(tservers.ServerTestBase):
 
             c.close()
             with pytest.raises(exceptions.NetlibException):
-                if c.rfile.peek(1) == b"":
-                    # Workaround for Python 2 on Unix:
-                    # Peeking a closed connection does not raise an exception here.
-                    raise exceptions.NetlibException()
+                c.rfile.peek(1)
 
 
 class TestPeekSSL(TestPeek):
@@ -787,58 +794,3 @@ class TestPeekSSL(TestPeek):
         with c.connect() as conn:
             c.convert_to_ssl()
             return conn.pop()
-
-
-class TestSSLKeyLogger(tservers.ServerTestBase):
-    handler = EchoHandler
-    ssl = dict(
-        cipher_list="AES256-SHA"
-    )
-
-    def test_log(self, tmpdir):
-        testval = b"echo!\n"
-        _logfun = tcp.log_ssl_key
-
-        logfile = str(tmpdir.join("foo", "bar", "logfile"))
-        tcp.log_ssl_key = tcp.SSLKeyLogger(logfile)
-
-        c = tcp.TCPClient(("127.0.0.1", self.port))
-        with c.connect():
-            c.convert_to_ssl()
-            c.wfile.write(testval)
-            c.wfile.flush()
-            assert c.rfile.readline() == testval
-            c.finish()
-
-            tcp.log_ssl_key.close()
-            with open(logfile, "rb") as f:
-                assert f.read().count(b"CLIENT_RANDOM") == 2
-
-        tcp.log_ssl_key = _logfun
-
-    def test_create_logfun(self):
-        assert isinstance(
-            tcp.SSLKeyLogger.create_logfun("test"),
-            tcp.SSLKeyLogger)
-        assert not tcp.SSLKeyLogger.create_logfun(False)
-
-
-class TestSSLInvalid(tservers.ServerTestBase):
-    handler = EchoHandler
-    ssl = True
-
-    def test_invalid_ssl_method_should_fail(self):
-        fake_ssl_method = 100500
-        c = tcp.TCPClient(("127.0.0.1", self.port))
-        with c.connect():
-            with pytest.raises(exceptions.TlsException):
-                c.convert_to_ssl(method=fake_ssl_method)
-
-    def test_alpn_error(self):
-        c = tcp.TCPClient(("127.0.0.1", self.port))
-        with c.connect():
-            with pytest.raises(exceptions.TlsException, match="must be a function"):
-                c.create_ssl_context(alpn_select_callback="foo")
-
-            with pytest.raises(exceptions.TlsException, match="ALPN error"):
-                c.create_ssl_context(alpn_select="foo", alpn_select_callback="bar")

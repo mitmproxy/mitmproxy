@@ -13,7 +13,7 @@ import logging
 
 from mitmproxy import certs
 from mitmproxy import exceptions
-from mitmproxy.net import tcp
+from mitmproxy.net import tcp, tls
 from mitmproxy.net import websockets
 from mitmproxy.net import socks
 from mitmproxy.net import http as net_http
@@ -158,8 +158,8 @@ class Pathoc(tcp.TCPClient):
             # SSL
             ssl=None,
             sni=None,
-            ssl_version=tcp.SSL_DEFAULT_METHOD,
-            ssl_options=tcp.SSL_DEFAULT_OPTIONS,
+            ssl_version=tls.DEFAULT_METHOD,
+            ssl_options=tls.DEFAULT_OPTIONS,
             clientcert=None,
             ciphers=None,
 

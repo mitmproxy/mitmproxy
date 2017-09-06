@@ -1,7 +1,7 @@
 import io
 import re
 import codecs
-from typing import AnyStr, Optional, cast, Iterable, Tuple
+from typing import AnyStr, Optional, cast, Iterable
 
 
 def always_bytes(str_or_bytes: Optional[AnyStr], *encode_args) -> Optional[bytes]:
@@ -153,11 +153,14 @@ def _restore_from_private_code_plane(matchobj):
 
 
 NO_ESCAPE = r"(?<!\\)(?:\\\\)*"
+MULTILINE_CONTENT = r"[\s\S]*?"
+SINGLELINE_CONTENT = r".*?"
+MULTILINE_CONTENT_LINE_CONTINUATION = r"(?:.|(?<=\\)\n)*?"
 
 
 def split_special_areas(
         data: str,
-        area_delimiter: Iterable[Tuple[str, str]],
+        area_delimiter: Iterable[str],
 ):
     """
     Split a string of code into a [code, special area, code, special area, ..., code] list.
@@ -166,18 +169,13 @@ def split_special_areas(
 
     >>> split_special_areas(
     >>>     "test /* don't modify me */ foo",
-    >>>     [(r"/\*", r"\*/")])  # (left delimiter regex, right delimiter regex)
+    >>>     [r"/\*[\s\S]*?\*/"])  # (regex matching comments)
     ["test ", "/* don't modify me */", " foo"]
 
     "".join(split_special_areas(x, ...)) == x always holds true.
     """
-    patterns = "|".join(
-        r"{lchar}[\s\S]*?{rchar}".format(
-            lchar=a,
-            rchar=b,
-        ) for (a, b) in area_delimiter)
     return re.split(
-        "({})".format(patterns),
+        "({})".format("|".join(area_delimiter)),
         data,
         flags=re.MULTILINE
     )
@@ -185,7 +183,7 @@ def split_special_areas(
 
 def escape_special_areas(
         data: str,
-        area_delimiter: Iterable[Tuple[str, str]],
+        area_delimiter: Iterable[str],
         control_characters,
 ):
     """
@@ -200,11 +198,11 @@ def escape_special_areas(
 
     >>> print(x)
     if (true) { console.log('{}'); }
-    >>> x = escape_special_areas(x, "{", [("'", "'")])
+    >>> x = escape_special_areas(x, "{", ["'" + SINGLELINE_CONTENT + "'"])
     >>> print(x)
     if (true) { console.log('�}'); }
     >>> x = re.sub(r"\s*{\s*", " {\n    ", x)
-    >>> x = unescape_special_areas(x, "{", [("'", "'")])
+    >>> x = unescape_special_areas(x)
     >>> print(x)
     if (true) {
         console.log('{}'); }
