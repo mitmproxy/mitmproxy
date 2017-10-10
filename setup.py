@@ -87,7 +87,7 @@ setup(
         'dev': [
             "flake8>=3.2.1, <3.5",
             "Flask>=0.10.1, <0.13",
-            "mypy>=0.521,<0.522",
+            "mypy>=0.530,<0.531",
             "pytest-cov>=2.2.1, <3",
             "pytest-faulthandler>=1.3.0, <2",
             "pytest-timeout>=1.0.0, <2",
@@ -102,7 +102,7 @@ setup(
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.7",
-            "Pillow>=3.2,<4.3",
+            "Pillow>=4.3,<4.4",
         ]
     }
 )
