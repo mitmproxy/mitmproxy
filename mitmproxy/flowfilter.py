@@ -22,7 +22,7 @@
 
         ~b rex      Expression in the body of either request or response
         ~bq rex     Expression in the body of request
-        ~bq rex     Expression in the body of response
+        ~bs rex     Expression in the body of response
         ~t rex      Shortcut for content-type header.
 
         ~d rex      Request domain
