@@ -15,6 +15,7 @@ Filter expressions consist of the following operators:
 - Header matching (~h, ~hq, ~hs) is against a string of the form "name: value".
 - Strings with no operators are matched against the request URL.
 - The default binary operator is &.
+- When specifying filter in `mitmproxy`, the leading `~` is omitted.
 
 Examples
 --------
