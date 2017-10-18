@@ -72,7 +72,7 @@ executables. This includes a self-contained Python 3 environment, a recent
 OpenSSL that support ALPN and HTTP/2, and other dependencies that would
 otherwise we cumbersome to compile and install.
 
-Please be advised that we do not updates these binaries after the initial
+Please be advised that we do not update these binaries after the initial
 release. This means we do not include security-related updates of our
 dependencies in already released mitmproxy versions. If there is a severe issue,
 we might consider releasing a bugfix release of mitmproxy and corresponding
