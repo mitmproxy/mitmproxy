@@ -314,7 +314,13 @@ class TestXSSScanner():
         assert logger.args == []
         xss.find_unclaimed_URLs("<html><script src=\"http://unclaimedDomainName.com\"></script></html>",
                                 "https://example.com")
-        assert logger.args[0] == 'XSS found in https://example.com due to unclaimed URL "http://unclaimedDomainName.com" in script tag.'
+        assert logger.args[0] == 'XSS found in https://example.com due to unclaimed URL "http://unclaimedDomainName.com".'
+        xss.find_unclaimed_URLs("<html><iframe src=\"http://unclaimedDomainName.com\"></iframe></html>",
+                                "https://example.com")
+        assert logger.args[0] == 'XSS found in https://example.com due to unclaimed URL "http://unclaimedDomainName.com".'
+        xss.find_unclaimed_URLs("<html><link rel=\"stylesheet\" href=\"http://unclaimedDomainName.com\"></html>",
+                                "https://example.com")
+        assert logger.args[0] == 'XSS found in https://example.com due to unclaimed URL "http://unclaimedDomainName.com".'
 
     def test_log_XSS_data(self, monkeypatch, logger):
         logger.args = []

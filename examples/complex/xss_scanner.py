@@ -85,14 +85,19 @@ def get_cookies(flow: http.HTTPFlow) -> Cookies:
 
 def find_unclaimed_URLs(body: Union[str, bytes], requestUrl: bytes) -> None:
     """ Look for unclaimed URLs in script tags and log them if found"""
+    def getValue(attrs: List[Tuple[str, str]], attrName: str) -> str:
+        for name, value in attrs:
+            if attrName == name:
+                return value
+
     class ScriptURLExtractor(HTMLParser):
         script_URLs = []
 
         def handle_starttag(self, tag, attrs):
-            if tag == "script" and "src" in [name for name, value in attrs]:
-                for name, value in attrs:
-                    if name == "src":
-                        self.script_URLs.append(value)
+            if (tag == "script" or tag == "iframe") and "src" in [name for name, value in attrs]:
+                self.script_URLs.append(getValue(attrs, "src"))
+            if tag == "link" and getValue(attrs, "rel") == "stylesheet" and "href" in [name for name, value in attrs]:
+                self.script_URLs.append(getValue(attrs, "href"))
 
     parser = ScriptURLExtractor()
     try:
@@ -105,7 +110,7 @@ def find_unclaimed_URLs(body: Union[str, bytes], requestUrl: bytes) -> None:
         try:
             gethostbyname(domain)
         except gaierror:
-            ctx.log.error("XSS found in %s due to unclaimed URL \"%s\" in script tag." % (requestUrl, url))
+            ctx.log.error("XSS found in %s due to unclaimed URL \"%s\"." % (requestUrl, url))
 
 
 def test_end_of_URL_injection(original_body: str, request_URL: str, cookies: Cookies) -> VulnData:
