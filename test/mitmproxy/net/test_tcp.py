@@ -12,6 +12,7 @@ from mitmproxy import certs
 from mitmproxy.net import tcp
 from mitmproxy import exceptions
 from mitmproxy.test import tutils
+from ...conftest import skip_no_ipv6
 
 from . import tservers
 
@@ -112,6 +113,7 @@ class TestServerBind(tservers.ServerTestBase):
                 pass
 
 
+@skip_no_ipv6
 class TestServerIPv6(tservers.ServerTestBase):
     handler = EchoHandler
     addr = ("::1", 0)
