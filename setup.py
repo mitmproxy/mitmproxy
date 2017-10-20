@@ -87,7 +87,7 @@ setup(
         'dev': [
             "flake8>=3.2.1, <3.5",
             "Flask>=0.10.1, <0.13",
-            "mypy>=0.530,<0.531",
+            "mypy>=0.540,<0.541",
             "pytest-cov>=2.2.1, <3",
             "pytest-faulthandler>=1.3.0, <2",
             "pytest-timeout>=1.0.0, <2",
