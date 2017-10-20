@@ -82,7 +82,7 @@ setup(
     ],
     extras_require={
         ':sys_platform == "win32"': [
-            "pydivert>=2.0.3, <2.1",
+            "pydivert>=2.1,<2.2",
         ],
         'dev': [
             "flake8>=3.2.1, <3.5",
