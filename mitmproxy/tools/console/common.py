@@ -1,9 +1,13 @@
+import platform
+
 import urwid
 import urwid.util
 
 from functools import lru_cache
 from mitmproxy.utils import human
 
+# Detect Windows Subsystem for Linux
+IS_WSL = "Microsoft" in platform.platform()
 
 METHOD_OPTIONS = [
     ("get", "g"),
@@ -90,7 +94,7 @@ def fcol(s, attr):
     )
 
 
-if urwid.util.detected_encoding:
+if urwid.util.detected_encoding and not IS_WSL:
     SYMBOL_REPLAY = u"\u21ba"
     SYMBOL_RETURN = u"\u2190"
     SYMBOL_MARK = u"\u25cf"
