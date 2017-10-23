@@ -57,7 +57,7 @@ test_script:
           )
         }
         echo "Install InstallBuilder..."
-        Start-Process $ibSetup "--mode unattended --unattendedmodeui none" -Wait
+        Start-Process $ibSetup "--mode unattended --unattendedmodeui none" -PassThru -NoNewWindow -Wait
         # Wait until executable exists - no idea why this is necessary.
         while (!(Test-Path $ibCli)) { Start-Sleep 0.1 }
         echo "Run InstallBuilder..."
@@ -67,7 +67,7 @@ test_script:
           windows `
           --license .\release\installbuilder\license.xml `
           --setvars project.version=$Env:VERSION `
-          --verbose" -Wait
+          --verbose" -PassThru -NoNewWindow -Wait
         echo "Installer build completed."
       }
 
