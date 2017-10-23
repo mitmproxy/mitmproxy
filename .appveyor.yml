@@ -46,8 +46,9 @@ test_script:
       ) {
         echo "Decrypt license..."
         tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
+        $ibVersion = "17.9.0"
         $ibSetup = "C:\projects\mitmproxy\release\installbuilder-installer.exe"
-        $ibVersion = "17.4.0"
+        $ibCli = "C:\Program Files (x86)\BitRock InstallBuilder Enterprise $ibVersion\bin\builder-cli.exe"
         if (!(Test-Path $ibSetup)) {
           echo "Download InstallBuilder..."
           (New-Object System.Net.WebClient).DownloadFile(
@@ -56,15 +57,18 @@ test_script:
           )
         }
         echo "Install InstallBuilder..."
-        Start-Process $ibSetup "--mode unattended --unattendedmodeui none" -Wait
+        Start-Process $ibSetup "--mode unattended --unattendedmodeui none" -PassThru -NoNewWindow -Wait
+        # Wait until executable exists - no idea why this is necessary.
+        while (!(Test-Path $ibCli)) { Start-Sleep 0.1 }
         echo "Run InstallBuilder..."
-        & "C:\Program Files (x86)\BitRock InstallBuilder Enterprise $ibVersion\bin\builder-cli.exe" `
+        &$ibCli `
           build `
           .\release\installbuilder\mitmproxy.xml `
           windows `
           --license .\release\installbuilder\license.xml `
           --setvars project.version=$Env:VERSION `
           --verbose
+        while (!(Test-Path C:\projects\mitmproxy\release\dist\mitmproxy-*-windows-installer.exe)) { Start-Sleep 0.1 }
         echo "Installer build completed."
       }
 
