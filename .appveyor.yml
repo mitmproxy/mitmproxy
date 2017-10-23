@@ -68,6 +68,7 @@ test_script:
           --license .\release\installbuilder\license.xml `
           --setvars project.version=$Env:VERSION `
           --verbose" -PassThru -NoNewWindow -Wait
+        while (!(Test-Path release\dist\mitmproxy-$Env:VERSION-windows-installer.exe)) { Start-Sleep 0.1 }
         echo "Installer build completed."
       }
 
