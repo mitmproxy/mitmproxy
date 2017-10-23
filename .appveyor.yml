@@ -58,13 +58,13 @@ test_script:
         echo "Install InstallBuilder..."
         Start-Process $ibSetup "--mode unattended --unattendedmodeui none" -Wait
         echo "Run InstallBuilder..."
-        & "C:\Program Files (x86)\BitRock InstallBuilder Enterprise $ibVersion\bin\builder-cli.exe" `
+        Start-Process "C:\Program Files (x86)\BitRock InstallBuilder Enterprise $ibVersion\bin\builder-cli.exe" "`
           build `
           .\release\installbuilder\mitmproxy.xml `
           windows `
           --license .\release\installbuilder\license.xml `
           --setvars project.version=$Env:VERSION `
-          --verbose
+          --verbose" -Wait
         echo "Installer build completed."
       }
 
