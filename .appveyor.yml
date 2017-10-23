@@ -61,6 +61,7 @@ test_script:
         # Wait until executable exists - no idea why this is necessary.
         while (!(Test-Path $ibCli)) { Start-Sleep 0.1 }
         echo "Run InstallBuilder..."
+        echo $env:VERSION
         Start-Process $ibCli "`
           build `
           .\release\installbuilder\mitmproxy.xml `
@@ -68,7 +69,7 @@ test_script:
           --license .\release\installbuilder\license.xml `
           --setvars project.version=$Env:VERSION `
           --verbose" -PassThru -NoNewWindow -Wait
-        while (!(Test-Path release\dist\mitmproxy-$Env:VERSION-windows-installer.exe)) { Start-Sleep 0.1 }
+        while (!(Test-Path C:\projects\mitmproxy\release\dist\mitmproxy-*-windows-installer.exe)) { Start-Sleep 0.1 }
         echo "Installer build completed."
       }
 
