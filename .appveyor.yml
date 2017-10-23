@@ -61,7 +61,6 @@ test_script:
         # Wait until executable exists - no idea why this is necessary.
         while (!(Test-Path $ibCli)) { Start-Sleep 0.1 }
         echo "Run InstallBuilder..."
-        echo $env:VERSION
         &$ibCli `
           build `
           .\release\installbuilder\mitmproxy.xml `
