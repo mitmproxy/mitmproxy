@@ -62,13 +62,13 @@ test_script:
         while (!(Test-Path $ibCli)) { Start-Sleep 0.1 }
         echo "Run InstallBuilder..."
         echo $env:VERSION
-        Start-Process $ibCli "`
+        &$ibCli "`
           build `
           .\release\installbuilder\mitmproxy.xml `
           windows `
           --license .\release\installbuilder\license.xml `
           --setvars project.version=$Env:VERSION `
-          --verbose" -PassThru -NoNewWindow -Wait
+          --verbose"
         while (!(Test-Path C:\projects\mitmproxy\release\dist\mitmproxy-*-windows-installer.exe)) { Start-Sleep 0.1 }
         echo "Installer build completed."
       }
