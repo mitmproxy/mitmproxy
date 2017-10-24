@@ -479,7 +479,7 @@ class TestHTTPSNoCommonName(tservers.HTTPProxyTest):
     ssl = True
     ssloptions = pathod.SSLOptions(
         certs=[
-            (b"*", tutils.test_data.path("mitmproxy/data/no_common_name.pem"))
+            ("*", tutils.test_data.path("mitmproxy/data/no_common_name.pem"))
         ]
     )
 
@@ -1142,7 +1142,7 @@ class AddUpstreamCertsToClientChainMixin:
     ssloptions = pathod.SSLOptions(
         cn=b"example.mitmproxy.org",
         certs=[
-            (b"example.mitmproxy.org", servercert)
+            ("example.mitmproxy.org", servercert)
         ]
     )
 
