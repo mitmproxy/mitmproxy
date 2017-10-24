@@ -114,46 +114,6 @@ def dummy_cert(privkey, cacert, commonname, sans):
     return SSLCert(cert)
 
 
-# DNTree did not pass TestCertStore.test_sans_change and is temporarily replaced by a simple dict.
-#
-# class _Node(UserDict.UserDict):
-#     def __init__(self):
-#         UserDict.UserDict.__init__(self)
-#         self.value = None
-#
-#
-# class DNTree:
-#     """
-#         Domain store that knows about wildcards. DNS wildcards are very
-#         restricted - the only valid variety is an asterisk on the left-most
-#         domain component, i.e.:
-#
-#             *.foo.com
-#     """
-#     def __init__(self):
-#         self.d = _Node()
-#
-#     def add(self, dn, cert):
-#         parts = dn.split(".")
-#         parts.reverse()
-#         current = self.d
-#         for i in parts:
-#             current = current.setdefault(i, _Node())
-#         current.value = cert
-#
-#     def get(self, dn):
-#         parts = dn.split(".")
-#         current = self.d
-#         for i in reversed(parts):
-#             if i in current:
-#                 current = current[i]
-#             elif "*" in current:
-#                 return current["*"].value
-#             else:
-#                 return None
-#         return current.value
-
-
 class CertStoreEntry:
 
     def __init__(self, cert, privatekey, chain_file):
