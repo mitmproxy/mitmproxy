@@ -11,13 +11,19 @@ from mitmproxy.utils import debug
 def test_dump_system_info_precompiled(precompiled):
     sys.frozen = None
     with mock.patch.object(sys, 'frozen', precompiled):
-        assert ("Precompiled Binary" in debug.dump_system_info()) == precompiled
+        assert ("binary" in debug.dump_system_info()) == precompiled
 
 
 def test_dump_system_info_version():
     with mock.patch('subprocess.check_output') as m:
+        m.return_value = b"v2.0.0-0-cafecafe"
+        x = debug.dump_system_info()
+        assert 'dev' not in x
+        assert 'cafecafe' in x
+
+    with mock.patch('subprocess.check_output') as m:
         m.side_effect = subprocess.CalledProcessError(-1, 'git describe --tags --long')
-        assert 'release version' in debug.dump_system_info()
+        assert 'dev' not in debug.dump_system_info()
 
 
 def test_dump_info():
