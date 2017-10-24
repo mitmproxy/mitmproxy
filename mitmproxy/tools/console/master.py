@@ -176,7 +176,7 @@ class ConsoleMaster(master.Master):
                   "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
             sys.exit(1)
 
-        self.ui = urwid.raw_display.Screen()
+        self.ui = window.Screen()
         self.ui.set_terminal_properties(256)
         self.set_palette(self.options, None)
         self.options.subscribe(
