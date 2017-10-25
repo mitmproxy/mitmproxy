@@ -5,7 +5,6 @@ import _ from 'lodash'
 import Nav from './FlowView/Nav'
 import { Request, Response, ErrorView as Error } from './FlowView/Messages'
 import Details from './FlowView/Details'
-import Prompt from './Prompt'
 
 import { selectTab } from '../ducks/ui/flow'
 
@@ -80,7 +79,7 @@ class FlowView extends Component {
                 />
                 <Tab ref={ tab => this.tabComponent = tab } flow={flow} updateFlow={updateFlow} />
                 {this.props.promptOpen && (
-                    <Prompt options={this.getPromptOptions()} done={this.onPromptFinish} />
+                    <div>fixme</div>
                 )}
             </div>
         )

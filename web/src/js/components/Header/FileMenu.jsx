@@ -20,7 +20,7 @@ FileMenu.onNewClick = (e, clearFlows) => {
         clearFlows()
 }
 
-export function FileMenu ({clearFlows, loadFlows, saveFlows, openModal}) {
+export function FileMenu ({clearFlows, loadFlows, saveFlows, openOptions}) {
      return (
         <Dropdown className="pull-left" btnClass="special" text="mitmproxy">
             <a href="#" onClick={e => FileMenu.onNewClick(e, clearFlows)}>
@@ -38,7 +38,7 @@ export function FileMenu ({clearFlows, loadFlows, saveFlows, openModal}) {
             </a>
 
             <HideInStatic>
-            <a href="#" onClick={e => { e.preventDefault(); openModal(); }}>
+            <a href="#" onClick={e => { e.preventDefault(); openOptions(); }}>
                 <i className="fa fa-fw fa-cog"></i>
                 &nbsp;Options
             </a>
@@ -59,6 +59,6 @@ export default connect(
         clearFlows: flowsActions.clear,
         loadFlows: flowsActions.upload,
         saveFlows: flowsActions.download,
-        openModal: () => modalActions.setActiveModal('OptionModal'),
+        openOptions: () => modalActions.setActiveModal('OptionModal'),
     }
 )(FileMenu)
