@@ -3,93 +3,47 @@ import { connect } from 'react-redux'
 import _ from 'lodash'
 
 import Nav from './FlowView/Nav'
-import { Request, Response, ErrorView as Error } from './FlowView/Messages'
+import { ErrorView as Error, Request, Response } from './FlowView/Messages'
 import Details from './FlowView/Details'
 
 import { selectTab } from '../ducks/ui/flow'
 
-class FlowView extends Component {
+export const allTabs = { Request, Response, Error, Details }
 
-    static allTabs = { Request, Response, Error, Details }
+function FlowView({ flow, tabName, selectTab }) {
 
-    constructor(props, context) {
-        super(props, context)
-        this.onPromptFinish = this.onPromptFinish.bind(this)
-    }
+    // only display available tab names
+    const tabs = ['request', 'response', 'error'].filter(k => flow[k])
+    tabs.push("details")
 
-    onPromptFinish(edit) {
-        this.props.setPrompt(false)
-        if (edit && this.tabComponent) {
-            this.tabComponent.edit(edit)
+    if (tabs.indexOf(tabName) < 0) {
+        if (tabName === 'response' && flow.error) {
+            tabName = 'error'
+        } else if (tabName === 'error' && flow.response) {
+            tabName = 'response'
+        } else {
+            tabName = tabs[0]
         }
     }
 
-    getPromptOptions() {
-        switch (this.props.tab) {
+    const Tab = allTabs[_.capitalize(tabName)]
 
-            case 'request':
-                return [
-                    'method',
-                    'url',
-                    { text: 'http version', key: 'v' },
-                    'header'
-                ]
-                break
-
-            case 'response':
-                return [
-                    { text: 'http version', key: 'v' },
-                    'code',
-                    'message',
-                    'header'
-                ]
-                break
-
-            case 'details':
-                return
-
-            default:
-                throw 'Unknown tab for edit: ' + this.props.tab
-        }
-    }
-
-    render() {
-        let { flow, tab: active, updateFlow } = this.props
-        const tabs = ['request', 'response', 'error'].filter(k => flow[k]).concat(['details'])
-
-        if (tabs.indexOf(active) < 0) {
-            if (active === 'response' && flow.error) {
-                active = 'error'
-            } else if (active === 'error' && flow.response) {
-                active = 'response'
-            } else {
-                active = tabs[0]
-            }
-        }
-
-        const Tab = FlowView.allTabs[_.capitalize(active)]
-
-        return (
-            <div className="flow-detail">
-                <Nav
-                    flow={flow}
-                    tabs={tabs}
-                    active={active}
-                    onSelectTab={this.props.selectTab}
-                />
-                <Tab ref={ tab => this.tabComponent = tab } flow={flow} updateFlow={updateFlow} />
-                {this.props.promptOpen && (
-                    <div>fixme</div>
-                )}
-            </div>
-        )
-    }
+    return (
+        <div className="flow-detail">
+            <Nav
+                tabs={tabs}
+                active={tabName}
+                onSelectTab={selectTab}
+            />
+            <Tab flow={flow}/>
+        </div>
+    )
 }
 
 export default connect(
     state => ({
-        promptOpen: state.ui.promptOpen,
-        tab: state.ui.flow.tab
+        flow: state.flows.byId[state.flows.selected[0]],
+        tabName: state.ui.flow.tab,
     }),
     {
         selectTab,
