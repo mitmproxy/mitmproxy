@@ -11,7 +11,6 @@ FileMenu.propTypes = {
     clearFlows: PropTypes.func.isRequired,
     loadFlows: PropTypes.func.isRequired,
     saveFlows: PropTypes.func.isRequired,
-    openModal: PropTypes.func.isRequired,
 }
 
 FileMenu.onNewClick = (e, clearFlows) => {
@@ -20,7 +19,7 @@ FileMenu.onNewClick = (e, clearFlows) => {
         clearFlows()
 }
 
-export function FileMenu ({clearFlows, loadFlows, saveFlows, openOptions}) {
+export function FileMenu ({clearFlows, loadFlows, saveFlows}) {
      return (
         <Dropdown className="pull-left" btnClass="special" text="mitmproxy">
             <a href="#" onClick={e => FileMenu.onNewClick(e, clearFlows)}>
@@ -38,12 +37,7 @@ export function FileMenu ({clearFlows, loadFlows, saveFlows, openOptions}) {
             </a>
 
             <HideInStatic>
-            <a href="#" onClick={e => { e.preventDefault(); openOptions(); }}>
-                <i className="fa fa-fw fa-cog"></i>
-                &nbsp;Options
-            </a>
             <Divider/>
-
             <a href="http://mitm.it/" target="_blank">
                 <i className="fa fa-fw fa-external-link"></i>
                 &nbsp;Install Certificates...
@@ -59,6 +53,5 @@ export default connect(
         clearFlows: flowsActions.clear,
         loadFlows: flowsActions.upload,
         saveFlows: flowsActions.download,
-        openOptions: () => modalActions.setActiveModal('OptionModal'),
     }
 )(FileMenu)
