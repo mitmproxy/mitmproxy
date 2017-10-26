@@ -179,7 +179,7 @@ class TLSLayer(layer.Layer):
             if isinstance(command, commands.SendData):
                 yield from self.send(command)
             elif isinstance(command, commands.OpenConnection):
-                raise NotImplementedError()
+                raise NotImplementedError("Cannot open connection")
             else:
                 yield command
 
@@ -217,7 +217,7 @@ class TLSLayer(layer.Layer):
         self.recv_buffer[event.connection].extend(event.data)
 
         if event.connection == client and self.parse_client_hello():
-            self._debug("SNI", self.client_hello.sni)
+            yield commands.Log(f"Client Hello: {self.client_hello}")
 
             client_tls_requires_server_connection = (
                 self.context.server.tls and

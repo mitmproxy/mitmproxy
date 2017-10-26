@@ -11,7 +11,7 @@ import asyncio
 import socket
 import typing
 
-from mitmproxy import options
+from mitmproxy import options as moptions
 from mitmproxy.proxy2 import events, commands
 from mitmproxy.proxy2.context import Client, Context, Connection
 from mitmproxy.proxy2.layers.modes import ReverseProxy
@@ -40,14 +40,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.client: StreamIO(reader, writer)
         }
 
-    def _debug(self, *args):
-        print(*args)
-
     async def handle_client(self):
+        self.log("clientconnect")
+
         self.server_event(events.Start())
         await self.handle_connection(self.client)
 
-        self._debug("client connection done, closing transports!")
+        self.log("clientdisconnect")
 
         if self.transports:
             await asyncio.wait([
@@ -55,13 +54,11 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 for x in self.transports
             ])
 
-        self._debug("transports closed!")
+        # self._debug("transports closed!")
 
     async def close_connection(self, connection):
         io = self.transports.pop(connection, None)
-        if not io:
-            self._debug(f"Already closed: {connection}")
-        self._debug(f"Closing {connection}")
+        self.log(f"closing {connection}", "debug")
         try:
             await io.w.drain()
             io.w.write_eof()
@@ -93,20 +90,25 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         except IOError as e:
             self.server_event(events.OpenConnectionReply(command, str(e)))
         else:
+            self.log("serverconnect")
             self.transports[command.connection] = StreamIO(reader, writer)
             command.connection.connected = True
             self.server_event(events.OpenConnectionReply(command, None))
             await self.handle_connection(command.connection)
+            self.log("serverdisconnect")
 
     @abc.abstractmethod
     async def handle_hook(self, hook: commands.Hook) -> None:
         pass
 
+    def log(self, message: str, level: str = "info") -> None:
+        print(message)
+
     def server_event(self, event: events.Event) -> None:
-        self._debug(">>", event)
+        self.log(f">> {event}", "debug")
         layer_commands = self.layer.handle_event(event)
         for command in layer_commands:
-            self._debug("<<", command)
+            self.log(f"<< {command}", "debug")
             if isinstance(command, commands.OpenConnection):
                 asyncio.ensure_future(
                     self.open_connection(command)
@@ -121,8 +123,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 asyncio.ensure_future(
                     self.handle_hook(command)
                 )
+            elif isinstance(command, commands.Log):
+                self.log(command.message, command.level)
             else:
-                raise RuntimeError(f"Unexpected event: {command}")
+                raise RuntimeError(f"Unexpected command: {command}")
 
 
 class SimpleConnectionHandler(ConnectionHandler):
@@ -136,8 +140,11 @@ class SimpleConnectionHandler(ConnectionHandler):
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
+    opts = moptions.Options()
+    opts.mode = "reverse:example.com"
+
     async def handle(reader, writer):
-        await SimpleConnectionHandler(reader, writer, options.Options()).handle_client()
+        await SimpleConnectionHandler(reader, writer, opts).handle_client()
 
     coro = asyncio.start_server(handle, '127.0.0.1', 8080, loop=loop)
     server = loop.run_until_complete(coro)
