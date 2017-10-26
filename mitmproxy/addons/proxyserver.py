@@ -42,8 +42,8 @@ class ProxyConnectionHandler(server.ConnectionHandler):
         if hook.blocking:
             self.server_event(events.HookReply(hook))
 
-    def _debug(self, *args):
-        x = log.LogEntry(" ".join(str(x) for x in args), "warn")
+    def log(self, message: str, level: str = "info") -> None:
+        x = log.LogEntry(message, level)
         x.reply = controller.DummyReply()
         self.event_queue.put(("log", x))
 
@@ -60,6 +60,7 @@ class Proxyserver:
         self.event_queue = None
         self.options = None
         self._lock = asyncio.Lock()
+        self.is_running = False
 
     def load(self, loader):
         loader.add_option(
@@ -72,6 +73,8 @@ class Proxyserver:
         self.options = ctx.options
         self.event_queue = ctx.master.event_queue
         threading.Thread(target=self.loop.run_forever, daemon=True).start()
+        self.is_running = True
+        self.configure(["listen_port"])
 
     async def start(self):
         async with self._lock:
@@ -98,14 +101,10 @@ class Proxyserver:
         ).handle_client()
 
     def configure(self, updated):
+        if not self.is_running:
+            return
         if "listen_port" in updated:
             self.listen_port = ctx.options.listen_port + 1
 
             # not sure if this actually required...
             self.loop.call_soon_threadsafe(lambda: asyncio.ensure_future(self.start()))
-
-    def request(self, flow):
-        pass
-        # test live options changes.
-        # print("Changing port...")
-        # ctx.options.listen_port += 1

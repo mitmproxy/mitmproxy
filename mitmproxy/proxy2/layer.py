@@ -20,12 +20,13 @@ class Paused(typing.NamedTuple):
 class Layer:
     context: Context
     _paused: typing.Optional[Paused]
+    _paused_event_queue: typing.Deque[events.Event]
 
     def __init__(self, context: Context) -> None:
         self.context = context
         self.context.layers.append(self)
         self._paused = None
-        self._paused_event_queue: typing.Deque[events.Event] = collections.deque()
+        self._paused_event_queue = collections.deque()
 
     def _debug(self, *args):
         pass  # print(*args)
