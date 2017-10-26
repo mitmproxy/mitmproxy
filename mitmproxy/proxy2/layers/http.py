@@ -62,7 +62,7 @@ class HTTPLayer(Layer):
         if event is h11.NEED_DATA:
             return
         elif isinstance(event, h11.Request):
-            yield commands.Log("requestheaders", event)
+            yield commands.Log(f"requestheaders: {event}")
 
             if self.client_conn.client_is_waiting_for_100_continue:
                 raise NotImplementedError()
@@ -83,7 +83,7 @@ class HTTPLayer(Layer):
                 self.flow_events[0].append(event)
             elif isinstance(event, h11.EndOfMessage):
                 self.flow_events[0].append(event)
-                yield commands.Log("request", self.flow_events)
+                yield commands.Log(f"request {self.flow_events}")
                 yield from self._send_request()
                 return
             else:
@@ -93,7 +93,7 @@ class HTTPLayer(Layer):
         if not self.context.server.connected:
             err = yield commands.OpenConnection(self.context.server)
             if err:
-                yield commands.Log("error", err)
+                yield commands.Log(f"error {err}")
                 yield commands.CloseConnection(self.context.client)
                 self._handle_event = self.done
                 return
@@ -107,7 +107,7 @@ class HTTPLayer(Layer):
         if event is h11.NEED_DATA:
             return
         elif isinstance(event, h11.Response):
-            yield commands.Log("responseheaders", event)
+            yield commands.Log(f"responseheaders {event}")
 
             self.flow_events[1].append(event)
             self.state = self.read_response_body
@@ -131,7 +131,7 @@ class HTTPLayer(Layer):
                 self.flow_events[1].append(event)
             elif isinstance(event, h11.EndOfMessage):
                 self.flow_events[1].append(event)
-                yield commands.Log("response", self.flow_events)
+                yield commands.Log(f"response {self.flow_events}")
                 yield from self._send_response()
                 return
             else:

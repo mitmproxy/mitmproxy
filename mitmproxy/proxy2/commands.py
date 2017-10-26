@@ -23,7 +23,8 @@ class Command:
 
     Example:
 
-        reply = yield Hook("requestheaders", flow)
+        reply = yield Hook("requestheaders", flow)  # blocking command
+        yield Log("hello world", "info")            # non-blocking
     """
 
     def __repr__(self):
@@ -84,17 +85,19 @@ class Hook(Command):
         self.data = data
 
 
-class Log(Hook):
+class Log(Command):
     blocking = False
+    message: str
+    level: str
 
-    # this is more of a hack at the moment.
-    def __init__(self, *args, level="info"):
-        if len(args) == 1:
-            args = args[0]
-        super().__init__("log", log.LogEntry(str(args), level))
+    def __init__(self, message, level="info"):
+        assert isinstance(message, str)
+        assert isinstance(level, str)
+        self.message = message
+        self.level = level
 
     def __repr__(self):
-        return f"Log: {self.data.msg}"
+        return f"Log({self.message}, {self.level})"
 
 
 TCommandGenerator = typing.Generator[Command, typing.Any, None]
