@@ -346,31 +346,7 @@ babel-code-frame@^6.26.0:
     esutils "^2.0.2"
     js-tokens "^3.0.2"
 
-babel-core@^6.0.0, babel-core@^6.24.1:
-  version "6.25.0"
-  resolved "https://registry.yarnpkg.com/babel-core/-/babel-core-6.25.0.tgz#7dd42b0463c742e9d5296deb3ec67a9322dad729"
-  dependencies:
-    babel-code-frame "^6.22.0"
-    babel-generator "^6.25.0"
-    babel-helpers "^6.24.1"
-    babel-messages "^6.23.0"
-    babel-register "^6.24.1"
-    babel-runtime "^6.22.0"
-    babel-template "^6.25.0"
-    babel-traverse "^6.25.0"
-    babel-types "^6.25.0"
-    babylon "^6.17.2"
-    convert-source-map "^1.1.0"
-    debug "^2.1.1"
-    json5 "^0.5.0"
-    lodash "^4.2.0"
-    minimatch "^3.0.2"
-    path-is-absolute "^1.0.0"
-    private "^0.1.6"
-    slash "^1.0.0"
-    source-map "^0.5.0"
-
-babel-core@^6.26.0:
+babel-core@^6.0.0, babel-core@^6.26.0:
   version "6.26.0"
   resolved "https://registry.yarnpkg.com/babel-core/-/babel-core-6.26.0.tgz#af32f78b31a6fcef119c87b0fd8d9753f03a0bb8"
   dependencies:
@@ -403,7 +379,7 @@ babel-eslint@^8.0.1:
     babel-types "7.0.0-beta.0"
     babylon "7.0.0-beta.22"
 
-babel-generator@^6.18.0, babel-generator@^6.25.0:
+babel-generator@^6.18.0:
   version "6.25.0"
   resolved "https://registry.yarnpkg.com/babel-generator/-/babel-generator-6.25.0.tgz#33a1af70d5f2890aeb465a4a7793c1df6a9ea9fc"
   dependencies:
@@ -863,18 +839,6 @@ babel-preset-react@^6.24.1:
     babel-plugin-transform-react-jsx-source "^6.22.0"
     babel-preset-flow "^6.23.0"
 
-babel-register@^6.24.1:
-  version "6.24.1"
-  resolved "https://registry.yarnpkg.com/babel-register/-/babel-register-6.24.1.tgz#7e10e13a2f71065bdfad5a1787ba45bca6ded75f"
-  dependencies:
-    babel-core "^6.24.1"
-    babel-runtime "^6.22.0"
-    core-js "^2.4.0"
-    home-or-tmp "^2.0.0"
-    lodash "^4.2.0"
-    mkdirp "^0.5.1"
-    source-map-support "^0.4.2"
-
 babel-register@^6.26.0:
   version "6.26.0"
   resolved "https://registry.yarnpkg.com/babel-register/-/babel-register-6.26.0.tgz#6ed021173e2fcb486d7acb45c6009a856f647071"
@@ -910,7 +874,7 @@ babel-template@7.0.0-beta.0:
     babylon "7.0.0-beta.22"
     lodash "^4.2.0"
 
-babel-template@^6.16.0, babel-template@^6.24.1, babel-template@^6.25.0:
+babel-template@^6.16.0, babel-template@^6.24.1:
   version "6.25.0"
   resolved "https://registry.yarnpkg.com/babel-template/-/babel-template-6.25.0.tgz#665241166b7c2aa4c619d71e192969552b10c071"
   dependencies:
@@ -1567,7 +1531,7 @@ content-type@~1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/content-type/-/content-type-1.0.2.tgz#b7d113aee7a8dd27bd21133c4dc2529df1721eed"
 
-convert-source-map@1.X, convert-source-map@^1.1.0, convert-source-map@~1.1.0:
+convert-source-map@1.X, convert-source-map@~1.1.0:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/convert-source-map/-/convert-source-map-1.1.3.tgz#4829c877e9fe49b3161f3bf3673888e204699860"
 
@@ -1721,23 +1685,17 @@ debug-fabulous@>=0.1.1:
     memoizee "0.4.X"
     object-assign "4.X"
 
-debug@3.X, debug@^3.0.1:
+debug@3.X, debug@^3.0.1, debug@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/debug/-/debug-3.1.0.tgz#5bb5a0672628b64149566ba16819e61518c67261"
   dependencies:
     ms "2.0.0"
 
-debug@^2.1.0, debug@^2.2.0, debug@^2.6.3, debug@^2.6.8:
+debug@^2.1.0, debug@^2.2.0, debug@^2.6.8:
   version "2.6.8"
   resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.8.tgz#e731531ca2ede27d188222427da17821d68ff4fc"
   dependencies:
     ms "2.0.0"
-
-debug@^2.1.1:
-  version "2.6.1"
-  resolved "https://registry.yarnpkg.com/debug/-/debug-2.6.1.tgz#79855090ba2c4e3115cc7d8769491d58f0491351"
-  dependencies:
-    ms "0.7.2"
 
 debug@~2.2.0:
   version "2.2.0"
@@ -3260,32 +3218,32 @@ isstream@~0.1.2:
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
 
 istanbul-api@^1.1.1:
-  version "1.1.9"
-  resolved "https://registry.yarnpkg.com/istanbul-api/-/istanbul-api-1.1.9.tgz#2827920d380d4286d857d57a2968a841db8a7ec8"
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/istanbul-api/-/istanbul-api-1.2.1.tgz#0c60a0515eb11c7d65c6b50bba2c6e999acd8620"
   dependencies:
     async "^2.1.4"
     fileset "^2.0.2"
     istanbul-lib-coverage "^1.1.1"
-    istanbul-lib-hook "^1.0.7"
-    istanbul-lib-instrument "^1.7.2"
-    istanbul-lib-report "^1.1.1"
-    istanbul-lib-source-maps "^1.2.1"
-    istanbul-reports "^1.1.1"
+    istanbul-lib-hook "^1.1.0"
+    istanbul-lib-instrument "^1.9.1"
+    istanbul-lib-report "^1.1.2"
+    istanbul-lib-source-maps "^1.2.2"
+    istanbul-reports "^1.1.3"
     js-yaml "^3.7.0"
     mkdirp "^0.5.1"
     once "^1.4.0"
 
-istanbul-lib-coverage@^1.0.0, istanbul-lib-coverage@^1.0.1:
+istanbul-lib-coverage@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/istanbul-lib-coverage/-/istanbul-lib-coverage-1.0.1.tgz#f263efb519c051c5f1f3343034fc40e7b43ff212"
 
-istanbul-lib-coverage@^1.0.0-alpha.0, istanbul-lib-coverage@^1.1.1:
+istanbul-lib-coverage@^1.0.1, istanbul-lib-coverage@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/istanbul-lib-coverage/-/istanbul-lib-coverage-1.1.1.tgz#73bfb998885299415c93d38a3e9adf784a77a9da"
 
-istanbul-lib-hook@^1.0.7:
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/istanbul-lib-hook/-/istanbul-lib-hook-1.0.7.tgz#dd6607f03076578fe7d6f2a630cf143b49bacddc"
+istanbul-lib-hook@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/istanbul-lib-hook/-/istanbul-lib-hook-1.1.0.tgz#8538d970372cb3716d53e55523dd54b557a8d89b"
   dependencies:
     append-transform "^0.4.0"
 
@@ -3301,49 +3259,40 @@ istanbul-lib-instrument@^1.4.2:
     istanbul-lib-coverage "^1.0.0"
     semver "^5.3.0"
 
-istanbul-lib-instrument@^1.7.2:
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/istanbul-lib-instrument/-/istanbul-lib-instrument-1.7.2.tgz#6014b03d3470fb77638d5802508c255c06312e56"
+istanbul-lib-instrument@^1.9.1:
+  version "1.9.1"
+  resolved "https://registry.yarnpkg.com/istanbul-lib-instrument/-/istanbul-lib-instrument-1.9.1.tgz#250b30b3531e5d3251299fdd64b0b2c9db6b558e"
   dependencies:
     babel-generator "^6.18.0"
     babel-template "^6.16.0"
     babel-traverse "^6.18.0"
     babel-types "^6.18.0"
-    babylon "^6.13.0"
+    babylon "^6.18.0"
     istanbul-lib-coverage "^1.1.1"
     semver "^5.3.0"
 
-istanbul-lib-report@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/istanbul-lib-report/-/istanbul-lib-report-1.1.1.tgz#f0e55f56655ffa34222080b7a0cd4760e1405fc9"
+istanbul-lib-report@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/istanbul-lib-report/-/istanbul-lib-report-1.1.2.tgz#922be27c13b9511b979bd1587359f69798c1d425"
   dependencies:
     istanbul-lib-coverage "^1.1.1"
     mkdirp "^0.5.1"
     path-parse "^1.0.5"
     supports-color "^3.1.2"
 
-istanbul-lib-source-maps@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/istanbul-lib-source-maps/-/istanbul-lib-source-maps-1.1.0.tgz#9d429218f35b823560ea300a96ff0c3bbdab785f"
+istanbul-lib-source-maps@^1.1.0, istanbul-lib-source-maps@^1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/istanbul-lib-source-maps/-/istanbul-lib-source-maps-1.2.2.tgz#750578602435f28a0c04ee6d7d9e0f2960e62c1c"
   dependencies:
-    istanbul-lib-coverage "^1.0.0-alpha.0"
-    mkdirp "^0.5.1"
-    rimraf "^2.4.4"
-    source-map "^0.5.3"
-
-istanbul-lib-source-maps@^1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/istanbul-lib-source-maps/-/istanbul-lib-source-maps-1.2.1.tgz#a6fe1acba8ce08eebc638e572e294d267008aa0c"
-  dependencies:
-    debug "^2.6.3"
+    debug "^3.1.0"
     istanbul-lib-coverage "^1.1.1"
     mkdirp "^0.5.1"
     rimraf "^2.6.1"
     source-map "^0.5.3"
 
-istanbul-reports@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/istanbul-reports/-/istanbul-reports-1.1.1.tgz#042be5c89e175bc3f86523caab29c014e77fee4e"
+istanbul-reports@^1.1.3:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/istanbul-reports/-/istanbul-reports-1.1.3.tgz#3b9e1e8defb6d18b1d425da8e8b32c5a163f2d10"
   dependencies:
     handlebars "^4.0.3"
 
@@ -3664,7 +3613,7 @@ json-stringify-safe@~5.0.1:
   version "5.0.1"
   resolved "https://registry.yarnpkg.com/json-stringify-safe/-/json-stringify-safe-5.0.1.tgz#1296a2d58fd45f19a0f6ce01d65701e2c735b6eb"
 
-json5@^0.5.0, json5@^0.5.1:
+json5@^0.5.1:
   version "0.5.1"
   resolved "https://registry.yarnpkg.com/json5/-/json5-0.5.1.tgz#1eade7acc012034ad84e2396767ead9fa5495821"
 
@@ -4297,10 +4246,6 @@ ms@0.7.1:
   version "0.7.1"
   resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.1.tgz#9cd13c03adbff25b65effde7ce864ee952017098"
 
-ms@0.7.2:
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.2.tgz#ae25cf2512b3885a1d95d7f037868d8431124765"
-
 ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
@@ -4342,9 +4287,18 @@ node-int64@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/node-int64/-/node-int64-0.4.0.tgz#87a9065cdb355d3182d8f94ce11188b825c68a3b"
 
-node-notifier@^5.0.1, node-notifier@^5.0.2:
+node-notifier@^5.0.1:
   version "5.0.2"
   resolved "https://registry.yarnpkg.com/node-notifier/-/node-notifier-5.0.2.tgz#4438449fe69e321f941cef943986b0797032701b"
+  dependencies:
+    growly "^1.3.0"
+    semver "^5.3.0"
+    shellwords "^0.1.0"
+    which "^1.2.12"
+
+node-notifier@^5.0.2:
+  version "5.1.2"
+  resolved "https://registry.yarnpkg.com/node-notifier/-/node-notifier-5.1.2.tgz#2fa9e12605fa10009d44549d6fcd8a63dde0e4ff"
   dependencies:
     growly "^1.3.0"
     semver "^5.3.0"
@@ -5263,7 +5217,7 @@ rimraf@2, rimraf@^2.6.1:
   dependencies:
     glob "^7.0.5"
 
-rimraf@^2.2.8, rimraf@^2.4.4, rimraf@~2.5.1, rimraf@~2.5.4:
+rimraf@^2.2.8, rimraf@~2.5.1, rimraf@~2.5.4:
   version "2.5.4"
   resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-2.5.4.tgz#96800093cbf1a0c86bd95b4625467535c29dfa04"
   dependencies:
@@ -5421,12 +5375,6 @@ source-map-support@^0.4.15:
   resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.4.18.tgz#0286a6de8be42641338594e97ccea75f0a2c585f"
   dependencies:
     source-map "^0.5.6"
-
-source-map-support@^0.4.2:
-  version "0.4.11"
-  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.4.11.tgz#647f939978b38535909530885303daf23279f322"
-  dependencies:
-    source-map "^0.5.3"
 
 source-map-url@~0.3.0:
   version "0.3.0"

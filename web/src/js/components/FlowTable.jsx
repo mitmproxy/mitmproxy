@@ -121,7 +121,7 @@ class FlowTable extends React.Component {
     }
 }
 
-FlowTable = AutoScroll(FlowTable)
+export const PureFlowTable = AutoScroll(FlowTable)
 
 export default connect(
     state => ({
@@ -132,4 +132,4 @@ export default connect(
     {
         selectFlow: flowsActions.select,
     }
-)(FlowTable)
+)(PureFlowTable)

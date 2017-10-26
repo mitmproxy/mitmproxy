@@ -83,11 +83,6 @@ describe('pure', () => {
         expect(utils.pure(tFunc).displayName).toEqual('tFunc')
     })
 
-    it('should suggest when should component update', () => {
-        expect(f.shouldComponentUpdate('foo')).toBeTruthy()
-        expect(f.shouldComponentUpdate('bar')).toBeFalsy()
-    })
-
     it('should render properties', () => {
         expect(f.render()).toEqual(tFunc('bar'))
     })
