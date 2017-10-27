@@ -12,3 +12,6 @@
 ##### System information
 
 <!-- Paste the output of "mitmproxy --version" here. -->
+
+
+<!-- Please use the mitmproxy forums (https://discourse.mitmproxy.org/) for support/how-to questions. Thanks! :) -->

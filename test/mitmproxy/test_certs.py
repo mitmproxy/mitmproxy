@@ -102,7 +102,7 @@ class TestCertStore:
         dc = ca2.get_cert(b"foo.com", [b"sans.example.com"])
         dcp = tmpdir.join("dc")
         dcp.write(dc[0].to_pem())
-        ca1.add_cert_file(b"foo.com", str(dcp))
+        ca1.add_cert_file("foo.com", str(dcp))
 
         ret = ca1.get_cert(b"foo.com", [])
         assert ret[0].serial == dc[0].serial

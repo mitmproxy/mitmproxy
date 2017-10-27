@@ -22,7 +22,7 @@ from mitmproxy import exceptions
 from mitmproxy.net import http
 from mitmproxy.utils import strutils
 from . import (
-    auto, raw, hex, json, xml_html, html_outline, wbxml, javascript, css,
+    auto, raw, hex, json, xml_html, wbxml, javascript, css,
     urlencoded, multipart, image, query, protobuf
 )
 from .base import View, VIEW_CUTOFF, KEY_MAX, format_text, format_dict, TViewResult
@@ -168,7 +168,6 @@ add(hex.ViewHex())
 add(json.ViewJSON())
 add(xml_html.ViewXmlHtml())
 add(wbxml.ViewWBXML())
-add(html_outline.ViewHTMLOutline())
 add(javascript.ViewJavaScript())
 add(css.ViewCSS())
 add(urlencoded.ViewURLEncoded())

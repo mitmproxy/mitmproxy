@@ -57,7 +57,7 @@ class TestNotAfterConnect(tservers.DaemonTests):
 class TestCustomCert(tservers.DaemonTests):
     ssl = True
     ssloptions = dict(
-        certs=[(b"*", tutils.test_data.path("pathod/data/testkey.pem"))],
+        certs=[("*", tutils.test_data.path("pathod/data/testkey.pem"))],
     )
 
     def test_connect(self):

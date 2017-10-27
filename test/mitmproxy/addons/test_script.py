@@ -7,6 +7,7 @@ import pytest
 
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
+from mitmproxy import log
 from mitmproxy.addons import script
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
@@ -50,7 +51,7 @@ def test_load_fullname():
 
 def test_script_print_stdout():
     with taddons.context() as tctx:
-        with mock.patch('mitmproxy.ctx.log.warn') as mock_warn:
+        with mock.patch('mitmproxy.ctx.master.tell') as mock_warn:
             with addonmanager.safecall():
                 ns = script.load_script(
                     tutils.test_data.path(
@@ -58,7 +59,7 @@ def test_script_print_stdout():
                     )
                 )
                 ns.load(addonmanager.Loader(tctx.master))
-        mock_warn.assert_called_once_with("stdoutprint")
+        mock_warn.assert_called_once_with("log", log.LogEntry("stdoutprint", "warn"))
 
 
 class TestScript:

@@ -64,15 +64,14 @@ setup(
         "brotlipy>=0.5.1, <0.8",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "click>=6.2, <7",
-        "cryptography>=2.0,<2.1",
+        "cryptography>=2.0,<2.2",
         "h2>=3.0, <4",
-        "html2text>=2016.1.8, <=2016.9.19",
         "hyperframe>=5.0, <6",
         "kaitaistruct>=0.7, <0.8",
         "ldap3>=2.2.0, <2.4",
         "passlib>=1.6.5, <1.8",
         "pyasn1>=0.3.1, <0.4",
-        "pyOpenSSL>=17.2,<17.3",
+        "pyOpenSSL>=17.2,<17.4",
         "pyparsing>=2.1.3, <2.3",
         "pyperclip>=1.5.22, <1.6",
         "requests>=2.9.1, <3",
@@ -83,12 +82,12 @@ setup(
     ],
     extras_require={
         ':sys_platform == "win32"': [
-            "pydivert>=2.0.3, <2.1",
+            "pydivert>=2.0.3,<2.2",
         ],
         'dev': [
             "flake8>=3.2.1, <3.5",
             "Flask>=0.10.1, <0.13",
-            "mypy>=0.521,<0.522",
+            "mypy>=0.530,<0.541",
             "pytest-cov>=2.2.1, <3",
             "pytest-faulthandler>=1.3.0, <2",
             "pytest-timeout>=1.0.0, <2",
@@ -103,7 +102,7 @@ setup(
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.7",
-            "Pillow>=3.2,<4.3",
+            "Pillow>=4.3,<4.4",
         ]
     }
 )

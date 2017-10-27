@@ -1,4 +1,7 @@
+import re
+
 import urwid
+from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import statusbar
 from mitmproxy.tools.console import flowlist
@@ -274,3 +277,13 @@ class Window(urwid.Frame):
             k = fs.keypress(size, k)
             if k:
                 return self.master.keymap.handle(fs.keyctx, k)
+
+
+class Screen(urwid.raw_display.Screen):
+
+    def write(self, data):
+        if common.IS_WSL:
+            # replace urwid's SI/SO, which produce artifacts under WSL.
+            # at some point we may figure out what they actually do.
+            data = re.sub("[\x0e\x0f]", "", data)
+        super().write(data)

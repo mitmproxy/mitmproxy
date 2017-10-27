@@ -208,4 +208,4 @@ directory and uses this as the client cert.
 
 
 
-.. _Certificate Pinning: https://security.stackexchange.com/questions/29988/what-is-certificate-pinning/
+.. _Certificate Pinning: https://en.wikipedia.org/wiki/HTTP_Public_Key_Pinning
