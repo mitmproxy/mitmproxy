@@ -1,6 +1,6 @@
 import React from 'react'
 import renderer from 'react-test-renderer'
-import FlowTable from '../../components/FlowTable'
+import {PureFlowTable as FlowTable} from '../../components/FlowTable'
 import TestUtils from 'react-dom/test-utils'
 import { TFlow, TStore } from '../ducks/tutils'
 import { Provider } from 'react-redux'

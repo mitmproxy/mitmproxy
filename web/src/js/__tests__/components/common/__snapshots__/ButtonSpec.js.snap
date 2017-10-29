@@ -4,7 +4,7 @@ exports[`Button Component should be able to be disabled 1`] = `
 <div
   className="classname btn btn-default"
   disabled="true"
-  onClick={false}
+  onClick={undefined}
   title={undefined}
 >
   <a>
