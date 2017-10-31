@@ -63,15 +63,6 @@ exports[`FileMenu Component should render correctly 1`] = `
     </li>
     <li>
        
-      <a
-        href="#"
-        onClick={[Function]}
-      >
-        <i
-          className="fa fa-fw fa-cog"
-        />
-         Options
-      </a>
       <hr
         className="divider"
       />

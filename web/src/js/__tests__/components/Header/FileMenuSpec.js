@@ -49,10 +49,4 @@ describe('FileMenu Component', () => {
         a.props.onClick(mockEvent)
         expect(saveFn).toBeCalled()
     })
-
-    it('should open optionModal', () => {
-        let a = ul.children[3].children[1]
-        a.props.onClick(mockEvent)
-        expect(openModalFn).toBeCalled()
-    })
 })

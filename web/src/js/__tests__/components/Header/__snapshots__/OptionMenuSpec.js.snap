@@ -9,46 +9,24 @@ exports[`OptionMenu Component should render correctly 1`] = `
       className="menu-content"
     >
       <div
-        className="menu-entry"
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="Open Options"
       >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          HTTP/2.0
-        </label>
-      </div>
-      <div
-        className="menu-entry"
-      >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          WebSockets
-        </label>
-      </div>
-      <div
-        className="menu-entry"
-      >
-        <label>
-          <input
-            checked={false}
-            onChange={[Function]}
-            type="checkbox"
-          />
-          Raw TCP
-        </label>
+        <i
+          className="fa fa-fw fa-cogs text-primary"
+        />
+        Edit Options 
+        <sup>
+          alpha
+        </sup>
       </div>
     </div>
     <div
       className="menu-legend"
     >
-      Protocol Support
+      Options Editor
     </div>
   </div>
   <div
@@ -66,7 +44,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
             onChange={[Function]}
             type="checkbox"
           />
-          Disable Caching 
+          Strip cache headers 
           <a
             href="http://docs.mitmproxy.org/en/stable/features/anticache.html"
             target="_blank"
@@ -86,26 +64,9 @@ exports[`OptionMenu Component should render correctly 1`] = `
             onChange={[Function]}
             type="checkbox"
           />
-          Disable Compression 
-          <i
-            className="fa fa-question-circle"
-            title="Do not forward Accept-Encoding headers to the server to force an uncompressed response."
-          />
+          Use host header for display
         </label>
       </div>
-    </div>
-    <div
-      className="menu-legend"
-    >
-      HTTP Options
-    </div>
-  </div>
-  <div
-    className="menu-group"
-  >
-    <div
-      className="menu-content"
-    >
       <div
         className="menu-entry"
       >
@@ -115,13 +76,22 @@ exports[`OptionMenu Component should render correctly 1`] = `
             onChange={[Function]}
             type="checkbox"
           />
-          Use Host Header 
-          <i
-            className="fa fa-question-circle"
-            title="Use the Host header to construct URLs for display."
-          />
+          Verify server certificates
         </label>
       </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      Quick Options
+    </div>
+  </div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
       <div
         className="menu-entry"
       >

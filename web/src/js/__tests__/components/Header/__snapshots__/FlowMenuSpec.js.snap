@@ -33,7 +33,7 @@ exports[`FlowMenu Component should connect to state 1`] = `
       <div
         className="btn btn-default"
         disabled={true}
-        onClick={false}
+        onClick={undefined}
         title="revert changes to flow [V]"
       >
         <i
@@ -92,7 +92,7 @@ exports[`FlowMenu Component should connect to state 1`] = `
       <div
         className="btn btn-default"
         disabled={true}
-        onClick={false}
+        onClick={undefined}
         title="[a]ccept intercepted flow"
       >
         <i
@@ -103,7 +103,7 @@ exports[`FlowMenu Component should connect to state 1`] = `
       <div
         className="btn btn-default"
         disabled={true}
-        onClick={false}
+        onClick={undefined}
         title="kill intercepted flow [x]"
       >
         <i

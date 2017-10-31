@@ -53,7 +53,7 @@ class PureOptionModal extends Component {
     }
 
     componentWillUnmount(){
-        this.props.save()
+        // this.props.save()
     }
 
     render() {

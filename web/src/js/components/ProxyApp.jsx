@@ -20,7 +20,7 @@ class ProxyAppMain extends Component {
     }
 
     render() {
-        const { showEventLog, location, filter, highlight } = this.props
+        const { showEventLog } = this.props
         return (
             <div id="container" tabIndex="0">
                 <Header/>

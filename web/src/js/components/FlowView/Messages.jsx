@@ -120,30 +120,6 @@ export class Request extends Component {
             </section>
         )
     }
-
-
-    edit(k) {
-        throw "unimplemented"
-        /*
-         switch (k) {
-         case 'm':
-         this.refs.requestLine.refs.method.focus()
-         break
-         case 'u':
-         this.refs.requestLine.refs.url.focus()
-         break
-         case 'v':
-         this.refs.requestLine.refs.httpVersion.focus()
-         break
-         case 'h':
-         this.refs.headers.edit()
-         break
-         default:
-         throw new Error(`Unimplemented: ${k}`)
-         }
-         */
-    }
-
 }
 
 Request = Message(Request)
@@ -188,28 +164,6 @@ export class Response extends Component {
                 </HideInStatic>
             </section>
         )
-    }
-
-    edit(k) {
-        throw "unimplemented"
-        /*
-         switch (k) {
-         case 'c':
-         this.refs.responseLine.refs.status_code.focus()
-         break
-         case 'm':
-         this.refs.responseLine.refs.msg.focus()
-         break
-         case 'v':
-         this.refs.responseLine.refs.httpVersion.focus()
-         break
-         case 'h':
-         this.refs.headers.edit()
-         break
-         default:
-         throw new Error(`'Unimplemented: ${k}`)
-         }
-         */
     }
 }
 

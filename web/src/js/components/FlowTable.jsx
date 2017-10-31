@@ -1,17 +1,20 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import ReactDOM from 'react-dom'
+import { connect } from 'react-redux'
 import shallowEqual from 'shallowequal'
 import AutoScroll from './helpers/AutoScroll'
 import { calcVScroll } from './helpers/VirtualScroll'
 import FlowTableHead from './FlowTable/FlowTableHead'
 import FlowRow from './FlowTable/FlowRow'
 import Filt from "../filt/filt"
+import * as flowsActions from '../ducks/flows'
+
 
 class FlowTable extends React.Component {
 
     static propTypes = {
-        onSelect: PropTypes.func.isRequired,
+        selectFlow: PropTypes.func.isRequired,
         flows: PropTypes.array.isRequired,
         rowHeight: PropTypes.number,
         highlight: PropTypes.string,
@@ -107,7 +110,7 @@ class FlowTable extends React.Component {
                                 flow={flow}
                                 selected={flow === selected}
                                 highlighted={isHighlighted(flow)}
-                                onSelect={this.props.onSelect}
+                                onSelect={this.props.selectFlow}
                             />
                         ))}
                         <tr style={{ height: vScroll.paddingBottom }}></tr>
@@ -118,4 +121,15 @@ class FlowTable extends React.Component {
     }
 }
 
-export default AutoScroll(FlowTable)
+export const PureFlowTable = AutoScroll(FlowTable)
+
+export default connect(
+    state => ({
+        flows: state.flows.view,
+        highlight: state.flows.highlight,
+        selected: state.flows.byId[state.flows.selected[0]],
+    }),
+    {
+        selectFlow: flowsActions.select,
+    }
+)(PureFlowTable)
