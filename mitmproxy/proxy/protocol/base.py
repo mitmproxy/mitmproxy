@@ -96,15 +96,7 @@ class ServerConnectionMixin:
     def __init__(self, server_address=None):
         super().__init__()
 
-        self.server_conn = None
-        if self.config.options.spoof_source_address and self.config.options.upstream_bind_address == '':
-            self.server_conn = connections.ServerConnection(
-                server_address, (self.ctx.client_conn.address[0], 0), True)
-        else:
-            self.server_conn = connections.ServerConnection(
-                server_address, (self.config.options.upstream_bind_address, 0),
-                self.config.options.spoof_source_address
-            )
+        self.server_conn = self.__make_server_conn(server_address)
 
         self.__check_self_connect()
 
@@ -124,6 +116,16 @@ class ServerConnectionMixin:
                     "Invalid server address: {}\r\n"
                     "The proxy shall not connect to itself.".format(repr(address))
                 )
+
+    def __make_server_conn(self, server_address):
+        if self.config.options.spoof_source_address and self.config.options.upstream_bind_address == '':
+            return connections.ServerConnection(
+                server_address, (self.ctx.client_conn.address[0], 0), True)
+        else:
+            return connections.ServerConnection(
+                server_address, (self.config.options.upstream_bind_address, 0),
+                self.config.options.spoof_source_address
+            )
 
     def set_server(self, address):
         """
@@ -146,11 +148,7 @@ class ServerConnectionMixin:
         self.server_conn.close()
         self.channel.tell("serverdisconnect", self.server_conn)
 
-        self.server_conn = connections.ServerConnection(
-            address,
-            (self.server_conn.source_address[0], 0),
-            self.config.options.spoof_source_address
-        )
+        self.server_conn = self.__make_server_conn(address)
 
     def connect(self):
         """
