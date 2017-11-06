@@ -42,6 +42,7 @@ class RequestReplayThread(basethread.BaseThread):
         super().__init__(
             "RequestReplay (%s)" % f.request.url
         )
+        self.daemon = True
 
     def run(self):
         r = self.f.request
