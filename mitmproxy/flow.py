@@ -99,6 +99,7 @@ class Flow(stateobject.StateObject):
         return d
 
     def set_state(self, state):
+        state = state.copy()
         state.pop("version")
         if "backup" in state:
             self._backup = state.pop("backup")

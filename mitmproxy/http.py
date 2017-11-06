@@ -56,6 +56,7 @@ class HTTPRequest(http.Request):
         return state
 
     def set_state(self, state):
+        state = state.copy()
         self.is_replay = state.pop("is_replay")
         super().set_state(state)
 
