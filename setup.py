@@ -68,7 +68,7 @@ setup(
         "h2>=3.0, <4",
         "hyperframe>=5.0, <6",
         "kaitaistruct>=0.7, <0.8",
-        "ldap3>=2.4,<2.5",
+        "ldap3>=2.2.0, <2.5",
         "passlib>=1.6.5, <1.8",
         "pyasn1>=0.3.1, <0.4",
         "pyOpenSSL>=17.2,<17.4",
