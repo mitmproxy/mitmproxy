@@ -36,9 +36,12 @@ class TestClientPlayback:
                 assert rp.called
                 assert cp.current_thread
 
-            cp.flows = None
-            cp.current_thread = None
+            cp.flows = []
+            cp.current_thread.is_alive.return_value = False
+            assert cp.count() == 1
             cp.tick()
+            assert cp.count() == 0
+            assert tctx.master.has_event("update")
             assert tctx.master.has_event("processing_complete")
 
             cp.current_thread = MockThread()

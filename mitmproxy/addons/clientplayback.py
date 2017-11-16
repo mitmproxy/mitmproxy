@@ -9,15 +9,16 @@ import typing
 
 class ClientPlayback:
     def __init__(self):
-        self.flows = None
+        self.flows = []  # type: typing.List[flow.Flow]
         self.current_thread = None
-        self.has_replayed = False
         self.configured = False
 
     def count(self) -> int:
-        if self.flows:
-            return len(self.flows)
-        return 0
+        if self.current_thread:
+            current = 1
+        else:
+            current = 0
+        return current + len(self.flows)
 
     @command.command("replay.client.stop")
     def stop_replay(self) -> None:
@@ -32,7 +33,7 @@ class ClientPlayback:
         """
             Replay requests from flows.
         """
-        self.flows = flows
+        self.flows = list(flows)
         ctx.master.addons.trigger("update", [])
 
     @command.command("replay.client.file")
@@ -54,13 +55,16 @@ class ClientPlayback:
             self.start_replay(flows)
 
     def tick(self):
-        if self.current_thread and not self.current_thread.is_alive():
+        current_is_done = self.current_thread and not self.current_thread.is_alive()
+        can_start_new = not self.current_thread or current_is_done
+        will_start_new = can_start_new and self.flows
+
+        if current_is_done:
             self.current_thread = None
-        if self.flows and not self.current_thread:
+            ctx.master.addons.trigger("update", [])
+        if will_start_new:
             f = self.flows.pop(0)
             self.current_thread = ctx.master.replay_request(f)
             ctx.master.addons.trigger("update", [f])
-            self.has_replayed = True
-        if self.has_replayed:
-            if not self.flows and not self.current_thread:
-                ctx.master.addons.trigger("processing_complete")
+        if current_is_done and not will_start_new:
+            ctx.master.addons.trigger("processing_complete")
