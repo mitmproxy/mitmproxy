@@ -165,7 +165,7 @@ class HttpLayer(base.Layer):
     def __init__(self, ctx, mode):
         super().__init__(ctx)
         self.mode = mode
-        self.__initial_server_conn = None
+        self.__initial_server_address = None  # type: tuple
         "Contains the original destination in transparent mode, which needs to be restored"
         "if an inline script modified the target server for a single http request"
         # We cannot rely on server_conn.tls_established,
@@ -177,7 +177,7 @@ class HttpLayer(base.Layer):
     def __call__(self):
         if self.mode == HTTPMode.transparent:
             self.__initial_server_tls = self.server_tls
-            self.__initial_server_conn = self.server_conn
+            self.__initial_server_address = self.server_conn.address
         while True:
             flow = http.HTTPFlow(
                 self.client_conn,
@@ -313,8 +313,8 @@ class HttpLayer(base.Layer):
             # Setting request.host also updates the host header, which we want
             # to preserve
             host_header = f.request.host_header
-            f.request.host = self.__initial_server_conn.address[0]
-            f.request.port = self.__initial_server_conn.address[1]
+            f.request.host = self.__initial_server_address[0]
+            f.request.port = self.__initial_server_address[1]
             f.request.host_header = host_header  # set again as .host overwrites this.
             f.request.scheme = "https" if self.__initial_server_tls else "http"
         self.channel.ask("request", f)

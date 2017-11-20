@@ -84,6 +84,17 @@ class TestSerialize:
         with pytest.raises(Exception, match="version"):
             list(r.stream())
 
+    def test_copy(self):
+        """
+        _backup may be shared across instances. That should not raise errors.
+        """
+        f = tflow.tflow()
+        f.backup()
+        f.request.path = "/foo"
+        f2 = f.copy()
+        f2.revert()
+        f.revert()
+
 
 class TestFlowMaster:
     def test_load_flow_reverse(self):
