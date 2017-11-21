@@ -42,7 +42,7 @@ class Save:
                     )
             else:
                 self.filt = None
-        if "save_stream_file" in updated:
+        if "save_stream_file" in updated or "save_stream_filter" in updated:
             if self.stream:
                 self.done()
             if ctx.options.save_stream_file:
