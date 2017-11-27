@@ -196,14 +196,15 @@ def test_expected_http_body_size():
 
     # more than 1 content-length headers with same value
     assert expected_http_body_size(
-        treq(headers=Headers(content_length="42", content_length="42"))
+        treq(headers=Headers([(b'content-length', b'42'), (b'content-length', b'42')]))
     ) == 42
 
     # more than 1 content-length headers with conflicting value
     with pytest.raises(exceptions.HttpSyntaxException):
         expected_http_body_size(
-            treq(headers=Headers(content_length="42", content_length="45"))
+            treq(headers=Headers([(b'content-length', b'42'), (b'content-length', b'45')]))
         )
+
     # no length
     assert expected_http_body_size(
         treq(headers=Headers())
