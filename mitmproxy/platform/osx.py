@@ -1,6 +1,7 @@
 import subprocess
 
 from . import pf
+import re
 
 """
     Doing this the "right" way by using DIOCNATLOOK on the pf device turns out
@@ -15,6 +16,7 @@ from . import pf
 """
 
 STATECMD = ("sudo", "-n", "/sbin/pfctl", "-s", "state")
+ipv4_mapped = re.compile("^::ffff:\d+.\d+.\d+.\d+$")
 
 
 def original_addr(csock):
@@ -33,4 +35,6 @@ def original_addr(csock):
         raise RuntimeError(
             "Insufficient privileges to access pfctl. "
             "See http://docs.mitmproxy.org/en/latest/transparent/osx.html for details.")
+    if ipv4_mapped.match(peer[0]):
+        return pf.lookup(peer[0].replace("::ffff:", ""), peer[1], stxt)
     return pf.lookup(peer[0], peer[1], stxt)
