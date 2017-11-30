@@ -13,6 +13,9 @@ mitmproxy CA certificates have to be installed on the client device.
 Quick Setup
 -----------
 
+WARNING!!! Use at your own risk. The CA certificate should be removed before 
+connecting to an untrusted network.
+
 By far the easiest way to install the mitmproxy certificates is to use the
 built-in certificate installation app. To do this, just start mitmproxy and
 configure your target device with the correct proxy settings. Now start a
