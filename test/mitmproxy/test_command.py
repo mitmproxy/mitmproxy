@@ -163,3 +163,10 @@ def test_decorator():
     with taddons.context() as tctx:
         tctx.master.addons.add(a)
         assert tctx.master.commands.call("cmd1 bar") == "ret bar"
+
+
+def test_verify_arg_signature():
+    with pytest.raises(exceptions.CommandError):
+        command.verify_arg_signature(lambda: None, [1, 2], {})
+        print('hello there')
+    command.verify_arg_signature(lambda a, b: None, [1, 2], {})
