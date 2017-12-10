@@ -1,6 +1,7 @@
 from mitmproxy.addons import allowremote
 from mitmproxy.addons import anticache
 from mitmproxy.addons import anticomp
+from mitmproxy.addons import browser
 from mitmproxy.addons import check_ca
 from mitmproxy.addons import clientplayback
 from mitmproxy.addons import core_option_validation
@@ -25,6 +26,7 @@ def default_addons():
     return [
         core.Core(),
         core_option_validation.CoreOptionValidation(),
+        browser.Browser(),
         allowremote.AllowRemote(),
         anticache.AntiCache(),
         anticomp.AntiComp(),
