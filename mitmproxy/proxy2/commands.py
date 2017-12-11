@@ -8,7 +8,6 @@ The counterpart to commands are events.
 """
 import typing
 
-from mitmproxy import log
 from mitmproxy.proxy2.context import Connection
 
 
@@ -86,7 +85,6 @@ class Hook(Command):
 
 
 class Log(Command):
-    blocking = False
     message: str
     level: str
 

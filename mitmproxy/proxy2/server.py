@@ -132,21 +132,42 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
 
 class SimpleConnectionHandler(ConnectionHandler):
-    """Simple handler that does not process any hooks."""
+    """Simple handler that does not really process any hooks."""
 
-    async def handle_hook(self, hook: commands.Hook) -> None:
+    hook_handlers: typing.Dict[str, typing.Callable]
+
+    def __init__(self, reader, writer, options, hooks):
+        super().__init__(reader, writer, options)
+        self.hook_handlers = hooks
+
+    async def handle_hook(
+            self,
+            hook: commands.Hook
+    ) -> None:
+        if hook.name in self.hook_handlers:
+            self.hook_handlers[hook.name](hook.data)
         if hook.blocking:
             self.server_event(events.HookReply(hook))
-
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
     opts = moptions.Options()
-    opts.mode = "reverse:example.com"
+    # opts.mode = "reverse:example.com"
 
     async def handle(reader, writer):
-        await SimpleConnectionHandler(reader, writer, opts).handle_client()
+        layer_stack = [
+            # layers.TLSLayer,
+            lambda c: layers.HTTPLayer(c, HTTPMode.regular),
+            layers.TCPLayer,
+        ]
+
+        def next_layer(nl: layer.NextLayer):
+            nl.layer = layer_stack.pop(0)(nl.context)
+
+        await SimpleConnectionHandler(reader, writer, opts, {
+            "next_layer": next_layer
+        }).handle_client()
 
     coro = asyncio.start_server(handle, '127.0.0.1', 8080, loop=loop)
     server = loop.run_until_complete(coro)
