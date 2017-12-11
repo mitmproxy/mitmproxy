@@ -1,15 +1,27 @@
+import shutil
 import subprocess
-import sys
 import tempfile
+import typing
 
 from mitmproxy import command
 from mitmproxy import ctx
 
-platformPaths = {
-    "linux": "google-chrome",
-    "win32": "chrome.exe",
-    "darwin": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-}
+
+def get_chrome_executable() -> typing.Optional[str]:
+    for browser in (
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            # https://stackoverflow.com/questions/40674914/google-chrome-path-in-windows-10
+            r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+            r"C:\Program Files (x86)\Google\Application\chrome.exe",
+            # Linux binary names from Python's webbrowser module.
+            "google-chrome",
+            "chrome",
+            "chromium",
+            "chromium-browser",
+    ):
+        if shutil.which(browser):
+            return browser
+    return None
 
 
 class Browser:
@@ -29,8 +41,8 @@ class Browser:
             else:
                 self.done()
 
-        cmd = platformPaths.get(sys.platform)
-        if not cmd:  # pragma: no cover
+        cmd = get_chrome_executable()
+        if not cmd:
             ctx.log.alert("Your platform is not supported yet - please submit a patch.")
             return
 
