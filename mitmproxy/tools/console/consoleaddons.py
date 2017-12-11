@@ -340,6 +340,9 @@ class ConsoleAddon:
 
     @command.command("console.edit.focus.options")
     def edit_focus_options(self) -> typing.Sequence[str]:
+        """
+            Possible components for console.edit.focus.
+        """
         return [
             "cookies",
             "form",
@@ -357,7 +360,7 @@ class ConsoleAddon:
     @command.command("console.edit.focus")
     def edit_focus(self, part: str) -> None:
         """
-            Edit the query of the current focus.
+            Edit a component of the currently focused flow.
         """
         if part == "cookies":
             self.master.switch_view("edit_focus_cookies")
