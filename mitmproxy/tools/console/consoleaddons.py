@@ -431,26 +431,32 @@ class ConsoleAddon:
         self._grideditor().cmd_spawn_editor()
 
     @command.command("console.flowview.mode.set")
-    def flowview_mode_set(self) -> None:
+    def flowview_mode_set(self, mode: str) -> None:
         """
             Set the display mode for the current flow view.
         """
-        fv = self.master.window.current("flowview")
+        fv = self.master.window.current_window("flowview")
         if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
 
-        def callback(opt):
-            try:
-                self.master.commands.call_args(
-                    "view.setval",
-                    ["@focus", "flowview_mode_%s" % idx, opt]
-                )
-            except exceptions.CommandError as e:
-                signals.status_message.send(message=str(e))
+        if mode not in [i.name.lower() for i in contentviews.views]:
+            raise exceptions.CommandError("Invalid flowview mode.")
 
-        opts = [i.name.lower() for i in contentviews.views]
-        self.master.overlay(overlay.Chooser(self.master, "Mode", opts, "", callback))
+        try:
+            self.master.commands.call_args(
+                "view.setval",
+                ["@focus", "flowview_mode_%s" % idx, mode]
+            )
+        except exceptions.CommandError as e:
+            signals.status_message.send(message=str(e))
+
+    @command.command("console.flowview.mode.options")
+    def flowview_mode_options(self) -> typing.Sequence[str]:
+        """
+            Returns the valid options for the flowview mode.
+        """
+        return [i.name.lower() for i in contentviews.views]
 
     @command.command("console.flowview.mode")
     def flowview_mode(self) -> str:
