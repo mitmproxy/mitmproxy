@@ -244,6 +244,7 @@ class Pathoc(tcp.TCPClient):
             port=connect_to[1],
             path=None,
             http_version='HTTP/1.1',
+            headers=[(b"Host", connect_to[0].encode("idna"))],
             content=b'',
         )
         self.wfile.write(net_http.http1.assemble_request(req))
