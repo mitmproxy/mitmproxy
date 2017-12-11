@@ -190,10 +190,19 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
         raise exceptions.CommandError("Unsupported argument type: %s" % argtype)
 
 
+def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
+    sig = inspect.signature(f)
+    try:
+        sig.bind(*args, **kwargs)
+    except TypeError as v:
+        raise exceptions.CommandError("Argument mismatch: %s" % v.args[0])
+
+
 def command(path):
     def decorator(function):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
+            verify_arg_signature(function, args, kwargs)
             return function(*args, **kwargs)
         wrapper.__dict__["command_path"] = path
         return wrapper
