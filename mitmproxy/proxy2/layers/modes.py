@@ -11,3 +11,10 @@ class ReverseProxy(layer.Layer):
 
         child_layer = layer.NextLayer(self.context)
         self._handle_event = child_layer.handle_event
+
+
+class HttpProxy(layer.Layer):
+    def __init__(self, context: Context):
+        super().__init__(context)
+        child_layer = layer.NextLayer(self.context)
+        self._handle_event = child_layer.handle_event

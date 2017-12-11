@@ -1,15 +1,84 @@
+import enum
 import typing
-from unittest import mock
 from warnings import warn
 
 import h11
-from mitmproxy.net import http
+from mitmproxy import http
+from mitmproxy.net import http as net_http
 from mitmproxy.net import websockets
-from mitmproxy.proxy2 import events, commands
+from mitmproxy.net.http import url
+from mitmproxy.net.http.http1.read import _parse_authority_form
+from mitmproxy.proxy.protocol.http import HTTPMode
+from mitmproxy.proxy2 import events, commands, context
 from mitmproxy.proxy2.context import Context
-from mitmproxy.proxy2.layer import Layer
+from mitmproxy.proxy2.layer import Layer, NextLayer
 from mitmproxy.proxy2.layers import websocket
 from mitmproxy.proxy2.utils import expect
+
+
+class FirstLineFormat(enum.Enum):
+    authority = "authority"
+    relative = "relative"
+    absolute = "absolute"
+
+
+MODE_REQUEST_FORMS = {
+    HTTPMode.regular: (FirstLineFormat.authority, FirstLineFormat.absolute),
+    HTTPMode.transparent: (FirstLineFormat.relative,),
+    HTTPMode.upstream: (FirstLineFormat.authority, FirstLineFormat.absolute),
+}
+
+
+def _make_request_from_event(event: h11.Request) -> http.HTTPRequest:
+    if event.target == b"*" or event.target.startswith(b"/"):
+        form = "relative"
+        path = event.target
+        scheme, host, port = None, None, None
+    elif event.method == b"CONNECT":
+        form = "authority"
+        host, port = _parse_authority_form(event.target)
+        scheme, path = None, None
+    else:
+        form = "absolute"
+        scheme, host, port, path = url.parse(event.target)
+
+    return http.HTTPRequest(
+        form,
+        event.method,
+        scheme,
+        host,
+        port,
+        path,
+        b"HTTP/" + event.http_version,
+        event.headers,
+        None,
+        -1  # FIXME: first_byte_timestamp
+    )
+
+
+def validate_request_form(
+        mode: HTTPMode,
+        first_line_format: FirstLineFormat,
+        scheme: str
+) -> None:
+    if first_line_format == FirstLineFormat.absolute and scheme != "http":
+        raise ValueError(f"Invalid request scheme: {scheme}")
+
+    allowed_request_forms = MODE_REQUEST_FORMS[mode]
+    if first_line_format not in allowed_request_forms:
+        if mode == HTTPMode.transparent:
+            desc = "HTTP CONNECT" if first_line_format == "authority" else "absolute-form"
+            raise ValueError(
+                f"""
+                Mitmproxy received an {desc} request even though it is not running
+                in regular mode. This usually indicates a misconfiguration,
+                please see the mitmproxy mode documentation for details.
+                """
+            )
+        else:
+            expected = ' or '.join(x.value for x in allowed_request_forms)
+            raise ValueError(
+                f"Invalid HTTP request form (expected: {expected}, got: {first_line_format})")
 
 
 class HTTPLayer(Layer):
@@ -17,29 +86,33 @@ class HTTPLayer(Layer):
     Simple TCP layer that just relays messages right now.
     """
     context: Context = None
+    mode: HTTPMode
 
     # this is like a mini state machine.
     state: typing.Callable[[events.Event], commands.TCommandGenerator]
 
-    def __init__(self, context: Context):
+    def __init__(self, context: Context, mode: HTTPMode):
         super().__init__(context)
+        self.mode = mode
+
         self.state = self.read_request_headers
-        self.flow = mock.Mock()
+        self.flow = http.HTTPFlow(self.context.client, self.context.server)
         self.client_conn = h11.Connection(h11.SERVER)
         self.server_conn = h11.Connection(h11.CLIENT)
 
-        # poor man's logging
+        # debug
+        # \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/
         def log_event(orig):
             def next_event():
                 e = orig()
-                yield commands.Log(str(e))
+                yield commands.Log(f"[h11] {e}")
                 return e
 
             return next_event
 
         self.client_conn.next_event = log_event(self.client_conn.next_event)
         self.server_conn.next_event = log_event(self.server_conn.next_event)
-
+        # /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\
         # this is very preliminary: [request_events, response_events]
         self.flow_events = [[], []]
 
@@ -67,8 +140,11 @@ class HTTPLayer(Layer):
             if self.client_conn.client_is_waiting_for_100_continue:
                 raise NotImplementedError()
 
-            self.flow.request.headers = http.Headers(event.headers)
-            self.flow_events[0].append(event)
+            self.flow.request = _make_request_from_event(event)
+            validate_request_form(self.mode, FirstLineFormat(self.flow.request.first_line_format), self.flow.request.scheme)
+
+            yield commands.Hook("requestheaders", self.flow)
+
             self.state = self.read_request_body
             yield from self.read_request_body()  # there may already be further events.
         else:
@@ -84,6 +160,25 @@ class HTTPLayer(Layer):
             elif isinstance(event, h11.EndOfMessage):
                 self.flow_events[0].append(event)
                 yield commands.Log(f"request {self.flow_events}")
+
+                if self.flow.request.first_line_format == FirstLineFormat.authority.value:
+                    if self.mode == HTTPMode.regular:
+                        yield commands.Hook("http_connect", self.flow)
+                        self.context.server = context.Server(
+                            (self.flow.request.host, self.flow.request.port)
+                        )
+                        yield commands.SendData(
+                            self.context.client,
+                            b'%s 200 Connection established\r\n\r\n' % self.flow.request.data.http_version
+                        )
+                        child_layer = NextLayer(self.context)
+                        self._handle_event = child_layer.handle_event
+                        yield from child_layer.handle_event(events.Start())
+                        return
+
+                    if self.mode == HTTPMode.upstream:
+                        raise NotImplementedError()
+
                 yield from self._send_request()
                 return
             else:
@@ -113,7 +208,7 @@ class HTTPLayer(Layer):
             self.state = self.read_response_body
             yield from self.read_response_body()  # there may already be further events.
         elif isinstance(event, h11.InformationalResponse):
-            self.flow.response.headers = http.Headers(event.headers)
+            self.flow.response.headers = net_http.Headers(event.headers)
             if event.status_code == 101 and websockets.check_handshake(self.flow.response.headers):
                 child_layer = websocket.WebsocketLayer(self.context, self.flow)
                 yield from child_layer.handle_event(events.Start())
