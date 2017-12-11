@@ -27,8 +27,9 @@ class Client(Connection):
 class Server(Connection):
     sni: Union[bytes, bool] = True
     """True: client SNI, False: no SNI, bytes: custom value"""
+    address: Optional[tuple]
 
-    def __init__(self, address):
+    def __init__(self, address: Optional[tuple]):
         self.address = address
 
 
@@ -38,17 +39,16 @@ class Context:
     """
 
     client: Client
-    server: Optional[Server]
+    server: Server
     options: Options
     layers: List["mitmproxy.proxy2.layer.Layer"]
 
     def __init__(
             self,
             client: Client,
-            server: Optional[Server],
             options: Options,
     ) -> None:
         self.client = client
-        self.server = server
         self.options = options
+        self.server = Server(None)
         self.layers = []

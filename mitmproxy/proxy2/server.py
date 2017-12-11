@@ -29,7 +29,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         addr = writer.get_extra_info('peername')
 
         self.client = Client(addr)
-        self.context = Context(self.client, None, options)
+        self.context = Context(self.client, options)
 
         if options.mode.startswith("reverse:"):
             self.layer = ReverseProxy(self.context)
@@ -83,6 +83,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 break
 
     async def open_connection(self, command: commands.OpenConnection):
+        if not command.connection.address:
+            raise ValueError("Cannot open connection, no hostname given.")
         try:
             reader, writer = await asyncio.open_connection(
                 *command.connection.address
