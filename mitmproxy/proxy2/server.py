@@ -12,9 +12,9 @@ import socket
 import typing
 
 from mitmproxy import options as moptions
-from mitmproxy.proxy2 import events, commands
+from mitmproxy.proxy.protocol.http import HTTPMode
+from mitmproxy.proxy2 import events, commands, layers, layer
 from mitmproxy.proxy2.context import Client, Context, Connection
-from mitmproxy.proxy2.layers.modes import ReverseProxy
 
 
 class StreamIO(typing.NamedTuple):
@@ -31,8 +31,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self.client = Client(addr)
         self.context = Context(self.client, options)
 
-        if options.mode.startswith("reverse:"):
-            self.layer = ReverseProxy(self.context)
+        if options.mode == "regular":
+            self.layer = layers.modes.HttpProxy(self.context)
+        elif options.mode.startswith("reverse:"):
+            self.layer = layers.modes.ReverseProxy(self.context)
         else:
             raise NotImplementedError("Mode not implemented.")
 
