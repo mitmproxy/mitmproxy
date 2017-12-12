@@ -1,3 +1,4 @@
+import re
 import sys
 
 
@@ -8,6 +9,9 @@ def lookup(address, port, s):
 
         Returns an (address, port) tuple, or None.
     """
+    # We may get an ipv4-mapped ipv6 address here, e.g. ::ffff:127.0.0.1.
+    # Those still appear as "127.0.0.1" in the table, so we need to strip the prefix.
+    address = re.sub("^::ffff:(?=\d+.\d+.\d+.\d+$)", "", address)
     s = s.decode()
     spec = "%s:%s" % (address, port)
     for i in s.split("\n"):
