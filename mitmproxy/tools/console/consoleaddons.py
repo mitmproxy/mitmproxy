@@ -329,9 +329,9 @@ class ConsoleAddon:
             correct viewier, and fall back to the programs in $PAGER or $EDITOR
             if necessary.
         """
-        fpart = getattr(f, part)
+        fpart = getattr(f, part, None)
         if not fpart:
-            raise exceptions.CommandError("Could not view part %s." % part)
+            raise exceptions.CommandError("Part must be either request or response, not %s." % part)
         t = fpart.headers.get("content-type")
         content = fpart.get_content(strict=False)
         if not content:
