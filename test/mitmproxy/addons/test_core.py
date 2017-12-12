@@ -69,9 +69,6 @@ def test_flow_set():
         f = tflow.tflow(resp=True)
         assert sa.flow_set_options()
 
-        with pytest.raises(exceptions.CommandError):
-            sa.flow_set([f], "flibble", "post")
-
         assert f.request.method != "post"
         sa.flow_set([f], "method", "post")
         assert f.request.method == "POST"
@@ -125,9 +122,6 @@ def test_encoding():
         assert f.request.headers["content-encoding"] == "deflate"
         sa.encode_toggle([f], "request")
         assert "content-encoding" not in f.request.headers
-
-        with pytest.raises(exceptions.CommandError):
-            sa.encode([f], "request", "invalid")
 
 
 def test_options(tmpdir):

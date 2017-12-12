@@ -31,6 +31,12 @@ console_layouts = [
     "horizontal",
 ]
 
+FocusChoice = typing.NewType("FocusChoice", command.Choice)
+FocusChoice.options_command = "console.edit.focus.options"
+
+FlowViewModeChoice = typing.NewType("FlowViewModeChoice", command.Choice)
+FlowViewModeChoice.options_command = "console.flowview.mode.options"
+
 
 class Logger:
     def log(self, evt):
@@ -111,8 +117,7 @@ class ConsoleAddon:
     @command.command("console.layout.options")
     def layout_options(self) -> typing.Sequence[str]:
         """
-            Returns the valid options for console layout. Use these by setting
-            the console_layout option.
+            Returns the available options for the consoler_layout option.
         """
         return ["single", "vertical", "horizontal"]
 
@@ -358,7 +363,7 @@ class ConsoleAddon:
         ]
 
     @command.command("console.edit.focus")
-    def edit_focus(self, part: str) -> None:
+    def edit_focus(self, part: FocusChoice) -> None:
         """
             Edit a component of the currently focused flow.
         """
@@ -431,7 +436,7 @@ class ConsoleAddon:
         self._grideditor().cmd_spawn_editor()
 
     @command.command("console.flowview.mode.set")
-    def flowview_mode_set(self, mode: str) -> None:
+    def flowview_mode_set(self, mode: FlowViewModeChoice) -> None:
         """
             Set the display mode for the current flow view.
         """

@@ -8,6 +8,10 @@ import io
 import pytest
 
 
+TChoice = typing.NewType("TChoice", command.Choice)
+TChoice.options_command = "choices"
+
+
 class TAddon:
     def cmd1(self, foo: str) -> str:
         """cmd1 help"""
@@ -24,6 +28,12 @@ class TAddon:
 
     def varargs(self, one: str, *var: str) -> typing.Sequence[str]:
         return list(var)
+
+    def choices(self) -> typing.Sequence[str]:
+        return ["one", "two", "three"]
+
+    def choose(self, arg: TChoice) -> typing.Sequence[str]:  # type: ignore
+        return ["one", "two", "three"]
 
 
 class TestCommand:
@@ -86,6 +96,8 @@ def test_typename():
     assert command.typename(flow.Flow, False) == "flow"
     assert command.typename(typing.Sequence[str], False) == "[str]"
 
+    assert command.typename(TChoice, False) == "choice"
+
 
 class DummyConsole:
     @command.command("view.resolve")
@@ -133,6 +145,16 @@ def test_parsearg():
         assert command.parsearg(
             tctx.master.commands, "foo, bar", typing.Sequence[str]
         ) == ["foo", "bar"]
+
+        a = TAddon()
+        tctx.master.commands.add("choices", a.choices)
+        assert command.parsearg(
+            tctx.master.commands, "one", TChoice,
+        ) == "one"
+        with pytest.raises(exceptions.CommandError):
+            assert command.parsearg(
+                tctx.master.commands, "invalid", TChoice,
+            )
 
 
 class TDec:

@@ -8,6 +8,13 @@ from mitmproxy import optmanager
 from mitmproxy.net.http import status_codes
 
 
+FlowSetChoice = typing.NewType("FlowSetChoice", command.Choice)
+FlowSetChoice.options_command = "flow.set.options"
+
+FlowEncodeChoice = typing.NewType("FlowEncodeChoice", command.Choice)
+FlowEncodeChoice.options_command = "flow.encode.options"
+
+
 class Core:
     @command.command("set")
     def set(self, *spec: str) -> None:
@@ -98,17 +105,13 @@ class Core:
     @command.command("flow.set")
     def flow_set(
         self,
-        flows: typing.Sequence[flow.Flow], spec: str, sval: str
+        flows: typing.Sequence[flow.Flow],
+        spec: FlowSetChoice,
+        sval: str
     ) -> None:
         """
             Quickly set a number of common values on flows.
         """
-        opts = self.flow_set_options()
-        if spec not in opts:
-            raise exceptions.CommandError(
-                "Set spec must be one of: %s." % ", ".join(opts)
-            )
-
         val = sval  # type: typing.Union[int, str]
         if spec == "status_code":
             try:
@@ -190,13 +193,15 @@ class Core:
         ctx.log.alert("Toggled encoding on %s flows." % len(updated))
 
     @command.command("flow.encode")
-    def encode(self, flows: typing.Sequence[flow.Flow], part: str, enc: str) -> None:
+    def encode(
+        self,
+        flows: typing.Sequence[flow.Flow],
+        part: str,
+        enc: FlowEncodeChoice,
+    ) -> None:
         """
             Encode flows with a specified encoding.
         """
-        if enc not in self.encode_options():
-            raise exceptions.CommandError("Invalid encoding format: %s" % enc)
-
         updated = []
         for f in flows:
             p = getattr(f, part, None)
@@ -212,7 +217,6 @@ class Core:
     def encode_options(self) -> typing.Sequence[str]:
         """
             The possible values for an encoding specification.
-
         """
         return ["gzip", "deflate", "br"]
 
