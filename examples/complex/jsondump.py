@@ -1,13 +1,16 @@
+from threading import Lock
 import base64
 import json
 
 from mitmproxy import ctx
+from mitmproxy.script import concurrent
 
 
 class JSONDumper:
     def __init__(self):
         self.outfile = open('jsondump.out', 'a')
         self.transformations = None
+        self.lock = Lock()
 
     def __del__(self):
         if self.outfile:
@@ -108,20 +111,26 @@ class JSONDumper:
                 self.transform_field(frame, field, tfm['func'])
         frame = json.dumps(self.convert_to_strings(frame))
 
+        self.lock.acquire()
         self.outfile.write(frame+"\n")
+        self.lock.release()
 
     def configure(self, _):
         self._init_transformations()
 
+    @concurrent
     def response(self, flow):
         self.dump(flow.get_state())
 
+    @concurrent
     def error(self, flow):
         self.dump(flow.get_state())
 
+    @concurrent
     def websocket_messages(self, flow):
         self.dump(flow.get_state())
 
+    @concurrent
     def websocket_error(self, flow):
         self.dump(flow.get_state())
 
