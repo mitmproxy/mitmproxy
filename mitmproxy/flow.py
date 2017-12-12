@@ -179,5 +179,7 @@ class Flow(stateobject.StateObject):
         if not self.intercepted:
             return
         self.intercepted = False
-        self.reply.ack()
-        self.reply.commit()
+        # If a flow is intercepted and then duplicated, the duplicated one is not taken.
+        if self.reply.state == "taken":
+            self.reply.ack()
+            self.reply.commit()

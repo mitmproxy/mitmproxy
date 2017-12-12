@@ -203,6 +203,15 @@ class TestHTTPFlow:
         f.resume()
         assert f.reply.state == "committed"
 
+    def test_resume_duplicated(self):
+        f = tflow.tflow()
+        f.intercept()
+        f2 = f.copy()
+        assert f.intercepted is f2.intercepted is True
+        f.resume()
+        f2.resume()
+        assert f.intercepted is f2.intercepted is False
+
     def test_replace_unicode(self):
         f = tflow.tflow(resp=True)
         f.response.content = b"\xc2foo"
