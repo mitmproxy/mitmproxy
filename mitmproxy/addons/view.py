@@ -238,7 +238,7 @@ class View(collections.Sequence):
     @command.command("view.order.options")
     def order_options(self) -> typing.Sequence[str]:
         """
-            A list of all the orders we support.
+            Choices supported by the console_order option.
         """
         return list(sorted(self.orders.keys()))
 

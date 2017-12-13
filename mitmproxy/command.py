@@ -18,12 +18,33 @@ Cuts = typing.Sequence[
 ]
 
 
+# A str that is validated at runtime by calling a command that returns options.
+#
+# This requires some explanation. We want to construct a type with two aims: it
+# must be detected as str by mypy, and it has to be decorated at runtime with an
+# options_commmand attribute that tells us where to look up options for runtime
+# validation. Unfortunately, mypy is really, really obtuse about what it detects
+# as a type - any construction of these types at runtime barfs. The effect is
+# that while the annotation mechanism is very generaly, if you also use mypy
+# you're hamstrung. So the middle road is to declare a derived type, which is
+# then used very clumsily as follows:
+#
+#       MyType = typing.NewType("MyType", command.Choice)
+#       MyType.options_command = "my.command"
+#
+# The resulting type is then used in the function argument decorator.
+class Choice(str):
+    options_command = ""
+
+
 def typename(t: type, ret: bool) -> str:
     """
         Translates a type to an explanatory string. If ret is True, we're
         looking at a return type, else we're looking at a parameter type.
     """
-    if issubclass(t, (str, int, bool)):
+    if hasattr(t, "options_command"):
+        return "choice"
+    elif issubclass(t, (str, int, bool)):
         return t.__name__
     elif t == typing.Sequence[flow.Flow]:
         return "[flow]" if ret else "flowspec"
@@ -157,6 +178,14 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     """
         Convert a string to a argument to the appropriate type.
     """
+    if hasattr(argtype, "options_command"):
+        cmd = getattr(argtype, "options_command")
+        opts = manager.call(cmd)
+        if spec not in opts:
+            raise exceptions.CommandError(
+                "Invalid choice: see %s for options" % cmd
+            )
+        return spec
     if issubclass(argtype, str):
         return spec
     elif argtype == bool:

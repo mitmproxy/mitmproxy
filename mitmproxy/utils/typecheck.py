@@ -31,7 +31,7 @@ def check_command_type(value: typing.Any, typeinfo: typing.Any) -> bool:
                 return False
     elif value is None and typeinfo is None:
         return True
-    elif not isinstance(value, typeinfo):
+    elif (not isinstance(typeinfo, type)) or (not isinstance(value, typeinfo)):
         return False
     return True
 

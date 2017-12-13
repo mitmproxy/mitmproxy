@@ -116,7 +116,15 @@ def map(km):
         "View flow body in an external viewer"
     )
     km.add("p", "view.focus.prev", ["flowview"], "Go to previous flow")
-    km.add("m", "console.flowview.mode.set", ["flowview"], "Set flow view mode")
+    km.add(
+        "m",
+        """
+        console.choose.cmd Mode console.flowview.mode.options
+        console.flowview.mode.set {choice}
+        """,
+        ["flowview"],
+        "Set flow view mode"
+    )
     km.add(
         "z",
         """
