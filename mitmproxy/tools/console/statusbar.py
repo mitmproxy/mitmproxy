@@ -6,6 +6,7 @@ from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import commandeditor
 import mitmproxy.tools.console.master # noqa
+from mitmproxy.tools.console.commander import commander
 
 
 class PromptPath:
@@ -66,7 +67,7 @@ class ActionBar(urwid.WidgetWrap):
 
     def sig_prompt_command(self, sender, partial=""):
         signals.focus.send(self, section="footer")
-        self._w = commandeditor.CommandEdit(partial)
+        self._w = commander.CommandEdit(partial)
         self.prompting = commandeditor.CommandExecutor(self.master)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
@@ -100,7 +101,7 @@ class ActionBar(urwid.WidgetWrap):
                 elif k in self.onekey:
                     self.prompt_execute(k)
             elif k == "enter":
-                self.prompt_execute(self._w.get_edit_text())
+                self.prompt_execute(self._w.get_value())
             else:
                 if common.is_keypress(k):
                     self._w.keypress(size, k)

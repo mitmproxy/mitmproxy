@@ -1,17 +1,8 @@
 import typing
-import urwid
 
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy.tools.console import signals
-
-
-class CommandEdit(urwid.Edit):
-    def __init__(self, partial):
-        urwid.Edit.__init__(self, ":", partial)
-
-    def keypress(self, size, key):
-        return urwid.Edit.keypress(self, size, key)
 
 
 class CommandExecutor:
