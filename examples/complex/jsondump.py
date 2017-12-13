@@ -1,6 +1,7 @@
 from threading import Lock
 import base64
 import json
+import requests
 
 from mitmproxy import ctx
 from mitmproxy.script import concurrent
@@ -10,7 +11,9 @@ class JSONDumper:
     def __init__(self):
         self.outfile = open('jsondump.out', 'a')
         self.transformations = None
-        self.lock = Lock()
+        self.url = None
+        self.lock = None
+        self.auth = None
 
     def __del__(self):
         if self.outfile:
@@ -111,11 +114,38 @@ class JSONDumper:
                 self.transform_field(frame, field, tfm['func'])
         frame = json.dumps(self.convert_to_strings(frame))
 
-        self.lock.acquire()
-        self.outfile.write(frame+"\n")
-        self.lock.release()
+        if self.outfile:
+            self.lock.acquire()
+            self.outfile.write(json.dumps(frame)+"\n")
+            self.lock.release()
+        else:
+            requests.post(self.url, json=frame, auth=(self.auth or None))
+
+    @staticmethod
+    def load(loader):
+        loader.add_option('dump_encodecontent', bool, False,
+                          'Encode content as base64.')
+        loader.add_option('dump_destination', str, 'jsondump.out',
+                          'Output destination: path to a file or URL.')
+        loader.add_option('dump_username', str, '',
+                          'Basic auth username for URL destinations.')
+        loader.add_option('dump_password', str, '',
+                          'Basic auth password for URL destinations.')
 
     def configure(self, _):
+        if ctx.options.dump_destination.startswith('http'):
+            self.outfile = None
+            self.url = ctx.options.dump_destination
+            ctx.log.info('Sending all data frames to %s' % self.url)
+            if ctx.options.dump_username and ctx.options.dump_password:
+                self.auth = (ctx.options.dump_username, ctx.options.dump_password)
+                ctx.log.info('HTTP Basic auth enabled.')
+        else:
+            self.outfile = open(ctx.options.dump_destination, 'a')
+            self.url = None
+            self.lock = Lock()
+            ctx.log.info('Writing all data frames to %s' % ctx.options.dump_destination)
+
         self._init_transformations()
 
     @concurrent
