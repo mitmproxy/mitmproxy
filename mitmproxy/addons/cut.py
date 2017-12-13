@@ -96,7 +96,7 @@ class Cut:
         return ret
 
     @command.command("cut.save")
-    def save(self, cuts: command.Cuts, path: str) -> None:
+    def save(self, cuts: command.Cuts, path: command.Path) -> None:
         """
             Save cuts to file. If there are multiple rows or columns, the format
             is UTF-8 encoded CSV. If there is exactly one row and one column,
@@ -107,7 +107,7 @@ class Cut:
         append = False
         if path.startswith("+"):
             append = True
-            path = path[1:]
+            path = command.Path(path[1:])
         if len(cuts) == 1 and len(cuts[0]) == 1:
             with open(path, "ab" if append else "wb") as fp:
                 if fp.tell() > 0:

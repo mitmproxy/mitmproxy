@@ -1,6 +1,7 @@
 import os.path
 import typing
 
+from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import io
@@ -48,7 +49,8 @@ class Save:
             if ctx.options.save_stream_file:
                 self.start_stream_to_path(ctx.options.save_stream_file, self.filt)
 
-    def save(self, flows: typing.Sequence[flow.Flow], path: str) -> None:
+    @command.command("save.file")
+    def save(self, flows: typing.Sequence[flow.Flow], path: command.Path) -> None:
         """
             Save flows to a file. If the path starts with a +, flows are
             appended to the file, otherwise it is over-written.
@@ -62,9 +64,6 @@ class Save:
             stream.add(i)
         f.close()
         ctx.log.alert("Saved %s flows." % len(flows))
-
-    def load(self, l):
-        l.add_command("save.file", self.save)
 
     def tcp_start(self, flow):
         if self.stream:

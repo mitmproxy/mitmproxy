@@ -221,7 +221,7 @@ class Core:
         return ["gzip", "deflate", "br"]
 
     @command.command("options.load")
-    def options_load(self, path: str) -> None:
+    def options_load(self, path: command.Path) -> None:
         """
             Load options from a file.
         """
@@ -233,7 +233,7 @@ class Core:
             ) from e
 
     @command.command("options.save")
-    def options_save(self, path: str) -> None:
+    def options_save(self, path: command.Path) -> None:
         """
             Save options to a file.
         """
