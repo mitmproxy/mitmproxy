@@ -2,6 +2,7 @@
     This module manges and invokes typed commands.
 """
 import inspect
+import types
 import typing
 import shlex
 import textwrap
@@ -18,25 +19,6 @@ Cuts = typing.Sequence[
 ]
 
 
-# A str that is validated at runtime by calling a command that returns options.
-#
-# This requires some explanation. We want to construct a type with two aims: it
-# must be detected as str by mypy, and it has to be decorated at runtime with an
-# options_commmand attribute that tells us where to look up options for runtime
-# validation. Unfortunately, mypy is really, really obtuse about what it detects
-# as a type - any construction of these types at runtime barfs. The effect is
-# that while the annotation mechanism is very generaly, if you also use mypy
-# you're hamstrung. So the middle road is to declare a derived type, which is
-# then used very clumsily as follows:
-#
-#       MyType = typing.NewType("MyType", command.Choice)
-#       MyType.options_command = "my.command"
-#
-# The resulting type is then used in the function argument decorator.
-class Choice(str):
-    options_command = ""
-
-
 Path = typing.NewType("Path", str)
 
 
@@ -45,7 +27,7 @@ def typename(t: type, ret: bool) -> str:
         Translates a type to an explanatory string. If ret is True, we're
         looking at a return type, else we're looking at a parameter type.
     """
-    if hasattr(t, "options_command"):
+    if isinstance(t, Choice):
         return "choice"
     elif t == typing.Sequence[flow.Flow]:
         return "[flow]" if ret else "flowspec"
@@ -112,11 +94,11 @@ class Command:
             args = args[:len(self.paramtypes) - 1]
 
         pargs = []
-        for i in range(len(args)):
-            if typecheck.check_command_type(args[i], self.paramtypes[i]):
-                pargs.append(args[i])
+        for arg, paramtype in zip(args, self.paramtypes):
+            if typecheck.check_command_type(arg, paramtype):
+                pargs.append(arg)
             else:
-                pargs.append(parsearg(self.manager, args[i], self.paramtypes[i]))
+                pargs.append(parsearg(self.manager, arg, paramtype))
 
         if remainder:
             chk = typecheck.check_command_type(
@@ -183,8 +165,8 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     """
         Convert a string to a argument to the appropriate type.
     """
-    if hasattr(argtype, "options_command"):
-        cmd = getattr(argtype, "options_command")
+    if isinstance(argtype, Choice):
+        cmd = argtype.options_command
         opts = manager.call(cmd)
         if spec not in opts:
             raise exceptions.CommandError(
@@ -242,4 +224,27 @@ def command(path):
             return function(*args, **kwargs)
         wrapper.__dict__["command_path"] = path
         return wrapper
+    return decorator
+
+
+class Choice:
+    def __init__(self, options_command):
+        self.options_command = options_command
+
+    def __instancecheck__(self, instance):
+        # return false here so that arguments are piped through parsearg,
+        # which does extended validation.
+        return False
+
+
+def argument(name, type):
+    """
+    Set the type of a command argument at runtime.
+    This is useful for more specific types such as command.Choice, which we cannot annotate
+    directly as mypy does not like that.
+    """
+    def decorator(f: types.FunctionType) -> types.FunctionType:
+        assert name in f.__annotations__
+        f.__annotations__[name] = type
+        return f
     return decorator

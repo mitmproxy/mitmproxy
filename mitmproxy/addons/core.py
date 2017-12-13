@@ -8,13 +8,6 @@ from mitmproxy import optmanager
 from mitmproxy.net.http import status_codes
 
 
-FlowSetChoice = typing.NewType("FlowSetChoice", command.Choice)
-FlowSetChoice.options_command = "flow.set.options"
-
-FlowEncodeChoice = typing.NewType("FlowEncodeChoice", command.Choice)
-FlowEncodeChoice.options_command = "flow.encode.options"
-
-
 class Core:
     @command.command("set")
     def set(self, *spec: str) -> None:
@@ -103,10 +96,11 @@ class Core:
         ]
 
     @command.command("flow.set")
+    @command.argument("spec", type=command.Choice("flow.set.options"))
     def flow_set(
         self,
         flows: typing.Sequence[flow.Flow],
-        spec: FlowSetChoice,
+        spec: str,
         sval: str
     ) -> None:
         """
@@ -193,11 +187,12 @@ class Core:
         ctx.log.alert("Toggled encoding on %s flows." % len(updated))
 
     @command.command("flow.encode")
+    @command.argument("enc", type=command.Choice("flow.encode.options"))
     def encode(
         self,
         flows: typing.Sequence[flow.Flow],
         part: str,
-        enc: FlowEncodeChoice,
+        enc: str,
     ) -> None:
         """
             Encode flows with a specified encoding.
