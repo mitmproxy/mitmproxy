@@ -11,6 +11,7 @@ class JSONDumper:
     def __init__(self):
         self.outfile = open('jsondump.out', 'a')
         self.transformations = None
+        self.encode = None
         self.url = None
         self.lock = None
         self.auth = None
@@ -51,6 +52,10 @@ class JSONDumper:
             ('request', 'headers'),
             ('response', 'headers'),
         ),
+        'content': (
+            ('request', 'content'),
+            ('response', 'content'),
+        ),
     }
 
     def _init_transformations(self):
@@ -75,11 +80,17 @@ class JSONDumper:
                 'func': lambda ms: [{
                     'type':        m[0],
                     'from_client': m[1],
-                    'content':     m[2],
+                    'content':     base64.b64encode(m[2]) if self.encode else m[2],
                     'timestamp':   int(m[3] * 1000),
                 } for m in ms],
             }
         ]
+
+        if self.encode:
+            self.transformations.append({
+                'fields': self.fields['content'],
+                'func': base64.b64encode,
+            })
 
     @staticmethod
     def transform_field(obj, path, func):
