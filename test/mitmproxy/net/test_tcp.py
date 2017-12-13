@@ -1,4 +1,5 @@
 from io import BytesIO
+import re
 import queue
 import time
 import socket
@@ -95,7 +96,13 @@ class TestServerBind(tservers.ServerTestBase):
     class handler(tcp.BaseHandler):
 
         def handle(self):
-            self.wfile.write(str(self.connection.getpeername()).encode())
+            # We may get an ipv4-mapped ipv6 address here, e.g. ::ffff:127.0.0.1.
+            # Those still appear as "127.0.0.1" in the table, so we need to strip the prefix.
+            peername = self.connection.getpeername()
+            address = re.sub("^::ffff:(?=\d+.\d+.\d+.\d+$)", "", peername[0])
+            port = peername[1]
+
+            self.wfile.write(str((address, port)).encode())
             self.wfile.flush()
 
     def test_bind(self):
