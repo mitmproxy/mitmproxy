@@ -351,13 +351,13 @@ class View(collections.Sequence):
         ctx.master.addons.trigger("update", updated)
 
     @command.command("view.load")
-    def load_file(self, path: str) -> None:
+    def load_file(self, path: command.Path) -> None:
         """
             Load flows into the view, without processing them with addons.
         """
-        path = os.path.expanduser(path)
+        spath = os.path.expanduser(path)
         try:
-            with open(path, "rb") as f:
+            with open(spath, "rb") as f:
                 for i in io.FlowReader(f).stream():
                     # Do this to get a new ID, so we can load the same file N times and
                     # get new flows each time. It would be more efficient to just have a

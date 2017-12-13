@@ -35,6 +35,9 @@ class TAddon:
     def choose(self, arg: TChoice) -> typing.Sequence[str]:  # type: ignore
         return ["one", "two", "three"]
 
+    def path(self, arg: command.Path) -> None:
+        pass
+
 
 class TestCommand:
     def test_varargs(self):
@@ -97,6 +100,7 @@ def test_typename():
     assert command.typename(typing.Sequence[str], False) == "[str]"
 
     assert command.typename(TChoice, False) == "choice"
+    assert command.typename(command.Path, False) == "path"
 
 
 class DummyConsole:
@@ -155,6 +159,10 @@ def test_parsearg():
             assert command.parsearg(
                 tctx.master.commands, "invalid", TChoice,
             )
+
+        assert command.parsearg(
+            tctx.master.commands, "foo", command.Path
+        ) == "foo"
 
 
 class TDec:

@@ -49,7 +49,7 @@ class Export():
         return list(sorted(formats.keys()))
 
     @command.command("export.file")
-    def file(self, fmt: str, f: flow.Flow, path: str) -> None:
+    def file(self, fmt: str, f: flow.Flow, path: command.Path) -> None:
         """
             Export a flow to path.
         """

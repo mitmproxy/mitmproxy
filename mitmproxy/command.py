@@ -37,6 +37,9 @@ class Choice(str):
     options_command = ""
 
 
+Path = typing.NewType("Path", str)
+
+
 def typename(t: type, ret: bool) -> str:
     """
         Translates a type to an explanatory string. If ret is True, we're
@@ -44,8 +47,6 @@ def typename(t: type, ret: bool) -> str:
     """
     if hasattr(t, "options_command"):
         return "choice"
-    elif issubclass(t, (str, int, bool)):
-        return t.__name__
     elif t == typing.Sequence[flow.Flow]:
         return "[flow]" if ret else "flowspec"
     elif t == typing.Sequence[str]:
@@ -54,6 +55,10 @@ def typename(t: type, ret: bool) -> str:
         return "[cuts]" if ret else "cutspec"
     elif t == flow.Flow:
         return "flow"
+    elif t == Path:
+        return "path"
+    elif issubclass(t, (str, int, bool)):
+        return t.__name__
     else:  # pragma: no cover
         raise NotImplementedError(t)
 
@@ -186,7 +191,9 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
                 "Invalid choice: see %s for options" % cmd
             )
         return spec
-    if issubclass(argtype, str):
+    if argtype == Path:
+        return spec
+    elif issubclass(argtype, str):
         return spec
     elif argtype == bool:
         if spec == "true":
