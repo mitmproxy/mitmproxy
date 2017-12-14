@@ -19,7 +19,8 @@ Cuts = typing.Sequence[
 ]
 
 
-Path = typing.NewType("Path", str)
+class Path(str):
+    pass
 
 
 def typename(t: type, ret: bool) -> str:
@@ -37,10 +38,8 @@ def typename(t: type, ret: bool) -> str:
         return "[cuts]" if ret else "cutspec"
     elif t == flow.Flow:
         return "flow"
-    elif t == Path:
-        return "path"
     elif issubclass(t, (str, int, bool)):
-        return t.__name__
+        return t.__name__.lower()
     else:  # pragma: no cover
         raise NotImplementedError(t)
 
@@ -172,8 +171,6 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
             raise exceptions.CommandError(
                 "Invalid choice: see %s for options" % cmd
             )
-        return spec
-    if argtype == Path:
         return spec
     elif issubclass(argtype, str):
         return spec
