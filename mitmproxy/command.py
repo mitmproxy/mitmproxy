@@ -23,6 +23,10 @@ class Path(str):
     pass
 
 
+class Cmd(str):
+    pass
+
+
 def typename(t: type, ret: bool) -> str:
     """
         Translates a type to an explanatory string. If ret is True, we're
@@ -171,6 +175,8 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
             raise exceptions.CommandError(
                 "Invalid choice: see %s for options" % cmd
             )
+        return spec
+    if argtype in (Path, Cmd):
         return spec
     elif issubclass(argtype, str):
         return spec

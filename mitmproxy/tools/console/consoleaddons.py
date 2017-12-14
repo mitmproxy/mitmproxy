@@ -224,7 +224,11 @@ class ConsoleAddon:
 
     @command.command("console.choose")
     def console_choose(
-        self, prompt: str, choices: typing.Sequence[str], *cmd: str
+        self,
+        prompt: str,
+        choices: typing.Sequence[str],
+        cmd: command.Cmd,
+        *args: str,
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
@@ -233,7 +237,7 @@ class ConsoleAddon:
         """
         def callback(opt):
             # We're now outside of the call context...
-            repl = " ".join(cmd)
+            repl = cmd + " " + " ".join(args)
             repl = repl.replace("{choice}", opt)
             try:
                 self.master.commands.call(repl)
@@ -246,7 +250,7 @@ class ConsoleAddon:
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
-        self, prompt: str, choicecmd: str, *cmd: str
+        self, prompt: str, choicecmd: command.Cmd, *cmd: str
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
@@ -492,14 +496,20 @@ class ConsoleAddon:
         return list(sorted(keymap.Contexts))
 
     @command.command("console.key.bind")
-    def key_bind(self, contexts: typing.Sequence[str], key: str, *command: str) -> None:
+    def key_bind(
+        self,
+        contexts: typing.Sequence[str],
+        key: str,
+        cmd: command.Cmd,
+        *args: str,
+    ) -> None:
         """
             Bind a shortcut key.
         """
         try:
             self.master.keymap.add(
                 key,
-                " ".join(command),
+                cmd + " " + " ".join(args),
                 contexts,
                 ""
             )

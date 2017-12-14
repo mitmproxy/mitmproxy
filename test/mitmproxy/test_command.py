@@ -100,6 +100,7 @@ def test_typename():
 
     assert command.typename(command.Choice("foo"), False) == "choice"
     assert command.typename(command.Path, False) == "path"
+    assert command.typename(command.Cmd, False) == "cmd"
 
 
 class DummyConsole:
@@ -161,6 +162,9 @@ def test_parsearg():
 
         assert command.parsearg(
             tctx.master.commands, "foo", command.Path
+        ) == "foo"
+        assert command.parsearg(
+            tctx.master.commands, "foo", command.Cmd
         ) == "foo"
 
 

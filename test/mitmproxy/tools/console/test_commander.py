@@ -32,6 +32,3 @@ class TestCommandBuffer:
             cb.insert("x")
             assert cb.buf == output[0]
             assert cb.cursor == output[1]
-
-
-

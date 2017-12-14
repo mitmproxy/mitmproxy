@@ -3,18 +3,18 @@ from urwid.text_layout import calc_coords
 
 
 class CommandBuffer():
-    def __init__(self, start: str = ""):
+    def __init__(self, start: str = "") -> None:
         self.buf = start
         # This is the logical cursor position - the display cursor is one
         # character further on. Cursor is always within the range [0:len(buffer)].
         self._cursor = len(self.buf)
 
     @property
-    def cursor(self):
+    def cursor(self) -> int:
         return self._cursor
 
     @cursor.setter
-    def cursor(self, x):
+    def cursor(self, x) -> None:
         if x < 0:
             self._cursor = 0
         elif x > len(self.buf):
@@ -25,19 +25,19 @@ class CommandBuffer():
     def render(self):
         return self.buf
 
-    def left(self):
+    def left(self) -> None:
         self.cursor = self.cursor - 1
 
-    def right(self):
+    def right(self) -> None:
         self.cursor = self.cursor + 1
 
-    def backspace(self):
+    def backspace(self) -> None:
         if self.cursor == 0:
             return
         self.buf = self.buf[:self.cursor - 1] + self.buf[self.cursor:]
         self.cursor = self.cursor - 1
 
-    def insert(self, k: str):
+    def insert(self, k: str) -> None:
         """
             Inserts text at the cursor.
         """
@@ -48,7 +48,7 @@ class CommandBuffer():
 class CommandEdit(urwid.WidgetWrap):
     leader = ": "
 
-    def __init__(self, text):
+    def __init__(self, text) -> None:
         self.cbuf = CommandBuffer(text)
         self._w = urwid.Text(self.leader)
         self.update()
@@ -82,4 +82,3 @@ class CommandEdit(urwid.WidgetWrap):
 
     def get_value(self):
         return self.cbuf.buf
-
