@@ -228,7 +228,7 @@ class ConsoleAddon:
         prompt: str,
         choices: typing.Sequence[str],
         cmd: command.Cmd,
-        *args: str,
+        *args: command.Arg
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
@@ -250,7 +250,7 @@ class ConsoleAddon:
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
-        self, prompt: str, choicecmd: command.Cmd, *cmd: str
+        self, prompt: str, choicecmd: command.Cmd, *cmd: command.Arg
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
@@ -501,7 +501,7 @@ class ConsoleAddon:
         contexts: typing.Sequence[str],
         key: str,
         cmd: command.Cmd,
-        *args: str,
+        *args: command.Arg
     ) -> None:
         """
             Bind a shortcut key.

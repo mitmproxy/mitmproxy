@@ -17,7 +17,8 @@ from mitmproxy import flow
 
 def lexer(s):
     # mypy mis-identifies shlex.shlex as abstract
-    lex = shlex.shlex(s, punctuation_chars=True)  # type: ignore
+    lex = shlex.shlex(s)  # type: ignore
+    lex.wordchars += "."
     lex.whitespace_split = True
     lex.commenters = ''
     return lex
@@ -33,6 +34,10 @@ class Path(str):
 
 
 class Cmd(str):
+    pass
+
+
+class Arg(str):
     pass
 
 
@@ -157,7 +162,7 @@ class CommandManager:
             Parse a possibly partial command. Return a sequence of (part, type) tuples.
         """
         buf = io.StringIO(cmdstr)
-        parts: typing.List[str] = []
+        parts = []  # type: typing.List[str]
         lex = lexer(buf)
         while 1:
             remainder = cmdstr[buf.tell():]
@@ -174,8 +179,8 @@ class CommandManager:
         elif cmdstr.endswith(" "):
             parts.append("")
 
-        parse: typing.List[ParseResult] = []
-        params: typing.List[type] = []
+        parse = []  # type: typing.List[ParseResult]
+        params = []  # type: typing.List[type]
         for i in range(len(parts)):
             if i == 0:
                 params[:] = [Cmd]

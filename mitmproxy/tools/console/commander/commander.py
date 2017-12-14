@@ -34,9 +34,13 @@ class ListCompleter(Completer):
         return ret
 
 
-class CompletionState(typing.NamedTuple):
-    completer: Completer
-    parse: typing.Sequence[mitmproxy.command.ParseResult]
+CompletionState = typing.NamedTuple(
+    "CompletionState",
+    [
+        ("completer", Completer),
+        ("parse", typing.Sequence[mitmproxy.command.ParseResult])
+    ]
+)
 
 
 class CommandBuffer():
