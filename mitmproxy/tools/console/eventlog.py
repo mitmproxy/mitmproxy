@@ -2,8 +2,6 @@ import urwid
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy import log
 
-EVENTLOG_SIZE = 10000
-
 
 class LogBufferWalker(urwid.SimpleListWalker):
     pass
@@ -47,8 +45,6 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         else:
             e = urwid.Text(txt)
         self.walker.append(e)
-        if len(self.walker) > EVENTLOG_SIZE:
-            self.walker.pop(0)
         if self.master.options.console_focus_follow:
             self.walker.set_focus(len(self.walker) - 1)
 
