@@ -2,8 +2,8 @@
 def map(km):
     km.add(":", "console.command ", ["global"], "Command prompt")
     km.add("?", "console.view.help", ["global"], "View help")
-    km.add("B", "browser.start", ["global"], "View commands")
-    km.add("C", "console.view.commands", ["global"], "Start an attached browser")
+    km.add("B", "browser.start", ["global"], "Start an attached browser")
+    km.add("C", "console.view.commands", ["global"], "View commands")
     km.add("K", "console.view.keybindings", ["global"], "View key bindings")
     km.add("O", "console.view.options", ["global"], "View options")
     km.add("E", "console.view.eventlog", ["global"], "View event log")
