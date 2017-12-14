@@ -406,8 +406,11 @@ class View(collections.Sequence):
                 if f.killable:
                     f.kill()
                 if f in self._view:
+                    # We manually pass the index here because multiple flows may have the same
+                    # sorting key, and we cannot reconstruct the index from that.
+                    idx = self._view.index(f)
                     self._view.remove(f)
-                    self.sig_view_remove.send(self, flow=f)
+                    self.sig_view_remove.send(self, flow=f, index=idx)
                 del self._store[f.id]
                 self.sig_store_remove.send(self, flow=f)
         if len(flows) > 1:
@@ -507,11 +510,12 @@ class View(collections.Sequence):
                         self.sig_view_update.send(self, flow=f)
                 else:
                     try:
-                        self._view.remove(f)
-                        self.sig_view_remove.send(self, flow=f)
+                        idx = self._view.index(f)
                     except ValueError:
-                        # The value was not in the view
-                        pass
+                        pass  # The value was not in the view
+                    else:
+                        self._view.remove(f)
+                        self.sig_view_remove.send(self, flow=f, index=idx)
 
 
 class Focus:
@@ -554,11 +558,11 @@ class Focus:
     def _nearest(self, f, v):
         return min(v._bisect(f), len(v) - 1)
 
-    def _sig_view_remove(self, view, flow):
+    def _sig_view_remove(self, view, flow, index):
         if len(view) == 0:
             self.flow = None
         elif flow is self.flow:
-            self.flow = view[self._nearest(self.flow, view)]
+            self.index = min(index, len(self.view) - 1)
 
     def _sig_view_refresh(self, view):
         if len(view) == 0:
