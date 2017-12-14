@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import traceback
+import typing  # noqa
 
 import urwid
 
@@ -31,6 +32,8 @@ class ConsoleMaster(master.Master):
 
     def __init__(self, opts):
         super().__init__(opts)
+
+        self.start_err = None  # type: typing.Optional[log.LogEntry]
 
         self.view = view.View()  # type: view.View
         self.events = eventstore.EventStore()
@@ -86,9 +89,13 @@ class ConsoleMaster(master.Master):
         if log.log_tier(self.options.verbosity) < log.log_tier(entry.level):
             return
         if entry.level in ("error", "warn"):
-            signals.status_message.send(
-                message="{}: {}".format(entry.level.title(), entry.msg)
-            )
+            if self.first_tick:
+                self.start_err = entry
+            else:
+                signals.status_message.send(
+                    message=(entry.level, "{}: {}".format(entry.level.title(), entry.msg)),
+                    expire=5
+                )
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
@@ -197,6 +204,12 @@ class ConsoleMaster(master.Master):
         self.window.refresh()
 
         self.loop.set_alarm_in(0.01, self.ticker)
+
+        if self.start_err:
+            def display_err(*_):
+                self.sig_add_log(None, self.start_err)
+                self.start_err = None
+            self.loop.set_alarm_in(0.01, display_err)
 
         self.start()
         try:
