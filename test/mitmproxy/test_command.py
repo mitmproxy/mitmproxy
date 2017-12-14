@@ -11,19 +11,24 @@ from mitmproxy.utils import typecheck
 
 
 class TAddon:
+    @command.command("cmd1")
     def cmd1(self, foo: str) -> str:
         """cmd1 help"""
         return "ret " + foo
 
+    @command.command("cmd2")
     def cmd2(self, foo: str) -> str:
         return 99
 
+    @command.command("cmd3")
     def cmd3(self, foo: int) -> int:
         return foo
 
+    @command.command("empty")
     def empty(self) -> None:
         pass
 
+    @command.command("varargs")
     def varargs(self, one: str, *var: str) -> typing.Sequence[str]:
         return list(var)
 
@@ -34,6 +39,7 @@ class TAddon:
     def choose(self, arg: str) -> typing.Sequence[str]:
         return ["one", "two", "three"]
 
+    @command.command("path")
     def path(self, arg: command.Path) -> None:
         pass
 
@@ -82,11 +88,25 @@ class TestCommand:
             ],
             ["a", [command.ParseResult(value = "a", type = command.Cmd)]],
             ["", [command.ParseResult(value = "", type = command.Cmd)]],
+            [
+                "cmd3 1",
+                [
+                    command.ParseResult(value = "cmd3", type = command.Cmd),
+                    command.ParseResult(value = "1", type = int),
+                ]
+            ],
+            [
+                "cmd3 ",
+                [
+                    command.ParseResult(value = "cmd3", type = command.Cmd),
+                    command.ParseResult(value = "", type = int),
+                ]
+            ],
         ]
         with taddons.context() as tctx:
-            cm = command.CommandManager(tctx.master)
+            tctx.master.addons.add(TAddon())
             for s, expected in tests:
-                assert cm.parse_partial(s) == expected
+                assert tctx.master.commands.parse_partial(s) == expected
 
 
 def test_simple():

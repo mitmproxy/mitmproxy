@@ -15,6 +15,14 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 
 
+def lexer(s):
+    # mypy mis-identifies shlex.shlex as abstract
+    lex = shlex.shlex(s, punctuation_chars=True)  # type: ignore
+    lex.whitespace_split = True
+    lex.commenters = ''
+    return lex
+
+
 Cuts = typing.Sequence[
     typing.Sequence[typing.Union[str, bytes]]
 ]
@@ -123,9 +131,10 @@ class Command:
         return ret
 
 
-class ParseResult(typing.NamedTuple):
-    value: str
-    type: typing.Type
+ParseResult = typing.NamedTuple(
+    "ParseResult",
+    [("value", str), ("type", typing.Type)],
+)
 
 
 class CommandManager:
@@ -147,27 +156,37 @@ class CommandManager:
         """
             Parse a possibly partial command. Return a sequence of (part, type) tuples.
         """
-        parts: typing.List[ParseResult] = []
         buf = io.StringIO(cmdstr)
-        # mypy mis-identifies shlex.shlex as abstract
-        lex = shlex.shlex(buf)  # type: ignore
+        parts: typing.List[str] = []
+        lex = lexer(buf)
         while 1:
             remainder = cmdstr[buf.tell():]
             try:
                 t = lex.get_token()
             except ValueError:
-                parts.append(ParseResult(value = remainder, type = str))
+                parts.append(remainder)
                 break
             if not t:
                 break
-            typ: type = str
-            # First value is a special case: it has to be a command
-            if not parts:
-                typ = Cmd
-            parts.append(ParseResult(value = t, type = typ))
+            parts.append(t)
         if not parts:
-            return [ParseResult(value = "", type = Cmd)]
-        return parts
+            parts = [""]
+        elif cmdstr.endswith(" "):
+            parts.append("")
+
+        parse: typing.List[ParseResult] = []
+        params: typing.List[type] = []
+        for i in range(len(parts)):
+            if i == 0:
+                params[:] = [Cmd]
+                if parts[i] in self.commands:
+                    params.extend(self.commands[parts[i]].paramtypes)
+            if params:
+                typ = params.pop(0)
+            else:
+                typ = str
+            parse.append(ParseResult(value=parts[i], type=typ))
+        return parse
 
     def call_args(self, path, args):
         """
@@ -181,7 +200,7 @@ class CommandManager:
         """
             Call a command using a string. May raise CommandError.
         """
-        parts = shlex.split(cmdstr)
+        parts = list(lexer(cmdstr))
         if not len(parts) >= 1:
             raise exceptions.CommandError("Invalid command: %s" % cmdstr)
         return self.call_args(parts[0], parts[1:])
@@ -207,8 +226,6 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
             raise exceptions.CommandError(
                 "Invalid choice: see %s for options" % cmd
             )
-        return spec
-    if argtype in (Path, Cmd):
         return spec
     elif issubclass(argtype, str):
         return spec

@@ -72,11 +72,20 @@ class CommandBuffer():
     def cycle_completion(self) -> None:
         if not self.completion:
             parts = self.master.commands.parse_partial(self.buf[:self.cursor])
-            if parts[-1].type == mitmproxy.command.Cmd:
+            last = parts[-1]
+            if last.type == mitmproxy.command.Cmd:
                 self.completion = CompletionState(
                     completer = ListCompleter(
                         parts[-1].value,
                         self.master.commands.commands.keys(),
+                    ),
+                    parse = parts,
+                )
+            elif isinstance(last.type, mitmproxy.command.Choice):
+                self.completion = CompletionState(
+                    completer = ListCompleter(
+                        parts[-1].value,
+                        self.master.commands.call(last.type.options_command),
                     ),
                     parse = parts,
                 )
