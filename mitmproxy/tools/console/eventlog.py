@@ -1,7 +1,5 @@
 import urwid
-from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import layoutwidget
-from mitmproxy import ctx
 from mitmproxy import log
 
 EVENTLOG_SIZE = 10000
@@ -18,9 +16,10 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
     def __init__(self, master):
         self.walker = LogBufferWalker([])
         self.master = master
-        urwid.ListBox.__init__(self, self.walker)
-        signals.sig_add_log.connect(self.sig_add_log)
-        signals.sig_clear_log.connect(self.sig_clear_log)
+        super().__init__(self.walker)
+        master.events.sig_add.connect(self.add_entry)
+        master.events.sig_refresh.connect(self.refresh_entries)
+        self.refresh_entries(None)
 
     def load(self, loader):
         loader.add_option(
@@ -39,12 +38,12 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
             self.set_focus(0)
         return urwid.ListBox.keypress(self, size, key)
 
-    def sig_add_log(self, sender, e, level):
-        if log.log_tier(ctx.options.verbosity) < log.log_tier(level):
+    def add_entry(self, event_store, entry: log.LogEntry):
+        if log.log_tier(self.master.options.verbosity) < log.log_tier(entry.level):
             return
-        txt = "%s: %s" % (level, str(e))
-        if level in ("error", "warn"):
-            e = urwid.Text((level, txt))
+        txt = "%s: %s" % (entry.level, str(entry.msg))
+        if entry.level in ("error", "warn"):
+            e = urwid.Text((entry.level, txt))
         else:
             e = urwid.Text(txt)
         self.walker.append(e)
@@ -53,5 +52,7 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         if self.master.options.console_focus_follow:
             self.walker.set_focus(len(self.walker) - 1)
 
-    def sig_clear_log(self, sender):
+    def refresh_entries(self, event_store):
         self.walker[:] = []
+        for event in self.master.events.data:
+            self.add_entry(None, event)
