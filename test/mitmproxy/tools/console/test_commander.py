@@ -2,6 +2,31 @@ from mitmproxy.tools.console.commander import commander
 from mitmproxy.test import taddons
 
 
+class TestListCompleter:
+    def test_cycle(self):
+        tests = [
+            [
+                "",
+                ["a", "b", "c"],
+                ["a", "b", "c", "a"]
+            ],
+            [
+                "xxx",
+                ["a", "b", "c"],
+                ["xxx", "xxx", "xxx"]
+            ],
+            [
+                "b",
+                ["a", "b", "ba", "bb", "c"],
+                ["b", "ba", "bb", "b"]
+            ],
+        ]
+        for start, options, cycle in tests:
+            c = commander.ListCompleter(start, options)
+            for expected in cycle:
+                assert c.cycle() == expected
+
+
 class TestCommandBuffer:
 
     def test_backspace(self):

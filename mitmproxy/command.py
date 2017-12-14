@@ -125,7 +125,7 @@ class Command:
 
 class ParseResult(typing.NamedTuple):
     value: str
-    type: type
+    type: typing.Type
 
 
 class CommandManager:
