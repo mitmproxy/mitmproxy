@@ -3,6 +3,7 @@
 """
 import inspect
 import types
+import io
 import typing
 import shlex
 import textwrap
@@ -136,6 +137,30 @@ class CommandManager:
 
     def add(self, path: str, func: typing.Callable):
         self.commands[path] = Command(self, path, func)
+
+    def parse_partial(self, cmdstr: str) -> typing.Sequence[typing.Tuple[str, type]]:
+        """
+            Parse a possibly partial command. Return a sequence of (part, type) tuples.
+        """
+        parts: typing.List[typing.Tuple[str, type]] = []
+        buf = io.StringIO(cmdstr)
+        # mypy mis-identifies shlex.shlex as abstract
+        lex = shlex.shlex(buf)  # type: ignore
+        while 1:
+            remainder = cmdstr[buf.tell():]
+            try:
+                t = lex.get_token()
+            except ValueError:
+                parts.append((remainder, str))
+                break
+            if not t:
+                break
+            typ: type = str
+            # First value is a special case: it has to be a command
+            if not parts:
+                typ = Cmd
+            parts.append((t, typ))
+        return parts
 
     def call_args(self, path, args):
         """

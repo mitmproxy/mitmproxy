@@ -64,6 +64,16 @@ class TestCommand:
             c = command.Command(cm, "cmd.three", a.cmd3)
             assert c.call(["1"]) == 1
 
+    def test_parse_partial(self):
+        tests = [
+            ["foo bar", [("foo", command.Cmd), ("bar", str)]],
+            ["foo 'bar", [("foo", command.Cmd), ("'bar", str)]],
+        ]
+        with taddons.context() as tctx:
+            cm = command.CommandManager(tctx.master)
+            for s, expected in tests:
+                assert cm.parse_partial(s) == expected
+
 
 def test_simple():
     with taddons.context() as tctx:
