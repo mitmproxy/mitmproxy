@@ -67,7 +67,7 @@ class ActionBar(urwid.WidgetWrap):
 
     def sig_prompt_command(self, sender, partial=""):
         signals.focus.send(self, section="footer")
-        self._w = commander.CommandEdit(partial)
+        self._w = commander.CommandEdit(self.master, partial)
         self.prompting = commandeditor.CommandExecutor(self.master)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):

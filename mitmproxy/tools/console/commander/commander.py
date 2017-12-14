@@ -1,9 +1,19 @@
 import urwid
 from urwid.text_layout import calc_coords
+import typing
+
+import mitmproxy.master
+import mitmproxy.command
+
+
+class CompletionState:
+    def __init__(self, parts: typing.Sequence[mitmproxy.command.ParseResult]) -> None:
+        self.parts = parts
 
 
 class CommandBuffer():
-    def __init__(self, start: str = "") -> None:
+    def __init__(self, master: mitmproxy.master.Master, start: str = "") -> None:
+        self.master = master
         self.buf = start
         # This is the logical cursor position - the display cursor is one
         # character further on. Cursor is always within the range [0:len(buffer)].
@@ -31,6 +41,12 @@ class CommandBuffer():
     def right(self) -> None:
         self.cursor = self.cursor + 1
 
+    def cycle_completion(self) -> None:
+        parts = self.master.commands.parse_partial(self.buf[:self.cursor])
+        if parts[-1][1] == str:
+            return
+        raise ValueError
+
     def backspace(self) -> None:
         if self.cursor == 0:
             return
@@ -48,8 +64,9 @@ class CommandBuffer():
 class CommandEdit(urwid.WidgetWrap):
     leader = ": "
 
-    def __init__(self, text) -> None:
-        self.cbuf = CommandBuffer(text)
+    def __init__(self, master: mitmproxy.master.Master, text: str) -> None:
+        self.master = master
+        self.cbuf = CommandBuffer(master, text)
         self._w = urwid.Text(self.leader)
         self.update()
 
@@ -60,6 +77,8 @@ class CommandEdit(urwid.WidgetWrap):
             self.cbuf.left()
         elif key == "right":
             self.cbuf.right()
+        elif key == "tab":
+            self.cbuf.cycle_completion()
         elif len(key) == 1:
             self.cbuf.insert(key)
         self.update()

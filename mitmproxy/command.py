@@ -123,6 +123,11 @@ class Command:
         return ret
 
 
+class ParseResult(typing.NamedTuple):
+    value: str
+    type: type
+
+
 class CommandManager:
     def __init__(self, master):
         self.master = master
@@ -138,11 +143,11 @@ class CommandManager:
     def add(self, path: str, func: typing.Callable):
         self.commands[path] = Command(self, path, func)
 
-    def parse_partial(self, cmdstr: str) -> typing.Sequence[typing.Tuple[str, type]]:
+    def parse_partial(self, cmdstr: str) -> typing.Sequence[ParseResult]:
         """
             Parse a possibly partial command. Return a sequence of (part, type) tuples.
         """
-        parts: typing.List[typing.Tuple[str, type]] = []
+        parts: typing.List[ParseResult] = []
         buf = io.StringIO(cmdstr)
         # mypy mis-identifies shlex.shlex as abstract
         lex = shlex.shlex(buf)  # type: ignore
@@ -151,7 +156,7 @@ class CommandManager:
             try:
                 t = lex.get_token()
             except ValueError:
-                parts.append((remainder, str))
+                parts.append(ParseResult(value = remainder, type = str))
                 break
             if not t:
                 break
@@ -159,7 +164,9 @@ class CommandManager:
             # First value is a special case: it has to be a command
             if not parts:
                 typ = Cmd
-            parts.append((t, typ))
+            parts.append(ParseResult(value = t, type = typ))
+        if not parts:
+            return [ParseResult(value = "", type = Cmd)]
         return parts
 
     def call_args(self, path, args):

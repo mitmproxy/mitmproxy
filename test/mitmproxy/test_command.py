@@ -66,8 +66,22 @@ class TestCommand:
 
     def test_parse_partial(self):
         tests = [
-            ["foo bar", [("foo", command.Cmd), ("bar", str)]],
-            ["foo 'bar", [("foo", command.Cmd), ("'bar", str)]],
+            [
+                "foo bar",
+                [
+                    command.ParseResult(value = "foo", type = command.Cmd),
+                    command.ParseResult(value = "bar", type = str)
+                ],
+            ],
+            [
+                "foo 'bar",
+                [
+                    command.ParseResult(value = "foo", type = command.Cmd),
+                    command.ParseResult(value = "'bar", type = str)
+                ]
+            ],
+            ["a", [command.ParseResult(value = "a", type = command.Cmd)]],
+            ["", [command.ParseResult(value = "", type = command.Cmd)]],
         ]
         with taddons.context() as tctx:
             cm = command.CommandManager(tctx.master)
