@@ -156,12 +156,14 @@ class Window(urwid.Frame):
             w = urwid.Pile(
                 [
                     wrapped(i) for i, s in enumerate(self.stacks)
-                ]
+                ],
+                focus_item=self.pane
             )
         else:
             w = urwid.Columns(
                 [wrapped(i) for i, s in enumerate(self.stacks)],
-                dividechars=1
+                dividechars=1,
+                focus_column=self.pane
             )
 
         self.body = urwid.AttrWrap(w, "background")
@@ -270,13 +272,12 @@ class Window(urwid.Frame):
             return True
 
     def keypress(self, size, k):
-        if self.focus_part == "footer":
-            return super().keypress(size, k)
-        else:
-            fs = self.focus_stack().top_widget()
-            k = fs.keypress(size, k)
-            if k:
-                return self.master.keymap.handle(fs.keyctx, k)
+        k = super().keypress(size, k)
+        if k:
+            return self.master.keymap.handle(
+                self.focus_stack().top_widget().keyctx,
+                k
+            )
 
 
 class Screen(urwid.raw_display.Screen):
