@@ -1,7 +1,7 @@
-.. _tcpproxy:
+.. _tcp_proxy:
 
-TCP Proxy
-=========
+TCP Proxy / Fallback
+====================
 
 In case mitmproxy does not handle a specific protocol, you can exempt
 hostnames from processing, so that mitmproxy acts as a generic TCP forwarder.
