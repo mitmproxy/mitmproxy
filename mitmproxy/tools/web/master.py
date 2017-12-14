@@ -60,7 +60,7 @@ class WebMaster(master.Master):
             data=app.flow_to_json(flow)
         )
 
-    def _sig_view_remove(self, view, flow):
+    def _sig_view_remove(self, view, flow, index):
         app.ClientConnection.broadcast(
             resource="flows",
             cmd="remove",
