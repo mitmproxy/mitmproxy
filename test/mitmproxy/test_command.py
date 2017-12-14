@@ -7,9 +7,7 @@ from mitmproxy.test import taddons
 import io
 import pytest
 
-
-TChoice = typing.NewType("TChoice", command.Choice)
-TChoice.options_command = "choices"
+from mitmproxy.utils import typecheck
 
 
 class TAddon:
@@ -32,7 +30,8 @@ class TAddon:
     def choices(self) -> typing.Sequence[str]:
         return ["one", "two", "three"]
 
-    def choose(self, arg: TChoice) -> typing.Sequence[str]:  # type: ignore
+    @command.argument("arg", type=command.Choice("choices"))
+    def choose(self, arg: str) -> typing.Sequence[str]:
         return ["one", "two", "three"]
 
     def path(self, arg: command.Path) -> None:
@@ -99,7 +98,7 @@ def test_typename():
     assert command.typename(flow.Flow, False) == "flow"
     assert command.typename(typing.Sequence[str], False) == "[str]"
 
-    assert command.typename(TChoice, False) == "choice"
+    assert command.typename(command.Choice("foo"), False) == "choice"
     assert command.typename(command.Path, False) == "path"
 
 
@@ -153,11 +152,11 @@ def test_parsearg():
         a = TAddon()
         tctx.master.commands.add("choices", a.choices)
         assert command.parsearg(
-            tctx.master.commands, "one", TChoice,
+            tctx.master.commands, "one", command.Choice("choices"),
         ) == "one"
         with pytest.raises(exceptions.CommandError):
             assert command.parsearg(
-                tctx.master.commands, "invalid", TChoice,
+                tctx.master.commands, "invalid", command.Choice("choices"),
             )
 
         assert command.parsearg(
@@ -200,3 +199,12 @@ def test_verify_arg_signature():
         command.verify_arg_signature(lambda: None, [1, 2], {})
         print('hello there')
     command.verify_arg_signature(lambda a, b: None, [1, 2], {})
+
+
+def test_choice():
+    """
+    basic typechecking for choices should fail as we cannot verify if strings are a valid choice
+    at this point.
+    """
+    c = command.Choice("foo")
+    assert not typecheck.check_command_type("foo", c)
