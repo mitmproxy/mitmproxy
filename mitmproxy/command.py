@@ -170,7 +170,7 @@ class Command:
             if chk:
                 pargs.extend(remainder)
             else:
-                raise exceptions.CommandError("Invalid value type.")
+                raise exceptions.CommandError("Invalid value type: %s - expected %s" % (remainder, self.paramtypes[-1]))
 
         with self.manager.master.handlecontext():
             ret = self.func(*pargs)

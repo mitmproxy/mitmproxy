@@ -2,6 +2,7 @@
 from mitmproxy import exceptions
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console.grideditor import base
+from mitmproxy.tools.console.grideditor import col
 from mitmproxy.tools.console.grideditor import col_text
 from mitmproxy.tools.console.grideditor import col_bytes
 from mitmproxy.tools.console.grideditor import col_subgrid
@@ -166,6 +167,23 @@ class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
             setattr(self.master.options, self.name, [i[0] for i in vals])
         except exceptions.OptionsError as v:
             signals.status_message.send(message=str(v))
+
+    def is_error(self, col, val):
+        pass
+
+
+class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
+    title = None  # type: str
+
+    def __init__(self, master, vals):
+        if vals:
+            if not isinstance(vals[0], list):
+                vals = [[i] for i in vals]
+            self.columns = [col.Column("")] * len(vals[0])
+        super().__init__(master, vals, self.callback)
+
+    def callback(self, vals):
+        pass
 
     def is_error(self, col, val):
         pass

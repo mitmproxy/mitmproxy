@@ -1,4 +1,3 @@
-import time
 from io import BytesIO
 
 from mitmproxy.utils import data
