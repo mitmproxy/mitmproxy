@@ -11,19 +11,24 @@ from mitmproxy.utils import typecheck
 
 
 class TAddon:
+    @command.command("cmd1")
     def cmd1(self, foo: str) -> str:
         """cmd1 help"""
         return "ret " + foo
 
+    @command.command("cmd2")
     def cmd2(self, foo: str) -> str:
         return 99
 
+    @command.command("cmd3")
     def cmd3(self, foo: int) -> int:
         return foo
 
+    @command.command("empty")
     def empty(self) -> None:
         pass
 
+    @command.command("varargs")
     def varargs(self, one: str, *var: str) -> typing.Sequence[str]:
         return list(var)
 
@@ -34,6 +39,7 @@ class TAddon:
     def choose(self, arg: str) -> typing.Sequence[str]:
         return ["one", "two", "three"]
 
+    @command.command("path")
     def path(self, arg: command.Path) -> None:
         pass
 
@@ -63,6 +69,44 @@ class TestCommand:
 
             c = command.Command(cm, "cmd.three", a.cmd3)
             assert c.call(["1"]) == 1
+
+    def test_parse_partial(self):
+        tests = [
+            [
+                "foo bar",
+                [
+                    command.ParseResult(value = "foo", type = command.Cmd),
+                    command.ParseResult(value = "bar", type = str)
+                ],
+            ],
+            [
+                "foo 'bar",
+                [
+                    command.ParseResult(value = "foo", type = command.Cmd),
+                    command.ParseResult(value = "'bar", type = str)
+                ]
+            ],
+            ["a", [command.ParseResult(value = "a", type = command.Cmd)]],
+            ["", [command.ParseResult(value = "", type = command.Cmd)]],
+            [
+                "cmd3 1",
+                [
+                    command.ParseResult(value = "cmd3", type = command.Cmd),
+                    command.ParseResult(value = "1", type = int),
+                ]
+            ],
+            [
+                "cmd3 ",
+                [
+                    command.ParseResult(value = "cmd3", type = command.Cmd),
+                    command.ParseResult(value = "", type = int),
+                ]
+            ],
+        ]
+        with taddons.context() as tctx:
+            tctx.master.addons.add(TAddon())
+            for s, expected in tests:
+                assert tctx.master.commands.parse_partial(s) == expected
 
 
 def test_simple():
@@ -100,6 +144,7 @@ def test_typename():
 
     assert command.typename(command.Choice("foo"), False) == "choice"
     assert command.typename(command.Path, False) == "path"
+    assert command.typename(command.Cmd, False) == "cmd"
 
 
 class DummyConsole:
@@ -161,6 +206,9 @@ def test_parsearg():
 
         assert command.parsearg(
             tctx.master.commands, "foo", command.Path
+        ) == "foo"
+        assert command.parsearg(
+            tctx.master.commands, "foo", command.Cmd
         ) == "foo"
 
 
