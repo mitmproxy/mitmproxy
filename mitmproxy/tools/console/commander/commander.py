@@ -10,7 +10,7 @@ import mitmproxy.master
 import mitmproxy.command
 
 
-class Completer:
+class Completer:  # pragma: no cover
     @abc.abstractmethod
     def cycle(self) -> str:
         pass
@@ -52,7 +52,7 @@ def pathOptions(start: str) -> typing.Sequence[str]:
         prefix = os.path.dirname(start)
     prefix = prefix or "./"
     for f in files:
-        display = os.path.normpath(os.path.join(prefix, os.path.basename(f)))
+        display = os.path.join(prefix, os.path.normpath(os.path.basename(f)))
         if os.path.isdir(f):
             display += "/"
         ret.append(display)
@@ -157,9 +157,9 @@ class CommandEdit(urwid.WidgetWrap):
     leader = ": "
 
     def __init__(self, master: mitmproxy.master.Master, text: str) -> None:
+        super().__init__(urwid.Text(self.leader))
         self.master = master
         self.cbuf = CommandBuffer(master, text)
-        self._w = urwid.Text(self.leader)
         self.update()
 
     def keypress(self, size, key):
