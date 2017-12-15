@@ -513,7 +513,7 @@ class ConsoleAddon:
         kwidget = self.master.window.current("keybindings")
         if not kwidget:
             raise exceptions.CommandError("Not viewing key bindings.")
-        f = kwidget.focus()
+        f = kwidget.get_focused_binding()
         if not f:
             raise exceptions.CommandError("No key binding focused")
         return f

@@ -135,7 +135,7 @@ class KeyBindings(urwid.Pile, layoutwidget.LayoutWidget):
         )
         self.master = master
 
-    def focus(self):
+    def get_focused_binding(self):
         if self.focus_position != 0:
             return None
         f = self.widget_list[0]
