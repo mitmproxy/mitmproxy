@@ -4,7 +4,7 @@ import urwid
 
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import commandeditor
+from mitmproxy.tools.console import commandexecutor
 import mitmproxy.tools.console.master # noqa
 from mitmproxy.tools.console.commander import commander
 
@@ -68,7 +68,7 @@ class ActionBar(urwid.WidgetWrap):
     def sig_prompt_command(self, sender, partial=""):
         signals.focus.send(self, section="footer")
         self._w = commander.CommandEdit(self.master, partial)
-        self.prompting = commandeditor.CommandExecutor(self.master)
+        self.prompting = commandexecutor.CommandExecutor(self.master)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
         """
