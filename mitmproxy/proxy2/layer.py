@@ -21,15 +21,17 @@ class Layer:
     context: Context
     _paused: typing.Optional[Paused]
     _paused_event_queue: typing.Deque[events.Event]
+    debug: typing.Optional[str] = None
+    """
+    Enable debug logging by assigning a prefix string for log messages.
+    Different amounts of whitespace for different layers work well.
+    """
 
     def __init__(self, context: Context) -> None:
         self.context = context
         self.context.layers.append(self)
         self._paused = None
         self._paused_event_queue = collections.deque()
-
-    def _debug(self, *args):
-        pass  # print(*args)
 
     @abstractmethod
     def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
@@ -44,12 +46,17 @@ class Layer:
                 isinstance(event, events.CommandReply) and
                 event.command is self._paused.command
             )
+            if self.debug is not None:
+                yield commands.Log(
+                    f"{self.debug}{'>>' if pause_finished else '>!'} {event}", "debug"
+                )
             if pause_finished:
                 yield from self.__continue(event)
             else:
                 self._paused_event_queue.append(event)
-                self._debug("Paused Event Queue: " + repr(self._paused_event_queue))
         else:
+            if self.debug is not None:
+                yield commands.Log(f"{self.debug}>> {event}", "debug")
             command_generator = self._handle_event(event)
             yield from self.__process(command_generator)
 
@@ -65,8 +72,10 @@ class Layer:
             return
 
         while command:
+            if self.debug is not None:
+                if not isinstance(command, commands.Log):
+                    yield commands.Log(f"{self.debug}<< {command}", "debug")
             if command.blocking is True:
-                self._debug("start pausing")
                 command.blocking = self  # assign to our layer so that higher layers don't block.
                 self._paused = Paused(
                     command,
@@ -80,17 +89,16 @@ class Layer:
 
     def __continue(self, event: events.CommandReply):
         """continue processing events after being paused"""
-        self._debug("continue")
         command_generator = self._paused.generator
         self._paused = None
         yield from self.__process(command_generator, event.reply)
 
         while not self._paused and self._paused_event_queue:
             event = self._paused_event_queue.popleft()
-            self._debug(f"<# Paused event: {event}")
+            if self.debug is not None:
+                yield commands.Log(f"{self.debug}!> {event}", "debug")
             command_generator = self._handle_event(event)
             yield from self.__process(command_generator)
-            self._debug("#>")
 
 
 mevents = events  # alias here because autocomplete above should not have aliased version.
