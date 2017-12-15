@@ -57,7 +57,8 @@ def expect(*event_types):
                 yield from f(self, event)
             else:
                 raise TypeError(
-                    "Invalid event type: Expected {}, got {}".format(event_types, event))
+                    "Invalid event type at {}: Expected {}, got {}.".format(f, event_types, event)
+                )
 
         return wrapper
 
