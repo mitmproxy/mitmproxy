@@ -92,7 +92,7 @@ def typename(t: type, ret: bool) -> str:
     if isinstance(t, Choice):
         return "choice"
     elif t == typing.Sequence[flow.Flow]:
-        return "[flow]" if ret else "flowspec"
+        return "[flow]"
     elif t == typing.Sequence[str]:
         return "[str]"
     elif t == typing.Sequence[Cut]:
