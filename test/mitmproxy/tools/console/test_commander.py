@@ -1,5 +1,18 @@
+import os
+
 from mitmproxy.tools.console.commander import commander
 from mitmproxy.test import taddons
+from mitmproxy.test import tutils
+
+
+def test_pathOptions():
+    cd = os.path.normpath(tutils.test_data.path("mitmproxy/completion"))
+
+    ret = [x[len(cd):] for x in commander.pathOptions(cd)]
+    assert ret == ['/aaa', '/aab', '/aac', '/bbb/']
+
+    ret = [x[len(cd):] for x in commander.pathOptions(os.path.join(cd, "a"))]
+    assert ret == ['/aaa', '/aab', '/aac']
 
 
 class TestListCompleter:

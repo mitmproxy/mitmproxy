@@ -1,7 +1,10 @@
+import abc
+import glob
+import os
+import typing
+
 import urwid
 from urwid.text_layout import calc_coords
-import typing
-import abc
 
 import mitmproxy.master
 import mitmproxy.command
@@ -32,6 +35,30 @@ class ListCompleter(Completer):
         ret = self.options[self.offset]
         self.offset = (self.offset + 1) % len(self.options)
         return ret
+
+
+# Generates the completion options for a specific starting input
+def pathOptions(start: str) -> typing.Sequence[str]:
+    if not start:
+        start = "./"
+    path = os.path.expanduser(start)
+    ret = []
+    if os.path.isdir(path):
+        files = glob.glob(os.path.join(path, "*"))
+        prefix = start
+    else:
+        files = glob.glob(path + "*")
+        prefix = os.path.dirname(start)
+    prefix = prefix or "./"
+    for f in files:
+        display = os.path.normpath(os.path.join(prefix, os.path.basename(f)))
+        if os.path.isdir(f):
+            display += "/"
+        ret.append(display)
+    if not ret:
+        ret = [start]
+    ret.sort()
+    return ret
 
 
 CompletionState = typing.NamedTuple(
@@ -93,6 +120,15 @@ class CommandBuffer():
                     ),
                     parse = parts,
                 )
+            elif last.type == mitmproxy.command.Path:
+                self.completion = CompletionState(
+                    completer = ListCompleter(
+                        "",
+                        pathOptions(parts[1].value)
+                    ),
+                    parse = parts,
+                )
+
         if self.completion:
             nxt = self.completion.completer.cycle()
             buf = " ".join([i.value for i in self.completion.parse[:-1]]) + " " + nxt
