@@ -17,14 +17,6 @@ def headername(spec: str):
     return spec[len("header["):-1].strip()
 
 
-flow_shortcuts = {
-    "q": "request",
-    "s": "response",
-    "cc": "client_conn",
-    "sc": "server_conn",
-}
-
-
 def is_addr(v):
     return isinstance(v, tuple) and len(v) > 1
 
@@ -35,8 +27,6 @@ def extract(cut: str, f: flow.Flow) -> typing.Union[str, bytes]:
     for i, spec in enumerate(path):
         if spec.startswith("_"):
             raise exceptions.CommandError("Can't access internal attribute %s" % spec)
-        if isinstance(current, flow.Flow):
-            spec = flow_shortcuts.get(spec, spec)
 
         part = getattr(current, spec, None)
         if i == len(path) - 1:
@@ -65,13 +55,12 @@ class Cut:
     ) -> command.Cuts:
         """
             Cut data from a set of flows. Cut specifications are attribute paths
-            from the base of the flow object, with a few conveniences - "q",
-            "s", "cc" and "sc" are shortcuts for request, response, client_conn
-            and server_conn, "port" and "host" retrieve parts of an address
-            tuple, ".header[key]" retrieves a header value. Return values
-            converted to strings or bytes: SSL certicates are converted to PEM
-            format, bools are "true" or "false", "bytes" are preserved, and all
-            other values are converted to strings.
+            from the base of the flow object, with a few conveniences - "port"
+            and "host" retrieve parts of an address tuple, ".header[key]"
+            retrieves a header value. Return values converted to strings or
+            bytes: SSL certicates are converted to PEM format, bools are "true"
+            or "false", "bytes" are preserved, and all other values are
+            converted to strings.
         """
         ret = []
         for f in flows:
@@ -101,11 +90,11 @@ class Cut:
                 if fp.tell() > 0:
                     # We're appending to a file that already exists and has content
                     fp.write(b"\n")
-                for v in [extract(cuts[0], f) for f in flows]:
-                    if isinstance(v, bytes):
-                        fp.write(v)
-                    else:
-                        fp.write(v.encode("utf8"))
+                v = extract(cuts[0], flows[0])
+                if isinstance(v, bytes):
+                    fp.write(v)
+                else:
+                    fp.write(v.encode("utf8"))
             ctx.log.alert("Saved single cut.")
         else:
             with open(path, "a" if append else "w", newline='', encoding="utf8") as fp:
@@ -129,8 +118,8 @@ class Cut:
             column, the data is written to file as-is, with raw bytes preserved.
         """
         fp = io.StringIO(newline="")
-        if len(cuts) == 1 and len(cuts[0]) == 1:
-            v = cuts[0][0]
+        if len(cuts) == 1 and len(flows) == 1:
+            v = extract(cuts[0], flows[0])
             if isinstance(v, bytes):
                 fp.write(strutils.always_str(v))
             else:
@@ -138,9 +127,10 @@ class Cut:
             ctx.log.alert("Clipped single cut.")
         else:
             writer = csv.writer(fp)
-            for r in cuts:
+            for f in flows:
+                vals = [extract(c, f) for c in cuts]
                 writer.writerow(
-                    [strutils.always_str(c) or "" for c in r]  # type: ignore
+                    [strutils.always_str(v) or "" for v in vals]  # type: ignore
                 )
             ctx.log.alert("Clipped %s cuts as CSV." % len(cuts))
         pyperclip.copy(fp.getvalue())

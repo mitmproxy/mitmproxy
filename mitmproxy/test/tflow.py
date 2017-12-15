@@ -53,6 +53,8 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
                 sec_websocket_version="13",
                 sec_websocket_key="1234",
             ),
+            timestamp_start=1,
+            timestamp_end=2,
             content=b''
         )
         resp = http.HTTPResponse(
@@ -64,6 +66,8 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
                 upgrade='websocket',
                 sec_websocket_accept=b'',
             ),
+            timestamp_start=1,
+            timestamp_end=2,
             content=b'',
         )
         handshake_flow = http.HTTPFlow(client_conn, server_conn)
