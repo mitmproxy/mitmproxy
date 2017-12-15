@@ -11,9 +11,8 @@ from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import searchable
-from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import tabs
-import mitmproxy.tools.console.master # noqa
+import mitmproxy.tools.console.master  # noqa
 
 
 class SearchError(Exception):
@@ -117,7 +116,7 @@ class FlowDetails(tabs.Tabs):
             viewmode, message
         )
         if error:
-            signals.add_log(error, "error")
+            self.master.add_log(error, "error")
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, http.HTTPRequest):
             description = "No request content (press tab to view response)"

@@ -32,43 +32,33 @@ console_layouts = [
 ]
 
 
-class Logger:
-    def log(self, evt):
-        signals.add_log(evt.msg, evt.level)
-        if evt.level == "alert":
-            signals.status_message.send(
-                message=str(evt.msg),
-                expire=2
-            )
-
-
 class UnsupportedLog:
     """
         A small addon to dump info on flow types we don't support yet.
     """
     def websocket_message(self, f):
         message = f.messages[-1]
-        signals.add_log(f.message_info(message), "info")
-        signals.add_log(message.content if isinstance(message.content, str) else strutils.bytes_to_escaped_str(message.content), "debug")
+        ctx.log.info(f.message_info(message))
+        ctx.log.debug(message.content if isinstance(message.content, str) else strutils.bytes_to_escaped_str(message.content))
 
     def websocket_end(self, f):
-        signals.add_log("WebSocket connection closed by {}: {} {}, {}".format(
+        ctx.log.info("WebSocket connection closed by {}: {} {}, {}".format(
             f.close_sender,
             f.close_code,
             f.close_message,
-            f.close_reason), "info")
+            f.close_reason))
 
     def tcp_message(self, f):
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"
-        signals.add_log("{client_host}:{client_port} {direction} tcp {direction} {server_host}:{server_port}".format(
+        ctx.log.info("{client_host}:{client_port} {direction} tcp {direction} {server_host}:{server_port}".format(
             client_host=f.client_conn.address[0],
             client_port=f.client_conn.address[1],
             server_host=f.server_conn.address[0],
             server_port=f.server_conn.address[1],
             direction=direction,
-        ), "info")
-        signals.add_log(strutils.bytes_to_escaped_str(message.content), "debug")
+        ))
+        ctx.log.debug(strutils.bytes_to_escaped_str(message.content))
 
 
 class ConsoleAddon:
@@ -480,13 +470,6 @@ class ConsoleAddon:
                 self.master.options.default_contentview,
             ]
         )
-
-    @command.command("console.eventlog.clear")
-    def eventlog_clear(self) -> None:
-        """
-            Clear the event log.
-        """
-        signals.sig_clear_log.send(self)
 
     @command.command("console.key.contexts")
     def key_contexts(self) -> typing.Sequence[str]:

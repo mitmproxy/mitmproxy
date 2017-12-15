@@ -1,10 +1,8 @@
-import urwid
-from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import layoutwidget
-from mitmproxy import ctx
-from mitmproxy import log
+import collections
 
-EVENTLOG_SIZE = 10000
+import urwid
+from mitmproxy.tools.console import layoutwidget
+from mitmproxy import log
 
 
 class LogBufferWalker(urwid.SimpleListWalker):
@@ -16,11 +14,16 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
     title = "Events"
 
     def __init__(self, master):
-        self.walker = LogBufferWalker([])
         self.master = master
-        urwid.ListBox.__init__(self, self.walker)
-        signals.sig_add_log.connect(self.sig_add_log)
-        signals.sig_clear_log.connect(self.sig_clear_log)
+        self.walker = LogBufferWalker(
+            collections.deque(maxlen=self.master.events.size)
+        )
+
+        master.events.sig_add.connect(self.add_event)
+        master.events.sig_refresh.connect(self.refresh_events)
+        self.refresh_events()
+
+        super().__init__(self.walker)
 
     def load(self, loader):
         loader.add_option(
@@ -37,21 +40,21 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
             self.set_focus(len(self.walker) - 1)
         elif key == "m_start":
             self.set_focus(0)
-        return urwid.ListBox.keypress(self, size, key)
+        return super().keypress(size, key)
 
-    def sig_add_log(self, sender, e, level):
-        if log.log_tier(ctx.options.verbosity) < log.log_tier(level):
+    def add_event(self, event_store, entry: log.LogEntry):
+        if log.log_tier(self.master.options.verbosity) < log.log_tier(entry.level):
             return
-        txt = "%s: %s" % (level, str(e))
-        if level in ("error", "warn"):
-            e = urwid.Text((level, txt))
+        txt = "%s: %s" % (entry.level, str(entry.msg))
+        if entry.level in ("error", "warn"):
+            e = urwid.Text((entry.level, txt))
         else:
             e = urwid.Text(txt)
         self.walker.append(e)
-        if len(self.walker) > EVENTLOG_SIZE:
-            self.walker.pop(0)
         if self.master.options.console_focus_follow:
             self.walker.set_focus(len(self.walker) - 1)
 
-    def sig_clear_log(self, sender):
-        self.walker[:] = []
+    def refresh_events(self, event_store=None):
+        self.walker.clear()
+        for event in self.master.events.data:
+            self.add_event(None, event)

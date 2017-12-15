@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import traceback
+import typing  # noqa
 
 import urwid
 
@@ -16,6 +17,7 @@ from mitmproxy import addons
 from mitmproxy import master
 from mitmproxy import log
 from mitmproxy.addons import intercept
+from mitmproxy.addons import eventstore
 from mitmproxy.addons import readfile
 from mitmproxy.addons import view
 from mitmproxy.tools.console import consoleaddons
@@ -31,7 +33,12 @@ class ConsoleMaster(master.Master):
     def __init__(self, opts):
         super().__init__(opts)
 
+        self.start_err = None  # type: typing.Optional[log.LogEntry]
+
         self.view = view.View()  # type: view.View
+        self.events = eventstore.EventStore()
+        self.events.sig_add.connect(self.sig_add_log)
+
         self.stream_path = None
         self.keymap = keymap.Keymap(self)
         defaultkeys.map(self.keymap)
@@ -40,12 +47,11 @@ class ConsoleMaster(master.Master):
         self.view_stack = []
 
         signals.call_in.connect(self.sig_call_in)
-        signals.sig_add_log.connect(self.sig_add_log)
-        self.addons.add(consoleaddons.Logger())
         self.addons.add(*addons.default_addons())
         self.addons.add(
             intercept.Intercept(),
             self.view,
+            self.events,
             consoleaddons.UnsupportedLog(),
             readfile.ReadFile(),
             consoleaddons.ConsoleAddon(self),
@@ -79,13 +85,17 @@ class ConsoleMaster(master.Master):
             callback = self.quit,
         )
 
-    def sig_add_log(self, sender, e, level):
-        if log.log_tier(self.options.verbosity) < log.log_tier(level):
+    def sig_add_log(self, event_store, entry: log.LogEntry):
+        if log.log_tier(self.options.verbosity) < log.log_tier(entry.level):
             return
-        if level in ("error", "warn"):
-            signals.status_message.send(
-                message = "{}: {}".format(level.title(), e)
-            )
+        if entry.level in ("error", "warn"):
+            if self.first_tick:
+                self.start_err = entry
+            else:
+                signals.status_message.send(
+                    message=(entry.level, "{}: {}".format(entry.level.title(), entry.msg)),
+                    expire=5
+                )
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
@@ -194,6 +204,12 @@ class ConsoleMaster(master.Master):
         self.window.refresh()
 
         self.loop.set_alarm_in(0.01, self.ticker)
+
+        if self.start_err:
+            def display_err(*_):
+                self.sig_add_log(None, self.start_err)
+                self.start_err = None
+            self.loop.set_alarm_in(0.01, display_err)
 
         self.start()
         try:
