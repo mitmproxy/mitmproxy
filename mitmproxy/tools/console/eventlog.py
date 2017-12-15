@@ -1,3 +1,5 @@
+import collections
+
 import urwid
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy import log
@@ -12,12 +14,16 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
     title = "Events"
 
     def __init__(self, master):
-        self.walker = LogBufferWalker([])
         self.master = master
+        self.walker = LogBufferWalker(
+            collections.deque(maxlen=self.master.events.size)
+        )
+
+        master.events.sig_add.connect(self.add_event)
+        master.events.sig_refresh.connect(self.refresh_events)
+        self.refresh_events()
+
         super().__init__(self.walker)
-        master.events.sig_add.connect(self.add_entry)
-        master.events.sig_refresh.connect(self.refresh_entries)
-        self.refresh_entries(None)
 
     def load(self, loader):
         loader.add_option(
@@ -34,9 +40,9 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
             self.set_focus(len(self.walker) - 1)
         elif key == "m_start":
             self.set_focus(0)
-        return urwid.ListBox.keypress(self, size, key)
+        return super().keypress(size, key)
 
-    def add_entry(self, event_store, entry: log.LogEntry):
+    def add_event(self, event_store, entry: log.LogEntry):
         if log.log_tier(self.master.options.verbosity) < log.log_tier(entry.level):
             return
         txt = "%s: %s" % (entry.level, str(entry.msg))
@@ -48,7 +54,7 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         if self.master.options.console_focus_follow:
             self.walker.set_focus(len(self.walker) - 1)
 
-    def refresh_entries(self, event_store):
-        self.walker[:] = []
+    def refresh_events(self, event_store=None):
+        self.walker.clear()
         for event in self.master.events.data:
-            self.add_entry(None, event)
+            self.add_event(None, event)
