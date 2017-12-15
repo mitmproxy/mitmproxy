@@ -181,13 +181,18 @@ class CommandManager:
 
         parse = []  # type: typing.List[ParseResult]
         params = []  # type: typing.List[type]
+        typ = None  # type: typing.Type
         for i in range(len(parts)):
             if i == 0:
-                params[:] = [Cmd]
+                typ = Cmd
                 if parts[i] in self.commands:
                     params.extend(self.commands[parts[i]].paramtypes)
-            if params:
+            elif params:
                 typ = params.pop(0)
+                # FIXME: Do we need to check that Arg is positional?
+                if typ == Cmd and params and params[0] == Arg:
+                    if parts[i] in self.commands:
+                        params[:] = self.commands[parts[i]].paramtypes
             else:
                 typ = str
             parse.append(ParseResult(value=parts[i], type=typ))
