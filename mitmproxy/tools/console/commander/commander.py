@@ -113,6 +113,19 @@ class CommandBuffer():
                     ),
                     parse = parts,
                 )
+            if last.type == typing.Sequence[mitmproxy.command.Cut]:
+                spec = parts[-1].value.split(",")
+                opts = []
+                for pref in mitmproxy.command.Cut.valid_prefixes:
+                    spec[-1] = pref
+                    opts.append(",".join(spec))
+                self.completion = CompletionState(
+                    completer = ListCompleter(
+                        parts[-1].value,
+                        opts,
+                    ),
+                    parse = parts,
+                )
             elif isinstance(last.type, mitmproxy.command.Choice):
                 self.completion = CompletionState(
                     completer = ListCompleter(

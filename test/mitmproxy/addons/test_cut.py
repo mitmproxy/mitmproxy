@@ -13,36 +13,41 @@ from unittest import mock
 def test_extract():
     tf = tflow.tflow(resp=True)
     tests = [
-        ["q.method", "GET"],
-        ["q.scheme", "http"],
-        ["q.host", "address"],
-        ["q.port", "22"],
-        ["q.path", "/path"],
-        ["q.url", "http://address:22/path"],
-        ["q.text", "content"],
-        ["q.content", b"content"],
-        ["q.raw_content", b"content"],
-        ["q.header[header]", "qvalue"],
+        ["request.method", "GET"],
+        ["request.scheme", "http"],
+        ["request.host", "address"],
+        ["request.http_version", "HTTP/1.1"],
+        ["request.port", "22"],
+        ["request.path", "/path"],
+        ["request.url", "http://address:22/path"],
+        ["request.text", "content"],
+        ["request.content", b"content"],
+        ["request.raw_content", b"content"],
+        ["request.timestamp_start", "1"],
+        ["request.timestamp_end", "2"],
+        ["request.header[header]", "qvalue"],
 
-        ["s.status_code", "200"],
-        ["s.reason", "OK"],
-        ["s.text", "message"],
-        ["s.content", b"message"],
-        ["s.raw_content", b"message"],
-        ["s.header[header-response]", "svalue"],
+        ["response.status_code", "200"],
+        ["response.reason", "OK"],
+        ["response.text", "message"],
+        ["response.content", b"message"],
+        ["response.raw_content", b"message"],
+        ["response.header[header-response]", "svalue"],
+        ["response.timestamp_start", "1"],
+        ["response.timestamp_end", "2"],
 
-        ["cc.address.port", "22"],
-        ["cc.address.host", "127.0.0.1"],
-        ["cc.tls_version", "TLSv1.2"],
-        ["cc.sni", "address"],
-        ["cc.ssl_established", "false"],
+        ["client_conn.address.port", "22"],
+        ["client_conn.address.host", "127.0.0.1"],
+        ["client_conn.tls_version", "TLSv1.2"],
+        ["client_conn.sni", "address"],
+        ["client_conn.ssl_established", "false"],
 
-        ["sc.address.port", "22"],
-        ["sc.address.host", "address"],
-        ["sc.ip_address.host", "192.168.0.1"],
-        ["sc.tls_version", "TLSv1.2"],
-        ["sc.sni", "address"],
-        ["sc.ssl_established", "false"],
+        ["server_conn.address.port", "22"],
+        ["server_conn.address.host", "address"],
+        ["server_conn.ip_address.host", "192.168.0.1"],
+        ["server_conn.tls_version", "TLSv1.2"],
+        ["server_conn.sni", "address"],
+        ["server_conn.ssl_established", "false"],
     ]
     for t in tests:
         ret = cut.extract(t[0], tf)
@@ -53,7 +58,7 @@ def test_extract():
         d = f.read()
     c1 = certs.SSLCert.from_pem(d)
     tf.server_conn.cert = c1
-    assert "CERTIFICATE" in cut.extract("sc.cert", tf)
+    assert "CERTIFICATE" in cut.extract("server_conn.cert", tf)
 
 
 def test_headername():
@@ -74,15 +79,15 @@ def test_cut_clip():
         v.add([tflow.tflow(resp=True)])
 
         with mock.patch('pyperclip.copy') as pc:
-            tctx.command(c.clip, "@all", "q.method")
+            tctx.command(c.clip, "@all", "request.method")
             assert pc.called
 
         with mock.patch('pyperclip.copy') as pc:
-            tctx.command(c.clip, "@all", "q.content")
+            tctx.command(c.clip, "@all", "request.content")
             assert pc.called
 
         with mock.patch('pyperclip.copy') as pc:
-            tctx.command(c.clip, "@all", "q.method,q.content")
+            tctx.command(c.clip, "@all", "request.method,request.content")
             assert pc.called
 
 
@@ -94,17 +99,17 @@ def test_cut_save(tmpdir):
         tctx.master.addons.add(v, c)
         v.add([tflow.tflow(resp=True)])
 
-        tctx.command(c.save, "@all", "q.method", f)
+        tctx.command(c.save, "@all", "request.method", f)
         assert qr(f) == b"GET"
-        tctx.command(c.save, "@all", "q.content", f)
+        tctx.command(c.save, "@all", "request.content", f)
         assert qr(f) == b"content"
-        tctx.command(c.save, "@all", "q.content", "+" + f)
+        tctx.command(c.save, "@all", "request.content", "+" + f)
         assert qr(f) == b"content\ncontent"
 
         v.add([tflow.tflow(resp=True)])
-        tctx.command(c.save, "@all", "q.method", f)
+        tctx.command(c.save, "@all", "request.method", f)
         assert qr(f).splitlines() == [b"GET", b"GET"]
-        tctx.command(c.save, "@all", "q.method,q.content", f)
+        tctx.command(c.save, "@all", "request.method,request.content", f)
         assert qr(f).splitlines() == [b"GET,content", b"GET,content"]
 
 
@@ -112,20 +117,20 @@ def test_cut():
     c = cut.Cut()
     with taddons.context():
         tflows = [tflow.tflow(resp=True)]
-        assert c.cut(tflows, ["q.method"]) == [["GET"]]
-        assert c.cut(tflows, ["q.scheme"]) == [["http"]]
-        assert c.cut(tflows, ["q.host"]) == [["address"]]
-        assert c.cut(tflows, ["q.port"]) == [["22"]]
-        assert c.cut(tflows, ["q.path"]) == [["/path"]]
-        assert c.cut(tflows, ["q.url"]) == [["http://address:22/path"]]
-        assert c.cut(tflows, ["q.content"]) == [[b"content"]]
-        assert c.cut(tflows, ["q.header[header]"]) == [["qvalue"]]
-        assert c.cut(tflows, ["q.header[unknown]"]) == [[""]]
+        assert c.cut(tflows, ["request.method"]) == [["GET"]]
+        assert c.cut(tflows, ["request.scheme"]) == [["http"]]
+        assert c.cut(tflows, ["request.host"]) == [["address"]]
+        assert c.cut(tflows, ["request.port"]) == [["22"]]
+        assert c.cut(tflows, ["request.path"]) == [["/path"]]
+        assert c.cut(tflows, ["request.url"]) == [["http://address:22/path"]]
+        assert c.cut(tflows, ["request.content"]) == [[b"content"]]
+        assert c.cut(tflows, ["request.header[header]"]) == [["qvalue"]]
+        assert c.cut(tflows, ["request.header[unknown]"]) == [[""]]
 
-        assert c.cut(tflows, ["s.status_code"]) == [["200"]]
-        assert c.cut(tflows, ["s.reason"]) == [["OK"]]
-        assert c.cut(tflows, ["s.content"]) == [[b"message"]]
-        assert c.cut(tflows, ["s.header[header-response]"]) == [["svalue"]]
+        assert c.cut(tflows, ["response.status_code"]) == [["200"]]
+        assert c.cut(tflows, ["response.reason"]) == [["OK"]]
+        assert c.cut(tflows, ["response.content"]) == [[b"message"]]
+        assert c.cut(tflows, ["response.header[header-response]"]) == [["svalue"]]
         assert c.cut(tflows, ["moo"]) == [[""]]
         with pytest.raises(exceptions.CommandError):
             assert c.cut(tflows, ["__dict__"]) == [[""]]
@@ -133,5 +138,5 @@ def test_cut():
     c = cut.Cut()
     with taddons.context():
         tflows = [tflow.ttcpflow()]
-        assert c.cut(tflows, ["q.method"]) == [[""]]
-        assert c.cut(tflows, ["s.status"]) == [[""]]
+        assert c.cut(tflows, ["request.method"]) == [[""]]
+        assert c.cut(tflows, ["response.status"]) == [[""]]
