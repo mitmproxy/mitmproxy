@@ -24,6 +24,10 @@ class TAddon:
     def cmd3(self, foo: int) -> int:
         return foo
 
+    @command.command("subcommand")
+    def subcommand(self, cmd: command.Cmd, *args: command.Arg) -> str:
+        return "ok"
+
     @command.command("empty")
     def empty(self) -> None:
         pass
@@ -98,6 +102,21 @@ class TestCommand:
             [
                 "cmd3 ",
                 [
+                    command.ParseResult(value = "cmd3", type = command.Cmd),
+                    command.ParseResult(value = "", type = int),
+                ]
+            ],
+            [
+                "subcommand ",
+                [
+                    command.ParseResult(value = "subcommand", type = command.Cmd),
+                    command.ParseResult(value = "", type = command.Cmd),
+                ]
+            ],
+            [
+                "subcommand cmd3 ",
+                [
+                    command.ParseResult(value = "subcommand", type = command.Cmd),
                     command.ParseResult(value = "cmd3", type = command.Cmd),
                     command.ParseResult(value = "", type = int),
                 ]
