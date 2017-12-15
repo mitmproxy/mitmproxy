@@ -27,6 +27,7 @@ class ListCompleter(Completer):
         for o in options:
             if o.startswith(start):
                 self.options.append(o)
+        self.options.sort()
         self.offset = 0
 
     def cycle(self) -> str:
