@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Sequence
 
 from mitmproxy.options import Options
 
@@ -10,7 +10,9 @@ class Connection:
     address: tuple
     connected: bool = False
     tls: bool = False
+    tls_established: bool = False
     alpn: Optional[bytes] = None
+    alpn_offers: Sequence[bytes] = ()
 
     def __repr__(self):
         return f"{type(self).__name__}({repr(self.__dict__)})"

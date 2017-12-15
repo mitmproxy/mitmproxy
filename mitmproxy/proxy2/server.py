@@ -59,8 +59,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         # self._debug("transports closed!")
 
     async def close_connection(self, connection):
-        io = self.transports.pop(connection, None)
-        self.log(f"closing {connection}", "debug")
+        try:
+            io = self.transports.pop(connection)
+        except KeyError:
+            self.log(f"already closed: {connection}", "warn")
+            return
+        else:
+            self.log(f"closing {connection}", "debug")
         try:
             await io.w.drain()
             io.w.write_eof()
@@ -109,10 +114,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         print(message)
 
     def server_event(self, event: events.Event) -> None:
-        self.log(f">> {event}", "debug")
         layer_commands = self.layer.handle_event(event)
         for command in layer_commands:
-            self.log(f"<< {command}", "debug")
             if isinstance(command, commands.OpenConnection):
                 asyncio.ensure_future(
                     self.open_connection(command)
@@ -155,13 +158,20 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
     opts = moptions.Options()
-    # opts.mode = "reverse:example.com"
+    opts.mode = "reverse:example.com"
+    # test client-tls-first scenario
+    # opts.upstream_cert = False
+
+    layers.ClientTLSLayer.debug = ""
+    layers.ServerTLSLayer.debug = "  "
+    layers.TCPLayer.debug = "    "
 
     async def handle(reader, writer):
         layer_stack = [
-            # layers.TLSLayer,
-            lambda c: layers.HTTPLayer(c, HTTPMode.regular),
+            layers.ClientTLSLayer,
+            #layers.ServerTLSLayer,
             layers.TCPLayer,
+            # lambda c: layers.HTTPLayer(c, HTTPMode.transparent),
         ]
 
         def next_layer(nl: layer.NextLayer):
