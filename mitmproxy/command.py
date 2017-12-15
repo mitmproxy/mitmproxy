@@ -29,6 +29,10 @@ Cuts = typing.Sequence[
 ]
 
 
+class Cut(str):
+    pass
+
+
 class Path(str):
     pass
 
@@ -52,8 +56,10 @@ def typename(t: type, ret: bool) -> str:
         return "[flow]" if ret else "flowspec"
     elif t == typing.Sequence[str]:
         return "[str]"
+    elif t == typing.Sequence[Cut]:
+        return "[cut]"
     elif t == Cuts:
-        return "[cuts]" if ret else "cutspec"
+        return "[cuts]"
     elif t == flow.Flow:
         return "flow"
     elif issubclass(t, (str, int, bool)):
@@ -264,7 +270,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
                 "Command requires one flow, specification matched %s." % len(flows)
             )
         return flows[0]
-    elif argtype == typing.Sequence[str]:
+    elif argtype in (typing.Sequence[str], typing.Sequence[Cut]):
         return [i.strip() for i in spec.split(",")]
     else:
         raise exceptions.CommandError("Unsupported argument type: %s" % argtype)

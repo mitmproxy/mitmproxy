@@ -56,42 +56,6 @@ def test_extract():
     assert "CERTIFICATE" in cut.extract("sc.cert", tf)
 
 
-def test_parse_cutspec():
-    tests = [
-        ("", None, True),
-        ("req.method", ("@all", ["req.method"]), False),
-        (
-            "req.method,req.host",
-            ("@all", ["req.method", "req.host"]),
-            False
-        ),
-        (
-            "req.method,req.host|~b foo",
-            ("~b foo", ["req.method", "req.host"]),
-            False
-        ),
-        (
-            "req.method,req.host|~b foo | ~b bar",
-            ("~b foo | ~b bar", ["req.method", "req.host"]),
-            False
-        ),
-        (
-            "req.method, req.host | ~b foo | ~b bar",
-            ("~b foo | ~b bar", ["req.method", "req.host"]),
-            False
-        ),
-    ]
-    for cutspec, output, err in tests:
-        try:
-            assert cut.parse_cutspec(cutspec) == output
-        except exceptions.CommandError:
-            if not err:
-                raise
-        else:
-            if err:
-                raise AssertionError("Expected error.")
-
-
 def test_headername():
     with pytest.raises(exceptions.CommandError):
         cut.headername("header[foo.")
@@ -110,69 +74,64 @@ def test_cut_clip():
         v.add([tflow.tflow(resp=True)])
 
         with mock.patch('pyperclip.copy') as pc:
-            tctx.command(c.clip, "q.method|@all")
+            tctx.command(c.clip, "@all", "q.method")
             assert pc.called
 
         with mock.patch('pyperclip.copy') as pc:
-            tctx.command(c.clip, "q.content|@all")
+            tctx.command(c.clip, "@all", "q.content")
             assert pc.called
 
         with mock.patch('pyperclip.copy') as pc:
-            tctx.command(c.clip, "q.method,q.content|@all")
+            tctx.command(c.clip, "@all", "q.method,q.content")
             assert pc.called
 
 
-def test_cut_file(tmpdir):
+def test_cut_save(tmpdir):
     f = str(tmpdir.join("path"))
     v = view.View()
     c = cut.Cut()
     with taddons.context() as tctx:
         tctx.master.addons.add(v, c)
-
         v.add([tflow.tflow(resp=True)])
 
-        tctx.command(c.save, "q.method|@all", f)
+        tctx.command(c.save, "@all", "q.method", f)
         assert qr(f) == b"GET"
-        tctx.command(c.save, "q.content|@all", f)
+        tctx.command(c.save, "@all", "q.content", f)
         assert qr(f) == b"content"
-        tctx.command(c.save, "q.content|@all", "+" + f)
+        tctx.command(c.save, "@all", "q.content", "+" + f)
         assert qr(f) == b"content\ncontent"
 
         v.add([tflow.tflow(resp=True)])
-        tctx.command(c.save, "q.method|@all", f)
+        tctx.command(c.save, "@all", "q.method", f)
         assert qr(f).splitlines() == [b"GET", b"GET"]
-        tctx.command(c.save, "q.method,q.content|@all", f)
+        tctx.command(c.save, "@all", "q.method,q.content", f)
         assert qr(f).splitlines() == [b"GET,content", b"GET,content"]
 
 
 def test_cut():
-    v = view.View()
     c = cut.Cut()
-    with taddons.context() as tctx:
-        v.add([tflow.tflow(resp=True)])
-        tctx.master.addons.add(v, c)
-        assert c.cut("q.method|@all") == [["GET"]]
-        assert c.cut("q.scheme|@all") == [["http"]]
-        assert c.cut("q.host|@all") == [["address"]]
-        assert c.cut("q.port|@all") == [["22"]]
-        assert c.cut("q.path|@all") == [["/path"]]
-        assert c.cut("q.url|@all") == [["http://address:22/path"]]
-        assert c.cut("q.content|@all") == [[b"content"]]
-        assert c.cut("q.header[header]|@all") == [["qvalue"]]
-        assert c.cut("q.header[unknown]|@all") == [[""]]
+    with taddons.context():
+        tflows = [tflow.tflow(resp=True)]
+        assert c.cut(tflows, ["q.method"]) == [["GET"]]
+        assert c.cut(tflows, ["q.scheme"]) == [["http"]]
+        assert c.cut(tflows, ["q.host"]) == [["address"]]
+        assert c.cut(tflows, ["q.port"]) == [["22"]]
+        assert c.cut(tflows, ["q.path"]) == [["/path"]]
+        assert c.cut(tflows, ["q.url"]) == [["http://address:22/path"]]
+        assert c.cut(tflows, ["q.content"]) == [[b"content"]]
+        assert c.cut(tflows, ["q.header[header]"]) == [["qvalue"]]
+        assert c.cut(tflows, ["q.header[unknown]"]) == [[""]]
 
-        assert c.cut("s.status_code|@all") == [["200"]]
-        assert c.cut("s.reason|@all") == [["OK"]]
-        assert c.cut("s.content|@all") == [[b"message"]]
-        assert c.cut("s.header[header-response]|@all") == [["svalue"]]
-        assert c.cut("moo") == [[""]]
+        assert c.cut(tflows, ["s.status_code"]) == [["200"]]
+        assert c.cut(tflows, ["s.reason"]) == [["OK"]]
+        assert c.cut(tflows, ["s.content"]) == [[b"message"]]
+        assert c.cut(tflows, ["s.header[header-response]"]) == [["svalue"]]
+        assert c.cut(tflows, ["moo"]) == [[""]]
         with pytest.raises(exceptions.CommandError):
-            assert c.cut("__dict__") == [[""]]
+            assert c.cut(tflows, ["__dict__"]) == [[""]]
 
-    v = view.View()
     c = cut.Cut()
-    with taddons.context() as tctx:
-        tctx.master.addons.add(v, c)
-        v.add([tflow.ttcpflow()])
-        assert c.cut("q.method|@all") == [[""]]
-        assert c.cut("s.status|@all") == [[""]]
+    with taddons.context():
+        tflows = [tflow.ttcpflow()]
+        assert c.cut(tflows, ["q.method"]) == [[""]]
+        assert c.cut(tflows, ["s.status"]) == [[""]]
