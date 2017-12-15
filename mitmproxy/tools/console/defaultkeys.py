@@ -31,7 +31,7 @@ def map(km):
     km.add("A", "flow.resume @all", ["flowlist", "flowview"], "Resume all intercepted flows")
     km.add("a", "flow.resume @focus", ["flowlist", "flowview"], "Resume this intercepted flow")
     km.add(
-        "b", "console.command cut.save s.content|@focus ''",
+        "b", "console.command cut.save @focus s.content ",
         ["flowlist", "flowview"],
         "Save response body to file"
     )
