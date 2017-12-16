@@ -156,6 +156,12 @@ def map(km):
         "Load a Python-style escaped string into the current cell from file"
     )
     km.add("e", "console.grideditor.editor", ["grideditor"], "Edit in external editor")
+    km.add(
+        "w",
+        "console.command console.grideditor.save ",
+        ["grideditor"],
+        "Save data to file as CSV"
+    )
 
     km.add("z", "eventstore.clear", ["eventlog"], "Clear")
 
