@@ -2,6 +2,8 @@ import typing
 
 from mitmproxy import exceptions
 from mitmproxy import flow
+
+from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
 
 
@@ -21,9 +23,11 @@ class CommandExecutor:
                         signals.status_message.send(
                             message="Command returned %s flows" % len(ret)
                         )
-                    elif len(str(ret)) < 50:
-                        signals.status_message.send(message=str(ret))
                     else:
-                        signals.status_message.send(
-                            message="Command returned too much data to display."
+                        self.master.overlay(
+                            overlay.DataViewerOverlay(
+                                self.master,
+                                ret,
+                            ),
+                            valign="top"
                         )

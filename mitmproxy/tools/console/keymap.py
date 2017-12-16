@@ -1,5 +1,5 @@
 import typing
-from mitmproxy.tools.console import commandeditor
+from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import signals
 
 
@@ -35,7 +35,7 @@ class Binding:
 
 class Keymap:
     def __init__(self, master):
-        self.executor = commandeditor.CommandExecutor(master)
+        self.executor = commandexecutor.CommandExecutor(master)
         self.keys = {}
         for c in Contexts:
             self.keys[c] = {}

@@ -148,3 +148,30 @@ class OptionsOverlay(urwid.WidgetWrap, layoutwidget.LayoutWidget):
 
     def layout_popping(self):
         return self.ge.layout_popping()
+
+
+class DataViewerOverlay(urwid.WidgetWrap, layoutwidget.LayoutWidget):
+    keyctx = "grideditor"
+
+    def __init__(self, master, vals):
+        """
+            vspace: how much vertical space to keep clear
+        """
+        cols, rows = master.ui.get_cols_rows()
+        self.ge = grideditor.DataViewer(master, vals)
+        super().__init__(
+            urwid.AttrWrap(
+                urwid.LineBox(
+                    urwid.BoxAdapter(self.ge, rows - 5),
+                    title="Data viewer"
+                ),
+                "background"
+            )
+        )
+        self.width = math.ceil(cols * 0.8)
+
+    def key_responder(self):
+        return self.ge.key_responder()
+
+    def layout_popping(self):
+        return self.ge.layout_popping()
