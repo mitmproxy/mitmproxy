@@ -29,6 +29,49 @@ Cuts = typing.Sequence[
 ]
 
 
+class Cut(str):
+    # This is an awkward location for these values, but it's better than having
+    # the console core import and depend on an addon. FIXME: Add a way for
+    # addons to add custom types and manage their completion and validation.
+    valid_prefixes = [
+        "request.method",
+        "request.scheme",
+        "request.host",
+        "request.http_version",
+        "request.port",
+        "request.path",
+        "request.url",
+        "request.text",
+        "request.content",
+        "request.raw_content",
+        "request.timestamp_start",
+        "request.timestamp_end",
+        "request.header[",
+
+        "response.status_code",
+        "response.reason",
+        "response.text",
+        "response.content",
+        "response.timestamp_start",
+        "response.timestamp_end",
+        "response.raw_content",
+        "response.header[",
+
+        "client_conn.address.port",
+        "client_conn.address.host",
+        "client_conn.tls_version",
+        "client_conn.sni",
+        "client_conn.ssl_established",
+
+        "server_conn.address.port",
+        "server_conn.address.host",
+        "server_conn.ip_address.host",
+        "server_conn.tls_version",
+        "server_conn.sni",
+        "server_conn.ssl_established",
+    ]
+
+
 class Path(str):
     pass
 
@@ -49,11 +92,13 @@ def typename(t: type, ret: bool) -> str:
     if isinstance(t, Choice):
         return "choice"
     elif t == typing.Sequence[flow.Flow]:
-        return "[flow]" if ret else "flowspec"
+        return "[flow]"
     elif t == typing.Sequence[str]:
         return "[str]"
+    elif t == typing.Sequence[Cut]:
+        return "[cut]"
     elif t == Cuts:
-        return "[cuts]" if ret else "cutspec"
+        return "[cuts]"
     elif t == flow.Flow:
         return "flow"
     elif issubclass(t, (str, int, bool)):
@@ -264,7 +309,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
                 "Command requires one flow, specification matched %s." % len(flows)
             )
         return flows[0]
-    elif argtype == typing.Sequence[str]:
+    elif argtype in (typing.Sequence[str], typing.Sequence[Cut]):
         return [i.strip() for i in spec.split(",")]
     else:
         raise exceptions.CommandError("Unsupported argument type: %s" % argtype)

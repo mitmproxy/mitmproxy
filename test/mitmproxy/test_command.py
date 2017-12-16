@@ -153,10 +153,10 @@ def test_simple():
 def test_typename():
     assert command.typename(str, True) == "str"
     assert command.typename(typing.Sequence[flow.Flow], True) == "[flow]"
-    assert command.typename(typing.Sequence[flow.Flow], False) == "flowspec"
+    assert command.typename(typing.Sequence[flow.Flow], False) == "[flow]"
 
-    assert command.typename(command.Cuts, False) == "cutspec"
     assert command.typename(command.Cuts, True) == "[cuts]"
+    assert command.typename(typing.Sequence[command.Cut], False) == "[cut]"
 
     assert command.typename(flow.Flow, False) == "flow"
     assert command.typename(typing.Sequence[str], False) == "[str]"
