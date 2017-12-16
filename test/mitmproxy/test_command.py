@@ -218,9 +218,16 @@ def test_parsearg():
         assert command.parsearg(
             tctx.master.commands, "one", command.Choice("choices"),
         ) == "one"
-        with pytest.raises(exceptions.CommandError):
+        assert command.parsearg(
+            tctx.master.commands, "o", command.Choice("choices"),
+        ) == "one"
+        with pytest.raises(exceptions.CommandError, message="Invalid"):
             assert command.parsearg(
                 tctx.master.commands, "invalid", command.Choice("choices"),
+            )
+        with pytest.raises(exceptions.CommandError, message="Ambigious"):
+            assert command.parsearg(
+                tctx.master.commands, "t", command.Choice("choices"),
             )
 
         assert command.parsearg(
