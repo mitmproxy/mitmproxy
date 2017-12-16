@@ -45,8 +45,8 @@ export default function(){
         "port": 22,
         "pretty_host": "address",
         "scheme": "http",
-        "timestamp_end": 2,
-        "timestamp_start": 1
+        "timestamp_end": null,
+        "timestamp_start": null
     },
     "response": {
         "contentHash": "ab530a13e45914982b79f9b7e3fba994cfd1f3fb22f71cea1afbf02b460c6d1d",

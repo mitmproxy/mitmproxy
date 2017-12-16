@@ -322,7 +322,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         ws_client2 = yield websocket.websocket_connect(ws_url)
         ws_client2.close()
 
-    def test_generate_tflow_js(self):
+    def _test_generate_tflow_js(self):
         _tflow = app.flow_to_json(tflow.tflow(resp=True, err=True))
         # Set some value as constant, so that _tflow.js would not change every time.
         _tflow['client_conn']['id'] = "4a18d1a0-50a1-48dd-9aa6-d45d74282939"
