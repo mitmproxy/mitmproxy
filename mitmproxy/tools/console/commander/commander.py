@@ -6,6 +6,7 @@ import typing
 import urwid
 from urwid.text_layout import calc_coords
 
+import mitmproxy.flow
 import mitmproxy.master
 import mitmproxy.command
 
@@ -142,7 +143,14 @@ class CommandBuffer():
                     ),
                     parse = parts,
                 )
-
+            elif last.type in (typing.Sequence[mitmproxy.flow.Flow], mitmproxy.flow.Flow):
+                self.completion = CompletionState(
+                    completer = ListCompleter(
+                        "",
+                        mitmproxy.command.valid_flow_prefixes,
+                    ),
+                    parse = parts,
+                )
         if self.completion:
             nxt = self.completion.completer.cycle()
             buf = " ".join([i.value for i in self.completion.parse[:-1]]) + " " + nxt

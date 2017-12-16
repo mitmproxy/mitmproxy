@@ -24,6 +24,32 @@ def lexer(s):
     return lex
 
 
+# This is an awkward location for these values, but it's better than having
+# the console core import and depend on an addon. FIXME: Add a way for
+# addons to add custom types and manage their completion and validation.
+valid_flow_prefixes = [
+    "@all",
+    "@focus",
+    "@shown",
+    "@hidden",
+    "@marked",
+    "@unmarked",
+    "~q",
+    "~s",
+    "~a",
+    "~hq",
+    "~hs",
+    "~b",
+    "~bq",
+    "~bs",
+    "~t",
+    "~d",
+    "~m",
+    "~u",
+    "~c",
+]
+
+
 Cuts = typing.Sequence[
     typing.Sequence[typing.Union[str, bytes]]
 ]
