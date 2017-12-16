@@ -151,19 +151,18 @@ def test_simple():
 
 
 def test_typename():
-    assert command.typename(str, True) == "str"
-    assert command.typename(typing.Sequence[flow.Flow], True) == "[flow]"
-    assert command.typename(typing.Sequence[flow.Flow], False) == "[flow]"
+    assert command.typename(str) == "str"
+    assert command.typename(typing.Sequence[flow.Flow]) == "[flow]"
 
-    assert command.typename(command.Cuts, True) == "[cuts]"
-    assert command.typename(typing.Sequence[command.Cut], False) == "[cut]"
+    assert command.typename(command.Cuts) == "[cuts]"
+    assert command.typename(typing.Sequence[command.Cut]) == "[cut]"
 
-    assert command.typename(flow.Flow, False) == "flow"
-    assert command.typename(typing.Sequence[str], False) == "[str]"
+    assert command.typename(flow.Flow) == "flow"
+    assert command.typename(typing.Sequence[str]) == "[str]"
 
-    assert command.typename(command.Choice("foo"), False) == "choice"
-    assert command.typename(command.Path, False) == "path"
-    assert command.typename(command.Cmd, False) == "cmd"
+    assert command.typename(command.Choice("foo")) == "choice"
+    assert command.typename(command.Path) == "path"
+    assert command.typename(command.Cmd) == "cmd"
 
 
 class DummyConsole:

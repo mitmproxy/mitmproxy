@@ -145,15 +145,15 @@ def map(km):
     km.add("d", "console.grideditor.delete", ["grideditor"], "Delete this row")
     km.add(
         "r",
-        "console.command console.grideditor.readfile",
+        "console.command console.grideditor.load",
         ["grideditor"],
-        "Read unescaped data from file"
+        "Read unescaped data into the current cell from file"
     )
     km.add(
         "R",
-        "console.command console.grideditor.readfile_escaped",
+        "console.command console.grideditor.load_escaped",
         ["grideditor"],
-        "Read a Python-style escaped string from file"
+        "Load a Python-style escaped string into the current cell from file"
     )
     km.add("e", "console.grideditor.editor", ["grideditor"], "Edit in external editor")
 
