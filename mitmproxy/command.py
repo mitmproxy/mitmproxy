@@ -233,9 +233,19 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
         cmd = argtype.options_command
         opts = manager.call(cmd)
         if spec not in opts:
-            raise exceptions.CommandError(
-                "Invalid choice: see %s for options" % cmd
-            )
+            matches = [
+                x for x in opts
+                if x.startswith(spec)
+            ]
+            if len(matches) == 1:
+                return matches[0]
+            else:
+                raise exceptions.CommandError(
+                    "%s choice: see %s for options" % (
+                        "Ambigious" if matches else "Invalid",
+                        cmd
+                    )
+                )
         return spec
     elif issubclass(argtype, str):
         return spec
