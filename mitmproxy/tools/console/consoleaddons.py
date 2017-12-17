@@ -1,3 +1,4 @@
+import csv
 import typing
 
 from mitmproxy import ctx
@@ -416,6 +417,20 @@ class ConsoleAddon:
             currrent cell.
         """
         self._grideditor().cmd_read_file_escaped(path)
+
+    @command.command("console.grideditor.save")
+    def grideditor_save(self, path: command.Path) -> None:
+        """
+            Save data to file as a CSV.
+        """
+        rows = self._grideditor().value
+        with open(path, "w", newline='', encoding="utf8") as fp:
+            writer = csv.writer(fp)
+            for row in rows:
+                writer.writerow(
+                    [strutils.always_str(x) or "" for x in row]  # type: ignore
+                )
+        ctx.log.alert("Saved %s rows as CSV." % (len(rows)))
 
     @command.command("console.grideditor.editor")
     def grideditor_editor(self) -> None:
