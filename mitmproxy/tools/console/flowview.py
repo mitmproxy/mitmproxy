@@ -116,7 +116,7 @@ class FlowDetails(tabs.Tabs):
             viewmode, message
         )
         if error:
-            self.master.add_log(error, "error")
+            self.master.add_log(error, "debug")
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, http.HTTPRequest):
             description = "No request content (press tab to view response)"
