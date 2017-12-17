@@ -402,17 +402,17 @@ class ConsoleAddon:
         """
         self._grideditor().cmd_delete()
 
-    @command.command("console.grideditor.readfile")
-    def grideditor_readfile(self, path: command.Path) -> None:
+    @command.command("console.grideditor.load")
+    def grideditor_load(self, path: command.Path) -> None:
         """
             Read a file into the currrent cell.
         """
         self._grideditor().cmd_read_file(path)
 
-    @command.command("console.grideditor.readfile_escaped")
-    def grideditor_readfile_escaped(self, path: command.Path) -> None:
+    @command.command("console.grideditor.load_escaped")
+    def grideditor_load_escaped(self, path: command.Path) -> None:
         """
-            Read a file containing a Python-style escaped stringinto the
+            Read a file containing a Python-style escaped string into the
             currrent cell.
         """
         self._grideditor().cmd_read_file_escaped(path)

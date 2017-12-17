@@ -110,7 +110,7 @@ class Arg(str):
     pass
 
 
-def typename(t: type, ret: bool) -> str:
+def typename(t: type) -> str:
     """
         Translates a type to an explanatory string. If ret is True, we're
         looking at a return type, else we're looking at a parameter type.
@@ -153,13 +153,13 @@ class Command:
         self.returntype = sig.return_annotation
 
     def paramnames(self) -> typing.Sequence[str]:
-        v = [typename(i, False) for i in self.paramtypes]
+        v = [typename(i) for i in self.paramtypes]
         if self.has_positional:
             v[-1] = "*" + v[-1]
         return v
 
     def retname(self) -> str:
-        return typename(self.returntype, True) if self.returntype else ""
+        return typename(self.returntype) if self.returntype else ""
 
     def signature_help(self) -> str:
         params = " ".join(self.paramnames())
