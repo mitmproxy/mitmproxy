@@ -21,6 +21,7 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
 
         master.events.sig_add.connect(self.add_event)
         master.events.sig_refresh.connect(self.refresh_events)
+        self.master.options.subscribe(self.refresh_events, ["verbosity"])
         self.refresh_events()
 
         super().__init__(self.walker)
@@ -54,7 +55,7 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         if self.master.options.console_focus_follow:
             self.walker.set_focus(len(self.walker) - 1)
 
-    def refresh_events(self, event_store=None):
+    def refresh_events(self, *_):
         self.walker.clear()
         for event in self.master.events.data:
             self.add_event(None, event)
