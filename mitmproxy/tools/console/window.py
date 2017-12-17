@@ -15,15 +15,29 @@ from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import eventlog
 
 
-class Header(urwid.Frame):
+class StackWidget(urwid.Frame):
     def __init__(self, widget, title, focus):
-        super().__init__(
-            widget,
+        if title:
             header = urwid.AttrWrap(
                 urwid.Text(title),
                 "heading" if focus else "heading_inactive"
             )
+        else:
+            header = None
+        super().__init__(
+            widget,
+            header=header
         )
+
+    def keypress(self, size, key):
+        # Make sure that we don't propagate cursor events outside of the widget.
+        # Otherwise, in a horizontal layout, urwid's Pile would change the focused widget
+        # if we cannot scroll any further.
+        ret = super().keypress(size, key)
+        command = self._command_map[ret]  # awkward as they don't implement a full dict api
+        if command and command.startswith("cursor"):
+            return None
+        return ret
 
 
 class WindowStack:
@@ -142,12 +156,16 @@ class Window(urwid.Frame):
             self.pane = 0
 
         def wrapped(idx):
-            window = self.stacks[idx].top_window()
             widget = self.stacks[idx].top_widget()
-            if self.master.options.console_layout_headers and window.title:
-                return Header(widget, window.title, self.pane == idx)
+            if self.master.options.console_layout_headers:
+                title = self.stacks[idx].top_window().title
             else:
-                return widget
+                title = None
+            return StackWidget(
+                widget,
+                title,
+                self.pane == idx
+            )
 
         w = None
         if c == "single":
