@@ -1,5 +1,5 @@
 from mitmproxy.net.http import url
-from mitmproxy.types import multidict
+from mitmproxy.coretypes import multidict
 from . import base
 
 

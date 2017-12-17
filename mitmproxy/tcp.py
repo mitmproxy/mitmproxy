@@ -3,7 +3,7 @@ import time
 from typing import List
 
 from mitmproxy import flow
-from mitmproxy.types import serializable
+from mitmproxy.coretypes import serializable
 
 
 class TCPMessage(serializable.Serializable):

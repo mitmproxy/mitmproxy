@@ -15,7 +15,7 @@ from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol import http as httpbase
 import mitmproxy.net.http
 from mitmproxy.net import tcp
-from mitmproxy.types import basethread
+from mitmproxy.coretypes import basethread
 from mitmproxy.net.http import http2, headers
 from mitmproxy.utils import human
 

@@ -14,7 +14,7 @@ from OpenSSL import SSL
 
 from mitmproxy import certs
 from mitmproxy import exceptions
-from mitmproxy.types import basethread
+from mitmproxy.coretypes import basethread
 
 socket_fileobject = socket.SocketIO
 

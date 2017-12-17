@@ -1,5 +1,5 @@
 from mitmproxy.contentviews import query
-from mitmproxy.types import multidict
+from mitmproxy.coretypes import multidict
 from . import full_eval
 
 

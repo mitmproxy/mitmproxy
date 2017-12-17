@@ -3,7 +3,7 @@ from typing import Optional, Union  # noqa
 
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import encoding
-from mitmproxy.types import serializable
+from mitmproxy.coretypes import serializable
 from mitmproxy.net.http import headers
 
 

@@ -2,7 +2,7 @@ from typing import Any
 from typing import List
 from typing import MutableMapping  # noqa
 
-from mitmproxy.types import serializable
+from mitmproxy.coretypes import serializable
 
 
 def _is_list(cls):

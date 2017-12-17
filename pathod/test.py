@@ -2,7 +2,7 @@ import io
 import time
 import queue
 from . import pathod
-from mitmproxy.types import basethread
+from mitmproxy.coretypes import basethread
 import typing  # noqa
 
 

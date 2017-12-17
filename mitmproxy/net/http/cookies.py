@@ -3,7 +3,7 @@ import re
 import time
 from typing import Tuple, List, Iterable
 
-from mitmproxy.types import multidict
+from mitmproxy.coretypes import multidict
 
 """
 A flexible module for cookie parsing and manipulation.

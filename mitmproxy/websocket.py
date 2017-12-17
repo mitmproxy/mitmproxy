@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from mitmproxy import flow
 from mitmproxy.net import websockets
-from mitmproxy.types import serializable
+from mitmproxy.coretypes import serializable
 from mitmproxy.utils import strutils, human
 
 

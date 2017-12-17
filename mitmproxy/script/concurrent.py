@@ -4,7 +4,7 @@ offload computations from mitmproxy's main master thread.
 """
 
 from mitmproxy import eventsequence
-from mitmproxy.types import basethread
+from mitmproxy.coretypes import basethread
 
 
 class ScriptThread(basethread.BaseThread):

@@ -11,7 +11,7 @@ from mitmproxy import options
 from mitmproxy import connections
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import http1
-from mitmproxy.types import basethread
+from mitmproxy.coretypes import basethread
 from mitmproxy.utils import human
 
 
