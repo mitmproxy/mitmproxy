@@ -4,7 +4,6 @@ from unittest import mock
 import pytest
 
 from mitmproxy.utils import typecheck
-from mitmproxy import command
 
 
 class TBase:
@@ -95,9 +94,6 @@ def test_check_command_type():
     assert(typecheck.check_command_type(None, None))
     assert(not typecheck.check_command_type(["foo"], typing.Sequence[int]))
     assert(not typecheck.check_command_type("foo", typing.Sequence[int]))
-    assert(typecheck.check_command_type([["foo", b"bar"]], command.Cuts))
-    assert(not typecheck.check_command_type(["foo", b"bar"], command.Cuts))
-    assert(not typecheck.check_command_type([["foo", 22]], command.Cuts))
 
     # Python 3.5 only defines __parameters__
     m = mock.Mock()

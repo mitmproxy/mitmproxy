@@ -9,6 +9,7 @@ from mitmproxy import flow
 from mitmproxy import exceptions
 from mitmproxy import io
 from mitmproxy import command
+import mitmproxy.types
 
 
 class ServerPlayback:
@@ -31,7 +32,7 @@ class ServerPlayback:
         ctx.master.addons.trigger("update", [])
 
     @command.command("replay.server.file")
-    def load_file(self, path: command.Path) -> None:
+    def load_file(self, path: mitmproxy.types.Path) -> None:
         try:
             flows = io.read_flows_from_paths([path])
         except exceptions.FlowReadException as e:
