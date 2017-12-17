@@ -5,6 +5,7 @@ from mitmproxy import flow
 from mitmproxy import exceptions
 from mitmproxy.utils import strutils
 from mitmproxy.net.http.http1 import assemble
+import mitmproxy.types
 
 import pyperclip
 
@@ -49,7 +50,7 @@ class Export():
         return list(sorted(formats.keys()))
 
     @command.command("export.file")
-    def file(self, fmt: str, f: flow.Flow, path: command.Path) -> None:
+    def file(self, fmt: str, f: flow.Flow, path: mitmproxy.types.Path) -> None:
         """
             Export a flow to path.
         """

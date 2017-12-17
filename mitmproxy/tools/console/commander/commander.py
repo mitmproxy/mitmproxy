@@ -1,6 +1,4 @@
 import abc
-import glob
-import os
 import typing
 
 import urwid
@@ -9,6 +7,7 @@ from urwid.text_layout import calc_coords
 import mitmproxy.flow
 import mitmproxy.master
 import mitmproxy.command
+import mitmproxy.types
 
 
 class Completer:  # pragma: no cover
@@ -37,30 +36,6 @@ class ListCompleter(Completer):
         ret = self.options[self.offset]
         self.offset = (self.offset + 1) % len(self.options)
         return ret
-
-
-# Generates the completion options for a specific starting input
-def pathOptions(start: str) -> typing.Sequence[str]:
-    if not start:
-        start = "./"
-    path = os.path.expanduser(start)
-    ret = []
-    if os.path.isdir(path):
-        files = glob.glob(os.path.join(path, "*"))
-        prefix = start
-    else:
-        files = glob.glob(path + "*")
-        prefix = os.path.dirname(start)
-    prefix = prefix or "./"
-    for f in files:
-        display = os.path.join(prefix, os.path.normpath(os.path.basename(f)))
-        if os.path.isdir(f):
-            display += "/"
-        ret.append(display)
-    if not ret:
-        ret = [start]
-    ret.sort()
-    return ret
 
 
 CompletionState = typing.NamedTuple(
@@ -106,48 +81,12 @@ class CommandBuffer():
         if not self.completion:
             parts = self.master.commands.parse_partial(self.buf[:self.cursor])
             last = parts[-1]
-            if last.type == mitmproxy.command.Cmd:
+            ct = mitmproxy.types.CommandTypes.get(last.type, None)
+            if ct:
                 self.completion = CompletionState(
                     completer = ListCompleter(
                         parts[-1].value,
-                        self.master.commands.commands.keys(),
-                    ),
-                    parse = parts,
-                )
-            if last.type == typing.Sequence[mitmproxy.command.Cut]:
-                spec = parts[-1].value.split(",")
-                opts = []
-                for pref in mitmproxy.command.Cut.valid_prefixes:
-                    spec[-1] = pref
-                    opts.append(",".join(spec))
-                self.completion = CompletionState(
-                    completer = ListCompleter(
-                        parts[-1].value,
-                        opts,
-                    ),
-                    parse = parts,
-                )
-            elif isinstance(last.type, mitmproxy.command.Choice):
-                self.completion = CompletionState(
-                    completer = ListCompleter(
-                        parts[-1].value,
-                        self.master.commands.call(last.type.options_command),
-                    ),
-                    parse = parts,
-                )
-            elif last.type == mitmproxy.command.Path:
-                self.completion = CompletionState(
-                    completer = ListCompleter(
-                        "",
-                        pathOptions(parts[1].value)
-                    ),
-                    parse = parts,
-                )
-            elif last.type in (typing.Sequence[mitmproxy.flow.Flow], mitmproxy.flow.Flow):
-                self.completion = CompletionState(
-                    completer = ListCompleter(
-                        "",
-                        mitmproxy.command.valid_flow_prefixes,
+                        ct.completion(self.master.commands, last.type, parts[-1].value)
                     ),
                     parse = parts,
                 )

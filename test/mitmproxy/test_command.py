@@ -4,6 +4,7 @@ from mitmproxy import flow
 from mitmproxy import exceptions
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
+import mitmproxy.types
 import io
 import pytest
 
@@ -25,7 +26,7 @@ class TAddon:
         return foo
 
     @command.command("subcommand")
-    def subcommand(self, cmd: command.Cmd, *args: command.Arg) -> str:
+    def subcommand(self, cmd: mitmproxy.types.Cmd, *args: mitmproxy.types.Arg) -> str:
         return "ok"
 
     @command.command("empty")
@@ -39,12 +40,12 @@ class TAddon:
     def choices(self) -> typing.Sequence[str]:
         return ["one", "two", "three"]
 
-    @command.argument("arg", type=command.Choice("choices"))
+    @command.argument("arg", type=mitmproxy.types.Choice("choices"))
     def choose(self, arg: str) -> typing.Sequence[str]:
         return ["one", "two", "three"]
 
     @command.command("path")
-    def path(self, arg: command.Path) -> None:
+    def path(self, arg: mitmproxy.types.Path) -> None:
         pass
 
 
@@ -79,45 +80,45 @@ class TestCommand:
             [
                 "foo bar",
                 [
-                    command.ParseResult(value = "foo", type = command.Cmd),
+                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd),
                     command.ParseResult(value = "bar", type = str)
                 ],
             ],
             [
                 "foo 'bar",
                 [
-                    command.ParseResult(value = "foo", type = command.Cmd),
+                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd),
                     command.ParseResult(value = "'bar", type = str)
                 ]
             ],
-            ["a", [command.ParseResult(value = "a", type = command.Cmd)]],
-            ["", [command.ParseResult(value = "", type = command.Cmd)]],
+            ["a", [command.ParseResult(value = "a", type = mitmproxy.types.Cmd)]],
+            ["", [command.ParseResult(value = "", type = mitmproxy.types.Cmd)]],
             [
                 "cmd3 1",
                 [
-                    command.ParseResult(value = "cmd3", type = command.Cmd),
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd),
                     command.ParseResult(value = "1", type = int),
                 ]
             ],
             [
                 "cmd3 ",
                 [
-                    command.ParseResult(value = "cmd3", type = command.Cmd),
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd),
                     command.ParseResult(value = "", type = int),
                 ]
             ],
             [
                 "subcommand ",
                 [
-                    command.ParseResult(value = "subcommand", type = command.Cmd),
-                    command.ParseResult(value = "", type = command.Cmd),
+                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd),
+                    command.ParseResult(value = "", type = mitmproxy.types.Cmd),
                 ]
             ],
             [
                 "subcommand cmd3 ",
                 [
-                    command.ParseResult(value = "subcommand", type = command.Cmd),
-                    command.ParseResult(value = "cmd3", type = command.Cmd),
+                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd),
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd),
                     command.ParseResult(value = "", type = int),
                 ]
             ],
@@ -154,15 +155,15 @@ def test_typename():
     assert command.typename(str) == "str"
     assert command.typename(typing.Sequence[flow.Flow]) == "[flow]"
 
-    assert command.typename(command.Cuts) == "[cuts]"
-    assert command.typename(typing.Sequence[command.Cut]) == "[cut]"
+    assert command.typename(mitmproxy.types.Data) == "[data]"
+    assert command.typename(mitmproxy.types.CutSpec) == "[cut]"
 
     assert command.typename(flow.Flow) == "flow"
     assert command.typename(typing.Sequence[str]) == "[str]"
 
-    assert command.typename(command.Choice("foo")) == "choice"
-    assert command.typename(command.Path) == "path"
-    assert command.typename(command.Cmd) == "cmd"
+    assert command.typename(mitmproxy.types.Choice("foo")) == "choice"
+    assert command.typename(mitmproxy.types.Path) == "path"
+    assert command.typename(mitmproxy.types.Cmd) == "cmd"
 
 
 class DummyConsole:
@@ -172,7 +173,7 @@ class DummyConsole:
         return [tflow.tflow(resp=True)] * n
 
     @command.command("cut")
-    def cut(self, spec: str) -> command.Cuts:
+    def cut(self, spec: str) -> mitmproxy.types.Data:
         return [["test"]]
 
 
@@ -202,10 +203,6 @@ def test_parsearg():
             command.parsearg(tctx.master.commands, "foo", Exception)
 
         assert command.parsearg(
-            tctx.master.commands, "foo", command.Cuts
-        ) == [["test"]]
-
-        assert command.parsearg(
             tctx.master.commands, "foo", typing.Sequence[str]
         ) == ["foo"]
         assert command.parsearg(
@@ -215,18 +212,18 @@ def test_parsearg():
         a = TAddon()
         tctx.master.commands.add("choices", a.choices)
         assert command.parsearg(
-            tctx.master.commands, "one", command.Choice("choices"),
+            tctx.master.commands, "one", mitmproxy.types.Choice("choices"),
         ) == "one"
         with pytest.raises(exceptions.CommandError):
             assert command.parsearg(
-                tctx.master.commands, "invalid", command.Choice("choices"),
+                tctx.master.commands, "invalid", mitmproxy.types.Choice("choices"),
             )
 
         assert command.parsearg(
-            tctx.master.commands, "foo", command.Path
+            tctx.master.commands, "foo", mitmproxy.types.Path
         ) == "foo"
         assert command.parsearg(
-            tctx.master.commands, "foo", command.Cmd
+            tctx.master.commands, "foo", mitmproxy.types.Cmd
         ) == "foo"
 
 
@@ -272,5 +269,5 @@ def test_choice():
     basic typechecking for choices should fail as we cannot verify if strings are a valid choice
     at this point.
     """
-    c = command.Choice("foo")
+    c = mitmproxy.types.Choice("foo")
     assert not typecheck.check_command_type("foo", c)
