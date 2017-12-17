@@ -76,11 +76,7 @@ class Command:
             ret = " -> " + ret
         return "%s %s%s" % (self.path, params, ret)
 
-    def call(self, args: typing.Sequence[str]) -> typing.Any:
-        """
-            Call the command with a list of arguments. At this point, all
-            arguments are strings.
-        """
+    def prepare_args(self, args: typing.Sequence[str]) -> typing.List[typing.Any]:
         verify_arg_signature(self.func, list(args), {})
 
         remainder = []  # type: typing.Sequence[str]
@@ -92,6 +88,14 @@ class Command:
         for arg, paramtype in zip(args, self.paramtypes):
             pargs.append(parsearg(self.manager, arg, paramtype))
         pargs.extend(remainder)
+        return pargs
+
+    def call(self, args: typing.Sequence[str]) -> typing.Any:
+        """
+            Call the command with a list of arguments. At this point, all
+            arguments are strings.
+        """
+        pargs = self.prepare_args(args)
 
         with self.manager.master.handlecontext():
             ret = self.func(*pargs)
@@ -121,7 +125,7 @@ ParseResult = typing.NamedTuple(
 class CommandManager(mitmproxy.types._CommandBase):
     def __init__(self, master):
         self.master = master
-        self.commands = {}
+        self.commands = {}  # type: typing.Dict[str, Command]
 
     def collect_commands(self, addon):
         for i in dir(addon):
