@@ -331,6 +331,7 @@ class FDomain(_Rex):
             self.re.search(f.request.pretty_host)
         )
 
+
 class FUrl(_Rex):
     code = "u"
     help = "URL"
