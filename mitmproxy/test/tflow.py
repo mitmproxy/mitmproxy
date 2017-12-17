@@ -44,7 +44,7 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
             "GET",
             "http",
             "example.com",
-            "80",
+            80,
             "/ws",
             "HTTP/1.1",
             headers=net_http.Headers(
