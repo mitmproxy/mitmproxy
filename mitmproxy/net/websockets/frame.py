@@ -6,7 +6,7 @@ from mitmproxy.net import tcp
 from mitmproxy.utils import strutils
 from mitmproxy.utils import bits
 from mitmproxy.utils import human
-from mitmproxy.types import bidi
+from mitmproxy.coretypes import bidi
 from .masker import Masker
 
 

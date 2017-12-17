@@ -1,5 +1,5 @@
 import re
-from mitmproxy.types import basethread
+from mitmproxy.coretypes import basethread
 
 
 def test_basethread():

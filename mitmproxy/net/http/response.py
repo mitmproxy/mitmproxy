@@ -1,7 +1,7 @@
 import time
 from email.utils import parsedate_tz, formatdate, mktime_tz
 from mitmproxy.utils import human
-from mitmproxy.types import multidict
+from mitmproxy.coretypes import multidict
 from mitmproxy.net.http import cookies
 from mitmproxy.net.http import headers as nheaders
 from mitmproxy.net.http import message

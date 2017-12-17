@@ -1,6 +1,6 @@
 import pytest
 
-from mitmproxy.types import multidict
+from mitmproxy.coretypes import multidict
 
 
 class _TMulti:

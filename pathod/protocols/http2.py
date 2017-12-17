@@ -8,7 +8,7 @@ from mitmproxy.net.http import http2
 import mitmproxy.net.http.headers
 import mitmproxy.net.http.response
 import mitmproxy.net.http.request
-from mitmproxy.types import bidi
+from mitmproxy.coretypes import bidi
 
 from .. import language
 

@@ -3,7 +3,7 @@ import array
 import ipaddress
 
 from mitmproxy.net import check
-from mitmproxy.types import bidi
+from mitmproxy.coretypes import bidi
 
 
 class SocksError(Exception):

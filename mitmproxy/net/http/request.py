@@ -2,7 +2,7 @@ import re
 import urllib
 from typing import Optional, AnyStr, Dict, Iterable, Tuple, Union
 
-from mitmproxy.types import multidict
+from mitmproxy.coretypes import multidict
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import multipart
 from mitmproxy.net.http import cookies

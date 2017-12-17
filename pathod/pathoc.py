@@ -17,7 +17,7 @@ from mitmproxy.net import tcp, tls
 from mitmproxy.net import websockets
 from mitmproxy.net import socks
 from mitmproxy.net import http as net_http
-from mitmproxy.types import basethread
+from mitmproxy.coretypes import basethread
 from mitmproxy.utils import strutils
 
 from pathod import log

@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 from collections.abc import MutableMapping
-from mitmproxy.types import serializable
+from mitmproxy.coretypes import serializable
 
 
 class _MultiDict(MutableMapping, metaclass=ABCMeta):

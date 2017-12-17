@@ -1,6 +1,6 @@
 from mitmproxy.contentviews import auto
 from mitmproxy.net import http
-from mitmproxy.types import multidict
+from mitmproxy.coretypes import multidict
 from . import full_eval
 
 

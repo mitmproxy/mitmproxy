@@ -1,7 +1,7 @@
 import re
 
 import collections
-from mitmproxy.types import multidict
+from mitmproxy.coretypes import multidict
 from mitmproxy.utils import strutils
 
 # See also: http://lucumr.pocoo.org/2013/7/2/the-updated-guide-to-unicode/

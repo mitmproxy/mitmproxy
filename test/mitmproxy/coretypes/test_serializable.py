@@ -1,6 +1,6 @@
 import copy
 
-from mitmproxy.types import serializable
+from mitmproxy.coretypes import serializable
 
 
 class SerializableDummy(serializable.Serializable):

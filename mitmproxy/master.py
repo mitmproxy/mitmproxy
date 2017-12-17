@@ -12,7 +12,7 @@ from mitmproxy import http
 from mitmproxy import log
 from mitmproxy.net import server_spec
 from mitmproxy.proxy.protocol import http_replay
-from mitmproxy.types import basethread
+from mitmproxy.coretypes import basethread
 
 from . import ctx as mitmproxy_ctx
 
