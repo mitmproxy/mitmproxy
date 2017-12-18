@@ -10,9 +10,16 @@ import textwrap
 import functools
 import sys
 
-from mitmproxy.utils import typecheck
 from mitmproxy import exceptions
 import mitmproxy.types
+
+
+def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
+    sig = inspect.signature(f)
+    try:
+        sig.bind(*args, **kwargs)
+    except TypeError as v:
+        raise exceptions.CommandError("command argument mismatch: %s" % v.args[0])
 
 
 def lexer(s):
@@ -74,8 +81,7 @@ class Command:
             Call the command with a list of arguments. At this point, all
             arguments are strings.
         """
-        if not self.has_positional and (len(self.paramtypes) != len(args)):
-            raise exceptions.CommandError("Usage: %s" % self.signature_help())
+        verify_arg_signature(self.func, list(args), {})
 
         remainder = []  # type: typing.Sequence[str]
         if self.has_positional:
@@ -84,37 +90,35 @@ class Command:
 
         pargs = []
         for arg, paramtype in zip(args, self.paramtypes):
-            if typecheck.check_command_type(arg, paramtype):
-                pargs.append(arg)
-            else:
-                pargs.append(parsearg(self.manager, arg, paramtype))
-
-        if remainder:
-            chk = typecheck.check_command_type(
-                remainder,
-                typing.Sequence[self.paramtypes[-1]]  # type: ignore
-            )
-            if chk:
-                pargs.extend(remainder)
-            else:
-                raise exceptions.CommandError("Invalid value type: %s - expected %s" % (remainder, self.paramtypes[-1]))
+            pargs.append(parsearg(self.manager, arg, paramtype))
+        pargs.extend(remainder)
 
         with self.manager.master.handlecontext():
             ret = self.func(*pargs)
 
-        if not typecheck.check_command_type(ret, self.returntype):
-            raise exceptions.CommandError("Command returned unexpected data")
-
+        if ret is None and self.returntype is None:
+            return
+        typ = mitmproxy.types.CommandTypes.get(self.returntype)
+        if not typ.is_valid(self.manager, typ, ret):
+            raise exceptions.CommandError(
+                "%s returned unexpected data - expected %s" % (
+                    self.path, typ.display
+                )
+            )
         return ret
 
 
 ParseResult = typing.NamedTuple(
     "ParseResult",
-    [("value", str), ("type", typing.Type)],
+    [
+        ("value", str),
+        ("type", typing.Type),
+        ("valid", bool),
+    ],
 )
 
 
-class CommandManager:
+class CommandManager(mitmproxy.types._CommandBase):
     def __init__(self, master):
         self.master = master
         self.commands = {}
@@ -161,13 +165,29 @@ class CommandManager:
                     params.extend(self.commands[parts[i]].paramtypes)
             elif params:
                 typ = params.pop(0)
-                # FIXME: Do we need to check that Arg is positional?
                 if typ == mitmproxy.types.Cmd and params and params[0] == mitmproxy.types.Arg:
                     if parts[i] in self.commands:
                         params[:] = self.commands[parts[i]].paramtypes
             else:
                 typ = str
-            parse.append(ParseResult(value=parts[i], type=typ))
+
+            to = mitmproxy.types.CommandTypes.get(typ, None)
+            valid = False
+            if to:
+                try:
+                    to.parse(self, typ, parts[i])
+                except exceptions.TypeError:
+                    valid = False
+                else:
+                    valid = True
+
+            parse.append(
+                ParseResult(
+                    value=parts[i],
+                    type=typ,
+                    valid=valid,
+                )
+            )
         return parse
 
     def call_args(self, path: str, args: typing.Sequence[str]) -> typing.Any:
@@ -208,14 +228,6 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
         return t.parse(manager, argtype, spec)  # type: ignore
     except exceptions.TypeError as e:
         raise exceptions.CommandError from e
-
-
-def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
-    sig = inspect.signature(f)
-    try:
-        sig.bind(*args, **kwargs)
-    except TypeError as v:
-        raise exceptions.CommandError("Argument mismatch: %s" % v.args[0])
 
 
 def command(path):

@@ -104,7 +104,7 @@ class ConsoleAddon:
     @command.command("console.layout.options")
     def layout_options(self) -> typing.Sequence[str]:
         """
-            Returns the available options for the consoler_layout option.
+            Returns the available options for the console_layout option.
         """
         return ["single", "vertical", "horizontal"]
 
@@ -243,7 +243,11 @@ class ConsoleAddon:
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
-        self, prompt: str, choicecmd: mitmproxy.types.Cmd, *cmd: mitmproxy.types.Arg
+        self,
+        prompt: str,
+        choicecmd: mitmproxy.types.Cmd,
+        subcmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.Arg
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
@@ -254,10 +258,10 @@ class ConsoleAddon:
 
         def callback(opt):
             # We're now outside of the call context...
-            repl = " ".join(cmd)
+            repl = " ".join(args)
             repl = repl.replace("{choice}", opt)
             try:
-                self.master.commands.call(repl)
+                self.master.commands.call(subcmd + " " + repl)
             except exceptions.CommandError as e:
                 signals.status_message.send(message=str(e))
 

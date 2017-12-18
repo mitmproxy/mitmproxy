@@ -8,8 +8,6 @@ import mitmproxy.types
 import io
 import pytest
 
-from mitmproxy.utils import typecheck
-
 
 class TAddon:
     @command.command("cmd1")
@@ -80,46 +78,46 @@ class TestCommand:
             [
                 "foo bar",
                 [
-                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "bar", type = str)
+                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "bar", type = str, valid = True)
                 ],
             ],
             [
                 "foo 'bar",
                 [
-                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "'bar", type = str)
+                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "'bar", type = str, valid = True)
                 ]
             ],
-            ["a", [command.ParseResult(value = "a", type = mitmproxy.types.Cmd)]],
-            ["", [command.ParseResult(value = "", type = mitmproxy.types.Cmd)]],
+            ["a", [command.ParseResult(value = "a", type = mitmproxy.types.Cmd, valid = True)]],
+            ["", [command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = True)]],
             [
                 "cmd3 1",
                 [
-                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "1", type = int),
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "1", type = int, valid = True),
                 ]
             ],
             [
                 "cmd3 ",
                 [
-                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "", type = int),
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = int, valid = False),
                 ]
             ],
             [
                 "subcommand ",
                 [
-                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "", type = mitmproxy.types.Cmd),
+                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = True),
                 ]
             ],
             [
                 "subcommand cmd3 ",
                 [
-                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "", type = int),
+                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = int, valid = False),
                 ]
             ],
         ]
@@ -140,7 +138,7 @@ def test_simple():
             c.call("nonexistent")
         with pytest.raises(exceptions.CommandError, match="Invalid"):
             c.call("")
-        with pytest.raises(exceptions.CommandError, match="Usage"):
+        with pytest.raises(exceptions.CommandError, match="argument mismatch"):
             c.call("one.two too many args")
 
         c.add("empty", a.empty)
@@ -262,12 +260,3 @@ def test_verify_arg_signature():
         command.verify_arg_signature(lambda: None, [1, 2], {})
         print('hello there')
     command.verify_arg_signature(lambda a, b: None, [1, 2], {})
-
-
-def test_choice():
-    """
-    basic typechecking for choices should fail as we cannot verify if strings are a valid choice
-    at this point.
-    """
-    c = mitmproxy.types.Choice("foo")
-    assert not typecheck.check_command_type("foo", c)
