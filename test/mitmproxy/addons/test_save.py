@@ -52,6 +52,7 @@ def test_websocket(tmpdir):
 
         f = tflow.twebsocketflow()
         sa.websocket_start(f)
+        sa.websocket_end(f)
         tctx.configure(sa, save_stream_file=None)
         assert rd(p)
 

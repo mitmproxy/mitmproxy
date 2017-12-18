@@ -13,7 +13,7 @@ class WebSocketMessage(serializable.Serializable):
     def __init__(
         self, type: int, from_client: bool, content: bytes, timestamp: Optional[int]=None
     ) -> None:
-        self.type = wsproto.frame_protocol.Opcode(type)
+        self.type = wsproto.frame_protocol.Opcode(type)  # type: ignore
         self.from_client = from_client
         self.content = content
         self.timestamp = timestamp or int(time.time())  # type: int
