@@ -114,7 +114,7 @@ ParseResult = typing.NamedTuple(
 )
 
 
-class CommandManager:
+class CommandManager(mitmproxy.types._CommandBase):
     def __init__(self, master):
         self.master = master
         self.commands = {}

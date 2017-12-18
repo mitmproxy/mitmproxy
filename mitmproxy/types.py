@@ -40,39 +40,39 @@ class Choice:
 # annotations can cause circular dependencies where there were none before.
 # Rather than putting types and the CommandManger in the same file, we introduce
 # a stub type with the signature we use.
-class _CommandStub:
-    commands = {}  # type: typing.Mapping[str, typing.Any]
+class _CommandBase:
+    commands = {}  # type: typing.MutableMapping[str, typing.Any]
 
-    def call_args(self, path: str, args: typing.Sequence[str]) -> typing.Any:  # pragma: no cover
-        pass
+    def call_args(self, path: str, args: typing.Sequence[str]) -> typing.Any:
+        raise NotImplementedError
 
-    def call(self, args: typing.Sequence[str]) -> typing.Any:  # pragma: no cover
-        pass
+    def call(self, cmd: str) -> typing.Any:
+        raise NotImplementedError
 
 
-class BaseType:
+class _BaseType:
     typ = object  # type: typing.Type
     display = ""  # type: str
 
     def completion(
-        self, manager: _CommandStub, t: type, s: str
+        self, manager: _CommandBase, t: typing.Any, s: str
     ) -> typing.Sequence[str]:  # pragma: no cover
         pass
 
     def parse(
-        self, manager: _CommandStub, t: type, s: str
+        self, manager: _CommandBase, t: typing.Any, s: str
     ) -> typing.Any:  # pragma: no cover
         pass
 
 
-class Bool(BaseType):
+class _BoolType(_BaseType):
     typ = bool
     display = "bool"
 
-    def completion(self, manager: _CommandStub, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
         return ["false", "true"]
 
-    def parse(self, manager: _CommandStub, t: type, s: str) -> bool:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> bool:
         if s == "true":
             return True
         elif s == "false":
@@ -83,36 +83,36 @@ class Bool(BaseType):
             )
 
 
-class Str(BaseType):
+class _StrType(_BaseType):
     typ = str
     display = "str"
 
-    def completion(self, manager: _CommandStub, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
         return []
 
-    def parse(self, manager: _CommandStub, t: type, s: str) -> str:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> str:
         return s
 
 
-class Int(BaseType):
+class _IntType(_BaseType):
     typ = int
     display = "int"
 
-    def completion(self, manager: _CommandStub, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
         return []
 
-    def parse(self, manager: _CommandStub, t: type, s: str) -> int:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> int:
         try:
             return int(s)
         except ValueError as e:
             raise exceptions.TypeError from e
 
 
-class PathType(BaseType):
+class _PathType(_BaseType):
     typ = Path
     display = "path"
 
-    def completion(self, manager: _CommandStub, t: type, start: str) -> typing.Sequence[str]:
+    def completion(self, manager: _CommandBase, t: type, start: str) -> typing.Sequence[str]:
         if not start:
             start = "./"
         path = os.path.expanduser(start)
@@ -134,44 +134,44 @@ class PathType(BaseType):
         ret.sort()
         return ret
 
-    def parse(self, manager: _CommandStub, t: type, s: str) -> str:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> str:
         return s
 
 
-class CmdType(BaseType):
+class _CmdType(_BaseType):
     typ = Cmd
     display = "cmd"
 
-    def completion(self, manager: _CommandStub, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
         return list(manager.commands.keys())
 
-    def parse(self, manager: _CommandStub, t: type, s: str) -> str:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> str:
         return s
 
 
-class ArgType(BaseType):
+class _ArgType(_BaseType):
     typ = Arg
     display = "arg"
 
-    def completion(self, manager: _CommandStub, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
         return []
 
-    def parse(self, manager: _CommandStub, t: type, s: str) -> str:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> str:
         return s
 
 
-class StrSeq(BaseType):
+class _StrSeqType(_BaseType):
     typ = typing.Sequence[str]
     display = "[str]"
 
-    def completion(self, manager: _CommandStub, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
         return []
 
-    def parse(self, manager: _CommandStub, t: type, s: str) -> typing.Sequence[str]:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
         return [x.strip() for x in s.split(",")]
 
 
-class CutSpecType(BaseType):
+class _CutSpecType(_BaseType):
     typ = CutSpec
     display = "[cut]"
     valid_prefixes = [
@@ -212,7 +212,7 @@ class CutSpecType(BaseType):
         "server_conn.ssl_established",
     ]
 
-    def completion(self, manager: _CommandStub, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
         spec = s.split(",")
         opts = []
         for pref in self.valid_prefixes:
@@ -220,12 +220,12 @@ class CutSpecType(BaseType):
             opts.append(",".join(spec))
         return opts
 
-    def parse(self, manager: _CommandStub, t: type, s: str) -> CutSpec:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> CutSpec:
         parts = s.split(",")  # type: typing.Any
         return parts
 
 
-class BaseFlowType(BaseType):
+class _BaseFlowType(_BaseType):
     valid_prefixes = [
         "@all",
         "@focus",
@@ -248,15 +248,15 @@ class BaseFlowType(BaseType):
         "~c",
     ]
 
-    def completion(self, manager: _CommandStub, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
         return self.valid_prefixes
 
 
-class FlowType(BaseFlowType):
+class _FlowType(_BaseFlowType):
     typ = flow.Flow
     display = "flow"
 
-    def parse(self, manager: _CommandStub, t: type, s: str) -> flow.Flow:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> flow.Flow:
         flows = manager.call_args("view.resolve", [s])
         if len(flows) != 1:
             raise exceptions.TypeError(
@@ -265,37 +265,37 @@ class FlowType(BaseFlowType):
         return flows[0]
 
 
-class FlowsType(BaseFlowType):
+class _FlowsType(_BaseFlowType):
     typ = typing.Sequence[flow.Flow]
     display = "[flow]"
 
-    def parse(self, manager: _CommandStub, t: type, s: str) -> typing.Sequence[flow.Flow]:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[flow.Flow]:
         return manager.call_args("view.resolve", [s])
 
 
-class DataType:
+class _DataType(_BaseType):
     typ = Data
     display = "[data]"
 
     def completion(
-        self, manager: _CommandStub, t: type, s: str
+        self, manager: _CommandBase, t: type, s: str
     ) -> typing.Sequence[str]:  # pragma: no cover
         raise exceptions.TypeError("data cannot be passed as argument")
 
     def parse(
-        self, manager: _CommandStub, t: type, s: str
+        self, manager: _CommandBase, t: type, s: str
     ) -> typing.Any:  # pragma: no cover
         raise exceptions.TypeError("data cannot be passed as argument")
 
 
-class ChoiceType:
+class _ChoiceType(_BaseType):
     typ = Choice
     display = "choice"
 
-    def completion(self, manager: _CommandStub, t: Choice, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: _CommandBase, t: Choice, s: str) -> typing.Sequence[str]:
         return manager.call(t.options_command)
 
-    def parse(self, manager: _CommandStub, t: Choice, s: str) -> str:
+    def parse(self, manager: _CommandBase, t: Choice, s: str) -> str:
         opts = manager.call(t.options_command)
         if s not in opts:
             raise exceptions.TypeError("Invalid choice.")
@@ -308,23 +308,23 @@ class TypeManager:
         for t in types:
             self.typemap[t.typ] = t()
 
-    def get(self, t: type, default=None) -> BaseType:
+    def get(self, t: type, default=None) -> _BaseType:
         if type(t) in self.typemap:
             return self.typemap[type(t)]
         return self.typemap.get(t, default)
 
 
 CommandTypes = TypeManager(
-    ArgType,
-    Bool,
-    ChoiceType,
-    CmdType,
-    CutSpecType,
-    DataType,
-    FlowType,
-    FlowsType,
-    Int,
-    PathType,
-    Str,
-    StrSeq,
+    _ArgType,
+    _BoolType,
+    _ChoiceType,
+    _CmdType,
+    _CutSpecType,
+    _DataType,
+    _FlowType,
+    _FlowsType,
+    _IntType,
+    _PathType,
+    _StrType,
+    _StrSeqType,
 )
