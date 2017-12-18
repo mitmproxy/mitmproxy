@@ -351,7 +351,7 @@ class View(collections.Sequence):
         ctx.master.addons.trigger("update", updated)
 
     @command.command("view.load")
-    def load_file(self, path: command.Path) -> None:
+    def load_file(self, path: mitmproxy.types.Path) -> None:
         """
             Load flows into the view, without processing them with addons.
         """

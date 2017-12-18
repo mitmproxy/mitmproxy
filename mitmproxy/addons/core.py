@@ -6,6 +6,7 @@ from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import optmanager
 from mitmproxy.net.http import status_codes
+import mitmproxy.types
 
 
 class Core:
@@ -96,7 +97,7 @@ class Core:
         ]
 
     @command.command("flow.set")
-    @command.argument("spec", type=command.Choice("flow.set.options"))
+    @command.argument("spec", type=mitmproxy.types.Choice("flow.set.options"))
     def flow_set(
         self,
         flows: typing.Sequence[flow.Flow],
@@ -187,7 +188,7 @@ class Core:
         ctx.log.alert("Toggled encoding on %s flows." % len(updated))
 
     @command.command("flow.encode")
-    @command.argument("enc", type=command.Choice("flow.encode.options"))
+    @command.argument("enc", type=mitmproxy.types.Choice("flow.encode.options"))
     def encode(
         self,
         flows: typing.Sequence[flow.Flow],
@@ -216,7 +217,7 @@ class Core:
         return ["gzip", "deflate", "br"]
 
     @command.command("options.load")
-    def options_load(self, path: command.Path) -> None:
+    def options_load(self, path: mitmproxy.types.Path) -> None:
         """
             Load options from a file.
         """
@@ -228,7 +229,7 @@ class Core:
             ) from e
 
     @command.command("options.save")
-    def options_save(self, path: command.Path) -> None:
+    def options_save(self, path: mitmproxy.types.Path) -> None:
         """
             Save options to a file.
         """

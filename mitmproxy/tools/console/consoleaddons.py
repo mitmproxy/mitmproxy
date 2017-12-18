@@ -7,6 +7,8 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import contentviews
 from mitmproxy.utils import strutils
+import mitmproxy.types
+
 
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
@@ -218,8 +220,8 @@ class ConsoleAddon:
         self,
         prompt: str,
         choices: typing.Sequence[str],
-        cmd: command.Cmd,
-        *args: command.Arg
+        cmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.Arg
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
@@ -241,7 +243,7 @@ class ConsoleAddon:
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
-        self, prompt: str, choicecmd: command.Cmd, *cmd: command.Arg
+        self, prompt: str, choicecmd: mitmproxy.types.Cmd, *cmd: mitmproxy.types.Arg
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
@@ -352,7 +354,7 @@ class ConsoleAddon:
         ]
 
     @command.command("console.edit.focus")
-    @command.argument("part", type=command.Choice("console.edit.focus.options"))
+    @command.argument("part", type=mitmproxy.types.Choice("console.edit.focus.options"))
     def edit_focus(self, part: str) -> None:
         """
             Edit a component of the currently focused flow.
@@ -404,14 +406,14 @@ class ConsoleAddon:
         self._grideditor().cmd_delete()
 
     @command.command("console.grideditor.load")
-    def grideditor_load(self, path: command.Path) -> None:
+    def grideditor_load(self, path: mitmproxy.types.Path) -> None:
         """
             Read a file into the currrent cell.
         """
         self._grideditor().cmd_read_file(path)
 
     @command.command("console.grideditor.load_escaped")
-    def grideditor_load_escaped(self, path: command.Path) -> None:
+    def grideditor_load_escaped(self, path: mitmproxy.types.Path) -> None:
         """
             Read a file containing a Python-style escaped string into the
             currrent cell.
@@ -419,7 +421,7 @@ class ConsoleAddon:
         self._grideditor().cmd_read_file_escaped(path)
 
     @command.command("console.grideditor.save")
-    def grideditor_save(self, path: command.Path) -> None:
+    def grideditor_save(self, path: mitmproxy.types.Path) -> None:
         """
             Save data to file as a CSV.
         """
@@ -440,7 +442,7 @@ class ConsoleAddon:
         self._grideditor().cmd_spawn_editor()
 
     @command.command("console.flowview.mode.set")
-    @command.argument("mode", type=command.Choice("console.flowview.mode.options"))
+    @command.argument("mode", type=mitmproxy.types.Choice("console.flowview.mode.options"))
     def flowview_mode_set(self, mode: str) -> None:
         """
             Set the display mode for the current flow view.
@@ -498,8 +500,8 @@ class ConsoleAddon:
         self,
         contexts: typing.Sequence[str],
         key: str,
-        cmd: command.Cmd,
-        *args: command.Arg
+        cmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.Arg
     ) -> None:
         """
             Bind a shortcut key.

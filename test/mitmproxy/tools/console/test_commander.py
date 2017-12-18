@@ -1,36 +1,6 @@
-import os
-import contextlib
 
 from mitmproxy.tools.console.commander import commander
 from mitmproxy.test import taddons
-from mitmproxy.test import tutils
-
-
-@contextlib.contextmanager
-def chdir(path: str):
-    old_dir = os.getcwd()
-    os.chdir(path)
-    yield
-    os.chdir(old_dir)
-
-
-def normPathOpts(prefix, match):
-    ret = []
-    for s in commander.pathOptions(match):
-        s = s[len(prefix):]
-        s = s.replace(os.sep, "/")
-        ret.append(s)
-    return ret
-
-
-def test_pathOptions():
-    cd = os.path.normpath(tutils.test_data.path("mitmproxy/completion"))
-    assert normPathOpts(cd, cd) == ['/aaa', '/aab', '/aac', '/bbb/']
-    assert normPathOpts(cd, os.path.join(cd, "a")) == ['/aaa', '/aab', '/aac']
-    with chdir(cd):
-        assert normPathOpts("", "./") == ['./aaa', './aab', './aac', './bbb/']
-        assert normPathOpts("", "") == ['./aaa', './aab', './aac', './bbb/']
-    assert commander.pathOptions("nonexistent") == ["nonexistent"]
 
 
 class TestListCompleter:
