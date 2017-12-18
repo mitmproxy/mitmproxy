@@ -58,5 +58,6 @@ systems:
         net.ipv4.conf.all.accept_redirects = 0
         net.ipv4.conf.all.send_redirects = 0
     
-  2. To make iptables changes persistent, install the package iptables-persistent:
+ 2. To make iptables changes persistent, install the package iptables-persistent:
+ 
     >>> sudo apt-get install iptables-persistent
