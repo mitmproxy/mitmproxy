@@ -120,6 +120,11 @@ class Master:
         self.addons.trigger("done")
 
     def _change_reverse_host(self, f):
+        """
+        When we load flows in reverse proxy mode, we adjust the target host to
+        the reverse proxy destination for all flows we load. This makes it very
+        easy to replay saved flows against a different host.
+        """
         if self.options.mode.startswith("reverse:"):
             _, upstream_spec = server_spec.parse_with_mode(self.options.mode)
             f.request.host, f.request.port = upstream_spec.address
