@@ -78,39 +78,54 @@ class TestCommand:
             [
                 "foo bar",
                 [
-                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd, valid = False),
                     command.ParseResult(value = "bar", type = str, valid = True)
                 ],
+                [],
             ],
             [
-                "foo 'bar",
+                "cmd1 'bar",
                 [
-                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "cmd1", type = mitmproxy.types.Cmd, valid = True),
                     command.ParseResult(value = "'bar", type = str, valid = True)
-                ]
+                ],
+                [],
             ],
-            ["a", [command.ParseResult(value = "a", type = mitmproxy.types.Cmd, valid = True)]],
-            ["", [command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = True)]],
+            [
+                "a",
+                [command.ParseResult(value = "a", type = mitmproxy.types.Cmd, valid = False)],
+                [],
+            ],
+            [
+                "",
+                [command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = False)],
+                []
+            ],
             [
                 "cmd3 1",
                 [
                     command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
                     command.ParseResult(value = "1", type = int, valid = True),
-                ]
+                ],
+                []
             ],
             [
                 "cmd3 ",
                 [
                     command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
                     command.ParseResult(value = "", type = int, valid = False),
-                ]
+                ],
+                []
             ],
             [
                 "subcommand ",
                 [
-                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd, valid = True),
-                    command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = True),
-                ]
+                    command.ParseResult(
+                        value = "subcommand", type = mitmproxy.types.Cmd, valid = True,
+                    ),
+                    command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = False),
+                ],
+                ["arg"],
             ],
             [
                 "subcommand cmd3 ",
@@ -118,13 +133,16 @@ class TestCommand:
                     command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd, valid = True),
                     command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
                     command.ParseResult(value = "", type = int, valid = False),
-                ]
+                ],
+                []
             ],
         ]
         with taddons.context() as tctx:
             tctx.master.addons.add(TAddon())
-            for s, expected in tests:
-                assert tctx.master.commands.parse_partial(s) == expected
+            for s, expected, expectedremain in tests:
+                current, remain = tctx.master.commands.parse_partial(s)
+                assert current == expected
+                assert expectedremain == remain
 
 
 def test_simple():
@@ -179,50 +197,10 @@ def test_parsearg():
     with taddons.context() as tctx:
         tctx.master.addons.add(DummyConsole())
         assert command.parsearg(tctx.master.commands, "foo", str) == "foo"
-
-        assert command.parsearg(tctx.master.commands, "1", int) == 1
+        with pytest.raises(exceptions.CommandError, match="Unsupported"):
+            command.parsearg(tctx.master.commands, "foo", type)
         with pytest.raises(exceptions.CommandError):
             command.parsearg(tctx.master.commands, "foo", int)
-
-        assert command.parsearg(tctx.master.commands, "true", bool) is True
-        assert command.parsearg(tctx.master.commands, "false", bool) is False
-        with pytest.raises(exceptions.CommandError):
-            command.parsearg(tctx.master.commands, "flobble", bool)
-
-        assert len(command.parsearg(
-            tctx.master.commands, "2", typing.Sequence[flow.Flow]
-        )) == 2
-        assert command.parsearg(tctx.master.commands, "1", flow.Flow)
-        with pytest.raises(exceptions.CommandError):
-            command.parsearg(tctx.master.commands, "2", flow.Flow)
-        with pytest.raises(exceptions.CommandError):
-            command.parsearg(tctx.master.commands, "0", flow.Flow)
-        with pytest.raises(exceptions.CommandError):
-            command.parsearg(tctx.master.commands, "foo", Exception)
-
-        assert command.parsearg(
-            tctx.master.commands, "foo", typing.Sequence[str]
-        ) == ["foo"]
-        assert command.parsearg(
-            tctx.master.commands, "foo, bar", typing.Sequence[str]
-        ) == ["foo", "bar"]
-
-        a = TAddon()
-        tctx.master.commands.add("choices", a.choices)
-        assert command.parsearg(
-            tctx.master.commands, "one", mitmproxy.types.Choice("choices"),
-        ) == "one"
-        with pytest.raises(exceptions.CommandError):
-            assert command.parsearg(
-                tctx.master.commands, "invalid", mitmproxy.types.Choice("choices"),
-            )
-
-        assert command.parsearg(
-            tctx.master.commands, "foo", mitmproxy.types.Path
-        ) == "foo"
-        assert command.parsearg(
-            tctx.master.commands, "foo", mitmproxy.types.Cmd
-        ) == "foo"
 
 
 class TDec:

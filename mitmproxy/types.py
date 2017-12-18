@@ -174,6 +174,8 @@ class _CmdType(_BaseType):
         return list(manager.commands.keys())
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> str:
+        if s not in manager.commands:
+            raise exceptions.TypeError("Unknown command: %s" % s)
         return s
 
     def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:

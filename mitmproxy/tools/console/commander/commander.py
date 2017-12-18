@@ -79,7 +79,7 @@ class CommandBuffer():
 
     def cycle_completion(self) -> None:
         if not self.completion:
-            parts = self.master.commands.parse_partial(self.buf[:self.cursor])
+            parts, remainhelp = self.master.commands.parse_partial(self.buf[:self.cursor])
             last = parts[-1]
             ct = mitmproxy.types.CommandTypes.get(last.type, None)
             if ct:

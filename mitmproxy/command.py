@@ -133,9 +133,12 @@ class CommandManager(mitmproxy.types._CommandBase):
     def add(self, path: str, func: typing.Callable):
         self.commands[path] = Command(self, path, func)
 
-    def parse_partial(self, cmdstr: str) -> typing.Sequence[ParseResult]:
+    def parse_partial(
+        self,
+        cmdstr: str
+    ) -> typing.Tuple[typing.Sequence[ParseResult], typing.Sequence[str]]:
         """
-            Parse a possibly partial command. Return a sequence of (part, type) tuples.
+            Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
         buf = io.StringIO(cmdstr)
         parts = []  # type: typing.List[str]
@@ -188,7 +191,16 @@ class CommandManager(mitmproxy.types._CommandBase):
                     valid=valid,
                 )
             )
-        return parse
+
+        remhelp = []
+        for x in params:
+            remt = mitmproxy.types.CommandTypes.get(x, None)
+            if not x:
+                remhelp = []
+                break
+            remhelp.append(remt.display)
+
+        return parse, remhelp
 
     def call_args(self, path: str, args: typing.Sequence[str]) -> typing.Any:
         """

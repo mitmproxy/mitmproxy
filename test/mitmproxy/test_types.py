@@ -88,7 +88,9 @@ def test_cmd():
         b = mitmproxy.types._CmdType()
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Cmd, "foo") is False
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Cmd, "cmd1") is True
-        assert b.parse(tctx.master.commands, mitmproxy.types.Cmd, "foo") == "foo"
+        assert b.parse(tctx.master.commands, mitmproxy.types.Cmd, "cmd1") == "cmd1"
+        with pytest.raises(mitmproxy.exceptions.TypeError):
+            assert b.parse(tctx.master.commands, mitmproxy.types.Cmd, "foo")
         assert len(
             b.completion(tctx.master.commands, mitmproxy.types.Cmd, "")
         ) == len(tctx.master.commands.commands.keys())
