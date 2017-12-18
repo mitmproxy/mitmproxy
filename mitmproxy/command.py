@@ -110,7 +110,11 @@ class Command:
 
 ParseResult = typing.NamedTuple(
     "ParseResult",
-    [("value", str), ("type", typing.Type)],
+    [
+        ("value", str),
+        ("type", typing.Type),
+        ("valid", bool),
+    ],
 )
 
 
@@ -161,13 +165,29 @@ class CommandManager(mitmproxy.types._CommandBase):
                     params.extend(self.commands[parts[i]].paramtypes)
             elif params:
                 typ = params.pop(0)
-                # FIXME: Do we need to check that Arg is positional?
                 if typ == mitmproxy.types.Cmd and params and params[0] == mitmproxy.types.Arg:
                     if parts[i] in self.commands:
                         params[:] = self.commands[parts[i]].paramtypes
             else:
                 typ = str
-            parse.append(ParseResult(value=parts[i], type=typ))
+
+            to = mitmproxy.types.CommandTypes.get(typ, None)
+            valid = False
+            if to:
+                try:
+                    to.parse(self, typ, parts[i])
+                except exceptions.TypeError:
+                    valid = False
+                else:
+                    valid = True
+
+            parse.append(
+                ParseResult(
+                    value=parts[i],
+                    type=typ,
+                    valid=valid,
+                )
+            )
         return parse
 
     def call_args(self, path: str, args: typing.Sequence[str]) -> typing.Any:

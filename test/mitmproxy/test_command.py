@@ -78,46 +78,46 @@ class TestCommand:
             [
                 "foo bar",
                 [
-                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "bar", type = str)
+                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "bar", type = str, valid = True)
                 ],
             ],
             [
                 "foo 'bar",
                 [
-                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "'bar", type = str)
+                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "'bar", type = str, valid = True)
                 ]
             ],
-            ["a", [command.ParseResult(value = "a", type = mitmproxy.types.Cmd)]],
-            ["", [command.ParseResult(value = "", type = mitmproxy.types.Cmd)]],
+            ["a", [command.ParseResult(value = "a", type = mitmproxy.types.Cmd, valid = True)]],
+            ["", [command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = True)]],
             [
                 "cmd3 1",
                 [
-                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "1", type = int),
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "1", type = int, valid = True),
                 ]
             ],
             [
                 "cmd3 ",
                 [
-                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "", type = int),
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = int, valid = False),
                 ]
             ],
             [
                 "subcommand ",
                 [
-                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "", type = mitmproxy.types.Cmd),
+                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = True),
                 ]
             ],
             [
                 "subcommand cmd3 ",
                 [
-                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd),
-                    command.ParseResult(value = "", type = int),
+                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = int, valid = False),
                 ]
             ],
         ]

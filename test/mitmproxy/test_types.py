@@ -182,6 +182,7 @@ def test_data():
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Data, []) is True
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Data, [["x"]]) is True
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Data, [[b"x"]]) is True
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Data, [[1]]) is False
         with pytest.raises(mitmproxy.exceptions.TypeError):
             b.parse(tctx.master.commands, mitmproxy.types.Data, "foo")
         with pytest.raises(mitmproxy.exceptions.TypeError):
