@@ -45,7 +45,7 @@ achieve transparent mode.
 For a detailed walkthrough, have a look at the :ref:`transparent-dhcp` tutorial.
 
 Debain
----
+======
 
 To make the changes pperminent on on debian (inc ubuntu and raspbian)
 systems:
