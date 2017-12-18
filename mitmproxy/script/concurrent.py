@@ -17,9 +17,11 @@ def concurrent(fn):
             "Concurrent decorator not supported for '%s' method." % fn.__name__
         )
 
-    def _concurrent(obj):
+    def _concurrent(*args):
+        obj = args[0] if len(args) == 1 else args[1]
+
         def run():
-            fn(obj)
+            fn(*args)
             if obj.reply.state == "taken":
                 if not obj.reply.has_message:
                     obj.reply.ack()
@@ -29,8 +31,5 @@ def concurrent(fn):
             "script.concurrent (%s)" % fn.__name__,
             target=run
         ).start()
-    # Support @concurrent for class-based addons
-    if "." in fn.__qualname__:
-        return staticmethod(_concurrent)
-    else:
-        return _concurrent
+
+    return _concurrent
