@@ -28,6 +28,8 @@ def test_bool():
         assert b.completion(tctx.master.commands, bool, "b") == ["false", "true"]
         assert b.parse(tctx.master.commands, bool, "true") is True
         assert b.parse(tctx.master.commands, bool, "false") is False
+        assert b.is_valid(tctx.master.commands, bool, True) is True
+        assert b.is_valid(tctx.master.commands, bool, "foo") is False
         with pytest.raises(mitmproxy.exceptions.TypeError):
             b.parse(tctx.master.commands, bool, "foo")
 
@@ -35,6 +37,8 @@ def test_bool():
 def test_str():
     with taddons.context() as tctx:
         b = mitmproxy.types._StrType()
+        assert b.is_valid(tctx.master.commands, str, "foo") is True
+        assert b.is_valid(tctx.master.commands, str, 1) is False
         assert b.completion(tctx.master.commands, str, "") == []
         assert b.parse(tctx.master.commands, str, "foo") == "foo"
 
@@ -42,6 +46,8 @@ def test_str():
 def test_int():
     with taddons.context() as tctx:
         b = mitmproxy.types._IntType()
+        assert b.is_valid(tctx.master.commands, int, "foo") is False
+        assert b.is_valid(tctx.master.commands, int, 1) is True
         assert b.completion(tctx.master.commands, int, "b") == []
         assert b.parse(tctx.master.commands, int, "1") == 1
         assert b.parse(tctx.master.commands, int, "999") == 999
@@ -54,6 +60,8 @@ def test_path():
         b = mitmproxy.types._PathType()
         assert b.parse(tctx.master.commands, mitmproxy.types.Path, "/foo") == "/foo"
         assert b.parse(tctx.master.commands, mitmproxy.types.Path, "/bar") == "/bar"
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Path, "foo") is True
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Path, 3) is False
 
         def normPathOpts(prefix, match):
             ret = []
@@ -78,6 +86,8 @@ def test_cmd():
     with taddons.context() as tctx:
         tctx.master.addons.add(test_command.TAddon())
         b = mitmproxy.types._CmdType()
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Cmd, "foo") is False
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Cmd, "cmd1") is True
         assert b.parse(tctx.master.commands, mitmproxy.types.Cmd, "foo") == "foo"
         assert len(
             b.completion(tctx.master.commands, mitmproxy.types.Cmd, "")
@@ -88,6 +98,10 @@ def test_cutspec():
     with taddons.context() as tctx:
         b = mitmproxy.types._CutSpecType()
         b.parse(tctx.master.commands, mitmproxy.types.CutSpec, "foo,bar") == ["foo", "bar"]
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.CutSpec, 1) is False
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.CutSpec, "foo") is False
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.CutSpec, "request.path") is True
+
         assert b.completion(
             tctx.master.commands, mitmproxy.types.CutSpec, "request.p"
         ) == b.valid_prefixes
@@ -101,6 +115,8 @@ def test_arg():
         b = mitmproxy.types._ArgType()
         assert b.completion(tctx.master.commands, mitmproxy.types.Arg, "") == []
         assert b.parse(tctx.master.commands, mitmproxy.types.Arg, "foo") == "foo"
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Arg, "foo") is True
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Arg, 1) is False
 
 
 def test_strseq():
@@ -109,6 +125,8 @@ def test_strseq():
         assert b.completion(tctx.master.commands, typing.Sequence[str], "") == []
         assert b.parse(tctx.master.commands, typing.Sequence[str], "foo") == ["foo"]
         assert b.parse(tctx.master.commands, typing.Sequence[str], "foo,bar") == ["foo", "bar"]
+        assert b.is_valid(tctx.master.commands, typing.Sequence[str], "foo") is True
+        assert b.is_valid(tctx.master.commands, typing.Sequence[str], 1) is False
 
 
 class DummyConsole:
@@ -132,6 +150,8 @@ def test_flow():
         b = mitmproxy.types._FlowType()
         assert len(b.completion(tctx.master.commands, flow.Flow, "")) == len(b.valid_prefixes)
         assert b.parse(tctx.master.commands, flow.Flow, "1")
+        assert b.is_valid(tctx.master.commands, flow.Flow, tflow.tflow()) is True
+        assert b.is_valid(tctx.master.commands, flow.Flow, "xx") is False
         with pytest.raises(mitmproxy.exceptions.TypeError):
             assert b.parse(tctx.master.commands, flow.Flow, "0")
         with pytest.raises(mitmproxy.exceptions.TypeError):
@@ -145,6 +165,9 @@ def test_flows():
         assert len(
             b.completion(tctx.master.commands, typing.Sequence[flow.Flow], "")
         ) == len(b.valid_prefixes)
+        assert b.is_valid(tctx.master.commands, typing.Sequence[flow.Flow], [tflow.tflow()]) is True
+        assert b.is_valid(tctx.master.commands, typing.Sequence[flow.Flow], "xx") is False
+        assert b.is_valid(tctx.master.commands, typing.Sequence[flow.Flow], 0) is False
         assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "0")) == 0
         assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "1")) == 1
         assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "2")) == 2
@@ -153,6 +176,10 @@ def test_flows():
 def test_data():
     with taddons.context() as tctx:
         b = mitmproxy.types._DataType()
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Data, 0) is False
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Data, []) is True
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Data, [["x"]]) is True
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Data, [[b"x"]]) is True
         with pytest.raises(mitmproxy.exceptions.TypeError):
             b.parse(tctx.master.commands, mitmproxy.types.Data, "foo")
         with pytest.raises(mitmproxy.exceptions.TypeError):
@@ -163,6 +190,21 @@ def test_choice():
     with taddons.context() as tctx:
         tctx.master.addons.add(DummyConsole())
         b = mitmproxy.types._ChoiceType()
+        assert b.is_valid(
+            tctx.master.commands,
+            mitmproxy.types.Choice("options"),
+            "one",
+        ) is True
+        assert b.is_valid(
+            tctx.master.commands,
+            mitmproxy.types.Choice("options"),
+            "invalid",
+        ) is False
+        assert b.is_valid(
+            tctx.master.commands,
+            mitmproxy.types.Choice("nonexistent"),
+            "invalid",
+        ) is False
         comp = b.completion(tctx.master.commands, mitmproxy.types.Choice("options"), "")
         assert comp == ["one", "two", "three"]
         assert b.parse(tctx.master.commands, mitmproxy.types.Choice("options"), "one") == "one"
