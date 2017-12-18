@@ -420,6 +420,20 @@ class TestMatchingWebSocketFlow:
         e = self.err()
         assert self.q("~e", e)
 
+    def test_domain(self):
+        q = self.flow()
+        assert self.q("~d example.com", q)
+        assert not self.q("~d none", q)
+
+    def test_url(self):
+        q = self.flow()
+        assert self.q("~u example.com", q)
+        assert self.q("~u example.com/ws", q)
+        assert not self.q("~u moo/path", q)
+
+        q.handshake_flow = None
+        assert not self.q("~u example.com", q)
+
     def test_body(self):
         f = self.flow()
 

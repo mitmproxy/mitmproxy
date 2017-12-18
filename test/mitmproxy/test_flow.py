@@ -97,7 +97,7 @@ class TestSerialize:
 
 
 class TestFlowMaster:
-    def test_load_flow_reverse(self):
+    def test_load_http_flow_reverse(self):
         s = tservers.TestState()
         opts = options.Options(
             mode="reverse:https://use-this-domain"
@@ -107,6 +107,20 @@ class TestFlowMaster:
         f = tflow.tflow(resp=True)
         fm.load_flow(f)
         assert s.flows[0].request.host == "use-this-domain"
+
+    def test_load_websocket_flow(self):
+        s = tservers.TestState()
+        opts = options.Options(
+            mode="reverse:https://use-this-domain"
+        )
+        fm = master.Master(opts)
+        fm.addons.add(s)
+        f = tflow.twebsocketflow()
+        fm.load_flow(f.handshake_flow)
+        fm.load_flow(f)
+        assert s.flows[0].request.host == "use-this-domain"
+        assert s.flows[1].handshake_flow == f.handshake_flow
+        assert len(s.flows[1].messages) == len(f.messages)
 
     def test_replay(self):
         opts = options.Options()

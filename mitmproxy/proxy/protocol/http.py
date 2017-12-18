@@ -321,6 +321,7 @@ class HttpLayer(base.Layer):
 
         try:
             if websockets.check_handshake(request.headers) and websockets.check_client_version(request.headers):
+                f.metadata['websocket'] = True
                 # We only support RFC6455 with WebSocket version 13
                 # allow inline scripts to manipulate the client handshake
                 self.channel.ask("websocket_handshake", f)

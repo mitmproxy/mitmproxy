@@ -75,6 +75,15 @@ class Save:
             self.stream.add(flow)
             self.active_flows.discard(flow)
 
+    def websocket_start(self, flow):
+        if self.stream:
+            self.active_flows.add(flow)
+
+    def websocket_end(self, flow):
+        if self.stream:
+            self.stream.add(flow)
+            self.active_flows.discard(flow)
+
     def response(self, flow):
         if self.stream:
             self.stream.add(flow)
