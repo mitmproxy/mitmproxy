@@ -1,3 +1,5 @@
+# type: ignore
+
 # -*- coding: utf-8 -*-
 """
 wsproto/extensions
