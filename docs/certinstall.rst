@@ -42,13 +42,10 @@ See http://jasdev.me/intercepting-ios-traffic
 
 and https://web.archive.org/web/20150920082614/http://kb.mit.edu/confluence/pages/viewpage.action?pageId=152600377
 
-On iOS 10.3 and onwards, you also need to enable full trust for the mitm root certificate after installing from http://mitm.it
+On iOS 10.3 and onwards, you also need to enable full trust for the mitmproxy root certificate:
 
-1. Open the Settings app
-2. Tap General
-3. Tap About
-4. Scroll to bottom. Tap Certificate Trust Settings
-5. Turn on the switch for mitmproxy
+1. Go to Settings > General > About > Certificate Trust Settings. 
+2. Under "Enable full trust for root certificates", turn on trust for the mitmproxy certificate.
 
 iOS Simulator
 ^^^^^^^^^^^^^
