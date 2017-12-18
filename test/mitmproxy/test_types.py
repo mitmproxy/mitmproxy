@@ -125,8 +125,10 @@ def test_strseq():
         assert b.completion(tctx.master.commands, typing.Sequence[str], "") == []
         assert b.parse(tctx.master.commands, typing.Sequence[str], "foo") == ["foo"]
         assert b.parse(tctx.master.commands, typing.Sequence[str], "foo,bar") == ["foo", "bar"]
-        assert b.is_valid(tctx.master.commands, typing.Sequence[str], "foo") is True
+        assert b.is_valid(tctx.master.commands, typing.Sequence[str], ["foo"]) is True
+        assert b.is_valid(tctx.master.commands, typing.Sequence[str], ["a", "b", 3]) is False
         assert b.is_valid(tctx.master.commands, typing.Sequence[str], 1) is False
+        assert b.is_valid(tctx.master.commands, typing.Sequence[str], "foo") is False
 
 
 class DummyConsole:

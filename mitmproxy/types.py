@@ -205,7 +205,15 @@ class _StrSeqType(_BaseType):
         return [x.strip() for x in s.split(",")]
 
     def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
-        return isinstance(val, str)
+        if isinstance(val, str) or isinstance(val, bytes):
+            return False
+        try:
+            for v in val:
+                if not isinstance(v, str):
+                    return False
+        except TypeError:
+            return False
+        return True
 
 
 class _CutSpecType(_BaseType):

@@ -8,8 +8,6 @@ import mitmproxy.types
 import io
 import pytest
 
-from mitmproxy.utils import typecheck
-
 
 class TAddon:
     @command.command("cmd1")
@@ -140,7 +138,7 @@ def test_simple():
             c.call("nonexistent")
         with pytest.raises(exceptions.CommandError, match="Invalid"):
             c.call("")
-        with pytest.raises(exceptions.CommandError, match="Usage"):
+        with pytest.raises(exceptions.CommandError, match="argument mismatch"):
             c.call("one.two too many args")
 
         c.add("empty", a.empty)
@@ -262,12 +260,3 @@ def test_verify_arg_signature():
         command.verify_arg_signature(lambda: None, [1, 2], {})
         print('hello there')
     command.verify_arg_signature(lambda a, b: None, [1, 2], {})
-
-
-def test_choice():
-    """
-    basic typechecking for choices should fail as we cannot verify if strings are a valid choice
-    at this point.
-    """
-    c = mitmproxy.types.Choice("foo")
-    assert not typecheck.check_command_type("foo", c)
