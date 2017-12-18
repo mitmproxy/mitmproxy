@@ -87,28 +87,6 @@ def test_check_any():
     typecheck.check_option_type("foo", None, typing.Any)
 
 
-def test_check_command_type():
-    assert(typecheck.check_command_type("foo", str))
-    assert(typecheck.check_command_type(["foo"], typing.Sequence[str]))
-    assert(not typecheck.check_command_type(["foo", 1], typing.Sequence[str]))
-    assert(typecheck.check_command_type(None, None))
-    assert(not typecheck.check_command_type(["foo"], typing.Sequence[int]))
-    assert(not typecheck.check_command_type("foo", typing.Sequence[int]))
-
-    # Python 3.5 only defines __parameters__
-    m = mock.Mock()
-    m.__str__ = lambda self: "typing.Sequence"
-    m.__parameters__ = (int,)
-
-    typecheck.check_command_type([10], m)
-
-    # Python 3.5 only defines __union_params__
-    m = mock.Mock()
-    m.__str__ = lambda self: "typing.Union"
-    m.__union_params__ = (int,)
-    assert not typecheck.check_command_type([22], m)
-
-
 def test_typesec_to_str():
     assert(typecheck.typespec_to_str(str)) == "str"
     assert(typecheck.typespec_to_str(typing.Sequence[str])) == "sequence of str"
