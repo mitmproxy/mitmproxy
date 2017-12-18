@@ -29,8 +29,8 @@ achieve transparent mode.
     .. code-block:: none
 
         iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
-        iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8080
-
+        iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8080            
+            
  5. Fire up mitmproxy. You probably want a command like this:
 
     >>> mitmproxy -T --host
@@ -43,3 +43,23 @@ achieve transparent mode.
 
 
 For a detailed walkthrough, have a look at the :ref:`transparent-dhcp` tutorial.
+
+Debain
+======
+
+To make the changes permanent on on Debian (inc ubuntu and raspbian)
+systems:
+
+ 1. Write the sysctl changes to a new config file at (for example) /etc/sysctl.d/mitm.conf    
+ 
+    .. code-block:: none
+    
+        net.ipv4.ip_forward = 1
+        net.ipv4.conf.all.accept_redirects = 0
+        net.ipv4.conf.all.send_redirects = 0
+        
+    If your system doesn't have a directory /etc/sysctl.d you can instead add the rule to the end of /etc/sysctl.conf
+    
+ 2. To make iptables changes persistent, install the package iptables-persistent:
+ 
+    >>> sudo apt-get install iptables-persistent
