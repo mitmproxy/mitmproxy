@@ -18,7 +18,8 @@ def concurrent(fn):
         )
 
     def _concurrent(*args):
-        obj = args[0] if len(args) == 1 else args[1]
+        # Support @concurrent for class-based addons
+        obj = args[-1]
 
         def run():
             fn(*args)
