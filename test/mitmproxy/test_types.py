@@ -43,6 +43,15 @@ def test_str():
         assert b.parse(tctx.master.commands, str, "foo") == "foo"
 
 
+def test_unknown():
+    with taddons.context() as tctx:
+        b = mitmproxy.types._UnknownType()
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Unknown, "foo") is False
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Unknown, 1) is False
+        assert b.completion(tctx.master.commands, mitmproxy.types.Unknown, "") == []
+        assert b.parse(tctx.master.commands, mitmproxy.types.Unknown, "foo") == "foo"
+
+
 def test_int():
     with taddons.context() as tctx:
         b = mitmproxy.types._IntType()

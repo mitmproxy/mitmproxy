@@ -72,10 +72,13 @@ class CommandBuffer():
         parts, _ = self.master.commands.parse_partial(self.text)
         ret = []
         for p in parts:
-            if p.type == mitmproxy.types.Cmd and p.valid:
-                ret.append(("title", p.value))
+            if p.valid:
+                if p.type == mitmproxy.types.Cmd:
+                    ret.append(("commander_command", p.value))
+                else:
+                    ret.append(("text", p.value))
             else:
-                ret.append(("text", p.value))
+                ret.append(("commander_invalid", p.value))
             ret.append(("text", " "))
         return ret
 

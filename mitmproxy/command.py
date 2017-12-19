@@ -172,7 +172,7 @@ class CommandManager(mitmproxy.types._CommandBase):
                     if parts[i] in self.commands:
                         params[:] = self.commands[parts[i]].paramtypes
             else:
-                typ = str
+                typ = mitmproxy.types.Unknown
 
             to = mitmproxy.types.CommandTypes.get(typ, None)
             valid = False

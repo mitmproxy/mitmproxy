@@ -78,8 +78,12 @@ class TestCommand:
             [
                 "foo bar",
                 [
-                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd, valid = False),
-                    command.ParseResult(value = "bar", type = str, valid = True)
+                    command.ParseResult(
+                        value = "foo", type = mitmproxy.types.Cmd, valid = False
+                    ),
+                    command.ParseResult(
+                        value = "bar", type = mitmproxy.types.Unknown, valid = False
+                    )
                 ],
                 [],
             ],

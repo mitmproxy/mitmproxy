@@ -18,6 +18,10 @@ class Arg(str):
     pass
 
 
+class Unknown(str):
+    pass
+
+
 class CutSpec(typing.Sequence[str]):
     pass
 
@@ -114,6 +118,20 @@ class _StrType(_BaseType):
 
     def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, str)
+
+
+class _UnknownType(_BaseType):
+    typ = Unknown
+    display = "unknown"
+
+    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
+        return []
+
+    def parse(self, manager: _CommandBase, t: type, s: str) -> str:
+        return s
+
+    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+        return False
 
 
 class _IntType(_BaseType):
