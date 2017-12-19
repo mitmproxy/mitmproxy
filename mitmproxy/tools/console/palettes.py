@@ -34,7 +34,7 @@ class Palette:
         'focusfield', 'focusfield_error', 'field_error', 'editfield',
 
         # Commander
-        'commander_command', 'commander_invalid'
+        'commander_command', 'commander_invalid', 'commander_hint'
     ]
     high = None  # type: typing.Mapping[str, typing.Sequence[str]]
 
@@ -124,6 +124,7 @@ class LowDark(Palette):
 
         commander_command = ('white,bold', 'default'),
         commander_invalid = ('light red', 'default'),
+        commander_hint = ('dark gray', 'default'),
     )
 
 
@@ -193,6 +194,7 @@ class LowLight(Palette):
 
         commander_command = ('dark magenta', 'default'),
         commander_invalid = ('light red', 'default'),
+        commander_hint = ('light gray', 'default'),
     )
 
 
@@ -280,6 +282,7 @@ class SolarizedLight(LowLight):
 
         commander_command = (sol_cyan, 'default'),
         commander_invalid = (sol_orange, 'default'),
+        commander_hint = (sol_base1, 'default'),
     )
 
 
@@ -333,6 +336,7 @@ class SolarizedDark(LowDark):
 
         commander_command = (sol_blue, 'default'),
         commander_invalid = (sol_orange, 'default'),
+        commander_hint = (sol_base00, 'default'),
     )
 
 

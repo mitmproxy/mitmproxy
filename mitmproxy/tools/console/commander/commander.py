@@ -69,7 +69,13 @@ class CommandBuffer():
             self._cursor = x
 
     def render(self):
-        parts, _ = self.master.commands.parse_partial(self.text)
+        """
+            This function is somewhat tricky - in order to make the cursor
+            position valid, we have to make sure there is a
+            character-for-character offset match in the rendered output, up
+            to the cursor. Beyond that, we can add stuff.
+        """
+        parts, remhelp = self.master.commands.parse_partial(self.text)
         ret = []
         for p in parts:
             if p.valid:
@@ -77,9 +83,15 @@ class CommandBuffer():
                     ret.append(("commander_command", p.value))
                 else:
                     ret.append(("text", p.value))
-            else:
+            elif p.value:
                 ret.append(("commander_invalid", p.value))
+            else:
+                ret.append(("text", ""))
             ret.append(("text", " "))
+        if remhelp:
+            ret.append(("text", " "))
+            for v in remhelp:
+                ret.append(("commander_hint", "%s " % v))
         return ret
 
     def flatten(self, txt):
