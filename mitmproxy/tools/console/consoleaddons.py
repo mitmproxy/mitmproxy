@@ -322,6 +322,7 @@ class ConsoleAddon:
         signals.pop_view_state.send(self)
 
     @command.command("console.bodyview")
+    @command.argument("part", type=mitmproxy.types.Choice("console.bodyview.options"))
     def bodyview(self, f: flow.Flow, part: str) -> None:
         """
             Spawn an external viewer for a flow request or response body based
@@ -337,6 +338,13 @@ class ConsoleAddon:
         if not content:
             raise exceptions.CommandError("No content to view.")
         self.master.spawn_external_viewer(content, t)
+
+    @command.command("console.bodyview.options")
+    def bodyview_options(self) -> typing.Sequence[str]:
+        """
+            Possible parts for console.bodyview.
+        """
+        return ["request", "response"]
 
     @command.command("console.edit.focus.options")
     def edit_focus_options(self) -> typing.Sequence[str]:
