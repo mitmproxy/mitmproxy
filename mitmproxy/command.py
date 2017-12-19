@@ -192,12 +192,9 @@ class CommandManager(mitmproxy.types._CommandBase):
                 )
             )
 
-        remhelp = []
+        remhelp = []  # type: typing.List[str]
         for x in params:
             remt = mitmproxy.types.CommandTypes.get(x, None)
-            if not x:
-                remhelp = []
-                break
             remhelp.append(remt.display)
 
         return parse, remhelp

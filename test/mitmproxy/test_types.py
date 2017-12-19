@@ -136,6 +136,8 @@ def test_strseq():
 class DummyConsole:
     @command.command("view.resolve")
     def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
+        if spec == "err":
+            raise mitmproxy.exceptions.CommandError()
         n = int(spec)
         return [tflow.tflow(resp=True)] * n
 
@@ -157,9 +159,11 @@ def test_flow():
         assert b.is_valid(tctx.master.commands, flow.Flow, tflow.tflow()) is True
         assert b.is_valid(tctx.master.commands, flow.Flow, "xx") is False
         with pytest.raises(mitmproxy.exceptions.TypeError):
-            assert b.parse(tctx.master.commands, flow.Flow, "0")
+            b.parse(tctx.master.commands, flow.Flow, "0")
         with pytest.raises(mitmproxy.exceptions.TypeError):
-            assert b.parse(tctx.master.commands, flow.Flow, "2")
+            b.parse(tctx.master.commands, flow.Flow, "2")
+        with pytest.raises(mitmproxy.exceptions.TypeError):
+            b.parse(tctx.master.commands, flow.Flow, "err")
 
 
 def test_flows():
@@ -175,6 +179,8 @@ def test_flows():
         assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "0")) == 0
         assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "1")) == 1
         assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "2")) == 2
+        with pytest.raises(mitmproxy.exceptions.TypeError):
+            b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "err")
 
 
 def test_data():
