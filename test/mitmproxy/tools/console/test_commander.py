@@ -42,16 +42,16 @@ class TestCommandBuffer:
         with taddons.context() as tctx:
             for start, output in tests:
                 cb = commander.CommandBuffer(tctx.master)
-                cb.buf, cb.cursor = start[0], start[1]
+                cb.text, cb.cursor = start[0], start[1]
                 cb.backspace()
-                assert cb.buf == output[0]
+                assert cb.text == output[0]
                 assert cb.cursor == output[1]
 
     def test_left(self):
         cursors = [3, 2, 1, 0, 0]
         with taddons.context() as tctx:
             cb = commander.CommandBuffer(tctx.master)
-            cb.buf, cb.cursor = "abcd", 4
+            cb.text, cb.cursor = "abcd", 4
             for c in cursors:
                 cb.left()
                 assert cb.cursor == c
@@ -60,7 +60,7 @@ class TestCommandBuffer:
         cursors = [1, 2, 3, 4, 4]
         with taddons.context() as tctx:
             cb = commander.CommandBuffer(tctx.master)
-            cb.buf, cb.cursor = "abcd", 0
+            cb.text, cb.cursor = "abcd", 0
             for c in cursors:
                 cb.right()
                 assert cb.cursor == c
@@ -74,20 +74,25 @@ class TestCommandBuffer:
         with taddons.context() as tctx:
             for start, output in tests:
                 cb = commander.CommandBuffer(tctx.master)
-                cb.buf, cb.cursor = start[0], start[1]
+                cb.text, cb.cursor = start[0], start[1]
                 cb.insert("x")
-                assert cb.buf == output[0]
+                assert cb.text == output[0]
                 assert cb.cursor == output[1]
 
     def test_cycle_completion(self):
         with taddons.context() as tctx:
             cb = commander.CommandBuffer(tctx.master)
-            cb.buf = "foo bar"
-            cb.cursor = len(cb.buf)
+            cb.text = "foo bar"
+            cb.cursor = len(cb.text)
             cb.cycle_completion()
 
     def test_render(self):
         with taddons.context() as tctx:
             cb = commander.CommandBuffer(tctx.master)
-            cb.buf = "foo"
-            assert cb.render() == "foo"
+            cb.text = "foo"
+            assert cb.render()
+
+    def test_flatten(self):
+        with taddons.context() as tctx:
+            cb = commander.CommandBuffer(tctx.master)
+            assert cb.flatten("foo  bar") == "foo bar"

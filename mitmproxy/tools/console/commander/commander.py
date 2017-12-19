@@ -50,9 +50,9 @@ CompletionState = typing.NamedTuple(
 class CommandBuffer():
     def __init__(self, master: mitmproxy.master.Master, start: str = "") -> None:
         self.master = master
-        self.buf = start
+        self.text = self.flatten(start)
         # Cursor is always within the range [0:len(buffer)].
-        self._cursor = len(self.buf)
+        self._cursor = len(self.text)
         self.completion = None   # type: CompletionState
 
     @property
@@ -63,13 +63,25 @@ class CommandBuffer():
     def cursor(self, x) -> None:
         if x < 0:
             self._cursor = 0
-        elif x > len(self.buf):
-            self._cursor = len(self.buf)
+        elif x > len(self.text):
+            self._cursor = len(self.text)
         else:
             self._cursor = x
 
     def render(self):
-        return self.buf
+        parts, _ = self.master.commands.parse_partial(self.text)
+        ret = []
+        for p in parts:
+            if p.type == mitmproxy.types.Cmd and p.valid:
+                ret.append(("title", p.value))
+            else:
+                ret.append(("text", p.value))
+            ret.append(("text", " "))
+        return ret
+
+    def flatten(self, txt):
+        parts, _ = self.master.commands.parse_partial(txt)
+        return " ".join([x.value for x in parts])
 
     def left(self) -> None:
         self.cursor = self.cursor - 1
@@ -79,7 +91,7 @@ class CommandBuffer():
 
     def cycle_completion(self) -> None:
         if not self.completion:
-            parts = self.master.commands.parse_partial(self.buf[:self.cursor])
+            parts, remainhelp = self.master.commands.parse_partial(self.text[:self.cursor])
             last = parts[-1]
             ct = mitmproxy.types.CommandTypes.get(last.type, None)
             if ct:
@@ -94,13 +106,13 @@ class CommandBuffer():
             nxt = self.completion.completer.cycle()
             buf = " ".join([i.value for i in self.completion.parse[:-1]]) + " " + nxt
             buf = buf.strip()
-            self.buf = buf
-            self.cursor = len(self.buf)
+            self.text = self.flatten(buf)
+            self.cursor = len(self.text)
 
     def backspace(self) -> None:
         if self.cursor == 0:
             return
-        self.buf = self.buf[:self.cursor - 1] + self.buf[self.cursor:]
+        self.text = self.flatten(self.text[:self.cursor - 1] + self.text[self.cursor:])
         self.cursor = self.cursor - 1
         self.completion = None
 
@@ -108,7 +120,7 @@ class CommandBuffer():
         """
             Inserts text at the cursor.
         """
-        self.buf = self.buf = self.buf[:self.cursor] + k + self.buf[self.cursor:]
+        self.text = self.flatten(self.text[:self.cursor] + k + self.text[self.cursor:])
         self.cursor += 1
         self.completion = None
 
@@ -152,4 +164,4 @@ class CommandEdit(urwid.WidgetWrap):
         return x, y
 
     def get_value(self):
-        return self.cbuf.buf
+        return self.cbuf.text
