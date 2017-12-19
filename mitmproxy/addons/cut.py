@@ -36,6 +36,8 @@ def extract(cut: str, f: flow.Flow) -> typing.Union[str, bytes]:
             if spec == "host" and is_addr(current):
                 return str(current[0])
             elif spec.startswith("header["):
+                if not current:
+                    return ""
                 return current.headers.get(headername(spec), "")
             elif isinstance(part, bytes):
                 return part
