@@ -23,6 +23,10 @@ class TAddon:
     def cmd3(self, foo: int) -> int:
         return foo
 
+    @command.command("cmd4")
+    def cmd4(self, a: int, b: str, c: mitmproxy.types.Path) -> str:
+        return "ok"
+
     @command.command("subcommand")
     def subcommand(self, cmd: mitmproxy.types.Cmd, *args: mitmproxy.types.Arg) -> str:
         return "ok"
@@ -44,6 +48,10 @@ class TAddon:
 
     @command.command("path")
     def path(self, arg: mitmproxy.types.Path) -> None:
+        pass
+
+    @command.command("flow")
+    def flow(self, f: flow.Flow, s: str) -> None:
         pass
 
 
@@ -78,8 +86,12 @@ class TestCommand:
             [
                 "foo bar",
                 [
-                    command.ParseResult(value = "foo", type = mitmproxy.types.Cmd, valid = False),
-                    command.ParseResult(value = "bar", type = str, valid = True)
+                    command.ParseResult(
+                        value = "foo", type = mitmproxy.types.Cmd, valid = False
+                    ),
+                    command.ParseResult(
+                        value = "bar", type = mitmproxy.types.Unknown, valid = False
+                    )
                 ],
                 [],
             ],
@@ -133,6 +145,69 @@ class TestCommand:
                     command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd, valid = True),
                     command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
                     command.ParseResult(value = "", type = int, valid = False),
+                ],
+                []
+            ],
+            [
+                "cmd4",
+                [
+                    command.ParseResult(value = "cmd4", type = mitmproxy.types.Cmd, valid = True),
+                ],
+                ["int", "str", "path"]
+            ],
+            [
+                "cmd4 ",
+                [
+                    command.ParseResult(value = "cmd4", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = int, valid = False),
+                ],
+                ["str", "path"]
+            ],
+            [
+                "cmd4 1",
+                [
+                    command.ParseResult(value = "cmd4", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "1", type = int, valid = True),
+                ],
+                ["str", "path"]
+            ],
+            [
+                "cmd4 1",
+                [
+                    command.ParseResult(value = "cmd4", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "1", type = int, valid = True),
+                ],
+                ["str", "path"]
+            ],
+            [
+                "flow",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                ],
+                ["flow", "str"]
+            ],
+            [
+                "flow ",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = flow.Flow, valid = False),
+                ],
+                ["str"]
+            ],
+            [
+                "flow x",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "x", type = flow.Flow, valid = False),
+                ],
+                ["str"]
+            ],
+            [
+                "flow x ",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "x", type = flow.Flow, valid = False),
+                    command.ParseResult(value = "", type = str, valid = True),
                 ],
                 []
             ],
