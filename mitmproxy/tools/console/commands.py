@@ -124,7 +124,7 @@ class CommandHelp(urwid.Frame):
 
 
 class Commands(urwid.Pile, layoutwidget.LayoutWidget):
-    title = "Commands"
+    title = "Command Reference"
     keyctx = "commands"
 
     def __init__(self, master):
