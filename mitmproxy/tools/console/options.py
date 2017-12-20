@@ -117,6 +117,7 @@ class OptionListWalker(urwid.ListWalker):
     def stop_editing(self):
         self.editing = False
         self.focus_obj = self._get(self.index, False)
+        self.set_focus(self.index)
         self._modified()
 
     def get_edit_text(self):

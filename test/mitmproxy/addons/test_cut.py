@@ -135,6 +135,11 @@ def test_cut():
         with pytest.raises(exceptions.CommandError):
             assert c.cut(tflows, ["__dict__"]) == [[""]]
 
+    with taddons.context():
+        tflows = [tflow.tflow(resp=False)]
+        assert c.cut(tflows, ["response.reason"]) == [[""]]
+        assert c.cut(tflows, ["response.header[key]"]) == [[""]]
+
     c = cut.Cut()
     with taddons.context():
         tflows = [tflow.ttcpflow()]
