@@ -24,10 +24,6 @@ something like this:
 Click on the relevant icon, follow the setup instructions for the platform
 you're on and you are good to go.
 
-For iOS version 10.3 or up, you need to make sure ``mitmproxy`` is enabled in 
-``Certificate Trust Settings``, you can check it by going to 
-``Settings > General > About > Certificate Trust Settings``.
-
 Installing the mitmproxy CA certificate manually
 ------------------------------------------------
 
@@ -39,13 +35,17 @@ documentation for some common platforms.
 The mitmproxy CA cert is located in ``~/.mitmproxy`` after it has been generated at the first
 start of mitmproxy.
 
-
 iOS
 ^^^
 
 See http://jasdev.me/intercepting-ios-traffic
 
 and https://web.archive.org/web/20150920082614/http://kb.mit.edu/confluence/pages/viewpage.action?pageId=152600377
+
+On iOS 10.3 and onwards, you also need to enable full trust for the mitmproxy root certificate:
+
+1. Go to Settings > General > About > Certificate Trust Settings. 
+2. Under "Enable full trust for root certificates", turn on trust for the mitmproxy certificate.
 
 iOS Simulator
 ^^^^^^^^^^^^^
