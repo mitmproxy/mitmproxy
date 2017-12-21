@@ -322,8 +322,10 @@ class FDomain(_Rex):
     flags = re.IGNORECASE
     is_binary = False
 
-    @only(http.HTTPFlow)
+    @only(http.HTTPFlow, websocket.WebSocketFlow)
     def __call__(self, f):
+        if isinstance(f, websocket.WebSocketFlow):
+            f = f.handshake_flow
         return bool(
             self.re.search(f.request.host) or
             self.re.search(f.request.pretty_host)
@@ -342,9 +344,11 @@ class FUrl(_Rex):
             toks = toks[1:]
         return klass(*toks)
 
-    @only(http.HTTPFlow)
+    @only(http.HTTPFlow, websocket.WebSocketFlow)
     def __call__(self, f):
-        if not f.request:
+        if isinstance(f, websocket.WebSocketFlow):
+            f = f.handshake_flow
+        if not f or not f.request:
             return False
         return self.re.search(f.request.pretty_url)
 

@@ -17,6 +17,13 @@ Contexts = {
 }
 
 
+navkeys = [
+    "m_start", "m_end", "m_next", "m_select",
+    "up", "down", "page_up", "page_down",
+    "left", "right"
+]
+
+
 class Binding:
     def __init__(self, key, command, contexts, help):
         self.key, self.command, self.contexts = key, command, sorted(contexts)
@@ -119,6 +126,16 @@ class Keymap:
             Returns the key if it has not been handled, or None.
         """
         b = self.get(context, key) or self.get("global", key)
+        if b:
+            return self.executor(b.command)
+        return key
+
+    def handle_only(self, context: str, key: str) -> typing.Optional[str]:
+        """
+            Like handle, but ignores global bindings. Returns the key if it has
+            not been handled, or None.
+        """
+        b = self.get(context, key)
         if b:
             return self.executor(b.command)
         return key

@@ -7,6 +7,7 @@ from mitmproxy import flowfilter
 from mitmproxy import io
 from mitmproxy import ctx
 from mitmproxy import flow
+import mitmproxy.types
 
 
 class Save:
@@ -50,7 +51,7 @@ class Save:
                 self.start_stream_to_path(ctx.options.save_stream_file, self.filt)
 
     @command.command("save.file")
-    def save(self, flows: typing.Sequence[flow.Flow], path: command.Path) -> None:
+    def save(self, flows: typing.Sequence[flow.Flow], path: mitmproxy.types.Path) -> None:
         """
             Save flows to a file. If the path starts with a +, flows are
             appended to the file, otherwise it is over-written.
@@ -70,6 +71,15 @@ class Save:
             self.active_flows.add(flow)
 
     def tcp_end(self, flow):
+        if self.stream:
+            self.stream.add(flow)
+            self.active_flows.discard(flow)
+
+    def websocket_start(self, flow):
+        if self.stream:
+            self.active_flows.add(flow)
+
+    def websocket_end(self, flow):
         if self.stream:
             self.stream.add(flow)
             self.active_flows.discard(flow)

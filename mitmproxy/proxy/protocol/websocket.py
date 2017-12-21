@@ -1,10 +1,11 @@
 import socket
 from OpenSSL import SSL
 
+
+from mitmproxy.contrib import wsproto
 from mitmproxy.contrib.wsproto import events
 from mitmproxy.contrib.wsproto.connection import ConnectionType, WSConnection
 from mitmproxy.contrib.wsproto.extensions import PerMessageDeflate
-from mitmproxy.contrib.wsproto.frame_protocol import Opcode
 
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -93,11 +94,14 @@ class WebSocketLayer(base.Layer):
 
         if event.message_finished:
             original_chunk_sizes = [len(f) for f in fb]
-            message_type = Opcode.TEXT if isinstance(event, events.TextReceived) else Opcode.BINARY
-            if message_type == Opcode.TEXT:
+
+            if isinstance(event, events.TextReceived):
+                message_type = wsproto.frame_protocol.Opcode.TEXT
                 payload = ''.join(fb)
             else:
+                message_type = wsproto.frame_protocol.Opcode.BINARY
                 payload = b''.join(fb)
+
             fb.clear()
 
             websocket_message = WebSocketMessage(message_type, not is_server, payload)

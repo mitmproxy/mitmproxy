@@ -1,6 +1,4 @@
 import abc
-import glob
-import os
 import typing
 
 import urwid
@@ -9,6 +7,7 @@ from urwid.text_layout import calc_coords
 import mitmproxy.flow
 import mitmproxy.master
 import mitmproxy.command
+import mitmproxy.types
 
 
 class Completer:  # pragma: no cover
@@ -39,30 +38,6 @@ class ListCompleter(Completer):
         return ret
 
 
-# Generates the completion options for a specific starting input
-def pathOptions(start: str) -> typing.Sequence[str]:
-    if not start:
-        start = "./"
-    path = os.path.expanduser(start)
-    ret = []
-    if os.path.isdir(path):
-        files = glob.glob(os.path.join(path, "*"))
-        prefix = start
-    else:
-        files = glob.glob(path + "*")
-        prefix = os.path.dirname(start)
-    prefix = prefix or "./"
-    for f in files:
-        display = os.path.join(prefix, os.path.normpath(os.path.basename(f)))
-        if os.path.isdir(f):
-            display += "/"
-        ret.append(display)
-    if not ret:
-        ret = [start]
-    ret.sort()
-    return ret
-
-
 CompletionState = typing.NamedTuple(
     "CompletionState",
     [
@@ -75,9 +50,9 @@ CompletionState = typing.NamedTuple(
 class CommandBuffer():
     def __init__(self, master: mitmproxy.master.Master, start: str = "") -> None:
         self.master = master
-        self.buf = start
+        self.text = self.flatten(start)
         # Cursor is always within the range [0:len(buffer)].
-        self._cursor = len(self.buf)
+        self._cursor = len(self.text)
         self.completion = None   # type: CompletionState
 
     @property
@@ -88,13 +63,40 @@ class CommandBuffer():
     def cursor(self, x) -> None:
         if x < 0:
             self._cursor = 0
-        elif x > len(self.buf):
-            self._cursor = len(self.buf)
+        elif x > len(self.text):
+            self._cursor = len(self.text)
         else:
             self._cursor = x
 
     def render(self):
-        return self.buf
+        """
+            This function is somewhat tricky - in order to make the cursor
+            position valid, we have to make sure there is a
+            character-for-character offset match in the rendered output, up
+            to the cursor. Beyond that, we can add stuff.
+        """
+        parts, remhelp = self.master.commands.parse_partial(self.text)
+        ret = []
+        for p in parts:
+            if p.valid:
+                if p.type == mitmproxy.types.Cmd:
+                    ret.append(("commander_command", p.value))
+                else:
+                    ret.append(("text", p.value))
+            elif p.value:
+                ret.append(("commander_invalid", p.value))
+            else:
+                ret.append(("text", ""))
+            ret.append(("text", " "))
+        if remhelp:
+            ret.append(("text", " "))
+            for v in remhelp:
+                ret.append(("commander_hint", "%s " % v))
+        return ret
+
+    def flatten(self, txt):
+        parts, _ = self.master.commands.parse_partial(txt)
+        return " ".join([x.value for x in parts])
 
     def left(self) -> None:
         self.cursor = self.cursor - 1
@@ -104,50 +106,14 @@ class CommandBuffer():
 
     def cycle_completion(self) -> None:
         if not self.completion:
-            parts = self.master.commands.parse_partial(self.buf[:self.cursor])
+            parts, remainhelp = self.master.commands.parse_partial(self.text[:self.cursor])
             last = parts[-1]
-            if last.type == mitmproxy.command.Cmd:
+            ct = mitmproxy.types.CommandTypes.get(last.type, None)
+            if ct:
                 self.completion = CompletionState(
                     completer = ListCompleter(
                         parts[-1].value,
-                        self.master.commands.commands.keys(),
-                    ),
-                    parse = parts,
-                )
-            if last.type == typing.Sequence[mitmproxy.command.Cut]:
-                spec = parts[-1].value.split(",")
-                opts = []
-                for pref in mitmproxy.command.Cut.valid_prefixes:
-                    spec[-1] = pref
-                    opts.append(",".join(spec))
-                self.completion = CompletionState(
-                    completer = ListCompleter(
-                        parts[-1].value,
-                        opts,
-                    ),
-                    parse = parts,
-                )
-            elif isinstance(last.type, mitmproxy.command.Choice):
-                self.completion = CompletionState(
-                    completer = ListCompleter(
-                        parts[-1].value,
-                        self.master.commands.call(last.type.options_command),
-                    ),
-                    parse = parts,
-                )
-            elif last.type == mitmproxy.command.Path:
-                self.completion = CompletionState(
-                    completer = ListCompleter(
-                        "",
-                        pathOptions(parts[1].value)
-                    ),
-                    parse = parts,
-                )
-            elif last.type in (typing.Sequence[mitmproxy.flow.Flow], mitmproxy.flow.Flow):
-                self.completion = CompletionState(
-                    completer = ListCompleter(
-                        "",
-                        mitmproxy.command.valid_flow_prefixes,
+                        ct.completion(self.master.commands, last.type, parts[-1].value)
                     ),
                     parse = parts,
                 )
@@ -155,13 +121,13 @@ class CommandBuffer():
             nxt = self.completion.completer.cycle()
             buf = " ".join([i.value for i in self.completion.parse[:-1]]) + " " + nxt
             buf = buf.strip()
-            self.buf = buf
-            self.cursor = len(self.buf)
+            self.text = self.flatten(buf)
+            self.cursor = len(self.text)
 
     def backspace(self) -> None:
         if self.cursor == 0:
             return
-        self.buf = self.buf[:self.cursor - 1] + self.buf[self.cursor:]
+        self.text = self.flatten(self.text[:self.cursor - 1] + self.text[self.cursor:])
         self.cursor = self.cursor - 1
         self.completion = None
 
@@ -169,7 +135,7 @@ class CommandBuffer():
         """
             Inserts text at the cursor.
         """
-        self.buf = self.buf = self.buf[:self.cursor] + k + self.buf[self.cursor:]
+        self.text = self.flatten(self.text[:self.cursor] + k + self.text[self.cursor:])
         self.cursor += 1
         self.completion = None
 
@@ -213,4 +179,4 @@ class CommandEdit(urwid.WidgetWrap):
         return x, y
 
     def get_value(self):
-        return self.cbuf.buf
+        return self.cbuf.text

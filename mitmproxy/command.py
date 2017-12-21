@@ -10,9 +10,16 @@ import textwrap
 import functools
 import sys
 
-from mitmproxy.utils import typecheck
 from mitmproxy import exceptions
-from mitmproxy import flow
+import mitmproxy.types
+
+
+def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
+    sig = inspect.signature(f)
+    try:
+        sig.bind(*args, **kwargs)
+    except TypeError as v:
+        raise exceptions.CommandError("command argument mismatch: %s" % v.args[0])
 
 
 def lexer(s):
@@ -24,113 +31,14 @@ def lexer(s):
     return lex
 
 
-# This is an awkward location for these values, but it's better than having
-# the console core import and depend on an addon. FIXME: Add a way for
-# addons to add custom types and manage their completion and validation.
-valid_flow_prefixes = [
-    "@all",
-    "@focus",
-    "@shown",
-    "@hidden",
-    "@marked",
-    "@unmarked",
-    "~q",
-    "~s",
-    "~a",
-    "~hq",
-    "~hs",
-    "~b",
-    "~bq",
-    "~bs",
-    "~t",
-    "~d",
-    "~m",
-    "~u",
-    "~c",
-]
-
-
-Cuts = typing.Sequence[
-    typing.Sequence[typing.Union[str, bytes]]
-]
-
-
-class Cut(str):
-    # This is an awkward location for these values, but it's better than having
-    # the console core import and depend on an addon. FIXME: Add a way for
-    # addons to add custom types and manage their completion and validation.
-    valid_prefixes = [
-        "request.method",
-        "request.scheme",
-        "request.host",
-        "request.http_version",
-        "request.port",
-        "request.path",
-        "request.url",
-        "request.text",
-        "request.content",
-        "request.raw_content",
-        "request.timestamp_start",
-        "request.timestamp_end",
-        "request.header[",
-
-        "response.status_code",
-        "response.reason",
-        "response.text",
-        "response.content",
-        "response.timestamp_start",
-        "response.timestamp_end",
-        "response.raw_content",
-        "response.header[",
-
-        "client_conn.address.port",
-        "client_conn.address.host",
-        "client_conn.tls_version",
-        "client_conn.sni",
-        "client_conn.ssl_established",
-
-        "server_conn.address.port",
-        "server_conn.address.host",
-        "server_conn.ip_address.host",
-        "server_conn.tls_version",
-        "server_conn.sni",
-        "server_conn.ssl_established",
-    ]
-
-
-class Path(str):
-    pass
-
-
-class Cmd(str):
-    pass
-
-
-class Arg(str):
-    pass
-
-
 def typename(t: type) -> str:
     """
-        Translates a type to an explanatory string. If ret is True, we're
-        looking at a return type, else we're looking at a parameter type.
+        Translates a type to an explanatory string.
     """
-    if isinstance(t, Choice):
-        return "choice"
-    elif t == typing.Sequence[flow.Flow]:
-        return "[flow]"
-    elif t == typing.Sequence[str]:
-        return "[str]"
-    elif t == typing.Sequence[Cut]:
-        return "[cut]"
-    elif t == Cuts:
-        return "[cuts]"
-    elif t == flow.Flow:
-        return "flow"
-    elif issubclass(t, (str, int, bool)):
-        return t.__name__.lower()
-    else:  # pragma: no cover
+    to = mitmproxy.types.CommandTypes.get(t, None)
+    if not to:
         raise NotImplementedError(t)
+    return to.display
 
 
 class Command:
@@ -168,13 +76,12 @@ class Command:
             ret = " -> " + ret
         return "%s %s%s" % (self.path, params, ret)
 
-    def call(self, args: typing.Sequence[str]):
+    def call(self, args: typing.Sequence[str]) -> typing.Any:
         """
             Call the command with a list of arguments. At this point, all
             arguments are strings.
         """
-        if not self.has_positional and (len(self.paramtypes) != len(args)):
-            raise exceptions.CommandError("Usage: %s" % self.signature_help())
+        verify_arg_signature(self.func, list(args), {})
 
         remainder = []  # type: typing.Sequence[str]
         if self.has_positional:
@@ -183,37 +90,35 @@ class Command:
 
         pargs = []
         for arg, paramtype in zip(args, self.paramtypes):
-            if typecheck.check_command_type(arg, paramtype):
-                pargs.append(arg)
-            else:
-                pargs.append(parsearg(self.manager, arg, paramtype))
-
-        if remainder:
-            chk = typecheck.check_command_type(
-                remainder,
-                typing.Sequence[self.paramtypes[-1]]  # type: ignore
-            )
-            if chk:
-                pargs.extend(remainder)
-            else:
-                raise exceptions.CommandError("Invalid value type: %s - expected %s" % (remainder, self.paramtypes[-1]))
+            pargs.append(parsearg(self.manager, arg, paramtype))
+        pargs.extend(remainder)
 
         with self.manager.master.handlecontext():
             ret = self.func(*pargs)
 
-        if not typecheck.check_command_type(ret, self.returntype):
-            raise exceptions.CommandError("Command returned unexpected data")
-
+        if ret is None and self.returntype is None:
+            return
+        typ = mitmproxy.types.CommandTypes.get(self.returntype)
+        if not typ.is_valid(self.manager, typ, ret):
+            raise exceptions.CommandError(
+                "%s returned unexpected data - expected %s" % (
+                    self.path, typ.display
+                )
+            )
         return ret
 
 
 ParseResult = typing.NamedTuple(
     "ParseResult",
-    [("value", str), ("type", typing.Type)],
+    [
+        ("value", str),
+        ("type", typing.Type),
+        ("valid", bool),
+    ],
 )
 
 
-class CommandManager:
+class CommandManager(mitmproxy.types._CommandBase):
     def __init__(self, master):
         self.master = master
         self.commands = {}
@@ -228,9 +133,12 @@ class CommandManager:
     def add(self, path: str, func: typing.Callable):
         self.commands[path] = Command(self, path, func)
 
-    def parse_partial(self, cmdstr: str) -> typing.Sequence[ParseResult]:
+    def parse_partial(
+        self,
+        cmdstr: str
+    ) -> typing.Tuple[typing.Sequence[ParseResult], typing.Sequence[str]]:
         """
-            Parse a possibly partial command. Return a sequence of (part, type) tuples.
+            Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
         buf = io.StringIO(cmdstr)
         parts = []  # type: typing.List[str]
@@ -255,21 +163,43 @@ class CommandManager:
         typ = None  # type: typing.Type
         for i in range(len(parts)):
             if i == 0:
-                typ = Cmd
+                typ = mitmproxy.types.Cmd
                 if parts[i] in self.commands:
                     params.extend(self.commands[parts[i]].paramtypes)
             elif params:
                 typ = params.pop(0)
-                # FIXME: Do we need to check that Arg is positional?
-                if typ == Cmd and params and params[0] == Arg:
+                if typ == mitmproxy.types.Cmd and params and params[0] == mitmproxy.types.Arg:
                     if parts[i] in self.commands:
                         params[:] = self.commands[parts[i]].paramtypes
             else:
-                typ = str
-            parse.append(ParseResult(value=parts[i], type=typ))
-        return parse
+                typ = mitmproxy.types.Unknown
 
-    def call_args(self, path, args):
+            to = mitmproxy.types.CommandTypes.get(typ, None)
+            valid = False
+            if to:
+                try:
+                    to.parse(self, typ, parts[i])
+                except exceptions.TypeError:
+                    valid = False
+                else:
+                    valid = True
+
+            parse.append(
+                ParseResult(
+                    value=parts[i],
+                    type=typ,
+                    valid=valid,
+                )
+            )
+
+        remhelp = []  # type: typing.List[str]
+        for x in params:
+            remt = mitmproxy.types.CommandTypes.get(x, None)
+            remhelp.append(remt.display)
+
+        return parse, remhelp
+
+    def call_args(self, path: str, args: typing.Sequence[str]) -> typing.Any:
         """
             Call a command using a list of string arguments. May raise CommandError.
         """
@@ -300,53 +230,13 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     """
         Convert a string to a argument to the appropriate type.
     """
-    if isinstance(argtype, Choice):
-        cmd = argtype.options_command
-        opts = manager.call(cmd)
-        if spec not in opts:
-            raise exceptions.CommandError(
-                "Invalid choice: see %s for options" % cmd
-            )
-        return spec
-    elif issubclass(argtype, str):
-        return spec
-    elif argtype == bool:
-        if spec == "true":
-            return True
-        elif spec == "false":
-            return False
-        else:
-            raise exceptions.CommandError(
-                "Booleans are 'true' or 'false', got %s" % spec
-            )
-    elif issubclass(argtype, int):
-        try:
-            return int(spec)
-        except ValueError as e:
-            raise exceptions.CommandError("Expected an integer, got %s." % spec)
-    elif argtype == typing.Sequence[flow.Flow]:
-        return manager.call_args("view.resolve", [spec])
-    elif argtype == Cuts:
-        return manager.call_args("cut", [spec])
-    elif argtype == flow.Flow:
-        flows = manager.call_args("view.resolve", [spec])
-        if len(flows) != 1:
-            raise exceptions.CommandError(
-                "Command requires one flow, specification matched %s." % len(flows)
-            )
-        return flows[0]
-    elif argtype in (typing.Sequence[str], typing.Sequence[Cut]):
-        return [i.strip() for i in spec.split(",")]
-    else:
+    t = mitmproxy.types.CommandTypes.get(argtype, None)
+    if not t:
         raise exceptions.CommandError("Unsupported argument type: %s" % argtype)
-
-
-def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
-    sig = inspect.signature(f)
     try:
-        sig.bind(*args, **kwargs)
-    except TypeError as v:
-        raise exceptions.CommandError("Argument mismatch: %s" % v.args[0])
+        return t.parse(manager, argtype, spec)  # type: ignore
+    except exceptions.TypeError as e:
+        raise exceptions.CommandError from e
 
 
 def command(path):
@@ -360,21 +250,11 @@ def command(path):
     return decorator
 
 
-class Choice:
-    def __init__(self, options_command):
-        self.options_command = options_command
-
-    def __instancecheck__(self, instance):
-        # return false here so that arguments are piped through parsearg,
-        # which does extended validation.
-        return False
-
-
 def argument(name, type):
     """
-    Set the type of a command argument at runtime.
-    This is useful for more specific types such as command.Choice, which we cannot annotate
-    directly as mypy does not like that.
+        Set the type of a command argument at runtime. This is useful for more
+        specific types such as mitmproxy.types.Choice, which we cannot annotate
+        directly as mypy does not like that.
     """
     def decorator(f: types.FunctionType) -> types.FunctionType:
         assert name in f.__annotations__

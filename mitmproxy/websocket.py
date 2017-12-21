@@ -1,6 +1,8 @@
 import time
 from typing import List, Optional
 
+from mitmproxy.contrib import wsproto
+
 from mitmproxy import flow
 from mitmproxy.net import websockets
 from mitmproxy.coretypes import serializable
@@ -11,7 +13,7 @@ class WebSocketMessage(serializable.Serializable):
     def __init__(
         self, type: int, from_client: bool, content: bytes, timestamp: Optional[int]=None
     ) -> None:
-        self.type = type
+        self.type = wsproto.frame_protocol.Opcode(type)  # type: ignore
         self.from_client = from_client
         self.content = content
         self.timestamp = timestamp or int(time.time())  # type: int
@@ -21,13 +23,14 @@ class WebSocketMessage(serializable.Serializable):
         return cls(*state)
 
     def get_state(self):
-        return self.type, self.from_client, self.content, self.timestamp
+        return int(self.type), self.from_client, self.content, self.timestamp
 
     def set_state(self, state):
         self.type, self.from_client, self.content, self.timestamp = state
+        self.type = wsproto.frame_protocol.Opcode(self.type)  # replace enum with bare int
 
     def __repr__(self):
-        if self.type == websockets.OPCODE.TEXT:
+        if self.type == wsproto.frame_protocol.Opcode.TEXT:
             return "text message: {}".format(repr(self.content))
         else:
             return "binary message: {}".format(strutils.bytes_to_escaped_str(self.content))
@@ -42,7 +45,7 @@ class WebSocketFlow(flow.Flow):
         super().__init__("websocket", client_conn, server_conn, live)
         self.messages = []  # type: List[WebSocketMessage]
         self.close_sender = 'client'
-        self.close_code = '(status code missing)'
+        self.close_code = wsproto.frame_protocol.CloseReason.NORMAL_CLOSURE
         self.close_message = '(message missing)'
         self.close_reason = 'unknown status code'
         self.stream = False
@@ -69,7 +72,7 @@ class WebSocketFlow(flow.Flow):
     _stateobject_attributes.update(dict(
         messages=List[WebSocketMessage],
         close_sender=str,
-        close_code=str,
+        close_code=int,
         close_message=str,
         close_reason=str,
         client_key=str,
@@ -82,6 +85,11 @@ class WebSocketFlow(flow.Flow):
         # Since mitmproxy-console currently only displays HTTPFlows,
         # dumping the handshake_flow will include the WebSocketFlow too.
     ))
+
+    def get_state(self):
+        d = super().get_state()
+        d['close_code'] = int(d['close_code'])  # replace enum with bare int
+        return d
 
     @classmethod
     def from_state(cls, state):

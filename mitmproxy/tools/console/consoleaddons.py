@@ -7,6 +7,8 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import contentviews
 from mitmproxy.utils import strutils
+import mitmproxy.types
+
 
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
@@ -102,7 +104,7 @@ class ConsoleAddon:
     @command.command("console.layout.options")
     def layout_options(self) -> typing.Sequence[str]:
         """
-            Returns the available options for the consoler_layout option.
+            Returns the available options for the console_layout option.
         """
         return ["single", "vertical", "horizontal"]
 
@@ -218,8 +220,8 @@ class ConsoleAddon:
         self,
         prompt: str,
         choices: typing.Sequence[str],
-        cmd: command.Cmd,
-        *args: command.Arg
+        cmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.Arg
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
@@ -241,7 +243,11 @@ class ConsoleAddon:
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
-        self, prompt: str, choicecmd: command.Cmd, *cmd: command.Arg
+        self,
+        prompt: str,
+        choicecmd: mitmproxy.types.Cmd,
+        subcmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.Arg
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
@@ -252,10 +258,10 @@ class ConsoleAddon:
 
         def callback(opt):
             # We're now outside of the call context...
-            repl = " ".join(cmd)
+            repl = " ".join(args)
             repl = repl.replace("{choice}", opt)
             try:
-                self.master.commands.call(repl)
+                self.master.commands.call(subcmd + " " + repl)
             except exceptions.CommandError as e:
                 signals.status_message.send(message=str(e))
 
@@ -316,6 +322,7 @@ class ConsoleAddon:
         signals.pop_view_state.send(self)
 
     @command.command("console.bodyview")
+    @command.argument("part", type=mitmproxy.types.Choice("console.bodyview.options"))
     def bodyview(self, f: flow.Flow, part: str) -> None:
         """
             Spawn an external viewer for a flow request or response body based
@@ -332,6 +339,13 @@ class ConsoleAddon:
             raise exceptions.CommandError("No content to view.")
         self.master.spawn_external_viewer(content, t)
 
+    @command.command("console.bodyview.options")
+    def bodyview_options(self) -> typing.Sequence[str]:
+        """
+            Possible parts for console.bodyview.
+        """
+        return ["request", "response"]
+
     @command.command("console.edit.focus.options")
     def edit_focus_options(self) -> typing.Sequence[str]:
         """
@@ -346,17 +360,24 @@ class ConsoleAddon:
             "reason",
             "request-headers",
             "response-headers",
+            "request-body",
+            "response-body",
             "status_code",
             "set-cookies",
             "url",
         ]
 
     @command.command("console.edit.focus")
-    @command.argument("part", type=command.Choice("console.edit.focus.options"))
+    @command.argument("part", type=mitmproxy.types.Choice("console.edit.focus.options"))
     def edit_focus(self, part: str) -> None:
         """
             Edit a component of the currently focused flow.
         """
+        flow = self.master.view.focus.flow
+        # This shouldn't be necessary once this command is "console.edit @focus",
+        # but for now it is.
+        if not flow:
+            raise exceptions.CommandError("No flow selected.")
         if part == "cookies":
             self.master.switch_view("edit_focus_cookies")
         elif part == "form":
@@ -369,6 +390,21 @@ class ConsoleAddon:
             self.master.switch_view("edit_focus_request_headers")
         elif part == "response-headers":
             self.master.switch_view("edit_focus_response_headers")
+        elif part in ("request-body", "response-body"):
+            if part == "request-body":
+                message = flow.request
+            else:
+                message = flow.response
+            if not message:
+                raise exceptions.CommandError("Flow has no {}.".format(part.split("-")[0]))
+            c = self.master.spawn_editor(message.get_content(strict=False) or b"")
+            # Fix an issue caused by some editors when editing a
+            # request/response body. Many editors make it hard to save a
+            # file without a terminating newline on the last line. When
+            # editing message bodies, this can cause problems. For now, I
+            # just strip the newlines off the end of the body when we return
+            # from an editor.
+            message.content = c.rstrip(b"\n")
         elif part == "set-cookies":
             self.master.switch_view("edit_focus_setcookies")
         elif part in ["url", "method", "status_code", "reason"]:
@@ -404,14 +440,14 @@ class ConsoleAddon:
         self._grideditor().cmd_delete()
 
     @command.command("console.grideditor.load")
-    def grideditor_load(self, path: command.Path) -> None:
+    def grideditor_load(self, path: mitmproxy.types.Path) -> None:
         """
             Read a file into the currrent cell.
         """
         self._grideditor().cmd_read_file(path)
 
     @command.command("console.grideditor.load_escaped")
-    def grideditor_load_escaped(self, path: command.Path) -> None:
+    def grideditor_load_escaped(self, path: mitmproxy.types.Path) -> None:
         """
             Read a file containing a Python-style escaped string into the
             currrent cell.
@@ -419,7 +455,7 @@ class ConsoleAddon:
         self._grideditor().cmd_read_file_escaped(path)
 
     @command.command("console.grideditor.save")
-    def grideditor_save(self, path: command.Path) -> None:
+    def grideditor_save(self, path: mitmproxy.types.Path) -> None:
         """
             Save data to file as a CSV.
         """
@@ -440,7 +476,7 @@ class ConsoleAddon:
         self._grideditor().cmd_spawn_editor()
 
     @command.command("console.flowview.mode.set")
-    @command.argument("mode", type=command.Choice("console.flowview.mode.options"))
+    @command.argument("mode", type=mitmproxy.types.Choice("console.flowview.mode.options"))
     def flowview_mode_set(self, mode: str) -> None:
         """
             Set the display mode for the current flow view.
@@ -498,8 +534,8 @@ class ConsoleAddon:
         self,
         contexts: typing.Sequence[str],
         key: str,
-        cmd: command.Cmd,
-        *args: command.Arg
+        cmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.Arg
     ) -> None:
         """
             Bind a shortcut key.

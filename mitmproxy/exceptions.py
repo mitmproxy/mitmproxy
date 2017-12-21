@@ -112,6 +112,10 @@ class AddonHalt(MitmproxyException):
     pass
 
 
+class TypeError(MitmproxyException):
+    pass
+
+
 """
     Net-layer exceptions
 """

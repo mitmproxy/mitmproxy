@@ -7,6 +7,7 @@ from mitmproxy import flow
 from mitmproxy import ctx
 from mitmproxy import certs
 from mitmproxy.utils import strutils
+import mitmproxy.types
 
 import pyperclip
 
@@ -35,6 +36,8 @@ def extract(cut: str, f: flow.Flow) -> typing.Union[str, bytes]:
             if spec == "host" and is_addr(current):
                 return str(current[0])
             elif spec.startswith("header["):
+                if not current:
+                    return ""
                 return current.headers.get(headername(spec), "")
             elif isinstance(part, bytes):
                 return part
@@ -51,8 +54,8 @@ class Cut:
     def cut(
         self,
         flows: typing.Sequence[flow.Flow],
-        cuts: typing.Sequence[command.Cut]
-    ) -> command.Cuts:
+        cuts: mitmproxy.types.CutSpec,
+    ) -> mitmproxy.types.Data:
         """
             Cut data from a set of flows. Cut specifications are attribute paths
             from the base of the flow object, with a few conveniences - "port"
@@ -62,17 +65,17 @@ class Cut:
             or "false", "bytes" are preserved, and all other values are
             converted to strings.
         """
-        ret = []
+        ret = []  # type:typing.List[typing.List[typing.Union[str, bytes]]]
         for f in flows:
             ret.append([extract(c, f) for c in cuts])
-        return ret
+        return ret  # type: ignore
 
     @command.command("cut.save")
     def save(
         self,
         flows: typing.Sequence[flow.Flow],
-        cuts: typing.Sequence[command.Cut],
-        path: command.Path
+        cuts: mitmproxy.types.CutSpec,
+        path: mitmproxy.types.Path
     ) -> None:
         """
             Save cuts to file. If there are multiple flows or cuts, the format
@@ -84,7 +87,7 @@ class Cut:
         append = False
         if path.startswith("+"):
             append = True
-            path = command.Path(path[1:])
+            path = mitmproxy.types.Path(path[1:])
         if len(cuts) == 1 and len(flows) == 1:
             with open(path, "ab" if append else "wb") as fp:
                 if fp.tell() > 0:
@@ -110,7 +113,7 @@ class Cut:
     def clip(
         self,
         flows: typing.Sequence[flow.Flow],
-        cuts: typing.Sequence[command.Cut],
+        cuts: mitmproxy.types.CutSpec,
     ) -> None:
         """
             Send cuts to the clipboard. If there are multiple flows or cuts, the

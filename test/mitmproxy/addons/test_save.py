@@ -44,6 +44,19 @@ def test_tcp(tmpdir):
         assert rd(p)
 
 
+def test_websocket(tmpdir):
+    sa = save.Save()
+    with taddons.context() as tctx:
+        p = str(tmpdir.join("foo"))
+        tctx.configure(sa, save_stream_file=p)
+
+        f = tflow.twebsocketflow()
+        sa.websocket_start(f)
+        sa.websocket_end(f)
+        tctx.configure(sa, save_stream_file=None)
+        assert rd(p)
+
+
 def test_save_command(tmpdir):
     sa = save.Save()
     with taddons.context() as tctx:

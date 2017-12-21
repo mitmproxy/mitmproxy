@@ -4,10 +4,9 @@ from mitmproxy import flow
 from mitmproxy import exceptions
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
+import mitmproxy.types
 import io
 import pytest
-
-from mitmproxy.utils import typecheck
 
 
 class TAddon:
@@ -24,8 +23,12 @@ class TAddon:
     def cmd3(self, foo: int) -> int:
         return foo
 
+    @command.command("cmd4")
+    def cmd4(self, a: int, b: str, c: mitmproxy.types.Path) -> str:
+        return "ok"
+
     @command.command("subcommand")
-    def subcommand(self, cmd: command.Cmd, *args: command.Arg) -> str:
+    def subcommand(self, cmd: mitmproxy.types.Cmd, *args: mitmproxy.types.Arg) -> str:
         return "ok"
 
     @command.command("empty")
@@ -39,12 +42,16 @@ class TAddon:
     def choices(self) -> typing.Sequence[str]:
         return ["one", "two", "three"]
 
-    @command.argument("arg", type=command.Choice("choices"))
+    @command.argument("arg", type=mitmproxy.types.Choice("choices"))
     def choose(self, arg: str) -> typing.Sequence[str]:
         return ["one", "two", "three"]
 
     @command.command("path")
-    def path(self, arg: command.Path) -> None:
+    def path(self, arg: mitmproxy.types.Path) -> None:
+        pass
+
+    @command.command("flow")
+    def flow(self, f: flow.Flow, s: str) -> None:
         pass
 
 
@@ -79,53 +86,138 @@ class TestCommand:
             [
                 "foo bar",
                 [
-                    command.ParseResult(value = "foo", type = command.Cmd),
-                    command.ParseResult(value = "bar", type = str)
+                    command.ParseResult(
+                        value = "foo", type = mitmproxy.types.Cmd, valid = False
+                    ),
+                    command.ParseResult(
+                        value = "bar", type = mitmproxy.types.Unknown, valid = False
+                    )
                 ],
+                [],
             ],
             [
-                "foo 'bar",
+                "cmd1 'bar",
                 [
-                    command.ParseResult(value = "foo", type = command.Cmd),
-                    command.ParseResult(value = "'bar", type = str)
-                ]
+                    command.ParseResult(value = "cmd1", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "'bar", type = str, valid = True)
+                ],
+                [],
             ],
-            ["a", [command.ParseResult(value = "a", type = command.Cmd)]],
-            ["", [command.ParseResult(value = "", type = command.Cmd)]],
+            [
+                "a",
+                [command.ParseResult(value = "a", type = mitmproxy.types.Cmd, valid = False)],
+                [],
+            ],
+            [
+                "",
+                [command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = False)],
+                []
+            ],
             [
                 "cmd3 1",
                 [
-                    command.ParseResult(value = "cmd3", type = command.Cmd),
-                    command.ParseResult(value = "1", type = int),
-                ]
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "1", type = int, valid = True),
+                ],
+                []
             ],
             [
                 "cmd3 ",
                 [
-                    command.ParseResult(value = "cmd3", type = command.Cmd),
-                    command.ParseResult(value = "", type = int),
-                ]
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = int, valid = False),
+                ],
+                []
             ],
             [
                 "subcommand ",
                 [
-                    command.ParseResult(value = "subcommand", type = command.Cmd),
-                    command.ParseResult(value = "", type = command.Cmd),
-                ]
+                    command.ParseResult(
+                        value = "subcommand", type = mitmproxy.types.Cmd, valid = True,
+                    ),
+                    command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = False),
+                ],
+                ["arg"],
             ],
             [
                 "subcommand cmd3 ",
                 [
-                    command.ParseResult(value = "subcommand", type = command.Cmd),
-                    command.ParseResult(value = "cmd3", type = command.Cmd),
-                    command.ParseResult(value = "", type = int),
-                ]
+                    command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = int, valid = False),
+                ],
+                []
+            ],
+            [
+                "cmd4",
+                [
+                    command.ParseResult(value = "cmd4", type = mitmproxy.types.Cmd, valid = True),
+                ],
+                ["int", "str", "path"]
+            ],
+            [
+                "cmd4 ",
+                [
+                    command.ParseResult(value = "cmd4", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = int, valid = False),
+                ],
+                ["str", "path"]
+            ],
+            [
+                "cmd4 1",
+                [
+                    command.ParseResult(value = "cmd4", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "1", type = int, valid = True),
+                ],
+                ["str", "path"]
+            ],
+            [
+                "cmd4 1",
+                [
+                    command.ParseResult(value = "cmd4", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "1", type = int, valid = True),
+                ],
+                ["str", "path"]
+            ],
+            [
+                "flow",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                ],
+                ["flow", "str"]
+            ],
+            [
+                "flow ",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "", type = flow.Flow, valid = False),
+                ],
+                ["str"]
+            ],
+            [
+                "flow x",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "x", type = flow.Flow, valid = False),
+                ],
+                ["str"]
+            ],
+            [
+                "flow x ",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "x", type = flow.Flow, valid = False),
+                    command.ParseResult(value = "", type = str, valid = True),
+                ],
+                []
             ],
         ]
         with taddons.context() as tctx:
             tctx.master.addons.add(TAddon())
-            for s, expected in tests:
-                assert tctx.master.commands.parse_partial(s) == expected
+            for s, expected, expectedremain in tests:
+                current, remain = tctx.master.commands.parse_partial(s)
+                assert current == expected
+                assert expectedremain == remain
 
 
 def test_simple():
@@ -139,7 +231,7 @@ def test_simple():
             c.call("nonexistent")
         with pytest.raises(exceptions.CommandError, match="Invalid"):
             c.call("")
-        with pytest.raises(exceptions.CommandError, match="Usage"):
+        with pytest.raises(exceptions.CommandError, match="argument mismatch"):
             c.call("one.two too many args")
 
         c.add("empty", a.empty)
@@ -154,15 +246,15 @@ def test_typename():
     assert command.typename(str) == "str"
     assert command.typename(typing.Sequence[flow.Flow]) == "[flow]"
 
-    assert command.typename(command.Cuts) == "[cuts]"
-    assert command.typename(typing.Sequence[command.Cut]) == "[cut]"
+    assert command.typename(mitmproxy.types.Data) == "[data]"
+    assert command.typename(mitmproxy.types.CutSpec) == "[cut]"
 
     assert command.typename(flow.Flow) == "flow"
     assert command.typename(typing.Sequence[str]) == "[str]"
 
-    assert command.typename(command.Choice("foo")) == "choice"
-    assert command.typename(command.Path) == "path"
-    assert command.typename(command.Cmd) == "cmd"
+    assert command.typename(mitmproxy.types.Choice("foo")) == "choice"
+    assert command.typename(mitmproxy.types.Path) == "path"
+    assert command.typename(mitmproxy.types.Cmd) == "cmd"
 
 
 class DummyConsole:
@@ -172,7 +264,7 @@ class DummyConsole:
         return [tflow.tflow(resp=True)] * n
 
     @command.command("cut")
-    def cut(self, spec: str) -> command.Cuts:
+    def cut(self, spec: str) -> mitmproxy.types.Data:
         return [["test"]]
 
 
@@ -180,54 +272,10 @@ def test_parsearg():
     with taddons.context() as tctx:
         tctx.master.addons.add(DummyConsole())
         assert command.parsearg(tctx.master.commands, "foo", str) == "foo"
-
-        assert command.parsearg(tctx.master.commands, "1", int) == 1
+        with pytest.raises(exceptions.CommandError, match="Unsupported"):
+            command.parsearg(tctx.master.commands, "foo", type)
         with pytest.raises(exceptions.CommandError):
             command.parsearg(tctx.master.commands, "foo", int)
-
-        assert command.parsearg(tctx.master.commands, "true", bool) is True
-        assert command.parsearg(tctx.master.commands, "false", bool) is False
-        with pytest.raises(exceptions.CommandError):
-            command.parsearg(tctx.master.commands, "flobble", bool)
-
-        assert len(command.parsearg(
-            tctx.master.commands, "2", typing.Sequence[flow.Flow]
-        )) == 2
-        assert command.parsearg(tctx.master.commands, "1", flow.Flow)
-        with pytest.raises(exceptions.CommandError):
-            command.parsearg(tctx.master.commands, "2", flow.Flow)
-        with pytest.raises(exceptions.CommandError):
-            command.parsearg(tctx.master.commands, "0", flow.Flow)
-        with pytest.raises(exceptions.CommandError):
-            command.parsearg(tctx.master.commands, "foo", Exception)
-
-        assert command.parsearg(
-            tctx.master.commands, "foo", command.Cuts
-        ) == [["test"]]
-
-        assert command.parsearg(
-            tctx.master.commands, "foo", typing.Sequence[str]
-        ) == ["foo"]
-        assert command.parsearg(
-            tctx.master.commands, "foo, bar", typing.Sequence[str]
-        ) == ["foo", "bar"]
-
-        a = TAddon()
-        tctx.master.commands.add("choices", a.choices)
-        assert command.parsearg(
-            tctx.master.commands, "one", command.Choice("choices"),
-        ) == "one"
-        with pytest.raises(exceptions.CommandError):
-            assert command.parsearg(
-                tctx.master.commands, "invalid", command.Choice("choices"),
-            )
-
-        assert command.parsearg(
-            tctx.master.commands, "foo", command.Path
-        ) == "foo"
-        assert command.parsearg(
-            tctx.master.commands, "foo", command.Cmd
-        ) == "foo"
 
 
 class TDec:
@@ -265,12 +313,3 @@ def test_verify_arg_signature():
         command.verify_arg_signature(lambda: None, [1, 2], {})
         print('hello there')
     command.verify_arg_signature(lambda a, b: None, [1, 2], {})
-
-
-def test_choice():
-    """
-    basic typechecking for choices should fail as we cannot verify if strings are a valid choice
-    at this point.
-    """
-    c = command.Choice("foo")
-    assert not typecheck.check_command_type("foo", c)

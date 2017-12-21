@@ -41,7 +41,7 @@ def map(km):
         "e",
         """
         console.choose.cmd Format export.formats
-        console.command export.file {choice} @focus ''
+        console.command export.file {choice} @focus
         """,
         ["flowlist", "flowview"],
         "Export this flow to file"
