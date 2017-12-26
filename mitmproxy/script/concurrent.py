@@ -18,7 +18,9 @@ def concurrent(fn):
         )
 
     def _concurrent(*args):
-        # Support @concurrent for class-based addons
+        # When annotating classmethods, "self" is passed as the first argument.
+        # To support both class and static methods, we accept a variable number of arguments
+        # and take the last one as our actual hook object.
         obj = args[-1]
 
         def run():
