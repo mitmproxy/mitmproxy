@@ -81,35 +81,18 @@ def git(args: str) -> str:
 
 
 def get_version(dev: bool = False, build: bool = False) -> str:
-    version = runpy.run_path(VERSION_FILE)["VERSION"]
-    version = re.sub(r"\.dev.+?$", "", version)  # replace dev suffix if present.
-
-    last_tag, tag_dist, commit = git("describe --tags --long").strip().rsplit("-", 2)
-    commit = commit.lstrip("g")[:7]
-    tag_dist = int(tag_dist)
-
-    if tag_dist > 0 and dev:
-        dev_tag = ".dev{tag_dist:04}".format(tag_dist=tag_dist)
-    else:
-        dev_tag = ""
-
-    if tag_dist > 0 and build:
-        # The wheel build tag (we use the commit) must start with a digit, so we include "0x"
-        build_tag = "-0x{commit}".format(commit=commit)
-    else:
-        build_tag = ""
-
-    return version + dev_tag + build_tag
+    x = runpy.run_path(VERSION_FILE)
+    return x["get_version"](dev, build, True)
 
 
 def set_version(dev: bool) -> None:
     """
-    Update version information in mitmproxy's version.py to either include the dev version or not.
+    Update version information in mitmproxy's version.py to either include hardcoded information or not.
     """
-    v = get_version(dev)
-    with open(VERSION_FILE) as f:
+    version = get_version(dev, dev)
+    with open(VERSION_FILE, "r") as f:
         content = f.read()
-    content = re.sub(r'^VERSION = ".+?"', 'VERSION = "{}"'.format(v), content)
+    content = re.sub(r'^VERSION = ".+?"', 'VERSION = "{}"'.format(version), content, flags=re.M)
     with open(VERSION_FILE, "w") as f:
         f.write(content)
 
