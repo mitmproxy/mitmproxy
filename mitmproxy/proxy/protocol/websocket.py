@@ -109,7 +109,7 @@ class WebSocketLayer(base.Layer):
             self.flow.messages.append(websocket_message)
             self.channel.ask("websocket_message", self.flow)
 
-            if not self.flow.stream:
+            if not self.flow.stream and not websocket_message.killed:
                 def get_chunk(payload):
                     if len(payload) == length:
                         # message has the same length, we can reuse the same sizes
@@ -129,14 +129,9 @@ class WebSocketLayer(base.Layer):
                     self.connections[other_conn].send_data(chunk, final)
                     other_conn.send(self.connections[other_conn].bytes_to_send())
 
-            else:
-                self.connections[other_conn].send_data(event.data, event.message_finished)
-                other_conn.send(self.connections[other_conn].bytes_to_send())
-
-        elif self.flow.stream:
+        if self.flow.stream:
             self.connections[other_conn].send_data(event.data, event.message_finished)
             other_conn.send(self.connections[other_conn].bytes_to_send())
-
         return True
 
     def _handle_ping_received(self, event, source_conn, other_conn, is_server):

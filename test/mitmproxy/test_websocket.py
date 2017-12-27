@@ -71,3 +71,9 @@ class TestWebSocketFlow:
         d = tflow.twebsocketflow().handshake_flow.get_state()
         tnetstring.dump(d, b)
         assert b.getvalue()
+
+    def test_message_kill(self):
+        f = tflow.twebsocketflow()
+        assert not f.messages[-1].killed
+        f.messages[-1].kill()
+        assert f.messages[-1].killed
