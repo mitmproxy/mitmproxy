@@ -3,6 +3,7 @@ import pytest
 
 from mitmproxy.io import tnetstring
 from mitmproxy import flowfilter
+from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy.test import tflow
 
 
@@ -41,6 +42,20 @@ class TestWebSocketFlow:
         assert f.handshake_flow is not f2.handshake_flow
         assert f.error.get_state() == f2.error.get_state()
         assert f.error is not f2.error
+
+    def test_kill(self):
+        f = tflow.twebsocketflow()
+        with pytest.raises(ControlException):
+            f.intercept()
+            f.resume()
+            f.kill()
+
+        f = tflow.twebsocketflow()
+        f.intercept()
+        assert f.killable
+        f.kill()
+        assert not f.killable
+        assert f.reply.value == Kill
 
     def test_match(self):
         f = tflow.twebsocketflow()
