@@ -10,23 +10,33 @@ from mitmproxy.utils import strutils, human
 
 
 class WebSocketMessage(serializable.Serializable):
+    """
+    A WebSocket message sent from one endpoint to the other.
+    """
+
     def __init__(
-        self, type: int, from_client: bool, content: bytes, timestamp: Optional[int]=None
+        self, type: int, from_client: bool, content: bytes, timestamp: Optional[int]=None, killed: bool=False
     ) -> None:
         self.type = wsproto.frame_protocol.Opcode(type)  # type: ignore
+        """indicates either TEXT or BINARY (from wsproto.frame_protocol.Opcode)."""
         self.from_client = from_client
+        """True if this messages was sent by the client."""
         self.content = content
+        """A byte-string representing the content of this message."""
         self.timestamp = timestamp or int(time.time())  # type: int
+        """Timestamp of when this message was received or created."""
+        self.killed = killed
+        """True if this messages was killed and should not be sent to the other endpoint."""
 
     @classmethod
     def from_state(cls, state):
         return cls(*state)
 
     def get_state(self):
-        return int(self.type), self.from_client, self.content, self.timestamp
+        return int(self.type), self.from_client, self.content, self.timestamp, self.killed
 
     def set_state(self, state):
-        self.type, self.from_client, self.content, self.timestamp = state
+        self.type, self.from_client, self.content, self.timestamp, self.killed = state
         self.type = wsproto.frame_protocol.Opcode(self.type)  # replace enum with bare int
 
     def __repr__(self):
@@ -35,20 +45,37 @@ class WebSocketMessage(serializable.Serializable):
         else:
             return "binary message: {}".format(strutils.bytes_to_escaped_str(self.content))
 
+    def kill(self):
+        """
+        Kill this message.
+
+        It will not be sent to the other endpoint. This has no effect in streaming mode.
+        """
+        self.killed = True
+
 
 class WebSocketFlow(flow.Flow):
     """
-    A WebsocketFlow is a simplified representation of a Websocket session.
+    A WebsocketFlow is a simplified representation of a Websocket connection.
     """
 
     def __init__(self, client_conn, server_conn, handshake_flow, live=None):
         super().__init__("websocket", client_conn, server_conn, live)
+
         self.messages = []  # type: List[WebSocketMessage]
+        """A list containing all WebSocketMessage's."""
         self.close_sender = 'client'
+        """'client' if the client initiated connection closing."""
         self.close_code = wsproto.frame_protocol.CloseReason.NORMAL_CLOSURE
+        """WebSocket close code."""
         self.close_message = '(message missing)'
+        """WebSocket close message."""
         self.close_reason = 'unknown status code'
+        """WebSocket close reason."""
         self.stream = False
+        """True of this connection is streaming directly to the other endpoint."""
+        self.handshake_flow = handshake_flow
+        """The HTTP flow containing the initial WebSocket handshake."""
 
         if handshake_flow:
             self.client_key = websockets.get_client_key(handshake_flow.request.headers)
@@ -64,8 +91,6 @@ class WebSocketFlow(flow.Flow):
             self.server_accept = ''
             self.server_protocol = ''
             self.server_extensions = ''
-
-        self.handshake_flow = handshake_flow
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     # mypy doesn't support update with kwargs

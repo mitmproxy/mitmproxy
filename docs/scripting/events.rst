@@ -187,8 +187,8 @@ are issued, only new WebSocket messages are called.
 
         - Called when a WebSocket message is received from the client or server. The
           sender and receiver are identifiable. The most recent message will be
-          ``flow.messages[-1]``. The message is user-modifiable. Currently there are
-          two types of messages, corresponding to the BINARY and TEXT frame types.
+          ``flow.messages[-1]``. The message is user-modifiable and is killable.
+          A message is either of TEXT or BINARY type.
 
           *flow*
             A ``models.WebSocketFlow`` object.
