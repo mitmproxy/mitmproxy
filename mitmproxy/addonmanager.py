@@ -230,7 +230,7 @@ class AddonManager:
 
         self.trigger(name, message)
 
-        if message.reply.state != "taken":
+        if message.reply.state == "start":
             message.reply.take()
             if not message.reply.has_message:
                 message.reply.ack()
