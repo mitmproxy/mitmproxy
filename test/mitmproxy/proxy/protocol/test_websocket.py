@@ -221,6 +221,25 @@ class TestSimple(_WebSocketTest):
         assert frame.payload == b'foo'
 
 
+class TestKillFlow(_WebSocketTest):
+
+    @classmethod
+    def handle_websockets(cls, rfile, wfile):
+        wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.TEXT, payload=b'server-foobar')))
+        wfile.flush()
+
+    def test_kill(self):
+        class KillFlow:
+            def websocket_message(self, f):
+                f.kill()
+
+        self.master.addons.add(KillFlow())
+        self.setup_connection()
+
+        frame = websockets.Frame.from_file(self.client.rfile)
+        assert frame.payload == b'foo'
+
+
 class TestSimpleTLS(_WebSocketTest):
     ssl = True
 
