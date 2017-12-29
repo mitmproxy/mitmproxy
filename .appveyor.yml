@@ -34,7 +34,7 @@ install:
 test_script:
   - ps: "tox -- --verbose --cov-report=term"
   - ps: |
-      $Env:VERSION = $(python mitmproxy/version.py)
+      $Env:VERSION = $(python -m mitmproxy.version)
       $Env:SKIP_MITMPROXY = "python -c `"print('skip mitmproxy')`""
       tox -e rtool -- wheel
       tox -e rtool -- bdist
