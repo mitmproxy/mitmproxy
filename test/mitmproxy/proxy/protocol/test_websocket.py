@@ -236,8 +236,8 @@ class TestKillFlow(_WebSocketTest):
         self.master.addons.add(KillFlow())
         self.setup_connection()
 
-        frame = websockets.Frame.from_file(self.client.rfile)
-        assert frame.payload == b'foo'
+        with pytest.raises(exceptions.TcpDisconnect):
+            websockets.Frame.from_file(self.client.rfile)
 
 
 class TestSimpleTLS(_WebSocketTest):

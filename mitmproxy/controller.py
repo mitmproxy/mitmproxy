@@ -105,16 +105,16 @@ class Reply:
         self.q.put(self.value)
 
     def ack(self, force=False):
-        if self.state not in {"start", "taken"}:
-            raise exceptions.ControlException(
-                "Reply is {}, but expected it to be start or taken.".format(self.state)
-            )
         self.send(self.obj, force)
 
     def kill(self, force=False):
         self.send(exceptions.Kill, force)
 
     def send(self, msg, force=False):
+        if self.state not in {"start", "taken"}:
+            raise exceptions.ControlException(
+                "Reply is {}, but expected it to be start or taken.".format(self.state)
+            )
         if self.has_message and not force:
             raise exceptions.ControlException("There is already a reply message.")
         self.value = msg
