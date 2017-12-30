@@ -46,7 +46,7 @@ test_script:
       ) {
         echo "Decrypt license..."
         tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
-        $ibVersion = "17.9.0"
+        $ibVersion = "17.12.0"
         $ibSetup = "C:\projects\mitmproxy\release\installbuilder-installer.exe"
         $ibCli = "C:\Program Files (x86)\BitRock InstallBuilder Enterprise $ibVersion\bin\builder-cli.exe"
         if (!(Test-Path $ibSetup)) {
