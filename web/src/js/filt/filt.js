@@ -1929,7 +1929,7 @@ module.exports = (function() {
     function body(regex){
         regex = new RegExp(regex, "i");
         function bodyFilter(flow){
-            return True;
+            return true;
         }
         bodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
         return bodyFilter;
@@ -1937,7 +1937,7 @@ module.exports = (function() {
     function requestBody(regex){
         regex = new RegExp(regex, "i");
         function requestBodyFilter(flow){
-            return True;
+            return true;
         }
         requestBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
         return requestBodyFilter;
@@ -1945,7 +1945,7 @@ module.exports = (function() {
     function responseBody(regex){
         regex = new RegExp(regex, "i");
         function responseBodyFilter(flow){
-            return True;
+            return true;
         }
         responseBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
         return responseBodyFilter;
