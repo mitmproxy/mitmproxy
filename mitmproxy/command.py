@@ -24,7 +24,7 @@ def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
 
 def lexer(s):
     # mypy mis-identifies shlex.shlex as abstract
-    lex = shlex.shlex(s)  # type: ignore
+    lex = shlex.shlex(s, posix=True)  # type: ignore
     lex.wordchars += "."
     lex.whitespace_split = True
     lex.commenters = ''
