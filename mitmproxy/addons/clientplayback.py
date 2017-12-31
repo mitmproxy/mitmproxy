@@ -27,6 +27,7 @@ class ClientPlayback:
             Stop client replay.
         """
         self.flows = []
+        ctx.log.alert("Client replay stopped.")
         ctx.master.addons.trigger("update", [])
 
     @command.command("replay.client")
@@ -35,6 +36,7 @@ class ClientPlayback:
             Replay requests from flows.
         """
         self.flows = list(flows)
+        ctx.log.alert("Replaying %s flows." % len(self.flows))
         ctx.master.addons.trigger("update", [])
 
     @command.command("replay.client.file")
@@ -43,7 +45,9 @@ class ClientPlayback:
             flows = io.read_flows_from_paths([path])
         except exceptions.FlowReadException as e:
             raise exceptions.CommandError(str(e))
+        ctx.log.alert("Replaying %s flows." % len(self.flows))
         self.flows = flows
+        ctx.master.addons.trigger("update", [])
 
     def configure(self, updated):
         if not self.configured and ctx.options.client_replay:
