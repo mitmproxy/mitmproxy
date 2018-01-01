@@ -15,17 +15,41 @@ from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import eventlog
 
 
+class Header(urwid.AttrWrap):
+    def __init__(self, master, title, focus):
+        self.master = master
+        super().__init__(urwid.Text(title),
+                         "heading" if focus else "heading_inactive"
+                         )
+
+    def mouse_event(self, size, event, button, col, row, focus):
+        if event == "mouse press" and button == 1:
+            if self.attr == "heading_inactive":
+                self.master.window.switch()
+                return True
+
+
+class Body(urwid.WidgetWrap):
+    def __init__(self, w, focus):
+        super().__init__(w)
+        self.f = focus
+
+    def mouse_event(self, size, event, button, col, row, focus):
+        if event == "mouse press" and button == 1:
+            if not self.f:
+                return False
+            else:
+                super().mouse_event(size, event, button, col, row, focus)
+
+
 class StackWidget(urwid.Frame):
-    def __init__(self, widget, title, focus):
+    def __init__(self, master, widget, title, focus):
         if title:
-            header = urwid.AttrWrap(
-                urwid.Text(title),
-                "heading" if focus else "heading_inactive"
-            )
+            header = Header(master, title, focus)
         else:
             header = None
         super().__init__(
-            widget,
+            body=Body(widget, focus),
             header=header
         )
 
@@ -162,6 +186,7 @@ class Window(urwid.Frame):
             else:
                 title = None
             return StackWidget(
+                self.master,
                 widget,
                 title,
                 self.pane == idx
