@@ -2,10 +2,10 @@ import socket
 from OpenSSL import SSL
 
 
-from mitmproxy.contrib import wsproto
-from mitmproxy.contrib.wsproto import events
-from mitmproxy.contrib.wsproto.connection import ConnectionType, WSConnection
-from mitmproxy.contrib.wsproto.extensions import PerMessageDeflate
+import wsproto
+from wsproto import events
+from wsproto.connection import ConnectionType, WSConnection
+from wsproto.extensions import PerMessageDeflate
 
 from mitmproxy import exceptions
 from mitmproxy import flow

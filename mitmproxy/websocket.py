@@ -1,7 +1,8 @@
 import time
 from typing import List, Optional
 
-from mitmproxy.contrib import wsproto
+from wsproto.frame_protocol import CloseReason
+from wsproto.frame_protocol import Opcode
 
 from mitmproxy import flow
 from mitmproxy.net import websockets
@@ -17,7 +18,7 @@ class WebSocketMessage(serializable.Serializable):
     def __init__(
         self, type: int, from_client: bool, content: bytes, timestamp: Optional[int]=None, killed: bool=False
     ) -> None:
-        self.type = wsproto.frame_protocol.Opcode(type)  # type: ignore
+        self.type = Opcode(type)  # type: ignore
         """indicates either TEXT or BINARY (from wsproto.frame_protocol.Opcode)."""
         self.from_client = from_client
         """True if this messages was sent by the client."""
@@ -37,10 +38,10 @@ class WebSocketMessage(serializable.Serializable):
 
     def set_state(self, state):
         self.type, self.from_client, self.content, self.timestamp, self.killed = state
-        self.type = wsproto.frame_protocol.Opcode(self.type)  # replace enum with bare int
+        self.type = Opcode(self.type)  # replace enum with bare int
 
     def __repr__(self):
-        if self.type == wsproto.frame_protocol.Opcode.TEXT:
+        if self.type == Opcode.TEXT:
             return "text message: {}".format(repr(self.content))
         else:
             return "binary message: {}".format(strutils.bytes_to_escaped_str(self.content))
@@ -66,7 +67,7 @@ class WebSocketFlow(flow.Flow):
         """A list containing all WebSocketMessage's."""
         self.close_sender = 'client'
         """'client' if the client initiated connection closing."""
-        self.close_code = wsproto.frame_protocol.CloseReason.NORMAL_CLOSURE
+        self.close_code = CloseReason.NORMAL_CLOSURE
         """WebSocket close code."""
         self.close_message = '(message missing)'
         """WebSocket close message."""
