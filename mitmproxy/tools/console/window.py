@@ -17,9 +17,10 @@ from mitmproxy.tools.console import eventlog
 
 class StackWidgetHeader(urwid.AttrWrap):
     def __init__(self, master, title, focus):
-        super().__init__(urwid.Text(title),
-                         "heading" if focus else "heading_inactive"
-                         )
+        super().__init__(
+            urwid.Text(title),
+            "heading" if focus else "heading_inactive"
+        )
         self.master = master
 
     def mouse_event(self, size, event, button, col, row, focus):
@@ -30,18 +31,19 @@ class StackWidgetHeader(urwid.AttrWrap):
 
 
 class StackWidgetBody(urwid.WidgetWrap):
-    def __init__(self, w, focus):
-        super().__init__(w)
+    def __init__(self, widget, focus):
+        super().__init__(widget)
         self.f = focus
 
     def mouse_event(self, size, event, button, col, row, focus):
-        if event == "mouse press" and button == 1:
-            if self.f:
-                super().mouse_event(size, event, button, col, row, focus)
+        if self.f:
+            super().mouse_event(size, event, button, col, row, focus)
 
 
 class StackWidget(urwid.Frame):
     def __init__(self, master, widget, title, focus):
+        self._selectable = focus
+
         if title:
             header = StackWidgetHeader(master, title, focus)
         else:
