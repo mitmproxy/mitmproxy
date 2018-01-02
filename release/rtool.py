@@ -4,6 +4,7 @@ import contextlib
 import fnmatch
 import os
 import platform
+import re
 import runpy
 import shlex
 import shutil
@@ -79,26 +80,21 @@ def git(args: str) -> str:
         return subprocess.check_output(["git"] + shlex.split(args)).decode()
 
 
-def get_version() -> str:
-    return runpy.run_path(VERSION_FILE)["VERSION"]
+def get_version(dev: bool = False, build: bool = False) -> str:
+    x = runpy.run_path(VERSION_FILE)
+    return x["get_version"](dev, build, True)
 
 
-def get_snapshot_version() -> str:
-    last_tag, tag_dist, commit = git("describe --tags --long").strip().rsplit("-", 2)
-    tag_dist = int(tag_dist)
-    if tag_dist == 0:
-        return get_version()
-    else:
-        # remove the 'g' prefix added by recent git versions
-        if commit.startswith('g'):
-            commit = commit[1:]
-
-        # The wheel build tag (we use the commit) must start with a digit, so we include "0x"
-        return "{version}dev{tag_dist:04}-0x{commit}".format(
-            version=get_version(),  # this should already be the next version
-            tag_dist=tag_dist,
-            commit=commit
-        )
+def set_version(dev: bool) -> None:
+    """
+    Update version information in mitmproxy's version.py to either include hardcoded information or not.
+    """
+    version = get_version(dev, dev)
+    with open(VERSION_FILE, "r") as f:
+        content = f.read()
+    content = re.sub(r'^VERSION = ".+?"', 'VERSION = "{}"'.format(version), content, flags=re.M)
+    with open(VERSION_FILE, "w") as f:
+        f.write(content)
 
 
 def archive_name(bdist: str) -> str:
@@ -116,7 +112,7 @@ def archive_name(bdist: str) -> str:
 
 def wheel_name() -> str:
     return "mitmproxy-{version}-py3-none-any.whl".format(
-        version=get_version(),
+        version=get_version(True),
     )
 
 
@@ -179,6 +175,23 @@ def contributors():
             f.write(contributors_data.encode())
 
 
+@cli.command("wheel")
+def make_wheel():
+    """
+    Build a Python wheel
+    """
+    set_version(True)
+    try:
+        subprocess.check_call([
+            "tox", "-e", "wheel",
+        ], env={
+            **os.environ,
+            "VERSION": get_version(True),
+        })
+    finally:
+        set_version(False)
+
+
 @cli.command("bdist")
 def make_bdist():
     """
@@ -206,24 +219,30 @@ def make_bdist():
                         excludes.append("mitmproxy.tools.web")
                     if tool != "mitmproxy_main":
                         excludes.append("mitmproxy.tools.console")
-                    subprocess.check_call(
-                        [
-                            "pyinstaller",
-                            "--clean",
-                            "--workpath", PYINSTALLER_TEMP,
-                            "--distpath", PYINSTALLER_DIST,
-                            "--additional-hooks-dir", PYINSTALLER_HOOKS,
-                            "--onefile",
-                            "--console",
-                            "--icon", "icon.ico",
-                            # This is PyInstaller, so setting a
-                            # different log level obviously breaks it :-)
-                            # "--log-level", "WARN",
-                        ]
-                        + [x for e in excludes for x in ["--exclude-module", e]]
-                        + PYINSTALLER_ARGS
-                        + [tool]
-                    )
+
+                    # Overwrite mitmproxy/version.py to include commit info
+                    set_version(True)
+                    try:
+                        subprocess.check_call(
+                            [
+                                "pyinstaller",
+                                "--clean",
+                                "--workpath", PYINSTALLER_TEMP,
+                                "--distpath", PYINSTALLER_DIST,
+                                "--additional-hooks-dir", PYINSTALLER_HOOKS,
+                                "--onefile",
+                                "--console",
+                                "--icon", "icon.ico",
+                                # This is PyInstaller, so setting a
+                                # different log level obviously breaks it :-)
+                                # "--log-level", "WARN",
+                            ]
+                            + [x for e in excludes for x in ["--exclude-module", e]]
+                            + PYINSTALLER_ARGS
+                            + [tool]
+                        )
+                    finally:
+                        set_version(False)
                     # Delete the spec file - we're good without.
                     os.remove("{}.spec".format(tool))
 
@@ -299,7 +318,11 @@ def upload_snapshot(host, port, user, private_key, private_key_password, wheel, 
 
             for f in files:
                 local_path = join(DIST_DIR, f)
-                remote_filename = f.replace(get_version(), get_snapshot_version())
+                remote_filename = re.sub(
+                    r"{version}(\.dev\d+(-0x[0-9a-f]+)?)?".format(version=get_version()),
+                    get_version(True, True),
+                    f
+                )
                 symlink_path = "../{}".format(f.replace(get_version(), "latest"))
 
                 # Upload new version

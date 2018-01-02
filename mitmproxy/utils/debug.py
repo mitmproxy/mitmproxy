@@ -1,43 +1,24 @@
 import gc
 import os
+import platform
+import re
+import signal
 import sys
 import threading
-import signal
-import platform
 import traceback
-import subprocess
-
-from mitmproxy import version
 
 from OpenSSL import SSL
 
+from mitmproxy import version
+
 
 def dump_system_info():
-    mitmproxy_version = version.VERSION
-    here = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-    try:
-        git_describe = subprocess.check_output(
-            ['git', 'describe', '--tags', '--long'],
-            stderr=subprocess.STDOUT,
-            cwd=here,
-        )
-    except:
-        pass
-    else:
-        last_tag, tag_dist, commit = git_describe.decode().strip().rsplit("-", 2)
-
-        commit = commit.lstrip("g")  # remove the 'g' prefix added by recent git versions
-        tag_dist = int(tag_dist)
-
-        if tag_dist > 0:
-            tag_dist = "dev{:04}".format(tag_dist)
-        else:
-            tag_dist = ""
-
-        mitmproxy_version += "{tag_dist} ({commit})".format(
-            tag_dist=tag_dist,
-            commit=commit,
-        )
+    mitmproxy_version = version.get_version(True, True)
+    mitmproxy_version = re.sub(
+        r"-0x([0-9a-f]+)",
+        r" (commit \1)",
+        mitmproxy_version
+    )
 
     # PyInstaller builds indicator, if using precompiled binary
     if getattr(sys, 'frozen', False):
