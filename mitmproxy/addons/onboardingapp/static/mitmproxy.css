@@ -1,6 +1,6 @@
-
 #certbank div {
     text-align: center;
+    padding-top: 20px;
 }
 
 .fronttable {
@@ -38,7 +38,6 @@ section {
 .masthead {
     padding: 50px 0 60px;
     text-align: center;
-
 }
 
 .header {
