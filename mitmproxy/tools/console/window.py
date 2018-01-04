@@ -15,43 +15,29 @@ from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import eventlog
 
 
-class StackWidgetHeader(urwid.AttrWrap):
-    def __init__(self, window, title, focus):
-        super().__init__(
-            urwid.Text(title),
-            "heading" if focus else "heading_inactive"
-        )
-        self.window = window
-
-    def mouse_event(self, size, event, button, col, row, focus):
-        if event == "mouse press" and button == 1:
-            if self.attr == "heading_inactive":
-                self.window.switch()
-                return True
-
-
-class StackWidgetBody(urwid.WidgetWrap):
-    def __init__(self, widget, focus):
-        super().__init__(widget)
-        self.f = focus
-
-    def mouse_event(self, size, event, button, col, row, focus):
-        if self.f:
-            super().mouse_event(size, event, button, col, row, focus)
-
-
 class StackWidget(urwid.Frame):
     def __init__(self, window, widget, title, focus):
-        self._selectable = focus
+        self.f = focus
+        self.window = window
 
         if title:
-            header = StackWidgetHeader(window, title, focus)
+            header = urwid.AttrWrap(
+                urwid.Text(title),
+                "heading" if focus else "heading_inactive"
+            )
         else:
             header = None
         super().__init__(
-            StackWidgetBody(widget, focus),
+            widget,
             header=header
         )
+
+    def mouse_event(self, size, event, button, col, row, focus):
+        if event == "mouse press" and button == 1:
+            if not self.f:
+                self.window.switch()
+            else:
+                super().mouse_event(size, event, button, col, row, focus)
 
     def keypress(self, size, key):
         # Make sure that we don't propagate cursor events outside of the widget.
