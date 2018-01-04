@@ -234,28 +234,34 @@ class Window(urwid.Frame):
             self.view_changed()
             self.focus_changed()
 
+    def stacks_sorted_by_focus(self):
+        """
+        Returns:
+            self.stacks, with the focused stack first.
+        """
+        stacks = self.stacks.copy()
+        stacks.insert(0, stacks.pop(self.pane))
+        return stacks
+
     def current(self, keyctx):
         """
-            Returns the active widget, but only the current focus or overlay has
-            a matching key context.
+        Returns the active widget with a matching key context, including overlays.
+        If multiple stacks have an active widget with a matching key context,
+        the currently focused stack is preferred.
         """
-        t = self.focus_stack().top_widget()
-        if t.keyctx == keyctx:
-            return t
+        for s in self.stacks_sorted_by_focus():
+            t = s.top_widget()
+            if t.keyctx == keyctx:
+                return t
 
     def current_window(self, keyctx):
         """
-            Returns the active window, ignoring overlays.
+        Returns the active window with a matching key context, ignoring overlays.
+        If multiple stacks have an active widget with a matching key context,
+        the currently focused stack is preferred.
         """
-        t = self.focus_stack().top_window()
-        if t.keyctx == keyctx:
-            return t
-
-    def any(self, keyctx):
-        """
-            Returns the top window of either stack if they match the context.
-        """
-        for t in [x.top_window() for x in self.stacks]:
+        for s in self.stacks_sorted_by_focus():
+            t = s.top_window()
             if t.keyctx == keyctx:
                 return t
 
