@@ -17,7 +17,7 @@ from mitmproxy.tools.console import eventlog
 
 class StackWidget(urwid.Frame):
     def __init__(self, window, widget, title, focus):
-        self.is_focus = focus
+        self.is_focused = focus
         self.window = window
 
         if title:
@@ -34,7 +34,7 @@ class StackWidget(urwid.Frame):
 
     def mouse_event(self, size, event, button, col, row, focus):
         if event == "mouse press" and button == 1:
-            if not self.is_focus:
+            if not self.is_focused:
                 self.window.switch()
                 return True
             else:
