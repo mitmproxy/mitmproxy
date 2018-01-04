@@ -60,5 +60,5 @@ def get_version(dev: bool = False, build: bool = False, refresh: bool = False) -
     return mitmproxy_version
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print(VERSION)

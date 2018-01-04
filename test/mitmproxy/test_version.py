@@ -1,3 +1,4 @@
+import pathlib
 import runpy
 import subprocess
 from unittest import mock
@@ -6,7 +7,9 @@ from mitmproxy import version
 
 
 def test_version(capsys):
-    runpy.run_module('mitmproxy.version', run_name='__main__')
+    here = pathlib.Path(__file__).absolute().parent
+    version_file = here / ".." / ".." / "mitmproxy" / "version.py"
+    runpy.run_path(str(version_file), run_name='__main__')
     stdout, stderr = capsys.readouterr()
     assert len(stdout) > 0
     assert stdout.strip() == version.VERSION
