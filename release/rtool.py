@@ -299,11 +299,15 @@ def upload_snapshot(host, port, user, private_key, private_key_password, wheel, 
     """
     Upload snapshot to snapshot server
     """
+    cnopts = pysftp.CnOpts(
+        knownhosts=join(RELEASE_DIR, 'known_hosts')
+    )
     with pysftp.Connection(host=host,
                            port=port,
                            username=user,
                            private_key=private_key,
-                           private_key_pass=private_key_password) as sftp:
+                           private_key_pass=private_key_password,
+                           cnopts=cnopts) as sftp:
         dir_name = "snapshots/v{}".format(get_version())
         sftp.makedirs(dir_name)
         with sftp.cd(dir_name):

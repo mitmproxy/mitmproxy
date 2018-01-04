@@ -79,6 +79,7 @@ deploy_script:
       ($Env:TOXENV -match "py35") -and
       (($Env:APPVEYOR_REPO_BRANCH -In ("master", "pyinstaller")) -or ($Env:APPVEYOR_REPO_TAG -match "true"))
     ) {
+      tox -e rtool -- decrypt release\known_hosts.enc release\known_hosts
       tox -e rtool -- upload-snapshot --bdist --wheel --installer
     }
 

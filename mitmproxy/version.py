@@ -48,7 +48,7 @@ def get_version(dev: bool = False, build: bool = False, refresh: bool = False) -
 
             # Add suffix for non-tagged releases
             if tag_dist > 0:
-                mitmproxy_version += ".dev{tag_dist:04}".format(tag_dist=tag_dist)
+                mitmproxy_version += ".dev{tag_dist}".format(tag_dist=tag_dist)
                 # The wheel build tag (we use the commit) must start with a digit, so we include "0x"
                 mitmproxy_version += "-0x{commit}".format(commit=commit)
 
