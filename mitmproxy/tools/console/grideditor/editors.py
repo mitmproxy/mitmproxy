@@ -1,13 +1,14 @@
+import typing
 
 from mitmproxy import exceptions
+from mitmproxy.net.http import Headers
 from mitmproxy.tools.console import layoutwidget
+from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.grideditor import base
-from mitmproxy.tools.console.grideditor import col
-from mitmproxy.tools.console.grideditor import col_text
 from mitmproxy.tools.console.grideditor import col_bytes
 from mitmproxy.tools.console.grideditor import col_subgrid
-from mitmproxy.tools.console import signals
-from mitmproxy.net.http import Headers
+from mitmproxy.tools.console.grideditor import col_text
+from mitmproxy.tools.console.grideditor import col_viewany
 
 
 class QueryEditor(base.FocusEditor):
@@ -67,7 +68,6 @@ class RequestFormEditor(base.FocusEditor):
 
 class PathEditor(base.FocusEditor):
     # TODO: Next row on enter?
-
     title = "Edit Path Components"
     columns = [
         col_text.Column("Component"),
@@ -175,11 +175,22 @@ class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
 class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
     title = None  # type: str
 
-    def __init__(self, master, vals):
+    def __init__(
+            self,
+            master,
+            vals: typing.Union[
+                typing.List[typing.List[typing.Any]],
+                typing.List[typing.Any],
+                str,
+            ]) -> None:
         if vals:
+            # Whatever vals is, make it a list of rows containing lists of column values.
+            if isinstance(vals, str):
+                vals = [vals]
             if not isinstance(vals[0], list):
                 vals = [[i] for i in vals]
-            self.columns = [col.Column("")] * len(vals[0])
+
+            self.columns = [col_viewany.Column("")] * len(vals[0])
         super().__init__(master, vals, self.callback)
 
     def callback(self, vals):

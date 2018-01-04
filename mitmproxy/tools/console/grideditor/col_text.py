@@ -21,7 +21,7 @@ class Column(col_bytes.Column):
         return TEdit(data, self.encoding_args)
 
     def blank(self):
-        return u""
+        return ""
 
 
 # This is the same for both edit and display.
