@@ -33,10 +33,9 @@ class StackWidget(urwid.Frame):
         )
 
     def mouse_event(self, size, event, button, col, row, focus):
-        if event == "mouse press" and button == 1:
-            if not self.is_focused:
-                self.window.switch()
-            return super().mouse_event(size, event, button, col, row, focus)
+        if event == "mouse press" and button == 1 and not self.is_focused:
+            self.window.switch()
+        return super().mouse_event(size, event, button, col, row, focus)
 
     def keypress(self, size, key):
         # Make sure that we don't propagate cursor events outside of the widget.
