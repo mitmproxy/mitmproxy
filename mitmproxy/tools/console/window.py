@@ -36,6 +36,7 @@ class StackWidget(urwid.Frame):
         if event == "mouse press" and button == 1:
             if not self.f:
                 self.window.switch()
+                return True
             else:
                 super().mouse_event(size, event, button, col, row, focus)
 
