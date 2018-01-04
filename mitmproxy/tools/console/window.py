@@ -16,7 +16,10 @@ from mitmproxy.tools.console import eventlog
 
 
 class StackWidget(urwid.Frame):
-    def __init__(self, widget, title, focus):
+    def __init__(self, window, widget, title, focus):
+        self.is_focused = focus
+        self.window = window
+
         if title:
             header = urwid.AttrWrap(
                 urwid.Text(title),
@@ -28,6 +31,11 @@ class StackWidget(urwid.Frame):
             widget,
             header=header
         )
+
+    def mouse_event(self, size, event, button, col, row, focus):
+        if event == "mouse press" and button == 1 and not self.is_focused:
+            self.window.switch()
+        return super().mouse_event(size, event, button, col, row, focus)
 
     def keypress(self, size, key):
         # Make sure that we don't propagate cursor events outside of the widget.
@@ -162,6 +170,7 @@ class Window(urwid.Frame):
             else:
                 title = None
             return StackWidget(
+                self,
                 widget,
                 title,
                 self.pane == idx
