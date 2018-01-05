@@ -11,6 +11,8 @@ def test_recordingmaster():
         ctx.log.error("foo")
         assert not tctx.master.has_log("foo", level="debug")
         assert tctx.master.has_log("foo", level="error")
+        assert tctx.master.has_log("Permission denied", level="error")
+        assert tctx.master.has_log("Is a directory", level="error")
 
 
 def test_dumplog():
