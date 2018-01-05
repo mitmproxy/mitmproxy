@@ -13,6 +13,7 @@ from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import tabs
 import mitmproxy.tools.console.master  # noqa
+from mitmproxy.utils import strutils
 
 
 class SearchError(Exception):
@@ -152,8 +153,30 @@ class FlowDetails(tabs.Tabs):
 
     def conn_text(self, conn):
         if conn:
+            hdrs = []
+            for k, v in conn.headers.fields:
+                # This will always force an ascii representation of headers. For example, if the server sends a
+                #
+                #     X-Authors: Made with ❤ in Hamburg
+                #
+                # header, mitmproxy will display the following:
+                #
+                #     X-Authors: Made with \xe2\x9d\xa4 in Hamburg.
+                #
+                # The alternative would be to just use the header's UTF-8 representation and maybe
+                # do `str.replace("\t", "\\t")` to exempt tabs from urwid's special characters escaping [1].
+                # That would in some terminals allow rendering UTF-8 characters, but the mapping
+                # wouldn't be bijective, i.e. a user couldn't distinguish "\\t" and "\t".
+                # Also, from a security perspective, a mitmproxy user couldn't be fooled by homoglyphs.
+                #
+                # 1) https://github.com/mitmproxy/mitmproxy/issues/1833
+                #    https://github.com/urwid/urwid/blob/6608ee2c9932d264abd1171468d833b7a4082e13/urwid/display_common.py#L35-L36,
+
+                k = strutils.bytes_to_escaped_str(k) + ":"
+                v = strutils.bytes_to_escaped_str(v)
+                hdrs.append((k, v))
             txt = common.format_keyvals(
-                [(h + ":", v) for (h, v) in conn.headers.items(multi=True)],
+                hdrs,
                 key_format="header"
             )
             viewmode = self.master.commands.call("console.flowview.mode")
