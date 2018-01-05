@@ -66,7 +66,7 @@ REPLACEMENTS = {
     "--palette": "console_palette",
     "--palette-transparent": "console_palette_transparent:",
     "--follow": "console_focus_follow",
-    "--order": "console_order",
+    "--order": "view_order",
     "--no-mouse": "console_mouse",
     "--reverse": "view_order_reversed",
     "--no-http2-priority": "http2_priority",

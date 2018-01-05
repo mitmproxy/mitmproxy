@@ -67,7 +67,7 @@ def map(km):
         "o",
         """
         console.choose.cmd Order view.order.options
-        set console_order={choice}
+        set view_order={choice}
         """,
         ["flowlist"],
         "Set flow list order"
