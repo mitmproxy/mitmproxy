@@ -31,8 +31,8 @@ def treq(**kwargs):
         http_version=b"HTTP/1.1",
         headers=http.Headers(((b"header", b"qvalue"), (b"content-length", b"7"))),
         content=b"content",
-        timestamp_start=1,
-        timestamp_end=2,
+        timestamp_start=946681200,
+        timestamp_end=946681201,
     )
     default.update(kwargs)
     return http.Request(**default)
@@ -49,8 +49,8 @@ def tresp(**kwargs):
         reason=b"OK",
         headers=http.Headers(((b"header-response", b"svalue"), (b"content-length", b"7"))),
         content=b"message",
-        timestamp_start=1,
-        timestamp_end=2,
+        timestamp_start=946681202,
+        timestamp_end=946681203,
     )
     default.update(kwargs)
     return http.Response(**default)

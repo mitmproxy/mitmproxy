@@ -76,7 +76,7 @@ class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
 
     def filtexp(self):
         text = []
-        text.extend(common.format_keyvals(flowfilter.help, key="key", val="text", indent=4))
+        text.extend(common.format_keyvals(flowfilter.help, indent=4))
         text.append(
             urwid.Text(
                 [
@@ -96,7 +96,7 @@ class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
             ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
         ]
         text.extend(
-            common.format_keyvals(examples, key="key", val="text", indent=4)
+            common.format_keyvals(examples, indent=4)
         )
         return CListBox(text)
 

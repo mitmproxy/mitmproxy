@@ -43,9 +43,11 @@ def format_dict(
 ) -> typing.Iterator[TViewLine]:
     """
     Helper function that transforms the given dictionary into a list of
+    [
         ("key",   key  )
         ("value", value)
-    tuples, where key is padded to a uniform width.
+    ]
+    entries, where key is padded to a uniform width.
     """
     max_key_len = max(len(k) for k in d.keys())
     max_key_len = min(max_key_len, KEY_MAX)

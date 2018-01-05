@@ -41,7 +41,7 @@ def test_order_generators():
     tf = tflow.tflow(resp=True)
 
     rs = view.OrderRequestStart(v)
-    assert rs.generate(tf) == 1
+    assert rs.generate(tf) == 946681200
 
     rm = view.OrderRequestMethod(v)
     assert rm.generate(tf) == tf.request.method

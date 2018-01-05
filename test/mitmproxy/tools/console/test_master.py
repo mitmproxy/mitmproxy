@@ -4,20 +4,7 @@ from mitmproxy import options
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.tools import console
-from mitmproxy.tools.console import common
 from ... import tservers
-
-
-def test_format_keyvals():
-    assert common.format_keyvals(
-        [
-            ("aa", "bb"),
-            None,
-            ("cc", "dd"),
-            (None, "dd"),
-            (None, "dd"),
-        ]
-    )
 
 
 def test_options():
