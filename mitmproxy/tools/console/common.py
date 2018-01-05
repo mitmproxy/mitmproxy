@@ -205,19 +205,15 @@ def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
         focus=focus,
         extended=extended,
         max_url_len=max_url_len,
-
-        intercepted = f.intercepted,
-        acked = acked,
-
-        req_timestamp = f.request.timestamp_start,
-        req_is_replay = f.request.is_replay,
-        req_method = f.request.method,
-        req_url = f.request.pretty_url if hostheader else f.request.url,
-        req_http_version = f.request.http_version,
-
-        err_msg = f.error.msg if f.error else None,
-
-        marked = f.marked,
+        intercepted=f.intercepted,
+        acked=acked,
+        req_timestamp=f.request.timestamp_start,
+        req_is_replay=f.request.is_replay,
+        req_method=f.request.method,
+        req_url=f.request.pretty_url if hostheader else f.request.url,
+        req_http_version=f.request.http_version,
+        err_msg=f.error.msg if f.error else None,
+        marked=f.marked,
     )
     if f.response:
         if f.response.raw_content:
@@ -232,11 +228,11 @@ def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
         roundtrip = human.pretty_duration(duration)
 
         d.update(dict(
-            resp_code = f.response.status_code,
-            resp_reason = f.response.reason,
-            resp_is_replay = f.response.is_replay,
-            resp_clen = contentdesc,
-            roundtrip = roundtrip,
+            resp_code=f.response.status_code,
+            resp_reason=f.response.reason,
+            resp_is_replay=f.response.is_replay,
+            resp_clen=contentdesc,
+            roundtrip=roundtrip,
         ))
 
         t = f.response.headers.get("content-type")
