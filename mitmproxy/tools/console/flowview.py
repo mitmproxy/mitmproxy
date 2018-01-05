@@ -153,7 +153,8 @@ class FlowDetails(tabs.Tabs):
     def conn_text(self, conn):
         if conn:
             txt = common.format_keyvals(
-                [(h + ":", v) for (h, v) in conn.headers.items(multi=True)],
+                [(h + ":", repr(v)[1:-1])
+                 for (h, v) in conn.headers.items(multi=True)],
                 key = "header",
                 val = "text"
             )
