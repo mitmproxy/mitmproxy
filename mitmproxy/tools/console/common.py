@@ -1,9 +1,10 @@
 import platform
+import typing
+from functools import lru_cache
 
 import urwid
 import urwid.util
 
-from functools import lru_cache
 from mitmproxy.utils import human
 
 # Detect Windows Subsystem for Linux
@@ -43,41 +44,48 @@ def highlight_key(str, key, textattr="text", keyattr="key"):
 KEY_MAX = 30
 
 
-def format_keyvals(lst, key="key", val="text", indent=0):
+def format_keyvals(
+        entries: typing.List[typing.Tuple[str, typing.Union[None, str, urwid.Widget]]],
+        key_format: str = "key",
+        value_format: str = "text",
+        indent: int = 0
+) -> typing.List[urwid.Columns]:
     """
-        Format a list of (key, value) tuples.
+    Format a list of (key, value) tuples.
 
-        If key is None, it's treated specially:
-            - We assume a sub-value, and add an extra indent.
-            - The value is treated as a pre-formatted list of directives.
+    Args:
+        entries: The list to format. keys must be strings, values can also be None or urwid widgets.
+            The latter makes it possible to use the result of format_keyvals() as a value.
+        key_format: The display attribute for the key.
+        value_format: The display attribute for the value.
+        indent: Additional indent to apply.
     """
+    max_key_len = max((len(k) for k, v in entries if k is not None), default=0)
+    max_key_len = min(max_key_len, KEY_MAX)
+
+    if indent > 2:
+        indent -= 2  # We use dividechars=2 below, which already adds two empty spaces
+
     ret = []
-    if lst:
-        maxk = min(max(len(i[0]) for i in lst if i and i[0]), KEY_MAX)
-        for i, kv in enumerate(lst):
-            if kv is None:
-                ret.append(urwid.Text(""))
-            else:
-                if isinstance(kv[1], urwid.Widget):
-                    v = kv[1]
-                elif kv[1] is None:
-                    v = urwid.Text("")
-                else:
-                    v = urwid.Text([(val, kv[1])])
-                ret.append(
-                    urwid.Columns(
-                        [
-                            ("fixed", indent, urwid.Text("")),
-                            (
-                                "fixed",
-                                maxk,
-                                urwid.Text([(key, kv[0] or "")])
-                            ),
-                            v
-                        ],
-                        dividechars = 2
-                    )
-                )
+    for k, v in entries:
+        if v is None:
+            v = urwid.Text("")
+        elif not isinstance(v, urwid.Widget):
+            v = urwid.Text([(value_format, v)])
+        ret.append(
+            urwid.Columns(
+                [
+                    ("fixed", indent, urwid.Text("")),
+                    (
+                        "fixed",
+                        max_key_len,
+                        urwid.Text([(key_format, k)])
+                    ),
+                    v
+                ],
+                dividechars=2
+            )
+        )
     return ret
 
 

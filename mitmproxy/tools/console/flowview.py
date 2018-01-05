@@ -154,8 +154,7 @@ class FlowDetails(tabs.Tabs):
         if conn:
             txt = common.format_keyvals(
                 [(h + ":", v) for (h, v) in conn.headers.items(multi=True)],
-                key = "header",
-                val = "text"
+                key_format="header"
             )
             viewmode = self.master.commands.call("console.flowview.mode")
             msg, body = self.content_view(viewmode, conn)
