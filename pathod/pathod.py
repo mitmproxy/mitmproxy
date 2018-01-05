@@ -170,7 +170,7 @@ class PathodHandler(tcp.BaseHandler):
                 ),
                 cipher=None,
             )
-            if self.ssl_established:
+            if self.tls_established:
                 retlog["cipher"] = self.get_current_cipher()
 
             m = utils.MemBool()

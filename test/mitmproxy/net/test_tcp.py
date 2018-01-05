@@ -408,7 +408,7 @@ class TestSNI(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_ssl(sni="mitmproxyäöüß.example.com")
-            assert c.ssl_established
+            assert c.tls_established
             assert "doesn't match" not in str(c.ssl_verification_error)
 
 

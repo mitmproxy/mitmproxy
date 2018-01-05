@@ -102,7 +102,7 @@ class _WebSocketTestBase:
 
         if self.ssl:
             self.client.convert_to_ssl()
-            assert self.client.ssl_established
+            assert self.client.tls_established
 
         request = http.Request(
             "relative",

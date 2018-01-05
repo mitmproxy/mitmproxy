@@ -41,10 +41,10 @@ class TestClientConnection:
     def test_tls_established_property(self):
         c = tflow.tclient_conn()
         c.tls_established = True
-        assert c.ssl_established
+        assert c.tls_established
         assert c.tls_established
         c.tls_established = False
-        assert not c.ssl_established
+        assert not c.tls_established
         assert not c.tls_established
 
     def test_make_dummy(self):
@@ -113,10 +113,10 @@ class TestServerConnection:
     def test_tls_established_property(self):
         c = tflow.tserver_conn()
         c.tls_established = True
-        assert c.ssl_established
+        assert c.tls_established
         assert c.tls_established
         c.tls_established = False
-        assert not c.ssl_established
+        assert not c.tls_established
         assert not c.tls_established
 
     def test_make_dummy(self):

@@ -267,14 +267,14 @@ class _CutSpecType(_BaseType):
         "client_conn.address.host",
         "client_conn.tls_version",
         "client_conn.sni",
-        "client_conn.ssl_established",
+        "client_conn.tls_established",
 
         "server_conn.address.port",
         "server_conn.address.host",
         "server_conn.ip_address.host",
         "server_conn.tls_version",
         "server_conn.sni",
-        "server_conn.ssl_established",
+        "server_conn.tls_established",
     ]
 
     def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:

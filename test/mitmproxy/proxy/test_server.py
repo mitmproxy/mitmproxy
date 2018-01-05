@@ -709,7 +709,7 @@ class TestProxy(tservers.HTTPProxyTest):
         first_flow = self.master.state.flows[0]
         second_flow = self.master.state.flows[1]
         assert first_flow.server_conn.timestamp_tcp_setup
-        assert first_flow.server_conn.timestamp_ssl_setup is None
+        assert first_flow.server_conn.timestamp_tls_setup is None
         assert second_flow.server_conn.timestamp_tcp_setup
         assert first_flow.server_conn.timestamp_tcp_setup == second_flow.server_conn.timestamp_tcp_setup
 
@@ -728,7 +728,7 @@ class TestProxySSL(tservers.HTTPProxyTest):
         f = self.pathod("304:b@10k")
         assert f.status_code == 304
         first_flow = self.master.state.flows[0]
-        assert first_flow.server_conn.timestamp_ssl_setup
+        assert first_flow.server_conn.timestamp_tls_setup
 
     def test_via(self):
         # tests that the ssl timestamp is present when ssl is used

@@ -524,7 +524,7 @@ class TlsLayer(base.Layer):
                 if alpn and b"h2" in alpn and not self.config.options.http2:
                     alpn.remove(b"h2")
 
-            if self.client_conn.ssl_established and self.client_conn.get_alpn_proto_negotiated():
+            if self.client_conn.tls_established and self.client_conn.get_alpn_proto_negotiated():
                 # If the client has already negotiated an ALP, then force the
                 # server to use the same. This can only happen if the host gets
                 # changed after the initial connection was established. E.g.:
