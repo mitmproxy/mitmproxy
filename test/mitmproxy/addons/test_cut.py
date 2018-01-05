@@ -23,8 +23,8 @@ def test_extract():
         ["request.text", "content"],
         ["request.content", b"content"],
         ["request.raw_content", b"content"],
-        ["request.timestamp_start", "1"],
-        ["request.timestamp_end", "2"],
+        ["request.timestamp_start", "946681200"],
+        ["request.timestamp_end", "946681201"],
         ["request.header[header]", "qvalue"],
 
         ["response.status_code", "200"],
@@ -33,8 +33,8 @@ def test_extract():
         ["response.content", b"message"],
         ["response.raw_content", b"message"],
         ["response.header[header-response]", "svalue"],
-        ["response.timestamp_start", "1"],
-        ["response.timestamp_end", "2"],
+        ["response.timestamp_start", "946681202"],
+        ["response.timestamp_end", "946681203"],
 
         ["client_conn.address.port", "22"],
         ["client_conn.address.host", "127.0.0.1"],
@@ -49,10 +49,9 @@ def test_extract():
         ["server_conn.sni", "address"],
         ["server_conn.ssl_established", "false"],
     ]
-    for t in tests:
-        ret = cut.extract(t[0], tf)
-        if ret != t[1]:
-            raise AssertionError("%s: Expected %s, got %s" % (t[0], t[1], ret))
+    for spec, expected in tests:
+        ret = cut.extract(spec, tf)
+        assert spec and ret == expected
 
     with open(tutils.test_data.path("mitmproxy/net/data/text_cert"), "rb") as f:
         d = f.read()
