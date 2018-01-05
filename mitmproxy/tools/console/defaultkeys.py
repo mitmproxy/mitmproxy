@@ -74,7 +74,7 @@ def map(km):
     )
     km.add("r", "replay.client @focus", ["flowlist", "flowview"], "Replay this flow")
     km.add("S", "console.command replay.server ", ["flowlist"], "Start server replay")
-    km.add("v", "set console_order_reversed=toggle", ["flowlist"], "Reverse flow list order")
+    km.add("v", "set view_order_reversed=toggle", ["flowlist"], "Reverse flow list order")
     km.add("U", "flow.mark @all false", ["flowlist"], "Un-set all marks")
     km.add("w", "console.command save.file @shown ", ["flowlist"], "Save listed flows to file")
     km.add("V", "flow.revert @focus", ["flowlist", "flowview"], "Revert changes to this flow")
