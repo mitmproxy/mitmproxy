@@ -161,8 +161,8 @@ def convert_5_6(data):
     data["server_conn"]["tls_established"] = data["server_conn"].pop("ssl_established")
     data["server_conn"]["timestamp_tls_setup"] = data["server_conn"].pop("timestamp_ssl_setup")
     if data["server_conn"]["via"]:
-        data["server_conn"]["via"]["tls_established"] = data["server_conn"]["via"].pop("ssl_established", None)
-        data["server_conn"]["via"]["timestamp_tls_setup"] = data["server_conn"]["via"].pop("timestamp_ssl_setup", None)
+        data["server_conn"]["via"]["tls_established"] = data["server_conn"]["via"].pop("ssl_established")
+        data["server_conn"]["via"]["timestamp_tls_setup"] = data["server_conn"]["via"].pop("timestamp_ssl_setup")
     return data
 
 

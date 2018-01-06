@@ -143,9 +143,9 @@ class TcpMixin:
 
         # Test that we get the original SSL cert
         if self.ssl:
-            i_cert = certs.SSLCert(i.sslinfo.certchain[0])
-            i2_cert = certs.SSLCert(i2.sslinfo.certchain[0])
-            n_cert = certs.SSLCert(n.sslinfo.certchain[0])
+            i_cert = certs.Cert(i.sslinfo.certchain[0])
+            i2_cert = certs.Cert(i2.sslinfo.certchain[0])
+            n_cert = certs.Cert(n.sslinfo.certchain[0])
 
             assert i_cert == i2_cert
             assert i_cert != n_cert
@@ -188,9 +188,9 @@ class TcpMixin:
 
         # Test that we get the original SSL cert
         if self.ssl:
-            i_cert = certs.SSLCert(i.sslinfo.certchain[0])
-            i2_cert = certs.SSLCert(i2.sslinfo.certchain[0])
-            n_cert = certs.SSLCert(n.sslinfo.certchain[0])
+            i_cert = certs.Cert(i.sslinfo.certchain[0])
+            i2_cert = certs.Cert(i2.sslinfo.certchain[0])
+            n_cert = certs.Cert(n.sslinfo.certchain[0])
 
             assert i_cert == i2_cert
             assert i_cert != n_cert
@@ -1149,7 +1149,7 @@ class AddUpstreamCertsToClientChainMixin:
     def test_add_upstream_certs_to_client_chain(self):
         with open(self.servercert, "rb") as f:
             d = f.read()
-        upstreamCert = certs.SSLCert.from_pem(d)
+        upstreamCert = certs.Cert.from_pem(d)
         p = self.pathoc()
         with p.connect():
             upstream_cert_found_in_client_chain = False

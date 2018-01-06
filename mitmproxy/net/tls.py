@@ -213,7 +213,7 @@ def create_client_context(
     ) -> bool:
         if is_cert_verified and depth == 0:
             # Verify hostname of leaf certificate.
-            cert = certs.SSLCert(x509)
+            cert = certs.Cert(x509)
             try:
                 crt = dict(
                     subjectAltName=[("DNS", x.decode("ascii", "strict")) for x in cert.altnames]
@@ -270,17 +270,17 @@ def create_client_context(
 
 
 def create_server_context(
-        cert: typing.Union[certs.SSLCert, str],
+        cert: typing.Union[certs.Cert, str],
         key: SSL.PKey,
         handle_sni: typing.Optional[typing.Callable[[SSL.Connection], None]] = None,
         request_client_cert: bool = False,
         chain_file=None,
         dhparams=None,
-        extra_chain_certs: typing.Iterable[certs.SSLCert] = None,
+        extra_chain_certs: typing.Iterable[certs.Cert] = None,
         **sslctx_kwargs
 ) -> SSL.Context:
     """
-        cert: A certs.SSLCert object or the path to a certificate
+        cert: A certs.Cert object or the path to a certificate
         chain file.
 
         handle_sni: SNI handler, should take a connection object. Server
@@ -321,7 +321,7 @@ def create_server_context(
     )
 
     context.use_privatekey(key)
-    if isinstance(cert, certs.SSLCert):
+    if isinstance(cert, certs.Cert):
         context.use_certificate(cert.x509)
     else:
         context.use_certificate_chain_file(cert)

@@ -400,11 +400,11 @@ class TCPClient(_Connection):
             else:
                 raise exceptions.TlsException("SSL handshake error: %s" % repr(v))
 
-        self.cert = certs.SSLCert(self.connection.get_peer_certificate())
+        self.cert = certs.Cert(self.connection.get_peer_certificate())
 
         # Keep all server certificates in a list
         for i in self.connection.get_peer_cert_chain():
-            self.server_certs.append(certs.SSLCert(i))
+            self.server_certs.append(certs.Cert(i))
 
         self.tls_established = True
         self.rfile.set_descriptor(self.connection)
@@ -510,7 +510,7 @@ class BaseHandler(_Connection):
         self.tls_established = True
         cert = self.connection.get_peer_certificate()
         if cert:
-            self.clientcert = certs.SSLCert(cert)
+            self.clientcert = certs.Cert(cert)
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
 

@@ -79,7 +79,7 @@ class SSLInfo:
             }
             t = types.get(pk.type(), "Uknown")
             parts.append("\tPubkey: %s bit %s" % (pk.bits(), t))
-            s = certs.SSLCert(i)
+            s = certs.Cert(i)
             if s.altnames:
                 parts.append("\tSANs: %s" % " ".join(strutils.always_str(n, "utf8") for n in s.altnames))
         return "\n".join(parts)

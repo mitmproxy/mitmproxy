@@ -55,7 +55,7 @@ def test_extract():
 
     with open(tutils.test_data.path("mitmproxy/net/data/text_cert"), "rb") as f:
         d = f.read()
-    c1 = certs.SSLCert.from_pem(d)
+    c1 = certs.Cert.from_pem(d)
     tf.server_conn.cert = c1
     assert "CERTIFICATE" in cut.extract("server_conn.cert", tf)
 

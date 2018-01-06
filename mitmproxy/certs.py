@@ -112,7 +112,7 @@ def dummy_cert(privkey, cacert, commonname, sans):
             [OpenSSL.crypto.X509Extension(b"subjectAltName", False, ss)])
     cert.set_pubkey(cacert.get_pubkey())
     cert.sign(privkey, "sha256")
-    return SSLCert(cert)
+    return Cert(cert)
 
 
 class CertStoreEntry:
@@ -249,7 +249,7 @@ class CertStore:
     def add_cert_file(self, spec: str, path: str) -> None:
         with open(path, "rb") as f:
             raw = f.read()
-        cert = SSLCert(
+        cert = Cert(
             OpenSSL.crypto.load_certificate(
                 OpenSSL.crypto.FILETYPE_PEM,
                 raw))
@@ -345,7 +345,7 @@ class _GeneralNames(univ.SequenceOf):
         constraint.ValueSizeConstraint(1, 1024)
 
 
-class SSLCert(serializable.Serializable):
+class Cert(serializable.Serializable):
 
     def __init__(self, cert):
         """
