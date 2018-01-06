@@ -238,11 +238,11 @@ class TestDaemonHTTP2(PathocTestDaemon):
             http2_skip_connection_preface=True,
         )
 
-        tmp_convert_to_ssl = c.convert_to_ssl
-        c.convert_to_ssl = Mock()
-        c.convert_to_ssl.side_effect = tmp_convert_to_ssl
+        tmp_convert_to_tls = c.convert_to_tls
+        c.convert_to_tls = Mock()
+        c.convert_to_tls.side_effect = tmp_convert_to_tls
         with c.connect():
-            _, kwargs = c.convert_to_ssl.call_args
+            _, kwargs = c.convert_to_tls.call_args
             assert set(kwargs['alpn_protos']) == set([b'http/1.1', b'h2'])
 
     def test_request(self):

@@ -579,7 +579,7 @@ class TestSocks5SSL(tservers.SocksModeTest):
         p = self.pathoc_raw()
         with p.connect():
             p.socks_connect(("localhost", self.server.port))
-            p.convert_to_ssl()
+            p.convert_to_tls()
             f = p.request("get:/p/200")
         assert f.status_code == 200
 

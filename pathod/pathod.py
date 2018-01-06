@@ -244,7 +244,7 @@ class PathodHandler(tcp.BaseHandler):
         if self.server.ssl:
             try:
                 cert, key, _ = self.server.ssloptions.get_cert(None)
-                self.convert_to_ssl(
+                self.convert_to_tls(
                     cert,
                     key,
                     handle_sni=self.handle_sni,

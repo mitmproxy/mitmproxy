@@ -487,7 +487,7 @@ class TlsLayer(base.Layer):
             extra_certs = None
 
         try:
-            self.client_conn.convert_to_ssl(
+            self.client_conn.convert_to_tls(
                 cert, key,
                 method=self.config.openssl_method_client,
                 options=self.config.openssl_options_client,
@@ -543,7 +543,7 @@ class TlsLayer(base.Layer):
                         ciphers_server.append(CIPHER_ID_NAME_MAP[id])
                 ciphers_server = ':'.join(ciphers_server)
 
-            self.server_conn.establish_ssl(
+            self.server_conn.establish_tls(
                 self.config.client_certs,
                 self.server_sni,
                 method=self.config.openssl_method_server,

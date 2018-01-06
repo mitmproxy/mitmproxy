@@ -127,8 +127,8 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             tls_version=None,
         ))
 
-    def convert_to_ssl(self, cert, *args, **kwargs):
-        super().convert_to_ssl(cert, *args, **kwargs)
+    def convert_to_tls(self, cert, *args, **kwargs):
+        super().convert_to_tls(cert, *args, **kwargs)
         self.timestamp_tls_setup = time.time()
         self.mitmcert = cert
         sni = self.connection.get_servername()
@@ -261,7 +261,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.wfile.write(message)
         self.wfile.flush()
 
-    def establish_ssl(self, clientcerts, sni, **kwargs):
+    def establish_tls(self, clientcerts, sni, **kwargs):
         if sni and not isinstance(sni, str):
             raise ValueError("sni must be str, not " + type(sni).__name__)
         clientcert = None
@@ -275,7 +275,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
                 if os.path.exists(path):
                     clientcert = path
 
-        self.convert_to_ssl(cert=clientcert, sni=sni, **kwargs)
+        self.convert_to_tls(cert=clientcert, sni=sni, **kwargs)
         self.sni = sni
         self.alpn_proto_negotiated = self.get_alpn_proto_negotiated()
         self.tls_version = self.connection.get_protocol_version_name()

@@ -436,7 +436,7 @@ class SSLCert(serializable.Serializable):
         Returns:
             All DNS altnames.
         """
-        # tcp.TCPClient.convert_to_ssl assumes that this property only contains DNS altnames for hostname verification.
+        # tcp.TCPClient.convert_to_tls assumes that this property only contains DNS altnames for hostname verification.
         altnames = []
         for i in range(self.x509.get_extension_count()):
             ext = self.x509.get_extension(i)

@@ -381,7 +381,7 @@ class TCPClient(_Connection):
         else:
             close_socket(self.connection)
 
-    def convert_to_ssl(self, sni=None, alpn_protos=None, **sslctx_kwargs):
+    def convert_to_tls(self, sni=None, alpn_protos=None, **sslctx_kwargs):
         context = tls.create_client_context(
             alpn_protos=alpn_protos,
             sni=sni,
@@ -491,7 +491,7 @@ class BaseHandler(_Connection):
         self.server = server
         self.clientcert = None
 
-    def convert_to_ssl(self, cert, key, **sslctx_kwargs):
+    def convert_to_tls(self, cert, key, **sslctx_kwargs):
         """
         Convert connection to SSL.
         For a list of parameters, see tls.create_server_context(...)
