@@ -44,8 +44,6 @@ class Options(optmanager.OptManager):
         console_layout = None  # type: str
         console_layout_headers = None  # type: bool
         console_mouse = None  # type: bool
-        console_order = None  # type: str
-        console_order_reversed = None  # type: bool
         console_palette = None  # type: str
         console_palette_transparent = None  # type: bool
         default_contentview = None  # type: str
@@ -98,6 +96,8 @@ class Options(optmanager.OptManager):
         upstream_cert = None  # type: bool
         verbosity = None  # type: str
         view_filter = None  # type: Optional[str]
+        view_order = None  # type: str
+        view_order_reversed = None  # type: bool
         web_debug = None  # type: bool
         web_iface = None  # type: str
         web_open_browser = None  # type: bool
