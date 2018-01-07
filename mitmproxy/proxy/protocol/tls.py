@@ -487,7 +487,7 @@ class TlsLayer(base.Layer):
             extra_certs = None
 
         try:
-            self.client_conn.convert_to_ssl(
+            self.client_conn.convert_to_tls(
                 cert, key,
                 method=self.config.openssl_method_client,
                 options=self.config.openssl_options_client,
@@ -524,7 +524,7 @@ class TlsLayer(base.Layer):
                 if alpn and b"h2" in alpn and not self.config.options.http2:
                     alpn.remove(b"h2")
 
-            if self.client_conn.ssl_established and self.client_conn.get_alpn_proto_negotiated():
+            if self.client_conn.tls_established and self.client_conn.get_alpn_proto_negotiated():
                 # If the client has already negotiated an ALP, then force the
                 # server to use the same. This can only happen if the host gets
                 # changed after the initial connection was established. E.g.:
@@ -543,7 +543,7 @@ class TlsLayer(base.Layer):
                         ciphers_server.append(CIPHER_ID_NAME_MAP[id])
                 ciphers_server = ':'.join(ciphers_server)
 
-            self.server_conn.establish_ssl(
+            self.server_conn.establish_tls(
                 self.config.client_certs,
                 self.server_sni,
                 method=self.config.openssl_method_server,

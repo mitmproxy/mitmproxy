@@ -33,7 +33,7 @@ parse_host_header = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 class Rerouter:
     def request(self, flow):
-        if flow.client_conn.ssl_established:
+        if flow.client_conn.tls_established:
             flow.request.scheme = "https"
             sni = flow.client_conn.connection.get_servername()
             port = 443

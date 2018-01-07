@@ -43,7 +43,7 @@ def extract(cut: str, f: flow.Flow) -> typing.Union[str, bytes]:
                 return part
             elif isinstance(part, bool):
                 return "true" if part else "false"
-            elif isinstance(part, certs.SSLCert):
+            elif isinstance(part, certs.Cert):
                 return part.to_pem().decode("ascii")
         current = part
     return str(current or "")

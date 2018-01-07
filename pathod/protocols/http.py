@@ -27,7 +27,7 @@ class HTTPProtocol:
                 cert, key, chain_file_ = self.pathod_handler.server.ssloptions.get_cert(
                     connect[0].encode()
                 )
-                self.pathod_handler.convert_to_ssl(
+                self.pathod_handler.convert_to_tls(
                     cert,
                     key,
                     handle_sni=self.pathod_handler.handle_sni,

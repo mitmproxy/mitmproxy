@@ -58,8 +58,8 @@ def response(flow):
         connect_time = (flow.server_conn.timestamp_tcp_setup -
                         flow.server_conn.timestamp_start)
 
-        if flow.server_conn.timestamp_ssl_setup is not None:
-            ssl_time = (flow.server_conn.timestamp_ssl_setup -
+        if flow.server_conn.timestamp_tls_setup is not None:
+            ssl_time = (flow.server_conn.timestamp_tls_setup -
                         flow.server_conn.timestamp_tcp_setup)
 
         SERVERS_SEEN.add(flow.server_conn)

@@ -7,7 +7,7 @@ from mitmproxy.net import tcp
 def get_remote_cert(host, port, sni):
     c = tcp.TCPClient((host, port))
     c.connect()
-    c.convert_to_ssl(sni=sni)
+    c.convert_to_tls(sni=sni)
     return c.cert
 
 if len(sys.argv) > 2:

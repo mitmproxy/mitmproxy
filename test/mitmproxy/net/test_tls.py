@@ -22,7 +22,7 @@ class TestMasterSecretLogger(tservers.ServerTestBase):
 
         c = TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            c.convert_to_ssl()
+            c.convert_to_tls()
             c.wfile.write(testval)
             c.wfile.flush()
             assert c.rfile.readline() == testval

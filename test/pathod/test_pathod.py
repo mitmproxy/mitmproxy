@@ -153,7 +153,7 @@ class CommonTests(tservers.DaemonTests):
         c = tcp.TCPClient(("localhost", self.d.port))
         with c.connect():
             if self.ssl:
-                c.convert_to_ssl()
+                c.convert_to_tls()
             c.wfile.write(b"foo\n\n\n")
             c.wfile.flush()
             l = self.d.last_log()
@@ -241,7 +241,7 @@ class TestDaemonSSL(CommonTests):
         with c.connect():
             c.wfile.write(b"\0\0\0\0")
             with pytest.raises(exceptions.TlsException):
-                c.convert_to_ssl()
+                c.convert_to_tls()
             l = self.d.last_log()
             assert l["type"] == "error"
             assert "SSL" in l["msg"]

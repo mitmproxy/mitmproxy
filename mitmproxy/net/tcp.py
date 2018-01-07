@@ -301,11 +301,11 @@ class _Connection:
             self.rfile = None
             self.wfile = None
 
-        self.ssl_established = False
+        self.tls_established = False
         self.finished = False
 
     def get_current_cipher(self):
-        if not self.ssl_established:
+        if not self.tls_established:
             return None
 
         name = self.connection.get_cipher_name()
@@ -381,7 +381,7 @@ class TCPClient(_Connection):
         else:
             close_socket(self.connection)
 
-    def convert_to_ssl(self, sni=None, alpn_protos=None, **sslctx_kwargs):
+    def convert_to_tls(self, sni=None, alpn_protos=None, **sslctx_kwargs):
         context = tls.create_client_context(
             alpn_protos=alpn_protos,
             sni=sni,
@@ -400,13 +400,13 @@ class TCPClient(_Connection):
             else:
                 raise exceptions.TlsException("SSL handshake error: %s" % repr(v))
 
-        self.cert = certs.SSLCert(self.connection.get_peer_certificate())
+        self.cert = certs.Cert(self.connection.get_peer_certificate())
 
         # Keep all server certificates in a list
         for i in self.connection.get_peer_cert_chain():
-            self.server_certs.append(certs.SSLCert(i))
+            self.server_certs.append(certs.Cert(i))
 
-        self.ssl_established = True
+        self.tls_established = True
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
 
@@ -473,7 +473,7 @@ class TCPClient(_Connection):
         return self.connection.gettimeout()
 
     def get_alpn_proto_negotiated(self):
-        if self.ssl_established:
+        if self.tls_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
             return b""
@@ -491,7 +491,7 @@ class BaseHandler(_Connection):
         self.server = server
         self.clientcert = None
 
-    def convert_to_ssl(self, cert, key, **sslctx_kwargs):
+    def convert_to_tls(self, cert, key, **sslctx_kwargs):
         """
         Convert connection to SSL.
         For a list of parameters, see tls.create_server_context(...)
@@ -507,10 +507,10 @@ class BaseHandler(_Connection):
             self.connection.do_handshake()
         except SSL.Error as v:
             raise exceptions.TlsException("SSL handshake error: %s" % repr(v))
-        self.ssl_established = True
+        self.tls_established = True
         cert = self.connection.get_peer_certificate()
         if cert:
-            self.clientcert = certs.SSLCert(cert)
+            self.clientcert = certs.Cert(cert)
         self.rfile.set_descriptor(self.connection)
         self.wfile.set_descriptor(self.connection)
 
@@ -521,7 +521,7 @@ class BaseHandler(_Connection):
         self.connection.settimeout(n)
 
     def get_alpn_proto_negotiated(self):
-        if self.ssl_established:
+        if self.tls_established:
             return self.connection.get_alpn_proto_negotiated()
         else:
             return b""

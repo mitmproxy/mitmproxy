@@ -101,8 +101,8 @@ class _WebSocketTestBase:
         response = http.http1.read_response(self.client.rfile, request)
 
         if self.ssl:
-            self.client.convert_to_ssl()
-            assert self.client.ssl_established
+            self.client.convert_to_tls()
+            assert self.client.tls_established
 
         request = http.Request(
             "relative",

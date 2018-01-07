@@ -60,7 +60,7 @@ class _TServer(tcp.TCPServer):
             else:
                 method = OpenSSL.SSL.SSLv23_METHOD
                 options = None
-            h.convert_to_ssl(
+            h.convert_to_tls(
                 cert,
                 key,
                 method=method,

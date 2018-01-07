@@ -30,7 +30,7 @@ class WebsocketsProtocol:
                 ),
                 cipher=None,
             )
-            if self.pathod_handler.ssl_established:
+            if self.pathod_handler.tls_established:
                 retlog["cipher"] = self.pathod_handler.get_current_cipher()
             self.pathod_handler.addlog(retlog)
             ld = language.websockets.NESTED_LEADER

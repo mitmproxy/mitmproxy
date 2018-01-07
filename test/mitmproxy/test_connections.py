@@ -41,10 +41,10 @@ class TestClientConnection:
     def test_tls_established_property(self):
         c = tflow.tclient_conn()
         c.tls_established = True
-        assert c.ssl_established
+        assert c.tls_established
         assert c.tls_established
         c.tls_established = False
-        assert not c.ssl_established
+        assert not c.tls_established
         assert not c.tls_established
 
     def test_make_dummy(self):
@@ -113,10 +113,10 @@ class TestServerConnection:
     def test_tls_established_property(self):
         c = tflow.tserver_conn()
         c.tls_established = True
-        assert c.ssl_established
+        assert c.tls_established
         assert c.tls_established
         c.tls_established = False
-        assert not c.ssl_established
+        assert not c.tls_established
         assert not c.tls_established
 
     def test_make_dummy(self):
@@ -155,7 +155,7 @@ class TestServerConnection:
     def test_sni(self):
         c = connections.ServerConnection(('', 1234))
         with pytest.raises(ValueError, matches='sni must be str, not '):
-            c.establish_ssl(None, b'foobar')
+            c.establish_tls(None, b'foobar')
 
     def test_state(self):
         c = tflow.tserver_conn()
@@ -206,7 +206,7 @@ class TestClientConnectionTLS:
         key = OpenSSL.crypto.load_privatekey(
             OpenSSL.crypto.FILETYPE_PEM,
             raw_key)
-        c.convert_to_ssl(cert, key)
+        c.convert_to_tls(cert, key)
         assert c.connected()
         assert c.sni == sni
         assert c.tls_established
@@ -230,7 +230,7 @@ class TestServerConnectionTLS(tservers.ServerTestBase):
     def test_tls(self, clientcert):
         c = connections.ServerConnection(("127.0.0.1", self.port))
         c.connect()
-        c.establish_ssl(clientcert, "foo.com")
+        c.establish_tls(clientcert, "foo.com")
         assert c.connected()
         assert c.sni == "foo.com"
         assert c.tls_established

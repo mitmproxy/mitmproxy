@@ -79,7 +79,7 @@ class SSLInfo:
             }
             t = types.get(pk.type(), "Uknown")
             parts.append("\tPubkey: %s bit %s" % (pk.bits(), t))
-            s = certs.SSLCert(i)
+            s = certs.Cert(i)
             if s.altnames:
                 parts.append("\tSANs: %s" % " ".join(strutils.always_str(n, "utf8") for n in s.altnames))
         return "\n".join(parts)
@@ -313,7 +313,7 @@ class Pathoc(tcp.TCPClient):
                     if self.use_http2:
                         alpn_protos.append(b'h2')
 
-                    self.convert_to_ssl(
+                    self.convert_to_tls(
                         sni=self.sni,
                         cert=self.clientcert,
                         method=self.ssl_version,

@@ -141,7 +141,7 @@ class _Http2TestBase:
         while self.client.rfile.readline() != b"\r\n":
             pass
 
-        self.client.convert_to_ssl(alpn_protos=[b'h2'])
+        self.client.convert_to_tls(alpn_protos=[b'h2'])
 
         config = h2.config.H2Configuration(
             client_side=True,

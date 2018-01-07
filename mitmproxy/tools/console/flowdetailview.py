@@ -119,11 +119,11 @@ def flowdetails(state, flow: http.HTTPFlow):
                 maybe_timestamp(cc, "timestamp_start")
             )
         )
-        if cc.ssl_established:
+        if cc.tls_established:
             parts.append(
                 (
                     "Client conn. TLS handshake",
-                    maybe_timestamp(cc, "timestamp_ssl_setup")
+                    maybe_timestamp(cc, "timestamp_tls_setup")
                 )
             )
 
@@ -140,11 +140,11 @@ def flowdetails(state, flow: http.HTTPFlow):
                 maybe_timestamp(sc, "timestamp_tcp_setup")
             )
         )
-        if sc.ssl_established:
+        if sc.tls_established:
             parts.append(
                 (
                     "Server conn. TLS handshake",
-                    maybe_timestamp(sc, "timestamp_ssl_setup")
+                    maybe_timestamp(sc, "timestamp_tls_setup")
                 )
             )
 
