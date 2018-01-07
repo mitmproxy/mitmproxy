@@ -24,7 +24,8 @@ class TermLog:
             click.secho(
                 e.msg,
                 file=outfile,
-                fg=dict(error="red", warn="yellow").get(e.level),
+                fg=dict(error="red", warn="yellow",
+                        alert="magenta").get(e.level),
                 dim=(e.level == "debug"),
                 err=(e.level == "error")
             )

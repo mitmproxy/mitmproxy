@@ -77,7 +77,7 @@ class Master:
 
     def add_log(self, e, level):
         """
-            level: debug, info, warn, error
+            level: debug, alert, info, warn, error
         """
         self.addons.trigger("log", log.LogEntry(e, level))
 
