@@ -33,7 +33,7 @@ def get_version(dev: bool = False, build: bool = False, refresh: bool = False) -
         here = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
         try:
             git_describe = subprocess.check_output(
-                ['git', 'describe', '--tags', '--long'],
+                ['git', 'describe', '--long'],
                 stderr=subprocess.STDOUT,
                 cwd=here,
             )
