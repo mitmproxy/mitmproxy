@@ -47,7 +47,7 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         if log.log_tier(self.master.options.verbosity) < log.log_tier(entry.level):
             return
         txt = "%s: %s" % (entry.level, str(entry.msg))
-        if entry.level in ("error", "warn"):
+        if entry.level in ("error", "warn", "alert"):
             e = urwid.Text((entry.level, txt))
         else:
             e = urwid.Text(txt)
