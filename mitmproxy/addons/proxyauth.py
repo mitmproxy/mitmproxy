@@ -146,14 +146,14 @@ class ProxyAuth:
                         )
                 elif ctx.options.proxyauth.startswith("ldap"):
                     parts = ctx.options.proxyauth.split(':')
-                    security = parts[0]
-                    ldap_server = parts[1]
-                    dn_baseauth = parts[2]
-                    password_baseauth = parts[3]
                     if len(parts) != 5:
                         raise exceptions.OptionsError(
                             "Invalid ldap specification"
                         )
+                    security = parts[0]
+                    ldap_server = parts[1]
+                    dn_baseauth = parts[2]
+                    password_baseauth = parts[3]
                     if security == "ldaps":
                         server = ldap3.Server(ldap_server, use_ssl=True)
                     elif security == "ldap":

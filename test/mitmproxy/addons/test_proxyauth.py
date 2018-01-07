@@ -190,7 +190,7 @@ class TestProxyAuth:
             with pytest.raises(exceptions.OptionsError):
                 ctx.configure(up, proxyauth="ldap:test:test:test")
 
-            with pytest.raises(IndexError):
+            with pytest.raises(exceptions.OptionsError):
                 ctx.configure(up, proxyauth="ldap:fake_serveruid=?dc=example,dc=com:person")
 
             with pytest.raises(exceptions.OptionsError):
