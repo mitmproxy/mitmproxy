@@ -147,6 +147,9 @@ def test_create():
         assert v[0].request.url == "http://foo.com/"
         v.create("get", "http://foo.com")
         assert len(v) == 2
+        v.create("get", "http://foo.com\\")
+        v.create("get", "http://")
+        assert len(v) == 2
 
 
 def test_orders():
