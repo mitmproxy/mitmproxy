@@ -444,8 +444,7 @@ class View(collections.Sequence):
         try:
             req = http.HTTPRequest.make(method.upper(), url)
         except ValueError as e:
-            ctx.log.error(e)
-            return
+            raise exceptions.CommandError("Invalid URL: %s" % e)
         c = connections.ClientConnection.make_dummy(("", 0))
         s = connections.ServerConnection.make_dummy((req.host, req.port))
         f = http.HTTPFlow(c, s)
