@@ -441,7 +441,10 @@ class View(collections.Sequence):
 
     @command.command("view.create")
     def create(self, method: str, url: str) -> None:
-        req = http.HTTPRequest.make(method.upper(), url)
+        try:
+            req = http.HTTPRequest.make(method.upper(), url)
+        except ValueError as e:
+            raise exceptions.CommandError("Invalid URL: %s" % e)
         c = connections.ClientConnection.make_dummy(("", 0))
         s = connections.ServerConnection.make_dummy((req.host, req.port))
         f = http.HTTPFlow(c, s)
