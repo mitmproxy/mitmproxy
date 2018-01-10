@@ -178,5 +178,5 @@ class CommandEdit(urwid.WidgetWrap):
         x, y = calc_coords(self._w.get_text()[0], trans, p)
         return x, y
 
-    def get_value(self):
+    def get_edit_text(self):
         return self.cbuf.text
