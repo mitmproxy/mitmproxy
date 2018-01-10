@@ -83,6 +83,10 @@ class TestDummyServer:
 class TestConnectionHandler:
 
     def check_proxy_for_mode(self, mode):
+        """
+        Checks that ProtocolException isn't raised, when making a request
+        to mitmproxy in specific mode.
+        """
         opts = options.Options(mode=mode)
         pconf = config.ProxyConfig(opts)
 
