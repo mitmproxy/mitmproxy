@@ -3,6 +3,8 @@ from unittest import mock
 from OpenSSL import SSL
 import pytest
 
+from pathod import pathoc
+from mitmproxy import exceptions
 from mitmproxy.tools import cmdline
 from mitmproxy.tools import main
 from mitmproxy import options
@@ -80,6 +82,29 @@ class TestDummyServer:
 
 class TestConnectionHandler:
 
+    def check_proxy_for_mode(self, mode):
+        opts = options.Options(mode=mode)
+        pconf = config.ProxyConfig(opts)
+
+        channel = mock.Mock()
+
+        c = ConnectionHandler(
+            mock.MagicMock(),
+            ("127.0.0.1", 8080),
+            pconf,
+            channel
+        )
+        try:
+            c.handle()
+        except exceptions.ProtocolException as e:
+            pytest.fail(repr(e))
+
+        c = pathoc.Pathoc(("127.0.0.1", 8080))
+        try:
+            c.connect()
+        except exceptions.TcpException:
+            pass
+
     def test_fatal_error(self, capsys):
         opts = options.Options()
         pconf = config.ProxyConfig(opts)
@@ -100,3 +125,11 @@ class TestConnectionHandler:
 
         _, err = capsys.readouterr()
         assert "mitmproxy has crashed" in err
+
+    def test_selfconnected_reverse_proxy(self):
+        reverse_mode = "reverse:http://127.0.0.1:8080"
+        self.check_proxy_for_mode(reverse_mode)
+
+    def test_selfconnected_upstream_proxy(self):
+        upstream_mode = "upstream:http://127.0.0.1:8080"
+        self.check_proxy_for_mode(upstream_mode)
