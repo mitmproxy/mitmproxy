@@ -86,7 +86,9 @@ class TestConnectionHandler:
         """
         Checks that we get correct log message in specific mode
         """
+        warning_triggered = False
         log_msg = "The proxy shall not connect to itself."
+
         opts = options.Options(mode=mode)
         pconf = config.ProxyConfig(opts)
 
@@ -95,6 +97,8 @@ class TestConnectionHandler:
         def tell(mtype, m):
             if m.level == "warn":
                 assert log_msg in m.msg
+                nonlocal warning_triggered
+                warning_triggered = True
 
         channel.tell = tell
 
@@ -111,6 +115,8 @@ class TestConnectionHandler:
             p.connect()
         except exceptions.TcpException:
             pass
+
+        assert warning_triggered
 
 
     def test_fatal_error(self, capsys):
