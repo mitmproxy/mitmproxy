@@ -35,9 +35,11 @@ class Gif(KaitaiStruct):
             self.global_color_table = self._root.ColorTable(io, self, self._root)
 
         self.blocks = []
-        while not self._io.is_eof():
-            self.blocks.append(self._root.Block(self._io, self, self._root))
-
+        while True:
+            _ = self._root.Block(self._io, self, self._root)
+            self.blocks.append(_)
+            if  ((self._io.is_eof()) or (_.block_type == self._root.BlockType.end_of_file)) :
+                break
 
     class ImageData(KaitaiStruct):
         def __init__(self, _io, _parent=None, _root=None):
