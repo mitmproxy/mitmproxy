@@ -107,7 +107,10 @@ class TestConnectionHandler:
         c.handle()
 
         p = pathoc.Pathoc(("127.0.0.1", 8080))
-        p.connect()
+        try:
+            p.connect()
+        except exceptions.TcpException:
+            pass
 
 
     def test_fatal_error(self, capsys):
