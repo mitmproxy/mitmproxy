@@ -84,13 +84,19 @@ class TestConnectionHandler:
 
     def check_proxy_for_mode(self, mode):
         """
-        Checks that ProtocolException isn't raised, when making a request
-        to mitmproxy in specific mode.
+        Checks that we get correct log message in specific mode
         """
+        log_msg = "The proxy shall not connect to itself."
         opts = options.Options(mode=mode)
         pconf = config.ProxyConfig(opts)
 
         channel = mock.Mock()
+
+        def tell(mtype, m):
+            if m.level == "warn":
+                assert log_msg in m.msg
+
+        channel.tell = tell
 
         c = ConnectionHandler(
             mock.MagicMock(),
@@ -98,16 +104,14 @@ class TestConnectionHandler:
             pconf,
             channel
         )
-        try:
-            c.handle()
-        except exceptions.ProtocolException as e:
-            pytest.fail(repr(e))
+        c.handle()
 
-        c = pathoc.Pathoc(("127.0.0.1", 8080))
+        p = pathoc.Pathoc(("127.0.0.1", 8080))
         try:
-            c.connect()
+            p.connect()
         except exceptions.TcpException:
             pass
+
 
     def test_fatal_error(self, capsys):
         opts = options.Options()
