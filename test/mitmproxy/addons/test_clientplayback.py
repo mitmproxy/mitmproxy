@@ -52,6 +52,10 @@ class TestClientPlayback:
             cp.stop_replay()
             assert not cp.flows
 
+            df = tflow.DummyFlow(tflow.tclient_conn(), tflow.tserver_conn(), True)
+            with pytest.raises(exceptions.CommandError, match="Can't replay live flow."):
+                cp.start_replay([df])
+
     def test_load_file(self, tmpdir):
         cp = clientplayback.ClientPlayback()
         with taddons.context():
