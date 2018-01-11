@@ -35,6 +35,9 @@ class ClientPlayback:
         """
             Replay requests from flows.
         """
+        for f in flows:
+            if f.live:
+                raise exceptions.CommandError("Can't replay live flow.")
         self.flows = list(flows)
         ctx.log.alert("Replaying %s flows." % len(self.flows))
         ctx.master.addons.trigger("update", [])
