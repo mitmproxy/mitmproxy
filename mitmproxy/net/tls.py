@@ -2,15 +2,20 @@
 # then add options to disable certain methods
 # https://bugs.launchpad.net/pyopenssl/+bug/1020632/comments/3
 import binascii
+import io
 import os
+import struct
 import threading
 import typing
 from ssl import match_hostname, CertificateError
 
 import certifi
 from OpenSSL import SSL
+from kaitaistruct import KaitaiStream
 
 from mitmproxy import exceptions, certs
+from mitmproxy.contrib.kaitaistruct import tls_client_hello
+from mitmproxy.net import check
 
 BASIC_OPTIONS = (
     SSL.OP_CIPHER_SERVER_PREFERENCE
@@ -189,7 +194,7 @@ def _create_ssl_context(
 def create_client_context(
         cert: str = None,
         sni: str = None,
-        address: str=None,
+        address: str = None,
         verify: int = SSL.VERIFY_NONE,
         **sslctx_kwargs
 ) -> SSL.Context:
@@ -338,3 +343,119 @@ def create_server_context(
         SSL._lib.SSL_CTX_set_tmp_dh(context._context, dhparams)
 
     return context
+
+
+def is_tls_record_magic(d):
+    """
+    Returns:
+        True, if the passed bytes start with the TLS record magic bytes.
+        False, otherwise.
+    """
+    d = d[:3]
+
+    # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
+    # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
+    return (
+        len(d) == 3 and
+        d[0] == 0x16 and
+        d[1] == 0x03 and
+        0x0 <= d[2] <= 0x03
+    )
+
+
+def get_client_hello(rfile):
+    """
+    Peek into the socket and read all records that contain the initial client hello message.
+
+    client_conn:
+        The :py:class:`client connection <mitmproxy.connections.ClientConnection>`.
+
+    Returns:
+        The raw handshake packet bytes, without TLS record header(s).
+    """
+    client_hello = b""
+    client_hello_size = 1
+    offset = 0
+    while len(client_hello) < client_hello_size:
+        record_header = rfile.peek(offset + 5)[offset:]
+        if not is_tls_record_magic(record_header) or len(record_header) < 5:
+            raise exceptions.TlsProtocolException(
+                'Expected TLS record, got "%s" instead.' % record_header)
+        record_size = struct.unpack_from("!H", record_header, 3)[0] + 5
+        record_body = rfile.peek(offset + record_size)[offset + 5:]
+        if len(record_body) != record_size - 5:
+            raise exceptions.TlsProtocolException(
+                "Unexpected EOF in TLS handshake: %s" % record_body)
+        client_hello += record_body
+        offset += record_size
+        client_hello_size = struct.unpack("!I", b'\x00' + client_hello[1:4])[0] + 4
+    return client_hello
+
+
+class ClientHello:
+
+    def __init__(self, raw_client_hello):
+        self._client_hello = tls_client_hello.TlsClientHello(
+            KaitaiStream(io.BytesIO(raw_client_hello))
+        )
+
+    @property
+    def cipher_suites(self):
+        return self._client_hello.cipher_suites.cipher_suites
+
+    @property
+    def sni(self):
+        if self._client_hello.extensions:
+            for extension in self._client_hello.extensions.extensions:
+                is_valid_sni_extension = (
+                    extension.type == 0x00 and
+                    len(extension.body.server_names) == 1 and
+                    extension.body.server_names[0].name_type == 0 and
+                    check.is_valid_host(extension.body.server_names[0].host_name)
+                )
+                if is_valid_sni_extension:
+                    return extension.body.server_names[0].host_name.decode("idna")
+        return None
+
+    @property
+    def alpn_protocols(self):
+        if self._client_hello.extensions:
+            for extension in self._client_hello.extensions.extensions:
+                if extension.type == 0x10:
+                    return list(x.name for x in extension.body.alpn_protocols)
+        return []
+
+    @property
+    def extensions(self) -> typing.List[typing.Tuple[int, bytes]]:
+        ret = []
+        if self._client_hello.extensions:
+            for extension in self._client_hello.extensions.extensions:
+                body = getattr(extension, "_raw_body", extension.body)
+                ret.append((extension.type, body))
+        return ret
+
+    @classmethod
+    def from_file(cls, client_conn) -> "ClientHello":
+        """
+        Peek into the connection, read the initial client hello and parse it to obtain ALPN values.
+        client_conn:
+            The :py:class:`client connection <mitmproxy.connections.ClientConnection>`.
+        Returns:
+            :py:class:`client hello <mitmproxy.net.tls.ClientHello>`.
+        """
+        try:
+            raw_client_hello = get_client_hello(client_conn)[4:]  # exclude handshake header.
+        except exceptions.ProtocolException as e:
+            raise exceptions.TlsProtocolException('Cannot read raw Client Hello: %s' % repr(e))
+
+        try:
+            return cls(raw_client_hello)
+        except EOFError as e:
+            raise exceptions.TlsProtocolException(
+                'Cannot parse Client Hello: %s, Raw Client Hello: %s' %
+                (repr(e), binascii.hexlify(raw_client_hello))
+            )
+
+    def __repr__(self):
+        return "ClientHello(sni: %s, alpn_protocols: %s, cipher_suites: %s)" % \
+               (self.sni, self.alpn_protocols, self.cipher_suites)
