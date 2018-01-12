@@ -1,7 +1,40 @@
 import typing
 
+Type = typing.Union[
+    typing.Any  # anything more elaborate really fails with mypy at the moment.
+]
 
-def check_option_type(name: str, value: typing.Any, typeinfo: typing.Any) -> None:
+
+def sequence_type(typeinfo: typing.Type[typing.List]) -> Type:
+    """Return the type of a sequence, e.g. typing.List"""
+    try:
+        return typeinfo.__args__[0]  # type: ignore
+    except AttributeError:  # Python 3.5.0
+        return typeinfo.__parameters__[0]  # type: ignore
+
+
+def tuple_types(typeinfo: typing.Type[typing.Tuple]) -> typing.Sequence[Type]:
+    """Return the types of a typing.Tuple"""
+    try:
+        return typeinfo.__args__  # type: ignore
+    except AttributeError:  # Python 3.5.x
+        return typeinfo.__tuple_params__  # type: ignore
+
+
+def union_types(typeinfo: typing.Type[typing.Tuple]) -> typing.Sequence[Type]:
+    """return the types of a typing.Union"""
+    try:
+        return typeinfo.__args__  # type: ignore
+    except AttributeError:  # Python 3.5.x
+        return typeinfo.__union_params__  # type: ignore
+
+
+def mapping_types(typeinfo: typing.Type[typing.Mapping]) -> typing.Tuple[Type, Type]:
+    """return the types of a mapping, e.g. typing.Dict"""
+    return typeinfo.__args__  # type: ignore
+
+
+def check_option_type(name: str, value: typing.Any, typeinfo: Type) -> None:
     """
     Check if the provided value is an instance of typeinfo and raises a
     TypeError otherwise. This function supports only those types required for
@@ -16,13 +49,7 @@ def check_option_type(name: str, value: typing.Any, typeinfo: typing.Any) -> Non
     typename = str(typeinfo)
 
     if typename.startswith("typing.Union"):
-        try:
-            types = typeinfo.__args__  # type: ignore
-        except AttributeError:
-            # Python 3.5.x
-            types = typeinfo.__union_params__  # type: ignore
-
-        for T in types:
+        for T in union_types(typeinfo):
             try:
                 check_option_type(name, value, T)
             except TypeError:
@@ -31,12 +58,7 @@ def check_option_type(name: str, value: typing.Any, typeinfo: typing.Any) -> Non
                 return
         raise e
     elif typename.startswith("typing.Tuple"):
-        try:
-            types = typeinfo.__args__  # type: ignore
-        except AttributeError:
-            # Python 3.5.x
-            types = typeinfo.__tuple_params__  # type: ignore
-
+        types = tuple_types(typeinfo)
         if not isinstance(value, (tuple, list)):
             raise e
         if len(types) != len(value):
@@ -45,11 +67,7 @@ def check_option_type(name: str, value: typing.Any, typeinfo: typing.Any) -> Non
             check_option_type("{}[{}]".format(name, i), x, T)
         return
     elif typename.startswith("typing.Sequence"):
-        try:
-            T = typeinfo.__args__[0]  # type: ignore
-        except AttributeError:
-            # Python 3.5.0
-            T = typeinfo.__parameters__[0]  # type: ignore
+        T = sequence_type(typeinfo)
         if not isinstance(value, (tuple, list)):
             raise e
         for v in value:

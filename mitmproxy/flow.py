@@ -87,7 +87,7 @@ class Flow(stateobject.StateObject):
         type=str,
         intercepted=bool,
         marked=bool,
-        metadata=dict,
+        metadata=typing.Dict[str, typing.Any],
     )
 
     def get_state(self):
