@@ -93,3 +93,8 @@ def test_typesec_to_str():
     assert(typecheck.typespec_to_str(typing.Optional[str])) == "optional str"
     with pytest.raises(NotImplementedError):
         typecheck.typespec_to_str(dict)
+
+
+def test_mapping_types():
+    # this is not covered by check_option_type, but still belongs in this module
+    assert (str, int) == typecheck.mapping_types(typing.Mapping[str, int])
