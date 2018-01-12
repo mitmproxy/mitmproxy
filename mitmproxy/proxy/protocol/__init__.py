@@ -36,13 +36,11 @@ from .http1 import Http1Layer
 from .http2 import Http2Layer
 from .websocket import WebSocketLayer
 from .rawtcp import RawTCPLayer
-from .tls import TlsClientHello
 from .tls import TlsLayer
-from .tls import is_tls_record_magic
 
 __all__ = [
     "Layer", "ServerConnectionMixin",
-    "TlsLayer", "is_tls_record_magic", "TlsClientHello",
+    "TlsLayer",
     "UpstreamConnectLayer",
     "HttpLayer",
     "Http1Layer",

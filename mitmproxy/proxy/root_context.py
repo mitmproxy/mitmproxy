@@ -1,5 +1,6 @@
 from mitmproxy import log
 from mitmproxy import exceptions
+from mitmproxy.net import tls
 from mitmproxy.proxy import protocol
 from mitmproxy.proxy import modes
 from mitmproxy.proxy.protocol import http
@@ -45,14 +46,14 @@ class RootContext:
             d = top_layer.client_conn.rfile.peek(3)
         except exceptions.TcpException as e:
             raise exceptions.ProtocolException(str(e))
-        client_tls = protocol.is_tls_record_magic(d)
+        client_tls = tls.is_tls_record_magic(d)
 
         # 1. check for --ignore
         if self.config.check_ignore:
             ignore = self.config.check_ignore(top_layer.server_conn.address)
             if not ignore and client_tls:
                 try:
-                    client_hello = protocol.TlsClientHello.from_client_conn(self.client_conn)
+                    client_hello = tls.ClientHello.from_client_conn(self.client_conn)
                 except exceptions.TlsProtocolException as e:
                     self.log("Cannot parse Client Hello: %s" % repr(e), "error")
                 else:
@@ -76,10 +77,10 @@ class RootContext:
             # if the user manually sets a scheme for connect requests, we use this to decide if we
             # want TLS or not.
             if top_layer.connect_request.scheme:
-                tls = top_layer.connect_request.scheme == "https"
+                server_tls = top_layer.connect_request.scheme == "https"
             else:
-                tls = client_tls
-            return protocol.TlsLayer(top_layer, client_tls, tls)
+                server_tls = client_tls
+            return protocol.TlsLayer(top_layer, client_tls, server_tls)
 
         # 3. In Http Proxy mode and Upstream Proxy mode, the next layer is fixed.
         if isinstance(top_layer, protocol.TlsLayer):

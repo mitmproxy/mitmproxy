@@ -1,14 +1,9 @@
-import struct
 from typing import Optional  # noqa
 from typing import Union
-import io
 
-from kaitaistruct import KaitaiStream
 from mitmproxy import exceptions
-from mitmproxy.contrib.kaitaistruct import tls_client_hello
+from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy.protocol import base
-from mitmproxy.net import check
-
 
 # taken from https://testssl.sh/openssl-rfc.mappping.html
 CIPHER_ID_NAME_MAP = {
@@ -200,7 +195,6 @@ CIPHER_ID_NAME_MAP = {
     0x080080: 'RC4-64-MD5',
 }
 
-
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
 DEFAULT_CLIENT_CIPHERS = (
@@ -216,114 +210,7 @@ DEFAULT_CLIENT_CIPHERS = (
 )
 
 
-def is_tls_record_magic(d):
-    """
-    Returns:
-        True, if the passed bytes start with the TLS record magic bytes.
-        False, otherwise.
-    """
-    d = d[:3]
-
-    # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
-    # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
-    return (
-        len(d) == 3 and
-        d[0] == 0x16 and
-        d[1] == 0x03 and
-        0x0 <= d[2] <= 0x03
-    )
-
-
-def get_client_hello(client_conn):
-    """
-    Peek into the socket and read all records that contain the initial client hello message.
-
-    client_conn:
-        The :py:class:`client connection <mitmproxy.connections.ClientConnection>`.
-
-    Returns:
-        The raw handshake packet bytes, without TLS record header(s).
-    """
-    client_hello = b""
-    client_hello_size = 1
-    offset = 0
-    while len(client_hello) < client_hello_size:
-        record_header = client_conn.rfile.peek(offset + 5)[offset:]
-        if not is_tls_record_magic(record_header) or len(record_header) != 5:
-            raise exceptions.TlsProtocolException('Expected TLS record, got "%s" instead.' % record_header)
-        record_size = struct.unpack("!H", record_header[3:])[0] + 5
-        record_body = client_conn.rfile.peek(offset + record_size)[offset + 5:]
-        if len(record_body) != record_size - 5:
-            raise exceptions.TlsProtocolException("Unexpected EOF in TLS handshake: %s" % record_body)
-        client_hello += record_body
-        offset += record_size
-        client_hello_size = struct.unpack("!I", b'\x00' + client_hello[1:4])[0] + 4
-    return client_hello
-
-
-class TlsClientHello:
-
-    def __init__(self, raw_client_hello):
-        self._client_hello = tls_client_hello.TlsClientHello(KaitaiStream(io.BytesIO(raw_client_hello)))
-
-    def raw(self):
-        return self._client_hello
-
-    @property
-    def cipher_suites(self):
-        return self._client_hello.cipher_suites.cipher_suites
-
-    @property
-    def sni(self):
-        if self._client_hello.extensions:
-            for extension in self._client_hello.extensions.extensions:
-                is_valid_sni_extension = (
-                    extension.type == 0x00 and
-                    len(extension.body.server_names) == 1 and
-                    extension.body.server_names[0].name_type == 0 and
-                    check.is_valid_host(extension.body.server_names[0].host_name)
-                )
-                if is_valid_sni_extension:
-                    return extension.body.server_names[0].host_name.decode("idna")
-        return None
-
-    @property
-    def alpn_protocols(self):
-        if self._client_hello.extensions:
-            for extension in self._client_hello.extensions.extensions:
-                if extension.type == 0x10:
-                    return list(x.name for x in extension.body.alpn_protocols)
-        return []
-
-    @classmethod
-    def from_client_conn(cls, client_conn):
-        """
-        Peek into the connection, read the initial client hello and parse it to obtain ALPN values.
-        client_conn:
-            The :py:class:`client connection <mitmproxy.connections.ClientConnection>`.
-        Returns:
-            :py:class:`client hello <mitmproxy.proxy.protocol.tls.TlsClientHello>`.
-        """
-        try:
-            raw_client_hello = get_client_hello(client_conn)[4:]  # exclude handshake header.
-        except exceptions.ProtocolException as e:
-            raise exceptions.TlsProtocolException('Cannot read raw Client Hello: %s' % repr(e))
-
-        try:
-            return cls(raw_client_hello)
-        except EOFError as e:
-            raise exceptions.TlsProtocolException(
-                'Cannot parse Client Hello: %s, Raw Client Hello: %s' %
-                (repr(e), raw_client_hello.encode("hex"))
-            )
-
-    def __repr__(self):
-        return "TlsClientHello( sni: %s alpn_protocols: %s,  cipher_suites: %s)" % \
-            (self.sni, self.alpn_protocols, self.cipher_suites)
-
-
 class TlsLayer(base.Layer):
-
     """
     The TLS layer implements transparent TLS connections.
 
@@ -334,13 +221,13 @@ class TlsLayer(base.Layer):
           the server connection.
     """
 
-    def __init__(self, ctx, client_tls, server_tls, custom_server_sni = None):
+    def __init__(self, ctx, client_tls, server_tls, custom_server_sni=None):
         super().__init__(ctx)
         self._client_tls = client_tls
         self._server_tls = server_tls
 
         self._custom_server_sni = custom_server_sni
-        self._client_hello = None  # type: Optional[TlsClientHello]
+        self._client_hello = None  # type: Optional[net_tls.ClientHello]
 
     def __call__(self):
         """
@@ -355,7 +242,7 @@ class TlsLayer(base.Layer):
         if self._client_tls:
             # Peek into the connection, read the initial client hello and parse it to obtain SNI and ALPN values.
             try:
-                self._client_hello = TlsClientHello.from_client_conn(self.client_conn)
+                self._client_hello = net_tls.ClientHello.from_client_conn(self.client_conn)
             except exceptions.TlsProtocolException as e:
                 self.log("Cannot parse Client Hello: %s" % repr(e), "error")
 
@@ -414,7 +301,7 @@ class TlsLayer(base.Layer):
         if self._server_tls and not self.server_conn.tls_established:
             self._establish_tls_with_server()
 
-    def set_server_tls(self, server_tls: bool, sni: Union[str, None, bool]=None) -> None:
+    def set_server_tls(self, server_tls: bool, sni: Union[str, None, bool] = None) -> None:
         """
         Set the TLS settings for the next server connection that will be established.
         This function will not alter an existing connection.
@@ -519,8 +406,10 @@ class TlsLayer(base.Layer):
                     # We only support http/1.1 and h2.
                     # If the server only supports spdy (next to http/1.1), it may select that
                     # and mitmproxy would enter TCP passthrough mode, which we want to avoid.
-                    alpn = [x for x in self._client_hello.alpn_protocols if
-                            not (x.startswith(b"h2-") or x.startswith(b"spdy"))]
+                    alpn = [
+                        x for x in self._client_hello.alpn_protocols if
+                        not (x.startswith(b"h2-") or x.startswith(b"spdy"))
+                    ]
                 if alpn and b"h2" in alpn and not self.config.options.http2:
                     alpn.remove(b"h2")
 
