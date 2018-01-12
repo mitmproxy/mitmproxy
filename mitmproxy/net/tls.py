@@ -363,7 +363,7 @@ def is_tls_record_magic(d):
     )
 
 
-def get_client_hello(client_conn):
+def get_client_hello(rfile):
     """
     Peek into the socket and read all records that contain the initial client hello message.
 
@@ -377,12 +377,12 @@ def get_client_hello(client_conn):
     client_hello_size = 1
     offset = 0
     while len(client_hello) < client_hello_size:
-        record_header = client_conn.rfile.peek(offset + 5)[offset:]
-        if not is_tls_record_magic(record_header) or len(record_header) != 5:
+        record_header = rfile.peek(offset + 5)[offset:]
+        if not is_tls_record_magic(record_header) or len(record_header) < 5:
             raise exceptions.TlsProtocolException(
                 'Expected TLS record, got "%s" instead.' % record_header)
-        record_size = struct.unpack("!H", record_header[3:])[0] + 5
-        record_body = client_conn.rfile.peek(offset + record_size)[offset + 5:]
+        record_size = struct.unpack_from("!H", record_header, 3)[0] + 5
+        record_body = rfile.peek(offset + record_size)[offset + 5:]
         if len(record_body) != record_size - 5:
             raise exceptions.TlsProtocolException(
                 "Unexpected EOF in TLS handshake: %s" % record_body)
@@ -396,10 +396,8 @@ class ClientHello:
 
     def __init__(self, raw_client_hello):
         self._client_hello = tls_client_hello.TlsClientHello(
-            KaitaiStream(io.BytesIO(raw_client_hello)))
-
-    def raw(self):
-        return self._client_hello
+            KaitaiStream(io.BytesIO(raw_client_hello))
+        )
 
     @property
     def cipher_suites(self):
@@ -437,7 +435,7 @@ class ClientHello:
         return ret
 
     @classmethod
-    def from_client_conn(cls, client_conn) -> "ClientHello":
+    def from_file(cls, client_conn) -> "ClientHello":
         """
         Peek into the connection, read the initial client hello and parse it to obtain ALPN values.
         client_conn:
@@ -455,7 +453,7 @@ class ClientHello:
         except EOFError as e:
             raise exceptions.TlsProtocolException(
                 'Cannot parse Client Hello: %s, Raw Client Hello: %s' %
-                (repr(e), raw_client_hello.encode("hex"))
+                (repr(e), binascii.hexlify(raw_client_hello))
             )
 
     def __repr__(self):

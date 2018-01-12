@@ -53,7 +53,7 @@ class RootContext:
             ignore = self.config.check_ignore(top_layer.server_conn.address)
             if not ignore and client_tls:
                 try:
-                    client_hello = tls.ClientHello.from_client_conn(self.client_conn)
+                    client_hello = tls.ClientHello.from_file(self.client_conn.rfile)
                 except exceptions.TlsProtocolException as e:
                     self.log("Cannot parse Client Hello: %s" % repr(e), "error")
                 else:

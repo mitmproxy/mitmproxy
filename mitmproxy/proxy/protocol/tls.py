@@ -242,7 +242,7 @@ class TlsLayer(base.Layer):
         if self._client_tls:
             # Peek into the connection, read the initial client hello and parse it to obtain SNI and ALPN values.
             try:
-                self._client_hello = net_tls.ClientHello.from_client_conn(self.client_conn)
+                self._client_hello = net_tls.ClientHello.from_file(self.client_conn.rfile)
             except exceptions.TlsProtocolException as e:
                 self.log("Cannot parse Client Hello: %s" % repr(e), "error")
 
