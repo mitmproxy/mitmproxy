@@ -136,7 +136,7 @@ class TestClientHello:
             (10, b'\x00\x06\x00\x1d\x00\x17\x00\x18')
         ]
 
-    def test_from_conn(self):
+    def test_from_file(self):
         rfile = io.BufferedReader(io.BytesIO(
             FULL_CLIENT_HELLO_NO_EXTENSIONS
         ))

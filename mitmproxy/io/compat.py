@@ -166,11 +166,10 @@ def convert_5_6(data):
     return data
 
 
-# def convert_6_7(data):
-#     data["version"] = 7
-#     # Your changes here!
-#     # Make sure to also increment FLOW_FORMAT_VERSION.
-#     return data
+def convert_6_7(data):
+    data["version"] = 7
+    data["client_conn"]["tls_extensions"] = None
+    return data
 
 
 def _convert_dict_keys(o: Any) -> Any:
@@ -226,7 +225,7 @@ converters = {
     (3, 0): convert_300_4,
     4: convert_4_5,
     5: convert_5_6,
-    # 6: convert_6_7,
+    6: convert_6_7,
 }
 
 
