@@ -118,7 +118,6 @@ class TestConnectionHandler:
 
         assert warning_triggered
 
-
     def test_fatal_error(self, capsys):
         opts = options.Options()
         pconf = config.ProxyConfig(opts)
