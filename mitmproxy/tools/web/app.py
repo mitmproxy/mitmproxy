@@ -43,6 +43,8 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             continue
         f[conn]["alpn_proto_negotiated"] = \
             f[conn]["alpn_proto_negotiated"].decode(errors="backslashreplace")
+    # There are some bytes in here as well, let's skip it until we have them in the UI.
+    f["client_conn"].pop("tls_extensions", None)
     if flow.error:
         f["error"] = flow.error.get_state()
 

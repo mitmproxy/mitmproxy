@@ -165,6 +165,7 @@ def tclient_conn():
         cipher_name="cipher",
         alpn_proto_negotiated=b"http/1.1",
         tls_version="TLSv1.2",
+        tls_extensions=[(0x00, bytes.fromhex("000e00000b6578616d"))],
     ))
     c.reply = controller.DummyReply()
     c.rfile = io.BytesIO()

@@ -723,12 +723,13 @@ class TestProxy(tservers.HTTPProxyTest):
 class TestProxySSL(tservers.HTTPProxyTest):
     ssl = True
 
-    def test_request_ssl_setup_timestamp_presence(self):
+    def test_request_tls_attribute_presence(self):
         # tests that the ssl timestamp is present when ssl is used
         f = self.pathod("304:b@10k")
         assert f.status_code == 304
         first_flow = self.master.state.flows[0]
         assert first_flow.server_conn.timestamp_tls_setup
+        assert first_flow.client_conn.tls_extensions
 
     def test_via(self):
         # tests that the ssl timestamp is present when ssl is used
