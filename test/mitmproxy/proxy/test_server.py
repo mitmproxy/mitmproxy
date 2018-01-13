@@ -511,6 +511,14 @@ class TestReverse(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
         req = self.master.state.flows[0].request
         assert req.host_header == "127.0.0.1"
 
+    def test_selfconnection(self):
+        self.options.mode = "reverse:http://127.0.0.1:0"
+
+        p = self.pathoc()
+        with p.connect():
+            resp = p.request("get:/")
+        assert self.master.has_log("The proxy shall not connect to itself.")
+
 
 class TestReverseSSL(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
     reverse = True
