@@ -365,7 +365,8 @@ class View(collections.Sequence):
                     self.add([i.copy()])
         except IOError as e:
             ctx.log.error(e.strerror)
-            return
+        except exceptions.FlowReadException as e:
+            ctx.log.error(str(e))
 
     @command.command("view.go")
     def go(self, dst: int) -> None:
