@@ -138,10 +138,6 @@ def tdump(path, flows):
         for i in flows:
             w.add(i)
 
-def twrite_invalid_data(path):
-    invalid_data = b"invalidflows"
-    with open(path, "wb") as f:
-        f.write(invalid_data)
 
 def test_create():
     v = view.View()
@@ -179,7 +175,8 @@ def test_load(tmpdir):
             v.load_file("nonexistent_file_path")
         except IOError:
             assert False
-        twrite_invalid_data(path)
+        with open(path, "wb") as f:
+            f.write(b"invalidflows")
         v.load_file(path)
         assert tctx.master.has_log("Invalid data format.")
 
