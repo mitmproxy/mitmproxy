@@ -516,7 +516,7 @@ class TestReverse(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
 
         p = self.pathoc()
         with p.connect():
-            resp = p.request("get:/")
+            p.request("get:/")
         assert self.master.has_log("The proxy shall not connect to itself.")
 
 
