@@ -114,9 +114,9 @@ class ConnectionHandler:
     def handle(self):
         self.log("clientconnect", "info")
 
-        root_layer = self._create_root_layer()
-
+        root_layer = None
         try:
+            root_layer = self._create_root_layer()
             root_layer = self.channel.ask("clientconnect", root_layer)
             root_layer()
         except exceptions.Kill:
@@ -151,7 +151,8 @@ class ConnectionHandler:
             print("Please lodge a bug report at: https://github.com/mitmproxy/mitmproxy", file=sys.stderr)
 
         self.log("clientdisconnect", "info")
-        self.channel.tell("clientdisconnect", root_layer)
+        if root_layer is not None:
+            self.channel.tell("clientdisconnect", root_layer)
         self.client_conn.finish()
 
     def log(self, msg, level):
