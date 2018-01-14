@@ -179,6 +179,10 @@ def test_load(tmpdir):
             v.load_file("nonexistent_file_path")
         except IOError:
             assert False
+        with open(path, "wb") as f:
+            f.write(b"invalidflows")
+        v.load_file(path)
+        assert tctx.master.has_log("Invalid data format.")
 
 
 def test_resolve():
