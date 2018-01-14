@@ -78,7 +78,7 @@ def encode(s: Sequence[Tuple[str, str]], similar_to: str=None) -> str:
 
     if remove_trailing_equal:
         encoded = encoded.replace("=&", "&")
-        if encoded[-1] == '=':
+        if encoded and encoded[-1] == '=':
             encoded = encoded[:-1]
 
     return encoded

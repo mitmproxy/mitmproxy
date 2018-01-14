@@ -108,6 +108,7 @@ def test_empty_key_trailing_equal_sign():
 def test_encode():
     assert url.encode([('foo', 'bar')])
     assert url.encode([('foo', surrogates)])
+    assert not url.encode([], similar_to="justatext")
 
 
 def test_decode():
