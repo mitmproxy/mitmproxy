@@ -76,7 +76,7 @@ def encode(s: Sequence[Tuple[str, str]], similar_to: str=None) -> str:
 
     encoded = urllib.parse.urlencode(s, False, errors="surrogateescape")
 
-    if remove_trailing_equal:
+    if encoded and remove_trailing_equal:
         encoded = encoded.replace("=&", "&")
         if encoded[-1] == '=':
             encoded = encoded[:-1]
