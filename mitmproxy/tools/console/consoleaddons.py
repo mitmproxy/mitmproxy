@@ -380,7 +380,8 @@ class ConsoleAddon:
         if not flow:
             raise exceptions.CommandError("No flow selected.")
         if part in ("response-headers", "response-body", "set-cookies"):
-            flow.response = http.HTTPResponse.make()
+            if flow.response is None:
+                flow.response = http.HTTPResponse.make()
         if part == "cookies":
             self.master.switch_view("edit_focus_cookies")
         elif part == "form":
