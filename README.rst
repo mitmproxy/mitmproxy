@@ -186,4 +186,4 @@ with the following command:
 .. _PEP8: https://www.python.org/dev/peps/pep-0008
 .. _`Google Style Guide`: https://google.github.io/styleguide/pyguide.html
 .. _forums: https://discourse.mitmproxy.org/
-.. _`good first contributions`: https://github.com/mitmproxy/mitmproxy/issues?q=is%3Aissue+is%3Aopen+label%3Agood-first-contribution
+.. _`good first contributions`: https://github.com/mitmproxy/mitmproxy/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
