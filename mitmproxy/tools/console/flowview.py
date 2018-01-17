@@ -58,7 +58,6 @@ class FlowDetails(tabs.Tabs):
             self.show()
         else:
             self.master.window.pop()
-            self.master.switch_view("flowlist")
 
     @property
     def view(self):
