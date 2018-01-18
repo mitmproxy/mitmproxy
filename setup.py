@@ -80,7 +80,7 @@ setup(
         "ruamel.yaml>=0.13.2, <0.16",
         "sortedcontainers>=1.5.4, <1.6",
         "tornado>=4.3, <4.6",
-        "urwid>=1.3.1, <1.4",
+        "urwid>=1.3.1, <2.1",
         "wsproto>=0.11.0,<0.12.0",
     ],
     extras_require={
