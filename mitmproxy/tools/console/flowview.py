@@ -55,7 +55,9 @@ class FlowDetails(tabs.Tabs):
                 (self.tab_response, self.view_response),
                 (self.tab_details, self.view_details),
             ]
-        self.show()
+            self.show()
+        else:
+            self.master.window.pop()
 
     @property
     def view(self):
