@@ -47,9 +47,12 @@ CompletionState = typing.NamedTuple(
 )
 
 
-class CommandBuffer():
+class CommandBuffer:
     def __init__(self, master: mitmproxy.master.Master, start: str = "") -> None:
         self.master = master
+        option_setting = start.startswith("set") and start.endswith("=")
+        if option_setting:
+            start += self.get_option_value(start)
         self.text = self.flatten(start)
         # Cursor is always within the range [0:len(buffer)].
         self._cursor = len(self.text)
@@ -93,6 +96,11 @@ class CommandBuffer():
             for v in remhelp:
                 ret.append(("commander_hint", "%s " % v))
         return ret
+
+    def get_option_value(self, txt):
+        option = txt.rstrip("=").split()[1]
+        option_value = getattr(self.master.options, option, None)
+        return option_value if option_value else ""
 
     def flatten(self, txt):
         parts, _ = self.master.commands.parse_partial(txt)

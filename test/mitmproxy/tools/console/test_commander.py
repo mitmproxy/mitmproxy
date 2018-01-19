@@ -1,4 +1,4 @@
-
+from mitmproxy import options
 from mitmproxy.tools.console.commander import commander
 from mitmproxy.test import taddons
 
@@ -96,3 +96,11 @@ class TestCommandBuffer:
         with taddons.context() as tctx:
             cb = commander.CommandBuffer(tctx.master)
             assert cb.flatten("foo  bar") == "foo bar"
+
+    def test_get_option_value(self):
+        opts = options.Options(view_filter="value")
+        with taddons.context(options=opts) as tctx:
+            cb = commander.CommandBuffer(tctx.master)
+            assert cb.get_option_value("set unknown_option=") == ""
+            assert cb.get_option_value("set intercept=") == ""
+            assert cb.get_option_value("set view_filter=") == "value"
