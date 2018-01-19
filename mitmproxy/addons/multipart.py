@@ -1,10 +1,5 @@
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
-import mimetypes
-
-
-def get_content_type(filename):
-    return mimetypes.guess_type(filename)[0] or 'application/octet-stream'
 
 
 def encode_multipart_formdata(filename, content):
@@ -19,7 +14,7 @@ def encode_multipart_formdata(filename, content):
         L.append(value.encode("utf-8"))
     L.append(b'--' + LIMIT)
     L.append(b'Content-Disposition: form-data; name="file"; filename="%b"' % filename.encode("utf-8"))
-    L.append(b'Content-Type: %b' % get_content_type(filename).encode("utf-8"))
+    L.append(b'Content-Type: application/octet-stream')
     L.append(b'')
     L.append(content)
     L.append(b'--' + LIMIT + b'--')
@@ -28,9 +23,10 @@ def encode_multipart_formdata(filename, content):
     content_type = b'multipart/form-data; boundary=%b' % LIMIT
     return content_type, body
 
+
 def post_multipart(host, filename, content):
     content_type, body = encode_multipart_formdata(filename, content)
-    req = Request("http://upload.share.mitmproxy.org.s3.amazonaws.com", data=body, method='POST')
+    req = Request(host, data=body, method='POST')
     req.add_header('content-type', content_type)
     req.add_header('content-length', str(len(body)))
     try:

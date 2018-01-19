@@ -3,9 +3,6 @@ import typing
 import random
 import datetime
 import time
-from urllib.request import Request, urlopen
-from urllib.error import HTTPError, URLError
-import mimetypes
 
 from mitmproxy import command
 from mitmproxy import exceptions
@@ -19,7 +16,7 @@ import mitmproxy.types
 from mitmproxy.addons import multipart
 
 
-class Upload:
+class Share:
     def __init__(self):
         self.stream = None
         self.filt = None
@@ -70,8 +67,8 @@ class Upload:
 
         return encoded
 
-    @command.command("upload.file")
-    def upload(self, flows: typing.Sequence[flow.Flow]) -> None:
+    @command.command("share.file")
+    def share(self, flows: typing.Sequence[flow.Flow]) -> None:
 
         d = datetime.datetime.utcnow()
         id = self.base36encode(int(time.mktime(d.timetuple()) * 1000 * random.random()))[0:7]
