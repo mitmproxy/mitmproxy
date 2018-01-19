@@ -3,6 +3,7 @@ import typing
 import random
 import datetime
 import time
+import _io
 
 from mitmproxy import command
 from mitmproxy import exceptions
@@ -26,12 +27,6 @@ class Share:
         mode = "wb"
         path = os.path.expanduser(path)
         return open(path, mode)
-
-    def read_file(self, path):
-        path = os.path.expanduser(path)
-        with open(path, "rb") as f:
-            content = f.read()
-        return content
 
     def start_stream_to_path(self, path, flt):
         try:
@@ -69,21 +64,17 @@ class Share:
 
     @command.command("share.file")
     def share(self, flows: typing.Sequence[flow.Flow]) -> None:
-
         d = datetime.datetime.utcnow()
-        id = self.base36encode(int(time.mktime(d.timetuple()) * 1000 * random.random()))[0:7]
-        try:
-            f = self.open_file(id)  # Making temporary file to store the flows
-        except IOError as v:
-            raise exceptions.CommandError(v) from v
+        u_id = self.base36encode(int(time.mktime(d.timetuple()) * 1000 * random.random()))[0:7]
+        f = _io.BytesIO()
         stream = io.FlowWriter(f)
         for i in flows:
             stream.add(i)
+        f.seek(0)
+        content = f.read()
+        res = multipart.post_multipart('upload.share.mitmproxy.org.s3.amazonaws.com', u_id, content)
         f.close()
-        content = self.read_file(id)
-        res = multipart.post_multipart('http://upload.share.mitmproxy.org.s3.amazonaws.com', id, content)
         ctx.log.alert("%s" % res)
-        os.remove(os.path.expanduser(id))  # Deleting the temporary file
 
     def tcp_start(self, flow):
         if self.stream:
