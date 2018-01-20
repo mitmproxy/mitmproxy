@@ -63,7 +63,7 @@ def format_dict(
                 ("text", value)
             ]
     except ValueError:
-        print("Request is blank")  # FIXME: Better message
+        print("Body is blank")  # FIXME: Better message
 
 
 def format_text(text: TTextType) -> typing.Iterator[TViewLine]:
