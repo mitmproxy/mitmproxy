@@ -1,5 +1,6 @@
 import typing
 
+from mitmproxy import ctx
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import exceptions
@@ -58,11 +59,14 @@ class Export():
             raise exceptions.CommandError("No such export format: %s" % fmt)
         func = formats[fmt]  # type: typing.Any
         v = func(f)
-        with open(path, "wb") as fp:
-            if isinstance(v, bytes):
-                fp.write(v)
-            else:
-                fp.write(v.encode("utf-8"))
+        try:
+            with open(path, "wb") as fp:
+                if isinstance(v, bytes):
+                    fp.write(v)
+                else:
+                    fp.write(v.encode("utf-8"))
+        except (PermissionError, IsADirectoryError, FileNotFoundError) as e:
+            ctx.log.error(e)
 
     @command.command("export.clip")
     def clip(self, fmt: str, f: flow.Flow) -> None:
