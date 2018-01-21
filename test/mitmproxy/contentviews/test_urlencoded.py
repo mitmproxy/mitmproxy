@@ -12,4 +12,7 @@ def test_view_urlencoded():
     d = url.encode([("adsfa", "")]).encode()
     assert v(d)
 
+    d = url.encode([]).encode()
+    assert v(d)
+
     assert not v(b"\xFF\x00")
