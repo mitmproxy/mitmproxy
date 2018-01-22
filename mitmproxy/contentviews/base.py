@@ -49,21 +49,19 @@ def format_dict(
     ]
     entries, where key is padded to a uniform width.
     """
-    try:
-        max_key_len = max(len(k) for k in d.keys())
-        max_key_len = min(max_key_len, KEY_MAX)
-        for key, value in d.items():
-            if isinstance(key, bytes):
-                key += b":"
-            else:
-                key += ":"
-            key = key.ljust(max_key_len + 2)
-            yield [
-                ("header", key),
-                ("text", value)
-            ]
-    except ValueError:
-        print("Body is blank")  # FIXME: Better message
+
+    max_key_len = max([len(k) for k in d.keys()], default=0)
+    max_key_len = min([max_key_len, KEY_MAX], default=0)
+    for key, value in d.items():
+        if isinstance(key, bytes):
+            key += b":"
+        else:
+            key += ":"
+        key = key.ljust(max_key_len + 2)
+        yield [
+            ("header", key),
+            ("text", value)
+        ]
 
 
 def format_text(text: TTextType) -> typing.Iterator[TViewLine]:
