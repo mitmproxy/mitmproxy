@@ -474,7 +474,7 @@ class ConsoleAddon:
                     )
             ctx.log.alert("Saved %s rows as CSV." % (len(rows)))
         except (PermissionError, IsADirectoryError, FileNotFoundError) as e:
-            ctx.log.error(e)
+            ctx.log.error(str(e))
 
     @command.command("console.grideditor.editor")
     def grideditor_editor(self) -> None:

@@ -66,7 +66,7 @@ class Export():
                 else:
                     fp.write(v.encode("utf-8"))
         except (PermissionError, IsADirectoryError, FileNotFoundError) as e:
-            ctx.log.error(e)
+            ctx.log.error(str(e))
 
     @command.command("export.clip")
     def clip(self, fmt: str, f: flow.Flow) -> None:

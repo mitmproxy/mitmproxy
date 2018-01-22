@@ -80,7 +80,7 @@ def qr(f):
 def test_export(tmpdir):
     f = str(tmpdir.join("path"))
     e = export.Export()
-    with taddons.context():
+    with taddons.context() as tctx:
         assert e.formats() == ["curl", "raw"]
         with pytest.raises(exceptions.CommandError):
             e.file("nonexistent", tflow.tflow(resp=True), f)
@@ -92,6 +92,16 @@ def test_export(tmpdir):
         e.file("curl", tflow.tflow(resp=True), f)
         assert qr(f)
         os.unlink(f)
+
+        with mock.patch("mitmproxy.addons.export.open") as m:
+            m.side_effect = [PermissionError("Permission denied"),
+                             IsADirectoryError("Is a directory"),
+                             FileNotFoundError("No such file or directory")]
+            for effect in range(3):
+                e.file("raw", tflow.tflow(resp=True), f)
+            assert tctx.master.has_log("Permission denied")
+            assert tctx.master.has_log("Is a directory")
+            assert tctx.master.has_log("No such file or directory")
 
 
 def test_clip(tmpdir):

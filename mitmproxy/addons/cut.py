@@ -110,7 +110,7 @@ class Cut:
                         )
                 ctx.log.alert("Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows)))
         except (PermissionError, IsADirectoryError, FileNotFoundError) as e:
-            ctx.log.error(e)
+            ctx.log.error(str(e))
 
     @command.command("cut.clip")
     def clip(
