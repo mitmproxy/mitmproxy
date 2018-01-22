@@ -473,7 +473,7 @@ class ConsoleAddon:
                         [strutils.always_str(x) or "" for x in row]  # type: ignore
                     )
             ctx.log.alert("Saved %s rows as CSV." % (len(rows)))
-        except (PermissionError, IsADirectoryError, FileNotFoundError) as e:
+        except IOError as e:
             ctx.log.error(str(e))
 
     @command.command("console.grideditor.editor")

@@ -65,7 +65,7 @@ class Export():
                     fp.write(v)
                 else:
                     fp.write(v.encode("utf-8"))
-        except (PermissionError, IsADirectoryError, FileNotFoundError) as e:
+        except IOError as e:
             ctx.log.error(str(e))
 
     @command.command("export.clip")

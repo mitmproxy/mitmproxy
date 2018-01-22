@@ -123,6 +123,25 @@ def test_cut_save(tmpdir):
                                        level="error")
 
 
+@pytest.mark.parametrize("exception, log_message", [
+    (PermissionError, "Permission denied"),
+    (IsADirectoryError, "Is a directory"),
+    (FileNotFoundError, "No such file or directory")
+])
+def test_cut_save_open(exception, log_message, tmpdir):
+    f = str(tmpdir.join("path"))
+    v = view.View()
+    c = cut.Cut()
+    with taddons.context() as tctx:
+        tctx.master.addons.add(v, c)
+        v.add([tflow.tflow(resp=True)])
+
+        with mock.patch("mitmproxy.addons.cut.open") as m:
+            m.side_effect = exception(log_message)
+            tctx.command(c.save, "@all", "request.method", f)
+            assert tctx.master.has_log(log_message, level="error")
+
+
 def test_cut():
     c = cut.Cut()
     with taddons.context():
