@@ -80,7 +80,7 @@ def qr(f):
 def test_export(tmpdir):
     f = str(tmpdir.join("path"))
     e = export.Export()
-    with taddons.context() as tctx:
+    with taddons.context():
         assert e.formats() == ["curl", "raw"]
         with pytest.raises(exceptions.CommandError):
             e.file("nonexistent", tflow.tflow(resp=True), f)
