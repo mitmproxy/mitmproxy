@@ -7,22 +7,24 @@ import json
 import base64
 import zlib
 import os
+import typing  # noqa
 
 from datetime import datetime
 from datetime import timezone
 
 import mitmproxy
 
+from mitmproxy import connections  # noqa
 from mitmproxy import version
 from mitmproxy import ctx
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import cookies
 
-HAR = {}
+HAR = {}  # type: typing.Dict
 
 # A list of server seen till now is maintained so we can avoid
 # using 'connect' time for entries that use an existing connection.
-SERVERS_SEEN = set()
+SERVERS_SEEN = set()  # type: typing.Set[connections.ServerConnection]
 
 
 def load(l):

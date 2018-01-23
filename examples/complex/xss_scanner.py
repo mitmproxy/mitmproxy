@@ -91,7 +91,7 @@ def find_unclaimed_URLs(body: Union[str, bytes], requestUrl: bytes) -> None:
                 return value
 
     class ScriptURLExtractor(HTMLParser):
-        script_URLs = []
+        script_URLs = []  # type: List[str]
 
         def handle_starttag(self, tag, attrs):
             if (tag == "script" or tag == "iframe") and "src" in [name for name, value in attrs]:
@@ -164,6 +164,7 @@ def test_query_injection(original_body: str, request_URL: str, cookies: Cookies)
 def log_XSS_data(xss_info: Optional[XSSData]) -> None:
     """ Log information about the given XSS to mitmproxy """
     # If it is None, then there is no info to log
+    print("in XSS")
     if not xss_info:
         return
     ctx.log.error("===== XSS Found ====")
@@ -175,6 +176,7 @@ def log_XSS_data(xss_info: Optional[XSSData]) -> None:
 
 def log_SQLi_data(sqli_info: Optional[SQLiData]) -> None:
     """ Log information about the given SQLi to mitmproxy """
+    print("in SQL")
     if not sqli_info:
         return
     ctx.log.error("===== SQLi Found =====")
@@ -251,7 +253,7 @@ def paths_to_text(html: str, str: str) -> List[str]:
 
     class PathHTMLParser(HTMLParser):
         currentPath = ""
-        paths = []
+        paths = []  # type: List[str]
 
         def handle_starttag(self, tag, attrs):
             self.currentPath += ("/" + tag)
