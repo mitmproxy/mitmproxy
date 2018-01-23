@@ -111,22 +111,10 @@ def test_cut_save(tmpdir):
         tctx.command(c.save, "@all", "request.method,request.content", f)
         assert qr(f).splitlines() == [b"GET,content", b"GET,content"]
 
-        with mock.patch("mitmproxy.addons.cut.open") as m:
-            m.side_effect = [PermissionError("Permission denied"),
-                             IsADirectoryError("Is a directory"),
-                             FileNotFoundError("No such file or directory")]
-            for i in range(3):
-                tctx.command(c.save, "@all", "request.method", f)
-            assert tctx.master.has_log("Permission denied", level="error")
-            assert tctx.master.has_log("Is a directory", level="error")
-            assert tctx.master.has_log("No such file or directory",
-                                       level="error")
-
 
 @pytest.mark.parametrize("exception, log_message", [
     (PermissionError, "Permission denied"),
-    (IsADirectoryError, "Is a directory"),
-    (FileNotFoundError, "No such file or directory")
+    (IsADirectoryError, "Is a directory")
 ])
 def test_cut_save_open(exception, log_message, tmpdir):
     f = str(tmpdir.join("path"))
