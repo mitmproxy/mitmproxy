@@ -96,7 +96,8 @@ def test_export(tmpdir):
 
 @pytest.mark.parametrize("exception, log_message", [
     (PermissionError, "Permission denied"),
-    (IsADirectoryError, "Is a directory")
+    (IsADirectoryError, "Is a directory"),
+    (FileNotFoundError, "No such file or directory")
 ])
 def test_export_open(exception, log_message, tmpdir):
     f = str(tmpdir.join("path"))
