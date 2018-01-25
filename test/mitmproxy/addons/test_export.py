@@ -94,6 +94,21 @@ def test_export(tmpdir):
         os.unlink(f)
 
 
+@pytest.mark.parametrize("exception, log_message", [
+    (PermissionError, "Permission denied"),
+    (IsADirectoryError, "Is a directory"),
+    (FileNotFoundError, "No such file or directory")
+])
+def test_export_open(exception, log_message, tmpdir):
+    f = str(tmpdir.join("path"))
+    e = export.Export()
+    with taddons.context() as tctx:
+        with mock.patch("mitmproxy.addons.export.open") as m:
+            m.side_effect = exception(log_message)
+            e.file("raw", tflow.tflow(resp=True), f)
+            assert tctx.master.has_log(log_message, level="error")
+
+
 def test_clip(tmpdir):
     e = export.Export()
     with taddons.context():
