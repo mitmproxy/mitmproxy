@@ -1,4 +1,3 @@
-# TODO: write tests
 import pytest
 from mitmproxy.contentviews import base
 
