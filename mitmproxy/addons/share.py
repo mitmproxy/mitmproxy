@@ -12,10 +12,6 @@ from mitmproxy import flow
 
 
 class Share:
-    def __init__(self):
-        self.res = None
-        self.u_id = None
-
     def encode_multipart_formdata(self, filename, content):
         params = {"key": filename, "acl": "bucket-owner-full-control", "Content-Type": "application/octet-stream"}
         LIMIT = b'---------------------------198495659117975628761412556003'
@@ -73,7 +69,5 @@ class Share:
         f.seek(0)
         content = f.read()
         res = self.post_multipart('upload.share.mitmproxy.org.s3.amazonaws.com', u_id, content)
-        self.res = res
-        self.u_id = u_id
         f.close()
         ctx.log.alert("%s" % res)

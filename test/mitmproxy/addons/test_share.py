@@ -13,15 +13,15 @@ def test_share_command():
         sh = share.Share()
         with taddons.context() as tctx:
             sh.share([tflow.tflow(resp=True)])
-            assert sh.res == "URL: share.mitmproxy.org/%s" % sh.u_id
+            assert tctx.master.has_log("URL: share.mitmproxy.org/")
 
             mock_http.return_value.getresponse.side_effect = http.client.RemoteDisconnected
             sh.share([tflow.tflow(resp=True)])
-            assert sh.res == "The server couldn\'t fulfill the request."
+            assert tctx.master.has_log("The server couldn\'t fulfill the request.")
 
             mock_http.return_value.request.side_effect = http.client.CannotSendRequest
             sh.share([tflow.tflow(resp=True)])
-            assert sh.res == "We failed to reach a server."
+            assert tctx.master.has_log("We failed to reach a server.")
 
             v = view.View()
             tctx.master.addons.add(v)
