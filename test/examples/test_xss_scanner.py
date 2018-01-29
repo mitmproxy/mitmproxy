@@ -343,10 +343,10 @@ class TestXSSScanner():
         monkeypatch.setattr("mitmproxy.ctx.log", logger)
         xss.log_SQLi_data(None)
         assert logger.args == []
-        xss.log_SQLi_data(xss.SQLiData(b'https://example.com',
-                                       b'Location',
-                                       b'Oracle.*Driver',
-                                       b'Oracle'))
+        xss.log_SQLi_data(xss.SQLiData('https://example.com',
+                                       'Location',
+                                       'Oracle.*Driver',
+                                       'Oracle'))
         assert logger.args[0] == '===== SQLi Found ====='
         assert logger.args[1] == 'SQLi URL: https://example.com'
         assert logger.args[2] == 'Injection Point: Location'
