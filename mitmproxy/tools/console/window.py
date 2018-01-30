@@ -63,6 +63,7 @@ class WindowStack:
             edit_focus_query = grideditor.QueryEditor(master),
             edit_focus_cookies = grideditor.CookieEditor(master),
             edit_focus_setcookies = grideditor.SetCookieEditor(master),
+            edit_focus_setcookie_attrs = grideditor.CookieAttributeEditor(master),
             edit_focus_form = grideditor.RequestFormEditor(master),
             edit_focus_path = grideditor.PathEditor(master),
             edit_focus_request_headers = grideditor.RequestHeaderEditor(master),

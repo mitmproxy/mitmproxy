@@ -433,7 +433,6 @@ class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
 
     def __init__(self, master):
         self.master = master
-        self.focus_changed()
 
     def call(self, v, name, *args, **kwargs):
         f = getattr(v, name, None)
@@ -462,7 +461,7 @@ class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     def layout_popping(self):
         self.call(self._w, "layout_popping")
 
-    def focus_changed(self):
+    def layout_pushed(self, prev):
         if self.master.view.focus.flow:
             self._w = BaseGridEditor(
                 self.master,
