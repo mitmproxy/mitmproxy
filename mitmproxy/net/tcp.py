@@ -295,8 +295,9 @@ class _Connection:
             try:
                 self.connection = connection
                 self.ip_address = connection.getpeername()
-                self._makefile()
             except:
+                pass
+            finally:
                 self._makefile()
         else:
             self.connection = None
