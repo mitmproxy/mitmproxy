@@ -140,9 +140,10 @@ class StatusBar(urwid.WidgetWrap):
         signals.flowlist_change.connect(self.sig_update)
         master.options.changed.connect(self.sig_update)
         master.view.focus.sig_change.connect(self.sig_update)
+        master.view.sig_view_add.connect(self.sig_update)
         self.redraw()
 
-    def sig_update(self, sender, updated=None):
+    def sig_update(self, sender, flow=None, updated=None):
         self.redraw()
 
     def keypress(self, *args, **kwargs):
