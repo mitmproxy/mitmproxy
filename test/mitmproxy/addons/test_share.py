@@ -12,16 +12,21 @@ def test_share_command():
     with mock.patch('mitmproxy.addons.share.http.client.HTTPConnection') as mock_http:
         sh = share.Share()
         with taddons.context() as tctx:
+            mock_http.return_value.getresponse.return_value = mock.MagicMock(status=204, reason="No Content")
             sh.share([tflow.tflow(resp=True)])
-            assert tctx.master.has_log("URL: share.mitmproxy.org/")
+            assert tctx.master.has_log("https://share.mitmproxy.org/")
 
-            mock_http.return_value.getresponse.side_effect = http.client.RemoteDisconnected
+            mock_http.return_value.getresponse.return_value = mock.MagicMock(status=403, reason="Forbidden")
             sh.share([tflow.tflow(resp=True)])
-            assert tctx.master.has_log("The server couldn\'t fulfill the request.")
+            assert tctx.master.has_log("Forbidden")
 
-            mock_http.return_value.request.side_effect = http.client.CannotSendRequest
+            mock_http.return_value.getresponse.return_value = mock.MagicMock(status=404, reason="")
             sh.share([tflow.tflow(resp=True)])
-            assert tctx.master.has_log("We failed to reach a server.")
+            assert tctx.master.has_log("Not Found")
+
+            mock_http.return_value.request.side_effect = http.client.CannotSendRequest("Error in sending req")
+            sh.share([tflow.tflow(resp=True)])
+            assert tctx.master.has_log("Error in sending req")
 
             v = view.View()
             tctx.master.addons.add(v)
