@@ -295,8 +295,8 @@ class _Connection:
             try:
                 self.connection = connection
                 self.ip_address = connection.getpeername()
-            except:
-                pass
+            except OSError as e:
+                print(e, file=sys.stderr)
             finally:
                 self._makefile()
         else:
