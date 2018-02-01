@@ -2,6 +2,7 @@ import math
 
 import urwid
 
+from mitmproxy import ctx
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import layoutwidget
@@ -45,7 +46,7 @@ class Choice(urwid.WidgetWrap):
             s = "option_active_selected" if focus else "option_active"
         else:
             s = "option_selected" if focus else "text"
-        return super().__init__(
+        super().__init__(
             urwid.AttrWrap(
                 urwid.Padding(urwid.Text(txt)),
                 s,
@@ -95,17 +96,29 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         self.master = master
         self.choices = choices
         self.callback = callback
+        shortcutwidth = 3
         choicewidth = max([len(i) for i in choices])
-        self.width = max(choicewidth, len(title)) + 5
+        self.width = max(shortcutwidth+choicewidth, len(title)) + 5
+        self.possible_shortcuts = "123456789abcdefghijklmnopqrstuvwxyz"
+        self.shortcuts = self.get_shortcuts(choices)
+
+        shortcuts_walker = urwid.SimpleListWalker([
+            urwid.Text([("key", s), ")"], align="left") for s in self.shortcuts
+        ])
+        shortcuts_listbox = urwid.ListBox(shortcuts_walker)
+        shortcuts_listbox._selectable = False  # We don't want to focus on it
         self.walker = ChooserListWalker(choices, current)
+        content = urwid.Columns([(shortcutwidth, shortcuts_listbox),
+                                 (choicewidth+3, urwid.ListBox(self.walker))],
+                                focus_column=1)
         super().__init__(
             urwid.AttrWrap(
                 urwid.LineBox(
                     urwid.BoxAdapter(
-                        urwid.ListBox(self.walker),
+                        content,
                         len(choices)
                     ),
-                    title= title
+                    title=title
                 ),
                 "background"
             )
@@ -120,7 +133,12 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
             self.callback(self.choices[self.walker.index])
             signals.pop_view_state.send(self)
             return
-        elif key == "esc":
+        elif key in self.possible_shortcuts:
+            shortcut_index = self.possible_shortcuts.find(key)
+            self.callback(self.choices[shortcut_index])
+            signals.pop_view_state.send(self)
+            return
+        elif key in ["q", "esc"]:
             signals.pop_view_state.send(self)
             return
 
@@ -130,6 +148,11 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
             self.master.keymap.handle("global", key)
         elif key in keymap.navkeys:
             return super().keypress(size, key)
+
+    def get_shortcuts(self, choices):
+        if len(self.possible_shortcuts) < len(choices):
+            ctx.log.warn("Too few available shortcuts.")
+        return list(self.possible_shortcuts[:len(choices)])
 
 
 class OptionsOverlay(urwid.WidgetWrap, layoutwidget.LayoutWidget):
