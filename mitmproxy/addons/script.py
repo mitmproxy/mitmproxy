@@ -44,13 +44,15 @@ class Script:
     def __init__(self, path):
         self.name = "scriptmanager:" + path
         self.path = path
-        self.fullpath = os.path.expanduser(path)
+        self.fullpath = os.path.expanduser(
+            path.strip("'\" ")
+        )
         self.ns = None
 
         self.last_load = 0
         self.last_mtime = 0
         if not os.path.isfile(self.fullpath):
-            raise exceptions.OptionsError("No such script: %s" % path)
+            raise exceptions.OptionsError('No such script: "%s"' % self.fullpath)
 
     @property
     def addons(self):
