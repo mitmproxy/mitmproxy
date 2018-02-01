@@ -133,8 +133,8 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
             self.callback(self.choices[self.walker.index])
             signals.pop_view_state.send(self)
             return
-        elif key in self.possible_shortcuts:
-            shortcut_index = self.possible_shortcuts.find(key)
+        elif key in self.shortcuts:
+            shortcut_index = self.shortcuts.index(key)
             self.callback(self.choices[shortcut_index])
             signals.pop_view_state.send(self)
             return
