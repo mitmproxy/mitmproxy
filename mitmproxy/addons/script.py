@@ -44,7 +44,9 @@ class Script:
     def __init__(self, path):
         self.name = "scriptmanager:" + path
         self.path = path
-        self.fullpath = os.path.expanduser(path)
+        self.fullpath = os.path.expanduser(
+            path.strip("'\" ")
+        )
         self.ns = None
 
         self.last_load = 0

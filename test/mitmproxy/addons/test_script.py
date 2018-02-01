@@ -68,6 +68,18 @@ class TestScript:
             with pytest.raises(exceptions.OptionsError):
                 script.Script("nonexistent")
 
+    def test_quotes_around_filename(self):
+        """
+        Test that a script specified as '"foo.py"' works to support the calling convention of
+        mitmproxy 2.0, as e.g. used by Cuckoo Sandbox.
+        """
+        path = tutils.test_data.path("mitmproxy/data/addonscripts/recorder/recorder.py")
+
+        s = script.Script(
+            '"{}"'.format(path)
+        )
+        assert '"' not in s.fullpath
+
     def test_simple(self):
         with taddons.context() as tctx:
             sc = script.Script(
