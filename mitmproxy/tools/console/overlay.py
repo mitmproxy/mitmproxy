@@ -41,10 +41,14 @@ class SimpleOverlay(urwid.Overlay, layoutwidget.LayoutWidget):
 
 
 class Choice(urwid.WidgetWrap):
-    def __init__(self, txt, focus, current):
+    def __init__(self, txt, shortcut, focus, current):
         if current:
             s = "option_active_selected" if focus else "option_active"
         else:
+            if shortcut and focus:
+                txt = [("option_selected_key", shortcut), ") ", txt]
+            else:
+                txt = [("key", shortcut), ") ", txt]
             s = "option_selected" if focus else "text"
         super().__init__(
             urwid.AttrWrap(
@@ -61,14 +65,15 @@ class Choice(urwid.WidgetWrap):
 
 
 class ChooserListWalker(urwid.ListWalker):
-    def __init__(self, choices, current):
+    def __init__(self, choices, shortcuts, current):
         self.index = 0
         self.choices = choices
+        self.shortcuts = shortcuts
         self.current = current
 
     def _get(self, idx, focus):
         c = self.choices[idx]
-        return Choice(c, focus, c == self.current)
+        return Choice(c, self.shortcuts[idx:idx+1], focus, c == self.current)
 
     def set_focus(self, index):
         self.index = index
@@ -88,6 +93,12 @@ class ChooserListWalker(urwid.ListWalker):
             return None, None
         return self._get(pos, False), pos
 
+    def choice_by_shortcut(self, shortcut):
+        for i, choice in enumerate(self.choices):
+            if shortcut == self.shortcuts[i:i+1]:
+                return choice
+        return None
+
 
 class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     keyctx = "chooser"
@@ -96,26 +107,16 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         self.master = master
         self.choices = choices
         self.callback = callback
-        shortcutwidth = 3
         choicewidth = max([len(i) for i in choices])
-        self.width = max(shortcutwidth + choicewidth, len(title)) + 5
-        self.possible_shortcuts = "12345"
-        self.shortcuts = self.get_shortcuts(choices)
+        self.width = max(choicewidth, len(title)) + 5
+        self.shortcuts = "123456789abcdefghijklmnoprstuvwxyz"[:len(choices)]
 
-        shortcuts_walker = urwid.SimpleListWalker([
-            urwid.Text([("key", s), ")"], align="left") for s in self.shortcuts
-        ])
-        shortcuts_listbox = urwid.ListBox(shortcuts_walker)
-        shortcuts_listbox._selectable = False  # We don't want to focus on it
-        self.walker = ChooserListWalker(choices, current)
-        content = urwid.Columns([(shortcutwidth, shortcuts_listbox),
-                                 (choicewidth + 3, urwid.ListBox(self.walker))],
-                                focus_column=1)
+        self.walker = ChooserListWalker(choices, self.shortcuts, current)
         super().__init__(
             urwid.AttrWrap(
                 urwid.LineBox(
                     urwid.BoxAdapter(
-                        content,
+                        urwid.ListBox(self.walker),
                         len(choices)
                     ),
                     title=title
@@ -129,13 +130,15 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
 
     def keypress(self, size, key):
         key = self.master.keymap.handle_only("chooser", key)
-        if key == "m_select":
-            self.callback(self.choices[self.walker.index])
-            signals.pop_view_state.send(self)
-            return
-        elif key in self.shortcuts:
+        choice = self.walker.choice_by_shortcut(key)
+        if choice:
             shortcut_index = self.shortcuts.index(key)
             self.callback(self.choices[shortcut_index])
+            signals.pop_view_state.send(self)
+            return
+
+        if key == "m_select":
+            self.callback(self.choices[self.walker.index])
             signals.pop_view_state.send(self)
             return
         elif key in ["q", "esc"]:
@@ -148,11 +151,6 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
             self.master.keymap.handle("global", key)
         elif key in keymap.navkeys:
             return super().keypress(size, key)
-
-    def get_shortcuts(self, choices):
-        if len(self.possible_shortcuts) < len(choices):
-            ctx.log.warn("Too few available shortcuts.")
-        return list(self.possible_shortcuts[:len(choices)])
 
 
 class OptionsOverlay(urwid.WidgetWrap, layoutwidget.LayoutWidget):
