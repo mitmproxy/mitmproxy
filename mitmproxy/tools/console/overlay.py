@@ -98,8 +98,8 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         self.callback = callback
         shortcutwidth = 3
         choicewidth = max([len(i) for i in choices])
-        self.width = max(shortcutwidth+choicewidth, len(title)) + 5
-        self.possible_shortcuts = "123456789abcdefghijklmnopqrstuvwxyz"
+        self.width = max(shortcutwidth + choicewidth, len(title)) + 5
+        self.possible_shortcuts = "12345"
         self.shortcuts = self.get_shortcuts(choices)
 
         shortcuts_walker = urwid.SimpleListWalker([
@@ -109,7 +109,7 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         shortcuts_listbox._selectable = False  # We don't want to focus on it
         self.walker = ChooserListWalker(choices, current)
         content = urwid.Columns([(shortcutwidth, shortcuts_listbox),
-                                 (choicewidth+3, urwid.ListBox(self.walker))],
+                                 (choicewidth + 3, urwid.ListBox(self.walker))],
                                 focus_column=1)
         super().__init__(
             urwid.AttrWrap(
