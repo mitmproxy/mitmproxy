@@ -803,9 +803,10 @@ class TestPeekSSL(TestPeek):
         with c.connect() as conn:
             c.convert_to_tls()
             return conn.pop()
+
+
 class Test_nmap_localhost_scan(tcp.BaseHandler):
     connection = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
     address = ('::ffff:127.0.0.1', 37656, 0, 0)
-    server = None
     def handle(self):
-        super().__init__(self,connection,address,server)
+        super().__init__(self,connection,address,None)
