@@ -50,7 +50,7 @@ class Script:
         self.last_load = 0
         self.last_mtime = 0
         if not os.path.isfile(self.fullpath):
-            raise exceptions.OptionsError("No such script: %s" % path)
+            raise exceptions.OptionsError('No such script: "%s"' % self.fullpath)
 
     @property
     def addons(self):
