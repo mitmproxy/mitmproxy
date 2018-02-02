@@ -65,11 +65,12 @@ class Choice(urwid.WidgetWrap):
 
 
 class ChooserListWalker(urwid.ListWalker):
-    def __init__(self, choices, current, shortcuts):
+    shortcuts = "123456789abcdefghijklmnoprstuvwxyz"
+
+    def __init__(self, choices, current):
         self.index = 0
         self.choices = choices
         self.current = current
-        self.shortcuts = shortcuts
 
     def _get(self, idx, focus):
         c = self.choices[idx]
@@ -93,6 +94,12 @@ class ChooserListWalker(urwid.ListWalker):
             return None, None
         return self._get(pos, False), pos
 
+    def choice_by_shortcut(self, shortcut):
+        for i, choice in enumerate(self.choices):
+            if shortcut == self.shortcuts[i:i+1]:
+                return choice
+        return None
+
 
 class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     keyctx = "chooser"
@@ -103,9 +110,8 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         self.callback = callback
         choicewidth = max([len(i) for i in choices])
         self.width = max(choicewidth, len(title)) + 7
-        self.shortcuts = "123456789abcdefghijklmnoprstuvwxyz"[:len(choices)]
 
-        self.walker = ChooserListWalker(choices, current, self.shortcuts)
+        self.walker = ChooserListWalker(choices, current)
         super().__init__(
             urwid.AttrWrap(
                 urwid.LineBox(
@@ -124,13 +130,13 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
 
     def keypress(self, size, key):
         key = self.master.keymap.handle_only("chooser", key)
-        if key == "m_select":
-            self.callback(self.choices[self.walker.index])
+        choice = self.walker.choice_by_shortcut(key)
+        if choice:
+            self.callback(choice)
             signals.pop_view_state.send(self)
             return
-        elif key in self.shortcuts:
-            shortcut_index = self.shortcuts.index(key)
-            self.callback(self.choices[shortcut_index])
+        if key == "m_select":
+            self.callback(self.choices[self.walker.index])
             signals.pop_view_state.send(self)
             return
         elif key in ["q", "esc"]:
