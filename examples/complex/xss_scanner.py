@@ -395,26 +395,23 @@ def get_XSS_data(body: Union[str, bytes], request_URL: str, injection_point: str
 
 # response is mitmproxy's entry point
 def response(flow: http.HTTPFlow) -> None:
-    cookiesDict = get_cookies(flow)
-    try:
-        resp = flow.response.content.decode('utf-8')
-    except AttributeError:
-        resp = flow.response.content
+    cookies_dict = get_cookies(flow)
+    resp = flow.response.get_text(strict=False)
     # Example: http://xss.guru/unclaimedScriptTag.html
     find_unclaimed_URLs(resp, flow.request.url)
-    results = test_end_of_URL_injection(resp, flow.request.url, cookiesDict)
+    results = test_end_of_URL_injection(resp, flow.request.url, cookies_dict)
     log_XSS_data(results[0])
     log_SQLi_data(results[1])
     # Example: https://daviddworken.com/vulnerableReferer.php
-    results = test_referer_injection(resp, flow.request.url, cookiesDict)
+    results = test_referer_injection(resp, flow.request.url, cookies_dict)
     log_XSS_data(results[0])
     log_SQLi_data(results[1])
     # Example: https://daviddworken.com/vulnerableUA.php
-    results = test_user_agent_injection(resp, flow.request.url, cookiesDict)
+    results = test_user_agent_injection(resp, flow.request.url, cookies_dict)
     log_XSS_data(results[0])
     log_SQLi_data(results[1])
     if "?" in flow.request.url:
         # Example: https://daviddworken.com/vulnerable.php?name=
-        results = test_query_injection(resp, flow.request.url, cookiesDict)
+        results = test_query_injection(resp, flow.request.url, cookies_dict)
         log_XSS_data(results[0])
         log_SQLi_data(results[1])
