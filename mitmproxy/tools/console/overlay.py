@@ -2,7 +2,6 @@ import math
 
 import urwid
 
-from mitmproxy import ctx
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import grideditor
 from mitmproxy.tools.console import layoutwidget
@@ -74,7 +73,7 @@ class ChooserListWalker(urwid.ListWalker):
 
     def _get(self, idx, focus):
         c = self.choices[idx]
-        return Choice(c, focus, c == self.current, self.shortcuts[idx:idx+1])
+        return Choice(c, focus, c == self.current, self.shortcuts[idx:idx + 1])
 
     def set_focus(self, index):
         self.index = index
