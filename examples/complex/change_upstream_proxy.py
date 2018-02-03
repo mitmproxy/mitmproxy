@@ -1,3 +1,6 @@
+from mitmproxy import http
+import typing
+
 # This scripts demonstrates how mitmproxy can switch to a second/different upstream proxy
 # in upstream proxy mode.
 #
@@ -6,7 +9,7 @@
 # If you want to change the target server, you should modify flow.request.host and flow.request.port
 
 
-def proxy_address(flow):
+def proxy_address(flow: http.HTTPFlow) -> typing.Tuple[str, int]:
     # Poor man's loadbalancing: route every second domain through the alternative proxy.
     if hash(flow.request.host) % 2 == 1:
         return ("localhost", 8082)
@@ -14,7 +17,7 @@ def proxy_address(flow):
         return ("localhost", 8081)
 
 
-def request(flow):
+def request(flow: http.HTTPFlow) -> None:
     if flow.request.method == "CONNECT":
         # If the decision is done by domain, one could also modify the server address here.
         # We do it after CONNECT here to have the request data available as well.

