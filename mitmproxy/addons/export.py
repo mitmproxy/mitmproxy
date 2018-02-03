@@ -77,4 +77,7 @@ class Export():
             raise exceptions.CommandError("No such export format: %s" % fmt)
         func = formats[fmt]  # type: typing.Any
         v = strutils.always_str(func(f))
-        pyperclip.copy(v)
+        try:
+            pyperclip.copy(v)
+        except pyperclip.PyperclipException as e:
+            ctx.log.error(str(e))

@@ -139,4 +139,7 @@ class Cut:
                     [strutils.always_str(v) or "" for v in vals]  # type: ignore
                 )
             ctx.log.alert("Clipped %s cuts as CSV." % len(cuts))
-        pyperclip.copy(fp.getvalue())
+        try:
+            pyperclip.copy(fp.getvalue())
+        except pyperclip.PyperclipException as e:
+            ctx.log.error(str(e))
