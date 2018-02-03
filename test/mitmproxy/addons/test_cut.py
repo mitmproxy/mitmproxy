@@ -92,7 +92,7 @@ def test_cut_clip():
 
         with mock.patch('pyperclip.copy') as pc:
             log_message = "Pyperclip could not find a " \
-                         "copy/paste mechanism for your system."
+                          "copy/paste mechanism for your system."
             pc.side_effect = pyperclip.PyperclipException(log_message)
             tctx.command(c.clip, "@all", "request.method")
             assert tctx.master.has_log(log_message, level="error")

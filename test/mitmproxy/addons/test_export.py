@@ -127,7 +127,7 @@ def test_clip(tmpdir):
 
         with mock.patch('pyperclip.copy') as pc:
             log_message = "Pyperclip could not find a " \
-                         "copy/paste mechanism for your system."
+                          "copy/paste mechanism for your system."
             pc.side_effect = pyperclip.PyperclipException(log_message)
             e.clip("raw", tflow.tflow(resp=True))
             assert tctx.master.has_log(log_message, level="error")
