@@ -96,7 +96,7 @@ class ChooserListWalker(urwid.ListWalker):
 
     def choice_by_shortcut(self, shortcut):
         for i, choice in enumerate(self.choices):
-            if shortcut == self.shortcuts[i:i+1]:
+            if shortcut == self.shortcuts[i:i + 1]:
                 return choice
         return None
 
