@@ -7,6 +7,7 @@ from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 import pytest
+import pyperclip
 from unittest import mock
 
 
@@ -88,6 +89,13 @@ def test_cut_clip():
         with mock.patch('pyperclip.copy') as pc:
             tctx.command(c.clip, "@all", "request.method,request.content")
             assert pc.called
+
+        with mock.patch('pyperclip.copy') as pc:
+            log_message = "Pyperclip could not find a " \
+                          "copy/paste mechanism for your system."
+            pc.side_effect = pyperclip.PyperclipException(log_message)
+            tctx.command(c.clip, "@all", "request.method")
+            assert tctx.master.has_log(log_message, level="error")
 
 
 def test_cut_save(tmpdir):
