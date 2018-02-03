@@ -40,12 +40,17 @@ class SimpleOverlay(urwid.Overlay, layoutwidget.LayoutWidget):
 
 
 class Choice(urwid.WidgetWrap):
-    def __init__(self, txt, focus, current):
+    def __init__(self, txt, focus, current, shortcut):
+        if shortcut:
+            selection_type = "option_selected_key" if focus else "key"
+            txt = [(selection_type, shortcut), ") ", txt]
+        else:
+            txt = "   " + txt
         if current:
             s = "option_active_selected" if focus else "option_active"
         else:
             s = "option_selected" if focus else "text"
-        return super().__init__(
+        super().__init__(
             urwid.AttrWrap(
                 urwid.Padding(urwid.Text(txt)),
                 s,
@@ -60,6 +65,8 @@ class Choice(urwid.WidgetWrap):
 
 
 class ChooserListWalker(urwid.ListWalker):
+    shortcuts = "123456789abcdefghijklmnoprstuvwxyz"
+
     def __init__(self, choices, current):
         self.index = 0
         self.choices = choices
@@ -67,7 +74,7 @@ class ChooserListWalker(urwid.ListWalker):
 
     def _get(self, idx, focus):
         c = self.choices[idx]
-        return Choice(c, focus, c == self.current)
+        return Choice(c, focus, c == self.current, self.shortcuts[idx:idx + 1])
 
     def set_focus(self, index):
         self.index = index
@@ -87,6 +94,12 @@ class ChooserListWalker(urwid.ListWalker):
             return None, None
         return self._get(pos, False), pos
 
+    def choice_by_shortcut(self, shortcut):
+        for i, choice in enumerate(self.choices):
+            if shortcut == self.shortcuts[i:i + 1]:
+                return choice
+        return None
+
 
 class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     keyctx = "chooser"
@@ -96,7 +109,8 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         self.choices = choices
         self.callback = callback
         choicewidth = max([len(i) for i in choices])
-        self.width = max(choicewidth, len(title)) + 5
+        self.width = max(choicewidth, len(title)) + 7
+
         self.walker = ChooserListWalker(choices, current)
         super().__init__(
             urwid.AttrWrap(
@@ -105,7 +119,7 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
                         urwid.ListBox(self.walker),
                         len(choices)
                     ),
-                    title= title
+                    title=title
                 ),
                 "background"
             )
@@ -116,11 +130,16 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
 
     def keypress(self, size, key):
         key = self.master.keymap.handle_only("chooser", key)
+        choice = self.walker.choice_by_shortcut(key)
+        if choice:
+            self.callback(choice)
+            signals.pop_view_state.send(self)
+            return
         if key == "m_select":
             self.callback(self.choices[self.walker.index])
             signals.pop_view_state.send(self)
             return
-        elif key == "esc":
+        elif key in ["q", "esc"]:
             signals.pop_view_state.send(self)
             return
 
