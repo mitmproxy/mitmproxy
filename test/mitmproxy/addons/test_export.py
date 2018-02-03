@@ -1,5 +1,7 @@
-import pytest
 import os
+
+import pytest
+import pyperclip
 
 from mitmproxy import exceptions
 from mitmproxy.addons import export  # heh
@@ -111,7 +113,7 @@ def test_export_open(exception, log_message, tmpdir):
 
 def test_clip(tmpdir):
     e = export.Export()
-    with taddons.context():
+    with taddons.context() as tctx:
         with pytest.raises(exceptions.CommandError):
             e.clip("nonexistent", tflow.tflow(resp=True))
 
@@ -122,3 +124,10 @@ def test_clip(tmpdir):
         with mock.patch('pyperclip.copy') as pc:
             e.clip("curl", tflow.tflow(resp=True))
             assert pc.called
+
+        with mock.patch('pyperclip.copy') as pc:
+            except_msg = "Pyperclip could not find a " \
+                         "copy/paste mechanism for your system."
+            pc.side_effect = pyperclip.PyperclipException(except_msg)
+            e.clip("raw", tflow.tflow(resp=True))
+            assert tctx.master.has_log(except_msg, level="error")
