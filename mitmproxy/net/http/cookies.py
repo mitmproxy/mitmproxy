@@ -114,12 +114,17 @@ def _read_cookie_pairs(s, off=0):
         lhs, off = _read_key(s, off)
         lhs = lhs.lstrip()
 
-        if lhs:
+        if not lhs:
+            if s and s[off] == "=":
+                lhs = ''
+
+        if s and s[off] == "=":
             rhs = None
-            if off < len(s) and s[off] == "=":
+            if off < len(s):
                 rhs, off = _read_value(s, off + 1, ";")
 
             pairs.append([lhs, rhs])
+            raise AssertionError([lhs, rhs])
 
         off += 1
 
@@ -143,9 +148,13 @@ def _read_set_cookie_pairs(s: str, off=0) -> Tuple[List[TPairs], int]:
         lhs, off = _read_key(s, off, ";=,")
         lhs = lhs.lstrip()
 
-        if lhs:
+        if not lhs:
+            if s and s[off] == "=":
+                lhs = ''
+
+        if s and s[off] == "=":
             rhs = None
-            if off < len(s) and s[off] == "=":
+            if off < len(s):
                 rhs, off = _read_value(s, off + 1, ";,")
 
                 # Special handliing of attributes
@@ -168,6 +177,7 @@ def _read_set_cookie_pairs(s: str, off=0) -> Tuple[List[TPairs], int]:
             if off < len(s) and s[off] == ",":
                 cookies.append(pairs)
                 pairs = []
+
 
         off += 1
 
