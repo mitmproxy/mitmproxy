@@ -7,6 +7,10 @@ from mitmproxy.net.http import cookies
 
 cookie_pairs = [
     [
+        "=uno",
+        [["", "uno"]]
+    ],
+    [
         "",
         []
     ],

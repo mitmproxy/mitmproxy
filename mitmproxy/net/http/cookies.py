@@ -114,12 +114,12 @@ def _read_cookie_pairs(s, off=0):
         lhs, off = _read_key(s, off)
         lhs = lhs.lstrip()
 
-        if lhs:
+        if lhs is not None:
             rhs = None
             if off < len(s) and s[off] == "=":
                 rhs, off = _read_value(s, off + 1, ";")
-
-            pairs.append([lhs, rhs])
+            if rhs or lhs:
+                pairs.append([lhs, rhs])
 
         off += 1
 
@@ -143,12 +143,12 @@ def _read_set_cookie_pairs(s: str, off=0) -> Tuple[List[TPairs], int]:
         lhs, off = _read_key(s, off, ";=,")
         lhs = lhs.lstrip()
 
-        if lhs:
+        if lhs is not None:
             rhs = None
             if off < len(s) and s[off] == "=":
                 rhs, off = _read_value(s, off + 1, ";,")
 
-                # Special handliing of attributes
+                # Special handling of attributes
                 if lhs.lower() == "expires":
                     # 'expires' values can contain commas in them so they need to
                     # be handled separately.
@@ -161,8 +161,8 @@ def _read_set_cookie_pairs(s: str, off=0) -> Tuple[List[TPairs], int]:
                     if len(rhs) <= 3:
                         trail, off = _read_value(s, off + 1, ";,")
                         rhs = rhs + "," + trail
-
-            pairs.append([lhs, rhs])
+            if rhs or lhs:
+                pairs.append([lhs, rhs])
 
             # comma marks the beginning of a new cookie
             if off < len(s) and s[off] == ",":
