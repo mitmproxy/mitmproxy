@@ -131,8 +131,11 @@ class CommandManager(mitmproxy.types._CommandBase):
         for i in dir(addon):
             if not i.startswith("__"):
                 o = getattr(addon, i)
-                if hasattr(o, "command_path"):
-                    self.add(o.command_path, o)
+                try:
+                    if hasattr(o, "command_path"):
+                        self.add(o.command_path, o)
+                except:
+                    pass
 
     def add(self, path: str, func: typing.Callable):
         self.commands[path] = Command(self, path, func)
