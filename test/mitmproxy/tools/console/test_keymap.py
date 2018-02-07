@@ -42,7 +42,7 @@ def test_join():
         km = keymap.Keymap(tctx.master)
         km.add("key", "str", ["options"], "help1")
         km.add("key", "str", ["commands"])
-        return
+
         assert len(km.bindings) == 1
         assert len(km.bindings[0].contexts) == 2
         assert km.bindings[0].help == "help1"
