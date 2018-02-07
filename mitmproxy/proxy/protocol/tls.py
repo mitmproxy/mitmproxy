@@ -424,6 +424,9 @@ class TlsLayer(base.Layer):
                 #   * which results in garbage because the layers don' match.
                 alpn = [self.client_conn.get_alpn_proto_negotiated()]
 
+            # We pass through the list of ciphers send by the client, because some HTTP/2 servers
+            # will select a non-HTTP/2 compatible cipher from our default list and then hang up
+            # because it's incompatible with h2. :-)
             ciphers_server = self.config.options.ciphers_server
             if not ciphers_server and self._client_tls:
                 ciphers_server = []
@@ -432,16 +435,12 @@ class TlsLayer(base.Layer):
                         ciphers_server.append(CIPHER_ID_NAME_MAP[id])
                 ciphers_server = ':'.join(ciphers_server)
 
+            args = net_tls.client_arguments_from_options(self.config.options)
+            args["cipher_list"] = ciphers_server
             self.server_conn.establish_tls(
-                self.config.client_certs,
-                self.server_sni,
-                method=self.config.openssl_method_server,
-                options=self.config.openssl_options_server,
-                verify=self.config.openssl_verification_mode_server,
-                ca_path=self.config.options.ssl_verify_upstream_trusted_cadir,
-                ca_pemfile=self.config.options.ssl_verify_upstream_trusted_ca,
-                cipher_list=ciphers_server,
+                sni=self.server_sni,
                 alpn_protos=alpn,
+                **args
             )
             tls_cert_err = self.server_conn.ssl_verification_error
             if tls_cert_err is not None:
