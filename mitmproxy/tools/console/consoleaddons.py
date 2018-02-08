@@ -279,11 +279,13 @@ class ConsoleAddon:
 
     @command.command("console.command.set")
     def console_command_set(self, option: str) -> None:
-        """Doc"""
+        """
+        Prompt the user to set an option of the form "key[=value]".
+        """
         option_value = getattr(self.master.options, option, None)
         current_value = option_value if option_value else ""
         self.master.commands.call(
-            "console.command set {}={}".format(option, current_value)
+            "console.command set %s=%s" % (option, current_value)
         )
 
     @command.command("console.view.keybindings")
