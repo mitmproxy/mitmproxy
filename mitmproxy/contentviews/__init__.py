@@ -23,7 +23,7 @@ from mitmproxy.net import http
 from mitmproxy.utils import strutils
 from . import (
     auto, raw, hex, json, xml_html, wbxml, javascript, css,
-    urlencoded, multipart, image, query, protobuf, stream_json
+    urlencoded, multipart, image, query, protobuf, octet_stream_json
 )
 from .base import View, VIEW_CUTOFF, KEY_MAX, format_text, format_dict, TViewResult
 
@@ -175,7 +175,7 @@ add(multipart.ViewMultipart())
 add(image.ViewImage())
 add(query.ViewQuery())
 add(protobuf.ViewProtobuf())
-add(stream_json.ViewStreamJSON())
+add(octet_stream_json.ViewOctetStreamJSON())
 
 __all__ = [
     "View", "VIEW_CUTOFF", "KEY_MAX", "format_text", "format_dict", "TViewResult",
