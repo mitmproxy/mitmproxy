@@ -383,6 +383,7 @@ class ConsoleAddon:
             part in ("response-headers", "response-body", "set-cookies") and
             flow.response is None
         )
+        flow.backup()
         if require_dummy_response:
             flow.response = http.HTTPResponse.make()
         if part == "cookies":

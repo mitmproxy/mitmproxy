@@ -178,6 +178,7 @@ class Core:
         for f in flows:
             p = getattr(f, part, None)
             if p:
+                f.backup()
                 current_enc = p.headers.get("content-encoding", "identity")
                 if current_enc == "identity":
                     p.encode("deflate")
