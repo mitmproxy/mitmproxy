@@ -47,7 +47,7 @@ CompletionState = typing.NamedTuple(
 )
 
 
-class CommandBuffer():
+class CommandBuffer:
     def __init__(self, master: mitmproxy.master.Master, start: str = "") -> None:
         self.master = master
         self.text = self.flatten(start)

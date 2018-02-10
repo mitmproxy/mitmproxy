@@ -277,6 +277,17 @@ class ConsoleAddon:
         """
         signals.status_prompt_command.send(partial=" ".join(partial))  # type: ignore
 
+    @command.command("console.command.set")
+    def console_command_set(self, option: str) -> None:
+        """
+        Prompt the user to set an option of the form "key[=value]".
+        """
+        option_value = getattr(self.master.options, option, None)
+        current_value = option_value if option_value else ""
+        self.master.commands.call(
+            "console.command set %s=%s" % (option, current_value)
+        )
+
     @command.command("console.view.keybindings")
     def view_keybindings(self) -> None:
         """View the commands list."""

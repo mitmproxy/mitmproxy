@@ -26,8 +26,8 @@ def map(km):
     km.add("ctrl b", "console.nav.pageup", ["global"], "Page up")
 
     km.add("I", "console.intercept.toggle", ["global"], "Toggle intercept")
-    km.add("i", "console.command set intercept=", ["global"], "Set intercept")
-    km.add("W", "console.command set save_stream_file=", ["global"], "Stream to file")
+    km.add("i", "console.command.set intercept", ["global"], "Set intercept")
+    km.add("W", "console.command.set save_stream_file", ["global"], "Stream to file")
     km.add("A", "flow.resume @all", ["flowlist", "flowview"], "Resume all intercepted flows")
     km.add("a", "flow.resume @focus", ["flowlist", "flowview"], "Resume this intercepted flow")
     km.add(
@@ -46,7 +46,7 @@ def map(km):
         ["flowlist", "flowview"],
         "Export this flow to file"
     )
-    km.add("f", "console.command set view_filter=", ["flowlist"], "Set view filter")
+    km.add("f", "console.command.set view_filter", ["flowlist"], "Set view filter")
     km.add("F", "set console_focus_follow=toggle", ["flowlist"], "Set focus follow")
     km.add(
         "ctrl l",
