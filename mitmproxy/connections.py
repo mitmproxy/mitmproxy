@@ -253,7 +253,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             address=address,
             ip_address=address,
             cert=None,
-            sni=None,
+            sni=address[0],
             alpn_proto_negotiated=None,
             tls_version=None,
             source_address=('', 0),
@@ -276,21 +276,21 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.wfile.write(message)
         self.wfile.flush()
 
-    def establish_tls(self, clientcerts, sni, **kwargs):
+    def establish_tls(self, *, sni=None, client_certs=None, **kwargs):
         if sni and not isinstance(sni, str):
             raise ValueError("sni must be str, not " + type(sni).__name__)
-        clientcert = None
-        if clientcerts:
-            if os.path.isfile(clientcerts):
-                clientcert = clientcerts
+        client_cert = None
+        if client_certs:
+            if os.path.isfile(client_certs):
+                client_cert = client_certs
             else:
                 path = os.path.join(
-                    clientcerts,
+                    client_certs,
                     self.address[0].encode("idna").decode()) + ".pem"
                 if os.path.exists(path):
-                    clientcert = path
+                    client_cert = path
 
-        self.convert_to_tls(cert=clientcert, sni=sni, **kwargs)
+        self.convert_to_tls(cert=client_cert, sni=sni, **kwargs)
         self.sni = sni
         self.alpn_proto_negotiated = self.get_alpn_proto_negotiated()
         self.tls_version = self.connection.get_protocol_version_name()

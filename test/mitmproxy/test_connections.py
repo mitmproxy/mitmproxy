@@ -155,7 +155,7 @@ class TestServerConnection:
     def test_sni(self):
         c = connections.ServerConnection(('', 1234))
         with pytest.raises(ValueError, matches='sni must be str, not '):
-            c.establish_tls(None, b'foobar')
+            c.establish_tls(sni=b'foobar')
 
     def test_state(self):
         c = tflow.tserver_conn()
@@ -222,17 +222,16 @@ class TestServerConnectionTLS(tservers.ServerTestBase):
         def handle(self):
             self.finish()
 
-    @pytest.mark.parametrize("clientcert", [
+    @pytest.mark.parametrize("client_certs", [
         None,
         tutils.test_data.path("mitmproxy/data/clientcert"),
         tutils.test_data.path("mitmproxy/data/clientcert/client.pem"),
     ])
-    def test_tls(self, clientcert):
+    def test_tls(self, client_certs):
         c = connections.ServerConnection(("127.0.0.1", self.port))
         c.connect()
-        c.establish_tls(clientcert, "foo.com")
+        c.establish_tls(client_certs=client_certs)
         assert c.connected()
-        assert c.sni == "foo.com"
         assert c.tls_established
         c.close()
         c.finish()
