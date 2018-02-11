@@ -168,7 +168,7 @@ class JSONDumper:
         self.dump(flow.get_state())
 
     @concurrent
-    def websocket_messages(self, flow):
+    def websocket_end(self, flow):
         self.dump(flow.get_state())
 
     @concurrent
