@@ -106,6 +106,14 @@ def test_read_cookie_pairs():
             'one="\\"two"; three=four',
             [["one", '"two'], ["three", "four"]]
         ],
+        [
+            "=; foo=bar",
+            [["", ""], ["foo", "bar"]]
+        ],
+        [
+            "=ooze; foo=bar",
+            [["", "ooze"], ["foo", "bar"]]
+        ],
     ]
     for s, lst in vals:
         ret, off = cookies._read_cookie_pairs(s)
@@ -151,6 +159,20 @@ def test_parse_set_cookie_pairs():
             [[
                 ["one", "uno"],
                 ["foo", None]
+            ]]
+        ],
+        [
+            "=; foo=bar",
+            [[
+                ["", ""],
+                ["foo", "bar"]
+            ]]
+        ],
+        [
+            "=ooze; foo=bar",
+            [[
+                ["", "ooze"],
+                ["foo", "bar"]
             ]]
         ],
         [
