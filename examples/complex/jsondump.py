@@ -1,3 +1,35 @@
+"""
+This script serializes the entire traffic dump, including websocket traffic,
+as JSON, and either sends it to a URL or writes to a file. The serialization
+format is optimized for Elasticsearch; the script can be used to send all
+captured traffic to Elasticsearch directly.
+
+Usage:
+
+    mitmproxy
+        -R http://example.com/
+        -s examples/jsondump.py
+
+Configuration:
+
+    Send to a URL:
+
+        cat > ~/.mitmproxy/config.yaml <<EOF
+        dump_destination: "https://elastic.search.local/my-index/my-type"
+        # Optional Basic auth:
+        dump_username: "never-gonna-give-you-up"
+        dump_password: "never-gonna-let-you-down"
+        # Optional base64 encoding of content fields
+        # to store as binary fields in Elasticsearch:
+        dump_encodecontent: true
+        EOF
+
+    Dump to a local file:
+
+        cat > ~/.mitmproxy/config.yaml <<EOF
+        dump_destination: "/user/rastley/output.log"
+        EOF
+"""
 from threading import Lock
 import base64
 import json
@@ -8,8 +40,13 @@ from mitmproxy.script import concurrent
 
 
 class JSONDumper:
+    """
+    JSONDumper performs JSON serialization and some extra processing
+    for out-of-the-box Elasticsearch support, and then either writes
+    the result to a file or sends it to a URL.
+    """
     def __init__(self):
-        self.outfile = open('jsondump.out', 'a')
+        self.outfile = None
         self.transformations = None
         self.encode = None
         self.url = None
@@ -120,10 +157,13 @@ class JSONDumper:
         return obj
 
     def dump(self, frame):
+        """
+        Transform and dump (write / send) a data frame.
+        """
         for tfm in self.transformations:
             for field in tfm['fields']:
                 self.transform_field(frame, field, tfm['func'])
-        frame = json.dumps(self.convert_to_strings(frame))
+        frame = self.convert_to_strings(frame)
 
         if self.outfile:
             self.lock.acquire()
@@ -134,6 +174,9 @@ class JSONDumper:
 
     @staticmethod
     def load(loader):
+        """
+        Extra options to be specified in `~/.mitmproxy/config.yaml`.
+        """
         loader.add_option('dump_encodecontent', bool, False,
                           'Encode content as base64.')
         loader.add_option('dump_destination', str, 'jsondump.out',
@@ -144,6 +187,12 @@ class JSONDumper:
                           'Basic auth password for URL destinations.')
 
     def configure(self, _):
+        """
+        Determine the destination type and path, initialize the output
+        transformation rules.
+        """
+        self.encode = ctx.options.dump_encodecontent
+
         if ctx.options.dump_destination.startswith('http'):
             self.outfile = None
             self.url = ctx.options.dump_destination
@@ -159,20 +208,38 @@ class JSONDumper:
 
         self._init_transformations()
 
+
     @concurrent
     def response(self, flow):
+        """
+        Dump request/response pairs.
+        """
         self.dump(flow.get_state())
 
     @concurrent
     def error(self, flow):
+        """
+        Dump errors.
+        """
         self.dump(flow.get_state())
 
     @concurrent
     def websocket_end(self, flow):
+        """
+        Dump websocket messages once the connection ends.
+
+        Alternatively, you can replace `websocket_end` with
+        `websocket_message` if you want the messages to be
+        dumped one at a time with full metadata. Warning:
+        this takes up _a lot_ of space.
+        """
         self.dump(flow.get_state())
 
     @concurrent
     def websocket_error(self, flow):
+        """
+        Dump websocket errors.
+        """
         self.dump(flow.get_state())
 
-addons = [JSONDumper()]
+addons = [JSONDumper()]  # pylint: disable=invalid-name
