@@ -379,11 +379,12 @@ class ConsoleAddon:
         # but for now it is.
         if not flow:
             raise exceptions.CommandError("No flow selected.")
+        flow.backup()
+
         require_dummy_response = (
             part in ("response-headers", "response-body", "set-cookies") and
             flow.response is None
         )
-        flow.backup()
         if require_dummy_response:
             flow.response = http.HTTPResponse.make()
         if part == "cookies":
