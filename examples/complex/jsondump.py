@@ -115,10 +115,10 @@ class JSONDumper:
             {
                 'fields': self.fields['ws_messages'],
                 'func': lambda ms: [{
-                    'type':        m[0],
+                    'type': m[0],
                     'from_client': m[1],
-                    'content':     base64.b64encode(m[2]) if self.encode else m[2],
-                    'timestamp':   int(m[3] * 1000),
+                    'content': base64.b64encode(m[2]) if self.encode else m[2],
+                    'timestamp': int(m[3] * 1000),
                 } for m in ms],
             }
         ]
@@ -167,7 +167,7 @@ class JSONDumper:
 
         if self.outfile:
             self.lock.acquire()
-            self.outfile.write(json.dumps(frame)+"\n")
+            self.outfile.write(json.dumps(frame) + "\n")
             self.lock.release()
         else:
             requests.post(self.url, json=frame, auth=(self.auth or None))
@@ -208,7 +208,6 @@ class JSONDumper:
 
         self._init_transformations()
 
-
     @concurrent
     def response(self, flow):
         """
@@ -241,5 +240,6 @@ class JSONDumper:
         Dump websocket errors.
         """
         self.dump(flow.get_state())
+
 
 addons = [JSONDumper()]  # pylint: disable=invalid-name
