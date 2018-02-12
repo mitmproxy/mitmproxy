@@ -791,9 +791,11 @@ class TestPeekSSL(TestPeek):
             return conn.pop()
 
 
-class Test_nmap_localhost_scan(tcp.BaseHandler):
+class Test_nmap_localhost_scan():
 
     def handle(self):
         connection = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
-        address = ('::ffff:127.0.0.1', 37656, 0, 0)
-        self.__init__(connection,address,None)
+        assert tcp._Connection(connection)
+
+
+
