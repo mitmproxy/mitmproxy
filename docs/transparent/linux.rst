@@ -18,8 +18,6 @@ achieve transparent mode.
  3. If your target machine is on the same physical network and you configured it to use a custom
     gateway, disable ICMP redirects:
 
-    >>> sysctl -w net.ipv4.conf.all.accept_redirects=0
-    >>> sysctl -w net.ipv6.conf.all.accept_redirects=0
     >>> sysctl -w net.ipv4.conf.all.send_redirects=0
 
     You may also want to consider enabling this permanently in ``/etc/sysctl.conf`` or a newly created ``/etc/sysctl.d/mitmproxy.conf``, see `here <https://superuser.com/a/625852>`__.
