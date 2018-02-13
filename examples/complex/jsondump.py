@@ -53,7 +53,7 @@ class JSONDumper:
         self.lock = None
         self.auth = None
 
-    def __del__(self):
+    def done(self):
         if self.outfile:
             self.outfile.close()
 
