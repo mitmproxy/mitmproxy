@@ -61,8 +61,8 @@ class Save:
         except IOError as v:
             raise exceptions.CommandError(v) from v
         stream = io.FlowWriter(f)
-        for i in flows:
-            stream.add(i)
+        for x in flows:
+            stream.add(x)
         f.close()
         ctx.log.alert("Saved %s flows." % len(flows))
 
