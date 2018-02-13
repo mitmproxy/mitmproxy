@@ -164,6 +164,7 @@ class Core:
         for f in flows:
             p = getattr(f, part, None)
             if p:
+                f.backup()
                 p.decode()
                 updated.append(f)
         ctx.master.addons.trigger("update", updated)
@@ -178,6 +179,7 @@ class Core:
         for f in flows:
             p = getattr(f, part, None)
             if p:
+                f.backup()
                 current_enc = p.headers.get("content-encoding", "identity")
                 if current_enc == "identity":
                     p.encode("deflate")
@@ -204,6 +206,7 @@ class Core:
             if p:
                 current_enc = p.headers.get("content-encoding", "identity")
                 if current_enc == "identity":
+                    f.backup()
                     p.encode(enc)
                     updated.append(f)
         ctx.master.addons.trigger("update", updated)
