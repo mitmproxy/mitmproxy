@@ -75,7 +75,10 @@ class Script:
                 self.ns = None
                 with addonmanager.safecall():
                     ns = load_script(self.fullpath)
-                    ctx.master.addons.register(ns)
+                    try:
+                        ctx.master.addons.register(ns)
+                    except exceptions.AddonManagerError as e:
+                        ctx.log.alert(str(e))
                     self.ns = ns
                 if self.ns:
                     # We're already running, so we have to explicitly register and

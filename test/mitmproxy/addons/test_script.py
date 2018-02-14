@@ -102,6 +102,10 @@ class TestScript:
             assert rec.call_log[0][1] == "request"
 
     def test_reload(self, tmpdir):
+        """
+        Test that a script should reload successfully, and users alerted if tries to run/load
+        the same script again manually.
+        """
         with taddons.context() as tctx:
             f = tmpdir.join("foo.py")
             f.ensure(file=True)
@@ -116,6 +120,11 @@ class TestScript:
             sc.last_load, sc.last_mtime = 0, 0
             sc.tick()
             assert tctx.master.has_log("Loading")
+
+            ns = script.Script(str(f))
+            tctx.configure(ns)
+            ns.tick()
+            assert tctx.master.has_log("already exists", level="alert")
 
     def test_exception(self):
         with taddons.context() as tctx:
