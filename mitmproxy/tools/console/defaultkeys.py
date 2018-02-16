@@ -11,6 +11,7 @@ def map(km):
     km.add("q", "console.view.pop", ["global"], "Exit the current view")
     km.add("-", "console.layout.cycle", ["global"], "Cycle to next layout")
     km.add("shift tab", "console.panes.next", ["global"], "Focus next layout pane")
+    km.add("ctrl right", "console.panes.next", ["global"], "Focus next layout pane")
     km.add("P", "console.view.flow @focus", ["global"], "View flow details")
 
     km.add("g", "console.nav.start", ["global"], "Go to start")
