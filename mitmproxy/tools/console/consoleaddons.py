@@ -498,10 +498,11 @@ class ConsoleAddon:
 
     @command.command("console.flowview.mode.set")
     @command.argument("mode", type=mitmproxy.types.Choice("console.flowview.mode.options"))
-    def flowview_mode_set(self, mode: str) -> None:
+    def flowview_mode_set(self, *mode: str) -> None:
         """
             Set the display mode for the current flow view.
         """
+        mode = " ".join(mode)
         fv = self.master.window.current_window("flowview")
         if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
