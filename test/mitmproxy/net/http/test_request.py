@@ -351,7 +351,7 @@ class TestRequestUtils:
         request.headers["Content-Type"] = "application/x-www-form-urlencoded"
         assert list(request.urlencoded_form.items()) == [("foobar", "baz")]
         request.raw_content = b"\xFF"
-        assert len(request.urlencoded_form) == 0
+        assert len(request.urlencoded_form) == 1
 
     def test_set_urlencoded_form(self):
         request = treq(content=b"\xec\xed")

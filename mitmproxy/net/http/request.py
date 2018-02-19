@@ -429,10 +429,7 @@ class Request(message.Message):
     def _get_urlencoded_form(self):
         is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
-            try:
-                return tuple(mitmproxy.net.http.url.decode(self.get_text(strict=False)))
-            except ValueError:
-                pass
+            return tuple(mitmproxy.net.http.url.decode(self.get_text(strict=False)))
         return ()
 
     def _set_urlencoded_form(self, form_data):
