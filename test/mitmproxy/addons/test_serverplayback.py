@@ -331,7 +331,7 @@ def test_server_playback_full():
     with taddons.context() as tctx:
         tctx.configure(
             s,
-            refresh_server_playback = True,
+            server_replay_refresh = True,
         )
 
         f = tflow.tflow()
@@ -363,7 +363,7 @@ def test_server_playback_kill():
     with taddons.context() as tctx:
         tctx.configure(
             s,
-            refresh_server_playback = True,
+            server_replay_refresh = True,
             replay_kill_extra=True
         )
 

@@ -211,7 +211,7 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("anticomp")
         if self.master.options.showhost:
             opts.append("showhost")
-        if not self.master.options.refresh_server_playback:
+        if not self.master.options.server_replay_refresh:
             opts.append("norefresh")
         if self.master.options.replay_kill_extra:
             opts.append("killextra")

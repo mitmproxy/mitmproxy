@@ -16,7 +16,7 @@ def test_statusbar(monkeypatch):
         anticache=True,
         anticomp=True,
         showhost=True,
-        refresh_server_playback=False,
+        server_replay_refresh=False,
         replay_kill_extra=True,
         upstream_cert=False,
         stream_large_bodies="3m",

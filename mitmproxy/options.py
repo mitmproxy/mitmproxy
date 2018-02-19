@@ -65,7 +65,7 @@ class Options(optmanager.OptManager):
         onboarding_port = None  # type: int
         proxyauth = None  # type: Optional[str]
         rawtcp = None  # type: bool
-        refresh_server_playback = None  # type: bool
+        server_replay_refresh = None  # type: bool
         replacements = None  # type: Sequence[str]
         replay_kill_extra = None  # type: bool
         rfile = None  # type: Optional[str]
@@ -160,7 +160,7 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
-            "refresh_server_playback", bool, True,
+            "server_replay_refresh", bool, True,
             """
             Refresh server replay responses by adjusting date, expires and
             last-modified headers, as well as adjusting cookie expiration.

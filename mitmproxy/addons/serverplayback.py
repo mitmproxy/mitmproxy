@@ -131,7 +131,7 @@ class ServerPlayback:
             if rflow:
                 response = rflow.response.copy()
                 response.is_replay = True
-                if ctx.options.refresh_server_playback:
+                if ctx.options.server_replay_refresh:
                     response.refresh()
                 f.response = response
                 if not self.flowmap:
