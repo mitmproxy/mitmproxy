@@ -230,9 +230,7 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.options.mode != "regular":
             r.append("[%s]" % self.master.options.mode)
         if self.master.options.scripts:
-            r.append("[")
-            r.append(("heading_key", "s"))
-            r.append("cripts:%s]" % len(self.master.options.scripts))
+            r.append("[scripts:%s]" % len(self.master.options.scripts))
 
         if self.master.options.save_stream_file:
             r.append("[W:%s]" % self.master.options.save_stream_file)
