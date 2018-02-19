@@ -430,7 +430,7 @@ class Request(message.Message):
         is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
             try:
-                return tuple(mitmproxy.net.http.url.decode(self.content.decode()))
+                return tuple(mitmproxy.net.http.url.decode(self.get_text(strict=False)))
             except ValueError:
                 pass
         return ()
