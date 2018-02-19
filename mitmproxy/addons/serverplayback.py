@@ -137,7 +137,7 @@ class ServerPlayback:
                 if not self.flowmap:
                     self.final_flow = f
                     self.stop = True
-            elif ctx.options.replay_kill_extra:
+            elif ctx.options.server_replay_kill_extra:
                 ctx.log.warn(
                     "server_playback: killed non-replay request {}".format(
                         f.request.url

@@ -364,7 +364,7 @@ def test_server_playback_kill():
         tctx.configure(
             s,
             server_replay_refresh = True,
-            replay_kill_extra=True
+            server_replay_kill_extra=True
         )
 
         f = tflow.tflow()

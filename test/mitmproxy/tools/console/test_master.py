@@ -21,7 +21,7 @@ def test_format_keyvals():
 
 
 def test_options():
-    assert options.Options(replay_kill_extra=True)
+    assert options.Options(server_replay_kill_extra=True)
 
 
 class TestMaster(tservers.MasterTest):

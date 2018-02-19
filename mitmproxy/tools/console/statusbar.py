@@ -213,7 +213,7 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("showhost")
         if not self.master.options.server_replay_refresh:
             opts.append("norefresh")
-        if self.master.options.replay_kill_extra:
+        if self.master.options.server_replay_kill_extra:
             opts.append("killextra")
         if not self.master.options.upstream_cert:
             opts.append("no-upstream-cert")

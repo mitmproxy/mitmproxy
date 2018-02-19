@@ -67,7 +67,7 @@ class Options(optmanager.OptManager):
         rawtcp = None  # type: bool
         server_replay_refresh = None  # type: bool
         replacements = None  # type: Sequence[str]
-        replay_kill_extra = None  # type: bool
+        server_replay_kill_extra = None  # type: bool
         rfile = None  # type: Optional[str]
         save_stream_file = None  # type: Optional[str]
         save_stream_filter = None  # type: Optional[str]
@@ -137,7 +137,7 @@ class Options(optmanager.OptManager):
             "Replay client requests from a saved file."
         )
         self.add_option(
-            "replay_kill_extra", bool, False,
+            "server_replay_kill_extra", bool, False,
             "Kill extra requests during replay."
         )
         self.add_option(
