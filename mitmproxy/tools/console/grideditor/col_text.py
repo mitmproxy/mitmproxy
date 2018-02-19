@@ -28,7 +28,7 @@ class Column(col_bytes.Column):
 class EncodingMixin:
     def __init__(self, data, encoding_args):
         self.encoding_args = encoding_args
-        super().__init__(data.encode(*self.encoding_args))
+        super().__init__(data.__str__().encode(*self.encoding_args))
 
     def get_data(self):
         data = super().get_data()
