@@ -1,4 +1,5 @@
 import csv
+import shlex
 import typing
 
 from mitmproxy import ctx
@@ -259,7 +260,7 @@ class ConsoleAddon:
 
         def callback(opt):
             # We're now outside of the call context...
-            repl = "\"" + " ".join(args) + "\""
+            repl = shlex.quote(" ".join(args))
             repl = repl.replace("{choice}", opt)
             try:
                 self.master.commands.call(subcmd + " " + repl)
