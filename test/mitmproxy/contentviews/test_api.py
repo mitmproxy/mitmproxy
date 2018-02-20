@@ -9,7 +9,6 @@ from mitmproxy.test import tutils
 
 class TestContentView(contentviews.View):
     name = "test"
-    prompt = ("test", "t")
     content_types = ["test/123"]
 
 
