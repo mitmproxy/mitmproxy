@@ -10,17 +10,6 @@ from mitmproxy.utils import human
 # Detect Windows Subsystem for Linux
 IS_WSL = "Microsoft" in platform.platform()
 
-METHOD_OPTIONS = [
-    ("get", "g"),
-    ("post", "p"),
-    ("put", "u"),
-    ("head", "h"),
-    ("trace", "t"),
-    ("delete", "d"),
-    ("options", "o"),
-    ("edit raw", "e"),
-]
-
 
 def is_keypress(k):
     """

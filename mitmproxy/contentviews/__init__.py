@@ -16,7 +16,6 @@ parameters are passed as the ``query`` keyword argument.
 import traceback
 from typing import Dict, Optional  # noqa
 from typing import List  # noqa
-from typing import Tuple  # noqa
 
 from mitmproxy import exceptions
 from mitmproxy.net import http
@@ -29,19 +28,11 @@ from .base import View, VIEW_CUTOFF, KEY_MAX, format_text, format_dict, TViewRes
 
 views = []  # type: List[View]
 content_types_map = {}  # type: Dict[str, List[View]]
-view_prompts = []  # type: List[Tuple[str, str]]
 
 
 def get(name: str) -> Optional[View]:
     for i in views:
         if i.name.lower() == name.lower():
-            return i
-    return None
-
-
-def get_by_shortcut(c: str) -> Optional[View]:
-    for i in views:
-        if i.prompt[1] == c:
             return i
     return None
 
@@ -52,18 +43,11 @@ def add(view: View) -> None:
         if i.name == view.name:
             raise exceptions.ContentViewException("Duplicate view: " + view.name)
 
-    # TODO: the UI should auto-prompt for a replacement shortcut
-    for prompt in view_prompts:
-        if prompt[1] == view.prompt[1]:
-            raise exceptions.ContentViewException("Duplicate view shortcut: " + view.prompt[1])
-
     views.append(view)
 
     for ct in view.content_types:
         l = content_types_map.setdefault(ct, [])
         l.append(view)
-
-    view_prompts.append(view.prompt)
 
 
 def remove(view: View) -> None:
@@ -74,7 +58,6 @@ def remove(view: View) -> None:
         if not len(l):
             del content_types_map[ct]
 
-    view_prompts.remove(view.prompt)
     views.remove(view)
 
 
@@ -178,6 +161,5 @@ add(protobuf.ViewProtobuf())
 
 __all__ = [
     "View", "VIEW_CUTOFF", "KEY_MAX", "format_text", "format_dict", "TViewResult",
-    "get", "get_by_shortcut", "add", "remove",
-    "get_content_view", "get_message_content_view",
+    "get", "add", "remove", "get_content_view", "get_message_content_view",
 ]

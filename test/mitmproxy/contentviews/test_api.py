@@ -22,13 +22,6 @@ def test_add_remove():
     with pytest.raises(ContentViewException, match="Duplicate view"):
         contentviews.add(tcv)
 
-    tcv2 = TestContentView()
-    tcv2.name = "test2"
-    tcv2.prompt = ("test2", "t")
-    # Same shortcut doesn't work either.
-    with pytest.raises(ContentViewException, match="Duplicate view shortcut"):
-        contentviews.add(tcv2)
-
     contentviews.remove(tcv)
     assert tcv not in contentviews.views
 
@@ -88,6 +81,3 @@ def test_get_message_content_view():
     assert list(lines) == [[("error", "content missing")]]
 
 
-def test_get_by_shortcut():
-    assert contentviews.get_by_shortcut("s")
-    assert not contentviews.get_by_shortcut("b")
