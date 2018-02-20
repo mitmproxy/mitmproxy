@@ -7,10 +7,6 @@ from mitmproxy import contentviews
 
 class ViewSwapCase(contentviews.View):
     name = "swapcase"
-
-    # We don't have a good solution for the keyboard shortcut yet -
-    # you manually need to find a free letter. Contributions welcome :)
-    prompt = ("swap case text", "z")
     content_types = ["text/plain"]
 
     def __call__(self, data, **metadata) -> contentviews.TViewResult:

@@ -4,7 +4,6 @@ from . import base
 
 class ViewWBXML(base.View):
     name = "WBXML"
-    prompt = ("wbxml", "w")
     content_types = [
         "application/vnd.wap.wbxml",
         "application/vnd.ms-sync.wbxml"

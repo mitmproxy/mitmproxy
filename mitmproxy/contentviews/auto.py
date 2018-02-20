@@ -6,7 +6,6 @@ from . import base
 
 class ViewAuto(base.View):
     name = "Auto"
-    prompt = ("auto", "a")
 
     def __call__(self, data, **metadata):
         headers = metadata.get("headers", {})

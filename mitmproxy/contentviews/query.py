@@ -5,7 +5,6 @@ from . import base
 
 class ViewQuery(base.View):
     name = "Query"
-    prompt = ("query", "q")
 
     def __call__(self, data, **metadata):
         query = metadata.get("query")

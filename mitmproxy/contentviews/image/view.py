@@ -15,7 +15,6 @@ imghdr.tests.append(test_ico)
 
 class ViewImage(base.View):
     name = "Image"
-    prompt = ("image", "i")
 
     # there is also a fallback in the auto view for image/*.
     content_types = [

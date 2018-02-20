@@ -4,7 +4,6 @@ from . import base
 
 class ViewHex(base.View):
     name = "Hex"
-    prompt = ("hex", "e")
 
     @staticmethod
     def _format(data):
