@@ -78,5 +78,3 @@ def test_get_message_content_view():
     r.content = None
     desc, lines, err = contentviews.get_message_content_view("raw", r)
     assert list(lines) == [[("error", "content missing")]]
-
-
