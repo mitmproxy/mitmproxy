@@ -50,7 +50,7 @@ def process_options(parser, opts, args):
         args.flow_detail = 0
     if args.verbose:
         args.verbosity = 'debug'
-        args.flow_detail = 3
+        args.flow_detail = 2
 
     adict = {}
     for n in dir(args):
