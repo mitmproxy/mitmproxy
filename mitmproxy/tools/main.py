@@ -43,9 +43,12 @@ def process_options(parser, opts, args):
     if args.version:
         print(debug.dump_system_info())
         sys.exit(0)
-    if args.quiet or args.options or args.commands:
+    if args.quiet:
         args.verbosity = 'error'
         args.flow_detail = 0
+    if args.verbose:
+        args.verbosity = 'debug'
+        args.flow_detail = 3
 
     adict = {}
     for n in dir(args):
