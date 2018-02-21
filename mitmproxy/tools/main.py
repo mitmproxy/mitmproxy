@@ -43,7 +43,9 @@ def process_options(parser, opts, args):
     if args.version:
         print(debug.dump_system_info())
         sys.exit(0)
-    if args.quiet:
+    if args.quiet or args.options or args.commands:
+        # also reduce log verbosity if --options or --commands is passed,
+        # we don't want log messages from regular startup then.
         args.verbosity = 'error'
         args.flow_detail = 0
     if args.verbose:
