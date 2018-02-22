@@ -29,8 +29,6 @@ matrix:
       env: TOXENV=py36
     - python: 3.6
       env: TOXENV=individual_coverage
-    - python: 3.6
-      env: TOXENV=docs
     - language: node_js
       node_js: "node"
       before_install:

@@ -1,1 +1,3 @@
-_build/
+src/public
+node_modules
+public

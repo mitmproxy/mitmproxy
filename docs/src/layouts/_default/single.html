@@ -1,0 +1,10 @@
+{{ partial "header.html" . }}
+<div class="columns">
+    <div class="column is-one-quarter sidebody">
+        {{ partial "sidebar.html" . }}
+    </div>
+    <div class="column content mainbody">
+        {{.Content}}
+    </div>
+</div>
+{{ partial "footer.html" . }}

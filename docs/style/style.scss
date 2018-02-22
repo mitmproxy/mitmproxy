@@ -1,0 +1,62 @@
+@import "./syntax";
+
+$primary: #C93312;
+$warning-invert: #FFFFFF;
+$family-sans-serif: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif, 'Font Awesome 5 Free', 'Font Awesome 5 Brands' !default;
+@import "../node_modules/bulma/sass/utilities/_all";
+@import "../node_modules/bulma/sass/base/_all";
+@import "../node_modules/bulma/sass/grid/_all";
+@import "../node_modules/bulma/sass/elements/_all";
+@import "../node_modules/bulma/sass/components/_all";
+@import "../node_modules/bulma/sass/layout/_all";
+
+.sidebody {
+    height: 100vh;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.example {
+    .highlight {
+        margin: 0;
+    }
+    .path {
+        font-style: italic;
+        width: 100%;
+        text-align: right;
+    }
+    margin-bottom: 1em;
+}
+
+
+.sidebar {
+    .version {
+        padding: 1em;
+    }
+    .brand {
+        background-color: #303030;
+        color: #c0c0c0;
+        padding: 1em;
+        top: 0;
+    }
+    .menu {
+        padding: 1em;
+    }
+}
+
+.mainbody {
+  padding: 3em;
+}
+
+code {
+  color: #1a9f1a;
+  font-size: 0.875em;
+  font-weight: normal;
+}
+
+.content {
+    h2 {
+        padding-top: 1em;
+        border-top: 1px solid #c0c0c0;
+    }
+}
