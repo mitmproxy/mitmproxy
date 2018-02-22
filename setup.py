@@ -96,12 +96,8 @@ setup(
             "pytest-timeout>=1.2.1,<2",
             "pytest-xdist>=1.22,<2",
             "pytest>=3.3,<4",
-            "rstcheck>=2.2, <4.0",
-            "sphinx_rtd_theme>=0.1.9, <0.3",
-            "sphinx-autobuild>=0.5.2, <0.8",
-            "sphinx>=1.7,<1.8",
-            "sphinxcontrib-documentedlist>=0.5.0, <0.7",
             "tox>=2.3, <3",
+            "rstcheck>=2.2, <4.0",
         ],
         'examples': [
             "beautifulsoup4>=4.4.1, <4.7",

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "bulma": "^0.6.1",
+    "node-sass": "^4.7.2"
+  }
+}
