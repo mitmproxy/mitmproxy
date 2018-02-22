@@ -1,3 +1,179 @@
+22 February 2018: mitmproxy 3.0
+
+  ** Major Changes **
+
+  * Commands: A consistent, typed mechanism that allows addons to expose actions
+  to users.
+
+  * Options: A typed settings store for use by mitmproxy and addons.
+
+  * Shift most of mitmproxy's own functionality into addons.
+
+  * Major improvements to mitmproxy console, including an almost complete
+  rewrite of the user interface, integration of commands, key bindings, and
+  multi-pane layouts.
+
+  * Major Improvements to mitmproxy’s web interface, mitmweb. (Matthew Shao,
+  Google Summer of Code 2017)
+
+  * Major Improvements to mitmproxy’s content views and protocol layers (Ujjwal
+  Verma, Google Summer of Code 2017)
+
+  * Faster JavaScript and CSS beautifiers. (Ujjwal Verma)
+
+
+  ** Minor Changes **
+
+  * Vastly improved JavaScript test coverage (Matthew Shao)
+
+  * Options editor for mitmweb (Matthew Shao)
+
+  * Static web-based flow viewer (Matthew Shao)
+
+  * Request streaming for HTTP/1.x and HTTP/2 (Ujjwal Verma)
+
+  * Implement more robust content views using Kaitai Struct (Ujjwal Verma)
+
+  * Protobuf decoding now works without protoc being installed on the host
+  system (Ujjwal Verma)
+
+  * PNG, GIF, and JPEG can now be parsed without Pillow, which simplifies
+  mitmproxy installation and moves parsing from unsafe C to pure Python (Ujjwal Verma)
+
+  * Add parser for ICO files (Ujjwal Verma)
+
+  * Migrate WebSockets implementation to wsproto. This reduces code size and
+  adds WebSocket compression support. (Ujjwal Verma)
+
+  * Add “split view” to split mitmproxy’s UI into two separate panes.
+
+  * Add key binding viewer and editor
+
+  * Add a command to spawn a preconfigured Chrome browser instance from
+  mitmproxy
+
+  * Fully support mitmproxy under the Windows Subsystem for Linux (WSL), work
+  around display errors
+
+  * Add XSS scanner addon (@ddworken)
+
+  * Add ability to toggle interception (@mattweidner)
+
+  * Numerous documentation improvements (@pauloromeira, @rst0git, @rgerganov,
+  @fulldecent, @zhigang1992, @F1ashhimself, @vinaydargar, @jonathanrfisher1,
+  @BasThomas, @LuD1161, @ayamamori, @TomTasche)
+
+  * Add filters for websocket flows (@s4chin)
+
+  * Make it possible to create a response to CONNECT requests in http_connect
+  (@mengbiping)
+
+  * Redirect stdout in scripts to ctx.log.warn (@nikofil)
+
+  * Fix a crash when clearing the event log (@krsoninikhil)
+
+  * Store the generated certificate for each flow (@dlenski)
+
+  * Add --keep-host-header to retain the host header in reverse proxy mode
+  (@krsoninikhil)
+
+  * Fix setting palette options (@JordanLoehr)
+
+  * Fix a crash with brotli encoding (@whackashoe)
+
+  * Provide certificate installation instructions on mitm.it (@ritiek)
+
+  * Fix a bug where we did not properly fall back to IPv4 when IPv6 is unavailable (@titeuf87)
+
+  * Fix transparent mode on IPv6-enabled macOS systems (@Ga-ryo)
+
+  * Fix handling of HTTP messages with multiple Content-Length headers (@surajt97)
+
+  * Fix IPv6 authority form parsing in CONNECT requests (@r1b)
+
+  * Fix event log display in mitmweb (@syahn)
+
+  * Remove private key from PKCS12 file in ~/.mitmproxy (@ograff).
+
+  * Add LDAP as a proxy authentication backend (@charlesdhdt)
+
+  * Use mypy to check the whole codebase (@iharsh234)
+
+  * Fix a crash when duplicating flows (@iharsh234)
+
+  * Fix testsuite when the path contains a “.” (@felixonmars)
+
+  * Store proxy authentication with flows (@lymanZerga11)
+
+  * Match ~d and ~u filters against pretty_host (@dequis)
+
+  * Update WBXML content view (@davidpshaw)
+
+  * Handle HEAD requests for mitm.it to support Chrome in transparent mode on
+  iOS (@tomlabaude)
+
+  * Update dns spoofing example to use --keep-host-header (@krsoninikhil)
+
+  * Call error handler on HTTPException (@tarnacious)
+
+  * Make it possible to remove TLS from upstream HTTP connections
+
+  * Update to pyOpenSSL 17.5, cryptography 2.1.4, and OpenSSL 1.1.0g
+
+  * Make it possible to retroactively increase log verbosity.
+
+  * Make logging from addons thread-safe
+
+  * Tolerate imports in user scripts that match hook names (`from mitmproxy
+  import log`)
+
+  * Update mitmweb to React 16, which brings performance improvements
+
+  * Fix a bug where reverting duplicated flows crashes mitmproxy
+
+  * Fix a bug where successive requests are sent to the wrong host after a
+  request has been redirected.
+
+  * Fix a bug that binds outgoing connections to the wrong interface
+
+  * Fix a bug where custom certificates are ignored in reverse proxy mode
+
+  * Fix import of flows that have been created with mitmproxy 0.17
+
+  * Fix formatting of (IPv6) IP addresses in a number of places
+
+  * Fix replay for HTTP/2 flows
+
+  * Decouple mitmproxy version and flow file format version
+
+  * Fix a bug where “mitmdump -nr” does not exit automatically
+
+  * Fix a crash when exporting flows to curl
+
+  * Fix formatting of sticky cookies
+
+  * Improve script reloading reliability by polling the filesystem instead of using watchdog
+
+  * Fix a crash when refreshing Set-Cookie headers
+
+  * Add connection indicator to mitmweb to alert users when the proxy server stops running
+
+  * Add support for certificates with cyrillic domains
+
+  * Simplify output of mitmproxy --version
+
+  * Add Request.make to simplify request creation in scripts
+
+  * Pathoc: Include a host header on CONNECT requests
+
+  * Remove HTML outline contentview (#2572)
+
+  * Remove Python and Locust export (#2465)
+
+  * Remove emojis from tox.ini because flake8 cannot parse that. :(
+
+
+
 28 April 2017: mitmproxy 2.0.2
 
     * Fix mitmweb's Content-Security-Policy to work with Chrome 58+
@@ -18,7 +194,7 @@
 
     * HTTP/2 is now enabled by default.
 
-    * Image ContentView: Parse images with Kaitai Struct (kaitai.io) instead of Pillow. 
+    * Image ContentView: Parse images with Kaitai Struct (kaitai.io) instead of Pillow.
       This simplifies installation, reduces binary size, and allows parsing in pure Python.
 
     * Web: Add missing flow filters.
@@ -27,7 +203,7 @@
 
     * Check the mitmproxy CA for expiration and warn the user to regenerate it if necessary.
 
-    * Testing: Tremendous improvements, enforced 100% coverage for large parts of the 
+    * Testing: Tremendous improvements, enforced 100% coverage for large parts of the
       codebase, increased overall coverage.
 
     * Enforce individual coverage: one source file -> one test file with 100% coverage.
@@ -42,13 +218,13 @@
     * All mitmproxy tools are now Python 3 only! We plan to support Python 3.5 and higher.
 
     * Web-Based User Interface: Mitmproxy now offically has a web-based user interface
-      called mitmweb. We consider it stable for all features currently exposed 
+      called mitmweb. We consider it stable for all features currently exposed
       in the UI, but it still misses a lot of mitmproxy’s options.
-      
-    * Windows Compatibility: With mitmweb, mitmproxy is now useable on Windows. 
-      We are also introducing an installer (kindly sponsored by BitRock) that 
+
+    * Windows Compatibility: With mitmweb, mitmproxy is now useable on Windows.
+      We are also introducing an installer (kindly sponsored by BitRock) that
       simplifies setup.
-      
+
     * Configuration: The config file format is now a single YAML file. In most cases,
       converting to the new format should be trivial - please see the docs for
       more information.
@@ -61,7 +237,7 @@
       due to wide-spread protocol implementation errors on some large website
 
     * WebSocket: The protocol implementation is now mature, and is enabled by
-      default. Complete UI support is coming in the next release. Hooks for 
+      default. Complete UI support is coming in the next release. Hooks for
       message interception and manipulation are available.
 
     * A myriad of other small improvements throughout the project.
