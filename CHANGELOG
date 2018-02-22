@@ -14,10 +14,10 @@
   multi-pane layouts.
 
   * Major Improvements to mitmproxy’s web interface, mitmweb. (Matthew Shao,
-  GSOC)
+  Google Summer of Code 2017)
 
   * Major Improvements to mitmproxy’s content views and protocol layers (Ujjwal
-  Verma, GSOC)
+  Verma, Google Summer of Code 2017)
 
   * Faster JavaScript and CSS beautifiers. (Ujjwal Verma)
 
