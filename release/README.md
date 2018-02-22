@@ -27,7 +27,8 @@ Make sure run all these steps on the correct branch you want to create a new rel
   - Tag the commit with the correct version
     * `2.0.0` for new major versions
     * `2.0.2` for new patch versions
-    * `2.0` always points to the latest patch version of the `2.0.x` series (update tag + force push)
 - Update `latest` tag [here](https://hub.docker.com/r/mitmproxy/mitmproxy/~/settings/automated-builds/)
 
-After everything is done, you might want to bump the version on master in [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) if you just created a major release.
+## Prepare for next release
+
+ - Last but not least, bump the version on master in [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) for major releases.
