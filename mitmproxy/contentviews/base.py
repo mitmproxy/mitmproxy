@@ -12,7 +12,6 @@ TViewResult = typing.Tuple[str, typing.Iterator[TViewLine]]
 
 class View:
     name = None  # type: str
-    prompt = None  # type: typing.Tuple[str,str]
     content_types = []  # type: typing.List[str]
 
     def __call__(self, data: bytes, **metadata) -> TViewResult:

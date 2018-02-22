@@ -132,13 +132,13 @@ class ServerPlayback:
             if rflow:
                 response = rflow.response.copy()
                 response.is_replay = True
-                if ctx.options.refresh_server_playback:
+                if ctx.options.server_replay_refresh:
                     response.refresh()
                 f.response = response
                 if not self.flowmap:
                     self.final_flow = f
                     self.stop = True
-            elif ctx.options.replay_kill_extra:
+            elif ctx.options.server_replay_kill_extra:
                 ctx.log.warn(
                     "server_playback: killed non-replay request {}".format(
                         f.request.url

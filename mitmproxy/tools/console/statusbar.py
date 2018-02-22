@@ -213,9 +213,9 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("anticomp")
         if self.master.options.showhost:
             opts.append("showhost")
-        if not self.master.options.refresh_server_playback:
+        if not self.master.options.server_replay_refresh:
             opts.append("norefresh")
-        if self.master.options.replay_kill_extra:
+        if self.master.options.server_replay_kill_extra:
             opts.append("killextra")
         if not self.master.options.upstream_cert:
             opts.append("no-upstream-cert")
@@ -230,9 +230,7 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.options.mode != "regular":
             r.append("[%s]" % self.master.options.mode)
         if self.master.options.scripts:
-            r.append("[")
-            r.append(("heading_key", "s"))
-            r.append("cripts:%s]" % len(self.master.options.scripts))
+            r.append("[scripts:%s]" % len(self.master.options.scripts))
 
         if self.master.options.save_stream_file:
             r.append("[W:%s]" % self.master.options.save_stream_file)
