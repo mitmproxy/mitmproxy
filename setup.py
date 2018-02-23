@@ -75,7 +75,7 @@ setup(
         "pyasn1>=0.3.1,<0.5",
         "pyOpenSSL>=17.5,<17.6",
         "pyparsing>=2.1.3, <2.3",
-        "pyperclip>=1.5.22, <1.7",
+        "pyperclip>=1.6.0, <1.7",
         "requests>=2.9.1, <3",
         "ruamel.yaml>=0.13.2, <0.16",
         "sortedcontainers>=1.5.4, <1.6",
