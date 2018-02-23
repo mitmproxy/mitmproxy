@@ -3,7 +3,7 @@ import subprocess
 
 # The actual version string. For precompiled binaries, this will be changed to include the build
 # tag, e.g. "3.0.0.dev0042-0xcafeabc"
-VERSION = "4.0.0"
+VERSION = "3.0.2"
 PATHOD = "pathod " + VERSION
 MITMPROXY = "mitmproxy " + VERSION
 
