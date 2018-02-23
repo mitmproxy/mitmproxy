@@ -5,14 +5,13 @@ from mitmproxy.test import tflow
 
 from mitmproxy import io
 from mitmproxy import exceptions
-from mitmproxy import options
 from mitmproxy.addons import save
 from mitmproxy.addons import view
 
 
 def test_configure(tmpdir):
     sa = save.Save()
-    with taddons.context(options=options.Options()) as tctx:
+    with taddons.context() as tctx:
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(sa, save_stream_file=str(tmpdir))
         with pytest.raises(Exception, match="Invalid filter"):

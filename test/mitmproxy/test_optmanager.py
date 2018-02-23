@@ -376,8 +376,11 @@ def test_make_parser():
     opts.make_parser(parser, "seqstr", short="d")
     opts.make_parser(parser, "bool_on", short="e")
 
-    # No error for nonexistent options
-    opts.make_parser(parser, "xxxxxxx")
+    with pytest.raises(ValueError):
+        opts.make_parser(parser, "unknown")
+
+    # Nonexistent options ignore
+    opts.make_parser(parser, "nonexistentxxx")
 
 
 def test_set():

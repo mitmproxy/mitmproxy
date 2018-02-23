@@ -1,7 +1,6 @@
 import pytest
 
 from mitmproxy.addons import intercept
-from mitmproxy import options
 from mitmproxy import exceptions
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
@@ -9,7 +8,7 @@ from mitmproxy.test import tflow
 
 def test_simple():
     r = intercept.Intercept()
-    with taddons.context(options=options.Options()) as tctx:
+    with taddons.context() as tctx:
         assert not r.filt
         tctx.configure(r, intercept="~q")
         assert r.filt
