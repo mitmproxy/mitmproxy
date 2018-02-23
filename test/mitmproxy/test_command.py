@@ -211,6 +211,22 @@ class TestCommand:
                 ],
                 []
             ],
+            [
+                "flow \"one two",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "\"one two", type = flow.Flow, valid = False),
+                ],
+                ["str"]
+            ],
+            [
+                "flow \"one two\"",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "one two", type = flow.Flow, valid = False),
+                ],
+                ["str"]
+            ],
         ]
         with taddons.context() as tctx:
             tctx.master.addons.add(TAddon())
