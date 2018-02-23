@@ -10,9 +10,9 @@ def test_set():
     with taddons.context() as tctx:
         tctx.master.addons.add(sa)
 
-        assert not tctx.master.options.anticomp
-        tctx.command(sa.set, "anticomp")
-        assert tctx.master.options.anticomp
+        assert tctx.master.options.server
+        tctx.command(sa.set, "server=false")
+        assert not tctx.master.options.server
 
         with pytest.raises(exceptions.CommandError):
             tctx.command(sa.set, "nonexistent")

@@ -7,7 +7,7 @@ from mitmproxy.test import taddons
 class TestAntiComp:
     def test_simple(self):
         sa = anticomp.AntiComp()
-        with taddons.context() as tctx:
+        with taddons.context(sa) as tctx:
             f = tflow.tflow(resp=True)
             sa.request(f)
 

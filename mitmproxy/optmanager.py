@@ -327,6 +327,13 @@ class OptManager:
         return d
 
     def make_parser(self, parser, optname, metavar=None, short=None):
+        """
+            Auto-Create a command-line parser entry for a named option. If the
+            option does not exist, it is ignored.
+        """
+        if optname not in self._options:
+            return
+
         o = self._options[optname]
 
         def mkf(l, s):
