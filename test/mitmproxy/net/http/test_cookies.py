@@ -143,6 +143,27 @@ def test_cookie_roundtrips():
 def test_parse_set_cookie_pairs():
     pairs = [
         [
+            "=",
+            [[
+                ["", ""]
+            ]]
+        ],
+        [
+            "=;foo=bar",
+            [[
+                ["", ""],
+                ["foo", "bar"]
+            ]]
+        ],
+        [
+            "=;=;foo=bar",
+            [[
+                ["", ""],
+                ["", ""],
+                ["foo", "bar"]
+            ]]
+        ],
+        [
             "=uno",
             [[
                 ["", "uno"]
