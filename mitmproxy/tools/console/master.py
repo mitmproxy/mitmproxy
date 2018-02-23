@@ -10,6 +10,7 @@ import sys
 import tempfile
 import traceback
 import typing  # noqa
+import contextlib
 
 import urwid
 
@@ -102,6 +103,16 @@ class ConsoleMaster(master.Master):
             return callback(*args)
         self.loop.set_alarm_in(seconds, cb)
 
+    @contextlib.contextmanager
+    def uistopped(self):
+        self.loop.stop()
+        try:
+            yield
+        finally:
+            self.loop.start()
+            self.loop.screen_size = None
+            self.loop.draw_screen()
+
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
         fd, name = tempfile.mkstemp('', "mproxy", text=text)
@@ -111,17 +122,16 @@ class ConsoleMaster(master.Master):
         c = os.environ.get("EDITOR") or "vi"
         cmd = shlex.split(c)
         cmd.append(name)
-        self.ui.stop()
-        try:
-            subprocess.call(cmd)
-        except:
-            signals.status_message.send(
-                message="Can't start editor: %s" % " ".join(c)
-            )
-        else:
-            with open(name, "r" if text else "rb") as f:
-                data = f.read()
-        self.ui.start()
+        with self.uistopped():
+            try:
+                subprocess.call(cmd)
+            except:
+                signals.status_message.send(
+                    message="Can't start editor: %s" % " ".join(c)
+                )
+            else:
+                with open(name, "r" if text else "rb") as f:
+                    data = f.read()
         os.unlink(name)
         return data
 
@@ -153,14 +163,13 @@ class ConsoleMaster(master.Master):
                 c = "less"
             cmd = shlex.split(c)
             cmd.append(name)
-        self.ui.stop()
-        try:
-            subprocess.call(cmd, shell=shell)
-        except:
-            signals.status_message.send(
-                message="Can't start external viewer: %s" % " ".join(c)
-            )
-        self.ui.start()
+        with self.uistopped():
+            try:
+                subprocess.call(cmd, shell=shell)
+            except:
+                signals.status_message.send(
+                    message="Can't start external viewer: %s" % " ".join(c)
+                )
         os.unlink(name)
 
     def set_palette(self, opts, updated):
