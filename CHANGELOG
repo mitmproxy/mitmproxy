@@ -1,3 +1,7 @@
+23 February 2018: mitmproxy 3.0
+
+  * Fix a quote-related issue affecting the mitmproxy console command prompt
+
 22 February 2018: mitmproxy 3.0
 
   ** Major Changes **
