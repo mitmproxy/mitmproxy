@@ -67,10 +67,6 @@ class Options(optmanager.OptManager):
         view_filter = None  # type: Optional[str]
 
         # FIXME: Options that should be uncomplicated to migrate to addons
-        rfile = None  # type: Optional[str]
-        save_stream_file = None  # type: Optional[str]
-        save_stream_filter = None  # type: Optional[str]
-        scripts = None  # type: Sequence[str]
         setheaders = None  # type: Sequence[str]
         stickyauth = None  # type: Optional[str]
         stickycookie = None  # type: Optional[str]
@@ -89,16 +85,6 @@ class Options(optmanager.OptManager):
         self.add_option(
             "server", bool, True,
             "Start a proxy server. Enabled by default."
-        )
-        self.add_option(
-            "rfile", Optional[str], None,
-            "Read flows from file."
-        )
-        self.add_option(
-            "scripts", Sequence[str], [],
-            """
-            Execute a script.
-            """
         )
         self.add_option(
             "showhost", bool, False,
@@ -143,14 +129,6 @@ class Options(optmanager.OptManager):
             "default_contentview", str, "auto",
             "The default content view mode.",
             choices = [i.name.lower() for i in contentviews.views]
-        )
-        self.add_option(
-            "save_stream_file", Optional[str], None,
-            "Stream flows to file as they arrive. Prefix path with + to append."
-        )
-        self.add_option(
-            "save_stream_filter", Optional[str], None,
-            "Filter which flows are written to file."
         )
 
         # Proxy options
