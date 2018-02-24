@@ -8,7 +8,7 @@ menu:
 
 # Overview
 
-You should thin of the mitmproxy project's tools as a set of front-ends that
+You should think of the mitmproxy project's tools as a set of front-ends that
 expose the same underlying functionality. We aim to have feature parity across
 all of our tooling, and all tools share a common configuration mechanism and
 most command-line options.
