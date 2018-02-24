@@ -95,6 +95,12 @@ requirements installed, and you can run the full test suite (including tests for
 
     tox
 
+To run complete tests with a full coverage report, you can use the following command:
+
+.. code-block:: bash
+
+    tox -- --verbose --cov-report=term
+
 For speedier testing, we recommend you run `pytest`_ directly on individual test files or folders:
 
 .. code-block:: bash
