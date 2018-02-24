@@ -1,7 +1,6 @@
 from typing import Optional, Sequence
 
 from mitmproxy import optmanager
-from mitmproxy import contentviews
 from mitmproxy.net import tls
 
 log_verbosity = [
@@ -57,7 +56,6 @@ class Options(optmanager.OptManager):
         # FIXME: Options that must be migrated to addons, but are complicated
         # because they're used by more than one addon, or because they're
         # embedded in the core code somehow.
-        default_contentview = None  # type: str
         proxyauth = None  # type: Optional[str]
         showhost = None  # type: bool
         verbosity = None  # type: str
@@ -77,11 +75,6 @@ class Options(optmanager.OptManager):
             "verbosity", str, 'info',
             "Log verbosity.",
             choices=log_verbosity
-        )
-        self.add_option(
-            "default_contentview", str, "auto",
-            "The default content view mode.",
-            choices = [i.name.lower() for i in contentviews.views]
         )
 
         # Proxy options

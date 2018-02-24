@@ -14,7 +14,7 @@ def test_statusbar(monkeypatch):
         view_filter="~dst example.com",
         stickycookie="~dst example.com",
         stickyauth="~dst example.com",
-        default_contentview="javascript",
+        console_default_contentview="javascript",
         anticache=True,
         anticomp=True,
         showhost=True,

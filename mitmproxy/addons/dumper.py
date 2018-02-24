@@ -42,6 +42,11 @@ class Dumper:
               3: 2 + full response content, content of WebSocket and TCP messages.
             """
         )
+        loader.add_option(
+            "dumper_default_contentview", str, "auto",
+            "The default content view mode.",
+            choices = [i.name.lower() for i in contentviews.views]
+        )
 
     def configure(self, updated):
         if "view_filter" in updated:
@@ -73,7 +78,7 @@ class Dumper:
 
     def _echo_message(self, message):
         _, lines, error = contentviews.get_message_content_view(
-            ctx.options.default_contentview,
+            ctx.options.dumper_default_contentview,
             message
         )
         if error:

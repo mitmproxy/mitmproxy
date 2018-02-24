@@ -197,10 +197,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "u"))
             r.append(":%s]" % self.master.options.stickyauth)
-        if self.master.options.default_contentview != "auto":
+        if self.master.options.console_default_contentview != "auto":
             r.append("[")
             r.append(("heading_key", "M"))
-            r.append(":%s]" % self.master.options.default_contentview)
+            r.append(":%s]" % self.master.options.console_default_contentview)
         if self.master.options.has_changed("view_order"):
             r.append("[")
             r.append(("heading_key", "o"))

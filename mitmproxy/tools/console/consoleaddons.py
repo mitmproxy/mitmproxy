@@ -77,6 +77,11 @@ class ConsoleAddon:
 
     def load(self, loader):
         loader.add_option(
+            "console_default_contentview", str, "auto",
+            "The default content view mode.",
+            choices = [i.name.lower() for i in contentviews.views]
+        )
+        loader.add_option(
             "console_layout", str, "single",
             "Console layout.",
             choices=sorted(console_layouts),
@@ -531,7 +536,7 @@ class ConsoleAddon:
             [
                 "@focus",
                 "flowview_mode_%s" % idx,
-                self.master.options.default_contentview,
+                self.master.options.console_default_contentview,
             ]
         )
 
