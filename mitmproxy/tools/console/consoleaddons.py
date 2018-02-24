@@ -110,15 +110,6 @@ class ConsoleAddon:
         """
         return ["single", "vertical", "horizontal"]
 
-    @command.command("console.intercept.toggle")
-    def intercept_toggle(self) -> None:
-        """
-            Toggles interception on/off leaving intercept filters intact.
-        """
-        ctx.options.update(
-            intercept_active = not ctx.options.intercept_active
-        )
-
     @command.command("console.layout.cycle")
     def layout_cycle(self) -> None:
         """

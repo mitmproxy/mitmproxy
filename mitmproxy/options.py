@@ -58,8 +58,6 @@ class Options(optmanager.OptManager):
         # because they're used by more than one addon, or because they're
         # embedded in the core code somehow.
         default_contentview = None  # type: str
-        intercept = None  # type: Optional[str]
-        intercept_active = None  # type: bool
         proxyauth = None  # type: Optional[str]
         showhost = None  # type: bool
         verbosity = None  # type: str
@@ -249,16 +247,6 @@ class Options(optmanager.OptManager):
             Similar to --ignore, but SSL connections are intercepted. The
             communication contents are printed to the log in verbose mode.
             """
-        )
-
-        self.add_option(
-            "intercept_active", bool, False,
-            "Intercept toggle"
-        )
-
-        self.add_option(
-            "intercept", Optional[str], None,
-            "Intercept filter expression."
         )
 
         self.add_option(
