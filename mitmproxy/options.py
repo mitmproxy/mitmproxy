@@ -56,7 +56,6 @@ class Options(optmanager.OptManager):
         # FIXME: Options that must be migrated to addons, but are complicated
         # because they're used by more than one addon, or because they're
         # embedded in the core code somehow.
-        proxyauth = None  # type: Optional[str]
         showhost = None  # type: bool
         verbosity = None  # type: str
         view_filter = None  # type: Optional[str]
@@ -78,16 +77,6 @@ class Options(optmanager.OptManager):
         )
 
         # Proxy options
-        self.add_option(
-            "proxyauth", Optional[str], None,
-            """
-            Require proxy authentication. Format:
-            "username:pass",
-            "any" to accept any user/pass combination,
-            "@path" to use an Apache htpasswd file,
-            or "ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" for LDAP authentication.
-            """
-        )
         self.add_option(
             "add_upstream_certs_to_client_chain", bool, False,
             """
