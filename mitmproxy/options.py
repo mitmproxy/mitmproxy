@@ -67,7 +67,6 @@ class Options(optmanager.OptManager):
         view_filter = None  # type: Optional[str]
 
         # FIXME: Options that should be uncomplicated to migrate to addons
-        replacements = None  # type: Sequence[str]
         rfile = None  # type: Optional[str]
         save_stream_file = None  # type: Optional[str]
         save_stream_filter = None  # type: Optional[str]
@@ -104,13 +103,6 @@ class Options(optmanager.OptManager):
         self.add_option(
             "showhost", bool, False,
             "Use the Host header to construct URLs for display."
-        )
-        self.add_option(
-            "replacements", Sequence[str], [],
-            """
-            Replacement patterns of the form "/pattern/regex/replacement", where
-            the separator can be any character.
-            """
         )
         self.add_option(
             "setheaders", Sequence[str], [],

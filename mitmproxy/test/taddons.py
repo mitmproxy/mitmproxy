@@ -59,17 +59,16 @@ class context:
         provides a number of helper methods for common testing scenarios.
     """
 
-    def __init__(self, *addons, master=None, options=None):
+    def __init__(self, *addons, options=None):
         options = options or mitmproxy.options.Options()
-        self.master = master or RecordingMaster(
+        self.master = RecordingMaster(
             options
         )
         self.options = self.master.options
         self.wrapped = None
 
-        loader = addonmanager.Loader(self.master)
         for a in addons:
-            self.master.addons.invoke_addon(a, "load", loader)
+            self.master.addons.register(a)
 
     def ctx(self):
         """
