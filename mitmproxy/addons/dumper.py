@@ -31,6 +31,18 @@ class Dumper:
         self.filter = None  # type: flowfilter.TFilter
         self.outfp = outfile  # type: typing.io.TextIO
 
+    def load(self, loader):
+        loader.add_option(
+            "flow_detail", int, 1,
+            """
+            The display detail level for flows in mitmdump: 0 (almost quiet) to 3 (very verbose).
+              0: shortened request URL, response status code, WebSocket and TCP message notifications.
+              1: full request URL with response status code
+              2: 1 + HTTP headers
+              3: 2 + full response content, content of WebSocket and TCP messages.
+            """
+        )
+
     def configure(self, updated):
         if "view_filter" in updated:
             if ctx.options.view_filter:

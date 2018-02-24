@@ -58,7 +58,6 @@ class Options(optmanager.OptManager):
         # because they're used by more than one addon, or because they're
         # embedded in the core code somehow.
         default_contentview = None  # type: str
-        flow_detail = None  # type: int
         intercept = None  # type: Optional[str]
         intercept_active = None  # type: bool
         proxyauth = None  # type: Optional[str]
@@ -265,18 +264,6 @@ class Options(optmanager.OptManager):
         self.add_option(
             "view_filter", Optional[str], None,
             "Limit which flows are displayed."
-        )
-
-        # Dump options
-        self.add_option(
-            "flow_detail", int, 1,
-            """
-            The display detail level for flows in mitmdump: 0 (almost quiet) to 3 (very verbose).
-              0: shortened request URL, response status code, WebSocket and TCP message notifications.
-              1: full request URL with response status code
-              2: 1 + HTTP headers
-              3: 2 + full response content, content of WebSocket and TCP messages.
-            """
         )
 
         self.update(**kwargs)
