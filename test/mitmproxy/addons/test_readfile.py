@@ -41,7 +41,7 @@ class TestReadFile:
     @mock.patch('mitmproxy.master.Master.load_flow')
     def test_configure(self, mck, tmpdir, data, corrupt_data):
         rf = readfile.ReadFile()
-        with taddons.context() as tctx:
+        with taddons.context(rf) as tctx:
             tf = tmpdir.join("tfile")
 
             tf.write(data.getvalue())
@@ -58,7 +58,7 @@ class TestReadFile:
     @mock.patch('mitmproxy.master.Master.load_flow')
     def test_corrupt(self, mck, corrupt_data):
         rf = readfile.ReadFile()
-        with taddons.context() as tctx:
+        with taddons.context(rf) as tctx:
             with pytest.raises(exceptions.FlowReadException):
                 rf.load_flows(io.BytesIO(b"qibble"))
             assert not mck.called
@@ -71,7 +71,7 @@ class TestReadFile:
 
     def test_nonexisting_file(self):
         rf = readfile.ReadFile()
-        with taddons.context() as tctx:
+        with taddons.context(rf) as tctx:
             with pytest.raises(exceptions.FlowReadException):
                 rf.load_flows_from_path("nonexistent")
             assert len(tctx.master.logs) == 1
@@ -82,7 +82,7 @@ class TestReadFileStdin:
     @mock.patch('sys.stdin')
     def test_stdin(self, stdin, load_flow, data, corrupt_data):
         rf = readfile.ReadFileStdin()
-        with taddons.context() as tctx:
+        with taddons.context(rf) as tctx:
             stdin.buffer = data
             tctx.configure(rf, rfile="-")
             assert not load_flow.called
@@ -97,7 +97,7 @@ class TestReadFileStdin:
     @mock.patch('mitmproxy.master.Master.load_flow')
     def test_normal(self, load_flow, tmpdir, data):
         rf = readfile.ReadFileStdin()
-        with taddons.context():
+        with taddons.context(rf):
             tfile = tmpdir.join("tfile")
             tfile.write(data.getvalue())
             rf.load_flows_from_path(str(tfile))

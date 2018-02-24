@@ -1,5 +1,6 @@
 import os
 import re
+import typing
 
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
@@ -46,6 +47,15 @@ def parse_hook(s):
 class Replace:
     def __init__(self):
         self.lst = []
+
+    def load(self, loader):
+        loader.add_option(
+            "replacements", typing.Sequence[str], [],
+            """
+            Replacement patterns of the form "/pattern/regex/replacement", where
+            the separator can be any character.
+            """
+        )
 
     def configure(self, updated):
         """

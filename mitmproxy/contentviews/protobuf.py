@@ -66,7 +66,6 @@ class ViewProtobuf(base.View):
     """
 
     name = "Protocol Buffer"
-    prompt = ("protobuf", "p")
     content_types = [
         "application/x-protobuf",
         "application/x-protobuffer",

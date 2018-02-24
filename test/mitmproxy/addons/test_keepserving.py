@@ -4,7 +4,6 @@ from mitmproxy.test import taddons
 
 def test_keepserving():
     ks = keepserving.KeepServing()
-
-    with taddons.context() as tctx:
+    with taddons.context(ks) as tctx:
         ks.event_processing_complete()
         assert tctx.master.should_exit.is_set()

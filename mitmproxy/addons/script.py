@@ -98,6 +98,14 @@ class ScriptLoader:
         self.is_running = False
         self.addons = []
 
+    def load(self, loader):
+        loader.add_option(
+            "scripts", typing.Sequence[str], [],
+            """
+            Execute a script.
+            """
+        )
+
     def running(self):
         self.is_running = True
 

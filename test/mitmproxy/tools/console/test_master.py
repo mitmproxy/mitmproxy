@@ -7,10 +7,6 @@ from mitmproxy.tools import console
 from ... import tservers
 
 
-def test_options():
-    assert options.Options(replay_kill_extra=True)
-
-
 class TestMaster(tservers.MasterTest):
     def mkmaster(self, **opts):
         if "verbosity" not in opts:

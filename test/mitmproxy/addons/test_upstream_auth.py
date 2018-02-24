@@ -9,7 +9,7 @@ from mitmproxy.addons import upstream_auth
 
 def test_configure():
     up = upstream_auth.UpstreamAuth()
-    with taddons.context() as tctx:
+    with taddons.context(up) as tctx:
         tctx.configure(up, upstream_auth="test:test")
         assert up.auth == b"Basic" + b" " + base64.b64encode(b"test:test")
 
@@ -29,7 +29,7 @@ def test_configure():
 
 def test_simple():
     up = upstream_auth.UpstreamAuth()
-    with taddons.context() as tctx:
+    with taddons.context(up) as tctx:
         tctx.configure(up, upstream_auth="foo:bar")
 
         f = tflow.tflow()

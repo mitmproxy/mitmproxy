@@ -68,6 +68,21 @@ class CommandBuffer:
         else:
             self._cursor = x
 
+    def maybequote(self, value):
+        if " " in value and not value.startswith("\""):
+            return "\"%s\"" % value
+        return value
+
+    def parse_quoted(self, txt):
+        parts, remhelp = self.master.commands.parse_partial(txt)
+        for i, p in enumerate(parts):
+            parts[i] = mitmproxy.command.ParseResult(
+                value = self.maybequote(p.value),
+                type = p.type,
+                valid = p.valid
+            )
+        return parts, remhelp
+
     def render(self):
         """
             This function is somewhat tricky - in order to make the cursor
@@ -75,7 +90,7 @@ class CommandBuffer:
             character-for-character offset match in the rendered output, up
             to the cursor. Beyond that, we can add stuff.
         """
-        parts, remhelp = self.master.commands.parse_partial(self.text)
+        parts, remhelp = self.parse_quoted(self.text)
         ret = []
         for p in parts:
             if p.valid:
@@ -95,8 +110,9 @@ class CommandBuffer:
         return ret
 
     def flatten(self, txt):
-        parts, _ = self.master.commands.parse_partial(txt)
-        return " ".join([x.value for x in parts])
+        parts, _ = self.parse_quoted(txt)
+        ret = [x.value for x in parts]
+        return " ".join(ret)
 
     def left(self) -> None:
         self.cursor = self.cursor - 1

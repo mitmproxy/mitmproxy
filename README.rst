@@ -116,19 +116,18 @@ suite. The project tries to maintain 100% test coverage and enforces this strict
 Documentation
 -------------
 
-The mitmproxy documentation is build using Sphinx_, which is installed
-automatically if you set up a development environment as described above. After
-installation, you can render the documentation like this:
+The following tools are required to build the mitmproxy docs:
+
+- Hugo_
+- modd_
+- yarn_
 
 .. code-block:: bash
 
     cd docs
-    make clean
-    make html
-    make livehtml
+    yarn
+    modd
 
-The last command invokes `sphinx-autobuild`_, which watches the Sphinx directory and rebuilds
-the documentation when a change is detected.
 
 Code Style
 ----------
@@ -187,8 +186,9 @@ with the following command:
 .. _virtualenv: https://virtualenv.pypa.io/
 .. _`pytest`: http://pytest.org/
 .. _tox: https://tox.readthedocs.io/
-.. _Sphinx: http://sphinx-doc.org/
-.. _sphinx-autobuild: https://pypi.python.org/pypi/sphinx-autobuild
+.. _Hugo: https://gohugo.io/
+.. _modd: https://github.com/cortesi/modd
+.. _yarn: https://yarnpkg.com/en/
 .. _PEP8: https://www.python.org/dev/peps/pep-0008
 .. _`Google Style Guide`: https://google.github.io/styleguide/pyguide.html
 .. _forums: https://discourse.mitmproxy.org/

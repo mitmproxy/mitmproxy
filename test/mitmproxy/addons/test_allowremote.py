@@ -19,8 +19,7 @@ from mitmproxy.test import taddons
 ])
 def test_allowremote(allow_remote, ip, should_be_killed):
     ar = allowremote.AllowRemote()
-    with taddons.context() as tctx:
-        tctx.master.addons.register(ar)
+    with taddons.context(ar) as tctx:
         tctx.options.allow_remote = allow_remote
 
         with mock.patch('mitmproxy.proxy.protocol.base.Layer') as layer:

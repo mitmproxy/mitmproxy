@@ -159,13 +159,17 @@ def _read_set_cookie_pairs(s: str, off=0) -> Tuple[List[TPairs], int]:
                 if len(rhs) <= 3:
                     trail, off = _read_value(s, off + 1, ";,")
                     rhs = rhs + "," + trail
-        if rhs or lhs:
+
+            # as long as there's a "=", we consider it a pair
             pairs.append([lhs, rhs])
 
-            # comma marks the beginning of a new cookie
-            if off < len(s) and s[off] == ",":
-                cookies.append(pairs)
-                pairs = []
+        elif lhs:
+            pairs.append([lhs, rhs])
+
+        # comma marks the beginning of a new cookie
+        if off < len(s) and s[off] == ",":
+            cookies.append(pairs)
+            pairs = []
 
         off += 1
 
