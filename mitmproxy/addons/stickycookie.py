@@ -34,6 +34,12 @@ class StickyCookie:
         self.jar = collections.defaultdict(dict)  # type: Dict[TOrigin, Dict[str, str]]
         self.flt = None  # type: Optional[flowfilter.TFilter]
 
+    def load(self, loader):
+        loader.add_option(
+            "stickycookie", Optional[str], None,
+            "Set sticky cookie filter. Matched against requests."
+        )
+
     def configure(self, updated):
         if "stickycookie" in updated:
             if ctx.options.stickycookie:

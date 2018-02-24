@@ -67,10 +67,6 @@ class Options(optmanager.OptManager):
         view_filter = None  # type: Optional[str]
 
         # FIXME: Options that should be uncomplicated to migrate to addons
-        stickyauth = None  # type: Optional[str]
-        stickycookie = None  # type: Optional[str]
-        stream_large_bodies = None  # type: Optional[str]
-        stream_websockets = None  # type: bool
         upstream_auth = None  # type: Optional[str]
         view_order = None  # type: str
         view_order_reversed = None  # type: bool
@@ -88,25 +84,6 @@ class Options(optmanager.OptManager):
         self.add_option(
             "showhost", bool, False,
             "Use the Host header to construct URLs for display."
-        )
-        self.add_option(
-            "stickycookie", Optional[str], None,
-            "Set sticky cookie filter. Matched against requests."
-        )
-        self.add_option(
-            "stream_large_bodies", Optional[str], None,
-            """
-            Stream data to the client if response body exceeds the given
-            threshold. If streamed, the body will not be stored in any way.
-            Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
-            """
-        )
-        self.add_option(
-            "stream_websockets", bool, False,
-            """
-            Stream WebSocket messages between client and server.
-            Messages are captured and cannot be modified.
-            """
         )
         self.add_option(
             "verbosity", str, 'info',
