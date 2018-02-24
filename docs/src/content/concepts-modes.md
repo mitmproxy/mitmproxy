@@ -157,20 +157,20 @@ There are various use-cases:
     example.com domain and get all requests recorded in mitmproxy.
 - Say you have some toy project that should get SSL support. Simply set up
     mitmproxy as a reverse proxy on port 443 and you're done (`mitmdump -p 443
-    -R http://localhost:80/`). Mitmproxy auto-detects TLS traffic and intercepts
+    --mode reverse:http://localhost:80/`). Mitmproxy auto-detects TLS traffic and intercepts
     it dynamically. There are better tools for this specific task, but mitmproxy
     is very quick and simple way to set up an SSL-speaking server.
 - Want to add a non-SSL-capable compression proxy in front of your server? You
-    could even spawn a mitmproxy instance that terminates SSL (`-R http://...`),
+    could even spawn a mitmproxy instance that terminates SSL (`--mode reverse:http://...`),
     point it to the compression proxy and let the compression proxy point to a
-    SSL-initiating mitmproxy (`-R https://...`), which then points to the real
+    SSL-initiating mitmproxy (`--mode reverse:https://...`), which then points to the real
     server. As you see, it's a fairly flexible thing.
 
 ### Host Header
 
 In reverse proxy mode, mitmproxy automatically rewrites the Host header to match
 the upstream server. This allows mitmproxy to easily connect to existing
-endpoints on the open web (e.g. `mitmproxy -R https://example.com`). You can
+endpoints on the open web (e.g. `mitmproxy --mode reverse:https://example.com`). You can
 disable this behaviour with the `keep_host_header` option.
 
 However, keep in mind that absolute URLs within the returned document or HTTP
