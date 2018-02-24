@@ -12,8 +12,6 @@ log_verbosity = [
     "debug",
 ]
 
-APP_HOST = "mitm.it"
-APP_PORT = 80
 CA_DIR = "~/.mitmproxy"
 LISTEN_PORT = 8080
 
@@ -69,10 +67,6 @@ class Options(optmanager.OptManager):
         view_filter = None  # type: Optional[str]
 
         # FIXME: Options that should be uncomplicated to migrate to addons
-        keepserving = None  # type: bool
-        onboarding = None  # type: bool
-        onboarding_host = None  # type: str
-        onboarding_port = None  # type: int
         server_replay_refresh = None  # type: bool
         replacements = None  # type: Sequence[str]
         rfile = None  # type: Optional[str]
@@ -103,31 +97,8 @@ class Options(optmanager.OptManager):
     def __init__(self, **kwargs) -> None:
         super().__init__()
         self.add_option(
-            "onboarding", bool, True,
-            "Toggle the mitmproxy onboarding app."
-        )
-        self.add_option(
-            "onboarding_host", str, APP_HOST,
-            """
-            Onboarding app domain. For transparent mode, use an IP when a DNS
-            entry for the app domain is not present.
-            """
-        )
-        self.add_option(
-            "onboarding_port", int, APP_PORT,
-            "Port to serve the onboarding app from."
-        )
-        self.add_option(
             "server_replay_kill_extra", bool, False,
             "Kill extra requests during replay."
-        )
-        self.add_option(
-            "keepserving", bool, False,
-            """
-            Continue serving after client playback, server playback or file
-            read. This option is ignored by interactive tools, which always keep
-            serving.
-            """
         )
         self.add_option(
             "server", bool, True,

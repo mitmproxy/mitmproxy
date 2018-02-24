@@ -222,12 +222,12 @@ class HTTPProxyTest(ProxyTestBase):
             p = pathod.pathoc.Pathoc(
                 ("127.0.0.1", self.proxy.port), True, fp=None
             )
-            with p.connect((options.APP_HOST, options.APP_PORT)):
+            with p.connect((self.master.options.onboarding_host, self.master.options.onbarding_port)):
                 return p.request("get:'%s'" % page)
         else:
             p = self.pathoc()
             with p.connect():
-                return p.request("get:'http://%s%s'" % (options.APP_HOST, page))
+                return p.request("get:'http://%s%s'" % (self.master.options.onboarding_host, page))
 
 
 class TransparentProxyTest(ProxyTestBase):
