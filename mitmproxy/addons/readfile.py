@@ -11,6 +11,11 @@ class ReadFile:
     """
         An addon that handles reading from file on startup.
     """
+    def load(self, loader):
+        loader.add_option(
+            "rfile", typing.Optional[str], None,
+            "Read flows from file."
+        )
 
     def load_flows(self, fo: typing.IO[bytes]) -> int:
         cnt = 0

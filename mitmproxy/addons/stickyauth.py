@@ -1,3 +1,5 @@
+import typing
+
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import ctx
@@ -7,6 +9,12 @@ class StickyAuth:
     def __init__(self):
         self.flt = None
         self.hosts = {}
+
+    def load(self, loader):
+        loader.add_option(
+            "stickyauth", typing.Optional[str], None,
+            "Set sticky auth filter. Matched against requests."
+        )
 
     def configure(self, updated):
         if "stickyauth" in updated:

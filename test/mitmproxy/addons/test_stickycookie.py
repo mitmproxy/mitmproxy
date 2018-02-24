@@ -15,7 +15,7 @@ def test_domain_match():
 class TestStickyCookie:
     def test_config(self):
         sc = stickycookie.StickyCookie()
-        with taddons.context() as tctx:
+        with taddons.context(sc) as tctx:
             with pytest.raises(Exception, match="invalid filter"):
                 tctx.configure(sc, stickycookie="~b")
 
@@ -26,7 +26,7 @@ class TestStickyCookie:
 
     def test_simple(self):
         sc = stickycookie.StickyCookie()
-        with taddons.context() as tctx:
+        with taddons.context(sc) as tctx:
             tctx.configure(sc, stickycookie=".*")
             f = tflow.tflow(resp=True)
             f.response.headers["set-cookie"] = "foo=bar"
@@ -50,7 +50,7 @@ class TestStickyCookie:
 
     def test_response(self):
         sc = stickycookie.StickyCookie()
-        with taddons.context() as tctx:
+        with taddons.context(sc) as tctx:
             tctx.configure(sc, stickycookie=".*")
 
             c = "SSID=mooo; domain=.google.com, FOO=bar; Domain=.google.com; Path=/; " \
@@ -68,7 +68,7 @@ class TestStickyCookie:
 
     def test_response_multiple(self):
         sc = stickycookie.StickyCookie()
-        with taddons.context() as tctx:
+        with taddons.context(sc) as tctx:
             tctx.configure(sc, stickycookie=".*")
 
             # Test setting of multiple cookies
@@ -82,7 +82,7 @@ class TestStickyCookie:
 
     def test_response_weird(self):
         sc = stickycookie.StickyCookie()
-        with taddons.context() as tctx:
+        with taddons.context(sc) as tctx:
             tctx.configure(sc, stickycookie=".*")
 
             # Test setting of weird cookie keys
@@ -100,7 +100,7 @@ class TestStickyCookie:
 
     def test_response_overwrite(self):
         sc = stickycookie.StickyCookie()
-        with taddons.context() as tctx:
+        with taddons.context(sc) as tctx:
             tctx.configure(sc, stickycookie=".*")
 
             # Test overwriting of a cookie value
@@ -115,7 +115,7 @@ class TestStickyCookie:
 
     def test_response_delete(self):
         sc = stickycookie.StickyCookie()
-        with taddons.context() as tctx:
+        with taddons.context(sc) as tctx:
             tctx.configure(sc, stickycookie=".*")
 
             # Test that a cookie is be deleted
@@ -127,7 +127,7 @@ class TestStickyCookie:
 
     def test_request(self):
         sc = stickycookie.StickyCookie()
-        with taddons.context() as tctx:
+        with taddons.context(sc) as tctx:
             tctx.configure(sc, stickycookie=".*")
 
             f = self._response(sc, "SSID=mooo", "www.google.com")

@@ -14,6 +14,12 @@ class ClientPlayback:
         self.current_thread = None
         self.configured = False
 
+    def load(self, loader):
+        loader.add_option(
+            "client_replay", typing.Sequence[str], [],
+            "Replay client requests from a saved file."
+        )
+
     def count(self) -> int:
         if self.current_thread:
             current = 1

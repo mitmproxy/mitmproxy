@@ -7,7 +7,7 @@ from mitmproxy.test import taddons
 class TestAntiCache:
     def test_simple(self):
         sa = anticache.AntiCache()
-        with taddons.context() as tctx:
+        with taddons.context(sa) as tctx:
             f = tflow.tflow(resp=True)
             f.request.headers["if-modified-since"] = "test"
             f.request.headers["if-none-match"] = "test"

@@ -171,7 +171,7 @@ class TestScriptLoader:
             "mitmproxy/data/addonscripts/recorder/recorder.py"
         )
         sc = script.ScriptLoader()
-        with taddons.context() as tctx:
+        with taddons.context(sc) as tctx:
             sc.script_run([tflow.tflow(resp=True)], rp)
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
@@ -183,7 +183,7 @@ class TestScriptLoader:
 
     def test_script_run_nonexistent(self):
         sc = script.ScriptLoader()
-        with taddons.context():
+        with taddons.context(sc):
             with pytest.raises(exceptions.CommandError):
                 sc.script_run([tflow.tflow(resp=True)], "/")
 
@@ -208,8 +208,7 @@ class TestScriptLoader:
 
     def test_dupes(self):
         sc = script.ScriptLoader()
-        with taddons.context() as tctx:
-            tctx.master.addons.add(sc)
+        with taddons.context(sc) as tctx:
             with pytest.raises(exceptions.OptionsError):
                 tctx.configure(
                     sc,
@@ -232,7 +231,7 @@ class TestScriptLoader:
 
     def test_load_err(self):
         sc = script.ScriptLoader()
-        with taddons.context() as tctx:
+        with taddons.context(sc) as tctx:
             tctx.configure(sc, scripts=[
                 tutils.test_data.path("mitmproxy/data/addonscripts/load_error.py")
             ])
@@ -242,7 +241,7 @@ class TestScriptLoader:
                 pass  # this is expected and normally guarded.
             # on the next tick we should not fail however.
             tctx.invoke(sc, "tick")
-            assert len(tctx.master.addons) == 0
+            assert len(tctx.master.addons) == 1
 
     def test_order(self):
         rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder")

@@ -19,14 +19,14 @@ class TestSetHeaders:
 
     def test_configure(self):
         sh = setheaders.SetHeaders()
-        with taddons.context() as tctx:
+        with taddons.context(sh) as tctx:
             with pytest.raises(Exception, match="Invalid setheader filter pattern"):
                 tctx.configure(sh, setheaders = ["/~b/one/two"])
             tctx.configure(sh, setheaders = ["/foo/bar/voing"])
 
     def test_setheaders(self):
         sh = setheaders.SetHeaders()
-        with taddons.context() as tctx:
+        with taddons.context(sh) as tctx:
             tctx.configure(
                 sh,
                 setheaders = [

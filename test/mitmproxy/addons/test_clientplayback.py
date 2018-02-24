@@ -24,7 +24,7 @@ class MockThread():
 class TestClientPlayback:
     def test_playback(self):
         cp = clientplayback.ClientPlayback()
-        with taddons.context() as tctx:
+        with taddons.context(cp) as tctx:
             assert cp.count() == 0
             f = tflow.tflow(resp=True)
             cp.start_replay([f])
@@ -58,7 +58,7 @@ class TestClientPlayback:
 
     def test_load_file(self, tmpdir):
         cp = clientplayback.ClientPlayback()
-        with taddons.context():
+        with taddons.context(cp):
             fpath = str(tmpdir.join("flows"))
             tdump(fpath, [tflow.tflow(resp=True)])
             cp.load_file(fpath)
@@ -68,7 +68,7 @@ class TestClientPlayback:
 
     def test_configure(self, tmpdir):
         cp = clientplayback.ClientPlayback()
-        with taddons.context() as tctx:
+        with taddons.context(cp) as tctx:
             path = str(tmpdir.join("flows"))
             tdump(path, [tflow.tflow()])
             tctx.configure(cp, client_replay=[path])

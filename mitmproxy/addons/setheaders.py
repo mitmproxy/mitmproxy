@@ -1,3 +1,5 @@
+import typing
+
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import ctx
@@ -43,6 +45,15 @@ def parse_setheader(s):
 class SetHeaders:
     def __init__(self):
         self.lst = []
+
+    def load(self, loader):
+        loader.add_option(
+            "setheaders", typing.Sequence[str], [],
+            """
+            Header set pattern of the form "/pattern/header/value", where the
+            separator can be any character.
+            """
+        )
 
     def configure(self, updated):
         if "setheaders" in updated:

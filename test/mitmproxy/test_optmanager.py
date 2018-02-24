@@ -351,7 +351,7 @@ def test_dump_defaults():
 def test_dump_dicts():
     o = options.Options()
     assert optmanager.dump_dicts(o)
-    assert optmanager.dump_dicts(o, ['http2', 'anticomp'])
+    assert optmanager.dump_dicts(o, ['http2', 'listen_port'])
 
 
 class TTypes(optmanager.OptManager):
@@ -375,8 +375,12 @@ def test_make_parser():
     opts.make_parser(parser, "int", short="c")
     opts.make_parser(parser, "seqstr", short="d")
     opts.make_parser(parser, "bool_on", short="e")
+
     with pytest.raises(ValueError):
         opts.make_parser(parser, "unknown")
+
+    # Nonexistent options ignore
+    opts.make_parser(parser, "nonexistentxxx")
 
 
 def test_set():
