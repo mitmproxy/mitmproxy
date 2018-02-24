@@ -26,7 +26,7 @@ def map(km):
     km.add("ctrl f", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl b", "console.nav.pageup", ["global"], "Page up")
 
-    km.add("I", "console.intercept.toggle", ["global"], "Toggle intercept")
+    km.add("I", "set intercept_active=toggle", ["global"], "Toggle intercept")
     km.add("i", "console.command.set intercept", ["global"], "Set intercept")
     km.add("W", "console.command.set save_stream_file", ["global"], "Stream to file")
     km.add("A", "flow.resume @all", ["flowlist", "flowview"], "Resume all intercepted flows")

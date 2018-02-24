@@ -1,7 +1,7 @@
 from unittest import mock
 import pytest
 
-from mitmproxy.addons import allowremote
+from mitmproxy.addons import allowremote, proxyauth
 from mitmproxy.test import taddons
 
 
@@ -19,7 +19,8 @@ from mitmproxy.test import taddons
 ])
 def test_allowremote(allow_remote, ip, should_be_killed):
     ar = allowremote.AllowRemote()
-    with taddons.context(ar) as tctx:
+    up = proxyauth.ProxyAuth()
+    with taddons.context(ar, up) as tctx:
         tctx.options.allow_remote = allow_remote
 
         with mock.patch('mitmproxy.proxy.protocol.base.Layer') as layer:

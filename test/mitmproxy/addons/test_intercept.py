@@ -8,7 +8,7 @@ from mitmproxy.test import tflow
 
 def test_simple():
     r = intercept.Intercept()
-    with taddons.context() as tctx:
+    with taddons.context(r) as tctx:
         assert not r.filt
         tctx.configure(r, intercept="~q")
         assert r.filt

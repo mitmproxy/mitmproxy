@@ -1,7 +1,6 @@
 from typing import Optional, Sequence
 
 from mitmproxy import optmanager
-from mitmproxy import contentviews
 from mitmproxy.net import tls
 
 log_verbosity = [
@@ -57,11 +56,6 @@ class Options(optmanager.OptManager):
         # FIXME: Options that must be migrated to addons, but are complicated
         # because they're used by more than one addon, or because they're
         # embedded in the core code somehow.
-        default_contentview = None  # type: str
-        flow_detail = None  # type: int
-        intercept = None  # type: Optional[str]
-        intercept_active = None  # type: bool
-        proxyauth = None  # type: Optional[str]
         showhost = None  # type: bool
         verbosity = None  # type: str
         view_filter = None  # type: Optional[str]
@@ -81,23 +75,8 @@ class Options(optmanager.OptManager):
             "Log verbosity.",
             choices=log_verbosity
         )
-        self.add_option(
-            "default_contentview", str, "auto",
-            "The default content view mode.",
-            choices = [i.name.lower() for i in contentviews.views]
-        )
 
         # Proxy options
-        self.add_option(
-            "proxyauth", Optional[str], None,
-            """
-            Require proxy authentication. Format:
-            "username:pass",
-            "any" to accept any user/pass combination,
-            "@path" to use an Apache htpasswd file,
-            or "ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" for LDAP authentication.
-            """
-        )
         self.add_option(
             "add_upstream_certs_to_client_chain", bool, False,
             """
@@ -253,30 +232,8 @@ class Options(optmanager.OptManager):
         )
 
         self.add_option(
-            "intercept_active", bool, False,
-            "Intercept toggle"
-        )
-
-        self.add_option(
-            "intercept", Optional[str], None,
-            "Intercept filter expression."
-        )
-
-        self.add_option(
             "view_filter", Optional[str], None,
             "Limit which flows are displayed."
-        )
-
-        # Dump options
-        self.add_option(
-            "flow_detail", int, 1,
-            """
-            The display detail level for flows in mitmdump: 0 (almost quiet) to 3 (very verbose).
-              0: shortened request URL, response status code, WebSocket and TCP message notifications.
-              1: full request URL with response status code
-              2: 1 + HTTP headers
-              3: 2 + full response content, content of WebSocket and TCP messages.
-            """
         )
 
         self.update(**kwargs)

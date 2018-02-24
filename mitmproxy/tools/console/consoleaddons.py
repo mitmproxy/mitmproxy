@@ -77,6 +77,11 @@ class ConsoleAddon:
 
     def load(self, loader):
         loader.add_option(
+            "console_default_contentview", str, "auto",
+            "The default content view mode.",
+            choices = [i.name.lower() for i in contentviews.views]
+        )
+        loader.add_option(
             "console_layout", str, "single",
             "Console layout.",
             choices=sorted(console_layouts),
@@ -109,15 +114,6 @@ class ConsoleAddon:
             Returns the available options for the console_layout option.
         """
         return ["single", "vertical", "horizontal"]
-
-    @command.command("console.intercept.toggle")
-    def intercept_toggle(self) -> None:
-        """
-            Toggles interception on/off leaving intercept filters intact.
-        """
-        ctx.options.update(
-            intercept_active = not ctx.options.intercept_active
-        )
 
     @command.command("console.layout.cycle")
     def layout_cycle(self) -> None:
@@ -540,7 +536,7 @@ class ConsoleAddon:
             [
                 "@focus",
                 "flowview_mode_%s" % idx,
-                self.master.options.default_contentview,
+                self.master.options.console_default_contentview,
             ]
         )
 

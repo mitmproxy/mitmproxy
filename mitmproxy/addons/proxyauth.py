@@ -52,6 +52,18 @@ class ProxyAuth:
         self.authenticated = weakref.WeakKeyDictionary()  # type: MutableMapping[connections.ClientConnection, Tuple[str, str]]
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
+    def load(self, loader):
+        loader.add_option(
+            "proxyauth", Optional[str], None,
+            """
+            Require proxy authentication. Format:
+            "username:pass",
+            "any" to accept any user/pass combination,
+            "@path" to use an Apache htpasswd file,
+            or "ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" for LDAP authentication.
+            """
+        )
+
     def enabled(self) -> bool:
         return any([self.nonanonymous, self.htpasswd, self.singleuser, self.ldapconn, self.ldapserver])
 

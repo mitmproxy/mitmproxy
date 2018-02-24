@@ -49,7 +49,7 @@ class TestProxyAuth:
     ])
     def test_is_proxy_auth(self, mode, expected):
         up = proxyauth.ProxyAuth()
-        with taddons.context() as ctx:
+        with taddons.context(up) as ctx:
             ctx.options.mode = mode
             assert up.is_proxy_auth() is expected
 
@@ -75,7 +75,7 @@ class TestProxyAuth:
 
     def test_check(self):
         up = proxyauth.ProxyAuth()
-        with taddons.context() as ctx:
+        with taddons.context(up) as ctx:
             ctx.configure(up, proxyauth="any", mode="regular")
             f = tflow.tflow()
             assert not up.check(f)
@@ -133,7 +133,7 @@ class TestProxyAuth:
 
     def test_authenticate(self):
         up = proxyauth.ProxyAuth()
-        with taddons.context() as ctx:
+        with taddons.context(up) as ctx:
             ctx.configure(up, proxyauth="any", mode="regular")
 
             f = tflow.tflow()
@@ -165,7 +165,7 @@ class TestProxyAuth:
 
     def test_configure(self):
         up = proxyauth.ProxyAuth()
-        with taddons.context() as ctx:
+        with taddons.context(up) as ctx:
             with pytest.raises(exceptions.OptionsError):
                 ctx.configure(up, proxyauth="foo")
 
@@ -223,7 +223,7 @@ class TestProxyAuth:
 
     def test_handlers(self):
         up = proxyauth.ProxyAuth()
-        with taddons.context() as ctx:
+        with taddons.context(up) as ctx:
             ctx.configure(up, proxyauth="any", mode="regular")
 
             f = tflow.tflow()
