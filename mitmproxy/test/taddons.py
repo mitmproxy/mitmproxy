@@ -68,7 +68,7 @@ class context:
         self.wrapped = None
 
         for a in addons:
-            self.master.addons.register(a)
+            self.master.addons.add(a)
 
     def ctx(self):
         """

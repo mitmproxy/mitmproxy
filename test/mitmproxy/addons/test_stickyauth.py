@@ -9,7 +9,7 @@ from mitmproxy import exceptions
 
 def test_configure():
     r = stickyauth.StickyAuth()
-    with taddons.context() as tctx:
+    with taddons.context(r) as tctx:
         tctx.configure(r, stickyauth="~s")
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(r, stickyauth="~~")
@@ -20,7 +20,7 @@ def test_configure():
 
 def test_simple():
     r = stickyauth.StickyAuth()
-    with taddons.context() as tctx:
+    with taddons.context(r) as tctx:
         tctx.configure(r, stickyauth=".*")
         f = tflow.tflow(resp=True)
         f.request.headers["authorization"] = "foo"

@@ -128,28 +128,23 @@ def test_options(tmpdir):
     p = str(tmpdir.join("path"))
     sa = core.Core()
     with taddons.context() as tctx:
-        tctx.options.stickycookie = "foo"
-        assert tctx.options.stickycookie == "foo"
-        sa.options_reset()
-        assert tctx.options.stickycookie is None
-
-        tctx.options.stickycookie = "foo"
-        tctx.options.stickyauth = "bar"
-        sa.options_reset_one("stickycookie")
-        assert tctx.options.stickycookie is None
-        assert tctx.options.stickyauth == "bar"
+        tctx.options.listen_host = "foo"
+        assert tctx.options.listen_host == "foo"
+        sa.options_reset_one("listen_host")
+        assert tctx.options.listen_host != "foo"
 
         with pytest.raises(exceptions.CommandError):
             sa.options_reset_one("unknown")
 
+        tctx.options.listen_host = "foo"
         sa.options_save(p)
         with pytest.raises(exceptions.CommandError):
             sa.options_save("/")
 
         sa.options_reset()
-        assert tctx.options.stickyauth is None
+        assert tctx.options.listen_host == ""
         sa.options_load(p)
-        assert tctx.options.stickyauth == "bar"
+        assert tctx.options.listen_host == "foo"
 
         sa.options_load("/nonexistent")
 

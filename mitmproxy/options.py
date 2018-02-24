@@ -67,7 +67,6 @@ class Options(optmanager.OptManager):
         view_filter = None  # type: Optional[str]
 
         # FIXME: Options that should be uncomplicated to migrate to addons
-        setheaders = None  # type: Sequence[str]
         stickyauth = None  # type: Optional[str]
         stickycookie = None  # type: Optional[str]
         stream_large_bodies = None  # type: Optional[str]
@@ -91,19 +90,8 @@ class Options(optmanager.OptManager):
             "Use the Host header to construct URLs for display."
         )
         self.add_option(
-            "setheaders", Sequence[str], [],
-            """
-            Header set pattern of the form "/pattern/header/value", where the
-            separator can be any character.
-            """
-        )
-        self.add_option(
             "stickycookie", Optional[str], None,
             "Set sticky cookie filter. Matched against requests."
-        )
-        self.add_option(
-            "stickyauth", Optional[str], None,
-            "Set sticky auth filter. Matched against requests."
         )
         self.add_option(
             "stream_large_bodies", Optional[str], None,
