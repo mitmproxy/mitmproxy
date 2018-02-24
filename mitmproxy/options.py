@@ -67,20 +67,11 @@ class Options(optmanager.OptManager):
         view_filter = None  # type: Optional[str]
 
         # FIXME: Options that should be uncomplicated to migrate to addons
-        server_replay_refresh = None  # type: bool
         replacements = None  # type: Sequence[str]
         rfile = None  # type: Optional[str]
         save_stream_file = None  # type: Optional[str]
         save_stream_filter = None  # type: Optional[str]
         scripts = None  # type: Sequence[str]
-        server_replay = None  # type: Sequence[str]
-        server_replay_ignore_content = None  # type: bool
-        server_replay_ignore_host = None  # type: bool
-        server_replay_ignore_params = None  # type: Sequence[str]
-        server_replay_ignore_payload_params = None  # type: Sequence[str]
-        server_replay_kill_extra = None  # type: bool
-        server_replay_nopop = None  # type: bool
-        server_replay_use_headers = None  # type: Sequence[str]
         setheaders = None  # type: Sequence[str]
         stickyauth = None  # type: Optional[str]
         stickycookie = None  # type: Optional[str]
@@ -97,26 +88,8 @@ class Options(optmanager.OptManager):
     def __init__(self, **kwargs) -> None:
         super().__init__()
         self.add_option(
-            "server_replay_kill_extra", bool, False,
-            "Kill extra requests during replay."
-        )
-        self.add_option(
             "server", bool, True,
             "Start a proxy server. Enabled by default."
-        )
-        self.add_option(
-            "server_replay_nopop", bool, False,
-            """
-            Don't remove flows from server replay state after use. This makes it
-            possible to replay same response multiple times.
-            """
-        )
-        self.add_option(
-            "server_replay_refresh", bool, True,
-            """
-            Refresh server replay responses by adjusting date, expires and
-            last-modified headers, as well as adjusting cookie expiration.
-            """
         )
         self.add_option(
             "rfile", Optional[str], None,
@@ -140,19 +113,11 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
-            "server_replay_use_headers", Sequence[str], [],
-            "Request headers to be considered during replay."
-        )
-        self.add_option(
             "setheaders", Sequence[str], [],
             """
             Header set pattern of the form "/pattern/header/value", where the
             separator can be any character.
             """
-        )
-        self.add_option(
-            "server_replay", Sequence[str], [],
-            "Replay server responses from a saved file."
         )
         self.add_option(
             "stickycookie", Optional[str], None,
@@ -194,32 +159,6 @@ class Options(optmanager.OptManager):
         self.add_option(
             "save_stream_filter", Optional[str], None,
             "Filter which flows are written to file."
-        )
-        self.add_option(
-            "server_replay_ignore_content", bool, False,
-            "Ignore request's content while searching for a saved flow to replay."
-        )
-        self.add_option(
-            "server_replay_ignore_params", Sequence[str], [],
-            """
-            Request's parameters to be ignored while searching for a saved flow
-            to replay.
-            """
-        )
-        self.add_option(
-            "server_replay_ignore_payload_params", Sequence[str], [],
-            """
-            Request's payload parameters (application/x-www-form-urlencoded or
-            multipart/form-data) to be ignored while searching for a saved flow
-            to replay.
-            """
-        )
-        self.add_option(
-            "server_replay_ignore_host", bool, False,
-            """
-            Ignore request's destination host while searching for a saved flow
-            to replay.
-            """
         )
 
         # Proxy options

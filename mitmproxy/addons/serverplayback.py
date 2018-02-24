@@ -1,8 +1,6 @@
 import hashlib
 import urllib
 import typing
-from typing import Any  # noqa
-from typing import List  # noqa
 
 from mitmproxy import ctx
 from mitmproxy import flow
@@ -18,6 +16,60 @@ class ServerPlayback:
         self.stop = False
         self.final_flow = None
         self.configured = False
+
+    def load(self, loader):
+        loader.add_option(
+            "server_replay_kill_extra", bool, False,
+            "Kill extra requests during replay."
+        )
+        loader.add_option(
+            "server_replay_nopop", bool, False,
+            """
+            Don't remove flows from server replay state after use. This makes it
+            possible to replay same response multiple times.
+            """
+        )
+        loader.add_option(
+            "server_replay_refresh", bool, True,
+            """
+            Refresh server replay responses by adjusting date, expires and
+            last-modified headers, as well as adjusting cookie expiration.
+            """
+        )
+        loader.add_option(
+            "server_replay_use_headers", typing.Sequence[str], [],
+            "Request headers to be considered during replay."
+        )
+        loader.add_option(
+            "server_replay", typing.Sequence[str], [],
+            "Replay server responses from a saved file."
+        )
+        loader.add_option(
+            "server_replay_ignore_content", bool, False,
+            "Ignore request's content while searching for a saved flow to replay."
+        )
+        loader.add_option(
+            "server_replay_ignore_params", typing.Sequence[str], [],
+            """
+            Request's parameters to be ignored while searching for a saved flow
+            to replay.
+            """
+        )
+        loader.add_option(
+            "server_replay_ignore_payload_params", typing.Sequence[str], [],
+            """
+            Request's payload parameters (application/x-www-form-urlencoded or
+            multipart/form-data) to be ignored while searching for a saved flow
+            to replay.
+            """
+        )
+        loader.add_option(
+            "server_replay_ignore_host", bool, False,
+            """
+            Ignore request's destination host while searching for a saved flow
+            to replay.
+            """
+        )
 
     @command.command("replay.server")
     def load_flows(self, flows: typing.Sequence[flow.Flow]) -> None:
