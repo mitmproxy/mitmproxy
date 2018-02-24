@@ -66,15 +66,6 @@ class Options(optmanager.OptManager):
         verbosity = None  # type: str
         view_filter = None  # type: Optional[str]
 
-        # FIXME: Options that should be uncomplicated to migrate to addons
-        upstream_auth = None  # type: Optional[str]
-        view_order = None  # type: str
-        view_order_reversed = None  # type: bool
-        web_debug = None  # type: bool
-        web_iface = None  # type: str
-        web_open_browser = None  # type: bool
-        web_port = None  # type: int
-
     def __init__(self, **kwargs) -> None:
         super().__init__()
         self.add_option(
@@ -219,13 +210,6 @@ class Options(optmanager.OptManager):
             """
             Use the client's IP for server-side connections. Combine with
             --upstream-bind-address to spoof a fixed source address.
-            """
-        )
-        self.add_option(
-            "upstream_auth", Optional[str], None,
-            """
-            Add HTTP Basic authentication to upstream proxy and reverse proxy
-            requests. Format: username:password.
             """
         )
         self.add_option(

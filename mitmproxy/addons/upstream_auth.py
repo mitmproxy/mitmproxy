@@ -1,4 +1,5 @@
 import re
+import typing
 import base64
 
 from mitmproxy import exceptions
@@ -27,6 +28,15 @@ class UpstreamAuth():
     """
     def __init__(self):
         self.auth = None
+
+    def load(self, loader):
+        loader.add_option(
+            "upstream_auth", typing.Optional[str], None,
+            """
+            Add HTTP Basic authentication to upstream proxy and reverse proxy
+            requests. Format: username:password.
+            """
+        )
 
     def configure(self, updated):
         # FIXME: We're doing this because our proxy core is terminally confused
