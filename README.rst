@@ -95,7 +95,7 @@ requirements installed, and you can run the full test suite (including tests for
 
     tox
 
-If you want to conduct an extensive testing with full coverage report, you can run it using the following command:
+To run complete tests with a full coverage report, you can use the following command:
 
 .. code-block:: bash
 
