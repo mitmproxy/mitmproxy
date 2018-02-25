@@ -106,7 +106,7 @@ sudo iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 443 -j REDIRECT --to-p
 Finally, we can run mitmproxy in transparent mode with
 
 {{< highlight bash  >}}
-mitmproxy -T
+mitmproxy --mode transparent
 {{< / highlight >}}
 
 The proxied machine cannot to leak any data outside of HTTP or DNS requests. If

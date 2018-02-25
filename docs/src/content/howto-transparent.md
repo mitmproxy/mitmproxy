@@ -58,7 +58,7 @@ dropped privileges. It can be used as follows:
 gcc examples/complex/full_transparency_shim.c -o mitmproxy_shim -lcap
 sudo chown root:root mitmproxy_shim
 sudo chmod u+s mitmproxy_shim
-./mitmproxy_shim $(which mitmproxy) -T --spoof-source-address
+./mitmproxy_shim $(which mitmproxy) --mode transparent --set spoof-source-address
 {{< / highlight >}}
 
 
@@ -112,10 +112,10 @@ something like this:
 You probably want a command like this:
 
 {{< highlight bash  >}}
-mitmproxy -T --host
+mitmproxy --mode transparent --showhost
 {{< / highlight >}}
 
-The `-T` flag turns on transparent mode, and the `--host` argument tells
+The `--mode transparent` option turns on transparent mode, and the `--showhost` argument tells
  mitmproxy to use the value of the Host header for URL display.
 
 ### 6. Finally, configure your test device
@@ -163,10 +163,10 @@ doas pfctl -e
 You probably want a command like this:
 
 {{< highlight bash  >}}
-mitmproxy -T --host
+mitmproxy --mode transparent --showhost
 {{< / highlight >}}
 
-The `-T` flag turns on transparent mode, and the `--host` argument tells
+The `--mode transparent` option turns on transparent mode, and the `--showhost` argument tells
 mitmproxy to use the value of the Host header for URL display.
 
 ### 6. Finally, configure your test device
@@ -245,10 +245,10 @@ tighten the restriction up to the user running mitmproxy.
 You probably want a command like this:
 
 {{< highlight bash  >}}
-mitmproxy -T --host
+mitmproxy --mode transparent --showhost
 {{< / highlight >}}
 
-The `-T` flag turns on transparent mode, and the `--host` argument tells
+The `--mode transparent` flag turns on transparent mode, and the `--showhost` argument tells
 mitmproxy to use the value of the Host header for URL display.
 
 ### 6. Finally, configure your test device
