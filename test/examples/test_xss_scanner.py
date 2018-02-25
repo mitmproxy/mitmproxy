@@ -296,6 +296,14 @@ class TestXSSScanner():
         assert xss_info == expected_xss_info
         assert sqli_info is None
 
+    def mocked_socket_gethostbyname(domain):
+        claimed_domains = ["google.com"]
+        if domain not in claimed_domains:
+            from socket import gaierror
+            raise gaierror("[Errno -2] Name or service not known")
+        else:
+            return '216.58.221.46'
+
     @pytest.fixture
     def logger(self):
         class Logger():
@@ -309,6 +317,7 @@ class TestXSSScanner():
     def test_find_unclaimed_URLs(self, monkeypatch, logger):
         logger.args = []
         monkeypatch.setattr("mitmproxy.ctx.log", logger)
+        monkeypatch.setattr("socket.gethostbyname", self.mocked_socket_gethostbyname)
         xss.find_unclaimed_URLs("<html><script src=\"http://google.com\"></script></html>",
                                 "https://example.com")
         assert logger.args == []
