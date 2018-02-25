@@ -15,7 +15,7 @@ from mitmproxy import http
 def test_configure():
     d = dumper.Dumper()
     with taddons.context(d) as ctx:
-        ctx.configure(d, view_filter="~b foo")
+        ctx.configure(d, dumper_filter="~b foo")
         assert d.filter
 
         f = tflow.tflow(resp=True)
@@ -23,10 +23,10 @@ def test_configure():
         f.response.content = b"foo"
         assert d.match(f)
 
-        ctx.configure(d, view_filter=None)
+        ctx.configure(d, dumper_filter=None)
         assert not d.filter
         with pytest.raises(exceptions.OptionsError):
-            ctx.configure(d, view_filter="~~")
+            ctx.configure(d, dumper_filter="~~")
         assert not d.filter
 
 
