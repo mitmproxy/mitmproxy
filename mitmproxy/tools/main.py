@@ -46,10 +46,10 @@ def process_options(parser, opts, args):
     if args.quiet or args.options or args.commands:
         # also reduce log verbosity if --options or --commands is passed,
         # we don't want log messages from regular startup then.
-        args.verbosity = 'error'
+        args.termlog_verbosity = 'error'
         args.flow_detail = 0
     if args.verbose:
-        args.verbosity = 'debug'
+        args.termlog_verbosity = 'debug'
         args.flow_detail = 2
 
     adict = {}
@@ -104,9 +104,7 @@ def run(
         master.server = server
         master.addons.trigger("configure", opts.keys())
         master.addons.trigger("tick")
-        remaining = opts.update_known(**unknown)
-        if remaining and log.log_tier(opts.verbosity) > 1:
-            print("Ignored options: %s" % remaining)
+        opts.update_known(**unknown)
         if args.options:
             print(optmanager.dump_defaults(opts))
             sys.exit(0)

@@ -7,8 +7,6 @@ from ... import tservers
 
 class TestMaster(tservers.MasterTest):
     def mkmaster(self, **opts):
-        if "verbosity" not in opts:
-            opts["verbosity"] = 'warn'
         o = options.Options(**opts)
         m = console.master.ConsoleMaster(o)
         m.addons.trigger("configure", o.keys())

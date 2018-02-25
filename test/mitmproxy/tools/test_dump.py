@@ -11,7 +11,7 @@ from .. import tservers
 
 class TestDumpMaster(tservers.MasterTest):
     def mkmaster(self, flt, **opts):
-        o = options.Options(view_filter=flt, verbosity='error', **opts)
+        o = options.Options(view_filter=flt, **opts)
         m = dump.DumpMaster(o, with_termlog=False, with_dumper=False)
         return m
 
