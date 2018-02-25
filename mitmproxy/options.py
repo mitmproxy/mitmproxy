@@ -41,11 +41,6 @@ class Options(optmanager.OptManager):
         upstream_cert = None  # type: bool
         websocket = None  # type: bool
 
-        # FIXME: Options that must be migrated to addons, but are complicated
-        # because they're used by more than one addon, or because they're
-        # embedded in the core code somehow.
-        view_filter = None  # type: Optional[str]
-
     def __init__(self, **kwargs) -> None:
         super().__init__()
         self.add_option(
@@ -210,11 +205,6 @@ class Options(optmanager.OptManager):
             Similar to --ignore, but SSL connections are intercepted. The
             communication contents are printed to the log in verbose mode.
             """
-        )
-
-        self.add_option(
-            "view_filter", Optional[str], None,
-            "Limit which flows are displayed."
         )
 
         self.update(**kwargs)

@@ -47,14 +47,18 @@ class Dumper:
             "The default content view mode.",
             choices = [i.name.lower() for i in contentviews.views]
         )
+        loader.add_option(
+            "dumper_filter", typing.Optional[str], None,
+            "Limit which flows are dumped."
+        )
 
     def configure(self, updated):
-        if "view_filter" in updated:
-            if ctx.options.view_filter:
-                self.filter = flowfilter.parse(ctx.options.view_filter)
+        if "dumper_filter" in updated:
+            if ctx.options.dumper_filter:
+                self.filter = flowfilter.parse(ctx.options.dumper_filter)
                 if not self.filter:
                     raise exceptions.OptionsError(
-                        "Invalid filter expression: %s" % ctx.options.view_filter
+                        "Invalid filter expression: %s" % ctx.options.dumper_filter
                     )
             else:
                 self.filter = None
