@@ -286,6 +286,20 @@ def upload_release(username, password, repository):
     ])
 
 
+@cli.command("homebrew-pr")
+def homebrew_pr():
+    """
+    Create a new Homebrew PR
+    """
+    print("Creating a new PR with Homebrew...")
+    subprocess.check_call([
+        "brew",
+        "bump-formula-pr",
+        "--url", "https://github.com/mitmproxy/mitmproxy/archive/v{}".format(get_version()),
+        "mitmproxy",
+    ])
+
+
 @cli.command("upload-snapshot")
 @click.option("--host", envvar="SNAPSHOT_HOST", prompt=True)
 @click.option("--port", envvar="SNAPSHOT_PORT", type=int, default=22)
