@@ -66,7 +66,6 @@ setup(
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "click>=6.2, <7",
         "cryptography>=2.1.4,<2.2",
-        'h11>=0.7.0,<0.8',
         "h2>=3.0.1,<4",
         "hyperframe>=5.1.0,<6",
         "kaitaistruct>=0.7,<0.9",
@@ -76,7 +75,6 @@ setup(
         "pyOpenSSL>=17.5,<17.6",
         "pyparsing>=2.1.3, <2.3",
         "pyperclip>=1.6.0, <1.7",
-        "requests>=2.9.1, <3",
         "ruamel.yaml>=0.13.2, <0.16",
         "sortedcontainers>=1.5.4, <1.6",
         "tornado>=4.3, <4.6",
@@ -96,6 +94,7 @@ setup(
             "pytest-timeout>=1.2.1,<2",
             "pytest-xdist>=1.22,<2",
             "pytest>=3.3,<4",
+            "requests>=2.9.1, <3",
             "tox>=2.3, <3",
             "rstcheck>=2.2, <4.0",
         ],
