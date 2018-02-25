@@ -11,7 +11,6 @@ DEPRECATED = """
 --order
 --no-mouse
 --reverse
---socks
 --http2-priority
 --no-http2-priority
 --no-websocket
@@ -59,6 +58,7 @@ REPLACED = """
 -i
 -f
 --filter
+--socks
 """
 
 REPLACEMENTS = {
@@ -99,7 +99,8 @@ REPLACEMENTS = {
     "--replace": "--replacements",
     "-i": "--intercept",
     "-f": "--view-filter",
-    "--filter": "--view-filter"
+    "--filter": "--view-filter",
+    "--socks": "--mode socks5"
 }
 
 
