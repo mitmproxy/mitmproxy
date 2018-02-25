@@ -30,11 +30,11 @@ def load_script(path: str) -> types.ModuleType:
         loader.exec_module(m)
         if not getattr(m, "name", None):
             m.name = path  # type: ignore
-        return m
     except Exception as e:
         ctx.log.error(str(e))
     finally:
         sys.path[:] = oldpath
+        return m
 
 
 class Script:
