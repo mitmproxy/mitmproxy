@@ -286,7 +286,8 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             else:
                 path = os.path.join(
                     client_certs,
-                    self.address[0].encode("idna").decode()) + ".pem"
+                    (sni or self.address[0].encode("idna").decode()) + ".pem"
+                )
                 if os.path.exists(path):
                     client_cert = path
 
