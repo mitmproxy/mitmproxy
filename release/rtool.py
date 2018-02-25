@@ -3,6 +3,7 @@
 import contextlib
 import fnmatch
 import os
+import sys
 import platform
 import re
 import runpy
@@ -291,6 +292,10 @@ def homebrew_pr():
     """
     Create a new Homebrew PR
     """
+    if platform.system() != "Darwin":
+        print("You need to run this on macOS to create a new Homebrew PR. Sorry.")
+        sys.exit(1)
+
     print("Creating a new PR with Homebrew...")
     subprocess.check_call([
         "brew",
