@@ -92,6 +92,13 @@ class Loader:
         help: str,
         choices: typing.Optional[typing.Sequence[str]] = None
     ) -> None:
+        """
+            Add an option to mitmproxy.
+
+            Help should be a single paragraph with no linebreaks - it will be
+            reflowed by tools. Information on the data type should be omitted -
+            it will be generated and added by tools as needed.
+        """
         if name in self.master.options:
             existing = self.master.options._options[name]
             same_signature = (

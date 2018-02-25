@@ -14,12 +14,6 @@ log_verbosity = [
 CA_DIR = "~/.mitmproxy"
 LISTEN_PORT = 8080
 
-# Some help text style guidelines:
-#
-# - Should be a single paragraph with no linebreaks. Help will be reflowed by
-# tools.
-# - Avoid adding information about the data type - we can generate that.
-
 
 class Options(optmanager.OptManager):
 
@@ -42,6 +36,7 @@ class Options(optmanager.OptManager):
         mode = None  # type: str
         rawtcp = None  # type: bool
         server = None  # type: bool
+        showhost = None  # type: bool
         spoof_source_address = None  # type: bool
         ssl_insecure = None  # type: bool
         ssl_verify_upstream_trusted_ca = None  # type: Optional[str]
@@ -56,7 +51,6 @@ class Options(optmanager.OptManager):
         # FIXME: Options that must be migrated to addons, but are complicated
         # because they're used by more than one addon, or because they're
         # embedded in the core code somehow.
-        showhost = None  # type: bool
         verbosity = None  # type: str
         view_filter = None  # type: Optional[str]
 
