@@ -3,13 +3,6 @@ from typing import Optional, Sequence
 from mitmproxy import optmanager
 from mitmproxy.net import tls
 
-log_verbosity = [
-    "error",
-    "warn",
-    "info",
-    "alert",
-    "debug",
-]
 
 CA_DIR = "~/.mitmproxy"
 LISTEN_PORT = 8080
@@ -51,7 +44,6 @@ class Options(optmanager.OptManager):
         # FIXME: Options that must be migrated to addons, but are complicated
         # because they're used by more than one addon, or because they're
         # embedded in the core code somehow.
-        verbosity = None  # type: str
         view_filter = None  # type: Optional[str]
 
     def __init__(self, **kwargs) -> None:
@@ -63,11 +55,6 @@ class Options(optmanager.OptManager):
         self.add_option(
             "showhost", bool, False,
             "Use the Host header to construct URLs for display."
-        )
-        self.add_option(
-            "verbosity", str, 'info',
-            "Log verbosity.",
-            choices=log_verbosity
         )
 
         # Proxy options

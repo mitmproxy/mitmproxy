@@ -7,6 +7,7 @@ from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
+from mitmproxy import log
 from mitmproxy import contentviews
 from mitmproxy.utils import strutils
 import mitmproxy.types
@@ -80,6 +81,11 @@ class ConsoleAddon:
             "console_default_contentview", str, "auto",
             "The default content view mode.",
             choices = [i.name.lower() for i in contentviews.views]
+        )
+        loader.add_option(
+            "console_eventlog_verbosity", str, 'info',
+            "EventLog verbosity.",
+            choices=log.LogTierOrder
         )
         loader.add_option(
             "console_layout", str, "single",

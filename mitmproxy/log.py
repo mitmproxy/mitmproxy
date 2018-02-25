@@ -57,5 +57,14 @@ class Log:
         self.master.add_log(text, level)
 
 
+LogTierOrder = [
+    "error",
+    "warn",
+    "info",
+    "alert",
+    "debug",
+]
+
+
 def log_tier(level):
     return dict(error=0, warn=1, info=2, alert=2, debug=3).get(level)

@@ -147,7 +147,7 @@ class TestContentView:
         sio = io.StringIO()
         d = dumper.Dumper(sio)
         with taddons.context(d) as ctx:
-            ctx.configure(d, flow_detail=4, verbosity='debug')
+            ctx.configure(d, flow_detail=4)
             d.response(tflow.tflow())
             assert ctx.master.has_log("content viewer failed")
 

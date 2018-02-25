@@ -14,13 +14,20 @@ class TermLog:
     def __init__(self, outfile=None):
         self.outfile = outfile
 
+    def load(self, loader):
+        loader.add_option(
+            "termlog_verbosity", str, 'info',
+            "Log verbosity.",
+            choices=log.LogTierOrder
+        )
+
     def log(self, e):
         if log.log_tier(e.level) == log.log_tier("error"):
             outfile = self.outfile or realstderr
         else:
             outfile = self.outfile or realstdout
 
-        if log.log_tier(ctx.options.verbosity) >= log.log_tier(e.level):
+        if log.log_tier(ctx.options.termlog_verbosity) >= log.log_tier(e.level):
             click.secho(
                 e.msg,
                 file=outfile,

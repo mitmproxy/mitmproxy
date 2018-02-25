@@ -310,6 +310,9 @@ class TestXSSScanner():
             def __init__(self):
                 self.args = []
 
+            def info(self, str):
+                self.args.append(str)
+
             def error(self, str):
                 self.args.append(str)
         return Logger()

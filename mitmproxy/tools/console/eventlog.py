@@ -21,7 +21,7 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
 
         master.events.sig_add.connect(self.add_event)
         master.events.sig_refresh.connect(self.refresh_events)
-        self.master.options.subscribe(self.refresh_events, ["verbosity"])
+        self.master.options.subscribe(self.refresh_events, ["console_eventlog_verbosity"])
         self.refresh_events()
 
         super().__init__(self.walker)
@@ -44,7 +44,7 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
         return super().keypress(size, key)
 
     def add_event(self, event_store, entry: log.LogEntry):
-        if log.log_tier(self.master.options.verbosity) < log.log_tier(entry.level):
+        if log.log_tier(self.master.options.console_eventlog_verbosity) < log.log_tier(entry.level):
             return
         txt = "%s: %s" % (entry.level, str(entry.msg))
         if entry.level in ("error", "warn", "alert"):
