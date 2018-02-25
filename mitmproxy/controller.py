@@ -56,7 +56,7 @@ class Reply:
 
         self._state = "start"  # "start" -> "taken" -> "committed"
 
-        # Holds the reply value. May change before things are actually commited.
+        # Holds the reply value. May change before things are actually committed.
         self.value = NO_REPLY
 
     @property
@@ -66,7 +66,7 @@ class Reply:
         sequentially through the following lifecycle:
 
             1. start: Initial State.
-            2. taken: The reply object has been taken to be commited.
+            2. taken: The reply object has been taken to be committed.
             3. committed: The reply has been sent back to the requesting party.
 
         This attribute is read-only and can only be modified by calling one of
@@ -91,7 +91,7 @@ class Reply:
 
     def commit(self):
         """
-        Ultimately, messages are commited. This is done either automatically by
+        Ultimately, messages are committed. This is done either automatically by
         if the message is not taken or manually by the entity which called
         .take().
         """

@@ -269,7 +269,7 @@ class Http2Layer(base.Layer):
 
     def _handle_priority_updated(self, eid, event):
         if not self.config.options.http2_priority:
-            self.log("HTTP/2 PRIORITY frame surpressed. Use --http2-priority to enable forwarding.", "debug")
+            self.log("HTTP/2 PRIORITY frame suppressed. Use --http2-priority to enable forwarding.", "debug")
             return True
 
         if eid in self.streams and self.streams[eid].handled_priority_event is event:
@@ -541,7 +541,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             # only send priority information if they actually came with the original HeadersFrame
             # and not if they got updated before/after with a PriorityFrame
             if not self.config.options.http2_priority:
-                self.log("HTTP/2 PRIORITY information in HEADERS frame surpressed. Use --http2-priority to enable forwarding.", "debug")
+                self.log("HTTP/2 PRIORITY information in HEADERS frame suppressed. Use --http2-priority to enable forwarding.", "debug")
             else:
                 priority_exclusive = self.priority_exclusive
                 priority_depends_on = self._map_depends_on_stream_id(self.server_stream_id, self.priority_depends_on)

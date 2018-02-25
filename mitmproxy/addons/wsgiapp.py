@@ -7,7 +7,7 @@ from mitmproxy import version
 
 class WSGIApp:
     """
-        An addon that hosts a WSGI app withing mitproxy, at a specified
+        An addon that hosts a WSGI app within mitproxy, at a specified
         hostname and port.
     """
     def __init__(self, app, host, port):

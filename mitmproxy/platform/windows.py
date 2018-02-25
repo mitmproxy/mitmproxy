@@ -359,7 +359,7 @@ class TransparentProxy:
         packet.dst_addr, packet.dst_port = self.proxy_addr, self.proxy_port
         packet.direction = pydivert.consts.Direction.INBOUND
 
-        # Use any handle thats on the NETWORK layer - request_local may be
+        # Use any handle that's on the NETWORK layer - request_local may be
         # unavailable.
         self.response_handle.send(packet)
 

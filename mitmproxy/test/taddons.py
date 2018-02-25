@@ -137,7 +137,7 @@ class context:
 
     def command(self, func, *args):
         """
-            Invoke a command function with a list of string arguments within a command context, mimicing the actual command environment.
+            Invoke a command function with a list of string arguments within a command context, mimicking the actual command environment.
         """
         cmd = command.Command(self.master.commands, "test.command", func)
         return cmd.call(args)

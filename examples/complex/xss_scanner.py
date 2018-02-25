@@ -215,7 +215,7 @@ def get_SQLi_data(new_body: str, original_body: str, request_URL: str, injection
 
 # A qc is either ' or "
 def inside_quote(qc: str, substring_bytes: bytes, text_index: int, body_bytes: bytes) -> bool:
-    """ Whether the Numberth occurence of the first string in the second
+    """ Whether the Numberth occurrence of the first string in the second
         string is inside quotes as defined by the supplied QuoteChar """
     substring = substring_bytes.decode('utf-8')
     body = body_bytes.decode('utf-8')
@@ -246,7 +246,7 @@ def paths_to_text(html: str, string: str) -> List[str]:
           - Note that it does a BFS """
 
     def remove_last_occurence_of_sub_string(string: str, substr: str) -> str:
-        """ Delete the last occurence of substr from str
+        """ Delete the last occurrence of substr from str
         String String -> String
         """
         index = string.rfind(substr)
@@ -274,7 +274,7 @@ def paths_to_text(html: str, string: str) -> List[str]:
 def get_XSS_data(body: Union[str, bytes], request_URL: str, injection_point: str) -> Optional[XSSData]:
     """ Return a XSSDict if there is a XSS otherwise return None """
     def in_script(text, index, body) -> bool:
-        """ Whether the Numberth occurence of the first string in the second
+        """ Whether the Numberth occurrence of the first string in the second
             string is inside a script tag """
         paths = paths_to_text(body.decode('utf-8'), text.decode("utf-8"))
         try:
@@ -284,7 +284,7 @@ def get_XSS_data(body: Union[str, bytes], request_URL: str, injection_point: str
             return False
 
     def in_HTML(text: bytes, index: int, body: bytes) -> bool:
-        """ Whether the Numberth occurence of the first string in the second
+        """ Whether the Numberth occurrence of the first string in the second
             string is inside the HTML but not inside a script tag or part of
             a HTML attribute"""
         # if there is a < then lxml will interpret that as a tag, so only search for the stuff before it

@@ -123,7 +123,7 @@ def convert_200_300(data):
 
 def convert_300_4(data):
     data["version"] = 4
-    # Ths is an empty migration to transition to the new versioning scheme.
+    # This is an empty migration to transition to the new versioning scheme.
     return data
 
 

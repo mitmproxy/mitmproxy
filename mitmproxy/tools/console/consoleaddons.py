@@ -88,7 +88,7 @@ class ConsoleAddon:
         )
         loader.add_option(
             "console_layout_headers", bool, True,
-            "Show layout comonent headers",
+            "Show layout component headers",
         )
         loader.add_option(
             "console_focus_follow", bool, False,
@@ -223,7 +223,7 @@ class ConsoleAddon:
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
-            invoke another command with all occurances of {choice} replaced by
+            invoke another command with all occurrences of {choice} replaced by
             the choice the user made.
         """
         def callback(opt):
@@ -249,7 +249,7 @@ class ConsoleAddon:
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
-            command, then invoke another command with all occurances of {choice}
+            command, then invoke another command with all occurrences of {choice}
             replaced by the choice the user made.
         """
         choices = ctx.master.commands.call_args(choicecmd, [])

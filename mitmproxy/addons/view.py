@@ -325,7 +325,7 @@ class View(collections.Sequence):
         key: str
     ) -> None:
         """
-            Toggle a boolean value in the settings store, seting the value to
+            Toggle a boolean value in the settings store, setting the value to
             the string "true" or "false".
         """
         updated = []

@@ -5,7 +5,7 @@ from mitmproxy import exceptions
 from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy.protocol import base
 
-# taken from https://testssl.sh/openssl-rfc.mappping.html
+# taken from https://testssl.sh/openssl-rfc.mapping.html
 CIPHER_ID_NAME_MAP = {
     0x00: 'NULL-MD5',
     0x01: 'NULL-MD5',

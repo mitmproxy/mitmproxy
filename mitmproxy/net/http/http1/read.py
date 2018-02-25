@@ -43,7 +43,7 @@ def read_request_head(rfile):
     Raises:
         exceptions.HttpReadDisconnect: No bytes can be read from rfile.
         exceptions.HttpSyntaxException: The input is malformed HTTP.
-        exceptions.HttpException: Any other error occured.
+        exceptions.HttpException: Any other error occurred.
     """
     timestamp_start = time.time()
     if hasattr(rfile, "reset_timestamps"):
@@ -82,7 +82,7 @@ def read_response_head(rfile):
     Raises:
         exceptions.HttpReadDisconnect: No bytes can be read from rfile.
         exceptions.HttpSyntaxException: The input is malformed HTTP.
-        exceptions.HttpException: Any other error occured.
+        exceptions.HttpException: Any other error occurred.
     """
 
     timestamp_start = time.time()

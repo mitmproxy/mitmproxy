@@ -10,7 +10,7 @@
 | mitmproxywrapper.py      | Bracket mitmproxy run with proxy enable/disable on OS X                                       |
 | nonblocking.py           | Demonstrate parallel processing with a blocking script                                        |
 | remote_debug.py          | This script enables remote debugging of the mitmproxy _UI_ with PyCharm.                      |
-| sslstrip.py              | sslstrip-like funtionality implemented with mitmproxy                                         |
+| sslstrip.py              | sslstrip-like functionality implemented with mitmproxy                                        |
 | stream.py                | Enable streaming for all responses.                                                           |
 | stream_modify.py         | Modify a streamed response body.                                                              |
 | tcp_message.py           | Modify a raw TCP connection                                                                   |
