@@ -6,6 +6,7 @@ import traceback
 
 from mitmproxy import options
 from mitmproxy import exceptions
+from mitmproxy.addons import core
 from mitmproxy.http import HTTPFlow
 from mitmproxy.websocket import WebSocketFlow
 
@@ -52,6 +53,7 @@ class _WebSocketTestBase:
     def setup_class(cls):
         cls.options = cls.get_options()
         tmaster = tservers.TestMaster(cls.options)
+        tmaster.addons.add(core.Core())
         cls.proxy = tservers.ProxyThread(tmaster)
         cls.proxy.start()
 

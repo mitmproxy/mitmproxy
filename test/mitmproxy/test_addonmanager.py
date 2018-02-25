@@ -107,7 +107,7 @@ def test_loader():
 
 
 def test_simple():
-    with taddons.context() as tctx:
+    with taddons.context(loadcore=False) as tctx:
         a = tctx.master.addons
 
         assert len(a) == 0

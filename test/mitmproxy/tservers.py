@@ -5,6 +5,7 @@ import sys
 from unittest import mock
 
 import mitmproxy.platform
+from mitmproxy.addons import core
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
 from mitmproxy import controller
@@ -132,6 +133,7 @@ class ProxyTestBase:
 
         cls.options = cls.get_options()
         tmaster = cls.masterclass(cls.options)
+        tmaster.addons.add(core.Core())
         cls.proxy = ProxyThread(tmaster)
         cls.proxy.start()
 
@@ -343,6 +345,7 @@ class ChainProxyTest(ProxyTestBase):
         for _ in range(cls.n):
             opts = cls.get_options()
             tmaster = cls.masterclass(opts)
+            tmaster.addons.add(core.Core())
             proxy = ProxyThread(tmaster)
             proxy.start()
             cls.chain.insert(0, proxy)

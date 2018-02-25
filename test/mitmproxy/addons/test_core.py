@@ -1,3 +1,5 @@
+from unittest import mock
+
 from mitmproxy.addons import core
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
@@ -7,9 +9,7 @@ import pytest
 
 def test_set():
     sa = core.Core()
-    with taddons.context() as tctx:
-        tctx.master.addons.add(sa)
-
+    with taddons.context(loadcore=False) as tctx:
         assert tctx.master.options.server
         tctx.command(sa.set, "server=false")
         assert not tctx.master.options.server
@@ -20,7 +20,7 @@ def test_set():
 
 def test_resume():
     sa = core.Core()
-    with taddons.context():
+    with taddons.context(loadcore=False):
         f = tflow.tflow()
         assert not sa.resume([f])
         f.intercept()
@@ -30,7 +30,7 @@ def test_resume():
 
 def test_mark():
     sa = core.Core()
-    with taddons.context():
+    with taddons.context(loadcore=False):
         f = tflow.tflow()
         assert not f.marked
         sa.mark([f], True)
@@ -44,7 +44,7 @@ def test_mark():
 
 def test_kill():
     sa = core.Core()
-    with taddons.context():
+    with taddons.context(loadcore=False):
         f = tflow.tflow()
         f.intercept()
         assert f.killable
@@ -54,7 +54,7 @@ def test_kill():
 
 def test_revert():
     sa = core.Core()
-    with taddons.context():
+    with taddons.context(loadcore=False):
         f = tflow.tflow()
         f.backup()
         f.request.content = b"bar"
@@ -65,7 +65,7 @@ def test_revert():
 
 def test_flow_set():
     sa = core.Core()
-    with taddons.context():
+    with taddons.context(loadcore=False):
         f = tflow.tflow(resp=True)
         assert sa.flow_set_options()
 
@@ -101,7 +101,7 @@ def test_flow_set():
 
 def test_encoding():
     sa = core.Core()
-    with taddons.context():
+    with taddons.context(loadcore=False):
         f = tflow.tflow()
         assert sa.encode_options()
         sa.encode([f], "request", "deflate")
@@ -152,3 +152,40 @@ def test_options(tmpdir):
             f.write("'''")
         with pytest.raises(exceptions.CommandError):
             sa.options_load(p)
+
+
+def test_validation_simple():
+    sa = core.Core()
+    with taddons.context() as tctx:
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(sa, body_size_limit = "invalid")
+        tctx.configure(sa, body_size_limit = "1m")
+
+        with pytest.raises(exceptions.OptionsError, match="mutually exclusive"):
+            tctx.configure(
+                sa,
+                add_upstream_certs_to_client_chain = True,
+                upstream_cert = False
+            )
+        with pytest.raises(exceptions.OptionsError, match="Invalid mode"):
+            tctx.configure(
+                sa,
+                mode = "Flibble"
+            )
+
+
+@mock.patch("mitmproxy.platform.original_addr", None)
+def test_validation_no_transparent():
+    sa = core.Core()
+    with taddons.context() as tctx:
+        with pytest.raises(Exception, match="Transparent mode not supported"):
+            tctx.configure(sa, mode = "transparent")
+
+
+@mock.patch("mitmproxy.platform.original_addr")
+def test_validation_modes(m):
+    sa = core.Core()
+    with taddons.context() as tctx:
+        tctx.configure(sa, mode = "reverse:http://localhost")
+        with pytest.raises(Exception, match="Invalid server specification"):
+            tctx.configure(sa, mode = "reverse:")
