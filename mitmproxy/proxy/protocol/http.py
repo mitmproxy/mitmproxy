@@ -481,7 +481,7 @@ class HttpLayer(base.Layer):
             if address != self.server_conn.address or tls != self.server_tls:
                 self.set_server(address)
                 self.set_server_tls(tls, address[0])
-            # Establish connection is neccessary.
+            # Establish connection is necessary.
             if not self.server_conn.connected():
                 self.connect()
         else:

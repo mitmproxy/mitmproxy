@@ -42,7 +42,7 @@ class UpstreamAuth():
         # FIXME: We're doing this because our proxy core is terminally confused
         # at the moment. Ideally, we should be able to check if we're in
         # reverse proxy mode at the HTTP layer, so that scripts can put the
-        # proxy in reverse proxy mode for specific reuests.
+        # proxy in reverse proxy mode for specific requests.
         if "upstream_auth" in updated:
             if ctx.options.upstream_auth is None:
                 self.auth = None

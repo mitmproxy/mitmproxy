@@ -485,7 +485,7 @@ class TestSSLDisconnect(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_tls()
-            # Excercise SSL.ZeroReturnError
+            # Exercise SSL.ZeroReturnError
             c.rfile.read(10)
             c.close()
             with pytest.raises(exceptions.TcpDisconnect):

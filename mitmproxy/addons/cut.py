@@ -61,7 +61,7 @@ class Cut:
             from the base of the flow object, with a few conveniences - "port"
             and "host" retrieve parts of an address tuple, ".header[key]"
             retrieves a header value. Return values converted to strings or
-            bytes: SSL certicates are converted to PEM format, bools are "true"
+            bytes: SSL certificates are converted to PEM format, bools are "true"
             or "false", "bytes" are preserved, and all other values are
             converted to strings.
         """

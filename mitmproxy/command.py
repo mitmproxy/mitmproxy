@@ -54,7 +54,7 @@ class Command:
 
         self.has_positional = False
         for i in sig.parameters.values():
-            # This is the kind for *args paramters
+            # This is the kind for *args parameters
             if i.kind == i.VAR_POSITIONAL:
                 self.has_positional = True
         self.paramtypes = [v.annotation for v in sig.parameters.values()]

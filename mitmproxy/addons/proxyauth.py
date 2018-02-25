@@ -172,7 +172,7 @@ class ProxyAuth:
                         server = ldap3.Server(ldap_server)
                     else:
                         raise exceptions.OptionsError(
-                            "Invalid ldap specfication on the first part"
+                            "Invalid ldap specification on the first part"
                         )
                     conn = ldap3.Connection(
                         server,

@@ -160,7 +160,7 @@ class CertStore:
     def load_dhparam(path):
 
         # mitmproxy<=0.10 doesn't generate a dhparam file.
-        # Create it now if neccessary.
+        # Create it now if necessary.
         if not os.path.exists(path):
             with open(path, "wb") as f:
                 f.write(DEFAULT_DHPARAM)

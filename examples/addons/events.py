@@ -155,7 +155,7 @@ class Events:
 
     def log(self, entry: mitmproxy.log.LogEntry):
         """
-            Called whenver a new log entry is created through the mitmproxy
+            Called whenever a new log entry is created through the mitmproxy
             context. Be careful not to log from this event, which will cause an
             infinite loop!
         """
