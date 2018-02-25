@@ -26,7 +26,7 @@ and pathod websites.
 
 |mitmproxy_site|
 
-The latest documentation for mitmproxy is also available on ReadTheDocs.
+The latest documentation for mitmproxy is available on our website.
 
 |mitmproxy_docs|
 
@@ -151,7 +151,7 @@ with the following command:
     :alt: mitmproxy.org
 
 .. |mitmproxy_docs| image:: https://shields.mitmproxy.org/api/docs-latest-brightgreen.svg
-    :target: http://docs.mitmproxy.org/en/latest/
+    :target: https://mitmproxy.org/docs/latest/
     :alt: mitmproxy documentation
 
 .. |mitmproxy_discourse| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-discourse.mitmproxy.org-orange.svg
