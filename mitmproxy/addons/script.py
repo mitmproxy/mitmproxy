@@ -12,6 +12,7 @@ from mitmproxy import flow
 from mitmproxy import command
 from mitmproxy import eventsequence
 from mitmproxy import ctx
+import mitmproxy.types as mtypes
 
 
 def load_script(path: str) -> types.ModuleType:
@@ -110,7 +111,7 @@ class ScriptLoader:
         self.is_running = True
 
     @command.command("script.run")
-    def script_run(self, flows: typing.Sequence[flow.Flow], path: str) -> None:
+    def script_run(self, flows: typing.Sequence[flow.Flow], path: mtypes.Path) -> None:
         """
             Run a script on the specified flows. The script is loaded with
             default options, and all lifecycle events for each flow are
