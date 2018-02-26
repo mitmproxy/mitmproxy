@@ -10,7 +10,6 @@ from mitmproxy import certs
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import options
-from mitmproxy.addons import proxyauth
 from mitmproxy.addons import script
 from mitmproxy.net import socks
 from mitmproxy.net import tcp
@@ -304,46 +303,6 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
         with p.connect():
             assert p.request(req).status_code == 200
             assert self.server.last_log()["request"]["first_line_format"] == "relative"
-
-
-class TestHTTPAuth(tservers.HTTPProxyTest):
-    def test_auth(self):
-        self.master.addons.add(proxyauth.ProxyAuth())
-        self.master.addons.trigger(
-            "configure", self.master.options.keys()
-        )
-        self.master.options.proxyauth = "test:test"
-        assert self.pathod("202").status_code == 407
-        p = self.pathoc()
-        with p.connect():
-            ret = p.request("""
-                get
-                'http://localhost:%s/p/202'
-                h'%s'='%s'
-            """ % (
-                self.server.port,
-                "Proxy-Authorization",
-                proxyauth.mkauth("test", "test")
-            ))
-        assert ret.status_code == 202
-
-
-class TestHTTPReverseAuth(tservers.ReverseProxyTest):
-    def test_auth(self):
-        self.master.addons.add(proxyauth.ProxyAuth())
-        self.master.options.proxyauth = "test:test"
-        assert self.pathod("202").status_code == 401
-        p = self.pathoc()
-        with p.connect():
-            ret = p.request("""
-                get
-                '/p/202'
-                h'%s'='%s'
-            """ % (
-                "Authorization",
-                proxyauth.mkauth("test", "test")
-            ))
-        assert ret.status_code == 202
 
 
 class TestHTTPS(tservers.HTTPProxyTest, CommonMixin, TcpMixin):

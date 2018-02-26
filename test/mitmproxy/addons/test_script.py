@@ -189,7 +189,7 @@ class TestScriptLoader:
 
     def test_simple(self):
         sc = script.ScriptLoader()
-        with taddons.context() as tctx:
+        with taddons.context(loadcore=False) as tctx:
             tctx.master.addons.add(sc)
             sc.running()
             assert len(tctx.master.addons) == 1
@@ -231,7 +231,7 @@ class TestScriptLoader:
 
     def test_load_err(self):
         sc = script.ScriptLoader()
-        with taddons.context(sc) as tctx:
+        with taddons.context(sc, loadcore=False) as tctx:
             tctx.configure(sc, scripts=[
                 tutils.test_data.path("mitmproxy/data/addonscripts/load_error.py")
             ])

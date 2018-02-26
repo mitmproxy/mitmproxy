@@ -4,7 +4,6 @@ from mitmproxy.addons import anticomp
 from mitmproxy.addons import browser
 from mitmproxy.addons import check_ca
 from mitmproxy.addons import clientplayback
-from mitmproxy.addons import core_option_validation
 from mitmproxy.addons import core
 from mitmproxy.addons import cut
 from mitmproxy.addons import disable_h2c
@@ -25,7 +24,6 @@ from mitmproxy.addons import upstream_auth
 def default_addons():
     return [
         core.Core(),
-        core_option_validation.CoreOptionValidation(),
         browser.Browser(),
         allowremote.AllowRemote(),
         anticache.AntiCache(),

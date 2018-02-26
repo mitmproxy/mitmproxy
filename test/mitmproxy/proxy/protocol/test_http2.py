@@ -10,6 +10,7 @@ import h2
 from mitmproxy import options
 
 import mitmproxy.net
+from mitmproxy.addons import core
 from ...net import tservers as net_tservers
 from mitmproxy import exceptions
 from mitmproxy.net.http import http1, http2
@@ -90,6 +91,7 @@ class _Http2TestBase:
     def setup_class(cls):
         cls.options = cls.get_options()
         tmaster = tservers.TestMaster(cls.options)
+        tmaster.addons.add(core.Core())
         cls.proxy = tservers.ProxyThread(tmaster)
         cls.proxy.start()
 

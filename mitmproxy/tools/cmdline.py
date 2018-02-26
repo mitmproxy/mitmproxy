@@ -1,10 +1,10 @@
 import argparse
 import os
 
-from mitmproxy import options
+from mitmproxy.addons import core
 
 
-CONFIG_PATH = os.path.join(options.CA_DIR, "config.yaml")
+CONFIG_PATH = os.path.join(core.CA_DIR, "config.yaml")
 
 
 def common_options(parser, opts):

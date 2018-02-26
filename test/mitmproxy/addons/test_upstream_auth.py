@@ -41,7 +41,7 @@ def test_simple():
         up.requestheaders(f)
         assert "proxy-authorization" not in f.request.headers
 
-        tctx.configure(up, mode="reverse")
+        tctx.configure(up, mode="reverse:127.0.0.1")
         f = tflow.tflow()
         f.mode = "transparent"
         up.requestheaders(f)
