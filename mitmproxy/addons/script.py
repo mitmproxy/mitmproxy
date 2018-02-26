@@ -75,7 +75,10 @@ class Script:
                 self.ns = None
                 with addonmanager.safecall():
                     ns = load_script(self.fullpath)
-                    ctx.master.addons.register(ns)
+                    try:
+                        ctx.master.addons.register(ns)
+                    except exceptions.AddonManagerError as e:
+                        ctx.log.alert(str(e))
                     self.ns = ns
                 if self.ns:
                     # We're already running, so we have to explicitly register and
@@ -123,9 +126,10 @@ class ScriptLoader:
             ctx.master.addons.invoke_addon(s, "configure", ctx.options.keys())
             # Script is loaded on the first tick
             ctx.master.addons.invoke_addon(s, "tick")
-            for f in flows:
-                for evt, arg in eventsequence.iterate(f):
-                    ctx.master.addons.invoke_addon(s, evt, arg)
+            with addonmanager.safecall():
+                for f in flows:
+                    for evt, arg in eventsequence.iterate(f):
+                        ctx.master.addons.invoke_addon(s, evt, arg)
         except exceptions.OptionsError as e:
             raise exceptions.CommandError("Error running script: %s" % e) from e
 
