@@ -1,5 +1,5 @@
 """
-    This module manges and invokes typed commands.
+    This module manages and invokes typed commands.
 """
 import inspect
 import types
@@ -37,7 +37,7 @@ def typename(t: type) -> str:
     """
     to = mitmproxy.types.CommandTypes.get(t, None)
     if not to:
-        raise NotImplementedError(t)
+        raise SyntaxError("missing type annotations in consoleaddons.py")
     return to.display
 
 
