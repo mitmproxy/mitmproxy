@@ -14,7 +14,7 @@ from mitmproxy import eventsequence
 from mitmproxy import ctx
 
 
-def load_script(path: str) -> types.ModuleType:
+def load_script(path: str) -> typing.Optional[types.ModuleType]:
     fullname = "__mitmproxy_script__.{}".format(
         os.path.splitext(os.path.basename(path))[0]
     )
@@ -23,6 +23,7 @@ def load_script(path: str) -> types.ModuleType:
     sys.modules.pop(fullname, None)
     oldpath = sys.path
     sys.path.insert(0, os.path.dirname(path))
+    m = None
     try:
         loader = importlib.machinery.SourceFileLoader(fullname, path)
         spec = importlib.util.spec_from_loader(fullname, loader=loader)

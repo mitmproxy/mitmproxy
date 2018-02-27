@@ -33,7 +33,7 @@ def test_load_script():
                 "mitmproxy/data/addonscripts/recorder/error.py"
             )
         )
-        assert tctx.master.has_log("invalid syntax (error.py, line 1)")
+        assert tctx.master.has_log("invalid syntax (error.py, line 5)")
 
 
 def test_load_fullname():
