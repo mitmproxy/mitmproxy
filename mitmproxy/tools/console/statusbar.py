@@ -49,7 +49,7 @@ class ActionBar(urwid.WidgetWrap):
     def sig_message(self, sender, message, expire=1):
         if self.prompting:
             return
-        w = urwid.Text(message)
+        w = urwid.Text(self.prep_message(message))
         self._w = w
         if expire:
             def cb(*args):
@@ -59,6 +59,36 @@ class ActionBar(urwid.WidgetWrap):
 
     def prep_prompt(self, p):
         return p.strip() + ": "
+
+    def prep_message(self, msg):
+        cols, _ = self.master.ui.get_cols_rows()
+        eventlog_prompt = "(more in eventlog)"
+        if isinstance(msg, (tuple, list)):
+            log_level, msg_text = msg
+        elif isinstance(msg, str):
+            log_level, msg_text = None, msg
+        else:
+            return msg
+
+        msg_lines = msg_text.split("\n")
+        first_line = msg_lines[0]
+
+        def prep_line(line, eventlog_prompt, cols):
+            if cols < len(eventlog_prompt) + 3:
+                first_line = "..."
+            else:
+                first_line = line[:cols - len(eventlog_prompt) - 3] + "..."
+            return first_line
+
+        if len(msg_lines) > 1:
+            if len(first_line) + len(eventlog_prompt) > cols:
+                first_line = prep_line(first_line, eventlog_prompt, cols)
+        else:
+            if len(first_line) > cols:
+                first_line = prep_line(first_line, eventlog_prompt, cols)
+            else:
+                eventlog_prompt = ""
+        return [(log_level, first_line), ("warn", eventlog_prompt)]
 
     def sig_prompt(self, sender, prompt, text, callback, args=()):
         signals.focus.send(self, section="footer")
