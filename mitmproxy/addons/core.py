@@ -1,5 +1,7 @@
 import typing
 
+import os
+
 from mitmproxy.utils import human
 from mitmproxy import ctx
 from mitmproxy import exceptions
@@ -42,6 +44,12 @@ class Core:
                 "then the upstream certificate is not retrieved before generating "
                 "the client certificate chain."
             )
+        if opts.add_upstream_certs_to_client_chain and not opts.ssl_insecure:
+            raise exceptions.OptionsError(
+                "The verify-upstream-cert requires certificate verification to be disabled. "
+                "If upstream certificates are verified then extra upstream certificates are "
+                "not available for inclusion to the client chain."
+            )
         if "body_size_limit" in updated:
             try:
                 human.parse_size(opts.body_size_limit)
@@ -66,6 +74,13 @@ class Core:
                 raise exceptions.OptionsError(
                     "Invalid mode specification: %s" % mode
                 )
+        if "client_certs" in updated:
+            if opts.client_certs:
+                client_certs = os.path.expanduser(opts.client_certs)
+                if not os.path.exists(client_certs):
+                    raise exceptions.OptionsError(
+                        "Client certificate path does not exist: {}".format(opts.client_certs)
+                    )
 
     @command.command("set")
     def set(self, *spec: str) -> None:

@@ -2,12 +2,11 @@ import os
 import re
 import typing
 
-from OpenSSL import SSL, crypto
+from OpenSSL import crypto
 
 from mitmproxy import exceptions
 from mitmproxy import options as moptions
 from mitmproxy import certs
-from mitmproxy.net import tls
 from mitmproxy.net import server_spec
 
 CONF_BASENAME = "mitmproxy"
@@ -40,34 +39,15 @@ class ProxyConfig:
         self.check_ignore = None  # type: HostMatcher
         self.check_tcp = None  # type: HostMatcher
         self.certstore = None  # type: certs.CertStore
-        self.client_certs = None  # type: str
-        self.openssl_verification_mode_server = None  # type: int
         self.upstream_server = None  # type: typing.Optional[server_spec.ServerSpec]
         self.configure(options, set(options.keys()))
         options.changed.connect(self.configure)
 
     def configure(self, options: moptions.Options, updated: typing.Any) -> None:
-        if options.add_upstream_certs_to_client_chain and not options.ssl_insecure:
-            raise exceptions.OptionsError(
-                "The verify-upstream-cert requires certificate verification to be disabled. "
-                "If upstream certificates are verified then extra upstream certificates are "
-                "not available for inclusion to the client chain."
-            )
-
-        if options.ssl_insecure:
-            self.openssl_verification_mode_server = SSL.VERIFY_NONE
-        else:
-            self.openssl_verification_mode_server = SSL.VERIFY_PEER
-
         if "ignore_hosts" in updated:
             self.check_ignore = HostMatcher(options.ignore_hosts)
         if "tcp_hosts" in updated:
             self.check_tcp = HostMatcher(options.tcp_hosts)
-
-        self.openssl_method_client, self.openssl_options_client = \
-            tls.VERSION_CHOICES[options.ssl_version_client]
-        self.openssl_method_server, self.openssl_options_server = \
-            tls.VERSION_CHOICES[options.ssl_version_server]
 
         certstore_path = os.path.expanduser(options.cadir)
         if not os.path.exists(os.path.dirname(certstore_path)):
@@ -79,15 +59,6 @@ class ProxyConfig:
             certstore_path,
             CONF_BASENAME
         )
-
-        if options.client_certs:
-            client_certs = os.path.expanduser(options.client_certs)
-            if not os.path.exists(client_certs):
-                raise exceptions.OptionsError(
-                    "Client certificate path does not exist: %s" %
-                    options.client_certs
-                )
-            self.client_certs = client_certs
 
         for c in options.certs:
             parts = c.split("=", 1)

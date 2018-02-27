@@ -281,6 +281,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             raise ValueError("sni must be str, not " + type(sni).__name__)
         client_cert = None
         if client_certs:
+            client_certs = os.path.expanduser(client_certs)
             if os.path.isfile(client_certs):
                 client_cert = client_certs
             else:

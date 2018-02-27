@@ -1,6 +1,5 @@
 import argparse
 from unittest import mock
-from OpenSSL import SSL
 import pytest
 
 from mitmproxy.tools import cmdline
@@ -49,10 +48,6 @@ class TestProcessProxyOptions:
             tutils.test_data.path("mitmproxy/data/testkey.pem"))
         with pytest.raises(Exception, match="does not exist"):
             self.p("--cert", "nonexistent")
-
-    def test_insecure(self):
-        p = self.assert_noerr("--ssl-insecure")
-        assert p.openssl_verification_mode_server == SSL.VERIFY_NONE
 
 
 class TestProxyServer:
