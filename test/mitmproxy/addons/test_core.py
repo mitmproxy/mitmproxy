@@ -3,6 +3,7 @@ from unittest import mock
 from mitmproxy.addons import core
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 from mitmproxy import exceptions
 import pytest
 
@@ -167,6 +168,12 @@ def test_validation_simple():
                 add_upstream_certs_to_client_chain = True,
                 upstream_cert = False
             )
+        with pytest.raises(exceptions.OptionsError, match="requires certificate verification to be disabled"):
+            tctx.configure(
+                sa,
+                add_upstream_certs_to_client_chain = True,
+                ssl_insecure = False
+            )
         with pytest.raises(exceptions.OptionsError, match="Invalid mode"):
             tctx.configure(
                 sa,
@@ -189,3 +196,15 @@ def test_validation_modes(m):
         tctx.configure(sa, mode = "reverse:http://localhost")
         with pytest.raises(Exception, match="Invalid server specification"):
             tctx.configure(sa, mode = "reverse:")
+
+
+def test_client_certs():
+    sa = core.Core()
+    with taddons.context() as tctx:
+        # Folders should work.
+        tctx.configure(sa, client_certs = tutils.test_data.path("mitmproxy/data/clientcert"))
+        # Files, too.
+        tctx.configure(sa, client_certs = tutils.test_data.path("mitmproxy/data/clientcert/client.pem"))
+
+        with pytest.raises(exceptions.OptionsError, match="certificate path does not exist"):
+            tctx.configure(sa, client_certs = "invalid")

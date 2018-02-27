@@ -374,10 +374,11 @@ class TlsLayer(base.Layer):
             extra_certs = None
 
         try:
+            tls_method, tls_options = net_tls.VERSION_CHOICES[self.config.options.ssl_version_client]
             self.client_conn.convert_to_tls(
                 cert, key,
-                method=self.config.openssl_method_client,
-                options=self.config.openssl_options_client,
+                method=tls_method,
+                options=tls_options,
                 cipher_list=self.config.options.ciphers_client or DEFAULT_CLIENT_CIPHERS,
                 dhparams=self.config.certstore.dhparams,
                 chain_file=chain_file,
