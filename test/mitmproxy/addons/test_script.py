@@ -187,6 +187,17 @@ class TestScriptLoader:
             with pytest.raises(exceptions.CommandError):
                 sc.script_run([tflow.tflow(resp=True)], "/")
 
+    def test_script_run_exception(self):
+        rp = tutils.test_data.path(
+            "mitmproxy/data/addonscripts/error.py"
+        )
+        sc = script.ScriptLoader()
+        with taddons.context(sc) as tctx:
+            sc.script_run([tflow.tflow(resp=True)], rp)
+
+            assert tctx.master.has_log("ValueError: Error!")
+            assert tctx.master.has_log("error.py")
+
     def test_simple(self):
         sc = script.ScriptLoader()
         with taddons.context(loadcore=False) as tctx:
