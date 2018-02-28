@@ -1,6 +1,8 @@
 from mitmproxy import options
 from mitmproxy.tools.console import statusbar, master
 
+from unittest import mock
+
 
 def test_statusbar(monkeypatch):
     o = options.Options()
@@ -31,3 +33,26 @@ def test_statusbar(monkeypatch):
 
     bar = statusbar.StatusBar(m)  # this already causes a redraw
     assert bar.ib._w
+
+
+def test_prep_message():
+    o = options.Options()
+    m = master.ConsoleMaster(o)
+    m.ui = mock.MagicMock()
+    m.ui.get_cols_rows = mock.MagicMock(return_value=(50, 50))
+    ab = statusbar.ActionBar(m)
+
+    prep_msg = ab.prep_message("Error: Fits into statusbar")
+    assert prep_msg == [(None, "Error: Fits into statusbar"), ("warn", "")]
+
+    prep_msg = ab.prep_message("Error: Doesn't fit into statusbar"*2)
+    assert prep_msg == [(None, "Error: Doesn't fit into statu..."),
+                        ("warn", "(more in eventlog)")]
+
+    prep_msg = ab.prep_message("Error: Two lines.\nFirst fits")
+    assert prep_msg == [(None, "Error: Two lines."),
+                        ("warn", "(more in eventlog)")]
+
+    prep_msg = ab.prep_message("Error: Two lines"*4 + "\nFirst doensn't fit")
+    assert prep_msg == [(None, "Error: Two linesError: Two li..."),
+                        ("warn", "(more in eventlog)")]

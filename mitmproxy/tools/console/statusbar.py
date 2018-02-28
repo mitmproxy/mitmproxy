@@ -61,34 +61,28 @@ class ActionBar(urwid.WidgetWrap):
         return p.strip() + ": "
 
     def prep_message(self, msg):
-        cols, _ = self.master.ui.get_cols_rows()
-        eventlog_prompt = "(more in eventlog)"
-        if isinstance(msg, (tuple, list)):
-            log_level, msg_text = msg
+        if isinstance(msg, tuple):
+            disp_attr, msg_text = msg
         elif isinstance(msg, str):
-            log_level, msg_text = None, msg
+            disp_attr, msg_text = None, msg
         else:
             return msg
+        cols, _ = self.master.ui.get_cols_rows()
+        prompt = "(more in eventlog)"
 
         msg_lines = msg_text.split("\n")
         first_line = msg_lines[0]
 
-        def prep_line(line, eventlog_prompt, cols):
-            if cols < len(eventlog_prompt) + 3:
-                first_line = "..."
-            else:
-                first_line = line[:cols - len(eventlog_prompt) - 3] + "..."
-            return first_line
+        oneline_fits = len(first_line) > cols and len(msg_lines) == 1
+        manylines_first_fits = (len(first_line) + len(prompt) > cols and
+                                len(msg_lines) > 1)
+        if oneline_fits or manylines_first_fits:
+            shortening_index = max(0, cols - len(prompt) - 3)
+            first_line = first_line[:shortening_index] + "..."
+        elif len(msg_lines) == 1 and len(first_line) <= cols:
+            prompt = ""
 
-        if len(msg_lines) > 1:
-            if len(first_line) + len(eventlog_prompt) > cols:
-                first_line = prep_line(first_line, eventlog_prompt, cols)
-        else:
-            if len(first_line) > cols:
-                first_line = prep_line(first_line, eventlog_prompt, cols)
-            else:
-                eventlog_prompt = ""
-        return [(log_level, first_line), ("warn", eventlog_prompt)]
+        return [(disp_attr, first_line), ("warn", prompt)]
 
     def sig_prompt(self, sender, prompt, text, callback, args=()):
         signals.focus.send(self, section="footer")
