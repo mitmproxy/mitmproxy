@@ -73,7 +73,7 @@ class ActionBar(urwid.WidgetWrap):
         msg_lines = msg_text.split("\n")
         first_line = msg_lines[0]
         if len(msg_lines) > 1:
-            # Messages with a few lines must end with prompt.
+            # First line of messages with a few lines must end with prompt.
             line_length = len(first_line) + len(prompt)
         else:
             line_length = len(first_line)
