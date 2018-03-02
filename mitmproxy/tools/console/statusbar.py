@@ -72,15 +72,18 @@ class ActionBar(urwid.WidgetWrap):
 
         msg_lines = msg_text.split("\n")
         first_line = msg_lines[0]
+        if len(msg_lines) > 1:
+            # Messages with a few lines must end with prompt.
+            line_length = len(first_line) + len(prompt)
+        else:
+            line_length = len(first_line)
 
-        oneline_fits = len(first_line) > cols and len(msg_lines) == 1
-        manylines_first_fits = (len(first_line) + len(prompt) > cols and
-                                len(msg_lines) > 1)
-        if oneline_fits or manylines_first_fits:
+        if line_length > cols:
             shortening_index = max(0, cols - len(prompt) - 3)
             first_line = first_line[:shortening_index] + "..."
-        elif len(msg_lines) == 1 and len(first_line) <= cols:
-            prompt = ""
+        else:
+            if len(msg_lines) == 1:
+                prompt = ""
 
         return [(disp_attr, first_line), ("warn", prompt)]
 

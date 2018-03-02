@@ -1,6 +1,7 @@
+import pytest
+
 from mitmproxy import options
 from mitmproxy.tools.console import statusbar, master
-
 from unittest import mock
 
 
@@ -35,24 +36,27 @@ def test_statusbar(monkeypatch):
     assert bar.ib._w
 
 
-def test_prep_message():
-    o = options.Options()
-    m = master.ConsoleMaster(o)
-    m.ui = mock.MagicMock()
-    m.ui.get_cols_rows = mock.MagicMock(return_value=(50, 50))
+@pytest.mark.parametrize("message,ready_message", [
+    ("", [(None, ""), ("warn", "")]),
+    (("info", "Line fits into statusbar"), [("info", "Line fits into statusbar"),
+                                            ("warn", "")]),
+    ("Line doesn't fit into statusbar", [(None, "Line does..."),
+                                         ("warn", "(more in eventlog)")]),
+    (("alert", "Two lines.\nFirst fits"), [("alert", "Two lines."),
+                                           ("warn", "(more in eventlog)")]),
+    ("Two long lines\nFirst doesn't fit", [(None, "Two long ..."),
+                                           ("warn", "(more in eventlog)")])
+])
+def test_prep_message(message, ready_message):
+    m = mock.Mock()
+    m.ui.get_cols_rows.return_value = (30, 30)
     ab = statusbar.ActionBar(m)
+    assert ab.prep_message(message) == ready_message
 
-    prep_msg = ab.prep_message("Error: Fits into statusbar")
-    assert prep_msg == [(None, "Error: Fits into statusbar"), ("warn", "")]
 
-    prep_msg = ab.prep_message("Error: Doesn't fit into statusbar"*2)
-    assert prep_msg == [(None, "Error: Doesn't fit into statu..."),
-                        ("warn", "(more in eventlog)")]
-
-    prep_msg = ab.prep_message("Error: Two lines.\nFirst fits")
-    assert prep_msg == [(None, "Error: Two lines."),
-                        ("warn", "(more in eventlog)")]
-
-    prep_msg = ab.prep_message("Error: Two lines"*4 + "\nFirst doensn't fit")
-    assert prep_msg == [(None, "Error: Two linesError: Two li..."),
-                        ("warn", "(more in eventlog)")]
+def test_prep_message_narrow():
+    m = mock.Mock()
+    m.ui.get_cols_rows.return_value = (4, 4)
+    ab = statusbar.ActionBar(m)
+    prep_msg = ab.prep_message("error")
+    assert prep_msg == [(None, "..."), ("warn", "(more in eventlog)")]

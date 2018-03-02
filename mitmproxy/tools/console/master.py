@@ -94,8 +94,9 @@ class ConsoleMaster(master.Master):
                 self.start_err = entry
             else:
                 signals.status_message.send(
-                    message=(entry.level, "{}: {}".format(entry.level.title(),
-                                                          entry.msg.lstrip())),
+                    message=(entry.level,
+                             "{}: {}".format(entry.level.title(),
+                                             str(entry.msg).lstrip())),
                     expire=5
                 )
 
