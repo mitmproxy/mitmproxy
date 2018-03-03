@@ -30,12 +30,14 @@ class FlowViewHeader(urwid.WidgetWrap):
         self.focus_changed()
 
     def focus_changed(self):
+        cols, _ = self.master.ui.get_cols_rows()
         if self.master.view.focus.flow:
             self._w = common.format_flow(
                 self.master.view.focus.flow,
                 False,
                 extended=True,
-                hostheader=self.master.options.showhost
+                hostheader=self.master.options.showhost,
+                max_url_len=cols,
             )
         else:
             self._w = urwid.Pile([])
