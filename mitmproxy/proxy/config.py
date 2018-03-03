@@ -53,7 +53,7 @@ class ProxyConfig:
         if not os.path.exists(os.path.dirname(certstore_path)):
             raise exceptions.OptionsError(
                 "Certificate Authority parent directory does not exist: %s" %
-                os.path.dirname(options.cadir)
+                os.path.dirname(certstore_path)
             )
         self.certstore = certs.CertStore.from_store(
             certstore_path,
