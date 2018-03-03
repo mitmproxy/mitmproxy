@@ -49,7 +49,8 @@ class ActionBar(urwid.WidgetWrap):
     def sig_message(self, sender, message, expire=1):
         if self.prompting:
             return
-        w = urwid.Text(self.prep_message(message))
+        cols, _ = self.master.ui.get_cols_rows()
+        w = urwid.Text(self.shorten_message(message, cols))
         self._w = w
         if expire:
             def cb(*args):
@@ -60,14 +61,17 @@ class ActionBar(urwid.WidgetWrap):
     def prep_prompt(self, p):
         return p.strip() + ": "
 
-    def prep_message(self, msg):
+    def shorten_message(self, msg, max_width):
+        """
+        Shorten message so that it fits into a single line in the statusbar.
+        """
         if isinstance(msg, tuple):
             disp_attr, msg_text = msg
         elif isinstance(msg, str):
             disp_attr, msg_text = None, msg
         else:
             return msg
-        cols, _ = self.master.ui.get_cols_rows()
+        msg_end = "\u2026"  # unicode ellipsis for the end of shortened message
         prompt = "(more in eventlog)"
 
         msg_lines = msg_text.split("\n")
@@ -78,9 +82,9 @@ class ActionBar(urwid.WidgetWrap):
         else:
             line_length = len(first_line)
 
-        if line_length > cols:
-            shortening_index = max(0, cols - len(prompt) - 3)
-            first_line = first_line[:shortening_index] + "..."
+        if line_length > max_width:
+            shortening_index = max(0, max_width - len(prompt) - len(msg_end))
+            first_line = first_line[:shortening_index] + msg_end
         else:
             if len(msg_lines) == 1:
                 prompt = ""
