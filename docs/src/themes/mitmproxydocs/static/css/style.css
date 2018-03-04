@@ -6731,6 +6731,10 @@ label.panel-block {
     width: 100%;
     text-align: right; }
 
+.sidebar {
+  background-color: #F1F1F1;
+}
+
 .sidebar .version {
   padding: 1em; }
 
