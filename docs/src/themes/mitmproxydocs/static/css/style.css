@@ -6731,20 +6731,16 @@ label.panel-block {
     text-align: right; }
 
 .sidebar {
-  background-color: #F1F1F1;
-}
-
-.sidebar .version {
-  padding: 1em; }
-
-.sidebar .brand {
-  background-color: #303030;
-  color: #c0c0c0;
-  padding: 1em;
-  top: 0; }
-
-.sidebar .menu {
-  padding: 1em; }
+  background-color: #F1F1F1; }
+  .sidebar .version {
+    padding: 1em; }
+  .sidebar .brand {
+    background-color: #303030;
+    color: #c0c0c0;
+    padding: 1em;
+    top: 0; }
+  .sidebar .menu {
+    padding: 1em; }
 
 .mainbody {
   padding: 3em; }
