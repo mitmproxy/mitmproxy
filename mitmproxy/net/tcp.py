@@ -292,9 +292,13 @@ class _Connection:
 
     def __init__(self, connection):
         if connection:
-            self.connection = connection
-            self.ip_address = connection.getpeername()
-            self._makefile()
+            try:
+                self.connection = connection
+                self.ip_address = connection.getpeername()
+            except OSError as e:
+                print(e, file=sys.stderr)
+            finally:
+                self._makefile()
         else:
             self.connection = None
             self.ip_address = None

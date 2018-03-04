@@ -39,7 +39,6 @@ class ClientCipherListHandler(tcp.BaseHandler):
 
 
 class HangHandler(tcp.BaseHandler):
-
     def handle(self):
         # Hang as long as the client connection is alive
         while True:
@@ -92,7 +91,6 @@ class TestServer(tservers.ServerTestBase):
 
 
 class TestServerBind(tservers.ServerTestBase):
-
     class handler(tcp.BaseHandler):
 
         def handle(self):
@@ -147,13 +145,11 @@ class TestEcho(tservers.ServerTestBase):
 
 
 class HardDisconnectHandler(tcp.BaseHandler):
-
     def handle(self):
         self.connection.close()
 
 
 class TestFinishFail(tservers.ServerTestBase):
-
     """
         This tests a difficult-to-trigger exception in the .finish() method of
         the handler.
@@ -353,7 +349,6 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
 
 
 class TestSSLClientCert(tservers.ServerTestBase):
-
     class handler(tcp.BaseHandler):
         sni = None
 
@@ -384,7 +379,6 @@ class TestSSLClientCert(tservers.ServerTestBase):
 
 
 class TestSNI(tservers.ServerTestBase):
-
     class handler(tcp.BaseHandler):
         sni = None
 
@@ -427,7 +421,6 @@ class TestServerCipherList(tservers.ServerTestBase):
 
 
 class TestServerCurrentCipher(tservers.ServerTestBase):
-
     class handler(tcp.BaseHandler):
         sni = None
 
@@ -473,9 +466,7 @@ class TestClientCipherListError(tservers.ServerTestBase):
 
 
 class TestSSLDisconnect(tservers.ServerTestBase):
-
     class handler(tcp.BaseHandler):
-
         def handle(self):
             self.finish()
 
@@ -510,7 +501,6 @@ class TestSSLHardDisconnect(tservers.ServerTestBase):
 
 
 class TestDisconnect(tservers.ServerTestBase):
-
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
@@ -521,7 +511,6 @@ class TestDisconnect(tservers.ServerTestBase):
 
 
 class TestServerTimeOut(tservers.ServerTestBase):
-
     class handler(tcp.BaseHandler):
 
         def handle(self):
@@ -611,7 +600,6 @@ class TestDHParams(tservers.ServerTestBase):
 
 
 class TestTCPClient(tservers.ServerTestBase):
-
     def test_conerr(self):
         c = tcp.TCPClient(("127.0.0.1", 0))
         with pytest.raises(exceptions.TcpException, match="Error connecting"):
@@ -629,7 +617,6 @@ class TestTCPClient(tservers.ServerTestBase):
 
 
 class TestTCPServer:
-
     def test_binderr(self):
         with pytest.raises(socket.error, match="prohibited"):
             tcp.TCPServer(("localhost", 8080))
@@ -643,7 +630,6 @@ class TestTCPServer:
 
 
 class TestFileLike:
-
     def test_blocksize(self):
         s = BytesIO(b"1234567890abcdefghijklmnopqrstuvwxyz")
         s = tcp.Reader(s)
@@ -803,3 +789,13 @@ class TestPeekSSL(TestPeek):
         with c.connect() as conn:
             c.convert_to_tls()
             return conn.pop()
+
+
+class Test_nmap_localhost_scan():
+
+    def handle(self):
+        connection = socket.socket(socket.AF_INET6, socket.SOCK_STREAM, 0)
+        assert tcp._Connection(connection)
+
+
+
