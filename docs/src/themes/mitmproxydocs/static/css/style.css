@@ -6718,7 +6718,6 @@ label.panel-block {
   padding: 3rem 1.5rem 6rem; }
 
 .sidebody {
-  height: 100vh;
   overflow-x: hidden;
   overflow-y: scroll; }
 
