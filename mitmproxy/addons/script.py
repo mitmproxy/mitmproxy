@@ -124,9 +124,10 @@ class ScriptLoader:
             ctx.master.addons.invoke_addon(s, "configure", ctx.options.keys())
             # Script is loaded on the first tick
             ctx.master.addons.invoke_addon(s, "tick")
-            for f in flows:
-                for evt, arg in eventsequence.iterate(f):
-                    ctx.master.addons.invoke_addon(s, evt, arg)
+            with addonmanager.safecall():
+                for f in flows:
+                    for evt, arg in eventsequence.iterate(f):
+                        ctx.master.addons.invoke_addon(s, evt, arg)
         except exceptions.OptionsError as e:
             raise exceptions.CommandError("Error running script: %s" % e) from e
 
