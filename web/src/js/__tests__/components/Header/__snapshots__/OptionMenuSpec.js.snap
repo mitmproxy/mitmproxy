@@ -46,7 +46,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
           />
           Strip cache headers 
           <a
-            href="http://docs.mitmproxy.org/en/stable/features/anticache.html"
+            href="https://mitmproxy.org/docs/latest/overview-features/#anticache"
             target="_blank"
           >
             <i
