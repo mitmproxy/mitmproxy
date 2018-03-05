@@ -11,7 +11,6 @@ $family-sans-serif: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Ox
 @import "../node_modules/bulma/sass/layout/_all";
 
 .sidebody {
-    height: 100vh;
     overflow-x: hidden;
     overflow-y: scroll;
 }
@@ -28,8 +27,8 @@ $family-sans-serif: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Ox
     margin-bottom: 1em;
 }
 
-
 .sidebar {
+    background-color: #F1F1F1;
     .version {
         padding: 1em;
     }
