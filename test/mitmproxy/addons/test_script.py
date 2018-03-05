@@ -15,17 +15,25 @@ from mitmproxy.test import tutils
 
 
 def test_load_script():
-    ns = script.load_script(
-        tutils.test_data.path(
-            "mitmproxy/data/addonscripts/recorder/recorder.py"
+    with taddons.context() as tctx:
+        ns = script.load_script(
+            tutils.test_data.path(
+                "mitmproxy/data/addonscripts/recorder/recorder.py"
+            )
         )
-    )
-    assert ns.addons
+        assert ns.addons
 
-    with pytest.raises(FileNotFoundError):
         script.load_script(
             "nonexistent"
         )
+        assert tctx.master.has_log("No such file or directory")
+
+        script.load_script(
+            tutils.test_data.path(
+                "mitmproxy/data/addonscripts/recorder/error.py"
+            )
+        )
+        assert tctx.master.has_log("invalid syntax (error.py, line 5)")
 
 
 def test_load_fullname():
