@@ -16,43 +16,43 @@ git:
 matrix:
   fast_finish: true
   include:
-    # - python: 3.6
-    #   env: TOXENV=lint
+    - python: 3.6
+      env: TOXENV=lint
     - os: osx
       osx_image: xcode7.3
       language: generic
       env: TOXENV=py36 BDIST=1
-    # - python: 3.5
-    #   env: TOXENV=py35
-    #   dist: precise
-    # - python: 3.6
-    #   env: TOXENV=py36 BDIST=1
-    # - python: 3.6
-    #   env: TOXENV=individual_coverage
-    # - language: node_js
-    #   node_js: "node"
-    #   before_install:
-    #       - curl -o- -L https://yarnpkg.com/install.sh | bash
-    #       - export PATH=$HOME/.yarn/bin:$PATH
-    #   install:
-    #       - cd web && yarn
-    #       - yarn global add codecov
-    #   script: npm test && codecov
-    #   cache:
-    #       yarn: true
-    #       directories:
-    #           - web/node_modules
-    # - language: python
-    #   env:
-    #     - NAME=docs
-    #   install:
-    #     - wget https://github.com/gohugoio/hugo/releases/download/v0.37/hugo_0.37_Linux-64bit.deb
-    #     - sudo dpkg -i hugo*.deb
-    #     - pip install awscli
-    #   script:
-    #     - cd docs && ./ci
-    #   after_success:
-    #     - echo done
+    - python: 3.5
+      env: TOXENV=py35
+      dist: precise
+    - python: 3.6
+      env: TOXENV=py36 BDIST=1
+    - python: 3.6
+      env: TOXENV=individual_coverage
+    - language: node_js
+      node_js: "node"
+      before_install:
+          - curl -o- -L https://yarnpkg.com/install.sh | bash
+          - export PATH=$HOME/.yarn/bin:$PATH
+      install:
+          - cd web && yarn
+          - yarn global add codecov
+      script: npm test && codecov
+      cache:
+          yarn: true
+          directories:
+              - web/node_modules
+    - language: python
+      env:
+        - NAME=docs
+      install:
+        - wget https://github.com/gohugoio/hugo/releases/download/v0.37/hugo_0.37_Linux-64bit.deb
+        - sudo dpkg -i hugo*.deb
+        - pip install awscli
+      script:
+        - cd docs && ./ci
+      after_success:
+        - echo done
 
 install:
   - |

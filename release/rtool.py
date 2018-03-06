@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 
 import contextlib
-import fnmatch
 import os
 import sys
 import platform
-import re
 import runpy
 import shlex
 import subprocess
@@ -14,7 +12,6 @@ import zipfile
 from os.path import join, abspath, dirname
 
 import click
-import pysftp
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
 # scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
