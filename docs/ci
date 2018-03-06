@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# This script gets run from CI to render and upload docs
+./build
+echo "XXX $AWS_ACCESS_KEY_ID"
+aws s3 sync --acl public-read ./public s3://docs.mitmproxy.org/master
+# aws --profile mitmproxy \
+#     cloudfront create-invalidation --distribution-id E3UCZ4MLN4TO7U \
+#     --paths "/master"
