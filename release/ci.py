@@ -3,7 +3,6 @@
 import contextlib
 import os
 import platform
-import re
 import sys
 import shutil
 import subprocess
@@ -82,18 +81,6 @@ else:
 print("BUILD VERSION=%s" % VERSION)
 
 
-def set_version(dev: bool) -> None:
-    """
-    Update version information in mitmproxy's version.py to either include hardcoded information or not.
-    """
-    version = get_version(dev, dev)
-    with open(VERSION_FILE, "r") as f:
-        content = f.read()
-    content = re.sub(r'^VERSION = ".+?"', 'VERSION = "{}"'.format(version), content, flags=re.M)
-    with open(VERSION_FILE, "w") as f:
-        f.write(content)
-
-
 def archive_name(bdist: str) -> str:
     if platform.system() == "Windows":
         ext = "zip"
@@ -139,26 +126,10 @@ def cli():
     """
     pass
 
+
 @cli.command("info")
 def info():
     print("Version: %s" % VERSION)
-
-
-@cli.command("wheel")
-def make_wheel():
-    """
-    Build a Python wheel
-    """
-    set_version(True)
-    try:
-        subprocess.check_call([
-            "tox", "-e", "wheel",
-        ], env={
-            **os.environ,
-            "VERSION": VERSION,
-        })
-    finally:
-        set_version(False)
 
 
 @cli.command("build")
