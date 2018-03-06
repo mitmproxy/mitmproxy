@@ -18,15 +18,15 @@ matrix:
   include:
     # - python: 3.6
     #   env: TOXENV=lint
-    # - os: osx
-    #   osx_image: xcode7.3
-    #   language: generic
-    #   env: TOXENV=py35 BDIST=1
+    - os: osx
+      osx_image: xcode7.3
+      language: generic
+      env: TOXENV=py36 BDIST=1
     # - python: 3.5
-    #   env: TOXENV=py35 BDIST=1
+    #   env: TOXENV=py35
     #   dist: precise
     # - python: 3.6
-    #   env: TOXENV=py36
+    #   env: TOXENV=py36 BDIST=1
     # - python: 3.6
     #   env: TOXENV=individual_coverage
     # - language: node_js
@@ -42,17 +42,17 @@ matrix:
     #       yarn: true
     #       directories:
     #           - web/node_modules
-    - language: python
-      env:
-        - NAME=docs
-      install:
-        - wget https://github.com/gohugoio/hugo/releases/download/v0.37/hugo_0.37_Linux-64bit.deb
-        - sudo dpkg -i hugo*.deb
-        - pip install awscli
-      script:
-        - cd docs && ./ci
-      after_success:
-        - echo done
+    # - language: python
+    #   env:
+    #     - NAME=docs
+    #   install:
+    #     - wget https://github.com/gohugoio/hugo/releases/download/v0.37/hugo_0.37_Linux-64bit.deb
+    #     - sudo dpkg -i hugo*.deb
+    #     - pip install awscli
+    #   script:
+    #     - cd docs && ./ci
+    #   after_success:
+    #     - echo done
 
 install:
   - |
@@ -61,12 +61,11 @@ install:
       brew update || brew update
       brew outdated pyenv || brew upgrade pyenv
       eval "$(pyenv init -)"
-      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.5.3
-      pyenv global 3.5.3
-      pyenv shell 3.5.3
-      pip install -U pip setuptools wheel virtualenv
+      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.6.4
+      pyenv global 3.6.4
+      pyenv shell 3.6.4
     fi
-  - pip install tox
+  - pip install tox virtualenv setuptools
 
 script:
   - tox -- --verbose --cov-report=term
@@ -74,16 +73,14 @@ script:
     if [[ $BDIST == "1" ]]
     then
         git fetch --unshallow --tags
-        tox -e rtool -- bdist
+        tox -e cibuild -- build
     fi
 
 after_success:
-  # we build binaries on every run, but we only upload them for master snapshots or tags.
   - |
-    if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "pyinstaller" || $TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
+    if [[ $BDIST == "1" ]]
     then
-        tox -e rtool -- decrypt release/known_hosts.enc release/known_hosts
-        tox -e rtool -- upload-snapshot --bdist
+        tox -e cibuild -- upload
     fi
 
 notifications:
