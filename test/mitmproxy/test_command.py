@@ -1,4 +1,5 @@
 import typing
+from unittest import mock
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import exceptions
@@ -307,6 +308,19 @@ class TDec:
     @command.command("empty")
     def empty(self) -> None:
         pass
+
+
+def test_collect_commands():
+    """
+        This tests for the error thrown by hasattr()
+    """
+    with mock.patch("mitmproxy.command.hasattr") as mock_hasattr:
+        mock_hasattr.return_value = False
+        with taddons.context() as tctx:
+            mock_hasattr.side_effect = OSError
+            c = command.CommandManager(tctx.master)
+            a = TDec()
+            c.collect_commands(a)
 
 
 def test_decorator():
