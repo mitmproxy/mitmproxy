@@ -215,11 +215,26 @@ def build():
         print("Packed {}.".format(archive_name(bdist)))
 
 
+def is_pr():
+    if os.environ.get("TRAVIS_PULL_REQUEST") != "false":
+        return True
+    elif os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER"):
+        return True
+    return False
+
+
 @cli.command("upload")
 def upload():
     """
         Upload snapshot to snapshot server
     """
+    # This requires some explanation. The AWS access keys are only exposed to
+    # privileged builds - that is, they are not available to PRs from forks.
+    # However, they ARE exposed to PRs from a branch within the main repo. This
+    # check catches that corner case, and prevents an inadvertent upload.
+    if is_pr():
+        print("Refusing to upload a pull request")
+        return
     if "AWS_ACCESS_KEY_ID" in os.environ:
         subprocess.check_call(
             [
