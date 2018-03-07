@@ -7,69 +7,16 @@ import platform
 import runpy
 import shlex
 import subprocess
-import tarfile
-import zipfile
 from os.path import join, abspath, dirname
 
 import cryptography.fernet
 import click
 
-# https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
-# scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
-if platform.system() == "Windows":
-    VENV_BIN = "Scripts"
-    PYINSTALLER_ARGS = [
-        # PyInstaller < 3.2 does not handle Python 3.5's ucrt correctly.
-        "-p", r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86",
-    ]
-else:
-    VENV_BIN = "bin"
-    PYINSTALLER_ARGS = []
-
-# ZipFile and tarfile have slightly different APIs. Fix that.
-if platform.system() == "Windows":
-    def Archive(name):
-        a = zipfile.ZipFile(name, "w")
-        a.add = a.write
-        return a
-else:
-    def Archive(name):
-        return tarfile.open(name, "w:gz")
-
-PLATFORM_TAG = {
-    "Darwin": "osx",
-    "Windows": "windows",
-    "Linux": "linux",
-}.get(platform.system(), platform.system())
 
 ROOT_DIR = abspath(join(dirname(__file__), ".."))
 RELEASE_DIR = join(ROOT_DIR, "release")
-
-BUILD_DIR = join(RELEASE_DIR, "build")
 DIST_DIR = join(RELEASE_DIR, "dist")
-
-PYINSTALLER_SPEC = join(RELEASE_DIR, "specs")
-# PyInstaller 3.2 does not bundle pydivert's Windivert binaries
-PYINSTALLER_HOOKS = join(RELEASE_DIR, "hooks")
-PYINSTALLER_TEMP = join(BUILD_DIR, "pyinstaller")
-PYINSTALLER_DIST = join(BUILD_DIR, "binaries", PLATFORM_TAG)
-
-VENV_DIR = join(BUILD_DIR, "venv")
-
-# Project Configuration
 VERSION_FILE = join(ROOT_DIR, "mitmproxy", "version.py")
-BDISTS = {
-    "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
-    "pathod": ["pathoc", "pathod"]
-}
-if platform.system() == "Windows":
-    BDISTS["mitmproxy"].remove("mitmproxy")
-
-TOOLS = [
-    tool
-    for tools in sorted(BDISTS.values())
-    for tool in tools
-]
 
 
 def git(args: str) -> str:
@@ -82,35 +29,9 @@ def get_version(dev: bool = False, build: bool = False) -> str:
     return x["get_version"](dev, build, True)
 
 
-def archive_name(bdist: str) -> str:
-    if platform.system() == "Windows":
-        ext = "zip"
-    else:
-        ext = "tar.gz"
-    return "{project}-{version}-{platform}.{ext}".format(
-        project=bdist,
-        version=get_version(),
-        platform=PLATFORM_TAG,
-        ext=ext
-    )
-
-
 def wheel_name() -> str:
     return "mitmproxy-{version}-py3-none-any.whl".format(
         version=get_version(True),
-    )
-
-
-def installer_name() -> str:
-    ext = {
-        "Windows": "exe",
-        "Darwin": "dmg",
-        "Linux": "run"
-    }[platform.system()]
-    return "mitmproxy-{version}-{platform}-installer.{ext}".format(
-        version=get_version(),
-        platform=PLATFORM_TAG,
-        ext=ext,
     )
 
 
