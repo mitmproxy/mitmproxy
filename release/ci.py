@@ -56,7 +56,6 @@ PYINSTALLER_DIST = join(BUILD_DIR, "binaries", PLATFORM_TAG)
 VENV_DIR = join(BUILD_DIR, "venv")
 
 # Project Configuration
-SNAPSHOT_BRANCHES = ["master", "updocs"]
 VERSION_FILE = join(ROOT_DIR, "mitmproxy", "version.py")
 BDISTS = {
     "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
@@ -75,10 +74,10 @@ TAG = os.environ.get("TRAVIS_TAG", os.environ.get("APPVEYOR_REPO_TAG_NAME", None
 BRANCH = os.environ.get("TRAVIS_BRANCH", os.environ.get("APPVEYOR_REPO_BRANCH", None))
 if TAG:
     VERSION = TAG
-elif BRANCH in SNAPSHOT_BRANCHES:
+elif BRANCH:
     VERSION = BRANCH
 else:
-    print("Branch %s is not build branch - exiting." % BRANCH)
+    print("Could not establish build name - exiting." % BRANCH)
     sys.exit(0)
 
 
