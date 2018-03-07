@@ -321,9 +321,9 @@ def test_collect_commands():
             c = command.CommandManager(tctx.master)
             a = TDec()
             c.collect_commands(a)
-            assert not "cmd1" in c.commands
-            assert not "cmd2" in c.commands
-            assert not "empty" in c.commands
+            assert "cmd1" not in c.commands
+            assert "cmd2" not in c.commands
+            assert "empty" not in c.commands
 
 
 def test_decorator():
