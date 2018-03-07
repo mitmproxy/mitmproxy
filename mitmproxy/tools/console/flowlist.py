@@ -39,6 +39,12 @@ class FlowListWalker(urwid.ListWalker):
     def __init__(self, master):
         self.master = master
 
+    def positions(self, reverse=False):
+        if reverse:
+            return range(len(self.master.view) - 1, -1, -1)
+        else:
+            return range(len(self.master.view))
+
     def view_changed(self):
         self._modified()
 
