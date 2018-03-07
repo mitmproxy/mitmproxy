@@ -217,7 +217,9 @@ def build():
 
 
 def is_pr():
-    if os.environ.get("TRAVIS_PULL_REQUEST") != "false":
+    if "TRAVIS_PULL_REQUEST" in os.environ:
+        if os.environ["TRAVIS_PULL_REQUEST"] == "false":
+            return False
         return True
     elif os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER"):
         return True
