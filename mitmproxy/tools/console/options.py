@@ -105,6 +105,12 @@ class OptionListWalker(urwid.ListWalker):
         self.set_focus(0)
         self.master.options.changed.connect(self.sig_mod)
 
+    def positions(self, reverse=False):
+        if reverse:
+            return range(len(self.opts) - 1, -1, -1)
+        else:
+            return range(len(self.opts))
+
     def sig_mod(self, *args, **kwargs):
         self._modified()
         self.set_focus(self.index)
@@ -219,7 +225,11 @@ class OptionsList(urwid.ListBox):
                     )
                 else:
                     raise NotImplementedError()
-        return super().keypress(size, key)
+
+        keypress_response = super().keypress(size, key)
+        # Without it the focused item won't update
+        self.walker._modified()
+        return keypress_response
 
 
 class OptionHelp(urwid.Frame):
