@@ -5,6 +5,7 @@ import time
 import sys
 import types
 import typing
+import traceback
 
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
@@ -34,6 +35,25 @@ def load_script(path: str) -> types.ModuleType:
         return m
     finally:
         sys.path[:] = oldpath
+
+
+def script_error_handler(path, exc, msg="", tb=False):
+    """
+        Handles all the user's script errors with
+        an optional traceback
+    """
+    exception = type(exc).__name__
+    if msg:
+        exception = msg
+    lineno = ""
+    if hasattr(exc, "lineno"):
+        lineno = str(exc.lineno)
+    log_msg = "Error in Script {}:{} {}".format(path, lineno, exception)
+    if tb:
+        etype, value, tback = sys.exc_info()
+        tback = addonmanager.cut_traceback(tback, "invoke_addon")
+        log_msg = log_msg.join(["\n"] + traceback.format_exception(etype, value, tback))
+    ctx.log.error(log_msg)
 
 
 class Script:

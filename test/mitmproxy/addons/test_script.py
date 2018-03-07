@@ -243,6 +243,18 @@ class TestScriptLoader:
             tctx.invoke(sc, "tick")
             assert len(tctx.master.addons) == 1
 
+    def test_script_error_handler(self):
+        path = "/sample/path/example.py"
+        exc = SyntaxError
+        msg = "Error raised"
+        tb = True
+        with taddons.context() as tctx:
+            script.script_error_handler(path, exc, msg, tb)
+            assert tctx.master.has_log("/sample/path/example.py")
+            assert tctx.master.has_log("Error raised")
+            assert tctx.master.has_log("lineno")
+            assert tctx.master.has_log("NoneType")
+
     def test_order(self):
         rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder")
         sc = script.ScriptLoader()
