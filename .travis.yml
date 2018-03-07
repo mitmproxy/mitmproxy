@@ -26,7 +26,7 @@ matrix:
       env: TOXENV=py35
       dist: precise
     - python: 3.6
-      env: TOXENV=py36 BDIST=1
+      env: TOXENV=py36 BDIST=1 WHEEL=1
     - python: 3.6
       env: TOXENV=individual_coverage
     - language: node_js

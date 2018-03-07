@@ -148,6 +148,16 @@ def build():
 
     os.makedirs(DIST_DIR, exist_ok=True)
 
+    if "WHEEL" in os.environ:
+        print("Building wheel...")
+        subprocess.check_call(
+            [
+                "python",
+                "setup.py", "-q", "bdist_wheel",
+                "--dist-dir", "release/dist",
+            ]
+        )
+
     for bdist, tools in sorted(BDISTS.items()):
         with Archive(join(DIST_DIR, archive_name(bdist))) as archive:
             for tool in tools:
