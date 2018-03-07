@@ -46,6 +46,12 @@ class KeyListWalker(urwid.ListWalker):
         self.set_focus(0)
         signals.keybindings_change.connect(self.sig_modified)
 
+    def positions(self, reverse=False):
+        if reverse:
+            return range(len(self.bindings) - 1, -1, -1)
+        else:
+            return range(len(self.bindings))
+
     def sig_modified(self, sender):
         self.bindings = list(self.master.keymap.list("all"))
         self.set_focus(min(self.index, len(self.bindings) - 1))
@@ -96,7 +102,11 @@ class KeyList(urwid.ListBox):
         elif key == "m_end":
             self.set_focus(len(self.walker.bindings) - 1)
             self.walker._modified()
-        return super().keypress(size, key)
+
+        keypress_response = super().keypress(size, key)
+        # Without it the focused item won't update
+        self.walker._modified()
+        return keypress_response
 
 
 class KeyHelp(urwid.Frame):
