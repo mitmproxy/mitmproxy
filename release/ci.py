@@ -10,6 +10,7 @@ import tarfile
 import zipfile
 from os.path import join, abspath, dirname, exists, basename
 
+import cryptography.fernet
 import click
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
@@ -70,13 +71,16 @@ TOOLS = [
     for tool in tools
 ]
 
-if os.environ.get("TRAVIS_TAG", None):
-    VERSION = os.environ["TRAVIS_TAG"]
-elif os.environ.get("TRAVIS_BRANCH", None) in SNAPSHOT_BRANCHES:
-    VERSION = os.environ["TRAVIS_BRANCH"]
+TAG = os.environ.get("TRAVIS_TAG", os.environ.get("APPVEYOR_REPO_TAG_NAME", None))
+BRANCH = os.environ.get("TRAVIS_BRANCH", os.environ.get("APPVEYOR_REPO_BRANCH", None))
+if TAG:
+    VERSION = TAG
+elif BRANCH in SNAPSHOT_BRANCHES:
+    VERSION = BRANCH
 else:
-    print("Branch %s is not buildabranch - exiting." % os.environ.get("TRAVIS_BRANCH", None))
+    print("Branch %s is not build branch - exiting." % BRANCH)
     sys.exit(0)
+
 
 print("BUILD VERSION=%s" % VERSION)
 
@@ -206,15 +210,25 @@ def upload():
     """
         Upload snapshot to snapshot server
     """
-    subprocess.check_call(
-        [
-            "aws", "s3", "cp",
-            "--acl", "public-read",
-            DIST_DIR + "/",
-            "s3://snapshots.mitmproxy.org/%s/" % VERSION,
-            "--recursive",
-        ]
-    )
+    if "AWS_ACCESS_KEY_ID" in os.environ:
+        subprocess.check_call(
+            [
+                "aws", "s3", "cp",
+                "--acl", "public-read",
+                DIST_DIR + "/",
+                "s3://snapshots.mitmproxy.org/%s/" % VERSION,
+                "--recursive",
+            ]
+        )
+
+
+@cli.command("decrypt")
+@click.argument('infile', type=click.File('rb'))
+@click.argument('outfile', type=click.File('wb'))
+@click.argument('key', envvar='RTOOL_KEY')
+def decrypt(infile, outfile, key):
+    f = cryptography.fernet.Fernet(key.encode())
+    outfile.write(f.decrypt(infile.read()))
 
 
 if __name__ == "__main__":

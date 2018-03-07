@@ -11,6 +11,7 @@ import tarfile
 import zipfile
 from os.path import join, abspath, dirname
 
+import cryptography.fernet
 import click
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
@@ -177,6 +178,15 @@ def homebrew_pr():
         "--url", "https://github.com/mitmproxy/mitmproxy/archive/v{}".format(get_version()),
         "mitmproxy",
     ])
+
+
+@cli.command("encrypt")
+@click.argument('infile', type=click.File('rb'))
+@click.argument('outfile', type=click.File('wb'))
+@click.argument('key', envvar='RTOOL_KEY')
+def encrypt(infile, outfile, key):
+    f = cryptography.fernet.Fernet(key.encode())
+    outfile.write(f.encrypt(infile.read()))
 
 
 if __name__ == "__main__":
