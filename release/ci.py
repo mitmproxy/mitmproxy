@@ -74,8 +74,10 @@ TAG = os.environ.get("TRAVIS_TAG", os.environ.get("APPVEYOR_REPO_TAG_NAME", None
 BRANCH = os.environ.get("TRAVIS_BRANCH", os.environ.get("APPVEYOR_REPO_BRANCH", None))
 if TAG:
     VERSION = TAG
+    UPLOAD_DIR = VERSION
 elif BRANCH:
     VERSION = BRANCH
+    UPLOAD_DIR = "branches/%s" % VERSION
 else:
     print("Could not establish build name - exiting." % BRANCH)
     sys.exit(0)
@@ -240,7 +242,7 @@ def upload():
                 "aws", "s3", "cp",
                 "--acl", "public-read",
                 DIST_DIR + "/",
-                "s3://snapshots.mitmproxy.org/%s/" % VERSION,
+                "s3://snapshots.mitmproxy.org/%s/" % UPLOAD_DIR,
                 "--recursive",
             ]
         )
