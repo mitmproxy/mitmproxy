@@ -15,6 +15,7 @@ def get_chrome_executable() -> typing.Optional[str]:
             r"C:\Program Files (x86)\Google\Application\chrome.exe",
             # Linux binary names from Python's webbrowser module.
             "google-chrome",
+            "google-chrome-stable",
             "chrome",
             "chromium",
             "chromium-browser",
