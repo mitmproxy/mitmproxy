@@ -53,6 +53,12 @@ class CommandListWalker(urwid.ListWalker):
         self.cmds.sort(key=lambda x: x.signature_help())
         self.set_focus(0)
 
+    def positions(self, reverse=False):
+        if reverse:
+            return range(len(self.cmds) - 1, -1, -1)
+        else:
+            return range(len(self.cmds))
+
     def get_edit_text(self):
         return self.focus_obj.get_edit_text()
 
@@ -98,7 +104,11 @@ class CommandsList(urwid.ListBox):
         elif key == "m_end":
             self.set_focus(len(self.walker.cmds) - 1)
             self.walker._modified()
-        return super().keypress(size, key)
+
+        keypress_response = super().keypress(size, key)
+        # Without it the focused item won't update
+        self.walker._modified()
+        return keypress_response
 
 
 class CommandHelp(urwid.Frame):
