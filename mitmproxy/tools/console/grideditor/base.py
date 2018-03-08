@@ -133,8 +133,6 @@ class GridWalker(urwid.ListWalker):
         self.editor.show_empty_msg()
         return super()._modified()
 
-
-
     def add_value(self, lst):
         self.lst.append(
             (lst[:], set())
