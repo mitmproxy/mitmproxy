@@ -57,7 +57,7 @@ class WebSocketMessage(serializable.Serializable):
 
 class WebSocketFlow(flow.Flow):
     """
-    A WebsocketFlow is a simplified representation of a Websocket connection.
+    A WebSocketFlow is a simplified representation of a Websocket connection.
     """
 
     def __init__(self, client_conn, server_conn, handshake_flow, live=None):
