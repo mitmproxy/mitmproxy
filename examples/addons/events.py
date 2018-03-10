@@ -80,12 +80,12 @@ class Events:
             attribute.
         """
 
-    def websocket_start(self, flow: mitmproxy.websocket.WebsocketFlow):
+    def websocket_start(self, flow: mitmproxy.websocket.WebSocketFlow):
         """
             A websocket connection has commenced.
         """
 
-    def websocket_message(self, flow: mitmproxy.websocket.WebsocketFlow):
+    def websocket_message(self, flow: mitmproxy.websocket.WebSocketFlow):
         """
             Called when a WebSocket message is received from the client or
             server. The most recent message will be flow.messages[-1]. The
@@ -93,12 +93,12 @@ class Events:
             messages, corresponding to the BINARY and TEXT frame types.
         """
 
-    def websocket_error(self, flow: mitmproxy.websocket.WebsocketFlow):
+    def websocket_error(self, flow: mitmproxy.websocket.WebSocketFlow):
         """
             A websocket connection has had an error.
         """
 
-    def websocket_end(self, flow: mitmproxy.websocket.WebsocketFlow):
+    def websocket_end(self, flow: mitmproxy.websocket.WebSocketFlow):
         """
             A websocket connection has ended.
         """
