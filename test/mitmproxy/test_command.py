@@ -1,5 +1,4 @@
 import typing
-from unittest import mock
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import exceptions
@@ -310,20 +309,27 @@ class TDec:
         pass
 
 
+class TAttr:
+    def __getattr__(self, item):
+        raise IOError
+
+
+class TCmds(TAttr):
+    def __init__(self):
+        self.TAttr = TAttr()
+
+
 def test_collect_commands():
     """
         This tests for the error thrown by hasattr()
     """
-    with mock.patch("mitmproxy.command.hasattr") as mock_hasattr:
-        mock_hasattr.return_value = False
-        with taddons.context() as tctx:
-            mock_hasattr.side_effect = OSError
-            c = command.CommandManager(tctx.master)
-            a = TDec()
-            c.collect_commands(a)
-            assert "cmd1" not in c.commands
-            assert "cmd2" not in c.commands
-            assert "empty" not in c.commands
+    with taddons.context() as tctx:
+        c = command.CommandManager(tctx.master)
+        a = TCmds()
+        c.collect_commands(a)
+        assert "cmd1" not in c.commands
+        assert "cmd2" not in c.commands
+        assert "empty" not in c.commands
 
 
 def test_decorator():
