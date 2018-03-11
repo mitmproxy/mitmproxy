@@ -262,8 +262,43 @@ inbound traffic. **This means that they will NOT redirect traffic coming
 from the box running pf itself.** We can't distinguish between an
 outbound connection from a non-mitmproxy app, and an outbound connection
 from mitmproxy itself - if you want to intercept your OSX traffic, you
-should use an external host to run mitmproxy. Nonetheless, pf is
-flexible to cater for a range of creative possibilities, like
+should use an external host to run mitmproxy or see the work-around below. 
+PF is flexible to cater for a range of creative possibilities, like
 intercepting traffic emanating from VMs. See the **pf.conf** man page
 for more.
 {{% /note %}}
+
+### Work-around to redirect traffic origination from the machine itself
+
+Follow the steps **1, 2** as above. In step **3** change the file **pf.conf** to 
+
+{{< highlight none >}}
+#The ports to redirect to proxy
+redir_ports = "{http, https}"
+
+#The address the transparent proxy is listening on
+tproxy = "127.0.0.1 port 8080"
+
+tproxy_user = "nobody"
+
+#The users whose connection must be redirected.
+#
+#This cannot involve the user which runs the
+#transparent proxy as that would cause an infinite loop.
+#
+#Here we redirect for all users which don't run transparent proxy.
+redir_users = "{ !=" $tproxy_user "}"
+
+#If you only wish to redirect traffic for particular users
+#you may also do:
+#redir_users = "{= john, = jane}"
+
+rdr pass proto tcp from any to any port $redir_ports -> $tproxy
+pass out route-to (lo0 127.0.0.1) proto tcp from any to any port $redir_ports user $redir_users
+{{< / highlight >}}
+
+Follow steps **4-6** above. This will redirect all the packets originating from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, the  we must run mitmproxy as the user `nobody`. Hence step **7** should look like:
+
+{{< highlight bash  >}}
+sudo -u nobody mitmproxy --mode transparent --showhost
+{{< / highlight >}}
