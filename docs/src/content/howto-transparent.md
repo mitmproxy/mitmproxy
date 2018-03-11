@@ -279,6 +279,7 @@ redir_ports = "{http, https}"
 #The address the transparent proxy is listening on
 tproxy = "127.0.0.1 port 8080"
 
+#The user the transparent proxy is running as
 tproxy_user = "nobody"
 
 #The users whose connection must be redirected.
@@ -297,7 +298,7 @@ rdr pass proto tcp from any to any port $redir_ports -> $tproxy
 pass out route-to (lo0 127.0.0.1) proto tcp from any to any port $redir_ports user $redir_users
 {{< / highlight >}}
 
-Follow steps **4-6** above. This will redirect all the packets originating from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, the  we must run mitmproxy as the user `nobody`. Hence step **7** should look like:
+Follow steps **4-6** above. This will redirect the packets from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, we must run mitmproxy as the user `nobody`. Hence step **7** should look like:
 
 {{< highlight bash  >}}
 sudo -u nobody mitmproxy --mode transparent --showhost
