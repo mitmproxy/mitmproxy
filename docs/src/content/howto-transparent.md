@@ -268,7 +268,7 @@ intercepting traffic emanating from VMs. See the **pf.conf** man page
 for more.
 {{% /note %}}
 
-### Work-around to redirect traffic origination from the machine itself
+### Work-around to redirect traffic originating from the machine itself
 
 Follow the steps **1, 2** as above. In step **3** change the file **pf.conf** to 
 
@@ -298,7 +298,7 @@ rdr pass proto tcp from any to any port $redir_ports -> $tproxy
 pass out route-to (lo0 127.0.0.1) proto tcp from any to any port $redir_ports user $redir_users
 {{< / highlight >}}
 
-Follow steps **4-6** above. This will redirect the packets from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, we must run mitmproxy as the user `nobody`. Hence step **7** should look like:
+Follow steps **4-6** above. This will redirect the packets from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `nobody`. Hence step **7** should look like:
 
 {{< highlight bash  >}}
 sudo -u nobody mitmproxy --mode transparent --showhost
