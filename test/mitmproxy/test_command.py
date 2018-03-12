@@ -318,6 +318,10 @@ class TCmds(TAttr):
     def __init__(self):
         self.TAttr = TAttr()
 
+    @command.command("empty")
+    def empty(self) -> None:
+        pass
+
 
 def test_collect_commands():
     """
@@ -327,9 +331,7 @@ def test_collect_commands():
         c = command.CommandManager(tctx.master)
         a = TCmds()
         c.collect_commands(a)
-        assert "cmd1" not in c.commands
-        assert "cmd2" not in c.commands
-        assert "empty" not in c.commands
+        assert "empty" in c.commands
 
 
 def test_decorator():
