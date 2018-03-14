@@ -309,6 +309,31 @@ class TDec:
         pass
 
 
+class TAttr:
+    def __getattr__(self, item):
+        raise IOError
+
+
+class TCmds(TAttr):
+    def __init__(self):
+        self.TAttr = TAttr()
+
+    @command.command("empty")
+    def empty(self) -> None:
+        pass
+
+
+def test_collect_commands():
+    """
+        This tests for the error thrown by hasattr()
+    """
+    with taddons.context() as tctx:
+        c = command.CommandManager(tctx.master)
+        a = TCmds()
+        c.collect_commands(a)
+        assert "empty" in c.commands
+
+
 def test_decorator():
     with taddons.context() as tctx:
         c = command.CommandManager(tctx.master)
