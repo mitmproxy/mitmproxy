@@ -511,7 +511,7 @@ def serialize(opts, text, defaults=False):
         in-place.
 
         - If "defaults" is False, only options with non-default values are
-            serialized. Default values in text are preserved.
+            serialized.
         - Unknown options in text are removed.
         - Raises OptionsError if text is invalid.
     """
@@ -520,7 +520,7 @@ def serialize(opts, text, defaults=False):
         if defaults or opts.has_changed(k):
             data[k] = getattr(opts, k)
     for k in list(data.keys()):
-        if k not in opts._options:
+        if not (k in opts._options and opts.has_changed(k)):
             del data[k]
     return ruamel.yaml.round_trip_dump(data)
 

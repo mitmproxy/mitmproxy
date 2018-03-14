@@ -241,7 +241,7 @@ def test_items():
 def test_serialize():
     o = TD2()
     o.three = "set"
-    assert "dfour" in optmanager.serialize(o, None, defaults=True)
+    assert "dfour" not in optmanager.serialize(o, None, defaults=True)
 
     data = optmanager.serialize(o, None)
     assert "dfour" not in data

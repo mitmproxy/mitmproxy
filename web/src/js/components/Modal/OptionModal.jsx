@@ -52,20 +52,17 @@ class PureOptionModal extends Component {
         this.state = { title: 'Options' }
     }
 
-    componentWillUnmount(){
-        // this.props.save()
-    }
-
     render() {
-        const { hideModal, options } = this.props
+        const { hideModal, options, save } = this.props
         const { title } = this.state
         return (
             <div>
                 <div className="modal-header">
-                    <button type="button" className="close" data-dismiss="modal" onClick={() => {
-                        hideModal()
-                    }}>
-                        <i className="fa fa-fw fa-times"></i>
+                    <button type="button" className="close" data-dismiss="modal" onClick={hideModal}>
+                        <i className="fa fa-fw fa-times"/>
+                    </button>
+                    <button type="button" className="save" data-dismiss="modal" onClick={save} title="save options">
+                        <i className="fa fa-fw fa-save"/>
                     </button>
                     <div className="modal-title">
                         <h4>{ title }</h4>
@@ -105,6 +102,9 @@ export default connect(
     }),
     {
         hideModal: modalAction.hideModal,
-        save: optionAction.save,
+        save: () => {
+            optionAction.save()
+            alert('Options saved, your options will be loaded automatically on next start up.')
+        },
     }
 )(PureOptionModal)
