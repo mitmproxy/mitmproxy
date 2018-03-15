@@ -35,6 +35,17 @@ exports[`Modal Component should render correctly 2`] = `
                 className="fa fa-fw fa-times"
               />
             </button>
+            <button
+              className="save"
+              data-dismiss="modal"
+              onClick={[Function]}
+              title="save options"
+              type="button"
+            >
+              <i
+                className="fa fa-fw fa-save"
+              />
+            </button>
             <div
               className="modal-title"
             >
