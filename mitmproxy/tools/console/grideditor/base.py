@@ -321,7 +321,7 @@ class BaseGridEditor(urwid.WidgetWrap):
                     [
                         ("highlight", "No values - you should add some. Press "),
                         ("key", "?"),
-                        ("highlight", " for help."),
+                        ("highlight", " to view help."),
                     ]
                 )
             )

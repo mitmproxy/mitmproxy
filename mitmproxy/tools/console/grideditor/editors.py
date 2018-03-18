@@ -178,6 +178,15 @@ class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
         self.name = name
         super().__init__(master, [[i] for i in vals], self.callback)
 
+    def keypress(self, size, key):
+        if key == '?':
+            # To display any other view, we need to close the overlay first.
+            self.master.commands.call('console.view.pop')
+            self.master.switch_view("help")
+            return
+        else:
+            return super().keypress(size, key)
+
     def callback(self, vals):
         try:
             setattr(self.master.options, self.name, [i[0] for i in vals])
