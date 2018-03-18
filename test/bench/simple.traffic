@@ -1,0 +1,3 @@
+#!/bin/sh
+
+hey -disable-keepalive http://localhost:10002/profiler.py | tee ./results/simple.perf
