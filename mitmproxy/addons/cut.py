@@ -129,7 +129,7 @@ class Cut:
             if isinstance(v, bytes):
                 fp.write(strutils.always_str(v))
             else:
-                fp.write("utf8")
+                fp.write(v)
             ctx.log.alert("Clipped single cut.")
         else:
             writer = csv.writer(fp)
