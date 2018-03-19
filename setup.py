@@ -65,7 +65,7 @@ setup(
         "brotlipy>=0.7.0,<0.8",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "click>=6.2, <7",
-        "cryptography>=2.1.4,<2.2",
+        "cryptography>=2.2,<2.3",
         "h2>=3.0.1,<4",
         "hyperframe>=5.1.0,<6",
         "kaitaistruct>=0.7,<0.9",
