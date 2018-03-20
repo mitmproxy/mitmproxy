@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # This script gets run from CI to render and upload docs
 
