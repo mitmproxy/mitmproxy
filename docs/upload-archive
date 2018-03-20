@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/bin/bash
+set -e
 
 if [[ $# -eq 0 ]] ; then
     echo "Please supply a version, e.g. 'v3'"
