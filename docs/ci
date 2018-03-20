@@ -3,7 +3,7 @@ set -e
 
 # This script gets run from CI to render and upload docs
 
-./build
+./build-current
 
 # Only upload if we have defined credentials - we only have these defined for
 # trusted commits (i.e. not PRs).

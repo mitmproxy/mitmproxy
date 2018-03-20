@@ -1,5 +1,6 @@
 ---
 title: "Introduction"
+layout: single
 menu:
     overview:
         weight: 1

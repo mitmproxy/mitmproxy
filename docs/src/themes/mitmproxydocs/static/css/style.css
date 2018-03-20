@@ -6717,9 +6717,17 @@ label.panel-block {
   background-color: whitesmoke;
   padding: 3rem 1.5rem 6rem; }
 
-.sidebody {
-  overflow-x: hidden;
-  overflow-y: scroll; }
+#sidebar {
+  background-color: #eee;
+  border-right: 1px solid #c1c1c1;
+  box-shadow: 0 0 20px rgba(50, 50, 50, 0.2) inset;
+  padding: 1.75rem; }
+  #sidebar .brand {
+    padding: 1rem 0;
+    text-align: center; }
+
+#main {
+  padding: 3rem; }
 
 .example {
   margin-bottom: 1em; }
@@ -6730,21 +6738,6 @@ label.panel-block {
     width: 100%;
     text-align: right; }
 
-.sidebar {
-  background-color: #F1F1F1; }
-  .sidebar .version {
-    padding: 1em; }
-  .sidebar .brand {
-    background-color: #303030;
-    color: #c0c0c0;
-    padding: 1em;
-    top: 0; }
-  .sidebar .menu {
-    padding: 1em; }
-
-.mainbody {
-  padding: 3em; }
-
 code {
   color: #1a9f1a;
   font-size: 0.875em;
@@ -6753,6 +6746,26 @@ code {
 .content h2 {
   padding-top: 1em;
   border-top: 1px solid #c0c0c0; }
+
+h1 .anchor, h2 .anchor, h3 .anchor, h4 .anchor, h5 .anchor, h6 .anchor {
+  display: inline-block;
+  width: 0;
+  margin-left: -1.5rem;
+  margin-right: 1.5rem;
+  transition: all 100ms ease-in-out;
+  opacity: 0; }
+
+h1:hover .anchor, h2:hover .anchor, h3:hover .anchor, h4:hover .anchor, h5:hover .anchor, h6:hover .anchor {
+  opacity: 1; }
+
+h1:target, h2:target, h3:target, h4:target, h5:target, h6:target {
+  color: #C93312; }
+  h1:target .anchor, h2:target .anchor, h3:target .anchor, h4:target .anchor, h5:target .anchor, h6:target .anchor {
+    opacity: 1;
+    color: #C93312; }
+
+.footnotes p {
+  display: inline; }
 
 figure.has-border img {
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25); }
