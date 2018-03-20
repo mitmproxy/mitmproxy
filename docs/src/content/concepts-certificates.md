@@ -19,7 +19,7 @@ configure your target device with the correct proxy settings. Now start a
 browser on the device, and visit the magic domain **mitm.it**. You should see
 something like this:
 
-{{< figure src="/certinstall-webapp.png" >}}
+{{< figure src="/certinstall-webapp.png" class="has-border" >}}
 
 Click on the relevant icon, follow the setup instructions for the platform
 you're on and you are good to go.
@@ -32,8 +32,8 @@ reason. Below is a list of pointers to manual certificate installation
 documentation for some common platforms. The mitmproxy CA cert is located in
 `~/.mitmproxy` after it has been generated at the first start of mitmproxy.
 
-- [IOS](http://jasdev.me/intercepting-ios-traffic) On
-  iOS 10.3 and onwards, you also need to enable full trust for the mitmproxy
+- [IOS](http://jasdev.me/intercepting-ios-traffic)  
+  On iOS 10.3 and onwards, you also need to enable full trust for the mitmproxy
   root certificate:
     1. Go to Settings > General > About > Certificate Trust Settings.
     2. Under "Enable full trust for root certificates", turn on trust for
@@ -42,13 +42,13 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 - [Java](https://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html)
 - [Android/Android Simulator](http://wiki.cacert.org/FAQ/ImportRootCert#Android_Phones_.26_Tablets)
 - [Windows](https://web.archive.org/web/20160612045445/http://windows.microsoft.com/en-ca/windows/import-export-certificates-private-keys#1TC=windows-7)
-- [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx)
+- [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx)  
 
 {{< highlight bash  >}}
 certutil.exe -importpfx Root mitmproxy-ca-cert.p12
 {{< / highlight >}}
-
-- [Mac OS X](https://support.apple.com/kb/PH7297?locale=en_US)
+  
+- [Mac OS X](https://support.apple.com/kb/PH20129)
 - [Ubuntu/Debian]( https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861)
 - [Mozilla Firefox](https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox)
 - [Chrome on Linux](https://stackoverflow.com/a/15076602/198996)
@@ -90,7 +90,7 @@ The files created by mitmproxy in the .mitmproxy directory are as follows:
 | mitmproxy-ca-cert.p12 | The certificate in PKCS12 format. For use on Windows.                                |
 | mitmproxy-ca-cert.cer | Same file as .pem, but with an extension expected by some Android devices.           |
 
-## Using a custom certificate
+## Using a custom server certificate
 
 You can use your own (leaf) certificate by passing the `--cert
 [domain=]path_to_certificate` option to mitmproxy. Mitmproxy then uses the
@@ -156,7 +156,7 @@ hostname, while using a filename allows a single specific certificate to be used
 for all SSL connections. Certificate files must be in the PEM format and should
 contain both the unencrypted private key and the certificate.
 
-### Multiple certs by Hostname
+### Multiple client certificates
 
 You can specify a directory to `--client-certs`, in which case the matching
 certificate is looked up by filename. So, if you visit example.org, mitmproxy

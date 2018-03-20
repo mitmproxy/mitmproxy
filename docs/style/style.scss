@@ -11,36 +11,36 @@ $family-sans-serif: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Ox
 @import "../node_modules/bulma/sass/layout/_all";
 
 .sidebody {
-    overflow-x: hidden;
-    overflow-y: scroll;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 
 .example {
-    .highlight {
-        margin: 0;
-    }
-    .path {
-        font-style: italic;
-        width: 100%;
-        text-align: right;
-    }
-    margin-bottom: 1em;
+  .highlight {
+    margin: 0;
+  }
+  .path {
+    font-style: italic;
+    width: 100%;
+    text-align: right;
+  }
+  margin-bottom: 1em;
 }
 
 .sidebar {
-    background-color: #F1F1F1;
-    .version {
-        padding: 1em;
-    }
-    .brand {
-        background-color: #303030;
-        color: #c0c0c0;
-        padding: 1em;
-        top: 0;
-    }
-    .menu {
-        padding: 1em;
-    }
+  background-color: #F1F1F1;
+  .version {
+    padding: 1em;
+  }
+  .brand {
+    background-color: #303030;
+    color: #c0c0c0;
+    padding: 1em;
+    top: 0;
+  }
+  .menu {
+    padding: 1em;
+  }
 }
 
 .mainbody {
@@ -54,8 +54,12 @@ code {
 }
 
 .content {
-    h2 {
-        padding-top: 1em;
-        border-top: 1px solid #c0c0c0;
-    }
+  h2 {
+    padding-top: 1em;
+    border-top: 1px solid #c0c0c0;
+  }
+}
+
+figure.has-border img {
+  box-shadow: 0 0 20px 0 rgba(0,0,0,0.25);
 }
