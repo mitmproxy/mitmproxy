@@ -10,5 +10,5 @@ set -e
 if [[ ! -z "${AWS_ACCESS_KEY_ID}" && $TRAVIS_BRANCH == "master" ]]; then
     aws s3 sync --acl public-read ./public s3://docs.mitmproxy.org/master
     aws cloudfront create-invalidation --distribution-id E1TH3USJHFQZ5Q \
-        --paths "/master"
+        --paths "/master/*"
 fi
