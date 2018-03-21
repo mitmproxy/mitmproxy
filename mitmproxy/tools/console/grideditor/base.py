@@ -176,6 +176,12 @@ class GridWalker(urwid.ListWalker):
         self.focus_col = 0
         self.start_edit()
 
+    def positions(self, reverse=False):
+        if reverse:
+            return range(len(self.lst) - 1, -1, -1)
+        else:
+            return range(len(self.lst))
+
     def insert(self):
         return self._insert(self.focus)
 
@@ -354,7 +360,10 @@ class BaseGridEditor(urwid.WidgetWrap):
         elif key == "right":
             self.walker.right()
         elif column.keypress(key, self) and not self.handle_key(key):
-            return self._w.keypress(size, key)
+            keypress_response = self._w.keypress(size, key)
+            # Without it the focused item won't update
+            self.walker._modified()
+            return keypress_response
 
     def data_out(self, data: typing.Sequence[list]) -> typing.Any:
         """

@@ -76,6 +76,12 @@ class ChooserListWalker(urwid.ListWalker):
         c = self.choices[idx]
         return Choice(c, focus, c == self.current, self.shortcuts[idx:idx + 1])
 
+    def positions(self, reverse=False):
+        if reverse:
+            return range(len(self.choices) - 1, -1, -1)
+        else:
+            return range(len(self.choices))
+
     def set_focus(self, index):
         self.index = index
 
@@ -148,7 +154,10 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         if binding and binding.command.startswith("console.nav"):
             self.master.keymap.handle("global", key)
         elif key in keymap.navkeys:
-            return super().keypress(size, key)
+            keypress_response = super().keypress(size, key)
+            # Without it the focused item won't update
+            self.walker._modified()
+            return keypress_response
 
 
 class OptionsOverlay(urwid.WidgetWrap, layoutwidget.LayoutWidget):
