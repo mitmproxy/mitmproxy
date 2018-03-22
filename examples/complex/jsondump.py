@@ -127,7 +127,7 @@ class JSONDumper:
                 'func': lambda ms: [{
                     'type': m[0],
                     'from_client': m[1],
-                    'content': base64.b64encode(m[2]) if self.encode else m[2],
+                    'content': base64.b64encode(bytes(m[2], 'utf-8')) if self.encode else m[2],
                     'timestamp': int(m[3] * 1000),
                 } for m in ms],
             }
