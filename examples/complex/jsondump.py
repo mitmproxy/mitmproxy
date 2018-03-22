@@ -8,7 +8,7 @@ Usage:
 
     mitmproxy
         -R http://example.com/
-        -s examples/jsondump.py
+        -s examples/complex/jsondump.py
 
 Configuration:
 
@@ -30,13 +30,16 @@ Configuration:
         dump_destination: "/user/rastley/output.log"
         EOF
 """
-from threading import Lock
+from threading import Lock, Thread
+from queue import Queue
 import base64
 import json
 import requests
 
 from mitmproxy import ctx
 from mitmproxy.script import concurrent
+
+WORKERS = 1
 
 
 class JSONDumper:
@@ -52,8 +55,15 @@ class JSONDumper:
         self.url = None
         self.lock = None
         self.auth = None
+        self.queue = Queue()
+
+        for i in range(WORKERS):
+            t = Thread(target=self.worker)
+            t.daemon = True
+            t.start()
 
     def done(self):
+        self.queue.join()
         if self.outfile:
             self.outfile.close()
 
@@ -156,6 +166,12 @@ class JSONDumper:
             return str(obj)[2:-1]
         return obj
 
+    def worker(self):
+        while True:
+            frame = self.queue.get()
+            self.dump(frame)
+            self.queue.task_done()
+
     def dump(self, frame):
         """
         Transform and dump (write / send) a data frame.
@@ -208,21 +224,18 @@ class JSONDumper:
 
         self._init_transformations()
 
-    @concurrent
     def response(self, flow):
         """
         Dump request/response pairs.
         """
-        self.dump(flow.get_state())
+        self.queue.put(flow.get_state())
 
-    @concurrent
     def error(self, flow):
         """
         Dump errors.
         """
-        self.dump(flow.get_state())
+        self.queue.put(flow.get_state())
 
-    @concurrent
     def websocket_end(self, flow):
         """
         Dump websocket messages once the connection ends.
@@ -232,14 +245,13 @@ class JSONDumper:
         dumped one at a time with full metadata. Warning:
         this takes up _a lot_ of space.
         """
-        self.dump(flow.get_state())
+        self.queue.put(flow.get_state())
 
-    @concurrent
     def websocket_error(self, flow):
         """
         Dump websocket errors.
         """
-        self.dump(flow.get_state())
+        self.queue.put(flow.get_state())
 
 
 addons = [JSONDumper()]  # pylint: disable=invalid-name
