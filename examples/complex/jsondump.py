@@ -37,9 +37,9 @@ import json
 import requests
 
 from mitmproxy import ctx
-from mitmproxy.script import concurrent
 
-WORKERS = 1
+FILE_WORKERS = 1
+HTTP_WORKERS = 10
 
 
 class JSONDumper:
@@ -56,11 +56,6 @@ class JSONDumper:
         self.lock = None
         self.auth = None
         self.queue = Queue()
-
-        for i in range(WORKERS):
-            t = Thread(target=self.worker)
-            t.daemon = True
-            t.start()
 
     def done(self):
         self.queue.join()
@@ -223,6 +218,11 @@ class JSONDumper:
             ctx.log.info('Writing all data frames to %s' % ctx.options.dump_destination)
 
         self._init_transformations()
+
+        for i in range(FILE_WORKERS if self.outfile else HTTP_WORKERS):
+            t = Thread(target=self.worker)
+            t.daemon = True
+            t.start()
 
     def response(self, flow):
         """
