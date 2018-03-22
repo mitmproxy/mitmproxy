@@ -75,6 +75,7 @@ setup(
         "passlib>=1.6.5, <1.8",
         "protobuf>=3.6.0, <3.12",
         "pyasn1>=0.3.1,<0.5",
+<<<<<<< HEAD
         "pyOpenSSL>=19.1.0,<19.2",
         "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.9",
@@ -85,6 +86,16 @@ setup(
         "wsproto>=0.14,<0.16",
         "publicsuffix2>=2.20190812,<3",
         "zstandard>=0.11,<0.14",
+=======
+        "pyOpenSSL>=17.5,<17.6",
+        "pyparsing>=2.1.3, <2.3",
+        "pyperclip>=1.5.22, <1.7",
+        "ruamel.yaml>=0.13.2, <0.16",
+        "sortedcontainers>=1.5.4, <1.6",
+        "tornado>=4.3, <4.6",
+        "urwid>=2.0.1,<2.1",
+        "wsproto>=0.11.0,<0.12.0",
+>>>>>>> Jsondump: dependency cleanup
     ],
     extras_require={
         ':sys_platform == "win32"': [
