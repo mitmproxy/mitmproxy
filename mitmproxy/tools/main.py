@@ -117,8 +117,8 @@ def run(
 
         def cleankill(*args, **kwargs):
             master.shutdown()
-
         signal.signal(signal.SIGTERM, cleankill)
+
         master.run()
     except exceptions.OptionsError as e:
         print("%s: %s" % (sys.argv[0], e), file=sys.stderr)

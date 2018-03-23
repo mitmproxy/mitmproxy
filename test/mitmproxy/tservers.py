@@ -2,6 +2,7 @@ import os.path
 import threading
 import tempfile
 import sys
+import time
 from unittest import mock
 
 import mitmproxy.platform
@@ -62,11 +63,6 @@ class TestState:
         if f not in self.flows:
             self.flows.append(f)
 
-    # TODO: add TCP support?
-    # def tcp_start(self, f):
-    #     if f not in self.flows:
-    #         self.flows.append(f)
-
 
 class TestMaster(taddons.RecordingMaster):
 
@@ -90,13 +86,11 @@ class TestMaster(taddons.RecordingMaster):
 
 class ProxyThread(threading.Thread):
 
-    def __init__(self, tmaster):
+    def __init__(self, masterclass, options):
         threading.Thread.__init__(self)
-        self.tmaster = tmaster
-        self.name = "ProxyThread (%s:%s)" % (
-            tmaster.server.address[0],
-            tmaster.server.address[1],
-        )
+        self.masterclass = masterclass
+        self.options = options
+        self.tmaster = None
         controller.should_exit = False
 
     @property
@@ -107,11 +101,17 @@ class ProxyThread(threading.Thread):
     def tlog(self):
         return self.tmaster.logs
 
-    def run(self):
-        self.tmaster.run()
-
     def shutdown(self):
         self.tmaster.shutdown()
+
+    def run(self):
+        self.tmaster = self.masterclass(self.options)
+        self.tmaster.addons.add(core.Core())
+        self.name = "ProxyThread (%s:%s)" % (
+            self.tmaster.server.address[0],
+            self.tmaster.server.address[1],
+        )
+        self.tmaster.run()
 
 
 class ProxyTestBase:
@@ -132,10 +132,12 @@ class ProxyTestBase:
             ssloptions=cls.ssloptions)
 
         cls.options = cls.get_options()
-        tmaster = cls.masterclass(cls.options)
-        tmaster.addons.add(core.Core())
-        cls.proxy = ProxyThread(tmaster)
+        cls.proxy = ProxyThread(cls.masterclass, cls.options)
         cls.proxy.start()
+        while True:
+            if cls.proxy.tmaster:
+                break
+            time.sleep(0.01)
 
     @classmethod
     def teardown_class(cls):
@@ -344,9 +346,7 @@ class ChainProxyTest(ProxyTestBase):
         cls.chain = []
         for _ in range(cls.n):
             opts = cls.get_options()
-            tmaster = cls.masterclass(opts)
-            tmaster.addons.add(core.Core())
-            proxy = ProxyThread(tmaster)
+            proxy = ProxyThread(cls.masterclass, opts)
             proxy.start()
             cls.chain.insert(0, proxy)
 

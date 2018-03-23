@@ -21,14 +21,6 @@ from pathod import pathod
 from .. import tservers
 from ...conftest import skip_appveyor
 
-"""
-    Note that the choice of response code in these tests matters more than you
-    might think. libcurl treats a 304 response code differently from, say, a
-    200 response code - it will correctly terminate a 304 response with no
-    content-length header, whereas it will block forever waiting for content
-    for a 200 response.
-"""
-
 
 class CommonMixin:
 

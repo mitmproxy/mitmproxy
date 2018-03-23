@@ -1,6 +1,8 @@
 import threading
 import contextlib
-import queue
+import asyncio
+import signal
+import time
 
 from mitmproxy import addonmanager
 from mitmproxy import options
@@ -35,10 +37,15 @@ class Master:
         The master handles mitmproxy's main event loop.
     """
     def __init__(self, opts):
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        for signame in ('SIGINT', 'SIGTERM'):
+            self.loop.add_signal_handler(getattr(signal, signame), self.shutdown)
+        self.event_queue = asyncio.Queue(loop=self.loop)
+
         self.options = opts or options.Options()  # type: options.Options
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
-        self.event_queue = queue.Queue()
         self.should_exit = threading.Event()
         self._server = None
         self.first_tick = True
@@ -51,7 +58,7 @@ class Master:
     @server.setter
     def server(self, server):
         server.set_channel(
-            controller.Channel(self.event_queue, self.should_exit)
+            controller.Channel(self.loop, self.event_queue)
         )
         self._server = server
 
@@ -86,38 +93,43 @@ class Master:
         if self.server:
             ServerThread(self.server).start()
 
-    def run(self):
-        self.start()
-        try:
-            while not self.should_exit.is_set():
-                self.tick(0.1)
-        finally:
-            self.shutdown()
-
-    def tick(self, timeout):
-        if self.first_tick:
-            self.first_tick = False
-            self.addons.trigger("running")
-        self.addons.trigger("tick")
-        changed = False
-        try:
-            mtype, obj = self.event_queue.get(timeout=timeout)
+    async def main(self):
+        while True:
+            if self.should_exit.is_set():
+                return
+            mtype, obj = await self.event_queue.get()
             if mtype not in eventsequence.Events:
                 raise exceptions.ControlException(
                     "Unknown event %s" % repr(mtype)
                 )
             self.addons.handle_lifecycle(mtype, obj)
             self.event_queue.task_done()
-            changed = True
-        except queue.Empty:
-            pass
-        return changed
+
+    async def tick(self):
+        if self.first_tick:
+            self.first_tick = False
+            self.addons.trigger("running")
+        while True:
+            if self.should_exit.is_set():
+                self.loop.stop()
+                return
+            self.addons.trigger("tick")
+            await asyncio.sleep(0.1, loop=self.loop)
+
+    def run(self, inject=None):
+        self.start()
+        asyncio.ensure_future(self.main(), loop=self.loop)
+        asyncio.ensure_future(self.tick(), loop=self.loop)
+        if inject:
+            asyncio.ensure_future(inject(), loop=self.loop)
+        self.loop.run_forever()
+        self.shutdown()
+        self.addons.trigger("done")
 
     def shutdown(self):
         if self.server:
             self.server.shutdown()
         self.should_exit.set()
-        self.addons.trigger("done")
 
     def _change_reverse_host(self, f):
         """
@@ -202,6 +214,7 @@ class Master:
         rt = http_replay.RequestReplayThread(
             self.options,
             f,
+            self.loop,
             self.event_queue,
             self.should_exit
         )

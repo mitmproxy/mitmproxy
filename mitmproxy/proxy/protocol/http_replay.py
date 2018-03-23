@@ -1,3 +1,4 @@
+import asyncio
 import queue
 import threading
 import typing
@@ -25,6 +26,7 @@ class RequestReplayThread(basethread.BaseThread):
             self,
             opts: options.Options,
             f: http.HTTPFlow,
+            loop: asyncio.AbstractEventLoop,
             event_queue: typing.Optional[queue.Queue],
             should_exit: threading.Event
     ) -> None:
@@ -36,7 +38,7 @@ class RequestReplayThread(basethread.BaseThread):
         self.f = f
         f.live = True
         if event_queue:
-            self.channel = controller.Channel(event_queue, should_exit)
+            self.channel = controller.Channel(loop, event_queue, should_exit)
         else:
             self.channel = None
         super().__init__(

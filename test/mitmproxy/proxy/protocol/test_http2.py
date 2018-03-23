@@ -90,9 +90,7 @@ class _Http2TestBase:
     @classmethod
     def setup_class(cls):
         cls.options = cls.get_options()
-        tmaster = tservers.TestMaster(cls.options)
-        tmaster.addons.add(core.Core())
-        cls.proxy = tservers.ProxyThread(tmaster)
+        cls.proxy = tservers.ProxyThread(tservers.TestMaster, cls.options)
         cls.proxy.start()
 
     @classmethod
