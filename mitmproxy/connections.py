@@ -1,18 +1,18 @@
-import time
-
 import os
+import time
 import typing
 import uuid
 
-from mitmproxy import stateobject, exceptions
 from mitmproxy import certs
+from mitmproxy import exceptions
+from mitmproxy import stateobject
 from mitmproxy.net import tcp
 from mitmproxy.net import tls
+from mitmproxy.utils import human
 from mitmproxy.utils import strutils
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
-
     """
     A client connection
 
@@ -72,11 +72,10 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         else:
             alpn = ""
 
-        return "<ClientConnection: {tls}{alpn}{host}:{port}>".format(
+        return "<ClientConnection: {tls}{alpn}{address}>".format(
             tls=tls,
             alpn=alpn,
-            host=self.address[0],
-            port=self.address[1],
+            address=human.format_address(self.address),
         )
 
     def __eq__(self, other):
@@ -161,7 +160,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
 
 
 class ServerConnection(tcp.TCPClient, stateobject.StateObject):
-
     """
     A server connection
 
@@ -209,11 +207,10 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             )
         else:
             alpn = ""
-        return "<ServerConnection: {tls}{alpn}{host}:{port}>".format(
+        return "<ServerConnection: {tls}{alpn}{address}>".format(
             tls=tls,
             alpn=alpn,
-            host=self.address[0],
-            port=self.address[1],
+            address=human.format_address(self.address),
         )
 
     def __eq__(self, other):
