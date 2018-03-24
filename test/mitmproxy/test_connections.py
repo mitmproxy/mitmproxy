@@ -38,6 +38,9 @@ class TestClientConnection:
         assert 'ALPN' not in repr(c)
         assert 'TLS' in repr(c)
 
+        c.address = None
+        assert repr(c)
+
     def test_tls_established_property(self):
         c = tflow.tclient_conn()
         c.tls_established = True
@@ -109,6 +112,9 @@ class TestServerConnection:
         c.sni = None
         c.tls_established = False
         assert 'TLS' not in repr(c)
+
+        c.address = None
+        assert repr(c)
 
     def test_tls_established_property(self):
         c = tflow.tserver_conn()

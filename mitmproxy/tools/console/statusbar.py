@@ -191,9 +191,7 @@ class StatusBar(urwid.WidgetWrap):
             r.append(("heading_key", "H"))
             r.append("eaders]")
         if len(self.master.options.replacements):
-            r.append("[")
-            r.append(("heading_key", "R"))
-            r.append("eplacing]")
+            r.append("[%d replacements]" % len(self.master.options.replacements))
         if creplay.count():
             r.append("[")
             r.append(("heading_key", "cplayback"))
@@ -228,10 +226,8 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "u"))
             r.append(":%s]" % self.master.options.stickyauth)
-        if self.master.options.console_default_contentview != "auto":
-            r.append("[")
-            r.append(("heading_key", "M"))
-            r.append(":%s]" % self.master.options.console_default_contentview)
+        if self.master.options.console_default_contentview != 'auto':
+            r.append("[contentview:%s]" % (self.master.options.console_default_contentview))
         if self.master.options.has_changed("view_order"):
             r.append("[")
             r.append(("heading_key", "o"))
