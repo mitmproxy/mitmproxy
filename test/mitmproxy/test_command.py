@@ -35,6 +35,10 @@ class TAddon:
     def empty(self) -> None:
         pass
 
+    @command.command("annotation_error")
+    def annotation_error(self):
+        return "ok"
+
     @command.command("varargs")
     def varargs(self, one: str, *var: str) -> typing.Sequence[str]:
         return list(var)
@@ -80,6 +84,14 @@ class TestCommand:
 
             c = command.Command(cm, "cmd.three", a.cmd3)
             assert c.call(["1"]) == 1
+
+    def test_annotation_error(self):
+        with taddons.context() as tctx:
+            cm = command.CommandManager(tctx.master)
+            a = TAddon()
+            c = command.Command(cm, "annotation_error", a.annotation_error)
+            with pytest.raises(SyntaxError):
+                c.signature_help()
 
     def test_parse_partial(self):
         tests = [
