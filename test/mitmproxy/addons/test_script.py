@@ -183,9 +183,9 @@ class TestScriptLoader:
 
     def test_script_run_nonexistent(self):
         sc = script.ScriptLoader()
-        with taddons.context(sc):
-            with pytest.raises(exceptions.CommandError):
-                sc.script_run([tflow.tflow(resp=True)], "/")
+        with taddons.context(sc) as tctx:
+            sc.script_run([tflow.tflow(resp=True)], "/")
+            tctx.master.has_log("/: No such script")
 
     def test_simple(self):
         sc = script.ScriptLoader()
