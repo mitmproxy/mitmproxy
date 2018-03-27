@@ -26,9 +26,10 @@ and pathod websites.
 
 |mitmproxy_site|
 
-The latest documentation for mitmproxy is available on our website.
+The documentation for mitmproxy is available on our website:
 
-|mitmproxy_docs|
+|mitmproxy_docs_stable| for the stable release documentation  
+|mitmproxy_docs_master| for the current master documentation
 
 
 Join our discussion forum on Discourse to ask questions, help
@@ -150,9 +151,13 @@ with the following command:
     :target: https://mitmproxy.org/
     :alt: mitmproxy.org
 
-.. |mitmproxy_docs| image:: https://shields.mitmproxy.org/api/docs-latest-brightgreen.svg
+.. |mitmproxy_docs_stable| image:: https://shields.mitmproxy.org/api/docs-stable-brightgreen.svg
     :target: https://docs.mitmproxy.org/stable/
-    :alt: mitmproxy documentation
+    :alt: mitmproxy documentation stable
+    
+.. |mitmproxy_docs_master| image:: https://shields.mitmproxy.org/api/docs-master-brightgreen.svg
+    :target: https://docs.mitmproxy.org/master/
+    :alt: mitmproxy documentation master
 
 .. |mitmproxy_discourse| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-discourse.mitmproxy.org-orange.svg
     :target: https://discourse.mitmproxy.org
