@@ -172,7 +172,7 @@ rdr on en0 inet proto tcp to any port {80, 443} -> 127.0.0.1 port 8080
 
 These rules tell pf to redirect all traffic destined for port 80 or 443
 to the local mitmproxy instance running on port 8080. You should replace
-`en2` with the interface on which your test device will appear.
+`en0` with the interface on which your test device will appear.
 
 ### 3. Configure pf with the rules.
 
