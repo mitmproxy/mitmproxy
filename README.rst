@@ -45,7 +45,7 @@ Join our developer chat on Slack if you would like to contribute to mitmproxy it
 Installation
 ------------
 
-The installation instructions are `here <https://mitmproxy.org/docs/latest/overview-installation>`__.
+The installation instructions are `here <https://docs.mitmproxy.org/stable/overview-installation>`__.
 If you want to contribute changes, keep on reading.
 
 Contributing
@@ -151,7 +151,7 @@ with the following command:
     :alt: mitmproxy.org
 
 .. |mitmproxy_docs| image:: https://shields.mitmproxy.org/api/docs-latest-brightgreen.svg
-    :target: https://mitmproxy.org/docs/latest/
+    :target: https://docs.mitmproxy.org/stable/
     :alt: mitmproxy documentation
 
 .. |mitmproxy_discourse| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-discourse.mitmproxy.org-orange.svg
@@ -182,7 +182,7 @@ with the following command:
     :target: https://pypi.python.org/pypi/mitmproxy
     :alt: Supported Python versions
 
-.. _`advanced installation`: https://mitmproxy.org/docs/latest/overview-installation/#advanced-installation
+.. _`advanced installation`: https://docs.mitmproxy.org/stable/overview-installation/#advanced-installation
 .. _virtualenv: https://virtualenv.pypa.io/
 .. _`pytest`: http://pytest.org/
 .. _tox: https://tox.readthedocs.io/
