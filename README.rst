@@ -28,8 +28,7 @@ and pathod websites.
 
 The documentation for mitmproxy is available on our website:
 
-|mitmproxy_docs_stable| for the stable release documentation  
-|mitmproxy_docs_master| for the current master documentation
+|mitmproxy_docs_stable| |mitmproxy_docs_master| 
 
 
 Join our discussion forum on Discourse to ask questions, help
