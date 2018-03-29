@@ -42,15 +42,15 @@ matrix:
           yarn: true
           directories:
               - web/node_modules
-    - language: python
-      env:
-        - NAME=docs
+    - python: 3.6
+      env: NAME=docs TOXENV=docs
       install:
         - wget https://github.com/gohugoio/hugo/releases/download/v0.37/hugo_0.37_Linux-64bit.deb
         - sudo dpkg -i hugo*.deb
-        - pip install awscli
+        - pip install tox virtualenv setuptools
+        - pyenv global system 3.6
       script:
-        - cd docs && ./ci
+        - tox
       after_success:
         - echo done
 

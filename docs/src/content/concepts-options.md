@@ -34,33 +34,14 @@ interactively have immediate effect in the running instance, and can be made
 persistent by saving the settings out to a YAML configuration file (please see
 the specific tool's interactive help for details on how to do this).
 
-For all tools, options can be set directly by name using the `--set` command-line
-option. Please see the command-line help (`--help`) for usage.
+For all tools, options can be set directly by name using the `--set`
+command-line option. Please see the command-line help (`--help`) for usage.
 
 
-## Example
+## Available Options
 
-Here is an excerpt showing the first few lines of the complete `--options`
-output:
+This list might not reflect what is actually available in your current mitmproxy
+environment. For an up-to-date list please use the `--options` flag for each of
+the mitmproxy tools.
 
-{{< highlight yaml  >}}
-
-# Add all certificates of the upstream server to the certificate chain
-# that will be served to the proxy client, as extras. Type bool.
-add_upstream_certs_to_client_chain: false
-
-# Allow remote clients to connect to proxy. If set to false, client will
-# not be able to connect to proxy unless it is on the same network or
-# the proxyauth option is set Type bool.
-allow_remote: false
-
-# Strip out request headers that might cause the server to return
-# 304-not-modified. Type bool.
-anticache: false
-
-# Try to convince servers to send us un-compressed data. Type bool.
-anticomp: false
-
-{{< /highlight >}}
-
-
+{{< readfile file="/generated/options.html" >}}
