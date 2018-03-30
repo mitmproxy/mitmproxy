@@ -275,7 +275,6 @@ class OptManager:
     def set(self, *spec):
         for i in spec:
             self.update(**(self._setspec(i)))
-        
 
     def parse_setval(self, optname: str, optstr: typing.Optional[str]) -> typing.Any:
         """
