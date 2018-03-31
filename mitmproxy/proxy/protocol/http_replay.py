@@ -1,8 +1,3 @@
-import asyncio
-import queue
-import threading
-import typing
-
 from mitmproxy import log
 from mitmproxy import controller
 from mitmproxy import exceptions
@@ -26,21 +21,12 @@ class RequestReplayThread(basethread.BaseThread):
             self,
             opts: options.Options,
             f: http.HTTPFlow,
-            loop: asyncio.AbstractEventLoop,
-            event_queue: typing.Optional[queue.Queue],
-            should_exit: threading.Event
+            channel: controller.Channel,
     ) -> None:
-        """
-            event_queue can be a queue or None, if no scripthooks should be
-            processed.
-        """
         self.options = opts
         self.f = f
         f.live = True
-        if event_queue:
-            self.channel = controller.Channel(loop, event_queue)
-        else:
-            self.channel = None
+        self.channel = channel
         super().__init__(
             "RequestReplay (%s)" % f.request.url
         )

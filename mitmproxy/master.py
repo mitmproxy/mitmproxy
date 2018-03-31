@@ -202,13 +202,7 @@ class Master:
             host = f.request.headers.pop(":authority")
             f.request.headers.insert(0, "host", host)
 
-        rt = http_replay.RequestReplayThread(
-            self.options,
-            f,
-            asyncio.get_event_loop(),
-            self.event_queue,
-            self.should_exit
-        )
+        rt = http_replay.RequestReplayThread(self.options, f, self.server.channel)
         rt.start()  # pragma: no cover
         if block:
             rt.join()
