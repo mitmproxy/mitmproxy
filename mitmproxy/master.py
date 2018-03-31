@@ -1,7 +1,6 @@
 import threading
 import contextlib
 import asyncio
-import signal
 
 from mitmproxy import addonmanager
 from mitmproxy import options
@@ -37,11 +36,16 @@ class Master:
     """
     def __init__(self, opts):
         self.event_queue = asyncio.Queue()
+        self.should_exit = threading.Event()
+        self.channel = controller.Channel(
+            asyncio.get_event_loop(),
+            self.event_queue,
+            self.should_exit,
+        )
 
         self.options = opts or options.Options()  # type: options.Options
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
-        self.should_exit = threading.Event()
         self._server = None
         self.first_tick = True
         self.waiting_flows = []
@@ -52,7 +56,7 @@ class Master:
 
     @server.setter
     def server(self, server):
-        server.set_channel(controller.Channel(asyncio.get_event_loop(), self.event_queue))
+        server.set_channel(self.channel)
         self._server = server
 
     @contextlib.contextmanager
@@ -202,7 +206,7 @@ class Master:
             host = f.request.headers.pop(":authority")
             f.request.headers.insert(0, "host", host)
 
-        rt = http_replay.RequestReplayThread(self.options, f, self.server.channel)
+        rt = http_replay.RequestReplayThread(self.options, f, self.channel)
         rt.start()  # pragma: no cover
         if block:
             rt.join()

@@ -92,6 +92,7 @@ class ProxyThread(threading.Thread):
         self.masterclass = masterclass
         self.options = options
         self.tmaster = None
+        self.event_loop = None
         controller.should_exit = False
 
     @property
@@ -106,7 +107,8 @@ class ProxyThread(threading.Thread):
         self.tmaster.shutdown()
 
     def run(self):
-        asyncio.set_event_loop(asyncio.new_event_loop())
+        self.event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.event_loop)
         self.tmaster = self.masterclass(self.options)
         self.tmaster.addons.add(core.Core())
         self.name = "ProxyThread (%s:%s)" % (
@@ -176,6 +178,10 @@ class ProxyTestBase:
             add_upstream_certs_to_client_chain=cls.add_upstream_certs_to_client_chain,
             ssl_insecure=True,
         )
+
+    def set_addons(self, *addons):
+        self.proxy.tmaster.reset(addons)
+        self.proxy.tmaster.addons.trigger("tick")
 
     def addons(self):
         """
