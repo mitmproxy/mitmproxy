@@ -5,9 +5,9 @@ Make sure run all these steps on the correct branch you want to create a new rel
 - Update CHANGELOG
 - Verify that all CI tests pass
 - Tag the release and push to Github
-  - For alphas, betas, and release candidates, use lightweight tags.  
+  - For alphas, betas, and release candidates, use lightweight tags.
     This is necessary so that the .devXXXX counter does not reset.
-  - For final releases, use annotated tags.  
+  - For final releases, use annotated tags.
     This makes the .devXXXX counter reset.
 - Wait for tag CI to complete
 
