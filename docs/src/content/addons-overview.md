@@ -35,7 +35,7 @@ Here, for example, is a command that shows the API documentation for the
 mitmproxy's HTTP flow classes:
 
 {{< highlight bash  >}}
-pydoc mimtproxy.http
+pydoc mitmproxy.http
 {{< /highlight >}}
 
 You will be referring to the mitmproxy API documentation frequently, so keep
