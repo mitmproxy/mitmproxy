@@ -22,9 +22,6 @@ matrix:
       osx_image: xcode7.3
       language: generic
       env: TOXENV=py36 BDIST=1
-    - python: 3.5
-      env: TOXENV=py35
-      dist: precise
     - python: 3.6
       env: TOXENV=py36 BDIST=1 WHEEL=1
     - python: 3.6
@@ -61,9 +58,9 @@ install:
       brew update || brew update
       brew outdated pyenv || brew upgrade pyenv
       eval "$(pyenv init -)"
-      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.6.4
-      pyenv global 3.6.4
-      pyenv shell 3.6.4
+      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.6.5
+      pyenv global 3.6.5
+      pyenv shell 3.6.5
     fi
   - pip install tox virtualenv setuptools
 

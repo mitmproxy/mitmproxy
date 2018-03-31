@@ -2,11 +2,11 @@ from __future__ import print_function  # this is here for the version check to w
 
 import sys
 
-if sys.version_info < (3, 5):
+if sys.version_info < (3, 6):
     # This must be before any mitmproxy imports, as they already break!
     # Keep all other imports below with the 'noqa' magic comment.
     print("#" * 49, file=sys.stderr)
-    print("# mitmproxy only supports Python 3.5 and above! #", file=sys.stderr)
+    print("# mitmproxy requires Python 3.6 or higher! #", file=sys.stderr)
     print("#" * 49, file=sys.stderr)
 
 import argparse  # noqa
