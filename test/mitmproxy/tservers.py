@@ -4,6 +4,7 @@ import tempfile
 import sys
 import time
 from unittest import mock
+import asyncio
 
 import mitmproxy.platform
 from mitmproxy.addons import core
@@ -105,6 +106,7 @@ class ProxyThread(threading.Thread):
         self.tmaster.shutdown()
 
     def run(self):
+        asyncio.set_event_loop(asyncio.new_event_loop())
         self.tmaster = self.masterclass(self.options)
         self.tmaster.addons.add(core.Core())
         self.name = "ProxyThread (%s:%s)" % (

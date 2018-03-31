@@ -38,7 +38,7 @@ class RequestReplayThread(basethread.BaseThread):
         self.f = f
         f.live = True
         if event_queue:
-            self.channel = controller.Channel(loop, event_queue, should_exit)
+            self.channel = controller.Channel(loop, event_queue)
         else:
             self.channel = None
         super().__init__(

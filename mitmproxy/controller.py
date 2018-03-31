@@ -22,7 +22,7 @@ class Channel:
         """
         m.reply = Reply(m)
         asyncio.run_coroutine_threadsafe(self._q.put((mtype, m)), self.loop)
-        g = m.reply._q.get()
+        g = m.reply.q.get()
         if g == exceptions.Kill:
             raise exceptions.Kill()
         return g

@@ -36,9 +36,6 @@ class Master:
         The master handles mitmproxy's main event loop.
     """
     def __init__(self, opts):
-        loop = asyncio.get_event_loop()
-        for signame in ('SIGINT', 'SIGTERM'):
-            loop.add_signal_handler(getattr(signal, signame), self.shutdown)
         self.event_queue = asyncio.Queue()
 
         self.options = opts or options.Options()  # type: options.Options

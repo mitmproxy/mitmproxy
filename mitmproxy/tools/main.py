@@ -1,5 +1,6 @@
 from __future__ import print_function  # this is here for the version check to work on Python 2.
 
+import asyncio
 import sys
 
 if sys.version_info < (3, 6):
@@ -118,7 +119,9 @@ def run(
         def cleankill(*args, **kwargs):
             master.shutdown()
         signal.signal(signal.SIGTERM, cleankill)
-
+        loop = asyncio.get_event_loop()
+        for signame in ('SIGINT', 'SIGTERM'):
+            loop.add_signal_handler(getattr(signal, signame), master.shutdown)
         master.run()
     except exceptions.OptionsError as e:
         print("%s: %s" % (sys.argv[0], e), file=sys.stderr)
