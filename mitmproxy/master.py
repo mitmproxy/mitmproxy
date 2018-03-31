@@ -2,7 +2,6 @@ import threading
 import contextlib
 import asyncio
 import signal
-import time
 
 from mitmproxy import addonmanager
 from mitmproxy import options
@@ -37,11 +36,10 @@ class Master:
         The master handles mitmproxy's main event loop.
     """
     def __init__(self, opts):
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
+        loop = asyncio.get_event_loop()
         for signame in ('SIGINT', 'SIGTERM'):
-            self.loop.add_signal_handler(getattr(signal, signame), self.shutdown)
-        self.event_queue = asyncio.Queue(loop=self.loop)
+            loop.add_signal_handler(getattr(signal, signame), self.shutdown)
+        self.event_queue = asyncio.Queue()
 
         self.options = opts or options.Options()  # type: options.Options
         self.commands = command.CommandManager(self)
@@ -57,9 +55,7 @@ class Master:
 
     @server.setter
     def server(self, server):
-        server.set_channel(
-            controller.Channel(self.loop, self.event_queue)
-        )
+        server.set_channel(controller.Channel(asyncio.get_event_loop(), self.event_queue))
         self._server = server
 
     @contextlib.contextmanager
@@ -111,18 +107,16 @@ class Master:
             self.addons.trigger("running")
         while True:
             if self.should_exit.is_set():
-                self.loop.stop()
+                asyncio.get_event_loop().stop()
                 return
             self.addons.trigger("tick")
-            await asyncio.sleep(0.1, loop=self.loop)
+            await asyncio.sleep(0.1)
 
-    def run(self, inject=None):
+    def run(self):
         self.start()
-        asyncio.ensure_future(self.main(), loop=self.loop)
-        asyncio.ensure_future(self.tick(), loop=self.loop)
-        if inject:
-            asyncio.ensure_future(inject(), loop=self.loop)
-        self.loop.run_forever()
+        asyncio.ensure_future(self.main())
+        asyncio.ensure_future(self.tick())
+        asyncio.get_event_loop().run_forever()
         self.shutdown()
         self.addons.trigger("done")
 
@@ -214,7 +208,7 @@ class Master:
         rt = http_replay.RequestReplayThread(
             self.options,
             f,
-            self.loop,
+            asyncio.get_event_loop(),
             self.event_queue,
             self.should_exit
         )
