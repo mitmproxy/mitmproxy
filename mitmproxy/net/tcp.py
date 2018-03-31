@@ -19,7 +19,7 @@ from mitmproxy.coretypes import basethread
 socket_fileobject = socket.SocketIO
 
 # workaround for https://bugs.python.org/issue29515
-# Python 3.5 and 3.6 for Windows is missing a constant
+# Python 3.6 for Windows is missing a constant
 IPPROTO_IPV6 = getattr(socket, "IPPROTO_IPV6", 41)
 
 EINTR = 4

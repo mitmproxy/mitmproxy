@@ -73,14 +73,14 @@ security considerations apply as for our binary packages.
 
 ## Installation on Linux via pip3
 
-Please make sure to install Python 3.5 (or higher) and pip3 for your
+Please make sure to install Python 3.6 (or higher) and pip3 for your
 distribution. If your distribution does not provide a suitable Python
 version, you can use [pyenv](https://github.com/yyuu/pyenv) to get a
 recent Python environment.
 
 {{< highlight bash  >}}
-sudo apt install python3-pip # Debian 8 or higher, Ubuntu 16.04 or higher
-sudo dnf install python3-pip # Fedora 24 or higher
+sudo apt install python3-pip # Debian 10 or higher, Ubuntu 17.10 or higher
+sudo dnf install python3-pip # Fedora 26 or higher
 sudo pacman -S python-pip # Arch Linux
 {{< / highlight >}}
 
@@ -98,7 +98,7 @@ sudo pip3 install mitmproxy
 
 ## Installation on Windows via pip3
 
-First, install the latest version of Python 3.5 or higher from the
+First, install the latest version of Python 3.6 or higher from the
 [Python website](https://www.python.org/downloads/windows/). During
 installation, make sure to select Add Python to PATH. There are no other
 dependencies on Windows.
