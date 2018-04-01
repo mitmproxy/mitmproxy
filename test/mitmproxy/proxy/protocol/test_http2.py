@@ -6,11 +6,11 @@ import tempfile
 import traceback
 import pytest
 import h2
+import time
 
 from mitmproxy import options
 
 import mitmproxy.net
-from mitmproxy.addons import core
 from ...net import tservers as net_tservers
 from mitmproxy import exceptions
 from mitmproxy.net.http import http1, http2
@@ -92,6 +92,10 @@ class _Http2TestBase:
         cls.options = cls.get_options()
         cls.proxy = tservers.ProxyThread(tservers.TestMaster, cls.options)
         cls.proxy.start()
+        while True:
+            if cls.proxy.tmaster:
+                break
+            time.sleep(0.01)
 
     @classmethod
     def teardown_class(cls):
@@ -118,6 +122,7 @@ class _Http2TestBase:
     def teardown(self):
         if self.client:
             self.client.close()
+        self.server.server.wait_for_silence()
 
     def setup_connection(self):
         self.client = mitmproxy.net.tcp.TCPClient(("127.0.0.1", self.proxy.port))

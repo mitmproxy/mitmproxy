@@ -122,7 +122,6 @@ class ProxyThread(threading.Thread):
         self.tmaster.addons.trigger("tick")
 
 
-
 class ProxyTestBase:
     # Test Configuration
     ssl = None

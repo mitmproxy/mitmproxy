@@ -92,13 +92,12 @@ class Master:
 
     async def main(self):
         while True:
-            if self.should_exit.is_set():
+            try:
+                mtype, obj = await self.event_queue.get()
+            except RuntimeError:
                 return
-            mtype, obj = await self.event_queue.get()
             if mtype not in eventsequence.Events:
-                raise exceptions.ControlException(
-                    "Unknown event %s" % repr(mtype)
-                )
+                raise exceptions.ControlException("Unknown event %s" % repr(mtype))
             self.addons.handle_lifecycle(mtype, obj)
             self.event_queue.task_done()
 
@@ -117,8 +116,12 @@ class Master:
         self.start()
         asyncio.ensure_future(self.main())
         asyncio.ensure_future(self.tick())
-        asyncio.get_event_loop().run_forever()
-        self.shutdown()
+        loop = asyncio.get_event_loop()
+        try:
+            loop.run_forever()
+        finally:
+            self.shutdown()
+            loop.close()
         self.addons.trigger("done")
 
     def shutdown(self):
