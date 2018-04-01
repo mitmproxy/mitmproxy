@@ -42,6 +42,8 @@ class Master:
             self.event_queue,
             self.should_exit,
         )
+        asyncio.ensure_future(self.main())
+        asyncio.ensure_future(self.tick())
 
         self.options = opts or options.Options()  # type: options.Options
         self.commands = command.CommandManager(self)
@@ -114,7 +116,6 @@ class Master:
 
     def run(self):
         self.start()
-        asyncio.ensure_future(self.main())
         asyncio.ensure_future(self.tick())
         loop = asyncio.get_event_loop()
         try:
