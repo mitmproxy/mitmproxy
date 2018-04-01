@@ -117,6 +117,11 @@ class ProxyThread(threading.Thread):
         )
         self.tmaster.run()
 
+    def set_addons(self, *addons):
+        self.tmaster.reset(addons)
+        self.tmaster.addons.trigger("tick")
+
+
 
 class ProxyTestBase:
     # Test Configuration
@@ -180,8 +185,7 @@ class ProxyTestBase:
         )
 
     def set_addons(self, *addons):
-        self.proxy.tmaster.reset(addons)
-        self.proxy.tmaster.addons.trigger("tick")
+        self.proxy.set_addons(*addons)
 
     def addons(self):
         """
@@ -337,8 +341,7 @@ class SocksModeTest(HTTPProxyTest):
         return opts
 
 
-class ChainProxyTest(ProxyTestBase):
-
+class HTTPUpstreamProxyTest(HTTPProxyTest):
     """
     Chain three instances of mitmproxy in a row to test upstream mode.
     Proxy order is cls.proxy -> cls.chain[0] -> cls.chain[1]
@@ -357,6 +360,12 @@ class ChainProxyTest(ProxyTestBase):
             proxy = ProxyThread(cls.masterclass, opts)
             proxy.start()
             cls.chain.insert(0, proxy)
+            while 1:
+                if(
+                    proxy.event_loop and
+                    proxy.event_loop.is_running()
+                ):
+                    break
 
         super().setup_class()
 
@@ -380,7 +389,3 @@ class ChainProxyTest(ProxyTestBase):
                 mode="upstream:" + s,
             )
         return opts
-
-
-class HTTPUpstreamProxyTest(ChainProxyTest, HTTPProxyTest):
-    pass

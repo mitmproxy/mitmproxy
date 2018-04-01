@@ -987,7 +987,7 @@ class TestUpstreamProxySSL(
         Client <- HTTPS -> Proxy <- HTTP -> Proxy <- HTTPS -> Server
         """
         self.set_addons(RewriteToHttp())
-        self.set_addons(RewriteToHttps())
+        self.chain[1].set_addons(RewriteToHttps())
         p = self.pathoc()
         with p.connect():
             resp = p.request("get:'/p/418'")
