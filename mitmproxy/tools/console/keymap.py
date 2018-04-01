@@ -6,6 +6,7 @@ from mitmproxy.tools.console import signals
 Contexts = {
     "chooser",
     "commands",
+    "dataviewer",
     "eventlog",
     "flowlist",
     "flowview",
