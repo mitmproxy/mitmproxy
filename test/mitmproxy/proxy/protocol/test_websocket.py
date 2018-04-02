@@ -3,10 +3,10 @@ import os
 import struct
 import tempfile
 import traceback
+import time
 
 from mitmproxy import options
 from mitmproxy import exceptions
-from mitmproxy.addons import core
 from mitmproxy.http import HTTPFlow
 from mitmproxy.websocket import WebSocketFlow
 
@@ -54,6 +54,10 @@ class _WebSocketTestBase:
         cls.options = cls.get_options()
         cls.proxy = tservers.ProxyThread(tservers.TestMaster, cls.options)
         cls.proxy.start()
+        while True:
+            if cls.proxy.tmaster:
+                break
+            time.sleep(0.01)
 
     @classmethod
     def teardown_class(cls):
@@ -161,7 +165,7 @@ class TestSimple(_WebSocketTest):
             def websocket_start(self, f):
                 f.stream = streaming
 
-        self.master.addons.add(Stream())
+        self.proxy.set_addons(Stream())
         self.setup_connection()
 
         frame = websockets.Frame.from_file(self.client.rfile)
@@ -202,7 +206,7 @@ class TestSimple(_WebSocketTest):
             def websocket_message(self, f):
                 f.messages[-1].content = "foo"
 
-        self.master.addons.add(Addon())
+        self.proxy.set_addons(Addon())
         self.setup_connection()
 
         frame = websockets.Frame.from_file(self.client.rfile)
@@ -233,7 +237,7 @@ class TestKillFlow(_WebSocketTest):
             def websocket_message(self, f):
                 f.kill()
 
-        self.master.addons.add(KillFlow())
+        self.proxy.set_addons(KillFlow())
         self.setup_connection()
 
         with pytest.raises(exceptions.TcpDisconnect):
@@ -403,7 +407,7 @@ class TestStreaming(_WebSocketTest):
             def websocket_start(self, f):
                 f.stream = streaming
 
-        self.master.addons.add(Stream())
+        self.proxy.set_addons(Stream())
         self.setup_connection()
 
         frame = None

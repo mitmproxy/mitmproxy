@@ -1,6 +1,7 @@
 import threading
 import contextlib
 import asyncio
+import logging
 
 from mitmproxy import addonmanager
 from mitmproxy import options
@@ -16,6 +17,13 @@ from mitmproxy.proxy.protocol import http_replay
 from mitmproxy.coretypes import basethread
 
 from . import ctx as mitmproxy_ctx
+
+
+# Conclusively preventing cross-thread races on proxy shutdown turns out to be
+# very hard. We could build a thread sync infrastructure for this, or we could
+# wait until we ditch threads and move all the protocols into the async loop.
+# Until then, silence non-critical errors.
+logging.getLogger('asyncio').setLevel(logging.CRITICAL)
 
 
 class ServerThread(basethread.BaseThread):

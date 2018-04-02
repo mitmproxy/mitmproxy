@@ -1,5 +1,5 @@
 from mitmproxy import ctx
 
 
-def running():
+def tick():
     ctx.master.shutdown()
