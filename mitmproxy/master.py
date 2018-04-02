@@ -85,11 +85,6 @@ class Master:
             mitmproxy_ctx.log = None
             mitmproxy_ctx.options = None
 
-    # This is a vestigial function that will go away in a refactor very soon
-    def tell(self, mtype, m):  # pragma: no cover
-        m.reply = controller.DummyReply()
-        self.event_queue.put((mtype, m))
-
     def add_log(self, e, level):
         """
             level: debug, alert, info, warn, error

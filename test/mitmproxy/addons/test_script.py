@@ -2,6 +2,7 @@ import os
 import sys
 import traceback
 from unittest import mock
+import time
 
 import pytest
 
@@ -49,17 +50,15 @@ def test_load_fullname():
     assert not hasattr(ns2, "addons")
 
 
-def test_script_print_stdout():
+@pytest.mark.asyncio
+async def test_script_print_stdout():
     with taddons.context() as tctx:
-        with mock.patch('mitmproxy.ctx.master.tell') as mock_warn:
-            with addonmanager.safecall():
-                ns = script.load_script(
-                    tutils.test_data.path(
-                        "mitmproxy/data/addonscripts/print.py"
-                    )
-                )
-                ns.load(addonmanager.Loader(tctx.master))
-        mock_warn.assert_called_once_with("log", log.LogEntry("stdoutprint", "warn"))
+        with addonmanager.safecall():
+            ns = script.load_script(
+                tutils.test_data.path("mitmproxy/data/addonscripts/print.py")
+            )
+            ns.load(addonmanager.Loader(tctx.master))
+        assert tctx.master.has_log("stdoutprint")
 
 
 class TestScript:

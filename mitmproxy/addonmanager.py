@@ -57,10 +57,10 @@ class StreamLog:
 def safecall():
     # resolve ctx.master here.
     # we want to be threadsafe, and ctx.master may already be cleared when an addon prints().
-    tell = ctx.master.tell
+    channel = ctx.master.channel
     # don't use master.add_log (which is not thread-safe). Instead, put on event queue.
     stdout_replacement = StreamLog(
-        lambda message: tell("log", log.LogEntry(message, "warn"))
+        lambda message: channel("log", log.LogEntry(message, "warn"))
     )
     try:
         with contextlib.redirect_stdout(stdout_replacement):
