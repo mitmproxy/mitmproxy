@@ -11,9 +11,13 @@ import mitmproxy.types
 import pyperclip
 
 
-def curl_command(f: flow.Flow) -> str:
+def raise_if_missing_request(f: flow.Flow) -> None:
     if not hasattr(f, "request"):
         raise exceptions.CommandError("Can't export flow with no request.")
+
+
+def curl_command(f: flow.Flow) -> str:
+    raise_if_missing_request(f)
     data = "curl "
     request = f.request.copy()  # type: ignore
     request.decode(strict=False)
@@ -30,14 +34,30 @@ def curl_command(f: flow.Flow) -> str:
     return data
 
 
+def httpie_command(f: flow.Flow) -> str:
+    raise_if_missing_request(f)
+    request = f.request.copy()  # type: ignore
+    data = "http %s " % request.method
+    request.decode(strict=False)
+    data += "%s" % request.url
+    for k, v in request.headers.items(multi=True):
+        data += " '%s:%s'" % (k, v)
+    if request.content:
+        data += " <<< '%s'" % strutils.bytes_to_escaped_str(
+            request.content,
+            escape_single_quotes=True
+        )
+    return data
+
+
 def raw(f: flow.Flow) -> bytes:
-    if not hasattr(f, "request"):
-        raise exceptions.CommandError("Can't export flow with no request.")
+    raise_if_missing_request(f)
     return assemble.assemble_request(f.request)  # type: ignore
 
 
 formats = dict(
     curl = curl_command,
+    httpie = httpie_command,
     raw = raw,
 )
 

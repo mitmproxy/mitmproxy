@@ -65,6 +65,26 @@ class TestExportCurlCommand:
             export.curl_command(tcp_flow)
 
 
+class TestExportHttpieCommand:
+    def test_get(self, get_request):
+        result = """http GET http://address:22/path?a=foo&a=bar&b=baz 'header:qvalue' 'content-length:0'"""
+        assert export.httpie_command(get_request) == result
+
+    def test_post(self, post_request):
+        result = "http POST http://address:22/path 'content-length:256' <<< '{}'".format(
+            str(bytes(range(256)))[2:-1]
+        )
+        assert export.httpie_command(post_request) == result
+
+    def test_patch(self, patch_request):
+        result = """http PATCH http://address:22/path?query=param 'header:qvalue' 'content-length:7' <<< 'content'"""
+        assert export.httpie_command(patch_request) == result
+
+    def test_tcp(self, tcp_flow):
+        with pytest.raises(exceptions.CommandError):
+            export.httpie_command(tcp_flow)
+
+
 class TestRaw:
     def test_get(self, get_request):
         assert b"header: qvalue" in export.raw(get_request)
@@ -83,7 +103,7 @@ def test_export(tmpdir):
     f = str(tmpdir.join("path"))
     e = export.Export()
     with taddons.context():
-        assert e.formats() == ["curl", "raw"]
+        assert e.formats() == ["curl", "httpie", "raw"]
         with pytest.raises(exceptions.CommandError):
             e.file("nonexistent", tflow.tflow(resp=True), f)
 
@@ -92,6 +112,10 @@ def test_export(tmpdir):
         os.unlink(f)
 
         e.file("curl", tflow.tflow(resp=True), f)
+        assert qr(f)
+        os.unlink(f)
+
+        e.file("httpie", tflow.tflow(resp=True), f)
         assert qr(f)
         os.unlink(f)
 
@@ -123,6 +147,10 @@ def test_clip(tmpdir):
 
         with mock.patch('pyperclip.copy') as pc:
             e.clip("curl", tflow.tflow(resp=True))
+            assert pc.called
+
+        with mock.patch('pyperclip.copy') as pc:
+            e.clip("httpie", tflow.tflow(resp=True))
             assert pc.called
 
         with mock.patch('pyperclip.copy') as pc:
