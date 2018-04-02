@@ -6,7 +6,6 @@ import tempfile
 import traceback
 import pytest
 import h2
-import time
 
 from mitmproxy import options
 

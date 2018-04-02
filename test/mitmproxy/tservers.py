@@ -14,6 +14,7 @@ from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy import exceptions
 from mitmproxy import io
+from mitmproxy.utils import human
 import pathod.test
 import pathod.pathoc
 
@@ -111,10 +112,7 @@ class ProxyThread(threading.Thread):
         asyncio.set_event_loop(self.event_loop)
         self.tmaster = self.masterclass(self.options)
         self.tmaster.addons.add(core.Core())
-        self.name = "ProxyThread (%s:%s)" % (
-            self.tmaster.server.address[0],
-            self.tmaster.server.address[1],
-        )
+        self.name = "ProxyThread (%s)" % human.format_address(self.tmaster.server.address)
         self.tmaster.run()
 
     def set_addons(self, *addons):
@@ -362,11 +360,8 @@ class HTTPUpstreamProxyTest(HTTPProxyTest):
             proxy = ProxyThread(cls.masterclass, opts)
             proxy.start()
             cls.chain.insert(0, proxy)
-            while 1:
-                if(
-                    proxy.event_loop and
-                    proxy.event_loop.is_running()
-                ):
+            while True:
+                if proxy.event_loop and proxy.event_loop.is_running():
                     break
 
         super().setup_class()
