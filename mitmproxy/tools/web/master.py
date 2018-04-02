@@ -2,6 +2,9 @@ import webbrowser
 
 import tornado.httpserver
 import tornado.ioloop
+from tornado.platform.asyncio import AsyncIOMainLoop
+import asyncio
+
 from mitmproxy import addons
 from mitmproxy import log
 from mitmproxy import master
@@ -102,6 +105,7 @@ class WebMaster(master.Master):
         )
 
     def run(self):  # pragma: no cover
+        AsyncIOMainLoop().install()
 
         iol = tornado.ioloop.IOLoop.instance()
 
@@ -109,7 +113,6 @@ class WebMaster(master.Master):
         http_server.listen(self.options.web_port, self.options.web_iface)
 
         iol.add_callback(self.start)
-        tornado.ioloop.PeriodicCallback(lambda: self.tick(timeout=0), 5).start()
 
         web_url = "http://{}:{}/".format(self.options.web_iface, self.options.web_port)
         self.add_log(
