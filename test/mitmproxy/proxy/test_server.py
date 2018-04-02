@@ -123,8 +123,6 @@ class TcpMixin:
         i2 = self.pathod("306")
         self._ignore_off()
 
-        self.master.event_queue.join()
-
         assert n.status_code == 304
         assert i.status_code == 305
         assert i2.status_code == 306
@@ -167,8 +165,6 @@ class TcpMixin:
         i = self.pathod("305")
         i2 = self.pathod("306")
         self._tcpproxy_off()
-
-        self.master.event_queue.join()
 
         assert n.status_code == 304
         assert i.status_code == 305

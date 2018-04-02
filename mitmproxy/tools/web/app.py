@@ -4,6 +4,7 @@ import logging
 import os.path
 import re
 from io import BytesIO
+import asyncio
 
 import mitmproxy.flow
 import tornado.escape
@@ -235,7 +236,7 @@ class DumpFlows(RequestHandler):
         self.view.clear()
         bio = BytesIO(self.filecontents)
         for i in io.FlowReader(bio).stream():
-            self.master.load_flow(i)
+            asyncio.call_soon(self.master.load_flow, i)
         bio.close()
 
 

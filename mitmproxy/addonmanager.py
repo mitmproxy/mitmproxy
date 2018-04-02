@@ -3,6 +3,7 @@ import typing
 import traceback
 import contextlib
 import sys
+import asyncio
 
 from mitmproxy import exceptions
 from mitmproxy import eventsequence
@@ -220,7 +221,7 @@ class AddonManager:
         name = _get_name(item)
         return name in self.lookup
 
-    def handle_lifecycle(self, name, message):
+    async def handle_lifecycle(self, name, message):
         """
             Handle a lifecycle event.
         """

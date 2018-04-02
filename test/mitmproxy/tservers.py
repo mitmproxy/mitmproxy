@@ -26,20 +26,20 @@ from mitmproxy.test import taddons
 
 class MasterTest:
 
-    def cycle(self, master, content):
+    async def cycle(self, master, content):
         f = tflow.tflow(req=tutils.treq(content=content))
         layer = mock.Mock("mitmproxy.proxy.protocol.base.Layer")
         layer.client_conn = f.client_conn
         layer.reply = controller.DummyReply()
-        master.addons.handle_lifecycle("clientconnect", layer)
+        await master.addons.handle_lifecycle("clientconnect", layer)
         for i in eventsequence.iterate(f):
-            master.addons.handle_lifecycle(*i)
-        master.addons.handle_lifecycle("clientdisconnect", layer)
+            await master.addons.handle_lifecycle(*i)
+        await master.addons.handle_lifecycle("clientdisconnect", layer)
         return f
 
-    def dummy_cycle(self, master, n, content):
+    async def dummy_cycle(self, master, n, content):
         for i in range(n):
-            self.cycle(master, content)
+            await self.cycle(master, content)
         master.shutdown()
 
     def flowfile(self, path):

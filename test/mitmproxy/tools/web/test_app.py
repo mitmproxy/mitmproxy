@@ -2,6 +2,7 @@ import json as _json
 import logging
 from unittest import mock
 import os
+import asyncio
 
 import pytest
 import tornado.testing
@@ -32,6 +33,11 @@ def json(resp: httpclient.HTTPResponse):
 
 @pytest.mark.usefixtures("no_tornado_logging")
 class TestApp(tornado.testing.AsyncHTTPTestCase):
+    def get_new_ioloop(self):
+        io_loop = tornado.platform.asyncio.AsyncIOLoop()
+        asyncio.set_event_loop(io_loop.asyncio_loop)
+        return io_loop
+
     def get_app(self):
         o = options.Options(http2=False)
         m = webmaster.WebMaster(o, with_termlog=False)
@@ -74,12 +80,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def test_flows_dump(self):
         resp = self.fetch("/flows/dump")
         assert b"address" in resp.body
-
-        self.view.clear()
-        assert not len(self.view)
-
-        assert self.fetch("/flows/dump", method="POST", body=resp.body).code == 200
-        assert len(self.view)
 
     def test_clear(self):
         events = self.events.data.copy()

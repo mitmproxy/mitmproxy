@@ -43,14 +43,12 @@ class Master:
         The master handles mitmproxy's main event loop.
     """
     def __init__(self, opts):
-        self.event_queue = asyncio.Queue()
         self.should_exit = threading.Event()
         self.channel = controller.Channel(
+            self,
             asyncio.get_event_loop(),
-            self.event_queue,
             self.should_exit,
         )
-        asyncio.ensure_future(self.main())
         asyncio.ensure_future(self.tick())
 
         self.options = opts or options.Options()  # type: options.Options
@@ -96,17 +94,6 @@ class Master:
         if self.server:
             ServerThread(self.server).start()
 
-    async def main(self):
-        while True:
-            try:
-                mtype, obj = await self.event_queue.get()
-            except RuntimeError:
-                return
-            if mtype not in eventsequence.Events:  # pragma: no cover
-                raise exceptions.ControlException("Unknown event %s" % repr(mtype))
-            self.addons.handle_lifecycle(mtype, obj)
-            self.event_queue.task_done()
-
     async def tick(self):
         if self.first_tick:
             self.first_tick = False
@@ -145,7 +132,7 @@ class Master:
             f.request.host, f.request.port = upstream_spec.address
             f.request.scheme = upstream_spec.scheme
 
-    def load_flow(self, f):
+    async def load_flow(self, f):
         """
         Loads a flow and links websocket & handshake flows
         """
@@ -163,7 +150,7 @@ class Master:
 
         f.reply = controller.DummyReply()
         for e, o in eventsequence.iterate(f):
-            self.addons.handle_lifecycle(e, o)
+            await self.addons.handle_lifecycle(e, o)
 
     def replay_request(
             self,

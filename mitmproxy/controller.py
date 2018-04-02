@@ -8,10 +8,10 @@ class Channel:
         The only way for the proxy server to communicate with the master
         is to use the channel it has been given.
     """
-    def __init__(self, loop, q, should_exit):
+    def __init__(self, master, loop, should_exit):
+        self.master = master
         self.loop = loop
         self.should_exit = should_exit
-        self._q = q
 
     def ask(self, mtype, m):
         """
@@ -22,7 +22,10 @@ class Channel:
             exceptions.Kill: All connections should be closed immediately.
         """
         m.reply = Reply(m)
-        asyncio.run_coroutine_threadsafe(self._q.put((mtype, m)), self.loop)
+        asyncio.run_coroutine_threadsafe(
+            self.master.addons.handle_lifecycle(mtype, m),
+            self.loop,
+        )
         g = m.reply.q.get()
         if g == exceptions.Kill:
             raise exceptions.Kill()
@@ -34,7 +37,10 @@ class Channel:
         then return immediately.
         """
         m.reply = DummyReply()
-        asyncio.run_coroutine_threadsafe(self._q.put((mtype, m)), self.loop)
+        asyncio.run_coroutine_threadsafe(
+            self.master.addons.handle_lifecycle(mtype, m),
+            self.loop,
+        )
 
 
 NO_REPLY = object()  # special object we can distinguish from a valid "None" reply.

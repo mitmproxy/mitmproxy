@@ -4,13 +4,15 @@ from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import master
 from mitmproxy import command
 
+import pytest
 
-def test_commands_exist():
+@pytest.mark.asyncio
+async def test_commands_exist():
     km = keymap.Keymap(None)
     defaultkeys.map(km)
     assert km.bindings
     m = master.ConsoleMaster(None)
-    m.load_flow(tflow())
+    await m.load_flow(tflow())
 
     for binding in km.bindings:
         cmd, *args = command.lexer(binding.command)

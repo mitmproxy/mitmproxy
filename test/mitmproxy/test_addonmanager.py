@@ -65,7 +65,8 @@ def test_halt():
     assert end.custom_called
 
 
-def test_lifecycle():
+@pytest.mark.asyncio
+async def test_lifecycle():
     o = options.Options()
     m = master.Master(o)
     a = addonmanager.AddonManager(m)
@@ -77,7 +78,7 @@ def test_lifecycle():
         a.remove(TAddon("nonexistent"))
 
     f = tflow.tflow()
-    a.handle_lifecycle("request", f)
+    await a.handle_lifecycle("request", f)
 
     a._configure_all(o, o.keys())
 
