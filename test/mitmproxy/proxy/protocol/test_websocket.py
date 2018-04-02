@@ -331,7 +331,12 @@ class TestPong(_WebSocketTest):
 
         assert frame.header.opcode == websockets.OPCODE.PONG
         assert frame.payload == b'foobar'
-        assert self.master.has_log("Pong Received from server", "info")
+        for i in range(20):
+            if self.master.has_log("Pong Received from server", "info"):
+                break
+            time.sleep(0.01)
+        else:
+            raise AssertionError("No pong seen")
 
 
 class TestClose(_WebSocketTest):

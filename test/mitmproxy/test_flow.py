@@ -7,7 +7,7 @@ import mitmproxy.io
 from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy.io import tnetstring
-from mitmproxy.exceptions import FlowReadException, ReplayException, ControlException
+from mitmproxy.exceptions import FlowReadException, ReplayException
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy.net import http as net_http

@@ -3,7 +3,6 @@ import webbrowser
 import tornado.httpserver
 import tornado.ioloop
 from tornado.platform.asyncio import AsyncIOMainLoop
-import asyncio
 
 from mitmproxy import addons
 from mitmproxy import log

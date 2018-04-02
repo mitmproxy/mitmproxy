@@ -1,4 +1,3 @@
-import sys
 from mitmproxy import ctx
 from mitmproxy.utils import human
 

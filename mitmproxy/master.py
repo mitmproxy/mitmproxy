@@ -85,7 +85,8 @@ class Master:
             mitmproxy_ctx.log = None
             mitmproxy_ctx.options = None
 
-    def tell(self, mtype, m):
+    # This is a vestigial function that will go away in a refactor very soon
+    def tell(self, mtype, m):  # pragma: no cover
         m.reply = controller.DummyReply()
         self.event_queue.put((mtype, m))
 
@@ -106,7 +107,7 @@ class Master:
                 mtype, obj = await self.event_queue.get()
             except RuntimeError:
                 return
-            if mtype not in eventsequence.Events:
+            if mtype not in eventsequence.Events:  # pragma: no cover
                 raise exceptions.ControlException("Unknown event %s" % repr(mtype))
             self.addons.handle_lifecycle(mtype, obj)
             self.event_queue.task_done()
