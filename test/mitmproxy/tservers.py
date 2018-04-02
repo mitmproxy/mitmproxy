@@ -121,6 +121,13 @@ class ProxyThread(threading.Thread):
         self.tmaster.reset(addons)
         self.tmaster.addons.trigger("tick")
 
+    def start(self):
+        super().start()
+        while True:
+            if self.tmaster:
+                break
+            time.sleep(0.01)
+
 
 class ProxyTestBase:
     # Test Configuration
@@ -142,10 +149,6 @@ class ProxyTestBase:
         cls.options = cls.get_options()
         cls.proxy = ProxyThread(cls.masterclass, cls.options)
         cls.proxy.start()
-        while True:
-            if cls.proxy.tmaster:
-                break
-            time.sleep(0.01)
 
     @classmethod
     def teardown_class(cls):

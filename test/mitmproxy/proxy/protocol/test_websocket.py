@@ -54,10 +54,6 @@ class _WebSocketTestBase:
         cls.options = cls.get_options()
         cls.proxy = tservers.ProxyThread(tservers.TestMaster, cls.options)
         cls.proxy.start()
-        while True:
-            if cls.proxy.tmaster:
-                break
-            time.sleep(0.01)
 
     @classmethod
     def teardown_class(cls):
