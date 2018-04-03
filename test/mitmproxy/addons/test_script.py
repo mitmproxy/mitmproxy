@@ -1,14 +1,11 @@
 import os
 import sys
 import traceback
-from unittest import mock
-import time
 
 import pytest
 
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
-from mitmproxy import log
 from mitmproxy.addons import script
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
@@ -58,7 +55,7 @@ async def test_script_print_stdout():
                 tutils.test_data.path("mitmproxy/data/addonscripts/print.py")
             )
             ns.load(addonmanager.Loader(tctx.master))
-        assert tctx.master.has_log("stdoutprint")
+        assert await tctx.master.await_log("stdoutprint")
 
 
 class TestScript:
@@ -100,7 +97,8 @@ class TestScript:
 
             assert rec.call_log[0][1] == "request"
 
-    def test_reload(self, tmpdir):
+    @pytest.mark.asyncio
+    async def test_reload(self, tmpdir):
         with taddons.context() as tctx:
             f = tmpdir.join("foo.py")
             f.ensure(file=True)
@@ -108,15 +106,15 @@ class TestScript:
             sc = script.Script(str(f))
             tctx.configure(sc)
             sc.tick()
-            assert tctx.master.has_log("Loading")
+            assert await tctx.master.await_log("Loading")
             tctx.master.clear()
-            assert not tctx.master.has_log("Loading")
 
             sc.last_load, sc.last_mtime = 0, 0
             sc.tick()
-            assert tctx.master.has_log("Loading")
+            assert await tctx.master.await_log("Loading")
 
-    def test_exception(self):
+    @pytest.mark.asyncio
+    async def test_exception(self):
         with taddons.context() as tctx:
             sc = script.Script(
                 tutils.test_data.path("mitmproxy/data/addonscripts/error.py")
@@ -128,8 +126,8 @@ class TestScript:
             f = tflow.tflow(resp=True)
             tctx.master.addons.trigger("request", f)
 
-            assert tctx.master.has_log("ValueError: Error!")
-            assert tctx.master.has_log("error.py")
+            assert await tctx.master.await_log("ValueError: Error!")
+            assert await tctx.master.await_log("error.py")
 
     def test_addon(self):
         with taddons.context() as tctx:
@@ -165,13 +163,15 @@ class TestCutTraceback:
 
 
 class TestScriptLoader:
-    def test_script_run(self):
+    @pytest.mark.asyncio
+    async def test_script_run(self):
         rp = tutils.test_data.path(
             "mitmproxy/data/addonscripts/recorder/recorder.py"
         )
         sc = script.ScriptLoader()
         with taddons.context(sc) as tctx:
             sc.script_run([tflow.tflow(resp=True)], rp)
+            await tctx.master.await_log("recorder response")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'recorder load', 'recorder running', 'recorder configure',
@@ -242,19 +242,21 @@ class TestScriptLoader:
             tctx.invoke(sc, "tick")
             assert len(tctx.master.addons) == 1
 
-    def test_script_error_handler(self):
+    @pytest.mark.asyncio
+    async def test_script_error_handler(self):
         path = "/sample/path/example.py"
         exc = SyntaxError
         msg = "Error raised"
         tb = True
         with taddons.context() as tctx:
             script.script_error_handler(path, exc, msg, tb)
-            assert tctx.master.has_log("/sample/path/example.py")
-            assert tctx.master.has_log("Error raised")
-            assert tctx.master.has_log("lineno")
-            assert tctx.master.has_log("NoneType")
+            assert await tctx.master.await_log("/sample/path/example.py")
+            assert await tctx.master.await_log("Error raised")
+            assert await tctx.master.await_log("lineno")
+            assert await tctx.master.await_log("NoneType")
 
-    def test_order(self):
+    @pytest.mark.asyncio
+    async def test_order(self):
         rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder")
         sc = script.ScriptLoader()
         sc.is_running = True
@@ -268,6 +270,7 @@ class TestScriptLoader:
                 ]
             )
             tctx.master.addons.invoke_addon(sc, "tick")
+            await tctx.master.await_log("c tick")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'a load',
@@ -286,7 +289,7 @@ class TestScriptLoader:
                 'c tick',
             ]
 
-            tctx.master.logs = []
+            tctx.master.clear()
             tctx.configure(
                 sc,
                 scripts = [
@@ -296,6 +299,7 @@ class TestScriptLoader:
                 ]
             )
 
+            await tctx.master.await_log("c configure")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'c configure',
@@ -312,6 +316,7 @@ class TestScriptLoader:
                 ]
             )
             tctx.master.addons.invoke_addon(sc, "tick")
+            await tctx.master.await_log("a tick")
 
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [

@@ -17,7 +17,8 @@ from mitmproxy.test import taddons
     (False, "fe80::", False),
     (False, "2001:4860:4860::8888", True),
 ])
-def test_allowremote(allow_remote, ip, should_be_killed):
+@pytest.mark.asyncio
+async def test_allowremote(allow_remote, ip, should_be_killed):
     ar = allowremote.AllowRemote()
     up = proxyauth.ProxyAuth()
     with taddons.context(ar, up) as tctx:
@@ -28,7 +29,7 @@ def test_allowremote(allow_remote, ip, should_be_killed):
 
             ar.clientconnect(layer)
             if should_be_killed:
-                assert tctx.master.has_log("Client connection was killed", "warn")
+                assert await tctx.master.await_log("Client connection was killed", "warn")
             else:
                 assert tctx.master.logs == []
             tctx.master.clear()

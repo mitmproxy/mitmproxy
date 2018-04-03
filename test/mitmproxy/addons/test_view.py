@@ -159,7 +159,8 @@ def test_orders():
         assert v.order_options()
 
 
-def test_load(tmpdir):
+@pytest.mark.asyncio
+async def test_load(tmpdir):
     path = str(tmpdir.join("path"))
     v = view.View()
     with taddons.context() as tctx:
@@ -182,7 +183,7 @@ def test_load(tmpdir):
         with open(path, "wb") as f:
             f.write(b"invalidflows")
         v.load_file(path)
-        assert tctx.master.has_log("Invalid data format.")
+        assert await tctx.master.await_log("Invalid data format.")
 
 
 def test_resolve():

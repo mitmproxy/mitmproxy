@@ -1,3 +1,5 @@
+import pytest
+
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.test import taddons
@@ -31,14 +33,15 @@ class TestConcurrent(tservers.MasterTest):
                     return
             raise ValueError("Script never acked")
 
-    def test_concurrent_err(self):
+    @pytest.mark.asyncio
+    async def test_concurrent_err(self):
         with taddons.context() as tctx:
             tctx.script(
                 tutils.test_data.path(
                     "mitmproxy/data/addonscripts/concurrent_decorator_err.py"
                 )
             )
-            assert tctx.master.has_log("decorator not supported")
+            assert await tctx.master.await_log("decorator not supported")
 
     def test_concurrent_class(self):
             with taddons.context() as tctx:

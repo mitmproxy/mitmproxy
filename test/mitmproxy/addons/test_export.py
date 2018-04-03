@@ -125,17 +125,19 @@ def test_export(tmpdir):
     (IsADirectoryError, "Is a directory"),
     (FileNotFoundError, "No such file or directory")
 ])
-def test_export_open(exception, log_message, tmpdir):
+@pytest.mark.asyncio
+async def test_export_open(exception, log_message, tmpdir):
     f = str(tmpdir.join("path"))
     e = export.Export()
     with taddons.context() as tctx:
         with mock.patch("mitmproxy.addons.export.open") as m:
             m.side_effect = exception(log_message)
             e.file("raw", tflow.tflow(resp=True), f)
-            assert tctx.master.has_log(log_message, level="error")
+            assert await tctx.master.await_log(log_message, level="error")
 
 
-def test_clip(tmpdir):
+@pytest.mark.asyncio
+async def test_clip(tmpdir):
     e = export.Export()
     with taddons.context() as tctx:
         with pytest.raises(exceptions.CommandError):
@@ -158,4 +160,4 @@ def test_clip(tmpdir):
                           "copy/paste mechanism for your system."
             pc.side_effect = pyperclip.PyperclipException(log_message)
             e.clip("raw", tflow.tflow(resp=True))
-            assert tctx.master.has_log(log_message, level="error")
+            assert await tctx.master.await_log(log_message, level="error")

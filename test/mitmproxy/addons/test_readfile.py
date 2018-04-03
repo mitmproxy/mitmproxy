@@ -55,26 +55,28 @@ class TestReadFile:
             with pytest.raises(exceptions.OptionsError):
                 rf.running()
 
-    @mock.patch('mitmproxy.master.Master.load_flow')
-    def test_corrupt(self, mck, corrupt_data):
+    @pytest.mark.asyncio
+    async def test_corrupt(self, corrupt_data):
         rf = readfile.ReadFile()
         with taddons.context(rf) as tctx:
-            with pytest.raises(exceptions.FlowReadException):
-                rf.load_flows(io.BytesIO(b"qibble"))
-            assert not mck.called
-            assert len(tctx.master.logs) == 1
+            with mock.patch('mitmproxy.master.Master.load_flow') as mck:
+                with pytest.raises(exceptions.FlowReadException):
+                    rf.load_flows(io.BytesIO(b"qibble"))
+                assert not mck.called
 
-            with pytest.raises(exceptions.FlowReadException):
-                rf.load_flows(corrupt_data)
-            assert mck.called
-            assert len(tctx.master.logs) == 2
+                tctx.master.clear()
+                with pytest.raises(exceptions.FlowReadException):
+                    rf.load_flows(corrupt_data)
+                assert await tctx.master.await_log("file corrupted")
+                assert mck.called
 
-    def test_nonexisting_file(self):
+    @pytest.mark.asyncio
+    async def test_nonexisting_file(self):
         rf = readfile.ReadFile()
         with taddons.context(rf) as tctx:
             with pytest.raises(exceptions.FlowReadException):
                 rf.load_flows_from_path("nonexistent")
-            assert len(tctx.master.logs) == 1
+            assert await tctx.master.await_log("nonexistent")
 
 
 class TestReadFileStdin:

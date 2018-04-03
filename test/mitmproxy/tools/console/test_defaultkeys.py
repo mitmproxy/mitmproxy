@@ -6,6 +6,7 @@ from mitmproxy import command
 
 import pytest
 
+
 @pytest.mark.asyncio
 async def test_commands_exist():
     km = keymap.Keymap(None)

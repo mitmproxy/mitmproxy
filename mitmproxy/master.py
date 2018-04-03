@@ -49,7 +49,6 @@ class Master:
             asyncio.get_event_loop(),
             self.should_exit,
         )
-        asyncio.ensure_future(self.tick())
 
         self.options = opts or options.Options()  # type: options.Options
         self.commands = command.CommandManager(self)

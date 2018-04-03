@@ -3,7 +3,6 @@ import typing
 import traceback
 import contextlib
 import sys
-import asyncio
 
 from mitmproxy import exceptions
 from mitmproxy import eventsequence

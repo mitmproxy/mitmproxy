@@ -71,7 +71,8 @@ def qr(f):
         return fp.read()
 
 
-def test_cut_clip():
+@pytest.mark.asyncio
+async def test_cut_clip():
     v = view.View()
     c = cut.Cut()
     with taddons.context() as tctx:
@@ -95,7 +96,7 @@ def test_cut_clip():
                           "copy/paste mechanism for your system."
             pc.side_effect = pyperclip.PyperclipException(log_message)
             tctx.command(c.clip, "@all", "request.method")
-            assert tctx.master.has_log(log_message, level="error")
+            assert await tctx.master.await_log(log_message, level="error")
 
 
 def test_cut_save(tmpdir):
@@ -125,7 +126,8 @@ def test_cut_save(tmpdir):
     (IsADirectoryError, "Is a directory"),
     (FileNotFoundError, "No such file or directory")
 ])
-def test_cut_save_open(exception, log_message, tmpdir):
+@pytest.mark.asyncio
+async def test_cut_save_open(exception, log_message, tmpdir):
     f = str(tmpdir.join("path"))
     v = view.View()
     c = cut.Cut()
@@ -136,7 +138,7 @@ def test_cut_save_open(exception, log_message, tmpdir):
         with mock.patch("mitmproxy.addons.cut.open") as m:
             m.side_effect = exception(log_message)
             tctx.command(c.save, "@all", "request.method", f)
-            assert tctx.master.has_log(log_message, level="error")
+            assert await tctx.master.await_log(log_message, level="error")
 
 
 def test_cut():

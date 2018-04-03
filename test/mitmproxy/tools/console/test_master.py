@@ -6,9 +6,8 @@ from ... import tservers
 
 import pytest
 
+
 @pytest.mark.asyncio
-
-
 class TestMaster(tservers.MasterTest):
     def mkmaster(self, **opts):
         o = options.Options(**opts)

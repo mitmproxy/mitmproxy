@@ -87,7 +87,8 @@ def test_defaults():
     assert addons.default_addons()
 
 
-def test_loader():
+@pytest.mark.asyncio
+async def test_loader():
     with taddons.context() as tctx:
         l = addonmanager.Loader(tctx.master)
         l.add_option("custom_option", bool, False, "help")
@@ -99,7 +100,7 @@ def test_loader():
 
         # a different signature should emit a warning though.
         l.add_option("custom_option", bool, True, "help")
-        assert tctx.master.has_log("Over-riding existing option")
+        assert await tctx.master.await_log("Over-riding existing option")
 
         def cmd(a: str) -> str:
             return "foo"
@@ -107,7 +108,8 @@ def test_loader():
         l.add_command("test.command", cmd)
 
 
-def test_simple():
+@pytest.mark.asyncio
+async def test_simple():
     with taddons.context(loadcore=False) as tctx:
         a = tctx.master.addons
 
@@ -121,14 +123,14 @@ def test_simple():
         assert not a.chain
 
         a.add(TAddon("one"))
-        a.trigger("done")
+        a.trigger("running")
         a.trigger("tick")
-        assert tctx.master.has_log("not callable")
+        assert await tctx.master.await_log("not callable")
 
         tctx.master.clear()
         a.get("one").tick = addons
         a.trigger("tick")
-        assert not tctx.master.has_log("not callable")
+        assert not await tctx.master.await_log("not callable")
 
         a.remove(a.get("one"))
         assert not a.get("one")

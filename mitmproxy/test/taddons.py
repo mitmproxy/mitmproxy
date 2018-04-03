@@ -1,4 +1,5 @@
 import contextlib
+import asyncio
 import sys
 
 import mitmproxy.master
@@ -40,6 +41,14 @@ class RecordingMaster(mitmproxy.master.Master):
                 continue
             if txt.lower() in i.msg.lower():
                 return True
+        return False
+
+    async def await_log(self, txt, level=None):
+        for i in range(20):
+            if self.has_log(txt, level):
+                return True
+            else:
+                await asyncio.sleep(0.1)
         return False
 
     def has_event(self, name):
