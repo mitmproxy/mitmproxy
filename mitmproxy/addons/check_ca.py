@@ -1,4 +1,5 @@
 import mitmproxy
+from mitmproxy import ctx
 
 
 class CheckCA:
@@ -15,10 +16,9 @@ class CheckCA:
         if has_ca:
             self.failed = mitmproxy.ctx.master.server.config.certstore.default_ca.has_expired()
             if self.failed:
-                mitmproxy.ctx.master.add_log(
+                ctx.log.warn(
                     "The mitmproxy certificate authority has expired!\n"
                     "Please delete all CA-related files in your ~/.mitmproxy folder.\n"
                     "The CA will be regenerated automatically after restarting mitmproxy.\n"
                     "Then make sure all your clients have the new CA installed.",
-                    "warn",
                 )

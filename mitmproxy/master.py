@@ -56,6 +56,7 @@ class Master:
         self._server = None
         self.first_tick = True
         self.waiting_flows = []
+        self.log = log.Log(self)
 
     @property
     def server(self):
@@ -73,7 +74,7 @@ class Master:
             yield
             return
         mitmproxy_ctx.master = self
-        mitmproxy_ctx.log = log.Log(self)
+        mitmproxy_ctx.log = self.log
         mitmproxy_ctx.options = self.options
         try:
             yield
@@ -81,12 +82,6 @@ class Master:
             mitmproxy_ctx.master = None
             mitmproxy_ctx.log = None
             mitmproxy_ctx.options = None
-
-    def add_log(self, e, level):
-        """
-            level: debug, alert, info, warn, error
-        """
-        self.addons.trigger("log", log.LogEntry(e, level))
 
     def start(self):
         self.should_exit.clear()

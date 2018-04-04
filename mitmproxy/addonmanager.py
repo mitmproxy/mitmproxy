@@ -41,8 +41,8 @@ class StreamLog:
     """
         A class for redirecting output using contextlib.
     """
-    def __init__(self, log):
-        self.log = log
+    def __init__(self, lg):
+        self.log = lg
 
     def write(self, buf):
         if buf.strip():
@@ -55,13 +55,7 @@ class StreamLog:
 
 @contextlib.contextmanager
 def safecall():
-    # resolve ctx.master here.
-    # we want to be threadsafe, and ctx.master may already be cleared when an addon prints().
-    channel = ctx.master.channel
-    # don't use master.add_log (which is not thread-safe). Instead, put on event queue.
-    stdout_replacement = StreamLog(
-        lambda message: channel("log", log.LogEntry(message, "warn"))
-    )
+    stdout_replacement = StreamLog(lambda message: ctx.log.warn(message))
     try:
         with contextlib.redirect_stdout(stdout_replacement):
             yield

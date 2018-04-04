@@ -45,7 +45,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f.id = "42"
         m.view.add([f])
         m.view.add([tflow.tflow(err=True)])
-        m.add_log("test log", "info")
+        m.log.info("test log")
         self.master = m
         self.view = m.view
         self.events = m.events
