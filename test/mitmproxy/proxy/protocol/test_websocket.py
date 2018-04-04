@@ -3,10 +3,10 @@ import os
 import struct
 import tempfile
 import traceback
+import time
 
 from mitmproxy import options
 from mitmproxy import exceptions
-from mitmproxy.addons import core
 from mitmproxy.http import HTTPFlow
 from mitmproxy.websocket import WebSocketFlow
 
@@ -52,9 +52,7 @@ class _WebSocketTestBase:
     @classmethod
     def setup_class(cls):
         cls.options = cls.get_options()
-        tmaster = tservers.TestMaster(cls.options)
-        tmaster.addons.add(core.Core())
-        cls.proxy = tservers.ProxyThread(tmaster)
+        cls.proxy = tservers.ProxyThread(tservers.TestMaster, cls.options)
         cls.proxy.start()
 
     @classmethod
@@ -163,7 +161,7 @@ class TestSimple(_WebSocketTest):
             def websocket_start(self, f):
                 f.stream = streaming
 
-        self.master.addons.add(Stream())
+        self.proxy.set_addons(Stream())
         self.setup_connection()
 
         frame = websockets.Frame.from_file(self.client.rfile)
@@ -204,7 +202,7 @@ class TestSimple(_WebSocketTest):
             def websocket_message(self, f):
                 f.messages[-1].content = "foo"
 
-        self.master.addons.add(Addon())
+        self.proxy.set_addons(Addon())
         self.setup_connection()
 
         frame = websockets.Frame.from_file(self.client.rfile)
@@ -235,7 +233,7 @@ class TestKillFlow(_WebSocketTest):
             def websocket_message(self, f):
                 f.kill()
 
-        self.master.addons.add(KillFlow())
+        self.proxy.set_addons(KillFlow())
         self.setup_connection()
 
         with pytest.raises(exceptions.TcpDisconnect):
@@ -329,7 +327,12 @@ class TestPong(_WebSocketTest):
 
         assert frame.header.opcode == websockets.OPCODE.PONG
         assert frame.payload == b'foobar'
-        assert self.master.has_log("Pong Received from server", "info")
+        for i in range(20):
+            if self.master.has_log("Pong Received from server", "info"):
+                break
+            time.sleep(0.01)
+        else:
+            raise AssertionError("No pong seen")
 
 
 class TestClose(_WebSocketTest):
@@ -405,7 +408,7 @@ class TestStreaming(_WebSocketTest):
             def websocket_start(self, f):
                 f.stream = streaming
 
-        self.master.addons.add(Stream())
+        self.proxy.set_addons(Stream())
         self.setup_connection()
 
         frame = None

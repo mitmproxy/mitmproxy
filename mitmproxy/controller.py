@@ -1,4 +1,5 @@
 import queue
+import asyncio
 from mitmproxy import exceptions
 
 
@@ -7,9 +8,10 @@ class Channel:
         The only way for the proxy server to communicate with the master
         is to use the channel it has been given.
     """
-    def __init__(self, q, should_exit):
-        self.q = q
+    def __init__(self, loop, q, should_exit):
+        self.loop = loop
         self.should_exit = should_exit
+        self._q = q
 
     def ask(self, mtype, m):
         """
@@ -20,18 +22,11 @@ class Channel:
             exceptions.Kill: All connections should be closed immediately.
         """
         m.reply = Reply(m)
-        self.q.put((mtype, m))
-        while not self.should_exit.is_set():
-            try:
-                # The timeout is here so we can handle a should_exit event.
-                g = m.reply.q.get(timeout=0.5)
-            except queue.Empty:  # pragma: no cover
-                continue
-            if g == exceptions.Kill:
-                raise exceptions.Kill()
-            return g
-        m.reply._state = "committed"  # suppress error message in __del__
-        raise exceptions.Kill()
+        asyncio.run_coroutine_threadsafe(self._q.put((mtype, m)), self.loop)
+        g = m.reply.q.get()
+        if g == exceptions.Kill:
+            raise exceptions.Kill()
+        return g
 
     def tell(self, mtype, m):
         """
@@ -39,7 +34,7 @@ class Channel:
         then return immediately.
         """
         m.reply = DummyReply()
-        self.q.put((mtype, m))
+        asyncio.run_coroutine_threadsafe(self._q.put((mtype, m)), self.loop)
 
 
 NO_REPLY = object()  # special object we can distinguish from a valid "None" reply.
@@ -52,7 +47,8 @@ class Reply:
     """
     def __init__(self, obj):
         self.obj = obj
-        self.q = queue.Queue()  # type: queue.Queue
+        # Spawn an event loop in the current thread
+        self.q = queue.Queue()
 
         self._state = "start"  # "start" -> "taken" -> "committed"
 

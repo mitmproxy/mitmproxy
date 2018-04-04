@@ -2,7 +2,9 @@ import os.path
 import threading
 import tempfile
 import sys
+import time
 from unittest import mock
+import asyncio
 
 import mitmproxy.platform
 from mitmproxy.addons import core
@@ -12,6 +14,7 @@ from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy import exceptions
 from mitmproxy import io
+from mitmproxy.utils import human
 import pathod.test
 import pathod.pathoc
 
@@ -62,11 +65,6 @@ class TestState:
         if f not in self.flows:
             self.flows.append(f)
 
-    # TODO: add TCP support?
-    # def tcp_start(self, f):
-    #     if f not in self.flows:
-    #         self.flows.append(f)
-
 
 class TestMaster(taddons.RecordingMaster):
 
@@ -90,13 +88,12 @@ class TestMaster(taddons.RecordingMaster):
 
 class ProxyThread(threading.Thread):
 
-    def __init__(self, tmaster):
+    def __init__(self, masterclass, options):
         threading.Thread.__init__(self)
-        self.tmaster = tmaster
-        self.name = "ProxyThread (%s:%s)" % (
-            tmaster.server.address[0],
-            tmaster.server.address[1],
-        )
+        self.masterclass = masterclass
+        self.options = options
+        self.tmaster = None
+        self.event_loop = None
         controller.should_exit = False
 
     @property
@@ -107,11 +104,27 @@ class ProxyThread(threading.Thread):
     def tlog(self):
         return self.tmaster.logs
 
-    def run(self):
-        self.tmaster.run()
-
     def shutdown(self):
         self.tmaster.shutdown()
+
+    def run(self):
+        self.event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.event_loop)
+        self.tmaster = self.masterclass(self.options)
+        self.tmaster.addons.add(core.Core())
+        self.name = "ProxyThread (%s)" % human.format_address(self.tmaster.server.address)
+        self.tmaster.run()
+
+    def set_addons(self, *addons):
+        self.tmaster.reset(addons)
+        self.tmaster.addons.trigger("tick")
+
+    def start(self):
+        super().start()
+        while True:
+            if self.tmaster:
+                break
+            time.sleep(0.01)
 
 
 class ProxyTestBase:
@@ -132,9 +145,7 @@ class ProxyTestBase:
             ssloptions=cls.ssloptions)
 
         cls.options = cls.get_options()
-        tmaster = cls.masterclass(cls.options)
-        tmaster.addons.add(core.Core())
-        cls.proxy = ProxyThread(tmaster)
+        cls.proxy = ProxyThread(cls.masterclass, cls.options)
         cls.proxy.start()
 
     @classmethod
@@ -172,6 +183,9 @@ class ProxyTestBase:
             add_upstream_certs_to_client_chain=cls.add_upstream_certs_to_client_chain,
             ssl_insecure=True,
         )
+
+    def set_addons(self, *addons):
+        self.proxy.set_addons(*addons)
 
     def addons(self):
         """
@@ -327,8 +341,7 @@ class SocksModeTest(HTTPProxyTest):
         return opts
 
 
-class ChainProxyTest(ProxyTestBase):
-
+class HTTPUpstreamProxyTest(HTTPProxyTest):
     """
     Chain three instances of mitmproxy in a row to test upstream mode.
     Proxy order is cls.proxy -> cls.chain[0] -> cls.chain[1]
@@ -344,11 +357,12 @@ class ChainProxyTest(ProxyTestBase):
         cls.chain = []
         for _ in range(cls.n):
             opts = cls.get_options()
-            tmaster = cls.masterclass(opts)
-            tmaster.addons.add(core.Core())
-            proxy = ProxyThread(tmaster)
+            proxy = ProxyThread(cls.masterclass, opts)
             proxy.start()
             cls.chain.insert(0, proxy)
+            while True:
+                if proxy.event_loop and proxy.event_loop.is_running():
+                    break
 
         super().setup_class()
 
@@ -372,7 +386,3 @@ class ChainProxyTest(ProxyTestBase):
                 mode="upstream:" + s,
             )
         return opts
-
-
-class HTTPUpstreamProxyTest(ChainProxyTest, HTTPProxyTest):
-    pass

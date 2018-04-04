@@ -1,3 +1,4 @@
+import asyncio
 import mailcap
 import mimetypes
 import os
@@ -182,12 +183,6 @@ class ConsoleMaster(master.Master):
         )
         self.ui.clear()
 
-    def ticker(self, *userdata):
-        changed = self.tick(timeout=0)
-        if changed:
-            self.loop.draw_screen()
-        self.loop.set_alarm_in(0.01, self.ticker)
-
     def inject_key(self, key):
         self.loop.process_input([key])
 
@@ -206,6 +201,7 @@ class ConsoleMaster(master.Master):
         )
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
+            event_loop=urwid.AsyncioEventLoop(loop=asyncio.get_event_loop()),
             screen = self.ui,
             handle_mouse = self.options.console_mouse,
         )
@@ -213,8 +209,6 @@ class ConsoleMaster(master.Master):
         self.window = window.Window(self)
         self.loop.widget = self.window
         self.window.refresh()
-
-        self.loop.set_alarm_in(0.01, self.ticker)
 
         if self.start_err:
             def display_err(*_):
@@ -236,6 +230,7 @@ class ConsoleMaster(master.Master):
         finally:
             sys.stderr.flush()
             super().shutdown()
+        self.addons.trigger("done")
 
     def shutdown(self):
         raise urwid.ExitMainLoop

@@ -21,14 +21,6 @@ from pathod import pathod
 from .. import tservers
 from ...conftest import skip_appveyor
 
-"""
-    Note that the choice of response code in these tests matters more than you
-    might think. libcurl treats a 304 response code differently from, say, a
-    200 response code - it will correctly terminate a 304 response with no
-    content-length header, whereas it will block forever waiting for content
-    for a 200 response.
-"""
-
 
 class CommonMixin:
 
@@ -284,10 +276,9 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
         s = script.Script(
             tutils.test_data.path("mitmproxy/data/addonscripts/stream_modify.py")
         )
-        self.master.addons.add(s)
+        self.set_addons(s)
         d = self.pathod('200:b"foo"')
         assert d.content == b"bar"
-        self.master.addons.remove(s)
 
     def test_first_line_rewrite(self):
         """
@@ -591,12 +582,11 @@ class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
         s = script.Script(
             tutils.test_data.path("mitmproxy/data/addonscripts/tcp_stream_modify.py")
         )
-        self.master.addons.add(s)
+        self.set_addons(s)
         self._tcpproxy_on()
         d = self.pathod('200:b"foo"')
         self._tcpproxy_off()
         assert d.content == b"bar"
-        self.master.addons.remove(s)
 
 
 class TestTransparentSSL(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
@@ -739,7 +729,7 @@ class TestRedirectRequest(tservers.HTTPProxyTest):
 
         This test verifies that the original destination is restored for the third request.
         """
-        self.proxy.tmaster.addons.add(ARedirectRequest(self.server2.port))
+        self.set_addons(ARedirectRequest(self.server2.port))
 
         p = self.pathoc()
         with p.connect():
@@ -778,7 +768,7 @@ class AStreamRequest:
 
 class TestStreamRequest(tservers.HTTPProxyTest):
     def test_stream_simple(self):
-        self.proxy.tmaster.addons.add(AStreamRequest())
+        self.set_addons(AStreamRequest())
         p = self.pathoc()
         with p.connect():
             # a request with 100k of data but without content-length
@@ -787,7 +777,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
             assert len(r1.content) > 100000
 
     def test_stream_multiple(self):
-        self.proxy.tmaster.addons.add(AStreamRequest())
+        self.set_addons(AStreamRequest())
         p = self.pathoc()
         with p.connect():
             # simple request with streaming turned on
@@ -799,7 +789,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
             assert r1.status_code == 201
 
     def test_stream_chunked(self):
-        self.proxy.tmaster.addons.add(AStreamRequest())
+        self.set_addons(AStreamRequest())
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.connect(("127.0.0.1", self.proxy.port))
         fconn = connection.makefile("rb")
@@ -828,7 +818,7 @@ class AFakeResponse:
 class TestFakeResponse(tservers.HTTPProxyTest):
 
     def test_fake(self):
-        self.proxy.tmaster.addons.add(AFakeResponse())
+        self.set_addons(AFakeResponse())
         f = self.pathod("200")
         assert "header-response" in f.headers
 
@@ -844,7 +834,7 @@ class TestServerConnect(tservers.HTTPProxyTest):
 
     def test_unnecessary_serverconnect(self):
         """A replayed/fake response with no upstream_cert should not connect to an upstream server"""
-        self.proxy.tmaster.addons.add(AFakeResponse())
+        self.set_addons(AFakeResponse())
         assert self.pathod("200").status_code == 200
         assert not self.proxy.tmaster.has_log("serverconnect")
 
@@ -857,7 +847,7 @@ class AKillRequest:
 
 class TestKillRequest(tservers.HTTPProxyTest):
     def test_kill(self):
-        self.proxy.tmaster.addons.add(AKillRequest())
+        self.set_addons(AKillRequest())
         with pytest.raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # Nothing should have hit the server
@@ -871,7 +861,7 @@ class AKillResponse:
 
 class TestKillResponse(tservers.HTTPProxyTest):
     def test_kill(self):
-        self.proxy.tmaster.addons.add(AKillResponse())
+        self.set_addons(AKillResponse())
         with pytest.raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # The server should have seen a request
@@ -894,7 +884,7 @@ class AIncomplete:
 
 class TestIncompleteResponse(tservers.HTTPProxyTest):
     def test_incomplete(self):
-        self.proxy.tmaster.addons.add(AIncomplete())
+        self.set_addons(AIncomplete())
         assert self.pathod("200").status_code == 502
 
 
@@ -977,7 +967,7 @@ class TestUpstreamProxySSL(
 
     def test_change_upstream_proxy_connect(self):
         # skip chain[0].
-        self.proxy.tmaster.addons.add(
+        self.set_addons(
             UpstreamProxyChanger(
                 ("127.0.0.1", self.chain[1].port)
             )
@@ -996,8 +986,8 @@ class TestUpstreamProxySSL(
 
         Client <- HTTPS -> Proxy <- HTTP -> Proxy <- HTTPS -> Server
         """
-        self.proxy.tmaster.addons.add(RewriteToHttp())
-        self.chain[1].tmaster.addons.add(RewriteToHttps())
+        self.set_addons(RewriteToHttp())
+        self.chain[1].set_addons(RewriteToHttps())
         p = self.pathoc()
         with p.connect():
             resp = p.request("get:'/p/418'")
@@ -1071,8 +1061,8 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
                     http1obj.server_conn.wfile.write(headers)
                     http1obj.server_conn.wfile.flush()
 
-        self.chain[0].tmaster.addons.add(RequestKiller([1, 2]))
-        self.chain[1].tmaster.addons.add(RequestKiller([1]))
+        self.chain[0].set_addons(RequestKiller([1, 2]))
+        self.chain[1].set_addons(RequestKiller([1]))
 
         p = self.pathoc()
         with p.connect():
