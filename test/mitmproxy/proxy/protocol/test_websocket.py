@@ -285,7 +285,8 @@ class TestPing(_WebSocketTest):
         wfile.flush()
         websockets.Frame.from_file(rfile)
 
-    def test_ping(self):
+    @pytest.mark.asyncio
+    async def test_ping(self):
         self.setup_connection()
 
         frame = websockets.Frame.from_file(self.client.rfile)
@@ -295,7 +296,7 @@ class TestPing(_WebSocketTest):
         assert frame.header.opcode == websockets.OPCODE.PING
         assert frame.payload == b''  # We don't send payload to other end
 
-        assert self.master.has_log("Pong Received from server", "info")
+        assert await self.master.await_log("Pong Received from server", "info")
 
 
 class TestPong(_WebSocketTest):

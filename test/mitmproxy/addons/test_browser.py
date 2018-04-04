@@ -13,9 +13,8 @@ async def test_browser():
         with taddons.context() as tctx:
             b.start()
             assert po.called
-            b.start()
 
-            assert not tctx.master.has_log("already running")
+            b.start()
             b.browser.poll = lambda: None
             b.start()
             assert await tctx.master.await_log("already running")

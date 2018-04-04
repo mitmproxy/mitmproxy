@@ -35,7 +35,7 @@ class RecordingMaster(mitmproxy.master.Master):
         for i in self.logs:
             print("%s: %s" % (i.level, i.msg), file=outf)
 
-    def has_log(self, txt, level=None):
+    def _has_log(self, txt, level=None):
         for i in self.logs:
             if level and i.level != level:
                 continue
@@ -45,7 +45,7 @@ class RecordingMaster(mitmproxy.master.Master):
 
     async def await_log(self, txt, level=None):
         for i in range(20):
-            if self.has_log(txt, level):
+            if self._has_log(txt, level):
                 return True
             else:
                 await asyncio.sleep(0.1)

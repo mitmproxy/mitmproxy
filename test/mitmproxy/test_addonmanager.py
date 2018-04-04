@@ -1,4 +1,6 @@
 import pytest
+from unittest import mock
+
 
 from mitmproxy import addons
 from mitmproxy import addonmanager
@@ -90,22 +92,23 @@ def test_defaults():
 @pytest.mark.asyncio
 async def test_loader():
     with taddons.context() as tctx:
-        l = addonmanager.Loader(tctx.master)
-        l.add_option("custom_option", bool, False, "help")
-        assert "custom_option" in l.master.options
+        with mock.patch("mitmproxy.ctx.log.warn") as warn:
+            l = addonmanager.Loader(tctx.master)
+            l.add_option("custom_option", bool, False, "help")
+            assert "custom_option" in l.master.options
 
-        # calling this again with the same signature is a no-op.
-        l.add_option("custom_option", bool, False, "help")
-        assert not tctx.master.has_log("Over-riding existing option")
+            # calling this again with the same signature is a no-op.
+            l.add_option("custom_option", bool, False, "help")
+            assert not warn.called
 
-        # a different signature should emit a warning though.
-        l.add_option("custom_option", bool, True, "help")
-        assert await tctx.master.await_log("Over-riding existing option")
+            # a different signature should emit a warning though.
+            l.add_option("custom_option", bool, True, "help")
+            assert warn.called
 
-        def cmd(a: str) -> str:
-            return "foo"
+            def cmd(a: str) -> str:
+                return "foo"
 
-        l.add_command("test.command", cmd)
+            l.add_command("test.command", cmd)
 
 
 @pytest.mark.asyncio

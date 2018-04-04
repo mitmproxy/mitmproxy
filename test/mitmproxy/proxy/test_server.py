@@ -1,3 +1,4 @@
+import asyncio
 import os
 import socket
 import time
@@ -234,13 +235,14 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
             assert p.request(req)
             assert p.request(req)
 
-    def test_get_connection_switching(self):
+    @pytest.mark.asyncio
+    async def test_get_connection_switching(self):
         req = "get:'%s/p/200:b@1'"
         p = self.pathoc()
         with p.connect():
             assert p.request(req % self.server.urlbase)
             assert p.request(req % self.server2.urlbase)
-        assert self.proxy.tmaster.has_log("serverdisconnect")
+        assert await self.proxy.tmaster.await_log("serverdisconnect")
 
     def test_blank_leading_line(self):
         p = self.pathoc()
@@ -443,13 +445,14 @@ class TestReverse(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
         req = self.master.state.flows[0].request
         assert req.host_header == "127.0.0.1"
 
-    def test_selfconnection(self):
+    @pytest.mark.asyncio
+    async def test_selfconnection(self):
         self.options.mode = "reverse:http://127.0.0.1:0"
 
         p = self.pathoc()
         with p.connect():
             p.request("get:/")
-        assert self.master.has_log("The proxy shall not connect to itself.")
+        assert await self.master.await_log("The proxy shall not connect to itself.")
 
 
 class TestReverseSSL(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
@@ -549,7 +552,6 @@ class TestHttps2Http(tservers.ReverseProxyTest):
         p = self.pathoc(ssl=True, sni="example.com")
         with p.connect():
             assert p.request("get:'/p/200'").status_code == 200
-            assert not self.proxy.tmaster.has_log("error in handle_sni")
 
     def test_http(self):
         p = self.pathoc(ssl=False)
@@ -814,11 +816,13 @@ class TestServerConnect(tservers.HTTPProxyTest):
         opts.upstream_cert = False
         return opts
 
-    def test_unnecessary_serverconnect(self):
+    @pytest.mark.asyncio
+    async def test_unnecessary_serverconnect(self):
         """A replayed/fake response with no upstream_cert should not connect to an upstream server"""
         self.set_addons(AFakeResponse())
         assert self.pathod("200").status_code == 200
-        assert not self.proxy.tmaster.has_log("serverconnect")
+        asyncio.sleep(0.1)
+        assert not self.proxy.tmaster._has_log("serverconnect")
 
 
 class AKillRequest:
