@@ -1,5 +1,4 @@
 import threading
-import contextlib
 import asyncio
 import logging
 
@@ -58,6 +57,10 @@ class Master:
         self.waiting_flows = []
         self.log = log.Log(self)
 
+        mitmproxy_ctx.master = self
+        mitmproxy_ctx.log = self.log
+        mitmproxy_ctx.options = self.options
+
     @property
     def server(self):
         return self._server
@@ -66,22 +69,6 @@ class Master:
     def server(self, server):
         server.set_channel(self.channel)
         self._server = server
-
-    @contextlib.contextmanager
-    def handlecontext(self):
-        # Handlecontexts also have to nest - leave cleanup to the outermost
-        if mitmproxy_ctx.master:
-            yield
-            return
-        mitmproxy_ctx.master = self
-        mitmproxy_ctx.log = self.log
-        mitmproxy_ctx.options = self.options
-        try:
-            yield
-        finally:
-            mitmproxy_ctx.master = None
-            mitmproxy_ctx.log = None
-            mitmproxy_ctx.options = None
 
     def start(self):
         self.should_exit.clear()

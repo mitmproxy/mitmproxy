@@ -74,7 +74,6 @@ class context:
             options
         )
         self.options = self.master.options
-        self.wrapped = None
 
         if loadcore:
             self.master.addons.add(core.Core())
@@ -82,20 +81,10 @@ class context:
         for a in addons:
             self.master.addons.add(a)
 
-    def ctx(self):
-        """
-            Returns a new handler context.
-        """
-        return self.master.handlecontext()
-
     def __enter__(self):
-        self.wrapped = self.ctx()
-        self.wrapped.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.wrapped.__exit__(exc_type, exc_value, traceback)
-        self.wrapped = None
         return False
 
     @contextlib.contextmanager

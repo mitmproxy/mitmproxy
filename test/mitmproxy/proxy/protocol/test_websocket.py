@@ -47,6 +47,7 @@ class _WebSocketServerBase(net_tservers.ServerTestBase):
 
 
 class _WebSocketTestBase:
+    client = None
 
     @classmethod
     def setup_class(cls):
