@@ -56,3 +56,4 @@ def test_format_address():
     assert human.format_address(("example.com", "54010")) == "example.com:54010"
     assert human.format_address(("::", "8080")) == "*:8080"
     assert human.format_address(("0.0.0.0", "8080")) == "*:8080"
+    assert human.format_address(None) == "<no address>"

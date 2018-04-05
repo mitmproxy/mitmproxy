@@ -4,6 +4,10 @@ from mitmproxy.addons import onboarding
 from mitmproxy.test import taddons
 from .. import tservers
 
+import asyncio
+import tornado.platform.asyncio
+asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())
+
 
 class TestApp(tservers.HTTPProxyTest):
     def addons(self):
