@@ -5,6 +5,7 @@ import time
 import sys
 import types
 import typing
+import traceback
 
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
@@ -36,6 +37,25 @@ def load_script(path: str) -> types.ModuleType:
         sys.path[:] = oldpath
 
 
+def script_error_handler(path, exc, msg="", tb=False):
+    """
+        Handles all the user's script errors with
+        an optional traceback
+    """
+    exception = type(exc).__name__
+    if msg:
+        exception = msg
+    lineno = ""
+    if hasattr(exc, "lineno"):
+        lineno = str(exc.lineno)
+    log_msg = "in Script {}:{} {}".format(path, lineno, exception)
+    if tb:
+        etype, value, tback = sys.exc_info()
+        tback = addonmanager.cut_traceback(tback, "invoke_addon")
+        log_msg = log_msg.join(["\n"] + traceback.format_exception(etype, value, tback))
+    ctx.log.error(log_msg)
+
+
 class Script:
     """
         An addon that manages a single script.
@@ -53,7 +73,7 @@ class Script:
         self.last_load = 0
         self.last_mtime = 0
         if not os.path.isfile(self.fullpath):
-            raise exceptions.OptionsError('No such script: "%s"' % self.fullpath)
+            raise exceptions.OptionsError('No such script')
 
     @property
     def addons(self):
@@ -128,13 +148,13 @@ class ScriptLoader:
                 for evt, arg in eventsequence.iterate(f):
                     ctx.master.addons.invoke_addon(s, evt, arg)
         except exceptions.OptionsError as e:
-            raise exceptions.CommandError("Error running script: %s" % e) from e
+            script_error_handler(path, e, msg=str(e))
 
     def configure(self, updated):
         if "scripts" in updated:
             for s in ctx.options.scripts:
                 if ctx.options.scripts.count(s) > 1:
-                    raise exceptions.OptionsError("Duplicate script: %s" % s)
+                    raise exceptions.OptionsError("Duplicate script")
 
             for a in self.addons[:]:
                 if a.path not in ctx.options.scripts:

@@ -183,9 +183,9 @@ class TestScriptLoader:
 
     def test_script_run_nonexistent(self):
         sc = script.ScriptLoader()
-        with taddons.context(sc):
-            with pytest.raises(exceptions.CommandError):
-                sc.script_run([tflow.tflow(resp=True)], "/")
+        with taddons.context(sc) as tctx:
+            sc.script_run([tflow.tflow(resp=True)], "/")
+            tctx.master.has_log("/: No such script")
 
     def test_simple(self):
         sc = script.ScriptLoader()
@@ -242,6 +242,18 @@ class TestScriptLoader:
             # on the next tick we should not fail however.
             tctx.invoke(sc, "tick")
             assert len(tctx.master.addons) == 1
+
+    def test_script_error_handler(self):
+        path = "/sample/path/example.py"
+        exc = SyntaxError
+        msg = "Error raised"
+        tb = True
+        with taddons.context() as tctx:
+            script.script_error_handler(path, exc, msg, tb)
+            assert tctx.master.has_log("/sample/path/example.py")
+            assert tctx.master.has_log("Error raised")
+            assert tctx.master.has_log("lineno")
+            assert tctx.master.has_log("NoneType")
 
     def test_order(self):
         rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder")
