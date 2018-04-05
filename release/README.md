@@ -40,6 +40,11 @@ Make sure run all these steps on the correct branch you want to create a new rel
   - `git push --tags` to push the new tag
   - Check the build details page again
 
+## Website
+ - Update version here: https://github.com/mitmproxy/www/blob/master/src/config.toml
+ - `./build && ./upload-test`
+ - If everything looks alright: `./upload-prod`
+
 ## Prepare for next release
 
  - Last but not least, bump the version on master in [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) for major releases.
