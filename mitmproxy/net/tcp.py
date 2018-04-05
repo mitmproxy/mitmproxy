@@ -547,7 +547,6 @@ class Counter:
 
 
 class TCPServer:
-    request_queue_size = 20
 
     def __init__(self, address):
         self.address = address
@@ -580,7 +579,7 @@ class TCPServer:
             self.socket.bind(self.address)
 
         self.address = self.socket.getsockname()
-        self.socket.listen(self.request_queue_size)
+        self.socket.listen()
         self.handler_counter = Counter()
 
     def connection_thread(self, connection, client_address):
