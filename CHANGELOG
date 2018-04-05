@@ -1,6 +1,18 @@
-23 February 2018: mitmproxy 3.0
+05 April 2018: mitmproxy 3.0.4
 
-  * Fix a quote-related issue affecting the mitmproxy console command prompt
+  * Fix an issue that caused mitmproxy to not retry HTTP requests on timeout.
+
+  * Various other fixes (@kira0204, @fenilgandhi, @tran-tien-dat, @smonami, 
+  @luzpaz, @fristonio, @kajojify, @Oliver-Fish, @hcbarry, @jplochocki, @MikeShi42,
+  @ghillu, @emilstahl)
+
+25 February 2018: mitmproxy 3.0.3
+
+  * Fix an issue that caused mitmproxy to lose keyboard control after spawning an external editor.
+
+23 February 2018: mitmproxy 3.0.1
+
+  * Fix a quote-related issue affecting the mitmproxy console command prompt.
 
 22 February 2018: mitmproxy 3.0
 
