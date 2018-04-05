@@ -333,8 +333,20 @@ class HttpLayer(base.Layer):
                     f.request.scheme
                 )
 
-                try:
+                def get_response():
                     self.send_request_headers(f.request)
+                    if f.request.stream:
+                        chunks = self.read_request_body(f.request)
+                        if callable(f.request.stream):
+                            chunks = f.request.stream(chunks)
+                        self.send_request_body(f.request, chunks)
+                    else:
+                        self.send_request_body(f.request, [f.request.data.content])
+
+                    f.response = self.read_response_headers()
+
+                try:
+                    get_response()
                 except exceptions.NetlibException as e:
                     self.log(
                         "server communication error: %s" % repr(e),
@@ -357,22 +369,17 @@ class HttpLayer(base.Layer):
                         raise exceptions.ProtocolException(
                             "First and only attempt to get response via HTTP2 failed."
                         )
+                    elif f.request.stream:
+                        # We may have already consumed some request chunks already,
+                        # so all we can do is signal downstream that upstream closed the connection.
+                        self.send_error_response(408, "Request Timeout")
+                        f.error = flow.Error(repr(e))
+                        self.channel.ask("error", f)
+                        return False
 
                     self.disconnect()
                     self.connect()
-                    self.send_request_headers(f.request)
-
-                # This is taken out of the try except block because when streaming
-                # we can't send the request body while retrying as the generator gets exhausted
-                if f.request.stream:
-                    chunks = self.read_request_body(f.request)
-                    if callable(f.request.stream):
-                        chunks = f.request.stream(chunks)
-                    self.send_request_body(f.request, chunks)
-                else:
-                    self.send_request_body(f.request, [f.request.data.content])
-
-                f.response = self.read_response_headers()
+                    get_response()
 
                 # call the appropriate script hook - this is an opportunity for
                 # an inline script to set f.stream = True
