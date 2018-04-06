@@ -140,6 +140,7 @@ class AddonManager:
         """
         for i in self.chain:
             self.remove(i)
+        self.lookup = {}
 
     def get(self, name):
         """

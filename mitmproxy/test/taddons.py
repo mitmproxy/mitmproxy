@@ -123,11 +123,7 @@ class context:
         """
             Loads a script from path, and returns the enclosed addon.
         """
-        sc = script.Script(path)
-        loader = addonmanager.Loader(self.master)
-        self.master.addons.invoke_addon(sc, "load", loader)
-        self.configure(sc)
-        self.master.addons.invoke_addon(sc, "tick")
+        sc = script.Script(path, False)
         return sc.addons[0] if sc.addons else None
 
     def invoke(self, addon, event, *args, **kwargs):

@@ -256,11 +256,15 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
             resp = p.request("get:'http://foo':h':foo'='bar'")
         assert resp.status_code == 400
 
-    def test_stream_modify(self):
+    @pytest.mark.asyncio
+    async def test_stream_modify(self):
         s = script.Script(
-            tutils.test_data.path("mitmproxy/data/addonscripts/stream_modify.py")
+            tutils.test_data.path("mitmproxy/data/addonscripts/stream_modify.py"),
+            False,
         )
         self.set_addons(s)
+        await self.master.await_log("stream_modify running")
+
         d = self.pathod('200:b"foo"')
         assert d.content == b"bar"
 
@@ -564,7 +568,8 @@ class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
 
     def test_tcp_stream_modify(self):
         s = script.Script(
-            tutils.test_data.path("mitmproxy/data/addonscripts/tcp_stream_modify.py")
+            tutils.test_data.path("mitmproxy/data/addonscripts/tcp_stream_modify.py"),
+            False,
         )
         self.set_addons(s)
         self._tcpproxy_on()

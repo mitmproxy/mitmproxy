@@ -1,3 +1,4 @@
+from mitmproxy import ctx
 event_log = []
 
 
@@ -7,6 +8,7 @@ class Addon:
         return event_log
 
     def load(self, opts):
+        ctx.log.info("addon running")
         event_log.append("addonload")
 
     def configure(self, updated):

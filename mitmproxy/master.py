@@ -94,19 +94,14 @@ class Master:
         exc = None
         try:
             loop()
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             exc = traceback.format_exc()
         finally:
-            if not self.should_exit.is_set():
+            if not self.should_exit.is_set():  # pragma: no cover
                 self.shutdown()
-            pending = asyncio.Task.all_tasks()
             loop = asyncio.get_event_loop()
-            try:
-                loop.run_until_complete(asyncio.gather(*pending))
-            except Exception as e:
-                # When we exit with an error, shutdown might not happen cleanly,
-                # and we can get exceptions here caused by pending Futures.
-                pass
+            for p in asyncio.Task.all_tasks():
+                p.cancel()
             loop.close()
 
         if exc:  # pragma: no cover
@@ -122,6 +117,7 @@ class Master:
         self.run_loop(loop.run_forever)
 
     async def _shutdown(self):
+        self.should_exit.set()
         if self.server:
             self.server.shutdown()
         loop = asyncio.get_event_loop()
