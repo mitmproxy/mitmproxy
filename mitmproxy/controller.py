@@ -21,26 +21,28 @@ class Channel:
         Raises:
             exceptions.Kill: All connections should be closed immediately.
         """
-        m.reply = Reply(m)
-        asyncio.run_coroutine_threadsafe(
-            self.master.addons.handle_lifecycle(mtype, m),
-            self.loop,
-        )
-        g = m.reply.q.get()
-        if g == exceptions.Kill:
-            raise exceptions.Kill()
-        return g
+        if not self.should_exit.is_set():
+            m.reply = Reply(m)
+            asyncio.run_coroutine_threadsafe(
+                self.master.addons.handle_lifecycle(mtype, m),
+                self.loop,
+            )
+            g = m.reply.q.get()
+            if g == exceptions.Kill:
+                raise exceptions.Kill()
+            return g
 
     def tell(self, mtype, m):
         """
         Decorate a message with a dummy reply attribute, send it to the master,
         then return immediately.
         """
-        m.reply = DummyReply()
-        asyncio.run_coroutine_threadsafe(
-            self.master.addons.handle_lifecycle(mtype, m),
-            self.loop,
-        )
+        if not self.should_exit.is_set():
+            m.reply = DummyReply()
+            asyncio.run_coroutine_threadsafe(
+                self.master.addons.handle_lifecycle(mtype, m),
+                self.loop,
+            )
 
 
 NO_REPLY = object()  # special object we can distinguish from a valid "None" reply.
