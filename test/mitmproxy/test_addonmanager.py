@@ -1,4 +1,6 @@
 import pytest
+from unittest import mock
+
 
 from mitmproxy import addons
 from mitmproxy import addonmanager
@@ -65,7 +67,8 @@ def test_halt():
     assert end.custom_called
 
 
-def test_lifecycle():
+@pytest.mark.asyncio
+async def test_lifecycle():
     o = options.Options()
     m = master.Master(o)
     a = addonmanager.AddonManager(m)
@@ -77,7 +80,7 @@ def test_lifecycle():
         a.remove(TAddon("nonexistent"))
 
     f = tflow.tflow()
-    a.handle_lifecycle("request", f)
+    await a.handle_lifecycle("request", f)
 
     a._configure_all(o, o.keys())
 
@@ -86,27 +89,30 @@ def test_defaults():
     assert addons.default_addons()
 
 
-def test_loader():
+@pytest.mark.asyncio
+async def test_loader():
     with taddons.context() as tctx:
-        l = addonmanager.Loader(tctx.master)
-        l.add_option("custom_option", bool, False, "help")
-        assert "custom_option" in l.master.options
+        with mock.patch("mitmproxy.ctx.log.warn") as warn:
+            l = addonmanager.Loader(tctx.master)
+            l.add_option("custom_option", bool, False, "help")
+            assert "custom_option" in l.master.options
 
-        # calling this again with the same signature is a no-op.
-        l.add_option("custom_option", bool, False, "help")
-        assert not tctx.master.has_log("Over-riding existing option")
+            # calling this again with the same signature is a no-op.
+            l.add_option("custom_option", bool, False, "help")
+            assert not warn.called
 
-        # a different signature should emit a warning though.
-        l.add_option("custom_option", bool, True, "help")
-        assert tctx.master.has_log("Over-riding existing option")
+            # a different signature should emit a warning though.
+            l.add_option("custom_option", bool, True, "help")
+            assert warn.called
 
-        def cmd(a: str) -> str:
-            return "foo"
+            def cmd(a: str) -> str:
+                return "foo"
 
-        l.add_command("test.command", cmd)
+            l.add_command("test.command", cmd)
 
 
-def test_simple():
+@pytest.mark.asyncio
+async def test_simple():
     with taddons.context(loadcore=False) as tctx:
         a = tctx.master.addons
 
@@ -120,14 +126,14 @@ def test_simple():
         assert not a.chain
 
         a.add(TAddon("one"))
-        a.trigger("done")
+        a.trigger("running")
         a.trigger("tick")
-        assert tctx.master.has_log("not callable")
+        assert await tctx.master.await_log("not callable")
 
         tctx.master.clear()
         a.get("one").tick = addons
         a.trigger("tick")
-        assert not tctx.master.has_log("not callable")
+        assert not await tctx.master.await_log("not callable")
 
         a.remove(a.get("one"))
         assert not a.get("one")

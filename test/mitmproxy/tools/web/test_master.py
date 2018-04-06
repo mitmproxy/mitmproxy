@@ -1,6 +1,8 @@
 from mitmproxy.tools.web import master
 from mitmproxy import options
 
+import pytest
+
 from ... import tservers
 
 
@@ -9,8 +11,9 @@ class TestWebMaster(tservers.MasterTest):
         o = options.Options(**opts)
         return master.WebMaster(o)
 
-    def test_basic(self):
+    @pytest.mark.asyncio
+    async def test_basic(self):
         m = self.mkmaster()
         for i in (1, 2, 3):
-            self.dummy_cycle(m, 1, b"")
+            await self.dummy_cycle(m, 1, b"")
             assert len(m.view) == i

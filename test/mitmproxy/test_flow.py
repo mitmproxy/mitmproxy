@@ -2,7 +2,7 @@ import io
 from unittest import mock
 import pytest
 
-from mitmproxy.test import tflow, tutils
+from mitmproxy.test import tflow, tutils, taddons
 import mitmproxy.io
 from mitmproxy import flowfilter
 from mitmproxy import options
@@ -97,30 +97,30 @@ class TestSerialize:
 
 
 class TestFlowMaster:
-    def test_load_http_flow_reverse(self):
-        s = tservers.TestState()
+    @pytest.mark.asyncio
+    async def test_load_http_flow_reverse(self):
         opts = options.Options(
             mode="reverse:https://use-this-domain"
         )
-        fm = master.Master(opts)
-        fm.addons.add(s)
-        f = tflow.tflow(resp=True)
-        fm.load_flow(f)
-        assert s.flows[0].request.host == "use-this-domain"
+        s = tservers.TestState()
+        with taddons.context(s, options=opts) as ctx:
+            f = tflow.tflow(resp=True)
+            await ctx.master.load_flow(f)
+            assert s.flows[0].request.host == "use-this-domain"
 
-    def test_load_websocket_flow(self):
-        s = tservers.TestState()
+    @pytest.mark.asyncio
+    async def test_load_websocket_flow(self):
         opts = options.Options(
             mode="reverse:https://use-this-domain"
         )
-        fm = master.Master(opts)
-        fm.addons.add(s)
-        f = tflow.twebsocketflow()
-        fm.load_flow(f.handshake_flow)
-        fm.load_flow(f)
-        assert s.flows[0].request.host == "use-this-domain"
-        assert s.flows[1].handshake_flow == f.handshake_flow
-        assert len(s.flows[1].messages) == len(f.messages)
+        s = tservers.TestState()
+        with taddons.context(s, options=opts) as ctx:
+            f = tflow.twebsocketflow()
+            await ctx.master.load_flow(f.handshake_flow)
+            await ctx.master.load_flow(f)
+            assert s.flows[0].request.host == "use-this-domain"
+            assert s.flows[1].handshake_flow == f.handshake_flow
+            assert len(s.flows[1].messages) == len(f.messages)
 
     def test_replay(self):
         opts = options.Options()
@@ -150,31 +150,27 @@ class TestFlowMaster:
             assert rt.f.request.http_version == "HTTP/1.1"
             assert ":authority" not in rt.f.request.headers
 
-    def test_all(self):
+    @pytest.mark.asyncio
+    async def test_all(self):
+        opts = options.Options(
+            mode="reverse:https://use-this-domain"
+        )
         s = tservers.TestState()
-        fm = master.Master(None)
-        fm.addons.add(s)
-        f = tflow.tflow(req=None)
-        fm.addons.handle_lifecycle("clientconnect", f.client_conn)
-        f.request = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
-        fm.addons.handle_lifecycle("request", f)
-        assert len(s.flows) == 1
+        with taddons.context(s, options=opts) as ctx:
+            f = tflow.tflow(req=None)
+            await ctx.master.addons.handle_lifecycle("clientconnect", f.client_conn)
+            f.request = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
+            await ctx.master.addons.handle_lifecycle("request", f)
+            assert len(s.flows) == 1
 
-        f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
-        fm.addons.handle_lifecycle("response", f)
-        assert len(s.flows) == 1
+            f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
+            await ctx.master.addons.handle_lifecycle("response", f)
+            assert len(s.flows) == 1
 
-        fm.addons.handle_lifecycle("clientdisconnect", f.client_conn)
+            await ctx.master.addons.handle_lifecycle("clientdisconnect", f.client_conn)
 
-        f.error = flow.Error("msg")
-        fm.addons.handle_lifecycle("error", f)
-
-        # FIXME: This no longer works, because we consume on the main loop.
-        # fm.tell("foo", f)
-        # with pytest.raises(ControlException):
-        #     fm.addons.trigger("unknown")
-
-        fm.shutdown()
+            f.error = flow.Error("msg")
+            await ctx.master.addons.handle_lifecycle("error", f)
 
 
 class TestError:

@@ -1,4 +1,5 @@
 import contextlib
+import asyncio
 import sys
 
 import mitmproxy.master
@@ -34,12 +35,20 @@ class RecordingMaster(mitmproxy.master.Master):
         for i in self.logs:
             print("%s: %s" % (i.level, i.msg), file=outf)
 
-    def has_log(self, txt, level=None):
+    def _has_log(self, txt, level=None):
         for i in self.logs:
             if level and i.level != level:
                 continue
             if txt.lower() in i.msg.lower():
                 return True
+        return False
+
+    async def await_log(self, txt, level=None):
+        for i in range(20):
+            if self._has_log(txt, level):
+                return True
+            else:
+                await asyncio.sleep(0.1)
         return False
 
     def has_event(self, name):
@@ -65,7 +74,6 @@ class context:
             options
         )
         self.options = self.master.options
-        self.wrapped = None
 
         if loadcore:
             self.master.addons.add(core.Core())
@@ -73,20 +81,10 @@ class context:
         for a in addons:
             self.master.addons.add(a)
 
-    def ctx(self):
-        """
-            Returns a new handler context.
-        """
-        return self.master.handlecontext()
-
     def __enter__(self):
-        self.wrapped = self.ctx()
-        self.wrapped.__enter__()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.wrapped.__exit__(exc_type, exc_value, traceback)
-        self.wrapped = None
         return False
 
     @contextlib.contextmanager

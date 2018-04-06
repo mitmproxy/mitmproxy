@@ -8,7 +8,6 @@ from mitmproxy import exceptions
 from mitmproxy import eventsequence
 from mitmproxy import controller
 from mitmproxy import flow
-from mitmproxy import log
 from . import ctx
 import pprint
 
@@ -38,11 +37,8 @@ def cut_traceback(tb, func_name):
 
 
 class StreamLog:
-    """
-        A class for redirecting output using contextlib.
-    """
-    def __init__(self, log):
-        self.log = log
+    def __init__(self, lg):
+        self.log = lg
 
     def write(self, buf):
         if buf.strip():
@@ -55,13 +51,7 @@ class StreamLog:
 
 @contextlib.contextmanager
 def safecall():
-    # resolve ctx.master here.
-    # we want to be threadsafe, and ctx.master may already be cleared when an addon prints().
-    tell = ctx.master.tell
-    # don't use master.add_log (which is not thread-safe). Instead, put on event queue.
-    stdout_replacement = StreamLog(
-        lambda message: tell("log", log.LogEntry(message, "warn"))
-    )
+    stdout_replacement = StreamLog(lambda message: ctx.log.warn(message))
     try:
         with contextlib.redirect_stdout(stdout_replacement):
             yield
@@ -189,9 +179,8 @@ class AddonManager:
             Add addons to the end of the chain, and run their load event.
             If any addon has sub-addons, they are registered.
         """
-        with self.master.handlecontext():
-            for i in addons:
-                self.chain.append(self.register(i))
+        for i in addons:
+            self.chain.append(self.register(i))
 
     def remove(self, addon):
         """
@@ -207,8 +196,7 @@ class AddonManager:
                 raise exceptions.AddonManagerError("No such addon: %s" % n)
             self.chain = [i for i in self.chain if i is not a]
             del self.lookup[_get_name(a)]
-        with self.master.handlecontext():
-            self.invoke_addon(a, "done")
+        self.invoke_addon(a, "done")
 
     def __len__(self):
         return len(self.chain)
@@ -220,7 +208,7 @@ class AddonManager:
         name = _get_name(item)
         return name in self.lookup
 
-    def handle_lifecycle(self, name, message):
+    async def handle_lifecycle(self, name, message):
         """
             Handle a lifecycle event.
         """
@@ -251,8 +239,7 @@ class AddonManager:
 
     def invoke_addon(self, addon, name, *args, **kwargs):
         """
-            Invoke an event on an addon and all its children. This method must
-            run within an established handler context.
+            Invoke an event on an addon and all its children.
         """
         if name not in eventsequence.Events:
             name = "event_" + name
@@ -274,12 +261,11 @@ class AddonManager:
 
     def trigger(self, name, *args, **kwargs):
         """
-            Establish a handler context and trigger an event across all addons
+            Trigger an event across all addons.
         """
-        with self.master.handlecontext():
-            for i in self.chain:
-                try:
-                    with safecall():
-                        self.invoke_addon(i, name, *args, **kwargs)
-                except exceptions.AddonHalt:
-                    return
+        for i in self.chain:
+            try:
+                with safecall():
+                    self.invoke_addon(i, name, *args, **kwargs)
+            except exceptions.AddonHalt:
+                return

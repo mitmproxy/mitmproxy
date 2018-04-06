@@ -114,17 +114,15 @@ class WebMaster(master.Master):
         iol.add_callback(self.start)
 
         web_url = "http://{}:{}/".format(self.options.web_iface, self.options.web_port)
-        self.add_log(
-            "Web   server listening at {}".format(web_url),
-            "info"
+        self.log.info(
+            "Web server listening at {}".format(web_url),
         )
 
         if self.options.web_open_browser:
             success = open_browser(web_url)
             if not success:
-                self.add_log(
+                self.log.info(
                     "No web browser found. Please open a browser and point it to {}".format(web_url),
-                    "info"
                 )
         try:
             iol.start()

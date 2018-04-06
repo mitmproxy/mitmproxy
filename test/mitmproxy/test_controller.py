@@ -5,12 +5,11 @@ import pytest
 from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy import controller
 from mitmproxy.test import taddons
+import mitmproxy.ctx
 
 
 @pytest.mark.asyncio
 async def test_master():
-    class TMsg:
-        pass
 
     class tAddon:
         def log(self, _):
@@ -20,12 +19,11 @@ async def test_master():
         assert not ctx.master.should_exit.is_set()
 
         async def test():
-            msg = TMsg()
-            msg.reply = controller.DummyReply()
-            await ctx.master.channel.tell("log", msg)
+            mitmproxy.ctx.log("test")
 
         asyncio.ensure_future(test())
-        assert not ctx.master.should_exit.is_set()
+        assert await ctx.master.await_log("test")
+        assert ctx.master.should_exit.is_set()
 
 
 class TestReply:

@@ -95,11 +95,7 @@ class Command:
             Call the command with a list of arguments. At this point, all
             arguments are strings.
         """
-        pargs = self.prepare_args(args)
-
-        with self.manager.master.handlecontext():
-            ret = self.func(*pargs)
-
+        ret = self.func(*self.prepare_args(args))
         if ret is None and self.returntype is None:
             return
         typ = mitmproxy.types.CommandTypes.get(self.returntype)

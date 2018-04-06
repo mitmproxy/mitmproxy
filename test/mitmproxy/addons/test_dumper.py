@@ -141,15 +141,16 @@ def test_echo_request_line():
 
 
 class TestContentView:
-    @mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__")
-    def test_contentview(self, view_auto):
-        view_auto.side_effect = exceptions.ContentViewException("")
-        sio = io.StringIO()
-        d = dumper.Dumper(sio)
-        with taddons.context(d) as ctx:
-            ctx.configure(d, flow_detail=4)
-            d.response(tflow.tflow())
-            assert ctx.master.has_log("content viewer failed")
+    @pytest.mark.asyncio
+    async def test_contentview(self):
+        with mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__") as va:
+            va.side_effect = exceptions.ContentViewException("")
+            sio = io.StringIO()
+            d = dumper.Dumper(sio)
+            with taddons.context(d) as ctx:
+                ctx.configure(d, flow_detail=4)
+                d.response(tflow.tflow())
+                assert await ctx.master.await_log("content viewer failed")
 
 
 def test_tcp():

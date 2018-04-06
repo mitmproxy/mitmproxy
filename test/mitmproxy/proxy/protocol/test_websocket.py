@@ -3,7 +3,6 @@ import os
 import struct
 import tempfile
 import traceback
-import time
 
 from mitmproxy import options
 from mitmproxy import exceptions
@@ -48,6 +47,7 @@ class _WebSocketServerBase(net_tservers.ServerTestBase):
 
 
 class _WebSocketTestBase:
+    client = None
 
     @classmethod
     def setup_class(cls):
@@ -286,7 +286,8 @@ class TestPing(_WebSocketTest):
         wfile.flush()
         websockets.Frame.from_file(rfile)
 
-    def test_ping(self):
+    @pytest.mark.asyncio
+    async def test_ping(self):
         self.setup_connection()
 
         frame = websockets.Frame.from_file(self.client.rfile)
@@ -296,7 +297,7 @@ class TestPing(_WebSocketTest):
         assert frame.header.opcode == websockets.OPCODE.PING
         assert frame.payload == b''  # We don't send payload to other end
 
-        assert self.master.has_log("Pong Received from server", "info")
+        assert await self.master.await_log("Pong Received from server", "info")
 
 
 class TestPong(_WebSocketTest):
@@ -314,7 +315,8 @@ class TestPong(_WebSocketTest):
         wfile.flush()
         websockets.Frame.from_file(rfile)
 
-    def test_pong(self):
+    @pytest.mark.asyncio
+    async def test_pong(self):
         self.setup_connection()
 
         self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.PING, payload=b'foobar')))
@@ -327,12 +329,7 @@ class TestPong(_WebSocketTest):
 
         assert frame.header.opcode == websockets.OPCODE.PONG
         assert frame.payload == b'foobar'
-        for i in range(20):
-            if self.master.has_log("Pong Received from server", "info"):
-                break
-            time.sleep(0.01)
-        else:
-            raise AssertionError("No pong seen")
+        assert await self.master.await_log("pong received")
 
 
 class TestClose(_WebSocketTest):

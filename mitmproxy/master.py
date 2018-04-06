@@ -1,5 +1,4 @@
 import threading
-import contextlib
 import asyncio
 import logging
 
@@ -43,15 +42,12 @@ class Master:
         The master handles mitmproxy's main event loop.
     """
     def __init__(self, opts):
-        self.event_queue = asyncio.Queue()
         self.should_exit = threading.Event()
         self.channel = controller.Channel(
+            self,
             asyncio.get_event_loop(),
-            self.event_queue,
             self.should_exit,
         )
-        asyncio.ensure_future(self.main())
-        asyncio.ensure_future(self.tick())
 
         self.options = opts or options.Options()  # type: options.Options
         self.commands = command.CommandManager(self)
@@ -59,6 +55,11 @@ class Master:
         self._server = None
         self.first_tick = True
         self.waiting_flows = []
+        self.log = log.Log(self)
+
+        mitmproxy_ctx.master = self
+        mitmproxy_ctx.log = self.log
+        mitmproxy_ctx.options = self.options
 
     @property
     def server(self):
@@ -69,48 +70,10 @@ class Master:
         server.set_channel(self.channel)
         self._server = server
 
-    @contextlib.contextmanager
-    def handlecontext(self):
-        # Handlecontexts also have to nest - leave cleanup to the outermost
-        if mitmproxy_ctx.master:
-            yield
-            return
-        mitmproxy_ctx.master = self
-        mitmproxy_ctx.log = log.Log(self)
-        mitmproxy_ctx.options = self.options
-        try:
-            yield
-        finally:
-            mitmproxy_ctx.master = None
-            mitmproxy_ctx.log = None
-            mitmproxy_ctx.options = None
-
-    # This is a vestigial function that will go away in a refactor very soon
-    def tell(self, mtype, m):  # pragma: no cover
-        m.reply = controller.DummyReply()
-        self.event_queue.put((mtype, m))
-
-    def add_log(self, e, level):
-        """
-            level: debug, alert, info, warn, error
-        """
-        self.addons.trigger("log", log.LogEntry(e, level))
-
     def start(self):
         self.should_exit.clear()
         if self.server:
             ServerThread(self.server).start()
-
-    async def main(self):
-        while True:
-            try:
-                mtype, obj = await self.event_queue.get()
-            except RuntimeError:
-                return
-            if mtype not in eventsequence.Events:  # pragma: no cover
-                raise exceptions.ControlException("Unknown event %s" % repr(mtype))
-            self.addons.handle_lifecycle(mtype, obj)
-            self.event_queue.task_done()
 
     async def tick(self):
         if self.first_tick:
@@ -150,7 +113,7 @@ class Master:
             f.request.host, f.request.port = upstream_spec.address
             f.request.scheme = upstream_spec.scheme
 
-    def load_flow(self, f):
+    async def load_flow(self, f):
         """
         Loads a flow and links websocket & handshake flows
         """
@@ -168,7 +131,7 @@ class Master:
 
         f.reply = controller.DummyReply()
         for e, o in eventsequence.iterate(f):
-            self.addons.handle_lifecycle(e, o)
+            await self.addons.handle_lifecycle(e, o)
 
     def replay_request(
             self,

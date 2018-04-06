@@ -79,7 +79,8 @@ class TestReplaceFile:
             r.request(f)
             assert f.request.content == b"bar"
 
-    def test_nonexistent(self, tmpdir):
+    @pytest.mark.asyncio
+    async def test_nonexistent(self, tmpdir):
         r = replace.Replace()
         with taddons.context(r) as tctx:
             with pytest.raises(Exception, match="Invalid file path"):
@@ -97,6 +98,5 @@ class TestReplaceFile:
             tmpfile.remove()
             f = tflow.tflow()
             f.request.content = b"foo"
-            assert not tctx.master.logs
             r.request(f)
-            assert tctx.master.logs
+            assert await tctx.master.await_log("could not read")

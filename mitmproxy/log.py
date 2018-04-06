@@ -1,3 +1,5 @@
+import asyncio
+
 
 class LogEntry:
     def __init__(self, msg, level):
@@ -54,7 +56,9 @@ class Log:
         self(txt, "error")
 
     def __call__(self, text, level="info"):
-        self.master.add_log(text, level)
+        asyncio.get_event_loop().call_soon(
+            self.master.addons.trigger, "log", LogEntry(text, level)
+        )
 
 
 LogTierOrder = [

@@ -8,12 +8,15 @@ from mitmproxy.test import taddons
 class TestCheckCA:
 
     @pytest.mark.parametrize('expired', [False, True])
-    def test_check_ca(self, expired):
+    @pytest.mark.asyncio
+    async def test_check_ca(self, expired):
         msg = 'The mitmproxy certificate authority has expired!'
 
         with taddons.context() as tctx:
             tctx.master.server = mock.MagicMock()
-            tctx.master.server.config.certstore.default_ca.has_expired = mock.MagicMock(return_value=expired)
+            tctx.master.server.config.certstore.default_ca.has_expired = mock.MagicMock(
+                return_value = expired
+            )
             a = check_ca.CheckCA()
             tctx.configure(a)
-            assert tctx.master.has_log(msg) is expired
+            assert await tctx.master.await_log(msg) == expired
