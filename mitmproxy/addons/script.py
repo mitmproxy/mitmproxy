@@ -25,6 +25,7 @@ def load_script(path: str) -> types.ModuleType:
     sys.modules.pop(fullname, None)
     oldpath = sys.path
     sys.path.insert(0, os.path.dirname(path))
+    m = None
     try:
         loader = importlib.machinery.SourceFileLoader(fullname, path)
         spec = importlib.util.spec_from_loader(fullname, loader=loader)
@@ -32,9 +33,11 @@ def load_script(path: str) -> types.ModuleType:
         loader.exec_module(m)
         if not getattr(m, "name", None):
             m.name = path  # type: ignore
-        return m
+    except Exception as e:
+        script_error_handler(path, e, msg=str(e))
     finally:
         sys.path[:] = oldpath
+        return m
 
 
 def script_error_handler(path, exc, msg="", tb=False):
@@ -48,11 +51,11 @@ def script_error_handler(path, exc, msg="", tb=False):
     lineno = ""
     if hasattr(exc, "lineno"):
         lineno = str(exc.lineno)
-    log_msg = "in Script {}:{} {}".format(path, lineno, exception)
+    log_msg = "in script {}:{} {}".format(path, lineno, exception)
     if tb:
         etype, value, tback = sys.exc_info()
         tback = addonmanager.cut_traceback(tback, "invoke_addon")
-        log_msg = log_msg.join(["\n"] + traceback.format_exception(etype, value, tback))
+        log_msg = log_msg + "\n" + "".join(traceback.format_exception(etype, value, tback))
     ctx.log.error(log_msg)
 
 
