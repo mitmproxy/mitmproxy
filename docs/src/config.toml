@@ -4,7 +4,7 @@ title = "mitmproxy.org docs"
 theme = "mitmproxydocs"
 publishDir = "../public"
 RelativeURLs = true
-googleAnalytics = "UA-4150636"
+googleAnalytics = "UA-4150636-13"
 
 [indexes]
   tag = "tags"
