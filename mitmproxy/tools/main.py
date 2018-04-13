@@ -151,6 +151,7 @@ def mitmdump(args=None):  # pragma: no cover
             v = " ".join(args.filter_args)
             return dict(
                 save_stream_filter=v,
+                readfile_filter=v,
             )
         return {}
 

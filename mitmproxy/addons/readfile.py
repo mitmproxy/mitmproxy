@@ -5,6 +5,7 @@ import typing
 
 from mitmproxy import ctx
 from mitmproxy import exceptions
+from mitmproxy import flowfilter
 from mitmproxy import io
 
 
@@ -12,17 +13,37 @@ class ReadFile:
     """
         An addon that handles reading from file on startup.
     """
+    def __init__(self):
+        self.filter = None
+
     def load(self, loader):
         loader.add_option(
             "rfile", typing.Optional[str], None,
             "Read flows from file."
         )
+        loader.add_option(
+            "readfile_filter", typing.Optional[str], None,
+            "Read only matching flows."
+        )
+
+    def configure(self, updated):
+        if "readfile_filter" in updated:
+            filt = None
+            if ctx.options.readfile_filter:
+                filt = flowfilter.parse(ctx.options.readfile_filter)
+                if not filt:
+                    raise exceptions.OptionsError(
+                        "Invalid readfile filter: %s" % ctx.options.readfile_filter
+                    )
+            self.filter = filt
 
     async def load_flows(self, fo: typing.IO[bytes]) -> int:
         cnt = 0
         freader = io.FlowReader(fo)
         try:
             for flow in freader.stream():
+                if self.filter and not self.filter(flow):
+                    continue
                 await ctx.master.load_flow(flow)
                 cnt += 1
         except (IOError, exceptions.FlowReadException) as e:
@@ -59,7 +80,9 @@ class ReadFile:
 class ReadFileStdin(ReadFile):
     """Support the special case of "-" for reading from stdin"""
     async def load_flows_from_path(self, path: str) -> int:
-        if path == "-":
+        if path == "-":  # pragma: no cover
+            # Need to think about how to test this. This function is scheduled
+            # onto the event loop, where a sys.stdin mock has no effect.
             return await self.load_flows(sys.stdin.buffer)
         else:
             return await super().load_flows_from_path(path)
