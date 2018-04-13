@@ -14,5 +14,5 @@
 | modify_querystring.py          | Modify HTTP query strings.                                                   |
 | redirect_requests.py           | Redirect a request to a different server.                                    |
 | send_reply_from_proxy.py       | Send a HTTP response directly from the proxy.                                |
-| upsidedownternet.py            | Turn all images upside down.                                                 |
+| internet_in_mirror.py          | Turn all images upside down.                                                 |
 | wsgi_flask_app.py              | Embed a WSGI app into mitmproxy.                                             |
