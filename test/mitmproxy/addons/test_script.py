@@ -12,18 +12,27 @@ from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
 
-def test_load_script():
-    ns = script.load_script(
-        tutils.test_data.path(
-            "mitmproxy/data/addonscripts/recorder/recorder.py"
+@pytest.mark.asyncio
+async def test_load_script():
+    with taddons.context() as tctx:
+        ns = script.load_script(
+            tutils.test_data.path(
+                "mitmproxy/data/addonscripts/recorder/recorder.py"
+            )
         )
-    )
-    assert ns.addons
+        assert ns.addons
 
-    with pytest.raises(FileNotFoundError):
         script.load_script(
             "nonexistent"
         )
+        assert await tctx.master.await_log("No such file or directory")
+
+        script.load_script(
+            tutils.test_data.path(
+                "mitmproxy/data/addonscripts/recorder/error.py"
+            )
+        )
+        assert await tctx.master.await_log("invalid syntax")
 
 
 def test_load_fullname():
