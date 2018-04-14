@@ -191,7 +191,7 @@ class FilterHelp(RequestHandler):
 
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
-    connections = None  # type: set
+    connections: set = None
 
     def open(self):
         self.connections.add(self)
@@ -211,7 +211,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
 
 class ClientConnection(WebSocketEventBroadcaster):
-    connections = set()  # type: set
+    connections: set = set()
 
 
 class Flows(RequestHandler):

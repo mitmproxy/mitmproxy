@@ -77,7 +77,7 @@ class Export():
         """
         if fmt not in formats:
             raise exceptions.CommandError("No such export format: %s" % fmt)
-        func = formats[fmt]  # type: typing.Any
+        func: typing.Any = formats[fmt]
         v = func(f)
         try:
             with open(path, "wb") as fp:
@@ -95,7 +95,7 @@ class Export():
         """
         if fmt not in formats:
             raise exceptions.CommandError("No such export format: %s" % fmt)
-        func = formats[fmt]  # type: typing.Any
+        func: typing.Any = formats[fmt]
         v = strutils.always_str(func(f))
         try:
             pyperclip.copy(v)

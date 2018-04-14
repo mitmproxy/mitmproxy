@@ -36,10 +36,10 @@ class ProxyConfig:
     def __init__(self, options: moptions.Options) -> None:
         self.options = options
 
-        self.check_ignore = None  # type: HostMatcher
-        self.check_tcp = None  # type: HostMatcher
-        self.certstore = None  # type: certs.CertStore
-        self.upstream_server = None  # type: typing.Optional[server_spec.ServerSpec]
+        self.check_ignore: HostMatcher = None
+        self.check_tcp: HostMatcher = None
+        self.certstore: certs.CertStore = None
+        self.upstream_server: typing.Optional[server_spec.ServerSpec] = None
         self.configure(options, set(options.keys()))
         options.changed.connect(self.configure)
 

@@ -44,12 +44,12 @@ class WebSocketLayer(base.Layer):
     def __init__(self, ctx, handshake_flow):
         super().__init__(ctx)
         self.handshake_flow = handshake_flow
-        self.flow = None  # type: WebSocketFlow
+        self.flow: WebSocketFlow = None
 
         self.client_frame_buffer = []
         self.server_frame_buffer = []
 
-        self.connections = {}  # type: Dict[object, WSConnection]
+        self.connections: dict[object, WSConnection] = {}
 
         extensions = []
         if 'Sec-WebSocket-Extensions' in handshake_flow.response.headers:

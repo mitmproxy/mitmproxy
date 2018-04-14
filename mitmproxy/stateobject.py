@@ -14,7 +14,7 @@ class StateObject(serializable.Serializable):
     or StateObject instances themselves.
     """
 
-    _stateobject_attributes = None  # type: MutableMapping[str, Any]
+    _stateobject_attributes: MutableMapping[str, Any] = None
     """
     An attribute-name -> class-or-type dict containing all attributes that
     should be serialized. If the attribute is a class, it must implement the

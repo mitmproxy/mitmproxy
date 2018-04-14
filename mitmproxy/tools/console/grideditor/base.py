@@ -39,7 +39,7 @@ class Cell(urwid.WidgetWrap):
 
 
 class Column(metaclass=abc.ABCMeta):
-    subeditor = None  # type: urwid.Edit
+    subeditor: urwid.Edit = None
 
     def __init__(self, heading):
         self.heading = heading
@@ -71,10 +71,10 @@ class GridRow(urwid.WidgetWrap):
     ) -> None:
         self.focused = focused
         self.editor = editor
-        self.edit_col = None  # type: typing.Optional[Cell]
+        self.edit_col: typing.Optional[Cell] = None
 
         errors = values[1]
-        self.fields = []  # type: typing.Sequence[typing.Any]
+        self.fields: typing.Sequence[typing.Any] = []
         for i, v in enumerate(values[0]):
             if focused == i and editing:
                 self.edit_col = self.editor.columns[i].Edit(v)
@@ -123,11 +123,11 @@ class GridWalker(urwid.ListWalker):
             lst: typing.Iterable[list],
             editor: "GridEditor"
     ) -> None:
-        self.lst = [(i, set()) for i in lst]  # type: typing.Sequence[typing.Tuple[typing.Any, typing.Set]]
+        self.lst: typing.Sequence[typing.Tuple[typing.Any, typing.Set]] = [(i, set()) for i in lst]
         self.editor = editor
         self.focus = 0
         self.focus_col = 0
-        self.edit_row = None  # type: typing.Optional[GridRow]
+        self.edit_row: typing.Optional[GridRow] = None
 
     def _modified(self):
         self.editor.show_empty_msg()
@@ -402,8 +402,8 @@ class BaseGridEditor(urwid.WidgetWrap):
 
 
 class GridEditor(BaseGridEditor):
-    title = None  # type: str
-    columns = None  # type: typing.Sequence[Column]
+    title: str = None
+    columns: typing.Sequence[Column] = None
     keyctx = "grideditor"
 
     def __init__(

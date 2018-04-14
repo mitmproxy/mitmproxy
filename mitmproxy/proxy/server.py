@@ -53,7 +53,7 @@ class ProxyServer(tcp.TCPServer):
             raise exceptions.ServerException(
                 'Error starting proxy server: ' + repr(e)
             ) from e
-        self.channel = None  # type: controller.Channel
+        self.channel: controller.Channel = None
 
     def set_channel(self, channel):
         self.channel = channel
@@ -71,7 +71,7 @@ class ProxyServer(tcp.TCPServer):
 class ConnectionHandler:
 
     def __init__(self, client_conn, client_address, config, channel):
-        self.config = config  # type: config.ProxyConfig
+        self.config: config.ProxyConfig = config
         self.client_conn = connections.ClientConnection(
             client_conn,
             client_address,

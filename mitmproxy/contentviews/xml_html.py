@@ -86,7 +86,7 @@ class Tag(Token):
 
 
 def tokenize(data: str) -> Iterable[Token]:
-    token = Text("")  # type: Token
+    token: Token = Text("")
 
     i = 0
 

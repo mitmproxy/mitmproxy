@@ -145,7 +145,7 @@ class CertStore:
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
         self.dhparams = dhparams
-        self.certs = {}  # type: typing.Dict[TCertId, CertStoreEntry]
+        self.certs: typing.Dict[TCertId, CertStoreEntry] = {}
         self.expire_queue = []
 
     def expire(self, entry):
@@ -298,7 +298,7 @@ class CertStore:
             sans: A list of Subject Alternate Names.
         """
 
-        potential_keys = []  # type: typing.List[TCertId]
+        potential_keys: typing.List[TCertId] = []
         if commonname:
             potential_keys.extend(self.asterisk_forms(commonname))
         for s in sans:

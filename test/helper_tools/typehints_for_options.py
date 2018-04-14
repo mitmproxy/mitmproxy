@@ -9,7 +9,7 @@ def print_typehints(opts):
     for name, option in sorted(opts.items()):
         print(
             # For Python 3.6, we can just use "{}: {}".
-            "{} = None  # type: {}".format(
+            "{}: {} = None".format(
                 name,
                 {
                     int: "int",

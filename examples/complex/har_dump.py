@@ -20,11 +20,11 @@ from mitmproxy import ctx
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import cookies
 
-HAR = {}  # type: typing.Dict
+HAR: typing.Dict = {}
 
 # A list of server seen till now is maintained so we can avoid
 # using 'connect' time for entries that use an existing connection.
-SERVERS_SEEN = set()  # type: typing.Set[connections.ServerConnection]
+SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
 
 
 def load(l):
@@ -155,12 +155,12 @@ def done():
         Called once on script shutdown, after any other events.
     """
     if ctx.options.hardump:
-        json_dump = json.dumps(HAR, indent=2)  # type: str
+        json_dump: str = json.dumps(HAR, indent=2)
 
         if ctx.options.hardump == '-':
             mitmproxy.ctx.log(json_dump)
         else:
-            raw = json_dump.encode()  # type: bytes
+            raw: bytes = json_dump.encode()
             if ctx.options.hardump.endswith('.zhar'):
                 raw = zlib.compress(raw, 9)
 

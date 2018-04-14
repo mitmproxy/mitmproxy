@@ -26,8 +26,8 @@ from . import (
 )
 from .base import View, VIEW_CUTOFF, KEY_MAX, format_text, format_dict, TViewResult
 
-views = []  # type: List[View]
-content_types_map = {}  # type: Dict[str, List[View]]
+views: List[View] = []
+content_types_map: Dict[str, List[View]] = {}
 
 
 def get(name: str) -> Optional[View]:

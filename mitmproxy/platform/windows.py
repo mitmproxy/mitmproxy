@@ -203,7 +203,7 @@ class TransparentProxy:
         self.request_filter = custom_filter or " or ".join(
             ("tcp.DstPort == %d" %
              p) for p in redirect_ports)
-        self.request_forward_handle = None  # type: pydivert.WinDivert
+        self.request_forward_handle: pydivert.WinDivert = None
         self.request_forward_thread = threading.Thread(
             target=self.request_forward)
         self.request_forward_thread.daemon = True
@@ -212,18 +212,18 @@ class TransparentProxy:
         self.trusted_pids = set()
         self.tcptable2 = MIB_TCPTABLE2(0)
         self.tcptable2_size = ctypes.wintypes.DWORD(0)
-        self.request_local_handle = None  # type: pydivert.WinDivert
+        self.request_local_handle: pydivert.WinDivert = None
         self.request_local_thread = threading.Thread(target=self.request_local)
         self.request_local_thread.daemon = True
 
         # The proxy server responds to the client. To the client,
         # this response should look like it has been sent by the real target
         self.response_filter = "outbound and tcp.SrcPort == %d" % proxy_port
-        self.response_handle = None  # type: pydivert.WinDivert
+        self.response_handle: pydivert.WinDivert = None
         self.response_thread = threading.Thread(target=self.response)
         self.response_thread.daemon = True
 
-        self.icmp_handle = None  # type: pydivert.WinDivert
+        self.icmp_handle: pydivert.WinDivert = None
 
     @classmethod
     def setup(cls):

@@ -334,7 +334,7 @@ class OptionsOrValue(_Component):
         Can be any of a specified set of options, or a value specifier.
     """
     preamble = ""
-    options = []  # type: typing.List[str]
+    options: typing.List[str] = []
 
     def __init__(self, value):
         # If it's a string, we were passed one of the options, so we lower-case
@@ -376,7 +376,7 @@ class OptionsOrValue(_Component):
 
 
 class Integer(_Component):
-    bounds = (None, None)  # type: typing.Tuple[typing.Optional[int], typing.Optional[int]]
+    bounds: typing.Tuple[typing.Optional[int], typing.Optional[int]] = (None, None)
     preamble = ""
 
     def __init__(self, value):
@@ -442,7 +442,7 @@ class FixedLengthValue(Value):
         A value component lead by an optional preamble.
     """
     preamble = ""
-    length = None  # type: typing.Optional[int]
+    length: typing.Optional[int] = None
 
     def __init__(self, value):
         Value.__init__(self, value)
@@ -511,7 +511,7 @@ class IntField(_Component):
     """
         An integer field, where values can optionally specified by name.
     """
-    names = {}  # type: typing.Dict[str, int]
+    names: typing.Dict[str, int] = {}
     max = 16
     preamble = ""
 

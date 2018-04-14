@@ -8,7 +8,7 @@ from mitmproxy.net.http import headers
 
 
 class MessageData(serializable.Serializable):
-    content = None  # type: bytes
+    content: bytes = None
 
     def __eq__(self, other):
         if isinstance(other, MessageData):
@@ -33,7 +33,7 @@ class MessageData(serializable.Serializable):
 
 
 class Message(serializable.Serializable):
-    data = None  # type: MessageData
+    data: MessageData = None
 
     def __eq__(self, other):
         if isinstance(other, Message):

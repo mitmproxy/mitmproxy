@@ -11,11 +11,11 @@ from mitmproxy import websocket
 from mitmproxy.io import compat
 from mitmproxy.io import tnetstring
 
-FLOW_TYPES = dict(
+FLOW_TYPES: Dict[str, Type[flow.Flow]] = dict(
     http=http.HTTPFlow,
     websocket=websocket.WebSocketFlow,
     tcp=tcp.TCPFlow,
-)  # type: Dict[str, Type[flow.Flow]]
+)
 
 
 class FlowWriter:

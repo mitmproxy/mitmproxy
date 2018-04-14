@@ -92,7 +92,7 @@ def run(
     try:
         unknown = optmanager.load_paths(opts, args.conf)
         pconf = process_options(parser, opts, args)
-        server = None  # type: typing.Any
+        server: typing.Any = None
         if pconf.options.server:
             try:
                 server = proxy.server.ProxyServer(pconf)

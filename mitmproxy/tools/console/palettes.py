@@ -36,7 +36,7 @@ class Palette:
         # Commander
         'commander_command', 'commander_invalid', 'commander_hint'
     ]
-    high = None  # type: typing.Mapping[str, typing.Sequence[str]]
+    high: typing.Mapping[str, typing.Sequence[str]] = None
 
     def palette(self, transparent):
         l = []

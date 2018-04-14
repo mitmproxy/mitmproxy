@@ -28,8 +28,8 @@ def colorful(line, styles):
 
 class Dumper:
     def __init__(self, outfile=sys.stdout):
-        self.filter = None  # type: flowfilter.TFilter
-        self.outfp = outfile  # type: typing.io.TextIO
+        self.filter: flowfilter.TFilter = None
+        self.outfp: typing.io.TextIO = outfile
 
     def load(self, loader):
         loader.add_option(

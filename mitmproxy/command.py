@@ -79,7 +79,7 @@ class Command:
     def prepare_args(self, args: typing.Sequence[str]) -> typing.List[typing.Any]:
         verify_arg_signature(self.func, list(args), {})
 
-        remainder = []  # type: typing.Sequence[str]
+        remainder: typing.Sequence[str] = []
         if self.has_positional:
             remainder = args[len(self.paramtypes) - 1:]
             args = args[:len(self.paramtypes) - 1]
@@ -121,7 +121,7 @@ ParseResult = typing.NamedTuple(
 class CommandManager(mitmproxy.types._CommandBase):
     def __init__(self, master):
         self.master = master
-        self.commands = {}  # type: typing.Dict[str, Command]
+        self.commands: typing.Dict[str, Command] = {}
 
     def collect_commands(self, addon):
         for i in dir(addon):
@@ -146,7 +146,7 @@ class CommandManager(mitmproxy.types._CommandBase):
             Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
         buf = io.StringIO(cmdstr)
-        parts = []  # type: typing.List[str]
+        parts: typing.List[str] = []
         lex = lexer(buf)
         while 1:
             remainder = cmdstr[buf.tell():]
@@ -163,9 +163,9 @@ class CommandManager(mitmproxy.types._CommandBase):
         elif cmdstr.endswith(" "):
             parts.append("")
 
-        parse = []  # type: typing.List[ParseResult]
-        params = []  # type: typing.List[type]
-        typ = None  # type: typing.Type
+        parse: typing.List[ParseResult] = []
+        params: typing.List[type] = []
+        typ: typing.Type = None
         for i in range(len(parts)):
             if i == 0:
                 typ = mitmproxy.types.Cmd
@@ -197,7 +197,7 @@ class CommandManager(mitmproxy.types._CommandBase):
                 )
             )
 
-        remhelp = []  # type: typing.List[str]
+        remhelp: typing.List[str] = []
         for x in params:
             remt = mitmproxy.types.CommandTypes.get(x, None)
             remhelp.append(remt.display)

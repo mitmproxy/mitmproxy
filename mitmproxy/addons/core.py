@@ -179,7 +179,7 @@ class Core:
         """
             Quickly set a number of common values on flows.
         """
-        val = sval  # type: typing.Union[int, str]
+        val: typing.Union[int, str] = sval
         if spec == "status_code":
             try:
                 val = int(val)  # type: ignore

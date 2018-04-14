@@ -7,7 +7,7 @@ from mitmproxy import ctx, http
 
 class Filter:
     def __init__(self):
-        self.filter = None  # type: flowfilter.TFilter
+        self.filter: flowfilter.TFilter = None
 
     def configure(self, updated):
         self.filter = flowfilter.parse(ctx.options.flowfilter)

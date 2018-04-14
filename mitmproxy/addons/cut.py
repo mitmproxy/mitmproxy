@@ -24,7 +24,7 @@ def is_addr(v):
 
 def extract(cut: str, f: flow.Flow) -> typing.Union[str, bytes]:
     path = cut.split(".")
-    current = f  # type: typing.Any
+    current: typing.Any = f
     for i, spec in enumerate(path):
         if spec.startswith("_"):
             raise exceptions.CommandError("Can't access internal attribute %s" % spec)
@@ -65,7 +65,7 @@ class Cut:
             or "false", "bytes" are preserved, and all other values are
             converted to strings.
         """
-        ret = []  # type:typing.List[typing.List[typing.Union[str, bytes]]]
+        ret: typing.List[typing.List[typing.Union[str, bytes]]] = []
         for f in flows:
             ret.append([extract(c, f) for c in cuts])
         return ret  # type: ignore

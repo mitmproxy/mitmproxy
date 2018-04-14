@@ -532,7 +532,7 @@ class Focus:
     """
     def __init__(self, v: View) -> None:
         self.view = v
-        self._flow = None  # type: mitmproxy.flow.Flow
+        self._flow: mitmproxy.flow.Flow = None
         self.sig_change = blinker.Signal()
         if len(self.view):
             self.flow = self.view[0]
@@ -589,7 +589,7 @@ class Focus:
 class Settings(collections.Mapping):
     def __init__(self, view: View) -> None:
         self.view = view
-        self._values = {}  # type: typing.MutableMapping[str, typing.Dict]
+        self._values: typing.MutableMapping[str, typing.Dict] = {}
         view.sig_store_remove.connect(self._sig_store_remove)
         view.sig_store_refresh.connect(self._sig_store_refresh)
 

@@ -111,7 +111,7 @@ class ServerPlayback:
         _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
-        key = [str(r.port), str(r.scheme), str(r.method), str(path)]  # type: List[Any]
+        key: typing.List[typing.Any] = [str(r.port), str(r.scheme), str(r.method), str(path)]
         if not ctx.options.server_replay_ignore_content:
             if ctx.options.server_replay_ignore_payload_params and r.multipart_form:
                 key.extend(

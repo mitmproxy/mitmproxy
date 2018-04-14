@@ -9,7 +9,7 @@ from mitmproxy.log import LogEntry
 
 class EventStore:
     def __init__(self, size=10000):
-        self.data = collections.deque(maxlen=size)  # type: typing.Deque[LogEntry]
+        self.data: typing.Deque[LogEntry] = collections.deque(maxlen=size)
         self.sig_add = blinker.Signal()
         self.sig_refresh = blinker.Signal()
 

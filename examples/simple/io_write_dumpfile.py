@@ -13,7 +13,7 @@ import typing  # noqa
 
 class Writer:
     def __init__(self, path: str) -> None:
-        self.f = open(path, "wb")  # type: typing.IO[bytes]
+        self.f: typing.IO[bytes] = open(path, "wb")
         self.w = io.FlowWriter(self.f)
 
     def response(self, flow: http.HTTPFlow) -> None:

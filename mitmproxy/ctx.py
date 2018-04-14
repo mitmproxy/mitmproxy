@@ -3,5 +3,5 @@ import mitmproxy.log  # noqa
 import mitmproxy.options  # noqa
 
 master = None  # type: mitmproxy.master.Master
-log = None  # type: mitmproxy.log.Log
-options = None  # type: mitmproxy.options.Options
+log: mitmproxy.log.Log = None
+options: mitmproxy.options.Options = None
