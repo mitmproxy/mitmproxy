@@ -140,7 +140,7 @@ def mitmproxy(args=None):  # pragma: no cover
     assert_utf8_env()
 
     from mitmproxy.tools import console
-    run(console.master.ConsoleMaster, cmdline.mitmproxy, args)
+    return run(console.master.ConsoleMaster, cmdline.mitmproxy, args)
 
 
 def mitmdump(args=None):  # pragma: no cover
@@ -159,8 +159,9 @@ def mitmdump(args=None):  # pragma: no cover
     m = run(dump.DumpMaster, cmdline.mitmdump, args, extra)
     if m and m.errorcheck.has_errored:
         sys.exit(1)
+    return m
 
 
 def mitmweb(args=None):  # pragma: no cover
     from mitmproxy.tools import web
-    run(web.master.WebMaster, cmdline.mitmweb, args)
+    return run(web.master.WebMaster, cmdline.mitmweb, args)

@@ -40,7 +40,7 @@ class MasterTest:
     async def dummy_cycle(self, master, n, content):
         for i in range(n):
             await self.cycle(master, content)
-        master.shutdown()
+        await master._shutdown()
 
     def flowfile(self, path):
         with open(path, "wb") as f:
