@@ -23,7 +23,7 @@ class ListCompleter(Completer):
         options: typing.Sequence[str],
     ) -> None:
         self.start = start
-        self.options = []  # type: typing.Sequence[str]
+        self.options: typing.Sequence[str] = []
         for o in options:
             if o.startswith(start):
                 self.options.append(o)
@@ -53,7 +53,7 @@ class CommandBuffer:
         self.text = self.flatten(start)
         # Cursor is always within the range [0:len(buffer)].
         self._cursor = len(self.text)
-        self.completion = None   # type: CompletionState
+        self.completion: CompletionState = None
 
     @property
     def cursor(self) -> int:

@@ -53,7 +53,7 @@ def dumps(value: TSerializable) -> bytes:
     #  This uses a deque to collect output fragments in reverse order,
     #  then joins them together at the end.  It's measurably faster
     #  than creating all the intermediate strings.
-    q = collections.deque()  # type: collections.deque
+    q: collections.deque = collections.deque()
     _rdumpq(q, 0, value)
     return b''.join(q)
 

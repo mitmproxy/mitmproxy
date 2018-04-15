@@ -24,7 +24,7 @@ class WebSocketMessage(serializable.Serializable):
         """True if this messages was sent by the client."""
         self.content = content
         """A byte-string representing the content of this message."""
-        self.timestamp = timestamp or int(time.time())  # type: int
+        self.timestamp: int = timestamp or int(time.time())
         """Timestamp of when this message was received or created."""
         self.killed = killed
         """True if this messages was killed and should not be sent to the other endpoint."""
@@ -63,7 +63,7 @@ class WebSocketFlow(flow.Flow):
     def __init__(self, client_conn, server_conn, handshake_flow, live=None):
         super().__init__("websocket", client_conn, server_conn, live)
 
-        self.messages = []  # type: List[WebSocketMessage]
+        self.messages: List[WebSocketMessage] = []
         """A list containing all WebSocketMessage's."""
         self.close_sender = 'client'
         """'client' if the client initiated connection closing."""

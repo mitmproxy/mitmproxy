@@ -241,9 +241,9 @@ def create_client_context(
             # Verify hostname of leaf certificate.
             cert = certs.Cert(x509)
             try:
-                crt = dict(
+                crt: typing.Dict[str, typing.Any] = dict(
                     subjectAltName=[("DNS", x.decode("ascii", "strict")) for x in cert.altnames]
-                )  # type: typing.Dict[str, typing.Any]
+                )
                 if cert.cn:
                     crt["subject"] = [[["commonName", cert.cn.decode("ascii", "strict")]]]
                 if sni:

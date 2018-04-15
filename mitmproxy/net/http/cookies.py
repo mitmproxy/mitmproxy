@@ -135,8 +135,8 @@ def _read_set_cookie_pairs(s: str, off=0) -> Tuple[List[TPairs], int]:
         off: start offset
         specials: attributes that are treated specially
     """
-    cookies = []  # type: List[TPairs]
-    pairs = []  # type: TPairs
+    cookies: List[TPairs] = []
+    pairs: TPairs = []
 
     while True:
         lhs, off = _read_key(s, off, ";=,")

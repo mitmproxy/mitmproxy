@@ -11,7 +11,7 @@ LOG_TRUNCATE = 1024
 
 class Message:
     __metaclass__ = abc.ABCMeta
-    logattrs = []  # type: typing.List[str]
+    logattrs: typing.List[str] = []
 
     def __init__(self, tokens):
         track = set([])
@@ -106,7 +106,7 @@ class NestedMessage(base.Token):
         A nested message, as an escaped string with a preamble.
     """
     preamble = ""
-    nest_type = None  # type: typing.Optional[typing.Type[Message]]
+    nest_type: typing.Optional[typing.Type[Message]] = None
 
     def __init__(self, value):
         super().__init__()

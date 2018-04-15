@@ -95,7 +95,7 @@ def find_unclaimed_URLs(body: str, requestUrl: bytes) -> None:
         return None
 
     class ScriptURLExtractor(HTMLParser):
-        script_URLs = []  # type: List[str]
+        script_URLs: List[str] = []
 
         def handle_starttag(self, tag, attrs):
             if (tag == "script" or tag == "iframe") and "src" in [name for name, value in attrs]:
@@ -254,7 +254,7 @@ def paths_to_text(html: str, string: str) -> List[str]:
 
     class PathHTMLParser(HTMLParser):
         currentPath = ""
-        paths = []  # type: List[str]
+        paths: List[str] = []
 
         def handle_starttag(self, tag, attrs):
             self.currentPath += ("/" + tag)

@@ -160,12 +160,12 @@ class HttpLayer(base.Layer):
 
     if False:
         # mypy type hints
-        server_conn = None  # type: connections.ServerConnection
+        server_conn: connections.ServerConnection = None
 
     def __init__(self, ctx, mode):
         super().__init__(ctx)
         self.mode = mode
-        self.__initial_server_address = None  # type: tuple
+        self.__initial_server_address: tuple = None
         "Contains the original destination in transparent mode, which needs to be restored"
         "if an inline script modified the target server for a single http request"
         # We cannot rely on server_conn.tls_established,

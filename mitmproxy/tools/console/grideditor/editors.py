@@ -107,7 +107,7 @@ class CookieAttributeEditor(base.FocusEditor):
         col_text.Column("Name"),
         col_text.Column("Value"),
     ]
-    grideditor = None  # type: base.BaseGridEditor
+    grideditor: base.BaseGridEditor = None
 
     def data_in(self, data):
         return [(k, v or "") for k, v in data]
@@ -169,7 +169,7 @@ class SetCookieEditor(base.FocusEditor):
 
 
 class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
-    title = None  # type: str
+    title: str = None
     columns = [
         col_text.Column("")
     ]
@@ -189,7 +189,7 @@ class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
 
 
 class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
-    title = None  # type: str
+    title: str = None
 
     def __init__(
             self,

@@ -16,14 +16,14 @@ class WF(base.CaselessLiteral):
 
 
 class OpCode(base.IntField):
-    names = {
+    names: typing.Dict[str, int] = {
         "continue": mitmproxy.net.websockets.OPCODE.CONTINUE,
         "text": mitmproxy.net.websockets.OPCODE.TEXT,
         "binary": mitmproxy.net.websockets.OPCODE.BINARY,
         "close": mitmproxy.net.websockets.OPCODE.CLOSE,
         "ping": mitmproxy.net.websockets.OPCODE.PING,
         "pong": mitmproxy.net.websockets.OPCODE.PONG,
-    }  # type: typing.Dict[str, int]
+    }
     max = 15
     preamble = "c"
 
@@ -97,7 +97,7 @@ COMPONENTS = [
 
 
 class WebsocketFrame(message.Message):
-    components = COMPONENTS  # type: typing.List[typing.Type[base._Component]]
+    components: typing.List[typing.Type[base._Component]] = COMPONENTS
     logattrs = ["body"]
     # Used for nested frames
     unique_name = "body"

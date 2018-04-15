@@ -145,22 +145,22 @@ class HTTPFlow(flow.Flow):
     def __init__(self, client_conn, server_conn, live=None, mode="regular"):
         super().__init__("http", client_conn, server_conn, live)
 
-        self.request = None  # type: HTTPRequest
+        self.request: HTTPRequest = None
         """ :py:class:`HTTPRequest` object """
-        self.response = None  # type: HTTPResponse
+        self.response: HTTPResponse = None
         """ :py:class:`HTTPResponse` object """
-        self.error = None  # type: flow.Error
+        self.error: flow.Error = None
         """ :py:class:`Error` object
 
         Note that it's possible for a Flow to have both a response and an error
         object. This might happen, for instance, when a response was received
         from the server, but there was an error sending it back to the client.
         """
-        self.server_conn = server_conn  # type: connections.ServerConnection
+        self.server_conn: connections.ServerConnection = server_conn
         """ :py:class:`ServerConnection` object """
-        self.client_conn = client_conn  # type: connections.ClientConnection
+        self.client_conn: connections.ClientConnection = client_conn
         """:py:class:`ClientConnection` object """
-        self.intercepted = False  # type: bool
+        self.intercepted: bool = False
         """ Is this flow currently being intercepted? """
         self.mode = mode
         """ What mode was the proxy layer in when receiving this request? """

@@ -14,7 +14,7 @@ class Save:
     def __init__(self):
         self.stream = None
         self.filt = None
-        self.active_flows = set()  # type: Set[flow.Flow]
+        self.active_flows: typing.Set[flow.Flow] = set()
 
     def load(self, loader):
         loader.add_option(

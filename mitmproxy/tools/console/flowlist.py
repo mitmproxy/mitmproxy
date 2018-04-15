@@ -74,7 +74,7 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
     def __init__(
         self, master: "mitmproxy.tools.console.master.ConsoleMaster"
     ) -> None:
-        self.master = master  # type: "mitmproxy.tools.console.master.ConsoleMaster"
+        self.master: "mitmproxy.tools.console.master.ConsoleMaster" = master
         super().__init__(FlowListWalker(master))
 
     def keypress(self, size, key):

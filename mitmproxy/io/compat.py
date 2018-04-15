@@ -127,8 +127,8 @@ def convert_300_4(data):
     return data
 
 
-client_connections = {}  # type: Mapping[str, str]
-server_connections = {}  # type: Mapping[str, str]
+client_connections: Mapping[str, str] = {}
+server_connections: Mapping[str, str] = {}
 
 
 def convert_4_5(data):

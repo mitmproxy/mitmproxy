@@ -9,7 +9,7 @@ import typing  # noqa
 from mitmproxy import http
 
 # set of SSL/TLS capable hosts
-secure_hosts = set()  # type: typing.Set[str]
+secure_hosts: typing.Set[str] = set()
 
 
 def request(flow: http.HTTPFlow) -> None:

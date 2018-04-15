@@ -45,7 +45,7 @@ class Choice:
 # Rather than putting types and the CommandManger in the same file, we introduce
 # a stub type with the signature we use.
 class _CommandBase:
-    commands = {}  # type: typing.MutableMapping[str, typing.Any]
+    commands: typing.MutableMapping[str, typing.Any] = {}
 
     def call_args(self, path: str, args: typing.Sequence[str]) -> typing.Any:
         raise NotImplementedError
@@ -55,8 +55,8 @@ class _CommandBase:
 
 
 class _BaseType:
-    typ = object  # type: typing.Type
-    display = ""  # type: str
+    typ: typing.Type = object
+    display: str = ""
 
     def completion(
         self, manager: _CommandBase, t: typing.Any, s: str
@@ -286,7 +286,7 @@ class _CutSpecType(_BaseType):
         return opts
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> CutSpec:
-        parts = s.split(",")  # type: typing.Any
+        parts: typing.Any = s.split(",")
         return parts
 
     def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:

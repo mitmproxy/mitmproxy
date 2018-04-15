@@ -227,7 +227,7 @@ class TlsLayer(base.Layer):
         self._server_tls = server_tls
 
         self._custom_server_sni = custom_server_sni
-        self._client_hello = None  # type: Optional[net_tls.ClientHello]
+        self._client_hello: Optional[net_tls.ClientHello] = None
 
     def __call__(self):
         """

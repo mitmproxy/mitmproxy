@@ -49,7 +49,7 @@ class Master:
             self.should_exit,
         )
 
-        self.options = opts or options.Options()  # type: options.Options
+        self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
         self._server = None

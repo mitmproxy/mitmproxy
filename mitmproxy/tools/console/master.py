@@ -35,9 +35,9 @@ class ConsoleMaster(master.Master):
     def __init__(self, opts):
         super().__init__(opts)
 
-        self.start_err = None  # type: typing.Optional[log.LogEntry]
+        self.start_err: typing.Optional[log.LogEntry] = None
 
-        self.view = view.View()  # type: view.View
+        self.view: view.View = view.View()
         self.events = eventstore.EventStore()
         self.events.sig_add.connect(self.sig_add_log)
 

@@ -10,7 +10,7 @@ import typing
 
 class ClientPlayback:
     def __init__(self):
-        self.flows = []  # type: typing.List[flow.Flow]
+        self.flows: typing.List[flow.Flow] = []
         self.current_thread = None
         self.configured = False
 

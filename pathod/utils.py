@@ -11,7 +11,7 @@ class MemBool:
     """
 
     def __init__(self) -> None:
-        self.v = None  # type: typing.Optional[bool]
+        self.v: typing.Optional[bool] = None
 
     def __call__(self, v: bool) -> bool:
         self.v = v
