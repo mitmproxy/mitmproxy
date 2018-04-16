@@ -1,18 +1,19 @@
 import pytest
 
 from mitmproxy.tools import main
+from mitmproxy import ctx
 
 
 @pytest.mark.asyncio
 async def test_mitmweb(event_loop):
-    m = main.mitmweb([
+    main.mitmweb([
         "--no-web-open-browser",
         "-q", "-p", "0",
     ])
-    await m._shutdown()
+    await ctx.master._shutdown()
 
 
 @pytest.mark.asyncio
 async def test_mitmdump():
-    m = main.mitmdump(["-q", "-p", "0"])
-    await m._shutdown()
+    main.mitmdump(["-q", "-p", "0"])
+    await ctx.master._shutdown()
