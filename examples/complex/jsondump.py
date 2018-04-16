@@ -7,7 +7,7 @@ captured traffic to Elasticsearch directly.
 Usage:
 
     mitmproxy
-        -R http://example.com/
+        --mode reverse:http://example.com/
         -s examples/complex/jsondump.py
 
 Configuration:
