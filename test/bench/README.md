@@ -1,7 +1,7 @@
 
-This directory contains a set of tools for benchmarking and profiling mitmproxy.
-At the moment, this is simply to give developers a quick way to see the impact
-of their work. Eventually, this might grow into a performance dashboard with
+This directory contains an addon for benchmarking and profiling mitmproxy. At
+the moment, this is simply to give developers a quick way to see the impact of
+their work. Eventually, this might grow into a performance dashboard with
 historical data, so we can track performance over time.
 
 
@@ -9,48 +9,18 @@ historical data, so we can track performance over time.
 
 Install the following tools:
 
-    go get -u github.com/rakyll/hey
+    https://github.com/wg/wrk
+
     go get github.com/cortesi/devd/cmd/devd
 
 You may also want to install snakeviz to make viewing profiles easier:
 
     pip install snakeviz
 
-In one window, run the devd server:
+Now run the benchmark by loading the addon. A typical invocation is as follows:
 
-    ./backend
+    mitmdump -p0 -q --set benchmark_save_path=/tmp/foo -s ./benchmark.py
 
-
-# Running tests
-
-Each run consists of two files - a mitproxy invocation, and a traffic generator.
-Make sure the backend is started, then run the proxy:
-
-    ./simple.mitmproxy
-
-Now run the traffic generator:
-
-    ./simple.traffic
-
-After the run is done, quit the proxy with ctrl-c.
-
-
-# Reading results
-
-Results are placed in the ./results directory. You should see two files - a
-performance log from **hey**, and a profile. You can view the profile like so:
-
-    snakeviz ./results/simple.prof
-
-
-
-
-
-
-
-
-
-
-
-
+This will start up the backend server, run the benchmark, save the results to
+/tmp/foo.bench and /tmp/foo.prof, and exit.
 

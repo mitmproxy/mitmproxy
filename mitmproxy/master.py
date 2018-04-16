@@ -81,7 +81,6 @@ class Master:
             self.addons.trigger("running")
         while True:
             if self.should_exit.is_set():
-                asyncio.get_event_loop().stop()
                 return
             self.addons.trigger("tick")
             await asyncio.sleep(0.1)
@@ -93,14 +92,27 @@ class Master:
         try:
             loop.run_forever()
         finally:
-            self.shutdown()
+            pending = asyncio.Task.all_tasks()
+            loop.run_until_complete(asyncio.gather(*pending))
             loop.close()
         self.addons.trigger("done")
 
-    def shutdown(self):
+    async def _shutdown(self):
         if self.server:
             self.server.shutdown()
-        self.should_exit.set()
+        loop = asyncio.get_event_loop()
+        loop.stop()
+
+    def shutdown(self):
+        """
+            Shut down the proxy. This method is thread-safe.
+        """
+        if not self.should_exit.is_set():
+            self.should_exit.set()
+            asyncio.run_coroutine_threadsafe(
+                self._shutdown(),
+                loop = self.channel.loop,
+            )
 
     def _change_reverse_host(self, f):
         """

@@ -1,5 +1,0 @@
-#!/bin/sh
-
-mkdir -p results
-mitmdump -p 10002 --mode reverse:http://devd.io:10001 \
-    -s ./profiler.py --set profile_path=./results/simple.prof
