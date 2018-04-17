@@ -105,33 +105,21 @@ class WebMaster(master.Master):
 
     def run(self):  # pragma: no cover
         AsyncIOMainLoop().install()
-
         iol = tornado.ioloop.IOLoop.instance()
-
         http_server = tornado.httpserver.HTTPServer(self.app)
         http_server.listen(self.options.web_port, self.options.web_iface)
-
-        iol.add_callback(self.start)
-
         web_url = "http://{}:{}/".format(self.options.web_iface, self.options.web_port)
         self.log.info(
             "Web server listening at {}".format(web_url),
         )
-
+        # FIXME: This should be in an addon hooked to the "running" event, not in master
         if self.options.web_open_browser:
             success = open_browser(web_url)
             if not success:
                 self.log.info(
                     "No web browser found. Please open a browser and point it to {}".format(web_url),
                 )
-        try:
-            iol.start()
-        except KeyboardInterrupt:
-            self.shutdown()
-
-    def shutdown(self):
-        tornado.ioloop.IOLoop.instance().stop()
-        super().shutdown()
+        self.run_loop(iol.start)
 
 
 def open_browser(url: str) -> bool:
