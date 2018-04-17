@@ -22,8 +22,6 @@ socket_fileobject = socket.SocketIO
 # Python 3.6 for Windows is missing a constant
 IPPROTO_IPV6 = getattr(socket, "IPPROTO_IPV6", 41)
 
-EINTR = 4
-
 
 class _FileLike:
     BLOCKSIZE = 1024 * 32
@@ -595,14 +593,7 @@ class TCPServer:
         self.__is_shut_down.clear()
         try:
             while not self.__shutdown_request:
-                try:
-                    r, w_, e_ = select.select(
-                        [self.socket], [], [], poll_interval)
-                except select.error as ex:  # pragma: no cover
-                    if ex[0] == EINTR:
-                        continue
-                    else:
-                        raise
+                r, w_, e_ = select.select([self.socket], [], [], poll_interval)
                 if self.socket in r:
                     connection, client_address = self.socket.accept()
                     t = basethread.BaseThread(
