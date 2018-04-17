@@ -1,3 +1,5 @@
+import sys
+import traceback
 import threading
 import asyncio
 import logging
@@ -85,17 +87,39 @@ class Master:
             self.addons.trigger("tick")
             await asyncio.sleep(0.1)
 
-    def run(self):
+    def run_loop(self, loop):
         self.start()
         asyncio.ensure_future(self.tick())
-        loop = asyncio.get_event_loop()
+
+        exc = None
         try:
-            loop.run_forever()
+            loop()
+        except Exception as e:
+            exc = traceback.format_exc()
         finally:
+            if not self.should_exit.is_set():
+                self.shutdown()
             pending = asyncio.Task.all_tasks()
-            loop.run_until_complete(asyncio.gather(*pending))
+            loop = asyncio.get_event_loop()
+            try:
+                loop.run_until_complete(asyncio.gather(*pending))
+            except Exception as e:
+                # When we exit with an error, shutdown might not happen cleanly,
+                # and we can get exceptions here caused by pending Futures.
+                pass
             loop.close()
+
+        if exc:  # pragma: no cover
+            print(exc, file=sys.stderr)
+            print("mitmproxy has crashed!", file=sys.stderr)
+            print("Please lodge a bug report at:", file=sys.stderr)
+            print("\thttps://github.com/mitmproxy/mitmproxy", file=sys.stderr)
+
         self.addons.trigger("done")
+
+    def run(self, func=None):
+        loop = asyncio.get_event_loop()
+        self.run_loop(loop.run_forever)
 
     async def _shutdown(self):
         if self.server:

@@ -9,7 +9,6 @@ import stat
 import subprocess
 import sys
 import tempfile
-import traceback
 import typing  # noqa
 import contextlib
 
@@ -205,7 +204,6 @@ class ConsoleMaster(master.Master):
             screen = self.ui,
             handle_mouse = self.options.console_mouse,
         )
-
         self.window = window.Window(self)
         self.loop.widget = self.window
         self.window.refresh()
@@ -216,24 +214,7 @@ class ConsoleMaster(master.Master):
                 self.start_err = None
             self.loop.set_alarm_in(0.01, display_err)
 
-        self.start()
-        try:
-            self.loop.run()
-        except Exception:
-            self.loop.stop()
-            sys.stdout.flush()
-            print(traceback.format_exc(), file=sys.stderr)
-            print("mitmproxy has crashed!", file=sys.stderr)
-            print("Please lodge a bug report at:", file=sys.stderr)
-            print("\thttps://github.com/mitmproxy/mitmproxy", file=sys.stderr)
-            print("Shutting down...", file=sys.stderr)
-        finally:
-            sys.stderr.flush()
-            super().shutdown()
-        self.addons.trigger("done")
-
-    def shutdown(self):
-        raise urwid.ExitMainLoop
+        super().run_loop(self.loop.run)
 
     def overlay(self, widget, **kwargs):
         self.window.set_overlay(widget, **kwargs)
