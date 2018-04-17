@@ -18,7 +18,6 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import version
 from mitmproxy import optmanager
-from mitmproxy.tools.cmdline import CONFIG_PATH
 import mitmproxy.tools.web.master # noqa
 
 
@@ -457,10 +456,11 @@ class Options(RequestHandler):
 
 class SaveOptions(RequestHandler):
     def post(self):
-        try:
-            optmanager.save(self.master.options, CONFIG_PATH, True)
-        except Exception as err:
-            raise APIError(400, "{}".format(err))
+        # try:
+        #     optmanager.save(self.master.options, CONFIG_PATH, True)
+        # except Exception as err:
+        #     raise APIError(400, "{}".format(err))
+        pass
 
 
 class Application(tornado.web.Application):
