@@ -235,7 +235,7 @@ class DumpFlows(RequestHandler):
         self.view.clear()
         bio = BytesIO(self.filecontents)
         for i in io.FlowReader(bio).stream():
-            asyncio.call_soon(self.master.load_flow, i)
+            asyncio.ensure_future(self.master.load_flow(i))
         bio.close()
 
 
