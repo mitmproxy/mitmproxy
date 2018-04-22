@@ -16,11 +16,14 @@ from mitmproxy.net import socks
 from mitmproxy.net import tcp
 from mitmproxy.net.http import http1
 from mitmproxy.proxy.config import HostMatcher
-from mitmproxy.test import tutils
+from mitmproxy.utils import data
 from pathod import pathoc
 from pathod import pathod
 from .. import tservers
 from ...conftest import skip_appveyor
+
+
+cdata = data.Data(__name__)
 
 
 class CommonMixin:
@@ -257,9 +260,9 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
         assert resp.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_stream_modify(self):
+    async def test_stream_modify(self, tdata):
         s = script.Script(
-            tutils.test_data.path("mitmproxy/data/addonscripts/stream_modify.py"),
+            tdata.path("mitmproxy/data/addonscripts/stream_modify.py"),
             False,
         )
         self.set_addons(s)
@@ -288,19 +291,19 @@ class TestHTTPS(tservers.HTTPProxyTest, CommonMixin, TcpMixin):
     ssl = True
     ssloptions = pathod.SSLOptions(request_client_cert=True)
 
-    def test_clientcert_file(self):
+    def test_clientcert_file(self, tdata):
         try:
             self.options.client_certs = os.path.join(
-                tutils.test_data.path("mitmproxy/data/clientcert"), "client.pem")
+                tdata.path("mitmproxy/data/clientcert"), "client.pem")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
         finally:
             self.options.client_certs = None
 
-    def test_clientcert_dir(self):
+    def test_clientcert_dir(self, tdata):
         try:
-            self.options.client_certs = tutils.test_data.path("mitmproxy/data/clientcert")
+            self.options.client_certs = tdata.path("mitmproxy/data/clientcert")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
@@ -339,7 +342,7 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
     ssloptions = pathod.SSLOptions(
         cn=b"example.mitmproxy.org",
         certs=[
-            ("example.mitmproxy.org", tutils.test_data.path("mitmproxy/data/servercert/trusted-leaf.pem"))
+            ("example.mitmproxy.org", cdata.path("../data/servercert/trusted-leaf.pem"))
         ]
     )
 
@@ -348,21 +351,21 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
         with p.connect():
             return p.request("get:/p/242")
 
-    def test_verification_w_cadir(self):
+    def test_verification_w_cadir(self, tdata):
         self.options.update(
             ssl_insecure=False,
-            ssl_verify_upstream_trusted_cadir=tutils.test_data.path(
+            ssl_verify_upstream_trusted_cadir=tdata.path(
                 "mitmproxy/data/servercert/"
             ),
             ssl_verify_upstream_trusted_ca=None,
         )
         assert self._request().status_code == 242
 
-    def test_verification_w_pemfile(self):
+    def test_verification_w_pemfile(self, tdata):
         self.options.update(
             ssl_insecure=False,
             ssl_verify_upstream_trusted_cadir=None,
-            ssl_verify_upstream_trusted_ca=tutils.test_data.path(
+            ssl_verify_upstream_trusted_ca=tdata.path(
                 "mitmproxy/data/servercert/trusted-root.pem"
             ),
         )
@@ -378,7 +381,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
     ssloptions = pathod.SSLOptions(
         cn=b"example.mitmproxy.org",
         certs=[
-            ("example.mitmproxy.org", tutils.test_data.path("mitmproxy/data/servercert/self-signed.pem"))
+            ("example.mitmproxy.org", cdata.path("../data/servercert/self-signed.pem"))
         ])
 
     def _request(self):
@@ -389,8 +392,8 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
     @classmethod
     def get_options(cls):
         opts = super().get_options()
-        opts.ssl_verify_upstream_trusted_ca = tutils.test_data.path(
-            "mitmproxy/data/servercert/trusted-root.pem"
+        opts.ssl_verify_upstream_trusted_ca = cdata.path(
+            "../data/servercert/trusted-root.pem"
         )
         return opts
 
@@ -417,7 +420,7 @@ class TestHTTPSNoCommonName(tservers.HTTPProxyTest):
     ssl = True
     ssloptions = pathod.SSLOptions(
         certs=[
-            ("*", tutils.test_data.path("mitmproxy/data/no_common_name.pem"))
+            ("*", cdata.path("../data/no_common_name.pem"))
         ]
     )
 
@@ -566,9 +569,9 @@ class TestHttps2Http(tservers.ReverseProxyTest):
 class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
     ssl = False
 
-    def test_tcp_stream_modify(self):
+    def test_tcp_stream_modify(self, tdata):
         s = script.Script(
-            tutils.test_data.path("mitmproxy/data/addonscripts/tcp_stream_modify.py"),
+            tdata.path("mitmproxy/data/addonscripts/tcp_stream_modify.py"),
             False,
         )
         self.set_addons(s)
@@ -1069,7 +1072,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
 class AddUpstreamCertsToClientChainMixin:
 
     ssl = True
-    servercert = tutils.test_data.path("mitmproxy/data/servercert/trusted-root.pem")
+    servercert = cdata.path("../data/servercert/trusted-root.pem")
     ssloptions = pathod.SSLOptions(
         cn=b"example.mitmproxy.org",
         certs=[

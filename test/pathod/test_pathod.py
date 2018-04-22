@@ -5,9 +5,12 @@ import pytest
 from pathod import pathod
 from mitmproxy.net import tcp
 from mitmproxy import exceptions
-from mitmproxy.test import tutils
+from mitmproxy.utils import data
 
 from . import tservers
+
+
+cdata = data.Data(__name__)
 
 
 class TestPathod:
@@ -57,7 +60,7 @@ class TestNotAfterConnect(tservers.DaemonTests):
 class TestCustomCert(tservers.DaemonTests):
     ssl = True
     ssloptions = dict(
-        certs=[("*", tutils.test_data.path("pathod/data/testkey.pem"))],
+        certs=[("*", cdata.path("data/testkey.pem"))],
     )
 
     def test_connect(self):

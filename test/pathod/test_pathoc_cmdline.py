@@ -4,11 +4,9 @@ from unittest import mock
 
 from pathod import pathoc_cmdline as cmdline
 
-from mitmproxy.test import tutils
-
 
 @mock.patch("argparse.ArgumentParser.error")
-def test_pathoc(perror):
+def test_pathoc(perror, tdata):
     assert cmdline.args_pathoc(["pathoc", "foo.com", "get:/"])
     s = io.StringIO()
     with pytest.raises(SystemExit):
@@ -53,7 +51,7 @@ def test_pathoc(perror):
         [
             "pathoc",
             "foo.com:8888",
-            tutils.test_data.path("pathod/data/request")
+            tdata.path("pathod/data/request")
         ]
     )
     assert len(list(a.requests)) == 1

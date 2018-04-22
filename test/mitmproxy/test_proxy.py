@@ -8,7 +8,6 @@ from mitmproxy import options
 from mitmproxy.proxy import ProxyConfig
 from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from mitmproxy.proxy import config
-from mitmproxy.test import tutils
 
 from ..conftest import skip_windows
 
@@ -42,10 +41,10 @@ class TestProcessProxyOptions:
     def test_simple(self):
         assert self.p()
 
-    def test_certs(self):
+    def test_certs(self, tdata):
         self.assert_noerr(
             "--cert",
-            tutils.test_data.path("mitmproxy/data/testkey.pem"))
+            tdata.path("mitmproxy/data/testkey.pem"))
         with pytest.raises(Exception, match="does not exist"):
             self.p("--cert", "nonexistent")
 

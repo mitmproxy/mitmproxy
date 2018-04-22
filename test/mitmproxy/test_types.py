@@ -3,7 +3,6 @@ import os
 import typing
 import contextlib
 
-from mitmproxy.test import tutils
 import mitmproxy.exceptions
 import mitmproxy.types
 from mitmproxy.test import taddons
@@ -64,7 +63,7 @@ def test_int():
             b.parse(tctx.master.commands, int, "foo")
 
 
-def test_path():
+def test_path(tdata):
     with taddons.context() as tctx:
         b = mitmproxy.types._PathType()
         assert b.parse(tctx.master.commands, mitmproxy.types.Path, "/foo") == "/foo"
@@ -80,7 +79,7 @@ def test_path():
                 ret.append(s)
             return ret
 
-        cd = os.path.normpath(tutils.test_data.path("mitmproxy/completion"))
+        cd = os.path.normpath(tdata.path("mitmproxy/completion"))
         assert normPathOpts(cd, cd) == ['/aaa', '/aab', '/aac', '/bbb/']
         assert normPathOpts(cd, os.path.join(cd, "a")) == ['/aaa', '/aab', '/aac']
         with chdir(cd):

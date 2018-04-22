@@ -3,7 +3,6 @@ import io
 import pytest
 
 from mitmproxy.test import taddons
-from mitmproxy.test import tutils
 from mitmproxy import ctx
 
 
@@ -27,10 +26,10 @@ async def test_dumplog():
         assert s.getvalue()
 
 
-def test_load_script():
+def test_load_script(tdata):
     with taddons.context() as tctx:
         s = tctx.script(
-            tutils.test_data.path(
+            tdata.path(
                 "mitmproxy/data/addonscripts/recorder/recorder.py"
             )
         )

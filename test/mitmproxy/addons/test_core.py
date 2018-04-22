@@ -3,7 +3,6 @@ from unittest import mock
 from mitmproxy.addons import core
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 from mitmproxy import exceptions
 import pytest
 
@@ -198,13 +197,13 @@ def test_validation_modes(m):
             tctx.configure(sa, mode = "reverse:")
 
 
-def test_client_certs():
+def test_client_certs(tdata):
     sa = core.Core()
     with taddons.context() as tctx:
         # Folders should work.
-        tctx.configure(sa, client_certs = tutils.test_data.path("mitmproxy/data/clientcert"))
+        tctx.configure(sa, client_certs = tdata.path("mitmproxy/data/clientcert"))
         # Files, too.
-        tctx.configure(sa, client_certs = tutils.test_data.path("mitmproxy/data/clientcert/client.pem"))
+        tctx.configure(sa, client_certs = tdata.path("mitmproxy/data/clientcert/client.pem"))
 
         with pytest.raises(exceptions.OptionsError, match="certificate path does not exist"):
             tctx.configure(sa, client_certs = "invalid")
