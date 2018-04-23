@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 import traceback
@@ -123,8 +124,13 @@ class TestScript:
             assert await tctx.master.await_log("Loading")
 
             tctx.master.clear()
-            f.write("\n")
-            assert await tctx.master.await_log("Loading")
+            for i in range(20):
+                f.write("\n")
+                if tctx.master.has_log("Loading"):
+                    break
+                await asyncio.sleep(0.1)
+            else:
+                raise AssertionError("No reload seen")
 
     @pytest.mark.asyncio
     async def test_exception(self):

@@ -827,7 +827,7 @@ class TestServerConnect(tservers.HTTPProxyTest):
         self.set_addons(AFakeResponse())
         assert self.pathod("200").status_code == 200
         asyncio.sleep(0.1)
-        assert not self.proxy.tmaster._has_log("serverconnect")
+        assert not self.proxy.tmaster.has_log("serverconnect")
 
 
 class AKillRequest:
