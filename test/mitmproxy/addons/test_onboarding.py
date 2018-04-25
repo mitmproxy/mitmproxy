@@ -4,23 +4,21 @@ from mitmproxy.addons import onboarding
 from mitmproxy.test import taddons
 from .. import tservers
 
-import asyncio
-import tornado.platform.asyncio
-asyncio.set_event_loop_policy(tornado.platform.asyncio.AnyThreadEventLoopPolicy())
-
 
 class TestApp(tservers.HTTPProxyTest):
     def addons(self):
         return [onboarding.Onboarding()]
 
-    def test_basic(self):
+    @pytest.mark.asyncio
+    async def test_basic(self):
         ob = onboarding.Onboarding()
         with taddons.context(ob) as tctx:
             tctx.configure(ob)
             assert self.app("/").status_code == 200
 
     @pytest.mark.parametrize("ext", ["pem", "p12"])
-    def test_cert(self, ext):
+    @pytest.mark.asyncio
+    async def test_cert(self, ext):
         ob = onboarding.Onboarding()
         with taddons.context(ob) as tctx:
             tctx.configure(ob)
@@ -29,7 +27,8 @@ class TestApp(tservers.HTTPProxyTest):
             assert resp.content
 
     @pytest.mark.parametrize("ext", ["pem", "p12"])
-    def test_head(self, ext):
+    @pytest.mark.asyncio
+    async def test_head(self, ext):
         ob = onboarding.Onboarding()
         with taddons.context(ob) as tctx:
             tctx.configure(ob)

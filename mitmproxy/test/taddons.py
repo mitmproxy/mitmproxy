@@ -35,7 +35,7 @@ class RecordingMaster(mitmproxy.master.Master):
         for i in self.logs:
             print("%s: %s" % (i.level, i.msg), file=outf)
 
-    def _has_log(self, txt, level=None):
+    def has_log(self, txt, level=None):
         for i in self.logs:
             if level and i.level != level:
                 continue
@@ -45,7 +45,7 @@ class RecordingMaster(mitmproxy.master.Master):
 
     async def await_log(self, txt, level=None):
         for i in range(20):
-            if self._has_log(txt, level):
+            if self.has_log(txt, level):
                 return True
             else:
                 await asyncio.sleep(0.1)
@@ -123,11 +123,7 @@ class context:
         """
             Loads a script from path, and returns the enclosed addon.
         """
-        sc = script.Script(path)
-        loader = addonmanager.Loader(self.master)
-        self.master.addons.invoke_addon(sc, "load", loader)
-        self.configure(sc)
-        self.master.addons.invoke_addon(sc, "tick")
+        sc = script.Script(path, False)
         return sc.addons[0] if sc.addons else None
 
     def invoke(self, addon, event, *args, **kwargs):

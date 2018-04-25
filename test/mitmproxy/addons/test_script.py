@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 import traceback
@@ -9,14 +10,17 @@ from mitmproxy import exceptions
 from mitmproxy.addons import script
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
+
+
+# We want this to be speedy for testing
+script.ReloadInterval = 0.1
 
 
 @pytest.mark.asyncio
-async def test_load_script():
+async def test_load_script(tdata):
     with taddons.context() as tctx:
         ns = script.load_script(
-            tutils.test_data.path(
+            tdata.path(
                 "mitmproxy/data/addonscripts/recorder/recorder.py"
             )
         )
@@ -28,27 +32,27 @@ async def test_load_script():
         assert await tctx.master.await_log("No such file or directory")
 
         script.load_script(
-            tutils.test_data.path(
+            tdata.path(
                 "mitmproxy/data/addonscripts/recorder/error.py"
             )
         )
         assert await tctx.master.await_log("invalid syntax")
 
 
-def test_load_fullname():
+def test_load_fullname(tdata):
     """
     Test that loading two scripts at locations a/foo.py and b/foo.py works.
     This only succeeds if they get assigned different basenames.
 
     """
     ns = script.load_script(
-        tutils.test_data.path(
+        tdata.path(
             "mitmproxy/data/addonscripts/addon.py"
         )
     )
     assert ns.addons
     ns2 = script.load_script(
-        tutils.test_data.path(
+        tdata.path(
             "mitmproxy/data/addonscripts/same_filename/addon.py"
         )
     )
@@ -57,11 +61,11 @@ def test_load_fullname():
 
 
 @pytest.mark.asyncio
-async def test_script_print_stdout():
+async def test_script_print_stdout(tdata):
     with taddons.context() as tctx:
         with addonmanager.safecall():
             ns = script.load_script(
-                tutils.test_data.path("mitmproxy/data/addonscripts/print.py")
+                tdata.path("mitmproxy/data/addonscripts/print.py")
             )
             ns.load(addonmanager.Loader(tctx.master))
         assert await tctx.master.await_log("stdoutprint")
@@ -71,31 +75,33 @@ class TestScript:
     def test_notfound(self):
         with taddons.context():
             with pytest.raises(exceptions.OptionsError):
-                script.Script("nonexistent")
+                script.Script("nonexistent", False)
 
-    def test_quotes_around_filename(self):
+    def test_quotes_around_filename(self, tdata):
         """
         Test that a script specified as '"foo.py"' works to support the calling convention of
         mitmproxy 2.0, as e.g. used by Cuckoo Sandbox.
         """
-        path = tutils.test_data.path("mitmproxy/data/addonscripts/recorder/recorder.py")
+        path = tdata.path("mitmproxy/data/addonscripts/recorder/recorder.py")
 
         s = script.Script(
-            '"{}"'.format(path)
+            '"{}"'.format(path),
+            False
         )
         assert '"' not in s.fullpath
 
-    def test_simple(self):
+    @pytest.mark.asyncio
+    async def test_simple(self, tdata):
         with taddons.context() as tctx:
             sc = script.Script(
-                tutils.test_data.path(
+                tdata.path(
                     "mitmproxy/data/addonscripts/recorder/recorder.py"
-                )
+                ),
+                True,
             )
             tctx.master.addons.add(sc)
             tctx.configure(sc)
-            sc.tick()
-
+            await tctx.master.await_log("recorder running")
             rec = tctx.master.addons.get("recorder")
 
             assert rec.call_log[0][0:2] == ("recorder", "load")
@@ -112,25 +118,29 @@ class TestScript:
             f = tmpdir.join("foo.py")
             f.ensure(file=True)
             f.write("\n")
-            sc = script.Script(str(f))
+            sc = script.Script(str(f), True)
             tctx.configure(sc)
-            sc.tick()
             assert await tctx.master.await_log("Loading")
-            tctx.master.clear()
 
-            sc.last_load, sc.last_mtime = 0, 0
-            sc.tick()
-            assert await tctx.master.await_log("Loading")
+            tctx.master.clear()
+            for i in range(20):
+                f.write("\n")
+                if tctx.master.has_log("Loading"):
+                    break
+                await asyncio.sleep(0.1)
+            else:
+                raise AssertionError("No reload seen")
 
     @pytest.mark.asyncio
-    async def test_exception(self):
+    async def test_exception(self, tdata):
         with taddons.context() as tctx:
             sc = script.Script(
-                tutils.test_data.path("mitmproxy/data/addonscripts/error.py")
+                tdata.path("mitmproxy/data/addonscripts/error.py"),
+                True,
             )
             tctx.master.addons.add(sc)
+            await tctx.master.await_log("error running")
             tctx.configure(sc)
-            sc.tick()
 
             f = tflow.tflow(resp=True)
             tctx.master.addons.trigger("request", f)
@@ -138,16 +148,17 @@ class TestScript:
             assert await tctx.master.await_log("ValueError: Error!")
             assert await tctx.master.await_log("error.py")
 
-    def test_addon(self):
+    @pytest.mark.asyncio
+    async def test_addon(self, tdata):
         with taddons.context() as tctx:
             sc = script.Script(
-                tutils.test_data.path(
+                tdata.path(
                     "mitmproxy/data/addonscripts/addon.py"
-                )
+                ),
+                True
             )
             tctx.master.addons.add(sc)
-            tctx.configure(sc)
-            sc.tick()
+            await tctx.master.await_log("addon running")
             assert sc.ns.event_log == [
                 'scriptload', 'addonload', 'scriptconfigure', 'addonconfigure'
             ]
@@ -173,8 +184,8 @@ class TestCutTraceback:
 
 class TestScriptLoader:
     @pytest.mark.asyncio
-    async def test_script_run(self):
-        rp = tutils.test_data.path(
+    async def test_script_run(self, tdata):
+        rp = tdata.path(
             "mitmproxy/data/addonscripts/recorder/recorder.py"
         )
         sc = script.ScriptLoader()
@@ -184,7 +195,6 @@ class TestScriptLoader:
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'recorder load', 'recorder running', 'recorder configure',
-                'recorder tick',
                 'recorder requestheaders', 'recorder request',
                 'recorder responseheaders', 'recorder response'
             ]
@@ -196,7 +206,7 @@ class TestScriptLoader:
             sc.script_run([tflow.tflow(resp=True)], "/")
             assert await tctx.master.await_log("/: No such script")
 
-    def test_simple(self):
+    def test_simple(self, tdata):
         sc = script.ScriptLoader()
         with taddons.context(loadcore=False) as tctx:
             tctx.master.addons.add(sc)
@@ -204,7 +214,7 @@ class TestScriptLoader:
             assert len(tctx.master.addons) == 1
             tctx.master.options.update(
                 scripts = [
-                    tutils.test_data.path(
+                    tdata.path(
                         "mitmproxy/data/addonscripts/recorder/recorder.py"
                     )
                 ]
@@ -224,25 +234,29 @@ class TestScriptLoader:
                     scripts = ["one", "one"]
                 )
 
-    def test_script_deletion(self):
-        tdir = tutils.test_data.path("mitmproxy/data/addonscripts/")
+    @pytest.mark.asyncio
+    async def test_script_deletion(self, tdata):
+        tdir = tdata.path("mitmproxy/data/addonscripts/")
         with open(tdir + "/dummy.py", 'w') as f:
             f.write("\n")
+
         with taddons.context() as tctx:
             sl = script.ScriptLoader()
             tctx.master.addons.add(sl)
-            tctx.configure(sl, scripts=[tutils.test_data.path("mitmproxy/data/addonscripts/dummy.py")])
+            tctx.configure(sl, scripts=[tdata.path("mitmproxy/data/addonscripts/dummy.py")])
+            await tctx.master.await_log("Loading")
 
-            os.remove(tutils.test_data.path("mitmproxy/data/addonscripts/dummy.py"))
-            tctx.invoke(sl, "tick")
+            os.remove(tdata.path("mitmproxy/data/addonscripts/dummy.py"))
+
+            await tctx.master.await_log("Removing")
             assert not tctx.options.scripts
             assert not sl.addons
 
-    def test_load_err(self):
+    def test_load_err(self, tdata):
         sc = script.ScriptLoader()
         with taddons.context(sc, loadcore=False) as tctx:
             tctx.configure(sc, scripts=[
-                tutils.test_data.path("mitmproxy/data/addonscripts/load_error.py")
+                tdata.path("mitmproxy/data/addonscripts/load_error.py")
             ])
             try:
                 tctx.invoke(sc, "tick")
@@ -266,8 +280,8 @@ class TestScriptLoader:
             assert await tctx.master.await_log("NoneType")
 
     @pytest.mark.asyncio
-    async def test_order(self):
-        rec = tutils.test_data.path("mitmproxy/data/addonscripts/recorder")
+    async def test_order(self, tdata):
+        rec = tdata.path("mitmproxy/data/addonscripts/recorder")
         sc = script.ScriptLoader()
         sc.is_running = True
         with taddons.context() as tctx:
@@ -286,17 +300,14 @@ class TestScriptLoader:
                 'a load',
                 'a running',
                 'a configure',
-                'a tick',
 
                 'b load',
                 'b running',
                 'b configure',
-                'b tick',
 
                 'c load',
                 'c running',
                 'c configure',
-                'c tick',
             ]
 
             tctx.master.clear()
@@ -317,7 +328,7 @@ class TestScriptLoader:
                 'b configure',
             ]
 
-            tctx.master.logs = []
+            tctx.master.clear()
             tctx.configure(
                 sc,
                 scripts = [
@@ -325,9 +336,7 @@ class TestScriptLoader:
                     "%s/a.py" % rec,
                 ]
             )
-            tctx.master.addons.invoke_addon(sc, "tick")
-            await tctx.master.await_log("a tick")
-
+            await tctx.master.await_log("Loading")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'c done',
@@ -336,6 +345,4 @@ class TestScriptLoader:
                 'e load',
                 'e running',
                 'e configure',
-                'e tick',
-                'a tick',
             ]

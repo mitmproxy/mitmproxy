@@ -10,7 +10,6 @@ from mitmproxy import exceptions
 from mitmproxy.net import tcp
 from mitmproxy.net.http import http1
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 from .net import tservers
 from pathod import test
 
@@ -185,7 +184,7 @@ class TestClientConnectionTLS:
         None,
         "example.com"
     ])
-    def test_tls_with_sni(self, sni):
+    def test_tls_with_sni(self, sni, tdata):
         address = ('127.0.0.1', 0)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -206,8 +205,8 @@ class TestClientConnectionTLS:
         connection, client_address = sock.accept()
         c = connections.ClientConnection(connection, client_address, None)
 
-        cert = tutils.test_data.path("mitmproxy/net/data/server.crt")
-        with open(tutils.test_data.path("mitmproxy/net/data/server.key")) as f:
+        cert = tdata.path("mitmproxy/net/data/server.crt")
+        with open(tdata.path("mitmproxy/net/data/server.key")) as f:
             raw_key = f.read()
         key = OpenSSL.crypto.load_privatekey(
             OpenSSL.crypto.FILETYPE_PEM,
@@ -230,10 +229,12 @@ class TestServerConnectionTLS(tservers.ServerTestBase):
 
     @pytest.mark.parametrize("client_certs", [
         None,
-        tutils.test_data.path("mitmproxy/data/clientcert"),
-        tutils.test_data.path("mitmproxy/data/clientcert/client.pem"),
+        "mitmproxy/data/clientcert",
+        "mitmproxy/data/clientcert/client.pem",
     ])
-    def test_tls(self, client_certs):
+    def test_tls(self, client_certs, tdata):
+        if client_certs:
+            client_certs = tdata.path(client_certs)
         c = connections.ServerConnection(("127.0.0.1", self.port))
         c.connect()
         c.establish_tls(client_certs=client_certs)

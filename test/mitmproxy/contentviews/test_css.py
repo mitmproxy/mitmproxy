@@ -1,10 +1,7 @@
 import pytest
 
 from mitmproxy.contentviews import css
-from mitmproxy.test import tutils
 from . import full_eval
-
-data = tutils.test_data.push("mitmproxy/contentviews/test_css_data/")
 
 
 @pytest.mark.parametrize("filename", [
@@ -19,8 +16,8 @@ data = tutils.test_data.push("mitmproxy/contentviews/test_css_data/")
     "selectors.css",
     "simple.css",
 ])
-def test_beautify(filename):
-    path = data.path(filename)
+def test_beautify(filename, tdata):
+    path = tdata.path("mitmproxy/contentviews/test_css_data/" + filename)
     with open(path) as f:
         input = f.read()
     with open("-formatted.".join(path.rsplit(".", 1))) as f:

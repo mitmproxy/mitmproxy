@@ -1,6 +1,5 @@
 import os
 from mitmproxy import certs
-from mitmproxy.test import tutils
 
 # class TestDNTree:
 #     def test_simple(self):
@@ -138,14 +137,14 @@ class TestDummyCert:
 
 class TestCert:
 
-    def test_simple(self):
-        with open(tutils.test_data.path("mitmproxy/net/data/text_cert"), "rb") as f:
+    def test_simple(self, tdata):
+        with open(tdata.path("mitmproxy/net/data/text_cert"), "rb") as f:
             d = f.read()
         c1 = certs.Cert.from_pem(d)
         assert c1.cn == b"google.com"
         assert len(c1.altnames) == 436
 
-        with open(tutils.test_data.path("mitmproxy/net/data/text_cert_2"), "rb") as f:
+        with open(tdata.path("mitmproxy/net/data/text_cert_2"), "rb") as f:
             d = f.read()
         c2 = certs.Cert.from_pem(d)
         assert c2.cn == b"www.inode.co.nz"
@@ -162,21 +161,21 @@ class TestCert:
 
         assert c1 != c2
 
-    def test_err_broken_sans(self):
-        with open(tutils.test_data.path("mitmproxy/net/data/text_cert_weird1"), "rb") as f:
+    def test_err_broken_sans(self, tdata):
+        with open(tdata.path("mitmproxy/net/data/text_cert_weird1"), "rb") as f:
             d = f.read()
         c = certs.Cert.from_pem(d)
         # This breaks unless we ignore a decoding error.
         assert c.altnames is not None
 
-    def test_der(self):
-        with open(tutils.test_data.path("mitmproxy/net/data/dercert"), "rb") as f:
+    def test_der(self, tdata):
+        with open(tdata.path("mitmproxy/net/data/dercert"), "rb") as f:
             d = f.read()
         s = certs.Cert.from_der(d)
         assert s.cn
 
-    def test_state(self):
-        with open(tutils.test_data.path("mitmproxy/net/data/text_cert"), "rb") as f:
+    def test_state(self, tdata):
+        with open(tdata.path("mitmproxy/net/data/text_cert"), "rb") as f:
             d = f.read()
         c = certs.Cert.from_pem(d)
 

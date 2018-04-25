@@ -1,10 +1,7 @@
 import pytest
 
 from mitmproxy.contentviews import javascript
-from mitmproxy.test import tutils
 from . import full_eval
-
-data = tutils.test_data.push("mitmproxy/contentviews/test_js_data/")
 
 
 def test_view_javascript():
@@ -22,8 +19,8 @@ def test_view_javascript():
 @pytest.mark.parametrize("filename", [
     "simple.js",
 ])
-def test_format_xml(filename):
-    path = data.path(filename)
+def test_format_xml(filename, tdata):
+    path = tdata.path("mitmproxy/contentviews/test_js_data/" + filename)
     with open(path) as f:
         input = f.read()
     with open("-formatted.".join(path.rsplit(".", 1))) as f:

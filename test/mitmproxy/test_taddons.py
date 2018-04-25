@@ -3,17 +3,16 @@ import io
 import pytest
 
 from mitmproxy.test import taddons
-from mitmproxy.test import tutils
 from mitmproxy import ctx
 
 
 @pytest.mark.asyncio
 async def test_recordingmaster():
     with taddons.context() as tctx:
-        assert not tctx.master._has_log("nonexistent")
+        assert not tctx.master.has_log("nonexistent")
         assert not tctx.master.has_event("nonexistent")
         ctx.log.error("foo")
-        assert not tctx.master._has_log("foo", level="debug")
+        assert not tctx.master.has_log("foo", level="debug")
         assert await tctx.master.await_log("foo", level="error")
 
 
@@ -27,10 +26,10 @@ async def test_dumplog():
         assert s.getvalue()
 
 
-def test_load_script():
+def test_load_script(tdata):
     with taddons.context() as tctx:
         s = tctx.script(
-            tutils.test_data.path(
+            tdata.path(
                 "mitmproxy/data/addonscripts/recorder/recorder.py"
             )
         )

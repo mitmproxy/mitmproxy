@@ -8,13 +8,16 @@ import urllib
 
 
 from mitmproxy.net import tcp
-from mitmproxy.test import tutils
+from mitmproxy.utils import data
 
 from pathod import language
 from pathod import pathoc
 from pathod import pathod
 from pathod import test
 from pathod.pathod import CA_CERT_NAME
+
+
+cdata = data.Data(__name__)
 
 
 def treader(bytes):
@@ -41,7 +44,7 @@ class DaemonTests:
         opts["confdir"] = cls.confdir
         so = pathod.SSLOptions(**opts)
         cls.d = test.Daemon(
-            staticdir=tutils.test_data.path("pathod/data"),
+            staticdir=cdata.path("data"),
             anchors=[
                 (re.compile("/anchor/.*"), "202:da")
             ],

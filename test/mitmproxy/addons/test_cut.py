@@ -5,13 +5,12 @@ from mitmproxy import exceptions
 from mitmproxy import certs
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 import pytest
 import pyperclip
 from unittest import mock
 
 
-def test_extract():
+def test_extract(tdata):
     tf = tflow.tflow(resp=True)
     tests = [
         ["request.method", "GET"],
@@ -54,7 +53,7 @@ def test_extract():
         ret = cut.extract(spec, tf)
         assert spec and ret == expected
 
-    with open(tutils.test_data.path("mitmproxy/net/data/text_cert"), "rb") as f:
+    with open(tdata.path("mitmproxy/net/data/text_cert"), "rb") as f:
         d = f.read()
     c1 = certs.Cert.from_pem(d)
     tf.server_conn.cert = c1
