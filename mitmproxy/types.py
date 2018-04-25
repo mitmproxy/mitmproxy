@@ -178,7 +178,7 @@ class _PathType(_BaseType):
         return ret
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> str:
-        return s
+        return os.path.expanduser(s)
 
     def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, str)

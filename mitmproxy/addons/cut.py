@@ -1,6 +1,8 @@
 import io
 import csv
 import typing
+import os.path
+
 from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -87,7 +89,8 @@ class Cut:
         append = False
         if path.startswith("+"):
             append = True
-            path = mitmproxy.types.Path(path[1:])
+            path = os.path.expanduser(path[1:])
+            path = mitmproxy.types.Path(path)
         try:
             if len(cuts) == 1 and len(flows) == 1:
                 with open(path, "ab" if append else "wb") as fp:
