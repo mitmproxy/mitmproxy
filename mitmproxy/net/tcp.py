@@ -563,6 +563,7 @@ class TCPServer:
             # Only works if self.address == ""
             self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             self.socket.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
             self.socket.bind(self.address)
         except socket.error:
@@ -574,6 +575,7 @@ class TCPServer:
             # Binding to an IPv6 socket failed, lets fall back to IPv4.
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             self.socket.bind(self.address)
 
         self.address = self.socket.getsockname()
