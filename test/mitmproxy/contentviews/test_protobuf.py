@@ -16,7 +16,7 @@ def test_view_protobuf_request():
     content_type, output = v(raw)
     assert content_type == "Protobuf"
     assert output == [[('text', '1: 3bbc333c-e61c-433b-819a-0b9a8cc103b8')]]
-    with pytest.raises(ValueError, matches="Failed to parse input."):
+    with pytest.raises(ValueError, match="Failed to parse input."):
         v(b'foobar')
 
 

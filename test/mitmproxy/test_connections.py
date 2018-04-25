@@ -160,7 +160,7 @@ class TestServerConnection:
 
     def test_sni(self):
         c = connections.ServerConnection(('', 1234))
-        with pytest.raises(ValueError, matches='sni must be str, not '):
+        with pytest.raises(ValueError, match='sni must be str, not '):
             c.establish_tls(sni=b'foobar')
 
     def test_state(self):
