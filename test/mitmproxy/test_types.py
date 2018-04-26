@@ -2,6 +2,7 @@ import pytest
 import os
 import typing
 import contextlib
+from unittest import mock
 
 import mitmproxy.exceptions
 import mitmproxy.types
@@ -68,7 +69,10 @@ def test_path(tdata):
         b = mitmproxy.types._PathType()
         assert b.parse(tctx.master.commands, mitmproxy.types.Path, "/foo") == "/foo"
         assert b.parse(tctx.master.commands, mitmproxy.types.Path, "/bar") == "/bar"
+        with mock.patch.dict("os.environ", {"HOME": "/home/test"}):
+            assert b.parse(tctx.master.commands, mitmproxy.types.Path, "~/mitm") == "/home/test/mitm"
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Path, "foo") is True
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Path, "~/mitm") is True
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Path, 3) is False
 
         def normPathOpts(prefix, match):
