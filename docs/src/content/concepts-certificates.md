@@ -143,14 +143,14 @@ mitmproxy --cert *.example.com=cert.pem
 By default, mitmproxy will use `~/.mitmproxy/mitmproxy-ca.pem` as the
 certificate authority to generate certificates for all domains for which
 no custom certificate is provided (see above). You can use your own
-certificate authority by passing the `--cadir DIRECTORY` option to
+certificate authority by passing the `--set cadir=DIRECTORY` option to
 mitmproxy. Mitmproxy will then look for `mitmproxy-ca.pem` in the
 specified directory. If no such file exists, it will be generated
 automatically.
 
 ## Using a client side certificate
 
-You can use a client certificate by passing the `--client-certs DIRECTORY|FILE`
+You can use a client certificate by passing the `--set client_certs=DIRECTORY|FILE`
 option to mitmproxy. Using a directory allows certs to be selected based on
 hostname, while using a filename allows a single specific certificate to be used
 for all SSL connections. Certificate files must be in the PEM format and should
@@ -158,7 +158,7 @@ contain both the unencrypted private key and the certificate.
 
 ### Multiple client certificates
 
-You can specify a directory to `--client-certs`, in which case the matching
+You can specify a directory to `--set client_certs=DIRECTORY`, in which case the matching
 certificate is looked up by filename. So, if you visit example.org, mitmproxy
 looks for a file named `example.org.pem` in the specified directory and uses
 this as the client cert.
