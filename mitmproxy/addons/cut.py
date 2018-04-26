@@ -89,8 +89,8 @@ class Cut:
         append = False
         if path.startswith("+"):
             append = True
-            path = os.path.expanduser(path[1:])
-            path = mitmproxy.types.Path(path)
+            epath = os.path.expanduser(path[1:])
+            path = mitmproxy.types.Path(epath)
         try:
             if len(cuts) == 1 and len(flows) == 1:
                 with open(path, "ab" if append else "wb") as fp:
