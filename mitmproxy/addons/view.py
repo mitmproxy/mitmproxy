@@ -10,7 +10,6 @@ The View:
 """
 import collections
 import typing
-import os
 
 import blinker
 import sortedcontainers
