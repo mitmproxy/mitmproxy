@@ -112,12 +112,10 @@ class context:
         if addon not in self.master.addons:
             self.master.addons.register(addon)
         with self.options.rollback(kwargs.keys(), reraise=True):
-            self.options.update(**kwargs)
-            self.master.addons.invoke_addon(
-                addon,
-                "configure",
-                kwargs.keys()
-            )
+            if kwargs:
+                self.options.update(**kwargs)
+            else:
+                self.master.addons.invoke_addon(addon, "configure", {})
 
     def script(self, path):
         """

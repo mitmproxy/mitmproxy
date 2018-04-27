@@ -42,7 +42,7 @@ def corrupt_data():
 class TestReadFile:
     def test_configure(self):
         rf = readfile.ReadFile()
-        with taddons.context() as tctx:
+        with taddons.context(rf) as tctx:
             tctx.configure(rf, readfile_filter="~q")
             with pytest.raises(Exception, match="Invalid readfile filter"):
                 tctx.configure(rf, readfile_filter="~~")

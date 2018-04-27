@@ -92,14 +92,13 @@ class TestScript:
 
     @pytest.mark.asyncio
     async def test_simple(self, tdata):
-        with taddons.context() as tctx:
-            sc = script.Script(
-                tdata.path(
-                    "mitmproxy/data/addonscripts/recorder/recorder.py"
-                ),
-                True,
-            )
-            tctx.master.addons.add(sc)
+        sc = script.Script(
+            tdata.path(
+                "mitmproxy/data/addonscripts/recorder/recorder.py"
+            ),
+            True,
+        )
+        with taddons.context(sc) as tctx:
             tctx.configure(sc)
             await tctx.master.await_log("recorder running")
             rec = tctx.master.addons.get("recorder")
@@ -284,7 +283,7 @@ class TestScriptLoader:
         rec = tdata.path("mitmproxy/data/addonscripts/recorder")
         sc = script.ScriptLoader()
         sc.is_running = True
-        with taddons.context() as tctx:
+        with taddons.context(sc) as tctx:
             tctx.configure(
                 sc,
                 scripts = [

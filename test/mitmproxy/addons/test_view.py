@@ -155,7 +155,7 @@ def test_create():
 
 def test_orders():
     v = view.View()
-    with taddons.context():
+    with taddons.context(v):
         assert v.order_options()
 
 
@@ -303,7 +303,7 @@ def test_setgetval():
 
 def test_order():
     v = view.View()
-    with taddons.context() as tctx:
+    with taddons.context(v) as tctx:
         v.request(tft(method="get", start=1))
         v.request(tft(method="put", start=2))
         v.request(tft(method="get", start=3))
@@ -434,7 +434,7 @@ def test_signals():
 
 def test_focus_follow():
     v = view.View()
-    with taddons.context() as tctx:
+    with taddons.context(v) as tctx:
         console_addon = consoleaddons.ConsoleAddon(tctx.master)
         tctx.configure(console_addon)
         tctx.configure(v, console_focus_follow=True, view_filter="~m get")
@@ -553,7 +553,7 @@ def test_settings():
 
 def test_configure():
     v = view.View()
-    with taddons.context() as tctx:
+    with taddons.context(v) as tctx:
         tctx.configure(v, view_filter="~q")
         with pytest.raises(Exception, match="Invalid interception filter"):
             tctx.configure(v, view_filter="~~")
