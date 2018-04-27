@@ -31,48 +31,6 @@ class CommonMixin:
     def test_large(self):
         assert len(self.pathod("200:b@50k").content) == 1024 * 50
 
-    @staticmethod
-    def wait_until_not_live(flow):
-        """
-        Race condition: We don't want to replay the flow while it is still live.
-        """
-        s = time.time()
-        while flow.live:
-            time.sleep(0.001)
-            if time.time() - s > 5:
-                raise RuntimeError("Flow is live for too long.")
-
-    def test_replay(self):
-        assert self.pathod("304").status_code == 304
-        assert len(self.master.state.flows) == 1
-        l = self.master.state.flows[-1]
-        assert l.response.status_code == 304
-        l.request.path = "/p/305"
-        self.wait_until_not_live(l)
-        rt = self.master.replay_request(l, block=True)
-        assert l.response.status_code == 305
-
-        # Disconnect error
-        l.request.path = "/p/305:d0"
-        rt = self.master.replay_request(l, block=True)
-        assert rt
-        if isinstance(self, tservers.HTTPUpstreamProxyTest):
-            assert l.response.status_code == 502
-        else:
-            assert l.error
-
-        # Port error
-        l.request.port = 1
-        # In upstream mode, we get a 502 response from the upstream proxy server.
-        # In upstream mode with ssl, the replay will fail as we cannot establish
-        # SSL with the upstream proxy.
-        rt = self.master.replay_request(l, block=True)
-        assert rt
-        if isinstance(self, tservers.HTTPUpstreamProxyTest):
-            assert l.response.status_code == 502
-        else:
-            assert l.error
-
     def test_http(self):
         f = self.pathod("304")
         assert f.status_code == 304

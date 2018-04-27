@@ -344,6 +344,7 @@ class ReplayFlow(RequestHandler):
         self.view.update([self.flow])
 
         try:
+            self.master.command.call
             self.master.replay_request(self.flow)
         except exceptions.ReplayException as e:
             raise APIError(400, str(e))
