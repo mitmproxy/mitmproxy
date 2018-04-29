@@ -115,6 +115,7 @@ def run(
         opts.set(*args.setoptions)
         if extra:
             opts.update(**extra(args))
+        master.addons.trigger("configure", ())
 
         def cleankill(*args, **kwargs):
             master.shutdown()

@@ -166,7 +166,7 @@ class ServerPlayback:
                 return ret
 
     def configure(self, updated):
-        if not self.configured and ctx.options.server_replay:
+        if not self.configured and not updated:
             self.configured = True
             try:
                 flows = io.read_flows_from_paths(ctx.options.server_replay)
