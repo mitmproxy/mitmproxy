@@ -70,6 +70,13 @@ class ServerPlayback:
             to replay.
             """
         )
+        loader.add_option(
+            "server_replay_ignore_port", bool, False,
+            """
+            Ignore request's destination port while searching for a saved flow
+            to replay.
+            """
+        )
 
     @command.command("replay.server")
     def load_flows(self, flows: typing.Sequence[flow.Flow]) -> None:
@@ -111,7 +118,7 @@ class ServerPlayback:
         _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
-        key: typing.List[typing.Any] = [str(r.port), str(r.scheme), str(r.method), str(path)]
+        key: typing.List[typing.Any] = [str(r.scheme), str(r.method), str(path)]
         if not ctx.options.server_replay_ignore_content:
             if ctx.options.server_replay_ignore_payload_params and r.multipart_form:
                 key.extend(
@@ -130,6 +137,8 @@ class ServerPlayback:
 
         if not ctx.options.server_replay_ignore_host:
             key.append(r.host)
+        if not ctx.options.server_replay_ignore_port:
+            key.append(r.port)
 
         filtered = []
         ignore_params = ctx.options.server_replay_ignore_params or []
