@@ -172,6 +172,8 @@ class ClientPlayback:
         with self.q.mutex:
             lst = list(self.q.queue)
             self.q.queue.clear()
+            for f in lst:
+                f.revert()
             ctx.master.addons.trigger("update", lst)
         ctx.log.alert("Client replay queue cleared.")
 
