@@ -34,10 +34,10 @@ class RequestReplayThread(basethread.BaseThread):
 
     def run(self):
         while True:
-            f = self.queue.get(block=True, timeout=None)
+            f = self.queue.get()
             self.replay(f)
 
-    def replay(self, f):
+    def replay(self, f):  # pragma: no cover
         f.live = True
         r = f.request
         bsl = human.parse_size(self.options.body_size_limit)
@@ -118,12 +118,13 @@ class RequestReplayThread(basethread.BaseThread):
             f.live = False
             if server.connected():
                 server.finish()
+                server.close()
 
 
 class ClientPlayback:
     def __init__(self):
-        self.q: queue.Queue = queue.Queue()
-        self.thread: RequestReplayThread | None = None
+        self.q = queue.Queue()
+        self.thread: RequestReplayThread = None
 
     def check(self, f: http.HTTPFlow):
         if f.live:
@@ -184,23 +185,25 @@ class ClientPlayback:
         """
         lst = []
         for f in flows:
-            err = self.check(f)
+            hf = typing.cast(http.HTTPFlow, f)
+
+            err = self.check(hf)
             if err:
                 ctx.log.warn(err)
                 continue
 
-            lst.append(f)
+            lst.append(hf)
             # Prepare the flow for replay
-            f.backup()
-            f.request.is_replay = True
-            f.response = None
-            f.error = None
+            hf.backup()
+            hf.request.is_replay = True
+            hf.response = None
+            hf.error = None
             # https://github.com/mitmproxy/mitmproxy/issues/2197
-            if f.request.http_version == "HTTP/2.0":
-                f.request.http_version = "HTTP/1.1"
-                host = f.request.headers.pop(":authority")
-                f.request.headers.insert(0, "host", host)
-            self.q.put(f)
+            if hf.request.http_version == "HTTP/2.0":
+                hf.request.http_version = "HTTP/1.1"
+                host = hf.request.headers.pop(":authority")
+                hf.request.headers.insert(0, "host", host)
+            self.q.put(hf)
         ctx.master.addons.trigger("update", lst)
 
     @command.command("replay.client.file")

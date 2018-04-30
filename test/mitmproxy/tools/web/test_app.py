@@ -9,7 +9,6 @@ import tornado.testing
 from tornado import httpclient
 from tornado import websocket
 
-from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
