@@ -1,4 +1,5 @@
 import queue
+import threading
 import typing
 
 from mitmproxy import log
@@ -30,12 +31,15 @@ class RequestReplayThread(basethread.BaseThread):
         self.options = opts
         self.channel = channel
         self.queue = queue
+        self.inflight = threading.Event()
         super().__init__("RequestReplayThread")
 
     def run(self):
         while True:
             f = self.queue.get()
+            self.inflight.set()
             self.replay(f)
+            self.inflight.clear()
 
     def replay(self, f):  # pragma: no cover
         f.live = True
@@ -163,7 +167,8 @@ class ClientPlayback:
         """
             Approximate number of flows queued for replay.
         """
-        return self.q.qsize()
+        inflight = 1 if self.thread and self.thread.inflight.is_set() else 0
+        return self.q.qsize() + inflight
 
     @command.command("replay.client.stop")
     def stop_replay(self) -> None:
