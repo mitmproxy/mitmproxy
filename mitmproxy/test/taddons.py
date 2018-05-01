@@ -17,10 +17,6 @@ class TestAddons(addonmanager.AddonManager):
     def trigger(self, event, *args, **kwargs):
         if event == "log":
             self.master.logs.append(args[0])
-        elif event == "tick" and not args and not kwargs:
-            pass
-        else:
-            self.master.events.append((event, args, kwargs))
         super().trigger(event, *args, **kwargs)
 
 
@@ -28,7 +24,6 @@ class RecordingMaster(mitmproxy.master.Master):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.addons = TestAddons(self)
-        self.events = []
         self.logs = []
 
     def dump_log(self, outf=sys.stdout):
@@ -49,12 +44,6 @@ class RecordingMaster(mitmproxy.master.Master):
                 return True
             else:
                 await asyncio.sleep(0.1)
-        return False
-
-    def has_event(self, name):
-        for i in self.events:
-            if i[0] == name:
-                return True
         return False
 
     def clear(self):
