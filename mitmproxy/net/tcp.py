@@ -372,12 +372,11 @@ class TCPClient(_Connection):
         # Make sure to close the real socket, not the SSL proxy.
         # OpenSSL is really good at screwing up, i.e. when trying to recv from a failed connection,
         # it tries to renegotiate...
-        if not self.connection:
-            return
-        elif isinstance(self.connection, SSL.Connection):
-            close_socket(self.connection._socket)
-        else:
-            close_socket(self.connection)
+        if self.connection:
+            if isinstance(self.connection, SSL.Connection):
+                close_socket(self.connection._socket)
+            else:
+                close_socket(self.connection)
 
     def convert_to_tls(self, sni=None, alpn_protos=None, **sslctx_kwargs):
         context = tls.create_client_context(

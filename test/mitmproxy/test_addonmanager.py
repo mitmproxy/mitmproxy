@@ -47,7 +47,7 @@ class AOption:
 def test_command():
     with taddons.context() as tctx:
         tctx.master.addons.add(TAddon("test"))
-        assert tctx.master.commands.call("test.command") == "here"
+        assert tctx.master.commands.execute("test.command") == "here"
 
 
 def test_halt():

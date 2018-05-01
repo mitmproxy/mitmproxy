@@ -204,7 +204,15 @@ class CommandManager(mitmproxy.types._CommandBase):
 
         return parse, remhelp
 
-    def call_args(self, path: str, args: typing.Sequence[str]) -> typing.Any:
+    def call(self, path: str, *args: typing.Sequence[typing.Any]) -> typing.Any:
+        """
+            Call a command with native arguments. May raise CommandError.
+        """
+        if path not in self.commands:
+            raise exceptions.CommandError("Unknown command: %s" % path)
+        return self.commands[path].func(*args)
+
+    def call_strings(self, path: str, args: typing.Sequence[str]) -> typing.Any:
         """
             Call a command using a list of string arguments. May raise CommandError.
         """
@@ -212,14 +220,14 @@ class CommandManager(mitmproxy.types._CommandBase):
             raise exceptions.CommandError("Unknown command: %s" % path)
         return self.commands[path].call(args)
 
-    def call(self, cmdstr: str):
+    def execute(self, cmdstr: str):
         """
-            Call a command using a string. May raise CommandError.
+            Execute a command string. May raise CommandError.
         """
         parts = list(lexer(cmdstr))
         if not len(parts) >= 1:
             raise exceptions.CommandError("Invalid command: %s" % cmdstr)
-        return self.call_args(parts[0], parts[1:])
+        return self.call_strings(parts[0], parts[1:])
 
     def dump(self, out=sys.stdout) -> None:
         cmds = list(self.commands.values())

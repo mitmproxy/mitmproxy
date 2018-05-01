@@ -258,7 +258,7 @@ class ConsoleAddon:
             command, then invoke another command with all occurrences of {choice}
             replaced by the choice the user made.
         """
-        choices = ctx.master.commands.call_args(choicecmd, [])
+        choices = ctx.master.commands.call_strings(choicecmd, [])
 
         def callback(opt):
             # We're now outside of the call context...
@@ -514,7 +514,7 @@ class ConsoleAddon:
             raise exceptions.CommandError("Invalid flowview mode.")
 
         try:
-            self.master.commands.call_args(
+            self.master.commands.call_strings(
                 "view.setval",
                 ["@focus", "flowview_mode_%s" % idx, mode]
             )
@@ -537,7 +537,7 @@ class ConsoleAddon:
         if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
-        return self.master.commands.call_args(
+        return self.master.commands.call_strings(
             "view.getval",
             [
                 "@focus",

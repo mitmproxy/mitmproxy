@@ -167,6 +167,7 @@ class StatusBar(urwid.WidgetWrap):
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         self.ab = ActionBar(self.master)
         super().__init__(urwid.Pile([self.ib, self.ab]))
+        signals.flow_change.connect(self.sig_update)
         signals.update_settings.connect(self.sig_update)
         signals.flowlist_change.connect(self.sig_update)
         master.options.changed.connect(self.sig_update)
@@ -184,7 +185,7 @@ class StatusBar(urwid.WidgetWrap):
         r = []
 
         sreplay = self.master.addons.get("serverplayback")
-        creplay = self.master.addons.get("clientplayback")
+        creplay = self.master.commands.call("replay.client.count")
 
         if len(self.master.options.setheaders):
             r.append("[")
@@ -192,10 +193,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("eaders]")
         if len(self.master.options.replacements):
             r.append("[%d replacements]" % len(self.master.options.replacements))
-        if creplay.count():
+        if creplay:
             r.append("[")
             r.append(("heading_key", "cplayback"))
-            r.append(":%s]" % creplay.count())
+            r.append(":%s]" % creplay)
         if sreplay.count():
             r.append("[")
             r.append(("heading_key", "splayback"))

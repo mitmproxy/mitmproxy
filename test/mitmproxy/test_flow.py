@@ -1,17 +1,14 @@
 import io
-from unittest import mock
 import pytest
 
-from mitmproxy.test import tflow, tutils, taddons
+from mitmproxy.test import tflow, taddons
 import mitmproxy.io
 from mitmproxy import flowfilter
 from mitmproxy import options
 from mitmproxy.io import tnetstring
-from mitmproxy.exceptions import FlowReadException, ReplayException
+from mitmproxy.exceptions import FlowReadException
 from mitmproxy import flow
 from mitmproxy import http
-from mitmproxy.net import http as net_http
-from mitmproxy import master
 from . import tservers
 
 
@@ -121,34 +118,6 @@ class TestFlowMaster:
             assert s.flows[0].request.host == "use-this-domain"
             assert s.flows[1].handshake_flow == f.handshake_flow
             assert len(s.flows[1].messages) == len(f.messages)
-
-    def test_replay(self):
-        opts = options.Options()
-        fm = master.Master(opts)
-        f = tflow.tflow(resp=True)
-        f.request.content = None
-        with pytest.raises(ReplayException, match="missing"):
-            fm.replay_request(f)
-
-        f.request = None
-        with pytest.raises(ReplayException, match="request"):
-            fm.replay_request(f)
-
-        f.intercepted = True
-        with pytest.raises(ReplayException, match="intercepted"):
-            fm.replay_request(f)
-
-        f.live = True
-        with pytest.raises(ReplayException, match="live"):
-            fm.replay_request(f)
-
-        req = tutils.treq(headers=net_http.Headers(((b":authority", b"foo"), (b"header", b"qvalue"), (b"content-length", b"7"))))
-        f = tflow.tflow(req=req)
-        f.request.http_version = "HTTP/2.0"
-        with mock.patch('mitmproxy.proxy.protocol.http_replay.RequestReplayThread.run'):
-            rt = fm.replay_request(f)
-            assert rt.f.request.http_version == "HTTP/1.1"
-            assert ":authority" not in rt.f.request.headers
 
     @pytest.mark.asyncio
     async def test_all(self):

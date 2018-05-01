@@ -242,16 +242,19 @@ def test_simple():
         a = TAddon()
         c.add("one.two", a.cmd1)
         assert c.commands["one.two"].help == "cmd1 help"
-        assert(c.call("one.two foo") == "ret foo")
+        assert(c.execute("one.two foo") == "ret foo")
+        assert(c.call("one.two", "foo") == "ret foo")
+        with pytest.raises(exceptions.CommandError, match="Unknown"):
+            c.execute("nonexistent")
+        with pytest.raises(exceptions.CommandError, match="Invalid"):
+            c.execute("")
+        with pytest.raises(exceptions.CommandError, match="argument mismatch"):
+            c.execute("one.two too many args")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.call("nonexistent")
-        with pytest.raises(exceptions.CommandError, match="Invalid"):
-            c.call("")
-        with pytest.raises(exceptions.CommandError, match="argument mismatch"):
-            c.call("one.two too many args")
 
         c.add("empty", a.empty)
-        c.call("empty")
+        c.execute("empty")
 
         fp = io.StringIO()
         c.dump(fp)
@@ -340,13 +343,13 @@ def test_decorator():
         a = TDec()
         c.collect_commands(a)
         assert "cmd1" in c.commands
-        assert c.call("cmd1 bar") == "ret bar"
+        assert c.execute("cmd1 bar") == "ret bar"
         assert "empty" in c.commands
-        assert c.call("empty") is None
+        assert c.execute("empty") is None
 
     with taddons.context() as tctx:
         tctx.master.addons.add(a)
-        assert tctx.master.commands.call("cmd1 bar") == "ret bar"
+        assert tctx.master.commands.execute("cmd1 bar") == "ret bar"
 
 
 def test_verify_arg_signature():

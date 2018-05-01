@@ -9,7 +9,6 @@ import tornado.testing
 from tornado import httpclient
 from tornado import websocket
 
-from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
@@ -186,13 +185,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert not f._backup
 
     def test_flow_replay(self):
-        with mock.patch("mitmproxy.master.Master.replay_request") as replay_request:
+        with mock.patch("mitmproxy.command.CommandManager.call") as replay_call:
             assert self.fetch("/flows/42/replay", method="POST").code == 200
-            assert replay_request.called
-            replay_request.side_effect = exceptions.ReplayException(
-                "out of replays"
-            )
-            assert self.fetch("/flows/42/replay", method="POST").code == 400
+            assert replay_call.called
 
     def test_flow_content(self):
         f = self.view.get_by_id("42")
