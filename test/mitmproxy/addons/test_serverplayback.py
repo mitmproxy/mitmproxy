@@ -39,16 +39,6 @@ def test_config(tmpdir):
             tctx.configure(s, server_replay=[str(tmpdir)])
 
 
-def test_tick():
-    s = serverplayback.ServerPlayback()
-    with taddons.context(s) as tctx:
-        s.stop = True
-        s.final_flow = tflow.tflow()
-        s.final_flow.live = False
-        s.tick()
-        assert tctx.master.has_event("processing_complete")
-
-
 def test_server_playback():
     sp = serverplayback.ServerPlayback()
     with taddons.context(sp) as tctx:
@@ -348,14 +338,6 @@ def test_server_playback_full():
         assert not tf.response
         s.request(tf)
         assert not tf.response
-
-        assert not s.stop
-        s.tick()
-        assert not s.stop
-
-        tf = tflow.tflow()
-        s.request(tflow.tflow())
-        assert s.stop
 
 
 def test_server_playback_kill():

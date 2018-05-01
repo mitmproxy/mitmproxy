@@ -51,6 +51,8 @@ class TestReadFile:
     async def test_read(self, tmpdir, data, corrupt_data):
         rf = readfile.ReadFile()
         with taddons.context(rf) as tctx:
+            assert not rf.reading()
+
             tf = tmpdir.join("tfile")
 
             with asynctest.patch('mitmproxy.master.Master.load_flow') as mck:

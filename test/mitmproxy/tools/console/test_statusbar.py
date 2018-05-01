@@ -30,6 +30,7 @@ def test_statusbar(monkeypatch):
     m.options.update(view_order='url', console_focus_follow=True)
     monkeypatch.setattr(m.addons.get("clientplayback"), "count", lambda: 42)
     monkeypatch.setattr(m.addons.get("serverplayback"), "count", lambda: 42)
+    monkeypatch.setattr(statusbar.StatusBar, "refresh", lambda x: None)
 
     bar = statusbar.StatusBar(m)  # this already causes a redraw
     assert bar.ib._w

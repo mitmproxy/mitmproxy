@@ -127,10 +127,7 @@ class Master:
         """
         if not self.should_exit.is_set():
             self.should_exit.set()
-            asyncio.run_coroutine_threadsafe(
-                self._shutdown(),
-                loop = self.channel.loop,
-            )
+            asyncio.run_coroutine_threadsafe(self._shutdown(), loop = self.channel.loop)
 
     def _change_reverse_host(self, f):
         """
