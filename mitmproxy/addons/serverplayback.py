@@ -99,6 +99,7 @@ class ServerPlayback:
         self.flowmap = {}
         ctx.master.addons.trigger("update", [])
 
+    @command.command("replay.server.count")
     def count(self):
         return sum([len(i) for i in self.flowmap.values()])
 
