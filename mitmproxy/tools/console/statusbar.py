@@ -158,6 +158,7 @@ class ActionBar(urwid.WidgetWrap):
 
 
 class StatusBar(urwid.WidgetWrap):
+    REFRESHTIME = 0.5  # Timed refresh time in seconds
     keyctx = ""
 
     def __init__(
@@ -173,7 +174,11 @@ class StatusBar(urwid.WidgetWrap):
         master.options.changed.connect(self.sig_update)
         master.view.focus.sig_change.connect(self.sig_update)
         master.view.sig_view_add.connect(self.sig_update)
+        self.refresh()
+
+    def refresh(self):
         self.redraw()
+        signals.call_in.send(seconds=self.REFRESHTIME, callback=self.refresh)
 
     def sig_update(self, sender, flow=None, updated=None):
         self.redraw()
@@ -184,7 +189,7 @@ class StatusBar(urwid.WidgetWrap):
     def get_status(self):
         r = []
 
-        sreplay = self.master.addons.get("serverplayback")
+        sreplay = self.master.commands.call("replay.server.count")
         creplay = self.master.commands.call("replay.client.count")
 
         if len(self.master.options.setheaders):
@@ -197,10 +202,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "cplayback"))
             r.append(":%s]" % creplay)
-        if sreplay.count():
+        if sreplay:
             r.append("[")
             r.append(("heading_key", "splayback"))
-            r.append(":%s]" % sreplay.count())
+            r.append(":%s]" % sreplay)
         if self.master.options.ignore_hosts:
             r.append("[")
             r.append(("heading_key", "I"))
