@@ -91,6 +91,17 @@ def run(
         sys.exit(1)
     try:
         unknown = optmanager.load_paths(opts, args.conf)
+        opts.update_known(**unknown)
+        if args.options:
+            print(optmanager.dump_defaults(opts))
+            sys.exit(0)
+        if args.commands:
+            master.commands.dump()
+            sys.exit(0)
+        opts.set(*args.setoptions)
+        if extra:
+            opts.update(**extra(args))
+
         pconf = process_options(parser, opts, args)
         server: typing.Any = None
         if pconf.options.server:
@@ -105,16 +116,6 @@ def run(
         master.server = server
         master.addons.trigger("configure", opts.keys())
         master.addons.trigger("tick")
-        opts.update_known(**unknown)
-        if args.options:
-            print(optmanager.dump_defaults(opts))
-            sys.exit(0)
-        if args.commands:
-            master.commands.dump()
-            sys.exit(0)
-        opts.set(*args.setoptions)
-        if extra:
-            opts.update(**extra(args))
 
         def cleankill(*args, **kwargs):
             master.shutdown()
