@@ -117,7 +117,6 @@ class ProxyThread(threading.Thread):
 
     def set_addons(self, *addons):
         self.tmaster.reset(addons)
-        self.tmaster.addons.trigger("tick")
 
     def start(self):
         super().start()

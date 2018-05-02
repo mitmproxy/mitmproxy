@@ -15,7 +15,7 @@ from mitmproxy.test import tflow
 class TAddon:
     def __init__(self, name, addons=None):
         self.name = name
-        self.tick = True
+        self.response = True
         self.custom_called = False
         if addons:
             self.addons = addons
@@ -127,12 +127,12 @@ async def test_simple():
 
         a.add(TAddon("one"))
         a.trigger("running")
-        a.trigger("tick")
+        a.trigger("response")
         assert await tctx.master.await_log("not callable")
 
         tctx.master.clear()
-        a.get("one").tick = addons
-        a.trigger("tick")
+        a.get("one").response = addons
+        a.trigger("response")
         assert not await tctx.master.await_log("not callable")
 
         a.remove(a.get("one"))
