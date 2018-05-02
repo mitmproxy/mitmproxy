@@ -7,6 +7,7 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import io
+from mitmproxy import command
 
 
 class ReadFile:
@@ -15,6 +16,7 @@ class ReadFile:
     """
     def __init__(self):
         self.filter = None
+        self.is_reading = False
 
     def load(self, loader):
         loader.add_option(
@@ -65,16 +67,22 @@ class ReadFile:
             raise exceptions.FlowReadException(str(e)) from e
 
     async def doread(self, rfile):
+        self.is_reading = True
         try:
             await self.load_flows_from_path(ctx.options.rfile)
         except exceptions.FlowReadException as e:
             raise exceptions.OptionsError(e) from e
         finally:
+            self.is_reading = False
             ctx.master.addons.trigger("processing_complete")
 
     def running(self):
         if ctx.options.rfile:
             asyncio.get_event_loop().create_task(self.doread(ctx.options.rfile))
+
+    @command.command("readfile.reading")
+    def reading(self) -> bool:
+        return self.is_reading
 
 
 class ReadFileStdin(ReadFile):

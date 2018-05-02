@@ -103,8 +103,6 @@ def run(
             server = proxy.server.DummyServer(pconf)
 
         master.server = server
-        master.addons.trigger("configure", opts.keys())
-        master.addons.trigger("tick")
         opts.update_known(**unknown)
         if args.options:
             print(optmanager.dump_defaults(opts))

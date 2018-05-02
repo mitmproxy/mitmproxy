@@ -14,7 +14,7 @@ class CommandExecutor:
     def __call__(self, cmd):
         if cmd.strip():
             try:
-                ret = self.master.commands.call(cmd)
+                ret = self.master.commands.execute(cmd)
             except exceptions.CommandError as v:
                 signals.status_message.send(message=str(v))
             else:

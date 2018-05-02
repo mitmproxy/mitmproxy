@@ -13,8 +13,6 @@ import mitmproxy.types
 class ServerPlayback:
     def __init__(self):
         self.flowmap = {}
-        self.stop = False
-        self.final_flow = None
         self.configured = False
 
     def load(self, loader):
@@ -99,7 +97,8 @@ class ServerPlayback:
         self.flowmap = {}
         ctx.master.addons.trigger("update", [])
 
-    def count(self):
+    @command.command("replay.server.count")
+    def count(self) -> int:
         return sum([len(i) for i in self.flowmap.values()])
 
     def _hash(self, flow):
@@ -174,10 +173,6 @@ class ServerPlayback:
                 raise exceptions.OptionsError(str(e))
             self.load_flows(flows)
 
-    def tick(self):
-        if self.stop and not self.final_flow.live:
-            ctx.master.addons.trigger("processing_complete")
-
     def request(self, f):
         if self.flowmap:
             rflow = self.next_flow(f)
@@ -187,9 +182,6 @@ class ServerPlayback:
                 if ctx.options.server_replay_refresh:
                     response.refresh()
                 f.response = response
-                if not self.flowmap:
-                    self.final_flow = f
-                    self.stop = True
             elif ctx.options.server_replay_kill_extra:
                 ctx.log.warn(
                     "server_playback: killed non-replay request {}".format(
