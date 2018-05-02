@@ -167,11 +167,6 @@ class Events:
             loaded.
         """
 
-    def tick(self):
-        """
-            A regular ticker - called approximately once every 100ms.
-        """
-
     def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]):
         """
             Update is called when one or more flow objects have been modified,

@@ -251,20 +251,6 @@ class TestScriptLoader:
             assert not tctx.options.scripts
             assert not sl.addons
 
-    def test_load_err(self, tdata):
-        sc = script.ScriptLoader()
-        with taddons.context(sc, loadcore=False) as tctx:
-            tctx.configure(sc, scripts=[
-                tdata.path("mitmproxy/data/addonscripts/load_error.py")
-            ])
-            try:
-                tctx.invoke(sc, "tick")
-            except ValueError:
-                pass  # this is expected and normally guarded.
-            # on the next tick we should not fail however.
-            tctx.invoke(sc, "tick")
-            assert len(tctx.master.addons) == 1
-
     @pytest.mark.asyncio
     async def test_script_error_handler(self):
         path = "/sample/path/example.py"
@@ -292,8 +278,7 @@ class TestScriptLoader:
                     "%s/c.py" % rec,
                 ]
             )
-            tctx.master.addons.invoke_addon(sc, "tick")
-            await tctx.master.await_log("c tick")
+            await tctx.master.await_log("configure")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'a load',

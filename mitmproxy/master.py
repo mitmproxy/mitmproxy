@@ -53,7 +53,6 @@ class Master:
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
         self._server = None
-        self.first_tick = True
         self.waiting_flows = []
         self.log = log.Log(self)
 
@@ -75,19 +74,12 @@ class Master:
         if self.server:
             ServerThread(self.server).start()
 
-    async def tick(self):
-        if self.first_tick:
-            self.first_tick = False
-            self.addons.trigger("running")
-        while True:
-            if self.should_exit.is_set():
-                return
-            self.addons.trigger("tick")
-            await asyncio.sleep(0.1)
+    async def running(self):
+        self.addons.trigger("running")
 
     def run_loop(self, loop):
         self.start()
-        asyncio.ensure_future(self.tick())
+        asyncio.ensure_future(self.running())
 
         exc = None
         try:
