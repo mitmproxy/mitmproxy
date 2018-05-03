@@ -179,7 +179,7 @@ class OptionsOverlay(urwid.WidgetWrap, layoutwidget.LayoutWidget):
 
 
 class DataViewerOverlay(urwid.WidgetWrap, layoutwidget.LayoutWidget):
-    keyctx = "grideditor"
+    keyctx = "dataviewer"
 
     def __init__(self, master, vals):
         """
