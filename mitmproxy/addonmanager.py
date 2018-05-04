@@ -243,7 +243,7 @@ class AddonManager:
             Invoke an event on an addon and all its children.
         """
         if name not in eventsequence.Events:
-            name = "event_" + name
+            raise exceptions.AddonManagerError("Unknown event: %s" % name)
         for a in traverse([addon]):
             func = getattr(a, name, None)
             if func:
