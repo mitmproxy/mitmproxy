@@ -293,6 +293,7 @@ class View(collections.Sequence):
         self._refilter()
         self.sig_store_refresh.send(self)
 
+    @command.command("view.marked.toggle")
     def add(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Adds a flow to the state. If the flow already exists, it is
