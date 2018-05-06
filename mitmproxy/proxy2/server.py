@@ -30,13 +30,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
         self.client = Client(addr)
         self.context = Context(self.client, options)
+        self.layer = layer.NextLayer(self.context)
 
-        if options.mode == "regular":
-            self.layer = layers.modes.HttpProxy(self.context)
-        elif options.mode.startswith("reverse:"):
-            self.layer = layers.modes.ReverseProxy(self.context)
-        else:
-            raise NotImplementedError("Mode not implemented.")
+        # Ask for the first layer right away.
+        # In a reverse proxy scenario, this is necessary as we would otherwise hang
+        # on protocols that start with a server greeting.
+        self.layer.ask_now()
 
         self.transports = {
             self.client: StreamIO(reader, writer)
