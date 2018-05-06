@@ -5,7 +5,7 @@ from typing import MutableMapping, Optional, Iterator, Union, Generator, Any
 from OpenSSL import SSL
 
 from mitmproxy.certs import CertStore
-from mitmproxy.proxy.protocol import TlsClientHello
+from mitmproxy.net.tls import ClientHello
 from mitmproxy.proxy.protocol import tls
 from mitmproxy.proxy2 import context
 from mitmproxy.proxy2 import layer, commands, events
@@ -69,7 +69,7 @@ def get_client_hello(data: bytes) -> Optional[bytes]:
     return None
 
 
-def parse_client_hello(data: bytes) -> Optional[TlsClientHello]:
+def parse_client_hello(data: bytes) -> Optional[ClientHello]:
     """
     Check if the supplied bytes contain a full ClientHello message,
     and if so, parse it.
@@ -84,7 +84,7 @@ def parse_client_hello(data: bytes) -> Optional[TlsClientHello]:
     # Check if ClientHello is complete
     client_hello = get_client_hello(data)
     if client_hello:
-        return TlsClientHello(client_hello[4:])
+        return ClientHello(client_hello[4:])
     return None
 
 
