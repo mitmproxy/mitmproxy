@@ -123,10 +123,17 @@ class NextLayer(Layer):
     def _handle_event(self, event: mevents.Event):
         self.events.append(event)
 
-        if not isinstance(event, mevents.DataReceived):
-            # We only ask if we have received new data.
-            return
+        # We receive new data. Let's find out if we can determine the next layer now?
 
+        if isinstance(event, mevents.DataReceived):
+            # For now, we only ask if we have received new data to reduce hook noise.
+            yield from self.ask_now()
+
+    def ask_now(self):
+        """
+        Manually trigger a next_layer hook.
+        The only use at the moment is to make sure that the top layer is initialized.
+        """
         yield commands.Hook("next_layer", self)
 
         # Has an addon decided on the next layer yet?
@@ -137,7 +144,7 @@ class NextLayer(Layer):
 
             self._handle_event = self.layer.handle_event
 
-    # Utility methods for addon.
+    # Utility methods for whoever decides what the next layer is going to be.
 
     def data_client(self):
         return self._data(self.context.client)
