@@ -1,7 +1,7 @@
 from mitmproxy import ctx
 from mitmproxy.net import server_spec
 from mitmproxy.proxy.config import HostMatcher
-from mitmproxy.proxy.protocol import is_tls_record_magic
+from mitmproxy.net.tls import is_tls_record_magic
 from mitmproxy.proxy2 import layer, layers
 
 
@@ -34,7 +34,7 @@ class NextLayer:
             nextlayer.context.server.tls = (
                 server_spec.parse_with_mode(ctx.options.mode)[1].scheme == "https"
             )
-            nextlayer.layer = layers.TLSLayer(nextlayer.context)
+            nextlayer.layer = layers.ClientTLSLayer(nextlayer.context)
             return
         # TODO: Other top layers
 
@@ -45,7 +45,7 @@ class NextLayer:
         if client_tls:
             nextlayer.context.client.tls = True
             nextlayer.context.server.tls = True
-            nextlayer.layer = layers.TLSLayer(nextlayer.context)
+            nextlayer.layer = layers.ClientTLSLayer(nextlayer.context)
             return
 
         # 5. Check for --tcp
@@ -54,7 +54,7 @@ class NextLayer:
             return
 
         # 6. Check for TLS ALPN (HTTP1/HTTP2)
-        if isinstance(top_layer, layers.TLSLayer):
+        if isinstance(top_layer, layers.ServerTLSLayer):
             alpn = nextlayer.context.client.alpn
             if alpn == b'http/1.1':
                 nextlayer.layer = layers.HTTPLayer(nextlayer.context)
