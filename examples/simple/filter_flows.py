@@ -19,8 +19,8 @@ class Filter:
 
     def response(self, flow: http.HTTPFlow) -> None:
         if flowfilter.match(self.filter, flow):
-            print("Flow matches filter:")
-            print(flow)
+            ctx.log.info("Flow matches filter:")
+            ctx.log.info(flow)
 
 
 addons = [Filter()]

@@ -60,17 +60,6 @@ def test_load_fullname(tdata):
     assert not hasattr(ns2, "addons")
 
 
-@pytest.mark.asyncio
-async def test_script_print_stdout(tdata):
-    with taddons.context() as tctx:
-        with addonmanager.safecall():
-            ns = script.load_script(
-                tdata.path("mitmproxy/data/addonscripts/print.py")
-            )
-            ns.load(addonmanager.Loader(tctx.master))
-        assert await tctx.master.await_log("stdoutprint")
-
-
 class TestScript:
     def test_notfound(self):
         with taddons.context():

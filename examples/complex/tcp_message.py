@@ -9,6 +9,7 @@ example cmdline invocation:
 mitmdump -T --host --tcp ".*" -q -s examples/tcp_message.py
 """
 from mitmproxy.utils import strutils
+from mitmproxy import ctx
 
 
 def tcp_message(tcp_msg):
@@ -17,7 +18,7 @@ def tcp_message(tcp_msg):
     is_modified = False if modified_msg == tcp_msg.message else True
     tcp_msg.message = modified_msg
 
-    print(
+    ctx.log.info(
         "[tcp_message{}] from {} {} to {} {}:\r\n{}".format(
             " (modified)" if is_modified else "",
             "client" if tcp_msg.sender == tcp_msg.client_conn else "server",
