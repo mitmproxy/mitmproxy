@@ -27,7 +27,7 @@ class FlowItem(urwid.WidgetWrap):
     def mouse_event(self, size, event, button, col, row, focus):
         if event == "mouse press" and button == 1:
             if self.flow.request:
-                self.master.commands.call("console.view.flow @focus")
+                self.master.commands.execute("console.view.flow @focus")
                 return True
 
     def keypress(self, size, key):
