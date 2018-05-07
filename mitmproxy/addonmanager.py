@@ -173,6 +173,7 @@ class AddonManager:
             self.lookup[name] = a
         for a in traverse([addon]):
             self.master.commands.collect_commands(a)
+        self.master.options.process_deferred()
         return addon
 
     def add(self, *addons):

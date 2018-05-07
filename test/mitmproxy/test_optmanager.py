@@ -426,4 +426,13 @@ def test_set():
     assert opts.seqstr == []
 
     with pytest.raises(exceptions.OptionsError):
-        opts.set("nonexistent=wobble")
+        opts.set("deferred=wobble")
+
+    opts.set("deferred=wobble", defer=True)
+    assert "deferred" in opts._deferred
+    opts.process_deferred()
+    assert "deferred" in opts._deferred
+    opts.add_option("deferred", str, "default", "help")
+    opts.process_deferred()
+    assert "deferred" not in opts._deferred
+    assert opts.deferred == "wobble"
