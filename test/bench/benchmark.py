@@ -11,6 +11,15 @@ class Benchmark:
         self.pr = cProfile.Profile()
         self.started = False
 
+        self.resps = 0
+        self.reqs = 0
+
+    def request(self, f):
+        self.reqs += 1
+
+    def response(self, f):
+        self.resps += 1
+
     async def procs(self):
         ctx.log.error("starting benchmark")
         backend = await asyncio.create_subprocess_exec("devd", "-q", "-p", "10001", ".")
@@ -23,6 +32,7 @@ class Benchmark:
         )
         stdout, _ = await traf.communicate()
         open(ctx.options.benchmark_save_path + ".bench", mode="wb").write(stdout)
+        ctx.log.error("Proxy saw %s requests, %s responses" % (self.reqs, self.resps))
         ctx.log.error(stdout.decode("ascii"))
         backend.kill()
         ctx.master.shutdown()
