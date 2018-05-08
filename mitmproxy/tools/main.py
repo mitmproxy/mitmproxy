@@ -110,7 +110,7 @@ def run(
         if args.commands:
             master.commands.dump()
             sys.exit(0)
-        opts.set(*args.setoptions)
+        opts.set(*args.setoptions, defer=True)
         if extra:
             opts.update(**extra(args))
 
