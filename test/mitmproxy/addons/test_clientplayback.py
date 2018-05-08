@@ -33,6 +33,7 @@ class TBase(tservers.HTTPProxyTest):
         s = time.time()
         while True:
             if flow.response or flow.error:
+                flow.server_conn.close()
                 break
             time.sleep(0.001)
             if time.time() - s > 5:
@@ -55,6 +56,7 @@ class TBase(tservers.HTTPProxyTest):
         l = self.master.state.flows[-1]
         assert l.response.status_code == 304
         l.request.path = "/p/305"
+        l.response = None
         cr.start_replay([l])
         self.wait_response(l)
         assert l.response.status_code == 305
