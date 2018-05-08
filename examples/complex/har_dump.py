@@ -1,5 +1,11 @@
 """
 This inline script can be used to dump flows as HAR files.
+
+example cmdline invocation:
+mitmdump -s ./har_dump.py --set hardump=./dump.har
+
+filename endwith '.zhar' will be compressed:
+mitmdump -s ./har_dump.py --set hardump=./dump.zhar
 """
 
 
