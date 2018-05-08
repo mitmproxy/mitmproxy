@@ -196,10 +196,3 @@ class D:
 
     def log(self, x):
         self.w = x
-
-
-def test_streamlog():
-    dummy = D()
-    s = addonmanager.StreamLog(dummy.log)
-    s.write("foo")
-    assert dummy.w == "foo"

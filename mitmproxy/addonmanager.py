@@ -36,25 +36,10 @@ def cut_traceback(tb, func_name):
     return tb or tb_orig
 
 
-class StreamLog:
-    def __init__(self, lg):
-        self.log = lg
-
-    def write(self, buf):
-        if buf.strip():
-            self.log(buf)
-
-    def flush(self):  # pragma: no cover
-        # Click uses flush sometimes, so we dummy it up
-        pass
-
-
 @contextlib.contextmanager
 def safecall():
-    stdout_replacement = StreamLog(lambda message: ctx.log.warn(message))
     try:
-        with contextlib.redirect_stdout(stdout_replacement):
-            yield
+        yield
     except (exceptions.AddonHalt, exceptions.OptionsError):
         raise
     except Exception as e:
