@@ -298,7 +298,7 @@ class OptManager:
             else:
                 optname, optval = parts[0], parts[1]
             if optname in self._options:
-                vals[optname] = self.parse_setval(optname, optval)
+                vals[optname] = self.parse_setval(self._options[optname], optval)
             else:
                 unknown[optname] = optval
         if defer:
@@ -315,19 +315,15 @@ class OptManager:
         update = {}
         for optname, optval in self._deferred.items():
             if optname in self._options:
-                update[optname] = self.parse_setval(optname, optval)
+                update[optname] = self.parse_setval(self._options[optname], optval)
         self.update(**update)
         for k in update.keys():
             del self._deferred[k]
 
-    def parse_setval(self, optname: str, optstr: typing.Optional[str]) -> typing.Any:
+    def parse_setval(self, o: _Option, optstr: typing.Optional[str]) -> typing.Any:
         """
             Convert a string to a value appropriate for the option type.
         """
-        if optname not in self._options:
-            raise exceptions.OptionsError("No such option %s" % optname)
-        o = self._options[optname]
-
         if o.typespec in (str, typing.Optional[str]):
             return optstr
         elif o.typespec in (int, typing.Optional[int]):
@@ -337,7 +333,7 @@ class OptManager:
                 except ValueError:
                     raise exceptions.OptionsError("Not an integer: %s" % optstr)
             elif o.typespec == int:
-                raise exceptions.OptionsError("Option is required: %s" % optname)
+                raise exceptions.OptionsError("Option is required: %s" % o.name)
             else:
                 return None
         elif o.typespec == bool:
@@ -355,7 +351,7 @@ class OptManager:
             if not optstr:
                 return []
             else:
-                return getattr(self, optname) + [optstr]
+                return getattr(self, o.name) + [optstr]
         raise NotImplementedError("Unsupported option type: %s", o.typespec)
 
     def make_parser(self, parser, optname, metavar=None, short=None):

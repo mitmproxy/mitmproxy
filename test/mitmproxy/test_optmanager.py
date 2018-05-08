@@ -70,7 +70,7 @@ def test_defaults():
 def test_required_int():
     o = TO()
     with pytest.raises(exceptions.OptionsError):
-        o.parse_setval("required_int", None)
+        o.parse_setval(o._options["required_int"], None)
 
 
 def test_deepcopy():
