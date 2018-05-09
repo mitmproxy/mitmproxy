@@ -67,7 +67,7 @@ class _WebSocketTestBase:
             ssl_insecure=True,
             websocket=True,
         )
-        opts.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
+        opts.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         return opts
 
     @property

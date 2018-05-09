@@ -32,7 +32,7 @@ reason. Below is a list of pointers to manual certificate installation
 documentation for some common platforms. The mitmproxy CA cert is located in
 `~/.mitmproxy` after it has been generated at the first start of mitmproxy.
 
-- [IOS](http://jasdev.me/intercepting-ios-traffic)  
+- [IOS](http://jasdev.me/intercepting-ios-traffic)
   On iOS 10.3 and onwards, you also need to enable full trust for the mitmproxy
   root certificate:
     1. Go to Settings > General > About > Certificate Trust Settings.
@@ -42,12 +42,12 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 - [Java](https://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html)
 - [Android/Android Simulator](http://wiki.cacert.org/FAQ/ImportRootCert#Android_Phones_.26_Tablets)
 - [Windows](https://web.archive.org/web/20160612045445/http://windows.microsoft.com/en-ca/windows/import-export-certificates-private-keys#1TC=windows-7)
-- [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx)  
+- [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx)
 
 {{< highlight bash  >}}
 certutil.exe -importpfx Root mitmproxy-ca-cert.p12
 {{< / highlight >}}
-  
+
 - [Mac OS X](https://support.apple.com/kb/PH20129)
 - [Ubuntu/Debian]( https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861)
 - [Mozilla Firefox](https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox)
@@ -143,7 +143,7 @@ mitmproxy --cert *.example.com=cert.pem
 By default, mitmproxy will use `~/.mitmproxy/mitmproxy-ca.pem` as the
 certificate authority to generate certificates for all domains for which
 no custom certificate is provided (see above). You can use your own
-certificate authority by passing the `--set cadir=DIRECTORY` option to
+certificate authority by passing the `--set confdir=DIRECTORY` option to
 mitmproxy. Mitmproxy will then look for `mitmproxy-ca.pem` in the
 specified directory. If no such file exists, it will be generated
 automatically.

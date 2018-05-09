@@ -71,7 +71,7 @@ def client_arguments_from_options(options: "mitmproxy.options.Options") -> dict:
         "verify": verify,
         "method": method,
         "options": tls_options,
-        "ca_path": options.ssl_verify_upstream_trusted_cadir,
+        "ca_path": options.ssl_verify_upstream_trusted_confdir,
         "ca_pemfile": options.ssl_verify_upstream_trusted_ca,
         "client_certs": options.client_certs,
         "cipher_list": options.ciphers_server,

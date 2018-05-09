@@ -151,7 +151,7 @@ class ProxyTestBase:
     def teardown_class(cls):
         # perf: we want to run tests in parallel
         # should this ever cause an error, travis should catch it.
-        # shutil.rmtree(cls.cadir)
+        # shutil.rmtree(cls.confdir)
         cls.proxy.shutdown()
         cls.server.shutdown()
         cls.server2.shutdown()
@@ -175,10 +175,10 @@ class ProxyTestBase:
 
     @classmethod
     def get_options(cls):
-        cls.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
+        cls.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         return options.Options(
             listen_port=0,
-            cadir=cls.cadir,
+            confdir=cls.confdir,
             add_upstream_certs_to_client_chain=cls.add_upstream_certs_to_client_chain,
             ssl_insecure=True,
         )

@@ -4,7 +4,7 @@ from mitmproxy import optmanager
 from mitmproxy.net import tls
 
 
-CA_DIR = "~/.mitmproxy"
+CONF_DIR = "~/.mitmproxy"
 LISTEN_PORT = 8080
 
 
@@ -30,8 +30,8 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
-            "cadir", str, CA_DIR,
-            "Location of the default mitmproxy CA files."
+            "confdir", str, CONF_DIR,
+            "Location of the default mitmproxy configuration files."
         )
         self.add_option(
             "certs", Sequence[str], [],
@@ -143,7 +143,7 @@ class Options(optmanager.OptManager):
             "Do not verify upstream server SSL/TLS certificates."
         )
         self.add_option(
-            "ssl_verify_upstream_trusted_cadir", Optional[str], None,
+            "ssl_verify_upstream_trusted_confdir", Optional[str], None,
             """
             Path to a directory of trusted CA certificates for upstream server
             verification prepared using the c_rehash tool.

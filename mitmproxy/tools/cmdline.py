@@ -4,7 +4,7 @@ import os
 from mitmproxy.addons import core
 
 
-CONFIG_PATH = os.path.join(core.CA_DIR, "config.yaml")
+CONFIG_PATH = os.path.join(core.CONF_DIR, "config.yaml")
 
 
 def common_options(parser, opts):
