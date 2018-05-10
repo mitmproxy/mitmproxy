@@ -10,9 +10,9 @@ from mitmproxy.utils import arg_check
 @pytest.mark.parametrize('arg, output', [
     (["-T"], "-T is deprecated, please use --mode transparent instead"),
     (["-U"], "-U is deprecated, please use --mode upstream:SPEC instead"),
-    (["--cadir"], "--cadir is deprecated.\n"
-                  "Please use `--set cadir=value` instead.\n"
-                  "To show all options and their default values use --options"),
+    (["--confdir"], "--confdir is deprecated.\n"
+                    "Please use `--set confdir=value` instead.\n"
+                    "To show all options and their default values use --options"),
     (["--palette"], "--palette is deprecated.\n"
                     "Please use `--set console_palette=value` instead.\n"
                     "To show all options and their default values use --options"),

@@ -338,7 +338,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
             c.wfile.flush()
             assert c.rfile.readline() == testval
 
-    def test_mode_strict_w_cadir_should_pass(self, tdata):
+    def test_mode_strict_w_confdir_should_pass(self, tdata):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_tls(
