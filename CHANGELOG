@@ -9,6 +9,8 @@
     * Configure mitmproxy console keybindings with the keys.yaml file. See docs for more.
 
   ** Breaking Changes **
+    * The --conf command-line flag is now --confdir, and specifies the mitmproxy configuration
+    directory, instead of the options yaml file (which is at `config.yaml` under the configuration directory).
     * `allow_remote` got replaced by `block_global` and `block_private` (#3100)
     * No more custom events (#3093)
     * The `cadir` option has been renamed to `confdir`
