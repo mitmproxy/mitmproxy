@@ -11,8 +11,8 @@ from mitmproxy.utils import arg_check
     (["-T"], "-T is deprecated, please use --mode transparent instead"),
     (["-U"], "-U is deprecated, please use --mode upstream:SPEC instead"),
     (["--confdir"], "--confdir is deprecated.\n"
-                  "Please use `--set confdir=value` instead.\n"
-                  "To show all options and their default values use --options"),
+                    "Please use `--set confdir=value` instead.\n"
+                    "To show all options and their default values use --options"),
     (["--palette"], "--palette is deprecated.\n"
                     "Please use `--set console_palette=value` instead.\n"
                     "To show all options and their default values use --options"),

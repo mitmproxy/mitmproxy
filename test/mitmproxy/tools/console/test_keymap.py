@@ -78,6 +78,7 @@ def test_load_path(tmpdir):
     kmc = keymap.KeymapConfig()
     with taddons.context(kmc) as tctx:
         km = keymap.Keymap(tctx.master)
+        tctx.master.keymap = km
 
         with open(dst, 'wb') as f:
             f.write(b"\xff\xff\xff")

@@ -163,15 +163,24 @@ requiredKeyAttrs = set(["key", "cmd"])
 
 
 class KeymapConfig:
+    defaultFile = "keys.yaml"
+
     @command.command("console.keymap.load")
     def keymap_load_path(self, path: mitmproxy.types.Path) -> None:
         try:
-            master = ctx.master  # type: mitmproxy.tools.console.master.ConsoleMaster
-            self.load_path(master.keymap, path)
+            self.load_path(ctx.master.keymap, path)  # type: ignore
         except (OSError, KeyBindingError) as e:
             raise exceptions.CommandError(
                 "Could not load key bindings - %s" % e
             ) from e
+
+    def running(self):
+        p = os.path.join(os.path.expanduser(ctx.options.confdir), self.defaultFile)
+        if os.path.exists(p):
+            try:
+                self.load_path(ctx.master.keymap, p)
+            except KeyBindingError as e:
+                ctx.log.error(e)
 
     def load_path(self, km, p):
         if os.path.exists(p) and os.path.isfile(p):
@@ -193,7 +202,7 @@ class KeymapConfig:
                     km.add(
                         key = v["key"],
                         command = v["cmd"],
-                        contexts = v.get("ctx", None),
+                        contexts = v.get("ctx", ["global"]),
                         help = v.get("help", None),
                     )
                 except ValueError as e:
