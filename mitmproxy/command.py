@@ -58,7 +58,10 @@ class Command:
             if i.kind == i.VAR_POSITIONAL:
                 self.has_positional = True
         self.paramtypes = [v.annotation for v in sig.parameters.values()]
-        self.returntype = sig.return_annotation
+        if sig.return_annotation == inspect._empty:
+            self.returntype = None
+        else:
+            self.returntype = sig.return_annotation
 
     def paramnames(self) -> typing.Sequence[str]:
         v = [typename(i) for i in self.paramtypes]

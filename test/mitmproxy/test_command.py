@@ -55,7 +55,20 @@ class TAddon:
         pass
 
 
+class TypeErrAddon:
+    @command.command("noret")
+    def noret(self):
+        pass
+
+
 class TestCommand:
+    def test_typecheck(self):
+        with taddons.context(loadcore=False) as tctx:
+            cm = command.CommandManager(tctx.master)
+            a = TypeErrAddon()
+            c = command.Command(cm, "noret", a.noret)
+            print(c.signature_help())
+
     def test_varargs(self):
         with taddons.context() as tctx:
             cm = command.CommandManager(tctx.master)
