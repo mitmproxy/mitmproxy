@@ -18,6 +18,7 @@ class KeyBindingError(Exception):
 Contexts = {
     "chooser",
     "commands",
+    "dataviewer",
     "eventlog",
     "flowlist",
     "flowview",
