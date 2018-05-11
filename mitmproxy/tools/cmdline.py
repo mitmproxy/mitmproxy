@@ -1,10 +1,6 @@
 import argparse
-import os
 
 from mitmproxy.addons import core
-
-
-CONFIG_PATH = os.path.join(core.CONF_DIR, "config.yaml")
 
 
 def common_options(parser, opts):
@@ -25,10 +21,10 @@ def common_options(parser, opts):
         help="Show all commands and their signatures",
     )
     parser.add_argument(
-        "--conf",
-        type=str, dest="conf", default=CONFIG_PATH,
+        "--confdir",
+        type=str, dest="confdir", default=core.CONF_DIR,
         metavar="PATH",
-        help="Read options from a configuration file"
+        help="Path to the mitmproxy config directory"
     )
     parser.add_argument(
         "--set",
