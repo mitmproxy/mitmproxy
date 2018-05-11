@@ -35,9 +35,11 @@ def typename(t: type) -> str:
     """
         Translates a type to an explanatory string.
     """
+    if t == inspect._empty:  # type: ignore
+        raise exceptions.CommandError("missing type annotation")
     to = mitmproxy.types.CommandTypes.get(t, None)
     if not to:
-        raise NotImplementedError(t)
+        raise exceptions.CommandError("unsupported type: %s" % getattr(t, "__name__", t))
     return to.display
 
 
@@ -58,10 +60,12 @@ class Command:
             if i.kind == i.VAR_POSITIONAL:
                 self.has_positional = True
         self.paramtypes = [v.annotation for v in sig.parameters.values()]
-        if sig.return_annotation == inspect._empty:
+        if sig.return_annotation == inspect._empty:  # type: ignore
             self.returntype = None
         else:
             self.returntype = sig.return_annotation
+        # This fails with a CommandException if types are invalid
+        self.signature_help()
 
     def paramnames(self) -> typing.Sequence[str]:
         v = [typename(i) for i in self.paramtypes]
@@ -136,7 +140,12 @@ class CommandManager(mitmproxy.types._CommandBase):
                     pass  # hasattr may raise if o implements __getattr__.
                 else:
                     if is_command:
-                        self.add(o.command_path, o)
+                        try:
+                            self.add(o.command_path, o)
+                        except exceptions.CommandError as e:
+                            self.master.log.warn(
+                                "Could not load command %s: %s" % (o.command_path, e)
+                            )
 
     def add(self, path: str, func: typing.Callable):
         self.commands[path] = Command(self, path, func)

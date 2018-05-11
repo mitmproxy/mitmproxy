@@ -1,4 +1,5 @@
 import typing
+import inspect
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import exceptions
@@ -55,9 +56,21 @@ class TAddon:
         pass
 
 
+class Unsupported:
+    pass
+
+
 class TypeErrAddon:
     @command.command("noret")
     def noret(self):
+        pass
+
+    @command.command("invalidret")
+    def invalidret(self) -> Unsupported:
+        pass
+
+    @command.command("invalidarg")
+    def invalidarg(self, u: Unsupported):
         pass
 
 
@@ -66,8 +79,11 @@ class TestCommand:
         with taddons.context(loadcore=False) as tctx:
             cm = command.CommandManager(tctx.master)
             a = TypeErrAddon()
-            c = command.Command(cm, "noret", a.noret)
-            print(c.signature_help())
+            command.Command(cm, "noret", a.noret)
+            with pytest.raises(exceptions.CommandError):
+                command.Command(cm, "invalidret", a.invalidret)
+            with pytest.raises(exceptions.CommandError):
+                command.Command(cm, "invalidarg", a.invalidarg)
 
     def test_varargs(self):
         with taddons.context() as tctx:
@@ -288,6 +304,11 @@ def test_typename():
     assert command.typename(mitmproxy.types.Path) == "path"
     assert command.typename(mitmproxy.types.Cmd) == "cmd"
 
+    with pytest.raises(exceptions.CommandError, match="missing type annotation"):
+        command.typename(inspect._empty)
+    with pytest.raises(exceptions.CommandError, match="unsupported type"):
+        command.typename(None)
+
 
 class DummyConsole:
     @command.command("view.resolve")
@@ -339,7 +360,8 @@ class TCmds(TAttr):
         pass
 
 
-def test_collect_commands():
+@pytest.mark.asyncio
+async def test_collect_commands():
     """
         This tests for the error thrown by hasattr()
     """
@@ -348,6 +370,10 @@ def test_collect_commands():
         a = TCmds()
         c.collect_commands(a)
         assert "empty" in c.commands
+
+        a = TypeErrAddon()
+        c.collect_commands(a)
+        await tctx.master.await_log("Could not load")
 
 
 def test_decorator():
