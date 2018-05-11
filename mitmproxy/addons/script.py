@@ -156,7 +156,8 @@ class ScriptLoader:
             s = Script(path, False)
             for f in flows:
                 for evt, arg in eventsequence.iterate(f):
-                    ctx.master.addons.invoke_addon(s, evt, arg)
+                    with addonmanager.safecall():
+                        ctx.master.addons.invoke_addon(s, evt, arg)
         except exceptions.OptionsError as e:
             script_error_handler(path, e, msg=str(e))
 
