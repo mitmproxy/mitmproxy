@@ -155,9 +155,9 @@ class ScriptLoader:
         if not os.path.isfile(path):
             ctx.log.error('No such script: %s' % path)
             return
-        try:
-            mod = load_script(path)
-            if mod:
+        mod = load_script(path)
+        if mod:
+            with addonmanager.safecall():
                 ctx.master.addons.invoke_addon(mod, "running")
                 ctx.master.addons.invoke_addon(
                     mod,
@@ -166,10 +166,7 @@ class ScriptLoader:
                 )
                 for f in flows:
                     for evt, arg in eventsequence.iterate(f):
-                        with addonmanager.safecall():
-                            ctx.master.addons.invoke_addon(mod, evt, arg)
-        except exceptions.OptionsError as e:
-            script_error_handler(path, e, msg=str(e))
+                        ctx.master.addons.invoke_addon(mod, evt, arg)
 
     def configure(self, updated):
         if "scripts" in updated:
