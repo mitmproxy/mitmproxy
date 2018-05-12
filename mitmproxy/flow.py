@@ -155,8 +155,12 @@ class Flow(stateobject.StateObject):
             Kill this request.
         """
         self.error = Error("Connection killed")
-        self.intercepted = False
         self.reply.kill(force=True)
+        if self.intercepted:
+            # If a flow is intercepted and killed, the reply will be taken
+            # so it will not be commited by addonManager
+            self.reply.commit()
+            self.intercepted = False
         self.live = False
 
     def intercept(self):

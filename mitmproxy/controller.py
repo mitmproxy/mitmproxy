@@ -95,7 +95,7 @@ class Reply:
 
     def commit(self):
         """
-        Ultimately, messages are committed. This is done either automatically by
+        Ultimately, messages are committed. This is done either automatically by the handler
         if the message is not taken or manually by the entity which called
         .take().
         """
