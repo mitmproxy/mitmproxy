@@ -1,6 +1,5 @@
 import asyncio
 import io
-from unittest import mock
 
 import pytest
 import asynctest
@@ -110,8 +109,7 @@ class TestReadFileStdin:
                     await rf.load_flows(stdin.buffer)
 
     @pytest.mark.asyncio
-    @mock.patch('mitmproxy.master.Master.load_flow')
-    async def test_normal(self, load_flow, tmpdir, data):
+    async def test_normal(self, tmpdir, data):
         rf = readfile.ReadFileStdin()
         with taddons.context(rf) as tctx:
             tf = tmpdir.join("tfile")

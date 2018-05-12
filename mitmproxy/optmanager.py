@@ -91,9 +91,12 @@ class OptManager:
         mutation doesn't change the option state inadvertently.
     """
     def __init__(self):
-        self.__dict__["_options"] = {}
-        self.__dict__["changed"] = blinker.Signal()
-        self.__dict__["errored"] = blinker.Signal()
+        self._deferred: typing.Dict[str, str] = {}
+        self.changed = blinker.Signal()
+        self.errored = blinker.Signal()
+        # Options must be the last attribute here - after that, we raise an
+        # error for attribute assigment to unknown options.
+        self._options: typing.Dict[str, typing.Any] = {}
 
     def add_option(
         self,
@@ -168,7 +171,14 @@ class OptManager:
             raise AttributeError("No such option: %s" % attr)
 
     def __setattr__(self, attr, value):
-        self.update(**{attr: value})
+        # This is slightly tricky. We allow attributes to be set on the instance
+        # until we have an _options attribute. After that, assignment is sent to
+        # the update function, and will raise an error for unknown options.
+        opts = self.__dict__.get("_options")
+        if not opts:
+            super().__setattr__(attr, value)
+        else:
+            self.update(**{attr: value})
 
     def keys(self):
         return set(self._options.keys())
@@ -272,20 +282,48 @@ class OptManager:
             options=options
         )
 
-    def set(self, *spec):
+    def set(self, *spec, defer=False):
+        """
+            Takes a list of set specification in standard form (option=value).
+            Options that are known are updated immediately. If defer is true,
+            options that are not known are deferred, and will be set once they
+            are added.
+        """
         vals = {}
+        unknown = {}
         for i in spec:
-            vals.update(self._setspec(i))
+            parts = i.split("=", maxsplit=1)
+            if len(parts) == 1:
+                optname, optval = parts[0], None
+            else:
+                optname, optval = parts[0], parts[1]
+            if optname in self._options:
+                vals[optname] = self.parse_setval(self._options[optname], optval)
+            else:
+                unknown[optname] = optval
+        if defer:
+            self._deferred.update(unknown)
+        elif unknown:
+            raise exceptions.OptionsError("Unknown options: %s" % ", ".join(unknown.keys()))
         self.update(**vals)
 
-    def parse_setval(self, optname: str, optstr: typing.Optional[str]) -> typing.Any:
+    def process_deferred(self):
+        """
+            Processes options that were deferred in previous calls to set, and
+            have since been added.
+        """
+        update = {}
+        for optname, optval in self._deferred.items():
+            if optname in self._options:
+                update[optname] = self.parse_setval(self._options[optname], optval)
+        self.update(**update)
+        for k in update.keys():
+            del self._deferred[k]
+
+    def parse_setval(self, o: _Option, optstr: typing.Optional[str]) -> typing.Any:
         """
             Convert a string to a value appropriate for the option type.
         """
-        if optname not in self._options:
-            raise exceptions.OptionsError("No such option %s" % optname)
-        o = self._options[optname]
-
         if o.typespec in (str, typing.Optional[str]):
             return optstr
         elif o.typespec in (int, typing.Optional[int]):
@@ -295,7 +333,7 @@ class OptManager:
                 except ValueError:
                     raise exceptions.OptionsError("Not an integer: %s" % optstr)
             elif o.typespec == int:
-                raise exceptions.OptionsError("Option is required: %s" % optname)
+                raise exceptions.OptionsError("Option is required: %s" % o.name)
             else:
                 return None
         elif o.typespec == bool:
@@ -313,18 +351,8 @@ class OptManager:
             if not optstr:
                 return []
             else:
-                return getattr(self, optname) + [optstr]
+                return getattr(self, o.name) + [optstr]
         raise NotImplementedError("Unsupported option type: %s", o.typespec)
-
-    def _setspec(self, spec):
-        d = {}
-        parts = spec.split("=", maxsplit=1)
-        if len(parts) == 1:
-            optname, optval = parts[0], None
-        else:
-            optname, optval = parts[0], parts[1]
-        d[optname] = self.parse_setval(optname, optval)
-        return d
 
     def make_parser(self, parser, optname, metavar=None, short=None):
         """

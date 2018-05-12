@@ -46,12 +46,13 @@ class CommandItem(urwid.WidgetWrap):
 class CommandListWalker(urwid.ListWalker):
     def __init__(self, master):
         self.master = master
-
         self.index = 0
-        self.focusobj = None
-        self.cmds = list(master.commands.commands.values())
+        self.refresh()
+
+    def refresh(self):
+        self.cmds = list(self.master.commands.commands.values())
         self.cmds.sort(key=lambda x: x.signature_help())
-        self.set_focus(0)
+        self.set_focus(self.index)
 
     def get_edit_text(self):
         return self.focus_obj.get_edit_text()
@@ -136,6 +137,9 @@ class Commands(urwid.Pile, layoutwidget.LayoutWidget):
             ]
         )
         self.master = master
+
+    def layout_pushed(self, prev):
+        self.widget_list[0].walker.refresh()
 
     def keypress(self, size, key):
         if key == "m_next":

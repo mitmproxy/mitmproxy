@@ -27,7 +27,7 @@ class FlowItem(urwid.WidgetWrap):
     def mouse_event(self, size, event, button, col, row, focus):
         if event == "mouse press" and button == 1:
             if self.flow.request:
-                self.master.commands.call("console.view.flow @focus")
+                self.master.commands.execute("console.view.flow @focus")
                 return True
 
     def keypress(self, size, key):
@@ -38,6 +38,14 @@ class FlowListWalker(urwid.ListWalker):
 
     def __init__(self, master):
         self.master = master
+
+    def positions(self, reverse=False):
+        # The stub implementation of positions can go once this issue is resolved:
+        # https://github.com/urwid/urwid/issues/294
+        ret = range(len(self.master.view))
+        if reverse:
+            return reversed(ret)
+        return ret
 
     def view_changed(self):
         self._modified()

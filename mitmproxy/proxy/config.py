@@ -49,7 +49,7 @@ class ProxyConfig:
         if "tcp_hosts" in updated:
             self.check_tcp = HostMatcher(options.tcp_hosts)
 
-        certstore_path = os.path.expanduser(options.cadir)
+        certstore_path = os.path.expanduser(options.confdir)
         if not os.path.exists(os.path.dirname(certstore_path)):
             raise exceptions.OptionsError(
                 "Certificate Authority parent directory does not exist: %s" %

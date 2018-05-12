@@ -16,7 +16,7 @@ class TAddon:
     def __init__(self, name, addons=None):
         self.name = name
         self.response = True
-        self.custom_called = False
+        self.running_called = False
         if addons:
             self.addons = addons
 
@@ -30,12 +30,12 @@ class TAddon:
     def done(self):
         pass
 
-    def event_custom(self):
-        self.custom_called = True
+    def running(self):
+        self.running_called = True
 
 
 class THalt:
-    def event_custom(self):
+    def running(self):
         raise exceptions.AddonHalt
 
 
@@ -59,12 +59,13 @@ def test_halt():
     a.add(halt)
     a.add(end)
 
-    a.trigger("custom")
-    assert not end.custom_called
+    assert not end.running_called
+    a.trigger("running")
+    assert not end.running_called
 
     a.remove(halt)
-    a.trigger("custom")
-    assert end.custom_called
+    a.trigger("running")
+    assert end.running_called
 
 
 @pytest.mark.asyncio
@@ -126,6 +127,10 @@ async def test_simple():
         assert not a.chain
 
         a.add(TAddon("one"))
+
+        a.trigger("nonexistent")
+        assert await tctx.master.await_log("unknown event")
+
         a.trigger("running")
         a.trigger("response")
         assert await tctx.master.await_log("not callable")
@@ -140,8 +145,8 @@ async def test_simple():
 
         ta = TAddon("one")
         a.add(ta)
-        a.trigger("custom")
-        assert ta.custom_called
+        a.trigger("running")
+        assert ta.running_called
 
         assert ta in a
 
@@ -174,11 +179,11 @@ def test_nesting():
     assert a.get("three")
     assert a.get("four")
 
-    a.trigger("custom")
-    assert a.get("one").custom_called
-    assert a.get("two").custom_called
-    assert a.get("three").custom_called
-    assert a.get("four").custom_called
+    a.trigger("running")
+    assert a.get("one").running_called
+    assert a.get("two").running_called
+    assert a.get("three").running_called
+    assert a.get("four").running_called
 
     a.remove(a.get("three"))
     assert not a.get("three")
@@ -191,10 +196,3 @@ class D:
 
     def log(self, x):
         self.w = x
-
-
-def test_streamlog():
-    dummy = D()
-    s = addonmanager.StreamLog(dummy.log)
-    s.write("foo")
-    assert dummy.w == "foo"

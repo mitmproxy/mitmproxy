@@ -103,7 +103,7 @@ class _Http2TestBase:
             upstream_cert=True,
             ssl_insecure=True
         )
-        opts.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
+        opts.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         return opts
 
     @property

@@ -56,6 +56,7 @@ class ConsoleMaster(master.Master):
             consoleaddons.UnsupportedLog(),
             readfile.ReadFile(),
             consoleaddons.ConsoleAddon(self),
+            keymap.KeymapConfig(),
         )
 
         def sigint_handler(*args, **kwargs):

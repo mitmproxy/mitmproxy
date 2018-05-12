@@ -148,17 +148,25 @@ class ScriptLoader:
     @command.command("script.run")
     def script_run(self, flows: typing.Sequence[flow.Flow], path: mtypes.Path) -> None:
         """
-            Run a script on the specified flows. The script is loaded with
-            default options, and all lifecycle events for each flow are
-            simulated.
+            Run a script on the specified flows. The script is configured with
+            the current options and all lifecycle events for each flow are
+            simulated. Note that the load event is not invoked.
         """
-        try:
-            s = Script(path, False)
-            for f in flows:
-                for evt, arg in eventsequence.iterate(f):
-                    ctx.master.addons.invoke_addon(s, evt, arg)
-        except exceptions.OptionsError as e:
-            script_error_handler(path, e, msg=str(e))
+        if not os.path.isfile(path):
+            ctx.log.error('No such script: %s' % path)
+            return
+        mod = load_script(path)
+        if mod:
+            with addonmanager.safecall():
+                ctx.master.addons.invoke_addon(mod, "running")
+                ctx.master.addons.invoke_addon(
+                    mod,
+                    "configure",
+                    ctx.options.keys()
+                )
+                for f in flows:
+                    for evt, arg in eventsequence.iterate(f):
+                        ctx.master.addons.invoke_addon(mod, evt, arg)
 
     def configure(self, updated):
         if "scripts" in updated:

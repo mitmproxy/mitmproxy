@@ -70,3 +70,98 @@ def test_remove():
 
         km.remove("key", ["commands"])
         assert len(km.bindings) == 0
+
+
+def test_load_path(tmpdir):
+    dst = str(tmpdir.join("conf"))
+
+    kmc = keymap.KeymapConfig()
+    with taddons.context(kmc) as tctx:
+        km = keymap.Keymap(tctx.master)
+        tctx.master.keymap = km
+
+        with open(dst, 'wb') as f:
+            f.write(b"\xff\xff\xff")
+        with pytest.raises(keymap.KeyBindingError, match="expected UTF8"):
+            kmc.load_path(km, dst)
+
+        with open(dst, 'w') as f:
+            f.write("'''")
+        with pytest.raises(keymap.KeyBindingError):
+            kmc.load_path(km, dst)
+
+        with open(dst, 'w') as f:
+            f.write(
+                """
+                    -   key: key1
+                        ctx: [unknown]
+                        cmd: >
+                            foo bar
+                            foo bar
+                """
+            )
+        with pytest.raises(keymap.KeyBindingError):
+            kmc.load_path(km, dst)
+
+        with open(dst, 'w') as f:
+            f.write(
+                """
+                    -   key: key1
+                        ctx: [chooser]
+                        help: one
+                        cmd: >
+                            foo bar
+                            foo bar
+                """
+            )
+        kmc.load_path(km, dst)
+        assert(km.get("chooser", "key1"))
+
+
+def test_parse():
+    kmc = keymap.KeymapConfig()
+    with taddons.context(kmc):
+        assert kmc.parse("") == []
+        assert kmc.parse("\n\n\n   \n") == []
+        with pytest.raises(keymap.KeyBindingError, match="expected a list of keys"):
+            kmc.parse("key: val")
+        with pytest.raises(keymap.KeyBindingError, match="expected a list of keys"):
+            kmc.parse("val")
+        with pytest.raises(keymap.KeyBindingError, match="Unknown key attributes"):
+            kmc.parse(
+                """
+                    -   key: key1
+                        nonexistent: bar
+                """
+            )
+        with pytest.raises(keymap.KeyBindingError, match="Missing required key attributes"):
+            kmc.parse(
+                """
+                    -   help: key1
+                """
+            )
+        with pytest.raises(keymap.KeyBindingError, match="Invalid type for cmd"):
+            kmc.parse(
+                """
+                    -   key: key1
+                        cmd: [ cmd ]
+                """
+            )
+        with pytest.raises(keymap.KeyBindingError, match="Invalid type for ctx"):
+            kmc.parse(
+                """
+                    -   key: key1
+                        ctx: foo
+                        cmd: cmd
+                """
+            )
+        assert kmc.parse(
+            """
+                -   key: key1
+                    ctx: [one, two]
+                    help: one
+                    cmd: >
+                        foo bar
+                        foo bar
+            """
+        ) == [{"key": "key1", "ctx": ["one", "two"], "help": "one", "cmd": "foo bar foo bar\n"}]

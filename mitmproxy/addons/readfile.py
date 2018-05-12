@@ -74,7 +74,6 @@ class ReadFile:
             raise exceptions.OptionsError(e) from e
         finally:
             self.is_reading = False
-            ctx.master.addons.trigger("processing_complete")
 
     def running(self):
         if ctx.options.rfile:

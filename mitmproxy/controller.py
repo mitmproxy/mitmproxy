@@ -96,8 +96,8 @@ class Reply:
     def commit(self):
         """
         Ultimately, messages are committed. This is done either automatically by
-        if the message is not taken or manually by the entity which called
-        .take().
+        the handler if the message is not taken or manually by the entity which
+        called .take().
         """
         if self.state != "taken":
             raise exceptions.ControlException(
@@ -113,6 +113,8 @@ class Reply:
 
     def kill(self, force=False):
         self.send(exceptions.Kill, force)
+        if self._state == "taken":
+            self.commit()
 
     def send(self, msg, force=False):
         if self.state not in {"start", "taken"}:

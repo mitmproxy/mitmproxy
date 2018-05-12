@@ -23,6 +23,8 @@ from mitmproxy import proxy  # noqa
 from mitmproxy import log  # noqa
 from mitmproxy.utils import debug, arg_check  # noqa
 
+OPTIONS_FILE_NAME = "config.yaml"
+
 
 def assert_utf8_env():
     spec = ""
@@ -90,7 +92,11 @@ def run(
         arg_check.check()
         sys.exit(1)
     try:
-        unknown = optmanager.load_paths(opts, args.conf)
+        opts.confdir = args.confdir
+        unknown = optmanager.load_paths(
+            opts,
+            os.path.join(opts.confdir, OPTIONS_FILE_NAME),
+        )
         pconf = process_options(parser, opts, args)
         server: typing.Any = None
         if pconf.options.server:
@@ -110,7 +116,7 @@ def run(
         if args.commands:
             master.commands.dump()
             sys.exit(0)
-        opts.set(*args.setoptions)
+        opts.set(*args.setoptions, defer=True)
         if extra:
             opts.update(**extra(args))
 

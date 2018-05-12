@@ -36,25 +36,10 @@ def cut_traceback(tb, func_name):
     return tb or tb_orig
 
 
-class StreamLog:
-    def __init__(self, lg):
-        self.log = lg
-
-    def write(self, buf):
-        if buf.strip():
-            self.log(buf)
-
-    def flush(self):  # pragma: no cover
-        # Click uses flush sometimes, so we dummy it up
-        pass
-
-
 @contextlib.contextmanager
 def safecall():
-    stdout_replacement = StreamLog(lambda message: ctx.log.warn(message))
     try:
-        with contextlib.redirect_stdout(stdout_replacement):
-            yield
+        yield
     except (exceptions.AddonHalt, exceptions.OptionsError):
         raise
     except Exception as e:
@@ -173,6 +158,7 @@ class AddonManager:
             self.lookup[name] = a
         for a in traverse([addon]):
             self.master.commands.collect_commands(a)
+        self.master.options.process_deferred()
         return addon
 
     def add(self, *addons):
@@ -243,7 +229,7 @@ class AddonManager:
             Invoke an event on an addon and all its children.
         """
         if name not in eventsequence.Events:
-            name = "event_" + name
+            raise exceptions.AddonManagerError("Unknown event: %s" % name)
         for a in traverse([addon]):
             func = getattr(a, name, None)
             if func:

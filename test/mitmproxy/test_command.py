@@ -1,4 +1,5 @@
 import typing
+import inspect
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import exceptions
@@ -55,7 +56,35 @@ class TAddon:
         pass
 
 
+class Unsupported:
+    pass
+
+
+class TypeErrAddon:
+    @command.command("noret")
+    def noret(self):
+        pass
+
+    @command.command("invalidret")
+    def invalidret(self) -> Unsupported:
+        pass
+
+    @command.command("invalidarg")
+    def invalidarg(self, u: Unsupported):
+        pass
+
+
 class TestCommand:
+    def test_typecheck(self):
+        with taddons.context(loadcore=False) as tctx:
+            cm = command.CommandManager(tctx.master)
+            a = TypeErrAddon()
+            command.Command(cm, "noret", a.noret)
+            with pytest.raises(exceptions.CommandError):
+                command.Command(cm, "invalidret", a.invalidret)
+            with pytest.raises(exceptions.CommandError):
+                command.Command(cm, "invalidarg", a.invalidarg)
+
     def test_varargs(self):
         with taddons.context() as tctx:
             cm = command.CommandManager(tctx.master)
@@ -252,6 +281,8 @@ def test_simple():
             c.execute("one.two too many args")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.call("nonexistent")
+        with pytest.raises(exceptions.CommandError, match="No escaped"):
+            c.execute("\\")
 
         c.add("empty", a.empty)
         c.execute("empty")
@@ -274,6 +305,11 @@ def test_typename():
     assert command.typename(mitmproxy.types.Choice("foo")) == "choice"
     assert command.typename(mitmproxy.types.Path) == "path"
     assert command.typename(mitmproxy.types.Cmd) == "cmd"
+
+    with pytest.raises(exceptions.CommandError, match="missing type annotation"):
+        command.typename(inspect._empty)
+    with pytest.raises(exceptions.CommandError, match="unsupported type"):
+        command.typename(None)
 
 
 class DummyConsole:
@@ -326,7 +362,8 @@ class TCmds(TAttr):
         pass
 
 
-def test_collect_commands():
+@pytest.mark.asyncio
+async def test_collect_commands():
     """
         This tests for the error thrown by hasattr()
     """
@@ -335,6 +372,10 @@ def test_collect_commands():
         a = TCmds()
         c.collect_commands(a)
         assert "empty" in c.commands
+
+        a = TypeErrAddon()
+        c.collect_commands(a)
+        await tctx.master.await_log("Could not load")
 
 
 def test_decorator():

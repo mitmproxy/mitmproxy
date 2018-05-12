@@ -1,6 +1,18 @@
 import typing
+import os
+
+import ruamel.yaml
+
+from mitmproxy import command
 from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import signals
+from mitmproxy import ctx
+from mitmproxy import exceptions
+import mitmproxy.types
+
+
+class KeyBindingError(Exception):
+    pass
 
 
 Contexts = {
@@ -140,3 +152,91 @@ class Keymap:
         if b:
             return self.executor(b.command)
         return key
+
+
+keyAttrs = {
+    "key": lambda x: isinstance(x, str),
+    "cmd": lambda x: isinstance(x, str),
+    "ctx": lambda x: isinstance(x, list) and [isinstance(v, str) for v in x],
+    "help": lambda x: isinstance(x, str),
+}
+requiredKeyAttrs = set(["key", "cmd"])
+
+
+class KeymapConfig:
+    defaultFile = "keys.yaml"
+
+    @command.command("console.keymap.load")
+    def keymap_load_path(self, path: mitmproxy.types.Path) -> None:
+        try:
+            self.load_path(ctx.master.keymap, path)  # type: ignore
+        except (OSError, KeyBindingError) as e:
+            raise exceptions.CommandError(
+                "Could not load key bindings - %s" % e
+            ) from e
+
+    def running(self):
+        p = os.path.join(os.path.expanduser(ctx.options.confdir), self.defaultFile)
+        if os.path.exists(p):
+            try:
+                self.load_path(ctx.master.keymap, p)
+            except KeyBindingError as e:
+                ctx.log.error(e)
+
+    def load_path(self, km, p):
+        if os.path.exists(p) and os.path.isfile(p):
+            with open(p, "rt", encoding="utf8") as f:
+                try:
+                    txt = f.read()
+                except UnicodeDecodeError as e:
+                    raise KeyBindingError(
+                        "Encoding error - expected UTF8: %s: %s" % (p, e)
+                    )
+            try:
+                vals = self.parse(txt)
+            except KeyBindingError as e:
+                raise KeyBindingError(
+                    "Error reading %s: %s" % (p, e)
+                ) from e
+            for v in vals:
+                try:
+                    km.add(
+                        key = v["key"],
+                        command = v["cmd"],
+                        contexts = v.get("ctx", ["global"]),
+                        help = v.get("help", None),
+                    )
+                except ValueError as e:
+                    raise KeyBindingError(
+                        "Error reading %s: %s" % (p, e)
+                    ) from e
+
+    def parse(self, text):
+        try:
+            data = ruamel.yaml.safe_load(text)
+        except ruamel.yaml.error.YAMLError as v:
+            if hasattr(v, "problem_mark"):
+                snip = v.problem_mark.get_snippet()
+                raise KeyBindingError(
+                    "Key binding config error at line %s:\n%s\n%s" %
+                    (v.problem_mark.line + 1, snip, v.problem)
+                )
+            else:
+                raise KeyBindingError("Could not parse key bindings.")
+        if not data:
+            return []
+        if not isinstance(data, list):
+            raise KeyBindingError("Inalid keybinding config - expected a list of keys")
+
+        for k in data:
+            unknown = k.keys() - keyAttrs.keys()
+            if unknown:
+                raise KeyBindingError("Unknown key attributes: %s" % unknown)
+            missing = requiredKeyAttrs - k.keys()
+            if missing:
+                raise KeyBindingError("Missing required key attributes: %s" % unknown)
+            for attr in k.keys():
+                if not keyAttrs[attr](k[attr]):
+                    raise KeyBindingError("Invalid type for %s" % attr)
+
+        return data

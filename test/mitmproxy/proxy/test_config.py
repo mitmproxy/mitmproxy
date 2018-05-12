@@ -6,9 +6,9 @@ from mitmproxy.proxy.config import ProxyConfig
 
 
 class TestProxyConfig:
-    def test_invalid_cadir(self):
+    def test_invalid_confdir(self):
         opts = options.Options()
-        opts.cadir = "foo"
+        opts.confdir = "foo"
         with pytest.raises(exceptions.OptionsError, match="parent directory does not exist"):
             ProxyConfig(opts)
 

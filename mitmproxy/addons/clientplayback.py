@@ -59,9 +59,7 @@ class RequestReplayThread(basethread.BaseThread):
                 # In all modes, we directly connect to the server displayed
                 if self.options.mode.startswith("upstream:"):
                     server_address = server_spec.parse_with_mode(self.options.mode)[1].address
-                    server = connections.ServerConnection(
-                        server_address, (self.options.listen_host, 0)
-                    )
+                    server = connections.ServerConnection(server_address)
                     server.connect()
                     if r.scheme == "https":
                         connect_request = http.make_connect_request((r.data.host, r.port))
@@ -85,10 +83,7 @@ class RequestReplayThread(basethread.BaseThread):
                         r.first_line_format = "absolute"
                 else:
                     server_address = (r.host, r.port)
-                    server = connections.ServerConnection(
-                        server_address,
-                        (self.options.listen_host, 0)
-                    )
+                    server = connections.ServerConnection(server_address)
                     server.connect()
                     if r.scheme == "https":
                         server.establish_tls(
