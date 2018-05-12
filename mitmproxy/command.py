@@ -236,7 +236,10 @@ class CommandManager(mitmproxy.types._CommandBase):
         """
             Execute a command string. May raise CommandError.
         """
-        parts = list(lexer(cmdstr))
+        try:
+            parts = list(lexer(cmdstr))
+        except ValueError as e:
+            raise exceptions.CommandError("Command error: %s" % e)
         if not len(parts) >= 1:
             raise exceptions.CommandError("Invalid command: %s" % cmdstr)
         return self.call_strings(parts[0], parts[1:])

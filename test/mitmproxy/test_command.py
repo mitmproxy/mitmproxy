@@ -281,6 +281,8 @@ def test_simple():
             c.execute("one.two too many args")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.call("nonexistent")
+        with pytest.raises(exceptions.CommandError, match="No escaped"):
+            c.execute("\\")
 
         c.add("empty", a.empty)
         c.execute("empty")
