@@ -39,6 +39,14 @@ class FlowListWalker(urwid.ListWalker):
     def __init__(self, master):
         self.master = master
 
+    def positions(self, reverse=False):
+        # The stub implementation of positions can go once this issue is resolved:
+        # https://github.com/urwid/urwid/issues/294
+        ret = range(len(self.master.view))
+        if reverse:
+            return reversed(ret)
+        return ret
+
     def view_changed(self):
         self._modified()
 

@@ -173,16 +173,14 @@ class TestCutTraceback:
 class TestScriptLoader:
     @pytest.mark.asyncio
     async def test_script_run(self, tdata):
-        rp = tdata.path(
-            "mitmproxy/data/addonscripts/recorder/recorder.py"
-        )
+        rp = tdata.path("mitmproxy/data/addonscripts/recorder/recorder.py")
         sc = script.ScriptLoader()
         with taddons.context(sc) as tctx:
             sc.script_run([tflow.tflow(resp=True)], rp)
             await tctx.master.await_log("recorder response")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
-                'recorder load', 'recorder running', 'recorder configure',
+                'recorder running', 'recorder configure',
                 'recorder requestheaders', 'recorder request',
                 'recorder responseheaders', 'recorder response'
             ]
@@ -192,7 +190,7 @@ class TestScriptLoader:
         sc = script.ScriptLoader()
         with taddons.context(sc) as tctx:
             sc.script_run([tflow.tflow(resp=True)], "/")
-            assert await tctx.master.await_log("/: No such script")
+            assert await tctx.master.await_log("No such script")
 
     def test_simple(self, tdata):
         sc = script.ScriptLoader()
