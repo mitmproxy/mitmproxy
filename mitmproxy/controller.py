@@ -96,8 +96,8 @@ class Reply:
     def commit(self):
         """
         Ultimately, messages are committed. This is done either automatically by
-        if the message is not taken or manually by the entity which called
-        .take().
+        the handler if the message is not taken or manually by the entity which
+        called .take().
         """
         if self.state != "taken":
             raise exceptions.ControlException(
