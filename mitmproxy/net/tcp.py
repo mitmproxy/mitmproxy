@@ -1,4 +1,5 @@
 import os
+import errno
 import select
 import socket
 import sys
@@ -585,6 +586,13 @@ class TCPServer:
         with self.handler_counter:
             try:
                 self.handle_client_connection(connection, client_address)
+            except OSError as e:
+                # This catches situations where the underlying connection is
+                # closed beneath us. Syscalls on the connection object at this
+                # point returns EINVAL. If this happens, we close the socket and
+                # move on.
+                if not e.errno == errno.EINVAL:
+                    raise
             except:
                 self.handle_error(connection, client_address)
             finally:
