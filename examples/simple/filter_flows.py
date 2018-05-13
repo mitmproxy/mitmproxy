@@ -1,5 +1,5 @@
 """
-This scripts demonstrates how to use mitmproxy's filter pattern in scripts.
+This script demonstrates how to use mitmproxy's filter pattern in scripts.
 """
 from mitmproxy import flowfilter
 from mitmproxy import ctx, http
