@@ -26,6 +26,8 @@ matrix:
       env: TOXENV=py36 BDIST=1 WHEEL=1
     - python: 3.6
       env: TOXENV=individual_coverage
+    - python: "3.7-dev"
+      env: TOXENV=py37
     - language: node_js
       node_js: "node"
       before_install:
