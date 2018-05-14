@@ -37,7 +37,7 @@ class Log:
     def alert(self, txt):
         """
             Log with level alert. Alerts have the same urgency as info, but
-            signals to interctive tools that the user's attention should be
+            signals to interactive tools that the user's attention should be
             drawn to the output even if they're not currently looking at the
             event log.
         """
