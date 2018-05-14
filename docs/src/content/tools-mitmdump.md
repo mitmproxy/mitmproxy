@@ -1,45 +1,10 @@
 ---
-title: "Tools"
-menu: "overview"
+title: "mitmdump"
+menu: "tools"
 menu:
-    overview:
-        weight: 3
+    tools:
+        weight: 2
 ---
-
-# Overview
-
-You should think of the mitmproxy project's tools as a set of front-ends that
-expose the same underlying functionality. We aim to have feature parity across
-all of our tooling, and all tools share a common configuration mechanism and
-most command-line options.
-
-## mitmproxy
-
-{{< figure src="/screenshots/mitmproxy.png" >}}
-
-**mitmproxy** is a console tool that allows interactive examination and
-modification of HTTP traffic. It differs from mitmdump in that all flows are
-kept in memory, which means that it's intended for taking and manipulating
-small-ish samples. Use the `?` shortcut key to view, context-sensitive
-documentation from any **mitmproxy** screen.
-
-
-## mitmweb
-
-{{< figure src="/screenshots/mitmweb.png" >}}
-
-**mitmweb** is mitmproxy's web-based user interface that allows
-interactive examination and modification of HTTP traffic. Like
-mitmproxy, it differs from mitmdump in that all flows are kept in
-memory, which means that it's intended for taking and manipulating
-small-ish samples.
-
-{{% note %}}
-Mitmweb is currently in beta. We consider it stable for all features
-currently exposed in the UI, but it still misses a lot of mitmproxy's
-features.
-{{% /note %}}
-
 
 ## mitmdump
 
