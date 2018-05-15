@@ -36,15 +36,20 @@ the repository maintainers directly for issues with native packages.
 
 ## Windows
 
-The recommended way to install mitmproxy on Windows is to download our
-binary-packages from our
-[releases](https://github.com/mitmproxy/mitmproxy/releases/latest) page.
+All the mitmproxy tools are fully supported under WSL (Windows Subsystem for
+Linux). Please follow the [installation instructions for
+WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and then
+follow the mitmproxy installation instructions for Linux.
 
-FIXME: WSL
+We also distribute native Windows packages for all tools other than the
+mitmproxy console app, which is not supported under native Windows. The
+recommended way to install mitmproxy on Windows is to download the binary
+packages from our
+[releases](https://github.com/mitmproxy/mitmproxy/releases/latest) page.
 
 After installation, you'll find shortcuts for mitmweb and mitmdump in the start
 menu. Both executables are added to your PATH and can be invoked from the
-command line. The console interface is not supported on native Windows.
+command line.
 
 
 # Advanced Installation
@@ -54,7 +59,7 @@ command line. The console interface is not supported on native Windows.
 For some platforms we provide pre-built binary packages containing ready-to-run
 executables. This includes a self-contained Python 3 environment, a recent
 OpenSSL that support ALPN and HTTP/2, and other dependencies that would
-otherwise we cumbersome to compile and install.
+otherwise be cumbersome to compile and install.
 
 Dependencies in the binary packages are frozen on release, and can't be updated
 in situ. This means that we necessarily capture any bugs or security issues that
