@@ -8,6 +8,9 @@ menu:
 
 # Introduction
 
+The mitmproxy project's tools are a set of front-ends that expose common
+underlying functionality.
+
 **mitmproxy** is an interactive man-in-the-middle proxy for HTTP and HTTPS
 with a console interface.
 
