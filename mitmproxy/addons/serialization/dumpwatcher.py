@@ -1,10 +1,11 @@
-from mitmproxy import ctx
-from mitmproxy.io import tnetstring
-from mitmproxy.addons.serialization import protobuf
-from mitmproxy import http
-from functools import wraps
 import sys
 import time
+from functools import wraps
+
+from mitmproxy import ctx
+from mitmproxy import http
+from mitmproxy.io import tnetstring
+from mitmproxy.addons.serialization import protobuf
 
 
 def watcher(func):

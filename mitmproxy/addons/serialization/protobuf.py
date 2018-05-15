@@ -1,13 +1,7 @@
-"""
-TODO: almost everything.
-Collect and dumps a python HTTPResponse
-as a protobuf blob.
-"""
-from mitmproxy.utils import data
-
 import sys
-sys.path.extend([data.pkg_data.path("addons/serialization")])
 
+from mitmproxy.utils import data
+sys.path.extend([data.pkg_data.path("addons/serialization")])
 from mitmproxy.addons.serialization import dummyhttp_pb2
 
 
