@@ -1,3 +1,4 @@
+import queue
 import socket
 from OpenSSL import SSL
 
@@ -165,8 +166,18 @@ class WebSocketLayer(base.Layer):
 
         return False
 
+    def _inject_messages(self, endpoint, message_queue):
+        while True:
+            try:
+                payload = message_queue.get_nowait()
+                self.connections[endpoint].send_data(payload, final=True)
+                data = self.connections[endpoint].bytes_to_send()
+                endpoint.send(data)
+            except queue.Empty:
+                break
+
     def __call__(self):
-        self.flow = WebSocketFlow(self.client_conn, self.server_conn, self.handshake_flow, self)
+        self.flow = WebSocketFlow(self.client_conn, self.server_conn, self.handshake_flow)
         self.flow.metadata['websocket_handshake'] = self.handshake_flow.id
         self.handshake_flow.metadata['websocket_flow'] = self.flow.id
         self.channel.ask("websocket_start", self.flow)
@@ -176,6 +187,9 @@ class WebSocketLayer(base.Layer):
 
         try:
             while not self.channel.should_exit.is_set():
+                self._inject_messages(self.client_conn, self.flow._inject_messages_client)
+                self._inject_messages(self.server_conn, self.flow._inject_messages_server)
+
                 r = tcp.ssl_read_select(conns, 0.1)
                 for conn in r:
                     source_conn = self.client_conn if conn == self.client_conn.connection else self.server_conn
@@ -198,4 +212,5 @@ class WebSocketLayer(base.Layer):
             self.flow.error = flow.Error("WebSocket connection closed unexpectedly by {}: {}".format(s, repr(e)))
             self.channel.tell("websocket_error", self.flow)
         finally:
+            self.flow.ended = True
             self.channel.tell("websocket_end", self.flow)

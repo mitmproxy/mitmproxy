@@ -1,4 +1,5 @@
 import time
+import queue
 from typing import List, Optional
 
 from wsproto.frame_protocol import CloseReason
@@ -77,6 +78,11 @@ class WebSocketFlow(flow.Flow):
         """True of this connection is streaming directly to the other endpoint."""
         self.handshake_flow = handshake_flow
         """The HTTP flow containing the initial WebSocket handshake."""
+        self.ended = False
+        """True when the WebSocket connection has been closed."""
+
+        self._inject_messages_client = queue.Queue(maxsize=1)
+        self._inject_messages_server = queue.Queue(maxsize=1)
 
         if handshake_flow:
             self.client_key = websockets.get_client_key(handshake_flow.request.headers)
@@ -134,3 +140,25 @@ class WebSocketFlow(flow.Flow):
             direction="->" if message.from_client else "<-",
             endpoint=self.handshake_flow.request.path,
         )
+
+    def inject_message(self, endpoint, payload):
+        """
+        Inject and send a full WebSocket message to the remote endpoint.
+        This might corrupt your WebSocket connection! Be careful!
+
+        The endpoint needs to be either flow.client_conn or flow.server_conn.
+
+        If ``payload`` is of type ``bytes`` then the message is flagged as
+        being binary If it is of type ``str`` encoded as UTF-8 and sent as
+        text.
+
+        :param payload: The message body to send.
+        :type payload: ``bytes`` or ``str``
+        """
+
+        if endpoint == self.client_conn:
+            self._inject_messages_client.put(payload)
+        elif endpoint == self.server_conn:
+            self._inject_messages_server.put(payload)
+        else:
+            raise ValueError('Invalid endpoint')

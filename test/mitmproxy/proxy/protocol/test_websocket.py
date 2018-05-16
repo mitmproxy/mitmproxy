@@ -467,3 +467,46 @@ class TestExtension(_WebSocketTest):
         assert self.master.state.flows[1].messages[3].type == websockets.OPCODE.BINARY
         assert self.master.state.flows[1].messages[4].content == b'\xde\xad\xbe\xef'
         assert self.master.state.flows[1].messages[4].type == websockets.OPCODE.BINARY
+
+
+class TestInjectMessageClient(_WebSocketTest):
+
+    @classmethod
+    def handle_websockets(cls, rfile, wfile):
+        pass
+
+    def test_inject_message_client(self):
+        class Inject:
+            def websocket_start(self, flow):
+                flow.inject_message(flow.client_conn, 'This is an injected message!')
+
+        self.proxy.set_addons(Inject())
+        self.setup_connection()
+
+        frame = websockets.Frame.from_file(self.client.rfile)
+        assert frame.header.opcode == websockets.OPCODE.TEXT
+        assert frame.payload == b'This is an injected message!'
+
+
+class TestInjectMessageServer(_WebSocketTest):
+
+    @classmethod
+    def handle_websockets(cls, rfile, wfile):
+        frame = websockets.Frame.from_file(rfile)
+        assert frame.header.opcode == websockets.OPCODE.TEXT
+        success = frame.payload == b'This is an injected message!'
+
+        wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.TEXT, payload=str(success).encode())))
+        wfile.flush()
+
+    def test_inject_message_server(self):
+        class Inject:
+            def websocket_start(self, flow):
+                flow.inject_message(flow.server_conn, 'This is an injected message!')
+
+        self.proxy.set_addons(Inject())
+        self.setup_connection()
+
+        frame = websockets.Frame.from_file(self.client.rfile)
+        assert frame.header.opcode == websockets.OPCODE.TEXT
+        assert frame.payload == b'True'
