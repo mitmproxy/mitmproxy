@@ -36,16 +36,15 @@ the repository maintainers directly for issues with native packages.
 
 ## Windows
 
-All the mitmproxy tools are fully supported under WSL (Windows Subsystem for
-Linux). Please follow the [installation instructions for
-WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and then
+
+All the mitmproxy tools are fully supported under [WSL (Windows Subsystem for
+Linux)](https://docs.microsoft.com/en-us/windows/wsl/about). We recommend to [install WSL](https://docs.microsoft.com/en-us/windows/wsl/install-win10), and then
 follow the mitmproxy installation instructions for Linux.
 
 We also distribute native Windows packages for all tools other than the
-mitmproxy console app, which is not supported under native Windows. The
-recommended way to install mitmproxy on Windows is to download the binary
-packages from our
-[releases](https://github.com/mitmproxy/mitmproxy/releases/latest) page.
+mitmproxy console app, which only works under WSL. To install mitmproxy on Windows,
+download the binary packages from our
+[releases](https://github.com/mitmproxy/mitmproxy/releases/latest) page. 
 
 After installation, you'll find shortcuts for mitmweb and mitmdump in the start
 menu. Both executables are added to your PATH and can be invoked from the
