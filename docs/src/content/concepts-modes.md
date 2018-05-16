@@ -213,3 +213,4 @@ tests).
 
 ## SOCKS Proxy
 
+In this mode, mitmproxy acts as a SOCKS5 proxy.
