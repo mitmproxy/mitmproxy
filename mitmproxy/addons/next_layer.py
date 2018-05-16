@@ -1,7 +1,6 @@
 from mitmproxy import ctx
-from mitmproxy.net import server_spec
-from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.net.tls import is_tls_record_magic
+from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import layer, layers, context
 
@@ -15,20 +14,6 @@ class NextLayer:
     def configure(self, updated):
         if "tcp_hosts" in updated:
             self.check_tcp = HostMatcher(ctx.options.tcp_hosts)
-
-    def make_top_layer(self, context):
-        if ctx.options.mode == "regular":
-            return layers.modes.HttpProxy(context)
-        elif ctx.options.mode == "transparent":
-            raise NotImplementedError("Mode not implemented.")
-        elif ctx.options.mode == "socks5":
-            raise NotImplementedError("Mode not implemented.")
-        elif ctx.options.mode.startswith("reverse:"):
-            return layers.modes.ReverseProxy(context)
-        elif ctx.options.mode.startswith("upstream:"):
-            raise NotImplementedError("Mode not implemented.")
-        else:
-            raise NotImplementedError("Mode not implemented.")
 
     def next_layer(self, nextlayer: layer.NextLayer):
         nextlayer.layer = self._next_layer(nextlayer, nextlayer.context)
@@ -90,3 +75,17 @@ class NextLayer:
 
         # 8. Assume HTTP1 by default.
         return layers.HTTPLayer(context, HTTPMode.transparent)
+
+    def make_top_layer(self, context):
+        if ctx.options.mode == "regular":
+            return layers.modes.HttpProxy(context)
+        elif ctx.options.mode == "transparent":
+            raise NotImplementedError("Mode not implemented.")
+        elif ctx.options.mode == "socks5":
+            raise NotImplementedError("Mode not implemented.")
+        elif ctx.options.mode.startswith("reverse:"):
+            return layers.modes.ReverseProxy(context)
+        elif ctx.options.mode.startswith("upstream:"):
+            raise NotImplementedError("Mode not implemented.")
+        else:
+            raise NotImplementedError("Mode not implemented.")
