@@ -21,8 +21,12 @@
     * Correctly block connections from remote clients with IPv4-mapped IPv6 client addresses (#3099)
     * Expand `~` in paths during the `cut` command (#3078)
     * Remove socket listen backlog constraint
-    * Improve handling of user script exceptions (#3050)
+    * Improve handling of user script exceptions (#3050, #2837)
     * Ignore signal errors on windows
+    * Fix traceback for commands with un-terminated escape characters (#2810)
+    * Fix request replay when proxy is bound to local interface (#2647)
+    * Fix traceback when running scripts on a flow twice (#2838)
+    * Fix traceback when killing intercepted flow (#2879)
     * And lots of typos, docs improvements, revamped examples, and general fixes!
 
 05 April 2018: mitmproxy 3.0.4
