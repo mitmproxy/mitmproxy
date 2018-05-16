@@ -81,37 +81,30 @@ class SSLTest:
         )
 
 
-def test_no_tls(tctx: context.Context):
+def test_server_no_tls(tctx: context.Context):
     """Test TLS layer without TLS"""
-    layer = tls.TLSLayer(tctx)
+    layer = tls.ServerTLSLayer(tctx)
     playbook = tutils.playbook(layer)
-    next_layer = tutils.Placeholder()
 
     # Handshake
     assert (
         playbook
         >> events.DataReceived(tctx.client, b"Hello World")
-        << commands.Hook("next_layer", next_layer)
-    )
-    next_layer().layer = tutils.EchoLayer(next_layer().context)
-    assert (
-        playbook
-        >> events.HookReply(-1)
+        << commands.Hook("next_layer", tutils.Placeholder())
+        >> tutils.next_layer(tutils.EchoLayer)
         << commands.SendData(tctx.client, b"hello world")
     )
 
 
-def test_client_tls(tctx: context.Context):
+def test_client_tls_only(tctx: context.Context):
     """Test TLS with client only"""
-    layer = tls.TLSLayer(tctx)
+    layer = tls.ClientTLSLayer(tctx)
     playbook = tutils.playbook(layer)
-    tctx.client.tls = True
     tssl = SSLTest()
 
     # Handshake
     assert playbook
-    assert layer.state[tctx.client] == tls.ConnectionState.NEGOTIATING
-    assert layer.state[tctx.server] == tls.ConnectionState.NO_TLS
+    assert layer._handle_event == layer.state_wait_for_clienthello
 
     def interact():
         data = tutils.Placeholder()
@@ -136,29 +129,25 @@ def test_client_tls(tctx: context.Context):
     assert interact()
     tssl.obj.do_handshake()
 
-    assert layer.state[tctx.client] == tls.ConnectionState.ESTABLISHED
-    assert layer.state[tctx.server] == tls.ConnectionState.NO_TLS
+    assert layer._handle_event == layer.state_process
 
     # Echo
     echo(playbook, tssl, tctx.client)
-
-
-def echo(playbook, tssl, conn):
-    tconn = type(conn).__name__.lower()
-    tssl.obj.write(b"Hello World")
-    next_layer = tutils.Placeholder()
     assert (
         playbook
-        >> events.DataReceived(conn, tssl.out.read())
-        << commands.Log(f"PlainDataReceived({tconn}, b'Hello World')")
-        << commands.Hook("next_layer", next_layer)
+        >> events.DataReceived(tctx.server, b"Hello")
+        << commands.SendData(tctx.server, b"hello")
     )
-    next_layer().layer = tutils.EchoLayer(next_layer().context)
+
+
+def echo(playbook: tutils.playbook, tssl: SSLTest, conn: context.Connection) -> None:
+    tssl.obj.write(b"Hello World")
     data = tutils.Placeholder()
     assert (
         playbook
-        >> events.HookReply(-1)
-        << commands.Log(f"PlainSendData({tconn}, b'hello world')")
+        >> events.DataReceived(conn, tssl.out.read())
+        << commands.Hook("next_layer", tutils.Placeholder())
+        >> tutils.next_layer(tutils.EchoLayer)
         << commands.SendData(conn, data)
     )
     tssl.inc.write(data())
@@ -166,20 +155,26 @@ def echo(playbook, tssl, conn):
 
 
 def test_server_tls_no_conn(tctx):
-    layer = tls.TLSLayer(tctx)
+    """
+    The server TLS layer is initiated, but there is no active connection yet, so nothing
+    should be done.
+    """
+    layer = tls.ServerTLSLayer(tctx)
     playbook = tutils.playbook(layer)
     tctx.server.tls = True
 
     # We did not have a server connection before, so let's do nothing.
-    assert playbook
-    assert layer.state[tctx.client] == tls.ConnectionState.NO_TLS
-    assert layer.state[tctx.server] == tls.ConnectionState.NO_TLS
+    assert (
+        playbook
+        << None
+    )
 
 
 def test_server_tls(tctx):
-    layer = tls.TLSLayer(tctx)
+    layer = tls.ServerTLSLayer(tctx)
     playbook = tutils.playbook(layer)
     tctx.server.connected = True
+    tctx.server.address = ("example.com", 443)
     tctx.server.tls = True
 
     tssl = SSLTest(server_side=True)
@@ -190,8 +185,6 @@ def test_server_tls(tctx):
         playbook
         << commands.SendData(tctx.server, data)
     )
-    assert layer.state[tctx.client] == tls.ConnectionState.NO_TLS
-    assert layer.state[tctx.server] == tls.ConnectionState.NEGOTIATING
 
     # receive ServerHello, finish client handshake
     tssl.inc.write(data())
@@ -213,24 +206,25 @@ def test_server_tls(tctx):
         << None
     )
 
-    assert layer.state[tctx.client] == tls.ConnectionState.NO_TLS
-    assert layer.state[tctx.server] == tls.ConnectionState.ESTABLISHED
+    assert tctx.server.tls_established
+    assert tctx.server.sni == b"example.com"
 
     # Echo
     echo(playbook, tssl, tctx.server)
 
 
 def _test_tls_client_server(tctx, alpn):
-    layer = tls.TLSLayer(tctx)
+    layer = tls.ClientTLSLayer(tctx)
     playbook = tutils.playbook(layer)
-    tctx.client.tls = True
     tctx.server.tls = True
+    tctx.server.address = ("example.com", 443)
     tssl_client = SSLTest(alpn=alpn)
 
     # Handshake
-    assert playbook
-    assert layer.state[tctx.client] == tls.ConnectionState.WAIT_FOR_CLIENTHELLO
-    assert layer.state[tctx.server] == tls.ConnectionState.WAIT_FOR_CLIENTHELLO
+    assert (
+        playbook
+        << None
+    )
 
     with pytest.raises(ssl.SSLWantReadError):
         tssl_client.obj.do_handshake()
@@ -241,9 +235,6 @@ def _test_tls_client_server(tctx, alpn):
         << None
     )
     # Still waiting...
-    assert layer.state[tctx.client] == tls.ConnectionState.WAIT_FOR_CLIENTHELLO
-    assert layer.state[tctx.server] == tls.ConnectionState.WAIT_FOR_CLIENTHELLO
-
     # Finish sending ClientHello
     playbook >> events.DataReceived(tctx.client, client_hello[42:])
     return playbook, tssl_client
@@ -263,8 +254,7 @@ def test_tls_client_server_no_server_conn(tctx):
         << commands.SendData(tctx.client, data)
     )
     assert data()
-    assert playbook.layer.state[tctx.client] == tls.ConnectionState.NEGOTIATING
-    assert playbook.layer.state[tctx.server] == tls.ConnectionState.NO_TLS
+    assert playbook.layer._handle_event == playbook.layer.state_process
 
 
 def test_tls_client_server_alpn(tctx):
@@ -288,8 +278,8 @@ def test_tls_client_server_alpn(tctx):
         >> events.OpenConnectionReply(-1, None)
         << commands.SendData(tctx.server, data)
     )
-    assert playbook.layer.state[tctx.client] == tls.ConnectionState.WAIT_FOR_SERVER_TLS
-    assert playbook.layer.state[tctx.server] == tls.ConnectionState.NEGOTIATING
+    assert playbook.layer._handle_event == playbook.layer.state_wait_for_server_tls
+    assert playbook.layer.child_layer.tls[tctx.server]
 
     # Establish TLS with the server...
     tssl_server.inc.write(data())
@@ -310,8 +300,8 @@ def test_tls_client_server_alpn(tctx):
         << commands.SendData(tctx.client, data)
     )
 
-    assert playbook.layer.state[tctx.client] == tls.ConnectionState.NEGOTIATING
-    assert playbook.layer.state[tctx.server] == tls.ConnectionState.ESTABLISHED
+    assert playbook.layer._handle_event == playbook.layer.state_process
+    assert tctx.server.tls_established
 
     # Server TLS is established, we can now reply to the client handshake...
     tssl_client.inc.write(data())
@@ -327,8 +317,8 @@ def test_tls_client_server_alpn(tctx):
     tssl_client.obj.do_handshake()
 
     # Both handshakes completed!
-    assert playbook.layer.state[tctx.client] == tls.ConnectionState.ESTABLISHED
-    assert playbook.layer.state[tctx.server] == tls.ConnectionState.ESTABLISHED
+    assert tctx.client.tls_established
+    assert tctx.server.tls_established
 
     assert tssl_client.obj.selected_alpn_protocol() == "foo"
     assert tssl_server.obj.selected_alpn_protocol() == "foo"

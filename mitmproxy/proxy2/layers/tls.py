@@ -109,8 +109,8 @@ class _TLSLayer(layer.Layer):
                 yield commands.SendData(conn, data)
 
     def send(
-            self,
-            send_command: commands.SendData,
+        self,
+        send_command: commands.SendData,
     ) -> commands.TCommandGenerator:
         tls_conn = self.tls[send_command.connection]
         if send_command.connection.tls_established:
@@ -288,13 +288,13 @@ class ClientTLSLayer(_TLSLayer):
                 client.alpn_offers = client_hello.alpn_protocols
 
                 client_tls_requires_server_connection = (
-                        self.context.server.tls and
-                        self.context.options.upstream_cert and
-                        (
-                                self.context.options.add_upstream_certs_to_client_chain or
-                                client.alpn_offers or
-                                not client.sni
-                        )
+                    self.context.server.tls and
+                    self.context.options.upstream_cert and
+                    (
+                        self.context.options.add_upstream_certs_to_client_chain or
+                        client.alpn_offers or
+                        not client.sni
+                    )
                 )
 
                 # What do we do with the client connection now?
@@ -304,6 +304,9 @@ class ClientTLSLayer(_TLSLayer):
                 else:
                     yield from self.start_negotiate()
                     self._handle_event = self.state_process
+
+                # In any case, we now have enough information to start server TLS if needed.
+                yield from self.child_layer.handle_event(events.Start())
         else:
             raise NotImplementedError(event)  # TODO
 
@@ -318,7 +321,7 @@ class ClientTLSLayer(_TLSLayer):
 
     def state_process(self, event: events.Event):
         if isinstance(event, events.DataReceived) and event.connection == self.context.client:
-            if not event.connection.tls_established:
+            if not self.context.client.tls_established:
                 yield from self.negotiate(event)
             else:
                 yield from self.relay(event)
@@ -342,12 +345,7 @@ class ClientTLSLayer(_TLSLayer):
             if not (x.startswith(b"h2-") or x.startswith(b"spdy"))
         ]
 
-        yield from self.child_layer.handle_event(events.Start())
-
     def start_negotiate(self):
-        if not self.child_layer:
-            yield from self.child_layer.handle_event(events.Start())
-
         # FIXME: Do this properly
         client = self.context.client
         server = self.context.server

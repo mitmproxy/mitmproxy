@@ -1,21 +1,21 @@
-import collections
 import copy
 import difflib
 import itertools
 import typing
 
-from mitmproxy.proxy2 import commands
+import collections
+
+from mitmproxy.proxy2 import commands, context
 from mitmproxy.proxy2 import events
-from mitmproxy.proxy2 import layer
-from mitmproxy.proxy2.layer import Layer
+from mitmproxy.proxy2.layer import Layer, NextLayer
 
 TPlaybookEntry = typing.Union[commands.Command, events.Event]
 TPlaybook = typing.List[TPlaybookEntry]
 
 
 def _eq(
-        a: TPlaybookEntry,
-        b: TPlaybookEntry
+    a: TPlaybookEntry,
+    b: TPlaybookEntry
 ) -> bool:
     """Compare two commands/events, and possibly update placeholders."""
     if type(a) != type(b):
@@ -43,8 +43,8 @@ def _eq(
 
 
 def eq(
-        a: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]],
-        b: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]]
+    a: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]],
+    b: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]]
 ):
     """
     Compare an indiviual event/command or a list of events/commands.
@@ -76,7 +76,7 @@ class playbook:
     x2 = list(t.handle_event(events.OpenConnectionReply(x1[-1])))
     assert x2 == []
     """
-    layer: layer.Layer
+    layer: Layer
     """The base layer"""
     expected: TPlaybook
     """expected command/event sequence"""
@@ -84,11 +84,14 @@ class playbook:
     """actual command/event sequence"""
     _errored: bool
     """used to check if playbook as been fully asserted"""
+    ignore_log: bool
+    """If True, log statements are ignored."""
 
     def __init__(
-            self,
-            layer,
-            expected=None,
+        self,
+        layer: Layer,
+        expected: typing.Optional[TPlaybook]=None,
+        ignore_log: bool=True
     ):
         if expected is None:
             expected = [
@@ -99,6 +102,7 @@ class playbook:
         self.expected = expected
         self.actual = []
         self._errored = False
+        self.ignore_log = ignore_log
 
     def __rshift__(self, e):
         """Add an event to send"""
@@ -111,6 +115,7 @@ class playbook:
         if c is None:
             return self
         assert isinstance(c, commands.Command)
+        assert not (self.ignore_log and isinstance(c, commands.Log))
         self.expected.append(c)
         return self
 
@@ -124,19 +129,26 @@ class playbook:
                 if isinstance(x, events.CommandReply):
                     if isinstance(x.command, int) and abs(x.command) < len(self.actual):
                         x.command = self.actual[x.command]
+                if hasattr(x, "_playbook_eval"):
+                    x._playbook_eval(self)
 
                 self.actual.append(x)
                 self.actual.extend(
                     self.layer.handle_event(x)
                 )
 
+        if self.ignore_log:
+            self.actual = [
+                x for x in self.actual if not isinstance(x, commands.Log)
+            ]
+
         if not eq(self.expected, self.actual):
             self._errored = True
 
             def _str(x):
                 arrow = ">" if isinstance(x, events.Event) else "<"
-                x = str(x)\
-                    .replace('Placeholder:None', '<unset placeholder>')\
+                x = str(x) \
+                    .replace('Placeholder:None', '<unset placeholder>') \
                     .replace('Placeholder:', '')
                 return f"{arrow} {x}"
 
@@ -189,9 +201,48 @@ class Placeholder:
     def __repr__(self):
         return f"Placeholder:{repr(self.obj)}"
 
+    def __str__(self):
+        return f"Placeholder:{str(self.obj)}"
+
 
 class EchoLayer(Layer):
     """Echo layer that sends all data back to the client in lowercase."""
+
     def _handle_event(self, event: events.Event):
         if isinstance(event, events.DataReceived):
             yield commands.SendData(event.connection, event.data.lower())
+
+
+def next_layer(
+    layer: typing.Union[typing.Type[Layer], typing.Callable[[context.Context], Layer]]
+) -> events.HookReply:
+    """
+    Helper function to simplify the syntax for next_layer events from this:
+
+            << commands.Hook("next_layer", next_layer)
+        )
+        next_layer().layer = tutils.EchoLayer(next_layer().context)
+        assert (
+            playbook
+            >> events.HookReply(-1)
+
+    to this:
+
+        << commands.Hook("next_layer", next_layer)
+        >> tutils.next_layer(next_layer, tutils.EchoLayer)
+    """
+    if isinstance(layer, type):
+        def make_layer(ctx: context.Context) -> Layer:
+            return layer(ctx)
+    else:
+        make_layer = layer
+
+    def set_layer(playbook: playbook) -> None:
+        last_command = playbook.actual[-1]
+        assert isinstance(last_command, commands.Hook)
+        assert isinstance(last_command.data, NextLayer)
+        last_command.data.layer = make_layer(last_command.data.context)
+
+    reply = events.HookReply(-1)
+    reply._playbook_eval = set_layer
+    return reply
