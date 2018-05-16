@@ -8,6 +8,5 @@ from mitmproxy.proxy2 import context
 def tctx():
     return context.Context(
         context.Client(("client", 1234)),
-        context.Server(("server", 42)),
         options.Options()
     )
