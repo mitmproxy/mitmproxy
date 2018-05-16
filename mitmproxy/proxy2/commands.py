@@ -8,7 +8,7 @@ The counterpart to commands are events.
 """
 import typing
 
-from mitmproxy.proxy2.context import Connection
+from mitmproxy.proxy2.context import Connection, Server
 
 
 class Command:
@@ -61,6 +61,7 @@ class OpenConnection(ConnectionCommand):
     """
     Open a new connection
     """
+    connection: Server
     blocking = True
 
 
@@ -88,9 +89,7 @@ class Log(Command):
     message: str
     level: str
 
-    def __init__(self, message, level="info"):
-        assert isinstance(message, str)
-        assert isinstance(level, str)
+    def __init__(self, message: str, level: str="info"):
         self.message = message
         self.level = level
 
