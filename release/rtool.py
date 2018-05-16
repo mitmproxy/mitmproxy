@@ -63,26 +63,6 @@ def contributors():
             f.write(contributors_data.encode())
 
 
-@cli.command("upload-release")
-@click.option('--username', prompt=True)
-@click.password_option(confirmation_prompt=False)
-@click.option('--repository', default="pypi")
-def upload_release(username, password, repository):
-    """
-    Upload wheels to PyPI
-    """
-    filename = wheel_name()
-    print("Uploading {} to {}...".format(filename, repository))
-    subprocess.check_call([
-        "twine",
-        "upload",
-        "-u", username,
-        "-p", password,
-        "-r", repository,
-        join(DIST_DIR, filename)
-    ])
-
-
 @cli.command("homebrew-pr")
 def homebrew_pr():
     """
@@ -96,7 +76,7 @@ def homebrew_pr():
     subprocess.check_call([
         "brew",
         "bump-formula-pr",
-        "--url", "https://github.com/mitmproxy/mitmproxy/archive/v{}".format(get_version()),
+        "--url", "https://github.com/mitmproxy/mitmproxy/archive/v{}.tar.gz".format(get_version()),
         "mitmproxy",
     ])
 

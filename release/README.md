@@ -1,24 +1,35 @@
 # Release Checklist
 
-Make sure run all these steps on the correct branch you want to create a new release for!
+Make sure run all these steps on the correct branch you want to create a new
+release for! The command examples assume that you have a git remote called
+`upstream` that points to the `mitmproxy/mitmproxy` repo.
+
 - Verify `mitmproxy/version.py`
 - Update CHANGELOG
 - Verify that all CI tests pass
+- Create a major version branch - e.g. `v4.x`. Assuming you have a remote repo called `upstream` that points to the mitmproxy/mitmproxy repo::
+  - `git checkout -b v4.x upstream/master`
+  - `git push -u upstream v4.x`
 - Tag the release and push to Github
-  - For alphas, betas, and release candidates, use lightweight tags.
-    This is necessary so that the .devXXXX counter does not reset.
-  - For final releases, use annotated tags.
-    This makes the .devXXXX counter reset.
+  - For alphas, betas, and release candidates, use lightweight tags. This is
+    necessary so that the .devXXXX counter does not reset.
+  - For final releases, use annotated tags. This makes the .devXXXX counter reset.
+    - `git tag -a v4.0.0 -m v4.0.0`
+    - `git push upstream v4.0.0`
 - Wait for tag CI to complete
 
 ## GitHub Release
 - Create release notice on Github [here](https://github.com/mitmproxy/mitmproxy/releases/new)
-- Attach all files from the new release folder on https://snapshots.mitmproxy.org
+- Grab a copy of the current snapshot files from snapshots.mitmproxy.org:
+  - `aws s3 cp --recursive s3://snapshots.mitmproxy.org/vXXX/ .`
+- Attach all files to the release
 
 ## PyPi
-- `tox -e rtool -- upload-release`
+- Upload the whl file you downloaded in the prevous step
+- `twine upload ./tmp/snap/mitmproxy-4.0.0-py3-none-any.whl`
 
 ## Homebrew
+- **FIXME** This process does not work with 2FA.
 - `tox -e rtool -- homebrew-pr`
 - The Homebrew maintainers are typically very fast and detect our new relese within a day, but we can be a nice citizen and create the PR ourself.
 
@@ -29,8 +40,8 @@ Make sure run all these steps on the correct branch you want to create a new rel
     * Creating a fresh venv, pip-installing the new wheel in there, and then export all packages:
     * `virtualenv -ppython3.6 venv && source venv/bin/activate && pip install mitmproxy && pip freeze`
   - Tag the commit with the correct version
-    * `2.0.0` for new major versions
-    * `2.0.2` for new patch versions
+    * `v2.0.0` for new major versions
+    * `v2.0.2` for new patch versions
 - Update `latest` tag [here](https://hub.docker.com/r/mitmproxy/mitmproxy/~/settings/automated-builds/)
 - Check that the build for this tag succeeds [https://hub.docker.com/r/mitmproxy/mitmproxy/builds/](here)
 - If build failed:
@@ -44,6 +55,12 @@ Make sure run all these steps on the correct branch you want to create a new rel
  - Update version here: https://github.com/mitmproxy/www/blob/master/src/config.toml
  - `./build && ./upload-test`
  - If everything looks alright: `./upload-prod`
+
+## Docs
+  - Make sure you've uploaded the previous version's docs to archive
+  - If everything looks alright:
+    - `./build-current`
+    - `./upload-stable`
 
 ## Prepare for next release
 
