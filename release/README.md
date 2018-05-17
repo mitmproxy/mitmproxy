@@ -1,26 +1,40 @@
 # Release Checklist
 
-Make sure run all these steps on the correct branch you want to create a new release for!
-- Verify `mitmproxy/version.py`
+Make sure to run all these steps on the correct branch you want to create a new
+release for! The command examples assume that you have a git remote called
+`upstream` that points to the `mitmproxy/mitmproxy` repo.
+
+- Verify that `mitmproxy/version.py` is correct
 - Update CHANGELOG
 - Verify that all CI tests pass
+- Create a major version branch - e.g. `v4.x`. Assuming you have a remote repo called `upstream` that points to the mitmproxy/mitmproxy repo::
+  - `git checkout -b v4.x upstream/master`
+  - `git push -u upstream v4.x`
 - Tag the release and push to Github
-  - For alphas, betas, and release candidates, use lightweight tags.
-    This is necessary so that the .devXXXX counter does not reset.
-  - For final releases, use annotated tags.
-    This makes the .devXXXX counter reset.
+  - For alphas, betas, and release candidates, use lightweight tags. This is
+    necessary so that the .devXXXX counter does not reset.
+  - For final releases, use annotated tags. This makes the .devXXXX counter reset.
+    - `git tag -a v4.0.0 -m v4.0.0`
+    - `git push upstream v4.0.0`
 - Wait for tag CI to complete
 
 ## GitHub Release
-- Create release notice on Github [here](https://github.com/mitmproxy/mitmproxy/releases/new)
-- Attach all files from the new release folder on https://snapshots.mitmproxy.org
+- Create release notice on Github
+  [here](https://github.com/mitmproxy/mitmproxy/releases/new) if not already
+  auto-created by the tag.
+- We DO NOT upload release artifacts to GitHub anymore. Simply add the
+  following snippet to the notice:
+  `You can find the latest release packages on our snapshot server: https://snapshots.mitmproxy.org/v<version number here>`
 
 ## PyPi
-- `tox -e rtool -- upload-release`
+- The created wheel is uploaded to PyPi automatically
+- Please check https://pypi.python.org/pypi/mitmproxy about the latest version
 
 ## Homebrew
-- `tox -e rtool -- homebrew-pr`
-- The Homebrew maintainers are typically very fast and detect our new relese within a day, but we can be a nice citizen and create the PR ourself.
+- The Homebrew maintainers are typically very fast and detect our new relese
+  within a day.
+- If you feel the need, you can run this from a macOS machine:
+  `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>`
 
 ## Docker
 - Update docker-releases repo
@@ -29,8 +43,8 @@ Make sure run all these steps on the correct branch you want to create a new rel
     * Creating a fresh venv, pip-installing the new wheel in there, and then export all packages:
     * `virtualenv -ppython3.6 venv && source venv/bin/activate && pip install mitmproxy && pip freeze`
   - Tag the commit with the correct version
-    * `2.0.0` for new major versions
-    * `2.0.2` for new patch versions
+    * `v2.0.0` for new major versions
+    * `v2.0.2` for new patch versions
 - Update `latest` tag [here](https://hub.docker.com/r/mitmproxy/mitmproxy/~/settings/automated-builds/)
 - Check that the build for this tag succeeds [https://hub.docker.com/r/mitmproxy/mitmproxy/builds/](here)
 - If build failed:
@@ -41,10 +55,17 @@ Make sure run all these steps on the correct branch you want to create a new rel
   - Check the build details page again
 
 ## Website
- - Update version here: https://github.com/mitmproxy/www/blob/master/src/config.toml
- - `./build && ./upload-test`
- - If everything looks alright: `./upload-prod`
+ - Update version here:
+   https://github.com/mitmproxy/www/blob/master/src/config.toml
+ - Run `./build && ./upload-test`
+ - If everything looks alright, run `./upload-prod`
+
+## Docs
+  - Make sure you've uploaded the previous version's docs to archive
+  - If everything looks alright:
+    - `./build-current`
+    - `./upload-stable`
 
 ## Prepare for next release
-
- - Last but not least, bump the version on master in [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) for major releases.
+ - Last but not least, bump the version on master in
+   [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) for major releases.
