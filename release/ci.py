@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import glob
+import re
 import contextlib
 import os
 import platform
@@ -73,17 +75,17 @@ TOOLS = [
 TAG = os.environ.get("TRAVIS_TAG", os.environ.get("APPVEYOR_REPO_TAG_NAME", None))
 BRANCH = os.environ.get("TRAVIS_BRANCH", os.environ.get("APPVEYOR_REPO_BRANCH", None))
 if TAG:
-    VERSION = TAG
+    VERSION = re.sub('^v', '', TAG)
     UPLOAD_DIR = VERSION
 elif BRANCH:
-    VERSION = BRANCH
+    VERSION = re.sub('^v', '', BRANCH)
     UPLOAD_DIR = "branches/%s" % VERSION
 else:
     print("Could not establish build name - exiting." % BRANCH)
     sys.exit(0)
 
-
 print("BUILD VERSION=%s" % VERSION)
+print("BUILD UPLOAD_DIR=%s" % UPLOAD_DIR)
 
 
 def archive_name(bdist: str) -> str:
@@ -96,23 +98,6 @@ def archive_name(bdist: str) -> str:
         version=VERSION,
         platform=PLATFORM_TAG,
         ext=ext
-    )
-
-
-def wheel_name() -> str:
-    return "mitmproxy-{version}-py3-none-any.whl".format(version=VERSION)
-
-
-def installer_name() -> str:
-    ext = {
-        "Windows": "exe",
-        "Darwin": "dmg",
-        "Linux": "run"
-    }[platform.system()]
-    return "mitmproxy-{version}-{platform}-installer.{ext}".format(
-        version=VERSION,
-        platform=PLATFORM_TAG,
-        ext=ext,
     )
 
 
@@ -134,7 +119,7 @@ def cli():
 
 @cli.command("info")
 def info():
-    print("Version: %s" % VERSION)
+    click.echo("Version: %s" % VERSION)
 
 
 @cli.command("build")
@@ -142,22 +127,40 @@ def build():
     """
     Build a binary distribution
     """
+    os.makedirs(DIST_DIR, exist_ok=True)
+    if "WHEEL" in os.environ:
+        build_wheel()
+    else:
+        click.echo("Not building wheels.")
+    build_pyinstaller()
+
+
+def build_wheel():
+    click.echo("Building wheel...")
+    subprocess.check_call([
+        "python",
+        "setup.py",
+        "-q",
+        "bdist_wheel",
+        "--dist-dir", DIST_DIR,
+    ])
+
+    whl = glob.glob(join(DIST_DIR, 'mitmproxy-*-py3-none-any.whl'))[0]
+    click.echo("Found wheel package: {}".format(whl))
+
+    subprocess.check_call([
+        "tox",
+        "-e", "wheeltest",
+        "--",
+        whl
+    ])
+
+
+def build_pyinstaller():
     if exists(PYINSTALLER_TEMP):
         shutil.rmtree(PYINSTALLER_TEMP)
     if exists(PYINSTALLER_DIST):
         shutil.rmtree(PYINSTALLER_DIST)
-
-    os.makedirs(DIST_DIR, exist_ok=True)
-
-    if "WHEEL" in os.environ:
-        print("Building wheel...")
-        subprocess.check_call(
-            [
-                "python",
-                "setup.py", "-q", "bdist_wheel",
-                "--dist-dir", "release/dist",
-            ]
-        )
 
     for bdist, tools in sorted(BDISTS.items()):
         with Archive(join(DIST_DIR, archive_name(bdist))) as archive:
@@ -168,7 +171,7 @@ def build():
                 # This is PyInstaller, so it messes up paths.
                 # We need to make sure that we are in the spec folder.
                 with chdir(PYINSTALLER_SPEC):
-                    print("Building %s binary..." % tool)
+                    click.echo("Building %s binary..." % tool)
                     excludes = []
                     if tool != "mitmweb":
                         excludes.append("mitmproxy.tools.web")
@@ -209,11 +212,11 @@ def build():
                     )
                     executable = executable.replace("_main", "")
 
-                print("> %s --version" % executable)
-                print(subprocess.check_output([executable, "--version"]).decode())
+                click.echo("> %s --version" % executable)
+                click.echo(subprocess.check_output([executable, "--version"]).decode())
 
                 archive.add(executable, basename(executable))
-        print("Packed {}.".format(archive_name(bdist)))
+        click.echo("Packed {}.".format(archive_name(bdist)))
 
 
 def is_pr():
@@ -229,25 +232,40 @@ def is_pr():
 @cli.command("upload")
 def upload():
     """
-        Upload snapshot to snapshot server
+        Upload build artifacts to snapshot server and
+        upload wheel package to PyPi
     """
     # This requires some explanation. The AWS access keys are only exposed to
     # privileged builds - that is, they are not available to PRs from forks.
     # However, they ARE exposed to PRs from a branch within the main repo. This
     # check catches that corner case, and prevents an inadvertent upload.
     if is_pr():
-        print("Refusing to upload a pull request")
+        click.echo("Refusing to upload a pull request")
         return
+
     if "AWS_ACCESS_KEY_ID" in os.environ:
-        subprocess.check_call(
-            [
-                "aws", "s3", "cp",
-                "--acl", "public-read",
-                DIST_DIR + "/",
-                "s3://snapshots.mitmproxy.org/%s/" % UPLOAD_DIR,
-                "--recursive",
-            ]
-        )
+        subprocess.check_call([
+            "aws", "s3", "cp",
+            "--acl", "public-read",
+            DIST_DIR + "/",
+            "s3://snapshots.mitmproxy.org/%s/" % UPLOAD_DIR,
+            "--recursive",
+        ])
+
+    upload_pypi = (
+        TAG and
+        "WHEEL" in os.environ and
+        "TWINE_USERNAME" in os.environ and
+        "TWINE_PASSWORD" in os.environ
+    )
+    if upload_pypi:
+        filename = "mitmproxy-{version}-py3-none-any.whl".format(version=VERSION)
+        click.echo("Uploading {} to PyPi...".format(filename))
+        subprocess.check_call([
+            "twine",
+            "upload",
+            join(DIST_DIR, filename)
+        ])
 
 
 @cli.command("decrypt")

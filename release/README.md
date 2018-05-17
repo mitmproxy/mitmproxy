@@ -1,12 +1,12 @@
 # Release Checklist
 
-Make sure run all these steps on the correct branch you want to create a new
+Make sure to run all these steps on the correct branch you want to create a new
 release for! The command examples assume that you have a git remote called
 `upstream` that points to the `mitmproxy/mitmproxy` repo.
 
 - Verify that `mitmproxy/version.py` is correct
 - Update CHANGELOG
-- Update CONTRIBUTORS
+- Update CONTRIBUTORS: `git shortlog -n -s > CONTRIBUTORS`
 - Verify that all CI tests pass
 - Create a major version branch - e.g. `v4.x`. Assuming you have a remote repo called `upstream` that points to the mitmproxy/mitmproxy repo::
   - `git checkout -b v4.x upstream/master`
@@ -20,16 +20,20 @@ release for! The command examples assume that you have a git remote called
 - Wait for tag CI to complete
 
 ## GitHub Release
-- Create release notice on Github [here](https://github.com/mitmproxy/mitmproxy/releases/new) if not already auto-created by the tag.
-- We DO NOT upload release artifacts to GitHub anymore. Simply add the following snippet to the notice:
+- Create release notice on Github
+  [here](https://github.com/mitmproxy/mitmproxy/releases/new) if not already
+  auto-created by the tag.
+- We DO NOT upload release artifacts to GitHub anymore. Simply add the
+  following snippet to the notice:
   `You can find the latest release packages on our snapshot server: https://snapshots.mitmproxy.org/v<version number here>`
 
 ## PyPi
-- Upload the whl file you downloaded in the prevous step
-- `twine upload ./tmp/snap/mitmproxy-4.0.0-py3-none-any.whl`
+- The created wheel is uploaded to PyPi automatically
+- Please check https://pypi.python.org/pypi/mitmproxy about the latest version
 
 ## Homebrew
-- The Homebrew maintainers are typically very fast and detect our new relese within a day.
+- The Homebrew maintainers are typically very fast and detect our new relese
+  within a day.
 - If you feel the need, you can run this from a macOS machine:
   `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>`
 
@@ -52,9 +56,10 @@ release for! The command examples assume that you have a git remote called
   - Check the build details page again
 
 ## Website
- - Update version here: https://github.com/mitmproxy/www/blob/master/src/config.toml
- - `./build && ./upload-test`
- - If everything looks alright: `./upload-prod`
+ - Update version here:
+   https://github.com/mitmproxy/www/blob/master/src/config.toml
+ - Run `./build && ./upload-test`
+ - If everything looks alright, run `./upload-prod`
 
 ## Docs
   - Make sure you've uploaded the previous version's docs to archive
@@ -64,4 +69,5 @@ release for! The command examples assume that you have a git remote called
 
 ## Prepare for next release
 
- - Last but not least, bump the version on master in [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) for major releases.
+ - Last but not least, bump the version on master in
+   [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) for major releases.
