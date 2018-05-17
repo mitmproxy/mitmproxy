@@ -1,0 +1,3 @@
+graft mitmproxy
+graft pathod
+recursive-exclude * *.pyc *.pyo *.swo *.swp *.map
