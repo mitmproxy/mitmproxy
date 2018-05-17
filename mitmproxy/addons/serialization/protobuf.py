@@ -20,8 +20,20 @@ def dumps(state : dict) -> bytes:
     return r.SerializeToString()
 
 
+def dump(state: dict, session) -> int:
+    r = dumps(state)
+    mid = session.store(r)
+    return mid
+
+
 def loads(blob) -> dummyhttp_pb2.HTTPResponse():
     r = dummyhttp_pb2.HTTPResponse()
     r.ParseFromString(blob)
     return r
 
+
+def load(mid, session) -> bytes:
+    r = dummyhttp_pb2.HTTPResponse()
+    blob = session.collect(mid)
+    r.ParseFromString(blob)
+    return r
