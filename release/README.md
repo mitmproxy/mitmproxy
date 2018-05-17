@@ -4,8 +4,9 @@ Make sure run all these steps on the correct branch you want to create a new
 release for! The command examples assume that you have a git remote called
 `upstream` that points to the `mitmproxy/mitmproxy` repo.
 
-- Verify `mitmproxy/version.py`
+- Verify that `mitmproxy/version.py` is correct
 - Update CHANGELOG
+- Update CONTRIBUTORS
 - Verify that all CI tests pass
 - Create a major version branch - e.g. `v4.x`. Assuming you have a remote repo called `upstream` that points to the mitmproxy/mitmproxy repo::
   - `git checkout -b v4.x upstream/master`
@@ -19,19 +20,18 @@ release for! The command examples assume that you have a git remote called
 - Wait for tag CI to complete
 
 ## GitHub Release
-- Create release notice on Github [here](https://github.com/mitmproxy/mitmproxy/releases/new)
-- Grab a copy of the current snapshot files from snapshots.mitmproxy.org:
-  - `aws s3 cp --recursive s3://snapshots.mitmproxy.org/vXXX/ .`
-- Attach all files to the release
+- Create release notice on Github [here](https://github.com/mitmproxy/mitmproxy/releases/new) if not already auto-created by the tag.
+- We DO NOT upload release artifacts to GitHub anymore. Simply add the following snippet to the notice:
+  `You can find the latest release packages on our snapshot server: https://snapshots.mitmproxy.org/v<version number here>`
 
 ## PyPi
 - Upload the whl file you downloaded in the prevous step
 - `twine upload ./tmp/snap/mitmproxy-4.0.0-py3-none-any.whl`
 
 ## Homebrew
-- **FIXME** This process does not work with 2FA.
-- `tox -e rtool -- homebrew-pr`
-- The Homebrew maintainers are typically very fast and detect our new relese within a day, but we can be a nice citizen and create the PR ourself.
+- The Homebrew maintainers are typically very fast and detect our new relese within a day.
+- If you feel the need, you can run this from a macOS machine:
+  `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>`
 
 ## Docker
 - Update docker-releases repo
