@@ -57,6 +57,9 @@ class TBase(tservers.HTTPProxyTest):
         assert l.response.status_code == 304
         l.request.path = "/p/305"
         l.response = None
+        l.live = False
+        l.intercepted = False
+
         cr.start_replay([l])
         self.wait_response(l)
         assert l.response.status_code == 305
