@@ -12,7 +12,6 @@ import tarfile
 import zipfile
 from os.path import join, abspath, dirname, exists, basename
 
-import cryptography.fernet
 import click
 
 # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
@@ -266,15 +265,6 @@ def upload():
             "upload",
             join(DIST_DIR, filename)
         ])
-
-
-@cli.command("decrypt")
-@click.argument('infile', type=click.File('rb'))
-@click.argument('outfile', type=click.File('wb'))
-@click.argument('key', envvar='RTOOL_KEY')
-def decrypt(infile, outfile, key):
-    f = cryptography.fernet.Fernet(key.encode())
-    outfile.write(f.decrypt(infile.read()))
 
 
 if __name__ == "__main__":
