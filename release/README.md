@@ -37,22 +37,10 @@ release for! The command examples assume that you have a git remote called
   `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>`
 
 ## Docker
-- Update docker-releases repo
-  - Create a new branch based of master for major versions.
-  - Update the dependencies in [alpine/requirements.txt](https://github.com/mitmproxy/docker-releases/commit/3d6a9989fde068ad0aea257823ac3d7986ff1613#diff-9b7e0eea8ae74688b1ac13ea080549ba)
-    * Creating a fresh venv, pip-installing the new wheel in there, and then export all packages:
-    * `virtualenv -ppython3.6 venv && source venv/bin/activate && pip install mitmproxy && pip freeze`
-  - Tag the commit with the correct version
-    * `v2.0.0` for new major versions
-    * `v2.0.2` for new patch versions
-- Update `latest` tag [here](https://hub.docker.com/r/mitmproxy/mitmproxy/~/settings/automated-builds/)
-- Check that the build for this tag succeeds [https://hub.docker.com/r/mitmproxy/mitmproxy/builds/](here)
-- If build failed:
-  - Fix it and commit
-  - `git tag 3.0.2` the new commit
-  - `git push origin :refs/tags/3.0.2` to delete the old remote tag
-  - `git push --tags` to push the new tag
-  - Check the build details page again
+- The docker image is built on Travis and pushed to Docker Hub automatically.
+- Please check https://hub.docker.com/r/mitmproxy/mitmproxy/tags/ about the latest version
+- Update `latest` tag: TODO write instructions
+
 
 ## Website
  - Update version here:

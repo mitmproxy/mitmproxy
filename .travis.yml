@@ -21,9 +21,12 @@ matrix:
     - os: osx
       osx_image: xcode7.3
       language: generic
-      env: TOXENV=py36 BDIST=1
+      env: TOXENV=py36 CIBUILD=1 PYINSTALLER=1
     - python: 3.6
-      env: TOXENV=py36 BDIST=1 WHEEL=1
+      env: TOXENV=py36 CIBUILD=1 PYINSTALLER=1 WHEEL=1 DOCKER=1
+      sudo: required
+      services:
+        - docker
     - python: 3.6
       env: TOXENV=individual_coverage
     - python: "3.7-dev"
@@ -67,19 +70,16 @@ install:
   - pip install tox virtualenv setuptools
 
 script:
+  # All these steps MUST succeed for the job to be successful!
+  # Using the after_success block DOES NOT capture errors.
+  # Pull requests might break our build - we need to check this.
+  # Pull requests are not allowed to upload build artifacts - enforced by cibuild script.
   - tox -- --verbose --cov-report=term
   - |
-    if [[ $BDIST == "1" ]]
+    if [[ $CIBUILD == "1" ]]
     then
         git fetch --unshallow --tags
-        tox -e cibuild -- build
-    fi
-
-after_success:
-  - |
-    if [[ $BDIST == "1" ]]
-    then
-        tox -e cibuild -- upload
+        tox -e cibuild -- build && tox -e cibuild -- upload
     fi
 
 notifications:

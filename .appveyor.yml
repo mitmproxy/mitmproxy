@@ -11,6 +11,7 @@ environment:
   matrix:
     - PYTHON: "C:\\Python36"
       TOXENV: "py36"
+      PYINSTALLER: "1"
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
@@ -21,7 +22,6 @@ test_script:
   - ps: "tox -- --verbose --cov-report=term"
   - ps: |
       $Env:VERSION = $(python -m mitmproxy.version)
-      $Env:SKIP_MITMPROXY = "python -c `"print('skip mitmproxy')`""
       tox -e cibuild -- build
   - ps: |
       if($Env:RTOOL_KEY) {
