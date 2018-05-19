@@ -97,6 +97,7 @@ class DumpWatcher:
                     self.deserializers[d](
                         self.session, self.rets[d])
 
+
     def load(self, loader):
         loader.add_option(
             "dumpwatcher", bool, False,
