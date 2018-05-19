@@ -1,11 +1,11 @@
 import sys
 import time
 from functools import wraps
-from functools import partial
 
 from mitmproxy import ctx
 from mitmproxy import http
 from mitmproxy.io import tnetstring
+from mitmproxy.utils import data
 from mitmproxy.addons.serialization import protobuf
 from mitmproxy.addons.serialization import dummysession
 
@@ -14,15 +14,15 @@ def watcher(func):
     """
     Decorator for dumpers.
     Shows how much time it
-    takes to create the blog,
-    together with its size.
+    takes to create/retrieve
+    the blob.
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
         start = time.perf_counter()
         result = func(*args, **kwargs)
         end = time.perf_counter()
-        ctx.log(f"{func.__name__} took {end-start} seconds")
+        ctx.log(f" ===> took {end-start} seconds")
         return result
     return wrapper
 
@@ -34,7 +34,7 @@ class DumpWatcher:
         modules behave in dumping and loading flows.
     """
 
-    default_tpath = "./tmp/dumps-tnet"
+    default_tpath = data.pkg_data.path('addons/serialization/') + '/dumps-tnet'
 
     def __init__(self):
         self.s_modules = ['mitmproxy.io.tnetstring',
@@ -50,17 +50,12 @@ class DumpWatcher:
         Apply watcher decorator
         to dumps/loads methods.
         """
-        if ctx.options.store_dumps:
-            self.serializers['mitmproxy.io.tnetstring'] = watcher(
-                partial(tnetstring.dump, file_handle=self.default_tpath))
-            self.serializers['mitmproxy.addons.serialization.protobuf'] = watcher(
-                partial(protobuf.dump, session=self.session))
-
-            self.deserializers['mitmproxy.io.tnetstring'] = watcher(tnetstring.load)
-            self.deserializers['mitmproxy.addons.serialization.protobuf'] = watcher(protobuf.load)
-        else:
-            for s in self.s_modules:
-                m = sys.modules[s]
+        for s in self.s_modules:
+            m = sys.modules[s]
+            if ctx.options.store_dumps:
+                self.serializers[s] = watcher(m.dump)
+                self.deserializers[s] = watcher(m.load)
+            else:
                 self.serializers[s] = watcher(m.dumps)
                 self.deserializers[s] = watcher(m.loads)
 
@@ -74,6 +69,16 @@ class DumpWatcher:
                 ctx.log('{} module: '.format(s))
                 self.rets[s] = self.serializers[s](self.f.get_state())
 
+    def _run_dumps_file(self):
+        if self.f:
+            for s in self.serializers:
+                ctx.log(f'{s} module: ')
+                if s == 'mitmproxy.io.tnetstring':
+                    with open(self.default_tpath, "wb") as storage_write:
+                        self.rets[s] = self.serializers[s](self.f.get_state(), storage_write)
+                elif s == 'mitmproxy.addons.serialization.protobuf':
+                    self.rets[s] = self.serializers[s](self.f.get_state(), self.session)
+
     def _run_loads(self):
         if self.rets:
             for d in self.deserializers:
@@ -81,12 +86,16 @@ class DumpWatcher:
                 self.deserializers[d](self.rets[d])
 
     def _run_loads_file(self):
-        ctx.log('mitmproxy.io.tnetstring module: ')
-        self.deserializers['mitmproxy.io.tnetstring'](
-            self.default_tpath)
-        ctx.log('mitmproxy.addons.serialization.protobuf module: ')
-        self.deserializers['mitmproxy.addons.serialization.protobuf'](
-            self.session, self.rets['mitmproxy.addons.serialization.protobuf'])
+        if self.rets:
+            for d in self.deserializers:
+                ctx.log(f'{d} module: ')
+                if d == 'mitmproxy.io.tnetstring':
+                    with open(self.default_tpath, "rb") as storage_read:
+                        self.deserializers[d](
+                            storage_read)
+                elif d == 'mitmproxy.addons.serialization.protobuf':
+                    self.deserializers[d](
+                        self.session, self.rets[d])
 
     def load(self, loader):
         loader.add_option(
@@ -118,10 +127,19 @@ class DumpWatcher:
             if isinstance(flow, http.HTTPFlow):
                 self.f = flow
                 ctx.log("<DUMPS>")
-                self._run_dumps()
+                if ctx.options.store_dumps:
+                    self._run_dumps_file()
+                else:
+                    self._run_dumps()
                 ctx.log("<LOADS>")
-                self._run_loads()
+                if ctx.options.store_dumps:
+                    self._run_loads_file()
+                else:
+                    self._run_loads()
             ctx.log("[/==DumpWatcher==]")
+
+    def done(self):
+        self.session.close()
 
 
 addons = [

@@ -32,8 +32,8 @@ def loads(blob) -> dummyhttp_pb2.HTTPResponse():
     return r
 
 
-def load(mid, session) -> bytes:
+def load(session, mid) -> bytes:
     r = dummyhttp_pb2.HTTPResponse()
     blob = session.collect(mid)
-    r.ParseFromString(blob)
+    r.ParseFromString(bytes(blob))
     return r
