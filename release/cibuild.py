@@ -13,18 +13,7 @@ import zipfile
 from os.path import join, abspath, dirname, exists, basename
 
 import click
-
-# https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
-# scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
-if platform.system() == "Windows":
-    VENV_BIN = "Scripts"
-    PYINSTALLER_ARGS = [
-        # PyInstaller < 3.2 does not handle Python 3.5's ucrt correctly.
-        "-p", r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86",
-    ]
-else:
-    VENV_BIN = "bin"
-    PYINSTALLER_ARGS = []
+import cryptography.fernet
 
 # ZipFile and tarfile have slightly different APIs. Fix that.
 if platform.system() == "Windows":
@@ -44,20 +33,9 @@ PLATFORM_TAG = {
 
 ROOT_DIR = abspath(join(dirname(__file__), ".."))
 RELEASE_DIR = join(ROOT_DIR, "release")
-
 BUILD_DIR = join(RELEASE_DIR, "build")
 DIST_DIR = join(RELEASE_DIR, "dist")
 
-PYINSTALLER_SPEC = join(RELEASE_DIR, "specs")
-# PyInstaller 3.2 does not bundle pydivert's Windivert binaries
-PYINSTALLER_HOOKS = join(RELEASE_DIR, "hooks")
-PYINSTALLER_TEMP = join(BUILD_DIR, "pyinstaller")
-PYINSTALLER_DIST = join(BUILD_DIR, "binaries", PLATFORM_TAG)
-
-VENV_DIR = join(BUILD_DIR, "venv")
-
-# Project Configuration
-VERSION_FILE = join(ROOT_DIR, "mitmproxy", "version.py")
 BDISTS = {
     "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
     "pathod": ["pathoc", "pathod"]
@@ -83,6 +61,14 @@ else:
     print("Could not establish build name - exiting." % BRANCH)
     sys.exit(0)
 
+print("BUILD PLATFORM_TAG=%s" % PLATFORM_TAG)
+print("BUILD ROOT_DIR=%s" % ROOT_DIR)
+print("BUILD RELEASE_DIR=%s" % RELEASE_DIR)
+print("BUILD BUILD_DIR=%s" % BUILD_DIR)
+print("BUILD DIST_DIR=%s" % DIST_DIR)
+print("BUILD BDISTS=%s" % BDISTS)
+print("BUILD TAG=%s" % TAG)
+print("BUILD BRANCH=%s" % BRANCH)
 print("BUILD VERSION=%s" % VERSION)
 print("BUILD UPLOAD_DIR=%s" % UPLOAD_DIR)
 
@@ -116,22 +102,28 @@ def cli():
     pass
 
 
-@cli.command("info")
-def info():
-    click.echo("Version: %s" % VERSION)
-
-
 @cli.command("build")
 def build():
     """
     Build a binary distribution
     """
     os.makedirs(DIST_DIR, exist_ok=True)
+
     if "WHEEL" in os.environ:
-        build_wheel()
+        whl = build_wheel()
     else:
         click.echo("Not building wheels.")
-    build_pyinstaller()
+
+    if "WHEEL" in os.environ and "DOCKER" in os.environ:
+        # Docker image requires wheels
+        build_docker_image(whl)
+    else:
+        click.echo("Not building Docker image.")
+
+    if "PYINSTALLER" in os.environ:
+        build_pyinstaller()
+    else:
+        click.echo("Not building PyInstaller packages.")
 
 
 def build_wheel():
@@ -154,8 +146,38 @@ def build_wheel():
         whl
     ])
 
+    return whl
+
+
+def build_docker_image(whl):
+    click.echo("Building Docker image...")
+    subprocess.check_call([
+        "docker",
+        "build",
+        "--build-arg", "WHEEL_MITMPROXY={}".format(os.path.relpath(whl, ROOT_DIR)),
+        "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(basename(whl)),
+        "--file", "docker/Dockerfile",
+        "."
+    ])
+
 
 def build_pyinstaller():
+    PYINSTALLER_SPEC = join(RELEASE_DIR, "specs")
+    # PyInstaller 3.2 does not bundle pydivert's Windivert binaries
+    PYINSTALLER_HOOKS = join(RELEASE_DIR, "hooks")
+    PYINSTALLER_TEMP = join(BUILD_DIR, "pyinstaller")
+    PYINSTALLER_DIST = join(BUILD_DIR, "binaries", PLATFORM_TAG)
+
+    # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
+    # scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
+    if platform.system() == "Windows":
+        PYINSTALLER_ARGS = [
+            # PyInstaller < 3.2 does not handle Python 3.5's ucrt correctly.
+            "-p", r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86",
+        ]
+    else:
+        PYINSTALLER_ARGS = []
+
     if exists(PYINSTALLER_TEMP):
         shutil.rmtree(PYINSTALLER_TEMP)
     if exists(PYINSTALLER_DIST):
@@ -170,7 +192,7 @@ def build_pyinstaller():
                 # This is PyInstaller, so it messes up paths.
                 # We need to make sure that we are in the spec folder.
                 with chdir(PYINSTALLER_SPEC):
-                    click.echo("Building %s binary..." % tool)
+                    click.echo("Building PyInstaller %s binary..." % tool)
                     excludes = []
                     if tool != "mitmweb":
                         excludes.append("mitmproxy.tools.web")
@@ -218,28 +240,25 @@ def build_pyinstaller():
         click.echo("Packed {}.".format(archive_name(bdist)))
 
 
-def is_pr():
-    if "TRAVIS_PULL_REQUEST" in os.environ:
-        if os.environ["TRAVIS_PULL_REQUEST"] == "false":
-            return False
-        return True
-    elif os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER"):
-        return True
-    return False
-
-
 @cli.command("upload")
 def upload():
     """
-        Upload build artifacts to snapshot server and
-        upload wheel package to PyPi
+        Upload build artifacts
+
+        Uploads the wheels package to PyPi.
+        Uploads the Pyinstaller and wheels packages to the snapshot server.
+        Pushes the Docker image to Docker Hub.
     """
-    # This requires some explanation. The AWS access keys are only exposed to
-    # privileged builds - that is, they are not available to PRs from forks.
-    # However, they ARE exposed to PRs from a branch within the main repo. This
-    # check catches that corner case, and prevents an inadvertent upload.
-    if is_pr():
-        click.echo("Refusing to upload a pull request")
+
+    # Our credentials are only available from within the main repository and not forks.
+    # We need to prevent uploads from all BUT the branches in the main repository.
+    # Pull requests and master-branches of forks are not allowed to upload.
+    is_pull_request = (
+        ("TRAVIS_PULL_REQUEST" in os.environ and os.environ["TRAVIS_PULL_REQUEST"] != "false") or
+        "APPVEYOR_PULL_REQUEST_NUMBER" in os.environ
+    )
+    if is_pull_request:
+        click.echo("Refusing to upload artifacts from a pull request!")
         return
 
     if "AWS_ACCESS_KEY_ID" in os.environ:
@@ -247,7 +266,7 @@ def upload():
             "aws", "s3", "cp",
             "--acl", "public-read",
             DIST_DIR + "/",
-            "s3://snapshots.mitmproxy.org/%s/" % UPLOAD_DIR,
+            "s3://snapshots.mitmproxy.org/{}/".format(UPLOAD_DIR),
             "--recursive",
         ])
 
@@ -258,13 +277,44 @@ def upload():
         "TWINE_PASSWORD" in os.environ
     )
     if upload_pypi:
-        filename = "mitmproxy-{version}-py3-none-any.whl".format(version=VERSION)
-        click.echo("Uploading {} to PyPi...".format(filename))
+        whl = glob.glob(join(DIST_DIR, 'mitmproxy-*-py3-none-any.whl'))[0]
+        click.echo("Uploading {} to PyPi...".format(whl))
         subprocess.check_call([
             "twine",
             "upload",
-            join(DIST_DIR, filename)
+            whl
         ])
+
+    upload_docker = (
+        (TAG or BRANCH == "master") and
+        "DOCKER" in os.environ and
+        "DOCKER_USERNAME" in os.environ and
+        "DOCKER_PASSWORD" in os.environ
+    )
+    if upload_docker:
+        docker_tag = "dev" if BRANCH == "master" else VERSION
+
+        click.echo("Uploading Docker image to tag={}...".format(docker_tag))
+        subprocess.check_call([
+            "docker",
+            "login",
+            "-u", os.environ["DOCKER_USERNAME"],
+            "-p", os.environ["DOCKER_PASSWORD"],
+        ])
+        subprocess.check_call([
+            "docker",
+            "push",
+            "mitmproxy/mitmproxy:{}".format(docker_tag),
+        ])
+
+
+@cli.command("decrypt")
+@click.argument('infile', type=click.File('rb'))
+@click.argument('outfile', type=click.File('wb'))
+@click.argument('key', envvar='RTOOL_KEY')
+def decrypt(infile, outfile, key):
+    f = cryptography.fernet.Fernet(key.encode())
+    outfile.write(f.decrypt(infile.read()))
 
 
 if __name__ == "__main__":
