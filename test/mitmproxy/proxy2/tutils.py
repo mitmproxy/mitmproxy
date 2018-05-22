@@ -30,9 +30,9 @@ def _eq(
         x, y = a[k], b[k]
 
         # if there's a placeholder, make it x.
-        if isinstance(y, Placeholder):
+        if isinstance(y, _Placeholder):
             x, y = y, x
-        if isinstance(x, Placeholder):
+        if isinstance(x, _Placeholder):
             if x.obj is None:
                 x.obj = y
             x = x.obj
@@ -56,7 +56,11 @@ def eq(
     return _eq(a, b)
 
 
-class playbook:
+T = typing.TypeVar('T', bound=Layer)
+
+
+# noinspection PyPep8Naming
+class playbook(typing.Generic[T]):
     """
     Assert that a layer emits the expected commands in reaction to a given sequence of events.
     For example, the following code asserts that the TCP layer emits an OpenConnection command
@@ -76,7 +80,7 @@ class playbook:
     x2 = list(t.handle_event(events.OpenConnectionReply(x1[-1])))
     assert x2 == []
     """
-    layer: Layer
+    layer: T
     """The base layer"""
     expected: TPlaybook
     """expected command/event sequence"""
@@ -89,9 +93,9 @@ class playbook:
 
     def __init__(
         self,
-        layer: Layer,
-        expected: typing.Optional[TPlaybook]=None,
-        ignore_log: bool=True
+        layer: T,
+        expected: typing.Optional[TPlaybook] = None,
+        ignore_log: bool = True
     ):
         if expected is None:
             expected = [
@@ -176,7 +180,7 @@ class playbook:
         return copy.deepcopy(self)
 
 
-class Placeholder:
+class _Placeholder:
     """
     Placeholder value in playbooks, so that objects (flows in particular) can be referenced before
     they are known. Example:
@@ -203,6 +207,10 @@ class Placeholder:
 
     def __str__(self):
         return f"Placeholder:{str(self.obj)}"
+
+
+def Placeholder() -> typing.Any:
+    return _Placeholder()
 
 
 class EchoLayer(Layer):
