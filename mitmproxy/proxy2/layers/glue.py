@@ -1,5 +1,4 @@
 import asyncio
-import io
 import socket
 import sys
 import threading
@@ -30,24 +29,6 @@ Temporary glue code to connect the old thread-based proxy core and the new sans-
 
 GLUE_DEBUG = False
 
-"""
-class GlueChannel:
-    def __init__(self, server):
-        self.server = server
-
-    def ask(self, mtype, m):
-        asyncio.get_event_loop().call_soon_threadsafe(
-            lambda: self.server.server_event(
-                GlueHook(
-                    commands.Hook(mtype, m)
-                )
-            )
-        )
-
-    def tell(self, mtype, m):
-        raise NotImplementedError()
-"""
-
 
 class GlueEvent(events.Event):
     def __init__(self, command: commands.Command):
@@ -62,53 +43,13 @@ class GlueGetConnectionHandlerReply(events.CommandReply):
     pass
 
 
-class GlueClientWfile(io.BufferedWriter):
-    raw: io.BytesIO
-    ch: server.ConnectionHandler
-    loop: asyncio.AbstractEventLoop
-
-    def __init__(self, ch, client, loop):
-        self.ch = ch
-        self.client = client
-        self.loop = loop
-        super().__init__(io.BytesIO())
-
-    def flush(self, *args, **kwargs):
-        super().flush()
-        val = self.raw.getvalue()
-        self.loop.call_soon_threadsafe(
-            lambda: self.ch.server_event(GlueEvent(commands.SendData(
-                self.client,
-                val
-            )))
-        )
-        self.raw.seek(0)
-        self.raw.truncate()
-
-    def __getattribute__(self, item):
-        if GLUE_DEBUG and item not in ("raw", "loop", "ch", "client"):
-            print(f"[client_conn.wfile] {item}")
-        return super().__getattribute__(item)
-
-
 class GlueClientConnection(connections.ClientConnection):
-    def __init__(self, s: socket.socket, address, ch, client, loop):
+    def __init__(self, s: socket.socket, address):
         super().__init__(s, address, None)
-        self.wfile = GlueClientWfile(ch, client, loop)
 
     def __getattribute__(self, item):
         if GLUE_DEBUG:
             print(f"[client_conn] {item}")
-        return super().__getattribute__(item)
-
-
-class GlueServerConnection(connections.ServerConnection):
-    def __init__(self, s: socket.socket):
-        super().__init__(s)
-
-    def __getattribute__(self, item):
-        if GLUE_DEBUG:
-            print(f"[server_conn] {item}")
         return super().__getattribute__(item)
 
 
@@ -132,7 +73,6 @@ class GlueTopLayer(ServerConnectionMixin):
         else:
             raise NotImplementedError()
         self.cls = m
-        # self.ctx = GlueTopLayerCtx(m)
 
     @property
     def __class__(self):
@@ -147,17 +87,6 @@ class GlueTopLayer(ServerConnectionMixin):
         return getattr(self.root_context, item)
 
 
-"""
-class GlueTopLayerCtx:
-    def __init__(self, cls):
-        self.cls = cls
-
-    @property
-    def __class__(self):
-        return self.cls
-"""
-
-
 class GlueLayer(Layer):
     """
     Translate between old and new proxy core.
@@ -168,26 +97,40 @@ class GlueLayer(Layer):
     def log(self, msg, level):
         self.master.channel.tell("log", LogEntry(msg, level))
 
+    def _inject(self, command: commands.Command):
+        e = GlueEvent(command)
+        self.loop.call_soon_threadsafe(
+            lambda: self.connection_handler.server_event(e)
+        )
+
     @expect(events.Start)
     def start(self, _) -> commands.TCommandGenerator:
         if GLUE_DEBUG:
             print("start!")
-        loop = asyncio.get_event_loop()
+        self.loop = asyncio.get_event_loop()
 
         self.connection_handler = yield GlueGetConnectionHandler()
         self.master = ctx.master
 
         self.c1, self.c2 = socket.socketpair(socket.AF_INET)
-        self.s1, self.s2 = socket.socketpair(socket.AF_INET)
 
-        self.client_conn = GlueClientConnection(self.c1, self.context.client.address,
-                                                self.connection_handler, self.context.client,
-                                                loop)
+        self.client_conn = GlueClientConnection(self.c1, self.context.client.address)
         self.root_context = proxy.RootContext(
             self.client_conn,
             proxy.ProxyConfig(self.context.options),
             self.master.channel
         )
+
+        def spin():
+            while True:
+                d = self.c2.recv(16384)
+                if not d:
+                    break
+                self._inject(commands.SendData(self.context.client, d))
+
+        self.spin = threading.Thread(target=spin)
+        self.spin.daemon = True
+        self.spin.start()
 
         def run():
             try:
@@ -252,8 +195,11 @@ class GlueLayer(Layer):
             yield event.command
         elif isinstance(event, events.ConnectionClosed):
             if event.connection == self.context.client:
+                self.c1.shutdown(socket.SHUT_RDWR)
+                self.c1.close()
                 self.c2.shutdown(socket.SHUT_RDWR)
                 self.c2.close()
+                self._handle_event = self.done
             else:
                 raise NotImplementedError()
         yield from ()
