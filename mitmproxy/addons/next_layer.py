@@ -1,8 +1,8 @@
 from mitmproxy import ctx
 from mitmproxy.net.tls import is_tls_record_magic
 from mitmproxy.proxy.config import HostMatcher
-from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import layer, layers, context
+from mitmproxy.proxy2.layers.glue import GLUE_DEBUG
 
 
 class NextLayer:
@@ -16,6 +16,10 @@ class NextLayer:
             self.check_tcp = HostMatcher(ctx.options.tcp_hosts)
 
     def next_layer(self, nextlayer: layer.NextLayer):
+        if not isinstance(nextlayer, layer.NextLayer):
+            if GLUE_DEBUG:
+                print(f"[glue: skipping nextlayer for {nextlayer}]")
+            return
         nextlayer.layer = self._next_layer(nextlayer, nextlayer.context)
 
     def _next_layer(self, nextlayer: layer.NextLayer, context: context.Context):
@@ -48,7 +52,7 @@ class NextLayer:
         # 3. In Http Proxy mode and Upstream Proxy mode, the next layer is fixed.
         if len(context.layers) == 2:
             if ctx.options.mode == "regular":
-                raise NotImplementedError()
+                return layers.GlueLayer(context)  # TODO
 
         # 4. Check for other TLS cases (e.g. after CONNECT).
         if client_tls:
@@ -63,9 +67,10 @@ class NextLayer:
         if isinstance(top_layer, layers.ServerTLSLayer):
             alpn = context.client.alpn
             if alpn == b'http/1.1':
-                return layers.HTTPLayer(context, HTTPMode.transparent)
+                return layers.GlueLayer(context)  # TODO
+                # return layers.HTTPLayer(context, HTTPMode.transparent)
             elif alpn == b"http/2":
-                raise NotImplementedError()
+                return layers.GlueLayer(context)  # TODO
 
         # 7. Check for raw tcp mode. Very simple heuristic here - the first three bytes should be
         # the HTTP verb, so A-Za-z is expected.
@@ -74,7 +79,8 @@ class NextLayer:
             return layers.TCPLayer(context)
 
         # 8. Assume HTTP1 by default.
-        return layers.HTTPLayer(context, HTTPMode.transparent)
+        return layers.GlueLayer(context)  # TODO
+        # return layers.HTTPLayer(context, HTTPMode.transparent)
 
     def make_top_layer(self, context):
         if ctx.options.mode == "regular":
