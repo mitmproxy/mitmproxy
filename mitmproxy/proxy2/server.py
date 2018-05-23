@@ -8,13 +8,14 @@ The very high level overview is as follows:
 """
 import abc
 import asyncio
+import logging
 import socket
 import typing
 
 from mitmproxy import options as moptions
-from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import events, commands, layers, layer
 from mitmproxy.proxy2.context import Client, Context, Connection
+from mitmproxy.proxy2.layers import glue
 
 
 class StreamIO(typing.NamedTuple):
@@ -42,6 +43,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         }
 
     async def handle_client(self):
+        # FIXME: Work around log suppression in core.
+        logging.getLogger('asyncio').setLevel(logging.DEBUG)
+
         self.log("clientconnect")
 
         self.server_event(events.Start())
@@ -54,7 +58,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 self.close_connection(x)
                 for x in self.transports
             ])
-
         # self._debug("transports closed!")
 
     async def close_connection(self, connection):
@@ -125,6 +128,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 asyncio.ensure_future(
                     self.close_connection(command.connection)
                 )
+            elif isinstance(command, glue.GlueGetConnectionHandler):
+                self.server_event(glue.GlueGetConnectionHandlerReply(command, self))
             elif isinstance(command, commands.Hook):
                 asyncio.ensure_future(
                     self.handle_hook(command)
@@ -145,13 +150,14 @@ class SimpleConnectionHandler(ConnectionHandler):
         self.hook_handlers = hooks
 
     async def handle_hook(
-            self,
-            hook: commands.Hook
+        self,
+        hook: commands.Hook
     ) -> None:
         if hook.name in self.hook_handlers:
             self.hook_handlers[hook.name](hook.data)
         if hook.blocking:
             self.server_event(events.HookReply(hook))
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
@@ -160,15 +166,15 @@ if __name__ == "__main__":
     opts.mode = "reverse:example.com"
     # test client-tls-first scenario
     # opts.upstream_cert = False
-
     layers.ClientTLSLayer.debug = ""
     layers.ServerTLSLayer.debug = "  "
     layers.TCPLayer.debug = "    "
 
+
     async def handle(reader, writer):
         layer_stack = [
             layers.ClientTLSLayer,
-            #layers.ServerTLSLayer,
+            # layers.ServerTLSLayer,
             layers.TCPLayer,
             # lambda c: layers.HTTPLayer(c, HTTPMode.transparent),
         ]
@@ -179,6 +185,7 @@ if __name__ == "__main__":
         await SimpleConnectionHandler(reader, writer, opts, {
             "next_layer": next_layer
         }).handle_client()
+
 
     coro = asyncio.start_server(handle, '127.0.0.1', 8080, loop=loop)
     server = loop.run_until_complete(coro)
