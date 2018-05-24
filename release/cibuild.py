@@ -13,6 +13,7 @@ import zipfile
 
 import click
 import cryptography.fernet
+import parver
 
 
 @contextlib.contextmanager
@@ -179,6 +180,14 @@ class BuildEnviron:
     @property
     def has_docker_creds(self) -> bool:
         return self.docker_username and self.docker_password
+
+    @property
+    def is_prod_release(self) -> bool:
+        try:
+            v = parver.Version.parse(self.version)
+        except (parver.ParseError, BuildError):
+            return False
+        return not v.is_prerelease
 
     @property
     def is_pull_request(self) -> bool:

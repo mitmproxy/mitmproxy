@@ -41,7 +41,6 @@ release for! The command examples assume that you have a git remote called
 - Please check https://hub.docker.com/r/mitmproxy/mitmproxy/tags/ about the latest version
 - Update `latest` tag: TODO write instructions
 
-
 ## Website
  - Update version here:
    https://github.com/mitmproxy/www/blob/master/src/config.toml

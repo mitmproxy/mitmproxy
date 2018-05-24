@@ -58,6 +58,7 @@ def test_buildenviron_pr():
         appveyor_pull_request_number = "xxxx",
     )
     assert be.is_pull_request
+    assert not be.is_prod_release
 
 
 def test_buildenviron_commit():
@@ -77,6 +78,7 @@ def test_buildenviron_commit():
     assert be.should_upload_docker
     assert not be.should_upload_pypi
     assert be.should_upload_docker
+    assert not be.is_prod_release
 
 
 def test_buildenviron_rleasetag():
@@ -102,7 +104,7 @@ def test_buildenviron_rleasetag():
     assert be.docker_tag == "0.0.1"
     assert be.should_upload_pypi
     assert be.should_upload_docker
-
+    assert be.is_prod_release
 
 def test_buildenviron_branch():
     # Simulates a development branch on the main repo
