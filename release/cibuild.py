@@ -106,64 +106,6 @@ class BuildEnviron:
             docker_password = os.environ.get("DOCKER_PASSWORD"),
         )
 
-    @property
-    def has_docker_creds(self) -> bool:
-        return self.docker_username and self.docker_password
-
-    @property
-    def is_pull_request(self) -> bool:
-        if self.appveyor_pull_request_number:
-            return True
-        if self.travis_pull_request and self.travis_pull_request != "false":
-            return True
-        return False
-
-    @property
-    def tag(self):
-        return self.travis_tag or self.appveyor_repo_tag_name
-
-    @property
-    def branch(self):
-        return self.travis_branch or self.appveyor_repo_branch
-
-    @property
-    def version(self):
-        name = self.tag or self.branch
-        if not name:
-            raise BuildError("We're on neither a tag nor a branch - could not establish version")
-        return re.sub('^v', "", name)
-
-    @property
-    def upload_dir(self):
-        if self.tag:
-            return self.version
-        else:
-            return "branches/%s" % self.version
-
-    @property
-    def platform_tag(self):
-        if self.system in self.PLATFORM_TAGS:
-            return self.PLATFORM_TAGS[self.system]
-        raise BuildError("Unsupported platform: %s" % self.system)
-
-    @property
-    def release_dir(self):
-        return os.path.join(self.root_dir, "release")
-
-    @property
-    def build_dir(self):
-        return os.path.join(self.release_dir, "build")
-
-    @property
-    def dist_dir(self):
-        return os.path.join(self.release_dir, "dist")
-
-    @property
-    def docker_tag(self):
-        if self.branch == "master":
-            return "dev"
-        return self.version
-
     def archive(self, path):
         # ZipFile and tarfile have slightly different APIs. Fix that.
         if self.system == "Windows":
@@ -196,18 +138,22 @@ class BuildEnviron:
         return ret
 
     @property
-    def should_upload_docker(self) -> bool:
-        return all([
-            (self.tag or self.branch == "master"),
-            self.should_build_docker,
-            self.has_docker_creds,
-        ])
+    def branch(self):
+        return self.travis_branch or self.appveyor_repo_branch
 
     @property
-    def should_upload_pypi(self) -> bool:
-        if self.tag and self.should_build_wheel and self.has_twine_creds:
-            return True
-        return False
+    def build_dir(self):
+        return os.path.join(self.release_dir, "build")
+
+    @property
+    def dist_dir(self):
+        return os.path.join(self.release_dir, "dist")
+
+    @property
+    def docker_tag(self):
+        if self.branch == "master":
+            return "dev"
+        return self.version
 
     def dump_info(self, fp=sys.stdout):
         lst = [
@@ -229,6 +175,60 @@ class BuildEnviron:
         ]
         for attr in lst:
             print("cibuild.%s=%s" % (attr, getattr(self, attr)), file=fp)
+
+    @property
+    def has_docker_creds(self) -> bool:
+        return self.docker_username and self.docker_password
+
+    @property
+    def is_pull_request(self) -> bool:
+        if self.appveyor_pull_request_number:
+            return True
+        if self.travis_pull_request and self.travis_pull_request != "false":
+            return True
+        return False
+
+    @property
+    def platform_tag(self):
+        if self.system in self.PLATFORM_TAGS:
+            return self.PLATFORM_TAGS[self.system]
+        raise BuildError("Unsupported platform: %s" % self.system)
+
+    @property
+    def release_dir(self):
+        return os.path.join(self.root_dir, "release")
+
+    @property
+    def should_upload_docker(self) -> bool:
+        return all([
+            (self.tag or self.branch == "master"),
+            self.should_build_docker,
+            self.has_docker_creds,
+        ])
+
+    @property
+    def should_upload_pypi(self) -> bool:
+        if self.tag and self.should_build_wheel and self.has_twine_creds:
+            return True
+        return False
+
+    @property
+    def tag(self):
+        return self.travis_tag or self.appveyor_repo_tag_name
+
+    @property
+    def upload_dir(self):
+        if self.tag:
+            return self.version
+        else:
+            return "branches/%s" % self.version
+
+    @property
+    def version(self):
+        name = self.tag or self.branch
+        if not name:
+            raise BuildError("We're on neither a tag nor a branch - could not establish version")
+        return re.sub('^v', "", name)
 
 
 def build_wheel(be: BuildEnviron):  # pragma: no cover
