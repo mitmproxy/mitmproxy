@@ -174,9 +174,9 @@ class Message(serializable.Serializable):
             else:
                 # check for HTML meta tags here at some point.
                 REGEX_ENCODING = re.compile(rb"""<meta[^>]+charset=['"]?([^'"]+)""")
-                enc = REGEX_ENCODING.findall(content)[0]
+                enc_found = REGEX_ENCODING.findall(content)
                 # if not found charset in HTML meta tags
-                enc = "latin-1" if not enc else enc.decode()
+                enc = "latin-1" if not enc_found else enc_found[0].decode()
 
         # fix encoding bug when some special characters exceed the character set, such as www.qq.com
         enc = enc.lower()
