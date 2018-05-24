@@ -170,17 +170,18 @@ class Message(serializable.Serializable):
 
         if not enc:
             if "json" in self.headers.get("content-type", ""):
-                return "utf8"
-            else:
-                # check for HTML meta tags here at some point.
-                REGEX_ENCODING = re.compile(rb"""<meta[^>]+charset=['"]?([^'"]+)""")
-                enc_found = REGEX_ENCODING.findall(content)
-                # if not found charset in HTML meta tags
-                enc = "latin-1" if not enc_found else enc_found[0].decode()
+                enc = "utf8"
+        if not enc:
+            meta_charset = re.search(rb"""<meta[^>]+charset=['"]?([^'">]+)""", content)
+            if meta_charset:
+                enc = meta_charset.group(1).decode("ascii", "ignore")
+        if not enc:
+            enc = "latin-1"
 
-        # fix encoding bug when some special characters exceed the character set, such as www.qq.com
-        enc = enc.lower()
-        enc = "gb18030" if enc == "gb2312" or enc == "gbk" else enc
+        # Use GB 18030 as the superset of GB2312 and GBK to fix common encoding problems on Chinese websites.
+        if enc.lower() in ("gb2312", "gbk"):
+            enc = "gb18030"
+
         return enc
 
     def get_text(self, strict: bool=True) -> Optional[str]:
