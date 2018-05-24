@@ -10,14 +10,13 @@ import shutil
 import subprocess
 import tarfile
 import zipfile
-from os.path import join, abspath, dirname, exists, basename
 
 import click
 import cryptography.fernet
 
 
 @contextlib.contextmanager
-def chdir(path: str):
+def chdir(path: str):  # pragma: no cover
     old_dir = os.getcwd()
     os.chdir(path)
     yield
@@ -49,9 +48,9 @@ class BuildEnviron:
         appveyor_repo_branch = "",
         appveyor_pull_request_number = "",
 
-        build_wheel = "",
-        build_docker = "",
-        build_pyinstaller = "",
+        build_wheel = False,
+        build_docker = False,
+        build_pyinstaller = False,
 
         has_aws_creds = False,
         has_twine_creds = False,
@@ -66,6 +65,10 @@ class BuildEnviron:
         self.travis_branch = travis_branch
         self.travis_pull_request = travis_pull_request
 
+        self.build_wheel = build_wheel
+        self.build_docker = build_docker
+        self.build_pyinstaller = build_pyinstaller
+
         self.appveyor_repo_tag_name = appveyor_repo_tag_name
         self.appveyor_repo_branch = appveyor_repo_branch
         self.appveyor_pull_request_number = appveyor_pull_request_number
@@ -78,8 +81,8 @@ class BuildEnviron:
     @classmethod
     def from_env(klass):
         return klass(
-            system = platform.system,
-            root_dir = dirname(__file__),
+            system = platform.system(),
+            root_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "..")),
 
             travis_tag = os.environ.get("TRAVIS_TAG", ""),
             travis_branch = os.environ.get("TRAVIS_BRANCH", ""),
@@ -127,7 +130,7 @@ class BuildEnviron:
     def version(self):
         name = self.tag or self.branch
         if not name:
-            raise BuildError("Could not establish build name")
+            raise BuildError("We're on neither a tag nor a branch - could not establish version")
         return re.sub('^v', "", name)
 
     @property
@@ -155,14 +158,14 @@ class BuildEnviron:
     def dist_dir(self):
         return os.path.join(self.release_dir, "dist")
 
-    def archive(self, name):
+    def archive(self, path):
         # ZipFile and tarfile have slightly different APIs. Fix that.
         if self.system == "Windows":
-            a = zipfile.ZipFile(name, "w")
+            a = zipfile.ZipFile(path, "w")
             a.add = a.write
             return a
         else:
-            return tarfile.open(name, "w:gz")
+            return tarfile.open(path, "w:gz")
 
     def archive_name(self, bdist: str) -> str:
         if self.system == "Windows":
@@ -199,7 +202,7 @@ class BuildEnviron:
         print("BUILD UPLOAD_DIR=%s" % self.upload_dir, file=fp)
 
 
-def build_wheel(be: BuildEnviron):
+def build_wheel(be: BuildEnviron):  # pragma: no cover
     click.echo("Building wheel...")
     subprocess.check_call([
         "python",
@@ -208,32 +211,32 @@ def build_wheel(be: BuildEnviron):
         "bdist_wheel",
         "--dist-dir", be.dist_dir,
     ])
-    whl = glob.glob(join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))[0]
+    whl = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))[0]
     click.echo("Found wheel package: {}".format(whl))
     subprocess.check_call(["tox", "-e", "wheeltest", "--", whl])
     return whl
 
 
-def build_docker_image(be: BuildEnviron, whl: str):
+def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
     click.echo("Building Docker image...")
     subprocess.check_call([
         "docker",
         "build",
-        "--build-arg", "WHEEL_MITMPROXY={}".format(os.path.relpath(whl, be.root_dir)),
-        "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(basename(whl)),
+        "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
+        "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
         "--file", "docker/Dockerfile",
         "."
     ])
 
 
-def build_pyinstaller(be: BuildEnviron):
+def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
     click.echo("Building pyinstaller package...")
 
-    PYINSTALLER_SPEC = join(be.release_dir, "specs")
+    PYINSTALLER_SPEC = os.path.join(be.release_dir, "specs")
     # PyInstaller 3.2 does not bundle pydivert's Windivert binaries
-    PYINSTALLER_HOOKS = join(be.release_dir, "hooks")
-    PYINSTALLER_TEMP = join(be.build_dir, "pyinstaller")
-    PYINSTALLER_DIST = join(be.build_dir, "binaries", be.platform_tag)
+    PYINSTALLER_HOOKS = os.path.abspath(os.path.join(be.release_dir, "hooks"))
+    PYINSTALLER_TEMP = os.path.abspath(os.path.join(be.build_dir, "pyinstaller"))
+    PYINSTALLER_DIST = os.path.abspath(os.path.join(be.build_dir, "binaries", be.platform_tag))
 
     # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
     # scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
@@ -245,13 +248,13 @@ def build_pyinstaller(be: BuildEnviron):
     else:
         PYINSTALLER_ARGS = []
 
-    if exists(PYINSTALLER_TEMP):
+    if os.path.exists(PYINSTALLER_TEMP):
         shutil.rmtree(PYINSTALLER_TEMP)
-    if exists(PYINSTALLER_DIST):
+    if os.path.exists(PYINSTALLER_DIST):
         shutil.rmtree(PYINSTALLER_DIST)
 
     for bdist, tools in sorted(be.bdists.items()):
-        with be.archive(join(be.dist_dir, be.archive_name(bdist))) as archive:
+        with be.archive(os.path.join(be.dist_dir, be.archive_name(bdist))) as archive:
             for tool in tools:
                 # We can't have a folder and a file with the same name.
                 if tool == "mitmproxy":
@@ -288,7 +291,7 @@ def build_pyinstaller(be: BuildEnviron):
                     os.remove("{}.spec".format(tool))
 
                 # Test if it works at all O:-)
-                executable = join(PYINSTALLER_DIST, tool)
+                executable = os.path.join(PYINSTALLER_DIST, tool)
                 if platform.system() == "Windows":
                     executable += ".exe"
 
@@ -303,12 +306,12 @@ def build_pyinstaller(be: BuildEnviron):
                 click.echo("> %s --version" % executable)
                 click.echo(subprocess.check_output([executable, "--version"]).decode())
 
-                archive.add(executable, basename(executable))
+                archive.add(executable, os.path.basename(executable))
         click.echo("Packed {}.".format(be.archive_name(bdist)))
 
 
 @click.group(chain=True)
-def cli():
+def cli():  # pragma: no cover
     """
     mitmproxy build tool
     """
@@ -316,7 +319,7 @@ def cli():
 
 
 @cli.command("build")
-def build():
+def build():  # pragma: no cover
     """
         Build a binary distribution
     """
@@ -329,13 +332,13 @@ def build():
         whl = build_wheel(be)
         # Docker image requires wheels
         if be.build_docker:
-            build_docker_image(whl)
+            build_docker_image(be, whl)
     if be.build_pyinstaller:
-        build_pyinstaller()
+        build_pyinstaller(be)
 
 
 @cli.command("upload")
-def upload():
+def upload():  # pragma: no cover
     """
         Upload build artifacts
 
@@ -360,7 +363,7 @@ def upload():
 
     upload_pypi = (be.tag and be.build_wheel and be.has_twine_creds)
     if upload_pypi:
-        whl = glob.glob(join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))[0]
+        whl = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))[0]
         click.echo("Uploading {} to PyPi...".format(whl))
         subprocess.check_call(["twine", "upload", whl])
 
@@ -390,10 +393,10 @@ def upload():
 @click.argument('infile', type=click.File('rb'))
 @click.argument('outfile', type=click.File('wb'))
 @click.argument('key', envvar='RTOOL_KEY')
-def decrypt(infile, outfile, key):
+def decrypt(infile, outfile, key):  # pragma: no cover
     f = cryptography.fernet.Fernet(key.encode())
     outfile.write(f.decrypt(infile.read()))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     cli()

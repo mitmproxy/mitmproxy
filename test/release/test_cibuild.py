@@ -1,6 +1,14 @@
 import os
 import io
+
+import pytest
+
 from release import cibuild
+
+
+def test_buildenviron_live():
+    be = cibuild.BuildEnviron.from_env()
+    assert be.release_dir
 
 
 def test_buildenviron_common():
@@ -15,10 +23,20 @@ def test_buildenviron_common():
     assert be.dist_dir == os.path.join(be.root_dir, "release", "dist")
     assert be.build_dir == os.path.join(be.root_dir, "release", "build")
     assert be.is_pull_request is False
+    assert not be.has_docker_creds
 
     cs = io.StringIO()
     be.dump_info(cs)
     assert cs.getvalue()
+
+    be = cibuild.BuildEnviron(
+        system = "Unknown",
+        root_dir = "/foo",
+    )
+    with pytest.raises(cibuild.BuildError):
+        be.version
+    with pytest.raises(cibuild.BuildError):
+        be.platform_tag
 
 
 def test_buildenviron_pr():
@@ -63,7 +81,7 @@ def test_buildenviron_branch():
     assert be.upload_dir == "branches/0.x"
 
 
-def test_buildenviron_osx():
+def test_buildenviron_osx(tmpdir):
     be = cibuild.BuildEnviron(
         system = "Darwin",
         root_dir = "/foo",
@@ -78,8 +96,12 @@ def test_buildenviron_osx():
     }
     assert be.archive_name("mitmproxy") == "mitmproxy-0.0.1-osx.tar.gz"
 
+    a = be.archive(os.path.join(tmpdir, "arch"))
+    assert a
+    a.close()
 
-def test_buildenviron_windows():
+
+def test_buildenviron_windows(tmpdir):
     be = cibuild.BuildEnviron(
         system = "Windows",
         root_dir = "/foo",
@@ -93,3 +115,7 @@ def test_buildenviron_windows():
         "pathod": ["pathoc", "pathod"],
     }
     assert be.archive_name("mitmproxy") == "mitmproxy-0.0.1-windows.zip"
+
+    a = be.archive(os.path.join(tmpdir, "arch"))
+    assert a
+    a.close()
