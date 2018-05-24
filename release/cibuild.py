@@ -48,9 +48,9 @@ class BuildEnviron:
         appveyor_repo_branch = "",
         appveyor_pull_request_number = "",
 
-        build_wheel = False,
-        build_docker = False,
-        build_pyinstaller = False,
+        should_build_wheel = False,
+        should_build_docker = False,
+        should_build_pyinstaller = False,
 
         has_aws_creds = False,
         has_twine_creds = False,
@@ -65,9 +65,9 @@ class BuildEnviron:
         self.travis_branch = travis_branch
         self.travis_pull_request = travis_pull_request
 
-        self.build_wheel = build_wheel
-        self.build_docker = build_docker
-        self.build_pyinstaller = build_pyinstaller
+        self.should_build_wheel = should_build_wheel
+        self.should_build_docker = should_build_docker
+        self.should_build_pyinstaller = should_build_pyinstaller
 
         self.appveyor_repo_tag_name = appveyor_repo_tag_name
         self.appveyor_repo_branch = appveyor_repo_branch
@@ -92,9 +92,9 @@ class BuildEnviron:
             appveyor_repo_branch = os.environ.get("APPVEYOR_REPO_BRANCH", ""),
             appveyor_pull_request_number = os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER"),
 
-            build_wheel = "WHEEL" in os.environ,
-            build_pyinstaller = "PYINSTALLER" in os.environ,
-            build_docker = "DOCKER" in os.environ,
+            should_build_wheel = "WHEEL" in os.environ,
+            should_build_pyinstaller = "PYINSTALLER" in os.environ,
+            should_build_docker = "DOCKER" in os.environ,
 
             has_aws_creds = "AWS_ACCESS_KEY_ID" in os.environ,
             has_twine_creds= (
@@ -195,6 +195,20 @@ class BuildEnviron:
             ret["mitmproxy"].remove("mitmproxy")
         return ret
 
+    @property
+    def should_upload_docker(self) -> bool:
+        return (
+            (self.tag or self.branch == "master") and
+            self.should_build_docker,
+            self.has_docker_creds,
+        )
+
+    @property
+    def should_upload_pypi(self) -> bool:
+        if self.tag and self.should_build_wheel and self.has_twine_creds:
+            return True
+        return False
+
     def dump_info(self, fp=sys.stdout):
         print("BUILD PLATFORM_TAG=%s" % self.platform_tag, file=fp)
         print("BUILD ROOT_DIR=%s" % self.root_dir, file=fp)
@@ -228,7 +242,7 @@ def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
     subprocess.check_call([
         "docker",
         "build",
-        "--tag", be.docker_tag,
+        "--tag", "mitmproxy/mitmproxy/{}".format(be.docker_tag),
         "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
         "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
         "--file", "docker/Dockerfile",
@@ -335,12 +349,12 @@ def build():  # pragma: no cover
 
     os.makedirs(be.dist_dir, exist_ok=True)
 
-    if be.build_wheel:
+    if be.should_build_wheel:
         whl = build_wheel(be)
         # Docker image requires wheels
-        if be.build_docker:
+        if be.should_build_docker:
             build_docker_image(be, whl)
-    if be.build_pyinstaller:
+    if be.should_build_pyinstaller:
         build_pyinstaller(be)
 
 
@@ -368,18 +382,12 @@ def upload():  # pragma: no cover
             "--recursive",
         ])
 
-    upload_pypi = (be.tag and be.build_wheel and be.has_twine_creds)
-    if upload_pypi:
+    if be.should_upload_pypi:
         whl = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))[0]
         click.echo("Uploading {} to PyPi...".format(whl))
         subprocess.check_call(["twine", "upload", whl])
 
-    upload_docker = (
-        (be.tag or be.branch == "master") and
-        be.build_docker,
-        be.has_docker_creds,
-    )
-    if upload_docker:
+    if be.should_upload_docker:
         click.echo("Uploading Docker image to tag={}...".format(be.docker_tag))
         subprocess.check_call([
             "docker",

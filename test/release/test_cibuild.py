@@ -59,21 +59,28 @@ def test_buildenviron_commit():
         travis_pull_request = "false",
     )
     assert be.docker_tag == "dev"
+    assert be.should_upload_docker
+    assert not be.should_upload_pypi
 
 
-def test_buildenviron_tag():
+def test_buildenviron_rleasetag():
     be = cibuild.BuildEnviron(
         system = "Linux",
         root_dir = "/foo",
 
         travis_tag = "v0.0.1",
         travis_branch = "v0.x",
+        should_build_wheel = True,
+        should_build_docker = True,
+        should_build_pyinstaller = True,
+        has_twine_creds = True,
     )
     assert be.tag == "v0.0.1"
     assert be.branch == "v0.x"
     assert be.version == "0.0.1"
     assert be.upload_dir == "0.0.1"
     assert be.docker_tag == "0.0.1"
+    assert be.should_upload_pypi
 
 
 def test_buildenviron_branch():
