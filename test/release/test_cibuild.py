@@ -40,13 +40,20 @@ def test_buildenviron_common():
 
 
 def test_buildenviron_pr():
+    # Simulates a PR. We build everything, but don't have access to secret
+    # credential env variables.
     be = cibuild.BuildEnviron(
         travis_tag = "v0.0.1",
         travis_branch = "v0.x",
         travis_pull_request = "true",
+
+        should_build_wheel = True,
+        should_build_pyinstaller = True,
+        should_build_docker = True,
     )
     assert be.is_pull_request
 
+    # Mini test for appveyor
     be = cibuild.BuildEnviron(
         appveyor_pull_request_number = "xxxx",
     )
@@ -54,26 +61,39 @@ def test_buildenviron_pr():
 
 
 def test_buildenviron_commit():
+    # Simulates an ordinary commit on the master branch.
     be = cibuild.BuildEnviron(
+        travis_tag = "",
         travis_branch = "master",
         travis_pull_request = "false",
+
+        should_build_wheel = True,
+        should_build_pyinstaller = True,
+        should_build_docker = True,
+        docker_username = "foo",
+        docker_password = "bar",
     )
     assert be.docker_tag == "dev"
     assert be.should_upload_docker
     assert not be.should_upload_pypi
+    assert be.should_upload_docker
 
 
 def test_buildenviron_rleasetag():
+    # Simulates a tagged release on a release branch.
     be = cibuild.BuildEnviron(
         system = "Linux",
         root_dir = "/foo",
 
         travis_tag = "v0.0.1",
         travis_branch = "v0.x",
+
         should_build_wheel = True,
         should_build_docker = True,
         should_build_pyinstaller = True,
         has_twine_creds = True,
+        docker_username = "foo",
+        docker_password = "bar",
     )
     assert be.tag == "v0.0.1"
     assert be.branch == "v0.x"
@@ -81,20 +101,31 @@ def test_buildenviron_rleasetag():
     assert be.upload_dir == "0.0.1"
     assert be.docker_tag == "0.0.1"
     assert be.should_upload_pypi
+    assert be.should_upload_docker
 
 
 def test_buildenviron_branch():
+    # Simulates a development branch on the main repo
     be = cibuild.BuildEnviron(
         system = "Linux",
         root_dir = "/foo",
 
         travis_tag = "",
-        travis_branch = "v0.x",
+        travis_branch = "mybranch",
+
+        should_build_wheel = True,
+        should_build_docker = True,
+        should_build_pyinstaller = True,
+        has_twine_creds = True,
+        docker_username = "foo",
+        docker_password = "bar",
     )
     assert be.tag == ""
-    assert be.branch == "v0.x"
-    assert be.version == "0.x"
-    assert be.upload_dir == "branches/0.x"
+    assert be.branch == "mybranch"
+    assert be.version == "mybranch"
+    assert be.upload_dir == "branches/mybranch"
+    assert not be.should_upload_pypi
+    assert not be.should_upload_docker
 
 
 def test_buildenviron_osx(tmpdir):

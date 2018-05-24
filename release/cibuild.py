@@ -197,11 +197,11 @@ class BuildEnviron:
 
     @property
     def should_upload_docker(self) -> bool:
-        return (
-            (self.tag or self.branch == "master") and
+        return all([
+            (self.tag or self.branch == "master"),
             self.should_build_docker,
             self.has_docker_creds,
-        )
+        ])
 
     @property
     def should_upload_pypi(self) -> bool:
