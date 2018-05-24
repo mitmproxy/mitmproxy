@@ -210,16 +210,25 @@ class BuildEnviron:
         return False
 
     def dump_info(self, fp=sys.stdout):
-        print("BUILD PLATFORM_TAG=%s" % self.platform_tag, file=fp)
-        print("BUILD ROOT_DIR=%s" % self.root_dir, file=fp)
-        print("BUILD RELEASE_DIR=%s" % self.release_dir, file=fp)
-        print("BUILD BUILD_DIR=%s" % self.build_dir, file=fp)
-        print("BUILD DIST_DIR=%s" % self.dist_dir, file=fp)
-        print("BUILD BDISTS=%s" % self.bdists, file=fp)
-        print("BUILD TAG=%s" % self.tag, file=fp)
-        print("BUILD BRANCH=%s" % self.branch, file=fp)
-        print("BUILD VERSION=%s" % self.version, file=fp)
-        print("BUILD UPLOAD_DIR=%s" % self.upload_dir, file=fp)
+        lst = [
+            "version",
+            "tag",
+            "branch",
+            "platform_tag",
+            "root_dir",
+            "release_dir",
+            "build_dir",
+            "dist_dir",
+            "bdists",
+            "upload_dir",
+            "should_build_wheel",
+            "should_build_pyinstaller",
+            "should_build_docker",
+            "should_upload_docker",
+            "should_upload_pypi",
+        ]
+        for attr in lst:
+            print("cibuild.%s=%s" % (attr, getattr(self, attr)), file=fp)
 
 
 def build_wheel(be: BuildEnviron):  # pragma: no cover

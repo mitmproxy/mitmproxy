@@ -43,8 +43,8 @@ def test_buildenviron_pr():
     # Simulates a PR. We build everything, but don't have access to secret
     # credential env variables.
     be = cibuild.BuildEnviron(
-        travis_tag = "v0.0.1",
-        travis_branch = "v0.x",
+        travis_tag = "",
+        travis_branch = "master",
         travis_pull_request = "true",
 
         should_build_wheel = True,
