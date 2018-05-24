@@ -68,7 +68,7 @@ class Message(serializable.Serializable):
     @property
     def raw_content(self) -> bytes:
         """
-        The raw (encoded) HTTP message body
+        The raw (potentially compressed) HTTP message body as bytes.
 
         See also: :py:attr:`content`, :py:class:`text`
         """
@@ -80,10 +80,10 @@ class Message(serializable.Serializable):
 
     def get_content(self, strict: bool=True) -> bytes:
         """
-        The HTTP message body decoded with the content-encoding header (e.g. gzip)
+        The uncompressed HTTP message body as bytes.
 
         Raises:
-            ValueError, when the content-encoding is invalid and strict is True.
+            ValueError, when the HTTP content-encoding is invalid and strict is True.
 
         See also: :py:class:`raw_content`, :py:attr:`text`
         """
@@ -186,9 +186,7 @@ class Message(serializable.Serializable):
 
     def get_text(self, strict: bool=True) -> Optional[str]:
         """
-        The HTTP message body decoded with both content-encoding header (e.g. gzip)
-        and content-type header charset.
-        and HTML meta charset.
+        The uncompressed and decoded HTTP message body as text.
 
         Raises:
             ValueError, when either content-encoding or charset is invalid and strict is True.
