@@ -158,6 +158,12 @@ class BuildEnviron:
     def dist_dir(self):
         return os.path.join(self.release_dir, "dist")
 
+    @property
+    def docker_tag(self):
+        if self.branch == "master":
+            return "dev"
+        return self.version
+
     def archive(self, path):
         # ZipFile and tarfile have slightly different APIs. Fix that.
         if self.system == "Windows":
@@ -222,6 +228,7 @@ def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
     subprocess.check_call([
         "docker",
         "build",
+        "--tag", be.docker_tag,
         "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
         "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
         "--file", "docker/Dockerfile",
@@ -373,9 +380,7 @@ def upload():  # pragma: no cover
         be.has_docker_creds,
     )
     if upload_docker:
-        docker_tag = "dev" if be.branch == "master" else be.version
-
-        click.echo("Uploading Docker image to tag={}...".format(docker_tag))
+        click.echo("Uploading Docker image to tag={}...".format(be.docker_tag))
         subprocess.check_call([
             "docker",
             "login",
@@ -385,7 +390,7 @@ def upload():  # pragma: no cover
         subprocess.check_call([
             "docker",
             "push",
-            "mitmproxy/mitmproxy:{}".format(docker_tag),
+            "mitmproxy/mitmproxy:{}".format(be.docker_tag),
         ])
 
 

@@ -53,6 +53,14 @@ def test_buildenviron_pr():
     assert be.is_pull_request
 
 
+def test_buildenviron_commit():
+    be = cibuild.BuildEnviron(
+        travis_branch = "master",
+        travis_pull_request = "false",
+    )
+    assert be.docker_tag == "dev"
+
+
 def test_buildenviron_tag():
     be = cibuild.BuildEnviron(
         system = "Linux",
@@ -65,6 +73,7 @@ def test_buildenviron_tag():
     assert be.branch == "v0.x"
     assert be.version == "0.0.1"
     assert be.upload_dir == "0.0.1"
+    assert be.docker_tag == "0.0.1"
 
 
 def test_buildenviron_branch():
