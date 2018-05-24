@@ -167,7 +167,7 @@ class Message(serializable.Serializable):
 
     def _guess_encoding(self, content=b"") -> str:
         enc = self._get_content_type_charset()
-        
+
         if not enc:
             if "json" in self.headers.get("content-type", ""):
                 return "utf8"
@@ -181,7 +181,7 @@ class Message(serializable.Serializable):
         # fix encoding bug when some special characters exceed the character set, such as www.qq.com
         enc = enc.lower()
         enc = "gb18030" if enc == "gb2312" or enc == "gbk" else enc
-        return enc            
+        return enc
 
     def get_text(self, strict: bool=True) -> Optional[str]:
         """
