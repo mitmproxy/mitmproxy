@@ -11,6 +11,14 @@ $family-sans-serif: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Ox
 @import "../node_modules/bulma/sass/components/_all";
 @import "../node_modules/bulma/sass/layout/_all";
 
+html, body {
+    height: 100%;
+}
+
+body > div {
+    min-height: 100%;
+}
+
 #sidebar {
     background-color: #eee;
     border-right: 1px solid #c1c1c1;
