@@ -291,7 +291,7 @@ class HttpLayer(base.Layer):
             self.channel.ask("error", f)
             raise exceptions.ProtocolException(
                 "HTTP protocol error in client request: {}".format(e)
-            )
+            ) from e
 
         self.log("request", "debug", [repr(request)])
 
