@@ -74,7 +74,7 @@ def test_buildenviron_commit():
         docker_username = "foo",
         docker_password = "bar",
     )
-    assert be.docker_tag == "dev"
+    assert be.docker_tag == "mitmproxy/mitmproxy:dev"
     assert be.should_upload_docker
     assert not be.should_upload_pypi
     assert be.should_upload_docker
@@ -101,10 +101,11 @@ def test_buildenviron_rleasetag():
     assert be.branch == "v0.x"
     assert be.version == "0.0.1"
     assert be.upload_dir == "0.0.1"
-    assert be.docker_tag == "0.0.1"
+    assert be.docker_tag == "mitmproxy/mitmproxy:0.0.1"
     assert be.should_upload_pypi
     assert be.should_upload_docker
     assert be.is_prod_release
+
 
 def test_buildenviron_branch():
     # Simulates a development branch on the main repo

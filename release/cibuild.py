@@ -153,8 +153,10 @@ class BuildEnviron:
     @property
     def docker_tag(self):
         if self.branch == "master":
-            return "dev"
-        return self.version
+            t = "dev"
+        else:
+            t = self.version
+        return "mitmproxy/mitmproxy:{}".format(t)
 
     def dump_info(self, fp=sys.stdout):
         lst = [
@@ -217,9 +219,12 @@ class BuildEnviron:
 
     @property
     def should_upload_pypi(self) -> bool:
-        if self.tag and self.should_build_wheel and self.has_twine_creds:
-            return True
-        return False
+        return all([
+            self.tag,
+            self.is_prod_release,
+            self.should_build_wheel,
+            self.has_twine_creds,
+        ])
 
     @property
     def tag(self):
@@ -260,7 +265,7 @@ def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
     subprocess.check_call([
         "docker",
         "build",
-        "--tag", "mitmproxy/mitmproxy/{}".format(be.docker_tag),
+        "--tag", be.docker_tag,
         "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
         "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
         "--file", "docker/Dockerfile",
@@ -413,11 +418,7 @@ def upload():  # pragma: no cover
             "-u", be.docker_username,
             "-p", be.docker_password,
         ])
-        subprocess.check_call([
-            "docker",
-            "push",
-            "mitmproxy/mitmproxy:{}".format(be.docker_tag),
-        ])
+        subprocess.check_call(["docker", "push", be.docker_tag])
 
 
 @cli.command("decrypt")
