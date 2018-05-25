@@ -106,6 +106,8 @@ class OptionListWalker(urwid.ListWalker):
         self.master.options.changed.connect(self.sig_mod)
 
     def sig_mod(self, *args, **kwargs):
+        self.opts = sorted(self.master.options.keys())
+        self.maxlen = max(len(i) for i in self.opts)
         self._modified()
         self.set_focus(self.index)
 

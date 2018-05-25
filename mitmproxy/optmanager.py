@@ -107,6 +107,7 @@ class OptManager:
         choices: typing.Optional[typing.Sequence[str]] = None
     ) -> None:
         self._options[name] = _Option(name, typespec, default, help, choices)
+        self.changed.send(self, updated={name})
 
     @contextlib.contextmanager
     def rollback(self, updated, reraise=False):
