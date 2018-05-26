@@ -217,6 +217,10 @@ class OptManager:
                 self.changed.send(self, updated=updated)
         return unknown
 
+    def update_defer(self, **kwargs):
+        unknown = self.update_known(**kwargs)
+        self._deferred.update(unknown)
+
     def update(self, **kwargs):
         u = self.update_known(**kwargs)
         if u:
@@ -494,26 +498,21 @@ def parse(text):
     return data
 
 
-def load(opts, text):
+def load(opts: OptManager, text: str) -> None:
     """
         Load configuration from text, over-writing options already set in
         this object. May raise OptionsError if the config file is invalid.
-
-        Returns a dictionary of all unknown options.
     """
     data = parse(text)
-    return opts.update_known(**data)
+    opts.update_defer(**data)
 
 
-def load_paths(opts, *paths):
+def load_paths(opts: OptManager, *paths: str) -> None:
     """
         Load paths in order. Each path takes precedence over the previous
         path. Paths that don't exist are ignored, errors raise an
         OptionsError.
-
-        Returns a dictionary of unknown options.
     """
-    ret = {}
     for p in paths:
         p = os.path.expanduser(p)
         if os.path.exists(p) and os.path.isfile(p):
@@ -525,15 +524,14 @@ def load_paths(opts, *paths):
                         "Error reading %s: %s" % (p, e)
                     )
             try:
-                ret.update(load(opts, txt))
+                load(opts, txt)
             except exceptions.OptionsError as e:
                 raise exceptions.OptionsError(
                     "Error reading %s: %s" % (p, e)
                 )
-    return ret
 
 
-def serialize(opts, text, defaults=False):
+def serialize(opts: OptManager, text: str, defaults: bool = False) -> str:
     """
         Performs a round-trip serialization. If text is not None, it is
         treated as a previous serialization that should be modified
@@ -554,7 +552,7 @@ def serialize(opts, text, defaults=False):
     return ruamel.yaml.round_trip_dump(data)
 
 
-def save(opts, path, defaults=False):
+def save(opts: OptManager, path: str, defaults: bool =False) -> None:
     """
         Save to path. If the destination file exists, modify it in-place.
 
