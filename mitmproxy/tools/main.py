@@ -93,7 +93,7 @@ def run(
         sys.exit(1)
     try:
         opts.confdir = args.confdir
-        unknown = optmanager.load_paths(
+        optmanager.load_paths(
             opts,
             os.path.join(opts.confdir, OPTIONS_FILE_NAME),
         )
@@ -109,7 +109,6 @@ def run(
             server = proxy.server.DummyServer(pconf)
 
         master.server = server
-        opts.update_known(**unknown)
         if args.options:
             print(optmanager.dump_defaults(opts))
             sys.exit(0)
