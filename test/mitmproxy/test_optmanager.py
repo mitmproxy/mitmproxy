@@ -270,12 +270,12 @@ def test_serialize():
     t = "# a comment"
     optmanager.load(o2, t)
     optmanager.load(o2, "foobar: '123'")
-    assert o2._deferred == {"foobar": "123"}
+    assert o2.deferred == {"foobar": "123"}
 
     t = ""
     optmanager.load(o2, t)
     optmanager.load(o2, "foobar: '123'")
-    assert o2._deferred == {"foobar": "123"}
+    assert o2.deferred == {"foobar": "123"}
 
 
 def test_serialize_defaults():
@@ -300,7 +300,7 @@ def test_saving(tmpdir):
     with open(dst, 'a') as f:
         f.write("foobar: '123'")
     optmanager.load_paths(o, dst)
-    assert o._deferred == {"foobar": "123"}
+    assert o.deferred == {"foobar": "123"}
 
     with open(dst, 'a') as f:
         f.write("'''")
@@ -429,13 +429,13 @@ def test_set():
     assert opts.seqstr == []
 
     with pytest.raises(exceptions.OptionsError):
-        opts.set("deferred=wobble")
+        opts.set("deferredoption=wobble")
 
-    opts.set("deferred=wobble", defer=True)
-    assert "deferred" in opts._deferred
+    opts.set("deferredoption=wobble", defer=True)
+    assert "deferredoption" in opts.deferred
     opts.process_deferred()
-    assert "deferred" in opts._deferred
-    opts.add_option("deferred", str, "default", "help")
+    assert "deferredoption" in opts.deferred
+    opts.add_option("deferredoption", str, "default", "help")
     opts.process_deferred()
-    assert "deferred" not in opts._deferred
-    assert opts.deferred == "wobble"
+    assert "deferredoption" not in opts.deferred
+    assert opts.deferredoption == "wobble"
