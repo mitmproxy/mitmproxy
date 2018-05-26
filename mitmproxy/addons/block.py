@@ -21,17 +21,19 @@ class Block:
         )
 
     def clientconnect(self, layer):
-        address = ipaddress.ip_address(layer.client_conn.address[0])
+        astr = layer.client_conn.address[0]
+
+        parts = astr.rsplit("%", 1)
+        address = ipaddress.ip_address(parts[0])
         if isinstance(address, ipaddress.IPv6Address):
             address = address.ipv4_mapped or address
 
-        ipa = ipaddress.ip_address(address)
-        if ipa.is_loopback:
+        if address.is_loopback:
             return
 
-        if ctx.options.block_private and ipa.is_private:
-            ctx.log.warn("Client connection from %s killed by block_private" % address)
+        if ctx.options.block_private and address.is_private:
+            ctx.log.warn("Client connection from %s killed by block_private" % astr)
             layer.reply.kill()
-        if ctx.options.block_global and ipa.is_global:
-            ctx.log.warn("Client connection from %s killed by block_global" % address)
+        if ctx.options.block_global and address.is_global:
+            ctx.log.warn("Client connection from %s killed by block_global" % astr)
             layer.reply.kill()

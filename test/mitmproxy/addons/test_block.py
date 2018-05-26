@@ -17,6 +17,7 @@ from mitmproxy.test import taddons
     (True, False, False, ("::ffff:172.20.0.1",)),
     (True, False, False, ("::ffff:192.168.1.1",)),
     (True, False, False, ("fe80::",)),
+    (True, False, False, (r"::ffff:192.168.1.1%scope",)),
     # block_global: global
     (True, False, True, ("1.1.1.1",)),
     (True, False, True, ("8.8.8.8",)),
@@ -25,6 +26,7 @@ from mitmproxy.test import taddons
     (True, False, True, ("::ffff:8.8.8.8",)),
     (True, False, True, ("::ffff:216.58.207.174",)),
     (True, False, True, ("2001:4860:4860::8888",)),
+    (True, False, True, (r"2001:4860:4860::8888%scope",)),
 
 
     # block_private: loopback
@@ -37,6 +39,7 @@ from mitmproxy.test import taddons
     (False, True, True, ("::ffff:10.0.0.1",)),
     (False, True, True, ("::ffff:172.20.0.1",)),
     (False, True, True, ("::ffff:192.168.1.1",)),
+    (False, True, True, (r"::ffff:192.168.1.1%scope",)),
     (False, True, True, ("fe80::",)),
     # block_private: global
     (False, True, False, ("1.1.1.1",)),
@@ -45,6 +48,7 @@ from mitmproxy.test import taddons
     (False, True, False, ("::ffff:1.1.1.1",)),
     (False, True, False, ("::ffff:8.8.8.8",)),
     (False, True, False, ("::ffff:216.58.207.174",)),
+    (False, True, False, (r"::ffff:216.58.207.174%scope",)),
     (False, True, False, ("2001:4860:4860::8888",)),
 ])
 @pytest.mark.asyncio
