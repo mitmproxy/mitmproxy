@@ -3,7 +3,7 @@
   key: ctrl a
   cmd: replay.client @marked
 -
-  # Bind key only in the lfowlist
+  # Bind key only in the flowlist
   # Note that 1 is quoted, or YAML interprets it as a digit
   key: "1"
   ctx: ["flowlist"]
