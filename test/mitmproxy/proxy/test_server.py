@@ -787,7 +787,7 @@ class TestServerConnect(tservers.HTTPProxyTest):
         """A replayed/fake response with no upstream_cert should not connect to an upstream server"""
         self.set_addons(AFakeResponse())
         assert self.pathod("200").status_code == 200
-        asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)
         assert not self.proxy.tmaster.has_log("serverconnect")
 
 
