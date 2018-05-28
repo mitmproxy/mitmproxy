@@ -1,11 +1,12 @@
 import sys
 import time
+import asyncio
 from functools import wraps
 
 from mitmproxy import ctx
 from mitmproxy import http
-from mitmproxy.io import tnetstring
 from mitmproxy.utils import data
+from mitmproxy.io import tnetstring
 from mitmproxy.addons.serialization import protobuf
 from mitmproxy.addons.serialization import dummysession
 
@@ -66,7 +67,7 @@ class DumpWatcher:
         """
         if self.f:
             for s in self.serializers:
-                ctx.log('{} module: '.format(s))
+                ctx.log(f'{s} module: ')
                 self.rets[s] = self.serializers[s](self.f.get_state())
 
     def _run_dumps_file(self):
@@ -96,7 +97,6 @@ class DumpWatcher:
                 elif d == 'mitmproxy.addons.serialization.protobuf':
                     self.deserializers[d](
                         self.session, self.rets[d])
-
 
     def load(self, loader):
         loader.add_option(

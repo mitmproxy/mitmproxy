@@ -16,6 +16,7 @@ class DummySession:
         'create_table': 'CREATE TABLE DUMMY_SESSION (MID INTEGER PRIMARY KEY, '
                         'PBUF_BLOB BLOB)',
         'insert_into':  'INSERT INTO DUMMY_SESSION values (:mid, :pbuf_blob)',
+        'insert_many':  'INSERT INTO DUMMY_SESSION values (?, ?)',
         'select_w_mid':   'SELECT PBUF_BLOB FROM DUMMY_SESSION WHERE mid=:mid'
     }
     mid = 0
@@ -33,17 +34,26 @@ class DummySession:
         with self._con:
             self._con.execute(self.queries['create_table'])
 
-    def close(self):
-        self._con.close()
-
     def store(self, blob):
         with self._con:
             self._con.execute(self.queries['insert_into'], {'mid': self.mid, 'pbuf_blob': blob})
         self.mid += 1
         return self.mid - 1
 
+    def store_many(self, blobs):
+        ts = [(self.mid + i, b) for i, b in enumerate(blobs)]
+        with self._con:
+            self._con.executemany(self.queries['insert_many'], ts)
+        self.mid += len(blobs)
+        return self.mid - 1
+
     def collect(self, mid):
         self._c.execute(self.queries['select_w_mid'], {'mid': mid})
         return self._c.fetchone()[0]
+
+    def close(self):
+        self._con.close()
+
+
 
 
