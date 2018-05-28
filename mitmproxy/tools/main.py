@@ -119,9 +119,6 @@ def run(
         if extra:
             opts.update(**extra(args))
 
-        def cleankill(*args, **kwargs):
-            master.shutdown()
-        signal.signal(signal.SIGTERM, cleankill)
         loop = asyncio.get_event_loop()
         for signame in ('SIGINT', 'SIGTERM'):
             try:
@@ -129,6 +126,15 @@ def run(
             except NotImplementedError:
                 # Not supported on Windows
                 pass
+
+        # Make sure that we catch KeyboardInterrupts on Windows.
+        # https://stackoverflow.com/a/36925722/934719
+        if os.name == "nt":
+            async def wakeup():
+                while True:
+                    await asyncio.sleep(0.2)
+            asyncio.ensure_future(wakeup())
+
         master.run()
     except exceptions.OptionsError as e:
         print("%s: %s" % (sys.argv[0], e), file=sys.stderr)

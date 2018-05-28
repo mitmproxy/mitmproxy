@@ -119,7 +119,15 @@ class Master:
         """
         if not self.should_exit.is_set():
             self.should_exit.set()
-            asyncio.run_coroutine_threadsafe(self._shutdown(), loop = self.channel.loop)
+            ret = asyncio.run_coroutine_threadsafe(self._shutdown(), loop=self.channel.loop)
+            # Weird band-aid to make sure that self._shutdown() is actually executed,
+            # which otherwise hangs the process as the proxy server is threaded.
+            # This all needs to be simplified when the proxy server runs on asyncio as well.
+            if not self.channel.loop.is_running():  # pragma: no cover
+                try:
+                    self.channel.loop.run_until_complete(asyncio.wrap_future(ret))
+                except RuntimeError:
+                    pass  # Event loop stopped before Future completed.
 
     def _change_reverse_host(self, f):
         """
