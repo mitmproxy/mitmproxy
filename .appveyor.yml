@@ -20,7 +20,12 @@ install:
   - "pip install -U tox"
 
 test_script:
-  - ps: tox -- --verbose --cov-report=term
+  - ps: |
+      if ($env:APPVEYOR_REPO_COMMIT_MESSAGE.Contains("[notest]")) {
+        echo "!!!! Skipping tests."
+      } else {
+        tox -- --verbose --cov-report=term
+      }
   - ps: tox -e cibuild -- build
 
 deploy_script:

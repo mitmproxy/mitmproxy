@@ -376,7 +376,7 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
             shutil.move(IB_SETUP.with_suffix(".tmp"), IB_SETUP)
 
         click.echo("Install InstallBuilder...")
-        subprocess.run([IB_SETUP, "--mode", "unattended", "--unattendedmodeui", "none"], check=True)
+        subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"], check=True)
         assert os.path.isfile(IB_CLI)
         click.echo("Installation complete.")
 
