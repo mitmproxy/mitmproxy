@@ -450,6 +450,7 @@ def upload():  # pragma: no cover
             be.dist_dir + "/",
             "s3://snapshots.mitmproxy.org/{}/".format(be.upload_dir),
             "--recursive",
+            "--no-progress",
         ])
 
     if be.should_upload_pypi:

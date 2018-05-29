@@ -75,7 +75,7 @@ script:
   # Pull requests might break our build - we need to check this.
   # Pull requests are not allowed to upload build artifacts - enforced by cibuild script.
   - |
-    if [[ $TRAVIS_COMMIT_MESSAGE = *"[notest]"*]]; then
+    if [[ $TRAVIS_COMMIT_MESSAGE = *"[notest]"* ]]; then
       echo "!!!! Skipping tests."
     else
       tox -- --verbose --cov-report=term
