@@ -5,7 +5,6 @@ import glob
 import os
 import pathlib
 import platform
-import re
 import shutil
 import subprocess
 import sys
@@ -183,6 +182,8 @@ class BuildEnviron:
 
     @property
     def is_prod_release(self) -> bool:
+        if not self.tag:
+            return False
         try:
             v = parver.Version.parse(self.version)
         except (parver.ParseError, BuildError):
@@ -210,7 +211,7 @@ class BuildEnviron:
     @property
     def should_upload_docker(self) -> bool:
         return all([
-            (self.tag or self.branch == "master"),
+            (self.is_prod_release or self.branch == "master"),
             self.should_build_docker,
             self.has_docker_creds,
         ])
@@ -218,7 +219,6 @@ class BuildEnviron:
     @property
     def should_upload_pypi(self) -> bool:
         return all([
-            self.tag,
             self.is_prod_release,
             self.should_build_wheel,
             self.has_twine_creds,
@@ -240,7 +240,7 @@ class BuildEnviron:
         name = self.tag or self.branch
         if not name:
             raise BuildError("We're on neither a tag nor a branch - could not establish version")
-        return re.sub('^v', "", name)
+        return name
 
 
 def build_wheel(be: BuildEnviron):  # pragma: no cover
@@ -353,6 +353,8 @@ def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
 
 
 def build_wininstaller(be: BuildEnviron):  # pragma: no cover
+    click.echo("Building wininstaller package...")
+
     IB_VERSION = "18.5.2"
     IB_DIR = pathlib.Path(be.release_dir) / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
@@ -378,7 +380,6 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
         click.echo("Install InstallBuilder...")
         subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"], check=True)
         assert os.path.isfile(IB_CLI)
-        click.echo("Installation complete.")
 
     click.echo("Decrypt InstallBuilder license...")
     f = cryptography.fernet.Fernet(be.rtool_key.encode())
@@ -395,8 +396,7 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
         "--setvars", f"project.version={be.version}",
         "--verbose"
     ], check=True)
-    assert os.path.isfile(
-        os.path.join(be.dist_dir, f"mitmproxy-{be.version}-windows-installer.exe"))
+    assert os.path.isfile(os.path.join(be.dist_dir, f"mitmproxy-{be.version}-windows-installer.exe"))
 
 
 @click.group(chain=True)
