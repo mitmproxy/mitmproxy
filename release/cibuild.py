@@ -5,6 +5,7 @@ import glob
 import os
 import pathlib
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -378,12 +379,14 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
             shutil.move(IB_SETUP.with_suffix(".tmp"), IB_SETUP)
 
         click.echo("Install InstallBuilder...")
-        subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"], check=True)
+        subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"],
+                       check=True)
         assert os.path.isfile(IB_CLI)
 
     click.echo("Decrypt InstallBuilder license...")
     f = cryptography.fernet.Fernet(be.rtool_key.encode())
-    with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, open(IB_LICENSE, "wb") as outfile:
+    with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, open(IB_LICENSE,
+                                                                        "wb") as outfile:
         outfile.write(f.decrypt(infile.read()))
 
     click.echo("Run InstallBuilder...")
@@ -396,7 +399,33 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
         "--setvars", f"project.version={be.version}",
         "--verbose"
     ], check=True)
-    assert os.path.isfile(os.path.join(be.dist_dir, f"mitmproxy-{be.version}-windows-installer.exe"))
+    assert os.path.isfile(
+        os.path.join(be.dist_dir, f"mitmproxy-{be.version}-windows-installer.exe"))
+
+
+@contextlib.contextmanager
+def set_version(be: BuildEnviron) -> None:  # pragma: no cover
+    VERSION_FILE = pathlib.Path(be.root_dir) / "mitmproxy" / "version.py"
+
+    if be.tag:
+        with open(VERSION_FILE, "r") as f:
+            existing_version = f.read()
+
+        new_version = re.sub(
+            r'^VERSION = ".+?"', f'VERSION = "{be.version}"',
+            existing_version,
+            flags=re.M
+        )
+
+        with open(VERSION_FILE, "w") as f:
+            f.write(new_version)
+        try:
+            yield
+        finally:
+            with open(VERSION_FILE, "w") as f:
+                f.write(existing_version)
+    else:
+        yield
 
 
 @click.group(chain=True)
@@ -417,15 +446,16 @@ def build():  # pragma: no cover
 
     os.makedirs(be.dist_dir, exist_ok=True)
 
-    if be.should_build_wheel:
-        whl = build_wheel(be)
-        # Docker image requires wheels
-        if be.should_build_docker:
-            build_docker_image(be, whl)
-    if be.should_build_pyinstaller:
-        build_pyinstaller(be)
-    if be.should_build_wininstaller:
-        build_wininstaller(be)
+    with set_version(be):
+        if be.should_build_wheel:
+            whl = build_wheel(be)
+            # Docker image requires wheels
+            if be.should_build_docker:
+                build_docker_image(be, whl)
+        if be.should_build_pyinstaller:
+            build_pyinstaller(be)
+        if be.should_build_wininstaller:
+            build_wininstaller(be)
 
 
 @cli.command("upload")
