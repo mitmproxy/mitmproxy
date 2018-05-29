@@ -12,6 +12,7 @@ environment:
     - PYTHON: "C:\\Python36"
       TOXENV: "py36"
       PYINSTALLER: "1"
+      WININSTALLER: "1"
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
@@ -19,41 +20,12 @@ install:
   - "pip install -U tox"
 
 test_script:
-  - ps: "tox -- --verbose --cov-report=term"
-  - ps: |
-      $Env:VERSION = $(python -m mitmproxy.version)
-      tox -e cibuild -- build
-  - ps: |
-      if($Env:RTOOL_KEY) {
-        $ibVersion = "18.2.0"
-        $ibSetup = "C:\projects\mitmproxy\release\installbuilder-installer.exe"
-        $ibCli = "C:\Program Files (x86)\BitRock InstallBuilder Enterprise $ibVersion\bin\builder-cli.exe"
-        if (!(Test-Path $ibSetup)) {
-          echo "Download InstallBuilder..."
-          (New-Object System.Net.WebClient).DownloadFile(
-            "https://installbuilder.bitrock.com/installbuilder-enterprise-$ibVersion-windows-installer.exe",
-            $ibSetup
-          )
-        }
-        echo "Install InstallBuilder..."
-        Start-Process $ibSetup "--mode unattended --unattendedmodeui none" -PassThru -NoNewWindow -Wait
-        echo "Decrypt license..."
-        tox -e cibuild -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
-        echo "Run InstallBuilder..."
-        &$ibCli `
-          build `
-          .\release\installbuilder\mitmproxy.xml `
-          windows `
-          --license .\release\installbuilder\license.xml `
-          --setvars project.version=$Env:VERSION `
-          --verbose
-        while (!(Test-Path C:\projects\mitmproxy\release\dist\mitmproxy-*-windows-installer.exe)) { Start-Sleep 0.1 }
-        echo "Installer build completed."
-      }
+  - ps: tox -- --verbose --cov-report=term
+  - ps: tox -e cibuild -- build
 
 deploy_script:
   ps: tox -e cibuild -- upload
 
 cache:
-  - C:\projects\mitmproxy\release\installbuilder-installer.exe -> .appveyor.yml
+  - C:\projects\mitmproxy\release\installbuilder\setup -> .appveyor.yml
   - C:\Users\appveyor\AppData\Local\pip\cache

@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
-import glob
-import re
 import contextlib
+import glob
 import os
+import pathlib
 import platform
-import sys
+import re
 import shutil
 import subprocess
+import sys
 import tarfile
+import urllib.request
 import zipfile
 
 import click
@@ -38,26 +40,23 @@ class BuildEnviron:
     def __init__(
         self,
         *,
-        system = "",
-        root_dir = "",
-
-        travis_tag = "",
-        travis_branch = "",
-        travis_pull_request = "",
-
-        appveyor_repo_tag_name = "",
-        appveyor_repo_branch = "",
-        appveyor_pull_request_number = "",
-
-        should_build_wheel = False,
-        should_build_docker = False,
-        should_build_pyinstaller = False,
-
-        has_aws_creds = False,
-        has_twine_creds = False,
-
-        docker_username = "",
-        docker_password = "",
+        system="",
+        root_dir="",
+        travis_tag="",
+        travis_branch="",
+        travis_pull_request="",
+        appveyor_repo_tag_name="",
+        appveyor_repo_branch="",
+        appveyor_pull_request_number="",
+        should_build_wheel=False,
+        should_build_docker=False,
+        should_build_pyinstaller=False,
+        should_build_wininstaller=False,
+        has_aws_creds=False,
+        has_twine_creds=False,
+        docker_username="",
+        docker_password="",
+        rtool_key="",
     ):
         self.system = system
         self.root_dir = root_dir
@@ -69,6 +68,7 @@ class BuildEnviron:
         self.should_build_wheel = should_build_wheel
         self.should_build_docker = should_build_docker
         self.should_build_pyinstaller = should_build_pyinstaller
+        self.should_build_wininstaller = should_build_wininstaller
 
         self.appveyor_repo_tag_name = appveyor_repo_tag_name
         self.appveyor_repo_branch = appveyor_repo_branch
@@ -78,33 +78,31 @@ class BuildEnviron:
         self.has_twine_creds = has_twine_creds
         self.docker_username = docker_username
         self.docker_password = docker_password
+        self.rtool_key = rtool_key
 
     @classmethod
-    def from_env(klass):
-        return klass(
-            system = platform.system(),
-            root_dir = os.path.normpath(os.path.join(os.path.dirname(__file__), "..")),
-
-            travis_tag = os.environ.get("TRAVIS_TAG", ""),
-            travis_branch = os.environ.get("TRAVIS_BRANCH", ""),
-            travis_pull_request = os.environ.get("TRAVIS_PULL_REQUEST"),
-
-            appveyor_repo_tag_name = os.environ.get("APPVEYOR_REPO_TAG_NAME", ""),
-            appveyor_repo_branch = os.environ.get("APPVEYOR_REPO_BRANCH", ""),
-            appveyor_pull_request_number = os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER"),
-
-            should_build_wheel = "WHEEL" in os.environ,
-            should_build_pyinstaller = "PYINSTALLER" in os.environ,
-            should_build_docker = "DOCKER" in os.environ,
-
-            has_aws_creds = "AWS_ACCESS_KEY_ID" in os.environ,
-            has_twine_creds= (
+    def from_env(cls):
+        return cls(
+            system=platform.system(),
+            root_dir=os.path.normpath(os.path.join(os.path.dirname(__file__), "..")),
+            travis_tag=os.environ.get("TRAVIS_TAG", ""),
+            travis_branch=os.environ.get("TRAVIS_BRANCH", ""),
+            travis_pull_request=os.environ.get("TRAVIS_PULL_REQUEST"),
+            appveyor_repo_tag_name=os.environ.get("APPVEYOR_REPO_TAG_NAME", ""),
+            appveyor_repo_branch=os.environ.get("APPVEYOR_REPO_BRANCH", ""),
+            appveyor_pull_request_number=os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER"),
+            should_build_wheel="WHEEL" in os.environ,
+            should_build_pyinstaller="PYINSTALLER" in os.environ,
+            should_build_wininstaller="WININSTALLER" in os.environ,
+            should_build_docker="DOCKER" in os.environ,
+            has_aws_creds="AWS_ACCESS_KEY_ID" in os.environ,
+            has_twine_creds=(
                 "TWINE_USERNAME" in os.environ and
                 "TWINE_PASSWORD" in os.environ
             ),
-
-            docker_username = os.environ.get("DOCKER_USERNAME"),
-            docker_password = os.environ.get("DOCKER_PASSWORD"),
+            docker_username=os.environ.get("DOCKER_USERNAME"),
+            docker_password=os.environ.get("DOCKER_PASSWORD"),
+            rtool_key=os.environ.get("RTOOL_KEY"),
         )
 
     def archive(self, path):
@@ -177,11 +175,11 @@ class BuildEnviron:
             "should_upload_pypi",
         ]
         for attr in lst:
-            print("cibuild.%s=%s" % (attr, getattr(self, attr)), file=fp)
+            print(f"cibuild.{attr}={getattr(self, attr)}", file=fp)
 
     @property
     def has_docker_creds(self) -> bool:
-        return self.docker_username and self.docker_password
+        return bool(self.docker_username and self.docker_password)
 
     @property
     def is_prod_release(self) -> bool:
@@ -354,6 +352,53 @@ def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
         click.echo("Packed {}.".format(be.archive_name(bdist)))
 
 
+def build_wininstaller(be: BuildEnviron):  # pragma: no cover
+    IB_VERSION = "18.5.2"
+    IB_DIR = pathlib.Path(be.release_dir) / "installbuilder"
+    IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
+    IB_CLI = fr"C:\Program Files (x86)\BitRock InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
+    IB_LICENSE = IB_DIR / "license.xml"
+
+    if True or not os.path.isfile(IB_CLI):
+        if not os.path.isfile(IB_SETUP):
+            click.echo("Downloading InstallBuilder...")
+
+            def report(block, blocksize, total):
+                done = block * blocksize
+                if round(100 * done / total) != round(100 * (done - blocksize) / total):
+                    click.secho(f"Downloading... {round(100*done/total)}%")
+
+            urllib.request.urlretrieve(
+                f"https://installbuilder.bitrock.com/installbuilder-enterprise-{IB_VERSION}-windows-installer.exe",
+                IB_SETUP.with_suffix(".tmp"),
+                reporthook=report
+            )
+            shutil.move(IB_SETUP.with_suffix(".tmp"), IB_SETUP)
+
+        click.echo("Install InstallBuilder...")
+        subprocess.run([IB_SETUP, "--mode", "unattended", "--unattendedmodeui", "none"], check=True)
+        assert os.path.isfile(IB_CLI)
+        click.echo("Installation complete.")
+
+    click.echo("Decrypt InstallBuilder license...")
+    f = cryptography.fernet.Fernet(be.rtool_key.encode())
+    with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, open(IB_LICENSE, "wb") as outfile:
+        outfile.write(f.decrypt(infile.read()))
+
+    click.echo("Run InstallBuilder...")
+    subprocess.run([
+        IB_CLI,
+        "build",
+        str(IB_DIR / "mitmproxy.xml"),
+        "windows",
+        "--license", str(IB_LICENSE),
+        "--setvars", f"project.version={be.version}",
+        "--verbose"
+    ], check=True)
+    assert os.path.isfile(
+        os.path.join(be.dist_dir, f"mitmproxy-{be.version}-windows-installer.exe"))
+
+
 @click.group(chain=True)
 def cli():  # pragma: no cover
     """
@@ -379,6 +424,8 @@ def build():  # pragma: no cover
             build_docker_image(be, whl)
     if be.should_build_pyinstaller:
         build_pyinstaller(be)
+    if be.should_build_wininstaller:
+        build_wininstaller(be)
 
 
 @cli.command("upload")
@@ -419,15 +466,6 @@ def upload():  # pragma: no cover
             "-p", be.docker_password,
         ])
         subprocess.check_call(["docker", "push", be.docker_tag])
-
-
-@cli.command("decrypt")
-@click.argument('infile', type=click.File('rb'))
-@click.argument('outfile', type=click.File('wb'))
-@click.argument('key', envvar='RTOOL_KEY')
-def decrypt(infile, outfile, key):  # pragma: no cover
-    f = cryptography.fernet.Fernet(key.encode())
-    outfile.write(f.decrypt(infile.read()))
 
 
 if __name__ == "__main__":  # pragma: no cover
