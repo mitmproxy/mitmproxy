@@ -408,6 +408,9 @@ def set_version(be: BuildEnviron) -> None:  # pragma: no cover
     VERSION_FILE = pathlib.Path(be.root_dir) / "mitmproxy" / "version.py"
 
     if be.tag:
+        # this must not fail.
+        parver.Version.parse(be.version, strict=True)
+
         with open(VERSION_FILE, "r") as f:
             existing_version = f.read()
 
