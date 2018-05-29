@@ -186,7 +186,7 @@ class BuildEnviron:
         if not self.tag:
             return False
         try:
-            v = parver.Version.parse(self.version)
+            v = parver.Version.parse(self.version, strict=True)
         except (parver.ParseError, BuildError):
             return False
         return not v.is_prerelease

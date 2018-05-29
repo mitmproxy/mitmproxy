@@ -1,6 +1,7 @@
 import pathlib
 import runpy
 import subprocess
+import sys
 from unittest import mock
 
 from mitmproxy import version
@@ -21,6 +22,10 @@ def test_get_version():
     with mock.patch('subprocess.check_output') as m:
         m.return_value = b"tag-0-cafecafe"
         assert version.get_dev_version() == "3.0.0rc2"
+
+        sys.frozen = True
+        assert version.get_dev_version() == "3.0.0rc2 binary"
+        sys.frozen = False
 
         m.return_value = b"tag-2-cafecafe"
         assert version.get_dev_version() == "3.0.0rc2 (+2, commit cafecaf)"

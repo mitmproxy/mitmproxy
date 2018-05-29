@@ -15,9 +15,7 @@ def test_buildenviron_common():
     be = cibuild.BuildEnviron(
         system = "Linux",
         root_dir = "/foo",
-
-        travis_tag = "v0.0.1",
-        travis_branch = "v0.x",
+        travis_branch = "master",
     )
     assert be.release_dir == os.path.join(be.root_dir, "release")
     assert be.dist_dir == os.path.join(be.root_dir, "release", "dist")
@@ -81,13 +79,13 @@ def test_buildenviron_commit():
     assert not be.is_prod_release
 
 
-def test_buildenviron_rleasetag():
+def test_buildenviron_releasetag():
     # Simulates a tagged release on a release branch.
     be = cibuild.BuildEnviron(
         system = "Linux",
         root_dir = "/foo",
 
-        travis_tag = "v0.0.1",
+        travis_tag = "0.0.1",
         travis_branch = "v0.x",
 
         should_build_wheel = True,
@@ -97,7 +95,7 @@ def test_buildenviron_rleasetag():
         docker_username = "foo",
         docker_password = "bar",
     )
-    assert be.tag == "v0.0.1"
+    assert be.tag == "0.0.1"
     assert be.branch == "v0.x"
     assert be.version == "0.0.1"
     assert be.upload_dir == "0.0.1"
@@ -136,7 +134,7 @@ def test_buildenviron_osx(tmpdir):
         system = "Darwin",
         root_dir = "/foo",
 
-        travis_tag = "v0.0.1",
+        travis_tag = "0.0.1",
         travis_branch = "v0.x",
     )
     assert be.platform_tag == "osx"
@@ -156,7 +154,7 @@ def test_buildenviron_windows(tmpdir):
         system = "Windows",
         root_dir = "/foo",
 
-        travis_tag = "v0.0.1",
+        travis_tag = "0.0.1",
         travis_branch = "v0.x",
     )
     assert be.platform_tag == "windows"
