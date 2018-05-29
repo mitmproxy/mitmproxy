@@ -338,7 +338,9 @@ class RedirectLocal(Redirect):
         if pid not in self.trusted_pids:
             self.redirect_request(packet)
         else:
-            self.windivert.send(packet, recalculate_checksum=False)
+            # It's not really clear why we need to recalculate the checksum here,
+            # but this was identified as necessary in https://github.com/mitmproxy/mitmproxy/pull/3174.
+            self.windivert.send(packet, recalculate_checksum=True)
 
 
 TConnection = typing.Tuple[str, int]
