@@ -171,7 +171,7 @@ with the following command:
     :alt: Travis Build Status
 
 .. |appveyor| image:: https://shields.mitmproxy.org/appveyor/ci/mitmproxy/mitmproxy/master.svg?label=appveyor%20ci
-    :target: https://ci.appveyor.com/project/mhils/mitmproxy
+    :target: https://ci.appveyor.com/project/mitmproxy/mitmproxy
     :alt: Appveyor Build Status
 
 .. |coverage| image:: https://shields.mitmproxy.org/codecov/c/github/mitmproxy/mitmproxy/master.svg?label=codecov
