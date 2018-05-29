@@ -59,6 +59,7 @@ class Resolver:
     def original_addr(self, csock: socket.socket):
         ip, port = csock.getpeername()[:2]
         ip = re.sub("^::ffff:(?=\d+.\d+.\d+.\d+$)", "", ip)
+        ip = ip.split("%", 1)[0]
         with self.lock:
             try:
                 write((ip, port), self.wfile)
