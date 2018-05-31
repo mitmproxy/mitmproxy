@@ -456,7 +456,7 @@ def build():  # pragma: no cover
             build_docker_image(be, whl)
     if be.should_build_pyinstaller:
         build_pyinstaller(be)
-    if be.should_build_wininstaller:
+    if be.should_build_wininstaller and be.rtool_key:
         build_wininstaller(be)
 
 
