@@ -177,6 +177,33 @@ class BuildEnviron:
         for attr in lst:
             print(f"cibuild.{attr}={getattr(self, attr)}", file=fp)
 
+    def check_version(self) -> None:
+        """
+        Check that version numbers match our conventions.
+        Raises a ValueError if there is a mismatch.
+        """
+        with open(pathlib.Path(self.root_dir) / "mitmproxy" / "version.py") as f:
+            contents = f.read()
+
+        version = re.search(r'^VERSION = "(.+?)"', contents, re.M).group(1)
+
+        if self.tag:
+            # For (tagged) releases, we are strict:
+            #  1. The tagname must match the version in mitmproxy/version.py
+            #  2. The version info must be in canonical form (as recommended in PEP 440).
+
+            if version != self.tag:
+                raise ValueError(f"Tag is {self.tag}, but mitmproxy/version.py is {version}.")
+            try:
+                parver.Version.parse(version, strict=True)
+            except parver.ParseError as e:
+                raise ValueError(str(e)) from e
+        else:
+            # For snapshots, we only ensure that mitmproxy/version.py contains a dev release.
+            version_info = parver.Version.parse(version)
+            if not version_info.is_devrelease:
+                raise ValueError("Releases must be tagged.")
+
     @property
     def has_docker_creds(self) -> bool:
         return bool(self.docker_username and self.docker_password)
@@ -403,34 +430,6 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
         os.path.join(be.dist_dir, f"mitmproxy-{be.version}-windows-installer.exe"))
 
 
-@contextlib.contextmanager
-def set_version(be: BuildEnviron) -> None:  # pragma: no cover
-    VERSION_FILE = pathlib.Path(be.root_dir) / "mitmproxy" / "version.py"
-
-    if be.tag:
-        # this must not fail.
-        parver.Version.parse(be.version, strict=True)
-
-        with open(VERSION_FILE, "r") as f:
-            existing_version = f.read()
-
-        new_version = re.sub(
-            r'^VERSION = ".+?"', f'VERSION = "{be.version}"',
-            existing_version,
-            flags=re.M
-        )
-
-        with open(VERSION_FILE, "w") as f:
-            f.write(new_version)
-        try:
-            yield
-        finally:
-            with open(VERSION_FILE, "w") as f:
-                f.write(existing_version)
-    else:
-        yield
-
-
 @click.group(chain=True)
 def cli():  # pragma: no cover
     """
@@ -447,18 +446,18 @@ def build():  # pragma: no cover
     be = BuildEnviron.from_env()
     be.dump_info()
 
+    be.check_version()
     os.makedirs(be.dist_dir, exist_ok=True)
 
-    with set_version(be):
-        if be.should_build_wheel:
-            whl = build_wheel(be)
-            # Docker image requires wheels
-            if be.should_build_docker:
-                build_docker_image(be, whl)
-        if be.should_build_pyinstaller:
-            build_pyinstaller(be)
-        if be.should_build_wininstaller:
-            build_wininstaller(be)
+    if be.should_build_wheel:
+        whl = build_wheel(be)
+        # Docker image requires wheels
+        if be.should_build_docker:
+            build_docker_image(be, whl)
+    if be.should_build_pyinstaller:
+        build_pyinstaller(be)
+    if be.should_build_wininstaller:
+        build_wininstaller(be)
 
 
 @cli.command("upload")
