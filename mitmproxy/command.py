@@ -8,8 +8,6 @@ import textwrap
 import functools
 import sys
 
-import ply.lex as lex
-
 import mitmproxy.types
 from mitmproxy import exceptions
 from mitmproxy.language import lexer

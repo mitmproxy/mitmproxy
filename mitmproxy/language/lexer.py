@@ -15,7 +15,7 @@ class CommandLanguageLexer:
         "QUOTED_STR"
     )
 
-    special_symbols = re.escape(",'\"")
+    special_symbols = re.escape(",'\"")  # Symbols to ignore in PLAIN_STR
 
     t_ignore_WHITESPACE = r"\s+"  # We won't ignore it in the new language
     t_ARRAY = r"\w+(\,\w+)+"
