@@ -1,4 +1,5 @@
 import re
+import typing
 
 import ply.lex as lex
 
@@ -14,7 +15,7 @@ class CommandLanguageLexer:
         "QUOTED_STR"
     )
 
-    special_symbols = re.escape(".,'\"")
+    special_symbols = re.escape(",'\"")
 
     t_ignore_WHITESPACE = r"\s+"  # We won't ignore it in the new language
     t_ARRAY = r"\w+(\,\w+)+"
@@ -41,3 +42,8 @@ def create_lexer(cmdstr: str) -> lex.Lexer:
     command_lexer.build()
     command_lexer.lexer.input(cmdstr)
     return command_lexer.lexer
+
+
+def get_tokens(cmdstr: str) -> typing.List[str]:
+    lexer = create_lexer(cmdstr)
+    return [token.value for token in lexer]

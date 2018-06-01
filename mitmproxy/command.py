@@ -3,15 +3,16 @@
 """
 import inspect
 import types
-import io
 import typing
-import shlex
 import textwrap
 import functools
 import sys
 
-from mitmproxy import exceptions
+import ply.lex as lex
+
 import mitmproxy.types
+from mitmproxy import exceptions
+from mitmproxy.language import lexer
 
 
 def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
@@ -20,15 +21,6 @@ def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
         sig.bind(*args, **kwargs)
     except TypeError as v:
         raise exceptions.CommandError("command argument mismatch: %s" % v.args[0])
-
-
-def lexer(s):
-    # mypy mis-identifies shlex.shlex as abstract
-    lex = shlex.shlex(s, posix=True)  # type: ignore
-    lex.wordchars += "."
-    lex.whitespace_split = True
-    lex.commenters = ''
-    return lex
 
 
 def typename(t: type) -> str:
@@ -157,19 +149,7 @@ class CommandManager(mitmproxy.types._CommandBase):
         """
             Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
-        buf = io.StringIO(cmdstr)
-        parts: typing.List[str] = []
-        lex = lexer(buf)
-        while 1:
-            remainder = cmdstr[buf.tell():]
-            try:
-                t = lex.get_token()
-            except ValueError:
-                parts.append(remainder)
-                break
-            if not t:
-                break
-            parts.append(t)
+        parts: typing.List[str] = lexer.get_tokens(cmdstr)
         if not parts:
             parts = [""]
         elif cmdstr.endswith(" "):
@@ -237,7 +217,7 @@ class CommandManager(mitmproxy.types._CommandBase):
             Execute a command string. May raise CommandError.
         """
         try:
-            parts = list(lexer(cmdstr))
+            parts = lexer.get_tokens(cmdstr)
         except ValueError as e:
             raise exceptions.CommandError("Command error: %s" % e)
         if not len(parts) >= 1:
