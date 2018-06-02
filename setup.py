@@ -13,7 +13,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 with open(os.path.join(here, "mitmproxy", "version.py")) as f:
-    VERSION = re.search(r'VERSION = "(.+?)(?:-0x|")', f.read()).group(1)
+    VERSION = re.search(r'VERSION = "(.+?)"', f.read()).group(1)
 
 setup(
     name="mitmproxy",

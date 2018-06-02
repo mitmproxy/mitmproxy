@@ -1,9 +1,8 @@
 import os
 import subprocess
+import sys
 
-# The actual version string. For precompiled binaries, this will be changed to include the build
-# tag, e.g. "3.0.0.dev0042-0xcafeabc"
-VERSION = "5.0.0"
+VERSION = "5.0.0.dev"
 PATHOD = "pathod " + VERSION
 MITMPROXY = "mitmproxy " + VERSION
 
@@ -12,50 +11,33 @@ MITMPROXY = "mitmproxy " + VERSION
 FLOW_FORMAT_VERSION = 7
 
 
-def get_version(dev: bool = False, build: bool = False, refresh: bool = False) -> str:
+def get_dev_version() -> str:
     """
-    Return a detailed version string, sourced either from a hardcoded VERSION constant
-    or obtained dynamically using git.
-
-    Args:
-        dev: If True, non-tagged releases will include a ".devXXXX" suffix, where XXXX is the number
-             of commits since the last tagged release.
-        build: If True, non-tagged releases will include a "-0xXXXXXXX" suffix, where XXXXXXX are
-               the first seven digits of the commit hash.
-        refresh: If True, always try to use git instead of a potentially hardcoded constant.
+    Return a detailed version string, sourced either from VERSION or obtained dynamically using git.
     """
 
     mitmproxy_version = VERSION
 
-    if "dev" in VERSION and not refresh:
-        pass  # There is a hardcoded build tag, so we just use what's there.
-    elif dev or build:
-        here = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-        try:
-            git_describe = subprocess.check_output(
-                ['git', 'describe', '--long'],
-                stderr=subprocess.STDOUT,
-                cwd=here,
-            )
-            last_tag, tag_dist, commit = git_describe.decode().strip().rsplit("-", 2)
-            commit = commit.lstrip("g")[:7]
-            tag_dist = int(tag_dist)
-        except Exception:
-            pass
-        else:
-            # Remove current suffix
-            mitmproxy_version = mitmproxy_version.split(".dev")[0]
+    here = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    try:
+        git_describe = subprocess.check_output(
+            ['git', 'describe', '--long'],
+            stderr=subprocess.STDOUT,
+            cwd=here,
+        )
+        last_tag, tag_dist, commit = git_describe.decode().strip().rsplit("-", 2)
+        commit = commit.lstrip("g")[:7]
+        tag_dist = int(tag_dist)
+    except Exception:
+        pass
+    else:
+        # Add commit info for non-tagged releases
+        if tag_dist > 0:
+            mitmproxy_version += f" (+{tag_dist}, commit {commit})"
 
-            # Add suffix for non-tagged releases
-            if tag_dist > 0:
-                mitmproxy_version += ".dev{tag_dist}".format(tag_dist=tag_dist)
-                # The wheel build tag (we use the commit) must start with a digit, so we include "0x"
-                mitmproxy_version += "-0x{commit}".format(commit=commit)
-
-    if not dev:
-        mitmproxy_version = mitmproxy_version.split(".dev")[0]
-    elif not build:
-        mitmproxy_version = mitmproxy_version.split("-0x")[0]
+    # PyInstaller build indicator, if using precompiled binary
+    if getattr(sys, 'frozen', False):
+        mitmproxy_version += " binary"
 
     return mitmproxy_version
 
