@@ -25,25 +25,29 @@ class CommandLanguageLexer:
     \"+[^\"]*\"+    # Double-quoted string
     """
 
+    def __init__(self, error=True):
+        self.error = error
+
     def t_COMMAND(self, t):
         r"""\w+(\.\w+)+"""
         return t
 
     def t_error(self, t):
         t.lexer.skip(1)
-        raise exceptions.CommandError(f"Illegal character '{t.value[0]}'")
+        if self.error:
+            raise exceptions.CommandError(f"Illegal character '{t.value[0]}'")
 
     def build(self, **kwargs):
         self.lexer = lex.lex(module=self, **kwargs)
 
 
-def create_lexer(cmdstr: str) -> lex.Lexer:
-    command_lexer = CommandLanguageLexer()
+def create_lexer(cmdstr: str, error=True) -> lex.Lexer:
+    command_lexer = CommandLanguageLexer(error)
     command_lexer.build()
     command_lexer.lexer.input(cmdstr)
     return command_lexer.lexer
 
 
 def get_tokens(cmdstr: str) -> typing.List[str]:
-    lexer = create_lexer(cmdstr)
+    lexer = create_lexer(cmdstr, True)
     return [token.value for token in lexer]

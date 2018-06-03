@@ -10,7 +10,7 @@ import sys
 
 import mitmproxy.types
 from mitmproxy import exceptions
-from mitmproxy.language import lexer
+from mitmproxy.language import lexer, parser
 
 
 def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
@@ -118,6 +118,7 @@ ParseResult = typing.NamedTuple(
 class CommandManager(mitmproxy.types._CommandBase):
     def __init__(self, master):
         self.master = master
+        self.parser = parser.create_parser(self)
         self.commands: typing.Dict[str, Command] = {}
 
     def collect_commands(self, addon):
@@ -215,12 +216,11 @@ class CommandManager(mitmproxy.types._CommandBase):
             Execute a command string. May raise CommandError.
         """
         try:
-            parts = lexer.get_tokens(cmdstr)
+            clexer = lexer.create_lexer(cmdstr)
+            parser_return = self.parser.parse(lexer=clexer)
         except ValueError as e:
             raise exceptions.CommandError("Command error: %s" % e)
-        if not len(parts) >= 1:
-            raise exceptions.CommandError("Invalid command: %s" % cmdstr)
-        return self.call_strings(parts[0], parts[1:])
+        return parser_return
 
     def dump(self, out=sys.stdout) -> None:
         cmds = list(self.commands.values())
