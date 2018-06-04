@@ -1,3 +1,6 @@
+import typing
+
+import ply.lex as lex
 import ply.yacc as yacc
 
 from mitmproxy import exceptions
@@ -5,7 +8,7 @@ from mitmproxy.language.lexer import CommandLanguageLexer
 
 
 class CommandLanguageParser:
-    tokens = CommandLanguageLexer.tokens  # it is required according to docs
+    tokens = CommandLanguageLexer.tokens  # it is always required
 
     def __init__(self, command_manager):
         self.return_value = None
@@ -18,7 +21,6 @@ class CommandLanguageParser:
 
     def p_command_call(self, p):
         """command_call : COMMAND argument_list"""
-        print(p[:])
         p[0] = self.command_manager.call_strings(p[1], p[2])
         self.return_value = p[0]
 
@@ -33,14 +35,14 @@ class CommandLanguageParser:
 
     def p_argument(self, p):
         """argument : PLAIN_STR
-                    | QUOTED_STR
-                    | array
+                    | quoted
+                    | ARRAY
                     | COMMAND"""
         p[0] = p[1]
 
-    def p_array(self, p):
-        """array : ARRAY"""
-        p[0] = p[1].split(",")
+    def p_quoted(self, p):
+        """quoted : QUOTED_STR"""
+        p[0] = p[1][1:-1]  # removing quotes
 
     def p_empty(self, p):
         """empty :"""
@@ -55,8 +57,12 @@ class CommandLanguageParser:
         self.parser = yacc.yacc(module=self,
                                 errorlog=yacc.NullLogger(), **kwargs)
 
+    def parse(self, lexer: lex.Lexer, **kwargs) -> typing.Any:
+        self.parser.parse(lexer=lexer, **kwargs)
+        return self.return_value
 
-def create_parser(command_manager) -> yacc.LRParser:
+
+def create_parser(command_manager) -> CommandLanguageParser:
     command_parser = CommandLanguageParser(command_manager)
     command_parser.build(debug=False, write_tables=False)
-    return command_parser.parser
+    return command_parser

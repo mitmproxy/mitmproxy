@@ -118,8 +118,9 @@ ParseResult = typing.NamedTuple(
 class CommandManager(mitmproxy.types._CommandBase):
     def __init__(self, master):
         self.master = master
-        self.parser = parser.create_parser(self)
+        self.command_parser = parser.create_parser(self)
         self.commands: typing.Dict[str, Command] = {}
+        self.oneword_commands: typing.List[str] = []
 
     def collect_commands(self, addon):
         for i in dir(addon):
@@ -140,6 +141,9 @@ class CommandManager(mitmproxy.types._CommandBase):
 
     def add(self, path: str, func: typing.Callable):
         self.commands[path] = Command(self, path, func)
+        # Collecting one-word commands for lexer
+        if len(path.split(".")) == 1:
+            self.oneword_commands.append(path)
 
     def parse_partial(
         self,
@@ -215,11 +219,8 @@ class CommandManager(mitmproxy.types._CommandBase):
         """
             Execute a command string. May raise CommandError.
         """
-        try:
-            clexer = lexer.create_lexer(cmdstr)
-            parser_return = self.parser.parse(lexer=clexer)
-        except ValueError as e:
-            raise exceptions.CommandError("Command error: %s" % e)
+        lex = lexer.create_lexer(cmdstr, self.oneword_commands)
+        parser_return = self.command_parser.parse(lexer=lex)
         return parser_return
 
     def dump(self, out=sys.stdout) -> None:
