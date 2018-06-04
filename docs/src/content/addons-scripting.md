@@ -14,4 +14,4 @@ handler functions in the module scope. For instance, here is a complete script
 that adds a header to every request.
 
 
-{{< example src="examples/addons/scripting.py" lang="py" >}}
+{{< example src="examples/addons/scripting-headers.py" lang="py" >}}
