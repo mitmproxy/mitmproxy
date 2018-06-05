@@ -16,6 +16,8 @@ git:
 matrix:
   fast_finish: true
   include:
+    - python: 3.5
+      env: TOXENV=py35 # this just makes sure that our version detection shows an appropriate error message
     - python: 3.6
       env: TOXENV=lint
     - os: osx
