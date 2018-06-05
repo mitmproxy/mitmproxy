@@ -244,9 +244,10 @@ class TestCommand:
                 "flow \"one two",
                 [
                     command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
-                    command.ParseResult(value = "\"one two", type = flow.Flow, valid = False),
+                    command.ParseResult(value = "\"one", type = flow.Flow, valid = False),
+                    command.ParseResult(value="two", type=str, valid=True),
                 ],
-                ["str"]
+                []
             ],
             [
                 "flow \"one two\"",
@@ -273,16 +274,12 @@ def test_simple():
         assert c.commands["one.two"].help == "cmd1 help"
         assert(c.execute("one.two foo") == "ret foo")
         assert(c.call("one.two", "foo") == "ret foo")
-        with pytest.raises(exceptions.CommandError, match="Unknown"):
+        with pytest.raises(exceptions.CommandError, match="Syntax error"):
             c.execute("nonexistent")
-        with pytest.raises(exceptions.CommandError, match="Invalid"):
-            c.execute("")
         with pytest.raises(exceptions.CommandError, match="argument mismatch"):
             c.execute("one.two too many args")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.call("nonexistent")
-        with pytest.raises(exceptions.CommandError, match="No escaped"):
-            c.execute("\\")
 
         c.add("empty", a.empty)
         c.execute("empty")
