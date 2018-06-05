@@ -103,6 +103,7 @@ class CommandBuffer:
             else:
                 ret.append(("text", ""))
             ret.append(("text", " "))
+            self.right()
         if remhelp:
             ret.append(("text", " "))
             for v in remhelp:

@@ -141,7 +141,7 @@ class CommandManager(mitmproxy.types._CommandBase):
 
     def add(self, path: str, func: typing.Callable):
         self.commands[path] = Command(self, path, func)
-        # Collecting one-word commands for lexer
+        # Collecting one-word command names for lexer
         if len(path.split(".")) == 1:
             self.oneword_commands.append(path)
 
@@ -220,6 +220,8 @@ class CommandManager(mitmproxy.types._CommandBase):
             Execute a command string. May raise CommandError.
         """
         lex = lexer.create_lexer(cmdstr, self.oneword_commands)
+        print(list(lex))
+        lex.lexpos = 0
         parser_return = self.command_parser.parse(lexer=lex)
         return parser_return
 

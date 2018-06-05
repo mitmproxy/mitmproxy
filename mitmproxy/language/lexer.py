@@ -9,7 +9,6 @@ from mitmproxy import exceptions
 class CommandLanguageLexer:
     tokens = (
         "WHITESPACE",
-        "ARRAY",
         "COMMAND",
         "PLAIN_STR",
         "QUOTED_STR"
@@ -19,17 +18,20 @@ class CommandLanguageLexer:
     plain_str = fr"[^{special_symbols}\s]+"
 
     t_ignore_WHITESPACE = r"\s+"  # We won't ignore it in the new language
-    t_ARRAY = r"\w+(\,\w+)+"
-    t_QUOTED_STR = r"""
-    \'+[^\']*\'+ |  # Single-quoted string
-    \"+[^\"]*\"+    # Double-quoted string
-    """
 
     def __init__(self, oneword_commands: typing.Sequence[str]):
         self.oneword_commands = dict.fromkeys(oneword_commands, "COMMAND")
 
     def t_COMMAND(self, t):
         r"""\w+(\.\w+)+"""
+        return t
+
+    def t_QUOTED_STR(self, t):
+        r"""
+            \'+[^\']*\'+ |  # Single-quoted string
+            \"+[^\"]*\"+    # Double-quoted string
+        """
+        t.value = t.value.strip("'\"")
         return t
 
     @lex.TOKEN(plain_str)
