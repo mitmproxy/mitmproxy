@@ -287,7 +287,7 @@ def build_wheel(be: BuildEnviron):  # pragma: no cover
 
 
 def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
-    click.echo("Building Docker image...")
+    click.echo("Building Docker images...")
     subprocess.check_call([
         "docker",
         "build",
@@ -297,10 +297,6 @@ def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
         "--file", "docker/Dockerfile",
         "."
     ])
-
-
-def build_docker_arm_image(be: BuildEnviron, whl: str):  # pragma: no cover
-    click.echo("Building ARMv7 Docker image...")
     subprocess.check_call([
         "docker",
         "build",
