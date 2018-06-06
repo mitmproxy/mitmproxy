@@ -299,7 +299,7 @@ def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
     ])
 
 
-def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
+def build_docker_arm_image(be: BuildEnviron, whl: str):  # pragma: no cover
     click.echo("Building ARMv7 Docker image...")
     subprocess.check_call([
         "docker",
@@ -310,6 +310,7 @@ def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
         "--file", "docker/DockerfileARMv7",
         "."
     ])
+
 
 def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
     click.echo("Building pyinstaller package...")
