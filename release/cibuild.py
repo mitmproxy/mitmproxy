@@ -300,7 +300,7 @@ def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
     subprocess.check_call([
         "docker",
         "build",
-        "--tag", be.docker_tag + "ARMv7",
+        "--tag", be.docker_tag + "-ARMv7",
         "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
         "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
         "--file", "docker/DockerfileARMv7",
@@ -507,16 +507,7 @@ def upload():  # pragma: no cover
             "-p", be.docker_password,
         ])
         subprocess.check_call(["docker", "push", be.docker_tag])
-
-    if be.should_upload_docker:
-        click.echo("Uploading ARMv7 Docker image to tag={}...".format(be.docker_tag + "ARMv7"))
-        subprocess.check_call([
-            "docker",
-            "login",
-            "-u", be.docker_username,
-            "-p", be.docker_password,
-        ])
-        subprocess.check_call(["docker", "push", be.docker_tag + "ARMv7"])
+        subprocess.check_call(["docker", "push", be.docker_tag + "-ARMv7"])
 
 
 if __name__ == "__main__":  # pragma: no cover
