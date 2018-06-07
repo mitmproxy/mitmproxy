@@ -141,7 +141,7 @@ class CommandBuffer:
                 )
         if self.completion:
             nxt = self.completion.completer.cycle()
-            buf = "".join([i.value for i in self.completion.parse[:-1]]) + "" + nxt
+            buf = "".join([i.value for i in self.completion.parse[:-1]]) + nxt
             buf = buf.strip()
             self.text = self.flatten(buf)
             self.cursor = len(self.text)

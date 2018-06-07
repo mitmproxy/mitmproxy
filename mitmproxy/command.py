@@ -155,20 +155,22 @@ class CommandManager(mitmproxy.types._CommandBase):
         parts: typing.List[str] = lexer.get_tokens(cmdstr)
         if not parts:
             parts = [""]
+        elif cmdstr.endswith(" "):
+            parts.append("")
 
         parse: typing.List[ParseResult] = []
         params: typing.List[type] = []
         typ: typing.Type = None
-        for i in range(len(parts)):
+        for i, part in enumerate(parts):
             if i == 0:
                 typ = mitmproxy.types.Cmd
-                if parts[i] in self.commands:
-                    params.extend(self.commands[parts[i]].paramtypes)
-            elif params and not parts[i].isspace():
+                if part in self.commands:
+                    params.extend(self.commands[part].paramtypes)
+            elif params and not part.isspace():
                 typ = params.pop(0)
                 if typ == mitmproxy.types.Cmd and params and params[0] == mitmproxy.types.Arg:
-                    if parts[i] in self.commands:
-                        params[:] = self.commands[parts[i]].paramtypes
+                    if part in self.commands:
+                        params[:] = self.commands[part].paramtypes
             else:
                 typ = mitmproxy.types.Unknown
 
@@ -176,7 +178,7 @@ class CommandManager(mitmproxy.types._CommandBase):
             valid = False
             if to:
                 try:
-                    to.parse(self, typ, parts[i])
+                    to.parse(self, typ, part)
                 except exceptions.TypeError:
                     valid = False
                 else:
@@ -184,7 +186,7 @@ class CommandManager(mitmproxy.types._CommandBase):
 
             parse.append(
                 ParseResult(
-                    value=parts[i],
+                    value=part,
                     type=typ,
                     valid=valid,
                 )
