@@ -14,13 +14,17 @@ class CommandLanguageLexer:
         "QUOTED_STR"
     )
 
+    states = (
+        ("interactive", "inclusive"),
+    )
+
     special_symbols = re.escape("")  # Symbols to ignore in PLAIN_STR. For example: ,'"
     plain_str = fr"[^{special_symbols}\s]+"
 
-    t_ignore_WHITESPACE = r"\s+"  # We won't ignore it in the new language
-
     def __init__(self, oneword_commands: typing.Sequence[str]):
         self.oneword_commands = dict.fromkeys(oneword_commands, "COMMAND")
+
+    t_ignore_WHITESPACE = r"\s+"
 
     def t_COMMAND(self, t):
         r"""\w+(\.\w+)+"""
@@ -43,6 +47,8 @@ class CommandLanguageLexer:
         t.lexer.skip(1)
         raise exceptions.CommandError(f"Illegal character '{t.value[0]}'")
 
+    t_interactive_WHITESPACE = r"\s+"
+
     def build(self, **kwargs):
         self.lexer = lex.lex(module=self, **kwargs)
 
@@ -56,4 +62,5 @@ def create_lexer(cmdstr: str, oneword_commands: typing.Sequence[str]) -> lex.Lex
 
 def get_tokens(cmdstr: str) -> typing.List[str]:
     lexer = create_lexer(cmdstr, [])
+    lexer.begin("interactive")
     return [token.value for token in lexer]

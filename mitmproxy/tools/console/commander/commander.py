@@ -77,7 +77,7 @@ class CommandBuffer:
         parts, remhelp = self.master.commands.parse_partial(txt)
         for i, p in enumerate(parts):
             parts[i] = mitmproxy.command.ParseResult(
-                value = self.maybequote(p.value),
+                value = p.value,
                 type = p.type,
                 valid = p.valid
             )
@@ -92,6 +92,7 @@ class CommandBuffer:
         """
         parts, remhelp = self.parse_quoted(self.text)
         ret = []
+
         for p in parts:
             if p.valid:
                 if p.type == mitmproxy.types.Cmd:
@@ -99,21 +100,25 @@ class CommandBuffer:
                 else:
                     ret.append(("text", p.value))
             elif p.value:
-                ret.append(("commander_invalid", p.value))
+                if p.value.isspace():
+                    ret.append(("text", p.value))
+                else:
+                    ret.append(("commander_invalid", p.value))
             else:
                 ret.append(("text", ""))
-            ret.append(("text", " "))
-            self.right()
+        ret.append(("text", " "))
+
         if remhelp:
-            ret.append(("text", " "))
+            # ret.append(("text", " "))
             for v in remhelp:
                 ret.append(("commander_hint", "%s " % v))
+                # ret.append(("text", " "))
         return ret
 
     def flatten(self, txt):
         parts, _ = self.parse_quoted(txt)
         ret = [x.value for x in parts]
-        return " ".join(ret)
+        return "".join(ret)
 
     def left(self) -> None:
         self.cursor = self.cursor - 1
@@ -136,7 +141,7 @@ class CommandBuffer:
                 )
         if self.completion:
             nxt = self.completion.completer.cycle()
-            buf = " ".join([i.value for i in self.completion.parse[:-1]]) + " " + nxt
+            buf = "".join([i.value for i in self.completion.parse[:-1]]) + "" + nxt
             buf = buf.strip()
             self.text = self.flatten(buf)
             self.cursor = len(self.text)

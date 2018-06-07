@@ -155,8 +155,6 @@ class CommandManager(mitmproxy.types._CommandBase):
         parts: typing.List[str] = lexer.get_tokens(cmdstr)
         if not parts:
             parts = [""]
-        elif cmdstr.endswith(" "):
-            parts.append("")
 
         parse: typing.List[ParseResult] = []
         params: typing.List[type] = []
@@ -166,7 +164,7 @@ class CommandManager(mitmproxy.types._CommandBase):
                 typ = mitmproxy.types.Cmd
                 if parts[i] in self.commands:
                     params.extend(self.commands[parts[i]].paramtypes)
-            elif params:
+            elif params and not parts[i].isspace():
                 typ = params.pop(0)
                 if typ == mitmproxy.types.Cmd and params and params[0] == mitmproxy.types.Arg:
                     if parts[i] in self.commands:
@@ -220,8 +218,6 @@ class CommandManager(mitmproxy.types._CommandBase):
             Execute a command string. May raise CommandError.
         """
         lex = lexer.create_lexer(cmdstr, self.oneword_commands)
-        print(list(lex))
-        lex.lexpos = 0
         parser_return = self.command_parser.parse(lexer=lex)
         return parser_return
 
