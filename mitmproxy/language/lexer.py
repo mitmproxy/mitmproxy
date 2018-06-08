@@ -35,7 +35,6 @@ class CommandLanguageLexer:
             \'+[^\']*\'+ |  # Single-quoted string
             \"+[^\"]*\"+    # Double-quoted string
         """
-        t.value = t.value.strip("'\"")
         return t
 
     @lex.TOKEN(plain_str)

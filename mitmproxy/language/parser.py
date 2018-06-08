@@ -35,9 +35,13 @@ class CommandLanguageParser:
 
     def p_argument(self, p):
         """argument : PLAIN_STR
-                    | QUOTED_STR
+                    | quoted_str
                     | COMMAND"""
         p[0] = p[1]
+
+    def p_quoted_str(self, p):
+        """quoted_str : QUOTED_STR"""
+        p[0] = p[1].strip("'\"")
 
     def p_empty(self, p):
         """empty :"""
