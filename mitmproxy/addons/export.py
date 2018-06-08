@@ -18,7 +18,7 @@ def raise_if_missing_request(f: flow.Flow) -> None:
 
 def curl_command(f: flow.Flow) -> str:
     raise_if_missing_request(f)
-    data = "curl "
+    data = "curl --dump-header "
     request = f.request.copy()  # type: ignore
     request.decode(strict=False)
     for k, v in request.headers.items(multi=True):
