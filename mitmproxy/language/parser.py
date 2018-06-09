@@ -8,7 +8,8 @@ from mitmproxy.language.lexer import CommandLanguageLexer
 
 
 class CommandLanguageParser:
-    tokens = CommandLanguageLexer.tokens  # it is always required
+    # the list of possible tokens is always required
+    tokens = CommandLanguageLexer.tokens
 
     def __init__(self, command_manager):
         self.return_value = None

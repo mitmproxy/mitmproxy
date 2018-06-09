@@ -119,6 +119,9 @@ class TestCommand:
                         value = "foo", type = mitmproxy.types.Cmd, valid = False
                     ),
                     command.ParseResult(
+                        value = " ", type = mitmproxy.types.Unknown, valid = False
+                    ),
+                    command.ParseResult(
                         value = "bar", type = mitmproxy.types.Unknown, valid = False
                     )
                 ],
@@ -128,6 +131,9 @@ class TestCommand:
                 "cmd1 'bar",
                 [
                     command.ParseResult(value = "cmd1", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(
+                        value = " ", type = mitmproxy.types.Unknown, valid = False
+                    ),
                     command.ParseResult(value = "'bar", type = str, valid = True)
                 ],
                 [],
@@ -143,9 +149,18 @@ class TestCommand:
                 []
             ],
             [
+                "     ",
+                [
+                    command.ParseResult(value = "     ", type=mitmproxy.types.Unknown, valid=False),
+                    command.ParseResult(value = "", type=mitmproxy.types.Cmd, valid=False)
+                 ],
+                []
+            ],
+            [
                 "cmd3 1",
                 [
                     command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = " ", type=mitmproxy.types.Unknown, valid=False),
                     command.ParseResult(value = "1", type = int, valid = True),
                 ],
                 []
@@ -154,6 +169,7 @@ class TestCommand:
                 "cmd3 ",
                 [
                     command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = " ", type=mitmproxy.types.Unknown, valid=False),
                     command.ParseResult(value = "", type = int, valid = False),
                 ],
                 []
@@ -164,6 +180,7 @@ class TestCommand:
                     command.ParseResult(
                         value = "subcommand", type = mitmproxy.types.Cmd, valid = True,
                     ),
+                    command.ParseResult(value = " ", type=mitmproxy.types.Unknown, valid=False),
                     command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = False),
                 ],
                 ["arg"],
@@ -172,7 +189,9 @@ class TestCommand:
                 "subcommand cmd3 ",
                 [
                     command.ParseResult(value = "subcommand", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = " ", type=mitmproxy.types.Unknown, valid=False),
                     command.ParseResult(value = "cmd3", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = " ", type=mitmproxy.types.Unknown, valid=False),
                     command.ParseResult(value = "", type = int, valid = False),
                 ],
                 []
@@ -188,6 +207,7 @@ class TestCommand:
                 "cmd4 ",
                 [
                     command.ParseResult(value = "cmd4", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = " ", type=mitmproxy.types.Unknown, valid=False),
                     command.ParseResult(value = "", type = int, valid = False),
                 ],
                 ["str", "path"]
@@ -196,14 +216,7 @@ class TestCommand:
                 "cmd4 1",
                 [
                     command.ParseResult(value = "cmd4", type = mitmproxy.types.Cmd, valid = True),
-                    command.ParseResult(value = "1", type = int, valid = True),
-                ],
-                ["str", "path"]
-            ],
-            [
-                "cmd4 1",
-                [
-                    command.ParseResult(value = "cmd4", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value=" ", type=mitmproxy.types.Unknown, valid=False),
                     command.ParseResult(value = "1", type = int, valid = True),
                 ],
                 ["str", "path"]
@@ -219,6 +232,7 @@ class TestCommand:
                 "flow ",
                 [
                     command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = " ", type = mitmproxy.types.Unknown, valid = False),
                     command.ParseResult(value = "", type = flow.Flow, valid = False),
                 ],
                 ["str"]
@@ -227,6 +241,7 @@ class TestCommand:
                 "flow x",
                 [
                     command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = " ", type = mitmproxy.types.Unknown, valid = False),
                     command.ParseResult(value = "x", type = flow.Flow, valid = False),
                 ],
                 ["str"]
@@ -235,7 +250,9 @@ class TestCommand:
                 "flow x ",
                 [
                     command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value=" ", type=mitmproxy.types.Unknown, valid=False),
                     command.ParseResult(value = "x", type = flow.Flow, valid = False),
+                    command.ParseResult(value = " ", type = mitmproxy.types.Unknown, valid = False),
                     command.ParseResult(value = "", type = str, valid = True),
                 ],
                 []
@@ -244,7 +261,9 @@ class TestCommand:
                 "flow \"one two",
                 [
                     command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value=" ", type=mitmproxy.types.Unknown, valid=False),
                     command.ParseResult(value = "\"one", type = flow.Flow, valid = False),
+                    command.ParseResult(value=" ", type=mitmproxy.types.Unknown, valid=False),
                     command.ParseResult(value="two", type=str, valid=True),
                 ],
                 []
@@ -253,7 +272,8 @@ class TestCommand:
                 "flow \"one two\"",
                 [
                     command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
-                    command.ParseResult(value = "one two", type = flow.Flow, valid = False),
+                    command.ParseResult(value=" ", type=mitmproxy.types.Unknown, valid=False),
+                    command.ParseResult(value = "\"one two\"", type = flow.Flow, valid = False),
                 ],
                 ["str"]
             ],

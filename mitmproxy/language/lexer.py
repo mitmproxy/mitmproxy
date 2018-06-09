@@ -1,4 +1,3 @@
-import re
 import typing
 
 import ply.lex as lex
@@ -13,17 +12,14 @@ class CommandLanguageLexer:
         "PLAIN_STR",
         "QUOTED_STR"
     )
-
     states = (
         ("interactive", "inclusive"),
     )
 
-    special_symbols = re.escape("")  # Symbols to ignore in PLAIN_STR. For example: ,'"
-    plain_str = fr"[^{special_symbols}\s]+"
-
     def __init__(self, oneword_commands: typing.Sequence[str]):
         self.oneword_commands = dict.fromkeys(oneword_commands, "COMMAND")
 
+    # Main(INITIAL) state
     t_ignore_WHITESPACE = r"\s+"
 
     def t_COMMAND(self, t):
@@ -37,8 +33,8 @@ class CommandLanguageLexer:
         """
         return t
 
-    @lex.TOKEN(plain_str)
     def t_PLAIN_STR(self, t):
+        r"""[^\(\)\s]+"""
         t.type = self.oneword_commands.get(t.value, "PLAIN_STR")
         return t
 
@@ -46,6 +42,7 @@ class CommandLanguageLexer:
         t.lexer.skip(1)
         raise exceptions.CommandError(f"Illegal character '{t.value[0]}'")
 
+    # Interactive state
     t_interactive_WHITESPACE = r"\s+"
 
     def build(self, **kwargs):
@@ -59,7 +56,8 @@ def create_lexer(cmdstr: str, oneword_commands: typing.Sequence[str]) -> lex.Lex
     return command_lexer.lexer
 
 
-def get_tokens(cmdstr: str) -> typing.List[str]:
+def get_tokens(cmdstr: str, state="interactive") -> typing.List[str]:
     lexer = create_lexer(cmdstr, [])
-    lexer.begin("interactive")
+    # Switching to the state with meaningful white spaces
+    lexer.begin(state)
     return [token.value for token in lexer]

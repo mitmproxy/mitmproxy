@@ -91,8 +91,3 @@ class TestCommandBuffer:
             cb = commander.CommandBuffer(tctx.master)
             cb.text = "foo"
             assert cb.render()
-
-    def test_flatten(self):
-        with taddons.context() as tctx:
-            cb = commander.CommandBuffer(tctx.master)
-            assert cb.flatten("foo  bar") == "foo bar"

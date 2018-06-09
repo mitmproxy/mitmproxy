@@ -162,17 +162,17 @@ class CommandManager(mitmproxy.types._CommandBase):
         params: typing.List[type] = []
         typ: typing.Type = None
         for i, part in enumerate(parts):
-            if (i == 0 and not part.isspace()) or i == 1:
-                typ = mitmproxy.types.Cmd
-                if part in self.commands:
-                    params.extend(self.commands[part].paramtypes)
-            elif params and not part.isspace():
-                typ = params.pop(0)
-                if typ == mitmproxy.types.Cmd and params and params[0] == mitmproxy.types.Arg:
+            typ = mitmproxy.types.Unknown
+            if not part.isspace():
+                if i == 0 or (i == 1 and parts[0].isspace()):
+                    typ = mitmproxy.types.Cmd
                     if part in self.commands:
-                        params[:] = self.commands[part].paramtypes
-            else:
-                typ = mitmproxy.types.Unknown
+                        params.extend(self.commands[part].paramtypes)
+                elif params:
+                    typ = params.pop(0)
+                    if typ == mitmproxy.types.Cmd and params and params[0] == mitmproxy.types.Arg:
+                        if part in self.commands:
+                            params[:] = self.commands[part].paramtypes
 
             to = mitmproxy.types.CommandTypes.get(typ, None)
             valid = False
@@ -191,6 +191,7 @@ class CommandManager(mitmproxy.types._CommandBase):
                     valid=valid,
                 )
             )
+
         remhelp: typing.List[str] = []
         for x in params:
             remt = mitmproxy.types.CommandTypes.get(x, None)

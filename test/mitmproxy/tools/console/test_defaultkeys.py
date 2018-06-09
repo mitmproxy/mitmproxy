@@ -16,7 +16,7 @@ async def test_commands_exist():
     await m.load_flow(tflow())
 
     for binding in km.bindings:
-        cmd, *args = lexer.get_tokens(binding.command)
+        cmd, *args = lexer.get_tokens(binding.command, state="INITIAL")
         assert cmd in m.commands.commands
 
         cmd_obj = m.commands.commands[cmd]
