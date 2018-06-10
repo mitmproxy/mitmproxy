@@ -150,7 +150,7 @@ class playbook(typing.Generic[T]):
             self._errored = True
 
             def _str(x):
-                arrow = ">" if isinstance(x, events.Event) else "<"
+                arrow = ">>" if isinstance(x, events.Event) else "<<"
                 x = str(x) \
                     .replace('Placeholder:None', '<unset placeholder>') \
                     .replace('Placeholder:', '')
