@@ -123,12 +123,6 @@ class TestWebsocketFrame:
         assert not frm.header.mask
         assert not frm.header.masking_key
 
-        frm = self.fr("wf:b'foo':-mask:k'abcd'", is_client=True)
-        assert not frm.header.mask
-        # We're reading back a corrupted frame - the first 3 characters of the
-        # mask is mis-interpreted as the payload
-        assert frm.payload == b"abc"
-
     def test_knone(self):
         with pytest.raises(Exception, match="Expected 4 bytes"):
             self.fr("wf:b'foo':mask:knone")
