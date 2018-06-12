@@ -287,7 +287,7 @@ def build_wheel(be: BuildEnviron):  # pragma: no cover
 
 
 def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
-    click.echo("Building Docker image...")
+    click.echo("Building Docker images...")
     subprocess.check_call([
         "docker",
         "build",
@@ -295,6 +295,15 @@ def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
         "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
         "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
         "--file", "docker/Dockerfile",
+        "."
+    ])
+    subprocess.check_call([
+        "docker",
+        "build",
+        "--tag", be.docker_tag + "-ARMv7",
+        "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
+        "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
+        "--file", "docker/DockerfileARMv7",
         "."
     ])
 
@@ -498,6 +507,7 @@ def upload():  # pragma: no cover
             "-p", be.docker_password,
         ])
         subprocess.check_call(["docker", "push", be.docker_tag])
+        subprocess.check_call(["docker", "push", be.docker_tag + "-ARMv7"])
 
 
 if __name__ == "__main__":  # pragma: no cover
