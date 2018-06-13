@@ -284,9 +284,11 @@ class View(collections.Sequence):
         """
         Returns the current view order.
         """
+        order = ""
         for k in self.orders.keys():
             if self.order_key == self.orders[k]:
-                return k
+                order = k
+        return order
 
     # Filter
     @command.command("view.filter.set")
