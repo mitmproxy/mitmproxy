@@ -123,6 +123,9 @@ def test_filter():
     v.toggle_marked()
     assert len(v) == 4
 
+    with pytest.raises(exceptions.CommandError):
+        v.set_filter_cmd("~notafilter regex")
+
     v[1].marked = True
     v.toggle_marked()
     assert len(v) == 1
@@ -320,6 +323,8 @@ def test_order():
 
     v.set_reversed(False)
     assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+    with pytest.raises(exceptions.CommandError):
+        v.set_order("not_an_order")
 
 
 def test_reversed():

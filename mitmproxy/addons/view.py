@@ -300,7 +300,7 @@ class View(collections.Sequence):
         if f:
             filt = flowfilter.parse(f)
             if not filt:
-                raise exceptions.OptionsError(
+                raise exceptions.CommandError(
                     "Invalid interception filter: %s" % f
                 )
         self.set_filter(filt)
