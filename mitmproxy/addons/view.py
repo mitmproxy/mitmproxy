@@ -292,7 +292,7 @@ class View(collections.Sequence):
 
     # Filter
     @command.command("view.filter.set")
-    def filter_set(self, f: str) -> None:
+    def set_filter_cmd(self, f: str) -> None:
         """
             Sets the current view filter.
         """
