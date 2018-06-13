@@ -166,12 +166,6 @@ class View(collections.Sequence):
     def store_count(self):
         return len(self._store)
 
-    def inbounds(self, index: int) -> bool:
-        """
-            Is this 0 <= index < len(self)
-        """
-        return 0 <= index < len(self)
-
     def _rev(self, idx: int) -> int:
         """
             Reverses an index, if needed
@@ -219,7 +213,26 @@ class View(collections.Sequence):
                 self._base_add(i)
         self.sig_view_refresh.send(self)
 
-    # API
+    """ View API """
+
+    # Focus
+    @command.command("view.focus.go")
+    def go(self, dst: int) -> None:
+        """
+            Go to a specified offset. Positive offests are from the beginning of
+            the view, negative from the end of the view, so that 0 is the first
+            flow, -1 is the last flow.
+        """
+        if len(self) == 0:
+            return
+        if dst < 0:
+            dst = len(self) + dst
+        if dst < 0:
+            dst = 0
+        if dst > len(self) - 1:
+            dst = len(self) - 1
+        self.focus.flow = self[dst]
+
     @command.command("view.focus.next")
     def focus_next(self) -> None:
         """
@@ -238,6 +251,7 @@ class View(collections.Sequence):
         if self.inbounds(idx):
             self.focus.flow = self[idx]
 
+    # Order
     @command.command("view.order.options")
     def order_options(self) -> typing.Sequence[str]:
         """
@@ -245,34 +259,56 @@ class View(collections.Sequence):
         """
         return list(sorted(self.orders.keys()))
 
-    @command.command("view.marked.toggle")
-    def toggle_marked(self) -> None:
-        """
-            Toggle whether to show marked views only.
-        """
-        self.show_marked = not self.show_marked
-        self._refilter()
-
+    @command.command("view.order.reverse")
     def set_reversed(self, value: bool):
         self.order_reversed = value
         self.sig_view_refresh.send(self)
 
-    def set_order(self, order_key: typing.Callable):
+    @command.command("view.order.set")
+    def set_order(self, order: str):
         """
             Sets the current view order.
         """
+        if order not in self.orders:
+            raise exceptions.CommandError(
+                "Unknown flow order: %s" % order
+            )
+        order_key = self.orders[order]
         self.order_key = order_key
         newview = sortedcontainers.SortedListWithKey(key=order_key)
         newview.update(self._view)
         self._view = newview
 
-    def set_filter(self, flt: typing.Optional[flowfilter.TFilter]):
+    @command.command("view.order")
+    def get_order(self) -> str:
+        """
+        Returns the current view order.
+        """
+        for k in self.orders.keys():
+            if self.order_key == self.orders[k]:
+                return k
+
+    # Filter
+    @command.command("view.filter.set")
+    def filter_set(self, f: str) -> None:
         """
             Sets the current view filter.
         """
+        filt = None
+        if f:
+            filt = flowfilter.parse(f)
+            if not filt:
+                raise exceptions.OptionsError(
+                    "Invalid interception filter: %s" % f
+                )
+        self.set_filter(filt)
+
+    def set_filter(self, flt: typing.Optional[flowfilter.TFilter]):
         self.filter = flt or matchall
         self._refilter()
 
+    # View Updates
+    @command.command("view.clear")
     def clear(self) -> None:
         """
             Clears both the store and view.
@@ -282,7 +318,8 @@ class View(collections.Sequence):
         self.sig_view_refresh.send(self)
         self.sig_store_refresh.send(self)
 
-    def clear_not_marked(self):
+    @command.command("view.clear_unmarked")
+    def clear_not_marked(self) -> None:
         """
             Clears only the unmarked flows.
         """
@@ -293,36 +330,15 @@ class View(collections.Sequence):
         self._refilter()
         self.sig_store_refresh.send(self)
 
-    @command.command("view.marked.toggle")
-    def add(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
-        """
-            Adds a flow to the state. If the flow already exists, it is
-            ignored.
-        """
-        for f in flows:
-            if f.id not in self._store:
-                self._store[f.id] = f
-                if self.filter(f):
-                    self._base_add(f)
-                    if self.focus_follow:
-                        self.focus.flow = f
-                    self.sig_view_add.send(self, flow=f)
-
-    def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
-        """
-        Get flow with the given id from the store.
-        Returns None if the flow is not found.
-        """
-        return self._store.get(flow_id)
-
-    @command.command("view.getval")
+    # View Settings
+    @command.command("view.settings.getval")
     def getvalue(self, f: mitmproxy.flow.Flow, key: str, default: str) -> str:
         """
             Get a value from the settings store for the specified flow.
         """
         return self.settings[f].get(key, default)
 
-    @command.command("view.setval.toggle")
+    @command.command("view.settings.setval.toggle")
     def setvalue_toggle(
         self,
         flows: typing.Sequence[mitmproxy.flow.Flow],
@@ -339,7 +355,7 @@ class View(collections.Sequence):
             updated.append(f)
         ctx.master.addons.trigger("update", updated)
 
-    @command.command("view.setval")
+    @command.command("view.settings.setval")
     def setvalue(
         self,
         flows: typing.Sequence[mitmproxy.flow.Flow],
@@ -354,41 +370,8 @@ class View(collections.Sequence):
             updated.append(f)
         ctx.master.addons.trigger("update", updated)
 
-    @command.command("view.load")
-    def load_file(self, path: mitmproxy.types.Path) -> None:
-        """
-            Load flows into the view, without processing them with addons.
-        """
-        try:
-            with open(path, "rb") as f:
-                for i in io.FlowReader(f).stream():
-                    # Do this to get a new ID, so we can load the same file N times and
-                    # get new flows each time. It would be more efficient to just have a
-                    # .newid() method or something.
-                    self.add([i.copy()])
-        except IOError as e:
-            ctx.log.error(e.strerror)
-        except exceptions.FlowReadException as e:
-            ctx.log.error(str(e))
-
-    @command.command("view.go")
-    def go(self, dst: int) -> None:
-        """
-            Go to a specified offset. Positive offests are from the beginning of
-            the view, negative from the end of the view, so that 0 is the first
-            flow, -1 is the last flow.
-        """
-        if len(self) == 0:
-            return
-        if dst < 0:
-            dst = len(self) + dst
-        if dst < 0:
-            dst = 0
-        if dst > len(self) - 1:
-            dst = len(self) - 1
-        self.focus.flow = self[dst]
-
-    @command.command("view.duplicate")
+    # Flows
+    @command.command("view.flows.duplicate")
     def duplicate(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Duplicates the specified flows, and sets the focus to the first
@@ -400,7 +383,7 @@ class View(collections.Sequence):
             self.focus.flow = dups[0]
             ctx.log.alert("Duplicated %s flows" % len(dups))
 
-    @command.command("view.remove")
+    @command.command("view.flows.remove")
     def remove(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Removes the flow from the underlying store and the view.
@@ -420,7 +403,7 @@ class View(collections.Sequence):
         if len(flows) > 1:
             ctx.log.alert("Removed %s flows" % len(flows))
 
-    @command.command("view.resolve")
+    @command.command("view.flows.resolve")
     def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
         """
             Resolve a flow list specification to an actual list of flows.
@@ -443,7 +426,7 @@ class View(collections.Sequence):
                 raise exceptions.CommandError("Invalid flow filter: %s" % spec)
             return [i for i in self._store.values() if filt(i)]
 
-    @command.command("view.create")
+    @command.command("view.flows.create")
     def create(self, method: str, url: str) -> None:
         try:
             req = http.HTTPRequest.make(method.upper(), url)
@@ -455,6 +438,74 @@ class View(collections.Sequence):
         f.request = req
         f.request.headers["Host"] = req.host
         self.add([f])
+
+    @command.command("view.flows.load")
+    def load_file(self, path: mitmproxy.types.Path) -> None:
+        """
+            Load flows into the view, without processing them with addons.
+        """
+        try:
+            with open(path, "rb") as f:
+                for i in io.FlowReader(f).stream():
+                    # Do this to get a new ID, so we can load the same file N times and
+                    # get new flows each time. It would be more efficient to just have a
+                    # .newid() method or something.
+                    self.add([i.copy()])
+        except IOError as e:
+            ctx.log.error(e.strerror)
+        except exceptions.FlowReadException as e:
+            ctx.log.error(str(e))
+
+    def add(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+        """
+            Adds a flow to the state. If the flow already exists, it is
+            ignored.
+        """
+        for f in flows:
+            if f.id not in self._store:
+                self._store[f.id] = f
+                if self.filter(f):
+                    self._base_add(f)
+                    if self.focus_follow:
+                        self.focus.flow = f
+                    self.sig_view_add.send(self, flow=f)
+
+    def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
+        """
+            Get flow with the given id from the store.
+            Returns None if the flow is not found.
+        """
+        return self._store.get(flow_id)
+
+    # View Properties
+    @command.command("view.properties.length")
+    def get_length(self) -> int:
+        """
+            Returns view length.
+        """
+        return len(self)
+
+    @command.command("view.properties.marked")
+    def get_marked(self) -> bool:
+        """
+            Returns true if view is in marked mode.
+        """
+        return self.show_marked
+
+    @command.command("view.properties.marked.toggle")
+    def toggle_marked(self) -> None:
+        """
+            Toggle whether to show marked views only.
+        """
+        self.show_marked = not self.show_marked
+        self._refilter()
+
+    @command.command("view.properties.inbounds")
+    def inbounds(self, index: int) -> bool:
+        """
+            Is this 0 <= index < len(self)?
+        """
+        return 0 <= index < len(self)
 
     # Event handlers
     def configure(self, updated):
@@ -472,7 +523,7 @@ class View(collections.Sequence):
                 raise exceptions.OptionsError(
                     "Unknown flow order: %s" % ctx.options.view_order
                 )
-            self.set_order(self.orders[ctx.options.view_order])
+            self.set_order(ctx.options.view_order)
         if "view_order_reversed" in updated:
             self.set_reversed(ctx.options.view_order_reversed)
         if "console_focus_follow" in updated:
