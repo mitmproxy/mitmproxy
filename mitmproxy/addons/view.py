@@ -260,12 +260,12 @@ class View(collections.Sequence):
         return list(sorted(self.orders.keys()))
 
     @command.command("view.order.reverse")
-    def set_reversed(self, value: bool):
+    def set_reversed(self, value: bool) -> None:
         self.order_reversed = value
         self.sig_view_refresh.send(self)
 
     @command.command("view.order.set")
-    def set_order(self, order: str):
+    def set_order(self, order: str) -> None:
         """
             Sets the current view order.
         """
