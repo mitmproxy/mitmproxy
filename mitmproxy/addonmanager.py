@@ -123,9 +123,10 @@ class AddonManager:
         """
             Remove all addons.
         """
-        for i in self.chain:
-            self.remove(i)
+        for a in self.chain:
+            self.invoke_addon(a, "done")
         self.lookup = {}
+        self.chain = []
 
     def get(self, name):
         """
