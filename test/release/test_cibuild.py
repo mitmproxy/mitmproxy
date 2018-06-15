@@ -36,6 +36,14 @@ def test_buildenviron_common():
     with pytest.raises(cibuild.BuildError):
         be.platform_tag
 
+    with pytest.raises(ValueError, match="TRAVIS_TAG"):
+        be = cibuild.BuildEnviron(
+            system="Linux",
+            root_dir="/foo",
+            travis_tag="one",
+            travis_branch="two",
+        )
+
 
 def test_buildenviron_pr():
     # Simulates a PR. We build everything, but don't have access to secret
@@ -83,7 +91,7 @@ def test_buildenviron_releasetag():
         system="Linux",
         root_dir="/foo",
         travis_tag="v0.0.1",
-        travis_branch="v0.x",
+        travis_branch="v0.0.1",
         should_build_wheel=True,
         should_build_docker=True,
         should_build_pyinstaller=True,
@@ -92,7 +100,7 @@ def test_buildenviron_releasetag():
         docker_password="bar",
     )
     assert be.tag == "v0.0.1"
-    assert be.branch == "v0.x"
+    assert be.branch == "v0.0.1"
     assert be.version == "0.0.1"
     assert be.upload_dir == "0.0.1"
     assert be.docker_tag == "mitmproxy/mitmproxy:0.0.1"
@@ -107,7 +115,7 @@ def test_buildenviron_namedtag():
         system="Linux",
         root_dir="/foo",
         travis_tag="anyname",
-        travis_branch="v0.x",
+        travis_branch="anyname",
         should_build_wheel=True,
         should_build_docker=True,
         should_build_pyinstaller=True,
@@ -116,7 +124,7 @@ def test_buildenviron_namedtag():
         docker_password="bar",
     )
     assert be.tag == "anyname"
-    assert be.branch == "v0.x"
+    assert be.branch == "anyname"
     assert be.version == "anyname"
     assert be.upload_dir == "anyname"
     assert be.docker_tag == "mitmproxy/mitmproxy:anyname"
@@ -152,7 +160,7 @@ def test_buildenviron_osx(tmpdir):
         system="Darwin",
         root_dir="/foo",
         travis_tag="0.0.1",
-        travis_branch="v0.x",
+        travis_branch="0.0.1",
     )
     assert be.platform_tag == "osx"
     assert be.bdists == {
@@ -170,8 +178,8 @@ def test_buildenviron_windows(tmpdir):
     be = cibuild.BuildEnviron(
         system="Windows",
         root_dir="/foo",
-        travis_tag="0.0.1",
-        travis_branch="v0.x",
+        travis_tag="v0.0.1",
+        travis_branch="v0.0.1",
     )
     assert be.platform_tag == "windows"
     assert be.bdists == {
@@ -193,13 +201,15 @@ def test_buildenviron_windows(tmpdir):
     ("3.0.0", "v3.0.0", True),  # regular release
     ("3.0.0.rc1", "v3.0.0.rc1", False),  # non-canonical.
     ("3.0.0.dev", "anyname", True),  # tagged test/dev release
+    ("3.0.0", "3.0.0", False),  # tagged, but without v prefix
 ])
 def test_buildenviron_check_version(version, tag, ok, tmpdir):
     tmpdir.mkdir("mitmproxy").join("version.py").write(f'VERSION = "{version}"')
 
     be = cibuild.BuildEnviron(
         root_dir=tmpdir,
-        travis_tag=tag
+        travis_tag=tag,
+        travis_branch=tag
     )
     if ok:
         be.check_version()

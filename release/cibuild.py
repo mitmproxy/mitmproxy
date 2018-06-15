@@ -63,6 +63,12 @@ class BuildEnviron:
 
         self.travis_tag = travis_tag
         self.travis_branch = travis_branch
+
+        if travis_tag and travis_tag != travis_branch:
+            raise ValueError(
+                f"Something is wrong - TRAVIS_TAG={travis_tag}, but TRAVIS_BRANCH={travis_branch}"
+            )
+
         self.travis_pull_request = travis_pull_request
 
         self.should_build_wheel = should_build_wheel
@@ -202,7 +208,7 @@ class BuildEnviron:
 
     @property
     def is_prod_release(self) -> bool:
-        if not self.tag:
+        if not (self.tag and self.tag.startswith("v")):
             return False
         try:
             v = parver.Version.parse(self.version, strict=True)
