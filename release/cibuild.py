@@ -63,6 +63,12 @@ class BuildEnviron:
 
         self.travis_tag = travis_tag
         self.travis_branch = travis_branch
+
+        if travis_tag and travis_tag != travis_branch:
+            raise ValueError(
+                f"Something is wrong - TRAVIS_TAG={travis_tag}, but TRAVIS_BRANCH={travis_branch}"
+            )
+
         self.travis_pull_request = travis_pull_request
 
         self.should_build_wheel = should_build_wheel
@@ -184,25 +190,17 @@ class BuildEnviron:
         """
         with open(pathlib.Path(self.root_dir) / "mitmproxy" / "version.py") as f:
             contents = f.read()
-
         version = re.search(r'^VERSION = "(.+?)"', contents, re.M).group(1)
 
-        if self.tag:
-            # For (tagged) releases, we are strict:
-            #  1. The tagname must match the version in mitmproxy/version.py
-            #  2. The version info must be in canonical form (as recommended in PEP 440).
-
-            if version != self.tag:
+        if self.is_prod_release:
+            # For production releases, we require strict version equality
+            if self.version != version:
                 raise ValueError(f"Tag is {self.tag}, but mitmproxy/version.py is {version}.")
-            try:
-                parver.Version.parse(version, strict=True)
-            except parver.ParseError as e:
-                raise ValueError(str(e)) from e
         else:
             # For snapshots, we only ensure that mitmproxy/version.py contains a dev release.
             version_info = parver.Version.parse(version)
             if not version_info.is_devrelease:
-                raise ValueError("Releases must be tagged.")
+                raise ValueError(f"Non-production releases must have dev suffix: {version}")
 
     @property
     def has_docker_creds(self) -> bool:
@@ -210,7 +208,7 @@ class BuildEnviron:
 
     @property
     def is_prod_release(self) -> bool:
-        if not self.tag:
+        if not (self.tag and self.tag.startswith("v")):
             return False
         try:
             v = parver.Version.parse(self.version, strict=True)
@@ -265,10 +263,18 @@ class BuildEnviron:
 
     @property
     def version(self):
-        name = self.tag or self.branch
-        if not name:
+        if self.tag:
+            if self.tag.startswith("v"):
+                try:
+                    parver.Version.parse(self.tag[1:], strict=True)
+                except parver.ParseError as e:
+                    return self.tag
+                return self.tag[1:]
+            return self.tag
+        elif self.branch:
+            return self.branch
+        else:
             raise BuildError("We're on neither a tag nor a branch - could not establish version")
-        return name
 
 
 def build_wheel(be: BuildEnviron):  # pragma: no cover
