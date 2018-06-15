@@ -170,8 +170,8 @@ with the following command:
     :target: https://travis-ci.org/mitmproxy/mitmproxy
     :alt: Travis Build Status
 
-.. |appveyor| image:: https://shields.mitmproxy.org/appveyor/ci/mhils/mitmproxy/master.svg?label=appveyor%20ci
-    :target: https://ci.appveyor.com/project/mhils/mitmproxy
+.. |appveyor| image:: https://shields.mitmproxy.org/appveyor/ci/mitmproxy/mitmproxy/master.svg?label=appveyor%20ci
+    :target: https://ci.appveyor.com/project/mitmproxy/mitmproxy
     :alt: Appveyor Build Status
 
 .. |coverage| image:: https://shields.mitmproxy.org/codecov/c/github/mitmproxy/mitmproxy/master.svg?label=codecov

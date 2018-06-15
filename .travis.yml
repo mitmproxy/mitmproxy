@@ -16,14 +16,19 @@ git:
 matrix:
   fast_finish: true
   include:
+    - python: 3.5
+      env: TOXENV=py35 # this just makes sure that our version detection shows an appropriate error message
     - python: 3.6
       env: TOXENV=lint
     - os: osx
       osx_image: xcode7.3
       language: generic
-      env: TOXENV=py36 BDIST=1
+      env: TOXENV=py36 CIBUILD=1 PYINSTALLER=1
     - python: 3.6
-      env: TOXENV=py36 BDIST=1 WHEEL=1
+      env: TOXENV=py36 CIBUILD=1 PYINSTALLER=1 WHEEL=1 DOCKER=1
+      sudo: required
+      services:
+        - docker
     - python: 3.6
       env: TOXENV=individual_coverage
     - python: "3.7-dev"
@@ -44,7 +49,7 @@ matrix:
     - python: 3.6
       env: NAME=docs TOXENV=docs
       install:
-        - wget https://github.com/gohugoio/hugo/releases/download/v0.37/hugo_0.37_Linux-64bit.deb
+        - wget https://github.com/gohugoio/hugo/releases/download/v0.41/hugo_0.41_Linux-64bit.deb
         - sudo dpkg -i hugo*.deb
         - pip install tox virtualenv setuptools
         - pyenv global system 3.6
@@ -67,19 +72,22 @@ install:
   - pip install tox virtualenv setuptools
 
 script:
-  - tox -- --verbose --cov-report=term
+  # All these steps MUST succeed for the job to be successful!
+  # Using the after_success block DOES NOT capture errors.
+  # Pull requests might break our build - we need to check this.
+  # Pull requests are not allowed to upload build artifacts - enforced by cibuild script.
   - |
-    if [[ $BDIST == "1" ]]
-    then
-        git fetch --unshallow --tags
-        tox -e cibuild -- build
+    if [[ $TRAVIS_COMMIT_MESSAGE = *"[notest]"* ]]; then
+      echo "!!!! Skipping tests."
+    else
+      tox -- --verbose --cov-report=term
     fi
 
-after_success:
   - |
-    if [[ $BDIST == "1" ]]
+    if [[ $CIBUILD == "1" ]]
     then
-        tox -e cibuild -- upload
+        git fetch --unshallow --tags
+        tox -e cibuild -- build && tox -e cibuild -- upload
     fi
 
 notifications:

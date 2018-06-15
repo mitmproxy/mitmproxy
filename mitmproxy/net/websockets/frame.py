@@ -71,7 +71,7 @@ class FrameHeader:
         else:
             self.length_code = length_code
 
-        if mask is DEFAULT and masking_key is DEFAULT:
+        if (mask is DEFAULT and masking_key is DEFAULT) or mask == 0 or mask is False:
             self.mask = False
             self.masking_key = b""
         elif mask is DEFAULT:

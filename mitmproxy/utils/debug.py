@@ -1,7 +1,6 @@
 import gc
 import os
 import platform
-import re
 import signal
 import sys
 import threading
@@ -13,21 +12,10 @@ from mitmproxy import version
 
 
 def dump_system_info():
-    mitmproxy_version = version.get_version(True, True)
-    mitmproxy_version = re.sub(
-        r"-0x([0-9a-f]+)",
-        r" (commit \1)",
-        mitmproxy_version
-    )
-
-    # PyInstaller builds indicator, if using precompiled binary
-    if getattr(sys, 'frozen', False):
-        bin_indicator = "binary"
-    else:
-        bin_indicator = ""
+    mitmproxy_version = version.get_dev_version()
 
     data = [
-        "Mitmproxy: {} {}".format(mitmproxy_version, bin_indicator),
+        "Mitmproxy: {}".format(mitmproxy_version),
         "Python:    {}".format(platform.python_version()),
         "OpenSSL:   {}".format(SSL.SSLeay_version(SSL.SSLEAY_VERSION).decode()),
         "Platform:  {}".format(platform.platform()),

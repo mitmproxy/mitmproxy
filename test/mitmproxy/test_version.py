@@ -1,6 +1,7 @@
 import pathlib
 import runpy
 import subprocess
+import sys
 from unittest import mock
 
 from mitmproxy import version
@@ -15,22 +16,19 @@ def test_version(capsys):
     assert stdout.strip() == version.VERSION
 
 
-def test_get_version_hardcoded():
-    version.VERSION = "3.0.0.dev123-0xcafebabe"
-    assert version.get_version() == "3.0.0"
-    assert version.get_version(True) == "3.0.0.dev123"
-    assert version.get_version(True, True) == "3.0.0.dev123-0xcafebabe"
-
-
 def test_get_version():
-    version.VERSION = "3.0.0"
+    version.VERSION = "3.0.0rc2"
 
     with mock.patch('subprocess.check_output') as m:
         m.return_value = b"tag-0-cafecafe"
-        assert version.get_version(True, True) == "3.0.0"
+        assert version.get_dev_version() == "3.0.0rc2"
+
+        sys.frozen = True
+        assert version.get_dev_version() == "3.0.0rc2 binary"
+        sys.frozen = False
 
         m.return_value = b"tag-2-cafecafe"
-        assert version.get_version(True, True) == "3.0.0.dev2-0xcafecaf"
+        assert version.get_dev_version() == "3.0.0rc2 (+2, commit cafecaf)"
 
         m.side_effect = subprocess.CalledProcessError(-1, 'git describe --long')
-        assert version.get_version(True, True) == "3.0.0"
+        assert version.get_dev_version() == "3.0.0rc2"
