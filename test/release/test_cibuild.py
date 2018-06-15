@@ -82,7 +82,7 @@ def test_buildenviron_releasetag():
     be = cibuild.BuildEnviron(
         system="Linux",
         root_dir="/foo",
-        travis_tag="0.0.1",
+        travis_tag="v0.0.1",
         travis_branch="v0.x",
         should_build_wheel=True,
         should_build_docker=True,
@@ -91,7 +91,7 @@ def test_buildenviron_releasetag():
         docker_username="foo",
         docker_password="bar",
     )
-    assert be.tag == "0.0.1"
+    assert be.tag == "v0.0.1"
     assert be.branch == "v0.x"
     assert be.version == "0.0.1"
     assert be.upload_dir == "0.0.1"
@@ -101,8 +101,32 @@ def test_buildenviron_releasetag():
     assert be.is_prod_release
 
 
+def test_buildenviron_namedtag():
+    # Simulates a non-release tag on a branch.
+    be = cibuild.BuildEnviron(
+        system="Linux",
+        root_dir="/foo",
+        travis_tag="anyname",
+        travis_branch="v0.x",
+        should_build_wheel=True,
+        should_build_docker=True,
+        should_build_pyinstaller=True,
+        has_twine_creds=True,
+        docker_username="foo",
+        docker_password="bar",
+    )
+    assert be.tag == "anyname"
+    assert be.branch == "v0.x"
+    assert be.version == "anyname"
+    assert be.upload_dir == "anyname"
+    assert be.docker_tag == "mitmproxy/mitmproxy:anyname"
+    assert not be.should_upload_pypi
+    assert not be.should_upload_docker
+    assert not be.is_prod_release
+
+
 def test_buildenviron_branch():
-    # Simulates a development branch on the main repo
+    # Simulates a commit on a development branch on the main repo
     be = cibuild.BuildEnviron(
         system="Linux",
         root_dir="/foo",
@@ -163,11 +187,12 @@ def test_buildenviron_windows(tmpdir):
 
 @pytest.mark.parametrize("version, tag, ok", [
     ("3.0.0.dev", "", True),  # regular snapshot
-    ("3.0.0.dev", "3.0.0", False),  # forgot to remove ".dev" on bump
+    ("3.0.0.dev", "v3.0.0", False),  # forgot to remove ".dev" on bump
     ("3.0.0", "", False),  # forgot to re-add ".dev"
-    ("3.0.0", "4.0.0", False),  # version mismatch
-    ("3.0.0", "3.0.0", True),  # regular release
-    ("3.0.0.rc1", "3.0.0.rc1", False),  # non-canonical.
+    ("3.0.0", "v4.0.0", False),  # version mismatch
+    ("3.0.0", "v3.0.0", True),  # regular release
+    ("3.0.0.rc1", "v3.0.0.rc1", False),  # non-canonical.
+    ("3.0.0.dev", "anyname", True),  # tagged test/dev release
 ])
 def test_buildenviron_check_version(version, tag, ok, tmpdir):
     tmpdir.mkdir("mitmproxy").join("version.py").write(f'VERSION = "{version}"')
