@@ -64,6 +64,7 @@ def test_buildenviron_pr():
     )
     assert be.is_pull_request
     assert not be.is_prod_release
+    assert not be.is_maintenance_branch
 
 
 def test_buildenviron_commit():
@@ -83,6 +84,7 @@ def test_buildenviron_commit():
     assert not be.should_upload_pypi
     assert be.should_upload_docker
     assert not be.is_prod_release
+    assert not be.is_maintenance_branch
 
 
 def test_buildenviron_releasetag():
@@ -107,6 +109,7 @@ def test_buildenviron_releasetag():
     assert be.should_upload_pypi
     assert be.should_upload_docker
     assert be.is_prod_release
+    assert not be.is_maintenance_branch
 
 
 def test_buildenviron_namedtag():
@@ -131,9 +134,10 @@ def test_buildenviron_namedtag():
     assert not be.should_upload_pypi
     assert not be.should_upload_docker
     assert not be.is_prod_release
+    assert not be.is_maintenance_branch
 
 
-def test_buildenviron_branch():
+def test_buildenviron_dev_branch():
     # Simulates a commit on a development branch on the main repo
     be = cibuild.BuildEnviron(
         system="Linux",
@@ -153,6 +157,30 @@ def test_buildenviron_branch():
     assert be.upload_dir == "branches/mybranch"
     assert not be.should_upload_pypi
     assert not be.should_upload_docker
+    assert not be.is_maintenance_branch
+
+
+def test_buildenviron_maintenance_branch():
+    # Simulates a commit on a release maintenance branch on the main repo
+    be = cibuild.BuildEnviron(
+        system="Linux",
+        root_dir="/foo",
+        travis_tag="",
+        travis_branch="v0.x",
+        should_build_wheel=True,
+        should_build_docker=True,
+        should_build_pyinstaller=True,
+        has_twine_creds=True,
+        docker_username="foo",
+        docker_password="bar",
+    )
+    assert be.tag == ""
+    assert be.branch == "v0.x"
+    assert be.version == "v0.x"
+    assert be.upload_dir == "branches/v0.x"
+    assert not be.should_upload_pypi
+    assert not be.should_upload_docker
+    assert be.is_maintenance_branch
 
 
 def test_buildenviron_osx(tmpdir):
@@ -209,7 +237,7 @@ def test_buildenviron_check_version(version, tag, ok, tmpdir):
     be = cibuild.BuildEnviron(
         root_dir=tmpdir,
         travis_tag=tag,
-        travis_branch=tag
+        travis_branch=tag or "branch",
     )
     if ok:
         be.check_version()
