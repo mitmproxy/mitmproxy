@@ -7,14 +7,11 @@ release for! The command examples assume that you have a git remote called
 - Verify that `mitmproxy/version.py` is correct
 - Update CHANGELOG
 - Verify that all CI tests pass
-- Create a major version branch - e.g. `v4.x`. Assuming you have a remote repo called `upstream` that points to the mitmproxy/mitmproxy repo::
+- If needed, create a major version branch - e.g. `v4.x`. Assuming you have a remote repo called `upstream` that points to the mitmproxy/mitmproxy repo::
   - `git checkout -b v4.x upstream/master`
   - `git push -u upstream v4.x`
 - Tag the release and push to Github
-  - For alphas, betas, and release candidates, use lightweight tags. This is
-    necessary so that the .devXXXX counter does not reset.
-  - For final releases, use annotated tags. This makes the .devXXXX counter reset.
-    - `git tag -a v4.0.0 -m v4.0.0`
+    - `git tag v4.0.0`
     - `git push upstream v4.0.0`
 - Wait for tag CI to complete
 
