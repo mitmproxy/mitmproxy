@@ -1,4 +1,4 @@
-15 June 2018: mitmproxy 4.0.2
+15 June 2018: mitmproxy 4.0.3
 
     * Add support for IPv6 transparent mode on Windows (#3174)
     * Add Docker images for ARMv7 - Raspberry Pi (#3190)
@@ -8,6 +8,10 @@
     * Fix IPv6 scope suffixes in block addon (#3164)
     * Fix options update when added (#3157)
     * Fix "Edit Flow" button in mitmweb (#3136)
+    
+15 June 2018: mitmproxy 4.0.2
+    * Skipped!
+    
 
 17 May 2018: mitmproxy 4.0.1
 

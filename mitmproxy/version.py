@@ -2,7 +2,7 @@ import os
 import subprocess
 import sys
 
-VERSION = "4.0.2"
+VERSION = "4.0.3"
 PATHOD = "pathod " + VERSION
 MITMPROXY = "mitmproxy " + VERSION
 
