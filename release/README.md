@@ -39,7 +39,7 @@ release for! The command examples assume that you have a git remote called
 ## Docker
 - The docker image is built on Travis and pushed to Docker Hub automatically.
 - Please check https://hub.docker.com/r/mitmproxy/mitmproxy/tags/ about the latest version
-- Update `latest` tag: `docker tag mitmproxy/mitmproxy:<version number here> mitmproxy/mitmproxy:latest && docker push mitmproxy/mitmproxy:latest`
+- Update `latest` tag: `export VERSION=4.0.3 && docker pull mitmproxy/mitmproxy:$VERSION && docker tag mitmproxy/mitmproxy:$VERSION mitmproxy/mitmproxy:latest && docker push mitmproxy/mitmproxy:latest`
 
 ## Website
  - Update version here:
