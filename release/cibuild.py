@@ -196,11 +196,23 @@ class BuildEnviron:
             # For production releases, we require strict version equality
             if self.version != version:
                 raise ValueError(f"Tag is {self.tag}, but mitmproxy/version.py is {version}.")
-        else:
-            # For snapshots, we only ensure that mitmproxy/version.py contains a dev release.
+        elif not self.is_maintenance_branch:
+            # Commits on maintenance branches don't need the dev suffix. This
+            # allows us to incorporate and test commits between tagged releases.
+            # For snapshots, we only ensure that mitmproxy/version.py contains a
+            # dev release.
             version_info = parver.Version.parse(version)
             if not version_info.is_devrelease:
                 raise ValueError(f"Non-production releases must have dev suffix: {version}")
+
+    @property
+    def is_maintenance_branch(self) -> bool:
+        """
+            Is this an untagged commit on a maintenance branch?
+        """
+        if not self.tag and self.branch and re.match(r"v\d+\.x", self.branch):
+            return True
+        return False
 
     @property
     def has_docker_creds(self) -> bool:
