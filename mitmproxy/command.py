@@ -164,7 +164,7 @@ class CommandManager(mitmproxy.types._CommandBase):
         for i, part in enumerate(parts):
             typ = mitmproxy.types.Unknown
             if not part.isspace():
-                if i == 0 or (i == 1 and parts[i-1].isspace()):
+                if i == 0 or (i == 1 and parts[i - 1].isspace()):
                     typ = mitmproxy.types.Cmd
                     if part in self.commands:
                         params.extend(self.commands[part].paramtypes)
