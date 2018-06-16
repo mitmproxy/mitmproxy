@@ -197,7 +197,10 @@ class GlueLayer(Layer):
             if event.connection == self.context.client:
                 self.c1.shutdown(socket.SHUT_RDWR)
                 self.c1.close()
-                self.c2.shutdown(socket.SHUT_RDWR)
+                try:
+                    self.c2.shutdown(socket.SHUT_RDWR)
+                except:
+                    pass
                 self.c2.close()
                 self._handle_event = self.done
             else:

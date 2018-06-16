@@ -44,6 +44,7 @@ class NextLayer:
             nextlayer.layer.debug = "  " * len(nextlayer.context.layers)
 
     def _next_layer(self, nextlayer: layer.NextLayer, context: context.Context):
+        print("foo")
         # 0. New connection
         if not context.layers:
             return self.make_top_layer(context)
