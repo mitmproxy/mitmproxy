@@ -9,7 +9,8 @@ __all__ = [
     "modes",
     "GlueLayer",
     "HTTPLayer",
+    "HTTP2Layer",
     "TCPLayer",
     "ClientTLSLayer", "ServerTLSLayer",
-    "WebsocketLayer"
+    "WebsocketLayer",
 ]
