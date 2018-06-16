@@ -2,8 +2,6 @@ import typing
 
 import ply.lex as lex
 
-from mitmproxy import exceptions
-
 
 class CommandLanguageLexer:
     tokens = (
@@ -34,19 +32,16 @@ class CommandLanguageLexer:
         return t
 
     def t_PLAIN_STR(self, t):
-        r"""[^\(\)\s]+"""
+        r"""[^\s]+"""
         t.type = self.oneword_commands.get(t.value, "PLAIN_STR")
         return t
-
-    def t_error(self, t):
-        t.lexer.skip(1)
-        raise exceptions.CommandError(f"Illegal character '{t.value[0]}'")
 
     # Interactive state
     t_interactive_WHITESPACE = r"\s+"
 
     def build(self, **kwargs):
-        self.lexer = lex.lex(module=self, **kwargs)
+        self.lexer = lex.lex(module=self,
+                             errorlog=lex.NullLogger(), **kwargs)
 
 
 def create_lexer(cmdstr: str, oneword_commands: typing.Sequence[str]) -> lex.Lexer:
@@ -58,6 +53,6 @@ def create_lexer(cmdstr: str, oneword_commands: typing.Sequence[str]) -> lex.Lex
 
 def get_tokens(cmdstr: str, state="interactive") -> typing.List[str]:
     lexer = create_lexer(cmdstr, [])
-    # Switching to the state with meaningful white spaces
+    # Switching to the other state
     lexer.begin(state)
     return [token.value for token in lexer]

@@ -20,7 +20,7 @@ class ListCompleter(Completer):
     def __init__(
         self,
         start: str,
-        options: typing.Sequence[str],
+        options: typing.Sequence[str]
     ) -> None:
         self.start = start
         self.options: typing.Sequence[str] = []

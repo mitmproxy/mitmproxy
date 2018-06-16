@@ -16,8 +16,7 @@ class CommandLanguageParser:
         self.command_manager = command_manager
 
     def p_command_line(self, p):
-        """command_line : empty
-                        | command_call"""
+        """command_line : command_call"""
         p[0] = p[1]
 
     def p_command_call(self, p):
@@ -59,7 +58,8 @@ class CommandLanguageParser:
 
     def parse(self, lexer: lex.Lexer, **kwargs) -> typing.Any:
         self.parser.parse(lexer=lexer, **kwargs)
-        return self.return_value
+        return_value, self.return_value = self.return_value, None
+        return return_value
 
 
 def create_parser(command_manager) -> CommandLanguageParser:

@@ -155,7 +155,7 @@ class CommandManager(mitmproxy.types._CommandBase):
         parts: typing.List[str] = lexer.get_tokens(cmdstr)
         if not parts:
             parts = [""]
-        elif cmdstr.endswith(" "):
+        elif parts[-1].isspace():
             parts.append("")
 
         parse: typing.List[ParseResult] = []
@@ -164,7 +164,7 @@ class CommandManager(mitmproxy.types._CommandBase):
         for i, part in enumerate(parts):
             typ = mitmproxy.types.Unknown
             if not part.isspace():
-                if i == 0 or (i == 1 and parts[0].isspace()):
+                if i == 0 or (i == 1 and parts[i-1].isspace()):
                     typ = mitmproxy.types.Cmd
                     if part in self.commands:
                         params.extend(self.commands[part].paramtypes)

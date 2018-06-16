@@ -153,7 +153,7 @@ class TestCommand:
                 [
                     command.ParseResult(value = "     ", type=mitmproxy.types.Unknown, valid=False),
                     command.ParseResult(value = "", type=mitmproxy.types.Cmd, valid=False)
-                 ],
+                ],
                 []
             ],
             [
@@ -293,13 +293,17 @@ def test_simple():
         c.add("one.two", a.cmd1)
         assert c.commands["one.two"].help == "cmd1 help"
         assert(c.execute("one.two foo") == "ret foo")
+        assert(c.execute("one.two \"foo\"") == "ret foo")
+        assert(c.execute("one.two 'foo'") == "ret foo")
         assert(c.call("one.two", "foo") == "ret foo")
         with pytest.raises(exceptions.CommandError, match="Syntax error"):
             c.execute("nonexistent")
+        with pytest.raises(exceptions.CommandError, match="Unknown"):
+            c.execute("two.three")
+        with pytest.raises(exceptions.CommandError, match="error at EOF"):
+            c.execute("")
         with pytest.raises(exceptions.CommandError, match="argument mismatch"):
             c.execute("one.two too many args")
-        with pytest.raises(exceptions.CommandError, match="Unknown"):
-            c.call("nonexistent")
 
         c.add("empty", a.empty)
         c.execute("empty")
