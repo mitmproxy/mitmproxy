@@ -146,7 +146,7 @@ def test_strseq():
 
 
 class DummyConsole:
-    @command.command("view.resolve")
+    @command.command("view.flows.resolve")
     def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
         if spec == "err":
             raise mitmproxy.exceptions.CommandError()

@@ -271,7 +271,7 @@ class StatusBar(urwid.WidgetWrap):
         return r
 
     def redraw(self):
-        fc = len(self.master.view)
+        fc = self.master.commands.execute("view.properties.length")
         if self.master.view.focus.flow is None:
             offset = 0
         else:
@@ -283,7 +283,7 @@ class StatusBar(urwid.WidgetWrap):
             arrow = common.SYMBOL_DOWN
 
         marked = ""
-        if self.master.view.show_marked:
+        if self.master.commands.execute("view.properties.marked"):
             marked = "M"
 
         t = [
