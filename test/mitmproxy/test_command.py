@@ -304,6 +304,8 @@ def test_simple():
             c.execute("")
         with pytest.raises(exceptions.CommandError, match="argument mismatch"):
             c.execute("one.two too many args")
+        with pytest.raises(exceptions.CommandError, match="Unknown"):
+            c.call("nonexistent")
 
         c.add("empty", a.empty)
         c.execute("empty")
