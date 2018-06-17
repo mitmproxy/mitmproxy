@@ -125,7 +125,7 @@ def test_any():
     assert a.x == b.x
 
     a = TAny(object())
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         a.get_state()
 
 
