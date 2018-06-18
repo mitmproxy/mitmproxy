@@ -14,7 +14,7 @@ class CommandLanguageLexer:
         ("interactive", "inclusive"),
     )
 
-    def __init__(self, oneword_commands: typing.Sequence[str]):
+    def __init__(self, oneword_commands: typing.Sequence[str]) -> None:
         self.oneword_commands = dict.fromkeys(oneword_commands, "COMMAND")
 
     # Main(INITIAL) state
