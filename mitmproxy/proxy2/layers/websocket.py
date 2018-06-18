@@ -55,12 +55,12 @@ class WebsocketLayer(Layer):
         assert isinstance(next(self.server_conn.events()), wsevents.ConnectionEstablished)
 
         yield commands.Hook("websocket_start", self.flow)
-        self._handle_event = self.relay_messages
+        self._handle_event = self.process_data
 
     _handle_event = start
 
     @expect(events.DataReceived, events.ConnectionClosed)
-    def relay_messages(self, event: events.Event) -> commands.TCommandGenerator:
+    def process_data(self, event: events.Event) -> commands.TCommandGenerator:
         if isinstance(event, events.DataReceived):
             from_client = event.connection == self.context.client
             if from_client:
