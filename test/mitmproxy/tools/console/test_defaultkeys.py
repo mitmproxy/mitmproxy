@@ -2,7 +2,7 @@ from mitmproxy.test.tflow import tflow
 from mitmproxy.tools.console import defaultkeys
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import master
-from mitmproxy import command
+from mitmproxy.language import lexer
 
 import pytest
 
@@ -16,7 +16,7 @@ async def test_commands_exist():
     await m.load_flow(tflow())
 
     for binding in km.bindings:
-        cmd, *args = command.lexer(binding.command)
+        cmd, *args = lexer.get_tokens(binding.command, state="INITIAL")
         assert cmd in m.commands.commands
 
         cmd_obj = m.commands.commands[cmd]

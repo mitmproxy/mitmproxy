@@ -20,7 +20,7 @@ class ListCompleter(Completer):
     def __init__(
         self,
         start: str,
-        options: typing.Sequence[str],
+        options: typing.Sequence[str]
     ) -> None:
         self.start = start
         self.options: typing.Sequence[str] = []
@@ -50,7 +50,7 @@ CompletionState = typing.NamedTuple(
 class CommandBuffer:
     def __init__(self, master: mitmproxy.master.Master, start: str = "") -> None:
         self.master = master
-        self.text = self.flatten(start)
+        self.text = start
         # Cursor is always within the range [0:len(buffer)].
         self._cursor = len(self.text)
         self.completion: CompletionState = None
@@ -68,21 +68,6 @@ class CommandBuffer:
         else:
             self._cursor = x
 
-    def maybequote(self, value):
-        if " " in value and not value.startswith("\""):
-            return "\"%s\"" % value
-        return value
-
-    def parse_quoted(self, txt):
-        parts, remhelp = self.master.commands.parse_partial(txt)
-        for i, p in enumerate(parts):
-            parts[i] = mitmproxy.command.ParseResult(
-                value = self.maybequote(p.value),
-                type = p.type,
-                valid = p.valid
-            )
-        return parts, remhelp
-
     def render(self):
         """
             This function is somewhat tricky - in order to make the cursor
@@ -90,8 +75,9 @@ class CommandBuffer:
             character-for-character offset match in the rendered output, up
             to the cursor. Beyond that, we can add stuff.
         """
-        parts, remhelp = self.parse_quoted(self.text)
+        parts, remhelp = self.master.commands.parse_partial(self.text)
         ret = []
+
         for p in parts:
             if p.valid:
                 if p.type == mitmproxy.types.Cmd:
@@ -99,20 +85,18 @@ class CommandBuffer:
                 else:
                     ret.append(("text", p.value))
             elif p.value:
-                ret.append(("commander_invalid", p.value))
+                if p.value.isspace():
+                    ret.append(("text", p.value))
+                else:
+                    ret.append(("commander_invalid", p.value))
             else:
                 ret.append(("text", ""))
-            ret.append(("text", " "))
+        ret.append(("text", " "))
+
         if remhelp:
-            ret.append(("text", " "))
             for v in remhelp:
                 ret.append(("commander_hint", "%s " % v))
         return ret
-
-    def flatten(self, txt):
-        parts, _ = self.parse_quoted(txt)
-        ret = [x.value for x in parts]
-        return " ".join(ret)
 
     def left(self) -> None:
         self.cursor = self.cursor - 1
@@ -135,15 +119,14 @@ class CommandBuffer:
                 )
         if self.completion:
             nxt = self.completion.completer.cycle()
-            buf = " ".join([i.value for i in self.completion.parse[:-1]]) + " " + nxt
-            buf = buf.strip()
-            self.text = self.flatten(buf)
+            buf = "".join([i.value for i in self.completion.parse[:-1]]) + nxt
+            self.text = buf
             self.cursor = len(self.text)
 
     def backspace(self) -> None:
         if self.cursor == 0:
             return
-        self.text = self.flatten(self.text[:self.cursor - 1] + self.text[self.cursor:])
+        self.text = self.text[:self.cursor - 1] + self.text[self.cursor:]
         self.cursor = self.cursor - 1
         self.completion = None
 
@@ -151,7 +134,7 @@ class CommandBuffer:
         """
             Inserts text at the cursor.
         """
-        self.text = self.flatten(self.text[:self.cursor] + k + self.text[self.cursor:])
+        self.text = self.text[:self.cursor] + k + self.text[self.cursor:]
         self.cursor += 1
         self.completion = None
 
