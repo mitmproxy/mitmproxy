@@ -1,0 +1,51 @@
+syntax='proto2';
+import "connection.proto";
+
+message HTTPFlow {
+    optional HTTPRequest request = 1;
+    optional HTTPResponse response = 2;
+    optional HTTPError error = 3;
+    optional ClientConnection client_conn = 4;
+    optional ServerConnection server_conn = 5;
+    optional bool intercepted = 6;
+    optional bool marked = 7;
+    optional string mode = 8;
+    optional string id = 9;
+    optional int32 version = 10;
+}
+
+message HTTPRequest {
+    optional string first_line_format = 1;
+    optional bytes method = 2;
+    optional bytes scheme = 3;
+    optional bytes host = 4;
+    optional int32 port = 5;
+    optional bytes path = 6;
+    optional bytes http_version = 7;
+    repeated HTTPHeader headers = 8;
+    optional bytes content = 9;
+    optional int64 timestamp_start = 10;
+    optional int64 timestamp_end = 11;
+    optional bool is_replay = 12;
+}
+
+message HTTPResponse {
+    optional bytes http_version = 1;
+    optional int32 status_code = 2;
+    optional bytes reason = 3;
+    repeated HTTPHeader headers = 4;
+    optional bytes content = 5;
+    optional int64 timestamp_start = 6;
+    optional int64 timestamp_end = 7;
+    optional bool is_replay = 8;
+}
+
+message HTTPError {
+    optional string msg = 1;
+    optional int64 timestamp = 2;
+}
+
+message HTTPHeader {
+    optional bytes name = 1;
+    optional bytes value = 2;
+}

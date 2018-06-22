@@ -1,0 +1,38 @@
+syntax='proto2';
+
+message Address {
+    optional string host = 1;
+    optional int32 port = 2;
+}
+
+message ClientConnection {
+    optional string id = 1;
+    optional Address address = 2;
+    optional bool tls_established = 3;
+    optional string clientcert = 4;
+    optional string mitmcert = 5;
+    optional float timestamp_start = 6;
+    optional float timestamp_tls_setup = 7;
+    optional float timestamp_end = 8;
+    optional string sni = 9;
+    optional string cipher_name = 10;
+    optional bytes alpn_proto_negotiated = 11;
+    optional string tls_version = 12;
+}
+
+message ServerConnection {
+    optional string id = 1;
+    optional Address address = 2;
+    optional Address ip_address = 3;
+    optional Address source_address = 4;
+    optional bool tls_established = 5;
+    optional string cert = 6;
+    optional string sni = 7;
+    optional bytes alpn_proto_negotiated = 8;
+    optional string tls_version = 9;
+    optional float timestamp_start = 10;
+    optional float timestamp_tcp_setup = 11;
+    optional float timestamp_tls_setup = 12;
+    optional float timestamp_end = 13;
+}
+
