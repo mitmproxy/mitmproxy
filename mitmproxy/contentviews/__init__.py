@@ -99,6 +99,7 @@ def get_message_content_view(viewname, message):
         return "", iter([[("error", "content missing")]]), None
 
     metadata = {}
+    metadata["message"] = message
     if isinstance(message, http.Request):
         metadata["query"] = message.query
     if isinstance(message, http.Message):
