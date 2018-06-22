@@ -75,7 +75,7 @@ def safe_to_print(lines, encoding="utf8"):
         yield clean_line
 
 
-def get_message_content_view(viewname, message):
+def get_message_content_view(viewname, message, flow=None):
     """
     Like get_content_view, but also handles message encoding.
     """
@@ -99,6 +99,7 @@ def get_message_content_view(viewname, message):
         return "", iter([[("error", "content missing")]]), None
 
     metadata = {}
+    metadata["flow"] = flow
     metadata["message"] = message
     if isinstance(message, http.Request):
         metadata["query"] = message.query
