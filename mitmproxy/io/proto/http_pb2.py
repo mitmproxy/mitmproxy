@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='http.proto',
   package='',
   syntax='proto2',
-  serialized_pb=_b('\n\nhttp.proto\"\x85\x02\n\x08HTTPFlow\x12\x1d\n\x07request\x18\x01 \x01(\x0b\x32\x0c.HTTPRequest\x12\x1f\n\x08response\x18\x02 \x01(\x0b\x32\r.HTTPResponse\x12\x19\n\x05\x65rror\x18\x03 \x01(\x0b\x32\n.HTTPError\x12&\n\x0b\x63lient_conn\x18\x04 \x01(\x0b\x32\x11.ClientConnection\x12&\n\x0bserver_conn\x18\x05 \x01(\x0b\x32\x11.ServerConnection\x12\x13\n\x0bintercepted\x18\x06 \x01(\x08\x12\x0e\n\x06marked\x18\x07 \x01(\x08\x12\x0c\n\x04mode\x18\x08 \x01(\t\x12\n\n\x02id\x18\t \x01(\t\x12\x0f\n\x07version\x18\n \x01(\x05\"\xfa\x01\n\x0bHTTPRequest\x12\x19\n\x11\x66irst_line_format\x18\x01 \x01(\t\x12\x0e\n\x06method\x18\x02 \x01(\t\x12\x0e\n\x06scheme\x18\x03 \x01(\t\x12\x0c\n\x04host\x18\x04 \x01(\t\x12\x0c\n\x04port\x18\x05 \x01(\x05\x12\x0c\n\x04path\x18\x06 \x01(\t\x12\x14\n\x0chttp_version\x18\x07 \x01(\t\x12\x1c\n\x07headers\x18\x08 \x03(\x0b\x32\x0b.HTTPHeader\x12\x0f\n\x07\x63ontent\x18\t \x01(\x0c\x12\x17\n\x0ftimestamp_start\x18\n \x01(\x02\x12\x15\n\rtimestamp_end\x18\x0b \x01(\x02\x12\x11\n\tis_replay\x18\x0c \x01(\x08\"\xbb\x01\n\x0cHTTPResponse\x12\x14\n\x0chttp_version\x18\x01 \x01(\t\x12\x13\n\x0bstatus_code\x18\x02 \x01(\x05\x12\x0e\n\x06reason\x18\x03 \x01(\t\x12\x1c\n\x07headers\x18\x04 \x03(\x0b\x32\x0b.HTTPHeader\x12\x0f\n\x07\x63ontent\x18\x05 \x01(\x0c\x12\x17\n\x0ftimestamp_start\x18\x06 \x01(\x02\x12\x15\n\rtimestamp_end\x18\x07 \x01(\x02\x12\x11\n\tis_replay\x18\x08 \x01(\x08\"+\n\tHTTPError\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x02\")\n\nHTTPHeader\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"%\n\x07\x41\x64\x64ress\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\"\x9b\x02\n\x10\x43lientConnection\x12\n\n\x02id\x18\x01 \x01(\t\x12\x19\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x08.Address\x12\x17\n\x0ftls_established\x18\x03 \x01(\x08\x12\x12\n\nclientcert\x18\x04 \x01(\t\x12\x10\n\x08mitmcert\x18\x05 \x01(\t\x12\x17\n\x0ftimestamp_start\x18\x06 \x01(\x02\x12\x1b\n\x13timestamp_tls_setup\x18\x07 \x01(\x02\x12\x15\n\rtimestamp_end\x18\x08 \x01(\x02\x12\x0b\n\x03sni\x18\t \x01(\t\x12\x13\n\x0b\x63ipher_name\x18\n \x01(\t\x12\x1d\n\x15\x61lpn_proto_negotiated\x18\x0b \x01(\x0c\x12\x13\n\x0btls_version\x18\x0c \x01(\t\"\xcb\x02\n\x10ServerConnection\x12\n\n\x02id\x18\x01 \x01(\t\x12\x19\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x08.Address\x12\x1c\n\nip_address\x18\x03 \x01(\x0b\x32\x08.Address\x12 \n\x0esource_address\x18\x04 \x01(\x0b\x32\x08.Address\x12\x17\n\x0ftls_established\x18\x05 \x01(\x08\x12\x0c\n\x04\x63\x65rt\x18\x06 \x01(\t\x12\x0b\n\x03sni\x18\x07 \x01(\t\x12\x1d\n\x15\x61lpn_proto_negotiated\x18\x08 \x01(\x0c\x12\x13\n\x0btls_version\x18\t \x01(\t\x12\x17\n\x0ftimestamp_start\x18\n \x01(\x02\x12\x1b\n\x13timestamp_tcp_setup\x18\x0b \x01(\x02\x12\x1b\n\x13timestamp_tls_setup\x18\x0c \x01(\x02\x12\x15\n\rtimestamp_end\x18\r \x01(\x02')
+  serialized_pb=_b('\n\nhttp.proto\"\x85\x02\n\x08HTTPFlow\x12\x1d\n\x07request\x18\x01 \x01(\x0b\x32\x0c.HTTPRequest\x12\x1f\n\x08response\x18\x02 \x01(\x0b\x32\r.HTTPResponse\x12\x19\n\x05\x65rror\x18\x03 \x01(\x0b\x32\n.HTTPError\x12&\n\x0b\x63lient_conn\x18\x04 \x01(\x0b\x32\x11.ClientConnection\x12&\n\x0bserver_conn\x18\x05 \x01(\x0b\x32\x11.ServerConnection\x12\x13\n\x0bintercepted\x18\x06 \x01(\x08\x12\x0e\n\x06marked\x18\x07 \x01(\x08\x12\x0c\n\x04mode\x18\x08 \x01(\t\x12\n\n\x02id\x18\t \x01(\t\x12\x0f\n\x07version\x18\n \x01(\x05\"\xfa\x01\n\x0bHTTPRequest\x12\x19\n\x11\x66irst_line_format\x18\x01 \x01(\t\x12\x0e\n\x06method\x18\x02 \x01(\t\x12\x0e\n\x06scheme\x18\x03 \x01(\t\x12\x0c\n\x04host\x18\x04 \x01(\t\x12\x0c\n\x04port\x18\x05 \x01(\x05\x12\x0c\n\x04path\x18\x06 \x01(\t\x12\x14\n\x0chttp_version\x18\x07 \x01(\t\x12\x1c\n\x07headers\x18\x08 \x03(\x0b\x32\x0b.HTTPHeader\x12\x0f\n\x07\x63ontent\x18\t \x01(\x0c\x12\x17\n\x0ftimestamp_start\x18\n \x01(\x02\x12\x15\n\rtimestamp_end\x18\x0b \x01(\x02\x12\x11\n\tis_replay\x18\x0c \x01(\x08\"\xbb\x01\n\x0cHTTPResponse\x12\x14\n\x0chttp_version\x18\x01 \x01(\t\x12\x13\n\x0bstatus_code\x18\x02 \x01(\x05\x12\x0e\n\x06reason\x18\x03 \x01(\t\x12\x1c\n\x07headers\x18\x04 \x03(\x0b\x32\x0b.HTTPHeader\x12\x0f\n\x07\x63ontent\x18\x05 \x01(\x0c\x12\x17\n\x0ftimestamp_start\x18\x06 \x01(\x02\x12\x15\n\rtimestamp_end\x18\x07 \x01(\x02\x12\x11\n\tis_replay\x18\x08 \x01(\x08\"+\n\tHTTPError\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x02\")\n\nHTTPHeader\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"%\n\x07\x41\x64\x64ress\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\"\xc2\x02\n\x10\x43lientConnection\x12\n\n\x02id\x18\x01 \x01(\t\x12\x19\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x08.Address\x12\x17\n\x0ftls_established\x18\x03 \x01(\x08\x12\x12\n\nclientcert\x18\x04 \x01(\t\x12\x10\n\x08mitmcert\x18\x05 \x01(\t\x12\x17\n\x0ftimestamp_start\x18\x06 \x01(\x02\x12\x1b\n\x13timestamp_tls_setup\x18\x07 \x01(\x02\x12\x15\n\rtimestamp_end\x18\x08 \x01(\x02\x12\x0b\n\x03sni\x18\t \x01(\t\x12\x13\n\x0b\x63ipher_name\x18\n \x01(\t\x12\x1d\n\x15\x61lpn_proto_negotiated\x18\x0b \x01(\x0c\x12\x13\n\x0btls_version\x18\x0c \x01(\t\x12%\n\x0etls_extensions\x18\r \x03(\x0b\x32\r.TLSExtension\"\xeb\x02\n\x10ServerConnection\x12\n\n\x02id\x18\x01 \x01(\t\x12\x19\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x08.Address\x12\x1c\n\nip_address\x18\x03 \x01(\x0b\x32\x08.Address\x12 \n\x0esource_address\x18\x04 \x01(\x0b\x32\x08.Address\x12\x17\n\x0ftls_established\x18\x05 \x01(\x08\x12\x0c\n\x04\x63\x65rt\x18\x06 \x01(\t\x12\x0b\n\x03sni\x18\x07 \x01(\t\x12\x1d\n\x15\x61lpn_proto_negotiated\x18\x08 \x01(\x0c\x12\x13\n\x0btls_version\x18\t \x01(\t\x12\x17\n\x0ftimestamp_start\x18\n \x01(\x02\x12\x1b\n\x13timestamp_tcp_setup\x18\x0b \x01(\x02\x12\x1b\n\x13timestamp_tls_setup\x18\x0c \x01(\x02\x12\x15\n\rtimestamp_end\x18\r \x01(\x02\x12\x1e\n\x03via\x18\x0e \x01(\x0b\x32\x11.ServerConnection\"*\n\x0cTLSExtension\x12\x0b\n\x03int\x18\x01 \x01(\x03\x12\r\n\x05\x62ytes\x18\x02 \x01(\x0c')
 )
 
 
@@ -512,6 +512,13 @@ _CLIENTCONNECTION = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='tls_extensions', full_name='ClientConnection.tls_extensions', index=12,
+      number=13, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -525,7 +532,7 @@ _CLIENTCONNECTION = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=849,
-  serialized_end=1132,
+  serialized_end=1171,
 )
 
 
@@ -627,6 +634,13 @@ _SERVERCONNECTION = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='via', full_name='ServerConnection.via', index=13,
+      number=14, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -639,8 +653,46 @@ _SERVERCONNECTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1135,
-  serialized_end=1466,
+  serialized_start=1174,
+  serialized_end=1537,
+)
+
+
+_TLSEXTENSION = _descriptor.Descriptor(
+  name='TLSExtension',
+  full_name='TLSExtension',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='int', full_name='TLSExtension.int', index=0,
+      number=1, type=3, cpp_type=2, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='bytes', full_name='TLSExtension.bytes', index=1,
+      number=2, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b(""),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto2',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1539,
+  serialized_end=1581,
 )
 
 _HTTPFLOW.fields_by_name['request'].message_type = _HTTPREQUEST
@@ -651,9 +703,11 @@ _HTTPFLOW.fields_by_name['server_conn'].message_type = _SERVERCONNECTION
 _HTTPREQUEST.fields_by_name['headers'].message_type = _HTTPHEADER
 _HTTPRESPONSE.fields_by_name['headers'].message_type = _HTTPHEADER
 _CLIENTCONNECTION.fields_by_name['address'].message_type = _ADDRESS
+_CLIENTCONNECTION.fields_by_name['tls_extensions'].message_type = _TLSEXTENSION
 _SERVERCONNECTION.fields_by_name['address'].message_type = _ADDRESS
 _SERVERCONNECTION.fields_by_name['ip_address'].message_type = _ADDRESS
 _SERVERCONNECTION.fields_by_name['source_address'].message_type = _ADDRESS
+_SERVERCONNECTION.fields_by_name['via'].message_type = _SERVERCONNECTION
 DESCRIPTOR.message_types_by_name['HTTPFlow'] = _HTTPFLOW
 DESCRIPTOR.message_types_by_name['HTTPRequest'] = _HTTPREQUEST
 DESCRIPTOR.message_types_by_name['HTTPResponse'] = _HTTPRESPONSE
@@ -662,6 +716,7 @@ DESCRIPTOR.message_types_by_name['HTTPHeader'] = _HTTPHEADER
 DESCRIPTOR.message_types_by_name['Address'] = _ADDRESS
 DESCRIPTOR.message_types_by_name['ClientConnection'] = _CLIENTCONNECTION
 DESCRIPTOR.message_types_by_name['ServerConnection'] = _SERVERCONNECTION
+DESCRIPTOR.message_types_by_name['TLSExtension'] = _TLSEXTENSION
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 HTTPFlow = _reflection.GeneratedProtocolMessageType('HTTPFlow', (_message.Message,), dict(
@@ -719,6 +774,13 @@ ServerConnection = _reflection.GeneratedProtocolMessageType('ServerConnection', 
   # @@protoc_insertion_point(class_scope:ServerConnection)
   ))
 _sym_db.RegisterMessage(ServerConnection)
+
+TLSExtension = _reflection.GeneratedProtocolMessageType('TLSExtension', (_message.Message,), dict(
+  DESCRIPTOR = _TLSEXTENSION,
+  __module__ = 'http_pb2'
+  # @@protoc_insertion_point(class_scope:TLSExtension)
+  ))
+_sym_db.RegisterMessage(TLSExtension)
 
 
 # @@protoc_insertion_point(module_scope)

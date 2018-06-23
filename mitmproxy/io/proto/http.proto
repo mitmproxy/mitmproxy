@@ -68,6 +68,7 @@ message ClientConnection {
     optional string cipher_name = 10;
     optional bytes alpn_proto_negotiated = 11;
     optional string tls_version = 12;
+    repeated TLSExtension tls_extensions = 13;
 }
 
 message ServerConnection {
@@ -84,4 +85,10 @@ message ServerConnection {
     optional float timestamp_tcp_setup = 11;
     optional float timestamp_tls_setup = 12;
     optional float timestamp_end = 13;
+    optional ServerConnection via = 14;
+}
+
+message TLSExtension {
+    optional int64 int = 1;
+    optional bytes bytes = 2;
 }
