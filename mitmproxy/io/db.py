@@ -1,5 +1,9 @@
 import sqlite3
+import os
+
 from mitmproxy.io import protobuf
+from mitmproxy.http import HTTPFlow
+from mitmproxy import exceptions
 
 
 class DbHandler:
@@ -8,7 +12,11 @@ class DbHandler:
     This class is wrapping up connection to SQLITE DB.
     """
 
-    def __init__(self, db_path="tmp.sqlite"):
+    def __init__(self, db_path="/tmp/tmp.sqlite"):
+        if os.path.isfile(db_path):
+            self.db_path = db_path
+        else:
+            raise IOError("Invalid path!")
         self.db_path = db_path
         self._con = sqlite3.connect(self.db_path)
         self._c = self._con.cursor()
@@ -17,16 +25,18 @@ class DbHandler:
     def _create_db(self):
         with self._con:
             self._con.execute('CREATE TABLE IF NOT EXISTS FLOWS('
-                              'id INTEGER PRIMARY KEY AUTOINCREMENT,'
+                              'id INTEGER PRIMARY KEY,'
                               'pbuf_blob BLOB)')
 
     def store(self, flows):
         blobs = []
         for flow in flows:
-            blobs.append(protobuf.dumps(flow))
+            blobs.append((protobuf.dumps(flow),))
         with self._con:
-            self._con.executemany('INSERT INTO FLOWS values (?)', blobs)
+            self._con.executemany('INSERT INTO FLOWS (pbuf_blob) values (?)', blobs)
 
     def load(self):
-        self._c.execute('SELECT * FROM FLOWS')
-        return self._c.fetchall()
+        flows = []
+        self._c.execute('SELECT pbuf_blob FROM FLOWS')
+        for row in self._c.fetchall():
+            flows.append(HTTPFlow.from_state(protobuf.loads(row[0])))

@@ -447,16 +447,13 @@ class View(collections.Sequence):
             Load flows into the view, without processing them with addons.
         """
         try:
-            with open(path, "rb") as f:
-                for i in io.FlowReader(f).stream():
-                    # Do this to get a new ID, so we can load the same file N times and
-                    # get new flows each time. It would be more efficient to just have a
-                    # .newid() method or something.
-                    self.add([i.copy()])
+            dh = io.DbHandler(path)
+            for f in dh.load():
+                self.add([f.copy()])
+        except exceptions.TypeError as e:
+            ctx.log.error(str(e))
         except IOError as e:
             ctx.log.error(e.strerror)
-        except exceptions.FlowReadException as e:
-            ctx.log.error(str(e))
 
     def add(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
