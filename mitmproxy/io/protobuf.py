@@ -12,13 +12,14 @@ def _parse_attr(s_obj, d_obj, attrs):
 
 
 def _parse_http_response(res: HTTPResponse) -> http_pb2.HTTPResponse:
-    pres = http_pb2.HTTPResponse
+    pres = http_pb2.HTTPResponse()
     _parse_attr(res, pres, ['http_version', 'status_code', 'reason',
                             'content', 'timestamp_start', 'timestamp_end', 'is_replay'])
-    for n, v in res.headers:
-        header = pres.headers.add()
-        header.name = n
-        header.value = v
+    if res.headers:
+        for h in res.headers.fields:
+            header = pres.headers.add()
+            header.name = h[0]
+            header.value = h[1]
     return pres
 
 
@@ -26,10 +27,11 @@ def _parse_http_request(req: HTTPRequest) -> http_pb2.HTTPRequest:
     preq = http_pb2.HTTPRequest()
     _parse_attr(req, preq, ['first_line_format', 'method', 'scheme', 'host', 'port', 'path', 'http_version', 'content',
                             'timestamp_start', 'timestamp_end', 'is_replay'])
-    for n, v in req.headers:
-        header = preq.headers.add()
-        header.name = n
-        header.value = v
+    if req.headers:
+        for h in req.headers.fields:
+            header = preq.headers.add()
+            header.name = h[0]
+            header.value = h[1]
     return preq
 
 
@@ -40,10 +42,11 @@ def _parse_http_client(cc: ClientConnection) -> http_pb2.ClientConnection:
     for cert in ['clientcert', 'mitmcert']:
         if hasattr(cc, cert) and getattr(cc, cert) is not None:
             setattr(pcc, cert, getattr(cc, cert).to_pem())
-    for extension in cc.tls_extensions:
-        ext = pcc.tls_extensions.add()
-        ext.int = extension[0]
-        ext.bytes = extension[1]
+    if cc.tls_extensions:
+        for extension in cc.tls_extensions:
+            ext = pcc.tls_extensions.add()
+            ext.int = extension[0]
+            ext.bytes = extension[1]
     if cc.address:
         pcc.address.host = cc.address[0]
         pcc.address.port = cc.address[1]
@@ -58,7 +61,8 @@ def _parse_http_server(sc: ServerConnection) -> http_pb2.ServerConnection:
         if hasattr(sc, addr) and getattr(sc, addr) is not None:
             getattr(psc, addr).host = getattr(sc, addr)[0]
             getattr(psc, addr).port = getattr(sc, addr)[1]
-    psc.cert = sc.cert.to_pem()
+    if psc.cert:
+        psc.cert = sc.cert.to_pem()
     if sc.via:
         psc.via.MergeFrom(_parse_http_server(sc.via))
     return psc
@@ -74,11 +78,16 @@ def _parse_http_error(e: flow.Error) -> http_pb2.HTTPError:
 
 def _parse_http(f: HTTPFlow) -> http_pb2.HTTPFlow():
     pf = http_pb2.HTTPFlow()
-    pf.request.MergeFrom(_parse_http_request(f.request))
-    pf.response.MergeFrom(_parse_http_response(f.response))
-    pf.client_conn.MergeFrom(_parse_http_client(f.client_conn))
-    pf.server_conn.MergeFrom(_parse_http_server(f.server_conn))
-    pf.error.MergeFrom(_parse_http_error(f.error))
+    if f.request:
+        pf.request.MergeFrom(_parse_http_request(f.request))
+    if f.response:
+        pf.response.MergeFrom(_parse_http_response(f.response))
+    if f.client_conn:
+        pf.client_conn.MergeFrom(_parse_http_client(f.client_conn))
+    if f.server_conn:
+        pf.server_conn.MergeFrom(_parse_http_server(f.server_conn))
+    if f.error:
+        pf.error.MergeFrom(_parse_http_error(f.error))
     _parse_attr(f, pf, ['intercepted', 'marked', 'mode', 'id', 'version'])
     return pf
 
