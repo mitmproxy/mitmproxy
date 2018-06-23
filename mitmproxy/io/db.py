@@ -39,4 +39,4 @@ class DbHandler:
         flows = []
         self._c.execute('SELECT pbuf_blob FROM FLOWS')
         for row in self._c.fetchall():
-            flows.append(HTTPFlow.from_state(protobuf.loads(row[0])))
+            flows.append((protobuf.loads(row[0])))

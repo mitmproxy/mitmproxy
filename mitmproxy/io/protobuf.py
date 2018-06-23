@@ -1,5 +1,6 @@
 from mitmproxy import flow
 from mitmproxy import exceptions
+from mitmproxy.http import HTTPFlow
 from mitmproxy.io.proto import http_pb2
 
 
@@ -41,6 +42,7 @@ def loads(blob: bytes) -> flow.Flow:
     state = dict()
     r.ParseFromString(blob)
     _dump_object(r, state)
+    return HTTPFlow.from_state(state)
 
 
 def _dump_object(obj, d):
