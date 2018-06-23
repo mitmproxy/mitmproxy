@@ -1,5 +1,6 @@
 from mitmproxy import flow
 from mitmproxy import exceptions
+from mitmproxy import ctx
 from mitmproxy.http import HTTPFlow, HTTPResponse, HTTPRequest
 from mitmproxy.connections import ClientConnection, ServerConnection
 from mitmproxy.io.proto import http_pb2
@@ -76,28 +77,41 @@ def _parse_http_error(e: flow.Error) -> http_pb2.HTTPError:
     return pe
 
 
-def _parse_http(f: HTTPFlow) -> http_pb2.HTTPFlow():
+def parse_http(f: HTTPFlow) -> http_pb2.HTTPFlow():
     pf = http_pb2.HTTPFlow()
-    if f.request:
-        pf.request.MergeFrom(_parse_http_request(f.request))
-    if f.response:
-        pf.response.MergeFrom(_parse_http_response(f.response))
-    if f.client_conn:
-        pf.client_conn.MergeFrom(_parse_http_client(f.client_conn))
-    if f.server_conn:
-        pf.server_conn.MergeFrom(_parse_http_server(f.server_conn))
-    if f.error:
-        pf.error.MergeFrom(_parse_http_error(f.error))
+    for p in ['request', 'response', 'client_conn', 'server_conn', 'error']:
+        if hasattr(f, p):
+            getattr(pf, p).MergeFrom(parsers[p](getattr(f, p)))
     _parse_attr(f, pf, ['intercepted', 'marked', 'mode', 'id', 'version'])
     return pf
+
+
+parsers = {
+    'request': _parse_http_request,
+    'response': _parse_http_response,
+    'error': _parse_http_error,
+    'client_conn': _parse_http_client,
+    'server_conn': _parse_http_server
+}
 
 
 def dumps(f: flow.Flow) -> bytes:
     if f.type != "http":
         raise exceptions.TypeError("Flow types different than HTTP not supported yet!")
     else:
-        p = _parse_http(f)
+        p = parse_http(f)
         return p.SerializeToString()
+
+
+def loads(b: bytes, type='http') -> flow.Flow:
+    if type != 'http':
+        raise exceptions.TypeError("Flow types different than HTTP not supported yet!")
+    else:
+        p = http_pb2.HTTPFlow()
+        try:
+            p.ParseFromString(b)
+        except Exception as e:
+            ctx.log(e.strerror)
 
 
 def dumps_state(f: flow.Flow) -> bytes:
