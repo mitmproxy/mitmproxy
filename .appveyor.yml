@@ -13,6 +13,8 @@ environment:
       TOXENV: "py36"
       PYINSTALLER: "1"
       WININSTALLER: "1"
+    - PYTHON: "C:\\Python37"
+      TOXENV: "py37"
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
