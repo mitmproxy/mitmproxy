@@ -6,15 +6,15 @@ from mitmproxy.connections import ClientConnection, ServerConnection
 from mitmproxy.io.proto import http_pb2
 
 
-def _parse_attr(s_obj, d_obj, attrs):
+def _move_attrs(s_obj, d_obj, attrs):
     for attr in attrs:
         if hasattr(s_obj, attr) and getattr(s_obj, attr) is not None:
             setattr(d_obj, attr, getattr(s_obj, attr))
 
 
-def _parse_http_response(res: HTTPResponse) -> http_pb2.HTTPResponse:
+def _extract_http_response(res: HTTPResponse) -> http_pb2.HTTPResponse:
     pres = http_pb2.HTTPResponse()
-    _parse_attr(res, pres, ['http_version', 'status_code', 'reason',
+    _move_attrs(res, pres, ['http_version', 'status_code', 'reason',
                             'content', 'timestamp_start', 'timestamp_end', 'is_replay'])
     if res.headers:
         for h in res.headers.fields:
@@ -24,9 +24,9 @@ def _parse_http_response(res: HTTPResponse) -> http_pb2.HTTPResponse:
     return pres
 
 
-def _parse_http_request(req: HTTPRequest) -> http_pb2.HTTPRequest:
+def _extract_http_request(req: HTTPRequest) -> http_pb2.HTTPRequest:
     preq = http_pb2.HTTPRequest()
-    _parse_attr(req, preq, ['first_line_format', 'method', 'scheme', 'host', 'port', 'path', 'http_version', 'content',
+    _move_attrs(req, preq, ['first_line_format', 'method', 'scheme', 'host', 'port', 'path', 'http_version', 'content',
                             'timestamp_start', 'timestamp_end', 'is_replay'])
     if req.headers:
         for h in req.headers.fields:
@@ -36,9 +36,9 @@ def _parse_http_request(req: HTTPRequest) -> http_pb2.HTTPRequest:
     return preq
 
 
-def _parse_http_client(cc: ClientConnection) -> http_pb2.ClientConnection:
+def _extract_http_client(cc: ClientConnection) -> http_pb2.ClientConnection:
     pcc = http_pb2.ClientConnection()
-    _parse_attr(cc, pcc, ['id', 'tls_established', 'timestamp_start', 'timestamp_tls_setup', 'timestamp_end', 'sni',
+    _move_attrs(cc, pcc, ['id', 'tls_established', 'timestamp_start', 'timestamp_tls_setup', 'timestamp_end', 'sni',
                           'cipher_name', 'alpn_proto_negotiated', 'tls_version'])
     for cert in ['clientcert', 'mitmcert']:
         if hasattr(cc, cert) and getattr(cc, cert) is not None:
@@ -54,9 +54,9 @@ def _parse_http_client(cc: ClientConnection) -> http_pb2.ClientConnection:
     return pcc
 
 
-def _parse_http_server(sc: ServerConnection) -> http_pb2.ServerConnection:
+def _extract_http_server(sc: ServerConnection) -> http_pb2.ServerConnection:
     psc = http_pb2.ServerConnection()
-    _parse_attr(sc, psc, ['id', 'tls_established', 'sni', 'alpn_proto_negotiated', 'tls_version',
+    _move_attrs(sc, psc, ['id', 'tls_established', 'sni', 'alpn_proto_negotiated', 'tls_version',
                           'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
     for addr in ['address', 'ip_address', 'source_address']:
         if hasattr(sc, addr) and getattr(sc, addr) is not None:
@@ -65,11 +65,11 @@ def _parse_http_server(sc: ServerConnection) -> http_pb2.ServerConnection:
     if psc.cert:
         psc.cert = sc.cert.to_pem()
     if sc.via:
-        psc.via.MergeFrom(_parse_http_server(sc.via))
+        psc.via.MergeFrom(_extract_http_server(sc.via))
     return psc
 
 
-def _parse_http_error(e: flow.Error) -> http_pb2.HTTPError:
+def _extract_http_error(e: flow.Error) -> http_pb2.HTTPError:
     pe = http_pb2.HTTPError()
     for attr in ['msg', 'timestamp']:
         if hasattr(e, attr) and getattr(e, attr) is not None:
@@ -77,21 +77,21 @@ def _parse_http_error(e: flow.Error) -> http_pb2.HTTPError:
     return pe
 
 
-def parse_http(f: HTTPFlow) -> http_pb2.HTTPFlow():
+def extract_http(f: HTTPFlow) -> http_pb2.HTTPFlow():
     pf = http_pb2.HTTPFlow()
     for p in ['request', 'response', 'client_conn', 'server_conn', 'error']:
         if hasattr(f, p):
             getattr(pf, p).MergeFrom(parsers[p](getattr(f, p)))
-    _parse_attr(f, pf, ['intercepted', 'marked', 'mode', 'id', 'version'])
+    _move_attrs(f, pf, ['intercepted', 'marked', 'mode', 'id', 'version'])
     return pf
 
 
 parsers = {
-    'request': _parse_http_request,
-    'response': _parse_http_response,
-    'error': _parse_http_error,
-    'client_conn': _parse_http_client,
-    'server_conn': _parse_http_server
+    'request': _extract_http_request,
+    'response': _extract_http_response,
+    'error': _extract_http_error,
+    'client_conn': _extract_http_client,
+    'server_conn': _extract_http_server
 }
 
 
