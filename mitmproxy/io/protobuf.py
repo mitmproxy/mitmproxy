@@ -2,17 +2,22 @@ from mitmproxy import flow
 from mitmproxy import exceptions
 from mitmproxy import ctx
 from mitmproxy.http import HTTPFlow, HTTPResponse, HTTPRequest
+from mitmproxy.certs import Cert
 from mitmproxy.connections import ClientConnection, ServerConnection
 from mitmproxy.io.proto import http_pb2
 
 
 def _move_attrs(s_obj, d_obj, attrs):
     for attr in attrs:
-        if hasattr(s_obj, attr) and getattr(s_obj, attr) is not None:
-            setattr(d_obj, attr, getattr(s_obj, attr))
+        if not isinstance(d_obj, dict):
+            if hasattr(s_obj, attr) and getattr(s_obj, attr) is not None:
+                setattr(d_obj, attr, getattr(s_obj, attr))
+        else:
+            if hasattr(s_obj, attr) and getattr(s_obj, attr) is not None:
+                d_obj[attr] = getattr(s_obj, attr)
 
 
-def _extract_http_response(res: HTTPResponse) -> http_pb2.HTTPResponse:
+def _dump_http_response(res: HTTPResponse) -> http_pb2.HTTPResponse:
     pres = http_pb2.HTTPResponse()
     _move_attrs(res, pres, ['http_version', 'status_code', 'reason',
                             'content', 'timestamp_start', 'timestamp_end', 'is_replay'])
@@ -24,7 +29,7 @@ def _extract_http_response(res: HTTPResponse) -> http_pb2.HTTPResponse:
     return pres
 
 
-def _extract_http_request(req: HTTPRequest) -> http_pb2.HTTPRequest:
+def _dump_http_request(req: HTTPRequest) -> http_pb2.HTTPRequest:
     preq = http_pb2.HTTPRequest()
     _move_attrs(req, preq, ['first_line_format', 'method', 'scheme', 'host', 'port', 'path', 'http_version', 'content',
                             'timestamp_start', 'timestamp_end', 'is_replay'])
@@ -36,7 +41,7 @@ def _extract_http_request(req: HTTPRequest) -> http_pb2.HTTPRequest:
     return preq
 
 
-def _extract_http_client(cc: ClientConnection) -> http_pb2.ClientConnection:
+def _dump_http_client_conn(cc: ClientConnection) -> http_pb2.ClientConnection:
     pcc = http_pb2.ClientConnection()
     _move_attrs(cc, pcc, ['id', 'tls_established', 'timestamp_start', 'timestamp_tls_setup', 'timestamp_end', 'sni',
                           'cipher_name', 'alpn_proto_negotiated', 'tls_version'])
@@ -54,7 +59,7 @@ def _extract_http_client(cc: ClientConnection) -> http_pb2.ClientConnection:
     return pcc
 
 
-def _extract_http_server(sc: ServerConnection) -> http_pb2.ServerConnection:
+def _dump_http_server_conn(sc: ServerConnection) -> http_pb2.ServerConnection:
     psc = http_pb2.ServerConnection()
     _move_attrs(sc, psc, ['id', 'tls_established', 'sni', 'alpn_proto_negotiated', 'tls_version',
                           'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
@@ -62,14 +67,14 @@ def _extract_http_server(sc: ServerConnection) -> http_pb2.ServerConnection:
         if hasattr(sc, addr) and getattr(sc, addr) is not None:
             getattr(psc, addr).host = getattr(sc, addr)[0]
             getattr(psc, addr).port = getattr(sc, addr)[1]
-    if psc.cert:
+    if sc.cert:
         psc.cert = sc.cert.to_pem()
     if sc.via:
-        psc.via.MergeFrom(_extract_http_server(sc.via))
+        psc.via.MergeFrom(_dump_http_server_conn(sc.via))
     return psc
 
 
-def _extract_http_error(e: flow.Error) -> http_pb2.HTTPError:
+def _dump_http_error(e: flow.Error) -> http_pb2.HTTPError:
     pe = http_pb2.HTTPError()
     for attr in ['msg', 'timestamp']:
         if hasattr(e, attr) and getattr(e, attr) is not None:
@@ -77,115 +82,104 @@ def _extract_http_error(e: flow.Error) -> http_pb2.HTTPError:
     return pe
 
 
-def extract_http(f: HTTPFlow) -> http_pb2.HTTPFlow():
+def dump_http(f: HTTPFlow) -> http_pb2.HTTPFlow():
     pf = http_pb2.HTTPFlow()
     for p in ['request', 'response', 'client_conn', 'server_conn', 'error']:
         if hasattr(f, p):
-            getattr(pf, p).MergeFrom(parsers[p](getattr(f, p)))
+            getattr(pf, p).MergeFrom(eval(f"_dump_http_{p}")(getattr(f, p)))
     _move_attrs(f, pf, ['intercepted', 'marked', 'mode', 'id', 'version'])
     return pf
-
-
-parsers = {
-    'request': _extract_http_request,
-    'response': _extract_http_response,
-    'error': _extract_http_error,
-    'client_conn': _extract_http_client,
-    'server_conn': _extract_http_server
-}
 
 
 def dumps(f: flow.Flow) -> bytes:
     if f.type != "http":
         raise exceptions.TypeError("Flow types different than HTTP not supported yet!")
     else:
-        p = parse_http(f)
+        p = dump_http(f)
         return p.SerializeToString()
 
 
-def loads(b: bytes, type='http') -> flow.Flow:
-    if type != 'http':
+def _load_http_request(o: http_pb2.HTTPRequest) -> HTTPRequest:
+    d = {}
+    _move_attrs(o, d, ['first_line_format', 'method', 'scheme', 'host', 'port', 'path', 'http_version', 'content',
+                            'timestamp_start', 'timestamp_end', 'is_replay'])
+    d["headers"] = []
+    for header in o.headers:
+        d["headers"].append((bytes(header.name), bytes(header.value)))
+
+    return HTTPRequest(**d)
+
+
+def _load_http_response(o: http_pb2.HTTPResponse) -> HTTPResponse:
+    d = {}
+    _move_attrs(o, d, ['http_version', 'status_code', 'reason',
+                            'content', 'timestamp_start', 'timestamp_end', 'is_replay'])
+    d["headers"] = []
+    for header in o.headers:
+        d["headers"].append((bytes(header.name), bytes(header.value)))
+
+    return HTTPResponse(**d)
+
+
+def _load_http_client_conn(o: http_pb2.ClientConnection) -> ClientConnection:
+    d = {}
+    _move_attrs(o.client_conn, d, ['id', 'tls_established', 'sni', 'alpn_proto_negotiated', 'tls_version',
+                                   'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
+    for cert in ['clientcert', 'mitmcert']:
+        if hasattr(o, cert) and getattr(o, cert) is not None:
+            c = Cert()
+            c.from_pem(getattr(o, cert))
+            d[cert] = c
+    if o.tls_extensions:
+        d['tls_extensions'] = []
+        for extension in o.tls_extensions:
+            d['tls_extensions'].append((extension.int, extension.bytes))
+    if o.address:
+        d['address'] = (o.address.host, o.address.port)
+
+
+def _load_http_server_conn(o: http_pb2.ServerConnection) -> ServerConnection:
+    d = {}
+    _move_attrs(o, d, ['id', 'tls_established', 'sni', 'alpn_proto_negotiated', 'tls_version',
+                          'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
+    for addr in ['address', 'ip_address', 'source_address']:
+        if hasattr(o, addr):
+            d[addr] = (getattr(o, addr).host, getattr(o, addr).port)
+    if o.cert:
+        c = Cert()
+        c.from_pem(o.cert)
+        d['cert'] = c
+    if o.via:
+        d['via'] = _load_http_server_conn(d['via'])
+        
+    return ServerConnection(**d)
+
+
+def _load_http_error(o: http_pb2.HTTPError) -> flow.Error:
+    d = {}
+    for m in ['msg', 'timestamp']:
+        if hasattr(o, m) and getattr(o, m):
+            d[m] = getattr(o, m)
+    return flow.Error(**d)
+
+
+def load_http(hf: http_pb2.HTTPFlow) -> HTTPFlow:
+    parts = {}
+    for p in ['request', 'response', 'client_conn', 'server_conn', 'error']:
+        if hasattr(hf, p) and getattr(hf, p):
+            parts[p] = eval(f"_load_http{p}")(getattr(hf, p))
+    _move_attrs(hf, parts, ['intercepted', 'marked', 'mode', 'id', 'version'])
+    return HTTPFlow(**parts)
+
+
+def loads(b: bytes, typ="http") -> flow.Flow:
+    if typ != 'http':
         raise exceptions.TypeError("Flow types different than HTTP not supported yet!")
     else:
         p = http_pb2.HTTPFlow()
         try:
             p.ParseFromString(b)
+            return load_http(p)
         except Exception as e:
             ctx.log(e.strerror)
 
-
-def dumps_state(f: flow.Flow) -> bytes:
-    if f.type != "http":
-        raise exceptions.TypeError("Flow types different than HTTP not supported yet!")
-    else:
-        hf = http_pb2.HTTPFlow()
-        state = f.get_state()
-        for r in ['request', 'response']:
-            for field in state[r]:
-                if hasattr(getattr(hf, r), field) and state[r][field] is not None:
-                    if field == 'headers':
-                        for n, v in state[r][field]:
-                            header = (getattr(hf, r)).headers.add()
-                            header.name = n
-                            header.value = v
-                    else:
-                        setattr(getattr(hf, r), field, state[r][field])
-        if state['error']:
-            hf.error.msg = state['error']['msg']
-            hf.error.timestamp = state['error']['timestamp']
-        for c in ['client_conn', 'server_conn']:
-            for field in state[c]:
-                if hasattr(getattr(hf, c), field) and state[c][field] is not None:
-                    if field in ['address', 'ip_address', 'source_address']:
-                        getattr(getattr(hf, c), field).host = state[c][field][0]
-                        getattr(getattr(hf, c), field).port = state[c][field][1]
-                    elif field == "tls_extensions":
-                        for t in state[c][field]:
-                            if t[0] and t[1]:
-                                ext = getattr(hf, c).tls_extensions.add()
-                                ext.int = t[0]
-                                ext.bytes = t[1]
-                    else:
-                        setattr(getattr(hf, c), field, state[c][field])
-        for val in ['intercepted', 'marked', 'mode', 'id', 'version']:
-            if state[val] is not None:
-                setattr(hf, val, state[val])
-    return hf.SerializeToString()
-
-
-def loads_state(blob: bytes) -> flow.Flow:
-    r = http_pb2.HTTPFlow()
-    state = dict()
-    r.ParseFromString(blob)
-    _dump_object(r, state)
-    # ugly repair for tls_extensions typing
-    for c in ["client_conn", "server_conn"]:
-        state[c]['tls_extensions'] = []
-    return HTTPFlow.from_state(state)
-
-
-def _dump_object(obj, d):
-    for descriptor in obj.DESCRIPTOR.fields:
-        value = getattr(obj, descriptor.name)
-        if descriptor.type == descriptor.TYPE_MESSAGE:
-            if descriptor.label == descriptor.LABEL_REPEATED:
-                d[descriptor] = []
-                if value:
-                    for v in value:
-                        _dump_object(v, d[descriptor.name])
-                else:
-                    d[descriptor.name] = None
-            else:
-                d[descriptor] = {}
-                _dump_object(value, d[descriptor.name])
-        elif descriptor.type == descriptor.TYPE_ENUM:
-            enum_name = descriptor.enum_type.values[value].name
-            d[descriptor.name] = enum_name
-        else:
-            if value == "" or value == b"":
-                d[descriptor.name] = None
-            else:
-                if type(d) == list:
-                    d.append([descriptor.name, value])
-                elif type(d) == dict:
-                    d[descriptor.name] = value
