@@ -60,7 +60,7 @@ def map(km):
     km.add("M", "view.properties.marked.toggle", ["flowlist"], "Toggle viewing marked flows")
     km.add(
         "n",
-        "console.command view.create get https://example.com/",
+        "console.command view.flows.create get https://example.com/",
         ["flowlist"],
         "Create a new flow"
     )
