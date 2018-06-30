@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='http.proto',
   package='',
   syntax='proto2',
-  serialized_pb=_b('\n\nhttp.proto\"\x85\x02\n\x08HTTPFlow\x12\x1d\n\x07request\x18\x01 \x01(\x0b\x32\x0c.HTTPRequest\x12\x1f\n\x08response\x18\x02 \x01(\x0b\x32\r.HTTPResponse\x12\x19\n\x05\x65rror\x18\x03 \x01(\x0b\x32\n.HTTPError\x12&\n\x0b\x63lient_conn\x18\x04 \x01(\x0b\x32\x11.ClientConnection\x12&\n\x0bserver_conn\x18\x05 \x01(\x0b\x32\x11.ServerConnection\x12\x13\n\x0bintercepted\x18\x06 \x01(\x08\x12\x0e\n\x06marked\x18\x07 \x01(\x08\x12\x0c\n\x04mode\x18\x08 \x01(\t\x12\n\n\x02id\x18\t \x01(\t\x12\x0f\n\x07version\x18\n \x01(\x05\"\xfa\x01\n\x0bHTTPRequest\x12\x19\n\x11\x66irst_line_format\x18\x01 \x01(\t\x12\x0e\n\x06method\x18\x02 \x01(\t\x12\x0e\n\x06scheme\x18\x03 \x01(\t\x12\x0c\n\x04host\x18\x04 \x01(\t\x12\x0c\n\x04port\x18\x05 \x01(\x05\x12\x0c\n\x04path\x18\x06 \x01(\t\x12\x14\n\x0chttp_version\x18\x07 \x01(\t\x12\x1c\n\x07headers\x18\x08 \x03(\x0b\x32\x0b.HTTPHeader\x12\x0f\n\x07\x63ontent\x18\t \x01(\x0c\x12\x17\n\x0ftimestamp_start\x18\n \x01(\x02\x12\x15\n\rtimestamp_end\x18\x0b \x01(\x02\x12\x11\n\tis_replay\x18\x0c \x01(\x08\"\xbb\x01\n\x0cHTTPResponse\x12\x14\n\x0chttp_version\x18\x01 \x01(\t\x12\x13\n\x0bstatus_code\x18\x02 \x01(\x05\x12\x0e\n\x06reason\x18\x03 \x01(\t\x12\x1c\n\x07headers\x18\x04 \x03(\x0b\x32\x0b.HTTPHeader\x12\x0f\n\x07\x63ontent\x18\x05 \x01(\x0c\x12\x17\n\x0ftimestamp_start\x18\x06 \x01(\x02\x12\x15\n\rtimestamp_end\x18\x07 \x01(\x02\x12\x11\n\tis_replay\x18\x08 \x01(\x08\"+\n\tHTTPError\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x02\")\n\nHTTPHeader\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"%\n\x07\x41\x64\x64ress\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\"\xc2\x02\n\x10\x43lientConnection\x12\n\n\x02id\x18\x01 \x01(\t\x12\x19\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x08.Address\x12\x17\n\x0ftls_established\x18\x03 \x01(\x08\x12\x12\n\nclientcert\x18\x04 \x01(\t\x12\x10\n\x08mitmcert\x18\x05 \x01(\t\x12\x17\n\x0ftimestamp_start\x18\x06 \x01(\x02\x12\x1b\n\x13timestamp_tls_setup\x18\x07 \x01(\x02\x12\x15\n\rtimestamp_end\x18\x08 \x01(\x02\x12\x0b\n\x03sni\x18\t \x01(\t\x12\x13\n\x0b\x63ipher_name\x18\n \x01(\t\x12\x1d\n\x15\x61lpn_proto_negotiated\x18\x0b \x01(\x0c\x12\x13\n\x0btls_version\x18\x0c \x01(\t\x12%\n\x0etls_extensions\x18\r \x03(\x0b\x32\r.TLSExtension\"\xeb\x02\n\x10ServerConnection\x12\n\n\x02id\x18\x01 \x01(\t\x12\x19\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x08.Address\x12\x1c\n\nip_address\x18\x03 \x01(\x0b\x32\x08.Address\x12 \n\x0esource_address\x18\x04 \x01(\x0b\x32\x08.Address\x12\x17\n\x0ftls_established\x18\x05 \x01(\x08\x12\x0c\n\x04\x63\x65rt\x18\x06 \x01(\t\x12\x0b\n\x03sni\x18\x07 \x01(\t\x12\x1d\n\x15\x61lpn_proto_negotiated\x18\x08 \x01(\x0c\x12\x13\n\x0btls_version\x18\t \x01(\t\x12\x17\n\x0ftimestamp_start\x18\n \x01(\x02\x12\x1b\n\x13timestamp_tcp_setup\x18\x0b \x01(\x02\x12\x1b\n\x13timestamp_tls_setup\x18\x0c \x01(\x02\x12\x15\n\rtimestamp_end\x18\r \x01(\x02\x12\x1e\n\x03via\x18\x0e \x01(\x0b\x32\x11.ServerConnection\"*\n\x0cTLSExtension\x12\x0b\n\x03int\x18\x01 \x01(\x03\x12\r\n\x05\x62ytes\x18\x02 \x01(\x0c')
+  serialized_pb=_b('\n\nhttp.proto\"\x85\x02\n\x08HTTPFlow\x12\x1d\n\x07request\x18\x01 \x01(\x0b\x32\x0c.HTTPRequest\x12\x1f\n\x08response\x18\x02 \x01(\x0b\x32\r.HTTPResponse\x12\x19\n\x05\x65rror\x18\x03 \x01(\x0b\x32\n.HTTPError\x12&\n\x0b\x63lient_conn\x18\x04 \x01(\x0b\x32\x11.ClientConnection\x12&\n\x0bserver_conn\x18\x05 \x01(\x0b\x32\x11.ServerConnection\x12\x13\n\x0bintercepted\x18\x06 \x01(\x08\x12\x0e\n\x06marked\x18\x07 \x01(\x08\x12\x0c\n\x04mode\x18\x08 \x01(\t\x12\n\n\x02id\x18\t \x01(\t\x12\x0f\n\x07version\x18\n \x01(\x05\"\xfa\x01\n\x0bHTTPRequest\x12\x19\n\x11\x66irst_line_format\x18\x01 \x01(\t\x12\x0e\n\x06method\x18\x02 \x01(\t\x12\x0e\n\x06scheme\x18\x03 \x01(\t\x12\x0c\n\x04host\x18\x04 \x01(\t\x12\x0c\n\x04port\x18\x05 \x01(\x05\x12\x0c\n\x04path\x18\x06 \x01(\t\x12\x14\n\x0chttp_version\x18\x07 \x01(\t\x12\x1c\n\x07headers\x18\x08 \x03(\x0b\x32\x0b.HTTPHeader\x12\x0f\n\x07\x63ontent\x18\t \x01(\x0c\x12\x17\n\x0ftimestamp_start\x18\n \x01(\x01\x12\x15\n\rtimestamp_end\x18\x0b \x01(\x01\x12\x11\n\tis_replay\x18\x0c \x01(\x08\"\xbb\x01\n\x0cHTTPResponse\x12\x14\n\x0chttp_version\x18\x01 \x01(\t\x12\x13\n\x0bstatus_code\x18\x02 \x01(\x05\x12\x0e\n\x06reason\x18\x03 \x01(\t\x12\x1c\n\x07headers\x18\x04 \x03(\x0b\x32\x0b.HTTPHeader\x12\x0f\n\x07\x63ontent\x18\x05 \x01(\x0c\x12\x17\n\x0ftimestamp_start\x18\x06 \x01(\x01\x12\x15\n\rtimestamp_end\x18\x07 \x01(\x01\x12\x11\n\tis_replay\x18\x08 \x01(\x08\"+\n\tHTTPError\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\x11\n\ttimestamp\x18\x02 \x01(\x01\")\n\nHTTPHeader\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"%\n\x07\x41\x64\x64ress\x12\x0c\n\x04host\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\x05\"\xc2\x02\n\x10\x43lientConnection\x12\n\n\x02id\x18\x01 \x01(\t\x12\x19\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x08.Address\x12\x17\n\x0ftls_established\x18\x03 \x01(\x08\x12\x12\n\nclientcert\x18\x04 \x01(\t\x12\x10\n\x08mitmcert\x18\x05 \x01(\t\x12\x17\n\x0ftimestamp_start\x18\x06 \x01(\x01\x12\x1b\n\x13timestamp_tls_setup\x18\x07 \x01(\x01\x12\x15\n\rtimestamp_end\x18\x08 \x01(\x01\x12\x0b\n\x03sni\x18\t \x01(\t\x12\x13\n\x0b\x63ipher_name\x18\n \x01(\t\x12\x1d\n\x15\x61lpn_proto_negotiated\x18\x0b \x01(\x0c\x12\x13\n\x0btls_version\x18\x0c \x01(\t\x12%\n\x0etls_extensions\x18\r \x03(\x0b\x32\r.TLSExtension\"\xeb\x02\n\x10ServerConnection\x12\n\n\x02id\x18\x01 \x01(\t\x12\x19\n\x07\x61\x64\x64ress\x18\x02 \x01(\x0b\x32\x08.Address\x12\x1c\n\nip_address\x18\x03 \x01(\x0b\x32\x08.Address\x12 \n\x0esource_address\x18\x04 \x01(\x0b\x32\x08.Address\x12\x17\n\x0ftls_established\x18\x05 \x01(\x08\x12\x0c\n\x04\x63\x65rt\x18\x06 \x01(\t\x12\x0b\n\x03sni\x18\x07 \x01(\t\x12\x1d\n\x15\x61lpn_proto_negotiated\x18\x08 \x01(\x0c\x12\x13\n\x0btls_version\x18\t \x01(\t\x12\x17\n\x0ftimestamp_start\x18\n \x01(\x01\x12\x1b\n\x13timestamp_tcp_setup\x18\x0b \x01(\x01\x12\x1b\n\x13timestamp_tls_setup\x18\x0c \x01(\x01\x12\x15\n\rtimestamp_end\x18\r \x01(\x01\x12\x1e\n\x03via\x18\x0e \x01(\x0b\x32\x11.ServerConnection\"*\n\x0cTLSExtension\x12\x0b\n\x03int\x18\x01 \x01(\x03\x12\r\n\x05\x62ytes\x18\x02 \x01(\x0c')
 )
 
 
@@ -191,14 +191,14 @@ _HTTPREQUEST = _descriptor.Descriptor(
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp_start', full_name='HTTPRequest.timestamp_start', index=9,
-      number=10, type=2, cpp_type=6, label=1,
+      number=10, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp_end', full_name='HTTPRequest.timestamp_end', index=10,
-      number=11, type=2, cpp_type=6, label=1,
+      number=11, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -271,14 +271,14 @@ _HTTPRESPONSE = _descriptor.Descriptor(
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp_start', full_name='HTTPResponse.timestamp_start', index=5,
-      number=6, type=2, cpp_type=6, label=1,
+      number=6, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp_end', full_name='HTTPResponse.timestamp_end', index=6,
-      number=7, type=2, cpp_type=6, label=1,
+      number=7, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -323,7 +323,7 @@ _HTTPERROR = _descriptor.Descriptor(
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp', full_name='HTTPError.timestamp', index=1,
-      number=2, type=2, cpp_type=6, label=1,
+      number=2, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -465,21 +465,21 @@ _CLIENTCONNECTION = _descriptor.Descriptor(
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp_start', full_name='ClientConnection.timestamp_start', index=5,
-      number=6, type=2, cpp_type=6, label=1,
+      number=6, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp_tls_setup', full_name='ClientConnection.timestamp_tls_setup', index=6,
-      number=7, type=2, cpp_type=6, label=1,
+      number=7, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp_end', full_name='ClientConnection.timestamp_end', index=7,
-      number=8, type=2, cpp_type=6, label=1,
+      number=8, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -608,28 +608,28 @@ _SERVERCONNECTION = _descriptor.Descriptor(
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp_start', full_name='ServerConnection.timestamp_start', index=9,
-      number=10, type=2, cpp_type=6, label=1,
+      number=10, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp_tcp_setup', full_name='ServerConnection.timestamp_tcp_setup', index=10,
-      number=11, type=2, cpp_type=6, label=1,
+      number=11, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp_tls_setup', full_name='ServerConnection.timestamp_tls_setup', index=11,
-      number=12, type=2, cpp_type=6, label=1,
+      number=12, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp_end', full_name='ServerConnection.timestamp_end', index=12,
-      number=13, type=2, cpp_type=6, label=1,
+      number=13, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,

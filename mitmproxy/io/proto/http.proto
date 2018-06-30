@@ -23,8 +23,8 @@ message HTTPRequest {
     optional string http_version = 7;
     repeated HTTPHeader headers = 8;
     optional bytes content = 9;
-    optional float timestamp_start = 10;
-    optional float timestamp_end = 11;
+    optional double timestamp_start = 10;
+    optional double timestamp_end = 11;
     optional bool is_replay = 12;
 }
 
@@ -34,14 +34,14 @@ message HTTPResponse {
     optional string reason = 3;
     repeated HTTPHeader headers = 4;
     optional bytes content = 5;
-    optional float timestamp_start = 6;
-    optional float timestamp_end = 7;
+    optional double timestamp_start = 6;
+    optional double timestamp_end = 7;
     optional bool is_replay = 8;
 }
 
 message HTTPError {
     optional string msg = 1;
-    optional float timestamp = 2;
+    optional double timestamp = 2;
 }
 
 message HTTPHeader {
@@ -61,9 +61,9 @@ message ClientConnection {
     optional bool tls_established = 3;
     optional string clientcert = 4;
     optional string mitmcert = 5;
-    optional float timestamp_start = 6;
-    optional float timestamp_tls_setup = 7;
-    optional float timestamp_end = 8;
+    optional double timestamp_start = 6;
+    optional double timestamp_tls_setup = 7;
+    optional double timestamp_end = 8;
     optional string sni = 9;
     optional string cipher_name = 10;
     optional bytes alpn_proto_negotiated = 11;
@@ -81,10 +81,10 @@ message ServerConnection {
     optional string sni = 7;
     optional bytes alpn_proto_negotiated = 8;
     optional string tls_version = 9;
-    optional float timestamp_start = 10;
-    optional float timestamp_tcp_setup = 11;
-    optional float timestamp_tls_setup = 12;
-    optional float timestamp_end = 13;
+    optional double timestamp_start = 10;
+    optional double timestamp_tcp_setup = 11;
+    optional double timestamp_tls_setup = 12;
+    optional double timestamp_end = 13;
     optional ServerConnection via = 14;
 }
 
