@@ -13,10 +13,6 @@ class DbHandler:
     """
 
     def __init__(self, db_path="/tmp/tmp.sqlite"):
-        if os.path.isfile(db_path):
-            self.db_path = db_path
-        else:
-            raise IOError("Invalid path!")
         self.db_path = db_path
         self._con = sqlite3.connect(self.db_path)
         self._c = self._con.cursor()
