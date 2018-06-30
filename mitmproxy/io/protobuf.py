@@ -16,7 +16,10 @@ def _move_attrs(s_obj, d_obj, attrs):
                 setattr(d_obj, attr, getattr(s_obj, attr))
         else:
             if hasattr(s_obj, attr) and getattr(s_obj, attr) is not None:
-                d_obj[attr] = getattr(s_obj, attr)
+                if not getattr(s_obj, attr):
+                    d_obj[attr] = None
+                else:
+                    d_obj[attr] = getattr(s_obj, attr)
 
 
 def _dump_http_response(res: HTTPResponse) -> http_pb2.HTTPResponse:
@@ -105,6 +108,8 @@ def _load_http_request(o: http_pb2.HTTPRequest) -> HTTPRequest:
     d = {}
     _move_attrs(o, d, ['first_line_format', 'method', 'scheme', 'host', 'port', 'path', 'http_version', 'content',
                             'timestamp_start', 'timestamp_end', 'is_replay'])
+    if d['content'] is None:
+        d['content'] = b""
     d["headers"] = []
     for header in o.headers:
         d["headers"].append((bytes(header.name, "utf-8"), bytes(header.value, "utf-8")))
@@ -116,6 +121,8 @@ def _load_http_response(o: http_pb2.HTTPResponse) -> HTTPResponse:
     d = {}
     _move_attrs(o, d, ['http_version', 'status_code', 'reason',
                             'content', 'timestamp_start', 'timestamp_end', 'is_replay'])
+    if d['content'] is None:
+        d['content'] = b""
     d["headers"] = []
     for header in o.headers:
         d["headers"].append((bytes(header.name, "utf-8"), bytes(header.value, "utf-8")))
