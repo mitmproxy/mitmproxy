@@ -462,6 +462,8 @@ class View(collections.Sequence):
             ctx.log.error(str(e))
         except IOError as e:
             ctx.log.error(e.strerror)
+        except exceptions.FlowReadException as e:
+            ctx.log.error(str(e))
 
     def add(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
