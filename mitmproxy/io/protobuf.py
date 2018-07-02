@@ -2,7 +2,6 @@ import typing
 
 from mitmproxy import flow
 from mitmproxy import exceptions
-from mitmproxy import ctx
 from mitmproxy.http import HTTPFlow, HTTPResponse, HTTPRequest
 from mitmproxy.certs import Cert
 from mitmproxy.connections import ClientConnection, ServerConnection
@@ -16,7 +15,8 @@ def _move_attrs(s_obj, d_obj, attrs):
                 setattr(d_obj, attr, getattr(s_obj, attr))
         else:
             if hasattr(s_obj, attr) and getattr(s_obj, attr) is not None:
-                if not getattr(s_obj, attr):
+                # ugly fix to set None in empty str or bytes fields
+                if getattr(s_obj, attr) == "" or getattr(s_obj, attr) == b"":
                     d_obj[attr] = None
                 else:
                     d_obj[attr] = getattr(s_obj, attr)
@@ -87,12 +87,12 @@ def _dump_http_error(e: flow.Error) -> http_pb2.HTTPError:
     return pe
 
 
-def dump_http(f: HTTPFlow) -> http_pb2.HTTPFlow():
+def dump_http(f: flow.Flow) -> http_pb2.HTTPFlow:
     pf = http_pb2.HTTPFlow()
     for p in ['request', 'response', 'client_conn', 'server_conn', 'error']:
-        if hasattr(f, p):
+        if hasattr(f, p) and getattr(f, p):
             getattr(pf, p).MergeFrom(eval(f"_dump_http_{p}")(getattr(f, p)))
-    _move_attrs(f, pf, ['intercepted', 'marked', 'mode', 'id', 'version'])
+    _move_attrs(f, pf, ['intercepted', 'marked', 'mode', 'id'])
     return pf
 
 
@@ -105,9 +105,9 @@ def dumps(f: flow.Flow) -> bytes:
 
 
 def _load_http_request(o: http_pb2.HTTPRequest) -> HTTPRequest:
-    d = {}
+    d: dict = {}
     _move_attrs(o, d, ['first_line_format', 'method', 'scheme', 'host', 'port', 'path', 'http_version', 'content',
-                            'timestamp_start', 'timestamp_end', 'is_replay'])
+                       'timestamp_start', 'timestamp_end', 'is_replay'])
     if d['content'] is None:
         d['content'] = b""
     d["headers"] = []
@@ -118,9 +118,9 @@ def _load_http_request(o: http_pb2.HTTPRequest) -> HTTPRequest:
 
 
 def _load_http_response(o: http_pb2.HTTPResponse) -> HTTPResponse:
-    d = {}
+    d: dict = {}
     _move_attrs(o, d, ['http_version', 'status_code', 'reason',
-                            'content', 'timestamp_start', 'timestamp_end', 'is_replay'])
+                       'content', 'timestamp_start', 'timestamp_end', 'is_replay'])
     if d['content'] is None:
         d['content'] = b""
     d["headers"] = []
@@ -131,14 +131,12 @@ def _load_http_response(o: http_pb2.HTTPResponse) -> HTTPResponse:
 
 
 def _load_http_client_conn(o: http_pb2.ClientConnection) -> ClientConnection:
-    d = {}
-    _move_attrs(o, d, ['id', 'tls_established', 'sni', 'alpn_proto_negotiated', 'tls_version',
-                                   'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
+    d: dict = {}
+    _move_attrs(o, d, ['id', 'tls_established', 'sni', 'cipher_name', 'alpn_proto_negotiated', 'tls_version',
+                       'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
     for cert in ['clientcert', 'mitmcert']:
         if hasattr(o, cert) and getattr(o, cert):
-            c = Cert("")
-            c.from_pem(getattr(o, cert))
-            d[cert] = c
+            d[cert] = Cert.from_pem(getattr(o, cert))
     if o.tls_extensions:
         d['tls_extensions'] = []
         for extension in o.tls_extensions:
@@ -152,18 +150,17 @@ def _load_http_client_conn(o: http_pb2.ClientConnection) -> ClientConnection:
 
 
 def _load_http_server_conn(o: http_pb2.ServerConnection) -> ServerConnection:
-    d = {}
+    d: dict = {}
     _move_attrs(o, d, ['id', 'tls_established', 'sni', 'alpn_proto_negotiated', 'tls_version',
-                          'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
+                       'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
     for addr in ['address', 'ip_address', 'source_address']:
         if hasattr(o, addr):
             d[addr] = (getattr(o, addr).host, getattr(o, addr).port)
     if o.cert:
-        c = Cert("")
-        c.from_pem(o.cert)
+        c = Cert.from_pem(o.cert)
         d['cert'] = c
-    if len(o.via.id):
-        d['via'] = _load_http_server_conn(d['via'])
+    if o.HasField('via'):
+        d['via'] = _load_http_server_conn(o.via)
     sc = ServerConnection(tuple())
     for k, v in d.items():
         setattr(sc, k, v)
@@ -181,9 +178,11 @@ def _load_http_error(o: http_pb2.HTTPError) -> typing.Optional[flow.Error]:
 def load_http(hf: http_pb2.HTTPFlow) -> HTTPFlow:
     parts = {}
     for p in ['request', 'response', 'client_conn', 'server_conn', 'error']:
-        if hasattr(hf, p) and getattr(hf, p):
+        if hf.HasField(p):
             parts[p] = eval(f"_load_http_{p}")(getattr(hf, p))
-    _move_attrs(hf, parts, ['intercepted', 'marked', 'mode', 'id', 'version'])
+        else:
+            parts[p] = None
+    _move_attrs(hf, parts, ['intercepted', 'marked', 'mode', 'id'])
     f = HTTPFlow(ClientConnection(None, tuple(), None), ServerConnection(tuple()))
     for k, v in parts.items():
         setattr(f, k, v)
@@ -195,9 +194,5 @@ def loads(b: bytes, typ="http") -> flow.Flow:
         raise exceptions.TypeError("Flow types different than HTTP not supported yet!")
     else:
         p = http_pb2.HTTPFlow()
-        try:
-            p.ParseFromString(b)
-            return load_http(p)
-        except Exception as e:
-            ctx.log(str(e))
-
+        p.ParseFromString(b)
+        return load_http(p)

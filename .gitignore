@@ -5,6 +5,7 @@ MANIFEST
 *.py[cdo]
 *.swp
 *.swo
+*.sqlite
 *.egg-info/
 .coverage*
 .idea
