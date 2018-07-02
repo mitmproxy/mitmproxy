@@ -195,9 +195,5 @@ def loads(b: bytes, typ="http") -> flow.Flow:
         raise exceptions.TypeError("Flow types different than HTTP not supported yet!")
     else:
         p = http_pb2.HTTPFlow()
-        try:
-            p.ParseFromString(b)
-            return load_http(p)
-        except Exception as e:
-            ctx.log(str(e))
-
+        p.ParseFromString(b)
+        return load_http(p)

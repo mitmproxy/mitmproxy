@@ -2,8 +2,6 @@ import sqlite3
 import os
 
 from mitmproxy.io import protobuf
-from mitmproxy.http import HTTPFlow
-from mitmproxy import exceptions
 
 
 class DbHandler:
@@ -12,7 +10,10 @@ class DbHandler:
     This class is wrapping up connection to SQLITE DB.
     """
 
-    def __init__(self, db_path="/tmp/tmp.sqlite"):
+    def __init__(self, db_path, mode='load'):
+        if mode == 'write':
+            if os.path.isfile(db_path):
+                os.remove(db_path)
         self.db_path = db_path
         self._con = sqlite3.connect(self.db_path)
         self._c = self._con.cursor()
