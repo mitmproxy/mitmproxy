@@ -16,7 +16,11 @@ def _move_attrs(s_obj, d_obj, attrs):
                 setattr(d_obj, attr, getattr(s_obj, attr))
         else:
             if hasattr(s_obj, attr) and getattr(s_obj, attr) is not None:
-                d_obj[attr] = getattr(s_obj, attr)
+                #ugly fix to set None in empty str or bytes fields
+                if getattr(s_obj, attr) == "" or getattr(s_obj,attr) == b"":
+                    d_obj[attr] = None
+                else:
+                    d_obj[attr] = getattr(s_obj, attr)
 
 
 def _dump_http_response(res: HTTPResponse) -> http_pb2.HTTPResponse:
@@ -87,9 +91,9 @@ def _dump_http_error(e: flow.Error) -> http_pb2.HTTPError:
 def dump_http(f: HTTPFlow) -> http_pb2.HTTPFlow():
     pf = http_pb2.HTTPFlow()
     for p in ['request', 'response', 'client_conn', 'server_conn', 'error']:
-        if hasattr(f, p):
+        if hasattr(f, p) and getattr(f, p):
             getattr(pf, p).MergeFrom(eval(f"_dump_http_{p}")(getattr(f, p)))
-    _move_attrs(f, pf, ['intercepted', 'marked', 'mode', 'id', 'version'])
+    _move_attrs(f, pf, ['intercepted', 'marked', 'mode', 'id'])
     return pf
 
 
@@ -154,11 +158,10 @@ def _load_http_server_conn(o: http_pb2.ServerConnection) -> ServerConnection:
         if hasattr(o, addr):
             d[addr] = (getattr(o, addr).host, getattr(o, addr).port)
     if o.cert:
-        c = Cert("")
-        c.from_pem(o.cert)
+        c = Cert.from_pem(o.cert)
         d['cert'] = c
-    if len(o.via.id):
-        d['via'] = _load_http_server_conn(d['via'])
+    if o.HasField('via'):
+        d['via'] = _load_http_server_conn(o.via)
     sc = ServerConnection(tuple())
     for k, v in d.items():
         setattr(sc, k, v)
@@ -176,9 +179,11 @@ def _load_http_error(o: http_pb2.HTTPError) -> typing.Optional[flow.Error]:
 def load_http(hf: http_pb2.HTTPFlow) -> HTTPFlow:
     parts = {}
     for p in ['request', 'response', 'client_conn', 'server_conn', 'error']:
-        if hasattr(hf, p) and getattr(hf, p):
+        if hf.HasField(p):
             parts[p] = eval(f"_load_http_{p}")(getattr(hf, p))
-    _move_attrs(hf, parts, ['intercepted', 'marked', 'mode', 'id', 'version'])
+        else:
+            parts[p] = None
+    _move_attrs(hf, parts, ['intercepted', 'marked', 'mode', 'id'])
     f = HTTPFlow(ClientConnection(None, tuple(), None), ServerConnection(tuple()))
     for k, v in parts.items():
         setattr(f, k, v)

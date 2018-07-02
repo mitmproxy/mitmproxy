@@ -10,7 +10,6 @@ message HTTPFlow {
     optional bool marked = 7;
     optional string mode = 8;
     optional string id = 9;
-    optional int32 version = 10;
 }
 
 message HTTPRequest {
