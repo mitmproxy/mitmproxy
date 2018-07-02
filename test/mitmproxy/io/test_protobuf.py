@@ -1,44 +1,9 @@
 import pytest
 
 from mitmproxy import certs
+from mitmproxy import http
 from mitmproxy.test import tflow, tutils, taddons
 from mitmproxy.io import protobuf
-
-"""
-IDEAS: 
-TEST INCREMENTALLY DIFFICULT FLOWS.
-FIRST SIMPLE FLOWS, THEN ADD MORE THINGS.
-INSPECT POINTS OF FAILURES.
-WHAT WE EXPECT FROM TESTS:
-F = FLOW()
-D = F.DUMPS()
-L = F.LOADS()
-ASSERT F == L
-
-F = FLOW(INVALID)
-D = F.DUMPS() => RAISES EXCEPTION
-
-D = MALFORMED_DUMP
-L = F.LOADS => RAISES EXCEPTION 
-
-TO OBTAIN THIS WE MIGHT NEED TO STRIP OFF STATEOBJECT ATTRIBUTES.
-THIS APART, THIS SHOULD WORK. WE'LL SEE.
-
-Classes of equivalence:
-
-- Presence of response and/or error in HTTPFlow
-- TLS in client/server Connection
-- via in Server Connection
-- TLS extensions in Server Connection
-- Content / No Content, Headers / No Headers
-
-OR
-
-- I could - Should test differently for all the methods! And THEN I can do it as a whole.
-
--> Client Connection EC : certs, tls_extensions, address
-
-"""
 
 
 class TestProtobuf:
@@ -66,6 +31,16 @@ class TestProtobuf:
         assert c.__dict__ == lc.__dict__
 
     def test_roundtrip_http_request(self):
-        c = tutils.treq()
+        req = http.HTTPRequest.wrap(tutils.treq())
+        preq = protobuf._dump_http_request(req)
+        lreq = protobuf._load_http_request(preq)
+        assert req.__dict__ == lreq.__dict__
+
+    def test_roundtrip_http_response(self):
+        res = http.HTTPResponse.wrap(tutils.tresp())
+        pres = protobuf._dump_http_response(res)
+        lres = protobuf._load_http_response(pres)
+        assert res.__dict__ == lres.__dict__
+
 
 
