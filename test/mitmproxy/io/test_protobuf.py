@@ -113,13 +113,3 @@ class TestProtobuf:
         w = tflow.twebsocketflow()
         with pytest.raises(exceptions.TypeError):
             protobuf.dumps(w)
-
-    def test_unsupported_loads(self):
-        b = b"byteobject"
-        with pytest.raises(exceptions.TypeError):
-            protobuf.loads(b, "not-http")
-
-    def test_malformed_object(self):
-        b = b"malformed_dump"
-        with pytest.raises(Exception):
-            protobuf.loads(b, 'http')
