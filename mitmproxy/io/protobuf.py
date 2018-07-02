@@ -16,10 +16,7 @@ def _move_attrs(s_obj, d_obj, attrs):
                 setattr(d_obj, attr, getattr(s_obj, attr))
         else:
             if hasattr(s_obj, attr) and getattr(s_obj, attr) is not None:
-                if not getattr(s_obj, attr):
-                    d_obj[attr] = None
-                else:
-                    d_obj[attr] = getattr(s_obj, attr)
+                d_obj[attr] = getattr(s_obj, attr)
 
 
 def _dump_http_response(res: HTTPResponse) -> http_pb2.HTTPResponse:
@@ -132,13 +129,11 @@ def _load_http_response(o: http_pb2.HTTPResponse) -> HTTPResponse:
 
 def _load_http_client_conn(o: http_pb2.ClientConnection) -> ClientConnection:
     d = {}
-    _move_attrs(o, d, ['id', 'tls_established', 'sni', 'alpn_proto_negotiated', 'tls_version',
+    _move_attrs(o, d, ['id', 'tls_established', 'sni', 'cipher_name', 'alpn_proto_negotiated', 'tls_version',
                                    'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
     for cert in ['clientcert', 'mitmcert']:
         if hasattr(o, cert) and getattr(o, cert):
-            c = Cert("")
-            c.from_pem(getattr(o, cert))
-            d[cert] = c
+            d[cert] = Cert.from_pem(getattr(o, cert))
     if o.tls_extensions:
         d['tls_extensions'] = []
         for extension in o.tls_extensions:
