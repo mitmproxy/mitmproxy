@@ -87,7 +87,7 @@ def _dump_http_error(e: flow.Error) -> http_pb2.HTTPError:
     return pe
 
 
-def dump_http(f: HTTPFlow) -> http_pb2.HTTPFlow():
+def dump_http(f: HTTPFlow) -> http_pb2.HTTPFlow:
     pf = http_pb2.HTTPFlow()
     for p in ['request', 'response', 'client_conn', 'server_conn', 'error']:
         if hasattr(f, p) and getattr(f, p):
