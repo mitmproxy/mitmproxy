@@ -2,7 +2,6 @@ import typing
 
 from mitmproxy import flow
 from mitmproxy import exceptions
-from mitmproxy import ctx
 from mitmproxy.http import HTTPFlow, HTTPResponse, HTTPRequest
 from mitmproxy.certs import Cert
 from mitmproxy.connections import ClientConnection, ServerConnection
@@ -16,8 +15,8 @@ def _move_attrs(s_obj, d_obj, attrs):
                 setattr(d_obj, attr, getattr(s_obj, attr))
         else:
             if hasattr(s_obj, attr) and getattr(s_obj, attr) is not None:
-                #ugly fix to set None in empty str or bytes fields
-                if getattr(s_obj, attr) == "" or getattr(s_obj,attr) == b"":
+                # ugly fix to set None in empty str or bytes fields
+                if getattr(s_obj, attr) == "" or getattr(s_obj, attr) == b"":
                     d_obj[attr] = None
                 else:
                     d_obj[attr] = getattr(s_obj, attr)
@@ -108,7 +107,7 @@ def dumps(f: flow.Flow) -> bytes:
 def _load_http_request(o: http_pb2.HTTPRequest) -> HTTPRequest:
     d = {}
     _move_attrs(o, d, ['first_line_format', 'method', 'scheme', 'host', 'port', 'path', 'http_version', 'content',
-                            'timestamp_start', 'timestamp_end', 'is_replay'])
+                       'timestamp_start', 'timestamp_end', 'is_replay'])
     if d['content'] is None:
         d['content'] = b""
     d["headers"] = []
@@ -121,7 +120,7 @@ def _load_http_request(o: http_pb2.HTTPRequest) -> HTTPRequest:
 def _load_http_response(o: http_pb2.HTTPResponse) -> HTTPResponse:
     d = {}
     _move_attrs(o, d, ['http_version', 'status_code', 'reason',
-                            'content', 'timestamp_start', 'timestamp_end', 'is_replay'])
+                       'content', 'timestamp_start', 'timestamp_end', 'is_replay'])
     if d['content'] is None:
         d['content'] = b""
     d["headers"] = []
@@ -134,7 +133,7 @@ def _load_http_response(o: http_pb2.HTTPResponse) -> HTTPResponse:
 def _load_http_client_conn(o: http_pb2.ClientConnection) -> ClientConnection:
     d = {}
     _move_attrs(o, d, ['id', 'tls_established', 'sni', 'cipher_name', 'alpn_proto_negotiated', 'tls_version',
-                                   'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
+                       'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
     for cert in ['clientcert', 'mitmcert']:
         if hasattr(o, cert) and getattr(o, cert):
             d[cert] = Cert.from_pem(getattr(o, cert))
@@ -153,7 +152,7 @@ def _load_http_client_conn(o: http_pb2.ClientConnection) -> ClientConnection:
 def _load_http_server_conn(o: http_pb2.ServerConnection) -> ServerConnection:
     d = {}
     _move_attrs(o, d, ['id', 'tls_established', 'sni', 'alpn_proto_negotiated', 'tls_version',
-                          'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
+                       'timestamp_start', 'timestamp_tcp_setup', 'timestamp_tls_setup', 'timestamp_end'])
     for addr in ['address', 'ip_address', 'source_address']:
         if hasattr(o, addr):
             d[addr] = (getattr(o, addr).host, getattr(o, addr).port)

@@ -3,7 +3,7 @@ import pytest
 from mitmproxy import certs
 from mitmproxy import http
 from mitmproxy import exceptions
-from mitmproxy.test import tflow, tutils, taddons
+from mitmproxy.test import tflow, tutils
 from mitmproxy.io import protobuf
 
 
@@ -118,4 +118,3 @@ class TestProtobuf:
         b = b"blobs"
         with pytest.raises(exceptions.TypeError):
             protobuf.loads(b, 'not-http')
-

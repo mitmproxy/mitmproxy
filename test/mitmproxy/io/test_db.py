@@ -1,6 +1,3 @@
-import pytest
-import sqlite3
-
 from mitmproxy.io import db
 from mitmproxy.test import tflow
 
@@ -8,19 +5,19 @@ from mitmproxy.test import tflow
 class TestDB:
 
     def test_create(self, tdata):
-        dh = db.DbHandler(db_path=tdata.path("mitmproxy/io/data")+"/tmp.sqlite")
+        dh = db.DbHandler(db_path=tdata.path("mitmproxy/io/data") + "/tmp.sqlite")
         with dh._con as c:
             cur = c.cursor()
             cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='FLOWS';")
             assert cur.fetchall() == [('FLOWS',)]
 
     def test_roundtrip(self, tdata):
-        dh = db.DbHandler(db_path=tdata.path("mitmproxy/io/data")+"/tmp.sqlite", mode='write')
+        dh = db.DbHandler(db_path=tdata.path("mitmproxy/io/data") + "/tmp.sqlite", mode='write')
         flows = []
         for i in range(10):
             flows.append(tflow.tflow())
         dh.store(flows)
-        dh = db.DbHandler(db_path=tdata.path("mitmproxy/io/data")+"/tmp.sqlite")
+        dh = db.DbHandler(db_path=tdata.path("mitmproxy/io/data") + "/tmp.sqlite")
         with dh._con as c:
             cur = c.cursor()
             cur.execute("SELECT count(*) FROM FLOWS;")
