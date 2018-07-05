@@ -163,14 +163,14 @@ for earlier versions of OSX.
 sudo sysctl -w net.inet.ip.forwarding=1
 {{< / highlight >}}
 
-### 2. Place the following two lines in a file called, say, **pf.conf**.
+### 2. Place the following line in a file called, say, **pf.conf**.
 
 
 {{< highlight none  >}}
-rdr on en0 inet proto tcp to any port {80, 443} -> 127.0.0.1 port 8080
+rdr pass on en0 inet proto tcp to any port {80, 443} -> 127.0.0.1 port 8080
 {{< / highlight >}}
 
-These rules tell pf to redirect all traffic destined for port 80 or 443
+This rule tells pf to redirect all traffic destined for port 80 or 443
 to the local mitmproxy instance running on port 8080. You should replace
 `en0` with the interface on which your test device will appear.
 
