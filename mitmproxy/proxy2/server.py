@@ -13,6 +13,7 @@ import socket
 import typing
 
 from mitmproxy import options as moptions
+from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import events, commands, layers, layer
 from mitmproxy.proxy2.context import Client, Context, Connection
 from mitmproxy.proxy2.layers import glue
@@ -46,12 +47,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         # FIXME: Work around log suppression in core.
         logging.getLogger('asyncio').setLevel(logging.DEBUG)
 
-        self.log("clientconnect")
+        self.log("[sans-io] clientconnect")
 
         self.server_event(events.Start())
         await self.handle_connection(self.client)
 
-        self.log("clientdisconnect")
+        self.log("[sans-io] clientdisconnect")
 
         if self.transports:
             await asyncio.wait([
@@ -163,24 +164,20 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
     opts = moptions.Options()
-    opts.mode = "reverse:example.com"
-    # test client-tls-first scenario
-    # opts.upstream_cert = False
-    layers.ClientTLSLayer.debug = ""
-    layers.ServerTLSLayer.debug = "  "
-    layers.TCPLayer.debug = "    "
-
+    opts.mode = "regular"
 
     async def handle(reader, writer):
         layer_stack = [
-            layers.ClientTLSLayer,
-            # layers.ServerTLSLayer,
+            layers.ServerTLSLayer,
+            lambda ctx: layers.HTTPLayer(ctx, HTTPMode.regular),
+            lambda ctx: setattr(ctx.server, "tls", True) or layers.ClientTLSLayer(ctx),
+            layers.ServerTLSLayer,
             layers.TCPLayer,
-            # lambda c: layers.HTTPLayer(c, HTTPMode.transparent),
         ]
 
         def next_layer(nl: layer.NextLayer):
             nl.layer = layer_stack.pop(0)(nl.context)
+            nl.layer.debug = "  " * len(nl.context.layers)
 
         await SimpleConnectionHandler(reader, writer, opts, {
             "next_layer": next_layer
