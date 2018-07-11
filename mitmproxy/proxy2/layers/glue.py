@@ -112,7 +112,7 @@ class GlueLayer(Layer):
         self.connection_handler = yield GlueGetConnectionHandler()
         self.master = ctx.master
 
-        self.c1, self.c2 = socket.socketpair(socket.AF_INET)
+        self.c1, self.c2 = socketpair()
 
         self.client_conn = GlueClientConnection(self.c1, self.context.client.address)
         self.root_context = proxy.RootContext(
@@ -207,3 +207,42 @@ class GlueLayer(Layer):
     @expect(events.DataReceived, events.ConnectionClosed)
     def done(self, _):
         yield from ()
+
+
+# https://github.com/python/cpython/blob/5c23e21ef655db35af45ed98a62eb54bff64dbd0/Lib/socket.py#L493
+def socketpair(family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0):
+    if family == socket.AF_INET:
+        host = socket._LOCALHOST
+    elif family == socket.AF_INET6:
+        host = socket._LOCALHOST_V6
+    else:
+        raise ValueError("Only AF_INET and AF_INET6 socket address families "
+                         "are supported")
+    if type != socket.SOCK_STREAM:
+        raise ValueError("Only SOCK_STREAM socket type is supported")
+    if proto != 0:
+        raise ValueError("Only protocol zero is supported")
+
+    # We create a connected TCP socket. Note the trick with
+    # setblocking(False) that prevents us from having to create a thread.
+    lsock = socket.socket(family, type, proto)
+    try:
+        lsock.bind((host, 0))
+        lsock.listen()
+        # On IPv6, ignore flow_info and scope_id
+        addr, port = lsock.getsockname()[:2]
+        csock = socket.socket(family, type, proto)
+        try:
+            csock.setblocking(False)
+            try:
+                csock.connect((addr, port))
+            except (BlockingIOError, InterruptedError):
+                pass
+            csock.setblocking(True)
+            ssock, _ = lsock.accept()
+        except:
+            csock.close()
+            raise
+    finally:
+        lsock.close()
+    return (ssock, csock)
