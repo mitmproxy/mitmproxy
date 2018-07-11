@@ -1,6 +1,6 @@
 import os
 import struct
-from typing import MutableMapping, Optional, Iterator, Union, Generator, Any
+from typing import MutableMapping, Optional, Iterator, Generator, Any
 
 from OpenSSL import SSL
 
@@ -175,6 +175,7 @@ class ServerTLSLayer(_TLSLayer):
     """
     This layer manages TLS on potentially multiple server connections.
     """
+    lazy_init: bool = False
 
     def __init__(self, context: context.Context):
         super().__init__(context)
@@ -185,13 +186,16 @@ class ServerTLSLayer(_TLSLayer):
         yield from self.child_layer.handle_event(event)
 
         server = self.context.server
-        if server.connected and server.tls:
-            yield from self._start_tls(server)
+        if server.tls:
+            if server.connected:
+                yield from self._start_tls(server)
+            else:
+                self.lazy_init = True
         self._handle_event = self.process
 
     _handle_event = start
 
-    def process(self, event: Union[events.DataReceived, events.ConnectionClosed]):
+    def process(self, event: events.Event) -> None:
         if isinstance(event, events.DataReceived) and event.connection in self.tls:
             if not event.connection.tls_established:
                 yield from self.negotiate(event)
@@ -200,7 +204,7 @@ class ServerTLSLayer(_TLSLayer):
         elif isinstance(event, events.OpenConnectionReply):
             err = event.reply
             conn = event.command.connection
-            if not err and conn.tls:
+            if self.lazy_init and not err and conn == self.context.server:
                 yield from self._start_tls(conn)
             yield from self.event_to_child(event)
         elif isinstance(event, events.ConnectionClosed):
@@ -334,16 +338,16 @@ class ClientTLSLayer(_TLSLayer):
         For example, we need to check if the client does ALPN or not.
         """
         if not self.context.server.connected:
+            self.context.server.alpn_offers = [
+                x for x in self.context.client.alpn_offers
+                if not (x.startswith(b"h2-") or x.startswith(b"spdy"))
+            ]
+
             err = yield commands.OpenConnection(self.context.server)
             if err:
                 yield commands.Log(
                     "Cannot establish server connection, which is required to establish TLS with the client."
                 )
-
-        self.context.server.alpn_offers = [
-            x for x in self.context.client.alpn_offers
-            if not (x.startswith(b"h2-") or x.startswith(b"spdy"))
-        ]
 
     def start_negotiate(self):
         # FIXME: Do this properly

@@ -12,7 +12,7 @@ from mitmproxy.proxy2.utils import expect
 
 class WebsocketLayer(Layer):
     """
-    Simple TCP layer that just relays messages right now.
+    WebSocket layer that intercepts and relays messages.
     """
     context: Context = None
     flow: websocket.WebSocketFlow

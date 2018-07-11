@@ -1,3 +1,4 @@
+import copy
 from typing import Optional, List, Union, Sequence
 
 from mitmproxy.options import Options

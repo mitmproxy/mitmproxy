@@ -94,7 +94,7 @@ class NextLayer:
             if alpn == b'http/1.1':
                 return layers.GlueLayer(context)  # TODO
                 # return layers.HTTPLayer(context, HTTPMode.transparent)
-            elif alpn == b"http/2":
+            elif alpn == b"h2":
                 return layers.GlueLayer(context)  # TODO
 
         # 7. Check for raw tcp mode. Very simple heuristic here - the first three bytes should be
