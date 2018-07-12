@@ -463,10 +463,20 @@ class SaveOptions(RequestHandler):
         pass
 
 
+class DnsRebind(RequestHandler):
+    def get(self):
+        raise tornado.web.HTTPError(
+            403,
+            reason="To protect against DNS rebinding, mitmweb can only be accessed by IP at the moment. "
+                   "(https://github.com/mitmproxy/mitmproxy/issues/3234)"
+        )
+
+
 class Application(tornado.web.Application):
     def __init__(self, master, debug):
         self.master = master
         super().__init__(
+            default_host="dns-rebind-protection",
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
@@ -475,9 +485,10 @@ class Application(tornado.web.Application):
             autoreload=False,
         )
 
+        self.add_handlers("dns-rebind-protection", [(r"/.*", DnsRebind)])
         self.add_handlers(
             # make mitmweb accessible by IP only to prevent DNS rebinding.
-            r'(localhost|\d+\.\d+\.\d+\.\d+)',
+            r'^(localhost|[0-9.:\[\]]+)$',
             [
                 (r"/", IndexHandler),
                 (r"/filter-help(?:\.json)?", FilterHelp),
