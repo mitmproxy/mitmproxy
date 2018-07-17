@@ -55,6 +55,18 @@ def _make_request_from_event(event: h11.Request) -> http.HTTPRequest:
         -1  # FIXME: first_byte_timestamp
     )
 
+def _make_event_from_request(request: http.HTTPRequest) -> h11.Request:
+    if request.first_line_format == FirstLineFormat.relative.value:
+        target = request.path
+    else:
+        target = request.url
+    return h11.Request(
+        method=request.method,
+        headers=request.headers.fields,
+        http_version=request.http_version.replace("HTTP/", ""),
+        target=target
+    )
+
 
 def validate_request_form(
         mode: HTTPMode,
@@ -105,7 +117,8 @@ class HTTPLayer(Layer):
         def log_event(orig):
             def next_event():
                 e = orig()
-                yield commands.Log(f"[h11] {e}")
+                if False:
+                    yield commands.Log(f"[h11] {e}")
                 return e
 
             return next_event
@@ -178,6 +191,11 @@ class HTTPLayer(Layer):
 
                     if self.mode == HTTPMode.upstream:
                         raise NotImplementedError()
+                elif self.flow.request.first_line_format == FirstLineFormat.absolute.value:
+                    if self.mode == HTTPMode.regular:
+                        self.context.server.address = (self.flow.request.host, self.flow.request.port)
+                    else:
+                        raise NotImplementedError()
 
                 yield from self._send_request()
                 return
@@ -192,9 +210,12 @@ class HTTPLayer(Layer):
                 yield commands.CloseConnection(self.context.client)
                 self._handle_event = self.done
                 return
+
+        self.flow_events[0].insert(0, _make_event_from_request(self.flow.request))
         for e in self.flow_events[0]:
             bytes_to_send = self.server_conn.send(e)
-            yield commands.SendData(self.context.server, bytes_to_send)
+            if bytes_to_send:
+                yield commands.SendData(self.context.server, bytes_to_send)
         self.state = self.read_response_headers
 
     def read_response_headers(self):
@@ -235,7 +256,8 @@ class HTTPLayer(Layer):
     def _send_response(self):
         for e in self.flow_events[1]:
             bytes_to_send = self.client_conn.send(e)
-            yield commands.SendData(self.context.client, bytes_to_send)
+            if bytes_to_send:
+                yield commands.SendData(self.context.client, bytes_to_send)
 
         # reset for next request.
         self.state = self.read_request_headers
