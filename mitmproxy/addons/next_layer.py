@@ -1,7 +1,7 @@
 import functools
 import typing
 
-from mitmproxy import ctx
+from mitmproxy import ctx, log
 from mitmproxy.net.tls import is_tls_record_magic
 from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.proxy.protocol.http import HTTPMode
@@ -40,6 +40,8 @@ class NextLayer:
                 print(f"[glue: skipping nextlayer for {nextlayer}]")
             return
         nextlayer.layer = self._next_layer(nextlayer, nextlayer.context)
+        if nextlayer.layer and log.log_tier(ctx.options.termlog_verbosity) >= log.log_tier("debug"):
+            nextlayer.layer.debug = "  " * len(nextlayer.context.layers)
 
     def _next_layer(self, nextlayer: layer.NextLayer, context: context.Context):
         # 0. New connection
@@ -92,8 +94,7 @@ class NextLayer:
         if isinstance(top_layer, layers.ServerTLSLayer):
             alpn = context.client.alpn
             if alpn == b'http/1.1':
-                return layers.GlueLayer(context)  # TODO
-                # return layers.HTTPLayer(context, HTTPMode.transparent)
+                return layers.HTTPLayer(context, HTTPMode.transparent)
             elif alpn == b"h2":
                 return layers.GlueLayer(context)  # TODO
 

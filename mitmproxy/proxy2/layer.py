@@ -1,9 +1,11 @@
 """
 Base class for protocol layers.
 """
-import collections
+import textwrap
 import typing
 from abc import abstractmethod
+
+import collections
 
 from mitmproxy.proxy2 import commands, events
 from mitmproxy.proxy2.context import Context, Connection
@@ -37,7 +39,7 @@ class Layer:
     def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
         """Handle a proxy server event"""
         if False:
-            yield None
+            yield
 
     def handle_event(self, event: events.Event) -> commands.TCommandGenerator:
         if self._paused:
@@ -48,7 +50,7 @@ class Layer:
             )
             if self.debug is not None:
                 yield commands.Log(
-                    f"{self.debug}{'>>' if pause_finished else '>!'} {event}", "debug"
+                    textwrap.indent(f"{'>>' if pause_finished else '>!'} {event}", self.debug)
                 )
             if pause_finished:
                 yield from self.__continue(event)
@@ -56,7 +58,7 @@ class Layer:
                 self._paused_event_queue.append(event)
         else:
             if self.debug is not None:
-                yield commands.Log(f"{self.debug}>> {event}", "debug")
+                yield commands.Log(textwrap.indent(f">> {event}", self.debug), "debug")
             command_generator = self._handle_event(event)
             yield from self.__process(command_generator)
 
@@ -74,7 +76,7 @@ class Layer:
         while command:
             if self.debug is not None:
                 if not isinstance(command, commands.Log):
-                    yield commands.Log(f"{self.debug}<< {command}", "debug")
+                    yield commands.Log(textwrap.indent(f"<< {command}", self.debug), "debug")
             if command.blocking is True:
                 command.blocking = self  # assign to our layer so that higher layers don't block.
                 self._paused = Paused(
@@ -96,7 +98,7 @@ class Layer:
         while not self._paused and self._paused_event_queue:
             event = self._paused_event_queue.popleft()
             if self.debug is not None:
-                yield commands.Log(f"{self.debug}!> {event}", "debug")
+                yield commands.Log(textwrap.indent(f"!> {event}", self.debug), "debug")
             command_generator = self._handle_event(event)
             yield from self.__process(command_generator)
 
@@ -124,7 +126,6 @@ class NextLayer(Layer):
         self.events.append(event)
 
         # We receive new data. Let's find out if we can determine the next layer now?
-
         if isinstance(event, mevents.DataReceived):
             # For now, we only ask if we have received new data to reduce hook noise.
             yield from self.ask_now()
@@ -145,7 +146,6 @@ class NextLayer(Layer):
             self._handle_event = self.layer.handle_event
 
     # Utility methods for whoever decides what the next layer is going to be.
-
     def data_client(self):
         return self._data(self.context.client)
 
