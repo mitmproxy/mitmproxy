@@ -28,6 +28,57 @@ class TestListCompleter:
                 assert c.cycle() == expected
 
 
+class TestCommandHistory:
+    def fill_history(self, commands):
+        with taddons.context() as tctx:
+            history = commander.CommandHistory(tctx.master, size=3)
+            for c in commands:
+                cbuf = commander.CommandBuffer(tctx.master, c)
+                history.add_command(cbuf)
+        return history, tctx.master
+
+    def test_add_command(self):
+        commands = ["command1", "command2"]
+        history, tctx_master = self.fill_history(commands)
+
+        history_commands = [buf.text for buf in history.history]
+        assert history_commands == [""] + commands
+
+        # The history size is only 3. So, we forget the first one command,
+        # when adding fourth command
+        cbuf = commander.CommandBuffer(tctx_master, "command3")
+        history.add_command(cbuf)
+        history_commands = [buf.text for buf in history.history]
+        assert history_commands == commands + ["command3"]
+
+        # Commands with the same text are not repeated in the history one by one
+        history.add_command(cbuf)
+        history_commands = [buf.text for buf in history.history]
+        assert history_commands == commands + ["command3"]
+
+    def test_get_next(self):
+        commands = ["command1", "command2"]
+        history, tctx_master = self.fill_history(commands)
+
+        history.index = -1
+        expected_items = ["", "command1", "command2"]
+        for i in range(3):
+            assert history.get_next().text == expected_items[i]
+        # We are at the last item of the history
+        assert history.get_next() is None
+
+    def test_get_prev(self):
+        commands = ["command1", "command2"]
+        history, tctx_master = self.fill_history(commands)
+
+        expected_items = ["command2", "command1", ""]
+        history.index = history.last_index + 1
+        for i in range(3):
+            assert history.get_prev().text == expected_items[i]
+        # We are at the first item of the history
+        assert history.get_prev() is None
+
+
 class TestCommandBuffer:
 
     def test_backspace(self):
