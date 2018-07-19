@@ -160,7 +160,7 @@ class CommandBuffer:
 
 class CommandHistory:
     def __init__(self, master: mitmproxy.master.Master, size: int=30) -> None:
-        self.history: collections.deque = collections.deque(
+        self.saved_commands: collections.deque = collections.deque(
             [CommandBuffer(master, "")],
             maxlen=size
         )
@@ -168,27 +168,28 @@ class CommandHistory:
 
     @property
     def last_index(self):
-        return len(self.history) - 1
+        return len(self.saved_commands) - 1
 
     def get_next(self) -> typing.Optional[CommandBuffer]:
         if self.index < self.last_index:
             self.index = self.index + 1
-            return self.history[self.index]
+            return self.saved_commands[self.index]
         return None
 
     def get_prev(self) -> typing.Optional[CommandBuffer]:
         if self.index > 0:
             self.index = self.index - 1
-            return self.history[self.index]
+            return self.saved_commands[self.index]
         return None
 
     def add_command(self, command: CommandBuffer, execution: bool=False) -> None:
         if self.index == self.last_index or execution:
-            last_item_empty = not self.history[-1].text
-            if self.history[-1].text == command.text or (last_item_empty and execution):
-                self.history[-1] = copy.copy(command)
+            last_item = self.saved_commands[-1]
+            last_item_empty = not last_item.text
+            if last_item.text == command.text or (last_item_empty and execution):
+                self.saved_commands[-1] = copy.copy(command)
             else:
-                self.history.append(command)
+                self.saved_commands.append(command)
                 if not execution and self.index < self.last_index:
                     self.index += 1
             if execution:

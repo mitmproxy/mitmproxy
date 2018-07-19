@@ -41,20 +41,31 @@ class TestCommandHistory:
         commands = ["command1", "command2"]
         history, tctx_master = self.fill_history(commands)
 
-        history_commands = [buf.text for buf in history.history]
-        assert history_commands == [""] + commands
+        saved_commands = [buf.text for buf in history.saved_commands]
+        assert saved_commands == [""] + commands
 
-        # The history size is only 3. So, we forget the first one command,
-        # when adding fourth command
+        # The history size is only 3. So, we forget the first
+        # one command, when adding fourth command
         cbuf = commander.CommandBuffer(tctx_master, "command3")
         history.add_command(cbuf)
-        history_commands = [buf.text for buf in history.history]
-        assert history_commands == commands + ["command3"]
+        saved_commands = [buf.text for buf in history.saved_commands]
+        assert saved_commands == commands + ["command3"]
 
         # Commands with the same text are not repeated in the history one by one
         history.add_command(cbuf)
-        history_commands = [buf.text for buf in history.history]
-        assert history_commands == commands + ["command3"]
+        saved_commands = [buf.text for buf in history.saved_commands]
+        assert saved_commands == commands + ["command3"]
+
+        # adding command in execution mode sets index at the beginning of the history
+        # and replace the last command buffer if it is empty or has the same text
+        cbuf = commander.CommandBuffer(tctx_master, "")
+        history.add_command(cbuf)
+        history.index = 0
+        cbuf = commander.CommandBuffer(tctx_master, "command4")
+        history.add_command(cbuf, True)
+        assert history.index == history.last_index
+        saved_commands = [buf.text for buf in history.saved_commands]
+        assert saved_commands == ["command2", "command3", "command4"]
 
     def test_get_next(self):
         commands = ["command1", "command2"]
