@@ -16,23 +16,23 @@ class TestSession:
         os.remove('tmp.sqlite')
 
     def test_session_not_valid(self, tdata):
-        path = tdata.path('mitmproxy/data/') + 'test.sqlite'
+        path = tdata.path('mitmproxy/data/') + '/test.sqlite'
         if os.path.isfile(path):
             os.remove(path)
         with open(path, 'w') as handle:
             handle.write("Not valid data")
         with pytest.raises(SessionLoadException):
-            s = session.SessionDB(path)
+            session.SessionDB(path)
 
     def test_session_new_persistent(self, tdata):
-        path = tdata.path('mitmproxy/data/') + 'test.sqlite'
+        path = tdata.path('mitmproxy/data/') + '/test.sqlite'
         if os.path.isfile(path):
             os.remove(path)
-        s = session.SessionDB(path)
+        session.SessionDB(path)
         assert session.SessionDB.is_session_db(path)
 
     def test_session_load_existing(self, tdata):
-        path = tdata.path('mitmproxy/data/') + 'test.sqlite'
+        path = tdata.path('mitmproxy/data/') + '/test.sqlite'
         if os.path.isfile(path):
             os.remove(path)
         con = sqlite3.connect(path)
@@ -43,7 +43,7 @@ class TestSession:
             blob = b'blob_of_data'
             con.execute(f'INSERT INTO FLOW VALUES(1, 1, 1, "{blob}");')
         con.close()
-        s = session.SessionDB(path)
+        session.SessionDB(path)
         con = sqlite3.connect(path)
         with con:
             cur = con.cursor()
