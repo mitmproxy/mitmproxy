@@ -1,5 +1,6 @@
 # Default view cutoff *in lines*
 import typing
+from mitmproxy.coretypes import multidict
 
 VIEW_CUTOFF = 512
 
@@ -51,7 +52,13 @@ def format_dict(
 
     max_key_len = max((len(k) for k in d.keys()), default=0)
     max_key_len = min((max_key_len, KEY_MAX), default=0)
-    for key, value in d.items():
+
+    if isinstance(d, multidict.MultiDictView):
+        items = d.items(multi=True)
+    else:
+        items = d.items()
+
+    for key, value in items:
         if isinstance(key, bytes):
             key += b":"
         else:
