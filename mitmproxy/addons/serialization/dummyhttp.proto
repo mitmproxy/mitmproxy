@@ -1,0 +1,35 @@
+
+syntax = 'proto2';
+
+/* Dummy here means: not complete, not compliant
+*  to protobuf design patterns. Its only purpose
+*  is testing the serialization process
+*  package dummy;
+*/
+package dummy;
+
+/* Defines the format of a dummy HTTPResponse.
+*  Mostly, we want to test how the python
+*  protobuf code handles serialization of
+*  medium to large bodies.
+*/
+message HTTPResponse {
+
+    message HTTPRequest {
+
+            enum HTTPMethod {
+                GET = 0;
+                PUT = 1;
+                POST = 2;
+            }
+
+            required HTTPMethod method = 1;
+            required string host = 2;
+            optional int32 port = 3;
+            optional string path = 4;
+    }
+
+    required HTTPRequest request = 1;
+    required int32 status_code = 2;
+    optional bytes content = 3;
+}
