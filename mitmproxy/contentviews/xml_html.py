@@ -138,7 +138,7 @@ def is_inline(prev2: Token, prev1: Token, t: Token, next1: Token, next2: Token) 
         if is_inline_text(prev2, prev1, t) or is_inline_text(t, next1, next2):
             return True
         if isinstance(next1, Tag) and t.is_opening and next1.is_closing and t.tag == next1.tag:
-                return True  # <div></div> (start tag)
+            return True  # <div></div> (start tag)
         if isinstance(prev1, Tag) and prev1.is_opening and t.is_closing and prev1.tag == t.tag:
             return True  # <div></div> (end tag)
     return False
