@@ -16,16 +16,22 @@ class CommandLanguageParser:
         self.command_manager = command_manager
 
     def p_command_line(self, p):
-        """command_line : command_call"""
+        """command_line : command_call_no_parentheses
+                        | command_call_with_parentheses"""
         p[0] = p[1]
-
-    def p_command_call(self, p):
-        """command_call : COMMAND argument_list"""
-        p[0] = self.command_manager.call_strings(p[1], p[2])
         self.return_value = p[0]
+
+    def p_command_call_no_parentheses(self, p):
+        """command_call_no_parentheses : COMMAND argument_list"""
+        p[0] = self.command_manager.call_strings(p[1], p[2])
+
+    def p_command_call_with_parentheses(self, p):
+        """command_call_with_parentheses : COMMAND LPAREN argument_list RPAREN"""
+        p[0] = self.command_manager.call_strings(p[1], p[3])
 
     def p_argument_list(self, p):
         """argument_list : empty
+                         | argument
                          | argument_list argument"""
         if len(p) == 2:
             p[0] = [] if p[1] is None else [p[1]]
@@ -36,8 +42,14 @@ class CommandLanguageParser:
     def p_argument(self, p):
         """argument : PLAIN_STR
                     | quoted_str
-                    | COMMAND"""
+                    | COMMAND
+                    | array
+                    | command_call_with_parentheses"""
         p[0] = p[1]
+
+    def p_array(self, p):
+        """array: LBRACE argument_list RBRACE"""
+        p[0] = ",".join(p[2])
 
     def p_quoted_str(self, p):
         """quoted_str : QUOTED_STR"""
