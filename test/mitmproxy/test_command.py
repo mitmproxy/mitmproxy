@@ -28,6 +28,10 @@ class TAddon:
     def cmd4(self, a: int, b: str, c: mitmproxy.types.Path) -> str:
         return "ok"
 
+    @command.command("cmd5")
+    def cmd5(self, choices: typing.Sequence[str]) -> typing.Sequence[str]:
+        return choices
+
     @command.command("subcommand")
     def subcommand(self, cmd: mitmproxy.types.Cmd, *args: mitmproxy.types.Arg) -> str:
         return "ok"
@@ -291,8 +295,11 @@ def test_simple():
         c = command.CommandManager(tctx.master)
         a = TAddon()
         c.add("one.two", a.cmd1)
+        c.add("array.command", a.cmd5)
         assert c.commands["one.two"].help == "cmd1 help"
         assert(c.execute("one.two foo") == "ret foo")
+        assert (c.execute("one.two(foo)") == "ret foo")
+        assert (c.execute("array.command [1 2 3]") == ["1", "2", "3"])
         assert(c.execute("one.two \"foo\"") == "ret foo")
         assert(c.execute("one.two 'foo'") == "ret foo")
         assert(c.call("one.two", "foo") == "ret foo")

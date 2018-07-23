@@ -42,14 +42,14 @@ class CommandLanguageParser:
     def p_argument(self, p):
         """argument : PLAIN_STR
                     | quoted_str
-                    | COMMAND
                     | array
+                    | COMMAND
                     | command_call_with_parentheses"""
         p[0] = p[1]
 
     def p_array(self, p):
-        """array: LBRACE argument_list RBRACE"""
-        p[0] = ",".join(p[2])
+        """array : LBRACE argument_list RBRACE"""
+        p[0] = ",".join(p[2]) if p[2] else ""
 
     def p_quoted_str(self, p):
         """quoted_str : QUOTED_STR"""

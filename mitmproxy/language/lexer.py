@@ -7,12 +7,9 @@ import ply.lex as lex
 class CommandLanguageLexer:
     tokens = (
         "WHITESPACE",
-        "LPAREN",
-        "RPAREN",
-        "LBRACE",
-        "RBRACE",
-        "PLAIN_STR",
-        "QUOTED_STR",
+        "LPAREN", "RPAREN",
+        "LBRACE", "RBRACE",
+        "PLAIN_STR", "QUOTED_STR",
         "COMMAND"
     )
     states = (
@@ -30,7 +27,7 @@ class CommandLanguageLexer:
     t_RBRACE = r"\]"
 
     special_symbols = re.escape("()[]")
-    plain_str = rf"""[^{special_symbols}\s]+"""
+    plain_str = rf"[^{special_symbols}\s]+"
 
     def t_COMMAND(self, t):
         r"""\w+(\.\w+)+"""
