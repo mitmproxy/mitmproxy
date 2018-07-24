@@ -1,5 +1,6 @@
-import os
+import tempfile
 import sqlite3
+import os
 
 from mitmproxy.exceptions import SessionLoadException
 from mitmproxy.utils.data import pkg_data
@@ -19,23 +20,38 @@ class SessionDB:
         or create a new one with optional path.
         :param db_path:
         """
+        self.temp = None
+        self.con = None
         if db_path is not None and os.path.isfile(db_path):
             self._load_session(db_path)
         else:
-            path = db_path or 'tmp.sqlite'
-            # in case tmp.sqlite already exists in FS
-            if os.path.isfile(path):
-                os.remove(path)
+            if db_path:
+                path = db_path
+            else:
+                # We use tempfile only to generate a path, since we demand file creation to sqlite, and removal to os.
+                self.temp = tempfile.NamedTemporaryFile()
+                path = self.temp.name
+                self.temp.close()
             self.con = sqlite3.connect(path)
-            script_path = pkg_data.path("io/sql/session_create.sql")
-            qry = open(script_path, 'r').read()
-            with self.con:
-                self.con.executescript(qry)
+            self._create_session()
+
+    def __del__(self):
+        if self.con:
+            self.con.close()
+        if self.temp:
+            # This is a workaround to ensure portability
+            os.remove(self.temp.name)
 
     def _load_session(self, path):
         if not self.is_session_db(path):
             raise SessionLoadException('Given path does not point to a valid Session')
         self.con = sqlite3.connect(path)
+
+    def _create_session(self):
+        script_path = pkg_data.path("io/sql/session_create.sql")
+        qry = open(script_path, 'r').read()
+        with self.con:
+            self.con.executescript(qry)
 
     @staticmethod
     def is_session_db(path):
@@ -49,7 +65,7 @@ class SessionDB:
             cursor = c.cursor()
             cursor.execute("SELECT NAME FROM sqlite_master WHERE type='table';")
             rows = cursor.fetchall()
-            tables = [('FLOW',), ('BODY',), ('META',), ('ANNOTATION',)]
+            tables = [('flow',), ('body',), ('annotation',)]
             if all(elem in rows for elem in tables):
                 c.close()
                 return True
