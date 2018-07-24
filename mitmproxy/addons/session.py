@@ -1,4 +1,5 @@
 import tempfile
+import shutil
 import sqlite3
 import os
 
@@ -20,7 +21,7 @@ class SessionDB:
         or create a new one with optional path.
         :param db_path:
         """
-        self.temp = None
+        self.tempdir = None
         self.con = None
         if db_path is not None and os.path.isfile(db_path):
             self._load_session(db_path)
@@ -28,19 +29,16 @@ class SessionDB:
             if db_path:
                 path = db_path
             else:
-                # We use tempfile only to generate a path, since we demand file creation to sqlite, and removal to os.
-                self.temp = tempfile.NamedTemporaryFile()
-                path = self.temp.name
-                self.temp.close()
+                self.tempdir = tempfile.mkdtemp()
+                path = os.path.join(self.tempdir, 'tmp.sqlite')
             self.con = sqlite3.connect(path)
             self._create_session()
 
     def __del__(self):
         if self.con:
             self.con.close()
-        if self.temp:
-            # This is a workaround to ensure portability
-            os.remove(self.temp.name)
+        if self.tempdir:
+            shutil.rmtree(self.tempdir)
 
     def _load_session(self, path):
         if not self.is_session_db(path):

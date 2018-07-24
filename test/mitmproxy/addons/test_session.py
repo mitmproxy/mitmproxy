@@ -8,10 +8,14 @@ from mitmproxy.utils.data import pkg_data
 
 
 class TestSession:
-    def test_session_temporary(self, tdata):
+    def test_session_temporary(self):
         s = session.SessionDB()
-        filename = s.temp.name
+        td = s.tempdir
+        filename = os.path.join(td, 'tmp.sqlite')
         assert session.SessionDB.is_session_db(filename)
+        assert os.path.isdir(td)
+        del s
+        assert not os.path.isdir(td)
 
     def test_session_not_valid(self, tdata):
         path = tdata.path('mitmproxy/data/') + '/test_snv.sqlite'
