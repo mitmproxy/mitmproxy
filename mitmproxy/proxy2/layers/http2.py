@@ -45,10 +45,7 @@ from mitmproxy.proxy2.utils import expect
 #             # stream is already closed - good
 #             pass
 #         self.conn.send(self.data_to_send())
-#
-#     def safe_update_settings(self, new_settings: Dict[int, Any]):
-#         self.update_settings(new_settings)
-#         self.conn.send(self.data_to_send())
+
 #
 #     def safe_send_headers(self, raise_zombie: Callable, stream_id: int, headers: headers.Headers, **kwargs):
 #         self.send_headers(stream_id, headers.fields, **kwargs)
@@ -76,8 +73,8 @@ from mitmproxy.proxy2.utils import expect
 #                 position += max_outbound_frame_size
 #         self.end_stream(stream_id)
 #         self.conn.send(self.data_to_send())
-#
-#
+
+
 # class Http2Layer(base.Layer):
 #
 #     if False:
@@ -215,10 +212,7 @@ from mitmproxy.proxy2.utils import expect
 #                     self.connections[other_conn].safe_reset_stream(other_stream_id, event.error_code)
 #         return True
 #
-#     def _handle_remote_settings_changed(self, event, other_conn):
-#         new_settings = dict([(key, cs.new_value) for (key, cs) in event.changed_settings.items()])
-#         self.connections[other_conn].safe_update_settings(new_settings)
-#         return True
+
 #
 #     def _handle_connection_terminated(self, event, is_server):
 #         self.log("HTTP/2 connection terminated by {}: error code: {}, last stream id: {}, additional data: {}".format(
@@ -359,9 +353,8 @@ from mitmproxy.proxy2.utils import expect
 #         except Exception as e:  # pragma: no cover
 #             self.log(repr(e), "info")
 #             self._kill_all_streams()
-#
-#
-#
+
+
 # class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThread):
 #
 #     def __init__(self, ctx, h2_connection, stream_id: int, request_headers: mitmproxy.net.http.Headers) -> None:
@@ -665,13 +658,13 @@ class HTTP2Layer(Layer):
         self.server_conn = connection.H2Connection(config=server_config)
 
         yield commands.Log("HTTP/2 connection started")
+
         self._handle_event = self.process_data
 
     _handle_event = start
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def process_data(self, event: events.Event) -> commands.TCommandGenerator:
-        print("PROCESS_DATA")
         if isinstance(event, events.DataReceived):
             from_client = event.connection == self.context.client
             if from_client:
@@ -708,7 +701,9 @@ class HTTP2Layer(Layer):
                 elif isinstance(event, h2events.StreamReset):
                     yield from self._handle_stream_reset(eid, event, is_server, other_conn)
                 elif isinstance(event, h2events.RemoteSettingsChanged):
-                    yield from self._handle_remote_settings_changed(event, other_conn)
+                    new_settings = dict([(key, cs.new_value) for (key, cs) in event.changed_settings.items()])
+                    other.update_settings(new_settings)
+                    yield command.SendData(self.context.client if from_client else self.context.server, other.data_to_send())
                 elif isinstance(event, h2events.ConnectionTerminated):
                     yield from self._handle_connection_terminated(event, is_server)
                 elif isinstance(event, h2events.PushedStreamReceived):
