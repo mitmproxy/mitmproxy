@@ -64,7 +64,7 @@ setup(
         "brotlipy>=0.7.0,<0.8",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "click>=6.2, <7",
-        "cryptography>=2.1.4,<2.3",
+        "cryptography>=2.1.4,<2.4",
         "h2>=3.0.1,<4",
         "hyperframe>=5.1.0,<6",
         "kaitaistruct>=0.7,<0.9",
@@ -76,7 +76,7 @@ setup(
         "pyperclip>=1.6.0, <1.7",
         "ruamel.yaml>=0.13.2, <0.16",
         "sortedcontainers>=1.5.4,<2.1",
-        "tornado>=4.3,<5.1",
+        "tornado>=4.3,<5.2",
         "urwid>=2.0.1,<2.1",
         "wsproto>=0.11.0,<0.12.0",
     ],
@@ -97,7 +97,7 @@ setup(
             "pytest-xdist>=1.22,<2",
             "pytest>=3.3,<4",
             "requests>=2.9.1, <3",
-            "tox>=3.0,<3.1",
+            "tox>=3.0,<3.2",
             "rstcheck>=2.2, <4.0",
         ],
         'examples': [
