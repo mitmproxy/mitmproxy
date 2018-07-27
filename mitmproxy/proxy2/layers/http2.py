@@ -643,39 +643,50 @@ from mitmproxy.proxy2.utils import expect
 
 class HTTP2Layer(Layer):
     context: Context = None
-    flow: websocket.WebSocketFlow
 
     def __init__(self, context: Context):
         super().__init__(context)
-        print("HERE")
         assert context.server.connected
 
     @expect(events.Start)
     def start(self, _) -> commands.TCommandGenerator:
+        client_config = h2.config.H2Configuration(
+            client_side=False,
+            header_encoding=False,
+            validate_outbound_headers=False,
+            validate_inbound_headers=False)
+        self.client_conn = connection.H2Connection(config=client_config)
+
+        server_config = h2.config.H2Configuration(
+            client_side=True,
+            header_encoding=False,
+            validate_outbound_headers=False,
+            validate_inbound_headers=False)
+        self.server_conn = connection.H2Connection(config=server_config)
+
+        yield commands.Log("HTTP/2 connection started")
         self._handle_event = self.process_data
 
     _handle_event = start
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def process_data(self, event: events.Event) -> commands.TCommandGenerator:
+        print("PROCESS_DATA")
         if isinstance(event, events.DataReceived):
             from_client = event.connection == self.context.client
             if from_client:
                 source = self.client_conn
                 other = self.server_conn
-                fb = self.client_frame_buffer
                 send_to = self.context.server
             else:
                 source = self.server_conn
                 other = self.client_conn
-                fb = self.server_frame_buffer
                 send_to = self.context.client
 
-            received_h2_events = source.receive_data(raw_frame)
-            yield commands.SendData(send_to, source.bytes_to_send())
+            received_h2_events = source.receive_data(event.data)
+            yield commands.SendData(send_to, source.data_to_send())
             for h2_event in received_h2_events:
                 yield commands.Log(
-                    "info",
                     "HTTP/2 event from {}: {}".format("client" if from_client else "server", h2_event)
                 )
 
@@ -708,7 +719,7 @@ class HTTP2Layer(Layer):
                     raise NotImplementedError('TrailersReceived not implemented')
 
         elif isinstance(event, events.ConnectionClosed):
-            yield commands.Log("error", "Connection closed abnormally")
+            yield commands.Log("Connection closed abnormally")
             if event.connection == self.context.server:
                 yield commands.CloseConnection(self.context.client)
             self._handle_event = self.done
