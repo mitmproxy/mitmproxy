@@ -225,7 +225,7 @@ def test_choice():
         ) is False
         assert b.is_valid(
             tctx.master.commands,
-            mitmproxy.types.Choice("nonexistent"),
+            mitmproxy.types.Choice("non.existent"),
             "invalid",
         ) is False
         comp = b.completion(tctx.master.commands, mitmproxy.types.Choice("options"), "")
