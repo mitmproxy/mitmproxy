@@ -11,10 +11,10 @@ class CommandLanguageParser:
     # the list of possible tokens is always required
     tokens = CommandLanguageLexer.tokens
 
-    def __init__(self, command_manager):
+    def __init__(self, command_manager) -> None:
         self.return_value: typing.Any = None
         self._pipe_value: typing.Any = None
-        self._inside_pipe: bool = False
+        self._ready_for_pipe: bool = False
         self.command_manager = command_manager
 
     # Grammar rules
@@ -30,6 +30,7 @@ class CommandLanguageParser:
                                | command_call"""
         p[0] = p[1]
         self._pipe_value = p[0]
+        self._ready_for_pipe = True
 
     def p_pipes_chain(self, p):
         """pipes_chain : empty
@@ -39,7 +40,6 @@ class CommandLanguageParser:
 
     def p_pipe_expression(self, p):
         """pipe_expression : PIPE command_call"""
-        self._inside_pipe = True
         p[0] = p[2]
         self._pipe_value = p[0]
 
@@ -90,7 +90,7 @@ class CommandLanguageParser:
     # Supporting methods
 
     def _command_call(self, command: str, args: list) -> typing.Any:
-        if self._inside_pipe:
+        if self._ready_for_pipe:
             new_first_argument = self._pipe_value
             args = [new_first_argument, *args]
         return self.command_manager.call_strings(command, args)
@@ -110,7 +110,7 @@ class CommandLanguageParser:
 
     def parse(self, lexer: lex.Lexer, **kwargs) -> typing.Any:
         self.parser.parse(lexer=lexer, **kwargs)
-        self._pipe_value = None
+        self._pipe_value, self._ready_for_pipe = None, False
         return self.return_value
 
 
