@@ -641,9 +641,9 @@ class HTTP2Layer(Layer):
                         server_stream_id,
                         headers=headers.items(),
                         end_stream=h2_event.stream_ended,
-                        # priority_exclusive=self.streams[eid].priority_exclusive,
-                        # priority_depends_on=self.streams[eid].priority_depends_on,
-                        # priority_weight=self.streams[eid].priority_weight,
+                        priority_exclusive=self.streams[eid].priority_exclusive,
+                        priority_depends_on=self.streams[eid].priority_depends_on,
+                        priority_weight=self.streams[eid].priority_weight,
                     )
                     yield commands.SendData(send_to_other, other.data_to_send())
 
@@ -653,11 +653,12 @@ class HTTP2Layer(Layer):
                     self.streams[eid].response_arrived.set()
 
                     headers = mitmproxy.net.http.Headers([[k, v] for k, v in h2_event.headers])
+                    status_code = int(headers.get(':status', 502))
                     headers.pop(":status", None)
 
                     self.streams[eid].flow.response = http.HTTPResponse(
                         http_version=b"HTTP/2.0",
-                        status_code=int(headers.get(':status', 502)),
+                        status_code=status_code,
                         reason=b'',
                         headers=headers,
                         content=None,
@@ -666,6 +667,9 @@ class HTTP2Layer(Layer):
                     )
 
                     yield commands.Hook("responseheaders", self.streams[eid].flow)
+
+                    if self.streams[eid].flow.response.stream:
+                        self.streams[eid].flow.response.data.content = None
 
                     headers = self.streams[eid].flow.response.headers
                     headers.insert(0, ":status", str(self.streams[eid].flow.response.status_code))
@@ -712,25 +716,39 @@ class HTTP2Layer(Layer):
                             (not from_client and self.streams[eid].flow.response and self.streams[eid].flow.response.stream)
                         )
                         if not streaming:
-                            stream_id = self.streams[eid].server_stream_id if from_client else self.streams[eid].stream_id
+                            content = b""
                             while True:
                                 try:
-                                    chunk = self.streams[eid].response_data_queue.get(timeout=0.1)
+                                    content += self.streams[eid].data_queue.get_nowait()
                                 except queue.Empty:
                                     break
 
-                                position = 0
-                                while position < len(chunk):
-                                    max_outbound_frame_size = other.max_outbound_frame_size
-                                    frame_chunk = chunk[position:position + max_outbound_frame_size]
-                                    # if other.local_flow_control_window(stream_id) < len(frame_chunk):
-                                    #     time.sleep(0.1)
-                                    #     continue
-                                    other.send_data(stream_id, frame_chunk)
-                                    yield commands.SendData(send_to_other, other.data_to_send())
-                                    position += max_outbound_frame_size
-                            other.end_stream(stream_id)
-                            yield commands.SendData(send_to_other, other.data_to_send())
+                            if from_client:
+                                self.streams[eid].flow.request.data.content = content
+                                self.streams[eid].flow.request.timestamp_end = time.time()
+                                yield commands.Hook("request", self.streams[eid].flow)
+                                content = self.streams[eid].flow.request.data.content
+                                stream_id = self.streams[eid].server_stream_id
+                            else:
+                                self.streams[eid].flow.response.data.content = content
+                                self.streams[eid].flow.response.timestamp_end = time.time()
+                                yield commands.Hook("response", self.streams[eid].flow)
+                                content = self.streams[eid].flow.response.data.content
+                                stream_id = self.streams[eid].stream_id
+
+                            max_outbound_frame_size = other.max_outbound_frame_size
+                            position = 0
+                            while position < len(content):
+                                frame_chunk = content[position:position + max_outbound_frame_size]
+                                # if other.local_flow_control_window(stream_id) < len(frame_chunk):
+                                #     time.sleep(0.1)
+                                #     continue
+                                other.send_data(stream_id, frame_chunk)
+                                yield commands.SendData(send_to_other, other.data_to_send())
+                                position += max_outbound_frame_size
+
+                        other.end_stream(stream_id)
+                        yield commands.SendData(send_to_other, other.data_to_send())
 
                 elif isinstance(h2_event, h2events.StreamReset):
                     if h2_event.error_code == h2.errors.ErrorCodes.CANCEL:
