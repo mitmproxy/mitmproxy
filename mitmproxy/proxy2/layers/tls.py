@@ -230,7 +230,7 @@ class ServerTLSLayer(_TLSLayer):
                     server.sni = self.context.client.sni.encode("idna")
                 else:
                     server.sni = server.address[0].encode("idna")
-                    self.tls[server].set_tlsext_host_name(server.sni)
+                self.tls[server].set_tlsext_host_name(server.sni)
         self.tls[server].set_connect_state()
 
         yield from self.process(events.DataReceived(server, b""))
