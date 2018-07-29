@@ -351,12 +351,15 @@ class ClientTLSLayer(_TLSLayer):
 
     def start_negotiate(self):
         # FIXME: Do this properly
+
+
         client = self.context.client
+        yield commands.Log(f"SNI: {client.sni}")
         server = self.context.server
         context = SSL.Context(SSL.SSLv23_METHOD)
         cert, privkey, cert_chain = CertStore.from_store(
             os.path.expanduser("~/.mitmproxy"), "mitmproxy"
-        ).get_cert(b"example.com", (b"example.com",))
+        ).get_cert(client.sni.encode(), (client.sni.encode(),))
         context.use_privatekey(privkey)
         context.use_certificate(cert.x509)
         context.set_cipher_list(tls.DEFAULT_CLIENT_CIPHERS)
