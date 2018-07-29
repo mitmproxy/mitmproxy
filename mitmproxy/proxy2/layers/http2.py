@@ -579,6 +579,7 @@ class HTTP2Layer(Layer):
 
         self.streams: Dict[int, Http2Stream] = dict()
         self.server_to_client_stream_ids: Dict[int, int] = dict([(0, 0)])
+        self.unfinished_bodies: Dict[connection.H2H2Connection, tuple] = dict()
 
         yield commands.Log("HTTP/2 connection started")
 
@@ -688,7 +689,6 @@ class HTTP2Layer(Layer):
                     yield commands.SendData(send_to_other, other.data_to_send())
 
                 elif isinstance(h2_event, h2events.DataReceived):
-                    yield commands.Log(f"response received {eid} {h2_event.stream_id}")
                     bsl = human.parse_size(self.context.options.body_size_limit)
                     if bsl and self.streams[eid].queued_data_length > bsl:
                         self.streams[eid].kill()
@@ -747,28 +747,20 @@ class HTTP2Layer(Layer):
                                 content = self.streams[eid].flow.response.data.content
                                 stream_id = self.streams[eid].stream_id
 
-                            max_outbound_frame_size = other.max_outbound_frame_size
-                            position = 0
-                            while position < len(content):
-                                frame_chunk = content[position:position + max_outbound_frame_size]
-                                # if other.local_flow_control_window(stream_id) < len(frame_chunk):
-                                #     time.sleep(0.1)
-                                #     continue
-                                other.send_data(stream_id, frame_chunk)
-                                yield commands.SendData(send_to_other, other.data_to_send())
-                                position += max_outbound_frame_size
-
-                        other.end_stream(stream_id)
-                        yield commands.SendData(send_to_other, other.data_to_send())
+                            self.unfinished_bodies[other] = (stream_id, content)
+                            yield from self._send_body(other, send_to_other)
 
                 elif isinstance(h2_event, h2events.StreamReset):
-                    if h2_event.error_code == h2.errors.ErrorCodes.CANCEL:
-                        try:
-                            other.reset_stream(eid, h2_event.error_code)
-                        except h2.exceptions.StreamClosedError:  # pragma: no cover
-                            # stream is already closed - good
-                            pass
-                        yield SendData(send_to_other, other.data_to_send())
+                    if eid in self.streams:
+                        if h2_event.error_code == h2.errors.ErrorCodes.CANCEL:
+                            try:
+                                stream_id = self.streams[eid].server_stream_id if from_client else self.streams[eid].stream_id
+                                if stream_id:
+                                    other.reset_stream(stream_id, h2_event.error_code)
+                            except h2.exceptions.StreamClosedError:  # pragma: no cover
+                                # stream is already closed - good
+                                pass
+                            yield commands.SendData(send_to_other, other.data_to_send())
 
                 elif isinstance(h2_event, h2events.RemoteSettingsChanged):
                     new_settings = dict([(key, cs.new_value) for (key, cs) in h2_event.changed_settings.items()])
@@ -776,6 +768,7 @@ class HTTP2Layer(Layer):
                     yield commands.SendData(send_to_other, other.data_to_send())
 
                 elif isinstance(h2_event, h2events.ConnectionTerminated):
+                    yield commands.Log(f"HTTP/2 Connection terminated: {h2_event}, {h2_event.additional_data}")
                     pass
                 elif isinstance(h2_event, h2events.PushedStreamReceived):
                     parent_eid = self.server_to_client_stream_ids[h2_event.parent_stream_id]
@@ -792,6 +785,9 @@ class HTTP2Layer(Layer):
 
                     yield commands.Hook("requestheaders", self.streams[h2_event.pushed_stream_id].flow)
 
+                elif isinstance(h2_event, h2events.WindowUpdated):
+                    if source in self.unfinished_bodies:
+                        self._send_body(source, send_to_source)
                 elif isinstance(h2_event, h2events.PriorityUpdated):
                     pass
                 elif isinstance(h2_event, h2events.TrailersReceived):
@@ -806,3 +802,21 @@ class HTTP2Layer(Layer):
     @expect(events.DataReceived, events.ConnectionClosed)
     def done(self, _):
         yield from ()
+
+    def _send_body(self, other, send_to_other):
+        stream_id, content = self.unfinished_bodies[other]
+
+        max_outbound_frame_size = other.max_outbound_frame_size
+        position = 0
+        while position < len(content):
+            frame_chunk = content[position:position + max_outbound_frame_size]
+            if other.local_flow_control_window(stream_id) < len(frame_chunk):
+                self.unfinished_bodies[other] = (stream_id, content[position:])
+                return
+            other.send_data(stream_id, frame_chunk)
+            yield commands.SendData(send_to_other, other.data_to_send())
+            position += max_outbound_frame_size
+
+        del self.unfinished_bodies[other]
+        other.end_stream(stream_id)
+        yield commands.SendData(send_to_other, other.data_to_send())
