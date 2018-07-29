@@ -5,7 +5,7 @@ from typing import MutableMapping, Optional, Iterator, Generator, Any
 from OpenSSL import SSL
 
 from mitmproxy.certs import CertStore
-from mitmproxy.net.tls import ClientHello
+from mitmproxy.net.tls import ClientHello, log_master_secret
 from mitmproxy.proxy.protocol import tls
 from mitmproxy.proxy2 import context
 from mitmproxy.proxy2 import layer, commands, events
@@ -363,6 +363,11 @@ class ClientTLSLayer(_TLSLayer):
         context.use_privatekey(privkey)
         context.use_certificate(cert.x509)
         context.set_cipher_list(tls.DEFAULT_CLIENT_CIPHERS)
+
+        # SSLKEYLOGFILE
+        if log_master_secret:
+            print("log_master_secret")
+            context.set_info_callback(log_master_secret)
 
         if server.alpn:
             def alpn_select_callback(conn_, options):

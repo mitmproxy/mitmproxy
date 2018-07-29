@@ -470,11 +470,15 @@ class Http2Stream:
 
     def __init__(self, h2_event, client_conn, server_conn) -> None:
 
-        self.stream_id = h2_event.stream_id
+        if isinstance(h2_event, h2.events.RequestReceived):
+            self.stream_id = h2_event.stream_id
+        else:
+            self.stream_id = h2_event.pushed_stream_id
+
         self.server_stream_id: int = None
         self.pushed = False
 
-        if h2_event.priority_updated is not None:
+        if isinstance(h2_event, h2.events.RequestReceived) and h2_event.priority_updated is not None:
             self.priority_exclusive = h2_event.priority_updated.exclusive
             self.priority_depends_on = h2_event.priority_updated.depends_on
             self.priority_weight = h2_event.priority_updated.weight
@@ -636,6 +640,8 @@ class HTTP2Layer(Layer):
                     headers.insert(0, ":path", self.streams[eid].flow.request.path)
                     headers.insert(0, ":method", self.streams[eid].flow.request.method)
                     headers.insert(0, ":scheme", self.streams[eid].flow.request.scheme)
+                    headers.pop("if-none-match", None)
+                    headers.pop("if-modified-since", None)
 
                     other.send_headers(
                         server_stream_id,
@@ -648,6 +654,7 @@ class HTTP2Layer(Layer):
                     yield commands.SendData(send_to_other, other.data_to_send())
 
                 elif isinstance(h2_event, h2events.ResponseReceived):
+                    yield commands.Log(f"response received {eid} {h2_event.stream_id}")
                     self.streams[eid].queued_data_length = 0
                     self.streams[eid].timestamp_start = time.time()
                     self.streams[eid].response_arrived.set()
@@ -681,6 +688,7 @@ class HTTP2Layer(Layer):
                     yield commands.SendData(send_to_other, other.data_to_send())
 
                 elif isinstance(h2_event, h2events.DataReceived):
+                    yield commands.Log(f"response received {eid} {h2_event.stream_id}")
                     bsl = human.parse_size(self.context.options.body_size_limit)
                     if bsl and self.streams[eid].queued_data_length > bsl:
                         self.streams[eid].kill()
@@ -702,6 +710,9 @@ class HTTP2Layer(Layer):
                         else:
                             self.streams[eid].data_queue.put(h2_event.data)
                             self.streams[eid].queued_data_length += len(h2_event.data)
+
+                    source.acknowledge_received_data(h2_event.flow_controlled_length, h2_event.stream_id)
+                    yield commands.SendData(send_to_source, source.data_to_send())
 
                 elif isinstance(h2_event, h2events.StreamEnded):
                     self.streams[eid].timestamp_end = time.time()
@@ -767,7 +778,20 @@ class HTTP2Layer(Layer):
                 elif isinstance(h2_event, h2events.ConnectionTerminated):
                     pass
                 elif isinstance(h2_event, h2events.PushedStreamReceived):
-                    pass
+                    parent_eid = self.server_to_client_stream_ids[h2_event.parent_stream_id]
+                    other.push_stream(parent_eid, h2_event.pushed_stream_id, h2_event.headers)
+                    yield commands.SendData(send_to_other, other.data_to_send())
+
+                    self.streams[h2_event.pushed_stream_id] = Http2Stream(h2_event, self.context.client, self.context.server)
+                    self.streams[h2_event.pushed_stream_id].timestamp_start = time.time()
+                    self.streams[h2_event.pushed_stream_id].pushed = True
+                    self.streams[h2_event.pushed_stream_id].parent_stream_id = parent_eid
+                    self.streams[h2_event.pushed_stream_id].timestamp_end = time.time()
+                    self.streams[h2_event.pushed_stream_id].request_arrived.set()
+                    self.streams[h2_event.pushed_stream_id].request_data_finished.set()
+
+                    yield commands.Hook("requestheaders", self.streams[h2_event.pushed_stream_id].flow)
+
                 elif isinstance(h2_event, h2events.PriorityUpdated):
                     pass
                 elif isinstance(h2_event, h2events.TrailersReceived):
