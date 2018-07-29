@@ -600,8 +600,6 @@ class HTTP2Layer(Layer):
             received_h2_events = source.receive_data(event.data)
             yield commands.SendData(send_to_source, source.data_to_send())
 
-            yield commands.Log(' '.join([str(e.__class__) for e in received_h2_events]))
-
             for h2_event in received_h2_events:
                 yield commands.Log(
                     "HTTP/2 event from {}: {}".format("client" if from_client else "server", h2_event)
@@ -615,7 +613,6 @@ class HTTP2Layer(Layer):
                         eid = h2_event.stream_id
 
                 if isinstance(h2_event, h2events.RequestReceived):
-                    yield commands.Log("HTTP/2 request received")
                     self.streams[eid] = Http2Stream(h2_event, self.context.client, self.context.server)
                     self.streams[eid].timestamp_start = time.time()
                     self.streams[eid].request_arrived.set()
@@ -649,11 +646,8 @@ class HTTP2Layer(Layer):
                         # priority_weight=self.streams[eid].priority_weight,
                     )
                     yield commands.SendData(send_to_other, other.data_to_send())
-                    yield commands.Log("HTTP/2 request sent to server")
 
                 elif isinstance(h2_event, h2events.ResponseReceived):
-                    yield commands.Log("HTTP/2 response received")
-
                     self.streams[eid].queued_data_length = 0
                     self.streams[eid].timestamp_start = time.time()
                     self.streams[eid].response_arrived.set()
@@ -688,7 +682,7 @@ class HTTP2Layer(Layer):
                         self.streams[eid].kill()
                         source.reset_stream(eid, h2.errors.ErrorCodes.REFUSED_STREAM)
                         yield commands.SendData(send_to_other, other.data_to_send())
-                        self.log("HTTP body too large. Limit is {}.".format(bsl), "info")
+                        yield commands.Log("HTTP body too large. Limit is {}.".format(bsl), "info")
                     else:
                         streaming = (
                             (from_client and self.streams[eid].flow.request.stream) or
@@ -709,27 +703,20 @@ class HTTP2Layer(Layer):
                     self.streams[eid].timestamp_end = time.time()
                     self.streams[eid].data_finished.set()
 
-                    yield commands.Log(repr(self.streams[eid].data_queue))
-
                     if from_client and self.streams[eid].request_data_finished:
                         # end_stream already communicated via request send_headers
-                        yield commands.Log("HTTP/2 stream ended already in request-received")
+                        pass
                     else:
-                        yield commands.Log("HTTP/2 stream ended - ending other side now")
                         streaming = (
                             (from_client and self.streams[eid].flow.request.stream) or
                             (not from_client and self.streams[eid].flow.response and self.streams[eid].flow.response.stream)
                         )
                         if not streaming:
-                            yield commands.Log("HTTP/2 not streaming")
-
                             stream_id = self.streams[eid].server_stream_id if from_client else self.streams[eid].stream_id
                             while True:
                                 try:
                                     chunk = self.streams[eid].response_data_queue.get(timeout=0.1)
-                                    yield commands.Log(repr(chunk))
                                 except queue.Empty:
-                                    yield commands.Log("empty")
                                     break
 
                                 position = 0
@@ -741,11 +728,9 @@ class HTTP2Layer(Layer):
                                     #     continue
                                     other.send_data(stream_id, frame_chunk)
                                     yield commands.SendData(send_to_other, other.data_to_send())
-                                    yield commands.Log("sent: " + repr(frame_chunk))
                                     position += max_outbound_frame_size
                             other.end_stream(stream_id)
                             yield commands.SendData(send_to_other, other.data_to_send())
-                            yield commands.Log("ended.")
 
                 elif isinstance(h2_event, h2events.StreamReset):
                     if h2_event.error_code == h2.errors.ErrorCodes.CANCEL:
