@@ -372,6 +372,7 @@ class HTTP2Layer(Layer):
                     )
 
                     yield commands.Hook("responseheaders", self.streams[eid].flow)
+                    self.streams[eid].flow.response.stream = True
 
                     if self.streams[eid].flow.response.stream:
                         self.streams[eid].flow.response.data.content = None
@@ -390,6 +391,8 @@ class HTTP2Layer(Layer):
                     if bsl and self.streams[eid].queued_data_length > bsl:
                         self.streams[eid].kill()
                         source.reset_stream(eid, h2.errors.ErrorCodes.REFUSED_STREAM)
+                        yield commands.SendData(send_to_source, source.data_to_send())
+                        other.reset_stream(eid, h2.errors.ErrorCodes.REFUSED_STREAM)
                         yield commands.SendData(send_to_other, other.data_to_send())
                         yield commands.Log("HTTP body too large. Limit is {}.".format(bsl), "info")
                     else:
@@ -398,12 +401,9 @@ class HTTP2Layer(Layer):
                             (not from_client and self.streams[eid].flow.response and self.streams[eid].flow.response.stream)
                         )
                         if streaming:
-                            source.acknowledge_received_data(h2_event.flow_controlled_length, eid)
-                            yield commands.SendData(send_to_source, source.data_to_send())
-
                             stream_id = self.streams[eid].server_stream_id if from_client else self.streams[eid].stream_id
-                            other.send_data(stream_id, h2_event.data) # TODO: this assumes the max frame size matches
-                            yield commands.SendData(send_to_other, other.data_to_send())
+                            self.unfinished_bodies[other] = (stream_id, h2_event.data, False)
+                            yield from self._send_body(send_to_other, other)
                         else:
                             self.streams[eid].data_queue.put(h2_event.data)
                             self.streams[eid].queued_data_length += len(h2_event.data)
@@ -423,7 +423,11 @@ class HTTP2Layer(Layer):
                             (from_client and self.streams[eid].flow.request.stream) or
                             (not from_client and self.streams[eid].flow.response and self.streams[eid].flow.response.stream)
                         )
-                        if not streaming:
+                        if streaming:
+                            stream_id = self.streams[eid].server_stream_id if from_client else self.streams[eid].stream_id
+                            self.unfinished_bodies[other] = (stream_id, b'', True)
+                            yield from self._send_body(send_to_other, other)
+                        else:
                             content = b""
                             while True:
                                 try:
@@ -444,8 +448,8 @@ class HTTP2Layer(Layer):
                                 content = self.streams[eid].flow.response.data.content
                                 stream_id = self.streams[eid].stream_id
 
-                            self.unfinished_bodies[other] = (stream_id, content)
-                            yield from self._send_body(other, send_to_other)
+                            self.unfinished_bodies[other] = (stream_id, content, True)
+                            yield from self._send_body(send_to_other, other)
 
                 elif isinstance(h2_event, h2events.StreamReset):
                     if eid in self.streams:
@@ -483,7 +487,7 @@ class HTTP2Layer(Layer):
 
                 elif isinstance(h2_event, h2events.WindowUpdated):
                     if source in self.unfinished_bodies:
-                        self._send_body(source, send_to_source)
+                        yield from self._send_body(send_to_source, source)
                 elif isinstance(h2_event, h2events.TrailersReceived):
                     raise NotImplementedError('TrailersReceived not implemented')
 
@@ -497,20 +501,22 @@ class HTTP2Layer(Layer):
     def done(self, _):
         yield from ()
 
-    def _send_body(self, other, send_to_other):
-        stream_id, content = self.unfinished_bodies[other]
+    def _send_body(self, send_to_endpoint, endpoint):
+        stream_id, content, end_stream = self.unfinished_bodies[endpoint]
 
-        max_outbound_frame_size = other.max_outbound_frame_size
+        max_outbound_frame_size = endpoint.max_outbound_frame_size
         position = 0
         while position < len(content):
             frame_chunk = content[position:position + max_outbound_frame_size]
-            if other.local_flow_control_window(stream_id) < len(frame_chunk):
-                self.unfinished_bodies[other] = (stream_id, content[position:])
+            if endpoint.local_flow_control_window(stream_id) < len(frame_chunk):
+                self.unfinished_bodies[endpoint] = (stream_id, content[position:], end_stream)
                 return
-            other.send_data(stream_id, frame_chunk)
-            yield commands.SendData(send_to_other, other.data_to_send())
+            endpoint.send_data(stream_id, frame_chunk)
+            yield commands.SendData(send_to_endpoint, endpoint.data_to_send())
             position += max_outbound_frame_size
 
-        del self.unfinished_bodies[other]
-        other.end_stream(stream_id)
-        yield commands.SendData(send_to_other, other.data_to_send())
+        del self.unfinished_bodies[endpoint]
+
+        if end_stream:
+            endpoint.end_stream(stream_id)
+            yield commands.SendData(send_to_endpoint, endpoint.data_to_send())
