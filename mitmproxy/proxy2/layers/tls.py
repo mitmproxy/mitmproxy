@@ -230,7 +230,7 @@ class ServerTLSLayer(_TLSLayer):
                     server.sni = self.context.client.sni.encode("idna")
                 else:
                     server.sni = server.address[0].encode("idna")
-                    self.tls[server].set_tlsext_host_name(server.sni)
+                self.tls[server].set_tlsext_host_name(server.sni)
         self.tls[server].set_connect_state()
 
         yield from self.process(events.DataReceived(server, b""))
@@ -356,7 +356,7 @@ class ClientTLSLayer(_TLSLayer):
         context = SSL.Context(SSL.SSLv23_METHOD)
         cert, privkey, cert_chain = CertStore.from_store(
             os.path.expanduser("~/.mitmproxy"), "mitmproxy"
-        ).get_cert(b"example.com", (b"example.com",))
+        ).get_cert(client.sni.encode(), (client.sni.encode(),))
         context.use_privatekey(privkey)
         context.use_certificate(cert.x509)
         context.set_cipher_list(tls.DEFAULT_CLIENT_CIPHERS)
