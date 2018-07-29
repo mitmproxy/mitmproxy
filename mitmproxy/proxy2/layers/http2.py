@@ -25,28 +25,6 @@ from mitmproxy.proxy2.layer import Layer
 from mitmproxy.proxy2.utils import expect
 
 
-#         if isinstance(event, events.RequestReceived):
-#             return self._handle_request_received(eid, event)
-#         elif isinstance(event, events.ResponseReceived):
-#             return self._handle_response_received(eid, event)
-#         elif isinstance(event, events.DataReceived):
-#             return self._handle_data_received(eid, event, source_conn)
-#         elif isinstance(event, events.StreamEnded):
-#             return self._handle_stream_ended(eid)
-#         elif isinstance(event, events.StreamReset):
-#             return self._handle_stream_reset(eid, event, is_server, other_conn)
-#         elif isinstance(event, events.RemoteSettingsChanged):
-#             return self._handle_remote_settings_changed(event, other_conn)
-#         elif isinstance(event, events.ConnectionTerminated):
-#             return self._handle_connection_terminated(event, is_server)
-#         elif isinstance(event, events.PushedStreamReceived):
-#             return self._handle_pushed_stream_received(event)
-#         elif isinstance(event, events.PriorityUpdated):
-#             return self._handle_priority_updated(eid, event)
-#         elif isinstance(event, events.TrailersReceived):
-#             raise NotImplementedError('TrailersReceived not implemented')
-#
-#
 #     def _handle_connection_terminated(self, event, is_server):
 #         self.log("HTTP/2 connection terminated by {}: error code: {}, last stream id: {}, additional data: {}".format(
 #             "server" if is_server else "client",
@@ -70,102 +48,6 @@ from mitmproxy.proxy2.utils import expect
 #             """
 #         return False
 #
-#     def _handle_priority_updated(self, eid, event):
-#         if not self.config.options.http2_priority:
-#             self.log("HTTP/2 PRIORITY frame suppressed. Use --http2-priority to enable forwarding.", "debug")
-#             return True
-#
-#         if eid in self.streams and self.streams[eid].handled_priority_event is event:
-#             # this event was already handled during stream creation
-#             # HeadersFrame + Priority information as RequestReceived
-#             return True
-#
-#         with self.connections[self.server_conn].lock:
-#             mapped_stream_id = event.stream_id
-#             if mapped_stream_id in self.streams and self.streams[mapped_stream_id].server_stream_id:
-#                 # if the stream is already up and running and was sent to the server,
-#                 # use the mapped server stream id to update priority information
-#                 mapped_stream_id = self.streams[mapped_stream_id].server_stream_id
-#
-#             if eid in self.streams:
-#                 self.streams[eid].priority_exclusive = event.exclusive
-#                 self.streams[eid].priority_depends_on = event.depends_on
-#                 self.streams[eid].priority_weight = event.weight
-#
-#             self.connections[self.server_conn].prioritize(
-#                 mapped_stream_id,
-#                 weight=event.weight,
-#                 depends_on=self._map_depends_on_stream_id(mapped_stream_id, event.depends_on),
-#                 exclusive=event.exclusive
-#             )
-#             self.server_conn.send(self.connections[self.server_conn].data_to_send())
-#         return True
-#
-#     def _map_depends_on_stream_id(self, stream_id, depends_on):
-#         mapped_depends_on = depends_on
-#         if mapped_depends_on in self.streams and self.streams[mapped_depends_on].server_stream_id:
-#             # if the depends-on-stream is already up and running and was sent to the server
-#             # use the mapped server stream id to update priority information
-#             mapped_depends_on = self.streams[mapped_depends_on].server_stream_id
-#         if stream_id == mapped_depends_on:
-#             # looks like one of the streams wasn't opened yet
-#             # prevent self-dependent streams which result in ProtocolError
-#             mapped_depends_on += 2
-#         return mapped_depends_on
-#
-#     def _cleanup_streams(self):
-#         death_time = time.time() - 10
-#
-#         zombie_streams = [(stream_id, stream) for stream_id, stream in list(self.streams.items()) if stream.zombie]
-#         outdated_streams = [stream_id for stream_id, stream in zombie_streams if stream.zombie <= death_time]
-#
-#         for stream_id in outdated_streams:  # pragma: no cover
-#             self.streams.pop(stream_id, None)
-#
-#     def _kill_all_streams(self):
-#         for stream in self.streams.values():
-#             stream.kill()
-#
-#     def __call__(self):
-#         self._initiate_server_conn()
-#         self._complete_handshake()
-#
-#         conns = [c.connection for c in self.connections.keys()]
-#
-#         try:
-#             while True:
-#                 r = tcp.ssl_read_select(conns, 0.1)
-#                 for conn in r:
-#                     source_conn = self.client_conn if conn == self.client_conn.connection else self.server_conn
-#                     other_conn = self.server_conn if conn == self.client_conn.connection else self.client_conn
-#                     is_server = (source_conn == self.server_conn)
-#
-#                     with self.connections[source_conn].lock:
-#                         try:
-#                             raw_frame = b''.join(http2.read_raw_frame(source_conn.rfile))
-#                         except:
-#                             # read frame failed: connection closed
-#                             self._kill_all_streams()
-#                             return
-#
-#                         if self.connections[source_conn].state_machine.state == h2.connection.ConnectionState.CLOSED:
-#                             self.log("HTTP/2 connection entered closed state already", "debug")
-#                             return
-#
-#                         incoming_events = self.connections[source_conn].receive_data(raw_frame)
-#                         source_conn.send(self.connections[source_conn].data_to_send())
-#
-#                         for event in incoming_events:
-#                             if not self._handle_event(event, source_conn, other_conn, is_server):
-#                                 # connection terminated: GoAway
-#                                 self._kill_all_streams()
-#                                 return
-#
-#                     self._cleanup_streams()
-#         except Exception as e:  # pragma: no cover
-#             self.log(repr(e), "info")
-#             self._kill_all_streams()
-
 
 
 class Http2Stream:
@@ -193,6 +75,7 @@ class Http2Stream:
 
         self.timestamp_start: float = None
         self.timestamp_end: float = None
+        self.death_time: float = None
 
         self.request_arrived = threading.Event()
         self.request_data_queue: queue.Queue[bytes] = queue.Queue()
@@ -226,6 +109,9 @@ class Http2Stream:
             timestamp_start=self.timestamp_start,
             timestamp_end=self.timestamp_end,
         )
+
+    def kill(self):
+        self.death_time = time.time()
 
     @property
     def data_queue(self):
@@ -292,6 +178,12 @@ class HTTP2Layer(Layer):
     @expect(events.DataReceived, events.ConnectionClosed)
     def process_data(self, event: events.Event) -> commands.TCommandGenerator:
         if isinstance(event, events.DataReceived):
+            dead = [stream for stream in self.streams.values() if stream.death_time]
+            for stream in dead:
+                if stream.death_time <= time.time() - 10:
+                    self.streams.pop(stream.stream_id, None)
+
+
             from_client = event.connection == self.context.client
             if from_client:
                 source = self.client_conn
@@ -424,7 +316,7 @@ class HTTP2Layer(Layer):
                         )
                         if streaming:
                             stream_id = self.streams[eid].server_stream_id if from_client else self.streams[eid].stream_id
-                            self.unfinished_bodies[other] = (stream_id, b'', True)
+                            self.unfinished_bodies[other] = (stream_id, b'', True, eid)
                             yield from self._send_body(send_to_other, other)
                         else:
                             content = b""
@@ -440,18 +332,21 @@ class HTTP2Layer(Layer):
                                 yield commands.Hook("request", self.streams[eid].flow)
                                 content = self.streams[eid].flow.request.data.content
                                 stream_id = self.streams[eid].server_stream_id
+                                kill_id = None
                             else:
                                 self.streams[eid].flow.response.data.content = content
                                 self.streams[eid].flow.response.timestamp_end = time.time()
                                 yield commands.Hook("response", self.streams[eid].flow)
                                 content = self.streams[eid].flow.response.data.content
                                 stream_id = self.streams[eid].stream_id
+                                kill_id = eid
 
-                            self.unfinished_bodies[other] = (stream_id, content, True)
+                            self.unfinished_bodies[other] = (stream_id, content, True, kill_id)
                             yield from self._send_body(send_to_other, other)
 
                 elif isinstance(h2_event, h2events.StreamReset):
                     if eid in self.streams:
+                        self.streams[eid].kill()
                         if h2_event.error_code == h2.errors.ErrorCodes.CANCEL:
                             try:
                                 stream_id = self.streams[eid].server_stream_id if from_client else self.streams[eid].stream_id
@@ -501,14 +396,14 @@ class HTTP2Layer(Layer):
         yield from ()
 
     def _send_body(self, send_to_endpoint, endpoint):
-        stream_id, content, end_stream = self.unfinished_bodies[endpoint]
+        stream_id, content, end_stream, kill_id = self.unfinished_bodies[endpoint]
 
         max_outbound_frame_size = endpoint.max_outbound_frame_size
         position = 0
         while position < len(content):
             frame_chunk = content[position:position + max_outbound_frame_size]
             if endpoint.local_flow_control_window(stream_id) < len(frame_chunk):
-                self.unfinished_bodies[endpoint] = (stream_id, content[position:], end_stream)
+                self.unfinished_bodies[endpoint] = (stream_id, content[position:], end_stream, kill_id)
                 return
             endpoint.send_data(stream_id, frame_chunk)
             yield commands.SendData(send_to_endpoint, endpoint.data_to_send())
@@ -519,3 +414,5 @@ class HTTP2Layer(Layer):
         if end_stream:
             endpoint.end_stream(stream_id)
             yield commands.SendData(send_to_endpoint, endpoint.data_to_send())
+        if kill_id:
+            self.streams[kill_id].kill()
