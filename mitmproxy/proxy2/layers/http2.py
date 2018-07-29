@@ -328,7 +328,7 @@ class HTTP2Layer(Layer):
 
                     while other.open_outbound_streams + 1 >= other.remote_settings.max_concurrent_streams:
                         # wait until we get a free slot for a new outgoing stream
-                        # TODO make async so we can handle other streams!
+                        # TODO make async/re-entry so we can handle other streams!
                         # time.sleep(0.1)
                         break
 
@@ -343,16 +343,12 @@ class HTTP2Layer(Layer):
                     headers.insert(0, ":path", self.streams[eid].flow.request.path)
                     headers.insert(0, ":method", self.streams[eid].flow.request.method)
                     headers.insert(0, ":scheme", self.streams[eid].flow.request.scheme)
-                    headers.pop("if-none-match", None)
-                    headers.pop("if-modified-since", None)
 
+                    # omit priority information because it is too complex to synchronize
                     other.send_headers(
                         server_stream_id,
                         headers=headers.items(),
                         end_stream=h2_event.stream_ended,
-                        priority_exclusive=self.streams[eid].priority_exclusive,
-                        priority_depends_on=self.streams[eid].priority_depends_on,
-                        priority_weight=self.streams[eid].priority_weight,
                     )
                     yield commands.SendData(send_to_other, other.data_to_send())
 
@@ -470,7 +466,6 @@ class HTTP2Layer(Layer):
 
                 elif isinstance(h2_event, h2events.ConnectionTerminated):
                     yield commands.Log(f"HTTP/2 Connection terminated: {h2_event}, {h2_event.additional_data}")
-                    pass
                 elif isinstance(h2_event, h2events.PushedStreamReceived):
                     parent_eid = self.server_to_client_stream_ids[h2_event.parent_stream_id]
                     other.push_stream(parent_eid, h2_event.pushed_stream_id, h2_event.headers)
@@ -489,8 +484,6 @@ class HTTP2Layer(Layer):
                 elif isinstance(h2_event, h2events.WindowUpdated):
                     if source in self.unfinished_bodies:
                         self._send_body(source, send_to_source)
-                elif isinstance(h2_event, h2events.PriorityUpdated):
-                    pass
                 elif isinstance(h2_event, h2events.TrailersReceived):
                     raise NotImplementedError('TrailersReceived not implemented')
 
