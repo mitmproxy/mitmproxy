@@ -372,7 +372,6 @@ class HTTP2Layer(Layer):
                     )
 
                     yield commands.Hook("responseheaders", self.streams[eid].flow)
-                    self.streams[eid].flow.response.stream = True
 
                     if self.streams[eid].flow.response.stream:
                         self.streams[eid].flow.response.data.content = None
