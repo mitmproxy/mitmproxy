@@ -5,7 +5,7 @@ from typing import MutableMapping, Optional, Iterator, Generator, Any
 from OpenSSL import SSL
 
 from mitmproxy.certs import CertStore
-from mitmproxy.net.tls import ClientHello, log_master_secret
+from mitmproxy.net.tls import ClientHello
 from mitmproxy.proxy.protocol import tls
 from mitmproxy.proxy2 import context
 from mitmproxy.proxy2 import layer, commands, events
@@ -351,10 +351,7 @@ class ClientTLSLayer(_TLSLayer):
 
     def start_negotiate(self):
         # FIXME: Do this properly
-
-
         client = self.context.client
-        yield commands.Log(f"SNI: {client.sni}")
         server = self.context.server
         context = SSL.Context(SSL.SSLv23_METHOD)
         cert, privkey, cert_chain = CertStore.from_store(
@@ -363,11 +360,6 @@ class ClientTLSLayer(_TLSLayer):
         context.use_privatekey(privkey)
         context.use_certificate(cert.x509)
         context.set_cipher_list(tls.DEFAULT_CLIENT_CIPHERS)
-
-        # SSLKEYLOGFILE
-        if log_master_secret:
-            print("log_master_secret")
-            context.set_info_callback(log_master_secret)
 
         if server.alpn:
             def alpn_select_callback(conn_, options):
