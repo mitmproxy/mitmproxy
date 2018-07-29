@@ -200,7 +200,6 @@ class ServerTLSLayer(_TLSLayer):
             if not event.connection.tls_established:
                 yield from self.negotiate(event)
             else:
-                print(event)
                 yield from self.relay(event)
         elif isinstance(event, events.OpenConnectionReply):
             err = event.reply

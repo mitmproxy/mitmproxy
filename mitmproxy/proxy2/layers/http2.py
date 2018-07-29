@@ -468,20 +468,17 @@ from mitmproxy.proxy2.utils import expect
 
 class Http2Stream:
 
-    def __init__(self, event) -> None:
+    def __init__(self, h2_event, client_conn, server_conn) -> None:
 
-        self.stream_id = event.stream_id
+        self.stream_id = h2_event.stream_id
         self.server_stream_id: int = None
-        self.request_headers = mitmproxy.net.http.Headers([[k, v] for k, v in event.headers])
-        self.response_headers: mitmproxy.net.http.Headers = None
-        self.no_body = (event.stream_ended is not None)
         self.pushed = False
 
-        if event.priority_updated is not None:
-            self.priority_exclusive = event.priority_updated.exclusive
-            self.priority_depends_on = event.priority_updated.depends_on
-            self.priority_weight = event.priority_updated.weight
-            self.handled_priority_event = event.priority_updated
+        if h2_event.priority_updated is not None:
+            self.priority_exclusive = h2_event.priority_updated.exclusive
+            self.priority_depends_on = h2_event.priority_updated.depends_on
+            self.priority_weight = h2_event.priority_updated.weight
+            self.handled_priority_event = h2_event.priority_updated
         else:
             self.priority_exclusive: bool = None
             self.priority_depends_on: int = None
@@ -491,6 +488,7 @@ class Http2Stream:
         self.timestamp_start: float = None
         self.timestamp_end: float = None
 
+        self.request_arrived = threading.Event()
         self.request_data_queue: queue.Queue[bytes] = queue.Queue()
         self.request_queued_data_length = 0
         self.request_data_finished = threading.Event()
@@ -499,6 +497,29 @@ class Http2Stream:
         self.response_data_queue: queue.Queue[bytes] = queue.Queue()
         self.response_queued_data_length = 0
         self.response_data_finished = threading.Event()
+
+        self.flow = http.HTTPFlow(
+            client_conn,
+            server_conn,
+            live=self,
+            mode='regular',
+        )
+
+        headers = mitmproxy.net.http.Headers([[k, v] for k, v in h2_event.headers])
+        first_line_format, method, scheme, host, port, path = http2.parse_headers(headers)
+        self.flow.request = http.HTTPRequest(
+            first_line_format,
+            method,
+            scheme,
+            host,
+            port,
+            path,
+            b"HTTP/2.0",
+            headers,
+            None,
+            timestamp_start=self.timestamp_start,
+            timestamp_end=self.timestamp_end,
+        )
 
     @property
     def data_queue(self):
@@ -540,6 +561,8 @@ class HTTP2Layer(Layer):
             validate_outbound_headers=False,
             validate_inbound_headers=False)
         self.client_conn = connection.H2Connection(config=client_config)
+        self.client_conn.initiate_connection()
+        yield commands.SendData(self.context.client, self.client_conn.data_to_send())
 
         server_config = h2.config.H2Configuration(
             client_side=True,
@@ -547,14 +570,11 @@ class HTTP2Layer(Layer):
             validate_outbound_headers=False,
             validate_inbound_headers=False)
         self.server_conn = connection.H2Connection(config=server_config)
-
-        self.streams: Dict[int, Http2Http2Stream] = dict()
-        self.server_to_client_stream_ids: Dict[int, int] = dict([(0, 0)])
-
         self.server_conn.initiate_connection()
         yield commands.SendData(self.context.server, self.server_conn.data_to_send())
-        self.client_conn.initiate_connection()
-        yield commands.SendData(self.context.client, self.client_conn.data_to_send())
+
+        self.streams: Dict[int, Http2Stream] = dict()
+        self.server_to_client_stream_ids: Dict[int, int] = dict([(0, 0)])
 
         yield commands.Log("HTTP/2 connection started")
 
@@ -569,16 +589,18 @@ class HTTP2Layer(Layer):
             if from_client:
                 source = self.client_conn
                 other = self.server_conn
-                send_to_source = self.context.server
+                send_to_source = self.context.client
                 send_to_other = self.context.server
             else:
                 source = self.server_conn
                 other = self.client_conn
-                send_to_source = self.context.client
+                send_to_source = self.context.server
                 send_to_other = self.context.client
 
             received_h2_events = source.receive_data(event.data)
             yield commands.SendData(send_to_source, source.data_to_send())
+
+            yield commands.Log(' '.join([str(e.__class__) for e in received_h2_events]))
 
             for h2_event in received_h2_events:
                 yield commands.Log(
@@ -594,9 +616,11 @@ class HTTP2Layer(Layer):
 
                 if isinstance(h2_event, h2events.RequestReceived):
                     yield commands.Log("HTTP/2 request received")
-                    headers = mitmproxy.net.http.Headers([[k, v] for k, v in h2_event.headers])
-                    self.streams[eid] = Http2Stream(h2_event)
+                    self.streams[eid] = Http2Stream(h2_event, self.context.client, self.context.server)
                     self.streams[eid].timestamp_start = time.time()
+                    self.streams[eid].request_arrived.set()
+
+                    yield commands.Hook("requestheaders", self.streams[eid].flow)
 
                     while other.open_outbound_streams + 1 >= other.remote_settings.max_concurrent_streams:
                         # wait until we get a free slot for a new outgoing stream
@@ -605,12 +629,21 @@ class HTTP2Layer(Layer):
                         break
 
                     server_stream_id = other.get_next_available_stream_id()
+                    self.streams[eid].server_stream_id = server_stream_id
                     self.server_to_client_stream_ids[server_stream_id] = h2_event.stream_id
+
+                    if h2_event.stream_ended:
+                        self.streams[eid].request_data_finished.set()
+
+                    headers = self.streams[eid].flow.request.headers.copy()
+                    headers.insert(0, ":path", self.streams[eid].flow.request.path)
+                    headers.insert(0, ":method", self.streams[eid].flow.request.method)
+                    headers.insert(0, ":scheme", self.streams[eid].flow.request.scheme)
 
                     other.send_headers(
                         server_stream_id,
-                        headers=self.streams[eid].request_headers.items(),
-                        # end_stream=self.streams[eid].no_body,
+                        headers=headers.items(),
+                        end_stream=h2_event.stream_ended,
                         # priority_exclusive=self.streams[eid].priority_exclusive,
                         # priority_depends_on=self.streams[eid].priority_depends_on,
                         # priority_weight=self.streams[eid].priority_weight,
@@ -620,14 +653,32 @@ class HTTP2Layer(Layer):
 
                 elif isinstance(h2_event, h2events.ResponseReceived):
                     yield commands.Log("HTTP/2 response received")
-                    headers = mitmproxy.net.http.Headers([[k, v] for k, v in h2_event.headers])
-                    self.streams[eid].response_headers = headers
+
                     self.streams[eid].queued_data_length = 0
                     self.streams[eid].timestamp_start = time.time()
+                    self.streams[eid].response_arrived.set()
+
+                    headers = mitmproxy.net.http.Headers([[k, v] for k, v in h2_event.headers])
+                    headers.pop(":status", None)
+
+                    self.streams[eid].flow.response = http.HTTPResponse(
+                        http_version=b"HTTP/2.0",
+                        status_code=int(headers.get(':status', 502)),
+                        reason=b'',
+                        headers=headers,
+                        content=None,
+                        timestamp_start=self.streams[eid].timestamp_start,
+                        timestamp_end=self.streams[eid].timestamp_end,
+                    )
+
+                    yield commands.Hook("responseheaders", self.streams[eid].flow)
+
+                    headers = self.streams[eid].flow.response.headers
+                    headers.insert(0, ":status", str(self.streams[eid].flow.response.status_code))
 
                     other.send_headers(
                         self.streams[eid].stream_id,
-                        headers=self.streams[eid].response_headers.items(),
+                        headers=headers.items(),
                     )
                     yield commands.SendData(send_to_other, other.data_to_send())
 
@@ -639,20 +690,63 @@ class HTTP2Layer(Layer):
                         yield commands.SendData(send_to_other, other.data_to_send())
                         self.log("HTTP body too large. Limit is {}.".format(bsl), "info")
                     else:
-                        self.streams[eid].data_queue.put(h2_event.data)
-                        self.streams[eid].queued_data_length += len(h2_event.data)
-                        source.acknowledge_received_data(h2_event.flow_controlled_length, eid)
-                        yield commands.SendData(send_to_source, source.data_to_send())
+                        streaming = (
+                            (from_client and self.streams[eid].flow.request.stream) or
+                            (not from_client and self.streams[eid].flow.response and self.streams[eid].flow.response.stream)
+                        )
+                        if streaming:
+                            source.acknowledge_received_data(h2_event.flow_controlled_length, eid)
+                            yield commands.SendData(send_to_source, source.data_to_send())
 
-                        # TODO: make streaming and blocking-buffering happen
-                        other.send_data(1, h2_event.data)
-                        yield commands.SendData(send_to_other, other.data_to_send())
+                            stream_id = self.streams[eid].server_stream_id if from_client else self.streams[eid].stream_id
+                            other.send_data(stream_id, h2_event.data) # TODO: this assumes the max frame size matches
+                            yield commands.SendData(send_to_other, other.data_to_send())
+                        else:
+                            self.streams[eid].data_queue.put(h2_event.data)
+                            self.streams[eid].queued_data_length += len(h2_event.data)
+
                 elif isinstance(h2_event, h2events.StreamEnded):
                     self.streams[eid].timestamp_end = time.time()
                     self.streams[eid].data_finished.set()
 
-                    other.end_stream(1) # TODO fix stream_id
-                    yield commands.SendData(send_to_other, other.data_to_send())
+                    yield commands.Log(repr(self.streams[eid].data_queue))
+
+                    if from_client and self.streams[eid].request_data_finished:
+                        # end_stream already communicated via request send_headers
+                        yield commands.Log("HTTP/2 stream ended already in request-received")
+                    else:
+                        yield commands.Log("HTTP/2 stream ended - ending other side now")
+                        streaming = (
+                            (from_client and self.streams[eid].flow.request.stream) or
+                            (not from_client and self.streams[eid].flow.response and self.streams[eid].flow.response.stream)
+                        )
+                        if not streaming:
+                            yield commands.Log("HTTP/2 not streaming")
+
+                            stream_id = self.streams[eid].server_stream_id if from_client else self.streams[eid].stream_id
+                            while True:
+                                try:
+                                    chunk = self.streams[eid].response_data_queue.get(timeout=0.1)
+                                    yield commands.Log(repr(chunk))
+                                except queue.Empty:
+                                    yield commands.Log("empty")
+                                    break
+
+                                position = 0
+                                while position < len(chunk):
+                                    max_outbound_frame_size = other.max_outbound_frame_size
+                                    frame_chunk = chunk[position:position + max_outbound_frame_size]
+                                    # if other.local_flow_control_window(stream_id) < len(frame_chunk):
+                                    #     time.sleep(0.1)
+                                    #     continue
+                                    other.send_data(stream_id, frame_chunk)
+                                    yield commands.SendData(send_to_other, other.data_to_send())
+                                    yield commands.Log("sent: " + repr(frame_chunk))
+                                    position += max_outbound_frame_size
+                            other.end_stream(stream_id)
+                            yield commands.SendData(send_to_other, other.data_to_send())
+                            yield commands.Log("ended.")
+
                 elif isinstance(h2_event, h2events.StreamReset):
                     if h2_event.error_code == h2.errors.ErrorCodes.CANCEL:
                         try:
@@ -661,18 +755,17 @@ class HTTP2Layer(Layer):
                             # stream is already closed - good
                             pass
                         yield SendData(send_to_other, other.data_to_send())
+
                 elif isinstance(h2_event, h2events.RemoteSettingsChanged):
                     new_settings = dict([(key, cs.new_value) for (key, cs) in h2_event.changed_settings.items()])
                     other.update_settings(new_settings)
                     yield commands.SendData(send_to_other, other.data_to_send())
+
                 elif isinstance(h2_event, h2events.ConnectionTerminated):
-                    # yield from self._handle_connection_terminated(h2_event, is_server)
                     pass
                 elif isinstance(h2_event, h2events.PushedStreamReceived):
-                    # yield from self._handle_pushed_stream_received(h2_event)
                     pass
                 elif isinstance(h2_event, h2events.PriorityUpdated):
-                    # yield from self._handle_priority_updated(eid, h2_event)
                     pass
                 elif isinstance(h2_event, h2events.TrailersReceived):
                     raise NotImplementedError('TrailersReceived not implemented')
@@ -685,5 +778,4 @@ class HTTP2Layer(Layer):
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def done(self, _):
-        yield commands.Log(repr(_))
         yield from ()
