@@ -14,119 +14,6 @@ from mitmproxy.proxy2.layer import Layer
 from mitmproxy.proxy2.layers.http import _make_event_from_request
 from mitmproxy.proxy2.utils import expect
 
-#     def _handle_connection_terminated(self, event, is_server):
-#         self.log("HTTP/2 connection terminated by {}: error code: {}, last stream id: {}, additional data: {}".format(
-#             "server" if is_server else "client",
-#             event.error_code,
-#             event.last_stream_id,
-#             event.additional_data), "info")
-#
-#         if event.error_code != h2.errors.ErrorCodes.NO_ERROR:
-#             # Something terrible has happened - kill everything!
-#             self.connections[self.client_conn].close_connection(
-#                 error_code=event.error_code,
-#                 last_stream_id=event.last_stream_id,
-#                 additional_data=event.additional_data
-#             )
-#             self.client_conn.send(self.connections[self.client_conn].data_to_send())
-#             self._kill_all_streams()
-#         else:
-#             """
-#             Do not immediately terminate the other connection.
-#             Some streams might be still sending data to the client.
-#             """
-#         return False
-#
-
-"""
-class Http2Stream:
-
-    def __init__(self, h2_event, client_conn, server_conn) -> None:
-        if isinstance(h2_event, h2.events.RequestReceived):
-            self.stream_id = h2_event.stream_id
-        else:
-            self.stream_id = h2_event.pushed_stream_id
-
-        self.server_stream_id: int = None
-        self.pushed = False
-
-        if isinstance(h2_event,
-                      h2.events.RequestReceived) and h2_event.priority_updated is not None:
-            self.priority_exclusive = h2_event.priority_updated.exclusive
-            self.priority_depends_on = h2_event.priority_updated.depends_on
-            self.priority_weight = h2_event.priority_updated.weight
-            self.handled_priority_event = h2_event.priority_updated
-        else:
-            self.priority_exclusive: bool = None
-            self.priority_depends_on: int = None
-            self.priority_weight: int = None
-            self.handled_priority_event: Any = None
-
-        self.timestamp_start: float = None
-        self.timestamp_end: float = None
-        self.death_time: float = None
-
-        self.request_arrived = threading.Event()
-        self.request_data_queue: queue.Queue[bytes] = queue.Queue()
-        self.request_queued_data_length = 0
-        self.request_data_finished = threading.Event()
-
-        self.response_arrived = threading.Event()
-        self.response_data_queue: queue.Queue[bytes] = queue.Queue()
-        self.response_queued_data_length = 0
-        self.response_data_finished = threading.Event()
-
-        self.flow = http.HTTPFlow(
-            client_conn,
-            server_conn,
-            live=self,
-            mode='regular',
-        )
-
-        headers = mitmproxy.net.http.Headers([[k, v] for k, v in h2_event.headers])
-        first_line_format, method, scheme, host, port, path = http2.parse_headers(headers)
-        self.flow.request = http.HTTPRequest(
-            first_line_format,
-            method,
-            scheme,
-            host,
-            port,
-            path,
-            b"HTTP/2.0",
-            headers,
-            None,
-            timestamp_start=self.timestamp_start,
-            timestamp_end=self.timestamp_end,
-        )
-
-    def kill(self):
-        self.death_time = time.time()
-
-    @property
-    def data_queue(self):
-        if self.response_arrived.is_set():
-            return self.response_data_queue
-        else:
-            return self.request_data_queue
-
-    @property
-    def queued_data_length(self):
-        if self.response_arrived.is_set():
-            return self.response_queued_data_length
-        else:
-            return self.request_queued_data_length
-
-    @queued_data_length.setter
-    def queued_data_length(self, v):
-        self.request_queued_data_length = v
-
-    @property
-    def data_finished(self):
-        if self.response_arrived.is_set():
-            return self.response_data_finished
-        else:
-            return self.request_data_finished
-"""
 
 
 class HttpEvent(events.Event):
@@ -321,10 +208,11 @@ class ServerHTTP1Layer(Layer):
         elif isinstance(event, events.DataReceived):
             self.h11.receive_data(event.data)
 
-            h11_event = None
-            while h11_event is not h11.NEED_DATA:
+            while True:
                 h11_event = yield from self.h11.next_event()
-                if isinstance(h11_event, h11.Response):
+                if h11_event is h11.NEED_DATA:
+                    break
+                elif isinstance(h11_event, h11.Response):
                     yield commands.Log(f"h11 responseheaders: {h11_event}")
                     self.flow.response = http.HTTPResponse(
                         b"HTTP/1.1",
@@ -390,7 +278,9 @@ class ServerHTTP2Layer(Layer):
 
         elif isinstance(event, events.DataReceived):
             h2_events = self.h2.receive_data(event.data)
-            yield commands.SendData(self.context.server, self.h2.data_to_send())
+            data = self.h2.data_to_send()
+            if data:
+                yield commands.SendData(self.context.server, data)
             for h2_event in h2_events:
                 # Do something smart with the response here.
                 raise NotImplementedError
@@ -434,10 +324,13 @@ class ClientHTTP2Layer(Layer):
     def handle_http_command(self, command: HttpCommand):
         stream_id = self.stream_by_flow[command.flow.id]
         if isinstance(command, SendResponseHeaders):
-            headers = command.flow.request.headers.copy()
+            headers = (
+                (b":status", str(command.flow.response.status_code).encode()),
+                *command.flow.request.headers.fields
+            )
             self.h2.send_headers(
                 stream_id,
-                headers=headers.items(multi=True),
+                headers,
             )
         elif isinstance(command, SendResponseData):
             self.h2.send_data(stream_id, command.data)
@@ -747,3 +640,117 @@ class ClientHTTP2Layer(Layer):
         if kill_id:
             self.streams[kill_id].kill()
     """
+
+#     def _handle_connection_terminated(self, event, is_server):
+#         self.log("HTTP/2 connection terminated by {}: error code: {}, last stream id: {}, additional data: {}".format(
+#             "server" if is_server else "client",
+#             event.error_code,
+#             event.last_stream_id,
+#             event.additional_data), "info")
+#
+#         if event.error_code != h2.errors.ErrorCodes.NO_ERROR:
+#             # Something terrible has happened - kill everything!
+#             self.connections[self.client_conn].close_connection(
+#                 error_code=event.error_code,
+#                 last_stream_id=event.last_stream_id,
+#                 additional_data=event.additional_data
+#             )
+#             self.client_conn.send(self.connections[self.client_conn].data_to_send())
+#             self._kill_all_streams()
+#         else:
+#             """
+#             Do not immediately terminate the other connection.
+#             Some streams might be still sending data to the client.
+#             """
+#         return False
+#
+
+"""
+class Http2Stream:
+
+    def __init__(self, h2_event, client_conn, server_conn) -> None:
+        if isinstance(h2_event, h2.events.RequestReceived):
+            self.stream_id = h2_event.stream_id
+        else:
+            self.stream_id = h2_event.pushed_stream_id
+
+        self.server_stream_id: int = None
+        self.pushed = False
+
+        if isinstance(h2_event,
+                      h2.events.RequestReceived) and h2_event.priority_updated is not None:
+            self.priority_exclusive = h2_event.priority_updated.exclusive
+            self.priority_depends_on = h2_event.priority_updated.depends_on
+            self.priority_weight = h2_event.priority_updated.weight
+            self.handled_priority_event = h2_event.priority_updated
+        else:
+            self.priority_exclusive: bool = None
+            self.priority_depends_on: int = None
+            self.priority_weight: int = None
+            self.handled_priority_event: Any = None
+
+        self.timestamp_start: float = None
+        self.timestamp_end: float = None
+        self.death_time: float = None
+
+        self.request_arrived = threading.Event()
+        self.request_data_queue: queue.Queue[bytes] = queue.Queue()
+        self.request_queued_data_length = 0
+        self.request_data_finished = threading.Event()
+
+        self.response_arrived = threading.Event()
+        self.response_data_queue: queue.Queue[bytes] = queue.Queue()
+        self.response_queued_data_length = 0
+        self.response_data_finished = threading.Event()
+
+        self.flow = http.HTTPFlow(
+            client_conn,
+            server_conn,
+            live=self,
+            mode='regular',
+        )
+
+        headers = mitmproxy.net.http.Headers([[k, v] for k, v in h2_event.headers])
+        first_line_format, method, scheme, host, port, path = http2.parse_headers(headers)
+        self.flow.request = http.HTTPRequest(
+            first_line_format,
+            method,
+            scheme,
+            host,
+            port,
+            path,
+            b"HTTP/2.0",
+            headers,
+            None,
+            timestamp_start=self.timestamp_start,
+            timestamp_end=self.timestamp_end,
+        )
+
+    def kill(self):
+        self.death_time = time.time()
+
+    @property
+    def data_queue(self):
+        if self.response_arrived.is_set():
+            return self.response_data_queue
+        else:
+            return self.request_data_queue
+
+    @property
+    def queued_data_length(self):
+        if self.response_arrived.is_set():
+            return self.response_queued_data_length
+        else:
+            return self.request_queued_data_length
+
+    @queued_data_length.setter
+    def queued_data_length(self, v):
+        self.request_queued_data_length = v
+
+    @property
+    def data_finished(self):
+        if self.response_arrived.is_set():
+            return self.response_data_finished
+        else:
+            return self.request_data_finished
+"""
