@@ -7,6 +7,7 @@ from abc import abstractmethod
 
 import collections
 
+from mitmproxy import log
 from mitmproxy.proxy2 import commands, events
 from mitmproxy.proxy2.context import Context, Connection
 
@@ -20,6 +21,7 @@ class Paused(typing.NamedTuple):
 
 
 class Layer:
+    __last_debug_message: typing.ClassVar[str] = ""
     context: Context
     _paused: typing.Optional[Paused]
     _paused_event_queue: typing.Deque[events.Event]
@@ -35,6 +37,23 @@ class Layer:
         self._paused = None
         self._paused_event_queue = collections.deque()
 
+        show_debug_output = (
+            log.log_tier(context.options.termlog_verbosity) >= log.log_tier("debug")
+        )
+        if show_debug_output:
+            self.debug = "  " * len(context.layers)
+
+    def __debug(self, message):
+        if Layer.__last_debug_message == message:
+            if "\n" in message:
+                message = message.split("\n", 1)[0].strip() + "..."
+        else:
+            Layer.__last_debug_message = message
+        return commands.Log(
+            textwrap.indent(message, self.debug),
+            "debug"
+        )
+
     @abstractmethod
     def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
         """Handle a proxy server event"""
@@ -49,16 +68,14 @@ class Layer:
                 event.command is self._paused.command
             )
             if self.debug is not None:
-                yield commands.Log(
-                    textwrap.indent(f"{'>>' if pause_finished else '>!'} {event}", self.debug)
-                )
+                yield self.__debug(f"{'>>' if pause_finished else '>!'} {event}")
             if pause_finished:
                 yield from self.__continue(event)
             else:
                 self._paused_event_queue.append(event)
         else:
             if self.debug is not None:
-                yield commands.Log(textwrap.indent(f">> {event}", self.debug), "debug")
+                yield self.__debug(f">> {event}")
             command_generator = self._handle_event(event)
             yield from self.__process(command_generator)
 
@@ -76,7 +93,7 @@ class Layer:
         while command:
             if self.debug is not None:
                 if not isinstance(command, commands.Log):
-                    yield commands.Log(textwrap.indent(f"<< {command}", self.debug), "debug")
+                    yield self.__debug(f"<< {command}")
             if command.blocking is True:
                 command.blocking = self  # assign to our layer so that higher layers don't block.
                 self._paused = Paused(
@@ -98,7 +115,7 @@ class Layer:
         while not self._paused and self._paused_event_queue:
             event = self._paused_event_queue.popleft()
             if self.debug is not None:
-                yield commands.Log(textwrap.indent(f"!> {event}", self.debug), "debug")
+                yield self.__debug(f"!> {event}")
             command_generator = self._handle_event(event)
             yield from self.__process(command_generator)
 

@@ -40,8 +40,6 @@ class NextLayer:
                 print(f"[glue: skipping nextlayer for {nextlayer}]")
             return
         nextlayer.layer = self._next_layer(nextlayer, nextlayer.context)
-        if nextlayer.layer and log.log_tier(ctx.options.termlog_verbosity) >= log.log_tier("debug"):
-            nextlayer.layer.debug = "  " * len(nextlayer.context.layers)
 
     def _next_layer(self, nextlayer: layer.NextLayer, context: context.Context):
         # 0. New connection
