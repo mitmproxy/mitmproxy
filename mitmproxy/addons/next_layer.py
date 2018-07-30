@@ -96,7 +96,7 @@ class NextLayer:
             if alpn == b'http/1.1':
                 return layers.HTTPLayer(context, HTTPMode.transparent)
             elif alpn == b"h2":
-                return layers.HTTP2Layer(context)
+                return layers.ClientHTTP2Layer(context)
 
         # 7. Check for raw tcp mode. Very simple heuristic here - the first three bytes should be
         # the HTTP verb, so A-Za-z is expected.
