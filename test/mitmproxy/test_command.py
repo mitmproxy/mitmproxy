@@ -32,6 +32,10 @@ class TAddon:
     def cmd5(self, choices: typing.Sequence[str]) -> typing.Sequence[str]:
         return choices
 
+    @command.command("cmd6")
+    def cmd6(self, one: str, two: str) -> str:
+        return f"{one} {two}"
+
     @command.command("subcommand")
     def subcommand(self, cmd: mitmproxy.types.Cmd, *args: mitmproxy.types.Arg) -> str:
         return "ok"
@@ -296,15 +300,23 @@ def test_simple():
         a = TAddon()
         c.add("one.two", a.cmd1)
         c.add("array.command", a.cmd5)
+        c.add("pipe.command", a.cmd6)
+
         assert c.commands["one.two"].help == "cmd1 help"
         assert(c.execute("one.two foo") == "ret foo")
         assert (c.execute("one.two(foo)") == "ret foo")
         assert (c.execute("array.command [1 2 3]") == ["1", "2", "3"])
+        assert (c.execute("foo | one.two | one.two") == "ret ret foo")
+        assert (c.execute("one | pipe.command(two) |"
+                          " pipe.command(three)") == "one two three")
+
         assert(c.execute("one.two \"foo\"") == "ret foo")
         assert(c.execute("one.two 'foo'") == "ret foo")
         assert(c.call("one.two", "foo") == "ret foo")
         with pytest.raises(exceptions.CommandError, match="Syntax error"):
-            c.execute("nonexistent")
+            c.execute("one.two(")
+        with pytest.raises(exceptions.CommandError, match="Syntax error"):
+            c.execute("nonexistent()")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.execute("two.three")
         with pytest.raises(exceptions.CommandError, match="error at EOF"):
