@@ -135,9 +135,16 @@ class NextLayer(Layer):
         self.context.layers.remove(self)
         self.events = []
         self.layer = None
+        self._handle = None
 
     def __repr__(self):
         return f"NextLayer:{repr(self.layer)}"
+
+    def handle_event(self, event: events.Event):
+        if self._handle is not None:
+            yield from self._handle(event)
+        else:
+            yield from super().handle_event(event)
 
     def _handle_event(self, event: mevents.Event):
         self.events.append(event)
@@ -160,7 +167,10 @@ class NextLayer(Layer):
                 yield from self.layer.handle_event(e)
             self.events.clear()
 
-            self._handle_event = self.layer.handle_event
+            self.handle_event = self.layer.handle_event
+            # Some functions may keep a reference to the old .handle_event around,
+            # so we add this second workaround.
+            self._handle = self.layer.handle_event
 
     # Utility methods for whoever decides what the next layer is going to be.
     def data_client(self):
