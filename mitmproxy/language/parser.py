@@ -39,7 +39,7 @@ class CommandLanguageParser:
            pipes_chain : pipes_chain pipe_expression"""
         p[0] = self._create_list(p)
 
-    def p_pipe_expression_no_parentheses(self, p):
+    def p_pipe_expression(self, p):
         """pipe_expression : PIPE COMMAND argument_list
            pipe_expression : PIPE COMMAND LPAREN argument_list RPAREN"""
         if len(p) == 4:
