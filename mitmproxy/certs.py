@@ -15,6 +15,7 @@ from mitmproxy.coretypes import serializable
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
 DEFAULT_EXP = 94608000  # = 24 * 60 * 60 * 365 * 3
+DEFAULT_EXP_DUMMY_CERT = 7776000  # = 90 days
 
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
 DEFAULT_DHPARAM = b"""
@@ -101,7 +102,7 @@ def dummy_cert(privkey, cacert, commonname, sans):
 
     cert = OpenSSL.crypto.X509()
     cert.gmtime_adj_notBefore(-3600 * 48)
-    cert.gmtime_adj_notAfter(DEFAULT_EXP)
+    cert.gmtime_adj_notAfter(DEFAULT_EXP_DUMMY_CERT)
     cert.set_issuer(cacert.get_subject())
     if commonname is not None and len(commonname) < 64:
         cert.get_subject().CN = commonname
