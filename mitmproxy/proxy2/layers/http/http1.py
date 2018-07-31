@@ -8,6 +8,8 @@ from mitmproxy.proxy2 import events, commands
 from mitmproxy.proxy2.layer import Layer
 from mitmproxy.proxy2.layers.old_http import _make_event_from_request
 from mitmproxy.proxy2.layers.http import semantics
+from mitmproxy.proxy2.layers.http.http_commands import *
+from mitmproxy.proxy2.layers.http.http_events import *
 from mitmproxy.proxy2.utils import expect
 
 

@@ -93,7 +93,7 @@ def validate_request_form(
                 f"Invalid HTTP request form (expected: {expected}, got: {first_line_format})")
 
 
-class HTTPLayer(Layer):
+class OldHTTPLayer(Layer):
     """
     Simple TCP layer that just relays messages right now.
     """

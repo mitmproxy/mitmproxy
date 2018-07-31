@@ -12,6 +12,8 @@ from mitmproxy.net.http import Headers, http2
 from mitmproxy.proxy2 import events, commands
 from mitmproxy.proxy2.layer import Layer
 from mitmproxy.proxy2.layers.http import semantics
+from mitmproxy.proxy2.layers.http.http_commands import *
+from mitmproxy.proxy2.layers.http.http_events import *
 from mitmproxy.proxy2.utils import expect
 
 
@@ -24,7 +26,13 @@ class ServerHTTP2Layer(Layer):
 
     @expect(events.Start)
     def start(self, _) -> commands.TCommandGenerator:
-        assert self.context.server.connected
+        if not self.context.server.connected:
+            # TODO: Can be done later
+            err = yield commands.OpenConnection(self.context.server)
+            if err:
+                yield commands.Log(f"Cannot open connection: {err}", level="error")
+                # FIXME: Handle properly.
+
         self.stream_by_flow = {}
         self.stream_by_command = {}
 
@@ -74,6 +82,7 @@ class ServerHTTP2Layer(Layer):
     def handle_h2_events(self, h2_events: List[h2.events.Event]):
         for h2_event in h2_events:
             if isinstance(h2_event, h2.events.RequestReceived):
+                yield commands.Log("foobar")
 
 
 class ClientHTTP2Layer(Layer):
@@ -92,8 +101,7 @@ class ClientHTTP2Layer(Layer):
         self.h2.initiate_connection()
         yield commands.SendData(self.context.client, self.h2.data_to_send())
 
-        self.child_layer = ServerHTTP1Layer(self.context)
-        # self.child_layer = ServerHTTP2Layer(self.context)
+        self.child_layer = ServerHTTP2Layer(self.context)
         yield from self.event_to_child(events.Start())
 
         self._handle_event = self._handle

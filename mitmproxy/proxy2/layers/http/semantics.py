@@ -1,5 +1,6 @@
 from mitmproxy.proxy2.layer import Layer
-
+from mitmproxy.proxy2.layers.http.http_commands import *
+from mitmproxy.proxy2.layers.http.http_events import *
 
 class HTTPLayer(Layer):
     """
