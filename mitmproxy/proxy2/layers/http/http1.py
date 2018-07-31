@@ -6,7 +6,8 @@ from mitmproxy import http
 from mitmproxy.net.http import Headers
 from mitmproxy.proxy2 import events, commands
 from mitmproxy.proxy2.layer import Layer
-from mitmproxy.proxy2.layers.http import _make_event_from_request
+from mitmproxy.proxy2.layers.old_http import _make_event_from_request
+from mitmproxy.proxy2.layers.http import semantics
 from mitmproxy.proxy2.utils import expect
 
 
@@ -37,7 +38,7 @@ class ServerHTTP1Layer(Layer):
 
         self.h11.next_event = log_event(self.h11.next_event)
         # /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\
-        self.child_layer = HTTPLayer(self.context)
+        self.child_layer = semantics.HTTPLayer(self.context)
         self.event_to_child(events.Start())
 
         yield commands.Log("HTTP/1 connection started")

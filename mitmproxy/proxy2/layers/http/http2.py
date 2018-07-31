@@ -11,7 +11,7 @@ from mitmproxy import http
 from mitmproxy.net.http import Headers, http2
 from mitmproxy.proxy2 import events, commands
 from mitmproxy.proxy2.layer import Layer
-from mitmproxy.proxy2.layers.http import _make_event_from_request
+from mitmproxy.proxy2.layers.http import semantics
 from mitmproxy.proxy2.utils import expect
 
 
@@ -19,8 +19,8 @@ TFlowId = str
 
 
 class ServerHTTP2Layer(Layer):
-    stream_by_flow: Dict[TFlowId, HTTPLayer]
-    stream_by_command: Dict[commands.Command, HTTPLayer]
+    stream_by_flow: Dict[TFlowId, semantics.HTTPLayer]
+    stream_by_command: Dict[commands.Command, semantics.HTTPLayer]
 
     @expect(events.Start)
     def start(self, _) -> commands.TCommandGenerator:
@@ -43,7 +43,7 @@ class ServerHTTP2Layer(Layer):
 
     _handle_event = start
 
-    def event_to_child(self, layer: HTTPLayer, event: events.Event):
+    def event_to_child(self, layer: semantics.HTTPLayer, event: events.Event):
         for command in layer.handle_event(event):
             if command.blocking:
                 self.stream_by_command[command] = layer
@@ -56,7 +56,7 @@ class ServerHTTP2Layer(Layer):
 
         elif isinstance(event, HttpEvent):
             if event.flow.id not in self.stream_by_flow:
-                child_layer = HTTPLayer(self.context)
+                child_layer = semantics.HTTPLayer(self.context)
                 yield from child_layer.handle_event(events.Start())
                 self.stream_by_flow[event.flow.id] = child_layer
             else:

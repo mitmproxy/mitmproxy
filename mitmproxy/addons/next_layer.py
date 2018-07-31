@@ -74,7 +74,7 @@ class NextLayer:
             s(modes.HttpProxy, layers.ServerTLSLayer),
             s(modes.HttpProxy, layers.ClientTLSLayer, layers.ServerTLSLayer),
         ]):
-            return layers.HTTPLayer(context, HTTPMode.regular)
+            return layers.OldHTTPLayer(context, HTTPMode.regular)
 
         if ctx.options.mode.startswith("upstream:") and len(context.layers) <= 3 and isinstance(top_layer, layers.ServerTLSLayer):
             raise NotImplementedError()
@@ -92,7 +92,7 @@ class NextLayer:
         if isinstance(top_layer, layers.ServerTLSLayer):
             alpn = context.client.alpn
             if alpn == b"http/1.1":
-                return layers.HTTPLayer(context, HTTPMode.transparent) # TODO: replace this with ClientHTTP1Layer
+                return layers.OldHTTPLayer(context, HTTPMode.transparent) # TODO: replace this with ClientHTTP1Layer
             elif alpn == b"h2":
                 return layers.ClientHTTP2Layer(context)
 
@@ -104,7 +104,7 @@ class NextLayer:
 
         # 8. Assume HTTP1 by default.
         return layers.GlueLayer(context)  # TODO
-        # return layers.HTTPLayer(context, HTTPMode.transparent)
+        # return layers.OldHTTPLayer(context, HTTPMode.transparent)
 
     def make_top_layer(self, context):
         if ctx.options.mode == "regular":

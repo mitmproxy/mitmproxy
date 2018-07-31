@@ -1,6 +1,6 @@
 from . import modes
 from .glue import GlueLayer
-from .http import HTTPLayer
+from .old_http import OldHTTPLayer
 from .http.http1 import ClientHTTP1Layer, ServerHTTP1Layer
 from .http.http2 import ClientHTTP2Layer, ServerHTTP2Layer
 from .tcp import TCPLayer
@@ -10,7 +10,7 @@ from .websocket import WebsocketLayer
 __all__ = [
     "modes",
     "GlueLayer",
-    "HTTPLayer", # TODO remove this and replace with ClientHTTP1Layer
+    "OldHTTPLayer", # TODO remove this and replace with ClientHTTP1Layer
     "ClientHTTP1Layer", "ServerHTTP1Layer",
     "ClientHTTP2Layer", "ServerHTTP2Layer",
     "TCPLayer",
