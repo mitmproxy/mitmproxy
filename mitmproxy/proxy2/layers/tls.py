@@ -296,7 +296,7 @@ class ClientTLSLayer(_TLSLayer):
                     self.context.options.upstream_cert and
                     (
                         self.context.options.add_upstream_certs_to_client_chain or
-                        client.alpn_offers or
+                        # client.alpn_offers or
                         not client.sni
                     )
                 )
@@ -361,12 +361,13 @@ class ClientTLSLayer(_TLSLayer):
         context.use_certificate(cert.x509)
         context.set_cipher_list(tls.DEFAULT_CLIENT_CIPHERS)
 
-        if server.alpn:
-            def alpn_select_callback(conn_, options):
-                if server.alpn in options:
-                    return server.alpn
+        def alpn_select_callback(conn_, options):
+            if server.alpn in options:
+                return server.alpn
+            elif b"h2" in options:
+                return b"h2"
 
-            context.set_alpn_select_callback(alpn_select_callback)
+        context.set_alpn_select_callback(alpn_select_callback)
 
         self.tls[self.context.client] = SSL.Connection(context)
         self.tls[self.context.client].set_accept_state()
