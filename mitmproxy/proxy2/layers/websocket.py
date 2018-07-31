@@ -55,12 +55,12 @@ class WebsocketLayer(Layer):
         assert isinstance(next(self.server_conn.events()), wsevents.ConnectionEstablished)
 
         yield commands.Hook("websocket_start", self.flow)
-        self._handle_event = self.relay_messages
+        self._handle_event = self.process_data
 
     _handle_event = start
 
     @expect(events.DataReceived, events.ConnectionClosed)
-    def relay_messages(self, event: events.Event) -> commands.TCommandGenerator:
+    def process_data(self, event: events.Event) -> commands.TCommandGenerator:
         if isinstance(event, events.DataReceived):
             from_client = event.connection == self.context.client
             if from_client:
@@ -90,7 +90,6 @@ class WebsocketLayer(Layer):
                     closing = True
                 else:
                     yield commands.Log(
-                        "info",
                         "WebSocket unhandled event: from {}: {}".format("client" if from_client else "server", ws_event)
                     )
 
@@ -104,7 +103,7 @@ class WebsocketLayer(Layer):
         # TODO: come up with a solid API to inject messages
 
         elif isinstance(event, events.ConnectionClosed):
-            yield commands.Log("error", "Connection closed abnormally")
+            yield commands.Log("Connection closed abnormally", "error")
             self.flow.error = flow.Error(
                 "WebSocket connection closed unexpectedly by {}".format(
                     "client" if event.connection == self.context.client else "server"
@@ -166,7 +165,6 @@ class WebsocketLayer(Layer):
 
     def _handle_ping_received(self, ws_event, source, other, send_to, from_client):
         yield commands.Log(
-            "info",
             "WebSocket PING received from {}: {}".format("client" if from_client else "server",
                                                          ws_event.payload.decode() or "<no payload>")
         )
@@ -178,7 +176,6 @@ class WebsocketLayer(Layer):
 
     def _handle_pong_received(self, ws_event, source, other, send_to, from_client):
         yield commands.Log(
-            "info",
             "WebSocket PONG received from {}: {}".format("client" if from_client else "server",
                                                          ws_event.payload.decode() or "<no payload>")
         )

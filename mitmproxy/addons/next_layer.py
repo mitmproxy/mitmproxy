@@ -40,8 +40,6 @@ class NextLayer:
                 print(f"[glue: skipping nextlayer for {nextlayer}]")
             return
         nextlayer.layer = self._next_layer(nextlayer, nextlayer.context)
-        if nextlayer.layer and log.log_tier(ctx.options.termlog_verbosity) >= log.log_tier("debug"):
-            nextlayer.layer.debug = "  " * len(nextlayer.context.layers)
 
     def _next_layer(self, nextlayer: layer.NextLayer, context: context.Context):
         # 0. New connection
@@ -76,7 +74,7 @@ class NextLayer:
             s(modes.HttpProxy, layers.ServerTLSLayer),
             s(modes.HttpProxy, layers.ClientTLSLayer, layers.ServerTLSLayer),
         ]):
-            return layers.HTTPLayer(context, HTTPMode.regular)
+            return layers.OldHTTPLayer(context, HTTPMode.regular)
 
         if ctx.options.mode.startswith("upstream:") and len(context.layers) <= 3 and isinstance(top_layer, layers.ServerTLSLayer):
             raise NotImplementedError()
@@ -93,10 +91,10 @@ class NextLayer:
         # 6. Check for TLS ALPN (HTTP1/HTTP2)
         if isinstance(top_layer, layers.ServerTLSLayer):
             alpn = context.client.alpn
-            if alpn == b'http/1.1':
-                return layers.HTTPLayer(context, HTTPMode.transparent)
+            if alpn == b"http/1.1":
+                return layers.OldHTTPLayer(context, HTTPMode.transparent) # TODO: replace this with ClientHTTP1Layer
             elif alpn == b"h2":
-                return layers.GlueLayer(context)  # TODO
+                return layers.ClientHTTP2Layer(context)
 
         # 7. Check for raw tcp mode. Very simple heuristic here - the first three bytes should be
         # the HTTP verb, so A-Za-z is expected.
@@ -106,7 +104,7 @@ class NextLayer:
 
         # 8. Assume HTTP1 by default.
         return layers.GlueLayer(context)  # TODO
-        # return layers.HTTPLayer(context, HTTPMode.transparent)
+        # return layers.OldHTTPLayer(context, HTTPMode.transparent)
 
     def make_top_layer(self, context):
         if ctx.options.mode == "regular":
