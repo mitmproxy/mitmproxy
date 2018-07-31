@@ -91,8 +91,8 @@ class NextLayer:
         # 6. Check for TLS ALPN (HTTP1/HTTP2)
         if isinstance(top_layer, layers.ServerTLSLayer):
             alpn = context.client.alpn
-            if alpn == b'http/1.1':
-                return layers.HTTPLayer(context, HTTPMode.transparent)
+            if alpn == b"http/1.1":
+                return layers.HTTPLayer(context, HTTPMode.transparent) # TODO: replace this with ClientHTTP1Layer
             elif alpn == b"h2":
                 return layers.ClientHTTP2Layer(context)
 

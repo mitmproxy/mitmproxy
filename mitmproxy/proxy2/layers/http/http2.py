@@ -15,222 +15,7 @@ from mitmproxy.proxy2.layers.http import _make_event_from_request
 from mitmproxy.proxy2.utils import expect
 
 
-
-class HttpEvent(events.Event):
-    flow: http.HTTPFlow
-
-    def __init__(self, flow: http.HTTPFlow):
-        self.flow = flow
-
-
-class HttpCommand(commands.Command):
-    flow: http.HTTPFlow
-
-    def __init__(self, flow: http.HTTPFlow):
-        self.flow = flow
-
-
-class RequestHeaders(HttpEvent):
-    pass
-
-
-class RequestData(HttpEvent):
-    pass
-
-
-class RequestComplete(HttpEvent):
-    pass
-
-
-class ResponseHeaders(HttpEvent):
-    pass
-
-
-class ResponseData(HttpEvent):
-    data: bytes
-
-    def __init__(self, flow, data):
-        super().__init__(flow)
-        self.data = data
-
-    pass
-
-
-class ResponseComplete(HttpEvent):
-    pass
-
-
-class SendRequestHeaders(HttpCommand):
-    pass
-
-
-class SendRequestData(HttpCommand):
-    pass
-
-
-class SendRequestComplete(HttpCommand):
-    pass
-
-
-class SendResponseHeaders(HttpCommand):
-    pass
-
-
-class SendResponseData(HttpCommand):
-    data: bytes
-
-    def __init__(self, flow, data):
-        super().__init__(flow)
-        self.data = data
-
-    pass
-
-
-class SendResponseComplete(HttpCommand):
-    pass
-
-
-class HTTPLayer(Layer):
-    """
-    HTTP Semantics layer. Maybe shared by both HTTP/1 and HTTP/2.
-    """
-
-    def _handle_event(self, event: HttpEvent):
-        if isinstance(event, RequestHeaders):
-            yield commands.Log(f"RequestHeadersReceived: {event}")
-
-            # This is blocking only this layer, none of the parent layers.
-            yield commands.Hook("requestheaders", event.flow)
-            yield commands.Log(f"Hook processed: {event}")
-
-        elif isinstance(event, RequestData):
-            raise NotImplementedError
-        elif isinstance(event, RequestComplete):
-            yield commands.Log(f"RequestComplete: {event}")
-            yield commands.Hook("request", event.flow)
-            yield commands.Log(f"Hook processed: {event}")
-            yield SendRequestHeaders(event.flow)
-            # TODO yield SendRequestData()
-            yield SendRequestComplete(event.flow)
-        elif isinstance(event, ResponseHeaders):
-            yield commands.Log(f"ResponseHeadersReceived: {event}")
-
-            # This is blocking only this layer, none of the parent layers.
-            yield commands.Hook("responseheaders", event.flow)
-            yield commands.Log(f"Hook processed: {event}")
-
-        elif isinstance(event, ResponseData):
-            event.flow.response.raw_content = (
-                (event.flow.response.raw_content or b"")
-                + event.data
-            )
-        elif isinstance(event, ResponseComplete):
-            yield commands.Log(f"ResponseComplete: {event}")
-            yield commands.Hook("response", event.flow)
-            yield commands.Log(f"Hook processed: {event}")
-            yield SendResponseHeaders(event.flow)
-            yield SendResponseData(event.flow, event.flow.response.raw_content)
-            yield SendResponseComplete(event.flow)
-
-        elif isinstance(event, events.ConnectionClosed):
-            yield commands.Log(f"HTTPLayer unimplemented event: {event}", level="error")
-        else:
-            raise NotImplementedError(event)
-
-
 TFlowId = str
-
-
-class ServerHTTP1Layer(Layer):
-    flow: http.HTTPFlow = None
-
-    @expect(events.Start)
-    def start(self, _) -> commands.TCommandGenerator:
-        if not self.context.server.connected:
-            # TODO: Can be done later
-            err = yield commands.OpenConnection(self.context.server)
-            if err:
-                yield commands.Log(f"Cannot open connection: {err}", level="error")
-                # FIXME: Handle properly.
-
-        self.h11 = h11.Connection(h11.CLIENT)
-
-        # debug
-        # \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/ \/
-        def log_event(orig):
-            def next_event():
-                e = orig()
-                if True:
-                    yield commands.Log(f"[h11] {e}")
-                return e
-
-            return next_event
-
-        self.h11.next_event = log_event(self.h11.next_event)
-        # /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\ /\
-        self.child_layer = HTTPLayer(self.context)
-        self.event_to_child(events.Start())
-
-        yield commands.Log("HTTP/1 connection started")
-
-        self._handle_event = self._handle
-
-    _handle_event = start
-
-    def event_to_child(self, event: events.Event):
-        for command in self.child_layer.handle_event(event):
-            if isinstance(command, HttpCommand):
-                yield from self.handle_http_command(command)
-            else:
-                yield command
-
-    def handle_http_command(self, command: HttpCommand):
-        bytes_to_send = None
-        if isinstance(command, SendRequestHeaders):
-            self.flow = command.flow
-            self.flow.request.http_version = b"HTTP/1.1"
-            h11_event = _make_event_from_request(self.flow.request)
-            bytes_to_send = self.h11.send(h11_event)
-
-        elif isinstance(command, SendRequestComplete):
-            bytes_to_send = self.h11.send(h11.EndOfMessage())
-        elif isinstance(command, SendRequestData):
-            yield commands.Log(f"Server HTTP1Layer unimplemented HttpCommand: {command}",
-                               level="error")
-        else:
-            yield command
-        if bytes_to_send:
-            yield commands.SendData(self.context.server, bytes_to_send)
-
-    def _handle(self, event: events.Event):
-        if isinstance(event, HttpEvent):
-            yield from self.event_to_child(event)
-        elif isinstance(event, events.DataReceived):
-            self.h11.receive_data(event.data)
-
-            while True:
-                h11_event = yield from self.h11.next_event()
-                if h11_event is h11.NEED_DATA:
-                    break
-                elif isinstance(h11_event, h11.Response):
-                    yield commands.Log(f"h11 responseheaders: {h11_event}")
-                    self.flow.response = http.HTTPResponse(
-                        b"HTTP/1.1",
-                        h11_event.status_code,
-                        h11_event.reason,
-                        h11_event.headers,
-                        None,
-                        time.time()
-                    )
-                    yield from self.event_to_child(ResponseHeaders(self.flow))
-                elif isinstance(h11_event, h11.Data):
-                    yield from self.event_to_child(ResponseData(self.flow, h11_event.data))
-                elif isinstance(h11_event, h11.EndOfMessage):
-                    yield from self.event_to_child(ResponseComplete(self.flow))
-                else:
-                    raise NotImplementedError(h11_event)
-        else:
-            yield from self.event_to_child(event)
 
 
 class ServerHTTP2Layer(Layer):
@@ -240,6 +25,8 @@ class ServerHTTP2Layer(Layer):
     @expect(events.Start)
     def start(self, _) -> commands.TCommandGenerator:
         assert self.context.server.connected
+        self.stream_by_flow = {}
+        self.stream_by_command = {}
 
         h2_config = h2.config.H2Configuration(
             client_side=True,
@@ -249,9 +36,6 @@ class ServerHTTP2Layer(Layer):
         self.h2 = connection.H2Connection(config=h2_config)
         self.h2.initiate_connection()
         yield commands.SendData(self.context.server, self.h2.data_to_send())
-
-        self.stream_by_flow = {}
-        self.stream_by_command = {}
 
         yield commands.Log("HTTP/2 connection started")
 
@@ -266,29 +50,30 @@ class ServerHTTP2Layer(Layer):
             yield command
 
     def _handle(self, event: events.Event):
-        if isinstance(event, HttpEvent):
+        if isinstance(event, events.CommandReply):
+            child_layer = self.stream_by_command.pop(event.command)
+            yield from self.event_to_child(child_layer, event)
+
+        elif isinstance(event, HttpEvent):
             if event.flow.id not in self.stream_by_flow:
                 child_layer = HTTPLayer(self.context)
                 yield from child_layer.handle_event(events.Start())
                 self.stream_by_flow[event.flow.id] = child_layer
             else:
                 child_layer = self.stream_by_flow[event.flow.id]
-
             yield from self.event_to_child(child_layer, event)
 
         elif isinstance(event, events.DataReceived):
             h2_events = self.h2.receive_data(event.data)
-            data = self.h2.data_to_send()
-            if data:
-                yield commands.SendData(self.context.server, data)
-            for h2_event in h2_events:
-                # Do something smart with the response here.
-                raise NotImplementedError
-        elif isinstance(event, events.CommandReply):
-            child_layer = self.stream_by_command.pop(event.command)
-            yield from self.event_to_child(child_layer, event)
+            yield commands.SendData(self.context.server, self.h2.data_to_send())
+            yield from self.handle_h2_events(h2_events)
+
         else:
             raise NotImplementedError
+
+    def handle_h2_events(self, h2_events: List[h2.events.Event]):
+        for h2_event in h2_events:
+            if isinstance(h2_event, h2.events.RequestReceived):
 
 
 class ClientHTTP2Layer(Layer):
@@ -297,6 +82,7 @@ class ClientHTTP2Layer(Layer):
     @expect(events.Start)
     def start(self, _) -> commands.TCommandGenerator:
         self.stream_by_flow = {}
+
         h2_config = h2.config.H2Configuration(
             client_side=False,
             header_encoding=False,
@@ -328,21 +114,17 @@ class ClientHTTP2Layer(Layer):
                 (b":status", str(command.flow.response.status_code).encode()),
                 *command.flow.request.headers.fields
             )
-            self.h2.send_headers(
-                stream_id,
-                headers,
-            )
+            self.h2.send_headers(stream_id, headers)
         elif isinstance(command, SendResponseData):
+            # TODO: do chunking with max_outbound_frame_size
             self.h2.send_data(stream_id, command.data)
         elif isinstance(command, SendResponseComplete):
             yield commands.Log(f"Ending stream {self.stream_by_flow[command.flow.id]}...")
             self.h2.end_stream(stream_id)
         else:
-            yield commands.Log(f"ClientHTTP2Layer unimplemented HttpCommand: {command}",
-                               level="error")
-        data = self.h2.data_to_send()
-        if data:
-            yield commands.SendData(self.context.client, data)
+            yield commands.Log(f"ClientHTTP2Layer unimplemented HttpCommand: {command}", level="error")
+
+        yield commands.SendData(self.context.client, self.h2.data_to_send())
 
     def _handle(self, event: events.Event) -> commands.TCommandGenerator:
         if isinstance(event, events.DataReceived):
@@ -611,7 +393,7 @@ class ClientHTTP2Layer(Layer):
             if event.connection == self.context.server:
                 yield commands.CloseConnection(self.context.client)
             self._handle_event = self.done
-    
+
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def done(self, _):
