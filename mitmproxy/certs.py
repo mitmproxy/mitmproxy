@@ -15,7 +15,7 @@ from mitmproxy.coretypes import serializable
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
 DEFAULT_EXP = 94608000  # = 24 * 60 * 60 * 365 * 3
-DEFAULT_EXP_DUMMY_CERT = 7776000  # = 90 days
+DEFAULT_EXP_DUMMY_CERT = 63072000  # = 2 years
 
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
 DEFAULT_DHPARAM = b"""
