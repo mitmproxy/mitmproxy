@@ -1,6 +1,7 @@
 """
     This module manages and invokes typed commands.
 """
+import asyncio
 import inspect
 import types
 import typing
@@ -10,7 +11,7 @@ import sys
 
 import mitmproxy.types
 from mitmproxy import exceptions
-from mitmproxy.language import lexer, parser
+from mitmproxy.language import lexer, parser, traversal
 
 
 def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
@@ -31,6 +32,25 @@ def typename(t: type) -> str:
     if not to:
         raise exceptions.CommandError("unsupported type: %s" % getattr(t, "__name__", t))
     return to.display
+
+
+class AsyncExectuionManager:
+    def __init__(self) -> None:
+        self.counter: int = 0
+        self.running_commands: typing.Dict[int, asyncio.Task] = {}
+
+    def add_command(self, command_task: asyncio.Task) -> None:
+        self.counter += 1
+        self.running_commands[self.counter] = command_task
+
+    def stop_command(self, cid: int) -> None:
+        try:
+            command_task = self.running_commands[cid]
+        except KeyError:
+            raise ValueError(f"There is not the command with id={cid}")
+        else:
+            command_task.cancel()
+            del self.running_commands[cid]
 
 
 class Command:
@@ -83,7 +103,10 @@ class Command:
 
         pargs = []
         for arg, paramtype in zip(args, self.paramtypes):
-            pargs.append(parsearg(self.manager, arg, paramtype))
+            if isinstance(arg, tuple) and arg[0] is mitmproxy.types.CommandTypes.get(paramtype, None):
+                pargs.append(arg[1])
+            else:
+                pargs.append(parsearg(self.manager, arg, paramtype))
         pargs.extend(remainder)
         return pargs
 
@@ -95,6 +118,8 @@ class Command:
         ret = self.func(*self.prepare_args(args))
         if ret is None and self.returntype is None:
             return
+        elif asyncio.iscoroutine(ret):
+            return ret
         typ = mitmproxy.types.CommandTypes.get(self.returntype)
         if not typ.is_valid(self.manager, typ, ret):
             raise exceptions.CommandError(
@@ -102,7 +127,7 @@ class Command:
                     self.path, typ.display
                 )
             )
-        return ret
+        return typ, ret
 
 
 ParseResult = typing.NamedTuple(
@@ -118,6 +143,7 @@ ParseResult = typing.NamedTuple(
 class CommandManager(mitmproxy.types._CommandBase):
     def __init__(self, master):
         self.master = master
+        self.async_manager = AsyncExectuionManager()
         self.command_parser = parser.create_parser(self)
         self.commands: typing.Dict[str, Command] = {}
         self.oneword_commands: typing.List[str] = []
@@ -199,29 +225,46 @@ class CommandManager(mitmproxy.types._CommandBase):
 
         return parse, remhelp
 
+    def get_command_by_path(self, path: str) -> Command:
+        """
+            Returns command by its path. May raise CommandError.
+        """
+        if path not in self.commands:
+            raise exceptions.CommandError(f"Unknown command: {path}")
+        return self.commands[path]
+
     def call(self, path: str, *args: typing.Sequence[typing.Any]) -> typing.Any:
         """
             Call a command with native arguments. May raise CommandError.
         """
-        if path not in self.commands:
-            raise exceptions.CommandError("Unknown command: %s" % path)
-        return self.commands[path].func(*args)
+        return self.get_command_by_path(path).func(*args)
 
     def call_strings(self, path: str, args: typing.Sequence[str]) -> typing.Any:
         """
             Call a command using a list of string arguments. May raise CommandError.
         """
-        if path not in self.commands:
-            raise exceptions.CommandError("Unknown command: %s" % path)
-        return self.commands[path].call(args)
+        return self.get_command_by_path(path).call(args)
 
-    def execute(self, cmdstr: str):
+    def async_execute(self, cmdstr: str) -> asyncio.Task:
+        """
+            Schedule a command to be executed. May raise CommandError.
+        """
+        lex = lexer.create_lexer(cmdstr, self.oneword_commands)
+        self.command_parser.asynchoronous = True
+        parsed_cmd = self.command_parser.parse(lexer=lex)
+
+        execution_coro = traversal.execute_parsed_line(parsed_cmd)
+        command_task = asyncio.ensure_future(execution_coro)
+        self.async_manager.add_command(command_task)
+        return command_task
+
+    def execute(self, cmdstr: str) -> typing.Any:
         """
             Execute a command string. May raise CommandError.
         """
         lex = lexer.create_lexer(cmdstr, self.oneword_commands)
-        parser_return = self.command_parser.parse(lexer=lex)
-        return parser_return
+        parsed_cmd = self.command_parser.parse(lexer=lex)
+        return parsed_cmd
 
     def dump(self, out=sys.stdout) -> None:
         cmds = list(self.commands.values())
@@ -248,10 +291,16 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
 
 def command(path):
     def decorator(function):
-        @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            verify_arg_signature(function, args, kwargs)
-            return function(*args, **kwargs)
+        if asyncio.iscoroutinefunction(function):
+            @functools.wraps(function)
+            async def wrapper(*args, **kwargs):
+                verify_arg_signature(function, args, kwargs)
+                return await function(*args, **kwargs)
+        else:
+            @functools.wraps(function)
+            def wrapper(*args, **kwargs):
+                verify_arg_signature(function, args, kwargs)
+                return function(*args, **kwargs)
         wrapper.__dict__["command_path"] = path
         return wrapper
     return decorator

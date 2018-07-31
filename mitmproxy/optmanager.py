@@ -234,8 +234,8 @@ class OptManager:
         if attr not in self._options:
             raise KeyError("No such option: %s" % attr)
 
-        def setter(x):
-            setattr(self, attr, x)
+        def setter(future_x):
+            setattr(self, attr, future_x.result())
         return setter
 
     def toggler(self, attr):

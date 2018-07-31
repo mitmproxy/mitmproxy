@@ -33,8 +33,8 @@ class TAddon:
         return choices
 
     @command.command("cmd6")
-    def cmd6(self, one: str, two: str) -> str:
-        return f"{one} {two}"
+    def cmd6(self, pipe_value: str) -> str:
+        return pipe_value
 
     @command.command("subcommand")
     def subcommand(self, cmd: mitmproxy.types.Cmd, *args: mitmproxy.types.Arg) -> str:
@@ -306,10 +306,7 @@ def test_simple():
         assert(c.execute("one.two foo") == "ret foo")
         assert (c.execute("one.two(foo)") == "ret foo")
         assert (c.execute("array.command [1 2 3]") == ["1", "2", "3"])
-        assert (c.execute("foo | one.two | one.two") == "ret ret foo")
-        assert (c.execute("one | pipe.command(two) |"
-                          " pipe.command(three)") == "one two three")
-
+        assert (c.execute("foo | pipe.command") == "foo")
         assert(c.execute("one.two \"foo\"") == "ret foo")
         assert(c.execute("one.two 'foo'") == "ret foo")
         assert(c.call("one.two", "foo") == "ret foo")

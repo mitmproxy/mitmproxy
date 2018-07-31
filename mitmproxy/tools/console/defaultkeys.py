@@ -1,6 +1,6 @@
 
 def map(km):
-    km.add(":", "console.command ", ["global"], "Command prompt")
+    km.add(":", "console.command []", ["global"], "Command prompt")
     km.add("?", "console.view.help", ["global"], "View help")
     km.add("B", "browser.start", ["global"], "Start an attached browser")
     km.add("C", "console.view.commands", ["global"], "View commands")
@@ -32,7 +32,7 @@ def map(km):
     km.add("A", "flow.resume @all", ["flowlist", "flowview"], "Resume all intercepted flows")
     km.add("a", "flow.resume @focus", ["flowlist", "flowview"], "Resume this intercepted flow")
     km.add(
-        "b", "console.command cut.save @focus response.content ",
+        "b", "console.command [cut.save @focus response.content]",
         ["flowlist", "flowview"],
         "Save response body to file"
     )
@@ -41,8 +41,10 @@ def map(km):
     km.add(
         "e",
         """
-        console.choose.cmd Format export.formats
-        console.command export.file {choice} @focus
+        console.command [
+            export.file
+            console.choose(Format export.formats()) @focus
+        ]
         """,
         ["flowlist", "flowview"],
         "Export this flow to file"
@@ -51,40 +53,37 @@ def map(km):
     km.add("F", "set console_focus_follow=toggle", ["flowlist"], "Set focus follow")
     km.add(
         "ctrl l",
-        "console.command cut.clip ",
+        "console.command [cut.clip]",
         ["flowlist", "flowview"],
         "Send cuts to clipboard"
     )
-    km.add("L", "console.command view.load ", ["flowlist"], "Load flows from file")
+    km.add("L", "console.command [view.load]", ["flowlist"], "Load flows from file")
     km.add("m", "flow.mark.toggle @focus", ["flowlist"], "Toggle mark on this flow")
     km.add("M", "view.marked.toggle", ["flowlist"], "Toggle viewing marked flows")
     km.add(
         "n",
-        "console.command view.create get https://example.com/",
+        "console.command [view.create get https://example.com/]",
         ["flowlist"],
         "Create a new flow"
     )
     km.add(
         "o",
-        """
-        console.choose.cmd Order view.order.options
-        set view_order={choice}
-        """,
+        "set view_order=console.choose(Order view.order.options())",
         ["flowlist"],
         "Set flow list order"
     )
     km.add("r", "replay.client @focus", ["flowlist", "flowview"], "Replay this flow")
-    km.add("S", "console.command replay.server ", ["flowlist"], "Start server replay")
+    km.add("S", "console.command [replay.server]", ["flowlist"], "Start server replay")
     km.add("v", "set view_order_reversed=toggle", ["flowlist"], "Reverse flow list order")
     km.add("U", "flow.mark @all false", ["flowlist"], "Un-set all marks")
-    km.add("w", "console.command save.file @shown ", ["flowlist"], "Save listed flows to file")
+    km.add("w", "console.command [save.file @shown]", ["flowlist"], "Save listed flows to file")
     km.add("V", "flow.revert @focus", ["flowlist", "flowview"], "Revert changes to this flow")
     km.add("X", "flow.kill @focus", ["flowlist"], "Kill this flow")
     km.add("z", "view.remove @all", ["flowlist"], "Clear flow list")
     km.add("Z", "view.remove @hidden", ["flowlist"], "Purge all flows not showing")
     km.add(
         "|",
-        "console.command script.run @focus ",
+        "console.command [script.run @focus]",
         ["flowlist", "flowview"],
         "Run a script on this flow"
     )
@@ -92,8 +91,8 @@ def map(km):
     km.add(
         "e",
         """
-        console.choose.cmd Part console.edit.focus.options
-        console.edit.focus {choice}
+        console.edit.focus
+        console.choose(Part console.edit.focus.options())
         """,
         ["flowview"],
         "Edit a flow component"
@@ -104,14 +103,14 @@ def map(km):
         ["flowview"],
         "Toggle viewing full contents on this flow",
     )
-    km.add("w", "console.command save.file @focus ", ["flowview"], "Save flow to file")
+    km.add("w", "console.command [save.file @focus]", ["flowview"], "Save flow to file")
     km.add("space", "view.focus.next", ["flowview"], "Go to next flow")
 
     km.add(
         "v",
         """
-        console.choose "View Part" request,response
-        console.bodyview @focus {choice}
+        @focus |
+        console.bodyview console.choose("View Part" [request response])
         """,
         ["flowview"],
         "View flow body in an external viewer"
@@ -120,8 +119,8 @@ def map(km):
     km.add(
         "m",
         """
-        console.choose.cmd Mode console.flowview.mode.options
-        console.flowview.mode.set {choice}
+        console.flowview.mode.set
+        console.choose(Mode console.flowview.mode.options())
         """,
         ["flowview"],
         "Set flow view mode"
@@ -129,15 +128,15 @@ def map(km):
     km.add(
         "z",
         """
-        console.choose "Part" request,response
-        flow.encode.toggle @focus {choice}
+        @focus |
+        flow.encode.toggle console.choose(Part [request response])
         """,
         ["flowview"],
         "Encode/decode flow body"
     )
 
-    km.add("L", "console.command options.load ", ["options"], "Load from file")
-    km.add("S", "console.command options.save ", ["options"], "Save to file")
+    km.add("L", "console.command [options.load]", ["options"], "Load from file")
+    km.add("S", "console.command [options.save]", ["options"], "Save to file")
     km.add("D", "options.reset", ["options"], "Reset all options")
     km.add("d", "console.options.reset.focus", ["options"], "Reset this option")
 
@@ -146,20 +145,20 @@ def map(km):
     km.add("d", "console.grideditor.delete", ["grideditor"], "Delete this row")
     km.add(
         "r",
-        "console.command console.grideditor.load",
+        "console.command [console.grideditor.load]",
         ["grideditor"],
         "Read unescaped data into the current cell from file"
     )
     km.add(
         "R",
-        "console.command console.grideditor.load_escaped",
+        "console.command [console.grideditor.load_escaped]",
         ["grideditor"],
         "Load a Python-style escaped string into the current cell from file"
     )
     km.add("e", "console.grideditor.editor", ["grideditor"], "Edit in external editor")
     km.add(
         "w",
-        "console.command console.grideditor.save ",
+        "console.command [console.grideditor.save]",
         ["grideditor"],
         "Save data to file as CSV"
     )
@@ -169,8 +168,10 @@ def map(km):
     km.add(
         "a",
         """
-        console.choose.cmd "Context" console.key.contexts
-        console.command console.key.bind {choice}
+        console.command [
+            console.key.bind
+            console.choose(Context console.key.contexts())
+        ]
         """,
         ["keybindings"],
         "Add a key binding"

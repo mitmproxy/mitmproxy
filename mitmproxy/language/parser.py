@@ -1,4 +1,5 @@
 import typing
+import asyncio
 
 import ply.lex as lex
 import ply.yacc as yacc
@@ -8,21 +9,34 @@ from mitmproxy import exceptions
 from mitmproxy.language.lexer import CommandLanguageLexer
 
 
+ParsedEntity = typing.Union[str, "ParsedCommand"]
+
+
+ParsedCommand = typing.NamedTuple(
+    "ParsedCommand",
+    [
+        ("command", "mitmproxy.command.Command"),
+        ("args", typing.List[ParsedEntity])
+    ]
+)
+
+
 class CommandLanguageParser:
     # the list of possible tokens is always required
     tokens = CommandLanguageLexer.tokens
 
     def __init__(self,
                  command_manager: "mitmproxy.command.CommandManager") -> None:
-        self.return_value: typing.Any = None
-        self._pipe_value: typing.Any = None
+        self.parsed_line: ParsedEntity = None
+        self._parsed_pipe_elem: ParsedCommand = None
+        self.asynchoronous: bool = False
         self.command_manager = command_manager
 
     # Grammar rules
 
     def p_command_line(self, p):
         """command_line : starting_expression pipes_chain"""
-        self.return_value = self._pipe_value
+        self.parsed_line = self._parsed_pipe_elem
 
     def p_starting_expression(self, p):
         """starting_expression : PLAIN_STR
@@ -31,7 +45,7 @@ class CommandLanguageParser:
                                | command_call_no_parentheses
                                | command_call_with_parentheses"""
         p[0] = p[1]
-        self._pipe_value = p[0]
+        self._parsed_pipe_elem = p[0]
 
     def p_pipes_chain(self, p):
         """pipes_chain : empty
@@ -43,19 +57,19 @@ class CommandLanguageParser:
         """pipe_expression : PIPE COMMAND argument_list
            pipe_expression : PIPE COMMAND LPAREN argument_list RPAREN"""
         if len(p) == 4:
-            new_args = [self._pipe_value, *p[3]]
+            new_args = [self._parsed_pipe_elem, *p[3]]
         else:
-            new_args = [self._pipe_value, *p[4]]
-        p[0] = self.command_manager.call_strings(p[2], new_args)
-        self._pipe_value = p[0]
+            new_args = [self._parsed_pipe_elem, *p[4]]
+        p[0] = self._call_command(p[2], new_args)
+        self._parsed_pipe_elem = p[0]
 
-    def p_call_command_no_parentheses(self, p):
+    def p_command_call_no_parentheses(self, p):
         """command_call_no_parentheses : COMMAND argument_list"""
-        p[0] = self.command_manager.call_strings(p[1], p[2])
+        p[0] = self._call_command(p[1], p[2])
 
-    def p_call_command_with_parentheses(self, p):
+    def p_command_call_with_parentheses(self, p):
         """command_call_with_parentheses : COMMAND LPAREN argument_list RPAREN"""
-        p[0] = self.command_manager.call_strings(p[1], p[3])
+        p[0] = self._call_command(p[1], p[3])
 
     def p_argument_list(self, p):
         """argument_list : empty
@@ -73,7 +87,7 @@ class CommandLanguageParser:
 
     def p_array(self, p):
         """array : LBRACE argument_list RBRACE"""
-        p[0] = ",".join(p[2]) if p[2] else ""
+        p[0] = p[2]
 
     def p_quoted_str(self, p):
         """quoted_str : QUOTED_STR"""
@@ -88,8 +102,22 @@ class CommandLanguageParser:
         else:
             raise exceptions.CommandError(f"Syntax error at '{p.value}'")
 
+    # Supporting methods
+
+    def _call_command(self, command: str,
+                      args: typing.List[ParsedEntity]) -> ParsedCommand:
+        if self.asynchoronous:
+            c = self.command_manager.get_command_by_path(command)
+            ret = ParsedCommand(c, args)
+        else:
+            ret = self.command_manager.call_strings(command, args)
+            if asyncio.iscoroutine(ret):
+                raise ValueError(f"You are trying to run async "
+                                 f"command {command} through sync executor.")
+        return ret
+
     @staticmethod
-    def _create_list(p: yacc.YaccProduction) -> typing.List[typing.Any]:
+    def _create_list(p: yacc.YaccProduction) -> typing.List[ParsedEntity]:
         if len(p) == 2:
             p[0] = [] if p[1] is None else [p[1]]
         else:
@@ -103,8 +131,9 @@ class CommandLanguageParser:
 
     def parse(self, lexer: lex.Lexer, **kwargs) -> typing.Any:
         self.parser.parse(lexer=lexer, **kwargs)
-        self._pipe_value = None
-        return self.return_value
+        self._parsed_pipe_elem = None
+        self.parser.asynchoronous = False
+        return self.parsed_line
 
 
 def create_parser(

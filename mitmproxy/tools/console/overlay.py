@@ -1,4 +1,5 @@
 import math
+import asyncio
 
 import urwid
 
@@ -104,10 +105,12 @@ class ChooserListWalker(urwid.ListWalker):
 class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     keyctx = "chooser"
 
-    def __init__(self, master, title, choices, current, callback):
+    def __init__(self, master, title, choices, current, callback=None):
         self.master = master
         self.choices = choices
-        self.callback = callback
+        self._future_choice = asyncio.get_event_loop().create_future()
+        if callback:
+            self._future_choice.add_done_callback(callback)
         choicewidth = max([len(i) for i in choices])
         self.width = max(choicewidth, len(title)) + 7
 
@@ -125,6 +128,9 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
             )
         )
 
+    async def get_choice(self):
+        return await self._future_choice
+
     def selectable(self):
         return True
 
@@ -132,11 +138,11 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         key = self.master.keymap.handle_only("chooser", key)
         choice = self.walker.choice_by_shortcut(key)
         if choice:
-            self.callback(choice)
+            self._future_choice.set_result(choice)
             signals.pop_view_state.send(self)
             return
         if key == "m_select":
-            self.callback(self.choices[self.walker.index])
+            self._future_choice.set_result(self.choices[self.walker.index])
             signals.pop_view_state.send(self)
             return
         elif key in ["q", "esc"]:

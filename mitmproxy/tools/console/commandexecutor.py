@@ -17,21 +17,30 @@ class CommandExecutor:
                 ret = self.master.commands.execute(cmd)
             except exceptions.CommandError as v:
                 signals.status_message.send(message=str(v))
+            except ValueError:
+                # Asynchronous launch
+                command_task = self.master.commands.async_execute(cmd)
+                command_task.add_done_callback(self.check_return)
             else:
-                if ret:
-                    if type(ret) == typing.Sequence[flow.Flow]:
-                        signals.status_message.send(
-                            message="Command returned %s flows" % len(ret)
-                        )
-                    elif type(ret) == flow.Flow:
-                        signals.status_message.send(
-                            message="Command returned 1 flow"
-                        )
-                    else:
-                        self.master.overlay(
-                            overlay.DataViewerOverlay(
-                                self.master,
-                                ret,
-                            ),
-                            valign="top"
-                        )
+                self.check_return(ret=ret)
+
+    def check_return(self, task=None, ret=None):
+        if task is not None:
+            ret = task.result()
+        if ret:
+            if type(ret) == typing.Sequence[flow.Flow]:
+                signals.status_message.send(
+                    message=f"Command returned {len(ret)} flows"
+                )
+            elif type(ret) == flow.Flow:
+                signals.status_message.send(
+                    message="Command returned 1 flow"
+                )
+            else:
+                self.master.overlay(
+                    overlay.DataViewerOverlay(
+                        self.master,
+                        ret,
+                    ),
+                    valign="top"
+                )
