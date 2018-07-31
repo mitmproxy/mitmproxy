@@ -1,3 +1,11 @@
+31 July 2018: mitmproxy 4.0.4
+
+    * Security: Protect mitmweb against DNS rebinding. (CVE-2018-14505, @atx)
+    * Reduce certificate lifetime to two years to be conformant with
+      the current CA/Browser Forum Baseline Requirements. (@muffl0n)
+      (https://cabforum.org/2017/03/17/ballot-193-825-day-certificate-lifetimes/)
+    * Update cryptography to version 2.3.
+
 15 June 2018: mitmproxy 4.0.3
 
     * Add support for IPv6 transparent mode on Windows (#3174)
