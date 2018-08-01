@@ -38,6 +38,7 @@ class Layer:
         self._paused_event_queue = collections.deque()
 
         show_debug_output = (
+            "termlog_verbosity" in context.options and
             log.log_tier(context.options.termlog_verbosity) >= log.log_tier("debug")
         )
         if show_debug_output:
@@ -140,7 +141,7 @@ class NextLayer(Layer):
     def __repr__(self):
         return f"NextLayer:{repr(self.layer)}"
 
-    def handle_event(self, event: events.Event):
+    def handle_event(self, event: mevents.Event):
         if self._handle is not None:
             yield from self._handle(event)
         else:
@@ -167,9 +168,14 @@ class NextLayer(Layer):
                 yield from self.layer.handle_event(e)
             self.events.clear()
 
+            # Why do we need three assignments here?
+            #  1. When this function here is invoked we may have paused events. Those should be
+            #     forwarded to the sublayer right away, so we reassign ._handle_event.
+            #  2. This layer is not needed anymore, so we directly reassign .handle_event.
+            #  3. Some layers may however still have a reference to the old .handle_event.
+            #     ._handle is just an optimization to reduce the callstack in these cases.
             self.handle_event = self.layer.handle_event
-            # Some functions may keep a reference to the old .handle_event around,
-            # so we add this second workaround.
+            self._handle_event = self.layer._handle_event
             self._handle = self.layer.handle_event
 
     # Utility methods for whoever decides what the next layer is going to be.
