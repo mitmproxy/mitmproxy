@@ -129,6 +129,10 @@ class NetlibException(MitmproxyException):
         super().__init__(message)
 
 
+class SessionLoadException(MitmproxyException):
+    pass
+
+
 class Disconnect:
     """Immediate EOF"""
 

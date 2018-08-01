@@ -122,7 +122,7 @@ class TestFrameHeader:
 
         f = websockets.FrameHeader(masking_key=b"foob", mask=0)
         assert not f.mask
-        assert f.masking_key
+        assert not f.masking_key
 
 
 class TestFrame:

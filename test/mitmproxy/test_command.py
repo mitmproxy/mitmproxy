@@ -313,7 +313,7 @@ def test_typename():
 
 
 class DummyConsole:
-    @command.command("view.resolve")
+    @command.command("view.flows.resolve")
     def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
         n = int(spec)
         return [tflow.tflow(resp=True)] * n

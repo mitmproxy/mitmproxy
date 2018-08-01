@@ -107,13 +107,12 @@ def test_simple():
 
 def test_filter():
     v = view.View()
-    f = flowfilter.parse("~m get")
     v.request(tft(method="get"))
     v.request(tft(method="put"))
     v.request(tft(method="get"))
     v.request(tft(method="put"))
     assert(len(v)) == 4
-    v.set_filter(f)
+    v.set_filter_cmd("~m get")
     assert [i.request.method for i in v] == ["GET", "GET"]
     assert len(v._store) == 4
     v.set_filter(None)
@@ -123,6 +122,9 @@ def test_filter():
     assert len(v) == 0
     v.toggle_marked()
     assert len(v) == 4
+
+    with pytest.raises(exceptions.CommandError):
+        v.set_filter_cmd("~notafilter regex")
 
     v[1].marked = True
     v.toggle_marked()
@@ -303,23 +305,26 @@ def test_setgetval():
 
 def test_order():
     v = view.View()
-    with taddons.context(v) as tctx:
-        v.request(tft(method="get", start=1))
-        v.request(tft(method="put", start=2))
-        v.request(tft(method="get", start=3))
-        v.request(tft(method="put", start=4))
-        assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+    v.request(tft(method="get", start=1))
+    v.request(tft(method="put", start=2))
+    v.request(tft(method="get", start=3))
+    v.request(tft(method="put", start=4))
+    assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
 
-        tctx.configure(v, view_order="method")
-        assert [i.request.method for i in v] == ["GET", "GET", "PUT", "PUT"]
-        v.set_reversed(True)
-        assert [i.request.method for i in v] == ["PUT", "PUT", "GET", "GET"]
+    v.set_order("method")
+    assert v.get_order() == "method"
+    assert [i.request.method for i in v] == ["GET", "GET", "PUT", "PUT"]
+    v.set_reversed(True)
+    assert [i.request.method for i in v] == ["PUT", "PUT", "GET", "GET"]
 
-        tctx.configure(v, view_order="time")
-        assert [i.request.timestamp_start for i in v] == [4, 3, 2, 1]
+    v.set_order("time")
+    assert v.get_order() == "time"
+    assert [i.request.timestamp_start for i in v] == [4, 3, 2, 1]
 
-        v.set_reversed(False)
-        assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+    v.set_reversed(False)
+    assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+    with pytest.raises(exceptions.CommandError):
+        v.set_order("not_an_order")
 
 
 def test_reversed():
@@ -549,6 +554,17 @@ def test_settings():
     assert v.settings.keys()
     v.clear()
     assert not v.settings.keys()
+
+
+def test_properties():
+    v = view.View()
+    f = tft()
+    v.request(f)
+    assert v.get_length() == 1
+    assert not v.get_marked()
+    v.toggle_marked()
+    assert v.get_length() == 0
+    assert v.get_marked()
 
 
 def test_configure():

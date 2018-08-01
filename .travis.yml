@@ -16,6 +16,8 @@ git:
 matrix:
   fast_finish: true
   include:
+    - python: 3.5
+      env: TOXENV=py35 # this just makes sure that our version detection shows an appropriate error message
     - python: 3.6
       env: TOXENV=lint
     - os: osx
@@ -47,7 +49,7 @@ matrix:
     - python: 3.6
       env: NAME=docs TOXENV=docs
       install:
-        - wget https://github.com/gohugoio/hugo/releases/download/v0.37/hugo_0.37_Linux-64bit.deb
+        - wget https://github.com/gohugoio/hugo/releases/download/v0.41/hugo_0.41_Linux-64bit.deb
         - sudo dpkg -i hugo*.deb
         - pip install tox virtualenv setuptools
         - pyenv global system 3.6

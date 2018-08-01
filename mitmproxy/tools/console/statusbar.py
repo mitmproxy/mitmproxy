@@ -42,6 +42,8 @@ class ActionBar(urwid.WidgetWrap):
         signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
         signals.status_prompt_command.connect(self.sig_prompt_command)
 
+        self.command_history = commander.CommandHistory(master)
+
         self.prompting = None
 
         self.onekey = False
@@ -98,7 +100,8 @@ class ActionBar(urwid.WidgetWrap):
 
     def sig_prompt_command(self, sender, partial=""):
         signals.focus.send(self, section="footer")
-        self._w = commander.CommandEdit(self.master, partial)
+        self._w = commander.CommandEdit(self.master, partial,
+                                        self.command_history)
         self.prompting = commandexecutor.CommandExecutor(self.master)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
@@ -125,6 +128,7 @@ class ActionBar(urwid.WidgetWrap):
     def keypress(self, size, k):
         if self.prompting:
             if k == "esc":
+                self.command_history.index = self.command_history.last_index
                 self.prompt_done()
             elif self.onekey:
                 if k == "enter":
@@ -132,6 +136,7 @@ class ActionBar(urwid.WidgetWrap):
                 elif k in self.onekey:
                     self.prompt_execute(k)
             elif k == "enter":
+                self.command_history.add_command(self._w.cbuf, True)
                 self.prompt_execute(self._w.get_edit_text())
             else:
                 if common.is_keypress(k):
@@ -271,7 +276,7 @@ class StatusBar(urwid.WidgetWrap):
         return r
 
     def redraw(self):
-        fc = len(self.master.view)
+        fc = self.master.commands.execute("view.properties.length")
         if self.master.view.focus.flow is None:
             offset = 0
         else:
@@ -283,7 +288,7 @@ class StatusBar(urwid.WidgetWrap):
             arrow = common.SYMBOL_DOWN
 
         marked = ""
-        if self.master.view.show_marked:
+        if self.master.commands.execute("view.properties.marked"):
             marked = "M"
 
         t = [
