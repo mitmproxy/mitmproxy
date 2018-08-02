@@ -24,9 +24,10 @@ class TestSession:
     @staticmethod
     def start_session(fp=None):
         s = session.Session()
-        tctx = taddons.context()
-        tctx.master.addons.add(s)
-        tctx.options.session_path = None
+        with taddons.context() as tctx:
+            tctx.master.addons.add(s)
+            tctx.options.session_path = None
+            tctx.options.view_filter = None
         if fp:
             s._flush_period = fp
         s.running()
@@ -97,7 +98,10 @@ class TestSession:
         s.order = "size"
         assert s._generate_order(tf) == len(tf.request.raw_content) + len(tf.response.raw_content)
 
-    def test_simple(self):
+        s.order = "invalid"
+        assert not s._generate_order(tf)
+
+    def test_storage_simple(self):
         s = session.Session()
         ctx.options = taddons.context()
         ctx.options.session_path = None
@@ -106,8 +110,8 @@ class TestSession:
         assert s.store_count() == 0
         s.request(f)
         assert s._view == [(1, f.id)]
-        assert s.load_view([f.id]) == [f]
-        assert s.load_view(['nonexistent']) == [None]
+        assert s.load_view() == [f]
+        assert s.load_storage(['nonexistent']) == [None]
 
         s.error(f)
         s.response(f)
@@ -136,14 +140,17 @@ class TestSession:
         assert len(s._view) == 0
         assert s.store_count() == 0
 
-    def test_filter(self):
+    def test_storage_filter(self):
         s = self.start_session()
         s.request(self.tft(method="get"))
         s.request(self.tft(method="put"))
         s.request(self.tft(method="get"))
         s.request(self.tft(method="put"))
         assert len(s._view) == 4
-        s.set_filter("~m get")
+        with taddons.context() as tctx:
+            tctx.master.addons.add(s)
+            tctx.options.view_filter = '~m get'
+        s.configure({"view_filter"})
         assert [f.request.method for f in s.load_view()] == ["GET", "GET"]
         assert s.store_count() == 4
         with pytest.raises(CommandError):
@@ -152,19 +159,24 @@ class TestSession:
         assert len(s._view) == 4
 
     @pytest.mark.asyncio
-    async def test_flush_withspecials(self):
+    async def test_storage_flush_with_specials(self):
         s = self.start_session(fp=0.5)
         f = self.tft()
         s.request(f)
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
         assert len(s._hot_store) == 0
-        assert all([lflow.__dict__ == flow.__dict__ for lflow, flow in list(zip(s.load_view(), [f]))])
+        f.response = http.HTTPResponse.wrap(tutils.tresp())
+        s.response(f)
+        assert len(s._hot_store) == 1
+        assert s.load_storage() == [f]
+        await asyncio.sleep(1)
+        assert all([lflow.__dict__ == flow.__dict__ for lflow, flow in list(zip(s.load_storage(), [f]))])
 
         f.server_conn.via = tflow.tserver_conn()
         s.request(f)
         await asyncio.sleep(1)
         assert len(s._hot_store) == 0
-        assert all([lflow.__dict__ == flow.__dict__ for lflow, flow in list(zip(s.load_view(), [f]))])
+        assert all([lflow.__dict__ == flow.__dict__ for lflow, flow in list(zip(s.load_storage(), [f]))])
 
         flows = [self.tft() for _ in range(500)]
         s.update(flows)
@@ -174,23 +186,23 @@ class TestSession:
         assert s._flush_period < fp and s._flush_rate > fr
 
     @pytest.mark.asyncio
-    async def test_bodies(self):
+    async def test_storage_bodies(self):
         # Need to test for configure
         # Need to test for set_order
         s = self.start_session(fp=0.5)
         f = self.tft()
         f2 = self.tft(start=1)
-        f.request.content = b"A"*1001
+        f.request.content = b"A" * 1001
         s.request(f)
         s.request(f2)
         await asyncio.sleep(1.0)
         content = s.db_store.con.execute(
             "SELECT type_id, content FROM body WHERE body.flow_id == (?);", [f.id]
         ).fetchall()[0]
-        assert content == (1, b"A"*1001)
+        assert content == (1, b"A" * 1001)
         assert s.db_store.body_ledger == {f.id}
-        f.response = http.HTTPResponse.wrap(tutils.tresp(content=b"A"*1001))
-        f2.response = http.HTTPResponse.wrap(tutils.tresp(content=b"A"*1001))
+        f.response = http.HTTPResponse.wrap(tutils.tresp(content=b"A" * 1001))
+        f2.response = http.HTTPResponse.wrap(tutils.tresp(content=b"A" * 1001))
         # Content length is wrong for some reason -- quick fix
         f.response.headers['content-length'] = b"1001"
         f2.response.headers['content-length'] = b"1001"
@@ -207,3 +219,25 @@ class TestSession:
         assert len(rows) == 1
         assert s.db_store.body_ledger == {f.id}
         assert all([lf.__dict__ == rf.__dict__ for lf, rf in list(zip(s.load_view(), [f, f2]))])
+
+    @pytest.mark.asyncio
+    async def test_storage_order(self):
+        s = self.start_session(fp=0.5)
+        s.request(self.tft(method="GET", start=4))
+        s.request(self.tft(method="PUT", start=2))
+        s.request(self.tft(method="GET", start=3))
+        s.request(self.tft(method="PUT", start=1))
+        assert [i.request.timestamp_start for i in s.load_view()] == [1, 2, 3, 4]
+        await asyncio.sleep(1.0)
+        assert [i.request.timestamp_start for i in s.load_view()] == [1, 2, 3, 4]
+        with taddons.context() as tctx:
+            tctx.master.addons.add(s)
+            tctx.options.view_order = "method"
+        s.configure({"view_order"})
+        assert [i.request.method for i in s.load_view()] == ["GET", "GET", "PUT", "PUT"]
+
+        s.set_order("time")
+        assert [i.request.timestamp_start for i in s.load_view()] == [1, 2, 3, 4]
+
+        with pytest.raises(CommandError):
+            s.set_order("not_an_order")

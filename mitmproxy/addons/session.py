@@ -241,8 +241,8 @@ class Session:
             self.started = True
             self.db_store = SessionDB(ctx.options.session_path)
             loop = asyncio.get_event_loop()
-            tasks = (self._writer, self._tweaker)
-            loop.create_task(asyncio.gather(*(t() for t in tasks)))
+            loop.create_task(self._writer())
+            loop.create_task(self._tweaker())
 
     def configure(self, updated):
         if "view_order" in updated:
@@ -269,27 +269,30 @@ class Session:
                 self._flush_period *= 1.1
                 self._flush_rate *= 0.9
 
-    def load_view(self, ids=None):
+    def load_view(self):
+        ids = [fid for _, fid in self._view]
+        flows = self.load_storage(ids)
+        return sorted(flows, key=lambda f: self._generate_order(f))
+
+    def load_storage(self, ids=None):
         flows = []
         ids_from_store = []
-        if ids is None:
-            ids = [fid for _, fid in self._view]
-        for fid in ids:
-            # Flow could be at the same time in database and in hot storage. We want the most updated version.
-            if fid in self._hot_store:
-                flows.append(self._hot_store[fid])
-            elif fid in self.db_store:
-                ids_from_store.append(fid)
-            else:
-                flows.append(None)
-        flows += self.db_store.retrieve_flows(ids_from_store)
-        return flows
-
-    def load_storage(self):
-        flows = []
-        flows += self.db_store.retrieve_flows()
-        for flow in self._hot_store.values():
-            flows.append(flow)
+        if ids is not None:
+            for fid in ids:
+                # A same flow could be at the same time in hot and db storage. We want the most updated version.
+                if fid in self._hot_store:
+                    flows.append(self._hot_store[fid])
+                elif fid in self.db_store:
+                    ids_from_store.append(fid)
+                else:
+                    flows.append(None)
+            flows += self.db_store.retrieve_flows(ids_from_store)
+        else:
+            for flow in self._hot_store.values():
+                flows.append(flow)
+            for flow in self.db_store.retrieve_flows():
+                if flow.id not in self._hot_store:
+                    flows.append(flow)
         return flows
 
     def clear_storage(self):
@@ -304,7 +307,7 @@ class Session:
                 ln += 1
         return ln + len(self.db_store)
 
-    def _generate_order(self, f: http.HTTPFlow) -> typing.Union[str, int, float]:
+    def _generate_order(self, f: http.HTTPFlow) -> typing.Optional[typing.Union[str, int, float]]:
         o = self.order
         if o == "time":
             return f.request.timestamp_start or 0
@@ -319,6 +322,7 @@ class Session:
             if f.response and f.response.raw_content:
                 s += len(f.response.raw_content)
             return s
+        return None
 
     def set_order(self, order: str) -> None:
         if order not in orders:
