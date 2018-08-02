@@ -233,7 +233,7 @@ def extract_header_host_name(flow, ssl_time):
     """
     header_object = flow.request.headers
     http_or_https = "http://"
-    if ( ssl_time > 0 ):
+    if (ssl_time > 0):
         http_or_https = "https://"
     host_name = "none"
     for name, value in header_object.items():
