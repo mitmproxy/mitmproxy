@@ -110,7 +110,7 @@ def response(flow):
         "time": full_time,
         "request": {
             "method": flow.request.method,
-            "url": extract_header_host_name(flow.request.headers),
+            "url": extract_header_host_name(flow),
             "httpVersion": flow.request.http_version,
             "cookies": format_request_cookies(flow.request.cookies.fields),
             "headers": name_value(flow.request.headers),
@@ -223,17 +223,19 @@ def name_value(obj):
     """
     return [{"name": k, "value": v} for k, v in obj.items()]
 
+
 def extract_header_host_name(obj):
     """
         Grab just the header Host value to sub in for URLs for other clients
         Copies same sort of logic as name_value, but extracts just the value.
         Also, if there's not a Host header, we just go back to the flow.request.url
     """
-    hostname = "none"
-    for name, value in obj.items():
+    header_object = obj.request.headers
+    host_name = "none"
+    for name, value in header_object.items():
         if name == "Host":
-            hostname = value
+            host_name = value
     if hostname == "none":
-        return flow.request.url
+        return obj.request.url
     else:
-        return hostname
+        return host_name
