@@ -110,7 +110,7 @@ def response(flow):
         "time": full_time,
         "request": {
             "method": flow.request.method,
-            "url": extract_header_host_name(flow),
+            "url": extract_header_host_name(flow, ssl_time),
             "httpVersion": flow.request.http_version,
             "cookies": format_request_cookies(flow.request.cookies.fields),
             "headers": name_value(flow.request.headers),
@@ -224,18 +224,22 @@ def name_value(obj):
     return [{"name": k, "value": v} for k, v in obj.items()]
 
 
-def extract_header_host_name(obj):
+def extract_header_host_name(flow, ssl_time):
     """
         Grab just the header Host value to sub in for URLs for other clients
         Copies same sort of logic as name_value, but extracts just the value.
-        Also, if there's not a Host header, we just go back to the flow.request.url
+        Also, if there's not a Host header, we just go back to the flow.request.url.
+        Uses ssl_timing to determine if the URL should be built with HTTP or HTPS.
     """
-    header_object = obj.request.headers
+    header_object = flow.request.headers
+    http_or_https = "http://"
+    if ( ssl_time > 0 ):
+        http_or_https = "https://"
     host_name = "none"
     for name, value in header_object.items():
         if name == "Host":
-            host_name = value
+            host_name = http_or_https + value
     if host_name == "none":
-        return obj.request.url
+        return flow.request.url
     else:
         return host_name
