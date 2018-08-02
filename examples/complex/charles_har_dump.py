@@ -235,7 +235,7 @@ def extract_header_host_name(obj):
     for name, value in header_object.items():
         if name == "Host":
             host_name = value
-    if hostname == "none":
+    if host_name == "none":
         return obj.request.url
     else:
         return host_name
