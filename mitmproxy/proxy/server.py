@@ -131,7 +131,7 @@ class ConnectionHandler:
                 self.log(repr(e), "debug")
             elif isinstance(e, exceptions.InvalidServerCertificate):
                 self.log(str(e), "warn")
-                self.log("Invalid certificate, closing connection. Pass --insecure to disable validation.", "warn")
+                self.log("Invalid certificate, closing connection. Pass --ssl-insecure to disable validation.", "warn")
             else:
                 self.log(str(e), "warn")
 
