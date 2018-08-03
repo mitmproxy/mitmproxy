@@ -93,6 +93,14 @@ class TestCertStore:
         assert (b"three.com", ()) in ca.certs
         assert (b"four.com", ()) in ca.certs
 
+    def test_expire_certificate(self, tmpdir, monkeypatch):
+        monkeypatch.setattr(certs, 'DEFAULT_EXP_DUMMY_CERT', -1)
+
+        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        c1 = ca.get_cert(b"one.com", [])
+        c2 = ca.get_cert(b"one.com", [])
+        assert c1 != c2
+
     def test_overrides(self, tmpdir):
         ca1 = certs.CertStore.from_store(str(tmpdir.join("ca1")), "test")
         ca2 = certs.CertStore.from_store(str(tmpdir.join("ca2")), "test")
