@@ -97,6 +97,10 @@ class CommandError(Exception):
     pass
 
 
+class ExecutionError(CommandError):
+    pass
+
+
 class OptionsError(MitmproxyException):
     pass
 

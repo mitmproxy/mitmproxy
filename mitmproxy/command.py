@@ -34,23 +34,43 @@ def typename(t: type) -> str:
     return to.display
 
 
+RunningCommand = typing.NamedTuple(
+    "RunningCommand",
+    [
+        ("cmdstr", str),
+        ("task", asyncio.Task)
+    ],
+)
+
+
 class AsyncExectuionManager:
     def __init__(self) -> None:
         self.counter: int = 0
-        self.running_commands: typing.Dict[int, asyncio.Task] = {}
+        self.running_cmds: typing.Dict[int, RunningCommand] = {}
 
-    def add_command(self, command_task: asyncio.Task) -> None:
+    def add_command(self, cmd: RunningCommand) -> None:
         self.counter += 1
-        self.running_commands[self.counter] = command_task
+        cmd.task.add_done_callback(functools.partial(self._delete_callback,
+                                                     cid=self.counter))
+        self.running_cmds[self.counter] = cmd
 
     def stop_command(self, cid: int) -> None:
         try:
-            command_task = self.running_commands[cid]
+            cmd = self.running_cmds[cid]
         except KeyError:
             raise ValueError(f"There is not the command with id={cid}")
         else:
-            command_task.cancel()
-            del self.running_commands[cid]
+            cmd.task.cancel()
+            del self.running_cmds[cid]
+
+    def get_running(self) -> typing.List[typing.Tuple[int, str]]:
+        running = []
+        for cid in sorted(self.running_cmds):
+            running.append((cid, self.running_cmds[cid].cmdstr))
+        return running
+
+    def _delete_callback(self, task: asyncio.Task, cid: int) -> None:
+        del self.running_cmds[cid]
 
 
 class Command:
@@ -58,6 +78,7 @@ class Command:
         self.path = path
         self.manager = manager
         self.func = func
+        self.asyncf = True if asyncio.iscoroutinefunction(func) else False
         sig = inspect.signature(self.func)
         self.help = None
         if func.__doc__:
@@ -102,24 +123,29 @@ class Command:
             args = args[:len(self.paramtypes) - 1]
 
         pargs = []
+
         for arg, paramtype in zip(args, self.paramtypes):
-            if isinstance(arg, tuple) and arg[0] is mitmproxy.types.CommandTypes.get(paramtype, None):
-                pargs.append(arg[1])
+            if not isinstance(arg, str):
+                t = mitmproxy.types.CommandTypes.get(paramtype, None)
+                if t.is_valid(self.manager, t, arg):
+                    pargs.append(arg)
+                else:
+                    raise exceptions.CommandError(
+                        f"{arg} is unexpected data for {paramtype.display} type"
+                    )
             else:
                 pargs.append(parsearg(self.manager, arg, paramtype))
         pargs.extend(remainder)
         return pargs
 
-    def call(self, args: typing.Sequence[str]) -> typing.Any:
+    def call(self, args: typing.Sequence[typing.Any]) -> typing.Any:
         """
-            Call the command with a list of arguments. At this point, all
-            arguments are strings.
+            Call the command with a list of arguments.
         """
         ret = self.func(*self.prepare_args(args))
+
         if ret is None and self.returntype is None:
             return
-        elif asyncio.iscoroutine(ret):
-            return ret
         typ = mitmproxy.types.CommandTypes.get(self.returntype)
         if not typ.is_valid(self.manager, typ, ret):
             raise exceptions.CommandError(
@@ -127,7 +153,24 @@ class Command:
                     self.path, typ.display
                 )
             )
-        return typ, ret
+        return ret
+
+    async def async_call(self, args: typing.Sequence[typing.Any]) -> typing.Any:
+        """
+            Call the command with a list of arguments asynchronously.
+        """
+        ret = await self.func(*self.prepare_args(args))
+
+        if ret is None and self.returntype is None:
+            return
+        typ = mitmproxy.types.CommandTypes.get(self.returntype)
+        if not typ.is_valid(self.manager, typ, ret):
+            raise exceptions.CommandError(
+                "%s returned unexpected data - expected %s" % (
+                    self.path, typ.display
+                )
+            )
+        return ret
 
 
 ParseResult = typing.NamedTuple(
@@ -178,7 +221,7 @@ class CommandManager(mitmproxy.types._CommandBase):
         """
             Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
-        parts: typing.List[str] = lexer.get_tokens(cmdstr)
+        parts: typing.List[str] = [t.value for t in lexer.get_tokens(cmdstr)]
         if not parts:
             parts = [""]
         elif parts[-1].isspace():
@@ -250,12 +293,11 @@ class CommandManager(mitmproxy.types._CommandBase):
             Schedule a command to be executed. May raise CommandError.
         """
         lex = lexer.create_lexer(cmdstr, self.oneword_commands)
-        self.command_parser.asynchoronous = True
-        parsed_cmd = self.command_parser.parse(lexer=lex)
+        parsed_cmd = self.command_parser.parse(lexer=lex, async_exec=True)
 
         execution_coro = traversal.execute_parsed_line(parsed_cmd)
         command_task = asyncio.ensure_future(execution_coro)
-        self.async_manager.add_command(command_task)
+        self.async_manager.add_command(RunningCommand(cmdstr, command_task))
         return command_task
 
     def execute(self, cmdstr: str) -> typing.Any:
@@ -263,6 +305,7 @@ class CommandManager(mitmproxy.types._CommandBase):
             Execute a command string. May raise CommandError.
         """
         lex = lexer.create_lexer(cmdstr, self.oneword_commands)
+        self.command_parser.async_exec = False
         parsed_cmd = self.command_parser.parse(lexer=lex)
         return parsed_cmd
 

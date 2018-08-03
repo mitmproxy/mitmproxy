@@ -4,6 +4,7 @@ import os
 import ruamel.yaml
 
 from mitmproxy import command
+from mitmproxy.language import lexer
 from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import signals
 from mitmproxy import ctx
@@ -55,6 +56,7 @@ class Binding:
 
 class Keymap:
     def __init__(self, master):
+        self.oneword_commands = master.commands.oneword_commands
         self.executor = commandexecutor.CommandExecutor(master)
         self.keys = {}
         for c in Contexts:
@@ -152,6 +154,11 @@ class Keymap:
         if b:
             return self.executor(b.command)
         return key
+
+    def _get_braced_command(self, command):
+        tokens = lexer.get_tokens(command, self.oneword_commands)
+
+
 
 
 keyAttrs = {

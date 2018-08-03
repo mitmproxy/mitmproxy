@@ -18,6 +18,7 @@ class CommandItem(urwid.WidgetWrap):
     def get_widget(self):
         parts = [
             ("focus", ">> " if self.focused else "   "),
+            ("text", "async " if self.cmd.asyncf else "      "),
             ("title", self.cmd.path),
             ("text", " "),
             ("text", " ".join(self.cmd.paramnames())),

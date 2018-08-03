@@ -1,5 +1,4 @@
 import typing
-import asyncio
 
 import ply.lex as lex
 import ply.yacc as yacc
@@ -9,7 +8,7 @@ from mitmproxy import exceptions
 from mitmproxy.language.lexer import CommandLanguageLexer
 
 
-ParsedEntity = typing.Union[str, "ParsedCommand"]
+ParsedEntity = typing.Union[str, list, "ParsedCommand"]
 
 
 ParsedCommand = typing.NamedTuple(
@@ -29,7 +28,7 @@ class CommandLanguageParser:
                  command_manager: "mitmproxy.command.CommandManager") -> None:
         self.parsed_line: ParsedEntity = None
         self._parsed_pipe_elem: ParsedCommand = None
-        self.asynchoronous: bool = False
+        self.async_exec: bool = False
         self.command_manager = command_manager
 
     # Grammar rules
@@ -97,6 +96,7 @@ class CommandLanguageParser:
         """empty :"""
 
     def p_error(self, p):
+        self._reset_internals()
         if p is None:
             raise exceptions.CommandError("Syntax error at EOF")
         else:
@@ -106,15 +106,21 @@ class CommandLanguageParser:
 
     def _call_command(self, command: str,
                       args: typing.List[ParsedEntity]) -> ParsedCommand:
-        if self.asynchoronous:
-            c = self.command_manager.get_command_by_path(command)
-            ret = ParsedCommand(c, args)
+        cmd = self.command_manager.get_command_by_path(command)
+        if self.async_exec:
+            ret = ParsedCommand(cmd, args)
         else:
-            ret = self.command_manager.call_strings(command, args)
-            if asyncio.iscoroutine(ret):
-                raise ValueError(f"You are trying to run async "
-                                 f"command {command} through sync executor.")
+            if cmd.asyncf:
+                self._reset_internals()
+                raise exceptions.ExecutionError(f"You are trying to run async "
+                                                f"command '{command}' through sync executor.")
+            else:
+                ret = cmd.call(args)
         return ret
+
+    def _reset_internals(self):
+        self._parsed_pipe_elem = None
+        self.async_exec = False
 
     @staticmethod
     def _create_list(p: yacc.YaccProduction) -> typing.List[ParsedEntity]:
@@ -129,10 +135,11 @@ class CommandLanguageParser:
         self.parser = yacc.yacc(module=self,
                                 errorlog=yacc.NullLogger(), **kwargs)
 
-    def parse(self, lexer: lex.Lexer, **kwargs) -> typing.Any:
+    def parse(self, lexer: lex.Lexer,
+              async_exec=False, **kwargs) -> typing.Any:
+        self.async_exec = async_exec
         self.parser.parse(lexer=lexer, **kwargs)
-        self._parsed_pipe_elem = None
-        self.parser.asynchoronous = False
+        self._reset_internals()
         return self.parsed_line
 
 

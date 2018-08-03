@@ -574,15 +574,19 @@ class ConsoleAddon:
     @command.command("console.key.edit.focus")
     def key_edit_focus(self) -> None:
         """
-            Execute the currently focused key binding.
+            Edit the currently focused key binding.
         """
         b = self._keyfocus()
-        self.console_command(
-            "console.key.bind",
-            ",".join(b.contexts),
-            b.key,
-            b.command,
-        )
+        print(f"""console.command [ console.key.bind 
+                                    [{" ".join(b.contexts)}]
+                                    {b.key}
+                                    "{b.command}" ]""")
+        # self.console_command(
+        #     "console.key.bind",
+        #     ",".join(b.contexts),
+        #     b.key,
+        #     b.command,
+        # )
 
     def running(self):
         self.started = True

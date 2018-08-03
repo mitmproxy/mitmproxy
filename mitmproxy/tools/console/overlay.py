@@ -108,7 +108,7 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
     def __init__(self, master, title, choices, current, callback=None):
         self.master = master
         self.choices = choices
-        self._future_choice = asyncio.get_event_loop().create_future()
+        self._future_choice = asyncio.Future()
         if callback:
             self._future_choice.add_done_callback(callback)
         choicewidth = max([len(i) for i in choices])
@@ -146,6 +146,7 @@ class Chooser(urwid.WidgetWrap, layoutwidget.LayoutWidget):
             signals.pop_view_state.send(self)
             return
         elif key in ["q", "esc"]:
+            self._future_choice.cancel()
             signals.pop_view_state.send(self)
             return
 

@@ -1,5 +1,4 @@
 import typing
-import asyncio
 
 import mitmproxy.command  # noqa
 from mitmproxy.language.parser import ParsedCommand, ParsedEntity
@@ -18,13 +17,12 @@ async def traverse_entity(command: typing.Optional["mitmproxy.command.Command"],
         if isinstance(arg, ParsedCommand):
             args[i] = await traverse_entity(arg.command, arg.args)
         elif isinstance(arg, list):
-            args[i] = await traverse_entity(args=arg, command=command)
+            args[i] = await traverse_entity(command=None, args=arg)
 
     if command is not None:
-        ret = command.call(args)
-        if asyncio.iscoroutine(ret):
-            return await ret
+        if command.asyncf:
+            return await command.async_call(args)
         else:
-            return ret
+            return command.call(args)
     else:
         return args
