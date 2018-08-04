@@ -66,4 +66,4 @@ def get_tokens(cmdstr: str, state="interactive") -> typing.List[lex.LexToken]:
     lexer = create_lexer(cmdstr, [])
     # Switching to the other state
     lexer.begin(state)
-    return list(lexer)
+    return [token.value for token in lexer]
