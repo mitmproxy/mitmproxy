@@ -221,7 +221,7 @@ class CommandManager(mitmproxy.types._CommandBase):
         """
             Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
-        parts: typing.List[str] = [t.value for t in lexer.get_tokens(cmdstr)]
+        parts: typing.List[str] = lexer.get_tokens(cmdstr)
         if not parts:
             parts = [""]
         elif parts[-1].isspace():
@@ -305,7 +305,6 @@ class CommandManager(mitmproxy.types._CommandBase):
             Execute a command string. May raise CommandError.
         """
         lex = lexer.create_lexer(cmdstr, self.oneword_commands)
-        self.command_parser.async_exec = False
         parsed_cmd = self.command_parser.parse(lexer=lex)
         return parsed_cmd
 

@@ -62,11 +62,8 @@ def create_lexer(cmdstr: str, oneword_commands: typing.Sequence[str]) -> lex.Lex
     return command_lexer.lexer
 
 
-def get_tokens(cmdstr: str, state="interactive",
-               oneword_commands=None) -> typing.List[lex.LexToken]:
-    if oneword_commands is None:
-        oneword_commands = []
-    lexer = create_lexer(cmdstr, oneword_commands)
+def get_tokens(cmdstr: str, state="interactive") -> typing.List[lex.LexToken]:
+    lexer = create_lexer(cmdstr, [])
     # Switching to the other state
     lexer.begin(state)
     return list(lexer)

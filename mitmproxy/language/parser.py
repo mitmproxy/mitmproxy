@@ -136,7 +136,7 @@ class CommandLanguageParser:
                                 errorlog=yacc.NullLogger(), **kwargs)
 
     def parse(self, lexer: lex.Lexer,
-              async_exec=False, **kwargs) -> typing.Any:
+              async_exec: bool=False, **kwargs) -> typing.Any:
         self.async_exec = async_exec
         self.parser.parse(lexer=lexer, **kwargs)
         self._reset_internals()

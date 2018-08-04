@@ -155,11 +155,6 @@ class Keymap:
             return self.executor(b.command)
         return key
 
-    def _get_braced_command(self, command):
-        tokens = lexer.get_tokens(command, self.oneword_commands)
-
-
-
 
 keyAttrs = {
     "key": lambda x: isinstance(x, str),
