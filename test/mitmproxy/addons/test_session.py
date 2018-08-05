@@ -28,8 +28,10 @@ class TestSession:
             tctx.master.addons.add(s)
             tctx.options.session_path = None
             tctx.options.view_filter = None
+        # To make tests quicker
         if fp:
             s._flush_period = fp
+            s._FP_DEFAULT = fp
         s.running()
         return s
 
@@ -85,21 +87,11 @@ class TestSession:
     def test_session_order_generators(self):
         s = session.Session()
         tf = tflow.tflow(resp=True)
-
-        s.order = "time"
-        assert s._generate_order(tf) == 946681200
-
-        s.order = "method"
-        assert s._generate_order(tf) == tf.request.method
-
-        s.order = "url"
-        assert s._generate_order(tf) == tf.request.url
-
-        s.order = "size"
-        assert s._generate_order(tf) == len(tf.request.raw_content) + len(tf.response.raw_content)
-
-        s.order = "invalid"
-        assert not s._generate_order(tf)
+        assert s._generate_order('time', tf) == 946681200
+        assert s._generate_order('method', tf) == tf.request.method
+        assert s._generate_order('url', tf) == tf.request.url
+        assert s._generate_order('size', tf) == len(tf.request.raw_content) + len(tf.response.raw_content)
+        assert not s._generate_order('invalid', tf)
 
     def test_storage_simple(self):
         s = session.Session()
@@ -110,8 +102,12 @@ class TestSession:
         assert s.store_count() == 0
         s.request(f)
         assert s._view == [(1, f.id)]
+        assert s._order_store[f.id]['time'] == 1
+        assert s._order_store[f.id]['method'] == f.request.method
+        assert s._order_store[f.id]['url'] == f.request.url
+        assert s._order_store[f.id]['size'] == len(f.request.raw_content)
         assert s.load_view() == [f]
-        assert s.load_storage(['nonexistent']) == [None]
+        assert s.load_storage(['nonexistent']) == []
 
         s.error(f)
         s.response(f)
@@ -121,6 +117,10 @@ class TestSession:
 
         # Verify that flow has been updated, not duplicated
         assert s._view == [(1, f.id)]
+        assert s._order_store[f.id]['time'] == 1
+        assert s._order_store[f.id]['method'] == f.request.method
+        assert s._order_store[f.id]['url'] == f.request.url
+        assert s._order_store[f.id]['size'] == len(f.request.raw_content)
         assert s.store_count() == 1
 
         f2 = self.tft(start=3)
@@ -174,16 +174,16 @@ class TestSession:
 
         f.server_conn.via = tflow.tserver_conn()
         s.request(f)
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.6)
         assert len(s._hot_store) == 0
         assert all([lflow.__dict__ == flow.__dict__ for lflow, flow in list(zip(s.load_storage(), [f]))])
 
         flows = [self.tft() for _ in range(500)]
         s.update(flows)
-        fp = s._flush_period
-        fr = s._flush_rate
         await asyncio.sleep(0.6)
-        assert s._flush_period < fp and s._flush_rate > fr
+        assert s._flush_period == s._FP_DEFAULT * s._FP_DECREMENT
+        await asyncio.sleep(3)
+        assert s._flush_period == s._FP_DEFAULT
 
     @pytest.mark.asyncio
     async def test_storage_bodies(self):
