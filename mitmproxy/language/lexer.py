@@ -6,6 +6,7 @@ import ply.lex as lex
 
 class CommandLanguageLexer:
     tokens = (
+        "DUMMY",
         "WHITESPACE",
         "PIPE",
         "LPAREN", "RPAREN",
@@ -62,8 +63,42 @@ def create_lexer(cmdstr: str, oneword_commands: typing.Sequence[str]) -> lex.Lex
     return command_lexer.lexer
 
 
-def get_tokens(cmdstr: str, state="interactive") -> typing.List[str]:
-    lexer = create_lexer(cmdstr, [])
+def get_tokens(cmdstr: str, oneword_commands: typing.Sequence[str],
+               state="interactive") -> typing.List[lex.LexToken]:
+    lexer = create_lexer(cmdstr, oneword_commands)
     # Switching to the other state
     lexer.begin(state)
-    return [token.value for token in lexer]
+    return list(lexer)
+
+
+def create_dummy_token(typ: str, value: str) -> lex.LexToken:
+    token = lex.LexToken()
+    token.type = typ
+    token.value = value
+    token.lineno = 0
+    token.lexpos = 0
+    return token
+
+
+class InteractiveLexer:
+    def __init__(self, cmdstr: str, oneword_commands, state="interactive"):
+        tokens = get_tokens(cmdstr, oneword_commands, state)
+        self.tokens = tokens
+        dummy_token = create_dummy_token("DUMMY", "")
+        if not tokens:
+            tokens = [dummy_token]
+        elif tokens[-1].type == "WHITESPACE":
+            tokens.append(dummy_token)
+        self.tokens_iter = iter(tokens)
+        self.whitespace_map = []
+
+    def token(self):
+        try:
+            current_token = next(self.tokens_iter)
+            if current_token.type == "WHITESPACE":
+                self.whitespace_map.append(current_token.value)
+                current_token = next(self.tokens_iter)
+            self.whitespace_map.append(None)
+            return current_token
+        except StopIteration:
+            return None
