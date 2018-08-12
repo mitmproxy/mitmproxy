@@ -2,7 +2,7 @@ from mitmproxy.test.tflow import tflow
 from mitmproxy.tools.console import defaultkeys
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import master
-from mitmproxy.language import lexer
+from mitmproxy.language import lexer, parser
 
 import pytest
 
@@ -15,12 +15,11 @@ async def test_commands_exist():
     m = master.ConsoleMaster(None)
     await m.load_flow(tflow())
 
-    for binding in km.bindings:
-        cmd, *args = lexer.get_tokens(binding.command, state="INITIAL")
-        assert cmd in m.commands.commands
+    command_parser = parser.create_parser(m.commands)
 
-        cmd_obj = m.commands.commands[cmd]
+    for binding in km.bindings:
+        lxr = lexer.create_lexer(binding.command, m.commands.oneword_commands)
         try:
-            cmd_obj.prepare_args(args)
+            command_parser.parse(lxr, async_exec=True)
         except Exception as e:
-            raise ValueError("Invalid command: {}".format(binding.command)) from e
+            raise ValueError(f"Invalid command: '{binding.command}'") from e

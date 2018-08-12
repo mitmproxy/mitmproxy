@@ -1,11 +1,15 @@
 import typing
 import inspect
+import asyncio
+from unittest import mock
+
+import mitmproxy.types
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import exceptions
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
-import mitmproxy.types
+
 import io
 import pytest
 
@@ -36,12 +40,25 @@ class TAddon:
     def cmd6(self, pipe_value: str) -> str:
         return pipe_value
 
+    @command.command("cmd7")
+    async def cmd7(self, foo: str) -> str:
+        await asyncio.sleep(0.01)
+        return foo
+
+    @command.command("cmd8")
+    async def cmd8(self, foo: str) -> str:
+        return 99
+
     @command.command("subcommand")
     def subcommand(self, cmd: mitmproxy.types.Cmd, *args: mitmproxy.types.Arg) -> str:
         return "ok"
 
     @command.command("empty")
     def empty(self) -> None:
+        pass
+
+    @command.command("empty")
+    async def asyncempty(self) -> None:
         pass
 
     @command.command("varargs")
@@ -82,6 +99,35 @@ class TypeErrAddon:
         pass
 
 
+class TestAsyncExecutionManager:
+    def test_add_command(self):
+        aem = command.AsyncExecutionManager()
+        dummy_command = command.RunningCommand("addon.command", mock.Mock())
+        aem.add_command(dummy_command)
+        assert aem.running_cmds == {1: dummy_command}
+
+    def test_stop_command(self):
+        aem = command.AsyncExecutionManager()
+        dummy_command = command.RunningCommand("addon.command", mock.Mock())
+        aem.add_command(dummy_command)
+        with pytest.raises(ValueError, match="There is not the command"):
+            aem.stop_command(100)
+
+        aem.stop_command(1)
+        assert aem.running_cmds == {}
+
+    def test_get_runnings(self):
+        aem = command.AsyncExecutionManager()
+        expected_res = []
+        for i in range(3):
+            cmd = f"addon.command{i}"
+            dummy = command.RunningCommand(cmd, mock.Mock())
+            aem.add_command(dummy)
+            expected_res.append((i + 1, cmd))
+
+        assert aem.get_running() == expected_res
+
+
 class TestCommand:
     def test_typecheck(self):
         with taddons.context(loadcore=False) as tctx:
@@ -115,8 +161,24 @@ class TestCommand:
             with pytest.raises(exceptions.CommandError):
                 c.call(["foo"])
 
+            with pytest.raises(exceptions.CommandError, match="unexpected data"):
+                c.call([123])
+
             c = command.Command(cm, "cmd.three", a.cmd3)
             assert c.call(["1"]) == 1
+
+    @pytest.mark.asyncio
+    async def test_async_call(self):
+        with taddons.context() as tctx:
+            cm = command.CommandManager(tctx.master)
+            a = TAddon()
+
+            c = command.Command(cm, "async.empty", a.asyncempty)
+            await c.async_call([])
+
+            c = command.Command(cm, "asynccmd.two", a.cmd8)
+            with pytest.raises(exceptions.CommandError, match="unexpected data"):
+                await c.async_call(["foo"])
 
     def test_parse_partial(self):
         tests = [
@@ -301,6 +363,7 @@ def test_simple():
         c.add("one.two", a.cmd1)
         c.add("array.command", a.cmd5)
         c.add("pipe.command", a.cmd6)
+        c.add("strasync.command", a.cmd7)
 
         assert c.commands["one.two"].help == "cmd1 help"
         assert(c.execute("one.two foo") == "ret foo")
@@ -320,6 +383,8 @@ def test_simple():
             c.execute("")
         with pytest.raises(exceptions.CommandError, match="argument mismatch"):
             c.execute("one.two too many args")
+        with pytest.raises(exceptions.ExecutionError, match="sync executor"):
+            c.execute("strasync.command abc")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.call("nonexistent")
 
@@ -329,6 +394,19 @@ def test_simple():
         fp = io.StringIO()
         c.dump(fp)
         assert fp.getvalue()
+
+
+@pytest.mark.asyncio
+async def test_async_execute():
+    with taddons.context() as tctx:
+        c = command.CommandManager(tctx.master)
+        a = TAddon()
+        c.add("strasync.command", a.cmd7)
+
+        c.async_execute("strasync.command abc")
+        assert c.async_manager.get_running() == [(1, "strasync.command abc")]
+        assert "abc" == await c.async_manager.running_cmds[1].task
+        assert c.async_manager.get_running() == []
 
 
 def test_typename():

@@ -1,4 +1,5 @@
 import typing
+import collections
 
 import ply.lex as lex
 import ply.yacc as yacc
@@ -11,12 +12,8 @@ from mitmproxy.language.lexer import CommandLanguageLexer
 ParsedEntity = typing.Union[str, list, "ParsedCommand"]
 
 
-ParsedCommand = typing.NamedTuple(
-    "ParsedCommand",
-    [
-        ("command", "mitmproxy.command.Command"),
-        ("args", typing.List[ParsedEntity])
-    ]
+ParsedCommand = collections.namedtuple(
+    "ParsedCommand", ["command", "args"]
 )
 
 
@@ -41,8 +38,7 @@ class CommandLanguageParser:
         """starting_expression : PLAIN_STR
                                | quoted_str
                                | array
-                               | command_call_no_parentheses
-                               | command_call_with_parentheses"""
+                               | command_call"""
         p[0] = p[1]
         self._parsed_pipe_elem = p[0]
 
@@ -62,6 +58,11 @@ class CommandLanguageParser:
         p[0] = self._call_command(p[2], new_args)
         self._parsed_pipe_elem = p[0]
 
+    def p_command_call(self, p):
+        """command_call : command_call_no_parentheses
+                        | command_call_with_parentheses"""
+        p[0] = p[1]
+
     def p_command_call_no_parentheses(self, p):
         """command_call_no_parentheses : COMMAND argument_list"""
         p[0] = self._call_command(p[1], p[2])
@@ -76,11 +77,17 @@ class CommandLanguageParser:
                          | argument_list argument"""
         p[0] = self._create_list(p)
 
+    def p_assignment(self, p):
+        """assignment : PLAIN_STR EQUAL_SIGN starting_expression
+                      | QUOTED_STR EQUAL_SIGN starting_expression"""
+        p[0] = f"{p[1]}{p[2]}{p[3]}"
+
     def p_argument(self, p):
         """argument : PLAIN_STR
                     | quoted_str
                     | array
                     | COMMAND
+                    | assignment
                     | command_call_with_parentheses"""
         p[0] = p[1]
 

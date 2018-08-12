@@ -38,12 +38,12 @@ RunningCommand = typing.NamedTuple(
     "RunningCommand",
     [
         ("cmdstr", str),
-        ("task", asyncio.Task)
+        ("task", asyncio.Future)
     ],
 )
 
 
-class AsyncExectuionManager:
+class AsyncExecutionManager:
     def __init__(self) -> None:
         self.counter: int = 0
         self.running_cmds: typing.Dict[int, RunningCommand] = {}
@@ -114,7 +114,7 @@ class Command:
             ret = " -> " + ret
         return "%s %s%s" % (self.path, params, ret)
 
-    def prepare_args(self, args: typing.Sequence[str]) -> typing.List[typing.Any]:
+    def prepare_args(self, args: typing.Sequence[typing.Any]) -> typing.List[typing.Any]:
         verify_arg_signature(self.func, list(args), {})
 
         remainder: typing.Sequence[str] = []
@@ -131,7 +131,7 @@ class Command:
                     pargs.append(arg)
                 else:
                     raise exceptions.CommandError(
-                        f"{arg} is unexpected data for {paramtype.display} type"
+                        f"{arg} is unexpected data for {t.display} type"
                     )
             else:
                 pargs.append(parsearg(self.manager, arg, paramtype))
@@ -149,9 +149,7 @@ class Command:
         typ = mitmproxy.types.CommandTypes.get(self.returntype)
         if not typ.is_valid(self.manager, typ, ret):
             raise exceptions.CommandError(
-                "%s returned unexpected data - expected %s" % (
-                    self.path, typ.display
-                )
+                f"{self.path} returned unexpected data - expected {typ.display}"
             )
         return ret
 
@@ -166,9 +164,7 @@ class Command:
         typ = mitmproxy.types.CommandTypes.get(self.returntype)
         if not typ.is_valid(self.manager, typ, ret):
             raise exceptions.CommandError(
-                "%s returned unexpected data - expected %s" % (
-                    self.path, typ.display
-                )
+                f"{self.path} returned unexpected data - expected {typ.display}"
             )
         return ret
 
@@ -186,7 +182,7 @@ ParseResult = typing.NamedTuple(
 class CommandManager(mitmproxy.types._CommandBase):
     def __init__(self, master):
         self.master = master
-        self.async_manager = AsyncExectuionManager()
+        self.async_manager = AsyncExecutionManager()
         self.command_parser = parser.create_parser(self)
         self.commands: typing.Dict[str, Command] = {}
         self.oneword_commands: typing.List[str] = []
@@ -288,7 +284,7 @@ class CommandManager(mitmproxy.types._CommandBase):
         """
         return self.get_command_by_path(path).call(args)
 
-    def async_execute(self, cmdstr: str) -> asyncio.Task:
+    def async_execute(self, cmdstr: str) -> asyncio.Future:
         """
             Schedule a command to be executed. May raise CommandError.
         """
@@ -324,7 +320,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     """
     t = mitmproxy.types.CommandTypes.get(argtype, None)
     if not t:
-        raise exceptions.CommandError("Unsupported argument type: %s" % argtype)
+        raise exceptions.CommandError(f"Unsupported argument type: {argtype}")
     try:
         return t.parse(manager, argtype, spec)  # type: ignore
     except exceptions.TypeError as e:
