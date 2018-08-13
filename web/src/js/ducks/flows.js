@@ -209,7 +209,7 @@ export function uploadContent(flow, file, type) {
     const body = new FormData()
     file       = new window.Blob([file], { type: 'plain/text' })
     body.append('file', file)
-    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content`, { method: 'POST', body })
+    return dispatch => fetchApi(`/flows/${flow.id}/${type}/content.data`, { method: 'POST', body })
 }
 
 

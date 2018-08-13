@@ -159,7 +159,7 @@ describe('flows actions', () => {
         store.dispatch(flowActions.uploadContent(tflow, 'foo', 'foo'))
         // window.Blob's lastModified is always the current time,
         // which causes flaky tests on comparison.
-        expect(fetchApi).toBeCalledWith('/flows/1/foo/content', { method: 'POST', body: expect.anything()})
+        expect(fetchApi).toBeCalledWith('/flows/1/foo/content.data', { method: 'POST', body: expect.anything()})
     })
 
     it('should handle clear action', () => {
