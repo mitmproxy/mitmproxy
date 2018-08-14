@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE flow (
 id VARCHAR(36) PRIMARY KEY,
 content BLOB
