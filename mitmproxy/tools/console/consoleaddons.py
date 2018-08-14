@@ -1,5 +1,4 @@
 import csv
-import shlex
 import typing
 
 from mitmproxy import ctx
@@ -147,7 +146,7 @@ class ConsoleAddon:
         fv = self.master.window.current("options")
         if not fv:
             raise exceptions.CommandError("Not viewing options.")
-        self.master.commands.execute("options.reset.one %s" % fv.current_name())
+        self.master.commands.execute(f"options.reset.one {fv.current_name()}")
 
     @command.command("console.nav.start")
     def nav_start(self) -> None:
@@ -220,65 +219,25 @@ class ConsoleAddon:
         self.master.inject_key("right")
 
     @command.command("console.choose")
-    def console_choose(
+    async def console_choose(
         self,
         prompt: str,
-        choices: typing.Sequence[str],
-        cmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.Arg
-    ) -> None:
+        choices: typing.Sequence[str]
+    ) -> str:
         """
-            Prompt the user to choose from a specified list of strings, then
-            invoke another command with all occurrences of {choice} replaced by
-            the choice the user made.
+            Prompt the user to choose from a list of strings.
+            Wait until user makes choice. Returns it.
         """
-        def callback(opt):
-            # We're now outside of the call context...
-            repl = cmd + " " + " ".join(args)
-            repl = repl.replace("{choice}", opt)
-            try:
-                self.master.commands.execute(repl)
-            except exceptions.CommandError as e:
-                signals.status_message.send(message=str(e))
-
-        self.master.overlay(
-            overlay.Chooser(self.master, prompt, choices, "", callback)
-        )
-
-    @command.command("console.choose.cmd")
-    def console_choose_cmd(
-        self,
-        prompt: str,
-        choicecmd: mitmproxy.types.Cmd,
-        subcmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.Arg
-    ) -> None:
-        """
-            Prompt the user to choose from a list of strings returned by a
-            command, then invoke another command with all occurrences of {choice}
-            replaced by the choice the user made.
-        """
-        choices = ctx.master.commands.call_strings(choicecmd, [])
-
-        def callback(opt):
-            # We're now outside of the call context...
-            repl = shlex.quote(" ".join(args))
-            repl = repl.replace("{choice}", opt)
-            try:
-                self.master.commands.execute(subcmd + " " + repl)
-            except exceptions.CommandError as e:
-                signals.status_message.send(message=str(e))
-
-        self.master.overlay(
-            overlay.Chooser(self.master, prompt, choices, "", callback)
-        )
+        chooser = overlay.Chooser(self.master, prompt, choices, "")
+        self.master.overlay(chooser)
+        return await chooser.get_choice()
 
     @command.command("console.command")
-    def console_command(self, *partial: str) -> None:
+    def console_command(self, command_parts: typing.Sequence[str]) -> None:
         """
         Prompt the user to edit a command with a (possibly empty) starting value.
         """
-        signals.status_prompt_command.send(partial=" ".join(partial))  # type: ignore
+        signals.status_prompt_command.send(partial=" ".join(command_parts))  # type: ignore
 
     @command.command("console.command.set")
     def console_command_set(self, option: str) -> None:
@@ -288,7 +247,7 @@ class ConsoleAddon:
         option_value = getattr(self.master.options, option, None)
         current_value = option_value if option_value else ""
         self.master.commands.execute(
-            "console.command set %s=%s" % (option, current_value)
+            f"console.command [set {option}={current_value}]"
         )
 
     @command.command("console.view.keybindings")
@@ -430,7 +389,7 @@ class ConsoleAddon:
             self.master.switch_view("edit_focus_setcookies")
         elif part in ["url", "method", "status_code", "reason"]:
             self.master.commands.execute(
-                "console.command flow.set @focus %s " % part
+                f"console.command [flow.set @focus {part}]"
             )
 
     def _grideditor(self):
@@ -516,7 +475,7 @@ class ConsoleAddon:
         try:
             self.master.commands.call_strings(
                 "view.setval",
-                ["@focus", "flowview_mode_%s" % idx, mode]
+                ["@focus", f"flowview_mode_{idx}", mode]
             )
         except exceptions.CommandError as e:
             signals.status_message.send(message=str(e))
@@ -541,7 +500,7 @@ class ConsoleAddon:
             "view.getval",
             [
                 "@focus",
-                "flowview_mode_%s" % idx,
+                f"flowview_mode_{idx}",
                 self.master.options.console_default_contentview,
             ]
         )
@@ -615,7 +574,7 @@ class ConsoleAddon:
     @command.command("console.key.edit.focus")
     def key_edit_focus(self) -> None:
         """
-            Execute the currently focused key binding.
+            Edit the currently focused key binding.
         """
         b = self._keyfocus()
         self.console_command(

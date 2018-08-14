@@ -1,6 +1,7 @@
 import copy
 import pytest
 import typing
+import asyncio
 import argparse
 
 from mitmproxy import options
@@ -114,7 +115,9 @@ def test_options():
 def test_setter():
     o = TO()
     f = o.setter("two")
-    f(99)
+    opt_future = asyncio.Future()
+    opt_future.set_result(99)
+    f(opt_future)
     assert o.two == 99
     with pytest.raises(Exception, match="No such option"):
         o.setter("nonexistent")

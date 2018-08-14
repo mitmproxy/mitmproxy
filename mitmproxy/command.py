@@ -1,6 +1,7 @@
 """
     This module manages and invokes typed commands.
 """
+import asyncio
 import inspect
 import types
 import typing
@@ -10,7 +11,7 @@ import sys
 
 import mitmproxy.types
 from mitmproxy import exceptions
-from mitmproxy.language import lexer, parser
+from mitmproxy.language import lexer, parser, traversal
 
 
 def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
@@ -33,11 +34,51 @@ def typename(t: type) -> str:
     return to.display
 
 
+RunningCommand = typing.NamedTuple(
+    "RunningCommand",
+    [
+        ("cmdstr", str),
+        ("task", asyncio.Future)
+    ],
+)
+
+
+class AsyncExecutionManager:
+    def __init__(self) -> None:
+        self.counter: int = 0
+        self.running_cmds: typing.Dict[int, RunningCommand] = {}
+
+    def add_command(self, cmd: RunningCommand) -> None:
+        self.counter += 1
+        cmd.task.add_done_callback(functools.partial(self._delete_callback,
+                                                     cid=self.counter))
+        self.running_cmds[self.counter] = cmd
+
+    def stop_command(self, cid: int) -> None:
+        try:
+            cmd = self.running_cmds[cid]
+        except KeyError:
+            raise ValueError(f"There is not the command with id={cid}")
+        else:
+            cmd.task.cancel()
+            del self.running_cmds[cid]
+
+    def get_running(self) -> typing.List[typing.Tuple[int, str]]:
+        running = []
+        for cid in sorted(self.running_cmds):
+            running.append((cid, self.running_cmds[cid].cmdstr))
+        return running
+
+    def _delete_callback(self, task: asyncio.Task, cid: int) -> None:
+        del self.running_cmds[cid]
+
+
 class Command:
     def __init__(self, manager, path, func) -> None:
         self.path = path
         self.manager = manager
         self.func = func
+        self.asyncf = True if asyncio.iscoroutinefunction(func) else False
         sig = inspect.signature(self.func)
         self.help = None
         if func.__doc__:
@@ -73,7 +114,7 @@ class Command:
             ret = " -> " + ret
         return "%s %s%s" % (self.path, params, ret)
 
-    def prepare_args(self, args: typing.Sequence[str]) -> typing.List[typing.Any]:
+    def prepare_args(self, args: typing.Sequence[typing.Any]) -> typing.List[typing.Any]:
         verify_arg_signature(self.func, list(args), {})
 
         remainder: typing.Sequence[str] = []
@@ -82,25 +123,48 @@ class Command:
             args = args[:len(self.paramtypes) - 1]
 
         pargs = []
+
         for arg, paramtype in zip(args, self.paramtypes):
-            pargs.append(parsearg(self.manager, arg, paramtype))
+            if not isinstance(arg, str):
+                t = mitmproxy.types.CommandTypes.get(paramtype, None)
+                if t.is_valid(self.manager, t, arg):
+                    pargs.append(arg)
+                else:
+                    raise exceptions.CommandError(
+                        f"{arg} is unexpected data for {t.display} type"
+                    )
+            else:
+                pargs.append(parsearg(self.manager, arg, paramtype))
         pargs.extend(remainder)
         return pargs
 
-    def call(self, args: typing.Sequence[str]) -> typing.Any:
+    def call(self, args: typing.Sequence[typing.Any]) -> typing.Any:
         """
-            Call the command with a list of arguments. At this point, all
-            arguments are strings.
+            Call the command with a list of arguments.
         """
         ret = self.func(*self.prepare_args(args))
+
         if ret is None and self.returntype is None:
             return
         typ = mitmproxy.types.CommandTypes.get(self.returntype)
         if not typ.is_valid(self.manager, typ, ret):
             raise exceptions.CommandError(
-                "%s returned unexpected data - expected %s" % (
-                    self.path, typ.display
-                )
+                f"{self.path} returned unexpected data - expected {typ.display}"
+            )
+        return ret
+
+    async def async_call(self, args: typing.Sequence[typing.Any]) -> typing.Any:
+        """
+            Call the command with a list of arguments asynchronously.
+        """
+        ret = await self.func(*self.prepare_args(args))
+
+        if ret is None and self.returntype is None:
+            return
+        typ = mitmproxy.types.CommandTypes.get(self.returntype)
+        if not typ.is_valid(self.manager, typ, ret):
+            raise exceptions.CommandError(
+                f"{self.path} returned unexpected data - expected {typ.display}"
             )
         return ret
 
@@ -118,6 +182,7 @@ ParseResult = typing.NamedTuple(
 class CommandManager(mitmproxy.types._CommandBase):
     def __init__(self, master):
         self.master = master
+        self.async_manager = AsyncExecutionManager()
         self.command_parser = parser.create_parser(self)
         self.commands: typing.Dict[str, Command] = {}
         self.oneword_commands: typing.List[str] = []
@@ -199,29 +264,45 @@ class CommandManager(mitmproxy.types._CommandBase):
 
         return parse, remhelp
 
+    def get_command_by_path(self, path: str) -> Command:
+        """
+            Returns command by its path. May raise CommandError.
+        """
+        if path not in self.commands:
+            raise exceptions.CommandError(f"Unknown command: {path}")
+        return self.commands[path]
+
     def call(self, path: str, *args: typing.Sequence[typing.Any]) -> typing.Any:
         """
             Call a command with native arguments. May raise CommandError.
         """
-        if path not in self.commands:
-            raise exceptions.CommandError("Unknown command: %s" % path)
-        return self.commands[path].func(*args)
+        return self.get_command_by_path(path).func(*args)
 
     def call_strings(self, path: str, args: typing.Sequence[str]) -> typing.Any:
         """
             Call a command using a list of string arguments. May raise CommandError.
         """
-        if path not in self.commands:
-            raise exceptions.CommandError("Unknown command: %s" % path)
-        return self.commands[path].call(args)
+        return self.get_command_by_path(path).call(args)
 
-    def execute(self, cmdstr: str):
+    def async_execute(self, cmdstr: str) -> asyncio.Future:
+        """
+            Schedule a command to be executed. May raise CommandError.
+        """
+        lex = lexer.create_lexer(cmdstr, self.oneword_commands)
+        parsed_cmd = self.command_parser.parse(lexer=lex, async_exec=True)
+
+        execution_coro = traversal.execute_parsed_line(parsed_cmd)
+        command_task = asyncio.ensure_future(execution_coro)
+        self.async_manager.add_command(RunningCommand(cmdstr, command_task))
+        return command_task
+
+    def execute(self, cmdstr: str) -> typing.Any:
         """
             Execute a command string. May raise CommandError.
         """
         lex = lexer.create_lexer(cmdstr, self.oneword_commands)
-        parser_return = self.command_parser.parse(lexer=lex)
-        return parser_return
+        parsed_cmd = self.command_parser.parse(lexer=lex)
+        return parsed_cmd
 
     def dump(self, out=sys.stdout) -> None:
         cmds = list(self.commands.values())
@@ -239,7 +320,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     """
     t = mitmproxy.types.CommandTypes.get(argtype, None)
     if not t:
-        raise exceptions.CommandError("Unsupported argument type: %s" % argtype)
+        raise exceptions.CommandError(f"Unsupported argument type: {argtype}")
     try:
         return t.parse(manager, argtype, spec)  # type: ignore
     except exceptions.TypeError as e:
@@ -248,10 +329,16 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
 
 def command(path):
     def decorator(function):
-        @functools.wraps(function)
-        def wrapper(*args, **kwargs):
-            verify_arg_signature(function, args, kwargs)
-            return function(*args, **kwargs)
+        if asyncio.iscoroutinefunction(function):
+            @functools.wraps(function)
+            async def wrapper(*args, **kwargs):
+                verify_arg_signature(function, args, kwargs)
+                return await function(*args, **kwargs)
+        else:
+            @functools.wraps(function)
+            def wrapper(*args, **kwargs):
+                verify_arg_signature(function, args, kwargs)
+                return function(*args, **kwargs)
         wrapper.__dict__["command_path"] = path
         return wrapper
     return decorator
