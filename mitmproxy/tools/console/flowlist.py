@@ -1,5 +1,6 @@
 import urwid
 
+from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master # noqa
@@ -49,6 +50,7 @@ class FlowListWalker(urwid.ListWalker):
 
     def view_changed(self):
         self._modified()
+        signals.flowlist_change.send(self)
 
     def get_focus(self):
         if not self.master.view.focus.flow:
