@@ -410,7 +410,7 @@ def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
 def build_wininstaller(be: BuildEnviron):  # pragma: no cover
     click.echo("Building wininstaller package...")
 
-    IB_VERSION = "18.5.2"
+    IB_VERSION = "18.8.0"
     IB_DIR = pathlib.Path(be.release_dir) / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
     IB_CLI = fr"C:\Program Files (x86)\BitRock InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
@@ -426,7 +426,7 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
                     click.secho(f"Downloading... {round(100*done/total)}%")
 
             urllib.request.urlretrieve(
-                f"https://installbuilder.bitrock.com/installbuilder-enterprise-{IB_VERSION}-windows-installer.exe",
+                f"https://clients.bitrock.com/installbuilder/installbuilder-enterprise-{IB_VERSION}-windows-installer.exe",
                 IB_SETUP.with_suffix(".tmp"),
                 reporthook=report
             )

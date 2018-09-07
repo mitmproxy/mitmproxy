@@ -37,9 +37,9 @@ Line: 1029zxcs'd"ao<ac>so[sb]po(pc)se;sl/bsl\eq=3847asd
 
 from html.parser import HTMLParser
 from typing import Dict, Union, Tuple, Optional, List, NamedTuple
-from socket import gaierror, gethostbyname
 from urllib.parse import urlparse
 import re
+import socket
 
 import requests
 
@@ -109,8 +109,8 @@ def find_unclaimed_URLs(body: str, requestUrl: bytes) -> None:
         url_parser = urlparse(url)
         domain = url_parser.netloc
         try:
-            gethostbyname(domain)
-        except gaierror:
+            socket.gethostbyname(domain)
+        except socket.gaierror:
             ctx.log.error("XSS found in %s due to unclaimed URL \"%s\"." % (requestUrl, url))
 
 
