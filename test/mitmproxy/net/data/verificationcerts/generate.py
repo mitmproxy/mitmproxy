@@ -27,7 +27,7 @@ def sign(cert):
        "-CA {root_ca}.crt "
        "-CAkey {root_ca}.key "
        "-CAcreateserial "
-       "-days 1024 "
+       "-days 7300 "
        "-out {cert}.crt".format(root_ca=ROOT_CA, cert=cert)
        )
 
@@ -47,7 +47,7 @@ def mkcert(cert, args):
 genrsa("trusted-root")
 do("openssl req -x509 -new -nodes -batch "
    "-key trusted-root.key "
-   "-days 1024 "
+   "-days 7300 "
    "-out trusted-root.crt"
    )
 h = do("openssl x509 -hash -noout -in trusted-root.crt").decode("ascii").strip()
@@ -61,6 +61,6 @@ genrsa("self-signed")
 do("openssl req -x509 -new -nodes -batch "
    "-key self-signed.key "
    "-subj {} "
-   "-days 1024 "
+   "-days 7300 "
    "-out self-signed.crt".format(SUBJECT)
    )
