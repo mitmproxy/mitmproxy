@@ -75,7 +75,7 @@ setup(
         "pyOpenSSL>=17.5,<18.1",
         "pyparsing>=2.1.3, <2.3",
         "pyperclip>=1.6.0, <1.7",
-        "ruamel.yaml>=0.13.2, <0.16",
+        "ruamel.yaml>=0.15,<0.16",  # https://bitbucket.org/ruamel/yaml/issues/234/ruamelyamlsafe_load-includes-a-in-folded
         "sortedcontainers>=1.5.4,<2.1",
         "tornado>=4.3,<5.2",
         "urwid>=2.0.1,<2.1",
