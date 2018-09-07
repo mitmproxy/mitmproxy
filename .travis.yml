@@ -33,6 +33,8 @@ matrix:
       env: TOXENV=individual_coverage
     - python: 3.7
       env: TOXENV=py37
+      dist: xenial
+      sudo: true # required workaround for https://github.com/travis-ci/travis-ci/issues/9815
     - language: node_js
       node_js: "node"
       before_install:
