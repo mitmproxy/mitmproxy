@@ -17,6 +17,7 @@ class ViewJSON(base.View):
     name = "JSON"
     content_types = [
         "application/json",
+        "application/json-rpc",
         "application/vnd.api+json"
     ]
 

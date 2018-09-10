@@ -189,7 +189,7 @@ def load_http(hf: http_pb2.HTTPFlow) -> HTTPFlow:
     return f
 
 
-def loads(b: bytes, typ="http") -> flow.Flow:
+def loads(b: bytes, typ="http") -> typing.Union[HTTPFlow]:
     if typ != 'http':
         raise exceptions.TypeError("Flow types different than HTTP not supported yet!")
     else:
