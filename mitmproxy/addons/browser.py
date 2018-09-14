@@ -19,6 +19,7 @@ def get_chrome_executable() -> typing.Optional[str]:
             "chrome",
             "chromium",
             "chromium-browser",
+            "google-chrome-unstable",
     ):
         if shutil.which(browser):
             return browser
