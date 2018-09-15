@@ -1,6 +1,6 @@
 # mitmproxy
 
-Containerized version of [mitmproxy](https://mitmproxy.org/), an interactive SSL-capable intercepting HTTP proxy.
+Containerized version of [mitmproxy](https://mitmproxy.org/): an interactive, SSL/TLS-capable intercepting proxy for HTTP/1, HTTP/2, and WebSockets.
 
 # Usage
 

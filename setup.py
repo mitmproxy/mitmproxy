@@ -18,7 +18,7 @@ with open(os.path.join(here, "mitmproxy", "version.py")) as f:
 setup(
     name="mitmproxy",
     version=VERSION,
-    description="An interactive, SSL-capable, man-in-the-middle HTTP proxy for penetration testers and software developers.",
+    description="An interactive, SSL/TLS-capable intercepting proxy for HTTP/1, HTTP/2, and WebSockets.",
     long_description=long_description,
     url="http://mitmproxy.org",
     author="Aldo Cortesi",
