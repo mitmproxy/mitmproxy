@@ -312,7 +312,7 @@ def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
         "--tag", be.docker_tag,
         "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
         "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
-        "--file", "docker/Dockerfile",
+        "--file", "release/docker/Dockerfile",
         "."
     ])
     subprocess.check_call([
@@ -321,7 +321,7 @@ def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
         "--tag", be.docker_tag + "-ARMv7",
         "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
         "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
-        "--file", "docker/DockerfileARMv7",
+        "--file", "release/docker/DockerfileARMv7",
         "."
     ])
 
