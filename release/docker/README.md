@@ -35,13 +35,17 @@ For further details, please consult the mitmproxy [documentation](http://docs.mi
 
 # Tags
 
-The available release tags can be seen [here](https://hub.docker.com/r/mitmproxy/mitmproxy/tags/).
+The available release tags can be seen
+[here](https://hub.docker.com/r/mitmproxy/mitmproxy/tags/).
 
 * `master` always tracks the git-master branch and represents the unstable development tree.
 * `latest` always points to the same image as the most recent stable release, including bugfix releases (e.g., `4.0.0` and `4.0.1`).
 * `X.Y.Z` tags contain the mitmproxy release with this version number.  
-  - All packages, dependencies, and the base image that were available at the time of the mitmproxy release.
-  - We DO NOT update these images! Use at your own risk!
-  - These images MIGHT BE affected by potential security issues!
-  - Security issues that were made public AFTER the release MIGHT affect these images!
-* `*-ARMv7` are images built for Raspbian / Raspberry Pi
+* `*-ARMv7` are images built for Raspbian / Raspberry Pi systems.
+
+# Security Notice
+
+Dependencies in the Docker images are frozen on release, and can’t be updated in
+situ. This means that we necessarily capture any bugs or security issues that
+may be present. We don’t generally release new Docker images simply to update
+dependencies (though we may do so if we become aware of a really serious issue).
