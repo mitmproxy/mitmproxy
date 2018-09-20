@@ -37,7 +37,7 @@ RUN [ "cross-build-end" ]
 
 VOLUME /home/mitmproxy/.mitmproxy
 
-COPY docker/docker-entrypoint.sh /usr/local/bin/
+COPY release/docker/docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 8080 8081

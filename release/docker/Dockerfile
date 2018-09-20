@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.8
 
 ENV LANG=en_US.UTF-8
 
@@ -33,7 +33,7 @@ RUN addgroup -S mitmproxy && adduser -S -G mitmproxy mitmproxy \
 
 VOLUME /home/mitmproxy/.mitmproxy
 
-COPY docker/docker-entrypoint.sh /usr/local/bin/
+COPY release/docker/docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 8080 8081
