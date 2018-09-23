@@ -128,7 +128,7 @@ class ConsoleMaster(master.Master):
                 subprocess.call(cmd)
             except:
                 signals.status_message.send(
-                    message="Can't start editor: %s" % " ".join(c)
+                    message="Can't start editor: %s" % c
                 )
             else:
                 with open(name, "r" if text else "rb") as f:
