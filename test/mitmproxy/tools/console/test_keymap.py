@@ -117,6 +117,21 @@ def test_load_path(tmpdir):
         kmc.load_path(km, dst)
         assert(km.get("chooser", "key1"))
 
+        km.add("key123", "str", ["flowlist", "flowview"])
+        with open(dst, 'w') as f:
+            f.write(
+                """
+                    -   key: key123
+                        ctx: [options]
+                        cmd: foo
+                """
+            )
+        kmc.load_path(km, dst)
+        for b in km.bindings:
+            if b.key == "key123":
+                assert b.contexts == ["options"]
+                break
+
 
 def test_parse():
     kmc = keymap.KeymapConfig()

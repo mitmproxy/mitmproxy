@@ -66,7 +66,7 @@ class Keymap:
             raise ValueError("Must specify at least one context.")
         for c in contexts:
             if c not in Contexts:
-                raise ValueError("Unsupported context: %s" % c)
+                raise ValueError(f"Unsupported context: {c}")
 
     def add(
         self,
@@ -172,7 +172,7 @@ class KeymapConfig:
             self.load_path(ctx.master.keymap, path)  # type: ignore
         except (OSError, KeyBindingError) as e:
             raise exceptions.CommandError(
-                "Could not load key bindings - %s" % e
+                f"Could not load key bindings - {e}"
             ) from e
 
     def running(self):
@@ -190,26 +190,25 @@ class KeymapConfig:
                     txt = f.read()
                 except UnicodeDecodeError as e:
                     raise KeyBindingError(
-                        "Encoding error - expected UTF8: %s: %s" % (p, e)
+                        f"Encoding error - expected UTF8: {p}: {e}"
                     )
             try:
                 vals = self.parse(txt)
             except KeyBindingError as e:
-                raise KeyBindingError(
-                    "Error reading %s: %s" % (p, e)
-                ) from e
+                raise KeyBindingError(f"Error reading {p}: {e}") from e
             for v in vals:
+                user_ctxs = v.get("ctx", ["global"])
                 try:
+                    km._check_contexts(user_ctxs)
+                    km.remove(v["key"], Contexts)
                     km.add(
                         key = v["key"],
                         command = v["cmd"],
-                        contexts = v.get("ctx", ["global"]),
+                        contexts = user_ctxs,
                         help = v.get("help", None),
                     )
                 except ValueError as e:
-                    raise KeyBindingError(
-                        "Error reading %s: %s" % (p, e)
-                    ) from e
+                    raise KeyBindingError(f"Error reading {p}: {e}") from e
 
     def parse(self, text):
         try:
@@ -218,8 +217,9 @@ class KeymapConfig:
             if hasattr(v, "problem_mark"):
                 snip = v.problem_mark.get_snippet()
                 raise KeyBindingError(
-                    "Key binding config error at line %s:\n%s\n%s" %
-                    (v.problem_mark.line + 1, snip, v.problem)
+                    "Key binding config error at line {}:\n{}\n{}".format(
+                        v.problem_mark.line + 1, snip, v.problem
+                    )
                 )
             else:
                 raise KeyBindingError("Could not parse key bindings.")
@@ -231,12 +231,12 @@ class KeymapConfig:
         for k in data:
             unknown = k.keys() - keyAttrs.keys()
             if unknown:
-                raise KeyBindingError("Unknown key attributes: %s" % unknown)
+                raise KeyBindingError(f"Unknown key attributes: {unknown}")
             missing = requiredKeyAttrs - k.keys()
             if missing:
-                raise KeyBindingError("Missing required key attributes: %s" % unknown)
+                raise KeyBindingError(f"Missing required key attributes: {unknown}")
             for attr in k.keys():
                 if not keyAttrs[attr](k[attr]):
-                    raise KeyBindingError("Invalid type for %s" % attr)
+                    raise KeyBindingError(f"Invalid type for {attr}")
 
         return data
