@@ -64,7 +64,7 @@ setup(
         "blinker>=1.4, <1.5",
         "brotlipy>=0.7.0,<0.8",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
-        "click>=6.2, <7",
+        "click>=7.0,<7.1",
         "cryptography>=2.1.4,<2.4",
         "h2>=3.0.1,<4",
         "hyperframe>=5.1.0,<6",
