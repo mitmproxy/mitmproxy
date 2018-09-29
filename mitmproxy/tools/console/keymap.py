@@ -199,11 +199,14 @@ class KeymapConfig:
                     "Error reading %s: %s" % (p, e)
                 ) from e
             for v in vals:
+                user_ctxs = v.get("ctx", ["global"])
                 try:
+                    km._check_contexts(user_ctxs)
+                    km.remove(v["key"], Contexts)
                     km.add(
                         key = v["key"],
                         command = v["cmd"],
-                        contexts = v.get("ctx", ["global"]),
+                        contexts = user_ctxs,
                         help = v.get("help", None),
                     )
                 except ValueError as e:
