@@ -1,5 +1,6 @@
 import queue
 import threading
+import time
 import typing
 
 from mitmproxy import log
@@ -65,6 +66,7 @@ class RequestReplayThread(basethread.BaseThread):
                         connect_request = http.make_connect_request((r.data.host, r.port))
                         server.wfile.write(http1.assemble_request(connect_request))
                         server.wfile.flush()
+                        request.timestamp_start = request.timestamp_end = time.time()
                         resp = http1.read_response(
                             server.rfile,
                             connect_request,
