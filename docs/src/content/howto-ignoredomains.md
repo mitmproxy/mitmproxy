@@ -72,8 +72,7 @@ method to do so:
 >>> mitmproxy --ignore-hosts ^example\.com:443$
 {{< /highlight >}}
 
-Here are some other examples for ignore
-patterns:
+Here are some other examples for ignore patterns:
 
 {{< highlight none  >}}
 # Exempt traffic from the iOS App Store (the regex is lax, but usually just works):
@@ -84,13 +83,20 @@ patterns:
 # Ignore example.com, but not its subdomains:
 --ignore-hosts '^example.com:'
 
-# Ignore everything but example.com and mitmproxy.org:
---ignore-hosts '^(?!example\.com)(?!mitmproxy\.org)'
-
 # Transparent mode:
 --ignore-hosts 17\.178\.96\.59:443
 # IP address range:
 --ignore-hosts 17\.178\.\d+\.\d+:443
+{{< / highlight >}}
+
+This option can also be used to whitelist some domains through negative lookahead expressions. However, ignore patterns are always matched against the IP address of the target before being matched against its domain name. Thus, the pattern must allow any IP addresses using an expression like `^(?![0-9\.]+:)` in order for domains whitelisting to work. Here are examples of such patterns:
+
+{{< highlight none  >}}
+# Ignore everything but example.com and mitmproxy.org (not subdomains):
+--ignore-hosts '^(?![0-9\.]+:)(?!example\.com:)(?!mitmproxy\.org:)'
+
+# Ignore everything but example.com and its subdomains:
+--ignore-hosts '^(?![0-9\.]+:)(?!([^\.:]+\.)*example\.com:)'
 {{< / highlight >}}
 
 **Footnotes**
