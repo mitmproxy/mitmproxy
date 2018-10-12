@@ -13,7 +13,7 @@ def response(flow):
         pageUrl = flow.request.url
         pageText = flow.response.text
         pattern = (r"<a\s+(?:[^>]*?\s+)?href=(?P<delimiter>[\"'])"
-            r"(?P<link>(?!https?:\/\/|ftps?:\/\/|\/\/|#|javascript:|mailto:).*?)(?P=delimiter)")
+                   r"(?P<link>(?!https?:\/\/|ftps?:\/\/|\/\/|#|javascript:|mailto:).*?)(?P=delimiter)")
         rel_matcher = re.compile(pattern, flags=re.IGNORECASE)
         rel_matches = rel_matcher.finditer(pageText)
         map_dict = {}
