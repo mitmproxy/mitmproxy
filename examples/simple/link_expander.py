@@ -12,7 +12,8 @@ def response(flow):
     if "Content-Type" in flow.response.headers and flow.response.headers["Content-Type"].find("text/html") != -1:
         pageUrl = flow.request.url
         pageText = flow.response.text
-        pattern = r"<a\s+(?:[^>]*?\s+)?href=(?P<delimiter>[\"'])(?P<link>(?!https?:\/\/|ftps?:\/\/|\/\/|#|javascript:|mailto:).*?)(?P=delimiter)"
+        pattern = (r"<a\s+(?:[^>]*?\s+)?href=(?P<delimiter>[\"'])"
+        r"(?P<link>(?!https?:\/\/|ftps?:\/\/|\/\/|#|javascript:|mailto:).*?)(?P=delimiter)")
         rel_matcher = re.compile(pattern, flags=re.IGNORECASE)
         rel_matches = rel_matcher.finditer(pageText)
         map_dict = {}
@@ -22,6 +23,6 @@ def response(flow):
             map_dict["{0}{1}{0}".format(delimiter, rel_link)] = "{0}{1}{0}".format(delimiter, abs_link)
         for map in map_dict.items():
             pageText = pageText.replace(*map)
-            #Uncomment the following to print the expansion mapping
-            #print("{0} -> {1}".format(*map))
+            # Uncomment the following to print the expansion mapping
+            # print("{0} -> {1}".format(*map))
         flow.response.text = pageText
