@@ -1,15 +1,87 @@
 import typing
 
+import os
+
+from mitmproxy.utils import human
 from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import optmanager
+from mitmproxy import platform
+from mitmproxy.net import server_spec
 from mitmproxy.net.http import status_codes
 import mitmproxy.types
 
 
+CONF_DIR = "~/.mitmproxy"
+LISTEN_PORT = 8080
+
+
 class Core:
+    def load(self, loader):
+        loader.add_option(
+            "body_size_limit", typing.Optional[str], None,
+            """
+            Byte size limit of HTTP request and response bodies. Understands
+            k/m/g suffixes, i.e. 3m for 3 megabytes.
+            """
+        )
+        loader.add_option(
+            "keep_host_header", bool, False,
+            """
+            Reverse Proxy: Keep the original host header instead of rewriting it
+            to the reverse proxy target.
+            """
+        )
+
+    def configure(self, updated):
+        opts = ctx.options
+        if opts.add_upstream_certs_to_client_chain and not opts.upstream_cert:
+            raise exceptions.OptionsError(
+                "The no-upstream-cert and add-upstream-certs-to-client-chain "
+                "options are mutually exclusive. If no-upstream-cert is enabled "
+                "then the upstream certificate is not retrieved before generating "
+                "the client certificate chain."
+            )
+        if opts.add_upstream_certs_to_client_chain and not opts.ssl_insecure:
+            raise exceptions.OptionsError(
+                "The verify-upstream-cert requires certificate verification to be disabled. "
+                "If upstream certificates are verified then extra upstream certificates are "
+                "not available for inclusion to the client chain."
+            )
+        if "body_size_limit" in updated:
+            try:
+                human.parse_size(opts.body_size_limit)
+            except ValueError as e:
+                raise exceptions.OptionsError(
+                    "Invalid body size limit specification: %s" %
+                    opts.body_size_limit
+                )
+        if "mode" in updated:
+            mode = opts.mode
+            if mode.startswith("reverse:") or mode.startswith("upstream:"):
+                try:
+                    server_spec.parse_with_mode(mode)
+                except ValueError as e:
+                    raise exceptions.OptionsError(str(e)) from e
+            elif mode == "transparent":
+                if not platform.original_addr:
+                    raise exceptions.OptionsError(
+                        "Transparent mode not supported on this platform."
+                    )
+            elif mode not in ["regular", "socks5"]:
+                raise exceptions.OptionsError(
+                    "Invalid mode specification: %s" % mode
+                )
+        if "client_certs" in updated:
+            if opts.client_certs:
+                client_certs = os.path.expanduser(opts.client_certs)
+                if not os.path.exists(client_certs):
+                    raise exceptions.OptionsError(
+                        "Client certificate path does not exist: {}".format(opts.client_certs)
+                    )
+
     @command.command("set")
     def set(self, *spec: str) -> None:
         """
@@ -107,7 +179,7 @@ class Core:
         """
             Quickly set a number of common values on flows.
         """
-        val = sval  # type: typing.Union[int, str]
+        val: typing.Union[int, str] = sval
         if spec == "status_code":
             try:
                 val = int(val)  # type: ignore
@@ -164,6 +236,7 @@ class Core:
         for f in flows:
             p = getattr(f, part, None)
             if p:
+                f.backup()
                 p.decode()
                 updated.append(f)
         ctx.master.addons.trigger("update", updated)
@@ -178,6 +251,7 @@ class Core:
         for f in flows:
             p = getattr(f, part, None)
             if p:
+                f.backup()
                 current_enc = p.headers.get("content-encoding", "identity")
                 if current_enc == "identity":
                     p.encode("deflate")
@@ -204,6 +278,7 @@ class Core:
             if p:
                 current_enc = p.headers.get("content-encoding", "identity")
                 if current_enc == "identity":
+                    f.backup()
                     p.encode(enc)
                     updated.append(f)
         ctx.master.addons.trigger("update", updated)

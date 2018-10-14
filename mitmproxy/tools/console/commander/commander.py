@@ -1,5 +1,7 @@
 import abc
+import copy
 import typing
+import collections
 
 import urwid
 from urwid.text_layout import calc_coords
@@ -23,7 +25,7 @@ class ListCompleter(Completer):
         options: typing.Sequence[str],
     ) -> None:
         self.start = start
-        self.options = []  # type: typing.Sequence[str]
+        self.options: typing.Sequence[str] = []
         for o in options:
             if o.startswith(start):
                 self.options.append(o)
@@ -47,13 +49,13 @@ CompletionState = typing.NamedTuple(
 )
 
 
-class CommandBuffer():
+class CommandBuffer:
     def __init__(self, master: mitmproxy.master.Master, start: str = "") -> None:
         self.master = master
         self.text = self.flatten(start)
         # Cursor is always within the range [0:len(buffer)].
         self._cursor = len(self.text)
-        self.completion = None   # type: CompletionState
+        self.completion: CompletionState = None
 
     @property
     def cursor(self) -> int:
@@ -68,6 +70,21 @@ class CommandBuffer():
         else:
             self._cursor = x
 
+    def maybequote(self, value):
+        if " " in value and not value.startswith("\""):
+            return "\"%s\"" % value
+        return value
+
+    def parse_quoted(self, txt):
+        parts, remhelp = self.master.commands.parse_partial(txt)
+        for i, p in enumerate(parts):
+            parts[i] = mitmproxy.command.ParseResult(
+                value = self.maybequote(p.value),
+                type = p.type,
+                valid = p.valid
+            )
+        return parts, remhelp
+
     def render(self):
         """
             This function is somewhat tricky - in order to make the cursor
@@ -75,7 +92,7 @@ class CommandBuffer():
             character-for-character offset match in the rendered output, up
             to the cursor. Beyond that, we can add stuff.
         """
-        parts, remhelp = self.master.commands.parse_partial(self.text)
+        parts, remhelp = self.parse_quoted(self.text)
         ret = []
         for p in parts:
             if p.valid:
@@ -95,8 +112,9 @@ class CommandBuffer():
         return ret
 
     def flatten(self, txt):
-        parts, _ = self.master.commands.parse_partial(txt)
-        return " ".join([x.value for x in parts])
+        parts, _ = self.parse_quoted(txt)
+        ret = [x.value for x in parts]
+        return " ".join(ret)
 
     def left(self) -> None:
         self.cursor = self.cursor - 1
@@ -140,13 +158,53 @@ class CommandBuffer():
         self.completion = None
 
 
+class CommandHistory:
+    def __init__(self, master: mitmproxy.master.Master, size: int=30) -> None:
+        self.saved_commands: collections.deque = collections.deque(
+            [CommandBuffer(master, "")],
+            maxlen=size
+        )
+        self.index: int = 0
+
+    @property
+    def last_index(self):
+        return len(self.saved_commands) - 1
+
+    def get_next(self) -> typing.Optional[CommandBuffer]:
+        if self.index < self.last_index:
+            self.index = self.index + 1
+            return self.saved_commands[self.index]
+        return None
+
+    def get_prev(self) -> typing.Optional[CommandBuffer]:
+        if self.index > 0:
+            self.index = self.index - 1
+            return self.saved_commands[self.index]
+        return None
+
+    def add_command(self, command: CommandBuffer, execution: bool=False) -> None:
+        if self.index == self.last_index or execution:
+            last_item = self.saved_commands[-1]
+            last_item_empty = not last_item.text
+            if last_item.text == command.text or (last_item_empty and execution):
+                self.saved_commands[-1] = copy.copy(command)
+            else:
+                self.saved_commands.append(command)
+                if not execution and self.index < self.last_index:
+                    self.index += 1
+            if execution:
+                self.index = self.last_index
+
+
 class CommandEdit(urwid.WidgetWrap):
     leader = ": "
 
-    def __init__(self, master: mitmproxy.master.Master, text: str) -> None:
+    def __init__(self, master: mitmproxy.master.Master,
+                 text: str, history: CommandHistory) -> None:
         super().__init__(urwid.Text(self.leader))
         self.master = master
         self.cbuf = CommandBuffer(master, text)
+        self.history = history
         self.update()
 
     def keypress(self, size, key):
@@ -156,6 +214,11 @@ class CommandEdit(urwid.WidgetWrap):
             self.cbuf.left()
         elif key == "right":
             self.cbuf.right()
+        elif key == "up":
+            self.history.add_command(self.cbuf)
+            self.cbuf = self.history.get_prev() or self.cbuf
+        elif key == "down":
+            self.cbuf = self.history.get_next() or self.cbuf
         elif key == "tab":
             self.cbuf.cycle_completion()
         elif len(key) == 1:

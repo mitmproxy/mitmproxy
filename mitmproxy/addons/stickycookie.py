@@ -31,8 +31,14 @@ def domain_match(a: str, b: str) -> bool:
 
 class StickyCookie:
     def __init__(self):
-        self.jar = collections.defaultdict(dict)  # type: Dict[TOrigin, Dict[str, str]]
-        self.flt = None  # type: Optional[flowfilter.TFilter]
+        self.jar: Dict[TOrigin, Dict[str, str]] = collections.defaultdict(dict)
+        self.flt: Optional[flowfilter.TFilter] = None
+
+    def load(self, loader):
+        loader.add_option(
+            "stickycookie", Optional[str], None,
+            "Set sticky cookie filter. Matched against requests."
+        )
 
     def configure(self, updated):
         if "stickycookie" in updated:
@@ -67,7 +73,7 @@ class StickyCookie:
 
     def request(self, flow: http.HTTPFlow):
         if self.flt:
-            cookie_list = []  # type: List[Tuple[str,str]]
+            cookie_list: List[Tuple[str, str]] = []
             if flowfilter.match(self.flt, flow):
                 for (domain, port, path), c in self.jar.items():
                     match = [

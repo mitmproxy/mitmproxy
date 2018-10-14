@@ -47,12 +47,12 @@ class _WebSocketServerBase(net_tservers.ServerTestBase):
 
 
 class _WebSocketTestBase:
+    client = None
 
     @classmethod
     def setup_class(cls):
         cls.options = cls.get_options()
-        tmaster = tservers.TestMaster(cls.options)
-        cls.proxy = tservers.ProxyThread(tmaster)
+        cls.proxy = tservers.ProxyThread(tservers.TestMaster, cls.options)
         cls.proxy.start()
 
     @classmethod
@@ -67,7 +67,7 @@ class _WebSocketTestBase:
             ssl_insecure=True,
             websocket=True,
         )
-        opts.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
+        opts.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         return opts
 
     @property
@@ -161,7 +161,7 @@ class TestSimple(_WebSocketTest):
             def websocket_start(self, f):
                 f.stream = streaming
 
-        self.master.addons.add(Stream())
+        self.proxy.set_addons(Stream())
         self.setup_connection()
 
         frame = websockets.Frame.from_file(self.client.rfile)
@@ -202,7 +202,7 @@ class TestSimple(_WebSocketTest):
             def websocket_message(self, f):
                 f.messages[-1].content = "foo"
 
-        self.master.addons.add(Addon())
+        self.proxy.set_addons(Addon())
         self.setup_connection()
 
         frame = websockets.Frame.from_file(self.client.rfile)
@@ -233,7 +233,7 @@ class TestKillFlow(_WebSocketTest):
             def websocket_message(self, f):
                 f.kill()
 
-        self.master.addons.add(KillFlow())
+        self.proxy.set_addons(KillFlow())
         self.setup_connection()
 
         with pytest.raises(exceptions.TcpDisconnect):
@@ -286,7 +286,8 @@ class TestPing(_WebSocketTest):
         wfile.flush()
         websockets.Frame.from_file(rfile)
 
-    def test_ping(self):
+    @pytest.mark.asyncio
+    async def test_ping(self):
         self.setup_connection()
 
         frame = websockets.Frame.from_file(self.client.rfile)
@@ -296,7 +297,7 @@ class TestPing(_WebSocketTest):
         assert frame.header.opcode == websockets.OPCODE.PING
         assert frame.payload == b''  # We don't send payload to other end
 
-        assert self.master.has_log("Pong Received from server", "info")
+        assert await self.master.await_log("Pong Received from server", "info")
 
 
 class TestPong(_WebSocketTest):
@@ -314,7 +315,8 @@ class TestPong(_WebSocketTest):
         wfile.flush()
         websockets.Frame.from_file(rfile)
 
-    def test_pong(self):
+    @pytest.mark.asyncio
+    async def test_pong(self):
         self.setup_connection()
 
         self.client.wfile.write(bytes(websockets.Frame(fin=1, mask=1, opcode=websockets.OPCODE.PING, payload=b'foobar')))
@@ -327,7 +329,7 @@ class TestPong(_WebSocketTest):
 
         assert frame.header.opcode == websockets.OPCODE.PONG
         assert frame.payload == b'foobar'
-        assert self.master.has_log("Pong Received from server", "info")
+        assert await self.master.await_log("pong received")
 
 
 class TestClose(_WebSocketTest):
@@ -403,7 +405,7 @@ class TestStreaming(_WebSocketTest):
             def websocket_start(self, f):
                 f.stream = streaming
 
-        self.master.addons.add(Stream())
+        self.proxy.set_addons(Stream())
         self.setup_connection()
 
         frame = None
@@ -465,3 +467,46 @@ class TestExtension(_WebSocketTest):
         assert self.master.state.flows[1].messages[3].type == websockets.OPCODE.BINARY
         assert self.master.state.flows[1].messages[4].content == b'\xde\xad\xbe\xef'
         assert self.master.state.flows[1].messages[4].type == websockets.OPCODE.BINARY
+
+
+class TestInjectMessageClient(_WebSocketTest):
+
+    @classmethod
+    def handle_websockets(cls, rfile, wfile):
+        pass
+
+    def test_inject_message_client(self):
+        class Inject:
+            def websocket_start(self, flow):
+                flow.inject_message(flow.client_conn, 'This is an injected message!')
+
+        self.proxy.set_addons(Inject())
+        self.setup_connection()
+
+        frame = websockets.Frame.from_file(self.client.rfile)
+        assert frame.header.opcode == websockets.OPCODE.TEXT
+        assert frame.payload == b'This is an injected message!'
+
+
+class TestInjectMessageServer(_WebSocketTest):
+
+    @classmethod
+    def handle_websockets(cls, rfile, wfile):
+        frame = websockets.Frame.from_file(rfile)
+        assert frame.header.opcode == websockets.OPCODE.TEXT
+        success = frame.payload == b'This is an injected message!'
+
+        wfile.write(bytes(websockets.Frame(fin=1, opcode=websockets.OPCODE.TEXT, payload=str(success).encode())))
+        wfile.flush()
+
+    def test_inject_message_server(self):
+        class Inject:
+            def websocket_start(self, flow):
+                flow.inject_message(flow.server_conn, 'This is an injected message!')
+
+        self.proxy.set_addons(Inject())
+        self.setup_connection()
+
+        frame = websockets.Frame.from_file(self.client.rfile)
+        assert frame.header.opcode == websockets.OPCODE.TEXT
+        assert frame.payload == b'True'

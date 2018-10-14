@@ -36,7 +36,6 @@ Events = frozenset([
     "log",
     "load",
     "running",
-    "tick",
     "update",
 ])
 
@@ -80,11 +79,11 @@ def _iterate_tcp(f: tcp.TCPFlow) -> TEventGenerator:
     yield "tcp_end", f
 
 
-_iterate_map = {
+_iterate_map: typing.Dict[typing.Type[flow.Flow], typing.Callable[[typing.Any], TEventGenerator]] = {
     http.HTTPFlow: _iterate_http,
     websocket.WebSocketFlow: _iterate_websocket,
     tcp.TCPFlow: _iterate_tcp,
-}  # type: typing.Dict[typing.Type[flow.Flow], typing.Callable[[typing.Any], TEventGenerator]]
+}
 
 
 def iterate(f: flow.Flow) -> TEventGenerator:

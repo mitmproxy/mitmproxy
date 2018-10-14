@@ -45,18 +45,18 @@ class Choice:
 # Rather than putting types and the CommandManger in the same file, we introduce
 # a stub type with the signature we use.
 class _CommandBase:
-    commands = {}  # type: typing.MutableMapping[str, typing.Any]
+    commands: typing.MutableMapping[str, typing.Any] = {}
 
-    def call_args(self, path: str, args: typing.Sequence[str]) -> typing.Any:
+    def call_strings(self, path: str, args: typing.Sequence[str]) -> typing.Any:
         raise NotImplementedError
 
-    def call(self, cmd: str) -> typing.Any:
+    def execute(self, cmd: str) -> typing.Any:
         raise NotImplementedError
 
 
 class _BaseType:
-    typ = object  # type: typing.Type
-    display = ""  # type: str
+    typ: typing.Type = object
+    display: str = ""
 
     def completion(
         self, manager: _CommandBase, t: typing.Any, s: str
@@ -178,7 +178,7 @@ class _PathType(_BaseType):
         return ret
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> str:
-        return s
+        return os.path.expanduser(s)
 
     def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, str)
@@ -286,7 +286,7 @@ class _CutSpecType(_BaseType):
         return opts
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> CutSpec:
-        parts = s.split(",")  # type: typing.Any
+        parts: typing.Any = s.split(",")
         return parts
 
     def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
@@ -337,7 +337,7 @@ class _FlowType(_BaseFlowType):
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> flow.Flow:
         try:
-            flows = manager.call_args("view.resolve", [s])
+            flows = manager.call_strings("view.flows.resolve", [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
         if len(flows) != 1:
@@ -356,7 +356,7 @@ class _FlowsType(_BaseFlowType):
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[flow.Flow]:
         try:
-            return manager.call_args("view.resolve", [s])
+            return manager.call_strings("view.flows.resolve", [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
 
@@ -401,17 +401,17 @@ class _ChoiceType(_BaseType):
     display = "choice"
 
     def completion(self, manager: _CommandBase, t: Choice, s: str) -> typing.Sequence[str]:
-        return manager.call(t.options_command)
+        return manager.execute(t.options_command)
 
     def parse(self, manager: _CommandBase, t: Choice, s: str) -> str:
-        opts = manager.call(t.options_command)
+        opts = manager.execute(t.options_command)
         if s not in opts:
             raise exceptions.TypeError("Invalid choice.")
         return s
 
     def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
         try:
-            opts = manager.call(typ.options_command)
+            opts = manager.execute(typ.options_command)
         except exceptions.CommandError:
             return False
         return val in opts

@@ -1,5 +1,5 @@
 """
-This scripts demonstrates how to use mitmproxy's filter pattern in scripts.
+This script demonstrates how to use mitmproxy's filter pattern in scripts.
 """
 from mitmproxy import flowfilter
 from mitmproxy import ctx, http
@@ -7,7 +7,7 @@ from mitmproxy import ctx, http
 
 class Filter:
     def __init__(self):
-        self.filter = None  # type: flowfilter.TFilter
+        self.filter: flowfilter.TFilter = None
 
     def configure(self, updated):
         self.filter = flowfilter.parse(ctx.options.flowfilter)
@@ -19,8 +19,8 @@ class Filter:
 
     def response(self, flow: http.HTTPFlow) -> None:
         if flowfilter.match(self.filter, flow):
-            print("Flow matches filter:")
-            print(flow)
+            ctx.log.info("Flow matches filter:")
+            ctx.log.info(flow)
 
 
 addons = [Filter()]

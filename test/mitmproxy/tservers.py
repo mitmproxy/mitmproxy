@@ -2,15 +2,19 @@ import os.path
 import threading
 import tempfile
 import sys
+import time
 from unittest import mock
+import asyncio
 
 import mitmproxy.platform
+from mitmproxy.addons import core
 from mitmproxy.proxy.config import ProxyConfig
 from mitmproxy.proxy.server import ProxyServer
 from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy import exceptions
 from mitmproxy import io
+from mitmproxy.utils import human
 import pathod.test
 import pathod.pathoc
 
@@ -22,21 +26,21 @@ from mitmproxy.test import taddons
 
 class MasterTest:
 
-    def cycle(self, master, content):
+    async def cycle(self, master, content):
         f = tflow.tflow(req=tutils.treq(content=content))
         layer = mock.Mock("mitmproxy.proxy.protocol.base.Layer")
         layer.client_conn = f.client_conn
         layer.reply = controller.DummyReply()
-        master.addons.handle_lifecycle("clientconnect", layer)
+        await master.addons.handle_lifecycle("clientconnect", layer)
         for i in eventsequence.iterate(f):
-            master.addons.handle_lifecycle(*i)
-        master.addons.handle_lifecycle("clientdisconnect", layer)
+            await master.addons.handle_lifecycle(*i)
+        await master.addons.handle_lifecycle("clientdisconnect", layer)
         return f
 
-    def dummy_cycle(self, master, n, content):
+    async def dummy_cycle(self, master, n, content):
         for i in range(n):
-            self.cycle(master, content)
-        master.shutdown()
+            await self.cycle(master, content)
+        await master._shutdown()
 
     def flowfile(self, path):
         with open(path, "wb") as f:
@@ -61,11 +65,6 @@ class TestState:
         if f not in self.flows:
             self.flows.append(f)
 
-    # TODO: add TCP support?
-    # def tcp_start(self, f):
-    #     if f not in self.flows:
-    #         self.flows.append(f)
-
 
 class TestMaster(taddons.RecordingMaster):
 
@@ -89,13 +88,12 @@ class TestMaster(taddons.RecordingMaster):
 
 class ProxyThread(threading.Thread):
 
-    def __init__(self, tmaster):
+    def __init__(self, masterclass, options):
         threading.Thread.__init__(self)
-        self.tmaster = tmaster
-        self.name = "ProxyThread (%s:%s)" % (
-            tmaster.server.address[0],
-            tmaster.server.address[1],
-        )
+        self.masterclass = masterclass
+        self.options = options
+        self.tmaster = None
+        self.event_loop = None
         controller.should_exit = False
 
     @property
@@ -106,11 +104,26 @@ class ProxyThread(threading.Thread):
     def tlog(self):
         return self.tmaster.logs
 
-    def run(self):
-        self.tmaster.run()
-
     def shutdown(self):
         self.tmaster.shutdown()
+
+    def run(self):
+        self.event_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.event_loop)
+        self.tmaster = self.masterclass(self.options)
+        self.tmaster.addons.add(core.Core())
+        self.name = "ProxyThread (%s)" % human.format_address(self.tmaster.server.address)
+        self.tmaster.run()
+
+    def set_addons(self, *addons):
+        self.tmaster.reset(addons)
+
+    def start(self):
+        super().start()
+        while True:
+            if self.tmaster:
+                break
+            time.sleep(0.01)
 
 
 class ProxyTestBase:
@@ -131,15 +144,14 @@ class ProxyTestBase:
             ssloptions=cls.ssloptions)
 
         cls.options = cls.get_options()
-        tmaster = cls.masterclass(cls.options)
-        cls.proxy = ProxyThread(tmaster)
+        cls.proxy = ProxyThread(cls.masterclass, cls.options)
         cls.proxy.start()
 
     @classmethod
     def teardown_class(cls):
         # perf: we want to run tests in parallel
         # should this ever cause an error, travis should catch it.
-        # shutil.rmtree(cls.cadir)
+        # shutil.rmtree(cls.confdir)
         cls.proxy.shutdown()
         cls.server.shutdown()
         cls.server2.shutdown()
@@ -163,13 +175,16 @@ class ProxyTestBase:
 
     @classmethod
     def get_options(cls):
-        cls.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
+        cls.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         return options.Options(
             listen_port=0,
-            cadir=cls.cadir,
+            confdir=cls.confdir,
             add_upstream_certs_to_client_chain=cls.add_upstream_certs_to_client_chain,
             ssl_insecure=True,
         )
+
+    def set_addons(self, *addons):
+        self.proxy.set_addons(*addons)
 
     def addons(self):
         """
@@ -222,12 +237,12 @@ class HTTPProxyTest(ProxyTestBase):
             p = pathod.pathoc.Pathoc(
                 ("127.0.0.1", self.proxy.port), True, fp=None
             )
-            with p.connect((options.APP_HOST, options.APP_PORT)):
+            with p.connect((self.master.options.onboarding_host, self.master.options.onbarding_port)):
                 return p.request("get:'%s'" % page)
         else:
             p = self.pathoc()
             with p.connect():
-                return p.request("get:'http://%s%s'" % (options.APP_HOST, page))
+                return p.request("get:'http://%s%s'" % (self.master.options.onboarding_host, page))
 
 
 class TransparentProxyTest(ProxyTestBase):
@@ -325,8 +340,7 @@ class SocksModeTest(HTTPProxyTest):
         return opts
 
 
-class ChainProxyTest(ProxyTestBase):
-
+class HTTPUpstreamProxyTest(HTTPProxyTest):
     """
     Chain three instances of mitmproxy in a row to test upstream mode.
     Proxy order is cls.proxy -> cls.chain[0] -> cls.chain[1]
@@ -342,10 +356,12 @@ class ChainProxyTest(ProxyTestBase):
         cls.chain = []
         for _ in range(cls.n):
             opts = cls.get_options()
-            tmaster = cls.masterclass(opts)
-            proxy = ProxyThread(tmaster)
+            proxy = ProxyThread(cls.masterclass, opts)
             proxy.start()
             cls.chain.insert(0, proxy)
+            while True:
+                if proxy.event_loop and proxy.event_loop.is_running():
+                    break
 
         super().setup_class()
 
@@ -369,7 +385,3 @@ class ChainProxyTest(ProxyTestBase):
                 mode="upstream:" + s,
             )
         return opts
-
-
-class HTTPUpstreamProxyTest(ChainProxyTest, HTTPProxyTest):
-    pass

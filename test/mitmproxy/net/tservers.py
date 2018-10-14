@@ -4,7 +4,9 @@ import io
 import OpenSSL
 
 from mitmproxy.net import tcp
-from mitmproxy.test import tutils
+from mitmproxy.utils import data
+
+cdata = data.Data(__name__)
 
 
 class _ServerThread(threading.Thread):
@@ -47,10 +49,10 @@ class _TServer(tcp.TCPServer):
         if self.ssl is not None:
             cert = self.ssl.get(
                 "cert",
-                tutils.test_data.path("mitmproxy/net/data/server.crt"))
+                cdata.path("data/server.crt"))
             raw_key = self.ssl.get(
                 "key",
-                tutils.test_data.path("mitmproxy/net/data/server.key"))
+                cdata.path("data/server.key"))
             with open(raw_key) as f:
                 raw_key = f.read()
             key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw_key)

@@ -1,6 +1,8 @@
 import os
 import socket
 
+from mitmproxy.utils import data
+
 import pytest
 
 pytest_plugins = ('test.full_coverage_plugin',)
@@ -33,3 +35,8 @@ skip_no_ipv6 = pytest.mark.skipif(
     no_ipv6,
     reason='Host has no IPv6 support'
 )
+
+
+@pytest.fixture()
+def tdata():
+    return data.Data(__name__)

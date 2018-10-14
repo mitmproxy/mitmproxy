@@ -13,12 +13,12 @@ Usage:
         -p 443
         -s dns_spoofing.py
         # Used as the target location if neither SNI nor host header are present.
-        -R http://example.com/
+        --mode reverse:http://example.com/
         # To avoid auto rewriting of host header by the reverse proxy target.
-        --keep-host-header
+        --set keep-host-header
     mitmdump
         -p 80
-        -R http://localhost:443/
+        --mode reverse:http://localhost:443/
 
     (Setting up a single proxy instance and using iptables to redirect to it
     works as well)

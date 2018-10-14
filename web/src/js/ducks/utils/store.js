@@ -1,3 +1,5 @@
+import stable from 'stable'
+
 export const SET_FILTER = 'LIST_SET_FILTER'
 export const SET_SORT = 'LIST_SET_SORT'
 export const ADD = 'LIST_ADD'
@@ -35,7 +37,7 @@ export default function reduce(state = defaultState, action) {
 
     switch (action.type) {
         case SET_FILTER:
-            view = list.filter(action.filter).sort(action.sort)
+            view = stable(list.filter(action.filter), action.sort)
             viewIndex = {}
             view.forEach((item, index) => {
                 viewIndex[item.id] = index
@@ -43,7 +45,7 @@ export default function reduce(state = defaultState, action) {
             break
 
         case SET_SORT:
-            view = [...view].sort(action.sort)
+            view = stable([...view], action.sort)
             viewIndex = {}
             view.forEach((item, index) => {
                 viewIndex[item.id] = index

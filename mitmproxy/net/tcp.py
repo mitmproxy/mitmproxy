@@ -1,4 +1,5 @@
 import os
+import errno
 import select
 import socket
 import sys
@@ -19,10 +20,8 @@ from mitmproxy.coretypes import basethread
 socket_fileobject = socket.SocketIO
 
 # workaround for https://bugs.python.org/issue29515
-# Python 3.5 and 3.6 for Windows is missing a constant
+# Python 3.6 for Windows is missing a constant
 IPPROTO_IPV6 = getattr(socket, "IPPROTO_IPV6", 41)
-
-EINTR = 4
 
 
 class _FileLike:
@@ -374,12 +373,11 @@ class TCPClient(_Connection):
         # Make sure to close the real socket, not the SSL proxy.
         # OpenSSL is really good at screwing up, i.e. when trying to recv from a failed connection,
         # it tries to renegotiate...
-        if not self.connection:
-            return
-        elif isinstance(self.connection, SSL.Connection):
-            close_socket(self.connection._socket)
-        else:
-            close_socket(self.connection)
+        if self.connection:
+            if isinstance(self.connection, SSL.Connection):
+                close_socket(self.connection._socket)
+            else:
+                close_socket(self.connection)
 
     def convert_to_tls(self, sni=None, alpn_protos=None, **sslctx_kwargs):
         context = tls.create_client_context(
@@ -547,7 +545,6 @@ class Counter:
 
 
 class TCPServer:
-    request_queue_size = 20
 
     def __init__(self, address):
         self.address = address
@@ -566,6 +563,7 @@ class TCPServer:
             # Only works if self.address == ""
             self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             self.socket.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
             self.socket.bind(self.address)
         except socket.error:
@@ -577,16 +575,24 @@ class TCPServer:
             # Binding to an IPv6 socket failed, lets fall back to IPv4.
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             self.socket.bind(self.address)
 
         self.address = self.socket.getsockname()
-        self.socket.listen(self.request_queue_size)
+        self.socket.listen()
         self.handler_counter = Counter()
 
     def connection_thread(self, connection, client_address):
         with self.handler_counter:
             try:
                 self.handle_client_connection(connection, client_address)
+            except OSError as e:  # pragma: no cover
+                # This catches situations where the underlying connection is
+                # closed beneath us. Syscalls on the connection object at this
+                # point returns EINVAL. If this happens, we close the socket and
+                # move on.
+                if not e.errno == errno.EINVAL:
+                    raise
             except:
                 self.handle_error(connection, client_address)
             finally:
@@ -596,14 +602,7 @@ class TCPServer:
         self.__is_shut_down.clear()
         try:
             while not self.__shutdown_request:
-                try:
-                    r, w_, e_ = select.select(
-                        [self.socket], [], [], poll_interval)
-                except select.error as ex:  # pragma: no cover
-                    if ex[0] == EINTR:
-                        continue
-                    else:
-                        raise
+                r, w_, e_ = select.select([self.socket], [], [], poll_interval)
                 if self.socket in r:
                     connection, client_address = self.socket.accept()
                     t = basethread.BaseThread(

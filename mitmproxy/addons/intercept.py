@@ -1,3 +1,5 @@
+import typing
+
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
 from mitmproxy import ctx
@@ -6,6 +8,17 @@ from mitmproxy import ctx
 class Intercept:
     def __init__(self):
         self.filt = None
+
+    def load(self, loader):
+        loader.add_option(
+            "intercept_active", bool, False,
+            "Intercept toggle"
+        )
+
+        loader.add_option(
+            "intercept", typing.Optional[str], None,
+            "Intercept filter expression."
+        )
 
     def configure(self, updated):
         if "intercept" in updated:

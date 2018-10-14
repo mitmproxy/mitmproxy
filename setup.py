@@ -13,7 +13,7 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 with open(os.path.join(here, "mitmproxy", "version.py")) as f:
-    VERSION = re.search(r'VERSION = "(.+?)(?:-0x|")', f.read()).group(1)
+    VERSION = re.search(r'VERSION = "(.+?)"', f.read()).group(1)
 
 setup(
     name="mitmproxy",
@@ -35,8 +35,8 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Security",
         "Topic :: Internet",
@@ -62,50 +62,48 @@ setup(
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
         "blinker>=1.4, <1.5",
-        "brotlipy>=0.5.1, <0.8",
+        "brotlipy>=0.7.0,<0.8",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "click>=6.2, <7",
-        "cryptography>=2.1.4,<2.2",
-        'h11>=0.7.0,<0.8',
-        "h2>=3.0, <4",
-        "hyperframe>=5.0, <6",
-        "kaitaistruct>=0.7, <0.8",
-        "ldap3>=2.4,<2.5",
+        "cryptography>=2.1.4,<2.4",
+        "h2>=3.0.1,<4",
+        "hyperframe>=5.1.0,<6",
+        "kaitaistruct>=0.7,<0.9",
+        "ldap3>=2.5,<2.6",
         "passlib>=1.6.5, <1.8",
+        "protobuf>=3.6.0, <3.7",
         "pyasn1>=0.3.1,<0.5",
-        "pyOpenSSL>=17.2,<17.6",
+        "pyOpenSSL>=17.5,<18.1",
         "pyparsing>=2.1.3, <2.3",
-        "pyperclip>=1.5.22, <1.7",
-        "requests>=2.9.1, <3",
-        "ruamel.yaml>=0.13.2, <0.16",
-        "sortedcontainers>=1.5.4, <1.6",
-        "tornado>=4.3, <4.6",
-        "urwid>=1.3.1, <2.1",
-        "wsproto>=0.11.0,<0.12.0",
+        "pyperclip>=1.6.0, <1.7",
+        "ruamel.yaml>=0.13.2, <0.15.55",
+        "sortedcontainers>=1.5.4,<2.1",
+        "tornado>=4.3,<5.2",
+        "urwid>=2.0.1,<2.1",
+        "wsproto>=0.12.0,<0.13.0",
     ],
     extras_require={
         ':sys_platform == "win32"': [
             "pydivert>=2.0.3,<2.2",
         ],
         'dev': [
+            "asynctest>=0.12.0",
             "flake8>=3.5, <3.6",
-            "Flask>=0.10.1, <0.13",
-            "mypy>=0.560,<0.561",
-            "pytest-cov>=2.2.1, <3",
-            "pytest-faulthandler>=1.3.0, <2",
-            "pytest-timeout>=1.0.0, <2",
-            "pytest-xdist>=1.14, <2",
-            "pytest>=3.1, <4",
+            "Flask>=1.0,<1.1",
+            "mypy>=0.590,<0.591",
+            "parver>=0.1,<2.0",
+            "pytest-asyncio>=0.8",
+            "pytest-cov>=2.5.1,<3",
+            "pytest-faulthandler>=1.3.1,<2",
+            "pytest-timeout>=1.2.1,<2",
+            "pytest-xdist>=1.22,<2",
+            "pytest>=3.3,<4",
+            "requests>=2.9.1, <3",
+            "tox>=3.0,<3.2",
             "rstcheck>=2.2, <4.0",
-            "sphinx_rtd_theme>=0.1.9, <0.3",
-            "sphinx-autobuild>=0.5.2, <0.8",
-            "sphinx>=1.3.5, <1.7",
-            "sphinxcontrib-documentedlist>=0.5.0, <0.7",
-            "tox>=2.3, <3",
         ],
         'examples': [
-            "beautifulsoup4>=4.4.1, <4.7",
-            "Pillow>=4.3,<5.1",
+            "beautifulsoup4>=4.4.1, <4.7"
         ]
     }
 )

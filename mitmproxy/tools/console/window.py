@@ -63,6 +63,7 @@ class WindowStack:
             edit_focus_query = grideditor.QueryEditor(master),
             edit_focus_cookies = grideditor.CookieEditor(master),
             edit_focus_setcookies = grideditor.SetCookieEditor(master),
+            edit_focus_setcookie_attrs = grideditor.CookieAttributeEditor(master),
             edit_focus_form = grideditor.RequestFormEditor(master),
             edit_focus_path = grideditor.PathEditor(master),
             edit_focus_request_headers = grideditor.RequestHeaderEditor(master),
@@ -293,7 +294,7 @@ class Window(urwid.Frame):
         if not k:
             if args[1] == "mouse drag":
                 signals.status_message.send(
-                    message = "Hold down fn, shift, alt or ctrl to select text or use the --no-mouse parameter.",
+                    message = "Hold down fn, shift, alt or ctrl to select text or use the --set console_mouse=false parameter.",
                     expire = 1
                 )
             elif args[1] == "mouse press" and args[2] == 4:

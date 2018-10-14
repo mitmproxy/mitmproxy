@@ -123,12 +123,12 @@ def convert_200_300(data):
 
 def convert_300_4(data):
     data["version"] = 4
-    # Ths is an empty migration to transition to the new versioning scheme.
+    # This is an empty migration to transition to the new versioning scheme.
     return data
 
 
-client_connections = {}  # type: Mapping[str, str]
-server_connections = {}  # type: Mapping[str, str]
+client_connections: Mapping[str, str] = {}
+server_connections: Mapping[str, str] = {}
 
 
 def convert_4_5(data):

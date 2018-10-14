@@ -1,3 +1,5 @@
+import typing
+
 from mitmproxy.net.http import http1
 from mitmproxy import exceptions
 from mitmproxy import ctx
@@ -7,6 +9,23 @@ from mitmproxy.utils import human
 class StreamBodies:
     def __init__(self):
         self.max_size = None
+
+    def load(self, loader):
+        loader.add_option(
+            "stream_large_bodies", typing.Optional[str], None,
+            """
+            Stream data to the client if response body exceeds the given
+            threshold. If streamed, the body will not be stored in any way.
+            Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
+            """
+        )
+        loader.add_option(
+            "stream_websockets", bool, False,
+            """
+            Stream WebSocket messages between client and server.
+            Messages are captured and cannot be modified.
+            """
+        )
 
     def configure(self, updated):
         if "stream_large_bodies" in updated and ctx.options.stream_large_bodies:

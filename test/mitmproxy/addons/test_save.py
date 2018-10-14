@@ -5,14 +5,13 @@ from mitmproxy.test import tflow
 
 from mitmproxy import io
 from mitmproxy import exceptions
-from mitmproxy import options
 from mitmproxy.addons import save
 from mitmproxy.addons import view
 
 
 def test_configure(tmpdir):
     sa = save.Save()
-    with taddons.context(options=options.Options()) as tctx:
+    with taddons.context(sa) as tctx:
         with pytest.raises(exceptions.OptionsError):
             tctx.configure(sa, save_stream_file=str(tmpdir))
         with pytest.raises(Exception, match="Invalid filter"):
@@ -33,7 +32,7 @@ def rd(p):
 
 def test_tcp(tmpdir):
     sa = save.Save()
-    with taddons.context() as tctx:
+    with taddons.context(sa) as tctx:
         p = str(tmpdir.join("foo"))
         tctx.configure(sa, save_stream_file=p)
 
@@ -46,7 +45,7 @@ def test_tcp(tmpdir):
 
 def test_websocket(tmpdir):
     sa = save.Save()
-    with taddons.context() as tctx:
+    with taddons.context(sa) as tctx:
         p = str(tmpdir.join("foo"))
         tctx.configure(sa, save_stream_file=p)
 
@@ -74,12 +73,12 @@ def test_save_command(tmpdir):
         v = view.View()
         tctx.master.addons.add(v)
         tctx.master.addons.add(sa)
-        tctx.master.commands.call_args("save.file", ["@shown", p])
+        tctx.master.commands.call_strings("save.file", ["@shown", p])
 
 
 def test_simple(tmpdir):
     sa = save.Save()
-    with taddons.context() as tctx:
+    with taddons.context(sa) as tctx:
         p = str(tmpdir.join("foo"))
 
         tctx.configure(sa, save_stream_file=p)

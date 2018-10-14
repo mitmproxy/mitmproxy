@@ -13,6 +13,7 @@ import certifi
 from OpenSSL import SSL
 from kaitaistruct import KaitaiStream
 
+import mitmproxy.options  # noqa
 from mitmproxy import exceptions, certs
 from mitmproxy.contrib.kaitaistruct import tls_client_hello
 from mitmproxy.net import check
@@ -55,6 +56,26 @@ METHOD_NAMES = {
     SSL.TLSv1_1_METHOD: "TLSv1.1",
     SSL.TLSv1_2_METHOD: "TLSv1.2",
 }
+
+
+def client_arguments_from_options(options: "mitmproxy.options.Options") -> dict:
+
+    if options.ssl_insecure:
+        verify = SSL.VERIFY_NONE
+    else:
+        verify = SSL.VERIFY_PEER
+
+    method, tls_options = VERSION_CHOICES[options.ssl_version_server]
+
+    return {
+        "verify": verify,
+        "method": method,
+        "options": tls_options,
+        "ca_path": options.ssl_verify_upstream_trusted_confdir,
+        "ca_pemfile": options.ssl_verify_upstream_trusted_ca,
+        "client_certs": options.client_certs,
+        "cipher_list": options.ciphers_server,
+    }
 
 
 class MasterSecretLogger:
@@ -220,9 +241,9 @@ def create_client_context(
             # Verify hostname of leaf certificate.
             cert = certs.Cert(x509)
             try:
-                crt = dict(
+                crt: typing.Dict[str, typing.Any] = dict(
                     subjectAltName=[("DNS", x.decode("ascii", "strict")) for x in cert.altnames]
-                )  # type: typing.Dict[str, typing.Any]
+                )
                 if cert.cn:
                     crt["subject"] = [[["commonName", cert.cn.decode("ascii", "strict")]]]
                 if sni:

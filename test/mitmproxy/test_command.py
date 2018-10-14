@@ -1,4 +1,5 @@
 import typing
+import inspect
 from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import exceptions
@@ -55,7 +56,35 @@ class TAddon:
         pass
 
 
+class Unsupported:
+    pass
+
+
+class TypeErrAddon:
+    @command.command("noret")
+    def noret(self):
+        pass
+
+    @command.command("invalidret")
+    def invalidret(self) -> Unsupported:
+        pass
+
+    @command.command("invalidarg")
+    def invalidarg(self, u: Unsupported):
+        pass
+
+
 class TestCommand:
+    def test_typecheck(self):
+        with taddons.context(loadcore=False) as tctx:
+            cm = command.CommandManager(tctx.master)
+            a = TypeErrAddon()
+            command.Command(cm, "noret", a.noret)
+            with pytest.raises(exceptions.CommandError):
+                command.Command(cm, "invalidret", a.invalidret)
+            with pytest.raises(exceptions.CommandError):
+                command.Command(cm, "invalidarg", a.invalidarg)
+
     def test_varargs(self):
         with taddons.context() as tctx:
             cm = command.CommandManager(tctx.master)
@@ -211,6 +240,22 @@ class TestCommand:
                 ],
                 []
             ],
+            [
+                "flow \"one two",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "\"one two", type = flow.Flow, valid = False),
+                ],
+                ["str"]
+            ],
+            [
+                "flow \"one two\"",
+                [
+                    command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
+                    command.ParseResult(value = "one two", type = flow.Flow, valid = False),
+                ],
+                ["str"]
+            ],
         ]
         with taddons.context() as tctx:
             tctx.master.addons.add(TAddon())
@@ -226,16 +271,21 @@ def test_simple():
         a = TAddon()
         c.add("one.two", a.cmd1)
         assert c.commands["one.two"].help == "cmd1 help"
-        assert(c.call("one.two foo") == "ret foo")
+        assert(c.execute("one.two foo") == "ret foo")
+        assert(c.call("one.two", "foo") == "ret foo")
+        with pytest.raises(exceptions.CommandError, match="Unknown"):
+            c.execute("nonexistent")
+        with pytest.raises(exceptions.CommandError, match="Invalid"):
+            c.execute("")
+        with pytest.raises(exceptions.CommandError, match="argument mismatch"):
+            c.execute("one.two too many args")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.call("nonexistent")
-        with pytest.raises(exceptions.CommandError, match="Invalid"):
-            c.call("")
-        with pytest.raises(exceptions.CommandError, match="argument mismatch"):
-            c.call("one.two too many args")
+        with pytest.raises(exceptions.CommandError, match="No escaped"):
+            c.execute("\\")
 
         c.add("empty", a.empty)
-        c.call("empty")
+        c.execute("empty")
 
         fp = io.StringIO()
         c.dump(fp)
@@ -256,9 +306,14 @@ def test_typename():
     assert command.typename(mitmproxy.types.Path) == "path"
     assert command.typename(mitmproxy.types.Cmd) == "cmd"
 
+    with pytest.raises(exceptions.CommandError, match="missing type annotation"):
+        command.typename(inspect._empty)
+    with pytest.raises(exceptions.CommandError, match="unsupported type"):
+        command.typename(None)
+
 
 class DummyConsole:
-    @command.command("view.resolve")
+    @command.command("view.flows.resolve")
     def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
         n = int(spec)
         return [tflow.tflow(resp=True)] * n
@@ -293,19 +348,49 @@ class TDec:
         pass
 
 
+class TAttr:
+    def __getattr__(self, item):
+        raise IOError
+
+
+class TCmds(TAttr):
+    def __init__(self):
+        self.TAttr = TAttr()
+
+    @command.command("empty")
+    def empty(self) -> None:
+        pass
+
+
+@pytest.mark.asyncio
+async def test_collect_commands():
+    """
+        This tests for the error thrown by hasattr()
+    """
+    with taddons.context() as tctx:
+        c = command.CommandManager(tctx.master)
+        a = TCmds()
+        c.collect_commands(a)
+        assert "empty" in c.commands
+
+        a = TypeErrAddon()
+        c.collect_commands(a)
+        await tctx.master.await_log("Could not load")
+
+
 def test_decorator():
     with taddons.context() as tctx:
         c = command.CommandManager(tctx.master)
         a = TDec()
         c.collect_commands(a)
         assert "cmd1" in c.commands
-        assert c.call("cmd1 bar") == "ret bar"
+        assert c.execute("cmd1 bar") == "ret bar"
         assert "empty" in c.commands
-        assert c.call("empty") is None
+        assert c.execute("empty") is None
 
     with taddons.context() as tctx:
         tctx.master.addons.add(a)
-        assert tctx.master.commands.call("cmd1 bar") == "ret bar"
+        assert tctx.master.commands.execute("cmd1 bar") == "ret bar"
 
 
 def test_verify_arg_signature():

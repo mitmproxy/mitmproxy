@@ -5,12 +5,12 @@ from mitmproxy import exceptions
 from mitmproxy import certs
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 import pytest
+import pyperclip
 from unittest import mock
 
 
-def test_extract():
+def test_extract(tdata):
     tf = tflow.tflow(resp=True)
     tests = [
         ["request.method", "GET"],
@@ -53,7 +53,7 @@ def test_extract():
         ret = cut.extract(spec, tf)
         assert spec and ret == expected
 
-    with open(tutils.test_data.path("mitmproxy/net/data/text_cert"), "rb") as f:
+    with open(tdata.path("mitmproxy/net/data/text_cert"), "rb") as f:
         d = f.read()
     c1 = certs.Cert.from_pem(d)
     tf.server_conn.cert = c1
@@ -70,7 +70,8 @@ def qr(f):
         return fp.read()
 
 
-def test_cut_clip():
+@pytest.mark.asyncio
+async def test_cut_clip():
     v = view.View()
     c = cut.Cut()
     with taddons.context() as tctx:
@@ -88,6 +89,13 @@ def test_cut_clip():
         with mock.patch('pyperclip.copy') as pc:
             tctx.command(c.clip, "@all", "request.method,request.content")
             assert pc.called
+
+        with mock.patch('pyperclip.copy') as pc:
+            log_message = "Pyperclip could not find a " \
+                          "copy/paste mechanism for your system."
+            pc.side_effect = pyperclip.PyperclipException(log_message)
+            tctx.command(c.clip, "@all", "request.method")
+            assert await tctx.master.await_log(log_message, level="error")
 
 
 def test_cut_save(tmpdir):
@@ -110,6 +118,26 @@ def test_cut_save(tmpdir):
         assert qr(f).splitlines() == [b"GET", b"GET"]
         tctx.command(c.save, "@all", "request.method,request.content", f)
         assert qr(f).splitlines() == [b"GET,content", b"GET,content"]
+
+
+@pytest.mark.parametrize("exception, log_message", [
+    (PermissionError, "Permission denied"),
+    (IsADirectoryError, "Is a directory"),
+    (FileNotFoundError, "No such file or directory")
+])
+@pytest.mark.asyncio
+async def test_cut_save_open(exception, log_message, tmpdir):
+    f = str(tmpdir.join("path"))
+    v = view.View()
+    c = cut.Cut()
+    with taddons.context() as tctx:
+        tctx.master.addons.add(v, c)
+        v.add([tflow.tflow(resp=True)])
+
+        with mock.patch("mitmproxy.addons.cut.open") as m:
+            m.side_effect = exception(log_message)
+            tctx.command(c.save, "@all", "request.method", f)
+            assert await tctx.master.await_log(log_message, level="error")
 
 
 def test_cut():

@@ -1,0 +1,93 @@
+syntax='proto2';
+
+message HTTPFlow {
+    optional HTTPRequest request = 1;
+    optional HTTPResponse response = 2;
+    optional HTTPError error = 3;
+    optional ClientConnection client_conn = 4;
+    optional ServerConnection server_conn = 5;
+    optional bool intercepted = 6;
+    optional bool marked = 7;
+    optional string mode = 8;
+    optional string id = 9;
+}
+
+message HTTPRequest {
+    optional string first_line_format = 1;
+    optional string method = 2;
+    optional string scheme = 3;
+    optional string host = 4;
+    optional int32 port = 5;
+    optional string path = 6;
+    optional string http_version = 7;
+    repeated HTTPHeader headers = 8;
+    optional bytes content = 9;
+    optional double timestamp_start = 10;
+    optional double timestamp_end = 11;
+    optional bool is_replay = 12;
+}
+
+message HTTPResponse {
+    optional string http_version = 1;
+    optional int32 status_code = 2;
+    optional string reason = 3;
+    repeated HTTPHeader headers = 4;
+    optional bytes content = 5;
+    optional double timestamp_start = 6;
+    optional double timestamp_end = 7;
+    optional bool is_replay = 8;
+}
+
+message HTTPError {
+    optional string msg = 1;
+    optional double timestamp = 2;
+}
+
+message HTTPHeader {
+    optional string name = 1;
+    optional string value = 2;
+}
+
+
+message Address {
+    optional string host = 1;
+    optional int32 port = 2;
+}
+
+message ClientConnection {
+    optional string id = 1;
+    optional Address address = 2;
+    optional bool tls_established = 3;
+    optional string clientcert = 4;
+    optional string mitmcert = 5;
+    optional double timestamp_start = 6;
+    optional double timestamp_tls_setup = 7;
+    optional double timestamp_end = 8;
+    optional string sni = 9;
+    optional string cipher_name = 10;
+    optional bytes alpn_proto_negotiated = 11;
+    optional string tls_version = 12;
+    repeated TLSExtension tls_extensions = 13;
+}
+
+message ServerConnection {
+    optional string id = 1;
+    optional Address address = 2;
+    optional Address ip_address = 3;
+    optional Address source_address = 4;
+    optional bool tls_established = 5;
+    optional string cert = 6;
+    optional string sni = 7;
+    optional bytes alpn_proto_negotiated = 8;
+    optional string tls_version = 9;
+    optional double timestamp_start = 10;
+    optional double timestamp_tcp_setup = 11;
+    optional double timestamp_tls_setup = 12;
+    optional double timestamp_end = 13;
+    optional ServerConnection via = 14;
+}
+
+message TLSExtension {
+    optional int64 int = 1;
+    optional bytes bytes = 2;
+}

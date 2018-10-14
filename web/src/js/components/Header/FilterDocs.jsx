@@ -44,7 +44,7 @@ export default class FilterDocs extends Component {
                     ))}
                     <tr key="docs-link">
                         <td colSpan="2">
-                            <a href="http://docs.mitmproxy.org/en/stable/features/filters.html"
+                            <a href="https://mitmproxy.org/docs/latest/concepts-filters/"
                                 target="_blank">
                                 <i className="fa fa-external-link"></i>
                             &nbsp; mitmproxy docs</a>

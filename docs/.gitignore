@@ -1,1 +1,4 @@
-_build/
+generated/
+src/public
+node_modules
+public

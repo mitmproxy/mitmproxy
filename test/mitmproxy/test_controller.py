@@ -1,82 +1,29 @@
-from threading import Thread, Event
-from unittest.mock import Mock
+import asyncio
 import queue
 import pytest
 
 from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy import controller
-from mitmproxy import master
-from mitmproxy import proxy
 from mitmproxy.test import taddons
+import mitmproxy.ctx
 
 
-class TMsg:
-    pass
+@pytest.mark.asyncio
+async def test_master():
 
+    class tAddon:
+        def log(self, _):
+            ctx.master.should_exit.set()
 
-class TestMaster:
-    def test_simple(self):
-        class tAddon:
-            def log(self, _):
-                ctx.master.should_exit.set()
+    with taddons.context(tAddon()) as ctx:
+        assert not ctx.master.should_exit.is_set()
 
-        with taddons.context() as ctx:
-            ctx.master.addons.add(tAddon())
-            assert not ctx.master.should_exit.is_set()
-            msg = TMsg()
-            msg.reply = controller.DummyReply()
-            ctx.master.event_queue.put(("log", msg))
-            ctx.master.run()
-            assert ctx.master.should_exit.is_set()
+        async def test():
+            mitmproxy.ctx.log("test")
 
-    def test_server_simple(self):
-        m = master.Master(None)
-        m.server = proxy.DummyServer()
-        m.start()
-        m.shutdown()
-        m.start()
-        m.shutdown()
-
-
-class TestServerThread:
-    def test_simple(self):
-        m = Mock()
-        t = master.ServerThread(m)
-        t.run()
-        assert m.serve_forever.called
-
-
-class TestChannel:
-    def test_tell(self):
-        q = queue.Queue()
-        channel = controller.Channel(q, Event())
-        m = Mock(name="test_tell")
-        channel.tell("test", m)
-        assert q.get() == ("test", m)
-        assert m.reply
-
-    def test_ask_simple(self):
-        q = queue.Queue()
-
-        def reply():
-            m, obj = q.get()
-            assert m == "test"
-            obj.reply.send(42)
-            obj.reply.take()
-            obj.reply.commit()
-
-        Thread(target=reply).start()
-
-        channel = controller.Channel(q, Event())
-        assert channel.ask("test", Mock(name="test_ask_simple")) == 42
-
-    def test_ask_shutdown(self):
-        q = queue.Queue()
-        done = Event()
-        done.set()
-        channel = controller.Channel(q, done)
-        with pytest.raises(Kill):
-            channel.ask("test", Mock(name="test_ask_shutdown"))
+        asyncio.ensure_future(test())
+        assert await ctx.master.await_log("test")
+        assert ctx.master.should_exit.is_set()
 
 
 class TestReply:

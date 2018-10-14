@@ -30,12 +30,14 @@ class FlowViewHeader(urwid.WidgetWrap):
         self.focus_changed()
 
     def focus_changed(self):
+        cols, _ = self.master.ui.get_cols_rows()
         if self.master.view.focus.flow:
             self._w = common.format_flow(
                 self.master.view.focus.flow,
                 False,
                 extended=True,
-                hostheader=self.master.options.showhost
+                hostheader=self.master.options.showhost,
+                max_url_len=cols,
             )
         else:
             self._w = urwid.Pile([])
@@ -96,7 +98,7 @@ class FlowDetails(tabs.Tabs):
             msg, body = "", [urwid.Text([("error", "[content missing]")])]
             return msg, body
         else:
-            full = self.master.commands.call("view.getval @focus fullcontents false")
+            full = self.master.commands.execute("view.settings.getval @focus fullcontents false")
             if full == "true":
                 limit = sys.maxsize
             else:
@@ -119,7 +121,7 @@ class FlowDetails(tabs.Tabs):
             viewmode, message
         )
         if error:
-            self.master.add_log(error, "debug")
+            self.master.log.debug(error)
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, http.HTTPRequest):
             description = "No request content (press tab to view response)"

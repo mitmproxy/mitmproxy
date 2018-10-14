@@ -72,12 +72,12 @@ class Flow(stateobject.StateObject):
         self.server_conn = server_conn
         self.live = live
 
-        self.error = None  # type: typing.Optional[Error]
-        self.intercepted = False  # type: bool
-        self._backup = None  # type: typing.Optional[Flow]
-        self.reply = None  # type: typing.Optional[controller.Reply]
-        self.marked = False  # type: bool
-        self.metadata = dict()  # type: typing.Dict[str, typing.Any]
+        self.error: typing.Optional[Error] = None
+        self.intercepted: bool = False
+        self._backup: typing.Optional[Flow] = None
+        self.reply: typing.Optional[controller.Reply] = None
+        self.marked: bool = False
+        self.metadata: typing.Dict[str, typing.Any] = dict()
 
     _stateobject_attributes = dict(
         id=str,

@@ -32,5 +32,5 @@ def original_addr(csock):
     if insufficient_priv:
         raise RuntimeError(
             "Insufficient privileges to access pfctl. "
-            "See http://docs.mitmproxy.org/en/latest/transparent/osx.html for details.")
+            "See https://mitmproxy.org/docs/latest/howto-transparent/#macos for details.")
     return pf.lookup(peer[0], peer[1], stxt)

@@ -1,19 +1,23 @@
-from mitmproxy.test import tutils
+import asyncio
+
 from mitmproxy.tools import main
 
-shutdown_script = tutils.test_data.path("mitmproxy/data/addonscripts/shutdown.py")
+
+shutdown_script = "mitmproxy/data/addonscripts/shutdown.py"
 
 
-def test_mitmweb():
+def test_mitmweb(event_loop, tdata):
+    asyncio.set_event_loop(event_loop)
     main.mitmweb([
         "--no-web-open-browser",
-        "-q",
-        "-s", shutdown_script
+        "-s", tdata.path(shutdown_script),
+        "-q", "-p", "0",
     ])
 
 
-def test_mitmdump():
+def test_mitmdump(event_loop, tdata):
+    asyncio.set_event_loop(event_loop)
     main.mitmdump([
-        "-q",
-        "-s", shutdown_script
+        "-s", tdata.path(shutdown_script),
+        "-q", "-p", "0",
     ])

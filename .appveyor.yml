@@ -9,22 +9,12 @@ environment:
   CI_DEPS: codecov>=2.0.5
   CI_COMMANDS: codecov
   matrix:
-    - PYTHON: "C:\\Python35"
-      TOXENV: "py35"
-    # TODO: ENABLE WHEN AVAILABLE
-    # - PYTHON: "C:\\Python36"
-    #   TOXENV: "py36"
-
-  SNAPSHOT_HOST:
-    secure: NeTo57s2rJhCd/mjKHetXVxCFd3uhr8txnjnAXD1tUI=
-  SNAPSHOT_PORT:
-    secure: TiJPtg60/edYTH8RnoBErg==
-  SNAPSHOT_USER:
-    secure: 6yBwmO5gv4vAwoFYII8qjQ==
-  SNAPSHOT_PASS:
-    secure: LPjrtFrWxYhOVGXzfPRV1GjtZE/wHoKq9m/PI6hSalfysUK5p2DxTG9uHlb4Q9qV
-  RTOOL_KEY:
-    secure: 0a+UUNbA+JjquyAbda4fd0JmiwL06AdG6torRPdCvbPDbKHnaW/BHHp1nRPytOKM
+    - PYTHON: "C:\\Python36"
+      TOXENV: "py36"
+      PYINSTALLER: "1"
+      WININSTALLER: "1"
+    - PYTHON: "C:\\Python37"
+      TOXENV: "py37"
 
 install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
@@ -32,61 +22,17 @@ install:
   - "pip install -U tox"
 
 test_script:
-  - ps: "tox -- --verbose --cov-report=term"
   - ps: |
-      $Env:VERSION = $(python -m mitmproxy.version)
-      $Env:SKIP_MITMPROXY = "python -c `"print('skip mitmproxy')`""
-      tox -e rtool -- wheel
-      tox -e rtool -- bdist
-
-  - ps: |
-      if(
-        ($Env:TOXENV -match "py35") -and !$Env:APPVEYOR_PULL_REQUEST_NUMBER -and
-        (($Env:APPVEYOR_REPO_BRANCH -In ("master", "pyinstaller")) -or ($Env:APPVEYOR_REPO_TAG -match "true"))
-      ) {
-        echo "Decrypt license..."
-        tox -e rtool -- decrypt release\installbuilder\license.xml.enc release\installbuilder\license.xml
-        $ibVersion = "17.12.0"
-        $ibSetup = "C:\projects\mitmproxy\release\installbuilder-installer.exe"
-        $ibCli = "C:\Program Files (x86)\BitRock InstallBuilder Enterprise $ibVersion\bin\builder-cli.exe"
-        if (!(Test-Path $ibSetup)) {
-          echo "Download InstallBuilder..."
-          (New-Object System.Net.WebClient).DownloadFile(
-            "https://installbuilder.bitrock.com/installbuilder-enterprise-$ibVersion-windows-installer.exe",
-            $ibSetup
-          )
-        }
-        echo "Install InstallBuilder..."
-        Start-Process $ibSetup "--mode unattended --unattendedmodeui none" -PassThru -NoNewWindow -Wait
-        # Wait until executable exists - no idea why this is necessary.
-        while (!(Test-Path $ibCli)) { Start-Sleep 0.1 }
-        echo "Run InstallBuilder..."
-        &$ibCli `
-          build `
-          .\release\installbuilder\mitmproxy.xml `
-          windows `
-          --license .\release\installbuilder\license.xml `
-          --setvars project.version=$Env:VERSION `
-          --verbose
-        while (!(Test-Path C:\projects\mitmproxy\release\dist\mitmproxy-*-windows-installer.exe)) { Start-Sleep 0.1 }
-        echo "Installer build completed."
+      if ($env:APPVEYOR_REPO_COMMIT_MESSAGE.Contains("[notest]")) {
+        echo "!!!! Skipping tests."
+      } else {
+        tox -- --verbose --cov-report=term
       }
+  - ps: tox -e cibuild -- build
 
 deploy_script:
-  # we build binaries on every run, but we only upload them for master snapshots or tags.
-  ps: |
-    if(
-      ($Env:TOXENV -match "py35") -and
-      (($Env:APPVEYOR_REPO_BRANCH -In ("master", "pyinstaller")) -or ($Env:APPVEYOR_REPO_TAG -match "true"))
-    ) {
-      tox -e rtool -- decrypt release\known_hosts.enc release\known_hosts
-      tox -e rtool -- upload-snapshot --bdist --wheel --installer
-    }
+  ps: tox -e cibuild -- upload
 
 cache:
-  - C:\projects\mitmproxy\release\installbuilder-installer.exe -> .appveyor.yml
+  - C:\projects\mitmproxy\release\installbuilder\setup -> .appveyor.yml
   - C:\Users\appveyor\AppData\Local\pip\cache
-
-notifications:
-  - provider: Slack
-    incoming_webhook: https://hooks.slack.com/services/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

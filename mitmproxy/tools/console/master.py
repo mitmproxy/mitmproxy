@@ -1,3 +1,4 @@
+import asyncio
 import mailcap
 import mimetypes
 import os
@@ -8,8 +9,8 @@ import stat
 import subprocess
 import sys
 import tempfile
-import traceback
 import typing  # noqa
+import contextlib
 
 import urwid
 
@@ -33,9 +34,9 @@ class ConsoleMaster(master.Master):
     def __init__(self, opts):
         super().__init__(opts)
 
-        self.start_err = None  # type: typing.Optional[log.LogEntry]
+        self.start_err: typing.Optional[log.LogEntry] = None
 
-        self.view = view.View()  # type: view.View
+        self.view: view.View = view.View()
         self.events = eventstore.EventStore()
         self.events.sig_add.connect(self.sig_add_log)
 
@@ -55,6 +56,7 @@ class ConsoleMaster(master.Master):
             consoleaddons.UnsupportedLog(),
             readfile.ReadFile(),
             consoleaddons.ConsoleAddon(self),
+            keymap.KeymapConfig(),
         )
 
         def sigint_handler(*args, **kwargs):
@@ -86,21 +88,31 @@ class ConsoleMaster(master.Master):
         )
 
     def sig_add_log(self, event_store, entry: log.LogEntry):
-        if log.log_tier(self.options.verbosity) < log.log_tier(entry.level):
+        if log.log_tier(self.options.console_eventlog_verbosity) < log.log_tier(entry.level):
             return
         if entry.level in ("error", "warn", "alert"):
-            if self.first_tick:
-                self.start_err = entry
-            else:
-                signals.status_message.send(
-                    message=(entry.level, "{}: {}".format(entry.level.title(), entry.msg)),
-                    expire=5
-                )
+            signals.status_message.send(
+                message = (
+                    entry.level,
+                    "{}: {}".format(entry.level.title(), str(entry.msg).lstrip())
+                ),
+                expire=5
+            )
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
             return callback(*args)
         self.loop.set_alarm_in(seconds, cb)
+
+    @contextlib.contextmanager
+    def uistopped(self):
+        self.loop.stop()
+        try:
+            yield
+        finally:
+            self.loop.start()
+            self.loop.screen_size = None
+            self.loop.draw_screen()
 
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
@@ -111,17 +123,16 @@ class ConsoleMaster(master.Master):
         c = os.environ.get("EDITOR") or "vi"
         cmd = shlex.split(c)
         cmd.append(name)
-        self.ui.stop()
-        try:
-            subprocess.call(cmd)
-        except:
-            signals.status_message.send(
-                message="Can't start editor: %s" % " ".join(c)
-            )
-        else:
-            with open(name, "r" if text else "rb") as f:
-                data = f.read()
-        self.ui.start()
+        with self.uistopped():
+            try:
+                subprocess.call(cmd)
+            except:
+                signals.status_message.send(
+                    message="Can't start editor: %s" % c
+                )
+            else:
+                with open(name, "r" if text else "rb") as f:
+                    data = f.read()
         os.unlink(name)
         return data
 
@@ -153,14 +164,13 @@ class ConsoleMaster(master.Master):
                 c = "less"
             cmd = shlex.split(c)
             cmd.append(name)
-        self.ui.stop()
-        try:
-            subprocess.call(cmd, shell=shell)
-        except:
-            signals.status_message.send(
-                message="Can't start external viewer: %s" % " ".join(c)
-            )
-        self.ui.start()
+        with self.uistopped():
+            try:
+                subprocess.call(cmd, shell=shell)
+            except:
+                signals.status_message.send(
+                    message="Can't start external viewer: %s" % " ".join(c)
+                )
         os.unlink(name)
 
     def set_palette(self, opts, updated):
@@ -170,12 +180,6 @@ class ConsoleMaster(master.Master):
             )
         )
         self.ui.clear()
-
-    def ticker(self, *userdata):
-        changed = self.tick(timeout=0)
-        if changed:
-            self.loop.draw_screen()
-        self.loop.set_alarm_in(0.01, self.ticker)
 
     def inject_key(self, key):
         self.loop.process_input([key])
@@ -195,15 +199,13 @@ class ConsoleMaster(master.Master):
         )
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
+            event_loop=urwid.AsyncioEventLoop(loop=asyncio.get_event_loop()),
             screen = self.ui,
             handle_mouse = self.options.console_mouse,
         )
-
         self.window = window.Window(self)
         self.loop.widget = self.window
         self.window.refresh()
-
-        self.loop.set_alarm_in(0.01, self.ticker)
 
         if self.start_err:
             def display_err(*_):
@@ -211,23 +213,7 @@ class ConsoleMaster(master.Master):
                 self.start_err = None
             self.loop.set_alarm_in(0.01, display_err)
 
-        self.start()
-        try:
-            self.loop.run()
-        except Exception:
-            self.loop.stop()
-            sys.stdout.flush()
-            print(traceback.format_exc(), file=sys.stderr)
-            print("mitmproxy has crashed!", file=sys.stderr)
-            print("Please lodge a bug report at:", file=sys.stderr)
-            print("\thttps://github.com/mitmproxy/mitmproxy", file=sys.stderr)
-            print("Shutting down...", file=sys.stderr)
-        finally:
-            sys.stderr.flush()
-            super().shutdown()
-
-    def shutdown(self):
-        raise urwid.ExitMainLoop
+        super().run_loop(self.loop.run)
 
     def overlay(self, widget, **kwargs):
         self.window.set_overlay(widget, **kwargs)

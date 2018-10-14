@@ -1,5 +1,6 @@
 import json
 from unittest import mock
+import pytest
 
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
@@ -8,7 +9,7 @@ from mitmproxy import flowfilter
 from mitmproxy.tools.web.app import flow_to_json
 
 from mitmproxy.tools.web import static_viewer
-from mitmproxy.addons import save
+from mitmproxy.addons import save, readfile
 
 
 def test_save_static(tmpdir):
@@ -57,10 +58,12 @@ def test_save_flows_content(ctx, tmpdir):
         assert p.join('response/content/Auto.json').check(file=1)
 
 
-def test_static_viewer(tmpdir):
+@pytest.mark.asyncio
+async def test_static_viewer(tmpdir):
     s = static_viewer.StaticViewer()
+    rf = readfile.ReadFile()
     sa = save.Save()
-    with taddons.context() as tctx:
+    with taddons.context(rf) as tctx:
         sa.save([tflow.tflow(resp=True)], str(tmpdir.join('foo')))
         tctx.master.addons.add(s)
         tctx.configure(s, web_static_viewer=str(tmpdir), rfile=str(tmpdir.join('foo')))

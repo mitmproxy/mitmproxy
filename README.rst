@@ -26,9 +26,9 @@ and pathod websites.
 
 |mitmproxy_site|
 
-The latest documentation for mitmproxy is also available on ReadTheDocs.
+The documentation for mitmproxy is available on our website:
 
-|mitmproxy_docs|
+|mitmproxy_docs_stable| |mitmproxy_docs_master| 
 
 
 Join our discussion forum on Discourse to ask questions, help
@@ -45,7 +45,7 @@ Join our developer chat on Slack if you would like to contribute to mitmproxy it
 Installation
 ------------
 
-The installation instructions are `here <http://docs.mitmproxy.org/en/stable/install.html>`__.
+The installation instructions are `here <https://docs.mitmproxy.org/stable/overview-installation>`__.
 If you want to contribute changes, keep on reading.
 
 Contributing
@@ -95,6 +95,12 @@ requirements installed, and you can run the full test suite (including tests for
 
     tox
 
+To run complete tests with a full coverage report, you can use the following command:
+
+.. code-block:: bash
+
+    tox -- --verbose --cov-report=term
+
 For speedier testing, we recommend you run `pytest`_ directly on individual test files or folders:
 
 .. code-block:: bash
@@ -110,19 +116,18 @@ suite. The project tries to maintain 100% test coverage and enforces this strict
 Documentation
 -------------
 
-The mitmproxy documentation is build using Sphinx_, which is installed
-automatically if you set up a development environment as described above. After
-installation, you can render the documentation like this:
+The following tools are required to build the mitmproxy docs:
+
+- Hugo_
+- modd_
+- yarn_
 
 .. code-block:: bash
 
     cd docs
-    make clean
-    make html
-    make livehtml
+    yarn
+    modd
 
-The last command invokes `sphinx-autobuild`_, which watches the Sphinx directory and rebuilds
-the documentation when a change is detected.
 
 Code Style
 ----------
@@ -145,9 +150,13 @@ with the following command:
     :target: https://mitmproxy.org/
     :alt: mitmproxy.org
 
-.. |mitmproxy_docs| image:: https://shields.mitmproxy.org/api/docs-latest-brightgreen.svg
-    :target: http://docs.mitmproxy.org/en/latest/
-    :alt: mitmproxy documentation
+.. |mitmproxy_docs_stable| image:: https://shields.mitmproxy.org/api/docs-stable-brightgreen.svg
+    :target: https://docs.mitmproxy.org/stable/
+    :alt: mitmproxy documentation stable
+    
+.. |mitmproxy_docs_master| image:: https://shields.mitmproxy.org/api/docs-master-brightgreen.svg
+    :target: https://docs.mitmproxy.org/master/
+    :alt: mitmproxy documentation master
 
 .. |mitmproxy_discourse| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-discourse.mitmproxy.org-orange.svg
     :target: https://discourse.mitmproxy.org
@@ -161,8 +170,8 @@ with the following command:
     :target: https://travis-ci.org/mitmproxy/mitmproxy
     :alt: Travis Build Status
 
-.. |appveyor| image:: https://shields.mitmproxy.org/appveyor/ci/mhils/mitmproxy/master.svg?label=appveyor%20ci
-    :target: https://ci.appveyor.com/project/mhils/mitmproxy
+.. |appveyor| image:: https://shields.mitmproxy.org/appveyor/ci/mitmproxy/mitmproxy/master.svg?label=appveyor%20ci
+    :target: https://ci.appveyor.com/project/mitmproxy/mitmproxy
     :alt: Appveyor Build Status
 
 .. |coverage| image:: https://shields.mitmproxy.org/codecov/c/github/mitmproxy/mitmproxy/master.svg?label=codecov
@@ -177,12 +186,13 @@ with the following command:
     :target: https://pypi.python.org/pypi/mitmproxy
     :alt: Supported Python versions
 
-.. _`advanced installation`: http://docs.mitmproxy.org/en/latest/install.html#advanced-installation
+.. _`advanced installation`: https://docs.mitmproxy.org/stable/overview-installation/#advanced-installation
 .. _virtualenv: https://virtualenv.pypa.io/
 .. _`pytest`: http://pytest.org/
 .. _tox: https://tox.readthedocs.io/
-.. _Sphinx: http://sphinx-doc.org/
-.. _sphinx-autobuild: https://pypi.python.org/pypi/sphinx-autobuild
+.. _Hugo: https://gohugo.io/
+.. _modd: https://github.com/cortesi/modd
+.. _yarn: https://yarnpkg.com/en/
 .. _PEP8: https://www.python.org/dev/peps/pep-0008
 .. _`Google Style Guide`: https://google.github.io/styleguide/pyguide.html
 .. _forums: https://discourse.mitmproxy.org/

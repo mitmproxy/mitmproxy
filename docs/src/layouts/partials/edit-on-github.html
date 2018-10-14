@@ -1,0 +1,9 @@
+{{ if and .IsPage (not (getenv "DOCS_ARCHIVE")) }}
+<a class="button is-small is-outlined is-link is-pulled-right"
+   target="_blank"
+   href="https://github.com/mitmproxy/mitmproxy/blob/master/docs/src/content/{{ .File.Path }}"
+>
+    Edit on GitHub
+</a>
+{{ end }}
+

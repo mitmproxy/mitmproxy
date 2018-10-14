@@ -1,6 +1,7 @@
 import typing
 from typing import Any  # noqa
 from typing import MutableMapping  # noqa
+import json
 
 from mitmproxy.coretypes import serializable
 from mitmproxy.utils import typecheck
@@ -14,7 +15,7 @@ class StateObject(serializable.Serializable):
     or StateObject instances themselves.
     """
 
-    _stateobject_attributes = None  # type: MutableMapping[str, Any]
+    _stateobject_attributes: MutableMapping[str, Any] = None
     """
     An attribute-name -> class-or-type dict containing all attributes that
     should be serialized. If the attribute is a class, it must implement the
@@ -77,8 +78,14 @@ def _process(typeinfo: typecheck.Type, val: typing.Any, make: bool) -> typing.An
             for k, v in val.items()
         }
     elif typename.startswith("typing.Any"):
-        # FIXME: Remove this when we remove flow.metadata
-        assert isinstance(val, (int, str, bool, bytes))
+        # This requires a bit of explanation. We can't import our IO layer here,
+        # because it causes a circular import. Rather than restructuring the
+        # code for this, we use JSON serialization, which has similar primitive
+        # type restrictions as tnetstring, to check for conformance.
+        try:
+            json.dumps(val)
+        except TypeError:
+            raise ValueError(f"Data not serializable: {val}")
         return val
     else:
         return typeinfo(val)

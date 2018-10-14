@@ -160,12 +160,12 @@ class HttpLayer(base.Layer):
 
     if False:
         # mypy type hints
-        server_conn = None  # type: connections.ServerConnection
+        server_conn: connections.ServerConnection = None
 
     def __init__(self, ctx, mode):
         super().__init__(ctx)
         self.mode = mode
-        self.__initial_server_address = None  # type: tuple
+        self.__initial_server_address: tuple = None
         "Contains the original destination in transparent mode, which needs to be restored"
         "if an inline script modified the target server for a single http request"
         # We cannot rely on server_conn.tls_established,
@@ -291,7 +291,7 @@ class HttpLayer(base.Layer):
             self.channel.ask("error", f)
             raise exceptions.ProtocolException(
                 "HTTP protocol error in client request: {}".format(e)
-            )
+            ) from e
 
         self.log("request", "debug", [repr(request)])
 
@@ -333,8 +333,20 @@ class HttpLayer(base.Layer):
                     f.request.scheme
                 )
 
-                try:
+                def get_response():
                     self.send_request_headers(f.request)
+                    if f.request.stream:
+                        chunks = self.read_request_body(f.request)
+                        if callable(f.request.stream):
+                            chunks = f.request.stream(chunks)
+                        self.send_request_body(f.request, chunks)
+                    else:
+                        self.send_request_body(f.request, [f.request.data.content])
+
+                    f.response = self.read_response_headers()
+
+                try:
+                    get_response()
                 except exceptions.NetlibException as e:
                     self.log(
                         "server communication error: %s" % repr(e),
@@ -357,22 +369,17 @@ class HttpLayer(base.Layer):
                         raise exceptions.ProtocolException(
                             "First and only attempt to get response via HTTP2 failed."
                         )
+                    elif f.request.stream:
+                        # We may have already consumed some request chunks already,
+                        # so all we can do is signal downstream that upstream closed the connection.
+                        self.send_error_response(408, "Request Timeout")
+                        f.error = flow.Error(repr(e))
+                        self.channel.ask("error", f)
+                        return False
 
                     self.disconnect()
                     self.connect()
-                    self.send_request_headers(f.request)
-
-                # This is taken out of the try except block because when streaming
-                # we can't send the request body while retrying as the generator gets exhausted
-                if f.request.stream:
-                    chunks = self.read_request_body(f.request)
-                    if callable(f.request.stream):
-                        chunks = f.request.stream(chunks)
-                    self.send_request_body(f.request, chunks)
-                else:
-                    self.send_request_body(f.request, [f.request.data.content])
-
-                f.response = self.read_response_headers()
+                    get_response()
 
                 # call the appropriate script hook - this is an opportunity for
                 # an inline script to set f.stream = True
@@ -481,7 +488,7 @@ class HttpLayer(base.Layer):
             if address != self.server_conn.address or tls != self.server_tls:
                 self.set_server(address)
                 self.set_server_tls(tls, address[0])
-            # Establish connection is neccessary.
+            # Establish connection is necessary.
             if not self.server_conn.connected():
                 self.connect()
         else:

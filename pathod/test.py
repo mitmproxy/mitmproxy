@@ -10,7 +10,7 @@ class Daemon:
     IFACE = "127.0.0.1"
 
     def __init__(self, ssl=None, **daemonargs) -> None:
-        self.q = queue.Queue()  # type: queue.Queue
+        self.q: queue.Queue = queue.Queue()
         self.logfp = io.StringIO()
         daemonargs["logfp"] = self.logfp
         self.thread = _PaThread(self.IFACE, self.q, ssl, daemonargs)

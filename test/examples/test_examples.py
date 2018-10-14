@@ -6,27 +6,25 @@ from mitmproxy.net.http import Headers
 
 from ..mitmproxy import tservers
 
-example_dir = tutils.test_data.push("../examples")
-
 
 class TestScripts(tservers.MasterTest):
-    def test_add_header(self):
+    def test_add_header(self, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(example_dir.path("simple/add_header.py"))
+            a = tctx.script(tdata.path("../examples/simple/add_header.py"))
             f = tflow.tflow(resp=tutils.tresp())
             a.response(f)
             assert f.response.headers["newheader"] == "foo"
 
-    def test_custom_contentviews(self):
+    def test_custom_contentviews(self, tdata):
         with taddons.context() as tctx:
-            tctx.script(example_dir.path("simple/custom_contentview.py"))
+            tctx.script(tdata.path("../examples/simple/custom_contentview.py"))
             swapcase = contentviews.get("swapcase")
             _, fmt = swapcase(b"<html>Test!</html>")
             assert any(b'tEST!' in val[0][1] for val in fmt)
 
-    def test_iframe_injector(self):
+    def test_iframe_injector(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(example_dir.path("simple/modify_body_inject_iframe.py"))
+            sc = tctx.script(tdata.path("../examples/simple/modify_body_inject_iframe.py"))
             tctx.configure(
                 sc,
                 iframe = "http://example.org/evil_iframe"
@@ -38,9 +36,9 @@ class TestScripts(tservers.MasterTest):
             content = f.response.content
             assert b'iframe' in content and b'evil_iframe' in content
 
-    def test_modify_form(self):
+    def test_modify_form(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(example_dir.path("simple/modify_form.py"))
+            sc = tctx.script(tdata.path("../examples/simple/modify_form.py"))
 
             form_header = Headers(content_type="application/x-www-form-urlencoded")
             f = tflow.tflow(req=tutils.treq(headers=form_header))
@@ -52,9 +50,9 @@ class TestScripts(tservers.MasterTest):
             sc.request(f)
             assert list(f.request.urlencoded_form.items()) == [("foo", "bar")]
 
-    def test_modify_querystring(self):
+    def test_modify_querystring(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(example_dir.path("simple/modify_querystring.py"))
+            sc = tctx.script(tdata.path("../examples/simple/modify_querystring.py"))
             f = tflow.tflow(req=tutils.treq(path="/search?q=term"))
 
             sc.request(f)
@@ -64,23 +62,23 @@ class TestScripts(tservers.MasterTest):
             sc.request(f)
             assert f.request.query["mitmproxy"] == "rocks"
 
-    def test_redirect_requests(self):
+    def test_redirect_requests(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(example_dir.path("simple/redirect_requests.py"))
+            sc = tctx.script(tdata.path("../examples/simple/redirect_requests.py"))
             f = tflow.tflow(req=tutils.treq(host="example.org"))
             sc.request(f)
             assert f.request.host == "mitmproxy.org"
 
-    def test_send_reply_from_proxy(self):
+    def test_send_reply_from_proxy(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(example_dir.path("simple/send_reply_from_proxy.py"))
+            sc = tctx.script(tdata.path("../examples/simple/send_reply_from_proxy.py"))
             f = tflow.tflow(req=tutils.treq(host="example.com", port=80))
             sc.request(f)
             assert f.response.content == b"Hello World"
 
-    def test_dns_spoofing(self):
+    def test_dns_spoofing(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(example_dir.path("complex/dns_spoofing.py"))
+            sc = tctx.script(tdata.path("../examples/complex/dns_spoofing.py"))
 
             original_host = "example.com"
 

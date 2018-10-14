@@ -61,10 +61,10 @@ class TestDaemonSSL(PathocTestDaemon):
     def test_showssl(self):
         assert "certificate chain" in self.tval(["get:/p/200"], showssl=True)
 
-    def test_clientcert(self):
+    def test_clientcert(self, tdata):
         self.tval(
             ["get:/p/200"],
-            clientcert=tutils.test_data.path("pathod/data/clientcert/client.pem"),
+            clientcert=tdata.path("pathod/data/clientcert/client.pem"),
         )
         log = self.d.log()
         assert log[0]["request"]["clientcert"]["keyinfo"]

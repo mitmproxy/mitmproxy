@@ -5,13 +5,17 @@ MANIFEST
 *.py[cdo]
 *.swp
 *.swo
+*.sqlite
 *.egg-info/
 .coverage*
 .idea
 .cache/
 .tox*/
 build/
+dist/
 mitmproxy/contrib/kaitaistruct/*.ksy
+.pytest_cache
+__pycache__
 
 # UI
 

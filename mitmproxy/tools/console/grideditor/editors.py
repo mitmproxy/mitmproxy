@@ -1,3 +1,4 @@
+import urwid
 import typing
 
 from mitmproxy import exceptions
@@ -100,12 +101,13 @@ class CookieEditor(base.FocusEditor):
         flow.request.cookies = vals
 
 
-class CookieAttributeEditor(base.GridEditor):
+class CookieAttributeEditor(base.FocusEditor):
     title = "Editing Set-Cookie attributes"
     columns = [
         col_text.Column("Name"),
         col_text.Column("Value"),
     ]
+    grideditor: base.BaseGridEditor = None
 
     def data_in(self, data):
         return [(k, v or "") for k, v in data]
@@ -118,6 +120,20 @@ class CookieAttributeEditor(base.GridEditor):
             else:
                 ret.append(i)
         return ret
+
+    def layout_pushed(self, prev):
+        if self.grideditor.master.view.focus.flow:
+            self._w = base.BaseGridEditor(
+                self.grideditor.master,
+                self.title,
+                self.columns,
+                self.grideditor.walker.get_current_value(),
+                self.grideditor.set_subeditor_value,
+                self.grideditor.walker.focus,
+                self.grideditor.walker.focus_col
+            )
+        else:
+            self._w = urwid.Pile([])
 
 
 class SetCookieEditor(base.FocusEditor):
@@ -153,7 +169,7 @@ class SetCookieEditor(base.FocusEditor):
 
 
 class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
-    title = None  # type: str
+    title: str = None
     columns = [
         col_text.Column("")
     ]
@@ -173,7 +189,7 @@ class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
 
 
 class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
-    title = None  # type: str
+    title: str = None
 
     def __init__(
             self,

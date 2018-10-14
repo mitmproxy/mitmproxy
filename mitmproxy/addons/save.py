@@ -14,7 +14,17 @@ class Save:
     def __init__(self):
         self.stream = None
         self.filt = None
-        self.active_flows = set()  # type: Set[flow.Flow]
+        self.active_flows: typing.Set[flow.Flow] = set()
+
+    def load(self, loader):
+        loader.add_option(
+            "save_stream_file", typing.Optional[str], None,
+            "Stream flows to file as they arrive. Prefix path with + to append."
+        )
+        loader.add_option(
+            "save_stream_filter", typing.Optional[str], None,
+            "Filter which flows are written to file."
+        )
 
     def open_file(self, path):
         if path.startswith("+"):

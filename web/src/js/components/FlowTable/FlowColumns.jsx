@@ -119,7 +119,7 @@ export function TimeColumn({ flow }) {
     return (
         <td className="col-time">
             {flow.response ? (
-                formatTimeDelta(1000 * (flow.response.timestamp_end - flow.server_conn.timestamp_start))
+                formatTimeDelta(1000 * (flow.response.timestamp_end - flow.request.timestamp_start))
             ) : (
                 '...'
             )}

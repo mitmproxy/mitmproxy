@@ -114,11 +114,10 @@ def _read_cookie_pairs(s, off=0):
         lhs, off = _read_key(s, off)
         lhs = lhs.lstrip()
 
-        if lhs:
-            rhs = None
-            if off < len(s) and s[off] == "=":
-                rhs, off = _read_value(s, off + 1, ";")
-
+        rhs = ""
+        if off < len(s) and s[off] == "=":
+            rhs, off = _read_value(s, off + 1, ";")
+        if rhs or lhs:
             pairs.append([lhs, rhs])
 
         off += 1
@@ -136,38 +135,41 @@ def _read_set_cookie_pairs(s: str, off=0) -> Tuple[List[TPairs], int]:
         off: start offset
         specials: attributes that are treated specially
     """
-    cookies = []  # type: List[TPairs]
-    pairs = []  # type: TPairs
+    cookies: List[TPairs] = []
+    pairs: TPairs = []
 
     while True:
         lhs, off = _read_key(s, off, ";=,")
         lhs = lhs.lstrip()
 
-        if lhs:
-            rhs = None
-            if off < len(s) and s[off] == "=":
-                rhs, off = _read_value(s, off + 1, ";,")
+        rhs = ""
+        if off < len(s) and s[off] == "=":
+            rhs, off = _read_value(s, off + 1, ";,")
 
-                # Special handliing of attributes
-                if lhs.lower() == "expires":
-                    # 'expires' values can contain commas in them so they need to
-                    # be handled separately.
+            # Special handling of attributes
+            if lhs.lower() == "expires":
+                # 'expires' values can contain commas in them so they need to
+                # be handled separately.
 
-                    # We actually bank on the fact that the expires value WILL
-                    # contain a comma. Things will fail, if they don't.
+                # We actually bank on the fact that the expires value WILL
+                # contain a comma. Things will fail, if they don't.
 
-                    # '3' is just a heuristic we use to determine whether we've
-                    # only read a part of the expires value and we should read more.
-                    if len(rhs) <= 3:
-                        trail, off = _read_value(s, off + 1, ";,")
-                        rhs = rhs + "," + trail
+                # '3' is just a heuristic we use to determine whether we've
+                # only read a part of the expires value and we should read more.
+                if len(rhs) <= 3:
+                    trail, off = _read_value(s, off + 1, ";,")
+                    rhs = rhs + "," + trail
 
+            # as long as there's a "=", we consider it a pair
             pairs.append([lhs, rhs])
 
-            # comma marks the beginning of a new cookie
-            if off < len(s) and s[off] == ",":
-                cookies.append(pairs)
-                pairs = []
+        elif lhs:
+            pairs.append([lhs, rhs])
+
+        # comma marks the beginning of a new cookie
+        if off < len(s) and s[off] == ",":
+            cookies.append(pairs)
+            pairs = []
 
         off += 1
 
@@ -196,13 +198,10 @@ def _format_pairs(pairs, specials=(), sep="; "):
     """
     vals = []
     for k, v in pairs:
-        if v is None:
-            vals.append(k)
-        else:
-            if k.lower() not in specials and _has_special(v):
-                v = ESCAPE.sub(r"\\\1", v)
-                v = '"%s"' % v
-            vals.append("%s=%s" % (k, v))
+        if k.lower() not in specials and _has_special(v):
+            v = ESCAPE.sub(r"\\\1", v)
+            v = '"%s"' % v
+        vals.append("%s=%s" % (k, v))
     return sep.join(vals)
 
 

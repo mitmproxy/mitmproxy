@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+aws configure set preview.cloudfront true
+aws --profile mitmproxy \
+    s3 cp --acl public-read ./bucketassets/error.html s3://docs.mitmproxy.org/error.html
+aws --profile mitmproxy \
+    s3 cp --acl public-read ./bucketassets/robots.txt s3://docs.mitmproxy.org/robots.txt

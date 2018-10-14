@@ -1,5 +1,11 @@
 """
 This inline script can be used to dump flows as HAR files.
+
+example cmdline invocation:
+mitmdump -s ./har_dump.py --set hardump=./dump.har
+
+filename endwith '.zhar' will be compressed:
+mitmdump -s ./har_dump.py --set hardump=./dump.zhar
 """
 
 
@@ -7,22 +13,24 @@ import json
 import base64
 import zlib
 import os
+import typing  # noqa
 
 from datetime import datetime
 from datetime import timezone
 
 import mitmproxy
 
+from mitmproxy import connections  # noqa
 from mitmproxy import version
 from mitmproxy import ctx
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import cookies
 
-HAR = {}
+HAR: typing.Dict = {}
 
 # A list of server seen till now is maintained so we can avoid
 # using 'connect' time for entries that use an existing connection.
-SERVERS_SEEN = set()
+SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
 
 
 def load(l):
@@ -153,12 +161,12 @@ def done():
         Called once on script shutdown, after any other events.
     """
     if ctx.options.hardump:
-        json_dump = json.dumps(HAR, indent=2)  # type: str
+        json_dump: str = json.dumps(HAR, indent=2)
 
         if ctx.options.hardump == '-':
             mitmproxy.ctx.log(json_dump)
         else:
-            raw = json_dump.encode()  # type: bytes
+            raw: bytes = json_dump.encode()
             if ctx.options.hardump.endswith('.zhar'):
                 raw = zlib.compress(raw, 9)
 

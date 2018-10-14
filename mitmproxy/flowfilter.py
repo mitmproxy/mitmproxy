@@ -69,8 +69,8 @@ class _Token:
 
 
 class _Action(_Token):
-    code = None  # type: str
-    help = None  # type: str
+    code: str = None
+    help: str = None
 
     @classmethod
     def make(klass, s, loc, toks):
@@ -434,7 +434,7 @@ class FNot(_Token):
         return not self.itm(f)
 
 
-filter_unary = [
+filter_unary: Sequence[Type[_Action]] = [
     FAsset,
     FErr,
     FHTTP,
@@ -443,8 +443,8 @@ filter_unary = [
     FResp,
     FTCP,
     FWebSocket,
-]  # type: Sequence[Type[_Action]]
-filter_rex = [
+]
+filter_rex: Sequence[Type[_Rex]] = [
     FBod,
     FBodRequest,
     FBodResponse,
@@ -459,7 +459,7 @@ filter_rex = [
     FMethod,
     FSrc,
     FUrl,
-]  # type: Sequence[Type[_Rex]]
+]
 filter_int = [
     FCode
 ]

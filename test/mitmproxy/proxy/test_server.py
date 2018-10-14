@@ -1,3 +1,4 @@
+import asyncio
 import os
 import socket
 import time
@@ -10,73 +11,25 @@ from mitmproxy import certs
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import options
-from mitmproxy.addons import proxyauth
 from mitmproxy.addons import script
 from mitmproxy.net import socks
 from mitmproxy.net import tcp
 from mitmproxy.net.http import http1
 from mitmproxy.proxy.config import HostMatcher
-from mitmproxy.test import tutils
+from mitmproxy.utils import data
 from pathod import pathoc
 from pathod import pathod
 from .. import tservers
 from ...conftest import skip_appveyor
 
-"""
-    Note that the choice of response code in these tests matters more than you
-    might think. libcurl treats a 304 response code differently from, say, a
-    200 response code - it will correctly terminate a 304 response with no
-    content-length header, whereas it will block forever waiting for content
-    for a 200 response.
-"""
+
+cdata = data.Data(__name__)
 
 
 class CommonMixin:
 
     def test_large(self):
         assert len(self.pathod("200:b@50k").content) == 1024 * 50
-
-    @staticmethod
-    def wait_until_not_live(flow):
-        """
-        Race condition: We don't want to replay the flow while it is still live.
-        """
-        s = time.time()
-        while flow.live:
-            time.sleep(0.001)
-            if time.time() - s > 5:
-                raise RuntimeError("Flow is live for too long.")
-
-    def test_replay(self):
-        assert self.pathod("304").status_code == 304
-        assert len(self.master.state.flows) == 1
-        l = self.master.state.flows[-1]
-        assert l.response.status_code == 304
-        l.request.path = "/p/305"
-        self.wait_until_not_live(l)
-        rt = self.master.replay_request(l, block=True)
-        assert l.response.status_code == 305
-
-        # Disconnect error
-        l.request.path = "/p/305:d0"
-        rt = self.master.replay_request(l, block=True)
-        assert rt
-        if isinstance(self, tservers.HTTPUpstreamProxyTest):
-            assert l.response.status_code == 502
-        else:
-            assert l.error
-
-        # Port error
-        l.request.port = 1
-        # In upstream mode, we get a 502 response from the upstream proxy server.
-        # In upstream mode with ssl, the replay will fail as we cannot establish
-        # SSL with the upstream proxy.
-        rt = self.master.replay_request(l, block=True)
-        assert rt
-        if isinstance(self, tservers.HTTPUpstreamProxyTest):
-            assert l.response.status_code == 502
-        else:
-            assert l.error
 
     def test_http(self):
         f = self.pathod("304")
@@ -132,8 +85,6 @@ class TcpMixin:
         i2 = self.pathod("306")
         self._ignore_off()
 
-        self.master.event_queue.join()
-
         assert n.status_code == 304
         assert i.status_code == 305
         assert i2.status_code == 306
@@ -176,8 +127,6 @@ class TcpMixin:
         i = self.pathod("305")
         i2 = self.pathod("306")
         self._tcpproxy_off()
-
-        self.master.event_queue.join()
 
         assert n.status_code == 304
         assert i.status_code == 305
@@ -238,36 +187,23 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
                 p.request("get:'%s'" % response)
 
     def test_reconnect(self):
-        req = "get:'%s/p/200:b@1'" % self.server.urlbase
+        req = "get:'%s/p/200:b@1:da'" % self.server.urlbase
         p = self.pathoc()
 
-        class MockOnce:
-            call = 0
-
-            def mock_once(self, http1obj, req):
-                self.call += 1
-                if self.call == 1:
-                    raise exceptions.TcpDisconnect
-                else:
-                    headers = http1.assemble_request_head(req)
-                    http1obj.server_conn.wfile.write(headers)
-                    http1obj.server_conn.wfile.flush()
-
         with p.connect():
-            with mock.patch("mitmproxy.proxy.protocol.http1.Http1Layer.send_request_headers",
-                            side_effect=MockOnce().mock_once, autospec=True):
-                # Server disconnects while sending headers but mitmproxy reconnects
-                resp = p.request(req)
-                assert resp
-                assert resp.status_code == 200
+            assert p.request(req)
+            # Server has disconnected. Mitmproxy should detect this, and reconnect.
+            assert p.request(req)
+            assert p.request(req)
 
-    def test_get_connection_switching(self):
+    @pytest.mark.asyncio
+    async def test_get_connection_switching(self):
         req = "get:'%s/p/200:b@1'"
         p = self.pathoc()
         with p.connect():
             assert p.request(req % self.server.urlbase)
             assert p.request(req % self.server2.urlbase)
-        assert self.proxy.tmaster.has_log("serverdisconnect")
+        assert await self.proxy.tmaster.await_log("serverdisconnect")
 
     def test_blank_leading_line(self):
         p = self.pathoc()
@@ -281,14 +217,17 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
             resp = p.request("get:'http://foo':h':foo'='bar'")
         assert resp.status_code == 400
 
-    def test_stream_modify(self):
+    @pytest.mark.asyncio
+    async def test_stream_modify(self, tdata):
         s = script.Script(
-            tutils.test_data.path("mitmproxy/data/addonscripts/stream_modify.py")
+            tdata.path("mitmproxy/data/addonscripts/stream_modify.py"),
+            False,
         )
-        self.master.addons.add(s)
+        self.set_addons(s)
+        await self.master.await_log("stream_modify running")
+
         d = self.pathod('200:b"foo"')
         assert d.content == b"bar"
-        self.master.addons.remove(s)
 
     def test_first_line_rewrite(self):
         """
@@ -306,63 +245,23 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
             assert self.server.last_log()["request"]["first_line_format"] == "relative"
 
 
-class TestHTTPAuth(tservers.HTTPProxyTest):
-    def test_auth(self):
-        self.master.addons.add(proxyauth.ProxyAuth())
-        self.master.addons.trigger(
-            "configure", self.master.options.keys()
-        )
-        self.master.options.proxyauth = "test:test"
-        assert self.pathod("202").status_code == 407
-        p = self.pathoc()
-        with p.connect():
-            ret = p.request("""
-                get
-                'http://localhost:%s/p/202'
-                h'%s'='%s'
-            """ % (
-                self.server.port,
-                "Proxy-Authorization",
-                proxyauth.mkauth("test", "test")
-            ))
-        assert ret.status_code == 202
-
-
-class TestHTTPReverseAuth(tservers.ReverseProxyTest):
-    def test_auth(self):
-        self.master.addons.add(proxyauth.ProxyAuth())
-        self.master.options.proxyauth = "test:test"
-        assert self.pathod("202").status_code == 401
-        p = self.pathoc()
-        with p.connect():
-            ret = p.request("""
-                get
-                '/p/202'
-                h'%s'='%s'
-            """ % (
-                "Authorization",
-                proxyauth.mkauth("test", "test")
-            ))
-        assert ret.status_code == 202
-
-
 class TestHTTPS(tservers.HTTPProxyTest, CommonMixin, TcpMixin):
     ssl = True
     ssloptions = pathod.SSLOptions(request_client_cert=True)
 
-    def test_clientcert_file(self):
+    def test_clientcert_file(self, tdata):
         try:
             self.options.client_certs = os.path.join(
-                tutils.test_data.path("mitmproxy/data/clientcert"), "client.pem")
+                tdata.path("mitmproxy/data/clientcert"), "client.pem")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
         finally:
             self.options.client_certs = None
 
-    def test_clientcert_dir(self):
+    def test_clientcert_dir(self, tdata):
         try:
-            self.options.client_certs = tutils.test_data.path("mitmproxy/data/clientcert")
+            self.options.client_certs = tdata.path("mitmproxy/data/clientcert")
             f = self.pathod("304")
             assert f.status_code == 304
             assert self.server.last_log()["request"]["clientcert"]["keyinfo"]
@@ -401,7 +300,7 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
     ssloptions = pathod.SSLOptions(
         cn=b"example.mitmproxy.org",
         certs=[
-            ("example.mitmproxy.org", tutils.test_data.path("mitmproxy/data/servercert/trusted-leaf.pem"))
+            ("example.mitmproxy.org", cdata.path("../data/servercert/trusted-leaf.pem"))
         ]
     )
 
@@ -410,21 +309,21 @@ class TestHTTPSUpstreamServerVerificationWTrustedCert(tservers.HTTPProxyTest):
         with p.connect():
             return p.request("get:/p/242")
 
-    def test_verification_w_cadir(self):
+    def test_verification_w_confdir(self, tdata):
         self.options.update(
             ssl_insecure=False,
-            ssl_verify_upstream_trusted_cadir=tutils.test_data.path(
+            ssl_verify_upstream_trusted_confdir=tdata.path(
                 "mitmproxy/data/servercert/"
             ),
             ssl_verify_upstream_trusted_ca=None,
         )
         assert self._request().status_code == 242
 
-    def test_verification_w_pemfile(self):
+    def test_verification_w_pemfile(self, tdata):
         self.options.update(
             ssl_insecure=False,
-            ssl_verify_upstream_trusted_cadir=None,
-            ssl_verify_upstream_trusted_ca=tutils.test_data.path(
+            ssl_verify_upstream_trusted_confdir=None,
+            ssl_verify_upstream_trusted_ca=tdata.path(
                 "mitmproxy/data/servercert/trusted-root.pem"
             ),
         )
@@ -440,7 +339,7 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
     ssloptions = pathod.SSLOptions(
         cn=b"example.mitmproxy.org",
         certs=[
-            ("example.mitmproxy.org", tutils.test_data.path("mitmproxy/data/servercert/self-signed.pem"))
+            ("example.mitmproxy.org", cdata.path("../data/servercert/self-signed.pem"))
         ])
 
     def _request(self):
@@ -451,8 +350,8 @@ class TestHTTPSUpstreamServerVerificationWBadCert(tservers.HTTPProxyTest):
     @classmethod
     def get_options(cls):
         opts = super().get_options()
-        opts.ssl_verify_upstream_trusted_ca = tutils.test_data.path(
-            "mitmproxy/data/servercert/trusted-root.pem"
+        opts.ssl_verify_upstream_trusted_ca = cdata.path(
+            "../data/servercert/trusted-root.pem"
         )
         return opts
 
@@ -479,7 +378,7 @@ class TestHTTPSNoCommonName(tservers.HTTPProxyTest):
     ssl = True
     ssloptions = pathod.SSLOptions(
         certs=[
-            ("*", tutils.test_data.path("mitmproxy/data/no_common_name.pem"))
+            ("*", cdata.path("../data/no_common_name.pem"))
         ]
     )
 
@@ -511,13 +410,14 @@ class TestReverse(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
         req = self.master.state.flows[0].request
         assert req.host_header == "127.0.0.1"
 
-    def test_selfconnection(self):
+    @pytest.mark.asyncio
+    async def test_selfconnection(self):
         self.options.mode = "reverse:http://127.0.0.1:0"
 
         p = self.pathoc()
         with p.connect():
             p.request("get:/")
-        assert self.master.has_log("The proxy shall not connect to itself.")
+        assert await self.master.await_log("The proxy shall not connect to itself.")
 
 
 class TestReverseSSL(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
@@ -617,7 +517,6 @@ class TestHttps2Http(tservers.ReverseProxyTest):
         p = self.pathoc(ssl=True, sni="example.com")
         with p.connect():
             assert p.request("get:'/p/200'").status_code == 200
-            assert not self.proxy.tmaster.has_log("error in handle_sni")
 
     def test_http(self):
         p = self.pathoc(ssl=False)
@@ -628,16 +527,16 @@ class TestHttps2Http(tservers.ReverseProxyTest):
 class TestTransparent(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
     ssl = False
 
-    def test_tcp_stream_modify(self):
+    def test_tcp_stream_modify(self, tdata):
         s = script.Script(
-            tutils.test_data.path("mitmproxy/data/addonscripts/tcp_stream_modify.py")
+            tdata.path("mitmproxy/data/addonscripts/tcp_stream_modify.py"),
+            False,
         )
-        self.master.addons.add(s)
+        self.set_addons(s)
         self._tcpproxy_on()
         d = self.pathod('200:b"foo"')
         self._tcpproxy_off()
         assert d.content == b"bar"
-        self.master.addons.remove(s)
 
 
 class TestTransparentSSL(tservers.TransparentProxyTest, CommonMixin, TcpMixin):
@@ -780,7 +679,7 @@ class TestRedirectRequest(tservers.HTTPProxyTest):
 
         This test verifies that the original destination is restored for the third request.
         """
-        self.proxy.tmaster.addons.add(ARedirectRequest(self.server2.port))
+        self.set_addons(ARedirectRequest(self.server2.port))
 
         p = self.pathoc()
         with p.connect():
@@ -819,7 +718,7 @@ class AStreamRequest:
 
 class TestStreamRequest(tservers.HTTPProxyTest):
     def test_stream_simple(self):
-        self.proxy.tmaster.addons.add(AStreamRequest())
+        self.set_addons(AStreamRequest())
         p = self.pathoc()
         with p.connect():
             # a request with 100k of data but without content-length
@@ -828,7 +727,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
             assert len(r1.content) > 100000
 
     def test_stream_multiple(self):
-        self.proxy.tmaster.addons.add(AStreamRequest())
+        self.set_addons(AStreamRequest())
         p = self.pathoc()
         with p.connect():
             # simple request with streaming turned on
@@ -840,7 +739,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
             assert r1.status_code == 201
 
     def test_stream_chunked(self):
-        self.proxy.tmaster.addons.add(AStreamRequest())
+        self.set_addons(AStreamRequest())
         connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         connection.connect(("127.0.0.1", self.proxy.port))
         fconn = connection.makefile("rb")
@@ -869,7 +768,7 @@ class AFakeResponse:
 class TestFakeResponse(tservers.HTTPProxyTest):
 
     def test_fake(self):
-        self.proxy.tmaster.addons.add(AFakeResponse())
+        self.set_addons(AFakeResponse())
         f = self.pathod("200")
         assert "header-response" in f.headers
 
@@ -883,10 +782,12 @@ class TestServerConnect(tservers.HTTPProxyTest):
         opts.upstream_cert = False
         return opts
 
-    def test_unnecessary_serverconnect(self):
+    @pytest.mark.asyncio
+    async def test_unnecessary_serverconnect(self):
         """A replayed/fake response with no upstream_cert should not connect to an upstream server"""
-        self.proxy.tmaster.addons.add(AFakeResponse())
+        self.set_addons(AFakeResponse())
         assert self.pathod("200").status_code == 200
+        await asyncio.sleep(0.1)
         assert not self.proxy.tmaster.has_log("serverconnect")
 
 
@@ -898,7 +799,7 @@ class AKillRequest:
 
 class TestKillRequest(tservers.HTTPProxyTest):
     def test_kill(self):
-        self.proxy.tmaster.addons.add(AKillRequest())
+        self.set_addons(AKillRequest())
         with pytest.raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # Nothing should have hit the server
@@ -912,7 +813,7 @@ class AKillResponse:
 
 class TestKillResponse(tservers.HTTPProxyTest):
     def test_kill(self):
-        self.proxy.tmaster.addons.add(AKillResponse())
+        self.set_addons(AKillResponse())
         with pytest.raises(exceptions.HttpReadDisconnect):
             self.pathod("200")
         # The server should have seen a request
@@ -935,7 +836,7 @@ class AIncomplete:
 
 class TestIncompleteResponse(tservers.HTTPProxyTest):
     def test_incomplete(self):
-        self.proxy.tmaster.addons.add(AIncomplete())
+        self.set_addons(AIncomplete())
         assert self.pathod("200").status_code == 502
 
 
@@ -1018,7 +919,7 @@ class TestUpstreamProxySSL(
 
     def test_change_upstream_proxy_connect(self):
         # skip chain[0].
-        self.proxy.tmaster.addons.add(
+        self.set_addons(
             UpstreamProxyChanger(
                 ("127.0.0.1", self.chain[1].port)
             )
@@ -1037,8 +938,8 @@ class TestUpstreamProxySSL(
 
         Client <- HTTPS -> Proxy <- HTTP -> Proxy <- HTTPS -> Server
         """
-        self.proxy.tmaster.addons.add(RewriteToHttp())
-        self.chain[1].tmaster.addons.add(RewriteToHttps())
+        self.set_addons(RewriteToHttp())
+        self.chain[1].set_addons(RewriteToHttps())
         p = self.pathoc()
         with p.connect():
             resp = p.request("get:'/p/418'")
@@ -1096,24 +997,8 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
         request again.
         """
 
-        class MockOnce:
-            call = 0
-
-            def mock_once(self, http1obj, req):
-                self.call += 1
-
-                if self.call == 2:
-                    headers = http1.assemble_request_head(req)
-                    http1obj.server_conn.wfile.write(headers)
-                    http1obj.server_conn.wfile.flush()
-                    raise exceptions.TcpDisconnect
-                else:
-                    headers = http1.assemble_request_head(req)
-                    http1obj.server_conn.wfile.write(headers)
-                    http1obj.server_conn.wfile.flush()
-
-        self.chain[0].tmaster.addons.add(RequestKiller([1, 2]))
-        self.chain[1].tmaster.addons.add(RequestKiller([1]))
+        self.chain[0].set_addons(RequestKiller([1, 2]))
+        self.chain[1].set_addons(RequestKiller([1]))
 
         p = self.pathoc()
         with p.connect():
@@ -1126,9 +1011,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
             assert len(self.chain[0].tmaster.state.flows) == 1
             assert len(self.chain[1].tmaster.state.flows) == 1
 
-            with mock.patch("mitmproxy.proxy.protocol.http1.Http1Layer.send_request_headers",
-                            side_effect=MockOnce().mock_once, autospec=True):
-                req = p.request("get:'/p/418:b\"content2\"'")
+            req = p.request("get:'/p/418:b\"content2\"'")
 
             assert req.status_code == 502
 
@@ -1147,7 +1030,7 @@ class TestProxyChainingSSLReconnect(tservers.HTTPUpstreamProxyTest):
 class AddUpstreamCertsToClientChainMixin:
 
     ssl = True
-    servercert = tutils.test_data.path("mitmproxy/data/servercert/trusted-root.pem")
+    servercert = cdata.path("../data/servercert/trusted-root.pem")
     ssloptions = pathod.SSLOptions(
         cn=b"example.mitmproxy.org",
         certs=[

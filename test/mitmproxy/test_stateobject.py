@@ -93,7 +93,7 @@ def test_tuple():
 
 def test_tuple_err():
     a = TTuple(None)
-    with pytest.raises(ValueError, msg="Invalid data"):
+    with pytest.raises(ValueError, match="Invalid data"):
         a.set_state({"x": (42,)})
 
 
@@ -125,7 +125,7 @@ def test_any():
     assert a.x == b.x
 
     a = TAny(object())
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         a.get_state()
 
 

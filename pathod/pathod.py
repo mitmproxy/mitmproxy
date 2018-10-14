@@ -69,7 +69,7 @@ class SSLOptions:
 
 class PathodHandler(tcp.BaseHandler):
     wbufsize = 0
-    sni = None  # type: typing.Union[str, None, bool]
+    sni: typing.Union[str, None, bool] = None
 
     def __init__(
         self,

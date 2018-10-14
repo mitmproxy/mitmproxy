@@ -1,4 +1,5 @@
 import queue
+import asyncio
 from mitmproxy import exceptions
 
 
@@ -7,8 +8,9 @@ class Channel:
         The only way for the proxy server to communicate with the master
         is to use the channel it has been given.
     """
-    def __init__(self, q, should_exit):
-        self.q = q
+    def __init__(self, master, loop, should_exit):
+        self.master = master
+        self.loop = loop
         self.should_exit = should_exit
 
     def ask(self, mtype, m):
@@ -19,27 +21,28 @@ class Channel:
         Raises:
             exceptions.Kill: All connections should be closed immediately.
         """
-        m.reply = Reply(m)
-        self.q.put((mtype, m))
-        while not self.should_exit.is_set():
-            try:
-                # The timeout is here so we can handle a should_exit event.
-                g = m.reply.q.get(timeout=0.5)
-            except queue.Empty:  # pragma: no cover
-                continue
+        if not self.should_exit.is_set():
+            m.reply = Reply(m)
+            asyncio.run_coroutine_threadsafe(
+                self.master.addons.handle_lifecycle(mtype, m),
+                self.loop,
+            )
+            g = m.reply.q.get()
             if g == exceptions.Kill:
                 raise exceptions.Kill()
             return g
-        m.reply._state = "committed"  # suppress error message in __del__
-        raise exceptions.Kill()
 
     def tell(self, mtype, m):
         """
         Decorate a message with a dummy reply attribute, send it to the master,
         then return immediately.
         """
-        m.reply = DummyReply()
-        self.q.put((mtype, m))
+        if not self.should_exit.is_set():
+            m.reply = DummyReply()
+            asyncio.run_coroutine_threadsafe(
+                self.master.addons.handle_lifecycle(mtype, m),
+                self.loop,
+            )
 
 
 NO_REPLY = object()  # special object we can distinguish from a valid "None" reply.
@@ -52,11 +55,12 @@ class Reply:
     """
     def __init__(self, obj):
         self.obj = obj
-        self.q = queue.Queue()  # type: queue.Queue
+        # Spawn an event loop in the current thread
+        self.q = queue.Queue()
 
         self._state = "start"  # "start" -> "taken" -> "committed"
 
-        # Holds the reply value. May change before things are actually commited.
+        # Holds the reply value. May change before things are actually committed.
         self.value = NO_REPLY
 
     @property
@@ -66,7 +70,7 @@ class Reply:
         sequentially through the following lifecycle:
 
             1. start: Initial State.
-            2. taken: The reply object has been taken to be commited.
+            2. taken: The reply object has been taken to be committed.
             3. committed: The reply has been sent back to the requesting party.
 
         This attribute is read-only and can only be modified by calling one of
@@ -91,9 +95,9 @@ class Reply:
 
     def commit(self):
         """
-        Ultimately, messages are commited. This is done either automatically by
-        if the message is not taken or manually by the entity which called
-        .take().
+        Ultimately, messages are committed. This is done either automatically by
+        the handler if the message is not taken or manually by the entity which
+        called .take().
         """
         if self.state != "taken":
             raise exceptions.ControlException(
@@ -109,6 +113,8 @@ class Reply:
 
     def kill(self, force=False):
         self.send(exceptions.Kill, force)
+        if self._state == "taken":
+            self.commit()
 
     def send(self, msg, force=False):
         if self.state not in {"start", "taken"}:

@@ -14,10 +14,10 @@ class _LayerCodeCompletion:
         super().__init__(**mixin_args)
         if True:
             return
-        self.config = None  # type: config.ProxyConfig
-        self.client_conn = None  # type: connections.ClientConnection
-        self.server_conn = None  # type: connections.ServerConnection
-        self.channel = None  # type: controller.Channel
+        self.config: config.ProxyConfig = None
+        self.client_conn: connections.ClientConnection = None
+        self.server_conn: connections.ServerConnection = None
+        self.channel: controller.Channel = None
         self.ctx = None
         """@type: mitmproxy.proxy.protocol.Layer"""
 

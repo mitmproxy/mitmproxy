@@ -1,3 +1,5 @@
+import asyncio
+
 
 class LogEntry:
     def __init__(self, msg, level):
@@ -35,7 +37,7 @@ class Log:
     def alert(self, txt):
         """
             Log with level alert. Alerts have the same urgency as info, but
-            signals to interctive tools that the user's attention should be
+            signals to interactive tools that the user's attention should be
             drawn to the output even if they're not currently looking at the
             event log.
         """
@@ -54,7 +56,18 @@ class Log:
         self(txt, "error")
 
     def __call__(self, text, level="info"):
-        self.master.add_log(text, level)
+        asyncio.get_event_loop().call_soon(
+            self.master.addons.trigger, "log", LogEntry(text, level)
+        )
+
+
+LogTierOrder = [
+    "error",
+    "warn",
+    "info",
+    "alert",
+    "debug",
+]
 
 
 def log_tier(level):

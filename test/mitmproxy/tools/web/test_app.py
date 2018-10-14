@@ -2,13 +2,13 @@ import json as _json
 import logging
 from unittest import mock
 import os
+import asyncio
 
 import pytest
 import tornado.testing
 from tornado import httpclient
 from tornado import websocket
 
-from mitmproxy import exceptions
 from mitmproxy import options
 from mitmproxy.test import tflow
 from mitmproxy.tools.web import app
@@ -32,6 +32,11 @@ def json(resp: httpclient.HTTPResponse):
 
 @pytest.mark.usefixtures("no_tornado_logging")
 class TestApp(tornado.testing.AsyncHTTPTestCase):
+    def get_new_ioloop(self):
+        io_loop = tornado.platform.asyncio.AsyncIOLoop()
+        asyncio.set_event_loop(io_loop.asyncio_loop)
+        return io_loop
+
     def get_app(self):
         o = options.Options(http2=False)
         m = webmaster.WebMaster(o, with_termlog=False)
@@ -39,7 +44,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f.id = "42"
         m.view.add([f])
         m.view.add([tflow.tflow(err=True)])
-        m.add_log("test log", "info")
+        m.log.info("test log")
         self.master = m
         self.view = m.view
         self.events = m.events
@@ -74,12 +79,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def test_flows_dump(self):
         resp = self.fetch("/flows/dump")
         assert b"address" in resp.body
-
-        self.view.clear()
-        assert not len(self.view)
-
-        assert self.fetch("/flows/dump", method="POST", body=resp.body).code == 200
-        assert len(self.view)
 
     def test_clear(self):
         events = self.events.data.copy()
@@ -186,13 +185,9 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert not f._backup
 
     def test_flow_replay(self):
-        with mock.patch("mitmproxy.master.Master.replay_request") as replay_request:
+        with mock.patch("mitmproxy.command.CommandManager.call") as replay_call:
             assert self.fetch("/flows/42/replay", method="POST").code == 200
-            assert replay_request.called
-            replay_request.side_effect = exceptions.ReplayException(
-                "out of replays"
-            )
-            assert self.fetch("/flows/42/replay", method="POST").code == 400
+            assert replay_call.called
 
     def test_flow_content(self):
         f = self.view.get_by_id("42")

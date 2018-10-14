@@ -4,6 +4,7 @@ import logging
 import os.path
 import re
 from io import BytesIO
+import asyncio
 
 import mitmproxy.flow
 import tornado.escape
@@ -17,7 +18,6 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import version
 from mitmproxy import optmanager
-from mitmproxy.tools.cmdline import CONFIG_PATH
 import mitmproxy.tools.web.master # noqa
 
 
@@ -190,7 +190,7 @@ class FilterHelp(RequestHandler):
 
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
-    connections = None  # type: set
+    connections: set = None
 
     def open(self):
         self.connections.add(self)
@@ -210,7 +210,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
 
 class ClientConnection(WebSocketEventBroadcaster):
-    connections = set()  # type: set
+    connections: set = set()
 
 
 class Flows(RequestHandler):
@@ -235,7 +235,7 @@ class DumpFlows(RequestHandler):
         self.view.clear()
         bio = BytesIO(self.filecontents)
         for i in io.FlowReader(bio).stream():
-            self.master.load_flow(i)
+            asyncio.ensure_future(self.master.load_flow(i))
         bio.close()
 
 
@@ -344,7 +344,7 @@ class ReplayFlow(RequestHandler):
         self.view.update([self.flow])
 
         try:
-            self.master.replay_request(self.flow)
+            self.master.commands.call("replay.client", [self.flow])
         except exceptions.ReplayException as e:
             raise APIError(400, str(e))
 
@@ -456,40 +456,27 @@ class Options(RequestHandler):
 
 class SaveOptions(RequestHandler):
     def post(self):
-        try:
-            optmanager.save(self.master.options, CONFIG_PATH, True)
-        except Exception as err:
-            raise APIError(400, "{}".format(err))
+        # try:
+        #     optmanager.save(self.master.options, CONFIG_PATH, True)
+        # except Exception as err:
+        #     raise APIError(400, "{}".format(err))
+        pass
+
+
+class DnsRebind(RequestHandler):
+    def get(self):
+        raise tornado.web.HTTPError(
+            403,
+            reason="To protect against DNS rebinding, mitmweb can only be accessed by IP at the moment. "
+                   "(https://github.com/mitmproxy/mitmproxy/issues/3234)"
+        )
 
 
 class Application(tornado.web.Application):
     def __init__(self, master, debug):
         self.master = master
-        handlers = [
-            (r"/", IndexHandler),
-            (r"/filter-help(?:\.json)?", FilterHelp),
-            (r"/updates", ClientConnection),
-            (r"/events(?:\.json)?", Events),
-            (r"/flows(?:\.json)?", Flows),
-            (r"/flows/dump", DumpFlows),
-            (r"/flows/resume", ResumeFlows),
-            (r"/flows/kill", KillFlows),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/resume", ResumeFlow),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/kill", KillFlow),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-            (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data", FlowContent),
-            (
-                r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",
-                FlowContentView),
-            (r"/settings(?:\.json)?", Settings),
-            (r"/clear", ClearAll),
-            (r"/options(?:\.json)?", Options),
-            (r"/options/save", SaveOptions)
-        ]
-        settings = dict(
+        super().__init__(
+            default_host="dns-rebind-protection",
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
@@ -497,4 +484,33 @@ class Application(tornado.web.Application):
             debug=debug,
             autoreload=False,
         )
-        super().__init__(handlers, **settings)
+
+        self.add_handlers("dns-rebind-protection", [(r"/.*", DnsRebind)])
+        self.add_handlers(
+            # make mitmweb accessible by IP only to prevent DNS rebinding.
+            r'^(localhost|[0-9.:\[\]]+)$',
+            [
+                (r"/", IndexHandler),
+                (r"/filter-help(?:\.json)?", FilterHelp),
+                (r"/updates", ClientConnection),
+                (r"/events(?:\.json)?", Events),
+                (r"/flows(?:\.json)?", Flows),
+                (r"/flows/dump", DumpFlows),
+                (r"/flows/resume", ResumeFlows),
+                (r"/flows/kill", KillFlows),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)", FlowHandler),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/resume", ResumeFlow),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/kill", KillFlow),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data", FlowContent),
+                (
+                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",
+                    FlowContentView),
+                (r"/settings(?:\.json)?", Settings),
+                (r"/clear", ClearAll),
+                (r"/options(?:\.json)?", Options),
+                (r"/options/save", SaveOptions)
+            ]
+        )

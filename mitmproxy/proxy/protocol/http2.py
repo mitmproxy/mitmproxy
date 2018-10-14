@@ -85,14 +85,14 @@ class Http2Layer(base.Layer):
 
     if False:
         # mypy type hints
-        client_conn = None  # type: connections.ClientConnection
+        client_conn: connections.ClientConnection = None
 
     def __init__(self, ctx, mode: str) -> None:
         super().__init__(ctx)
         self.mode = mode
-        self.streams = dict()  # type: Dict[int, Http2SingleStreamLayer]
-        self.server_to_client_stream_ids = dict([(0, 0)])  # type: Dict[int, int]
-        self.connections = {}  # type: Dict[object, SafeH2Connection]
+        self.streams: Dict[int, Http2SingleStreamLayer] = dict()
+        self.server_to_client_stream_ids: Dict[int, int] = dict([(0, 0)])
+        self.connections: Dict[object, SafeH2Connection] = {}
 
         config = h2.config.H2Configuration(
             client_side=False,
@@ -269,7 +269,7 @@ class Http2Layer(base.Layer):
 
     def _handle_priority_updated(self, eid, event):
         if not self.config.options.http2_priority:
-            self.log("HTTP/2 PRIORITY frame surpressed. Use --http2-priority to enable forwarding.", "debug")
+            self.log("HTTP/2 PRIORITY frame suppressed. Use --http2-priority to enable forwarding.", "debug")
             return True
 
         if eid in self.streams and self.streams[eid].handled_priority_event is event:
@@ -382,32 +382,32 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             ctx, name="Http2SingleStreamLayer-{}".format(stream_id)
         )
         self.h2_connection = h2_connection
-        self.zombie = None  # type: float
-        self.client_stream_id = stream_id  # type: int
-        self.server_stream_id = None  # type: int
+        self.zombie: float = None
+        self.client_stream_id: int = stream_id
+        self.server_stream_id: int = None
         self.request_headers = request_headers
-        self.response_headers = None  # type: mitmproxy.net.http.Headers
+        self.response_headers: mitmproxy.net.http.Headers = None
         self.pushed = False
 
-        self.timestamp_start = None  # type: float
-        self.timestamp_end = None  # type: float
+        self.timestamp_start: float = None
+        self.timestamp_end: float = None
 
         self.request_arrived = threading.Event()
-        self.request_data_queue = queue.Queue()  # type: queue.Queue[bytes]
+        self.request_data_queue: queue.Queue[bytes] = queue.Queue()
         self.request_queued_data_length = 0
         self.request_data_finished = threading.Event()
 
         self.response_arrived = threading.Event()
-        self.response_data_queue = queue.Queue()  # type: queue.Queue[bytes]
+        self.response_data_queue: queue.Queue[bytes] = queue.Queue()
         self.response_queued_data_length = 0
         self.response_data_finished = threading.Event()
 
         self.no_body = False
 
-        self.priority_exclusive = None  # type: bool
-        self.priority_depends_on = None  # type: int
-        self.priority_weight = None  # type: int
-        self.handled_priority_event = None  # type: Any
+        self.priority_exclusive: bool = None
+        self.priority_depends_on: int = None
+        self.priority_weight: int = None
+        self.handled_priority_event: Any = None
 
     def kill(self):
         if not self.zombie:
@@ -541,7 +541,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             # only send priority information if they actually came with the original HeadersFrame
             # and not if they got updated before/after with a PriorityFrame
             if not self.config.options.http2_priority:
-                self.log("HTTP/2 PRIORITY information in HEADERS frame surpressed. Use --http2-priority to enable forwarding.", "debug")
+                self.log("HTTP/2 PRIORITY information in HEADERS frame suppressed. Use --http2-priority to enable forwarding.", "debug")
             else:
                 priority_exclusive = self.priority_exclusive
                 priority_depends_on = self._map_depends_on_stream_id(self.server_stream_id, self.priority_depends_on)

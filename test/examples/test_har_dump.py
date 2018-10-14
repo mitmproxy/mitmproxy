@@ -5,8 +5,6 @@ from mitmproxy.test import tutils
 from mitmproxy.test import taddons
 from mitmproxy.net.http import cookies
 
-example_dir = tutils.test_data.push("../examples")
-
 
 class TestHARDump:
     def flow(self, resp_content=b'message'):
@@ -21,9 +19,9 @@ class TestHARDump:
             resp=tutils.tresp(content=resp_content, **times)
         )
 
-    def test_simple(self, tmpdir):
+    def test_simple(self, tmpdir, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(example_dir.path("complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
             tctx.invoke(a, "response", self.flow())
@@ -32,9 +30,9 @@ class TestHARDump:
                 har = json.load(inp)
             assert len(har["log"]["entries"]) == 1
 
-    def test_base64(self, tmpdir):
+    def test_base64(self, tmpdir, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(example_dir.path("complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
 
@@ -46,9 +44,9 @@ class TestHARDump:
                 har = json.load(inp)
             assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
 
-    def test_format_cookies(self):
+    def test_format_cookies(self, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(example_dir.path("complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
 
             CA = cookies.CookieAttrs
 
@@ -65,9 +63,9 @@ class TestHARDump:
             f = a.format_cookies([("n", "v", CA([("expires", "Mon, 24-Aug-2037 00:00:00 GMT")]))])[0]
             assert f['expires']
 
-    def test_binary(self, tmpdir):
+    def test_binary(self, tmpdir, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(example_dir.path("complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
 

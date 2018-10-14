@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -e
+
+for script in scripts/* ; do
+  echo "Generating output for $script ..."
+  output="${script##*/}"
+  "$script" > "src/generated/${output%.*}.html"
+done
+
+cd src
+hugo

@@ -7,7 +7,6 @@ from mitmproxy import exceptions
 from mitmproxy.addons import proxyauth
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
-from mitmproxy.test import tutils
 
 
 class TestMkauth:
@@ -49,7 +48,7 @@ class TestProxyAuth:
     ])
     def test_is_proxy_auth(self, mode, expected):
         up = proxyauth.ProxyAuth()
-        with taddons.context() as ctx:
+        with taddons.context(up, loadcore=False) as ctx:
             ctx.options.mode = mode
             assert up.is_proxy_auth() is expected
 
@@ -73,9 +72,9 @@ class TestProxyAuth:
             assert resp.status_code == expected_status_code
             assert expected_header in resp.headers.keys()
 
-    def test_check(self):
+    def test_check(self, tdata):
         up = proxyauth.ProxyAuth()
-        with taddons.context() as ctx:
+        with taddons.context(up) as ctx:
             ctx.configure(up, proxyauth="any", mode="regular")
             f = tflow.tflow()
             assert not up.check(f)
@@ -102,7 +101,7 @@ class TestProxyAuth:
 
             ctx.configure(
                 up,
-                proxyauth="@" + tutils.test_data.path(
+                proxyauth="@" + tdata.path(
                     "mitmproxy/net/data/htpasswd"
                 )
             )
@@ -133,7 +132,7 @@ class TestProxyAuth:
 
     def test_authenticate(self):
         up = proxyauth.ProxyAuth()
-        with taddons.context() as ctx:
+        with taddons.context(up, loadcore=False) as ctx:
             ctx.configure(up, proxyauth="any", mode="regular")
 
             f = tflow.tflow()
@@ -163,9 +162,9 @@ class TestProxyAuth:
             assert not f.response
             assert not f.request.headers.get("Authorization")
 
-    def test_configure(self):
+    def test_configure(self, tdata):
         up = proxyauth.ProxyAuth()
-        with taddons.context() as ctx:
+        with taddons.context(up) as ctx:
             with pytest.raises(exceptions.OptionsError):
                 ctx.configure(up, proxyauth="foo")
 
@@ -199,14 +198,14 @@ class TestProxyAuth:
             with pytest.raises(exceptions.OptionsError):
                 ctx.configure(
                     up,
-                    proxyauth= "@" + tutils.test_data.path("mitmproxy/net/data/server.crt")
+                    proxyauth= "@" + tdata.path("mitmproxy/net/data/server.crt")
                 )
             with pytest.raises(exceptions.OptionsError):
                 ctx.configure(up, proxyauth="@nonexistent")
 
             ctx.configure(
                 up,
-                proxyauth= "@" + tutils.test_data.path(
+                proxyauth= "@" + tdata.path(
                     "mitmproxy/net/data/htpasswd"
                 )
             )
@@ -223,7 +222,7 @@ class TestProxyAuth:
 
     def test_handlers(self):
         up = proxyauth.ProxyAuth()
-        with taddons.context() as ctx:
+        with taddons.context(up) as ctx:
             ctx.configure(up, proxyauth="any", mode="regular")
 
             f = tflow.tflow()

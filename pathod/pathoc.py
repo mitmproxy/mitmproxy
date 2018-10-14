@@ -352,7 +352,7 @@ class Pathoc(tcp.TCPClient):
 
             timeout: If specified None may be yielded instead if timeout is
             reached. If timeout is None, wait forever. If timeout is 0, return
-            immedately if nothing is on the queue.
+            immediately if nothing is on the queue.
 
             finish: If true, consume messages until the reader shuts down.
             Otherwise, return None on timeout.
@@ -434,7 +434,7 @@ class Pathoc(tcp.TCPClient):
                 req = language.serve(r, self.wfile, self.settings)
                 self.wfile.flush()
 
-                # build a dummy request to read the reponse
+                # build a dummy request to read the response
                 # ideally this would be returned directly from language.serve
                 dummy_req = net_http.Request(
                     first_line_format="relative",
@@ -471,7 +471,7 @@ class Pathoc(tcp.TCPClient):
         """
             Performs a single request.
 
-            r: A language.message.Messsage object, or a string representing
+            r: A language.message.Message object, or a string representing
             one.
 
             Returns Response if we have a non-ignored response.

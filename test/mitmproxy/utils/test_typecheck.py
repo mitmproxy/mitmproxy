@@ -1,6 +1,5 @@
 import io
 import typing
-from unittest import mock
 import pytest
 
 from mitmproxy.utils import typecheck
@@ -32,12 +31,6 @@ def test_check_union():
     with pytest.raises(TypeError):
         typecheck.check_option_type("foo", [], typing.Union[int, str])
 
-    # Python 3.5 only defines __union_params__
-    m = mock.Mock()
-    m.__str__ = lambda self: "typing.Union"
-    m.__union_params__ = (int,)
-    typecheck.check_option_type("foo", 42, m)
-
 
 def test_check_tuple():
     typecheck.check_option_type("foo", (42, "42"), typing.Tuple[int, str])
@@ -50,12 +43,6 @@ def test_check_tuple():
     with pytest.raises(TypeError):
         typecheck.check_option_type("foo", ("42", 42), typing.Tuple[int, str])
 
-    # Python 3.5 only defines __tuple_params__
-    m = mock.Mock()
-    m.__str__ = lambda self: "typing.Tuple"
-    m.__tuple_params__ = (int, str)
-    typecheck.check_option_type("foo", (42, "42"), m)
-
 
 def test_check_sequence():
     typecheck.check_option_type("foo", [10], typing.Sequence[int])
@@ -67,12 +54,6 @@ def test_check_sequence():
         typecheck.check_option_type("foo", [b"foo"], typing.Sequence[str])
     with pytest.raises(TypeError):
         typecheck.check_option_type("foo", "foo", typing.Sequence[str])
-
-    # Python 3.5 only defines __parameters__
-    m = mock.Mock()
-    m.__str__ = lambda self: "typing.Sequence"
-    m.__parameters__ = (int,)
-    typecheck.check_option_type("foo", [10], m)
 
 
 def test_check_io():

@@ -89,8 +89,7 @@ class _Http2TestBase:
     @classmethod
     def setup_class(cls):
         cls.options = cls.get_options()
-        tmaster = tservers.TestMaster(cls.options)
-        cls.proxy = tservers.ProxyThread(tmaster)
+        cls.proxy = tservers.ProxyThread(tservers.TestMaster, cls.options)
         cls.proxy.start()
 
     @classmethod
@@ -104,7 +103,7 @@ class _Http2TestBase:
             upstream_cert=True,
             ssl_insecure=True
         )
-        opts.cadir = os.path.join(tempfile.gettempdir(), "mitmproxy")
+        opts.confdir = os.path.join(tempfile.gettempdir(), "mitmproxy")
         return opts
 
     @property
@@ -118,6 +117,7 @@ class _Http2TestBase:
     def teardown(self):
         if self.client:
             self.client.close()
+        self.server.server.wait_for_silence()
 
     def setup_connection(self):
         self.client = mitmproxy.net.tcp.TCPClient(("127.0.0.1", self.proxy.port))

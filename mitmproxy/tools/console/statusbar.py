@@ -42,6 +42,8 @@ class ActionBar(urwid.WidgetWrap):
         signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
         signals.status_prompt_command.connect(self.sig_prompt_command)
 
+        self.command_history = commander.CommandHistory(master)
+
         self.prompting = None
 
         self.onekey = False
@@ -49,7 +51,8 @@ class ActionBar(urwid.WidgetWrap):
     def sig_message(self, sender, message, expire=1):
         if self.prompting:
             return
-        w = urwid.Text(message)
+        cols, _ = self.master.ui.get_cols_rows()
+        w = urwid.Text(self.shorten_message(message, cols))
         self._w = w
         if expire:
             def cb(*args):
@@ -60,6 +63,36 @@ class ActionBar(urwid.WidgetWrap):
     def prep_prompt(self, p):
         return p.strip() + ": "
 
+    def shorten_message(self, msg, max_width):
+        """
+        Shorten message so that it fits into a single line in the statusbar.
+        """
+        if isinstance(msg, tuple):
+            disp_attr, msg_text = msg
+        elif isinstance(msg, str):
+            disp_attr, msg_text = None, msg
+        else:
+            return msg
+        msg_end = "\u2026"  # unicode ellipsis for the end of shortened message
+        prompt = "(more in eventlog)"
+
+        msg_lines = msg_text.split("\n")
+        first_line = msg_lines[0]
+        if len(msg_lines) > 1:
+            # First line of messages with a few lines must end with prompt.
+            line_length = len(first_line) + len(prompt)
+        else:
+            line_length = len(first_line)
+
+        if line_length > max_width:
+            shortening_index = max(0, max_width - len(prompt) - len(msg_end))
+            first_line = first_line[:shortening_index] + msg_end
+        else:
+            if len(msg_lines) == 1:
+                prompt = ""
+
+        return [(disp_attr, first_line), ("warn", prompt)]
+
     def sig_prompt(self, sender, prompt, text, callback, args=()):
         signals.focus.send(self, section="footer")
         self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
@@ -67,7 +100,8 @@ class ActionBar(urwid.WidgetWrap):
 
     def sig_prompt_command(self, sender, partial=""):
         signals.focus.send(self, section="footer")
-        self._w = commander.CommandEdit(self.master, partial)
+        self._w = commander.CommandEdit(self.master, partial,
+                                        self.command_history)
         self.prompting = commandexecutor.CommandExecutor(self.master)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
@@ -94,6 +128,7 @@ class ActionBar(urwid.WidgetWrap):
     def keypress(self, size, k):
         if self.prompting:
             if k == "esc":
+                self.command_history.index = self.command_history.last_index
                 self.prompt_done()
             elif self.onekey:
                 if k == "enter":
@@ -101,6 +136,7 @@ class ActionBar(urwid.WidgetWrap):
                 elif k in self.onekey:
                     self.prompt_execute(k)
             elif k == "enter":
+                self.command_history.add_command(self._w.cbuf, True)
                 self.prompt_execute(self._w.get_edit_text())
             else:
                 if common.is_keypress(k):
@@ -127,6 +163,7 @@ class ActionBar(urwid.WidgetWrap):
 
 
 class StatusBar(urwid.WidgetWrap):
+    REFRESHTIME = 0.5  # Timed refresh time in seconds
     keyctx = ""
 
     def __init__(
@@ -136,13 +173,19 @@ class StatusBar(urwid.WidgetWrap):
         self.ib = urwid.WidgetWrap(urwid.Text(""))
         self.ab = ActionBar(self.master)
         super().__init__(urwid.Pile([self.ib, self.ab]))
+        signals.flow_change.connect(self.sig_update)
         signals.update_settings.connect(self.sig_update)
         signals.flowlist_change.connect(self.sig_update)
         master.options.changed.connect(self.sig_update)
         master.view.focus.sig_change.connect(self.sig_update)
-        self.redraw()
+        master.view.sig_view_add.connect(self.sig_update)
+        self.refresh()
 
-    def sig_update(self, sender, updated=None):
+    def refresh(self):
+        self.redraw()
+        signals.call_in.send(seconds=self.REFRESHTIME, callback=self.refresh)
+
+    def sig_update(self, sender, flow=None, updated=None):
         self.redraw()
 
     def keypress(self, *args, **kwargs):
@@ -151,25 +194,23 @@ class StatusBar(urwid.WidgetWrap):
     def get_status(self):
         r = []
 
-        sreplay = self.master.addons.get("serverplayback")
-        creplay = self.master.addons.get("clientplayback")
+        sreplay = self.master.commands.call("replay.server.count")
+        creplay = self.master.commands.call("replay.client.count")
 
         if len(self.master.options.setheaders):
             r.append("[")
             r.append(("heading_key", "H"))
             r.append("eaders]")
         if len(self.master.options.replacements):
-            r.append("[")
-            r.append(("heading_key", "R"))
-            r.append("eplacing]")
-        if creplay.count():
+            r.append("[%d replacements]" % len(self.master.options.replacements))
+        if creplay:
             r.append("[")
             r.append(("heading_key", "cplayback"))
-            r.append(":%s]" % creplay.count())
-        if sreplay.count():
+            r.append(":%s]" % creplay)
+        if sreplay:
             r.append("[")
             r.append(("heading_key", "splayback"))
-            r.append(":%s]" % sreplay.count())
+            r.append(":%s]" % sreplay)
         if self.master.options.ignore_hosts:
             r.append("[")
             r.append(("heading_key", "I"))
@@ -196,10 +237,8 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "u"))
             r.append(":%s]" % self.master.options.stickyauth)
-        if self.master.options.default_contentview != "auto":
-            r.append("[")
-            r.append(("heading_key", "M"))
-            r.append(":%s]" % self.master.options.default_contentview)
+        if self.master.options.console_default_contentview != 'auto':
+            r.append("[contentview:%s]" % (self.master.options.console_default_contentview))
         if self.master.options.has_changed("view_order"):
             r.append("[")
             r.append(("heading_key", "o"))
@@ -212,9 +251,9 @@ class StatusBar(urwid.WidgetWrap):
             opts.append("anticomp")
         if self.master.options.showhost:
             opts.append("showhost")
-        if not self.master.options.refresh_server_playback:
+        if not self.master.options.server_replay_refresh:
             opts.append("norefresh")
-        if self.master.options.replay_kill_extra:
+        if self.master.options.server_replay_kill_extra:
             opts.append("killextra")
         if not self.master.options.upstream_cert:
             opts.append("no-upstream-cert")
@@ -229,9 +268,7 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.options.mode != "regular":
             r.append("[%s]" % self.master.options.mode)
         if self.master.options.scripts:
-            r.append("[")
-            r.append(("heading_key", "s"))
-            r.append("cripts:%s]" % len(self.master.options.scripts))
+            r.append("[scripts:%s]" % len(self.master.options.scripts))
 
         if self.master.options.save_stream_file:
             r.append("[W:%s]" % self.master.options.save_stream_file)
@@ -239,7 +276,7 @@ class StatusBar(urwid.WidgetWrap):
         return r
 
     def redraw(self):
-        fc = len(self.master.view)
+        fc = self.master.commands.execute("view.properties.length")
         if self.master.view.focus.flow is None:
             offset = 0
         else:
@@ -251,7 +288,7 @@ class StatusBar(urwid.WidgetWrap):
             arrow = common.SYMBOL_DOWN
 
         marked = ""
-        if self.master.view.show_marked:
+        if self.master.commands.execute("view.properties.marked"):
             marked = "M"
 
         t = [

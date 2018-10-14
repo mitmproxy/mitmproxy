@@ -19,7 +19,7 @@ def tdump(path, flows):
 
 def test_load_file(tmpdir):
     s = serverplayback.ServerPlayback()
-    with taddons.context():
+    with taddons.context(s):
         fpath = str(tmpdir.join("flows"))
         tdump(fpath, [tflow.tflow(resp=True)])
         s.load_file(fpath)
@@ -30,7 +30,7 @@ def test_load_file(tmpdir):
 
 def test_config(tmpdir):
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         fpath = str(tmpdir.join("flows"))
         tdump(fpath, [tflow.tflow(resp=True)])
         tctx.configure(s, server_replay=[fpath])
@@ -39,19 +39,9 @@ def test_config(tmpdir):
             tctx.configure(s, server_replay=[str(tmpdir)])
 
 
-def test_tick():
-    s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
-        s.stop = True
-        s.final_flow = tflow.tflow()
-        s.final_flow.live = False
-        s.tick()
-        assert tctx.master.has_event("processing_complete")
-
-
 def test_server_playback():
     sp = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(sp) as tctx:
         tctx.configure(sp)
         f = tflow.tflow(resp=True)
 
@@ -70,7 +60,7 @@ def test_server_playback():
 
 def test_ignore_host():
     sp = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(sp) as tctx:
         tctx.configure(sp, server_replay_ignore_host=True)
 
         r = tflow.tflow(resp=True)
@@ -85,7 +75,7 @@ def test_ignore_host():
 
 def test_ignore_content():
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         tctx.configure(s, server_replay_ignore_content=False)
 
         r = tflow.tflow(resp=True)
@@ -113,7 +103,7 @@ def test_ignore_content():
 
 def test_ignore_content_wins_over_params():
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         tctx.configure(
             s,
             server_replay_ignore_content=True,
@@ -137,7 +127,7 @@ def test_ignore_content_wins_over_params():
 
 def test_ignore_payload_params_other_content_type():
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         tctx.configure(
             s,
             server_replay_ignore_content=False,
@@ -161,7 +151,7 @@ def test_ignore_payload_params_other_content_type():
 
 def test_hash():
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         tctx.configure(s)
 
         r = tflow.tflow()
@@ -181,7 +171,7 @@ def test_hash():
 
 def test_headers():
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         tctx.configure(s, server_replay_use_headers=["foo"])
 
         r = tflow.tflow(resp=True)
@@ -200,7 +190,7 @@ def test_headers():
 
 def test_load():
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         tctx.configure(s)
 
         r = tflow.tflow(resp=True)
@@ -227,7 +217,7 @@ def test_load():
 
 def test_load_with_server_replay_nopop():
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         tctx.configure(s, server_replay_nopop=True)
 
         r = tflow.tflow(resp=True)
@@ -245,7 +235,7 @@ def test_load_with_server_replay_nopop():
 
 def test_ignore_params():
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         tctx.configure(
             s,
             server_replay_ignore_params=["param1", "param2"]
@@ -266,7 +256,7 @@ def test_ignore_params():
 
 def thash(r, r2, setter):
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         s = serverplayback.ServerPlayback()
         tctx.configure(
             s,
@@ -328,10 +318,10 @@ def test_ignore_payload_params():
 
 def test_server_playback_full():
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         tctx.configure(
             s,
-            refresh_server_playback = True,
+            server_replay_refresh = True,
         )
 
         f = tflow.tflow()
@@ -349,22 +339,14 @@ def test_server_playback_full():
         s.request(tf)
         assert not tf.response
 
-        assert not s.stop
-        s.tick()
-        assert not s.stop
-
-        tf = tflow.tflow()
-        s.request(tflow.tflow())
-        assert s.stop
-
 
 def test_server_playback_kill():
     s = serverplayback.ServerPlayback()
-    with taddons.context() as tctx:
+    with taddons.context(s) as tctx:
         tctx.configure(
             s,
-            refresh_server_playback = True,
-            replay_kill_extra=True
+            server_replay_refresh = True,
+            server_replay_kill_extra=True
         )
 
         f = tflow.tflow()

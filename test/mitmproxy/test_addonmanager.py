@@ -1,4 +1,6 @@
 import pytest
+from unittest import mock
+
 
 from mitmproxy import addons
 from mitmproxy import addonmanager
@@ -13,8 +15,8 @@ from mitmproxy.test import tflow
 class TAddon:
     def __init__(self, name, addons=None):
         self.name = name
-        self.tick = True
-        self.custom_called = False
+        self.response = True
+        self.running_called = False
         if addons:
             self.addons = addons
 
@@ -28,12 +30,12 @@ class TAddon:
     def done(self):
         pass
 
-    def event_custom(self):
-        self.custom_called = True
+    def running(self):
+        self.running_called = True
 
 
 class THalt:
-    def event_custom(self):
+    def running(self):
         raise exceptions.AddonHalt
 
 
@@ -45,7 +47,7 @@ class AOption:
 def test_command():
     with taddons.context() as tctx:
         tctx.master.addons.add(TAddon("test"))
-        assert tctx.master.commands.call("test.command") == "here"
+        assert tctx.master.commands.execute("test.command") == "here"
 
 
 def test_halt():
@@ -57,15 +59,17 @@ def test_halt():
     a.add(halt)
     a.add(end)
 
-    a.trigger("custom")
-    assert not end.custom_called
+    assert not end.running_called
+    a.trigger("running")
+    assert not end.running_called
 
     a.remove(halt)
-    a.trigger("custom")
-    assert end.custom_called
+    a.trigger("running")
+    assert end.running_called
 
 
-def test_lifecycle():
+@pytest.mark.asyncio
+async def test_lifecycle():
     o = options.Options()
     m = master.Master(o)
     a = addonmanager.AddonManager(m)
@@ -77,7 +81,7 @@ def test_lifecycle():
         a.remove(TAddon("nonexistent"))
 
     f = tflow.tflow()
-    a.handle_lifecycle("request", f)
+    await a.handle_lifecycle("request", f)
 
     a._configure_all(o, o.keys())
 
@@ -86,28 +90,31 @@ def test_defaults():
     assert addons.default_addons()
 
 
-def test_loader():
+@pytest.mark.asyncio
+async def test_loader():
     with taddons.context() as tctx:
-        l = addonmanager.Loader(tctx.master)
-        l.add_option("custom_option", bool, False, "help")
-        assert "custom_option" in l.master.options
+        with mock.patch("mitmproxy.ctx.log.warn") as warn:
+            l = addonmanager.Loader(tctx.master)
+            l.add_option("custom_option", bool, False, "help")
+            assert "custom_option" in l.master.options
 
-        # calling this again with the same signature is a no-op.
-        l.add_option("custom_option", bool, False, "help")
-        assert not tctx.master.has_log("Over-riding existing option")
+            # calling this again with the same signature is a no-op.
+            l.add_option("custom_option", bool, False, "help")
+            assert not warn.called
 
-        # a different signature should emit a warning though.
-        l.add_option("custom_option", bool, True, "help")
-        assert tctx.master.has_log("Over-riding existing option")
+            # a different signature should emit a warning though.
+            l.add_option("custom_option", bool, True, "help")
+            assert warn.called
 
-        def cmd(a: str) -> str:
-            return "foo"
+            def cmd(a: str) -> str:
+                return "foo"
 
-        l.add_command("test.command", cmd)
+            l.add_command("test.command", cmd)
 
 
-def test_simple():
-    with taddons.context() as tctx:
+@pytest.mark.asyncio
+async def test_simple():
+    with taddons.context(loadcore=False) as tctx:
         a = tctx.master.addons
 
         assert len(a) == 0
@@ -120,22 +127,26 @@ def test_simple():
         assert not a.chain
 
         a.add(TAddon("one"))
-        a.trigger("done")
-        a.trigger("tick")
-        assert tctx.master.has_log("not callable")
+
+        a.trigger("nonexistent")
+        assert await tctx.master.await_log("unknown event")
+
+        a.trigger("running")
+        a.trigger("response")
+        assert await tctx.master.await_log("not callable")
 
         tctx.master.clear()
-        a.get("one").tick = addons
-        a.trigger("tick")
-        assert not tctx.master.has_log("not callable")
+        a.get("one").response = addons
+        a.trigger("response")
+        assert not await tctx.master.await_log("not callable")
 
         a.remove(a.get("one"))
         assert not a.get("one")
 
         ta = TAddon("one")
         a.add(ta)
-        a.trigger("custom")
-        assert ta.custom_called
+        a.trigger("running")
+        assert ta.running_called
 
         assert ta in a
 
@@ -168,11 +179,11 @@ def test_nesting():
     assert a.get("three")
     assert a.get("four")
 
-    a.trigger("custom")
-    assert a.get("one").custom_called
-    assert a.get("two").custom_called
-    assert a.get("three").custom_called
-    assert a.get("four").custom_called
+    a.trigger("running")
+    assert a.get("one").running_called
+    assert a.get("two").running_called
+    assert a.get("three").running_called
+    assert a.get("four").running_called
 
     a.remove(a.get("three"))
     assert not a.get("three")
@@ -185,10 +196,3 @@ class D:
 
     def log(self, x):
         self.w = x
-
-
-def test_streamlog():
-    dummy = D()
-    s = addonmanager.StreamLog(dummy.log)
-    s.write("foo")
-    assert dummy.w == "foo"

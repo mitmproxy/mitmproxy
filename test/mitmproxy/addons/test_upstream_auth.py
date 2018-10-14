@@ -9,7 +9,7 @@ from mitmproxy.addons import upstream_auth
 
 def test_configure():
     up = upstream_auth.UpstreamAuth()
-    with taddons.context() as tctx:
+    with taddons.context(up) as tctx:
         tctx.configure(up, upstream_auth="test:test")
         assert up.auth == b"Basic" + b" " + base64.b64encode(b"test:test")
 
@@ -29,7 +29,7 @@ def test_configure():
 
 def test_simple():
     up = upstream_auth.UpstreamAuth()
-    with taddons.context() as tctx:
+    with taddons.context(up) as tctx:
         tctx.configure(up, upstream_auth="foo:bar")
 
         f = tflow.tflow()
@@ -41,7 +41,7 @@ def test_simple():
         up.requestheaders(f)
         assert "proxy-authorization" not in f.request.headers
 
-        tctx.configure(up, mode="reverse")
+        tctx.configure(up, mode="reverse:127.0.0.1")
         f = tflow.tflow()
         f.mode = "transparent"
         up.requestheaders(f)

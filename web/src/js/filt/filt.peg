@@ -253,7 +253,7 @@ BindingExpr
   / Expr
 
 /* All the filters except "~s" and "~src" are arranged in the ascending order as
-   given in the docs(http://docs.mitmproxy.org/en/latest/features/filters.html).
+   given in the docs(https://mitmproxy.org/docs/latest/concepts-filters/).
    "~s" and "~src" are so arranged as "~s" caused problems in the evaluation of
    "~src". */
 

@@ -1,7 +1,7 @@
 import sys
 
 DEPRECATED = """
---cadir
+--confdir
 -Z
 --body-size-limit
 --stream
@@ -11,7 +11,6 @@ DEPRECATED = """
 --order
 --no-mouse
 --reverse
---socks
 --http2-priority
 --no-http2-priority
 --no-websocket
@@ -23,7 +22,7 @@ DEPRECATED = """
 --client-certs
 --no-upstream-cert
 --add-upstream-certs-to-client-chain
---upstream-trusted-cadir
+--upstream-trusted-confdir
 --upstream-trusted-ca
 --ssl-version-client
 --ssl-version-server
@@ -59,6 +58,7 @@ REPLACED = """
 -i
 -f
 --filter
+--socks
 """
 
 REPLACEMENTS = {
@@ -72,7 +72,7 @@ REPLACEMENTS = {
     "--no-http2-priority": "http2_priority",
     "--no-websocket": "websocket",
     "--no-upstream-cert": "upstream_cert",
-    "--upstream-trusted-cadir": "ssl_verify_upstream_trusted_cadir",
+    "--upstream-trusted-confdir": "ssl_verify_upstream_trusted_confdir",
     "--upstream-trusted-ca": "ssl_verify_upstream_trusted_ca",
     "--no-onboarding": "onboarding",
     "--no-pop": "server_replay_nopop",
@@ -99,7 +99,8 @@ REPLACEMENTS = {
     "--replace": "--replacements",
     "-i": "--intercept",
     "-f": "--view-filter",
-    "--filter": "--view-filter"
+    "--filter": "--view-filter",
+    "--socks": "--mode socks5"
 }
 
 

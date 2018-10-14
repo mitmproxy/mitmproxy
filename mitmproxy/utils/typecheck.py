@@ -7,26 +7,17 @@ Type = typing.Union[
 
 def sequence_type(typeinfo: typing.Type[typing.List]) -> Type:
     """Return the type of a sequence, e.g. typing.List"""
-    try:
-        return typeinfo.__args__[0]  # type: ignore
-    except AttributeError:  # Python 3.5.0
-        return typeinfo.__parameters__[0]  # type: ignore
+    return typeinfo.__args__[0]  # type: ignore
 
 
 def tuple_types(typeinfo: typing.Type[typing.Tuple]) -> typing.Sequence[Type]:
     """Return the types of a typing.Tuple"""
-    try:
-        return typeinfo.__args__  # type: ignore
-    except AttributeError:  # Python 3.5.x
-        return typeinfo.__tuple_params__  # type: ignore
+    return typeinfo.__args__  # type: ignore
 
 
 def union_types(typeinfo: typing.Type[typing.Tuple]) -> typing.Sequence[Type]:
     """return the types of a typing.Union"""
-    try:
-        return typeinfo.__args__  # type: ignore
-    except AttributeError:  # Python 3.5.x
-        return typeinfo.__union_params__  # type: ignore
+    return typeinfo.__args__  # type: ignore
 
 
 def mapping_types(typeinfo: typing.Type[typing.Mapping]) -> typing.Tuple[Type, Type]:

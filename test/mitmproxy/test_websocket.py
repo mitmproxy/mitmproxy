@@ -92,3 +92,15 @@ class TestWebSocketFlow:
         assert not f.messages[-1].killed
         f.messages[-1].kill()
         assert f.messages[-1].killed
+
+    def test_inject_message(self):
+        f = tflow.twebsocketflow()
+
+        with pytest.raises(ValueError):
+            f.inject_message(None, 'foobar')
+
+        f.inject_message(f.client_conn, 'foobar')
+        assert f._inject_messages_client.qsize() == 1
+
+        f.inject_message(f.server_conn, 'foobar')
+        assert f._inject_messages_client.qsize() == 1

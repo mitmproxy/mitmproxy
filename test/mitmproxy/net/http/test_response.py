@@ -113,7 +113,7 @@ class TestResponseUtils:
         assert attrs["domain"] == "example.com"
         assert attrs["expires"] == "Wed Oct  21 16:29:41 2015"
         assert attrs["path"] == "/"
-        assert attrs["httponly"] is None
+        assert attrs["httponly"] == ""
 
     def test_get_cookies_no_value(self):
         resp = tresp()

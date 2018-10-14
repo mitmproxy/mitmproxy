@@ -11,9 +11,8 @@ TViewResult = typing.Tuple[str, typing.Iterator[TViewLine]]
 
 
 class View:
-    name = None  # type: str
-    prompt = None  # type: typing.Tuple[str,str]
-    content_types = []  # type: typing.List[str]
+    name: str = None
+    content_types: typing.List[str] = []
 
     def __call__(self, data: bytes, **metadata) -> TViewResult:
         """
@@ -49,8 +48,9 @@ def format_dict(
     ]
     entries, where key is padded to a uniform width.
     """
-    max_key_len = max(len(k) for k in d.keys())
-    max_key_len = min(max_key_len, KEY_MAX)
+
+    max_key_len = max((len(k) for k in d.keys()), default=0)
+    max_key_len = min((max_key_len, KEY_MAX), default=0)
     for key, value in d.items():
         if isinstance(key, bytes):
             key += b":"

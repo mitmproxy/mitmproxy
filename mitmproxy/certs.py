@@ -15,6 +15,7 @@ from mitmproxy.coretypes import serializable
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
 DEFAULT_EXP = 94608000  # = 24 * 60 * 60 * 365 * 3
+DEFAULT_EXP_DUMMY_CERT = 63072000  # = 2 years
 
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
 DEFAULT_DHPARAM = b"""
@@ -101,7 +102,7 @@ def dummy_cert(privkey, cacert, commonname, sans):
 
     cert = OpenSSL.crypto.X509()
     cert.gmtime_adj_notBefore(-3600 * 48)
-    cert.gmtime_adj_notAfter(DEFAULT_EXP)
+    cert.gmtime_adj_notAfter(DEFAULT_EXP_DUMMY_CERT)
     cert.set_issuer(cacert.get_subject())
     if commonname is not None and len(commonname) < 64:
         cert.get_subject().CN = commonname
@@ -145,7 +146,7 @@ class CertStore:
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
         self.dhparams = dhparams
-        self.certs = {}  # type: typing.Dict[TCertId, CertStoreEntry]
+        self.certs: typing.Dict[TCertId, CertStoreEntry] = {}
         self.expire_queue = []
 
     def expire(self, entry):
@@ -160,7 +161,7 @@ class CertStore:
     def load_dhparam(path):
 
         # mitmproxy<=0.10 doesn't generate a dhparam file.
-        # Create it now if neccessary.
+        # Create it now if necessary.
         if not os.path.exists(path):
             with open(path, "wb") as f:
                 f.write(DEFAULT_DHPARAM)
@@ -298,7 +299,7 @@ class CertStore:
             sans: A list of Subject Alternate Names.
         """
 
-        potential_keys = []  # type: typing.List[TCertId]
+        potential_keys: typing.List[TCertId] = []
         if commonname:
             potential_keys.extend(self.asterisk_forms(commonname))
         for s in sans:

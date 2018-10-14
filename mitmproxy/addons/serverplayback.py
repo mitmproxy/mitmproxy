@@ -1,8 +1,6 @@
 import hashlib
 import urllib
 import typing
-from typing import Any  # noqa
-from typing import List  # noqa
 
 from mitmproxy import ctx
 from mitmproxy import flow
@@ -15,9 +13,61 @@ import mitmproxy.types
 class ServerPlayback:
     def __init__(self):
         self.flowmap = {}
-        self.stop = False
-        self.final_flow = None
         self.configured = False
+
+    def load(self, loader):
+        loader.add_option(
+            "server_replay_kill_extra", bool, False,
+            "Kill extra requests during replay."
+        )
+        loader.add_option(
+            "server_replay_nopop", bool, False,
+            """
+            Don't remove flows from server replay state after use. This makes it
+            possible to replay same response multiple times.
+            """
+        )
+        loader.add_option(
+            "server_replay_refresh", bool, True,
+            """
+            Refresh server replay responses by adjusting date, expires and
+            last-modified headers, as well as adjusting cookie expiration.
+            """
+        )
+        loader.add_option(
+            "server_replay_use_headers", typing.Sequence[str], [],
+            "Request headers to be considered during replay."
+        )
+        loader.add_option(
+            "server_replay", typing.Sequence[str], [],
+            "Replay server responses from a saved file."
+        )
+        loader.add_option(
+            "server_replay_ignore_content", bool, False,
+            "Ignore request's content while searching for a saved flow to replay."
+        )
+        loader.add_option(
+            "server_replay_ignore_params", typing.Sequence[str], [],
+            """
+            Request's parameters to be ignored while searching for a saved flow
+            to replay.
+            """
+        )
+        loader.add_option(
+            "server_replay_ignore_payload_params", typing.Sequence[str], [],
+            """
+            Request's payload parameters (application/x-www-form-urlencoded or
+            multipart/form-data) to be ignored while searching for a saved flow
+            to replay.
+            """
+        )
+        loader.add_option(
+            "server_replay_ignore_host", bool, False,
+            """
+            Ignore request's destination host while searching for a saved flow
+            to replay.
+            """
+        )
 
     @command.command("replay.server")
     def load_flows(self, flows: typing.Sequence[flow.Flow]) -> None:
@@ -47,7 +97,8 @@ class ServerPlayback:
         self.flowmap = {}
         ctx.master.addons.trigger("update", [])
 
-    def count(self):
+    @command.command("replay.server.count")
+    def count(self) -> int:
         return sum([len(i) for i in self.flowmap.values()])
 
     def _hash(self, flow):
@@ -59,7 +110,7 @@ class ServerPlayback:
         _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
-        key = [str(r.port), str(r.scheme), str(r.method), str(path)]  # type: List[Any]
+        key: typing.List[typing.Any] = [str(r.port), str(r.scheme), str(r.method), str(path)]
         if not ctx.options.server_replay_ignore_content:
             if ctx.options.server_replay_ignore_payload_params and r.multipart_form:
                 key.extend(
@@ -122,23 +173,16 @@ class ServerPlayback:
                 raise exceptions.OptionsError(str(e))
             self.load_flows(flows)
 
-    def tick(self):
-        if self.stop and not self.final_flow.live:
-            ctx.master.addons.trigger("processing_complete")
-
     def request(self, f):
         if self.flowmap:
             rflow = self.next_flow(f)
             if rflow:
                 response = rflow.response.copy()
                 response.is_replay = True
-                if ctx.options.refresh_server_playback:
+                if ctx.options.server_replay_refresh:
                     response.refresh()
                 f.response = response
-                if not self.flowmap:
-                    self.final_flow = f
-                    self.stop = True
-            elif ctx.options.replay_kill_extra:
+            elif ctx.options.server_replay_kill_extra:
                 ctx.log.warn(
                     "server_playback: killed non-replay request {}".format(
                         f.request.url

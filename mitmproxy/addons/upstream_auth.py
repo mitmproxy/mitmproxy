@@ -1,4 +1,5 @@
 import re
+import typing
 import base64
 
 from mitmproxy import exceptions
@@ -28,11 +29,20 @@ class UpstreamAuth():
     def __init__(self):
         self.auth = None
 
+    def load(self, loader):
+        loader.add_option(
+            "upstream_auth", typing.Optional[str], None,
+            """
+            Add HTTP Basic authentication to upstream proxy and reverse proxy
+            requests. Format: username:password.
+            """
+        )
+
     def configure(self, updated):
         # FIXME: We're doing this because our proxy core is terminally confused
         # at the moment. Ideally, we should be able to check if we're in
         # reverse proxy mode at the HTTP layer, so that scripts can put the
-        # proxy in reverse proxy mode for specific reuests.
+        # proxy in reverse proxy mode for specific requests.
         if "upstream_auth" in updated:
             if ctx.options.upstream_auth is None:
                 self.auth = None
@@ -47,5 +57,5 @@ class UpstreamAuth():
         if self.auth:
             if f.mode == "upstream" and not f.server_conn.via:
                 f.request.headers["Proxy-Authorization"] = self.auth
-            elif ctx.options.mode == "reverse":
+            elif ctx.options.mode.startswith("reverse"):
                 f.request.headers["Proxy-Authorization"] = self.auth

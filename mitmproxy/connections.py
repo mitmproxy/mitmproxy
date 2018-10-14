@@ -1,18 +1,18 @@
-import time
-
 import os
+import time
 import typing
 import uuid
 
-from mitmproxy import stateobject, exceptions
 from mitmproxy import certs
+from mitmproxy import exceptions
+from mitmproxy import stateobject
 from mitmproxy.net import tcp
 from mitmproxy.net import tls
+from mitmproxy.utils import human
 from mitmproxy.utils import strutils
 
 
 class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
-
     """
     A client connection
 
@@ -72,11 +72,10 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         else:
             alpn = ""
 
-        return "<ClientConnection: {tls}{alpn}{host}:{port}>".format(
+        return "<ClientConnection: {tls}{alpn}{address}>".format(
             tls=tls,
             alpn=alpn,
-            host=self.address[0],
-            port=self.address[1],
+            address=human.format_address(self.address),
         )
 
     def __eq__(self, other):
@@ -161,7 +160,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
 
 
 class ServerConnection(tcp.TCPClient, stateobject.StateObject):
-
     """
     A server connection
 
@@ -209,11 +207,10 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             )
         else:
             alpn = ""
-        return "<ServerConnection: {tls}{alpn}{host}:{port}>".format(
+        return "<ServerConnection: {tls}{alpn}{address}>".format(
             tls=tls,
             alpn=alpn,
-            host=self.address[0],
-            port=self.address[1],
+            address=human.format_address(self.address),
         )
 
     def __eq__(self, other):
@@ -253,7 +250,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             address=address,
             ip_address=address,
             cert=None,
-            sni=None,
+            sni=address[0],
             alpn_proto_negotiated=None,
             tls_version=None,
             source_address=('', 0),
@@ -276,21 +273,23 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         self.wfile.write(message)
         self.wfile.flush()
 
-    def establish_tls(self, clientcerts, sni, **kwargs):
+    def establish_tls(self, *, sni=None, client_certs=None, **kwargs):
         if sni and not isinstance(sni, str):
             raise ValueError("sni must be str, not " + type(sni).__name__)
-        clientcert = None
-        if clientcerts:
-            if os.path.isfile(clientcerts):
-                clientcert = clientcerts
+        client_cert = None
+        if client_certs:
+            client_certs = os.path.expanduser(client_certs)
+            if os.path.isfile(client_certs):
+                client_cert = client_certs
             else:
                 path = os.path.join(
-                    clientcerts,
-                    self.address[0].encode("idna").decode()) + ".pem"
+                    client_certs,
+                    (sni or self.address[0].encode("idna").decode()) + ".pem"
+                )
                 if os.path.exists(path):
-                    clientcert = path
+                    client_cert = path
 
-        self.convert_to_tls(cert=clientcert, sni=sni, **kwargs)
+        self.convert_to_tls(cert=client_cert, sni=sni, **kwargs)
         self.sni = sni
         self.alpn_proto_negotiated = self.get_alpn_proto_negotiated()
         self.tls_version = self.connection.get_protocol_version_name()

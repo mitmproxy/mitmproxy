@@ -252,8 +252,7 @@ class TestXSSScanner():
                 self.text = html
         return MockResponse("<html></html>")
 
-    def test_test_end_of_url_injection(self, monkeypatch):
-        monkeypatch.setattr(requests, 'get', self.mocked_requests_vuln)
+    def test_test_end_of_url_injection(self, get_request_vuln):
         xss_info = xss.test_end_of_URL_injection("<html></html>", "https://example.com/index.html", {})[0]
         expected_xss_info = xss.XSSData('https://example.com/index.html/1029zxcs\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\eq=3847asd',
                                         'End of URL',
@@ -263,8 +262,7 @@ class TestXSSScanner():
         assert xss_info == expected_xss_info
         assert sqli_info is None
 
-    def test_test_referer_injection(self, monkeypatch):
-        monkeypatch.setattr(requests, 'get', self.mocked_requests_vuln)
+    def test_test_referer_injection(self, get_request_vuln):
         xss_info = xss.test_referer_injection("<html></html>", "https://example.com/", {})[0]
         expected_xss_info = xss.XSSData('https://example.com/',
                                         'Referer',
@@ -274,8 +272,7 @@ class TestXSSScanner():
         assert xss_info == expected_xss_info
         assert sqli_info is None
 
-    def test_test_user_agent_injection(self, monkeypatch):
-        monkeypatch.setattr(requests, 'get', self.mocked_requests_vuln)
+    def test_test_user_agent_injection(self, get_request_vuln):
         xss_info = xss.test_user_agent_injection("<html></html>", "https://example.com/", {})[0]
         expected_xss_info = xss.XSSData('https://example.com/',
                                         'User Agent',
@@ -285,8 +282,8 @@ class TestXSSScanner():
         assert xss_info == expected_xss_info
         assert sqli_info is None
 
-    def test_test_query_injection(self, monkeypatch):
-        monkeypatch.setattr(requests, 'get', self.mocked_requests_vuln)
+    def test_test_query_injection(self, get_request_vuln):
+
         xss_info = xss.test_query_injection("<html></html>", "https://example.com/vuln.php?cmd=ls", {})[0]
         expected_xss_info = xss.XSSData('https://example.com/vuln.php?cmd=1029zxcs\'d"ao<ac>so[sb]po(pc)se;sl/bsl\\eq=3847asd',
                                         'Query',
@@ -296,19 +293,43 @@ class TestXSSScanner():
         assert xss_info == expected_xss_info
         assert sqli_info is None
 
-    @pytest.fixture
-    def logger(self):
+    @pytest.fixture(scope='function')
+    def logger(self, monkeypatch):
         class Logger():
             def __init__(self):
                 self.args = []
 
+            def info(self, str):
+                self.args.append(str)
+
             def error(self, str):
                 self.args.append(str)
-        return Logger()
 
-    def test_find_unclaimed_URLs(self, monkeypatch, logger):
-        logger.args = []
+        logger = Logger()
         monkeypatch.setattr("mitmproxy.ctx.log", logger)
+        yield logger
+
+    @pytest.fixture(scope='function')
+    def get_request_vuln(self, monkeypatch):
+        monkeypatch.setattr(requests, 'get', self.mocked_requests_vuln)
+
+    @pytest.fixture(scope='function')
+    def get_request_invuln(self, monkeypatch):
+        monkeypatch.setattr(requests, 'get', self.mocked_requests_invuln)
+
+    @pytest.fixture(scope='function')
+    def mock_gethostbyname(self, monkeypatch):
+        def gethostbyname(domain):
+            claimed_domains = ["google.com"]
+            if domain not in claimed_domains:
+                from socket import gaierror
+                raise gaierror("[Errno -2] Name or service not known")
+            else:
+                return '216.58.221.46'
+
+        monkeypatch.setattr("socket.gethostbyname", gethostbyname)
+
+    def test_find_unclaimed_URLs(self, logger, mock_gethostbyname):
         xss.find_unclaimed_URLs("<html><script src=\"http://google.com\"></script></html>",
                                 "https://example.com")
         assert logger.args == []
@@ -317,14 +338,12 @@ class TestXSSScanner():
         assert logger.args[0] == 'XSS found in https://example.com due to unclaimed URL "http://unclaimedDomainName.com".'
         xss.find_unclaimed_URLs("<html><iframe src=\"http://unclaimedDomainName.com\"></iframe></html>",
                                 "https://example.com")
-        assert logger.args[0] == 'XSS found in https://example.com due to unclaimed URL "http://unclaimedDomainName.com".'
+        assert logger.args[1] == 'XSS found in https://example.com due to unclaimed URL "http://unclaimedDomainName.com".'
         xss.find_unclaimed_URLs("<html><link rel=\"stylesheet\" href=\"http://unclaimedDomainName.com\"></html>",
                                 "https://example.com")
-        assert logger.args[0] == 'XSS found in https://example.com due to unclaimed URL "http://unclaimedDomainName.com".'
+        assert logger.args[2] == 'XSS found in https://example.com due to unclaimed URL "http://unclaimedDomainName.com".'
 
-    def test_log_XSS_data(self, monkeypatch, logger):
-        logger.args = []
-        monkeypatch.setattr("mitmproxy.ctx.log", logger)
+    def test_log_XSS_data(self, logger):
         xss.log_XSS_data(None)
         assert logger.args == []
         # self, url: str, injection_point: str, exploit: str, line: str
@@ -338,15 +357,13 @@ class TestXSSScanner():
         assert logger.args[3] == 'Suggested Exploit: String'
         assert logger.args[4] == 'Line: Line of HTML'
 
-    def test_log_SQLi_data(self, monkeypatch, logger):
-        logger.args = []
-        monkeypatch.setattr("mitmproxy.ctx.log", logger)
+    def test_log_SQLi_data(self, logger):
         xss.log_SQLi_data(None)
         assert logger.args == []
-        xss.log_SQLi_data(xss.SQLiData(b'https://example.com',
-                                       b'Location',
-                                       b'Oracle.*Driver',
-                                       b'Oracle'))
+        xss.log_SQLi_data(xss.SQLiData('https://example.com',
+                                       'Location',
+                                       'Oracle.*Driver',
+                                       'Oracle'))
         assert logger.args[0] == '===== SQLi Found ====='
         assert logger.args[1] == 'SQLi URL: https://example.com'
         assert logger.args[2] == 'Injection Point: Location'
@@ -359,11 +376,11 @@ class TestXSSScanner():
         # It only uses the request cookies
         assert xss.get_cookies(mocked_flow) == {"cookieName2": "cookieValue2"}
 
-    def test_response(self, monkeypatch, logger):
-        logger.args = []
-        monkeypatch.setattr("mitmproxy.ctx.log", logger)
-        monkeypatch.setattr(requests, 'get', self.mocked_requests_invuln)
-        mocked_flow = tflow.tflow(req=tutils.treq(path=b"index.html?q=1"), resp=tutils.tresp(content=b'<html></html>'))
+    def test_response(self, get_request_invuln, logger):
+        mocked_flow = tflow.tflow(
+            req=tutils.treq(path=b"index.html?q=1"),
+            resp=tutils.tresp(content=b'<html></html>')
+        )
         xss.response(mocked_flow)
         assert logger.args == []
 

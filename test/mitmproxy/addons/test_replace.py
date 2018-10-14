@@ -18,7 +18,7 @@ class TestReplace:
 
     def test_configure(self):
         r = replace.Replace()
-        with taddons.context() as tctx:
+        with taddons.context(r) as tctx:
             tctx.configure(r, replacements=["one/two/three"])
             with pytest.raises(Exception, match="Invalid filter pattern"):
                 tctx.configure(r, replacements=["/~b/two/three"])
@@ -28,7 +28,7 @@ class TestReplace:
 
     def test_simple(self):
         r = replace.Replace()
-        with taddons.context() as tctx:
+        with taddons.context(r) as tctx:
             tctx.configure(
                 r,
                 replacements=[
@@ -48,7 +48,7 @@ class TestReplace:
 
     def test_order(self):
         r = replace.Replace()
-        with taddons.context() as tctx:
+        with taddons.context(r) as tctx:
             tctx.configure(
                 r,
                 replacements=[
@@ -67,7 +67,7 @@ class TestReplace:
 class TestReplaceFile:
     def test_simple(self, tmpdir):
         r = replace.Replace()
-        with taddons.context() as tctx:
+        with taddons.context(r) as tctx:
             tmpfile = tmpdir.join("replacement")
             tmpfile.write("bar")
             tctx.configure(
@@ -79,9 +79,10 @@ class TestReplaceFile:
             r.request(f)
             assert f.request.content == b"bar"
 
-    def test_nonexistent(self, tmpdir):
+    @pytest.mark.asyncio
+    async def test_nonexistent(self, tmpdir):
         r = replace.Replace()
-        with taddons.context() as tctx:
+        with taddons.context(r) as tctx:
             with pytest.raises(Exception, match="Invalid file path"):
                 tctx.configure(
                     r,
@@ -97,6 +98,5 @@ class TestReplaceFile:
             tmpfile.remove()
             f = tflow.tflow()
             f.request.content = b"foo"
-            assert not tctx.master.logs
             r.request(f)
-            assert tctx.master.logs
+            assert await tctx.master.await_log("could not read")

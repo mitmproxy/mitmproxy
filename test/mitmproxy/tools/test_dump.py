@@ -10,13 +10,13 @@ from .. import tservers
 
 
 class TestDumpMaster(tservers.MasterTest):
-    def mkmaster(self, flt, **opts):
-        o = options.Options(view_filter=flt, verbosity='error', flow_detail=0, **opts)
+    def mkmaster(self, **opts):
+        o = options.Options(**opts)
         m = dump.DumpMaster(o, with_termlog=False, with_dumper=False)
         return m
 
     def test_has_error(self):
-        m = self.mkmaster(None)
+        m = self.mkmaster()
         ent = log.LogEntry("foo", "error")
         ent.reply = controller.DummyReply()
         m.addons.trigger("log", ent)

@@ -1,10 +1,6 @@
 import argparse
-import os
 
-from mitmproxy import options
-
-
-CONFIG_PATH = os.path.join(options.CA_DIR, "config.yaml")
+from mitmproxy.addons import core
 
 
 def common_options(parser, opts):
@@ -25,10 +21,10 @@ def common_options(parser, opts):
         help="Show all commands and their signatures",
     )
     parser.add_argument(
-        "--conf",
-        type=str, dest="conf", default=CONFIG_PATH,
+        "--confdir",
+        type=str, dest="confdir", default=core.CONF_DIR,
         metavar="PATH",
-        help="Read options from a configuration file"
+        help="Path to the mitmproxy config directory"
     )
     parser.add_argument(
         "--set",
@@ -87,7 +83,7 @@ def common_options(parser, opts):
     # Server replay
     group = parser.add_argument_group("Server Replay")
     opts.make_parser(group, "server_replay", metavar="PATH", short="S")
-    opts.make_parser(group, "replay_kill_extra")
+    opts.make_parser(group, "server_replay_kill_extra")
     opts.make_parser(group, "server_replay_nopop")
 
     # Replacements

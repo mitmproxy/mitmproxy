@@ -1,11 +1,7 @@
 from io import BytesIO
 
-from mitmproxy.utils import data
 from mitmproxy.net import tcp
 from mitmproxy.net import http
-
-
-test_data = data.Data(__name__).push("../../test/")
 
 
 def treader(bytes):

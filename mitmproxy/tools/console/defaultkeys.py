@@ -11,6 +11,7 @@ def map(km):
     km.add("q", "console.view.pop", ["global"], "Exit the current view")
     km.add("-", "console.layout.cycle", ["global"], "Cycle to next layout")
     km.add("shift tab", "console.panes.next", ["global"], "Focus next layout pane")
+    km.add("ctrl right", "console.panes.next", ["global"], "Focus next layout pane")
     km.add("P", "console.view.flow @focus", ["global"], "View flow details")
 
     km.add("g", "console.nav.start", ["global"], "Go to start")
@@ -25,9 +26,9 @@ def map(km):
     km.add("ctrl f", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl b", "console.nav.pageup", ["global"], "Page up")
 
-    km.add("I", "console.intercept.toggle", ["global"], "Toggle intercept")
-    km.add("i", "console.command set intercept=", ["global"], "Set intercept")
-    km.add("W", "console.command set save_stream_file=", ["global"], "Stream to file")
+    km.add("I", "set intercept_active=toggle", ["global"], "Toggle intercept")
+    km.add("i", "console.command.set intercept", ["global"], "Set intercept")
+    km.add("W", "console.command.set save_stream_file", ["global"], "Stream to file")
     km.add("A", "flow.resume @all", ["flowlist", "flowview"], "Resume all intercepted flows")
     km.add("a", "flow.resume @focus", ["flowlist", "flowview"], "Resume this intercepted flow")
     km.add(
@@ -35,8 +36,8 @@ def map(km):
         ["flowlist", "flowview"],
         "Save response body to file"
     )
-    km.add("d", "view.remove @focus", ["flowlist", "flowview"], "Delete flow from view")
-    km.add("D", "view.duplicate @focus", ["flowlist", "flowview"], "Duplicate flow")
+    km.add("d", "view.flows.remove @focus", ["flowlist", "flowview"], "Delete flow from view")
+    km.add("D", "view.flows.duplicate @focus", ["flowlist", "flowview"], "Duplicate flow")
     km.add(
         "e",
         """
@@ -46,7 +47,7 @@ def map(km):
         ["flowlist", "flowview"],
         "Export this flow to file"
     )
-    km.add("f", "console.command set view_filter=", ["flowlist"], "Set view filter")
+    km.add("f", "console.command.set view_filter", ["flowlist"], "Set view filter")
     km.add("F", "set console_focus_follow=toggle", ["flowlist"], "Set focus follow")
     km.add(
         "ctrl l",
@@ -56,10 +57,10 @@ def map(km):
     )
     km.add("L", "console.command view.load ", ["flowlist"], "Load flows from file")
     km.add("m", "flow.mark.toggle @focus", ["flowlist"], "Toggle mark on this flow")
-    km.add("M", "view.marked.toggle", ["flowlist"], "Toggle viewing marked flows")
+    km.add("M", "view.properties.marked.toggle", ["flowlist"], "Toggle viewing marked flows")
     km.add(
         "n",
-        "console.command view.create get https://example.com/",
+        "console.command view.flows.create get https://example.com/",
         ["flowlist"],
         "Create a new flow"
     )
@@ -79,8 +80,8 @@ def map(km):
     km.add("w", "console.command save.file @shown ", ["flowlist"], "Save listed flows to file")
     km.add("V", "flow.revert @focus", ["flowlist", "flowview"], "Revert changes to this flow")
     km.add("X", "flow.kill @focus", ["flowlist"], "Kill this flow")
-    km.add("z", "view.remove @all", ["flowlist"], "Clear flow list")
-    km.add("Z", "view.remove @hidden", ["flowlist"], "Purge all flows not showing")
+    km.add("z", "view.flows.remove @all", ["flowlist"], "Clear flow list")
+    km.add("Z", "view.flows.remove @hidden", ["flowlist"], "Purge all flows not showing")
     km.add(
         "|",
         "console.command script.run @focus ",
@@ -99,7 +100,7 @@ def map(km):
     )
     km.add(
         "f",
-        "view.setval.toggle @focus fullcontents",
+        "view.settings.setval.toggle @focus fullcontents",
         ["flowview"],
         "Toggle viewing full contents on this flow",
     )

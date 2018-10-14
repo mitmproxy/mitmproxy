@@ -1,4 +1,5 @@
 import csv
+import shlex
 import typing
 
 from mitmproxy import ctx
@@ -6,6 +7,7 @@ from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
+from mitmproxy import log
 from mitmproxy import contentviews
 from mitmproxy.utils import strutils
 import mitmproxy.types
@@ -76,13 +78,23 @@ class ConsoleAddon:
 
     def load(self, loader):
         loader.add_option(
+            "console_default_contentview", str, "auto",
+            "The default content view mode.",
+            choices = [i.name.lower() for i in contentviews.views]
+        )
+        loader.add_option(
+            "console_eventlog_verbosity", str, 'info',
+            "EventLog verbosity.",
+            choices=log.LogTierOrder
+        )
+        loader.add_option(
             "console_layout", str, "single",
             "Console layout.",
             choices=sorted(console_layouts),
         )
         loader.add_option(
             "console_layout_headers", bool, True,
-            "Show layout comonent headers",
+            "Show layout component headers",
         )
         loader.add_option(
             "console_focus_follow", bool, False,
@@ -108,15 +120,6 @@ class ConsoleAddon:
             Returns the available options for the console_layout option.
         """
         return ["single", "vertical", "horizontal"]
-
-    @command.command("console.intercept.toggle")
-    def intercept_toggle(self) -> None:
-        """
-            Toggles interception on/off leaving intercept filters intact.
-        """
-        ctx.options.update(
-            intercept_active = not ctx.options.intercept_active
-        )
 
     @command.command("console.layout.cycle")
     def layout_cycle(self) -> None:
@@ -144,7 +147,7 @@ class ConsoleAddon:
         fv = self.master.window.current("options")
         if not fv:
             raise exceptions.CommandError("Not viewing options.")
-        self.master.commands.call("options.reset.one %s" % fv.current_name())
+        self.master.commands.execute("options.reset.one %s" % fv.current_name())
 
     @command.command("console.nav.start")
     def nav_start(self) -> None:
@@ -226,7 +229,7 @@ class ConsoleAddon:
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
-            invoke another command with all occurances of {choice} replaced by
+            invoke another command with all occurrences of {choice} replaced by
             the choice the user made.
         """
         def callback(opt):
@@ -234,7 +237,7 @@ class ConsoleAddon:
             repl = cmd + " " + " ".join(args)
             repl = repl.replace("{choice}", opt)
             try:
-                self.master.commands.call(repl)
+                self.master.commands.execute(repl)
             except exceptions.CommandError as e:
                 signals.status_message.send(message=str(e))
 
@@ -252,17 +255,17 @@ class ConsoleAddon:
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
-            command, then invoke another command with all occurances of {choice}
+            command, then invoke another command with all occurrences of {choice}
             replaced by the choice the user made.
         """
-        choices = ctx.master.commands.call_args(choicecmd, [])
+        choices = ctx.master.commands.call_strings(choicecmd, [])
 
         def callback(opt):
             # We're now outside of the call context...
-            repl = " ".join(args)
+            repl = shlex.quote(" ".join(args))
             repl = repl.replace("{choice}", opt)
             try:
-                self.master.commands.call(subcmd + " " + repl)
+                self.master.commands.execute(subcmd + " " + repl)
             except exceptions.CommandError as e:
                 signals.status_message.send(message=str(e))
 
@@ -276,6 +279,17 @@ class ConsoleAddon:
         Prompt the user to edit a command with a (possibly empty) starting value.
         """
         signals.status_prompt_command.send(partial=" ".join(partial))  # type: ignore
+
+    @command.command("console.command.set")
+    def console_command_set(self, option: str) -> None:
+        """
+        Prompt the user to set an option of the form "key[=value]".
+        """
+        option_value = getattr(self.master.options, option, None)
+        current_value = option_value if option_value else ""
+        self.master.commands.execute(
+            "console.command set %s=%s" % (option, current_value)
+        )
 
     @command.command("console.view.keybindings")
     def view_keybindings(self) -> None:
@@ -379,6 +393,8 @@ class ConsoleAddon:
         # but for now it is.
         if not flow:
             raise exceptions.CommandError("No flow selected.")
+        flow.backup()
+
         require_dummy_response = (
             part in ("response-headers", "response-body", "set-cookies") and
             flow.response is None
@@ -413,7 +429,7 @@ class ConsoleAddon:
         elif part == "set-cookies":
             self.master.switch_view("edit_focus_setcookies")
         elif part in ["url", "method", "status_code", "reason"]:
-            self.master.commands.call(
+            self.master.commands.execute(
                 "console.command flow.set @focus %s " % part
             )
 
@@ -465,13 +481,16 @@ class ConsoleAddon:
             Save data to file as a CSV.
         """
         rows = self._grideditor().value
-        with open(path, "w", newline='', encoding="utf8") as fp:
-            writer = csv.writer(fp)
-            for row in rows:
-                writer.writerow(
-                    [strutils.always_str(x) or "" for x in row]  # type: ignore
-                )
-        ctx.log.alert("Saved %s rows as CSV." % (len(rows)))
+        try:
+            with open(path, "w", newline='', encoding="utf8") as fp:
+                writer = csv.writer(fp)
+                for row in rows:
+                    writer.writerow(
+                        [strutils.always_str(x) or "" for x in row]  # type: ignore
+                    )
+            ctx.log.alert("Saved %s rows as CSV." % (len(rows)))
+        except IOError as e:
+            ctx.log.error(str(e))
 
     @command.command("console.grideditor.editor")
     def grideditor_editor(self) -> None:
@@ -495,8 +514,8 @@ class ConsoleAddon:
             raise exceptions.CommandError("Invalid flowview mode.")
 
         try:
-            self.master.commands.call_args(
-                "view.setval",
+            self.master.commands.call_strings(
+                "view.settings.setval",
                 ["@focus", "flowview_mode_%s" % idx, mode]
             )
         except exceptions.CommandError as e:
@@ -518,12 +537,12 @@ class ConsoleAddon:
         if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
-        return self.master.commands.call_args(
-            "view.getval",
+        return self.master.commands.call_strings(
+            "view.settings.getval",
             [
                 "@focus",
                 "flowview_mode_%s" % idx,
-                self.master.options.default_contentview,
+                self.master.options.console_default_contentview,
             ]
         )
 

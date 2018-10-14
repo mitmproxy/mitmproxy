@@ -28,6 +28,68 @@ class TestListCompleter:
                 assert c.cycle() == expected
 
 
+class TestCommandHistory:
+    def fill_history(self, commands):
+        with taddons.context() as tctx:
+            history = commander.CommandHistory(tctx.master, size=3)
+            for c in commands:
+                cbuf = commander.CommandBuffer(tctx.master, c)
+                history.add_command(cbuf)
+        return history, tctx.master
+
+    def test_add_command(self):
+        commands = ["command1", "command2"]
+        history, tctx_master = self.fill_history(commands)
+
+        saved_commands = [buf.text for buf in history.saved_commands]
+        assert saved_commands == [""] + commands
+
+        # The history size is only 3. So, we forget the first
+        # one command, when adding fourth command
+        cbuf = commander.CommandBuffer(tctx_master, "command3")
+        history.add_command(cbuf)
+        saved_commands = [buf.text for buf in history.saved_commands]
+        assert saved_commands == commands + ["command3"]
+
+        # Commands with the same text are not repeated in the history one by one
+        history.add_command(cbuf)
+        saved_commands = [buf.text for buf in history.saved_commands]
+        assert saved_commands == commands + ["command3"]
+
+        # adding command in execution mode sets index at the beginning of the history
+        # and replace the last command buffer if it is empty or has the same text
+        cbuf = commander.CommandBuffer(tctx_master, "")
+        history.add_command(cbuf)
+        history.index = 0
+        cbuf = commander.CommandBuffer(tctx_master, "command4")
+        history.add_command(cbuf, True)
+        assert history.index == history.last_index
+        saved_commands = [buf.text for buf in history.saved_commands]
+        assert saved_commands == ["command2", "command3", "command4"]
+
+    def test_get_next(self):
+        commands = ["command1", "command2"]
+        history, tctx_master = self.fill_history(commands)
+
+        history.index = -1
+        expected_items = ["", "command1", "command2"]
+        for i in range(3):
+            assert history.get_next().text == expected_items[i]
+        # We are at the last item of the history
+        assert history.get_next() is None
+
+    def test_get_prev(self):
+        commands = ["command1", "command2"]
+        history, tctx_master = self.fill_history(commands)
+
+        expected_items = ["command2", "command1", ""]
+        history.index = history.last_index + 1
+        for i in range(3):
+            assert history.get_prev().text == expected_items[i]
+        # We are at the first item of the history
+        assert history.get_prev() is None
+
+
 class TestCommandBuffer:
 
     def test_backspace(self):

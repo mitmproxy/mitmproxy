@@ -70,7 +70,7 @@ def test_defaults():
 def test_required_int():
     o = TO()
     with pytest.raises(exceptions.OptionsError):
-        o.parse_setval("required_int", None)
+        o.parse_setval(o._options["required_int"], None)
 
 
 def test_deepcopy():
@@ -269,11 +269,13 @@ def test_serialize():
 
     t = "# a comment"
     optmanager.load(o2, t)
-    assert optmanager.load(o2, "foobar: '123'") == {"foobar": "123"}
+    optmanager.load(o2, "foobar: '123'")
+    assert o2.deferred == {"foobar": "123"}
 
     t = ""
     optmanager.load(o2, t)
-    assert optmanager.load(o2, "foobar: '123'") == {"foobar": "123"}
+    optmanager.load(o2, "foobar: '123'")
+    assert o2.deferred == {"foobar": "123"}
 
 
 def test_serialize_defaults():
@@ -297,7 +299,8 @@ def test_saving(tmpdir):
 
     with open(dst, 'a') as f:
         f.write("foobar: '123'")
-    assert optmanager.load_paths(o, dst) == {"foobar": "123"}
+    optmanager.load_paths(o, dst)
+    assert o.deferred == {"foobar": "123"}
 
     with open(dst, 'a') as f:
         f.write("'''")
@@ -351,7 +354,7 @@ def test_dump_defaults():
 def test_dump_dicts():
     o = options.Options()
     assert optmanager.dump_dicts(o)
-    assert optmanager.dump_dicts(o, ['http2', 'anticomp'])
+    assert optmanager.dump_dicts(o, ['http2', 'listen_port'])
 
 
 class TTypes(optmanager.OptManager):
@@ -375,8 +378,12 @@ def test_make_parser():
     opts.make_parser(parser, "int", short="c")
     opts.make_parser(parser, "seqstr", short="d")
     opts.make_parser(parser, "bool_on", short="e")
+
     with pytest.raises(ValueError):
         opts.make_parser(parser, "unknown")
+
+    # Nonexistent options ignore
+    opts.make_parser(parser, "nonexistentxxx")
 
 
 def test_set():
@@ -422,4 +429,13 @@ def test_set():
     assert opts.seqstr == []
 
     with pytest.raises(exceptions.OptionsError):
-        opts.set("nonexistent=wobble")
+        opts.set("deferredoption=wobble")
+
+    opts.set("deferredoption=wobble", defer=True)
+    assert "deferredoption" in opts.deferred
+    opts.process_deferred()
+    assert "deferredoption" in opts.deferred
+    opts.add_option("deferredoption", str, "default", "help")
+    opts.process_deferred()
+    assert "deferredoption" not in opts.deferred
+    assert opts.deferredoption == "wobble"

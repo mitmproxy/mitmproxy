@@ -35,14 +35,17 @@ Line: 1029zxcs'd"ao<ac>so[sb]po(pc)se;sl/bsl\eq=3847asd
 
 """
 
-from mitmproxy import ctx
-from socket import gaierror, gethostbyname
-from urllib.parse import urlparse
-import requests
-import re
 from html.parser import HTMLParser
-from mitmproxy import http
 from typing import Dict, Union, Tuple, Optional, List, NamedTuple
+from urllib.parse import urlparse
+import re
+import socket
+
+import requests
+
+from mitmproxy import http
+from mitmproxy import ctx
+
 
 # The actual payload is put between a frontWall and a backWall to make it easy
 # to locate the payload with regular expressions
@@ -83,15 +86,16 @@ def get_cookies(flow: http.HTTPFlow) -> Cookies:
     return {name: value for name, value in flow.request.cookies.fields}
 
 
-def find_unclaimed_URLs(body: Union[str, bytes], requestUrl: bytes) -> None:
+def find_unclaimed_URLs(body: str, requestUrl: bytes) -> None:
     """ Look for unclaimed URLs in script tags and log them if found"""
-    def getValue(attrs: List[Tuple[str, str]], attrName: str) -> str:
+    def getValue(attrs: List[Tuple[str, str]], attrName: str) -> Optional[str]:
         for name, value in attrs:
             if attrName == name:
                 return value
+        return None
 
     class ScriptURLExtractor(HTMLParser):
-        script_URLs = []
+        script_URLs: List[str] = []
 
         def handle_starttag(self, tag, attrs):
             if (tag == "script" or tag == "iframe") and "src" in [name for name, value in attrs]:
@@ -100,16 +104,13 @@ def find_unclaimed_URLs(body: Union[str, bytes], requestUrl: bytes) -> None:
                 self.script_URLs.append(getValue(attrs, "href"))
 
     parser = ScriptURLExtractor()
-    try:
-        parser.feed(body)
-    except TypeError:
-        parser.feed(body.decode('utf-8'))
+    parser.feed(body)
     for url in parser.script_URLs:
-        parser = urlparse(url)
-        domain = parser.netloc
+        url_parser = urlparse(url)
+        domain = url_parser.netloc
         try:
-            gethostbyname(domain)
-        except gaierror:
+            socket.gethostbyname(domain)
+        except socket.gaierror:
             ctx.log.error("XSS found in %s due to unclaimed URL \"%s\"." % (requestUrl, url))
 
 
@@ -178,10 +179,11 @@ def log_SQLi_data(sqli_info: Optional[SQLiData]) -> None:
     if not sqli_info:
         return
     ctx.log.error("===== SQLi Found =====")
-    ctx.log.error("SQLi URL: %s" % sqli_info.url.decode('utf-8'))
-    ctx.log.error("Injection Point: %s" % sqli_info.injection_point.decode('utf-8'))
-    ctx.log.error("Regex used: %s" % sqli_info.regex.decode('utf-8'))
-    ctx.log.error("Suspected DBMS: %s" % sqli_info.dbms.decode('utf-8'))
+    ctx.log.error("SQLi URL: %s" % sqli_info.url)
+    ctx.log.error("Injection Point: %s" % sqli_info.injection_point)
+    ctx.log.error("Regex used: %s" % sqli_info.regex)
+    ctx.log.error("Suspected DBMS: %s" % sqli_info.dbms)
+    return
 
 
 def get_SQLi_data(new_body: str, original_body: str, request_URL: str, injection_point: str) -> Optional[SQLiData]:
@@ -202,20 +204,21 @@ def get_SQLi_data(new_body: str, original_body: str, request_URL: str, injection
         "Sybase": (r"(?i)Warning.*sybase.*", r"Sybase message", r"Sybase.*Server message.*"),
     }
     for dbms, regexes in DBMS_ERRORS.items():
-        for regex in regexes:
+        for regex in regexes:  # type: ignore
             if re.search(regex, new_body, re.IGNORECASE) and not re.search(regex, original_body, re.IGNORECASE):
                 return SQLiData(request_URL,
                                 injection_point,
                                 regex,
                                 dbms)
+    return None
 
 
 # A qc is either ' or "
-def inside_quote(qc: str, substring: bytes, text_index: int, body: bytes) -> bool:
-    """ Whether the Numberth occurence of the first string in the second
+def inside_quote(qc: str, substring_bytes: bytes, text_index: int, body_bytes: bytes) -> bool:
+    """ Whether the Numberth occurrence of the first string in the second
         string is inside quotes as defined by the supplied QuoteChar """
-    substring = substring.decode('utf-8')
-    body = body.decode('utf-8')
+    substring = substring_bytes.decode('utf-8')
+    body = body_bytes.decode('utf-8')
     num_substrings_found = 0
     in_quote = False
     for index, char in enumerate(body):
@@ -238,20 +241,20 @@ def inside_quote(qc: str, substring: bytes, text_index: int, body: bytes) -> boo
     return False
 
 
-def paths_to_text(html: str, str: str) -> List[str]:
+def paths_to_text(html: str, string: str) -> List[str]:
     """ Return list of Paths to a given str in the given HTML tree
           - Note that it does a BFS """
 
-    def remove_last_occurence_of_sub_string(str: str, substr: str):
-        """ Delete the last occurence of substr from str
+    def remove_last_occurence_of_sub_string(string: str, substr: str) -> str:
+        """ Delete the last occurrence of substr from str
         String String -> String
         """
-        index = str.rfind(substr)
-        return str[:index] + str[index + len(substr):]
+        index = string.rfind(substr)
+        return string[:index] + string[index + len(substr):]
 
     class PathHTMLParser(HTMLParser):
         currentPath = ""
-        paths = []
+        paths: List[str] = []
 
         def handle_starttag(self, tag, attrs):
             self.currentPath += ("/" + tag)
@@ -260,7 +263,7 @@ def paths_to_text(html: str, str: str) -> List[str]:
             self.currentPath = remove_last_occurence_of_sub_string(self.currentPath, "/" + tag)
 
         def handle_data(self, data):
-            if str in data:
+            if string in data:
                 self.paths.append(self.currentPath)
 
     parser = PathHTMLParser()
@@ -268,10 +271,10 @@ def paths_to_text(html: str, str: str) -> List[str]:
     return parser.paths
 
 
-def get_XSS_data(body: str, request_URL: str, injection_point: str) -> Optional[XSSData]:
+def get_XSS_data(body: Union[str, bytes], request_URL: str, injection_point: str) -> Optional[XSSData]:
     """ Return a XSSDict if there is a XSS otherwise return None """
     def in_script(text, index, body) -> bool:
-        """ Whether the Numberth occurence of the first string in the second
+        """ Whether the Numberth occurrence of the first string in the second
             string is inside a script tag """
         paths = paths_to_text(body.decode('utf-8'), text.decode("utf-8"))
         try:
@@ -281,7 +284,7 @@ def get_XSS_data(body: str, request_URL: str, injection_point: str) -> Optional[
             return False
 
     def in_HTML(text: bytes, index: int, body: bytes) -> bool:
-        """ Whether the Numberth occurence of the first string in the second
+        """ Whether the Numberth occurrence of the first string in the second
             string is inside the HTML but not inside a script tag or part of
             a HTML attribute"""
         # if there is a < then lxml will interpret that as a tag, so only search for the stuff before it
@@ -314,9 +317,9 @@ def get_XSS_data(body: str, request_URL: str, injection_point: str) -> Optional[
     matches = regex.findall(body)
     for index, match in enumerate(matches):
         # Where the string is injected into the HTML
-        in_script = in_script(match, index, body)
-        in_HTML = in_HTML(match, index, body)
-        in_tag = not in_script and not in_HTML
+        in_script_val = in_script(match, index, body)
+        in_HTML_val = in_HTML(match, index, body)
+        in_tag = not in_script_val and not in_HTML_val
         in_single_quotes = inside_quote("'", match, index, body)
         in_double_quotes = inside_quote('"', match, index, body)
         # Whether you can inject:
@@ -327,17 +330,17 @@ def get_XSS_data(body: str, request_URL: str, injection_point: str) -> Optional[
         inject_slash = b"sl/bsl" in match  # forward slashes
         inject_semi = b"se;sl" in match  # semicolons
         inject_equals = b"eq=" in match  # equals sign
-        if in_script and inject_slash and inject_open_angle and inject_close_angle:  # e.g. <script>PAYLOAD</script>
+        if in_script_val and inject_slash and inject_open_angle and inject_close_angle:  # e.g. <script>PAYLOAD</script>
             return XSSData(request_URL,
                            injection_point,
                            '</script><script>alert(0)</script><script>',
                            match.decode('utf-8'))
-        elif in_script and in_single_quotes and inject_single_quotes and inject_semi:  # e.g. <script>t='PAYLOAD';</script>
+        elif in_script_val and in_single_quotes and inject_single_quotes and inject_semi:  # e.g. <script>t='PAYLOAD';</script>
             return XSSData(request_URL,
                            injection_point,
                            "';alert(0);g='",
                            match.decode('utf-8'))
-        elif in_script and in_double_quotes and inject_double_quotes and inject_semi:  # e.g. <script>t="PAYLOAD";</script>
+        elif in_script_val and in_double_quotes and inject_double_quotes and inject_semi:  # e.g. <script>t="PAYLOAD";</script>
             return XSSData(request_URL,
                            injection_point,
                            '";alert(0);g="',
@@ -380,33 +383,35 @@ def get_XSS_data(body: str, request_URL: str, injection_point: str) -> Optional[
                            injection_point,
                            " onmouseover=alert(0) t=",
                            match.decode('utf-8'))
-        elif in_HTML and not in_script and inject_open_angle and inject_close_angle and inject_slash:  # e.g. <html>PAYLOAD</html>
+        elif in_HTML_val and not in_script_val and inject_open_angle and inject_close_angle and inject_slash:  # e.g. <html>PAYLOAD</html>
             return XSSData(request_URL,
                            injection_point,
                            '<script>alert(0)</script>',
                            match.decode('utf-8'))
         else:
             return None
+    return None
 
 
 # response is mitmproxy's entry point
 def response(flow: http.HTTPFlow) -> None:
-    cookiesDict = get_cookies(flow)
+    cookies_dict = get_cookies(flow)
+    resp = flow.response.get_text(strict=False)
     # Example: http://xss.guru/unclaimedScriptTag.html
-    find_unclaimed_URLs(flow.response.content, flow.request.url)
-    results = test_end_of_URL_injection(flow.response.content.decode('utf-8'), flow.request.url, cookiesDict)
+    find_unclaimed_URLs(resp, flow.request.url)
+    results = test_end_of_URL_injection(resp, flow.request.url, cookies_dict)
     log_XSS_data(results[0])
     log_SQLi_data(results[1])
     # Example: https://daviddworken.com/vulnerableReferer.php
-    results = test_referer_injection(flow.response.content.decode('utf-8'), flow.request.url, cookiesDict)
+    results = test_referer_injection(resp, flow.request.url, cookies_dict)
     log_XSS_data(results[0])
     log_SQLi_data(results[1])
     # Example: https://daviddworken.com/vulnerableUA.php
-    results = test_user_agent_injection(flow.response.content.decode('utf-8'), flow.request.url, cookiesDict)
+    results = test_user_agent_injection(resp, flow.request.url, cookies_dict)
     log_XSS_data(results[0])
     log_SQLi_data(results[1])
     if "?" in flow.request.url:
         # Example: https://daviddworken.com/vulnerable.php?name=
-        results = test_query_injection(flow.response.content.decode('utf-8'), flow.request.url, cookiesDict)
+        results = test_query_injection(resp, flow.request.url, cookies_dict)
         log_XSS_data(results[0])
         log_SQLi_data(results[1])

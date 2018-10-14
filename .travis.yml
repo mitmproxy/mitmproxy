@@ -16,21 +16,25 @@ git:
 matrix:
   fast_finish: true
   include:
+    - python: 3.5
+      env: TOXENV=py35 # this just makes sure that our version detection shows an appropriate error message
     - python: 3.6
       env: TOXENV=lint
     - os: osx
       osx_image: xcode7.3
       language: generic
-      env: TOXENV=py35 BDIST=1
-    - python: 3.5
-      env: TOXENV=py35 BDIST=1
-      dist: precise
+      env: TOXENV=py36 CIBUILD=1 PYINSTALLER=1
     - python: 3.6
-      env: TOXENV=py36
+      env: TOXENV=py36 CIBUILD=1 PYINSTALLER=1 WHEEL=1 DOCKER=1
+      sudo: required
+      services:
+        - docker
     - python: 3.6
       env: TOXENV=individual_coverage
-    - python: 3.6
-      env: TOXENV=docs
+    - python: 3.7
+      env: TOXENV=py37
+      dist: xenial
+      sudo: true # required workaround for https://github.com/travis-ci/travis-ci/issues/9815
     - language: node_js
       node_js: "node"
       before_install:
@@ -44,6 +48,17 @@ matrix:
           yarn: true
           directories:
               - web/node_modules
+    - python: 3.6
+      env: NAME=docs TOXENV=docs
+      install:
+        - wget https://github.com/gohugoio/hugo/releases/download/v0.41/hugo_0.41_Linux-64bit.deb
+        - sudo dpkg -i hugo*.deb
+        - pip install tox virtualenv setuptools
+        - pyenv global system 3.6
+      script:
+        - tox
+      after_success:
+        - echo done
 
 install:
   - |
@@ -52,29 +67,29 @@ install:
       brew update || brew update
       brew outdated pyenv || brew upgrade pyenv
       eval "$(pyenv init -)"
-      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.5.3
-      pyenv global 3.5.3
-      pyenv shell 3.5.3
-      pip install -U pip setuptools wheel virtualenv
+      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.6.5
+      pyenv global 3.6.5
+      pyenv shell 3.6.5
     fi
-  - pip install tox
+  - pip install tox virtualenv setuptools
 
 script:
-  - tox -- --verbose --cov-report=term
+  # All these steps MUST succeed for the job to be successful!
+  # Using the after_success block DOES NOT capture errors.
+  # Pull requests might break our build - we need to check this.
+  # Pull requests are not allowed to upload build artifacts - enforced by cibuild script.
   - |
-    if [[ $BDIST == "1" ]]
-    then
-        git fetch --unshallow --tags
-        tox -e rtool -- bdist
+    if [[ $TRAVIS_COMMIT_MESSAGE = *"[notest]"* ]]; then
+      echo "!!!! Skipping tests."
+    else
+      tox -- --verbose --cov-report=term
     fi
 
-after_success:
-  # we build binaries on every run, but we only upload them for master snapshots or tags.
   - |
-    if [[ $BDIST == "1" && $TRAVIS_PULL_REQUEST == "false" && ($TRAVIS_BRANCH == "pyinstaller" || $TRAVIS_BRANCH == "master" || -n $TRAVIS_TAG) ]]
+    if [[ $CIBUILD == "1" ]]
     then
-        tox -e rtool -- decrypt release/known_hosts.enc release/known_hosts
-        tox -e rtool -- upload-snapshot --bdist
+        git fetch --unshallow --tags
+        tox -e cibuild -- build && tox -e cibuild -- upload
     fi
 
 notifications:
