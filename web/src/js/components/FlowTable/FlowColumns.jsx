@@ -90,8 +90,26 @@ MethodColumn.headerClass = 'col-method'
 MethodColumn.headerName = 'Method'
 
 export function StatusColumn({ flow }) {
+    let color = 'darkred';
+
+    if (100 <= flow.response.status_code && flow.response.status_code < 200) {
+        color = 'green'
+    }
+    else if (200 <= flow.response.status_code && flow.response.status_code < 300) {
+        color = 'darkgreen'
+    }
+    else if (300 <= flow.response.status_code && flow.response.status_code < 400) {
+        color = 'lightblue'
+    }
+    else if (400 <= flow.response.status_code && flow.response.status_code < 500) {
+        color = 'lightred'
+    }
+    else if (500 <= flow.response.status_code && flow.response.status_code < 600) {
+        color = 'lightred'
+    }
+
     return (
-        <td className="col-status">{flow.response && flow.response.status_code}</td>
+        <td className="col-status" style={{color: color}}>{flow.response && flow.response.status_code}</td>
     )
 }
 
