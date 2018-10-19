@@ -24,7 +24,7 @@ from . import (
     auto, raw, hex, json, xml_html, wbxml, javascript, css,
     urlencoded, multipart, image, query, protobuf
 )
-from .base import View, VIEW_CUTOFF, KEY_MAX, format_text, format_dict, TViewResult
+from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 
 views: List[View] = []
 content_types_map: Dict[str, List[View]] = {}
@@ -160,6 +160,6 @@ add(query.ViewQuery())
 add(protobuf.ViewProtobuf())
 
 __all__ = [
-    "View", "VIEW_CUTOFF", "KEY_MAX", "format_text", "format_dict", "TViewResult",
+    "View", "KEY_MAX", "format_text", "format_dict", "TViewResult",
     "get", "add", "remove", "get_content_view", "get_message_content_view",
 ]
