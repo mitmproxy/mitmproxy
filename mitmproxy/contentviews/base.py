@@ -12,7 +12,8 @@ TViewResult = typing.Tuple[str, typing.Iterator[TViewLine]]
 
 class View:
     name: str = None
-    content_types: typing.List[str] = []
+    media_types: typing.List[str] = []
+    suffixes: typing.List[str] = [] # rfc6839
 
     def __call__(self, data: bytes, **metadata) -> TViewResult:
         """

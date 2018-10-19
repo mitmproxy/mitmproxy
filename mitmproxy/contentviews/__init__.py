@@ -27,7 +27,8 @@ from . import (
 from .base import View, VIEW_CUTOFF, KEY_MAX, format_text, format_dict, TViewResult
 
 views: List[View] = []
-content_types_map: Dict[str, List[View]] = {}
+media_types_map: Dict[str, List[View]] = {}
+suffixes_map: Dict[str, List[View]] = {}
 
 
 def get(name: str) -> Optional[View]:
@@ -45,18 +46,29 @@ def add(view: View) -> None:
 
     views.append(view)
 
-    for ct in view.content_types:
-        l = content_types_map.setdefault(ct, [])
+    for mt in view.media_types:
+        l = media_types_map.setdefault(mt, [])
+        l.append(view)
+
+    for suffix in view.suffixes:
+        l = suffixes_map.setdefault(suffix, [])
         l.append(view)
 
 
 def remove(view: View) -> None:
-    for ct in view.content_types:
-        l = content_types_map.setdefault(ct, [])
+    for mt in view.media_types:
+        l = media_types_map.setdefault(mt, [])
         l.remove(view)
 
         if not len(l):
-            del content_types_map[ct]
+            del media_types_map[mt]
+
+    for suffix in view.suffixes:
+        l = suffixes_map.setdefault(suffix, [])
+        l.remove(view)
+
+        if not len(l):
+            del suffixes_map[suffix]
 
     views.remove(view)
 

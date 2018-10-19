@@ -66,7 +66,7 @@ class ViewProtobuf(base.View):
     """
 
     name = "Protocol Buffer"
-    content_types = [
+    media_types = [
         "application/x-protobuf",
         "application/x-protobuffer",
     ]

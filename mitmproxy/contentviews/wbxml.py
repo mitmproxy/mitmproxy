@@ -4,10 +4,11 @@ from . import base
 
 class ViewWBXML(base.View):
     name = "WBXML"
-    content_types = [
+    media_types = [
         "application/vnd.wap.wbxml",
         "application/vnd.ms-sync.wbxml"
     ]
+    suffixes = ["wbxml"]
 
     def __call__(self, data, **metadata):
         try:

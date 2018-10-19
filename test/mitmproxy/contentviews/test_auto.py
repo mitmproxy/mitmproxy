@@ -37,6 +37,18 @@ def test_view_auto():
     assert f[0].startswith("XML")
 
     f = v(
+        b"{\"foo\":\"bar\"}",
+        headers=http.Headers(content_type="application/vnd.acme+json")
+    )
+    assert f[0] == "JSON"
+
+    f = v(
+        b"\x03\x01\x6A\x00",
+        headers=http.Headers(content_type="application/vnd.acme+wbxml")
+    )
+    assert f[0] == "WBXML"
+
+    f = v(
         b"verybinary",
         headers=http.Headers(content_type="image/new-magic-image-format")
     )

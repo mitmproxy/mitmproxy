@@ -182,40 +182,53 @@ class Headers(multidict.MultiDict):
         return replacements
 
 
+content_type_regex = re.compile("([^/+;]+)/([^+;]+)(?:\+([^;]+))?(?:;(.*))?")
+
+
 def parse_content_type(c):
     """
         A simple parser for content-type values. Returns a (type, subtype,
-        parameters) tuple, where type and subtype are strings, and parameters
-        is a dict. If the string could not be parsed, return None.
+        suffix, parameters) tuple, where type and subtype are strings, suffix is
+        optional string and parameters is a dict. If the string could not be
+        parsed, returns None.
 
-        E.g. the following string:
+        E.g. for the following string:
 
             text/html; charset=UTF-8
 
         Returns:
 
-            ("text", "html", {"charset": "UTF-8"})
+            ("text", "html", None, {"charset": "UTF-8"})
+
+        And for the following string:
+
+            application/vnd.acme+json; charset=UTF-8
+
+        Returns:
+
+            ("application", "vnd.acme", "json", {"charset": "UTF-8"})
     """
-    parts = c.split(";", 1)
-    ts = parts[0].split("/", 1)
-    if len(ts) != 2:
+    m = content_type_regex.match(c)
+    if m is None:
         return None
+    type, subtype, suffix, parameters = m.groups()
     d = collections.OrderedDict()
-    if len(parts) == 2:
-        for i in parts[1].split(";"):
-            clause = i.split("=", 1)
-            if len(clause) == 2:
-                d[clause[0].strip()] = clause[1].strip()
-    return ts[0].lower(), ts[1].lower(), d
+    if parameters is not None:
+        for parameter in parameters.split(";"):
+            key_value = parameter.split("=", 1)
+            if len(key_value) == 2:
+                d[key_value[0].strip()] = key_value[1].strip()
+    return type, subtype, suffix, d
 
 
-def assemble_content_type(type, subtype, parameters):
-    if not parameters:
-        return "{}/{}".format(type, subtype)
-    params = "; ".join(
-        "{}={}".format(k, v)
-        for k, v in parameters.items()
-    )
-    return "{}/{}; {}".format(
-        type, subtype, params
-    )
+def assemble_content_type(type, subtype, suffix, parameters):
+    content_type = "{}/{}".format(type, subtype)
+    if suffix:
+        content_type += "+{}".format(suffix)
+    if parameters:
+        params = "; ".join(
+            "{}={}".format(k, v)
+            for k, v in parameters.items()
+        )
+        content_type += "; {}".format(params)
+    return content_type

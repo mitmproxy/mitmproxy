@@ -214,7 +214,8 @@ def format_xml(tokens: Iterable[Token]) -> str:
 
 class ViewXmlHtml(base.View):
     name = "XML/HTML"
-    content_types = ["text/xml", "text/html"]
+    media_types = ["text/xml", "text/html"]
+    suffixes = ["xml"]
 
     def __call__(self, data, **metadata):
         # TODO:

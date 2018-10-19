@@ -9,7 +9,7 @@ from mitmproxy.test import tutils
 
 class TestContentView(contentviews.View):
     name = "test"
-    content_types = ["test/123"]
+    media_types = ["test/123"]
 
 
 def test_add_remove():

@@ -162,7 +162,7 @@ class Message(serializable.Serializable):
     def _get_content_type_charset(self) -> Optional[str]:
         ct = headers.parse_content_type(self.headers.get("content-type", ""))
         if ct:
-            return ct[2].get("charset")
+            return ct[3].get("charset")
         return None
 
     def _guess_encoding(self) -> str:
@@ -209,8 +209,8 @@ class Message(serializable.Serializable):
             self.content = encoding.encode(text, enc)
         except ValueError:
             # Fall back to UTF-8 and update the content-type header.
-            ct = headers.parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
-            ct[2]["charset"] = "utf-8"
+            ct = headers.parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", None, {})
+            ct[3]["charset"] = "utf-8"
             self.headers["content-type"] = headers.assemble_content_type(*ct)
             enc = "utf8"
             self.content = text.encode(enc, "surrogateescape")

@@ -50,7 +50,7 @@ def beautify(data: str, indent: str = "    "):
 
 class ViewCSS(base.View):
     name = "CSS"
-    content_types = [
+    media_types = [
         "text/css"
     ]
 

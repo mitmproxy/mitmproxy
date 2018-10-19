@@ -5,7 +5,7 @@ from . import base
 
 class ViewMultipart(base.View):
     name = "Multipart Form"
-    content_types = ["multipart/form-data"]
+    media_types = ["multipart/form-data"]
 
     @staticmethod
     def _format(v):

@@ -13,7 +13,7 @@ def decode(hdrs, content):
         if not v:
             return []
         try:
-            boundary = v[2]["boundary"].encode("ascii")
+            boundary = v[3]["boundary"].encode("ascii")
         except (KeyError, UnicodeError):
             return []
 

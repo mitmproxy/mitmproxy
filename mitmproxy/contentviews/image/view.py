@@ -17,7 +17,7 @@ class ViewImage(base.View):
     name = "Image"
 
     # there is also a fallback in the auto view for image/*.
-    content_types = [
+    media_types = [
         "image/png",
         "image/jpeg",
         "image/gif",

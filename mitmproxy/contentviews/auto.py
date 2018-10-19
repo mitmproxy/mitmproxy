@@ -12,12 +12,15 @@ class ViewAuto(base.View):
         ctype = headers.get("content-type")
         if data and ctype:
             ct = http.parse_content_type(ctype) if ctype else None
-            ct = "%s/%s" % (ct[0], ct[1])
-            if ct in contentviews.content_types_map:
-                return contentviews.content_types_map[ct][0](data, **metadata)
+            suffix = ct[2]
+            mt = "%s/%s" % (ct[0], ct[1])
+            if suffix in contentviews.suffixes_map:
+                return contentviews.suffixes_map[suffix][0](data, **metadata)
+            elif mt in contentviews.media_types_map:
+                return contentviews.media_types_map[mt][0](data, **metadata)
             elif strutils.is_xml(data):
                 return contentviews.get("XML/HTML")(data, **metadata)
-            elif ct.startswith("image/"):
+            elif mt.startswith("image/"):
                 return contentviews.get("Image")(data, **metadata)
         if metadata.get("query"):
             return contentviews.get("Query")(data, **metadata)

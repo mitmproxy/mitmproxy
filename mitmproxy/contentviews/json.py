@@ -15,11 +15,11 @@ def pretty_json(s: bytes) -> Optional[bytes]:
 
 class ViewJSON(base.View):
     name = "JSON"
-    content_types = [
+    media_types = [
         "application/json",
-        "application/json-rpc",
-        "application/vnd.api+json"
+        "application/json-rpc"
     ]
+    suffixes = ["json"]
 
     def __call__(self, data, **metadata):
         pj = pretty_json(data)

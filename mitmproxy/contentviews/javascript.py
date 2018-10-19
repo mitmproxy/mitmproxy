@@ -46,7 +46,7 @@ def beautify(data):
 
 class ViewJavaScript(base.View):
     name = "JavaScript"
-    content_types = [
+    media_types = [
         "application/x-javascript",
         "application/javascript",
         "text/javascript"
