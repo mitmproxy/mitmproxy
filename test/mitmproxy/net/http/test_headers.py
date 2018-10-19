@@ -106,5 +106,9 @@ def test_assemble_content_type():
     p = assemble_content_type
     assert p("text", "html", None, {}) == "text/html"
     assert p("text", "html", None, {"charset": "utf8"}) == "text/html; charset=utf8"
-    assert p("text", "html", None, collections.OrderedDict([("charset", "utf8"), ("foo", "bar")])) == "text/html; charset=utf8; foo=bar"
-    assert p("application", "vnd.acme", "json", collections.OrderedDict([("charset", "utf8"), ("foo", "bar")])) == "application/vnd.acme+json; charset=utf8; foo=bar"
+
+    v = p("text", "html", None, collections.OrderedDict([("charset", "utf8"), ("foo", "bar")]))
+    assert v == "text/html; charset=utf8; foo=bar"
+
+    v = p("application", "vnd.acme", "json", collections.OrderedDict([("charset", "utf8"), ("foo", "bar")]))
+    assert v == "application/vnd.acme+json; charset=utf8; foo=bar"
