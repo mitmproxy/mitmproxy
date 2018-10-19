@@ -6,6 +6,7 @@ from typing import Optional, Union  # noqa
 import urwid
 
 from mitmproxy import contentviews
+from mitmproxy import ctx
 from mitmproxy import http
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
@@ -102,7 +103,7 @@ class FlowDetails(tabs.Tabs):
             if full == "true":
                 limit = sys.maxsize
             else:
-                limit = contentviews.VIEW_CUTOFF
+                limit = ctx.options.content_view_lines_cutoff
 
             flow_modify_cache_invalidation = hash((
                 message.raw_content,

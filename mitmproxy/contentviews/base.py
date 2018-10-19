@@ -1,8 +1,6 @@
 # Default view cutoff *in lines*
 import typing
 
-VIEW_CUTOFF = 512
-
 KEY_MAX = 30
 
 TTextType = typing.Union[str, bytes]  # FIXME: This should be either bytes or str ultimately.

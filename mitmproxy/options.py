@@ -6,6 +6,7 @@ from mitmproxy.net import tls
 
 CONF_DIR = "~/.mitmproxy"
 LISTEN_PORT = 8080
+CONTENT_VIEW_LINES_CUTOFF = 512
 
 
 class Options(optmanager.OptManager):
@@ -159,6 +160,13 @@ class Options(optmanager.OptManager):
             Generic TCP SSL proxy mode for all hosts that match the pattern.
             Similar to --ignore, but SSL connections are intercepted. The
             communication contents are printed to the log in verbose mode.
+            """
+        )
+        self.add_option(
+            "content_view_lines_cutoff", int, CONTENT_VIEW_LINES_CUTOFF,
+            """
+            Flow content view lines limit. Limit is enabled by default to
+            speedup flows browsing.
             """
         )
 
