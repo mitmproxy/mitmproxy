@@ -92,19 +92,19 @@ MethodColumn.headerName = 'Method'
 export function StatusColumn({ flow }) {
     let color = 'darkred';
 
-    if (100 <= flow.response.status_code && flow.response.status_code < 200) {
+    if (flow.response !== null && 100 <= flow.response.status_code && flow.response.status_code < 200) {
         color = 'green'
     }
-    else if (200 <= flow.response.status_code && flow.response.status_code < 300) {
+    else if (flow.response !== null && 200 <= flow.response.status_code && flow.response.status_code < 300) {
         color = 'darkgreen'
     }
-    else if (300 <= flow.response.status_code && flow.response.status_code < 400) {
+    else if (flow.response !== null && 300 <= flow.response.status_code && flow.response.status_code < 400) {
         color = 'lightblue'
     }
-    else if (400 <= flow.response.status_code && flow.response.status_code < 500) {
+    else if (flow.response !== null && 400 <= flow.response.status_code && flow.response.status_code < 500) {
         color = 'lightred'
     }
-    else if (500 <= flow.response.status_code && flow.response.status_code < 600) {
+    else if (flow.response !== null && 500 <= flow.response.status_code && flow.response.status_code < 600) {
         color = 'lightred'
     }
 
