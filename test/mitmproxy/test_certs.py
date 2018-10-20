@@ -111,6 +111,13 @@ class TestCertStore:
         certs.CertStore.load_dhparam(filename)
         assert os.path.exists(filename)
 
+    def test_umask_secret(self, tmpdir):
+        filename = str(tmpdir.join("secret"))
+        with certs.CertStore.umask_secret(), open(filename, "wb"):
+            pass
+        # TODO: How do we actually attempt to read that file as another user?
+        assert os.stat(filename).st_mode & 0o77 == 0
+
 
 class TestDummyCert:
 
