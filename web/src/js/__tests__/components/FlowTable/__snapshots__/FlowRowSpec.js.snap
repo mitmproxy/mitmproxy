@@ -30,6 +30,11 @@ exports[`FlowRow Component should render correctly 1`] = `
   </td>
   <td
     className="col-status"
+    style={
+      Object {
+        "color": "darkgreen",
+      }
+    }
   >
     200
   </td>
