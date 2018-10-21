@@ -109,6 +109,11 @@ exports[`FlowColumns Components should render SizeColumn 1`] = `
 exports[`FlowColumns Components should render StatusColumn 1`] = `
 <td
   className="col-status"
+  style={
+    Object {
+      "color": "darkred",
+    }
+  }
 />
 `;
 
