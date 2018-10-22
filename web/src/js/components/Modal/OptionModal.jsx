@@ -102,9 +102,6 @@ export default connect(
     }),
     {
         hideModal: modalAction.hideModal,
-        save: () => {
-            optionAction.save()
-            alert('Options saved, your options will be loaded automatically on next start up.')
-        },
+        save: optionAction.save,
     }
 )(PureOptionModal)

@@ -46,5 +46,6 @@ export function update(option, value) {
 }
 
 export function save() {
+    alert('Options saved, your options will be loaded automatically on next start up.')
     return dispatch => fetchApi('/options/save', { method: 'POST' })
 }
