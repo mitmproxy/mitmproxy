@@ -1,4 +1,6 @@
 import os
+import sys
+import pytest
 from mitmproxy import certs
 
 # class TestDNTree:
@@ -111,6 +113,8 @@ class TestCertStore:
         certs.CertStore.load_dhparam(filename)
         assert os.path.exists(filename)
 
+    @pytest.mark.skipif(sys.platform in ["win32", "cygwin"],
+                        reason="Unix file permissions are not applicable on Windows")
     def test_umask_secret(self, tmpdir):
         filename = str(tmpdir.join("secret"))
         with certs.CertStore.umask_secret(), open(filename, "wb"):
