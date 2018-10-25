@@ -118,6 +118,8 @@ error. If it doesn't work for you, try the following things:
     is not needed in transparent mode.
 - Re-check the instructions in the [transparent]({{< relref "howto-transparent"
     >}}) section. Anything you missed?
+- Try including or excluding the (`--set keep-host-header`) directive.
+- Try using reverse mode instead of transparent mode (both modes canont be used at once).
 
 If you encounter any other pitfalls that should be listed here, please
 let us know!
