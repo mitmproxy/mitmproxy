@@ -7,10 +7,20 @@ menu:
 
 # Transparent Proxying
 
-When a transparent proxy is used, traffic is redirected into a proxy at the
-network layer, without any client configuration being required. This makes
-transparent proxying ideal for those situations where you can't change client
-behaviour - proxy-oblivious mobile applications being a common example.
+When a transparent proxy is used, traffic can be redirected into a proxy at the
+network layer, without any client configuration being required, or the client can be tricked into sending data through the proxy.
+
+## Client Configuration
+Often, DNS or other modifications can be used to trick the client into sending data through the proxy. In some cases, this is as simple as editing the hosts file on the client so it contains the IP address of the mitmproxy for the target host. Traffic will then be sent to the mitmproxy, and mitmproxy can correctly handle it in transparent mode. In other cases, the DNS server can be set to point to a host running dnschef or dnsspoof. Without any iptables rules in place, mitmproxy will need to listen on the port that the server would normally be listening on. The following example shows an example of this configuration, where the machine running dnschef and mitmproxy has the IP 192.168.1.105, and the client has its DNS server set to 192.168.1.105:
+
+{{< highlight bash  >}}
+dnschef --fakeip=192.168.1.105 --fakedomains=api.example.com -i 192.168.1.105
+mitmproxy --mode transparent -p 443
+{{< / highlight >}}
+
+## Network Layer Proxying
+
+Transparent proxying at the network layer is ideal for those situations where you can't change client behaviour.
 
 To set up transparent proxying, we need two new components. The first is a
 redirection mechanism that transparently reroutes a TCP connection destined for
