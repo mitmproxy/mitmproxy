@@ -18,16 +18,16 @@ dnschef --fakeip=192.168.1.105 --fakedomains=api.example.com -i 192.168.1.105
 mitmproxy --mode transparent -p 443
 {{< / highlight >}}
 
-In many cases this request will be made to your IP, and you will need to use a reverse proxy to forward the traffic upstream to the actual target. The reverse and transparent modes cannot be used together, although the reverse mode will correctly handle transparent traffic. The following example shows this configuration (the keep-host-header parameter is not always necissary):
+In many cases this request will be made to your IP, and you will need to use a reverse proxy to forward the traffic upstream to the actual target. The reverse and transparent modes cannot be used together, although the reverse mode will correctly handle transparent traffic. The following example shows this configuration (the keep_host_header option is not always necessary):
 
 {{< highlight bash  >}}
-mitmproxy --mode reverse:http://api.example.com/ -p 443 --set keep-host-header
+mitmproxy --mode reverse:http://api.example.com/ -p 443 --set keep_host_header
 {{< / highlight >}}
 
 The upstream proxy can also be a local proxy, such as Burp suite. In some cases this may be needed or helpful in further analysis of HTTP requests.
 
 {{< highlight bash  >}}
-mitmproxy --mode reverse:http://192.168.1.110:443/ -p 443 --set keep-host-header
+mitmproxy --mode reverse:http://192.168.1.110:443/ -p 443 --set keep_host_header
 {{< / highlight >}}
 
 The following file has additional information about how to spoof DNS from within mitmproxy:
