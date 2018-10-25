@@ -1,5 +1,6 @@
 import os
 from mitmproxy import certs
+from ..conftest import skip_windows
 
 # class TestDNTree:
 #     def test_simple(self):
@@ -110,6 +111,14 @@ class TestCertStore:
         filename = str(tmpdir.join("dhparam.pem"))
         certs.CertStore.load_dhparam(filename)
         assert os.path.exists(filename)
+
+    @skip_windows
+    def test_umask_secret(self, tmpdir):
+        filename = str(tmpdir.join("secret"))
+        with certs.CertStore.umask_secret(), open(filename, "wb"):
+            pass
+        # TODO: How do we actually attempt to read that file as another user?
+        assert os.stat(filename).st_mode & 0o77 == 0
 
 
 class TestDummyCert:

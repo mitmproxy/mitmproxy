@@ -5,6 +5,7 @@ import datetime
 import ipaddress
 import sys
 import typing
+import contextlib
 
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
@@ -196,6 +197,21 @@ class CertStore:
         return cls(key, ca, ca_path, dh)
 
     @staticmethod
+    @contextlib.contextmanager
+    def umask_secret():
+        """
+            Context to temporarily set umask to its original value bitor 0o77.
+            Useful when writing private keys to disk so that only the owner
+            will be able to read them.
+        """
+        original_umask = os.umask(0)
+        os.umask(original_umask | 0o77)
+        try:
+            yield
+        finally:
+            os.umask(original_umask)
+
+    @staticmethod
     def create_store(path, basename, o=None, cn=None, expiry=DEFAULT_EXP):
         if not os.path.exists(path):
             os.makedirs(path)
@@ -205,7 +221,7 @@ class CertStore:
 
         key, ca = create_ca(o=o, cn=cn, exp=expiry)
         # Dump the CA plus private key
-        with open(os.path.join(path, basename + "-ca.pem"), "wb") as f:
+        with CertStore.umask_secret(), open(os.path.join(path, basename + "-ca.pem"), "wb") as f:
             f.write(
                 OpenSSL.crypto.dump_privatekey(
                     OpenSSL.crypto.FILETYPE_PEM,
@@ -236,7 +252,7 @@ class CertStore:
             f.write(p12.export())
 
         # Dump the certificate and key in a PKCS12 format for Windows devices
-        with open(os.path.join(path, basename + "-ca.p12"), "wb") as f:
+        with CertStore.umask_secret(), open(os.path.join(path, basename + "-ca.p12"), "wb") as f:
             p12 = OpenSSL.crypto.PKCS12()
             p12.set_certificate(ca)
             p12.set_privatekey(key)
