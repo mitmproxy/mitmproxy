@@ -15,7 +15,7 @@ Usage:
         # Used as the target location if neither SNI nor host header are present.
         --mode reverse:http://example.com/
         # To avoid auto rewriting of host header by the reverse proxy target.
-        --set keep-host-header
+        --set keep_host_header
     mitmdump
         -p 80
         --mode reverse:http://localhost:443/
