@@ -27,9 +27,10 @@ def colorful(line, styles):
 
 
 class Dumper:
-    def __init__(self, outfile=sys.stdout):
+    def __init__(self, outfile=sys.stdout, errfile=sys.stderr):
         self.filter: flowfilter.TFilter = None
         self.outfp: typing.io.TextIO = outfile
+        self.errfp: typing.io.TextIO = errfile
 
     def load(self, loader):
         loader.add_option(
@@ -69,6 +70,13 @@ class Dumper:
         click.secho(text, file=self.outfp, **style)
         if self.outfp:
             self.outfp.flush()
+
+    def echo_error(self, text, ident=None, **style):
+        if ident:
+            text = indent(ident, text)
+        click.secho(text, file=self.errfp, **style)
+        if self.errfp:
+            self.errfp.flush()
 
     def _echo_headers(self, headers):
         for k, v in headers.fields:
@@ -243,7 +251,7 @@ class Dumper:
             self.echo_flow(f)
 
     def websocket_error(self, f):
-        self.echo(
+        self.echo_error(
             "Error in WebSocket connection to {}: {}".format(
                 human.format_address(f.server_conn.address), f.error
             ),
@@ -268,7 +276,7 @@ class Dumper:
                 f.close_reason))
 
     def tcp_error(self, f):
-        self.echo(
+        self.echo_error(
             "Error in TCP connection to {}: {}".format(
                 human.format_address(f.server_conn.address), f.error
             ),
