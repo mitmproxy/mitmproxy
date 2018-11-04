@@ -16,7 +16,7 @@ certificates have to be installed on the client device.
 By far the easiest way to install the mitmproxy certificates is to use the
 built-in certificate installation app. To do this, just start mitmproxy and
 configure your target device with the correct proxy settings. Now start a
-browser on the device, and visit the magic domain **mitm.it**. You should see
+browser on the device, and visit the magic domain [**mitm.it**](http://mitm.it/). You should see
 something like this:
 
 {{< figure src="/certinstall-webapp.png" class="has-border" >}}
