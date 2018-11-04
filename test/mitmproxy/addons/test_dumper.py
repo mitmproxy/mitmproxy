@@ -32,37 +32,50 @@ def test_configure():
 
 def test_simple():
     sio = io.StringIO()
-    d = dumper.Dumper(sio)
+    sio_err = io.StringIO()
+    d = dumper.Dumper(sio, sio_err)
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=0)
         d.response(tflow.tflow(resp=True))
         assert not sio.getvalue()
         sio.truncate(0)
+        assert not sio_err.getvalue()
+        sio_err.truncate(0)
 
         ctx.configure(d, flow_detail=1)
         d.response(tflow.tflow(resp=True))
         assert sio.getvalue()
         sio.truncate(0)
+        assert not sio_err.getvalue()
+        sio_err.truncate(0)
 
         ctx.configure(d, flow_detail=1)
         d.error(tflow.tflow(err=True))
         assert sio.getvalue()
         sio.truncate(0)
+        assert not sio_err.getvalue()
+        sio_err.truncate(0)
 
         ctx.configure(d, flow_detail=4)
         d.response(tflow.tflow(resp=True))
         assert sio.getvalue()
         sio.truncate(0)
+        assert not sio_err.getvalue()
+        sio_err.truncate(0)
 
         ctx.configure(d, flow_detail=4)
         d.response(tflow.tflow(resp=True))
         assert "<<" in sio.getvalue()
         sio.truncate(0)
+        assert not sio_err.getvalue()
+        sio_err.truncate(0)
 
         ctx.configure(d, flow_detail=4)
         d.response(tflow.tflow(err=True))
         assert "<<" in sio.getvalue()
         sio.truncate(0)
+        assert not sio_err.getvalue()
+        sio_err.truncate(0)
 
         ctx.configure(d, flow_detail=4)
         flow = tflow.tflow()
@@ -75,6 +88,8 @@ def test_simple():
         d.response(flow)
         assert sio.getvalue()
         sio.truncate(0)
+        assert not sio_err.getvalue()
+        sio_err.truncate(0)
 
         ctx.configure(d, flow_detail=4)
         flow = tflow.tflow(resp=tutils.tresp(content=b"{"))
@@ -83,6 +98,8 @@ def test_simple():
         d.response(flow)
         assert sio.getvalue()
         sio.truncate(0)
+        assert not sio_err.getvalue()
+        sio_err.truncate(0)
 
         ctx.configure(d, flow_detail=4)
         flow = tflow.tflow()
@@ -92,6 +109,8 @@ def test_simple():
         d.response(flow)
         assert "content missing" in sio.getvalue()
         sio.truncate(0)
+        assert not sio_err.getvalue()
+        sio_err.truncate(0)
 
 
 def test_echo_body():
@@ -100,7 +119,8 @@ def test_echo_body():
     f.response.content = b"foo bar voing\n" * 100
 
     sio = io.StringIO()
-    d = dumper.Dumper(sio)
+    sio_err = io.StringIO()
+    d = dumper.Dumper(sio, sio_err)
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=3)
         d._echo_message(f.response)
@@ -110,7 +130,8 @@ def test_echo_body():
 
 def test_echo_request_line():
     sio = io.StringIO()
-    d = dumper.Dumper(sio)
+    sio_err = io.StringIO()
+    d = dumper.Dumper(sio, sio_err)
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=3, showhost=True)
         f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
@@ -146,7 +167,8 @@ class TestContentView:
         with mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__") as va:
             va.side_effect = exceptions.ContentViewException("")
             sio = io.StringIO()
-            d = dumper.Dumper(sio)
+            sio_err = io.StringIO()
+            d = dumper.Dumper(sio, sio_err)
             with taddons.context(d) as ctx:
                 ctx.configure(d, flow_detail=4)
                 d.response(tflow.tflow())
