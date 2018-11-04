@@ -155,6 +155,7 @@ class TestContentView:
 
 def test_tcp():
     sio = io.StringIO()
+    sio_err = io.StringIO()
     d = dumper.Dumper(sio)
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=3, showhost=True)
@@ -165,11 +166,12 @@ def test_tcp():
 
         f = tflow.ttcpflow(client_conn=True, err=True)
         d.tcp_error(f)
-        assert "Error in TCP" in sio.getvalue()
+        assert "Error in TCP" in sio_err.getvalue()
 
 
 def test_websocket():
     sio = io.StringIO()
+    sio_err = io.StringIO()
     d = dumper.Dumper(sio)
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=3, showhost=True)
@@ -183,4 +185,4 @@ def test_websocket():
 
         f = tflow.twebsocketflow(client_conn=True, err=True)
         d.websocket_error(f)
-        assert "Error in WebSocket" in sio.getvalue()
+        assert "Error in WebSocket" in sio_err.getvalue()
