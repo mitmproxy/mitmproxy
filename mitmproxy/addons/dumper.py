@@ -71,9 +71,7 @@ class Dumper:
         if self.outfp:
             self.outfp.flush()
 
-    def echo_error(self, text, ident=None, **style):
-        if ident:
-            text = indent(ident, text)
+    def echo_error(self, text, **style):
         click.secho(text, file=self.errfp, **style)
         if self.errfp:
             self.errfp.flush()
