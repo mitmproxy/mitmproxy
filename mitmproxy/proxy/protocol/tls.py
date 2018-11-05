@@ -502,3 +502,4 @@ class TlsLayer(base.Layer):
         if host:
             sans.add(host)
         return self.config.certstore.get_cert(host, list(sans), o)
+        # To satisfy the CIs
