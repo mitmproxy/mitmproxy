@@ -80,7 +80,7 @@ def create_ca(o, cn, exp):
     return key, cert
 
 
-def dummy_cert(privkey, cacert, commonname, sans):
+def dummy_cert(privkey, cacert, commonname, sans, o):
     """
         Generates a dummy certificate.
 
@@ -88,6 +88,7 @@ def dummy_cert(privkey, cacert, commonname, sans):
         cacert: CA certificate
         commonname: Common name for the generated certificate.
         sans: A list of Subject Alternate Names.
+        o: Organization name for the generated certificate.
 
         Returns cert if operation succeeded, None if not.
     """
@@ -107,6 +108,8 @@ def dummy_cert(privkey, cacert, commonname, sans):
     cert.set_issuer(cacert.get_subject())
     if commonname is not None and len(commonname) < 64:
         cert.get_subject().CN = commonname
+    if o is not None:
+        cert.get_subject().O = o
     cert.set_serial_number(int(time.time() * 10000))
     if ss:
         cert.set_version(2)
@@ -305,7 +308,7 @@ class CertStore:
             ret.append(b"*." + b".".join(parts[i:]))
         return ret
 
-    def get_cert(self, commonname: typing.Optional[bytes], sans: typing.List[bytes]):
+    def get_cert(self, commonname: typing.Optional[bytes], sans: typing.List[bytes], o: typing.Optional[bytes] = None):
         """
             Returns an (cert, privkey, cert_chain) tuple.
 
@@ -313,6 +316,8 @@ class CertStore:
             valid, plain-ASCII, IDNA-encoded domain name.
 
             sans: A list of Subject Alternate Names.
+
+            o: Organization name for the generated certificate.
         """
 
         potential_keys: typing.List[TCertId] = []
@@ -335,7 +340,8 @@ class CertStore:
                     self.default_privatekey,
                     self.default_ca,
                     commonname,
-                    sans),
+                    sans,
+                    o),
                 privatekey=self.default_privatekey,
                 chain_file=self.default_chain_file)
             self.certs[(commonname, tuple(sans))] = entry
@@ -444,6 +450,14 @@ class Cert(serializable.Serializable):
         c = None
         for i in self.subject:
             if i[0] == b"CN":
+                c = i[1]
+        return c
+
+    @property
+    def o(self):
+        c = None
+        for i in self.subject:
+            if i[0] == b"O":
                 c = i[1]
         return c
 
