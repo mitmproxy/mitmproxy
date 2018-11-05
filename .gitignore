@@ -28,5 +28,3 @@ sslkeylogfile.log
 coverage.xml
 web/coverage/
 .mypy_cache/
-
-# To triggle CI, will be delete later
