@@ -469,6 +469,7 @@ class TlsLayer(base.Layer):
         """
         host = None
         sans = set()
+        o = None
 
         # In normal operation, the server address should always be known at this point.
         # However, we may just want to establish TLS so that we can send an error message to the client,
@@ -488,6 +489,8 @@ class TlsLayer(base.Layer):
             if upstream_cert.cn:
                 sans.add(host)
                 host = upstream_cert.cn.decode("utf8").encode("idna")
+            if upstream_cert.o:
+                o = upstream_cert.o
         # Also add SNI values.
         if self._client_hello.sni:
             sans.add(self._client_hello.sni.encode("idna"))
@@ -498,4 +501,4 @@ class TlsLayer(base.Layer):
         # In other words, the Common Name is irrelevant then.
         if host:
             sans.add(host)
-        return self.config.certstore.get_cert(host, list(sans))
+        return self.config.certstore.get_cert(host, list(sans), o)
