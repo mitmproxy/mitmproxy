@@ -134,7 +134,7 @@ class TestDummyCert:
         )
         assert r.cn == b"foo.com"
         assert r.altnames == [b'one.com', b'two.com', b'*.three.com']
-        assert r.o == b"Foo Ltd."
+        assert r.organization == b"Foo Ltd."
 
         r = certs.dummy_cert(
             ca.default_privatekey,
@@ -144,7 +144,7 @@ class TestDummyCert:
             None
         )
         assert r.cn is None
-        assert r.o is None
+        assert r.organization is None
         assert r.altnames == []
 
 
@@ -156,7 +156,7 @@ class TestCert:
         c1 = certs.Cert.from_pem(d)
         assert c1.cn == b"google.com"
         assert len(c1.altnames) == 436
-        assert c1.o == b"Google Inc"
+        assert c1.organization == b"Google Inc"
 
         with open(tdata.path("mitmproxy/net/data/text_cert_2"), "rb") as f:
             d = f.read()

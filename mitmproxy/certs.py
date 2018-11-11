@@ -36,14 +36,14 @@ rD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=
 """
 
 
-def create_ca(o, cn, exp):
+def create_ca(organization, cn, exp):
     key = OpenSSL.crypto.PKey()
     key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
     cert = OpenSSL.crypto.X509()
     cert.set_serial_number(int(time.time() * 10000))
     cert.set_version(2)
     cert.get_subject().CN = cn
-    cert.get_subject().O = o
+    cert.get_subject().O = organization
     cert.gmtime_adj_notBefore(-3600 * 48)
     cert.gmtime_adj_notAfter(exp)
     cert.set_issuer(cert.get_subject())
@@ -80,7 +80,7 @@ def create_ca(o, cn, exp):
     return key, cert
 
 
-def dummy_cert(privkey, cacert, commonname, sans, o):
+def dummy_cert(privkey, cacert, commonname, sans, organization):
     """
         Generates a dummy certificate.
 
@@ -88,7 +88,7 @@ def dummy_cert(privkey, cacert, commonname, sans, o):
         cacert: CA certificate
         commonname: Common name for the generated certificate.
         sans: A list of Subject Alternate Names.
-        o: Organization name for the generated certificate.
+        organization: Organization name for the generated certificate.
 
         Returns cert if operation succeeded, None if not.
     """
@@ -108,8 +108,8 @@ def dummy_cert(privkey, cacert, commonname, sans, o):
     cert.set_issuer(cacert.get_subject())
     if commonname is not None and len(commonname) < 64:
         cert.get_subject().CN = commonname
-    if o is not None:
-        cert.get_subject().O = o
+    if organization is not None:
+        cert.get_subject().O = organization
     cert.set_serial_number(int(time.time() * 10000))
     if ss:
         cert.set_version(2)
@@ -215,14 +215,14 @@ class CertStore:
             os.umask(original_umask)
 
     @staticmethod
-    def create_store(path, basename, o=None, cn=None, expiry=DEFAULT_EXP):
+    def create_store(path, basename, organization=None, cn=None, expiry=DEFAULT_EXP):
         if not os.path.exists(path):
             os.makedirs(path)
 
-        o = o or basename
+        organization = organization or basename
         cn = cn or basename
 
-        key, ca = create_ca(o=o, cn=cn, exp=expiry)
+        key, ca = create_ca(organization=organization, cn=cn, exp=expiry)
         # Dump the CA plus private key
         with CertStore.umask_secret(), open(os.path.join(path, basename + "-ca.pem"), "wb") as f:
             f.write(
@@ -308,7 +308,7 @@ class CertStore:
             ret.append(b"*." + b".".join(parts[i:]))
         return ret
 
-    def get_cert(self, commonname: typing.Optional[bytes], sans: typing.List[bytes], o: typing.Optional[bytes] = None):
+    def get_cert(self, commonname: typing.Optional[bytes], sans: typing.List[bytes], organization: typing.Optional[bytes] = None):
         """
             Returns an (cert, privkey, cert_chain) tuple.
 
@@ -317,7 +317,7 @@ class CertStore:
 
             sans: A list of Subject Alternate Names.
 
-            o: Organization name for the generated certificate.
+            organization: Organization name for the generated certificate.
         """
 
         potential_keys: typing.List[TCertId] = []
@@ -341,7 +341,7 @@ class CertStore:
                     self.default_ca,
                     commonname,
                     sans,
-                    o),
+                    organization),
                 privatekey=self.default_privatekey,
                 chain_file=self.default_chain_file)
             self.certs[(commonname, tuple(sans))] = entry
@@ -454,7 +454,7 @@ class Cert(serializable.Serializable):
         return c
 
     @property
-    def o(self):
+    def organization(self):
         c = None
         for i in self.subject:
             if i[0] == b"O":
