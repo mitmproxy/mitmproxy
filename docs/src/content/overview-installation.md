@@ -34,6 +34,20 @@ OpenSUSE, etc.). We are not involved in the maintenance of downstream packaging
 efforts, and they often lag behind the current mitmproxy release. Please contact
 the repository maintainers directly for issues with native packages.
 
+## FreeBSD
+
+The recommended way to install mitmproxy on FreeBSD is to use pkg:
+
+{{< highlight bash  >}}
+pkg install mitmproxy-py36
+{{< / highlight >}}
+
+Alternatively you can install it from FreeBSD Ports:
+
+{{< highlight bash  >}}
+cd /usr/ports/www/mitmproxy && make install clean
+{{< / highlight >}}
+
 ## Windows
 
 
