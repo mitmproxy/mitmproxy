@@ -1,6 +1,7 @@
 import queue
 import threading
 import typing
+import time
 
 from mitmproxy import log
 from mitmproxy import controller
@@ -94,6 +95,7 @@ class RequestReplayThread(basethread.BaseThread):
 
                 server.wfile.write(http1.assemble_request(r))
                 server.wfile.flush()
+                r.timestamp_start = r.timestamp_end = time.time()
 
                 if f.server_conn:
                     f.server_conn.close()
