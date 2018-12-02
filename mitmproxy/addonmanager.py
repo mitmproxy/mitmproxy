@@ -42,7 +42,7 @@ def safecall():
         yield
     except (exceptions.AddonHalt, exceptions.OptionsError):
         raise
-    except Exception as e:
+    except Exception:
         etype, value, tb = sys.exc_info()
         tb = cut_traceback(tb, "invoke_addon")
         ctx.log.error(

@@ -53,7 +53,7 @@ class Core:
         if "body_size_limit" in updated:
             try:
                 human.parse_size(opts.body_size_limit)
-            except ValueError as e:
+            except ValueError:
                 raise exceptions.OptionsError(
                     "Invalid body size limit specification: %s" %
                     opts.body_size_limit

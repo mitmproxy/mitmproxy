@@ -279,7 +279,7 @@ class BuildEnviron:
             if self.tag.startswith("v"):
                 try:
                     parver.Version.parse(self.tag[1:], strict=True)
-                except parver.ParseError as e:
+                except parver.ParseError:
                     return self.tag
                 return self.tag[1:]
             return self.tag

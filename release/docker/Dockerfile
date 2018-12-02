@@ -21,7 +21,8 @@ RUN addgroup -S mitmproxy && adduser -S -G mitmproxy mitmproxy \
         openssl-dev \
         python3 \
         python3-dev \
-    && python3 -m ensurepip \
+    && python3 -m ensurepip --upgrade \
+    && pip3 install -U pip \
     && LDFLAGS=-L/lib pip3 install -U /home/mitmproxy/${WHEEL_BASENAME_MITMPROXY} \
     && apk del --purge \
         git \
