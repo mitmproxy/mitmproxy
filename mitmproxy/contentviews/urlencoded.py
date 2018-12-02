@@ -1,5 +1,4 @@
 from mitmproxy.net.http import url
-from mitmproxy.coretypes import multidict
 from . import base
 
 
@@ -13,4 +12,4 @@ class ViewURLEncoded(base.View):
         except ValueError:
             return None
         d = url.decode(data)
-        return "URLEncoded form", base.format_dict(multidict.MultiDict(d))
+        return "URLEncoded form", base.format_pair(d)

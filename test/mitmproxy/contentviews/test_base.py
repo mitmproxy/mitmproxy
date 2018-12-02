@@ -15,3 +15,18 @@ def test_format_dict():
     f_d = base.format_dict(d)
     with pytest.raises(StopIteration):
         next(f_d)
+
+
+def test_format_pair():
+    d = [("a", "c"), ("b", "d")]
+    f_d = base.format_pair(d)
+    assert next(f_d)
+
+    d = [("abc", "")]
+    f_d = base.format_pair(d)
+    assert next(f_d)
+
+    d = []
+    f_d = base.format_pair(d)
+    with pytest.raises(StopIteration):
+        next(f_d)

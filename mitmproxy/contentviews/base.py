@@ -35,6 +35,35 @@ class View:
         raise NotImplementedError()  # pragma: no cover
 
 
+def format_pair(item: TViewLine) -> typing.Iterator[TViewLine]:
+
+    """
+    Helper function that accepts a list of (k,v) pairs into a list of
+    [
+        ("key", key    )
+        ("value", value)
+    ]
+    where key is padded to a uniform width
+    """
+
+    max_key_len = max((len(k[0]) for k in item), default=0)
+    max_key_len = min((max_key_len, KEY_MAX), default=0)
+
+    for k in item:
+        if isinstance(k[0], bytes):
+
+            temp = b"k[0]" + b":"
+        else:
+            temp = k[0] + ":"
+
+        key = temp.ljust(max_key_len + 2)
+
+        yield [
+            ("header", key),
+            ("text", k[1])
+        ]
+
+
 def format_dict(
         d: typing.Mapping[TTextType, TTextType]
 ) -> typing.Iterator[TViewLine]:
@@ -47,18 +76,7 @@ def format_dict(
     entries, where key is padded to a uniform width.
     """
 
-    max_key_len = max((len(k) for k in d.keys()), default=0)
-    max_key_len = min((max_key_len, KEY_MAX), default=0)
-    for key, value in d.items():
-        if isinstance(key, bytes):
-            key += b":"
-        else:
-            key += ":"
-        key = key.ljust(max_key_len + 2)
-        yield [
-            ("header", key),
-            ("text", value)
-        ]
+    return format_pair(list(d.items()))
 
 
 def format_text(text: TTextType) -> typing.Iterator[TViewLine]:
