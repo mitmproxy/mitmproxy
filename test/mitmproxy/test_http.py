@@ -49,7 +49,7 @@ class TestHTTPRequest:
         r.path = "path/foo"
         r.headers["Foo"] = "fOo"
         r.content = b"afoob"
-        assert r.replace("foo(?i)", "boo") == 4
+        assert r.replace("(?i)foo", "boo") == 4
         assert r.path == "path/boo"
         assert b"foo" not in r.content
         assert r.headers["boo"] == "boo"
@@ -82,7 +82,7 @@ class TestHTTPResponse:
         r = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
         r.headers["Foo"] = "fOo"
         r.content = b"afoob"
-        assert r.replace("foo(?i)", "boo") == 3
+        assert r.replace("(?i)foo", "boo") == 3
         assert b"foo" not in r.content
         assert r.headers["boo"] == "boo"
 

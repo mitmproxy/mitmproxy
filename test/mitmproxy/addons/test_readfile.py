@@ -30,8 +30,8 @@ def data():
 
 
 @pytest.fixture
-def corrupt_data():
-    f = data()
+def corrupt_data(data):
+    f = io.BytesIO(data.getvalue())
     f.seek(0, io.SEEK_END)
     f.write(b"qibble")
     f.seek(0)

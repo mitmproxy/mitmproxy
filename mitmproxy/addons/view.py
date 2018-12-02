@@ -103,7 +103,7 @@ orders = [
 ]
 
 
-class View(collections.Sequence):
+class View(collections.abc.Sequence):
     def __init__(self):
         super().__init__()
         self._store = collections.OrderedDict()
@@ -638,7 +638,7 @@ class Focus:
             self.flow = flow
 
 
-class Settings(collections.Mapping):
+class Settings(collections.abc.Mapping):
     def __init__(self, view: View) -> None:
         self.view = view
         self._values: typing.MutableMapping[str, typing.Dict] = {}

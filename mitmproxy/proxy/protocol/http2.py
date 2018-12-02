@@ -642,7 +642,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
 
         try:
             layer()
-        except exceptions.Http2ZombieException as e:  # pragma: no cover
+        except exceptions.Http2ZombieException:  # pragma: no cover
             pass
         except exceptions.ProtocolException as e:  # pragma: no cover
             self.log(repr(e), "info")

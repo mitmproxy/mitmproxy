@@ -84,13 +84,14 @@ class Master:
         exc = None
         try:
             loop()
-        except Exception as e:  # pragma: no cover
+        except Exception:  # pragma: no cover
             exc = traceback.format_exc()
         finally:
             if not self.should_exit.is_set():  # pragma: no cover
                 self.shutdown()
             loop = asyncio.get_event_loop()
-            for p in asyncio.Task.all_tasks():
+            tasks = asyncio.all_tasks(loop) if sys.version_info >= (3, 7) else asyncio.Task.all_tasks(loop)
+            for p in tasks:
                 p.cancel()
             loop.close()
 

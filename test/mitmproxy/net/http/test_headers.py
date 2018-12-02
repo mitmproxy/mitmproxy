@@ -75,7 +75,7 @@ class TestHeaders:
 
     def test_replace_multi(self):
         headers = self._2host()
-        headers.replace(r"Host: example\.com", r"Host: example.de")
+        headers.replace(r"Host: example.com", r"Host: example.de")
         assert headers.get_all("Host") == ["example.de", "example.org"]
 
     def test_replace_remove_spacer(self):

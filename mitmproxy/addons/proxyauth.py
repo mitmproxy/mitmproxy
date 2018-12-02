@@ -152,7 +152,7 @@ class ProxyAuth:
                     p = ctx.options.proxyauth[1:]
                     try:
                         self.htpasswd = passlib.apache.HtpasswdFile(p)
-                    except (ValueError, OSError) as v:
+                    except (ValueError, OSError):
                         raise exceptions.OptionsError(
                             "Could not open htpasswd file: %s" % p
                         )
