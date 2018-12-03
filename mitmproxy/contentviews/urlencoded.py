@@ -12,4 +12,4 @@ class ViewURLEncoded(base.View):
         except ValueError:
             return None
         d = url.decode(data)
-        return "URLEncoded form", base.format_pair(d)
+        return "URLEncoded form", base.format_pairs(d)
