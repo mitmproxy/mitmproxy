@@ -68,7 +68,7 @@ class Message(serializable.Serializable):
     @property
     def raw_content(self) -> bytes:
         """
-        The raw (encoded) HTTP message body
+        The raw (potentially compressed) HTTP message body as bytes.
 
         See also: :py:attr:`content`, :py:class:`text`
         """
@@ -80,10 +80,10 @@ class Message(serializable.Serializable):
 
     def get_content(self, strict: bool=True) -> bytes:
         """
-        The HTTP message body decoded with the content-encoding header (e.g. gzip)
+        The uncompressed HTTP message body as bytes.
 
         Raises:
-            ValueError, when the content-encoding is invalid and strict is True.
+            ValueError, when the HTTP content-encoding is invalid and strict is True.
 
         See also: :py:class:`raw_content`, :py:attr:`text`
         """
@@ -165,22 +165,26 @@ class Message(serializable.Serializable):
             return ct[2].get("charset")
         return None
 
-    def _guess_encoding(self) -> str:
+    def _guess_encoding(self, content=b"") -> str:
         enc = self._get_content_type_charset()
-        if enc:
-            return enc
+        if not enc:
+            if "json" in self.headers.get("content-type", ""):
+                enc = "utf8"
+        if not enc:
+            meta_charset = re.search(rb"""<meta[^>]+charset=['"]?([^'">]+)""", content)
+            if meta_charset:
+                enc = meta_charset.group(1).decode("ascii", "ignore")
+        if not enc:
+            enc = "latin-1"
+        # Use GB 18030 as the superset of GB2312 and GBK to fix common encoding problems on Chinese websites.
+        if enc.lower() in ("gb2312", "gbk"):
+            enc = "gb18030"
 
-        if "json" in self.headers.get("content-type", ""):
-            return "utf8"
-        else:
-            # We may also want to check for HTML meta tags here at some point.
-            # REGEX_ENCODING = re.compile(rb"""<meta[^>]+charset=['"]?([^'"]+)""")
-            return "latin-1"
+        return enc
 
     def get_text(self, strict: bool=True) -> Optional[str]:
         """
-        The HTTP message body decoded with both content-encoding header (e.g. gzip)
-        and content-type header charset.
+        The uncompressed and decoded HTTP message body as text.
 
         Raises:
             ValueError, when either content-encoding or charset is invalid and strict is True.
@@ -189,9 +193,9 @@ class Message(serializable.Serializable):
         """
         if self.raw_content is None:
             return None
-        enc = self._guess_encoding()
 
         content = self.get_content(strict)
+        enc = self._guess_encoding(content)
         try:
             return encoding.decode(content, enc)
         except ValueError:
