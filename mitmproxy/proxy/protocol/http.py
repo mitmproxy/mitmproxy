@@ -289,9 +289,12 @@ class HttpLayer(base.Layer):
             f.request = None
             f.error = flow.Error(str(e))
             self.channel.ask("error", f)
-            raise exceptions.ProtocolException(
-                "HTTP protocol error in client request: {}".format(e)
-            ) from e
+            if not isinstance(e, exceptions.HttpSyntaxException):
+                raise exceptions.ProtocolException(
+                    "HTTP protocol error in client request: {}".format(e)
+                ) from e
+            
+            return False
 
         self.log("request", "debug", [repr(request)])
 
