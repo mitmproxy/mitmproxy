@@ -1,4 +1,8 @@
+import bz2
+import gzip
 import json
+import os
+import zlib
 
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
@@ -23,7 +27,7 @@ class TestHARDump:
         with taddons.context() as tctx:
             a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
             path = str(tmpdir.join("somefile"))
-            tctx.configure(a, hardump=path)
+            tctx.configure(a, harfile=path)
             tctx.invoke(a, "response", self.flow())
             tctx.invoke(a, "done")
             with open(path, "r") as inp:
@@ -34,7 +38,7 @@ class TestHARDump:
         with taddons.context() as tctx:
             a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
             path = str(tmpdir.join("somefile"))
-            tctx.configure(a, hardump=path)
+            tctx.configure(a, harfile=path)
 
             tctx.invoke(
                 a, "response", self.flow(resp_content=b"foo" + b"\xFF" * 10)
@@ -67,7 +71,7 @@ class TestHARDump:
         with taddons.context() as tctx:
             a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
             path = str(tmpdir.join("somefile"))
-            tctx.configure(a, hardump=path)
+            tctx.configure(a, harfile=path)
 
             f = self.flow()
             f.request.method = "POST"
@@ -82,3 +86,121 @@ class TestHARDump:
             with open(path, "r") as inp:
                 har = json.load(inp)
             assert len(har["log"]["entries"]) == 1
+
+    def test_simple_bzip2_compression(self, tmpdir, tdata):
+        with taddons.context() as tctx:
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            path = str(tmpdir.join("somefile"))
+            tctx.configure(a, harfile=path, compress="bzip2")
+            tctx.invoke(a, "response", self.flow())
+            tctx.invoke(a, "done")
+            with open(path, "rb") as inp:
+                har = json.loads(bz2.decompress(inp.read()))
+            assert len(har["log"]["entries"]) == 1
+
+    def test_simple_gzip_compression(self, tmpdir, tdata):
+        with taddons.context() as tctx:
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            path = str(tmpdir.join("somefile"))
+            tctx.configure(a, harfile=path, compress="gzip")
+            tctx.invoke(a, "response", self.flow())
+            tctx.invoke(a, "done")
+            with open(path, "rb") as inp:
+                har = json.loads(gzip.decompress(inp.read()))
+            assert len(har["log"]["entries"]) == 1
+
+    def test_simple_zlib_compression(self, tmpdir, tdata):
+        with taddons.context() as tctx:
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            path = str(tmpdir.join("somefile"))
+            tctx.configure(a, harfile=path, compress="zlib")
+            tctx.invoke(a, "response", self.flow())
+            tctx.invoke(a, "done")
+            with open(path, "rb") as inp:
+                har = json.loads(zlib.decompress(inp.read()))
+            assert len(har["log"]["entries"]) == 1
+
+    def test_simple_zlib_compression_via_filename(self, tmpdir, tdata):
+        with taddons.context() as tctx:
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            path = str(tmpdir.join("somefile.zhar"))
+            tctx.configure(a, harfile=path)
+            tctx.invoke(a, "response", self.flow())
+            tctx.invoke(a, "done")
+            with open(path, "rb") as inp:
+                har = json.loads(zlib.decompress(inp.read()))
+            assert len(har["log"]["entries"]) == 1
+
+    def test_multiple_entries(self, tmpdir, tdata):
+        with taddons.context() as tctx:
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            path = str(tmpdir.join("somefile"))
+            tctx.configure(a, harfile=path)
+            tctx.invoke(a, "response", self.flow())
+            tctx.invoke(a, "response", self.flow())
+            tctx.invoke(a, "done")
+            with open(path, "r") as inp:
+                har = json.load(inp)
+            assert len(har["log"]["entries"]) == 2
+
+    def test_single_flow_per_file(self, tmpdir, tdata):
+        with taddons.context() as tctx:
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            tctx.configure(a, hardir=str(tmpdir))
+            tctx.invoke(a, "response", self.flow())
+            f = self.flow()
+            f.request.timestamp_start = f.request.timestamp_start + 1
+            tctx.invoke(a, "response", f)
+            filecount = 0
+            files = os.listdir(tmpdir)
+            for file in files:
+                filename = str(tmpdir.join(file))
+                if os.path.isfile(filename):
+                    assert filename.endswith(".har")
+                    filecount = filecount + 1
+                    with open(filename, "r") as inp:
+                        har = json.load(inp)
+                    assert len(har["log"]["entries"]) == 1
+            assert filecount == 2
+
+    def test_single_bzip2_compression(self, tmpdir, tdata):
+        with taddons.context() as tctx:
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            tctx.configure(a, hardir=str(tmpdir), compress="bzip2")
+            tctx.invoke(a, "response", self.flow())
+            files = os.listdir(tmpdir)
+            for file in files:
+                filename = str(tmpdir.join(file))
+                if os.path.isfile(filename):
+                    assert filename.endswith(".har.bz2")
+                    with open(filename, "rb") as inp:
+                        har = json.loads(bz2.decompress(inp.read()))
+                    assert len(har["log"]["entries"]) == 1
+
+    def test_single_gzip_compression(self, tmpdir, tdata):
+        with taddons.context() as tctx:
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            tctx.configure(a, hardir=str(tmpdir), compress="gzip")
+            tctx.invoke(a, "response", self.flow())
+            files = os.listdir(tmpdir)
+            for file in files:
+                filename = str(tmpdir.join(file))
+                if os.path.isfile(filename):
+                    assert filename.endswith(".har.gz")
+                    with open(filename, "rb") as inp:
+                        har = json.loads(gzip.decompress(inp.read()))
+                    assert len(har["log"]["entries"]) == 1
+
+    def test_single_zlib_compression(self, tmpdir, tdata):
+        with taddons.context() as tctx:
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            tctx.configure(a, hardir=str(tmpdir), compress="zlib")
+            tctx.invoke(a, "response", self.flow())
+            files = os.listdir(tmpdir)
+            for file in files:
+                filename = str(tmpdir.join(file))
+                if os.path.isfile(filename):
+                    assert filename.endswith(".zhar")
+                    with open(filename, "rb") as inp:
+                        har = json.loads(zlib.decompress(inp.read()))
+                    assert len(har["log"]["entries"]) == 1

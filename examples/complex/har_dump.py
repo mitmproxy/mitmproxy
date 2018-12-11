@@ -1,24 +1,40 @@
 """
 This inline script can be used to dump flows as HAR files.
 
-example cmdline invocation:
-mitmdump -s ./har_dump.py --set hardump=./dump.har
+example cmdline invocation options:
+Single file for entire session.
+mitmdump -s ./har_dump.py --set harfile=./dump.har
 
-filename endwith '.zhar' will be compressed:
-mitmdump -s ./har_dump.py --set hardump=./dump.zhar
+One file per flow. Filenames will be the timestamp of the
+request along with a 6 char hash of the URL. Files will have
+.har for their extension.
+mitmdump -s ./har_dump.py --set hardir=./hars
+
+To set compression for files use the compress flag.
+Options are "bzip2, gzip, zlib"
+For one file per flow the extensions will be either
+.har.bz2 (bzip2), .har.gz (gzip) or .zhar (zlib)
+mitmdump -s ./har_dump.py --set harfile=./dump.har.gz --set compress=gzip
+mitmdump -s ./har_dump.py --set hardir=./hars --set compress=zlib
+
+OR
+
+Single files with '.zhar' as the extension will be compressed using zlib
+mitmdump -s ./har_dump.py --set harfile=./dump.zhar
 """
 
 
-import json
 import base64
-import zlib
+import bz2
+import hashlib
+import gzip
+import json
 import os
 import typing  # noqa
+import zlib
 
 from datetime import datetime
 from datetime import timezone
-
-import mitmproxy
 
 from mitmproxy import connections  # noqa
 from mitmproxy import version
@@ -34,12 +50,22 @@ SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
 
 
 def load(l):
-    l.add_option(
-        "hardump", str, "", "HAR dump path.",
-    )
+    l.add_option("harfile", str, "", "HAR dump file.")
+    l.add_option("hardir", str, "", "HAR dump folder.")
+    l.add_option("compress", str, "", "Compress files - bzip2, gzip or zlib")
+    l.add_option("verbose", bool, False, "Verbose")
 
 
 def configure(updated):
+    if ctx.options.verbose:
+        ctx.log("Option - harfile - %s" % ctx.options.harfile)
+        ctx.log("Option - hardir - %s" % ctx.options.hardir)
+        ctx.log("Option - compress - %s" % ctx.options.compress)
+
+    prep_dict()
+
+
+def prep_dict():
     HAR.update({
         "log": {
             "version": "1.2",
@@ -153,27 +179,59 @@ def response(flow):
     if flow.server_conn.connected():
         entry["serverIPAddress"] = str(flow.server_conn.ip_address[0])
 
-    HAR["log"]["entries"].append(entry)
+    if ctx.options.hardir:
+        HAR["log"]["entries"] = [entry]
+        filename = "%s-%s" % (flow.request.timestamp_start,
+                              hashlib.sha1(flow.request.url.encode('utf-8')).hexdigest()[:6])
+
+        if ctx.options.compress == "bzip2":
+            filename = "%s.har.bz2" % filename
+        elif ctx.options.compress == "gzip":
+            filename = "%s.har.gz" % filename
+        elif ctx.options.compress == "zlib":
+            filename = "%s.zhar" % filename
+        else:
+            filename = "%s.har" % filename
+
+        dump_file(os.path.join(ctx.options.hardir, filename))
+        prep_dict()
+    else:
+        HAR["log"]["entries"].append(entry)
 
 
 def done():
     """
         Called once on script shutdown, after any other events.
     """
-    if ctx.options.hardump:
-        json_dump: str = json.dumps(HAR, indent=2)
+    if ctx.options.harfile:
+        dump_file(ctx.options.harfile)
 
-        if ctx.options.hardump == '-':
-            mitmproxy.ctx.log(json_dump)
-        else:
-            raw: bytes = json_dump.encode()
-            if ctx.options.hardump.endswith('.zhar'):
-                raw = zlib.compress(raw, 9)
 
-            with open(os.path.expanduser(ctx.options.hardump), "wb") as f:
-                f.write(raw)
+def dump_file(filename):
+    compress: str = ctx.options.compress
+    json_dump: str = json.dumps(HAR, indent=2)
 
-            mitmproxy.ctx.log("HAR dump finished (wrote %s bytes to file)" % len(json_dump))
+    if filename == '-':
+        ctx.log(json_dump)
+    else:
+        raw: bytes = json_dump.encode()
+        if compress == "bzip2":
+            raw = bz2.compress(raw, 9)
+        elif compress == "gzip":
+            raw = gzip.compress(raw, 9)
+        elif compress == "zlib":
+            raw = zlib.compress(raw, 9)
+        elif filename.endswith('.zhar'):
+            raw = zlib.compress(raw, 9)
+
+        with open(os.path.expanduser(filename), "wb") as f:
+            f.write(raw)
+
+        if ctx.options.verbose:
+            if compress:
+                ctx.log("HAR dump finished (wrote %s bytes (%s compressed) to %s)" % (len(json_dump), len(raw), filename))
+            else:
+                ctx.log("HAR dump finished (wrote %s bytes to file %s)" % (len(json_dump), filename))
 
 
 def format_cookies(cookie_list):
