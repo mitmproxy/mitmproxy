@@ -293,7 +293,7 @@ class HttpLayer(base.Layer):
                 raise exceptions.ProtocolException(
                     "HTTP protocol error in client request: {}".format(e)
                 ) from e
-            
+
             return False
 
         self.log("request", "debug", [repr(request)])
