@@ -181,8 +181,8 @@ def response(flow):
 
     if ctx.options.hardir:
         HAR["log"]["entries"] = [entry]
-        filename = "%s-%s" % (flow.request.timestamp_start,
-                              hashlib.sha1(flow.request.url.encode('utf-8')).hexdigest()[:6])
+        filename = "%.6f-%s" % (flow.request.timestamp_start,
+                                hashlib.sha1(flow.request.url.encode('utf-8')).hexdigest()[:6])
 
         if ctx.options.compress == "bzip2":
             filename = "%s.har.bz2" % filename

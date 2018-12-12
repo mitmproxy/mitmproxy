@@ -204,3 +204,15 @@ class TestHARDump:
                     with open(filename, "rb") as inp:
                         har = json.loads(zlib.decompress(inp.read()))
                     assert len(har["log"]["entries"]) == 1
+
+    def test_single_filename_format(self, tmpdir, tdata):
+        with taddons.context() as tctx:
+            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            tctx.configure(a, hardir=str(tmpdir), compress="zlib")
+            tctx.invoke(a, "response", self.flow())
+            files = os.listdir(tmpdir)
+            for file in files:
+                filename = str(tmpdir.join(file))
+                if os.path.isfile(filename):
+                    base = os.path.basename(filename)
+                    assert base.startswith("%s.000000" % self.flow().request.timestamp_start)
