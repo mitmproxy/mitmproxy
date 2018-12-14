@@ -54,16 +54,24 @@ class ResponseHeaderEditor(HeaderEditor):
 
 
 class RequestFormEditor(base.FocusEditor):
-    title = "Edit URL-encoded Form"
+    title = "Edit Form"
     columns = [
         col_text.Column("Key"),
         col_text.Column("Value")
     ]
 
     def get_data(self, flow):
-        return flow.request.urlencoded_form.items(multi=True)
+
+        if "application/x-www-form-urlencoded" in flow.request.headers['Content-Type']:
+            return flow.request.urlencoded_form.items(multi=True)
+
+        return flow.request.multipart_form.items(multi=True)
 
     def set_data(self, vals, flow):
+
+        if "multipart/form-data" in flow.request.headers['Content-Type']:
+            flow.request.multipart_form = vals
+
         flow.request.urlencoded_form = vals
 
 

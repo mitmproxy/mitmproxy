@@ -372,5 +372,6 @@ class TestRequestUtils:
 
     def test_set_multipart_form(self):
         request = treq(content=b"foobar")
-        with pytest.raises(NotImplementedError):
-            request.multipart_form = "foobar"
+        request.multipart_form = [("filename", "shell.jpg"), ("file_size", "1000")]
+        assert request.headers['Content-Type'] == "multipart/form-data"
+        assert request.content
