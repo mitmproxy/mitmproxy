@@ -197,10 +197,10 @@ class CommandHistory:
 
 
 class CommandEdit(urwid.WidgetWrap):
-    leader = ": "
 
     def __init__(self, master: mitmproxy.master.Master,
-                 text: str, history: CommandHistory) -> None:
+                 text: str, history: CommandHistory, leader: str = ": ") -> None:
+        self.leader = leader if leader == ": " else leader + ": "
         super().__init__(urwid.Text(self.leader))
         self.master = master
         self.cbuf = CommandBuffer(master, text)
