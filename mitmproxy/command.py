@@ -14,11 +14,11 @@ from mitmproxy import exceptions
 import mitmproxy.types
 
 
-@functools.lru_cache(maxsize=200)
+@functools.lru_cache()
 def verify_arg_signature(f: typing.Callable, args: tuple, kwargs: tuple) -> None:
     sig = inspect.signature(f)
     try:
-        sig.bind(*list(args), **dict(kwargs))
+        sig.bind(*args, **dict(kwargs))
     except TypeError as v:
         raise exceptions.CommandError("command argument mismatch: %s" % v.args[0])
 
@@ -32,8 +32,8 @@ def lexer(s):
     return lex
 
 
-@functools.lru_cache(maxsize=200)
-def lex_string(cmdstr):
+@functools.lru_cache()
+def lex_string(cmdstr: str) -> typing.List[str]:
     buf = io.StringIO(cmdstr)
     parts: typing.List[str] = []
     lex = lexer(buf)
