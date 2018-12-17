@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 import urwid
 
 from mitmproxy.tools.console import common
@@ -35,7 +37,6 @@ class FlowItem(urwid.WidgetWrap):
 
 
 class FlowListWalker(urwid.ListWalker):
-
     def __init__(self, master):
         self.master = master
 
@@ -48,6 +49,7 @@ class FlowListWalker(urwid.ListWalker):
         return ret
 
     def view_changed(self):
+        self.__get.cache_clear()
         self._modified()
 
     def get_focus(self):
@@ -60,19 +62,18 @@ class FlowListWalker(urwid.ListWalker):
         if self.master.commands.execute("view.properties.inbounds %d" % index):
             self.master.view.focus.index = index
 
-    def get_next(self, pos):
-        pos = pos + 1
+    @lru_cache(maxsize=None)
+    def __get(self, pos):
         if not self.master.commands.execute("view.properties.inbounds %d" % pos):
             return None, None
         f = FlowItem(self.master, self.master.view[pos])
         return f, pos
 
+    def get_next(self, pos):
+        return self.__get(pos + 1)
+
     def get_prev(self, pos):
-        pos = pos - 1
-        if not self.master.commands.execute("view.properties.inbounds %d" % pos):
-            return None, None
-        f = FlowItem(self.master, self.master.view[pos])
-        return f, pos
+        return self.__get(pos - 1)
 
 
 class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
