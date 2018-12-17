@@ -14,10 +14,11 @@ from mitmproxy import exceptions
 import mitmproxy.types
 
 
-def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
+@functools.lru_cache(maxsize=200)
+def verify_arg_signature(f: typing.Callable, args: tuple, kwargs: tuple) -> None:
     sig = inspect.signature(f)
     try:
-        sig.bind(*args, **kwargs)
+        sig.bind(*list(args), **dict(kwargs))
     except TypeError as v:
         raise exceptions.CommandError("command argument mismatch: %s" % v.args[0])
 
@@ -29,6 +30,28 @@ def lexer(s):
     lex.whitespace_split = True
     lex.commenters = ''
     return lex
+
+
+@functools.lru_cache(maxsize=200)
+def lex_string(cmdstr):
+    buf = io.StringIO(cmdstr)
+    parts: typing.List[str] = []
+    lex = lexer(buf)
+    while 1:
+        remainder = cmdstr[buf.tell():]
+        try:
+            t = lex.get_token()
+        except ValueError:
+            parts.append(remainder)
+            break
+        if not t:
+            break
+        parts.append(t)
+    if not parts:
+        parts = [""]
+    elif cmdstr.endswith(" "):
+        parts.append("")
+    return parts
 
 
 def typename(t: type) -> str:
@@ -84,7 +107,7 @@ class Command:
         return "%s %s%s" % (self.path, params, ret)
 
     def prepare_args(self, args: typing.Sequence[str]) -> typing.List[typing.Any]:
-        verify_arg_signature(self.func, list(args), {})
+        verify_arg_signature(self.func, tuple(args), ())
 
         remainder: typing.Sequence[str] = []
         if self.has_positional:
@@ -157,23 +180,7 @@ class CommandManager(mitmproxy.types._CommandBase):
         """
             Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
-        buf = io.StringIO(cmdstr)
-        parts: typing.List[str] = []
-        lex = lexer(buf)
-        while 1:
-            remainder = cmdstr[buf.tell():]
-            try:
-                t = lex.get_token()
-            except ValueError:
-                parts.append(remainder)
-                break
-            if not t:
-                break
-            parts.append(t)
-        if not parts:
-            parts = [""]
-        elif cmdstr.endswith(" "):
-            parts.append("")
+        parts = lex_string(cmdstr)
 
         parse: typing.List[ParseResult] = []
         params: typing.List[type] = []
@@ -271,7 +278,7 @@ def command(path):
     def decorator(function):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            verify_arg_signature(function, args, kwargs)
+            verify_arg_signature(function, args, tuple(kwargs.items()))
             return function(*args, **kwargs)
         wrapper.__dict__["command_path"] = path
         return wrapper
