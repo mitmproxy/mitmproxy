@@ -278,7 +278,7 @@ def command(path):
     def decorator(function):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            verify_arg_signature(function, args, tuple(kwargs.items()))
+            verify_arg_signature(function, tuple(args), tuple(kwargs.items()))
             return function(*args, **kwargs)
         wrapper.__dict__["command_path"] = path
         return wrapper
