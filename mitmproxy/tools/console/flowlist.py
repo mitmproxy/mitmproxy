@@ -18,7 +18,7 @@ class FlowItem(urwid.WidgetWrap):
             self.flow,
             self.flow is self.master.view.focus.flow,
             hostheader=self.master.options.showhost,
-            max_url_len=cols,
+            cols=cols,
         )
 
     def selectable(self):
