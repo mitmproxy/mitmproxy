@@ -38,7 +38,7 @@ class FlowViewHeader(urwid.WidgetWrap):
                 False,
                 extended=True,
                 hostheader=self.master.options.showhost,
-                max_url_len=cols,
+                cols=cols,
             )
         else:
             self._w = urwid.Pile([])
