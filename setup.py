@@ -103,7 +103,7 @@ setup(
             "rstcheck>=2.2, <4.0",
         ],
         'examples': [
-            "beautifulsoup4>=4.4.1, <4.7"
+            "beautifulsoup4>=4.7,<4.8"
         ]
     }
 )
