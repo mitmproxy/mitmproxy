@@ -102,7 +102,7 @@ class TestServerBind(tservers.ServerTestBase):
             # We may get an ipv4-mapped ipv6 address here, e.g. ::ffff:127.0.0.1.
             # Those still appear as "127.0.0.1" in the table, so we need to strip the prefix.
             peername = self.connection.getpeername()
-            address = re.sub("^::ffff:(?=\d+.\d+.\d+.\d+$)", "", peername[0])
+            address = re.sub(r"^::ffff:(?=\d+.\d+.\d+.\d+$)", "", peername[0])
             port = peername[1]
 
             self.wfile.write(str((address, port)).encode())

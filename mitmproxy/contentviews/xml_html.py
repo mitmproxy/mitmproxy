@@ -18,7 +18,7 @@ The implementation is split into two main parts: tokenization and formatting of 
 """
 
 # http://www.xml.com/pub/a/2001/07/25/namingparts.html - this is close enough for what we do.
-REGEX_TAG = re.compile("[a-zA-Z0-9._:\-]+(?!=)")
+REGEX_TAG = re.compile(r"[a-zA-Z0-9._:\-]+(?!=)")
 # https://www.w3.org/TR/html5/syntax.html#void-elements
 HTML_VOID_ELEMENTS = {
     "area", "base", "br", "col", "embed", "hr", "img", "input", "keygen", "link", "meta", "param",
