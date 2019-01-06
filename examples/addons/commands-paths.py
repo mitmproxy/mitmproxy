@@ -20,9 +20,9 @@ class MyAddon:
         for f in flows:
             totals[f.request.host] = totals.setdefault(f.request.host, 0) + 1
 
-        fp = open(path, "w+")
-        for cnt, dom in sorted([(v, k) for (k, v) in totals.items()]):
-            fp.write("%s: %s\n" % (cnt, dom))
+        with open(path, "w+") as fp:
+            for cnt, dom in sorted([(v, k) for (k, v) in totals.items()]):
+                fp.write("%s: %s\n" % (cnt, dom))
 
         ctx.log.alert("done")
 

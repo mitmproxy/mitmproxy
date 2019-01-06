@@ -68,7 +68,8 @@ class TestSession:
             os.remove(path)
         con = sqlite3.connect(path)
         script_path = pkg_data.path("io/sql/session_create.sql")
-        qry = open(script_path, 'r').read()
+        with open(script_path) as f:
+            qry = f.read()
         with con:
             con.executescript(qry)
             blob = b'blob_of_data'

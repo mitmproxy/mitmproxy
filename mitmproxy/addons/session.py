@@ -87,8 +87,8 @@ class SessionDB:
 
     def _create_session(self):
         script_path = pkg_data.path("io/sql/session_create.sql")
-        qry = open(script_path, 'r').read()
-        self.con.executescript(qry)
+        with open(script_path, 'r') as qry:
+            self.con.executescript(qry.read())
         self.con.commit()
 
     @staticmethod
