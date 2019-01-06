@@ -38,7 +38,7 @@ def response(flow: http.HTTPFlow) -> None:
     flow.response.content = flow.response.content.replace(b'https://', b'http://')
 
     # strip meta tag upgrade-insecure-requests in response body
-    csp_meta_tag_pattern = b'<meta.*http-equiv=["\']Content-Security-Policy[\'"].*upgrade-insecure-requests.*?>'
+    csp_meta_tag_pattern = br'<meta.*http-equiv=["\']Content-Security-Policy[\'"].*upgrade-insecure-requests.*?>'
     flow.response.content = re.sub(csp_meta_tag_pattern, b'', flow.response.content, flags=re.IGNORECASE)
 
     # strip links in 'Location' header
@@ -52,7 +52,7 @@ def response(flow: http.HTTPFlow) -> None:
     # strip upgrade-insecure-requests in Content-Security-Policy header
     if re.search('upgrade-insecure-requests', flow.response.headers.get('Content-Security-Policy', ''), flags=re.IGNORECASE):
         csp = flow.response.headers['Content-Security-Policy']
-        flow.response.headers['Content-Security-Policy'] = re.sub('upgrade-insecure-requests[;\s]*', '', csp, flags=re.IGNORECASE)
+        flow.response.headers['Content-Security-Policy'] = re.sub(r'upgrade-insecure-requests[;\s]*', '', csp, flags=re.IGNORECASE)
 
     # strip secure flag from 'Set-Cookie' headers
     cookies = flow.response.headers.get_all('Set-Cookie')

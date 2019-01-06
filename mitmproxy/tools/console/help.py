@@ -91,9 +91,9 @@ class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
             )
         )
         examples = [
-            ("google\.com", "Url containing \"google.com"),
-            ("~q ~b test", "Requests where body contains \"test\""),
-            ("!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
+            (r"google\.com", r"Url containing \"google.com"),
+            ("~q ~b test", r"Requests where body contains \"test\""),
+            (r"!(~q & ~t \"text/html\")", "Anything but requests with a text/html content type."),
         ]
         text.extend(
             common.format_keyvals(examples, indent=4)

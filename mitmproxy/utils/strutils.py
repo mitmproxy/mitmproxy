@@ -169,7 +169,7 @@ def split_special_areas(
 
     >>> split_special_areas(
     >>>     "test /* don't modify me */ foo",
-    >>>     [r"/\*[\s\S]*?\*/"])  # (regex matching comments)
+    >>>     [r"/\\*[\\s\\S]*?\\*/"])  # (regex matching comments)
     ["test ", "/* don't modify me */", " foo"]
 
     "".join(split_special_areas(x, ...)) == x always holds true.
@@ -201,7 +201,7 @@ def escape_special_areas(
     >>> x = escape_special_areas(x, "{", ["'" + SINGLELINE_CONTENT + "'"])
     >>> print(x)
     if (true) { console.log('�}'); }
-    >>> x = re.sub(r"\s*{\s*", " {\n    ", x)
+    >>> x = re.sub(r"\\s*{\\s*", " {\n    ", x)
     >>> x = unescape_special_areas(x)
     >>> print(x)
     if (true) {
