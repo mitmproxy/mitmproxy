@@ -113,6 +113,11 @@ class ConsoleAddon:
             "console_mouse", bool, True,
             "Console mouse interaction."
         )
+        loader.add_option(
+            "console_external_viewer_default", str, "vi",
+            "External viewer for flow body. Set environment variable $MITMPROXY_EDITOR "
+            "to change default."
+        )
 
     @command.command("console.layout.options")
     def layout_options(self) -> typing.Sequence[str]:
