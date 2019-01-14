@@ -34,10 +34,7 @@ def curl_command(f: flow.Flow) -> str:
             # shlex.quote doesn't support a bytes object
             # see https://github.com/python/cpython/pull/10871
             raise exceptions.CommandError("Request content must be valid unicode")
-        args += [
-            "--data-binary",
-            strutils.always_str(request.content)
-        ]
+        args += ["--data-binary", content]
     return ' '.join(shlex.quote(arg) for arg in args)
 
 
