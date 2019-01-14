@@ -31,7 +31,8 @@ class Benchmark:
             stdout=asyncio.subprocess.PIPE
         )
         stdout, _ = await traf.communicate()
-        open(ctx.options.benchmark_save_path + ".bench", mode="wb").write(stdout)
+        with open(ctx.options.benchmark_save_path + ".bench", mode="wb") as f:
+            f.write(stdout)
         ctx.log.error("Proxy saw %s requests, %s responses" % (self.reqs, self.resps))
         ctx.log.error(stdout.decode("ascii"))
         backend.kill()

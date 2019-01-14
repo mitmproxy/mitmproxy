@@ -27,7 +27,7 @@ cookie_pairs = [
         [["one", "uno"], ["two", "due"]]
     ],
     [
-        'one="uno"; two="\due"',
+        'one="uno"; two="\\due"',
         [["one", "uno"], ["two", "due"]]
     ],
     [
@@ -70,7 +70,7 @@ def test_read_key():
 def test_read_quoted_string():
     tokens = [
         [('"foo" x', 0), ("foo", 5)],
-        [('"f\oo" x', 0), ("foo", 6)],
+        [('"f\\oo" x', 0), ("foo", 6)],
         [(r'"f\\o" x', 0), (r"f\o", 6)],
         [(r'"f\\" x', 0), (r"f" + '\\', 5)],
         [('"fo\\\"" x', 0), ("fo\"", 6)],

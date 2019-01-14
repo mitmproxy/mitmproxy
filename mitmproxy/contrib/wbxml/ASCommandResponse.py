@@ -63,8 +63,9 @@ if __name__ == "__main__":
 	listOfSamples = os.listdir(samplesDir)
 
 	for filename in listOfSamples:
-		byteWBXML = open(samplesDir + os.sep + filename, "rb").read()
-		
+		with open(samplesDir + os.sep + filename, "rb") as f:
+			byteWBXML = f.read()
+
 		logging.info("-"*100)
 		logging.info(filename)
 		logging.info("-"*100)

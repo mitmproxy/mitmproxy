@@ -10,9 +10,9 @@ SPECIAL_AREAS = (
     r"'" + strutils.MULTILINE_CONTENT_LINE_CONTINUATION + strutils.NO_ESCAPE + "'",
     r'"' + strutils.MULTILINE_CONTENT_LINE_CONTINUATION + strutils.NO_ESCAPE + '"',
     r'`' + strutils.MULTILINE_CONTENT + strutils.NO_ESCAPE + '`',
-    r"/\*" + strutils.MULTILINE_CONTENT + "\*/",
+    r"/\*" + strutils.MULTILINE_CONTENT + r"\*/",
     r"//" + strutils.SINGLELINE_CONTENT + "$",
-    r"for\(" + strutils.SINGLELINE_CONTENT + "\)",
+    r"for\(" + strutils.SINGLELINE_CONTENT + r"\)",
 )
 
 
