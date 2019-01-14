@@ -1,4 +1,5 @@
 import typing
+import shlex
 
 from mitmproxy import ctx
 from mitmproxy import command
@@ -18,20 +19,26 @@ def raise_if_missing_request(f: flow.Flow) -> None:
 
 def curl_command(f: flow.Flow) -> str:
     raise_if_missing_request(f)
-    data = "curl "
+    args = ["curl"]
     request = f.request.copy()  # type: ignore
     request.decode(strict=False)
     for k, v in request.headers.items(multi=True):
-        data += "-H '%s:%s' " % (k, v)
+        args += ["-H", shlex.quote("%s:%s" % (k, v))]
     if request.method != "GET":
-        data += "-X %s " % request.method
-    data += "'%s'" % request.url
+        args += ["-X", shlex.quote(request.method)]
+    args.append(shlex.quote(request.url))
     if request.content:
-        data += " --data-binary '%s'" % strutils.bytes_to_escaped_str(
-            request.content,
-            escape_single_quotes=True
-        )
-    return data
+        try:
+            content = strutils.always_str(request.content)
+        except UnicodeDecodeError:
+            # shlex.quote doesn't support a bytes object
+            # see https://github.com/python/cpython/pull/10871
+            raise exceptions.CommandError("Request content must be valid unicode")
+        args += [
+            "--data-binary",
+            shlex.quote(strutils.always_str(request.content))
+        ]
+    return ' '.join(args)
 
 
 def httpie_command(f: flow.Flow) -> str:

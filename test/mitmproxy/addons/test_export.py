@@ -1,4 +1,5 @@
 import os
+import shlex
 
 import pytest
 import pyperclip
@@ -47,22 +48,39 @@ def tcp_flow():
 
 class TestExportCurlCommand:
     def test_get(self, get_request):
-        result = """curl -H 'header:qvalue' -H 'content-length:0' 'http://address:22/path?a=foo&a=bar&b=baz'"""
+        result = """curl -H header:qvalue -H content-length:0 'http://address:22/path?a=foo&a=bar&b=baz'"""
         assert export.curl_command(get_request) == result
 
     def test_post(self, post_request):
-        result = "curl -H 'content-length:256' -X POST 'http://address:22/path' --data-binary '{}'".format(
-            str(bytes(range(256)))[2:-1]
-        )
+        post_request.request.content = b'nobinarysupport'
+        result = "curl -H content-length:15 -X POST http://address:22/path --data-binary nobinarysupport"
         assert export.curl_command(post_request) == result
 
+    def test_fails_with_binary_data(self, post_request):
+        # shlex.quote doesn't support a bytes object
+        # see https://github.com/python/cpython/pull/10871
+        with pytest.raises(exceptions.CommandError):
+            export.curl_command(post_request)
+
     def test_patch(self, patch_request):
-        result = """curl -H 'header:qvalue' -H 'content-length:7' -X PATCH 'http://address:22/path?query=param' --data-binary 'content'"""
+        result = """curl -H header:qvalue -H content-length:7 -X PATCH 'http://address:22/path?query=param' --data-binary content"""
         assert export.curl_command(patch_request) == result
 
     def test_tcp(self, tcp_flow):
         with pytest.raises(exceptions.CommandError):
             export.curl_command(tcp_flow)
+
+    def test_escape_single_quotes_in_body(self):
+        request = tflow.tflow(
+            req=tutils.treq(
+                method=b'POST',
+                headers=(),
+                content=b"'&#"
+            )
+        )
+        command = export.curl_command(request)
+        assert shlex.split(command)[-2] == '--data-binary'
+        assert shlex.split(command)[-1] == "'&#"
 
 
 class TestExportHttpieCommand:
