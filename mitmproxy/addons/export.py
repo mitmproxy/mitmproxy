@@ -23,10 +23,10 @@ def curl_command(f: flow.Flow) -> str:
     request = f.request.copy()  # type: ignore
     request.decode(strict=False)
     for k, v in request.headers.items(multi=True):
-        args += ["-H", shlex.quote("%s:%s" % (k, v))]
+        args += ["-H", "%s:%s" % (k, v)]
     if request.method != "GET":
-        args += ["-X", shlex.quote(request.method)]
-    args.append(shlex.quote(request.url))
+        args += ["-X", request.method]
+    args.append(request.url)
     if request.content:
         try:
             content = strutils.always_str(request.content)
@@ -36,20 +36,19 @@ def curl_command(f: flow.Flow) -> str:
             raise exceptions.CommandError("Request content must be valid unicode")
         args += [
             "--data-binary",
-            shlex.quote(strutils.always_str(request.content))
+            strutils.always_str(request.content)
         ]
-    return ' '.join(args)
+    return ' '.join(shlex.quote(arg) for arg in args)
 
 
 def httpie_command(f: flow.Flow) -> str:
     raise_if_missing_request(f)
     request = f.request.copy()  # type: ignore
-    args = ["http"]
-    args.append(shlex.quote(request.method))
     request.decode(strict=False)
-    args.append(shlex.quote(request.url))
+    args = ["http", request.method, request.url]
     for k, v in request.headers.items(multi=True):
-        args.append(shlex.quote("%s:%s" % (k, v)))
+        args.append("%s:%s" % (k, v))
+    cmd = ' '.join(shlex.quote(arg) for arg in args)
     if request.content:
         try:
             content = strutils.always_str(request.content)
@@ -57,8 +56,8 @@ def httpie_command(f: flow.Flow) -> str:
             # shlex.quote doesn't support a bytes object
             # see https://github.com/python/cpython/pull/10871
             raise exceptions.CommandError("Request content must be valid unicode")
-        args += ["<<<", shlex.quote(content)]
-    return ' '.join(args)
+        cmd += " <<< " + shlex.quote(content)
+    return cmd
 
 
 def raw(f: flow.Flow) -> bytes:
