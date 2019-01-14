@@ -85,22 +85,39 @@ class TestExportCurlCommand:
 
 class TestExportHttpieCommand:
     def test_get(self, get_request):
-        result = """http GET http://address:22/path?a=foo&a=bar&b=baz 'header:qvalue' 'content-length:0'"""
+        result = """http GET 'http://address:22/path?a=foo&a=bar&b=baz' header:qvalue content-length:0"""
         assert export.httpie_command(get_request) == result
 
     def test_post(self, post_request):
-        result = "http POST http://address:22/path 'content-length:256' <<< '{}'".format(
-            str(bytes(range(256)))[2:-1]
-        )
+        post_request.request.content = b'nobinarysupport'
+        result = "http POST http://address:22/path content-length:15 <<< nobinarysupport"
         assert export.httpie_command(post_request) == result
 
+    def test_fails_with_binary_data(self, post_request):
+        # shlex.quote doesn't support a bytes object
+        # see https://github.com/python/cpython/pull/10871
+        with pytest.raises(exceptions.CommandError):
+            export.httpie_command(post_request)
+
     def test_patch(self, patch_request):
-        result = """http PATCH http://address:22/path?query=param 'header:qvalue' 'content-length:7' <<< 'content'"""
+        result = """http PATCH 'http://address:22/path?query=param' header:qvalue content-length:7 <<< content"""
         assert export.httpie_command(patch_request) == result
 
     def test_tcp(self, tcp_flow):
         with pytest.raises(exceptions.CommandError):
             export.httpie_command(tcp_flow)
+
+    def test_escape_single_quotes_in_body(self):
+        request = tflow.tflow(
+            req=tutils.treq(
+                method=b'POST',
+                headers=(),
+                content=b"'&#"
+            )
+        )
+        command = export.httpie_command(request)
+        assert shlex.split(command)[-2] == '<<<'
+        assert shlex.split(command)[-1] == "'&#"
 
 
 class TestRaw:

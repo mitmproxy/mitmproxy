@@ -44,17 +44,21 @@ def curl_command(f: flow.Flow) -> str:
 def httpie_command(f: flow.Flow) -> str:
     raise_if_missing_request(f)
     request = f.request.copy()  # type: ignore
-    data = "http %s " % request.method
+    args = ["http"]
+    args.append(shlex.quote(request.method))
     request.decode(strict=False)
-    data += "%s" % request.url
+    args.append(shlex.quote(request.url))
     for k, v in request.headers.items(multi=True):
-        data += " '%s:%s'" % (k, v)
+        args.append(shlex.quote("%s:%s" % (k, v)))
     if request.content:
-        data += " <<< '%s'" % strutils.bytes_to_escaped_str(
-            request.content,
-            escape_single_quotes=True
-        )
-    return data
+        try:
+            content = strutils.always_str(request.content)
+        except UnicodeDecodeError:
+            # shlex.quote doesn't support a bytes object
+            # see https://github.com/python/cpython/pull/10871
+            raise exceptions.CommandError("Request content must be valid unicode")
+        args += ["<<<", shlex.quote(content)]
+    return ' '.join(args)
 
 
 def raw(f: flow.Flow) -> bytes:
