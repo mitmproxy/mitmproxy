@@ -124,7 +124,7 @@ doas pfctl -e
 You probably want a command like this:
 
 {{< highlight bash  >}}
-mitmproxy --mode transparent --showhost
+mitmproxy --mode transparent --listen-host 127.0.0.1 --showhost
 {{< / highlight >}}
 
 The `--mode transparent` option turns on transparent mode, and the `--showhost` argument tells
