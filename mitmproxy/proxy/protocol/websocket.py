@@ -4,8 +4,8 @@ from OpenSSL import SSL
 
 
 import wsproto
-from wsproto import events
-from wsproto.connection import ConnectionType, WSConnection
+from wsproto import events, WSConnection
+from wsproto.connection import ConnectionType
 from wsproto.extensions import PerMessageDeflate
 
 from mitmproxy import exceptions
