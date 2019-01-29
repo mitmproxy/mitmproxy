@@ -468,8 +468,8 @@ class Request(message.Message):
         return ()
 
     def _set_multipart_form(self, value):
+        self.content = mitmproxy.net.http.multipart.encode(self.headers, value)
         self.headers["content-type"] = "multipart/form-data"
-        self.content = mitmproxy.net.http.url.encode(value, self.get_text(strict=False)).encode()
 
     @property
     def multipart_form(self):

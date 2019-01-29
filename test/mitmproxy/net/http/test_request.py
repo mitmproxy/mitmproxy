@@ -371,7 +371,7 @@ class TestRequestUtils:
             assert list(request.multipart_form.items()) == []
 
     def test_set_multipart_form(self):
-        request = treq(content=b"foobar")
-        request.multipart_form = [("filename", "shell.jpg"), ("file_size", "1000")]
-        assert request.headers['Content-Type'] == "multipart/form-data"
-        assert request.content
+        request = treq()
+        request.multipart_form = [("file", "shell.jpg"), ("file_size", "1000")]
+        assert request.headers["Content-Type"] == 'multipart/form-data'
+        assert request.content is None
