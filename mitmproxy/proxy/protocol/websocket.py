@@ -52,17 +52,19 @@ class WebSocketLayer(base.Layer):
 
         self.connections: dict[object, WSConnection] = {}
 
-        extensions = []
+        client_extensions = []
+        server_extensions = []
         if 'Sec-WebSocket-Extensions' in handshake_flow.response.headers:
             if PerMessageDeflate.name in handshake_flow.response.headers['Sec-WebSocket-Extensions']:
-                extensions = [PerMessageDeflate()]
+                client_extensions = [PerMessageDeflate()]
+                server_extensions = [PerMessageDeflate()]
         self.connections[self.client_conn] = WSConnection(ConnectionType.SERVER,
-                                                          extensions=extensions)
+                                                          extensions=client_extensions)
         self.connections[self.server_conn] = WSConnection(ConnectionType.CLIENT,
                                                           host=handshake_flow.request.host,
                                                           resource=handshake_flow.request.path,
-                                                          extensions=extensions)
-        if extensions:
+                                                          extensions=server_extensions)
+        if client_extensions:
             for conn in self.connections.values():
                 conn.extensions[0].finalize(conn, handshake_flow.response.headers['Sec-WebSocket-Extensions'])
 
