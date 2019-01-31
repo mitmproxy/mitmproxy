@@ -67,7 +67,7 @@ class WebSocketLayer(base.Layer):
         if server_extensions:
             server_extensions[0].finalize(handshake_flow.response.headers['Sec-WebSocket-Extensions'])
 
-        request = Request(extensions = client_extensions, host = handshake_flow.request.host, target = handshake_flow.request.path)
+        request = Request(extensions=client_extensions, host=handshake_flow.request.host, target=handshake_flow.request.path)
         data = self.connections[self.server_conn].send(request)
         self.connections[self.client_conn].receive_data(data)
 
@@ -129,11 +129,11 @@ class WebSocketLayer(base.Layer):
                             yield (payload[i:i + chunk_size], True if i + chunk_size >= len(payload) else False)
 
                 for chunk, final in get_chunk(websocket_message.content):
-                    data = self.connections[other_conn].send(Message(data = chunk, message_finished = final))
+                    data = self.connections[other_conn].send(Message(data=chunk, message_finished=final))
                     other_conn.send(data)
 
         if self.flow.stream:
-            data = self.connections[other_conn].send(Message(data = event.data, message_finished = event.message_finished))
+            data = self.connections[other_conn].send(Message(data=event.data, message_finished=event.message_finished))
             other_conn.send(data)
         return True
 
@@ -174,7 +174,7 @@ class WebSocketLayer(base.Layer):
         while True:
             try:
                 payload = message_queue.get_nowait()
-                data = self.connections[endpoint].send(Message(data = payload, message_finished = True))
+                data = self.connections[endpoint].send(Message(data=payload, message_finished=True))
                 endpoint.send(data)
             except queue.Empty:
                 break
