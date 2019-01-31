@@ -64,7 +64,7 @@ class WebSocketLayer(base.Layer):
 
         if client_extensions:
             client_extensions[0].finalize(handshake_flow.response.headers['Sec-WebSocket-Extensions'])
-		if server_extensions:
+        if server_extensions:
             server_extensions[0].finalize(handshake_flow.response.headers['Sec-WebSocket-Extensions'])
 
         request = Request(extensions = client_extensions, host = handshake_flow.request.host, target = handshake_flow.request.path)
