@@ -53,24 +53,28 @@ class WebSocketLayer(base.Layer):
 
         self.connections: dict[object, WSConnection] = {}
 
-        extensions = []
+        client_extensions = []
+        server_extensions = []
         if 'Sec-WebSocket-Extensions' in handshake_flow.response.headers:
             if PerMessageDeflate.name in handshake_flow.response.headers['Sec-WebSocket-Extensions']:
-                extensions = [PerMessageDeflate()]
+                client_extensions = [PerMessageDeflate()]
+                server_extensions = [PerMessageDeflate()]
         self.connections[self.client_conn] = WSConnection(ConnectionType.SERVER)
         self.connections[self.server_conn] = WSConnection(ConnectionType.CLIENT)
 
-        if extensions:
-            extensions[0].finalize(handshake_flow.response.headers['Sec-WebSocket-Extensions'])
+        if client_extensions:
+            client_extensions[0].finalize(handshake_flow.response.headers['Sec-WebSocket-Extensions'])
+		if server_extensions:
+            server_extensions[0].finalize(handshake_flow.response.headers['Sec-WebSocket-Extensions'])
 
-        request = Request(extensions = extensions, host = handshake_flow.request.host, target = handshake_flow.request.path)
+        request = Request(extensions = client_extensions, host = handshake_flow.request.host, target = handshake_flow.request.path)
         data = self.connections[self.server_conn].send(request)
         self.connections[self.client_conn].receive_data(data)
 
         event = next(self.connections[self.client_conn].events())
         assert isinstance(event, events.Request)
 
-        data = self.connections[self.client_conn].send(AcceptConnection(extensions=extensions))
+        data = self.connections[self.client_conn].send(AcceptConnection(extensions=server_extensions))
         self.connections[self.server_conn].receive_data(data)
         assert isinstance(next(self.connections[self.server_conn].events()), events.AcceptConnection)
 
