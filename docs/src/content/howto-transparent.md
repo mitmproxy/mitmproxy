@@ -63,8 +63,10 @@ something like this:
 {{< highlight bash  >}}
 iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
 iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8080
+iptables -t nat -A POSTROUTING -j MASQUERADE
 ip6tables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
 ip6tables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8080
+ip6tables -t nat -A POSTROUTING -j MASQUERADE
 {{< / highlight >}}
 
 If you want to persist this across reboots, you can use the `iptables-persistent` package (see
