@@ -24,6 +24,18 @@ def test_decode():
     assert form[0] == (b"field1", b"value1")
     assert form[1] == (b"field2", b"value2")
 
+    boundary = 'boundary茅莽'
+    headers = Headers(
+        content_type='multipart/form-data; boundary=' + boundary
+    )
+    result = multipart.decode(headers, content)
+    assert result == []
+
+    headers = Headers(
+        content_type=''
+    )
+    assert multipart.decode(headers, content) == []
+
 
 def test_encode():
     data = [("file".encode('utf-8'), "shell.jpg".encode('utf-8')),
@@ -40,3 +52,10 @@ def test_encode():
 
     with pytest.raises(ValueError, match=r"boundary found in encoded string"):
         multipart.encode(headers, [("key".encode('utf-8'), "--127824672498".encode('utf-8'))])
+
+    boundary = 'boundary茅莽'
+    headers = Headers(
+        content_type='multipart/form-data; boundary=' + boundary
+    )
+    result = multipart.encode(headers, data)
+    assert result == b''
