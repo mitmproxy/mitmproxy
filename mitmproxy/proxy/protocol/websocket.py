@@ -4,7 +4,7 @@ from OpenSSL import SSL
 
 
 import wsproto
-from wsproto import events, WSConnection
+from wsproto import events, Connection
 from wsproto.connection import ConnectionType
 from wsproto.events import AcceptConnection, CloseConnection, Message, Ping, Request
 from wsproto.extensions import PerMessageDeflate
