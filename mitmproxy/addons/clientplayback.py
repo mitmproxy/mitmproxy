@@ -117,9 +117,10 @@ class RequestReplayThread(basethread.BaseThread):
         finally:
             r.first_line_format = first_line_format_backup
             f.live = False
-            if server.connected():
-                server.finish()
-                server.close()
+            if server is not None:
+                if server.connected():
+                    server.finish()
+                    server.close()
 
 
 class ClientPlayback:

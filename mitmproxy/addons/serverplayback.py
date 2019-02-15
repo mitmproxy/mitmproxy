@@ -177,11 +177,12 @@ class ServerPlayback:
         if self.flowmap:
             rflow = self.next_flow(f)
             if rflow:
-                response = rflow.response.copy()
-                response.is_replay = True
-                if ctx.options.server_replay_refresh:
-                    response.refresh()
-                f.response = response
+                if rflow.response is not None:
+                    response = rflow.response.copy()
+                    response.is_replay = True
+                    if ctx.options.server_replay_refresh:
+                        response.refresh()
+                    f.response = response
             elif ctx.options.server_replay_kill_extra:
                 ctx.log.warn(
                     "server_playback: killed non-replay request {}".format(
