@@ -475,7 +475,30 @@ def _make():
         parts.append(f)
 
     simplerex = "".join(c for c in pp.printables if c not in "()~'\"")
+    alphdevanagari = pp.pyparsing_unicode.Devanagari.alphas
+    alphcyrillic = pp.pyparsing_unicode.Cyrillic.alphas
+    alphgreek = pp.pyparsing_unicode.Greek.alphas
+    alphchinese = pp.pyparsing_unicode.Chinese.alphas
+    alpharabic = pp.pyparsing_unicode.Arabic.alphas
+    alphhebrew = pp.pyparsing_unicode.Hebrew.alphas
+    alphjapanese = pp.pyparsing_unicode.Japanese.alphas
+    alphkorean = pp.pyparsing_unicode.Korean.alphas
+    alphlatin1 = pp.pyparsing_unicode.Latin1.alphas
+    alphlatinA = pp.pyparsing_unicode.LatinA.alphas
+    alphlatinB = pp.pyparsing_unicode.LatinB.alphas
+
     rex = pp.Word(simplerex) |\
+        pp.Word(alphcyrillic) |\
+        pp.Word(alphgreek) |\
+        pp.Word(alphchinese) |\
+        pp.Word(alpharabic) |\
+        pp.Word(alphdevanagari) |\
+        pp.Word(alphhebrew) |\
+        pp.Word(alphjapanese) |\
+        pp.Word(alphkorean) |\
+        pp.Word(alphlatin1) |\
+        pp.Word(alphlatinA) |\
+        pp.Word(alphlatinB) |\
         pp.QuotedString("\"", escChar='\\') |\
         pp.QuotedString("'", escChar='\\')
     for klass in filter_rex:
