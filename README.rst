@@ -107,6 +107,12 @@ For speedier testing, we recommend you run `pytest`_ directly on individual test
 
     cd test/mitmproxy/addons
     pytest --cov mitmproxy.addons.anticache --looponfail test_anticache.py
+    
+To generate terminal report along with missing line numbers of individual test files or folders:
+
+.. code-block:: bash
+
+    pytest --cov-report term-missing --cov mitmproxy.flowfilter --looponfail test_flowfilter.py
 
 As pytest does not check the code style, you probably want to run ``tox -e lint`` before committing your changes.
 
