@@ -78,7 +78,7 @@ setup(
         "pyperclip>=1.6.0,<1.8",
         "ruamel.yaml>=0.15,<0.16",
         "sortedcontainers>=2.1,<2.2",
-        "tornado>=4.3,<5.2",
+        "tornado>=6.0,<6.1",
         "urwid>=2.0.1,<2.1",
         "wsproto>=0.13.0,<0.14.0",
     ],
