@@ -1,3 +1,5 @@
+import typing
+
 class WebAddon:
     def load(self, loader):
         loader.add_option(
@@ -15,4 +17,12 @@ class WebAddon:
         loader.add_option(
             "web_iface", str, "127.0.0.1",
             "Web UI interface."
+        )
+        loader.add_option(
+            "wsingleuser", typing.Optional[str], None,
+            "Web UI authentication username."
+        )
+        loader.add_option(
+            "whtpasswd", typing.Optional[str], None,
+            "Web UI authentication password."
         )

@@ -5,6 +5,8 @@ import os.path
 import re
 from io import BytesIO
 import asyncio
+import functools
+import base64
 
 import mitmproxy.flow
 import tornado.escape
@@ -107,6 +109,38 @@ class APIError(tornado.web.HTTPError):
     pass
 
 
+def basic_auth(f):
+    """
+        cause browser to show authentication prompt
+    """
+    def _auth(handler):
+        handler.set_header('WWW-Authenticate', 'Basic realm=Restricted')
+        handler.set_status(401)
+        handler.finish()
+
+    @functools.wraps(f)
+    def wrapper_f(*args, **kwargs):
+        handler = args[0]
+
+        if handler.master.options.wsingleuser == None:
+            return f(*args, **kwargs)
+
+        header = handler.request.headers.get('Authorization')
+        if header is None or not header.startswith('Basic '): 
+            return _auth(handler)
+
+        username, password = base64.decodestring(header[6:].encode("utf-8")) \
+                                   .decode("utf-8") \
+                                   .split(':', 2)
+
+        # additionally, allow username w/o password to login
+        if username == handler.master.options.wsingleuser \
+        and (not handler.master.options.whtpasswd or password == handler.master.options.whtpasswd):
+            return f(*args, **kwargs)
+        return _auth(handler)
+    return wrapper_f
+
+
 class RequestHandler(tornado.web.RequestHandler):
     def write(self, chunk):
         # Writing arrays on the top level is ok nowadays.
@@ -175,6 +209,7 @@ class RequestHandler(tornado.web.RequestHandler):
 
 
 class IndexHandler(RequestHandler):
+    @basic_auth
     def get(self):
         token = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
         assert token
