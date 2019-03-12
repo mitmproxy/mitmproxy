@@ -122,11 +122,11 @@ def basic_auth(f):
     def wrapper_f(*args, **kwargs):
         handler = args[0]
 
-        if handler.master.options.wsingleuser == None:
+        if handler.master.options.wsingleuser is None:
             return f(*args, **kwargs)
 
         header = handler.request.headers.get('Authorization')
-        if header is None or not header.startswith('Basic '): 
+        if header is None or not header.startswith('Basic '):
             return _auth(handler)
 
         username, password = base64.decodestring(header[6:].encode("utf-8")) \
@@ -135,7 +135,7 @@ def basic_auth(f):
 
         # additionally, allow username w/o password to login
         if username == handler.master.options.wsingleuser \
-        and (not handler.master.options.whtpasswd or password == handler.master.options.whtpasswd):
+                and (not handler.master.options.whtpasswd or password == handler.master.options.whtpasswd):
             return f(*args, **kwargs)
         return _auth(handler)
     return wrapper_f

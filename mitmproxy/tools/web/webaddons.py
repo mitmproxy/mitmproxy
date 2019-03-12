@@ -1,5 +1,6 @@
 import typing
 
+
 class WebAddon:
     def load(self, loader):
         loader.add_option(
