@@ -74,7 +74,7 @@ setup(
         "protobuf>=3.7,<3.8",
         "pyasn1>=0.3.1,<0.5",
         "pyOpenSSL>=19.0,<19.1",
-        "pyparsing>=2.1.3,<2.4",
+        "pyparsing>=2.4,<2.5",
         "pyperclip>=1.6.0,<1.8",
         "ruamel.yaml>=0.15,<0.16",
         "sortedcontainers>=2.1,<2.2",
