@@ -87,7 +87,7 @@ def run(
         arg_check.check()
         sys.exit(1)
     try:
-        opts.confdir = args.confdir
+        opts.set(*args.setoptions, defer=True)
         optmanager.load_paths(
             opts,
             os.path.join(opts.confdir, OPTIONS_FILE_NAME),
@@ -110,7 +110,6 @@ def run(
         if args.commands:
             master.commands.dump()
             sys.exit(0)
-        opts.set(*args.setoptions, defer=True)
         if extra:
             opts.update(**extra(args))
 
