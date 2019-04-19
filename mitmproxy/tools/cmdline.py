@@ -65,6 +65,7 @@ def common_options(parser, opts):
     opts.make_parser(group, "listen_port", metavar="PORT", short="p")
     opts.make_parser(group, "server", short="n")
     opts.make_parser(group, "ignore_hosts", metavar="HOST")
+    opts.make_parser(group, "allow_hosts", metavar="HOST")
     opts.make_parser(group, "tcp_hosts", metavar="HOST")
     opts.make_parser(group, "upstream_auth", metavar="USER:PASS")
     opts.make_parser(group, "proxyauth", metavar="SPEC")

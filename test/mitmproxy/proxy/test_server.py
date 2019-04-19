@@ -78,6 +78,16 @@ class TcpMixin:
         self.options.ignore_hosts = self._ignore_backup
         del self._ignore_backup
 
+    def _allow_on(self):
+        assert not hasattr(self, "_allow_backup")
+        self._allow_backup = self.options.allow_hosts
+        self.options.allow_hosts = ["(127.0.0.1|None):\\d+"] + self.options.allow_hosts
+
+    def _allow_off(self):
+        assert hasattr(self, "_allow_backup")
+        self.options.allow_hosts = self._allow_backup
+        del self._allow_backup
+
     def test_ignore(self):
         n = self.pathod("304")
         self._ignore_on()
@@ -110,6 +120,40 @@ class TcpMixin:
             self.pathod(spec)  # pathoc tries to parse answer as HTTP
 
         self._ignore_off()
+
+    def test_allow(self):
+        n = self.pathod("304")
+        self._allow_on()
+        i = self.pathod("305")
+        i2 = self.pathod("306")
+        self._allow_off()
+
+        assert n.status_code == 304
+        assert i.status_code == 305
+        assert i2.status_code == 306
+
+        assert any(f.response.status_code == 304 for f in self.master.state.flows)
+        assert any(f.response.status_code == 305 for f in self.master.state.flows)
+        assert any(f.response.status_code == 306 for f in self.master.state.flows)
+
+        # Test that we get the original SSL cert
+        if self.ssl:
+            i_cert = certs.Cert(i.sslinfo.certchain[0])
+            i2_cert = certs.Cert(i2.sslinfo.certchain[0])
+            n_cert = certs.Cert(n.sslinfo.certchain[0])
+
+            assert i_cert == i2_cert
+            assert i_cert != n_cert
+
+        # Test Non-HTTP traffic
+        spec = "200:i0,@100:d0"  # this results in just 100 random bytes
+        # mitmproxy responds with bad gateway
+        assert self.pathod(spec).status_code == 502
+        self._allow_on()
+
+        self.pathod(spec)  # pathoc parses answer as HTTP
+
+        self._allow_off()
 
     def _tcpproxy_on(self):
         assert not hasattr(self, "_tcpproxy_backup")
@@ -852,10 +896,12 @@ class TestUpstreamProxySSL(
 
     def _host_pattern_on(self, attr):
         """
-        Updates config.check_tcp or check_ignore, depending on attr.
+        Updates config.check_tcp or check_filter, depending on attr.
         """
         assert not hasattr(self, "_ignore_%s_backup" % attr)
         backup = []
+        handle = attr
+        attr = "filter" if attr in ["allow", "ignore"] else attr
         for proxy in self.chain:
             old_matcher = getattr(
                 proxy.tmaster.server.config,
@@ -865,12 +911,13 @@ class TestUpstreamProxySSL(
             setattr(
                 proxy.tmaster.server.config,
                 "check_%s" % attr,
-                HostMatcher([".+:%s" % self.server.port] + old_matcher.patterns)
+                HostMatcher(handle, [".+:%s" % self.server.port] + old_matcher.patterns)
             )
 
         setattr(self, "_ignore_%s_backup" % attr, backup)
 
     def _host_pattern_off(self, attr):
+        attr = "filter" if attr in ["allow", "ignore"] else attr
         backup = getattr(self, "_ignore_%s_backup" % attr)
         for proxy in reversed(self.chain):
             setattr(

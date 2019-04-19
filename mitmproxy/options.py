@@ -68,6 +68,10 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
+            "allow_hosts", Sequence[str], [],
+            "Opposite of --ignore_hosts."
+        )
+        self.add_option(
             "listen_host", str, "",
             "Address to bind proxy to."
         )

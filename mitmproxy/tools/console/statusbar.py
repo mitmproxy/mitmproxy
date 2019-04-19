@@ -215,6 +215,10 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "I"))
             r.append("gnore:%d]" % len(self.master.options.ignore_hosts))
+        elif self.master.options.allow_hosts:
+            r.append("[")
+            r.append(("heading_key", "A"))
+            r.append("llow:%d]" % len(self.master.options.allow_hosts))
         if self.master.options.tcp_hosts:
             r.append("[")
             r.append(("heading_key", "T"))
