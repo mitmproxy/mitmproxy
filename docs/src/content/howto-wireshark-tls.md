@@ -7,7 +7,7 @@ menu:
 
 # Wireshark and SSL/TLS Master Secrets
 
-The SSL/SSL master keys can be logged by mitmproxy so that external programs can
+The SSL/TLS master keys can be logged by mitmproxy so that external programs can
 decrypt SSL/TLS connections both from and to the proxy. Recent versions of
 Wireshark can use these log files to decrypt packets. See the [Wireshark wiki](https://wiki.wireshark.org/SSL#Using_the_.28Pre.29-Master-Secret) for more information.
 
