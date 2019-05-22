@@ -8,7 +8,7 @@ Be aware that content replacement isn't trivial:
 """
 
 
-def modify(chunks):
+def modify(chunks, flow=None):
     """
     chunks is a generator that can be used to iterate over all chunks.
     """

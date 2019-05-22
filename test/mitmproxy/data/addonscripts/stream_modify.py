@@ -1,6 +1,6 @@
 from mitmproxy import ctx
 
-def modify(chunks):
+def modify(chunks, flow=None):
     for chunk in chunks:
         yield chunk.replace(b"foo", b"bar")
 

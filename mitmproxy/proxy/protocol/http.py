@@ -338,7 +338,7 @@ class HttpLayer(base.Layer):
                     if f.request.stream:
                         chunks = self.read_request_body(f.request)
                         if callable(f.request.stream):
-                            chunks = f.request.stream(chunks)
+                            chunks = f.request.stream(chunks, flow=f)
                         self.send_request_body(f.request, chunks)
                     else:
                         self.send_request_body(f.request, [f.request.data.content])
@@ -418,7 +418,7 @@ class HttpLayer(base.Layer):
                     f.response
                 )
                 if callable(f.response.stream):
-                    chunks = f.response.stream(chunks)
+                    chunks = f.response.stream(chunks, flow=f)
                 self.send_response_body(f.response, chunks)
                 f.response.timestamp_end = time.time()
 
