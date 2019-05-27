@@ -62,7 +62,7 @@ setup(
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
         "blinker>=1.4, <1.5",
-        "brotlipy>=0.7.0,<0.8",
+        "Brotli>=1.0,<1.1",
         "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
         "click>=6.2, <7",
         "cryptography>=2.1.4,<2.5",
