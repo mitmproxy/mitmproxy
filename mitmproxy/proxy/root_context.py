@@ -115,7 +115,7 @@ class RootContext:
             return protocol.RawTCPLayer(top_layer)
 
         # 7. Assume HTTP1 by default
-        return protocol.Http1Layer(top_layer, http.HTTPMode.transparent)
+        return protocol.Http1Layer(top_layer, http.HTTPMode.regular)
 
     def log(self, msg, level, subs=()):
         """
