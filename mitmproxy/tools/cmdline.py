@@ -85,6 +85,7 @@ def common_options(parser, opts):
     opts.make_parser(group, "server_replay", metavar="PATH", short="S")
     opts.make_parser(group, "server_replay_kill_extra")
     opts.make_parser(group, "server_replay_nopop")
+    opts.make_parser(group, "server_replay_refresh")
 
     # Replacements
     group = parser.add_argument_group("Replacements")
