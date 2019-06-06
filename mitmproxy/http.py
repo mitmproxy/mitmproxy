@@ -142,7 +142,7 @@ class HTTPFlow(flow.Flow):
     transaction.
     """
 
-    def __init__(self, client_conn, server_conn, live=None, mode="regular"):
+    def __init__(self, client_conn, server_conn, live=None, mode="regular", client_stream_id=None, server_stream_id=None):
         super().__init__("http", client_conn, server_conn, live)
 
         self.request: HTTPRequest = None
@@ -164,6 +164,9 @@ class HTTPFlow(flow.Flow):
         """ Is this flow currently being intercepted? """
         self.mode = mode
         """ What mode was the proxy layer in when receiving this request? """
+        self.client_stream_id = client_stream_id
+        self.server_stream_id = server_stream_id
+        """ In case of HTTP/2 connection this is the used stream-id for this flow """
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     # mypy doesn't support update with kwargs

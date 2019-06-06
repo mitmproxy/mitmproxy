@@ -3,6 +3,7 @@ import typing
 from mitmproxy import controller
 from mitmproxy import flow
 from mitmproxy import http
+from mitmproxy import http2
 from mitmproxy import tcp
 from mitmproxy import websocket
 
@@ -16,6 +17,11 @@ Events = frozenset([
     "tcp_message",
     "tcp_error",
     "tcp_end",
+    # HTTP/2
+    "http2_start",
+    "http2_frame",
+    "http2_error",
+    "http2_end",
     # HTTP
     "http_connect",
     "request",
@@ -51,6 +57,18 @@ def _iterate_http(f: http.HTTPFlow) -> TEventGenerator:
         yield "response", f
     if f.error:
         yield "error", f
+
+def _iterate_http2(f: http2.HTTP2Flow) -> TEventGenerator:
+    messages = f.messages
+    f.messages = []
+    f.reply = controller.DummyReply()
+    yield "http2_start", f
+    while messages:
+        f.messages.append(messages.pop(0))
+        yield "http2_frame", f
+    if f.error:
+        yield "http2_error", f
+    yield "http2_end", f
 
 
 def _iterate_websocket(f: websocket.WebSocketFlow) -> TEventGenerator:

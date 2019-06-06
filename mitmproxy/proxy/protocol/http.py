@@ -183,7 +183,9 @@ class HttpLayer(base.Layer):
                 self.client_conn,
                 self.server_conn,
                 live=self,
-                mode=self.mode.name
+                mode=self.mode.name,
+                #client_stream_id=self.client_stream_id,
+                #server_stream_id=self.server_stream_id
             )
             if not self._process_flow(flow):
                 return

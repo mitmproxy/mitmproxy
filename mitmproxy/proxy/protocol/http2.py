@@ -14,6 +14,7 @@ from mitmproxy import http
 from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol import http as httpbase
 import mitmproxy.net.http
+from mitmproxy import http2 as http2Flow
 from mitmproxy.net import tcp
 from mitmproxy.coretypes import basethread
 from mitmproxy.net.http import http2, headers
@@ -326,6 +327,10 @@ class Http2Layer(base.Layer):
     def __call__(self):
         self._initiate_server_conn()
         self._complete_handshake()
+        f : http2Flow.HTTP2Flow = http2Flow.HTTP2Flow(self.client_conn,
+                                  self.server_conn,
+                                  live=self)
+        self.channel.tell("http2_start", f)
 
         conns = [c.connection for c in self.connections.keys()]
 
@@ -352,16 +357,22 @@ class Http2Layer(base.Layer):
                         incoming_events = self.connections[source_conn].receive_data(raw_frame)
                         source_conn.send(self.connections[source_conn].data_to_send())
 
+                        f.messages.append(http2Flow.HTTP2Frame(not is_server, incoming_events))
+                        self.channel.ask("http2_frame", f)
+
                         for event in incoming_events:
                             if not self._handle_event(event, source_conn, other_conn, is_server):
                                 # connection terminated: GoAway
                                 self._kill_all_streams()
+                                self.channel.tell("http2_end", f)
                                 return
 
                     self._cleanup_streams()
         except Exception as e:  # pragma: no cover
             self.log(repr(e), "info")
+            self.channel.tell("http2_error", f)
             self._kill_all_streams()
+            self.channel.tell("http2_end", f)
 
 
 def detect_zombie_stream(func):  # pragma: no cover
