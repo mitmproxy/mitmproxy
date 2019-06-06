@@ -28,3 +28,7 @@ sslkeylogfile.log
 coverage.xml
 web/coverage/
 .mypy_cache/
+
+.project
+.pydevproject
+.settings
