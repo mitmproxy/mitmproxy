@@ -1,18 +1,16 @@
-import time
-
-from typing import List
-
 from mitmproxy import flow
 from mitmproxy.coretypes import serializable
+import time
+from typing import List
 
-from h2 import events
+import h2.events
 
 
 class HTTP2Frame(serializable.Serializable):
 
     def __init__(self, from_client, events, timestamp=None):
         self.from_client = from_client
-        self.events: List[events.Event] = events
+        self.events: List[h2.events.Event] = events
         self.timestamp = timestamp or time.time()
 
     @classmethod
@@ -20,16 +18,15 @@ class HTTP2Frame(serializable.Serializable):
         return cls(*state)
 
     def get_state(self):
-        return self.from_client, self.content, self.timestamp
+        return self.from_client, self.events, self.timestamp
 
     def set_state(self, state):
-        self.from_client, self.content, self.timestamp = state
+        self.from_client, self.events, self.timestamp = state
 
     def __repr__(self):
-        # TODO Improve message
-        return "{direction} {content}".format(
+        return "<HTTP2Frame: {direction}, events: {events}>".format(
             direction="->" if self.from_client else "<-",
-            content=repr(self.content)
+            events=repr(self.events)
         )
 
 
