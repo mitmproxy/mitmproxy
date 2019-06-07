@@ -9,6 +9,6 @@ def request(flow):
     # Only interactive tools have a view. If we have one, add a duplicate entry
     # for our flow.
     if "view" in ctx.master.addons:
-        ctx.master.commands.call("view.flows.add", [flow])
+        ctx.master.commands.call("view.http1.flows.add", [flow])
     flow.request.path = "/changed"
     ctx.master.commands.call("replay.client", [flow])

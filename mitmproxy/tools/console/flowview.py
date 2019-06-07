@@ -99,7 +99,7 @@ class FlowDetails(tabs.Tabs):
             msg, body = "", [urwid.Text([("error", "[content missing]")])]
             return msg, body
         else:
-            full = self.master.commands.execute("view.settings.getval @focus fullcontents false")
+            full = self.master.commands.execute("view.http1.settings.getval @focus fullcontents false")
             if full == "true":
                 limit = sys.maxsize
             else:

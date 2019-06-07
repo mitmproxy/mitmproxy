@@ -21,7 +21,7 @@ from mitmproxy import command
 from mitmproxy import connections
 from mitmproxy import ctx
 from mitmproxy import io
-from mitmproxy import http  # noqa
+from mitmproxy import flow  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -38,7 +38,7 @@ class _OrderKey:
     def __init__(self, view):
         self.view = view
 
-    def generate(self, f: http.HTTPFlow) -> typing.Any:  # pragma: no cover
+    def generate(self, f: flow.Flow) -> typing.Any:  # pragma: no cover
         pass
 
     def refresh(self, f):
@@ -67,29 +67,14 @@ class _OrderKey:
             return self.generate(f)
 
 
-class OrderRequestStart(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> int:
-        return f.request.timestamp_start or 0
-
-
-class OrderRequestMethod(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> str:
-        return f.request.method
-
-
-class OrderRequestURL(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> str:
-        return f.request.url
+class OrderTimestamp(_OrderKey):
+    def generate(self, f: flow.Flow) -> int:
+        raise NotImplementedError()
 
 
 class OrderKeySize(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> int:
-        s = 0
-        if f.request.raw_content:
-            s += len(f.request.raw_content)
-        if f.response and f.response.raw_content:
-            s += len(f.response.raw_content)
-        return s
+    def generate(self, f: flow.Flow) -> int:
+        raise NotImplementedError()
 
 
 matchall = flowfilter.parse(".")
@@ -97,11 +82,7 @@ matchall = flowfilter.parse(".")
 
 orders = [
     ("t", "time"),
-    ("m", "method"),
-    ("u", "url"),
-    ("z", "size"),
 ]
-
 
 class View(collections.abc.Sequence):
     def __init__(self):
@@ -111,11 +92,8 @@ class View(collections.abc.Sequence):
         # Should we show only marked flows?
         self.show_marked = False
 
-        self.default_order = OrderRequestStart(self)
-        self.orders = dict(
-            time = OrderRequestStart(self), method = OrderRequestMethod(self),
-            url = OrderRequestURL(self), size = OrderKeySize(self),
-        )
+        self.default_order = OrderTimestamp(self)
+        self.orders = dict(time = OrderTimestamp(self))
         self.order_key = self.default_order
         self.order_reversed = False
         self.focus_follow = False
@@ -216,7 +194,6 @@ class View(collections.abc.Sequence):
     """ View API """
 
     # Focus
-    @command.command("view.focus.go")
     def go(self, dst: int) -> None:
         """
             Go to a specified offset. Positive offests are from the beginning of
@@ -233,7 +210,6 @@ class View(collections.abc.Sequence):
             dst = len(self) - 1
         self.focus.flow = self[dst]
 
-    @command.command("view.focus.next")
     def focus_next(self) -> None:
         """
             Set focus to the next flow.
@@ -242,7 +218,6 @@ class View(collections.abc.Sequence):
         if self.inbounds(idx):
             self.focus.flow = self[idx]
 
-    @command.command("view.focus.prev")
     def focus_prev(self) -> None:
         """
             Set focus to the previous flow.
@@ -252,19 +227,16 @@ class View(collections.abc.Sequence):
             self.focus.flow = self[idx]
 
     # Order
-    @command.command("view.order.options")
     def order_options(self) -> typing.Sequence[str]:
         """
             Choices supported by the view_order option.
         """
         return list(sorted(self.orders.keys()))
 
-    @command.command("view.order.reverse")
     def set_reversed(self, value: bool) -> None:
         self.order_reversed = value
         self.sig_view_refresh.send(self)
 
-    @command.command("view.order.set")
     def set_order(self, order: str) -> None:
         """
             Sets the current view order.
@@ -279,7 +251,6 @@ class View(collections.abc.Sequence):
         newview.update(self._view)
         self._view = newview
 
-    @command.command("view.order")
     def get_order(self) -> str:
         """
         Returns the current view order.
@@ -291,7 +262,6 @@ class View(collections.abc.Sequence):
         return order
 
     # Filter
-    @command.command("view.filter.set")
     def set_filter_cmd(self, f: str) -> None:
         """
             Sets the current view filter.
@@ -310,7 +280,6 @@ class View(collections.abc.Sequence):
         self._refilter()
 
     # View Updates
-    @command.command("view.clear")
     def clear(self) -> None:
         """
             Clears both the store and view.
@@ -320,7 +289,6 @@ class View(collections.abc.Sequence):
         self.sig_view_refresh.send(self)
         self.sig_store_refresh.send(self)
 
-    @command.command("view.clear_unmarked")
     def clear_not_marked(self) -> None:
         """
             Clears only the unmarked flows.
@@ -333,14 +301,12 @@ class View(collections.abc.Sequence):
         self.sig_store_refresh.send(self)
 
     # View Settings
-    @command.command("view.settings.getval")
     def getvalue(self, f: mitmproxy.flow.Flow, key: str, default: str) -> str:
         """
             Get a value from the settings store for the specified flow.
         """
         return self.settings[f].get(key, default)
 
-    @command.command("view.settings.setval.toggle")
     def setvalue_toggle(
         self,
         flows: typing.Sequence[mitmproxy.flow.Flow],
@@ -357,7 +323,6 @@ class View(collections.abc.Sequence):
             updated.append(f)
         ctx.master.addons.trigger("update", updated)
 
-    @command.command("view.settings.setval")
     def setvalue(
         self,
         flows: typing.Sequence[mitmproxy.flow.Flow],
@@ -373,7 +338,6 @@ class View(collections.abc.Sequence):
         ctx.master.addons.trigger("update", updated)
 
     # Flows
-    @command.command("view.flows.duplicate")
     def duplicate(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Duplicates the specified flows, and sets the focus to the first
@@ -385,7 +349,6 @@ class View(collections.abc.Sequence):
             self.focus.flow = dups[0]
             ctx.log.alert("Duplicated %s flows" % len(dups))
 
-    @command.command("view.flows.remove")
     def remove(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Removes the flow from the underlying store and the view.
@@ -405,7 +368,7 @@ class View(collections.abc.Sequence):
         if len(flows) > 1:
             ctx.log.alert("Removed %s flows" % len(flows))
 
-    @command.command("view.flows.resolve")
+
     def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
         """
             Resolve a flow list specification to an actual list of flows.
@@ -428,20 +391,9 @@ class View(collections.abc.Sequence):
                 raise exceptions.CommandError("Invalid flow filter: %s" % spec)
             return [i for i in self._store.values() if filt(i)]
 
-    @command.command("view.flows.create")
     def create(self, method: str, url: str) -> None:
-        try:
-            req = http.HTTPRequest.make(method.upper(), url)
-        except ValueError as e:
-            raise exceptions.CommandError("Invalid URL: %s" % e)
-        c = connections.ClientConnection.make_dummy(("", 0))
-        s = connections.ServerConnection.make_dummy((req.host, req.port))
-        f = http.HTTPFlow(c, s)
-        f.request = req
-        f.request.headers["Host"] = req.host
-        self.add([f])
+        raise NotImplementedError()
 
-    @command.command("view.flows.load")
     def load_file(self, path: mitmproxy.types.Path) -> None:
         """
             Load flows into the view, without processing them with addons.
@@ -480,21 +432,18 @@ class View(collections.abc.Sequence):
         return self._store.get(flow_id)
 
     # View Properties
-    @command.command("view.properties.length")
     def get_length(self) -> int:
         """
             Returns view length.
         """
         return len(self)
 
-    @command.command("view.properties.marked")
     def get_marked(self) -> bool:
         """
             Returns true if view is in marked mode.
         """
         return self.show_marked
 
-    @command.command("view.properties.marked.toggle")
     def toggle_marked(self) -> None:
         """
             Toggle whether to show marked views only.
@@ -502,7 +451,6 @@ class View(collections.abc.Sequence):
         self.show_marked = not self.show_marked
         self._refilter()
 
-    @command.command("view.properties.inbounds")
     def inbounds(self, index: int) -> bool:
         """
             Is this 0 <= index < len(self)?
@@ -531,22 +479,10 @@ class View(collections.abc.Sequence):
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
 
-    def request(self, f):
-        self.add([f])
-
-    def error(self, f):
-        self.update([f])
-
-    def response(self, f):
-        self.update([f])
-
     def intercept(self, f):
         self.update([f])
 
     def resume(self, f):
-        self.update([f])
-
-    def kill(self, f):
         self.update([f])
 
     def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:

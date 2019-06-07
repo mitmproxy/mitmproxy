@@ -337,7 +337,7 @@ class _FlowType(_BaseFlowType):
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> flow.Flow:
         try:
-            flows = manager.call_strings("view.flows.resolve", [s])
+            flows = manager.call_strings("view.http1.flows.resolve", [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
         if len(flows) != 1:
@@ -356,7 +356,7 @@ class _FlowsType(_BaseFlowType):
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[flow.Flow]:
         try:
-            return manager.call_strings("view.flows.resolve", [s])
+            return manager.call_strings("view.http1.flows.resolve", [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
 

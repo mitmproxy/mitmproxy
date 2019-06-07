@@ -36,8 +36,8 @@ def map(km):
         ["flowlist", "flowview"],
         "Save response body to file"
     )
-    km.add("d", "view.flows.remove @focus", ["flowlist", "flowview"], "Delete flow from view")
-    km.add("D", "view.flows.duplicate @focus", ["flowlist", "flowview"], "Duplicate flow")
+    km.add("d", "view.http1.flows.remove @focus", ["flowlist", "flowview"], "Delete flow from view")
+    km.add("D", "view.http1.flows.duplicate @focus", ["flowlist", "flowview"], "Duplicate flow")
     km.add(
         "e",
         """
@@ -57,7 +57,7 @@ def map(km):
     )
     km.add("L", "console.command view.load ", ["flowlist"], "Load flows from file")
     km.add("m", "flow.mark.toggle @focus", ["flowlist"], "Toggle mark on this flow")
-    km.add("M", "view.properties.marked.toggle", ["flowlist"], "Toggle viewing marked flows")
+    km.add("M", "view.http1.properties.marked.toggle", ["flowlist"], "Toggle viewing marked flows")
     km.add(
         "n",
         "console.command view.flows.create get https://example.com/",
@@ -80,8 +80,8 @@ def map(km):
     km.add("w", "console.command save.file @shown ", ["flowlist"], "Save listed flows to file")
     km.add("V", "flow.revert @focus", ["flowlist", "flowview"], "Revert changes to this flow")
     km.add("X", "flow.kill @focus", ["flowlist"], "Kill this flow")
-    km.add("z", "view.flows.remove @all", ["flowlist"], "Clear flow list")
-    km.add("Z", "view.flows.remove @hidden", ["flowlist"], "Purge all flows not showing")
+    km.add("z", "view.http1.flows.remove @all", ["flowlist"], "Clear flow list")
+    km.add("Z", "view.http1.flows.remove @hidden", ["flowlist"], "Purge all flows not showing")
     km.add(
         "|",
         "console.command script.run @focus ",
@@ -105,7 +105,7 @@ def map(km):
         "Toggle viewing full contents on this flow",
     )
     km.add("w", "console.command save.file @focus ", ["flowview"], "Save flow to file")
-    km.add("space", "view.focus.next", ["flowview"], "Go to next flow")
+    km.add("space", "view.http1.focus.next", ["flowview"], "Go to next flow")
 
     km.add(
         "v",
@@ -116,7 +116,7 @@ def map(km):
         ["flowview"],
         "View flow body in an external viewer"
     )
-    km.add("p", "view.focus.prev", ["flowview"], "Go to previous flow")
+    km.add("p", "view.http1.focus.prev", ["flowview"], "Go to previous flow")
     km.add(
         "m",
         """

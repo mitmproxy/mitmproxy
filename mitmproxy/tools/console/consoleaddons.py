@@ -515,7 +515,7 @@ class ConsoleAddon:
 
         try:
             self.master.commands.call_strings(
-                "view.settings.setval",
+                "view.http1.settings.setval",
                 ["@focus", "flowview_mode_%s" % idx, mode]
             )
         except exceptions.CommandError as e:
@@ -538,7 +538,7 @@ class ConsoleAddon:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
         return self.master.commands.call_strings(
-            "view.settings.getval",
+            "view.http1.settings.getval",
             [
                 "@focus",
                 "flowview_mode_%s" % idx,

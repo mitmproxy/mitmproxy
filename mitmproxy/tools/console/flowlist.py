@@ -42,7 +42,7 @@ class FlowListWalker(urwid.ListWalker):
     def positions(self, reverse=False):
         # The stub implementation of positions can go once this issue is resolved:
         # https://github.com/urwid/urwid/issues/294
-        ret = range(self.master.commands.execute("view.properties.length"))
+        ret = range(self.master.commands.execute("view.http1.properties.length"))
         if reverse:
             return reversed(ret)
         return ret
@@ -57,19 +57,19 @@ class FlowListWalker(urwid.ListWalker):
         return f, self.master.view.focus.index
 
     def set_focus(self, index):
-        if self.master.commands.execute("view.properties.inbounds %d" % index):
+        if self.master.commands.execute("view.http1.properties.inbounds %d" % index):
             self.master.view.focus.index = index
 
     def get_next(self, pos):
         pos = pos + 1
-        if not self.master.commands.execute("view.properties.inbounds %d" % pos):
+        if not self.master.commands.execute("view.http1.properties.inbounds %d" % pos):
             return None, None
         f = FlowItem(self.master, self.master.view[pos])
         return f, pos
 
     def get_prev(self, pos):
         pos = pos - 1
-        if not self.master.commands.execute("view.properties.inbounds %d" % pos):
+        if not self.master.commands.execute("view.http1.properties.inbounds %d" % pos):
             return None, None
         f = FlowItem(self.master, self.master.view[pos])
         return f, pos
@@ -87,9 +87,9 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
 
     def keypress(self, size, key):
         if key == "m_start":
-            self.master.commands.execute("view.focus.go 0")
+            self.master.commands.execute("view.http1.focus.go 0")
         elif key == "m_end":
-            self.master.commands.execute("view.focus.go -1")
+            self.master.commands.execute("view.http1.focus.go -1")
         elif key == "m_select":
             self.master.commands.execute("console.view.flow @focus")
         return urwid.ListBox.keypress(self, size, key)
