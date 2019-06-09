@@ -14,14 +14,14 @@ import typing
 import blinker
 import sortedcontainers
 
-import mitmproxy.flow
+import mitmproxy.viewitem
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
 from mitmproxy import command
 from mitmproxy import connections
 from mitmproxy import ctx
 from mitmproxy import io
-from mitmproxy import flow  # noqa
+from mitmproxy import viewitem  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -38,7 +38,7 @@ class _OrderKey:
     def __init__(self, view):
         self.view = view
 
-    def generate(self, f: flow.Flow) -> typing.Any:  # pragma: no cover
+    def generate(self, f: viewitem.ViewItem) -> typing.Any:  # pragma: no cover
         pass
 
     def refresh(self, f):
@@ -68,17 +68,16 @@ class _OrderKey:
 
 
 class OrderTimestamp(_OrderKey):
-    def generate(self, f: flow.Flow) -> int:
+    def generate(self, f: viewitem.ViewItem) -> int:
         raise NotImplementedError()
 
 
 class OrderKeySize(_OrderKey):
-    def generate(self, f: flow.Flow) -> int:
+    def generate(self, f: viewitem.ViewItem) -> int:
         raise NotImplementedError()
 
 
-matchall = flowfilter.parse(".")
-
+matchall = None
 
 orders = [
     ("t", "time"),
@@ -169,11 +168,11 @@ class View(collections.abc.Sequence):
 
     # Reflect some methods to the efficient underlying implementation
 
-    def _bisect(self, f: mitmproxy.flow.Flow) -> int:
+    def _bisect(self, f: mitmproxy.viewitem.ViewItem) -> int:
         v = self._view.bisect_right(f)
         return self._rev(v - 1) + 1
 
-    def index(self, f: mitmproxy.flow.Flow, start: int = 0, stop: typing.Optional[int] = None) -> int:
+    def index(self, f: mitmproxy.viewitem.ViewItem, start: int = 0, stop: typing.Optional[int] = None) -> int:
         return self._rev(self._view.index(f, start, stop))
 
     def __contains__(self, f: typing.Any) -> bool:
@@ -305,7 +304,7 @@ class View(collections.abc.Sequence):
         self.sig_store_refresh.send(self)
 
     # View Settings
-    def getvalue(self, f: mitmproxy.flow.Flow, key: str, default: str) -> str:
+    def getvalue(self, f: mitmproxy.viewitem.ViewItem, key: str, default: str) -> str:
         """
             Get a value from the settings store for the specified flow.
         """
@@ -313,7 +312,7 @@ class View(collections.abc.Sequence):
 
     def setvalue_toggle(
         self,
-        flows: typing.Sequence[mitmproxy.flow.Flow],
+        flows: typing.Sequence[mitmproxy.viewitem.ViewItem],
         key: str
     ) -> None:
         """
@@ -329,7 +328,7 @@ class View(collections.abc.Sequence):
 
     def setvalue(
         self,
-        flows: typing.Sequence[mitmproxy.flow.Flow],
+        flows: typing.Sequence[mitmproxy.viewitem.ViewItem],
         key: str, value: str
     ) -> None:
         """
@@ -342,7 +341,7 @@ class View(collections.abc.Sequence):
         ctx.master.addons.trigger("update", updated)
 
     # Flows
-    def duplicate(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+    def duplicate(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
             Duplicates the specified flows, and sets the focus to the first
             duplicate.
@@ -353,7 +352,7 @@ class View(collections.abc.Sequence):
             self.focus.flow = dups[0]
             ctx.log.alert("Duplicated %s flows" % len(dups))
 
-    def remove(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+    def remove(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
             Removes the flow from the underlying store and the view.
         """
@@ -373,7 +372,7 @@ class View(collections.abc.Sequence):
             ctx.log.alert("Removed %s flows" % len(flows))
 
 
-    def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
+    def resolve(self, spec: str) -> typing.Sequence[mitmproxy.viewitem.ViewItem]:
         """
             Resolve a flow list specification to an actual list of flows.
         """
@@ -414,7 +413,7 @@ class View(collections.abc.Sequence):
         except exceptions.FlowReadException as e:
             ctx.log.error(str(e))
 
-    def add(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+    def add(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
             Adds a flow to the state. If the flow already exists, it is
             ignored.
@@ -428,7 +427,7 @@ class View(collections.abc.Sequence):
                         self.focus.flow = f
                     self.sig_view_add.send(self, flow=f)
 
-    def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
+    def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.viewitem.ViewItem]:
         """
             Get flow with the given id from the store.
             Returns None if the flow is not found.
@@ -489,7 +488,7 @@ class View(collections.abc.Sequence):
     def resume(self, f):
         self.update([f])
 
-    def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+    def update(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
             Updates a list of flows. If flow is not in the state, it's ignored.
         """
@@ -524,7 +523,7 @@ class Focus:
     """
     def __init__(self, v: View) -> None:
         self.view = v
-        self._flow: mitmproxy.flow.Flow = None
+        self._flow: mitmproxy.viewitem.ViewItem = None
         self.sig_change = blinker.Signal()
         if len(self.view):
             self.flow = self.view[0]
@@ -533,11 +532,11 @@ class Focus:
         v.sig_view_refresh.connect(self._sig_view_refresh)
 
     @property
-    def flow(self) -> typing.Optional[mitmproxy.flow.Flow]:
+    def flow(self) -> typing.Optional[mitmproxy.viewitem.ViewItem]:
         return self._flow
 
     @flow.setter
-    def flow(self, f: typing.Optional[mitmproxy.flow.Flow]):
+    def flow(self, f: typing.Optional[mitmproxy.viewitem.ViewItem]):
         if f is not None and f not in self.view:
             raise ValueError("Attempt to set focus to flow not in view")
         self._flow = f
@@ -591,7 +590,7 @@ class Settings(collections.abc.Mapping):
     def __len__(self) -> int:
         return len(self._values)
 
-    def __getitem__(self, f: mitmproxy.flow.Flow) -> dict:
+    def __getitem__(self, f: mitmproxy.viewitem.ViewItem) -> dict:
         if f.id not in self.view._store:
             raise KeyError
         return self._values.setdefault(f.id, {})

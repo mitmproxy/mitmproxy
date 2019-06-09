@@ -59,6 +59,8 @@ class OrderKeySize(view._OrderKey):
             s += len(f.response.raw_content)
         return s
 
+matchall = flowfilter.parse(".")
+
 orders = [
     ("t", "time"),
     ("m", "method"),
@@ -71,6 +73,7 @@ class ViewHttp1(view.View):
         super().__init__()
 
         self.default_order = OrderTimestamp(self)
+        self.filter = matchall
         self.orders = dict(
             time = OrderTimestamp(self), method = OrderRequestMethod(self),
             url = OrderRequestURL(self), size = OrderKeySize(self),
@@ -194,7 +197,7 @@ class ViewHttp1(view.View):
         super().setvalue(flows, key)
 
     # Flows
-    @command.command("view.http1.flow.duplicate")
+    @command.command("view.http1.flows.duplicate")
     def duplicate(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Duplicates the specified flows, and sets the focus to the first

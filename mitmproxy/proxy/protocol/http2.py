@@ -357,6 +357,7 @@ class Http2Layer(base.Layer):
                         incoming_events = self.connections[source_conn].receive_data(raw_frame)
                         source_conn.send(self.connections[source_conn].data_to_send())
 
+                        f.state = "run"
                         f.messages.append(http2Flow.HTTP2Frame(not is_server, incoming_events))
                         self.channel.ask("http2_frame", f)
 
@@ -370,8 +371,10 @@ class Http2Layer(base.Layer):
                     self._cleanup_streams()
         except Exception as e:  # pragma: no cover
             self.log(repr(e), "info")
+            f.state = "error"
             self.channel.tell("http2_error", f)
             self._kill_all_streams()
+            f.state = "end"
             self.channel.tell("http2_end", f)
 
 

@@ -37,6 +37,7 @@ import sys
 import functools
 
 from mitmproxy import http
+from mitmproxy import http2
 from mitmproxy import websocket
 from mitmproxy import tcp
 from mitmproxy import flow
@@ -119,6 +120,13 @@ class FTCP(_Action):
     def __call__(self, f):
         return True
 
+class FHTTP2(_Action):
+    code = "http2"
+    help = "Match HTTP2 frame"
+
+    @only(http2.HTTP2Frame)
+    def __call__(self, f):
+        return True
 
 class FReq(_Action):
     code = "q"
@@ -442,6 +450,7 @@ filter_unary: Sequence[Type[_Action]] = [
     FReq,
     FResp,
     FTCP,
+    FHTTP2,
     FWebSocket,
 ]
 filter_rex: Sequence[Type[_Rex]] = [

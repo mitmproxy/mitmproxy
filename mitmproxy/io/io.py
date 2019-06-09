@@ -5,6 +5,7 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
+from mitmproxy import http2
 from mitmproxy import tcp
 from mitmproxy import websocket
 
@@ -15,6 +16,7 @@ FLOW_TYPES: Dict[str, Type[flow.Flow]] = dict(
     http=http.HTTPFlow,
     websocket=websocket.WebSocketFlow,
     tcp=tcp.TCPFlow,
+    http2=http2.HTTP2Flow,
 )
 
 

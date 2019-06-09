@@ -110,3 +110,18 @@ class Save:
             self.active_flows = set([])
             self.stream.fo.close()
             self.stream = None
+
+    def http2_start(self, flow):
+        if self.stream:
+            self.active_flows.add(flow)
+
+    def http2_frame(self, flow):
+        if self.stream:
+            flow_to_store = flow.copy()
+            flow_to_store.messages = [flow.messages[-1]]
+            self.stream.add(flow_to_store)
+
+    def http2_end(self, flow):
+        if self.stream:
+            self.stream.add(flow)
+            self.active_flows.discard(flow)

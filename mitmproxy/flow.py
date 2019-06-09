@@ -73,10 +73,7 @@ class Flow(stateobject.StateObject):
         self.live = live
 
         self.error: typing.Optional[Error] = None
-        self.intercepted: bool = False
         self._backup: typing.Optional[Flow] = None
-        self.reply: typing.Optional[controller.Reply] = None
-        self.marked: bool = False
         self.metadata: typing.Dict[str, typing.Any] = dict()
 
     _stateobject_attributes = dict(
@@ -141,14 +138,6 @@ class Flow(stateobject.StateObject):
         if self._backup:
             self.set_state(self._backup)
             self._backup = None
-
-    @property
-    def killable(self):
-        return (
-            self.reply and
-            self.reply.state in {"start", "taken"} and
-            self.reply.value != exceptions.Kill
-        )
 
     def kill(self):
         """

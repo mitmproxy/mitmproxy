@@ -10,6 +10,7 @@ from mitmproxy import controller
 from mitmproxy import eventsequence
 from mitmproxy import command
 from mitmproxy import http
+from mitmproxy import http2
 from mitmproxy import websocket
 from mitmproxy import log
 from mitmproxy.net import server_spec
@@ -150,6 +151,15 @@ class Master:
             self._change_reverse_host(f)
             if 'websocket' in f.metadata:
                 self.waiting_flows.append(f)
+
+        if isinstance(f, http2.HTTP2Flow):
+            last_same_flows = [lf for lf in self.waiting_flows if lf.id == f.id]
+            if len(last_same_flows) > 0:
+                last_message = last_same_flows[0].messages[0]
+                self.waiting_flows.remove(last_same_flows[0])
+                f.insert(0, last_same_flow[0].messages[0])
+            self.waiting_flows.append(f)
+            self._change_reverse_host(f)
 
         if isinstance(f, websocket.WebSocketFlow):
             hf = [hf for hf in self.waiting_flows if hf.id == f.metadata['websocket_handshake']][0]

@@ -6,12 +6,13 @@ from wsproto.frame_protocol import CloseReason
 from wsproto.frame_protocol import Opcode
 
 from mitmproxy import flow
+from mitmproxy import viewitem
 from mitmproxy.net import websockets
 from mitmproxy.coretypes import serializable
 from mitmproxy.utils import strutils, human
 
 
-class WebSocketMessage(serializable.Serializable):
+class WebSocketMessage(serializable.Serializable, viewitem.ViewItem):
     """
     A WebSocket message sent from one endpoint to the other.
     """

@@ -2,6 +2,7 @@ import html
 from typing import Optional
 
 from mitmproxy import flow
+from mitmproxy import viewitem
 
 from mitmproxy.net import http
 from mitmproxy import version
@@ -135,7 +136,7 @@ class HTTPResponse(http.Response):
         return resp
 
 
-class HTTPFlow(flow.Flow):
+class HTTPFlow(flow.Flow, viewitem.ViewItem):
 
     """
     An HTTPFlow is a collection of objects representing a single HTTP
@@ -143,7 +144,8 @@ class HTTPFlow(flow.Flow):
     """
 
     def __init__(self, client_conn, server_conn, live=None, mode="regular", client_stream_id=None, server_stream_id=None):
-        super().__init__("http", client_conn, server_conn, live)
+        flow.Flow.__init__(self, "http", client_conn, server_conn, live)
+        viewitem.ViewItem.__init__(self)
 
         self.request: HTTPRequest = None
         """ :py:class:`HTTPRequest` object """

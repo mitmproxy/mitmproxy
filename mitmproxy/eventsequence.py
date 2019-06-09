@@ -59,17 +59,14 @@ def _iterate_http(f: http.HTTPFlow) -> TEventGenerator:
         yield "error", f
 
 def _iterate_http2(f: http2.HTTP2Flow) -> TEventGenerator:
-    messages = f.messages
-    f.messages = []
-    f.reply = controller.DummyReply()
-    yield "http2_start", f
-    while messages:
-        f.messages.append(messages.pop(0))
+    if f.state == "start":
+        yield "http2_start", f
+    if f.state == "run":
         yield "http2_frame", f
-    if f.error:
+    if f.state == "error":
         yield "http2_error", f
-    yield "http2_end", f
-
+    if f.state == "end":
+        yield "http2_end", f
 
 def _iterate_websocket(f: websocket.WebSocketFlow) -> TEventGenerator:
     messages = f.messages
@@ -99,6 +96,7 @@ def _iterate_tcp(f: tcp.TCPFlow) -> TEventGenerator:
 
 _iterate_map: typing.Dict[typing.Type[flow.Flow], typing.Callable[[typing.Any], TEventGenerator]] = {
     http.HTTPFlow: _iterate_http,
+    http2.HTTP2Flow: _iterate_http2,
     websocket.WebSocketFlow: _iterate_websocket,
     tcp.TCPFlow: _iterate_tcp,
 }

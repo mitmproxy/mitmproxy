@@ -37,10 +37,10 @@ class Dumper:
             "flow_detail", int, 1,
             """
             The display detail level for flows in mitmdump: 0 (almost quiet) to 3 (very verbose).
-              0: shortened request URL, response status code, WebSocket and TCP message notifications.
+              0: shortened request URL, response status code, WebSocket, HTTP2 and TCP message notifications.
               1: full request URL with response status code
               2: 1 + HTTP headers
-              3: 2 + full response content, content of WebSocket and TCP messages.
+              3: 2 + full response content, content of WebSocket, HTTP2 and TCP messages.
             """
         )
         loader.add_option(
@@ -292,3 +292,28 @@ class Dumper:
             ))
             if ctx.options.flow_detail >= 3:
                 self._echo_message(message)
+
+
+    def http2_error(self, f):
+        self.echo_error(
+            "Error in HTTP/2 connection to {}: {}".format(
+                human.format_address(f.server_conn.address), f.error
+            ),
+            fg="red"
+        )
+
+    def http2_frame(self, f):
+        if self.match(f):
+            message = f.messages[-1]
+            direction = "->" if message.from_client else "<-"
+            self.echo("{client} {direction} HTTP/2 {direction} {server}".format(
+                client=human.format_address(f.client_conn.address),
+                server=human.format_address(f.server_conn.address),
+                direction=direction,
+            ))
+            if ctx.options.flow_detail >= 3:
+                self._echo_message(message)
+
+    def http2_end(self, f):
+        if self.match(f):
+            self.echo("HTTP/2 connection closed")
