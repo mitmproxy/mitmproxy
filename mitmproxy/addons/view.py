@@ -141,6 +141,10 @@ class View(collections.abc.Sequence):
             "Focus follows new flows."
         )
 
+    @property
+    def flow_type(self) -> str:
+        raise NotImplementedError()
+
     def store_count(self):
         return len(self._store)
 

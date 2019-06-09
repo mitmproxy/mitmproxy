@@ -80,6 +80,10 @@ class ViewHttp1(view.View):
             key = self.order_key
         )
 
+    @property
+    def flow_type(self) -> str:
+        return "http1"
+
     """ View API """
 
     # Focus
@@ -223,41 +227,20 @@ class ViewHttp1(view.View):
         """
         super().load_file(path)
 
-    def add(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
-        """
-            Adds a flow to the state. If the flow already exists, it is
-            ignored.
-        """
-        for f in flows:
-            if f.id not in self._store:
-                self._store[f.id] = f
-                if self.filter(f):
-                    self._base_add(f)
-                    if self.focus_follow:
-                        self.focus.flow = f
-                    self.sig_view_add.send(self, flow=f)
-
-    def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
-        """
-            Get flow with the given id from the store.
-            Returns None if the flow is not found.
-        """
-        return self._store.get(flow_id)
-
     # View Properties
     @command.command("view.http1.properties.length")
     def get_length(self) -> int:
         """
             Returns view length.
         """
-        return len(self)
+        return super().get_length()
 
     @command.command("view.http1.properties.marked")
     def get_marked(self) -> bool:
         """
             Returns true if view is in marked mode.
         """
-        return self.show_marked
+        return super().get_marked()
 
     @command.command("view.http1.properties.marked.toggle")
     def toggle_marked(self) -> None:
@@ -274,27 +257,6 @@ class ViewHttp1(view.View):
         return super().inbounds(index)
 
     # Event handlers
-    def configure(self, updated):
-        if "view_filter" in updated:
-            filt = None
-            if ctx.options.view_filter:
-                filt = flowfilter.parse(ctx.options.view_filter)
-                if not filt:
-                    raise exceptions.OptionsError(
-                        "Invalid interception filter: %s" % ctx.options.view_filter
-                    )
-            self.set_filter(filt)
-        if "view_order" in updated:
-            if ctx.options.view_order not in self.orders:
-                raise exceptions.OptionsError(
-                    "Unknown flow order: %s" % ctx.options.view_order
-                )
-            self.set_order(ctx.options.view_order)
-        if "view_order_reversed" in updated:
-            self.set_reversed(ctx.options.view_order_reversed)
-        if "console_focus_follow" in updated:
-            self.focus_follow = ctx.options.console_focus_follow
-
     def request(self, f):
         self.add([f])
 
@@ -313,30 +275,3 @@ class ViewHttp1(view.View):
     def kill(self, f):
         self.update([f])
 
-    def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
-        """
-            Updates a list of flows. If flow is not in the state, it's ignored.
-        """
-        for f in flows:
-            if f.id in self._store:
-                if self.filter(f):
-                    if f not in self._view:
-                        self._base_add(f)
-                        if self.focus_follow:
-                            self.focus.flow = f
-                        self.sig_view_add.send(self, flow=f)
-                    else:
-                        # This is a tad complicated. The sortedcontainers
-                        # implementation assumes that the order key is stable. If
-                        # it changes mid-way Very Bad Things happen. We detect when
-                        # this happens, and re-fresh the item.
-                        self.order_key.refresh(f)
-                        self.sig_view_update.send(self, flow=f)
-                else:
-                    try:
-                        idx = self._view.index(f)
-                    except ValueError:
-                        pass  # The value was not in the view
-                    else:
-                        self._view.remove(f)
-                        self.sig_view_remove.send(self, flow=f, index=idx)
