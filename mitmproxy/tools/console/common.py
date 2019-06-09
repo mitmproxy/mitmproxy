@@ -239,3 +239,4 @@ def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
             d["resp_ctype"] = ""
 
     return raw_format_flow(tuple(sorted(d.items())))
+
