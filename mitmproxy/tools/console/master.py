@@ -20,7 +20,7 @@ from mitmproxy import log
 from mitmproxy.addons import intercept
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import readfile
-from mitmproxy.addons import viewhttp1
+from mitmproxy.addons import viewhttp1, viewhttp2
 from mitmproxy.tools.console import consoleaddons
 from mitmproxy.tools.console import defaultkeys
 from mitmproxy.tools.console import keymap
@@ -36,7 +36,11 @@ class ConsoleMaster(master.Master):
 
         self.start_err: typing.Optional[log.LogEntry] = None
 
-        self.view: viewhttp1.ViewHttp1 = viewhttp1.ViewHttp1()
+        self.views: Dict[str, view.View] = dict(
+            http1 = viewhttp1.ViewHttp1(),
+            http2 = viewhttp2.ViewHttp2(),
+        )
+        #self.view: viewhttp2.ViewHttp2 = viewhttp2.ViewHttp2()
         self.events = eventstore.EventStore()
         self.events.sig_add.connect(self.sig_add_log)
 
@@ -51,7 +55,8 @@ class ConsoleMaster(master.Master):
         self.addons.add(*addons.default_addons())
         self.addons.add(
             intercept.Intercept(),
-            self.view,
+            self.views["http1"],
+            self.views["http2"],
             self.events,
             consoleaddons.UnsupportedLog(),
             readfile.ReadFile(),

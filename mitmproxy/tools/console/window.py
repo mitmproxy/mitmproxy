@@ -52,8 +52,9 @@ class WindowStack:
     def __init__(self, master, base):
         self.master = master
         self.windows = dict(
-            flowlist = flowlist.FlowListBox(master),
-            flowview = flowview.FlowView(master),
+            flowlist_http1 = flowlist.FlowListBox(master, master.views['http1']),
+            flowlist_http2 = flowlist.FlowListBox(master, master.views['http2']),
+            #flowview = flowview.FlowView(master),
             commands = commands.Commands(master),
             keybindings = keybindings.KeyBindings(master),
             options = options.Options(master),
@@ -130,12 +131,13 @@ class Window(urwid.Frame):
             footer = urwid.AttrWrap(self.statusbar, "background")
         )
         self.master = master
-        self.master.view.sig_view_refresh.connect(self.view_changed)
-        self.master.view.sig_view_add.connect(self.view_changed)
-        self.master.view.sig_view_remove.connect(self.view_changed)
-        self.master.view.sig_view_update.connect(self.view_changed)
-        self.master.view.focus.sig_change.connect(self.view_changed)
-        self.master.view.focus.sig_change.connect(self.focus_changed)
+        for view in master.views.values():
+            view.sig_view_refresh.connect(self.view_changed)
+            view.sig_view_add.connect(self.view_changed)
+            view.sig_view_remove.connect(self.view_changed)
+            view.sig_view_update.connect(self.view_changed)
+            view.focus.sig_change.connect(self.view_changed)
+            view.focus.sig_change.connect(self.focus_changed)
 
         signals.focus.connect(self.sig_focus)
         signals.flow_change.connect(self.flow_changed)
@@ -146,7 +148,8 @@ class Window(urwid.Frame):
         self.master.options.subscribe(self.configure, ["console_layout_headers"])
         self.pane = 0
         self.stacks = [
-            WindowStack(master, "flowlist"),
+            WindowStack(master, "flowlist_http1"),
+            WindowStack(master, "flowlist_http2"),
             WindowStack(master, "eventlog")
         ]
 
@@ -197,9 +200,10 @@ class Window(urwid.Frame):
         self.body = urwid.AttrWrap(w, "background")
 
     def flow_changed(self, sender, flow):
-        if self.master.view.focus.flow:
-            if flow.id == self.master.view.focus.flow.id:
-                self.focus_changed()
+        for view in self.master.views.values():
+            if view.focus.flow:
+                if flow.id == view.focus.flow.id:
+                    self.focus_changed()
 
     def focus_changed(self, *args, **kwargs):
         """

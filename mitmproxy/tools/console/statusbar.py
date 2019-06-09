@@ -177,8 +177,9 @@ class StatusBar(urwid.WidgetWrap):
         signals.update_settings.connect(self.sig_update)
         signals.flowlist_change.connect(self.sig_update)
         master.options.changed.connect(self.sig_update)
-        master.view.focus.sig_change.connect(self.sig_update)
-        master.view.sig_view_add.connect(self.sig_update)
+        for view in master.views.values():
+            view.focus.sig_change.connect(self.sig_update)
+            view.sig_view_add.connect(self.sig_update)
         self.refresh()
 
     def refresh(self):
@@ -276,24 +277,24 @@ class StatusBar(urwid.WidgetWrap):
         return r
 
     def redraw(self):
-        fc = self.master.commands.execute("view.http1.properties.length")
-        if self.master.view.focus.flow is None:
-            offset = 0
-        else:
-            offset = self.master.view.focus.index + 1
+        t = list()
+        for view_type, view in self.master.views.items():
+            fc = self.master.commands.execute("view.%s.properties.length" % view.flow_type)
+            if view.focus.flow is None:
+                offset = 0
+            else:
+                offset = view.focus.index + 1
 
-        if self.master.options.view_order_reversed:
-            arrow = common.SYMBOL_UP
-        else:
-            arrow = common.SYMBOL_DOWN
+            if self.master.options.view_order_reversed:
+                arrow = common.SYMBOL_UP
+            else:
+                arrow = common.SYMBOL_DOWN
 
-        marked = ""
-        if self.master.commands.execute("view.http1.properties.marked"):
-            marked = "M"
+            marked = ""
+            if self.master.commands.execute("view.%s.properties.marked" % view.flow_type):
+                marked = "M"
 
-        t = [
-            ('heading', ("%s %s [%s/%s]" % (arrow, marked, offset, fc)).ljust(11)),
-        ]
+            t.append(('heading', ("%s : %s %s [%s/%s]" % (view_type, arrow, marked, offset, fc)).ljust(20)))
 
         if self.master.options.server:
             host = self.master.options.listen_host
