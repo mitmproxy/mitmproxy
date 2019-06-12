@@ -358,7 +358,7 @@ class Http2Layer(base.Layer):
                         source_conn.send(self.connections[source_conn].data_to_send())
 
                         f.state = "run"
-                        f.messages.append(http2Flow.HTTP2Frame(not is_server, incoming_events))
+                        f.messages.append(http2Flow.HTTP2Frame.from_event(not is_server, source_conn, incoming_events))
                         self.channel.ask("http2_frame", f)
 
                         for event in incoming_events:
