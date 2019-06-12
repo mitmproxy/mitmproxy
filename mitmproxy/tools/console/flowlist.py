@@ -22,7 +22,7 @@ class FlowItem(urwid.WidgetWrap):
                 max_url_len=cols,
             )
         elif self.view.flow_type == "http2":
-            return common.format_flow(
+            return common.format_http2_flow(
                 self.flow,
                 self.flow is self.view.focus.flow,
             )
