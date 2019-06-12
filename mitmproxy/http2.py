@@ -1,4 +1,5 @@
 from mitmproxy import flow
+from mitmproxy import viewitem
 from mitmproxy.coretypes import serializable
 import time
 from typing import List
@@ -6,9 +7,10 @@ from typing import List
 from h2 import events
 
 
-class HTTP2Frame(serializable.Serializable):
+class HTTP2Frame(serializable.Serializable, viewitem.ViewItem):
 
     def __init__(self, from_client, events, frame_type="Unknown", stream_ID=0, timestamp=None):
+        super().__init__()
         self.from_client: bool = from_client
         self.events: List[events.Event] = events
         self.frame_type: str = self._detect_frame_type(events[0]) if len(events) > 0 else "Unknown"
@@ -41,7 +43,7 @@ class HTTP2Frame(serializable.Serializable):
     def _detect_frame_type(self, event: events.Event) -> str:
         self.content = ""
         if isinstance(event, events.RequestReceived):
-            #self.content = event.headers
+            self.content = event.headers
             return "HEADER"
         elif isinstance(event, events.ResponseReceived):
             return "HEADER"
@@ -50,14 +52,14 @@ class HTTP2Frame(serializable.Serializable):
         elif isinstance(event, events.InformationalResponseReceived):
             raise "INFORMATIONAL RESPONSE RECEIVED"
         elif isinstance(event, events.DataReceived):
-            #self.content = event.data
+            self.content = event.data
             return "DATA"
         elif isinstance(event, events.WindowUpdated):
             return "WINDOWS UPDATE"
         elif isinstance(event, events.RemoteSettingsChanged):
             return "SETTINGS"
         elif isinstance(event, events.PingReceived):
-            #self.content = event.ping_data
+            self.content = event.ping_data
             return "PING"
         elif isinstance(event, events.PingAcknowledged):
             return "PING"
@@ -77,7 +79,6 @@ class HTTP2Frame(serializable.Serializable):
         elif isinstance(event, events.UnknownFrameReceived):
             return "UNKNOWN"
         else:
-            self.content = ""
             return "UNKNOWN"
 
 class HTTP2Flow(flow.Flow):
