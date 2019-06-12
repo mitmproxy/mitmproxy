@@ -7,6 +7,7 @@ from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
+from mitmproxy import http2
 from mitmproxy import log
 from mitmproxy import contentviews
 from mitmproxy.utils import strutils
@@ -306,6 +307,11 @@ class ConsoleAddon:
         """View the options editor."""
         self.master.switch_view("options")
 
+    @command.command("console.view.http2")
+    def view_http2(self) -> None:
+        """View the options editor."""
+        self.master.switch_view("flowlist_http2")
+
     @command.command("console.view.eventlog")
     def view_eventlog(self) -> None:
         """View the options editor."""
@@ -319,9 +325,12 @@ class ConsoleAddon:
     @command.command("console.view.flow")
     def view_flow(self, flow: flow.Flow) -> None:
         """View a flow."""
-        if hasattr(flow, "request"):
-            # FIME: Also set focus?
-            self.master.switch_view("flowview")
+        if isinstance(flow, http.HTTPFlow):
+            if hasattr(flow, "request"):
+                # FIME: Also set focus?
+                self.master.switch_view("flowview_http1")
+        elif isinstance(flow, http2.HTTP2Frame):
+            self.master.switch_view("flowview_http2")
 
     @command.command("console.exit")
     def exit(self) -> None:

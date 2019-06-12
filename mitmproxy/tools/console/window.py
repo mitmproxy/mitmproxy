@@ -54,7 +54,8 @@ class WindowStack:
         self.windows = dict(
             flowlist_http1 = flowlist.FlowListBox(master, master.views['http1']),
             flowlist_http2 = flowlist.FlowListBox(master, master.views['http2']),
-            #flowview = flowview.FlowView(master),
+            flowview_http1 = flowview.FlowView(master, master.views['http1']),
+            flowview_http2 = flowview.FlowView(master, master.views['http2']),
             commands = commands.Commands(master),
             keybindings = keybindings.KeyBindings(master),
             options = options.Options(master),
