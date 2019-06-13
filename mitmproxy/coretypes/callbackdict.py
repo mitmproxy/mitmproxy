@@ -5,14 +5,14 @@ class CallbackDict(dict):
     """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._callback = None
+        self.callback = None
     def __setitem__(self, key, value):
         res = dict.__setitem__(self, key, value)
-        self._callback()
+        if self.callback:
+            self.callback()
         return res
     def __delitem__(self, key):
         res =  dict.__delitem__(self, key)
-        self._callback()
+        if self.callback:
+            self.callback()
         return res
-    def set_callback(self, callback):
-        self._callback = callback

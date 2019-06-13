@@ -18,7 +18,6 @@ class ViewItem():
     def __init__(self) -> None:
         self.id = str(uuid.uuid4())
 
-        self.intercepted: bool = False
         self.reply: typing.Optional[controller.Reply] = None
         self.marked: bool = False
 

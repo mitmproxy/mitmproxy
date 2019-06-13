@@ -175,6 +175,7 @@ class HTTPFlow(flow.Flow, viewitem.ViewItem):
     _stateobject_attributes.update(dict(
         request=HTTPRequest,
         response=HTTPResponse,
+        marked=bool,
         mode=str
     ))
 
