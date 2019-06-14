@@ -94,12 +94,14 @@ def fcol(s, attr):
 if urwid.util.detected_encoding and not IS_WSL:
     SYMBOL_REPLAY = u"\u21ba"
     SYMBOL_RETURN = u"\u2190"
+    SYMBOL_DIRECTION = u"\u2192"
     SYMBOL_MARK = u"\u25cf"
     SYMBOL_UP = u"\u21E7"
     SYMBOL_DOWN = u"\u21E9"
 else:
     SYMBOL_REPLAY = u"[r]"
     SYMBOL_RETURN = u"<-"
+    SYMBOL_DIRECTION = u"->"
     SYMBOL_MARK = "[m]"
     SYMBOL_UP = "^"
     SYMBOL_DOWN = " "
@@ -238,20 +240,37 @@ def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
         else:
             d["resp_ctype"] = ""
 
-    return raw_format_flow(tuple(sorted(d.items())))
+    return raw_format_flow(tuple(d.items()))
 
 @lru_cache(maxsize=800)
 def raw_format_http2_flow(f):
     f = dict(f)
     pile = []
-    req = []
+    l1 = []
+    l2 = []
 
-    req.append(fcol(">>" if f["focus"] else "  ", "focus"))
+    l1.append(fcol(">>" if f["focus"] else "  ", "focus"))
 
     if f["marked"]:
-        req.append(fcol(SYMBOL_MARK, "mark"))
+        l1.append(fcol(SYMBOL_MARK, "mark"))
 
-    req.append(fcol(f['frame_type'], "method"))
+    space_l2 = sum(i[1] for i in l1) + len(l1) + 13
+
+    l1.append(fcol(f['frame_type'], "f_type"))
+
+    space_l1 = space_l2 - sum(i[1] for i in l1) + len(l1) -1
+
+    l1.append(("fixed", space_l1, urwid.Text("")))
+
+    space_l2 = sum(i[1] for i in l1) + len(l1) - 1
+
+    l1.append(fcol(f['source_addr'], "source_addr"))
+    l1.append(fcol(SYMBOL_DIRECTION, "direction"))
+    l1.append(fcol(f['dest_addr'], "dest_addr"))
+
+    l2.append(("fixed", space_l2, urwid.Text("")))
+    l2.append(fcol("Stream ID: %s" % f['stream_id'], "stream_id"))
+    l2.append(fcol("Timestamp: %s" % f['timestamp'], "timestamp"))
 
     #preamble = sum(i[1] for i in req) + len(req) - 1
 
@@ -273,67 +292,24 @@ def raw_format_http2_flow(f):
         #urwid.Text([(uc, url)])
     #)
 
-    pile.append(urwid.Columns(req, dividechars=1))
-
-    resp = []
-    #resp.append(
-        #("fixed", preamble, urwid.Text(""))
-    #)
-
-    #if "resp_code" in f:
-        #codes = {
-            #2: "code_200",
-            #3: "code_300",
-            #4: "code_400",
-            #5: "code_500",
-        #}
-        #ccol = codes.get(f["resp_code"] // 100, "code_other")
-        #resp.append(fcol(SYMBOL_RETURN, ccol))
-        #if f["resp_is_replay"]:
-            #resp.append(fcol(SYMBOL_REPLAY, "replay"))
-        #resp.append(fcol(f["resp_code"], ccol))
-        #if f["extended"]:
-            #resp.append(fcol(f["resp_reason"], ccol))
-    if f["intercepted"] and f["resp_code"] and not f["acked"]:
-        rc = "intercept"
-    else:
-        rc = "text"
-
-        #if f["resp_ctype"]:
-            #resp.append(fcol(f["resp_ctype"], rc))
-        #resp.append(fcol(f["resp_clen"], rc))
-        #resp.append(fcol(f["roundtrip"], rc))
-
-    #elif f["err_msg"]:
-        #resp.append(fcol(SYMBOL_RETURN, "error"))
-        #resp.append(
-            #urwid.Text([
-                #(
-                    #"error",
-                    #f["err_msg"]
-                #)
-            #])
-        #)
-    pile.append(urwid.Columns(resp, dividechars=1))
+    pile.append(urwid.Columns(l1, dividechars=1))
+    pile.append(urwid.Columns(l2, dividechars=1))
     return urwid.Pile(pile)
 
-def format_http2_flow(f, focus): # extended=False, hostheader=False, max_url_len=False):
+def format_http2_item(i, focus): # extended=False, hostheader=False, max_url_len=False):
     d = dict(
         focus=focus,
-        intercepted=f.intercepted,
-        req_timestamp=f.timestamp,
-        marked=f.marked,
-        frame_type=f.frame_type
+        intercepted=i.intercepted,
+        marked=i.marked,
+        timestamp=i.timestamp,
+        frame_type=i.frame_type,
+        stream_id=i.stream_id,
     )
-
-    contentdesc = "[no content]"
-    duration = 0
-
-    roundtrip = human.pretty_duration(duration)
-
-    d.update(dict(
-        resp_clen=contentdesc,
-        roundtrip=roundtrip,
-    ))
+    if i.from_client:
+        d.update(source_addr=i.flow.client_conn.address[0],
+                 dest_addr=i.flow.server_conn.address[0])
+    else:
+        d.update(source_addr=i.flow.server_conn.address[0],
+                 dest_addr=i.flow.client_conn.address[0])
 
     return raw_format_http2_flow(tuple(sorted(d.items())))

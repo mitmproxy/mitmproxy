@@ -91,10 +91,11 @@ class HTTP2Frame(viewitem.ViewItem):
     This is a class to represent a frame
     """
 
-    def __init__(self, from_client,  events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, flow, events=[], stream_id=0, timestamp=None):
         viewitem.ViewItem.__init__(self)
         self.frame_type = "UNKNOWN"
         self.from_client: bool = from_client
+        self.flow = flow
         self._stream_id: int = stream_id
         self._events: List[h2.events.Event] = events
         self.timestamp: float = timestamp or time.time()
@@ -149,8 +150,8 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
     This is a class to represent a HEADER frame
     """
 
-    def __init__(self, from_client, headers, hpack_info, priority, end_stream, events=[], stream_id=0, timestamp=None):
-        HTTP2Frame.__init__(self, from_client, events, stream_id)
+    def __init__(self, from_client, flow, headers, hpack_info, priority, end_stream, events=[], stream_id=0, timestamp=None):
+        HTTP2Frame.__init__(self, from_client, flow, events, stream_id)
         _EndStreamFrame.__init__(self, end_stream)
         self.frame_type = "HEADER"
         if priority:
@@ -205,8 +206,8 @@ class Http2Pushed(HTTP2Frame):
     This is a class to represent a HEADER frame
     """
 
-    def __init__(self, from_client, pushed_stream_id, headers, hpack_info, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, events, stream_id)
+    def __init__(self, from_client, flow, pushed_stream_id, headers, hpack_info, events=[], stream_id=0, timestamp=None):
+        super().__init__(from_client, flow, events, stream_id)
         self.frame_type = "PUSHED"
         self.pushed_stream_id : int = pushed_stream_id
         self._headers : hpack.HeaderTuple = headers
@@ -254,8 +255,8 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
     This is a class to represent a DATA frame
     """
 
-    def __init__(self, from_client, data, flow_controlled_length, end_stream, events=[], stream_id=0, timestamp=None):
-        HTTP2Frame.__init__(self, from_client, events, stream_id)
+    def __init__(self, from_client, flow, data, flow_controlled_length, end_stream, events=[], stream_id=0, timestamp=None):
+        HTTP2Frame.__init__(self, from_client, flow, events, stream_id)
         _EndStreamFrame.__init__(self, end_stream)
         self.frame_type = "DATA"
         self._data : h2.events.Data = None
@@ -304,8 +305,8 @@ class Http2WindowsUpdate(HTTP2Frame):
     This is a class to represent a Windows Update frame
     """
 
-    def __init__(self, from_client, delta, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, events, stream_id)
+    def __init__(self, from_client, flow, delta, events=[], stream_id=0, timestamp=None):
+        super().__init__(from_client, flow, events, stream_id)
         self.frame_type = "WINDOWS UPDATE"
         self._delta : int = delta
 
@@ -345,8 +346,8 @@ class Http2Settings(HTTP2Frame):
     This is a class to represent a Settings frame
     """
 
-    def __init__(self, from_client, settings, ack, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, events, 0)
+    def __init__(self, from_client, flow, settings, ack, events=[], stream_id=0, timestamp=None):
+        super().__init__(from_client, flow, events, 0)
         self.frame_type = "SETTINGS"
         self._ack : bool = False
         self._settings : callbackdict.CallbackDict[str, int] = settings
@@ -414,8 +415,8 @@ class Http2Ping(HTTP2Frame):
     This is a class to represent a Ping frame
     """
 
-    def __init__(self, from_client, data, ack, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, events, 0)
+    def __init__(self, from_client, flow, data, ack, events=[], stream_id=0, timestamp=None):
+        super().__init__(from_client, flow, events, 0)
         self.frame_type = "PING"
         self._data : h2.events.ping_data = data
         self._ack: bool = ack
@@ -477,8 +478,8 @@ class Http2PriorityUpdate(HTTP2Frame, _PriorityFrame):
     This is a class to represent a Priority update frame
     """
 
-    def __init__(self, from_client, priority, events=[], stream_id=0, timestamp=None):
-        HTTP2Frame.__init__(self, from_client, events, 0)
+    def __init__(self, from_client, flow, priority, events=[], stream_id=0, timestamp=None):
+        HTTP2Frame.__init__(self, from_client, flow, events, 0)
         self.frame_type = "PRIORITY"
         _PriorityFrame.__init__(self, priority)
 
@@ -509,8 +510,8 @@ class Http2RstStream(HTTP2Frame):
     This is a class to represent a Reset stream frame
     """
 
-    def __init__(self, from_client, error_code, remote_reset, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, events, stream_id)
+    def __init__(self, from_client, flow, error_code, remote_reset, events=[], stream_id=0, timestamp=None):
+        super().__init__(from_client, flow, events, stream_id)
         self.frame_type = "RESET STREAM"
         self._error_code: int = error_code
         self._remote_reset: bool = remote_reset
@@ -565,8 +566,8 @@ class Http2Goaway(HTTP2Frame):
     This is a class to represent a Reset stream frame
     """
 
-    def __init__(self, from_client, last_stream_id, error_code, additional_data, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, events, 0)
+    def __init__(self, from_client, flow, last_stream_id, error_code, additional_data, events=[], stream_id=0, timestamp=None):
+        super().__init__(from_client, flow, events, 0)
         self.frame_type = "GOAWAY"
         self._last_stream_id: int = last_stream_id
         self._error_code: int = error_code
@@ -628,7 +629,7 @@ class Http2Goaway(HTTP2Frame):
             additional_data=self._additional_data)
 
 
-def frame_from_event(from_client: bool, events: h2.events.Event, http2_source_connection=None):
+def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_source_connection):
     # Detect the type of frame and create a frame object for the specific type
     frame = None
     event = events[0]
@@ -637,6 +638,7 @@ def frame_from_event(from_client: bool, events: h2.events.Event, http2_source_co
                           dynamic=http2_source_connection.decoder.header_table.dynamic_entries)
         frame = Http2Header(
             from_client=from_client,
+            flow=flow,
             events=events,
             stream_id=event.stream_id,
             headers=event.headers,
@@ -651,6 +653,7 @@ def frame_from_event(from_client: bool, events: h2.events.Event, http2_source_co
                           dynamic=http2_source_connection.decoder.header_table.dynamic_entries)
         frame = Http2Pushed(
             from_client=from_client,
+            flow=flow,
             events=events,
             stream_id=event.parent_stream_id,
             pushed_stream_id=event.pushed_stream_id,
@@ -659,6 +662,7 @@ def frame_from_event(from_client: bool, events: h2.events.Event, http2_source_co
     elif isinstance(event, h2.events.DataReceived):
         frame = Http2Data(
             from_client=from_client,
+            flow=flow,
             events=events,
             stream_id=event.stream_id,
             data=event.data,
@@ -667,6 +671,7 @@ def frame_from_event(from_client: bool, events: h2.events.Event, http2_source_co
     elif isinstance(event, h2.events.WindowUpdated):
         frame = Http2WindowsUpdate(
             from_client=from_client,
+            flow=flow,
             events=events,
             stream_id=event.stream_id,
             delta=event.delta)
@@ -677,24 +682,28 @@ def frame_from_event(from_client: bool, events: h2.events.Event, http2_source_co
                                             new_value=setting.new_value)
         frame = Http2Settings(
             from_client=from_client,
+            flow=flow,
             events=events,
             settings=settings,
             ack=isinstance(event, h2.events.SettingsAcknowledged))
     elif isinstance(event, h2.events.PingReceived):
         frame = Http2Ping(
             from_client=from_client,
+            flow=flow,
             events=events,
             data=event.ping_data,
             ack=False)
     elif isinstance(event, h2.events.PingAcknowledged):
         frame = Http2Ping(
             from_client=from_client,
+            flow=flow,
             events=events,
             ping_data=event.ping_data,
             ack=True)
     elif isinstance(event, h2.events.PriorityUpdated):
         frame = Http2PriorityUpdate(
             from_client=from_client,
+            flow=flow,
             events=events,
             priority=callbackdict.CallbackDict(
                 weight=event.weight,
@@ -703,6 +712,7 @@ def frame_from_event(from_client: bool, events: h2.events.Event, http2_source_co
     elif isinstance(event, h2.events.StreamReset):
         frame = Http2RstStream(
             from_client=from_client,
+            flow=flow,
             events=events,
             stream_id=event.stream_id,
             error_code=event.error_code,
@@ -710,6 +720,7 @@ def frame_from_event(from_client: bool, events: h2.events.Event, http2_source_co
     elif isinstance(event, h2.events.ConnectionTerminated):
         frame = Http2Goaway(
             from_client=from_client,
+            flow=flow,
             events=events,
             last_stream_id=event.last_stream_id,
             error_code=event.error_code,
