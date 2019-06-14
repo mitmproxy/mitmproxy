@@ -326,18 +326,15 @@ class Http2Settings(HTTP2Frame):
     This is a class to represent a Settings frame
     """
 
-    def __init__(self, from_client, changed_settings, ack, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, settings, ack, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, events, 0)
         self._ack : bool = False
-        
-        self._settings : callbackdict.CallbackDict[str, int] = callbackdict.CallbackDict()
+        self._settings : callbackdict.CallbackDict[str, int] = settings
         self._settings.callback = self._update_settings
-        
-        # TODO Implement !!
 
     @classmethod
     def from_state(cls, args, state):
-        return Http2Settings(**args, changed_settings=state['_settings'], ack=state['_ack'])
+        return Http2Settings(**args, settings=state['_settings'], ack=state['_ack'])
 
     @property
     def ack(self):
@@ -365,23 +362,28 @@ class Http2Settings(HTTP2Frame):
     @settings.setter
     def settings(self, settings):
         self._settings = settings
-        if self._events:
-            # TODO
-            pass
-    
+        self._update_settings()
+
     def _update_settings(self):
-        # TODO
-        pass
+        if self._events:
+            for event in self._events:
+                if hasattr(event, "changed_settings"):
+                    for key, setting in self._settings.items():
+                        settings_key = h2.settings.SettingCodes(key)
+                        event.changed_settings[settings_key].original_value = setting['original_value']
+                        event.changed_settings[settings_key].original_value = setting['new_value']
 
     def __repr__(self):
         """
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return "<HTTP2Frame: {direction}, type: {type}, stream ID: {stream_id}>".format(
+        return "<HTTP2Frame: {direction}, type: {type}, stream ID: {stream_id}, settings: {settings}, ack: {ack}>".format(
             direction="->" if self.from_client else "<-",
             type=repr(type(self)),
-            stream_id=self._stream_id)
+            stream_id=self._stream_id,
+            settings=self._settings,
+            ack=self._ack)
 
 
 class Http2Ping(HTTP2Frame):
@@ -540,7 +542,7 @@ class Http2Goaway(HTTP2Frame):
 
     @classmethod
     def from_state(cls, args, state):
-        return Http2Goaway(**args, last_stream_id=state['_last_stream_id'], error_code=state['_error_code'], additional_data=state['error_code'])
+        return Http2Goaway(**args, last_stream_id=state['_last_stream_id'], error_code=state['_error_code'], additional_data=state['_additional_data'])
 
     @property
     def last_stream_id(self):
@@ -634,18 +636,16 @@ def frame_from_event(from_client: bool, events: h2.events.Event, http2_source_co
             events=events,
             stream_id=event.stream_id,
             delta=event.delta)
-    elif isinstance(event, h2.events.RemoteSettingsChanged):
+    elif isinstance(event, h2.events.RemoteSettingsChanged) or isinstance(event, h2.events.SettingsAcknowledged):
+        settings = callbackdict.CallbackDict()
+        for key, setting in event.changed_settings.items():
+            settings[int(key)] = dict(original_value=setting.original_value,
+                                            new_value=setting.new_value)
         frame = Http2Settings(
             from_client=from_client,
             events=events,
-            changed_settings=event.changed_settings,
-            ack=False)
-    elif isinstance(event, h2.events.SettingsAcknowledged):
-        frame = Http2Settings(
-            from_client=from_client,
-            events=events,
-            changed_settings=event.changed_settings,
-            ack=True)
+            settings=settings,
+            ack=isinstance(event, h2.events.SettingsAcknowledged))
     elif isinstance(event, h2.events.PingReceived):
         frame = Http2Ping(
             from_client=from_client,
