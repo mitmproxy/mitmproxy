@@ -40,7 +40,6 @@ class ConsoleMaster(master.Master):
             http1 = viewhttp1.ViewHttp1(),
             http2 = viewhttp2.ViewHttp2(),
         )
-        #self.view: viewhttp2.ViewHttp2 = viewhttp2.ViewHttp2()
         self.events = eventstore.EventStore()
         self.events.sig_add.connect(self.sig_add_log)
 

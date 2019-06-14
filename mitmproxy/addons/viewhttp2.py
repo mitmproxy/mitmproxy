@@ -195,7 +195,7 @@ class ViewHttp2(view.View):
         super().setvalue(flows, key)
 
     # Flows
-    @command.command("view.http2.flow.duplicate")
+    @command.command("view.http2.flows.duplicate")
     def duplicate(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
             Duplicates the specified flows, and sets the focus to the first

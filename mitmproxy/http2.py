@@ -91,7 +91,7 @@ class HTTP2Frame(viewitem.ViewItem):
     This is a class to represent a frame
     """
 
-    def __init__(self, from_client, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client,  events=[], stream_id=0, timestamp=None):
         viewitem.ViewItem.__init__(self)
         self.frame_type = "UNKNOWN"
         self.from_client: bool = from_client
@@ -105,7 +105,13 @@ class HTTP2Frame(viewitem.ViewItem):
         args = dict(from_client=state['from_client'],
                     stream_id=state['_stream_id'],
                     timestamp=state['timestamp'])
-        return cls.from_state(args, state)
+        return cls.from_state(state, args)
+
+    def copy(self):
+        f = super().copy()
+        if self.reply is not None:
+            f.reply = controller.DummyReply()
+        return f
 
     def set_state(self, state):
         for k, v in state.items():
@@ -155,7 +161,9 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
         self.hpack_info = hpack_info
 
     @classmethod
-    def from_state(cls, args, state):
+    def from_state(cls, state, args=None):
+        if not args:
+            return super().from_state(state)
         return Http2Header(**args, headers=state['_headers'], hpack_info=state['hpack_info'],
                              priority=state['_priority'], end_stream=state['_end_stream'])
 
@@ -205,7 +213,9 @@ class Http2Pushed(HTTP2Frame):
         self.hpack_info = hpack_info
 
     @classmethod
-    def from_state(cls, args, state):
+    def from_state(cls, state, args=None):
+        if not args:
+            return super().from_state(state)
         return Http2Pushed(**args, headers=state['_headers'], hpack_info=state['hpack_info'])
 
     def get_state(self):
@@ -252,7 +262,9 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
         self._length : int = flow_controlled_length
 
     @classmethod
-    def from_state(cls, args, state):
+    def from_state(cls, state, args=None):
+        if not args:
+            return super().from_state(state)
         return Http2Data(**args, data=state['_data'], flow_controlled_length=state['_length'],
                              end_stream=state['_end_stream'])
 
@@ -298,7 +310,9 @@ class Http2WindowsUpdate(HTTP2Frame):
         self._delta : int = delta
 
     @classmethod
-    def from_state(cls, args, state):
+    def from_state(cls, state, args=None):
+        if not args:
+            return super().from_state(state)
         return Http2WindowsUpdate(**args, delta=state['_delta'])
 
     @property
@@ -339,7 +353,9 @@ class Http2Settings(HTTP2Frame):
         self._settings.callback = self._update_settings
 
     @classmethod
-    def from_state(cls, args, state):
+    def from_state(cls, state, args=None):
+        if not args:
+            return super().from_state(state)
         return Http2Settings(**args, settings=state['_settings'], ack=state['_ack'])
 
     @property
@@ -405,7 +421,9 @@ class Http2Ping(HTTP2Frame):
         self._ack: bool = ack
 
     @classmethod
-    def from_state(cls, args, state):
+    def from_state(cls, state, args=None):
+        if not args:
+            return super().from_state(state)
         return Http2Ping(**args, data=state['_data'], ack=state['_ack'])
 
     @property
@@ -465,7 +483,9 @@ class Http2PriorityUpdate(HTTP2Frame, _PriorityFrame):
         _PriorityFrame.__init__(self, priority)
 
     @classmethod
-    def from_state(cls, args, state):
+    def from_state(cls, state, args=None):
+        if not args:
+            return super().from_state(state)
         return Http2PriorityUpdate(**args, priority=state['_priority'])
 
     def __repr__(self):
@@ -496,7 +516,9 @@ class Http2RstStream(HTTP2Frame):
         self._remote_reset: bool = remote_reset
 
     @classmethod
-    def from_state(cls, args, state):
+    def from_state(cls, state, args=None):
+        if not args:
+            return super().from_state(state)
         return Http2RstStream(**args, error_code=state['_error_code'], remote_reset=state['_remote_reset'])
 
     @property
@@ -551,7 +573,9 @@ class Http2Goaway(HTTP2Frame):
         self._additional_data = additional_data
 
     @classmethod
-    def from_state(cls, args, state):
+    def from_state(cls, state, args=None):
+        if not args:
+            return super().from_state(state)
         return Http2Goaway(**args, last_stream_id=state['_last_stream_id'], error_code=state['_error_code'], additional_data=state['_additional_data'])
 
     @property
