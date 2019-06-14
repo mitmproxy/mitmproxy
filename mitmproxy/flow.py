@@ -72,7 +72,6 @@ class Flow(stateobject.StateObject):
         self.server_conn = server_conn
         self.live = live
 
-        self.intercepted: bool = False
         self.error: typing.Optional[Error] = None
         self._backup: typing.Optional[Flow] = None
         self.metadata: typing.Dict[str, typing.Any] = dict()
@@ -83,7 +82,6 @@ class Flow(stateobject.StateObject):
         client_conn=connections.ClientConnection,
         server_conn=connections.ServerConnection,
         type=str,
-        intercepted=bool,
         metadata=typing.Dict[str, typing.Any],
     )
 

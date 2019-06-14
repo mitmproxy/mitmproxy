@@ -402,9 +402,6 @@ class FlowDetailsHttp2(FlowDetails):
 
 
 class FlowView(urwid.Frame, layoutwidget.LayoutWidget):
-    keyctx = "flowview"
-    title = "Flow Details"
-
     def __init__(self, master, view):
         if view.flow_type == "http1":
             super().__init__(
@@ -417,6 +414,8 @@ class FlowView(urwid.Frame, layoutwidget.LayoutWidget):
                 header = FlowViewHeader(master, view),
             )
         self.master, self.view = master, view
+        self.title = "Flow Details %s" % self.view.flow_type
+        self.keyctx = "flowview_%s" % self.view.flow_type
 
     def focus_changed(self, *args, **kwargs):
         self.body.focus_changed()

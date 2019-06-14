@@ -258,14 +258,6 @@ class ViewHttp2(view.View):
         return super().inbounds(index)
 
     # Event handlers
-    #def http2_start(self, f):
-        #self.add([f])
-
-    #def error(self, f):
-        #self.update([f])
-
-    #def response(self, f):
-        #self.update([f])
 
     #def intercept(self, f):
         #self.update([f])

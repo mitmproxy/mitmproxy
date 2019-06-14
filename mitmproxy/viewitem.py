@@ -20,6 +20,7 @@ class ViewItem():
 
         self.reply: typing.Optional[controller.Reply] = None
         self.marked: bool = False
+        self.intercepted: bool = False
 
     @property
     def killable(self):

@@ -514,7 +514,10 @@ class ConsoleAddon:
         """
             Set the display mode for the current flow view.
         """
-        fv = self.master.window.current_window("flowview")
+        for view_type in self.master.views.keys():
+            fv = self.master.window.current_window("flowview_%s" % view_type)
+            if fv:
+                break
         if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
@@ -524,7 +527,7 @@ class ConsoleAddon:
 
         try:
             self.master.commands.call_strings(
-                "view.http1.settings.setval",
+                "view.%s.settings.setval" % view_type,
                 ["@focus", "flowview_mode_%s" % idx, mode]
             )
         except exceptions.CommandError as e:
@@ -542,12 +545,15 @@ class ConsoleAddon:
         """
             Get the display mode for the current flow view.
         """
-        fv = self.master.window.current_window("flowview")
+        for view_type in self.master.views.keys():
+            fv = self.master.window.current_window("flowview_%s"% view_type)
+            if fv:
+                break
         if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
         return self.master.commands.call_strings(
-            "view.http1.settings.getval",
+            "view.%s.settings.getval" % view_type,
             [
                 "@focus",
                 "flowview_mode_%s" % idx,
