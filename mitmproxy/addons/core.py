@@ -6,7 +6,7 @@ from mitmproxy.utils import human
 from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import command
-from mitmproxy import flow
+from mitmproxy import viewitem
 from mitmproxy import optmanager
 from mitmproxy import platform
 from mitmproxy.net import server_spec
@@ -98,7 +98,7 @@ class Core:
             raise exceptions.CommandError(e) from e
 
     @command.command("flow.resume")
-    def resume(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def resume(self, flows: typing.Sequence[viewitem.ViewItem]) -> None:
         """
             Resume flows if they are intercepted.
         """
@@ -109,7 +109,7 @@ class Core:
 
     # FIXME: this will become view.mark later
     @command.command("flow.mark")
-    def mark(self, flows: typing.Sequence[flow.Flow], val: bool) -> None:
+    def mark(self, flows: typing.Sequence[viewitem.ViewItem], val: bool) -> None:
         """
             Mark flows.
         """
@@ -122,7 +122,7 @@ class Core:
 
     # FIXME: this will become view.mark.toggle later
     @command.command("flow.mark.toggle")
-    def mark_toggle(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def mark_toggle(self, flows: typing.Sequence[viewitem.ViewItem]) -> None:
         """
             Toggle mark for flows.
         """
@@ -131,7 +131,7 @@ class Core:
         ctx.master.addons.trigger("update", flows)
 
     @command.command("flow.kill")
-    def kill(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def kill(self, flows: typing.Sequence[viewitem.ViewItem]) -> None:
         """
             Kill running flows.
         """
@@ -145,7 +145,7 @@ class Core:
 
     # FIXME: this will become view.revert later
     @command.command("flow.revert")
-    def revert(self, flows: typing.Sequence[flow.Flow]) -> None:
+    def revert(self, flows: typing.Sequence[viewitem.ViewItem]) -> None:
         """
             Revert flow changes.
         """
@@ -172,7 +172,7 @@ class Core:
     @command.argument("spec", type=mitmproxy.types.Choice("flow.set.options"))
     def flow_set(
         self,
-        flows: typing.Sequence[flow.Flow],
+        flows: typing.Sequence[viewitem.ViewItem],
         spec: str,
         sval: str
     ) -> None:
@@ -228,7 +228,7 @@ class Core:
         ctx.log.alert("Set %s on  %s flows." % (spec, len(updated)))
 
     @command.command("flow.decode")
-    def decode(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
+    def decode(self, flows: typing.Sequence[viewitem.ViewItem], part: str) -> None:
         """
             Decode flows.
         """
@@ -243,7 +243,7 @@ class Core:
         ctx.log.alert("Decoded %s flows." % len(updated))
 
     @command.command("flow.encode.toggle")
-    def encode_toggle(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
+    def encode_toggle(self, flows: typing.Sequence[viewitem.ViewItem], part: str) -> None:
         """
             Toggle flow encoding on and off, using deflate for encoding.
         """
@@ -265,7 +265,7 @@ class Core:
     @command.argument("enc", type=mitmproxy.types.Choice("flow.encode.options"))
     def encode(
         self,
-        flows: typing.Sequence[flow.Flow],
+        flows: typing.Sequence[viewitem.ViewItem],
         part: str,
         enc: str,
     ) -> None:

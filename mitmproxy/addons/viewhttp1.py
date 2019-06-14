@@ -14,7 +14,7 @@ import typing
 import blinker
 import sortedcontainers
 
-import mitmproxy.flow
+import mitmproxy.viewitem
 from mitmproxy.addons import view
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
@@ -167,7 +167,7 @@ class ViewHttp1(view.View):
 
     # View Settings
     @command.command("view.http1.settings.getval")
-    def getvalue(self, f: mitmproxy.flow.Flow, key: str, default: str) -> str:
+    def getvalue(self, f: mitmproxy.viewitem.ViewItem, key: str, default: str) -> str:
         """
             Get a value from the settings store for the specified flow.
         """
@@ -176,7 +176,7 @@ class ViewHttp1(view.View):
     @command.command("view.http1.settings.setval.toggle")
     def setvalue_toggle(
         self,
-        flows: typing.Sequence[mitmproxy.flow.Flow],
+        flows: typing.Sequence[mitmproxy.viewitem.ViewItem],
         key: str
     ) -> None:
         """
@@ -188,7 +188,7 @@ class ViewHttp1(view.View):
     @command.command("view.http1.settings.setval")
     def setvalue(
         self,
-        flows: typing.Sequence[mitmproxy.flow.Flow],
+        flows: typing.Sequence[mitmproxy.viewitem.ViewItem],
         key: str, value: str
     ) -> None:
         """
@@ -198,7 +198,7 @@ class ViewHttp1(view.View):
 
     # Flows
     @command.command("view.http1.flows.duplicate")
-    def duplicate(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+    def duplicate(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
             Duplicates the specified flows, and sets the focus to the first
             duplicate.
@@ -206,14 +206,14 @@ class ViewHttp1(view.View):
         super().duplicate(flows)
 
     @command.command("view.http1.flows.remove")
-    def remove(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
+    def remove(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
             Removes the flow from the underlying store and the view.
         """
         super().remove(flows)
 
     @command.command("view.http1.flows.resolve")
-    def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
+    def resolve(self, spec: str) -> typing.Sequence[mitmproxy.viewitem.ViewItem]:
         """
             Resolve a flow list specification to an actual list of flows.
         """

@@ -8,7 +8,7 @@ from mitmproxy import stateobject
 from mitmproxy import version
 
 
-class ViewItem():
+class ViewItem(stateobject.StateObject):
 
     """
     A ViewItem is a collection of objects representing a single transaction.

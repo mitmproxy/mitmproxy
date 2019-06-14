@@ -7,7 +7,7 @@ from mitmproxy import viewitem
 from mitmproxy.coretypes import serializable
 
 
-class TCPMessage(serializable.Serializable, viewitem.ViewItem):
+class TCPMessage(serializable.Serializable):
 
     def __init__(self, from_client, content, timestamp=None):
         self.from_client = from_client

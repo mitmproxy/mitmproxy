@@ -5,7 +5,7 @@ import typing
 from mitmproxy import ctx
 from mitmproxy import command
 from mitmproxy import exceptions
-from mitmproxy import flow
+from mitmproxy import viewitem
 from mitmproxy import http
 from mitmproxy import http2
 from mitmproxy import log
@@ -323,7 +323,7 @@ class ConsoleAddon:
         self.master.switch_view("help")
 
     @command.command("console.view.flow")
-    def view_flow(self, flow: flow.Flow) -> None:
+    def view_flow(self, flow: viewitem.ViewItem) -> None:
         """View a flow."""
         if isinstance(flow, http.HTTPFlow):
             if hasattr(flow, "request"):
@@ -347,7 +347,7 @@ class ConsoleAddon:
 
     @command.command("console.bodyview")
     @command.argument("part", type=mitmproxy.types.Choice("console.bodyview.options"))
-    def bodyview(self, f: flow.Flow, part: str) -> None:
+    def bodyview(self, f: viewitem.ViewItem, part: str) -> None:
         """
             Spawn an external viewer for a flow request or response body based
             on the detected MIME type. We use the mailcap system to find the

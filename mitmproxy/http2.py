@@ -85,7 +85,7 @@ class _PriorityFrame():
                     event.depends_on = self._priority['exclusive']
 
 
-class HTTP2Frame(serializable.Serializable, viewitem.ViewItem):
+class HTTP2Frame(viewitem.ViewItem):
 
     """
     This is a class to represent a frame

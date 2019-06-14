@@ -3,7 +3,7 @@ import glob
 import typing
 
 from mitmproxy import exceptions
-from mitmproxy import flow
+from mitmproxy import viewitem
 
 
 class Path(str):
@@ -332,12 +332,16 @@ class _BaseFlowType(_BaseType):
 
 
 class _FlowType(_BaseFlowType):
-    typ = flow.Flow
+    typ = viewitem.ViewItem
     display = "flow"
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> flow.Flow:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> viewitem.ViewItem:
         try:
-            flows = manager.call_strings("view.http1.flows.resolve", [s])
+            for view_type in manager.master.views.keys():
+                if (manager.master.window.current_window("flowlist_%s" % view_type)
+                    or manager.master.window.current_window("flowview_%s" % view_type)):
+                    break
+            flows = manager.call_strings("view.%s.flows.resolve" % view_type, [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
         if len(flows) != 1:
@@ -347,23 +351,27 @@ class _FlowType(_BaseFlowType):
         return flows[0]
 
     def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
-        return isinstance(val, flow.Flow)
+        return isinstance(val, viewitem.ViewItem)
 
 
 class _FlowsType(_BaseFlowType):
-    typ = typing.Sequence[flow.Flow]
+    typ = typing.Sequence[viewitem.ViewItem]
     display = "[flow]"
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[flow.Flow]:
+    def parse(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[viewitem.ViewItem]:
         try:
-            return manager.call_strings("view.http1.flows.resolve", [s])
+            for view_type in manager.master.views.keys():
+                if (manager.master.window.current_window("flowlist_%s" % view_type)
+                    or manager.master.window.current_window("flowview_%s" % view_type)):
+                    break
+            return manager.call_strings("view.%s.flows.resolve" % view_type, [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
 
     def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
         try:
             for v in val:
-                if not isinstance(v, flow.Flow):
+                if not isinstance(v, viewitem.ViewItem):
                     return False
         except TypeError:
             return False
