@@ -93,6 +93,7 @@ class HTTP2Frame(serializable.Serializable, viewitem.ViewItem):
 
     def __init__(self, from_client, events=[], stream_id=0, timestamp=None):
         viewitem.ViewItem.__init__(self)
+        self.frame_type = "UNKNOWN"
         self.from_client: bool = from_client
         self._stream_id: int = stream_id
         self._events: List[h2.events.Event] = events
@@ -145,6 +146,7 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
     def __init__(self, from_client, headers, hpack_info, priority, end_stream, events=[], stream_id=0, timestamp=None):
         HTTP2Frame.__init__(self, from_client, events, stream_id)
         _EndStreamFrame.__init__(self, end_stream)
+        self.frame_type = "HEADER"
         if priority:
             _PriorityFrame.__init__(self, priority)
         else:
@@ -197,6 +199,7 @@ class Http2Pushed(HTTP2Frame):
 
     def __init__(self, from_client, pushed_stream_id, headers, hpack_info, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, events, stream_id)
+        self.frame_type = "PUSHED"
         self.pushed_stream_id : int = pushed_stream_id
         self._headers : hpack.HeaderTuple = headers
         self.hpack_info = hpack_info
@@ -228,7 +231,7 @@ class Http2Pushed(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return "<HTTP2Frame: {direction}, type: {type}, stream ID: {stream_id}, Headers: {headers}>".format(
+        return "<HTTP2Frame PUSHED: {direction}, type: {type}, stream ID: {stream_id}, Headers: {headers}>".format(
             direction="->" if self.from_client else "<-",
             type=repr(type(self)),
             stream_id=self._stream_id,
@@ -244,6 +247,7 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
     def __init__(self, from_client, data, flow_controlled_length, end_stream, events=[], stream_id=0, timestamp=None):
         HTTP2Frame.__init__(self, from_client, events, stream_id)
         _EndStreamFrame.__init__(self, end_stream)
+        self.frame_type = "DATA"
         self._data : h2.events.Data = None
         self._length : int = flow_controlled_length
 
@@ -273,7 +277,7 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return ("<HTTP2Frame HEADER: {direction}, type: {type}, stream ID: {stream_id}, "
+        return ("<HTTP2Frame DATA: {direction}, type: {type}, stream ID: {stream_id}, "
                 "Data: {data}, Length: {length}>").format(
                 direction="->" if self.from_client else "<-",
                 type=repr(type(self)),
@@ -290,6 +294,7 @@ class Http2WindowsUpdate(HTTP2Frame):
 
     def __init__(self, from_client, delta, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, events, stream_id)
+        self.frame_type = "WINDOWS UPDATE"
         self._delta : int = delta
 
     @classmethod
@@ -313,7 +318,7 @@ class Http2WindowsUpdate(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return "<HTTP2Frame: {direction}, type: {type}, stream ID: {stream_id}, delta: {delta}>".format(
+        return "<HTTP2Frame WINDOWS UPDATE: {direction}, type: {type}, stream ID: {stream_id}, delta: {delta}>".format(
             direction="->" if self.from_client else "<-",
             type=repr(type(self)),
             stream_id=self._stream_id,
@@ -328,6 +333,7 @@ class Http2Settings(HTTP2Frame):
 
     def __init__(self, from_client, settings, ack, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, events, 0)
+        self.frame_type = "SETTINGS"
         self._ack : bool = False
         self._settings : callbackdict.CallbackDict[str, int] = settings
         self._settings.callback = self._update_settings
@@ -378,7 +384,7 @@ class Http2Settings(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return "<HTTP2Frame: {direction}, type: {type}, stream ID: {stream_id}, settings: {settings}, ack: {ack}>".format(
+        return "<HTTP2Frame SETTINGS: {direction}, type: {type}, stream ID: {stream_id}, settings: {settings}, ack: {ack}>".format(
             direction="->" if self.from_client else "<-",
             type=repr(type(self)),
             stream_id=self._stream_id,
@@ -394,6 +400,7 @@ class Http2Ping(HTTP2Frame):
 
     def __init__(self, from_client, data, ack, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, events, 0)
+        self.frame_type = "PING"
         self._data : h2.events.ping_data = data
         self._ack: bool = ack
 
@@ -438,7 +445,7 @@ class Http2Ping(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return "<HTTP2Frame: {direction}, type: {type}, stream ID: {stream_id}, data: {data}, ack {ack}>".format(
+        return "<HTTP2Frame PING: {direction}, type: {type}, stream ID: {stream_id}, data: {data}, ack {ack}>".format(
             direction="->" if self.from_client else "<-",
             type=repr(type(self)),
             stream_id=self._stream_id,
@@ -454,6 +461,7 @@ class Http2PriorityUpdate(HTTP2Frame, _PriorityFrame):
 
     def __init__(self, from_client, priority, events=[], stream_id=0, timestamp=None):
         HTTP2Frame.__init__(self, from_client, events, 0)
+        self.frame_type = "PRIORITY"
         _PriorityFrame.__init__(self, priority)
 
     @classmethod
@@ -465,7 +473,7 @@ class Http2PriorityUpdate(HTTP2Frame, _PriorityFrame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return ("<HTTP2Frame: {direction}, type: {type}, stream ID: {stream_id}, "
+        return ("<HTTP2Frame PRIORITY: {direction}, type: {type}, stream ID: {stream_id}, "
                 "weight: {weight}, depends on: {depends_on}, exclusive: {exclusive}>").format(
                 direction="->" if self.from_client else "<-",
                 type=repr(type(self)),
@@ -483,6 +491,7 @@ class Http2RstStream(HTTP2Frame):
 
     def __init__(self, from_client, error_code, remote_reset, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, events, stream_id)
+        self.frame_type = "RESET STREAM"
         self._error_code: int = error_code
         self._remote_reset: bool = remote_reset
 
@@ -519,7 +528,7 @@ class Http2RstStream(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return ("<HTTP2Frame: {direction}, type: {type}, stream ID: {stream_id}, "
+        return ("<HTTP2Frame RESET STREAM: {direction}, type: {type}, stream ID: {stream_id}, "
                 "error code: {error_code}, remote reset: {remote_reset}>").format(
             direction="->" if self.from_client else "<-",
             type=repr(type(self)),
@@ -536,6 +545,7 @@ class Http2Goaway(HTTP2Frame):
 
     def __init__(self, from_client, last_stream_id, error_code, additional_data, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, events, 0)
+        self.frame_type = "GOAWAY"
         self._last_stream_id: int = last_stream_id
         self._error_code: int = error_code
         self._additional_data = additional_data
@@ -585,7 +595,7 @@ class Http2Goaway(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return ("<HTTP2Frame: {direction}, type: {type}, last stream ID: {last_stream_id}, "
+        return ("<HTTP2Frame GOAWAY: {direction}, type: {type}, last stream ID: {last_stream_id}, "
                 "error code: {error_code}, additional data: {additional_data}>").format(
             direction="->" if self.from_client else "<-",
             type=repr(type(self)),
