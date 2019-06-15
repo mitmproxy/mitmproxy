@@ -8,7 +8,9 @@ import urwid
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import http
+from mitmproxy import flowfilter
 from mitmproxy.tools.console import common
+from mitmproxy.tools.console import flowlist
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import searchable
@@ -64,6 +66,7 @@ class FlowDetailsHttp1(FlowDetails):
                 (self.tab_request, self.view_request),
                 (self.tab_response, self.view_response),
                 (self.tab_details, self.view_details),
+                (self.tab_http2, self.view_http2)
             ]
             self.show()
         else:
@@ -88,6 +91,9 @@ class FlowDetailsHttp1(FlowDetails):
     def tab_details(self):
         return "Detail"
 
+    def tab_http2(self):
+        return "HTTP/2"
+
     def view_request(self):
         return self.conn_text(self.flow.request)
 
@@ -96,6 +102,13 @@ class FlowDetailsHttp1(FlowDetails):
 
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
+
+    def view_http2(self):
+        flt = flowfilter.parse(
+            "((~sid %s | ~f.pushed_stream_id %s) & ~fc | ((~sid %s | ~f.pushed_stream_id %s) & ! ~fc)" %
+            (self.flow.client_stream_id, self.flow.client_stream_id,
+             self.flow.server_stream_id, self.flow.server_stream_id))
+        return flowlist.FlowListBox(self.master, self.master.views['http2'], flt)
 
     def content_view(self, viewmode, message):
         if message.raw_content is None:

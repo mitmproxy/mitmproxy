@@ -128,6 +128,15 @@ class FHTTP2(_Action):
     def __call__(self, f):
         return True
 
+class FHTTP2C(_Action):
+    code = "fc"
+    help = "Match frame from client"
+
+    @only(http2.HTTP2Frame)
+    def __call__(self, f):
+        if f.from_client:
+            return True
+
 class FReq(_Action):
     code = "q"
     help = "Match request with no response"
@@ -400,6 +409,23 @@ class FCode(_Int):
         if f.response and f.response.status_code == self.num:
             return True
 
+class FHTTP2SID(_Int):
+    code = "sid"
+    help = "Match HTTP2 frame stream ID"
+
+    @only(http2.HTTP2Frame)
+    def __call__(self, f):
+        if f.stream_id == self.num:
+            return True
+
+class FHTTP2PUSHEDSID(_Int):
+    code = "sid"
+    help = "Match HTTP2 frame PUSHED with next stream ID"
+
+    @only(http2.Http2Pushed)
+    def __call__(self, f):
+        if f.pushed_stream_id == self.num:
+            return True
 
 class FAnd(_Token):
 

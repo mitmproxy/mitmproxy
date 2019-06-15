@@ -148,7 +148,7 @@ class ViewHttp1(view.View):
         super().set_filter_cmd(f)
 
     def set_filter(self, flt: typing.Optional[flowfilter.TFilter]):
-        super().set_filter_cmd(f)
+        super().set_filter(flt)
 
     # View Updates
     @command.command("view.http1.clear")
