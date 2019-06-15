@@ -1,4 +1,5 @@
 from mitmproxy import flow
+from mitmproxy import controller
 from mitmproxy import viewitem
 from mitmproxy.coretypes import callbackdict
 from mitmproxy.coretypes import serializable
@@ -105,6 +106,7 @@ class HTTP2Frame(viewitem.ViewItem):
         cls = eval(state.pop('frame_class'))
         args = dict(from_client=state['from_client'],
                     stream_id=state['_stream_id'],
+                    flow=state['flow'],
                     timestamp=state['timestamp'])
         return cls.from_state(state, args)
 
@@ -121,7 +123,7 @@ class HTTP2Frame(viewitem.ViewItem):
     def get_state(self):
         state = vars(self).copy()
         state['frame_class'] = type(self).__name__
-        del state["_events"]
+        #del state["_events"]
         return state
 
     # Frame property
@@ -151,7 +153,7 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
     """
 
     def __init__(self, from_client, flow, headers, hpack_info, priority, end_stream, events=[], stream_id=0, timestamp=None):
-        HTTP2Frame.__init__(self, from_client, flow, events, stream_id)
+        HTTP2Frame.__init__(self, from_client, flow, events, stream_id, timestamp)
         _EndStreamFrame.__init__(self, end_stream)
         self.frame_type = "HEADER"
         if priority:
@@ -207,7 +209,7 @@ class Http2Pushed(HTTP2Frame):
     """
 
     def __init__(self, from_client, flow, pushed_stream_id, headers, hpack_info, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, flow, events, stream_id)
+        super().__init__(from_client, flow, events, stream_id, timestamp)
         self.frame_type = "PUSHED"
         self.pushed_stream_id : int = pushed_stream_id
         self._headers : hpack.HeaderTuple = headers
@@ -256,7 +258,7 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
     """
 
     def __init__(self, from_client, flow, data, flow_controlled_length, end_stream, events=[], stream_id=0, timestamp=None):
-        HTTP2Frame.__init__(self, from_client, flow, events, stream_id)
+        HTTP2Frame.__init__(self, from_client, flow, events, stream_id, timestamp)
         _EndStreamFrame.__init__(self, end_stream)
         self.frame_type = "DATA"
         self._data : h2.events.Data = None
@@ -306,7 +308,7 @@ class Http2WindowsUpdate(HTTP2Frame):
     """
 
     def __init__(self, from_client, flow, delta, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, flow, events, stream_id)
+        super().__init__(from_client, flow, events, stream_id, timestamp)
         self.frame_type = "WINDOWS UPDATE"
         self._delta : int = delta
 
@@ -347,7 +349,7 @@ class Http2Settings(HTTP2Frame):
     """
 
     def __init__(self, from_client, flow, settings, ack, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, flow, events, 0)
+        super().__init__(from_client, flow, events, 0, timestamp)
         self.frame_type = "SETTINGS"
         self._ack : bool = False
         self._settings : callbackdict.CallbackDict[str, int] = settings
@@ -416,7 +418,7 @@ class Http2Ping(HTTP2Frame):
     """
 
     def __init__(self, from_client, flow, data, ack, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, flow, events, 0)
+        super().__init__(from_client, flow, events, 0, timestamp)
         self.frame_type = "PING"
         self._data : h2.events.ping_data = data
         self._ack: bool = ack
@@ -479,7 +481,7 @@ class Http2PriorityUpdate(HTTP2Frame, _PriorityFrame):
     """
 
     def __init__(self, from_client, flow, priority, events=[], stream_id=0, timestamp=None):
-        HTTP2Frame.__init__(self, from_client, flow, events, 0)
+        HTTP2Frame.__init__(self, from_client, flow, events, 0, timestamp)
         self.frame_type = "PRIORITY"
         _PriorityFrame.__init__(self, priority)
 
@@ -511,7 +513,7 @@ class Http2RstStream(HTTP2Frame):
     """
 
     def __init__(self, from_client, flow, error_code, remote_reset, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, flow, events, stream_id)
+        super().__init__(from_client, flow, events, stream_id, timestamp)
         self.frame_type = "RESET STREAM"
         self._error_code: int = error_code
         self._remote_reset: bool = remote_reset
@@ -567,7 +569,7 @@ class Http2Goaway(HTTP2Frame):
     """
 
     def __init__(self, from_client, flow, last_stream_id, error_code, additional_data, events=[], stream_id=0, timestamp=None):
-        super().__init__(from_client, flow, events, 0)
+        super().__init__(from_client, flow, events, 0, timestamp)
         self.frame_type = "GOAWAY"
         self._last_stream_id: int = last_stream_id
         self._error_code: int = error_code
