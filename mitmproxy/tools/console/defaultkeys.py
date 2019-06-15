@@ -7,6 +7,7 @@ def map(km):
     km.add("K", "console.view.keybindings", ["global"], "View key bindings")
     km.add("O", "console.view.options", ["global"], "View options")
     km.add("E", "console.view.eventlog", ["global"], "View event log")
+    km.add("2", "console.view.http2", ["global"], "View the HTTP/2 flow")
     km.add("Q", "console.exit", ["global"], "Exit immediately")
     km.add("q", "console.view.pop", ["global"], "Exit the current view")
     km.add("-", "console.layout.cycle", ["global"], "Cycle to next layout")

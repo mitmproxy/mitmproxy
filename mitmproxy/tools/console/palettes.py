@@ -26,6 +26,7 @@ class Palette:
         'code_200', 'code_300', 'code_400', 'code_500', 'code_other',
         'error', "warn", "alert",
         'header', 'highlight', 'intercept', 'replay', 'mark',
+        'frame_type', 'stream_id',
 
         # Hex view
         'offset',
@@ -113,6 +114,9 @@ class LowDark(Palette):
         replay = ('light green', 'default'),
         mark = ('light red', 'default'),
 
+        frame_type = ('dark cyan', 'default'),
+        stream_id = ('dark green', 'default'),
+
         # Hex view
         offset = ('dark cyan', 'default'),
 
@@ -184,6 +188,9 @@ class LowLight(Palette):
         intercept = ('brown', 'default'),
         replay = ('dark green', 'default'),
         mark = ('dark red', 'default'),
+
+        frame_type = ('dark cyan', 'default'),
+        stream_id = ('dark green', 'default'),
 
         # Hex view
         offset = ('dark blue', 'default'),
@@ -274,6 +281,9 @@ class SolarizedLight(LowLight):
         intercept = (sol_red, 'default',),
         replay = (sol_green, 'default',),
 
+        frame_type = (sol_cyan, 'default'),
+        stream_id = (sol_green, 'default'),
+
         # Hex view
         offset = (sol_cyan, 'default'),
 
@@ -328,6 +338,9 @@ class SolarizedDark(LowDark):
         highlight = (sol_base01, 'default'),
         intercept = (sol_red, 'default',),
         replay = (sol_green, 'default',),
+
+        frame_type = (sol_cyan, 'default'),
+        stream_id = (sol_cyan, 'default'),
 
         # Hex view
         offset = (sol_cyan, 'default'),

@@ -256,7 +256,7 @@ def raw_format_http2_flow(f):
 
     space_l2 = sum(i[1] for i in l1) + len(l1) + 13
 
-    l1.append(fcol(f['frame_type'], "f_type"))
+    l1.append(fcol(f['frame_type'], "frame_type"))
 
     space_l1 = space_l2 - sum(i[1] for i in l1) + len(l1) -1
 
@@ -264,33 +264,13 @@ def raw_format_http2_flow(f):
 
     space_l2 = sum(i[1] for i in l1) + len(l1) - 1
 
-    l1.append(fcol(f['source_addr'], "source_addr"))
-    l1.append(fcol(SYMBOL_DIRECTION, "direction"))
-    l1.append(fcol(f['dest_addr'], "dest_addr"))
+    l1.append(fcol(f['source_addr'], "text"))
+    l1.append(fcol(SYMBOL_DIRECTION, "text"))
+    l1.append(fcol(f['dest_addr'], "text"))
 
     l2.append(("fixed", space_l2, urwid.Text("")))
     l2.append(fcol("Stream ID: %s" % f['stream_id'], "stream_id"))
-    l2.append(fcol("Timestamp: %s" % f['timestamp'], "timestamp"))
-
-    #preamble = sum(i[1] for i in req) + len(req) - 1
-
-    #if f["intercepted"] and not f["acked"]:
-        #uc = "intercept"
-    #elif "resp_code" in f or "err_msg" in f:
-        #uc = "text"
-    #else:
-        #uc = "title"
-
-    #url = f["req_url"]
-
-    #if f["max_url_len"] and len(url) > f["max_url_len"]:
-        #url = url[:f["max_url_len"]] + "…"
-
-    #if f["req_http_version"] not in ("HTTP/1.0", "HTTP/1.1"):
-        #url += " " + f["req_http_version"]
-    #req.append(
-        #urwid.Text([(uc, url)])
-    #)
+    l2.append(fcol("Timestamp: %s" % f['timestamp'], "text"))
 
     pile.append(urwid.Columns(l1, dividechars=1))
     pile.append(urwid.Columns(l2, dividechars=1))
