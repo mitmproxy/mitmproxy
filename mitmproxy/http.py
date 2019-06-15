@@ -209,6 +209,14 @@ class HTTPFlow(flow.Flow, viewitem.ViewItem):
             c += self.response.replace(pattern, repl, *args, **kwargs)
         return c
 
+    def kill(self):
+        """
+            Kill this request.
+        """
+        self.error = flow.Error("Connection killed")
+        self.intercepted = False
+        self.reply.kill(force=True)
+        self.live = False
 
 def make_error_response(
         status_code: int,

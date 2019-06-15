@@ -136,34 +136,3 @@ class Flow(stateobject.StateObject):
         if self._backup:
             self.set_state(self._backup)
             self._backup = None
-
-    def kill(self):
-        """
-            Kill this request.
-        """
-        self.error = Error("Connection killed")
-        self.intercepted = False
-        self.reply.kill(force=True)
-        self.live = False
-
-    def intercept(self):
-        """
-            Intercept this Flow. Processing will stop until resume is
-            called.
-        """
-        if self.intercepted:
-            return
-        self.intercepted = True
-        self.reply.take()
-
-    def resume(self):
-        """
-            Continue with the flow - called after an intercept().
-        """
-        if not self.intercepted:
-            return
-        self.intercepted = False
-        # If a flow is intercepted and then duplicated, the duplicated one is not taken.
-        if self.reply.state == "taken":
-            self.reply.ack()
-            self.reply.commit()
