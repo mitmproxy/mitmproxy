@@ -53,6 +53,10 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
                             onClick={() => window.location = MessageUtils.getContentURL(flow, flow.response)}>
                         Download
                     </Button>
+                    <Button title="export" icon="fa-external-link"
+                            onClick={() => window.location = MessageUtils.getContentURL(flow, flow.response)}>
+                        cURL
+                    </Button>
                 </div>
                 <div className="menu-legend">Export</div>
             </div>
