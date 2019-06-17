@@ -59,21 +59,20 @@ class OrderKeySize(view._OrderKey):
             s += len(f.response.raw_content)
         return s
 
-matchall = flowfilter.parse(".")
-
-orders = [
-    ("t", "time"),
-    ("m", "method"),
-    ("u", "url"),
-    ("z", "size"),
-]
 
 class ViewHttp1(view.View):
     def __init__(self):
         super().__init__()
+        self.matchall = flowfilter.parse(".")
+        self.base_orders = [
+            ("t", "time"),
+            ("m", "method"),
+            ("u", "url"),
+            ("z", "size"),
+        ]
 
         self.default_order = OrderTimestamp(self)
-        self.filter = matchall
+        self.filter = self.matchall
         self.orders = dict(
             time = OrderTimestamp(self), method = OrderRequestMethod(self),
             url = OrderRequestURL(self), size = OrderKeySize(self),

@@ -77,17 +77,18 @@ class OrderKeySize(_OrderKey):
         raise NotImplementedError()
 
 
-matchall = None
 
-orders = [
-    ("t", "time"),
-]
 
 class View(collections.abc.Sequence):
     def __init__(self):
         super().__init__()
+        self.matchall = None
+        self.base_orders = [
+            ("t", "time"),
+        ]
+
         self._store = collections.OrderedDict()
-        self.filter = matchall
+        self.filter = self.matchall
         # Should we show only marked flows?
         self.show_marked = False
 
@@ -123,13 +124,13 @@ class View(collections.abc.Sequence):
 
     def load(self, loader):
         loader.add_option(
-            "view_filter", typing.Optional[str], None,
+            "view_filter_%s" % self.flow_type, typing.Optional[str], None,
             "Limit the view to matching flows."
         )
         loader.add_option(
-            "view_order", str, "time",
+            "view_order_%s" % self.flow_type, str, "time",
             "Flow sort order.",
-            choices=list(map(lambda c: c[1], orders)),
+            choices=list(map(lambda c: c[1], self.base_orders)),
         )
         loader.add_option(
             "view_order_reversed", bool, False,
@@ -279,7 +280,7 @@ class View(collections.abc.Sequence):
         self.set_filter(filt)
 
     def set_filter(self, flt: typing.Optional[flowfilter.TFilter]):
-        self.filter = flt or matchall
+        self.filter = flt or self.matchall
         self._refilter()
 
     # View Updates
@@ -462,21 +463,23 @@ class View(collections.abc.Sequence):
 
     # Event handlers
     def configure(self, updated):
-        if "view_filter" in updated:
+        if "view_filter_%s" % self.flow_type in updated:
             filt = None
-            if ctx.options.view_filter:
-                filt = flowfilter.parse(ctx.options.view_filter)
+            view_filter = getattr(ctx.options, "view_filter_%s" % self.flow_type)
+            if view_filter:
+                filt = flowfilter.parse(view_filter)
                 if not filt:
                     raise exceptions.OptionsError(
-                        "Invalid interception filter: %s" % ctx.options.view_filter
+                        "Invalid interception filter: %s" % view_filter
                     )
             self.set_filter(filt)
-        if "view_order" in updated:
-            if ctx.options.view_order not in self.orders:
+        if "view_order_%s" % self.flow_type  in updated:
+            view_order = getattr(ctx.options, "view_order_%s" % self.flow_type)
+            if view_order not in self.orders:
                 raise exceptions.OptionsError(
-                    "Unknown flow order: %s" % ctx.options.view_order
+                    "Unknown flow order: %s" % view_order
                 )
-            self.set_order(ctx.options.view_order)
+            self.set_order(view_order)
         if "view_order_reversed" in updated:
             self.set_reversed(ctx.options.view_order_reversed)
         if "console_focus_follow" in updated:

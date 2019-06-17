@@ -106,7 +106,8 @@ def mitmproxy(opts):
         "See help in mitmproxy for filter expression syntax."
     )
     opts.make_parser(group, "intercept", metavar="FILTER")
-    opts.make_parser(group, "view_filter", metavar="FILTER")
+    opts.make_parser(group, "view_filter_http1", metavar="FILTER")
+    opts.make_parser(group, "view_filter_http2", metavar="FILTER")
     return parser
 
 

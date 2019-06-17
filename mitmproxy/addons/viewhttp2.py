@@ -59,19 +59,18 @@ class OrderKeySize(view._OrderKey):
             s += len(f.response.raw_content)
         return s
 
-matchall = flowfilter.parse("~http2")
-
-orders = [
-    ("t", "time"),
-    ("f", "frametype"),
-]
 
 class ViewHttp2(view.View):
     def __init__(self):
         super().__init__()
+        self.matchall = flowfilter.parse("~http2")
+        self.base_orders = [
+            ("t", "time"),
+            ("f", "frametype"),
+        ]
 
         self.default_order = OrderTimestamp(self)
-        self.filter = matchall
+        self.filter = self.matchall
         self.orders = dict(
             time = OrderTimestamp(self), method = OrderStreamID(self),
             url = OrderFrameType(self), size = OrderKeySize(self),

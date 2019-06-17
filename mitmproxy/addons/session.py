@@ -229,12 +229,14 @@ class Session:
             "Path of session to load or to create."
         )
         loader.add_option(
-            "view_order", str, "time",
+            "view_order_http1", str, "time",
+            "view_order_http2", str, "time",
             "Flow sort order.",
             choices=list(map(lambda c: c[1], orders))
         )
         loader.add_option(
-            "view_filter", typing.Optional[str], None,
+            "view_filter_http1", typing.Optional[str], None,
+            "view_filter_http2", typing.Optional[str], None,
             "Limit the view to matching flows."
         )
 
@@ -246,10 +248,12 @@ class Session:
             loop.create_task(self._writer())
 
     def configure(self, updated):
-        if "view_order" in updated:
-            self.set_order(ctx.options.view_order)
-        if "view_filter" in updated:
-            self.set_filter(ctx.options.view_filter)
+        if "view_order_http1" in updated:
+            self.set_order(ctx.options.view_order_http1)
+        if "view_order_http2" in updated:
+            self.set_order(ctx.options.view_order_http2)
+        if "view_filter_http1" in updated:
+            self.set_filter(ctx.options.view_filter_http1)
 
     async def _writer(self):
         while True:

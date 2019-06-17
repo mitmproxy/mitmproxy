@@ -226,10 +226,12 @@ class StatusBar(urwid.WidgetWrap):
                 r.append("X")
             r.append(("heading_key", "i"))
             r.append(":%s]" % self.master.options.intercept)
-        if self.master.options.view_filter:
-            r.append("[")
-            r.append(("heading_key", "f"))
-            r.append(":%s]" % self.master.options.view_filter)
+        for view_type in self.master.views.keys():
+            view_filter = getattr(self.master.options, "view_filter_%s" % view_type)
+            if view_filter:
+                r.append("[")
+                r.append(("heading_key", "f %s" % view_type))
+                r.append(":%s]" % view_filter)
         if self.master.options.stickycookie:
             r.append("[")
             r.append(("heading_key", "t"))
@@ -240,10 +242,12 @@ class StatusBar(urwid.WidgetWrap):
             r.append(":%s]" % self.master.options.stickyauth)
         if self.master.options.console_default_contentview != 'auto':
             r.append("[contentview:%s]" % (self.master.options.console_default_contentview))
-        if self.master.options.has_changed("view_order"):
-            r.append("[")
-            r.append(("heading_key", "o"))
-            r.append(":%s]" % self.master.options.view_order)
+        for view_type in self.master.views.keys():
+            if self.master.options.has_changed("view_order_%s" % view_type):
+                view_order = getattr(self.master.options, "view_order_%s" % view_type)
+                r.append("[")
+                r.append(("heading_key", "o %s" % view_type))
+                r.append(":%s]" % view_order)
 
         opts = []
         if self.master.options.anticache:

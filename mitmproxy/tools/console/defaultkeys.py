@@ -50,7 +50,8 @@ def map(km):
         ["flowlist_http1", "flowlist_http2", "flowview_http1", "flowview_http2"],
         "Export this flow to file"
     )
-    km.add("f", "console.command.set view_filter", ["flowlist_http1", "flowlist_http2"], "Set view filter")
+    km.add("f", "console.command.set view_filter_http1", ["flowlist_http1"], "Set view filter")
+    km.add("f", "console.command.set view_filter_http2", ["flowlist_http2"], "Set view filter")
     km.add("F", "set console_focus_follow=toggle", ["flowlist_http1", "flowlist_http2"], "Set focus follow")
     km.add(
         "ctrl l",
