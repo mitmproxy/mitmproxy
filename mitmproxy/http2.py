@@ -83,7 +83,7 @@ class _PriorityFrame():
                 if isinstance(event, h2.events.PriorityUpdated):
                     event.weight = self._priority['weight']
                     event.depends_on = self._priority['depends_on']
-                    event.depends_on = self._priority['exclusive']
+                    event.exclusive = self._priority['exclusive']
 
 
 class HTTP2Frame(viewitem.ViewItem):
