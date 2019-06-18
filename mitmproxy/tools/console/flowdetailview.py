@@ -16,11 +16,15 @@ def maybe_timestamp(base, attr):
 def flowdetails(state, flow: http.HTTPFlow):
     text = []
 
-    sc = flow.server_conn
-    cc = flow.client_conn
-    req = flow.request
-    resp = flow.response
-    metadata = flow.metadata
+    sc = flow.flow.server_conn
+    cc = flow.flow.client_conn
+    req = None
+    resp = None
+    metadata = None
+    if isinstance(flow, http.HTTPFlow):
+        req = flow.request
+        resp = flow.response
+        metadata = flow.metadata
 
     if metadata is not None and len(metadata) > 0:
         parts = [(str(k), repr(v)) for k, v in metadata.items()]

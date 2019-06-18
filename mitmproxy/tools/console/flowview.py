@@ -8,6 +8,7 @@ import urwid
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import http
+from mitmproxy import http2
 from mitmproxy import flowfilter
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowlist
@@ -36,13 +37,21 @@ class FlowViewHeader(urwid.WidgetWrap):
     def focus_changed(self):
         cols, _ = self.master.ui.get_cols_rows()
         if self.view.focus.flow:
-            self._w = common.format_flow(
-                self.view.focus.flow,
-                False,
-                extended=True,
-                hostheader=self.master.options.showhost,
-                max_url_len=cols,
-            )
+            if self.view.flow_type == "http1":
+                self._w = common.format_flow(
+                    self.view.focus.flow,
+                    False,
+                    extended=True,
+                    hostheader=self.master.options.showhost,
+                    max_url_len=cols,
+                )
+            elif self.view.flow_type == "http2":
+                self._w = common.format_http2_item(
+                    self.view.focus.flow,
+                    False,
+                )
+            else:
+                raise NotImplementedError()
         else:
             self._w = urwid.Pile([])
 
@@ -104,11 +113,16 @@ class FlowDetailsHttp1(FlowDetails):
         return flowdetailview.flowdetails(self.view, self.flow)
 
     def view_http2(self):
-        if self.flow.client_stream_id and self.flow.server_stream_id:
+        if (self.flow.client_stream_id and self.flow.server_stream_id and
+            self.flow.server_conn and self.flow.server_conn.address and
+            self.flow.client_conn and self.flow.client_conn.address):
+            dst_addr = "{}:{}".format(self.flow.server_conn.address[0], self.flow.server_conn.address[1])
+            src_addr = "{}:{}".format(self.flow.client_conn.address[0], self.flow.client_conn.address[1])
             flt = flowfilter.parse(
-                "( (~sid %s | ~f.pushed_stream_id %s) & ~fc ) | ( (~sid %s | ~f.pushed_stream_id %s) & ! ~fc )" %
+                "( ( (~sid %s | ~f.pushed_stream_id %s) & ~fc ) | ( (~sid %s | ~f.pushed_stream_id %s) & ! ~fc ) ) & ~src %s & ~dst %s" %
                 (self.flow.client_stream_id, self.flow.client_stream_id,
-                self.flow.server_stream_id, self.flow.server_stream_id))
+                self.flow.server_stream_id, self.flow.server_stream_id,
+                src_addr, dst_addr))
             return flowlist.FlowListBox(self.master, self.master.views['http2'], flt)
         else:
             txt = [
@@ -249,17 +263,10 @@ class FlowDetailsHttp1(FlowDetails):
 
 
 class FlowDetailsHttp2(FlowDetails):
-    def __init__(self, master):
-        self.master = master
-        super().__init__([])
-        self.show()
-        self.last_displayed_body = None
-
     def focus_changed(self):
-        if self.master.view.focus.flow:
+        if self.view.focus.flow:
             self.tabs = [
-                (self.tab_request, self.view_request),
-                (self.tab_response, self.view_response),
+                (self.tab_frame, self.view_frame),
                 (self.tab_details, self.view_details),
             ]
             self.show()
@@ -270,30 +277,14 @@ class FlowDetailsHttp2(FlowDetails):
     def view(self):
         return self.master.views['http2']
 
-    @property
-    def flow(self):
-        return self.master.view.focus.flow
-
-    def tab_request(self):
-        if self.flow.intercepted and not self.flow.response:
-            return "Request intercepted"
-        else:
-            return "Request"
-
-    def tab_response(self):
-        if self.flow.intercepted and self.flow.response:
-            return "Response intercepted"
-        else:
-            return "Response"
+    def tab_frame(self):
+        return "Frame"
 
     def tab_details(self):
         return "Detail"
 
-    def view_request(self):
-        return self.conn_text(self.flow.request)
-
-    def view_response(self):
-        return self.conn_text(self.flow.response)
+    def view_frame(self):
+        return self.conn_text(self.flow)
 
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
@@ -360,68 +351,140 @@ class FlowDetailsHttp2(FlowDetails):
 
         return description, text_objects
 
-    def conn_text(self, conn):
-        if conn:
-            hdrs = []
-            for k, v in conn.headers.fields:
-                # This will always force an ascii representation of headers. For example, if the server sends a
-                #
-                #     X-Authors: Made with ❤ in Hamburg
-                #
-                # header, mitmproxy will display the following:
-                #
-                #     X-Authors: Made with \xe2\x9d\xa4 in Hamburg.
-                #
-                # The alternative would be to just use the header's UTF-8 representation and maybe
-                # do `str.replace("\t", "\\t")` to exempt tabs from urwid's special characters escaping [1].
-                # That would in some terminals allow rendering UTF-8 characters, but the mapping
-                # wouldn't be bijective, i.e. a user couldn't distinguish "\\t" and "\t".
-                # Also, from a security perspective, a mitmproxy user couldn't be fooled by homoglyphs.
-                #
-                # 1) https://github.com/mitmproxy/mitmproxy/issues/1833
-                #    https://github.com/urwid/urwid/blob/6608ee2c9932d264abd1171468d833b7a4082e13/urwid/display_common.py#L35-L36,
 
-                k = strutils.bytes_to_escaped_str(k) + ":"
-                v = strutils.bytes_to_escaped_str(v)
-                hdrs.append((k, v))
-            txt = common.format_keyvals(
-                hdrs,
-                key_format="header"
+    def _frame_base(self, frame):
+        pass
+    def _frame_header(self, frame):
+        pass
+    def _frame_pushed(self, frame):
+        pass
+    def _frame_data(self, frame):
+        txt = [
+            urwid.Text(
+                        [
+                            ("highlight", "exemple !!!!"),
+                        ]
             )
-            viewmode = self.master.commands.call("console.flowview.mode")
-            msg, body = self.content_view(viewmode, conn)
+            
+        ]
+        
+        
+        
+        
+        
+        return txt
 
-            cols = [
-                urwid.Text(
-                    [
-                        ("heading", msg),
-                    ]
-                ),
-                urwid.Text(
-                    [
-                        " ",
-                        ('heading', "["),
-                        ('heading_key', "m"),
-                        ('heading', (":%s]" % viewmode)),
-                    ],
-                    align="right"
-                )
-            ]
-            title = urwid.AttrWrap(urwid.Columns(cols), "heading")
 
-            txt.append(title)
-            txt.extend(body)
+    def _frame_windows_update(self, frame):
+        pass
+    def _frame_settings(self, frame):
+        pass
+    def _frame_ping(self, frame):
+        pass
+    def _frame_priority_update(self, frame):
+        pass
+    def _frame_reset_stream(self, frame):
+        pass
+    def _frame_goaway(self, frame):
+        pass
+
+    def _priority(self, frame):
+        pass
+
+    def _static_header_field(self, frame):
+        pass
+    
+    def _dynamic_header_filed(self, frame):
+        pass
+    
+    def _format_data(self, frame):
+        pass
+
+    def conn_text(self, frame):
+        if isinstance(frame, http2.Http2Header):
+            txt = self._frame_header(frame)
+        elif isinstance(frame, http2.Http2Pushed):
+            txt = self._frame_pushed(frame)
+        elif isinstance(frame, http2.Http2Data):
+            txt = self._frame_data(frame)
+        elif isinstance(frame, http2.Http2WindowsUpdate):
+            txt = self._frame_windows_update(frame)
+        elif isinstance(frame, http2.Http2Settings):
+            txt = self._frame_settings(frame)
+        elif isinstance(frame, http2.Http2Ping):
+            txt = self._frame_ping(frame)
+        elif isinstance(frame, http2.Http2PriorityUpdate):
+            txt = self._frame_priority_update(frame)
+        elif isinstance(frame, http2.Http2RstStream):
+            txt = self._frame_reset_stream(frame)
+        elif isinstance(frame, http2.Http2Goaway):
+            txt = self._frame_goaway(frame)
+        elif isinstance(frame, http2.HTTP2Frame):
+            txt = self._frame_base(frame)
         else:
-            txt = [
-                urwid.Text(""),
-                urwid.Text(
-                    [
-                        ("highlight", "No response. Press "),
-                        ("key", "e"),
-                        ("highlight", " and edit any aspect to add one."),
-                    ]
-                )
-            ]
+            raise exceptions.TypeError("Unknown frame type: %s" % frame)
+        
+        #if conn:
+            #hdrs = []
+            #for k, v in conn.headers.fields:
+                ## This will always force an ascii representation of headers. For example, if the server sends a
+                ##
+                ##     X-Authors: Made with ❤ in Hamburg
+                ##
+                ## header, mitmproxy will display the following:
+                ##
+                ##     X-Authors: Made with \xe2\x9d\xa4 in Hamburg.
+                ##
+                ## The alternative would be to just use the header's UTF-8 representation and maybe
+                ## do `str.replace("\t", "\\t")` to exempt tabs from urwid's special characters escaping [1].
+                ## That would in some terminals allow rendering UTF-8 characters, but the mapping
+                ## wouldn't be bijective, i.e. a user couldn't distinguish "\\t" and "\t".
+                ## Also, from a security perspective, a mitmproxy user couldn't be fooled by homoglyphs.
+                ##
+                ## 1) https://github.com/mitmproxy/mitmproxy/issues/1833
+                ##    https://github.com/urwid/urwid/blob/6608ee2c9932d264abd1171468d833b7a4082e13/urwid/display_common.py#L35-L36,
+
+                #k = strutils.bytes_to_escaped_str(k) + ":"
+                #v = strutils.bytes_to_escaped_str(v)
+                #hdrs.append((k, v))
+            #txt = common.format_keyvals(
+                #hdrs,
+                #key_format="header"
+            #)
+            #viewmode = self.master.commands.call("console.flowview.mode")
+            #msg, body = self.content_view(viewmode, conn)
+
+            #cols = [
+                #urwid.Text(
+                    #[
+                        #("heading", msg),
+                    #]
+                #),
+                #urwid.Text(
+                    #[
+                        #" ",
+                        #('heading', "["),
+                        #('heading_key', "m"),
+                        #('heading', (":%s]" % viewmode)),
+                    #],
+                    #align="right"
+                #)
+            #]
+            #title = urwid.AttrWrap(urwid.Columns(cols), "heading")
+
+            #txt.append(title)
+            #txt.extend(body)
+        #else:
+            #txt = [
+                #urwid.Text(""),
+                #urwid.Text(
+                    #[
+                        #("highlight", "No response. Press "),
+                        #("key", "e"),
+                        #("highlight", " and edit any aspect to add one."),
+                    #]
+                #)
+            #]
         return searchable.Searchable(txt)
 
 

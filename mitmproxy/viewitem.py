@@ -6,6 +6,7 @@ from mitmproxy import connections
 from mitmproxy import controller, exceptions  # noqa
 from mitmproxy import stateobject
 from mitmproxy import version
+from mitmproxy import flow
 
 
 class ViewItem(stateobject.StateObject):
@@ -21,6 +22,7 @@ class ViewItem(stateobject.StateObject):
         self.reply: typing.Optional[controller.Reply] = None
         self.marked: bool = False
         self.intercepted: bool = False
+        self.flow: flow.Flow = None
 
     @property
     def killable(self):
