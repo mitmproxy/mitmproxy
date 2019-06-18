@@ -419,7 +419,7 @@ class FHTTP2SID(_Int):
             return True
 
 class FHTTP2PUSHEDSID(_Int):
-    code = "sid"
+    code = "f.pushed_stream_id"
     help = "Match HTTP2 frame PUSHED with next stream ID"
 
     @only(http2.Http2Pushed)
@@ -477,6 +477,7 @@ filter_unary: Sequence[Type[_Action]] = [
     FResp,
     FTCP,
     FHTTP2,
+    FHTTP2C,
     FWebSocket,
 ]
 filter_rex: Sequence[Type[_Rex]] = [
@@ -496,7 +497,9 @@ filter_rex: Sequence[Type[_Rex]] = [
     FUrl,
 ]
 filter_int = [
-    FCode
+    FCode,
+    FHTTP2SID,
+    FHTTP2PUSHEDSID
 ]
 
 
