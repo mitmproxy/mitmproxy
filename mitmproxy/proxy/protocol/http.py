@@ -248,6 +248,8 @@ class HttpLayer(base.Layer):
                 return False
 
             f.request = request
+            if request.http_version == "HTTP/2.0":
+                f.client_stream_id = self.client_stream_id
 
             if request.first_line_format == "authority":
                 # The standards are silent on what we should do with a CONNECT
@@ -346,6 +348,8 @@ class HttpLayer(base.Layer):
                         self.send_request_body(f.request, [f.request.data.content])
 
                     f.response = self.read_response_headers()
+                    if f.response.http_version == "HTTP/2.0":
+                        f.server_stream_id = self.server_stream_id
 
                 try:
                     get_response()
