@@ -104,11 +104,22 @@ class FlowDetailsHttp1(FlowDetails):
         return flowdetailview.flowdetails(self.view, self.flow)
 
     def view_http2(self):
-        flt = flowfilter.parse(
-            "((~sid %s | ~f.pushed_stream_id %s) & ~fc | ((~sid %s | ~f.pushed_stream_id %s) & ! ~fc)" %
-            (self.flow.client_stream_id, self.flow.client_stream_id,
-             self.flow.server_stream_id, self.flow.server_stream_id))
-        return flowlist.FlowListBox(self.master, self.master.views['http2'], flt)
+        if self.flow.client_stream_id and self.flow.server_stream_id:
+            flt = flowfilter.parse(
+                "( (~sid %s | ~f.pushed_stream_id %s) & ~fc ) | ( (~sid %s | ~f.pushed_stream_id %s) & ! ~fc )" %
+                (self.flow.client_stream_id, self.flow.client_stream_id,
+                self.flow.server_stream_id, self.flow.server_stream_id))
+            return flowlist.FlowListBox(self.master, self.master.views['http2'], flt)
+        else:
+            txt = [
+                urwid.Text(""),
+                urwid.Text(
+                    [
+                        ("highlight", "No HTTP/2 Exchange"),
+                    ]
+                )
+            ]
+            return searchable.Searchable(txt)
 
     def content_view(self, viewmode, message):
         if message.raw_content is None:

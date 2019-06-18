@@ -51,6 +51,8 @@ class FlowListWalker(urwid.ListWalker):
 
     def __init__(self, master, view, flt=None):
         self.master, self.view, self.flt = master, view, flt
+        if flt:
+            self.focus = 1
 
     def positions(self, reverse=False):
         # The stub implementation of positions can go once this issue is resolved:
@@ -64,14 +66,21 @@ class FlowListWalker(urwid.ListWalker):
         self._modified()
 
     def get_focus(self):
-        if not self.view.focus.flow:
-            return None, 0
-        f = FlowItem(self.master, self.view, self.view.focus.flow)
-        return f, self.view.focus.index
+        if not self.flt:
+            if not self.view.focus.flow:
+                return None, 0
+            f = FlowItem(self.master, self.view, self.view.focus.flow)
+            return f, self.view.focus.index
+        else:
+            f = FlowItem(self.master, self.view, self.view[self.focus])
+            return f, self.focus
 
     def set_focus(self, index):
-        if self.master.commands.execute("view.%s.properties.inbounds %d" % (self.view.flow_type, index)):
-            self.view.focus.index = index
+        if not self.flt:
+            if self.master.commands.execute("view.%s.properties.inbounds %d" % (self.view.flow_type, index)):
+                self.view.focus.index = index
+        else:
+            self.focus = index
 
     def get_next(self, pos):
         while True:
@@ -79,7 +88,7 @@ class FlowListWalker(urwid.ListWalker):
             if not self.master.commands.execute("view.%s.properties.inbounds %d" % (self.view.flow_type, pos)):
                 return None, None
             if self.flt:
-                if not flt(self.view[pos]):
+                if not self.flt(self.view[pos]):
                     continue
             f = FlowItem(self.master, self.view, self.view[pos])
             break
