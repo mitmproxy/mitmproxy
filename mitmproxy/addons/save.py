@@ -123,5 +123,6 @@ class Save:
 
     def http2_end(self, flow):
         if self.stream:
+            flow.messages = []
             self.stream.add(flow)
             self.active_flows.discard(flow)

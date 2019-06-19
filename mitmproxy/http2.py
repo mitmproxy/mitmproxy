@@ -50,7 +50,7 @@ class _PriorityFrame():
     """
 
     def __init__(self, priority):
-        self._priority : callbackdict.CallbackDict[str, typing.Any] = priority
+        self._priority : callbackdict.CallbackDict[str, typing.Any] = callbackdict.CallbackDict(priority)
         self._priority.callback = self._update_priority
 
     @property
@@ -92,11 +92,12 @@ class HTTP2Frame(viewitem.ViewItem):
     This is a class to represent a frame
     """
 
-    def __init__(self, from_client, flow, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, flow=None, events=[], stream_id=0, timestamp=None):
         viewitem.ViewItem.__init__(self)
         self.frame_type = "UNKNOWN"
         self.from_client: bool = from_client
         self.flow = flow
+        self.flow_id = flow.id if flow else None
         self._stream_id: int = stream_id
         self._events: List[h2.events.Event] = events
         self.timestamp: float = timestamp or time.time()
@@ -106,12 +107,13 @@ class HTTP2Frame(viewitem.ViewItem):
         cls = eval(state.pop('frame_class'))
         args = dict(from_client=state['from_client'],
                     stream_id=state['_stream_id'],
-                    flow=state['flow'],
                     timestamp=state['timestamp'])
         return cls.from_state(state, args)
 
     def copy(self):
         f = super().copy()
+        f.flow = self.flow
+        self.flow.messages.append(f)
         if self.reply is not None:
             f.reply = controller.DummyReply()
         return f
@@ -123,7 +125,8 @@ class HTTP2Frame(viewitem.ViewItem):
     def get_state(self):
         state = vars(self).copy()
         state['frame_class'] = type(self).__name__
-        #del state["_events"]
+        del state["flow"]
+        del state["_events"]
         return state
 
     # Frame property
@@ -152,7 +155,7 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
     This is a class to represent a HEADER frame
     """
 
-    def __init__(self, from_client, flow, headers, hpack_info, priority, end_stream, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, headers, hpack_info, priority, end_stream, flow=None, events=[], stream_id=0, timestamp=None):
         HTTP2Frame.__init__(self, from_client, flow, events, stream_id, timestamp)
         _EndStreamFrame.__init__(self, end_stream)
         self.frame_type = "HEADER"
@@ -174,6 +177,10 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
         state = HTTP2Frame.get_state(self)
         state['_headers'] = list(self._headers)
         state['hpack_info']['dynamic'] = list(self.hpack_info['dynamic'])
+        hpack_dynamic = state['hpack_info']['dynamic']
+        for index in range(0,len(hpack_dynamic)-1):
+            if isinstance(hpack_dynamic[index][1], memoryview):
+                hpack_dynamic[index] = hpack_dynamic[index][0], hpack_dynamic[index][1].tobytes()
         return state
 
     @property
@@ -208,7 +215,7 @@ class Http2Push(HTTP2Frame):
     This is a class to represent a HEADER frame
     """
 
-    def __init__(self, from_client, flow, pushed_stream_id, headers, hpack_info, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, pushed_stream_id, headers, hpack_info, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, stream_id, timestamp)
         self.frame_type = "PUSH PROMISE"
         self.pushed_stream_id : int = pushed_stream_id
@@ -219,12 +226,16 @@ class Http2Push(HTTP2Frame):
     def from_state(cls, state, args=None):
         if not args:
             return super().from_state(state)
-        return Http2Pushed(**args, headers=state['_headers'], hpack_info=state['hpack_info'])
+        return Http2Push(**args, headers=state['_headers'], hpack_info=state['hpack_info'])
 
     def get_state(self):
         state = HTTP2Frame.get_state(self)
-        state['hpack_info']['dynamic'] = list(self.hpack_info['dynamic'])
         state['_headers'] = list(self._headers)
+        state['hpack_info']['dynamic'] = list(self.hpack_info['dynamic'])
+        hpack_dynamic = state['hpack_info']['dynamic']
+        for index in range(0,len(hpack_dynamic)-1):
+            if isinstance(hpack_dynamic[index][1], memoryview):
+                hpack_dynamic[index] = hpack_dynamic[index][0], hpack_dynamic[index][1].tobytes()
         return state
 
     @property
@@ -257,7 +268,7 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
     This is a class to represent a DATA frame
     """
 
-    def __init__(self, from_client, flow, data, flow_controlled_length, end_stream, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, data, flow_controlled_length, end_stream, flow=None, events=[], stream_id=0, timestamp=None):
         HTTP2Frame.__init__(self, from_client, flow, events, stream_id, timestamp)
         _EndStreamFrame.__init__(self, end_stream)
         self.frame_type = "DATA"
@@ -307,7 +318,7 @@ class Http2WindowsUpdate(HTTP2Frame):
     This is a class to represent a Windows Update frame
     """
 
-    def __init__(self, from_client, flow, delta, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, delta, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, stream_id, timestamp)
         self.frame_type = "WINDOWS UPDATE"
         self._delta : int = delta
@@ -348,11 +359,11 @@ class Http2Settings(HTTP2Frame):
     This is a class to represent a Settings frame
     """
 
-    def __init__(self, from_client, flow, settings, ack, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, settings, ack, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, 0, timestamp)
         self.frame_type = "SETTINGS"
         self._ack : bool = False
-        self._settings : callbackdict.CallbackDict[str, int] = settings
+        self._settings : callbackdict.CallbackDict[str, int] = callbackdict.CallbackDict(settings)
         self._settings.callback = self._update_settings
 
     @classmethod
@@ -417,7 +428,7 @@ class Http2Ping(HTTP2Frame):
     This is a class to represent a Ping frame
     """
 
-    def __init__(self, from_client, flow, data, ack, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, data, ack, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, 0, timestamp)
         self.frame_type = "PING"
         self._data : h2.events.ping_data = data
@@ -480,7 +491,7 @@ class Http2PriorityUpdate(HTTP2Frame, _PriorityFrame):
     This is a class to represent a Priority update frame
     """
 
-    def __init__(self, from_client, flow, priority, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, priority, flow=None, events=[], stream_id=0, timestamp=None):
         HTTP2Frame.__init__(self, from_client, flow, events, 0, timestamp)
         self.frame_type = "PRIORITY"
         _PriorityFrame.__init__(self, priority)
@@ -512,7 +523,7 @@ class Http2RstStream(HTTP2Frame):
     This is a class to represent a Reset stream frame
     """
 
-    def __init__(self, from_client, flow, error_code, remote_reset, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, error_code, remote_reset, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, stream_id, timestamp)
         self.frame_type = "RESET STREAM"
         self._error_code: int = error_code
@@ -568,7 +579,7 @@ class Http2Goaway(HTTP2Frame):
     This is a class to represent a Reset stream frame
     """
 
-    def __init__(self, from_client, flow, last_stream_id, error_code, additional_data, events=[], stream_id=0, timestamp=None):
+    def __init__(self, from_client, last_stream_id, error_code, additional_data, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, 0, timestamp)
         self.frame_type = "GOAWAY"
         self._last_stream_id: int = last_stream_id
@@ -645,7 +656,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
             stream_id=event.stream_id,
             headers=event.headers,
             hpack_info=hpack_info,
-            priority=callbackdict.CallbackDict(
+            priority=list(
                 weight=event.priority_updated.weight,
                 depends_on=event.priority_updated.depends_on,
                 exclusive=event.priority_updated.exclusive) if event.priority_updated else None,
@@ -678,7 +689,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
             stream_id=event.stream_id,
             delta=event.delta)
     elif isinstance(event, h2.events.RemoteSettingsChanged) or isinstance(event, h2.events.SettingsAcknowledged):
-        settings = callbackdict.CallbackDict()
+        settings = list()
         for key, setting in event.changed_settings.items():
             settings[int(key)] = dict(original_value=setting.original_value,
                                             new_value=setting.new_value)
@@ -707,7 +718,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
             from_client=from_client,
             flow=flow,
             events=events,
-            priority=callbackdict.CallbackDict(
+            priority=list(
                 weight=event.weight,
                 depends_on=event.depends_on,
                 exclusive=event.exclusive))
@@ -736,7 +747,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
 class HTTP2Flow(flow.Flow):
 
     """
-    A Http2Flow is a simplified representation of a Http/2 connection
+    A HTTP2Flow is a simplified representation of a Http/2 connection
     """
 
     def __init__(self, client_conn, server_conn, live=None, state="start"):
@@ -751,4 +762,4 @@ class HTTP2Flow(flow.Flow):
     ))
 
     def __repr__(self):
-        return "<Http2Flow ({} messages)>".format(len(self.messages))
+        return "<HTTP2Flow ({} messages)>".format(len(self.messages))

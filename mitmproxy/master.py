@@ -146,7 +146,7 @@ class Master:
         """
         Loads a flow and links websocket & handshake flows
         """
-
+        print("a")
         if isinstance(f, http.HTTPFlow):
             self._change_reverse_host(f)
             if 'websocket' in f.metadata:
@@ -167,6 +167,7 @@ class Master:
             self.waiting_flows.remove(hf)
             self._change_reverse_host(f.handshake_flow)
 
+        if not isinstance(f, http2.HTTP2Flow):
         f.reply = controller.DummyReply()
         for e, o in eventsequence.iterate(f):
             await self.addons.handle_lifecycle(e, o)
