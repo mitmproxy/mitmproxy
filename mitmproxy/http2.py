@@ -178,7 +178,7 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
         state['_headers'] = list(self._headers)
         state['hpack_info']['dynamic'] = list(self.hpack_info['dynamic'])
         hpack_dynamic = state['hpack_info']['dynamic']
-        for index in range(0,len(hpack_dynamic)-1):
+        for index in range(0, len(hpack_dynamic)-1):
             if isinstance(hpack_dynamic[index][1], memoryview):
                 hpack_dynamic[index] = hpack_dynamic[index][0], hpack_dynamic[index][1].tobytes()
         return state
@@ -233,7 +233,7 @@ class Http2Push(HTTP2Frame):
         state['_headers'] = list(self._headers)
         state['hpack_info']['dynamic'] = list(self.hpack_info['dynamic'])
         hpack_dynamic = state['hpack_info']['dynamic']
-        for index in range(0,len(hpack_dynamic)-1):
+        for index in range(0, len(hpack_dynamic)-1):
             if isinstance(hpack_dynamic[index][1], memoryview):
                 hpack_dynamic[index] = hpack_dynamic[index][0], hpack_dynamic[index][1].tobytes()
         return state
@@ -656,7 +656,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
             stream_id=event.stream_id,
             headers=event.headers,
             hpack_info=hpack_info,
-            priority=list(
+            priority=dict(
                 weight=event.priority_updated.weight,
                 depends_on=event.priority_updated.depends_on,
                 exclusive=event.priority_updated.exclusive) if event.priority_updated else None,
@@ -689,10 +689,10 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
             stream_id=event.stream_id,
             delta=event.delta)
     elif isinstance(event, h2.events.RemoteSettingsChanged) or isinstance(event, h2.events.SettingsAcknowledged):
-        settings = list()
+        settings = dict()
         for key, setting in event.changed_settings.items():
             settings[int(key)] = dict(original_value=setting.original_value,
-                                            new_value=setting.new_value)
+                                      new_value=setting.new_value)
         frame = Http2Settings(
             from_client=from_client,
             flow=flow,
@@ -718,7 +718,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
             from_client=from_client,
             flow=flow,
             events=events,
-            priority=list(
+            priority=dict(
                 weight=event.weight,
                 depends_on=event.depends_on,
                 exclusive=event.exclusive))
