@@ -2,6 +2,7 @@ import math
 import sys
 from functools import lru_cache
 from typing import Optional, Union  # noqa
+from mitmproxy import exceptions
 
 import urwid
 
@@ -290,11 +291,66 @@ class FlowDetailsHttp2(FlowDetails):
         return flowdetailview.flowdetails(self.view, self.flow)
 
     def _frame_base(self, frame):
-        pass
+        base_frame_info = [
+                ("Type", frame.frame_type),
+                ("Stream-ID", str(frame.stream_id)),
+            ]
+        return common.format_keyvals(base_frame_info, indent=4)
+
+    def _format_headers(self, frame):
+        static_field = []
+        dynamic_field = []
+        header_index = 0
+        headers = list(frame.headers)
+        for header in frame.hpack_info['static']:
+            for h in headers:
+                if h[0] == header[0] and h[1] == header[1]:
+                    static_field.append((str(header_index), header[0], header[1]))
+                    headers.remove(h)
+            header_index += 1
+
+        for header in frame.hpack_info['dynamic']:
+            for h in headers:
+                if h[0] == header[0] and h[1] == header[1]:
+                    dynamic_field.append((str(header_index), header[0], header[1]))
+                    headers.remove(h)
+                header_index += 1
+        for h in headers:
+            dynamic_field.append(("", h[0], h[1]))
+
+        txt = [urwid.Text([("head", "Static Header fields")])]
+        txt.extend(common.format_keyvals(static_field))
+        txt.append(urwid.Text([("head", "Dynamic Header fields")]))
+        txt.extend(common.format_keyvals(dynamic_field))
+        return txt
+
     def _frame_header(self, frame):
-        pass
-    def _frame_pushed(self, frame):
-        pass
+        txt = common.format_keyvals([
+                ("Type", frame.frame_type),
+                ("Stream-ID", str(frame.stream_id)),
+                ("End stream", str(frame.end_stream))
+            ], indent=4)
+        if frame.priority:
+            txt.append(urwid.Text([("head", "Priority informations")]))
+            txt.extend(common.format_keyvals([
+                    ("Weight", str(frame.priority['weight'])),
+                    ("Depends on", str(frame.priority['depends_on'])),
+                    ("Exclusive", str(frame.priority['exclusive']))
+                ], indent=4))
+
+        txt.extend(self._format_headers(frame))
+        return txt
+
+    def _frame_push(self, frame):
+        txt = common.format_keyvals([
+                ("Type", frame.frame_type),
+                ("Stream-ID", str(frame.stream_id)),
+                ("Pushed stream-ID", str(frame.pushed_stream_id))
+            ], indent=4)
+
+        txt.extend(self._format_headers(frame))
+        return txt
+
     def _frame_data(self, frame):
         base_frame_info = [
                 ("Type", frame.frame_type),
@@ -304,7 +360,18 @@ class FlowDetailsHttp2(FlowDetails):
             ]
         txt = common.format_keyvals(base_frame_info, indent=4)
         txt.append(urwid.Text([("head", "Data")]))
-        txt.append(urwid.Text([("data", str(frame.data))]))
+        data = ""
+        return_nb = 0
+        space_nb  = 0
+        for b in frame.data.hex():
+            data += b
+            if space_nb == 3:
+                data += " "
+                if return_nb == 7:
+                    data += "\n"
+                return_nb = (return_nb + 1) % 8
+            space_nb = (space_nb + 1) % 4
+        txt.append(urwid.Text([("text", data)]))
         return txt
 
     def _frame_windows_update(self, frame):
@@ -320,23 +387,11 @@ class FlowDetailsHttp2(FlowDetails):
     def _frame_goaway(self, frame):
         pass
 
-    def _priority(self, frame):
-        pass
-
-    def _static_header_field(self, frame):
-        pass
-    
-    def _dynamic_header_filed(self, frame):
-        pass
-    
-    def _format_data(self, frame):
-        pass
-
     def conn_text(self, frame):
         if isinstance(frame, http2.Http2Header):
             txt = self._frame_header(frame)
-        elif isinstance(frame, http2.Http2Pushed):
-            txt = self._frame_pushed(frame)
+        elif isinstance(frame, http2.Http2Push):
+            txt = self._frame_push(frame)
         elif isinstance(frame, http2.Http2Data):
             txt = self._frame_data(frame)
         elif isinstance(frame, http2.Http2WindowsUpdate):

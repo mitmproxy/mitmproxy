@@ -157,7 +157,7 @@ class Master:
             if len(last_same_flows) > 0:
                 last_message = last_same_flows[0].messages[0]
                 self.waiting_flows.remove(last_same_flows[0])
-                f.insert(0, last_same_flow[0].messages[0])
+                f.messages[0] = [last_same_flows[0].messages[0]]
             self.waiting_flows.append(f)
             self._change_reverse_host(f)
 

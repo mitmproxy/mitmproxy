@@ -36,6 +36,7 @@ KEY_MAX = 30
 def format_keyvals(
         entries: typing.List[typing.Tuple[str, typing.Union[None, str, urwid.Widget]]],
         key_format: str = "key",
+        index_format: str = "highlight",
         value_format: str = "text",
         indent: int = 0
 ) -> typing.List[urwid.Columns]:
@@ -49,29 +50,44 @@ def format_keyvals(
         value_format: The display attribute for the value.
         indent: Additional indent to apply.
     """
-    max_key_len = max((len(k) for k, v in entries if k is not None), default=0)
+    max_key_len = max((len(e[0]) for e in entries if e[0] is not None), default=0)
     max_key_len = min(max_key_len, KEY_MAX)
+
+    if len(entries) > 0 and len(entries[0]) == 3:
+        max_index_len = max_key_len
+        max_key_len = max((len(e[1]) for e in entries if e[1] is not None), default=0)
+        max_key_len = min(max_key_len, KEY_MAX)
 
     if indent > 2:
         indent -= 2  # We use dividechars=2 below, which already adds two empty spaces
 
     ret = []
-    for k, v in entries:
+    for e in entries:
+        if len(e) == 3:
+            i, k, v = e
+        else:
+            k, v = e
         if v is None:
             v = urwid.Text("")
         elif not isinstance(v, urwid.Widget):
             v = urwid.Text([(value_format, v)])
+        line = [("fixed", indent, urwid.Text("")),
+                (
+                    "fixed",
+                    max_key_len,
+                    urwid.Text([(key_format, k)])
+                ),
+                v
+        ]
+        if len(e) == 3:
+            line[0:0] = [((
+                        "fixed",
+                        max_index_len,
+                        urwid.Text([(index_format, i)])
+                    ))]
         ret.append(
             urwid.Columns(
-                [
-                    ("fixed", indent, urwid.Text("")),
-                    (
-                        "fixed",
-                        max_key_len,
-                        urwid.Text([(key_format, k)])
-                    ),
-                    v
-                ],
+                line,
                 dividechars=2
             )
         )

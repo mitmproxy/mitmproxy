@@ -202,7 +202,7 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
                 headers=self._headers)
 
 
-class Http2Pushed(HTTP2Frame):
+class Http2Push(HTTP2Frame):
 
     """
     This is a class to represent a HEADER frame
@@ -210,7 +210,7 @@ class Http2Pushed(HTTP2Frame):
 
     def __init__(self, from_client, flow, pushed_stream_id, headers, hpack_info, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, stream_id, timestamp)
-        self.frame_type = "PUSHED"
+        self.frame_type = "PUSH PROMISE"
         self.pushed_stream_id : int = pushed_stream_id
         self._headers : hpack.HeaderTuple = headers
         self.hpack_info = hpack_info
@@ -261,7 +261,7 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
         HTTP2Frame.__init__(self, from_client, flow, events, stream_id, timestamp)
         _EndStreamFrame.__init__(self, end_stream)
         self.frame_type = "DATA"
-        self._data : h2.events.Data = None
+        self._data : h2.events.Data = data
         self._length : int = flow_controlled_length
 
     @classmethod
@@ -653,7 +653,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
     elif isinstance(event, h2.events.PushedStreamReceived):
         hpack_info = dict(static=http2_source_connection.decoder.header_table.STATIC_TABLE,
                           dynamic=http2_source_connection.decoder.header_table.dynamic_entries)
-        frame = Http2Pushed(
+        frame = Http2Push(
             from_client=from_client,
             flow=flow,
             events=events,
