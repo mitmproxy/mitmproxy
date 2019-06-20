@@ -1,6 +1,7 @@
 import platform
 import typing
 from functools import lru_cache
+from datetime import datetime
 
 import urwid
 import urwid.util
@@ -297,7 +298,7 @@ def format_http2_item(i, focus): # extended=False, hostheader=False, max_url_len
         focus=focus,
         intercepted=i.intercepted,
         marked=i.marked,
-        timestamp=i.timestamp,
+        timestamp=datetime.fromtimestamp(i.timestamp).isoformat(),
         frame_type=i.frame_type,
         stream_id=i.stream_id,
     )
