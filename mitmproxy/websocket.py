@@ -12,7 +12,7 @@ from mitmproxy.coretypes import serializable
 from mitmproxy.utils import strutils, human
 
 
-class WebSocketMessage(serializable.Serializable):
+class WebSocketMessage(viewitem.ViewItem):
     """
     A WebSocket message sent from one endpoint to the other.
     """

@@ -7,6 +7,8 @@ from mitmproxy import flowfilter
 from mitmproxy import io
 from mitmproxy import ctx
 from mitmproxy import flow
+from mitmproxy import http2
+from mitmproxy import viewitem
 import mitmproxy.types
 
 
@@ -61,17 +63,21 @@ class Save:
                 self.start_stream_to_path(ctx.options.save_stream_file, self.filt)
 
     @command.command("save.file")
-    def save(self, flows: typing.Sequence[flow.Flow], path: mitmproxy.types.Path) -> None:
+    def save(self, flows: typing.Sequence[viewitem.ViewItem], path: mitmproxy.types.Path) -> None:
         """
             Save flows to a file. If the path starts with a +, flows are
             appended to the file, otherwise it is over-written.
         """
+
         try:
             f = self.open_file(path)
         except IOError as v:
             raise exceptions.CommandError(v) from v
         stream = io.FlowWriter(f)
         for i in flows:
+            if isinstance(i, http2.HTTP2Frame):
+                i.flow.messages = [i]
+                i = i.flow
             stream.add(i)
         f.close()
         ctx.log.alert("Saved %s flows." % len(flows))

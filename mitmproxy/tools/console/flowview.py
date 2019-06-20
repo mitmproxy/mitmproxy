@@ -3,7 +3,8 @@ import sys
 from functools import lru_cache
 from typing import Optional, Union  # noqa
 from mitmproxy import exceptions
-from h2.settings import _setting_code_from_int
+from h2.errors import ErrorCodes
+from h2.settings import SettingCodes
 
 import urwid
 
@@ -396,7 +397,7 @@ class FlowDetailsHttp2(FlowDetails):
         txt.append(urwid.Text([("head", "Settings")]))
         settings = []
         for key, val in frame.settings.items():
-            key_name = str(_setting_code_from_int(key)).split('.')[1]
+            key_name = str(SettingCodes(key)).split('.')[1]
             settings.append((key_name, str(val['new_value'])))
         txt.extend(common.format_keyvals(settings, indent=4))
         return txt
@@ -436,7 +437,7 @@ class FlowDetailsHttp2(FlowDetails):
         return common.format_keyvals([
                 ("Type", frame.frame_type),
                 ("Stream-ID", str(frame.stream_id)),
-                ("Error code", str(frame.error_code)),
+                ("Error code", str(ErrorCodes(frame.error_code)).split('.')[1]),
                 ("Remote reset", str(frame.remote_reset)),
             ], indent=4)
 
@@ -445,7 +446,7 @@ class FlowDetailsHttp2(FlowDetails):
                 ("Type", frame.frame_type),
                 ("Stream-ID", str(frame.stream_id)),
                 ("Last stream-ID", str(frame.last_stream_id)),
-                ("Error code", str(frame.error_code)),
+                ("Error code", str(ErrorCodes(frame.error_code)).split('.')[1]),
                 ("Additional data", str(frame.additional_data)),
             ], indent=4)
 

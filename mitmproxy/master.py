@@ -146,7 +146,6 @@ class Master:
         """
         Loads a flow and links websocket & handshake flows
         """
-
         if isinstance(f, http.HTTPFlow):
             self._change_reverse_host(f)
             if 'websocket' in f.metadata:
@@ -155,9 +154,17 @@ class Master:
         if isinstance(f, http2.HTTP2Flow):
             last_same_flows = [lf for lf in self.waiting_flows if lf.id == f.id]
             if len(last_same_flows) > 0:
-                last_message = last_same_flows[0].messages[0]
+                last_messages = last_same_flows[0].messages
                 self.waiting_flows.remove(last_same_flows[0])
-                f.messages[0] = [last_same_flows[0].messages[0]]
+                flow_msg = f.messages[0] if len(f.messages) > 0 else None
+                f.messages = last_messages
+                if flow_msg:
+                    f.messages.append(flow_msg)
+            for m in f.messages:
+                try:
+                    m.flow = f
+                except:
+                    print(m)
             self.waiting_flows.append(f)
             self._change_reverse_host(f)
 

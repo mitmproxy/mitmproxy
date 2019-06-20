@@ -8,6 +8,8 @@ from typing import List
 import typing
 
 import h2.events
+from h2.errors import ErrorCodes
+from h2.settings import SettingCodes
 from hpack.hpack import HeaderTuple
 
 
@@ -178,7 +180,9 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
         state['_headers'] = list(self._headers)
         state['hpack_info']['dynamic'] = list(self.hpack_info['dynamic'])
         hpack_dynamic = state['hpack_info']['dynamic']
-        for index in range(0, len(hpack_dynamic)-1):
+        for index in range(0, len(hpack_dynamic)):
+            if isinstance(hpack_dynamic[index][0], memoryview):
+                hpack_dynamic[index] = hpack_dynamic[index][0].tobytes(), hpack_dynamic[index][1]
             if isinstance(hpack_dynamic[index][1], memoryview):
                 hpack_dynamic[index] = hpack_dynamic[index][0], hpack_dynamic[index][1].tobytes()
         return state
@@ -233,7 +237,9 @@ class Http2Push(HTTP2Frame):
         state['_headers'] = list(self._headers)
         state['hpack_info']['dynamic'] = list(self.hpack_info['dynamic'])
         hpack_dynamic = state['hpack_info']['dynamic']
-        for index in range(0, len(hpack_dynamic)-1):
+        for index in range(0, len(hpack_dynamic)):
+            if isinstance(hpack_dynamic[index][0], memoryview):
+                hpack_dynamic[index] = hpack_dynamic[index][0].tobytes(), hpack_dynamic[index][1]
             if isinstance(hpack_dynamic[index][1], memoryview):
                 hpack_dynamic[index] = hpack_dynamic[index][0], hpack_dynamic[index][1].tobytes()
         return state
@@ -363,7 +369,7 @@ class Http2Settings(HTTP2Frame):
         super().__init__(from_client, flow, events, 0, timestamp)
         self.frame_type = "SETTINGS"
         self._ack : bool = False
-        self._settings : callbackdict.CallbackDict[str, int] = callbackdict.CallbackDict(settings)
+        self._settings : callbackdict.CallbackDict[int, int] = callbackdict.CallbackDict(settings)
         self._settings.callback = self._update_settings
 
     @classmethod
@@ -405,7 +411,7 @@ class Http2Settings(HTTP2Frame):
             for event in self._events:
                 if hasattr(event, "changed_settings"):
                     for key, setting in self._settings.items():
-                        settings_key = h2.settings.SettingCodes(key)
+                        settings_key = SettingCodes(key)
                         event.changed_settings[settings_key].original_value = setting['original_value']
                         event.changed_settings[settings_key].original_value = setting['new_value']
 
@@ -545,7 +551,7 @@ class Http2RstStream(HTTP2Frame):
         if self._events:
             for event in self._events:
                 if hasattr(event, "error_code"):
-                    event.error_code = error_code
+                    event.error_code = ErrorCodes(error_code)
 
     @property
     def remote_reset(self):
@@ -614,7 +620,7 @@ class Http2Goaway(HTTP2Frame):
         if self._events:
             for event in self._events:
                 if hasattr(event, "error_code"):
-                    event.error_code = error_code
+                    event.error_code = ErrorCodes(error_code)
 
     @property
     def additional_data(self):
@@ -728,7 +734,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
             flow=flow,
             events=events,
             stream_id=event.stream_id,
-            error_code=event.error_code,
+            error_code=int(event.error_code),
             remote_reset=event.remote_reset)
     elif isinstance(event, h2.events.ConnectionTerminated):
         frame = Http2Goaway(
@@ -736,7 +742,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
             flow=flow,
             events=events,
             last_stream_id=event.last_stream_id,
-            error_code=event.error_code,
+            error_code=int(event.error_code),
             additional_data=event.additional_data)
     else:
         frame = HTTP2Frame(from_client, events=events)
