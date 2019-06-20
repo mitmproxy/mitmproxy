@@ -394,6 +394,15 @@ class FDst(_Rex):
         return f.flow.server_conn.address and self.re.search(r)
 
 
+class FType(_Rex):
+    code = "ft"
+    help = "Match frame type"
+    is_binary = False
+
+    @only(http2.HTTP2Frame)
+    def __call__(self, f):
+        return self.re.search(f.frame_type)
+
 class _Int(_Action):
 
     def __init__(self, num):
