@@ -1,6 +1,7 @@
 import os
 import glob
 import typing
+import re
 
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -377,10 +378,13 @@ class _ViewItemType(_BaseFlowType):
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> viewitem.ViewItem:
         try:
-            for view_type in manager.master.views.keys():
-                if (manager.master.window.current_window("flowlist_%s" % view_type)
-                    or manager.master.window.current_window("flowview_%s" % view_type)):
-                    break
+            if re.search(r'@\w+\.\w+', s):
+                view_type = re.search(r'@\w+\.(\w+)', s).group(1)
+            else:
+                for view_type in manager.master.views.keys():
+                    if (manager.master.window.current_window("flowlist_%s" % view_type)
+                        or manager.master.window.current_window("flowview_%s" % view_type)):
+                        break
             flows = manager.call_strings("view.%s.flows.resolve" % view_type, [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
@@ -400,6 +404,8 @@ class _ViewItemsType(_BaseFlowType):
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[viewitem.ViewItem]:
         try:
+            if re.search(r'@\w+\.\w+', s):
+                view_type = re.search(r'@\w+\.(\w+)', s).group(1)
             for view_type in manager.master.views.keys():
                 if (manager.master.window.current_window("flowlist_%s" % view_type)
                     or manager.master.window.current_window("flowview_%s" % view_type)):

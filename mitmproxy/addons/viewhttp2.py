@@ -144,8 +144,9 @@ class ViewHttp2(view.View):
         """
         super().set_filter_cmd(f)
 
-    def set_filter(self, flt: typing.Optional[flowfilter.TFilter]):
-        super().set_filter(flt)
+    @command.command("view.http2.filtred_view.add")
+    def add_filtred_view(self, f: str, n: str) -> None:
+        super().add_filtred_view(f, n)
 
     # View Updates
     @command.command("view.http2.clear")
@@ -250,11 +251,11 @@ class ViewHttp2(view.View):
         super().toggle_marked()
 
     @command.command("view.http2.properties.inbounds")
-    def inbounds(self, index: int) -> bool:
+    def inbounds(self, index: int, name: str = None) -> bool:
         """
-            Is this 0 <= index < len(self)?
+            Is this 0 <= index < len(self)
         """
-        return super().inbounds(index)
+        return super().inbounds(index, name)
 
     # Event handlers
 

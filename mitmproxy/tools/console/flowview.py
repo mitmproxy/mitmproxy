@@ -121,7 +121,7 @@ class FlowDetailsHttp1(FlowDetails):
             self.flow.client_conn and self.flow.client_conn.address):
             dst_addr = "{}:{}".format(self.flow.server_conn.address[0], self.flow.server_conn.address[1])
             src_addr = "{}:{}".format(self.flow.client_conn.address[0], self.flow.client_conn.address[1])
-            self.master.commands.execute("view.http2.filter.set '( ( (~sid %s | ~f.pushed_stream_id %s) & ~fc ) | ( (~sid %s | ~f.pushed_stream_id %s) & ! ~fc ) ) & ~src %s & ~dst %s'" %
+            self.master.commands.execute("view.http2.filtred_view.add '( ( (~sid %s | ~f.pushed_stream_id %s) & ~fc ) | ( (~sid %s | ~f.pushed_stream_id %s) & ! ~fc ) ) & ~src %s & ~dst %s' 'stream_from_http1'" %
                 (self.flow.client_stream_id, self.flow.client_stream_id,
                 self.flow.server_stream_id, self.flow.server_stream_id,
                 src_addr, dst_addr))
@@ -130,7 +130,7 @@ class FlowDetailsHttp1(FlowDetails):
                 #(self.flow.client_stream_id, self.flow.client_stream_id,
                 #self.flow.server_stream_id, self.flow.server_stream_id,
                 #src_addr, dst_addr))
-            return flowlist.FlowListBox(self.master, self.master.views['http2'])
+            return flowlist.FlowListBox(self.master, self.master.views['http2'], flt="stream_from_http1")
         else:
             txt = [
                 urwid.Text(""),

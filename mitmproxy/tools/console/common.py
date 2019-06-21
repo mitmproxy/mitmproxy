@@ -293,7 +293,7 @@ def raw_format_http2_flow(f):
     pile.append(urwid.Columns(l2, dividechars=1))
     return urwid.Pile(pile)
 
-def format_http2_item(i, focus): # extended=False, hostheader=False, max_url_len=False):
+def format_http2_item(i, focus):
     d = dict(
         focus=focus,
         intercepted=i.intercepted,

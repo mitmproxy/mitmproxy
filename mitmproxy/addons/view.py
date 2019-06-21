@@ -10,6 +10,7 @@ The View:
 """
 import collections
 import typing
+import re
 
 import blinker
 import sortedcontainers
@@ -89,6 +90,7 @@ class View(collections.abc.Sequence):
 
         self._store = collections.OrderedDict()
         self.filter = self.matchall
+        self.filtred_views_filter = {}
         # Should we show only marked flows?
         self.show_marked = False
 
@@ -101,15 +103,19 @@ class View(collections.abc.Sequence):
         self._view = sortedcontainers.SortedListWithKey(
             key = self.order_key
         )
+        self.filtred_views = {}
 
         # The sig_view* signals broadcast events that affect the view. That is,
         # an update to a flow in the store but not in the view does not trigger
         # a signal. All signals are called after the view has been updated.
         self.sig_view_update = blinker.Signal()
         self.sig_view_add = blinker.Signal()
+        self.filtred_views_sig_view_add = {}
         self.sig_view_remove = blinker.Signal()
+        self.filtred_views_sig_view_remove = {}
         # Signals that the view should be refreshed completely
         self.sig_view_refresh = blinker.Signal()
+        self.filtred_views_sig_view_refresh = {}
 
         # The sig_store* signals broadcast events that affect the underlying
         # store. If a flow is removed from just the view, sig_view_remove is
@@ -120,6 +126,7 @@ class View(collections.abc.Sequence):
         self.sig_store_refresh = blinker.Signal()
 
         self.focus = Focus(self)
+        self.filtred_views_focus = {}
         self.settings = Settings(self)
 
     def load(self, loader):
@@ -148,7 +155,7 @@ class View(collections.abc.Sequence):
     def store_count(self):
         return len(self._store)
 
-    def _rev(self, idx: int) -> int:
+    def _rev(self, idx: int, view_name=None) -> int:
         """
             Reverses an index, if needed
         """
@@ -156,7 +163,10 @@ class View(collections.abc.Sequence):
             if idx < 0:
                 idx = -idx - 1
             else:
-                idx = len(self._view) - idx - 1
+                if view_name:
+                    idx = len(self.filtred_views[view_name]) - idx - 1
+                else:
+                    idx = len(self._view) - idx - 1
                 if idx < 0:
                     raise IndexError
         return idx
@@ -169,31 +179,49 @@ class View(collections.abc.Sequence):
 
     # Reflect some methods to the efficient underlying implementation
 
-    def _bisect(self, f: mitmproxy.viewitem.ViewItem) -> int:
-        v = self._view.bisect_right(f)
-        return self._rev(v - 1) + 1
+    def _bisect(self, f: mitmproxy.viewitem.ViewItem, view_name=None) -> int:
+        if view_name:
+            v = self.filtred_views[view_name].bisect_right(f)
+        else:
+            v = self._view.bisect_right(f)
+        return self._rev(v - 1, view_name) + 1
 
-    def index(self, f: mitmproxy.viewitem.ViewItem, start: int = 0, stop: typing.Optional[int] = None) -> int:
-        return self._rev(self._view.index(f, start, stop))
+    def index(self, f: mitmproxy.viewitem.ViewItem, start: int = 0, stop: typing.Optional[int] = None, view_name: typing.Sequence[str] = None) -> int:
+        if view_name:
+            return self._rev(self.filtred_views[view_name].index(f, start, stop), view_name)
+        else:
+            return self._rev(self._view.index(f, start, stop))
 
-    def __contains__(self, f: typing.Any) -> bool:
-        return self._view.__contains__(f)
+    def __contains__(self, f: typing.Any, view_name: typing.Sequence[str] = None) -> bool:
+        if view_name:
+            return self._view[view_name].__contains__(f)
+        else:
+            return self._view.__contains__(f)
 
     def _order_key_name(self):
         return "_order_%s" % id(self.order_key)
 
-    def _base_add(self, f):
+    def _base_add(self, f, view_name=None):
         self.settings[f][self._order_key_name()] = self.order_key(f)
-        self._view.add(f)
+        if view_name:
+            self.filtred_views[view_name].add(f)
+        else:
+            self._view.add(f)
 
     def _refilter(self):
-        self._view.clear()
+        for view in [self._view, *self.filtred_views.values()]:
+            view.clear()
         for i in self._store.values():
             if self.show_marked and not i.marked:
                 continue
             if self.filter(i):
                 self._base_add(i)
+            for name, flt in self.filtred_views_filter.items():
+                if flt(i):
+                    self._base_add(i, name)
         self.sig_view_refresh.send(self)
+        for name, signal in self.filtred_views_sig_view_refresh.items():
+            signal.send(self.filtred_views[name])
 
     """ View API """
 
@@ -240,6 +268,9 @@ class View(collections.abc.Sequence):
     def set_reversed(self, value: bool) -> None:
         self.order_reversed = value
         self.sig_view_refresh.send(self)
+        for name, signal in self.filtred_views_sig_view_refresh.items():
+            signal.send(self.filtred_views[name])
+
 
     def set_order(self, order: str) -> None:
         """
@@ -279,9 +310,27 @@ class View(collections.abc.Sequence):
                 )
         self.set_filter(filt)
 
-    def set_filter(self, flt: typing.Optional[flowfilter.TFilter]):
-        self.filter = flt or self.matchall
+    def set_filter(self, flt: typing.Optional[flowfilter.TFilter], view_name: typing.Sequence[str] = None):
+        if not view_name:
+            self.filter = flt or self.matchall
+        else:
+            self.filtred_views[view_name] = self._view.copy()
+            self.filtred_views_filter[view_name] = flt or self.matchall
+            self.filtred_views_sig_view_add[view_name] =  blinker.Signal()
+            self.filtred_views_sig_view_remove[view_name] = blinker.Signal()
+            self.filtred_views_sig_view_refresh[view_name] = blinker.Signal()
+            self.filtred_views_focus[view_name] = Focus(self, view_name)
         self._refilter()
+
+    def add_filtred_view(self, f: str, name: str) -> None:
+        filt = None
+        if f:
+            filt = flowfilter.parse(f)
+            if not filt:
+                raise exceptions.CommandError(
+                    "Invalid interception filter: %s" % f
+                )
+        self.set_filter(filt, name)
 
     # View Updates
     def clear(self) -> None:
@@ -292,6 +341,9 @@ class View(collections.abc.Sequence):
         self._view.clear()
         self.sig_view_refresh.send(self)
         self.sig_store_refresh.send(self)
+        for name, signal in self.filtred_views_sig_view_refresh.items():
+            signal.send(self.filtred_views[name])
+
 
     def clear_not_marked(self) -> None:
         """
@@ -367,6 +419,10 @@ class View(collections.abc.Sequence):
                     idx = self._view.index(f)
                     self._view.remove(f)
                     self.sig_view_remove.send(self, flow=f, index=idx)
+                for name in self.filtred_views.keys():
+                    idx = self.filtred_views[name].index(f)
+                    self.filtred_views[name].remove(f)
+                    self.filtred_views_sig_view_remove[name].send(self, flow=f, index=idx)
                 del self._store[f.id]
                 self.sig_store_remove.send(self, flow=f)
         if len(flows) > 1:
@@ -377,14 +433,29 @@ class View(collections.abc.Sequence):
         """
             Resolve a flow list specification to an actual list of flows.
         """
+        view_name = None
+        if re.match(r'@\w+\.\w+\.\w+', spec):
+            spec, view_name = re.match(r'(@\w+)\.\w+\.(\w+)', spec).group(1, 2)
+        if re.match(r'@\w+\.\w+', spec):
+            spec = re.match(r'(@\w+)\.\w+', spec).group(0)
+
         if spec == "@all":
             return [i for i in self._store.values()]
         if spec == "@focus":
-            return [self.focus.flow] if self.focus.flow else []
+            if view_name:
+                return [self.filtred_views_focus[view_name].flow] if self.filtred_views_focus[view_name].flow else []
+            else:
+                return [self.focus.flow] if self.focus.flow else []
         elif spec == "@shown":
-            return [i for i in self]
+            if view_name:
+                return [i for i in self.filtred_views[view_name]]
+            else:
+                return [i for i in self]
         elif spec == "@hidden":
-            return [i for i in self._store.values() if i not in self._view]
+            if view_name:
+                return [i for i in self._store.values() if i not in self.filtred_views[view_name]]
+            else:
+                return [i for i in self._store.values() if i not in self._view]
         elif spec == "@marked":
             return [i for i in self._store.values() if i.marked]
         elif spec == "@unmarked":
@@ -427,6 +498,12 @@ class View(collections.abc.Sequence):
                     if self.focus_follow:
                         self.focus.flow = f
                     self.sig_view_add.send(self, flow=f)
+                for name, flt in self.filtred_views_filter.items():
+                    if flt(f):
+                        self._base_add(f, name)
+                        if self.focus_follow:
+                            self.filtred_views_focus[name].flow = f
+                        self.filtred_views_sig_view_add[name].send(self, flow=f)
 
     def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.viewitem.ViewItem]:
         """
@@ -455,11 +532,14 @@ class View(collections.abc.Sequence):
         self.show_marked = not self.show_marked
         self._refilter()
 
-    def inbounds(self, index: int) -> bool:
+    def inbounds(self, index: int, name: str = None) -> bool:
         """
             Is this 0 <= index < len(self)?
         """
-        return 0 <= index < len(self)
+        if name and name != "None":
+            return 0 <= index < len(self.filtred_views[name])
+        else:
+            return 0 <= index < len(self)
 
     # Event handlers
     def configure(self, updated):
@@ -519,20 +599,52 @@ class View(collections.abc.Sequence):
                         self._view.remove(f)
                         self.sig_view_remove.send(self, flow=f, index=idx)
 
+                for name, flt in self.filtred_views_filter.items():
+                    if flt(f):
+                        if f not in self._view:
+                            self._base_add(f, name)
+                            if self.focus_follow:
+                                self.focus.flow = f
+                            self.filtred_views_sig_view_add[name].send(self, flow=f)
+                        else:
+                            # This is a tad complicated. The sortedcontainers
+                            # implementation assumes that the order key is stable. If
+                            # it changes mid-way Very Bad Things happen. We detect when
+                            # this happens, and re-fresh the item.
+                            self.order_key.refresh(f)
+                            self.sig_view_update.send(self, flow=f)
+                    else:
+                        try:
+                            idx = self._view.index(f)
+                        except ValueError:
+                            pass  # The value was not in the view
+                        else:
+                            self._view.remove(f)
+                            self.filtred_views_sig_view_remove[name].send(self, flow=f, index=idx)
+
 
 class Focus:
     """
         Tracks a focus element within a View.
     """
-    def __init__(self, v: View) -> None:
-        self.view = v
+    def __init__(self, v: View, view_name=None) -> None:
+        self.base_view, self.view_name = v, view_name
+        if view_name:
+            self.view = v.filtred_views[view_name]
+        else:
+            self.view = v
         self._flow: mitmproxy.viewitem.ViewItem = None
         self.sig_change = blinker.Signal()
         if len(self.view):
             self.flow = self.view[0]
-        v.sig_view_add.connect(self._sig_view_add)
-        v.sig_view_remove.connect(self._sig_view_remove)
-        v.sig_view_refresh.connect(self._sig_view_refresh)
+        if view_name:
+            v.filtred_views_sig_view_add[view_name].connect(self._sig_view_add)
+            v.filtred_views_sig_view_remove[view_name].connect(self._sig_view_remove)
+            v.filtred_views_sig_view_refresh[view_name].connect(self._sig_view_refresh)
+        else:
+            v.sig_view_add.connect(self._sig_view_add)
+            v.sig_view_remove.connect(self._sig_view_remove)
+            v.sig_view_refresh.connect(self._sig_view_refresh)
 
     @property
     def flow(self) -> typing.Optional[mitmproxy.viewitem.ViewItem]:
@@ -558,7 +670,7 @@ class Focus:
         self.flow = self.view[idx]
 
     def _nearest(self, f, v):
-        return min(v._bisect(f), len(v) - 1)
+        return min(self.base_view._bisect(f, self.view_name), len(v) - 1)
 
     def _sig_view_remove(self, view, flow, index):
         if len(view) == 0:

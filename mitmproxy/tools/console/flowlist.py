@@ -7,8 +7,8 @@ import mitmproxy.tools.console.master # noqa
 
 class FlowItem(urwid.WidgetWrap):
 
-    def __init__(self, master, view, flow):
-        self.master, self.view, self.flow = master, view, flow
+    def __init__(self, master, view, flow, flt=None):
+        self.master, self.view, self.flow, self.flt = master, view, flow, flt
         w = self.get_text()
         urwid.WidgetWrap.__init__(self, w)
 
@@ -17,14 +17,14 @@ class FlowItem(urwid.WidgetWrap):
         if self.view.flow_type == "http1":
             return common.format_flow(
                 self.flow,
-                self.flow is self.view.focus.flow,
+                self.flow is self.view.filtred_views_focus[self.flt].flow if self.flt else self.flow is self.view.focus.flow,
                 hostheader=self.master.options.showhost,
                 max_url_len=cols,
             )
         elif self.view.flow_type == "http2":
             return common.format_http2_item(
                 self.flow,
-                self.flow is self.view.focus.flow,
+                self.flow is self.view.filtred_views_focus[self.flt].flow if self.flt else self.flow is self.view.focus.flow,
             )
         else:
             raise NotImplementedError()
@@ -34,12 +34,24 @@ class FlowItem(urwid.WidgetWrap):
 
     def mouse_event(self, size, event, button, col, row, focus):
         if event == "mouse press" and button == 1:
+            if self.flt:
+                focus_flt = ".%s.%s" % (self.view.flow_type, self.flt)
+                try:
+                    self.view.focus.flow = self.flow
+                except ValueError:
+                    self.master.commands.execute("set view_filter_%s=" % self.view.flow_type)
+                    try:
+                        self.view.focus
+                    except:
+                        pass
+            else:
+                focus_flt = ""
             if self.view.flow_type == "http1":
                 if self.flow.request:
-                    self.master.commands.execute("console.view.flow @focus")
+                    self.master.commands.execute("console.view.flow @focus%s" % focus_flt)
                     return True
             elif self.view.flow_type == "http2":
-                    self.master.commands.execute("console.view.flow @focus")
+                    self.master.commands.execute("console.view.flow @focus%s" % focus_flt)
                     return True
             else:
                 raise NotImplementedError()
@@ -51,7 +63,6 @@ class FlowListWalker(urwid.ListWalker):
 
     def __init__(self, master, view, flt=None):
         self.master, self.view, self.flt = master, view, flt
-        self.focus_init = False
 
     def positions(self, reverse=False):
         # The stub implementation of positions can go once this issue is resolved:
@@ -65,44 +76,44 @@ class FlowListWalker(urwid.ListWalker):
         self._modified()
 
     def get_focus(self):
-        if not self.view.focus.flow:
-            return None, 0
-        f = FlowItem(self.master, self.view, self.view.focus.flow)
-        if self.flt and not self.focus_init:
-            self.focus_init = True
-            focus = 1
-            while not self.flt(self.view[focus]):
-                if focus >= len(self.view)-1:
-                    return None, 0
-                focus += 1
-            self.view.focus.index = focus
+        if self.flt:
+            if not self.view.filtred_views_focus[self.flt].flow:
+                return None, 0
+            f = FlowItem(self.master, self.view, self.view.filtred_views_focus[self.flt].flow, self.flt)
+        else:
+            if not self.view.focus.flow:
+                return None, 0
             f = FlowItem(self.master, self.view, self.view.focus.flow)
-        return f, self.view.focus.index
+        if self.flt:
+            return f, self.view.filtred_views_focus[self.flt].index
+        else:
+            return f, self.view.focus.index
 
     def set_focus(self, index):
-        if self.master.commands.execute("view.%s.properties.inbounds %d" % (self.view.flow_type, index)):
-            self.view.focus.index = index
+        if self.master.commands.execute("view.%s.properties.inbounds %d %s" % (self.view.flow_type, index, self.flt)):
+            if self.flt:
+                self.view.filtred_views_focus[self.flt].index = index
+            else:
+                self.view.focus.index = index
 
     def get_next(self, pos):
-        while True:
-            pos += 1
-            if not self.master.commands.execute("view.%s.properties.inbounds %d" % (self.view.flow_type, pos)):
-                return None, None
-            if self.flt and not self.flt(self.view[pos]):
-                continue
+        pos = pos + 1
+        if not self.master.commands.execute("view.%s.properties.inbounds %d %s" % (self.view.flow_type, pos, self.flt)):
+            return None, None
+        if self.flt:
+            f = FlowItem(self.master, self.view, self.view.filtred_views[self.flt][pos], self.flt)
+        else:
             f = FlowItem(self.master, self.view, self.view[pos])
-            break
         return f, pos
 
     def get_prev(self, pos):
-        while True:
-            pos -= 1
-            if not self.master.commands.execute("view.%s.properties.inbounds %d" % (self.view.flow_type, pos)):
-                return None, None
-            if self.flt and not self.flt(self.view[pos]):
-                continue
+        pos = pos - 1
+        if not self.master.commands.execute("view.%s.properties.inbounds %d %s" % (self.view.flow_type, pos, self.flt)):
+            return None, None
+        if self.flt:
+            f = FlowItem(self.master, self.view, self.view.filtred_views[self.flt][pos], self.flt)
+        else:
             f = FlowItem(self.master, self.view, self.view[pos])
-            break
         return f, pos
 
 
@@ -116,6 +127,7 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
         self.view: "mitmproxy.addons.View" = view
         self.title = "Flows %s" % self.view.flow_type
         self.keyctx = "flowlist_%s" % self.view.flow_type
+        self.flt = flt
         super().__init__(FlowListWalker(master, view, flt))
 
     def keypress(self, size, key):
@@ -124,7 +136,19 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
         elif key == "m_end":
             self.master.commands.execute("view.%s.focus.go -1" % self.view.flow_type)
         elif key == "m_select":
-            self.master.commands.execute("console.view.flow @focus")
+            if self.flt:
+                focus_flt = ".%s.%s" % (self.view.flow_type, self.flt)
+                try:
+                    self.view.focus.flow = self.flow
+                except ValueError:
+                    self.master.commands.execute("set view_filter_%s=" % self.view.flow_type)
+                    try:
+                        self.view.focus
+                    except:
+                        pass
+            else:
+                focus_flt = ""
+            self.master.commands.execute("console.view.flow @focus%s" % focus_flt)
         return urwid.ListBox.keypress(self, size, key)
 
     def view_changed(self):
