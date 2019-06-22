@@ -35,23 +35,13 @@ class FlowItem(urwid.WidgetWrap):
     def mouse_event(self, size, event, button, col, row, focus):
         if event == "mouse press" and button == 1:
             if self.flt:
-                focus_flt = ".%s.%s" % (self.view.flow_type, self.flt)
-                try:
-                    self.view.focus.flow = self.flow
-                except ValueError:
-                    self.master.commands.execute("set view_filter_%s=" % self.view.flow_type)
-                    try:
-                        self.view.focus
-                    except:
-                        pass
-            else:
-                focus_flt = ""
+                return
             if self.view.flow_type == "http1":
                 if self.flow.request:
-                    self.master.commands.execute("console.view.flow @focus%s" % focus_flt)
+                    self.master.commands.execute("console.view.flow @focus")
                     return True
             elif self.view.flow_type == "http2":
-                    self.master.commands.execute("console.view.flow @focus%s" % focus_flt)
+                    self.master.commands.execute("console.view.flow @focus")
                     return True
             else:
                 raise NotImplementedError()
@@ -137,18 +127,8 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
             self.master.commands.execute("view.%s.focus.go -1" % self.view.flow_type)
         elif key == "m_select":
             if self.flt:
-                focus_flt = ".%s.%s" % (self.view.flow_type, self.flt)
-                try:
-                    self.view.focus.flow = self.flow
-                except ValueError:
-                    self.master.commands.execute("set view_filter_%s=" % self.view.flow_type)
-                    try:
-                        self.view.focus
-                    except:
-                        pass
-            else:
-                focus_flt = ""
-            self.master.commands.execute("console.view.flow @focus%s" % focus_flt)
+                return
+            self.master.commands.execute("console.view.flow @focus")
         return urwid.ListBox.keypress(self, size, key)
 
     def view_changed(self):

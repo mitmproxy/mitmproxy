@@ -3,8 +3,6 @@ import sys
 from functools import lru_cache
 from typing import Optional, Union  # noqa
 from mitmproxy import exceptions
-from h2.errors import ErrorCodes
-from h2.settings import SettingCodes
 
 import urwid
 
@@ -19,6 +17,7 @@ from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import flowdetailview
 from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import tabs
+from mitmproxy.tools.console import flowhttp2view
 import mitmproxy.tools.console.master  # noqa
 from mitmproxy.utils import strutils
 
@@ -125,12 +124,12 @@ class FlowDetailsHttp1(FlowDetails):
                 (self.flow.client_stream_id, self.flow.client_stream_id,
                 self.flow.server_stream_id, self.flow.server_stream_id,
                 src_addr, dst_addr))
-            #flt = flowfilter.parse(
-                #"( ( (~sid %s | ~f.pushed_stream_id %s) & ~fc ) | ( (~sid %s | ~f.pushed_stream_id %s) & ! ~fc ) ) & ~src %s & ~dst %s" %
-                #(self.flow.client_stream_id, self.flow.client_stream_id,
-                #self.flow.server_stream_id, self.flow.server_stream_id,
-                #src_addr, dst_addr))
-            return flowlist.FlowListBox(self.master, self.master.views['http2'], flt="stream_from_http1")
+
+            flow_list = flowlist.FlowListBox(self.master, self.master.views['http2'], flt="stream_from_http1")
+            flow_detail = flowhttp2view.conn_text(self.master.views['http2'].filtred_views_focus["stream_from_http1"].flow)
+            columns = flowhttp2view.Http2DetailColumns([flow_list, flow_detail], focus_column=0)
+            self.master.views['http2'].filtred_views_focus["stream_from_http1"].sig_change.connect(columns.update_view)
+            return columns
         else:
             txt = [
                 urwid.Text(""),
@@ -296,185 +295,8 @@ class FlowDetailsHttp2(FlowDetails):
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
 
-    def _frame_base(self, frame):
-        base_frame_info = [
-                ("Type", frame.frame_type),
-                ("Stream-ID", str(frame.stream_id)),
-            ]
-        return common.format_keyvals(base_frame_info, indent=4)
-
-    def _format_headers(self, frame):
-        static_field = []
-        dynamic_field = []
-        header_index = 0
-        headers = list(frame.headers)
-        for hpack_h in frame.hpack_info['static']:
-            for h in headers:
-                if h[0] == hpack_h[0] and h[1] == hpack_h[1]:
-                    static_field.append((str(header_index), h[0], h[1]))
-                    headers.remove(h)
-            header_index += 1
-
-        for hpack_h in frame.hpack_info['dynamic']:
-            hpack_h_val = hpack_h[1] if not isinstance(hpack_h[1], memoryview) else hpack_h[1].tobytes()
-            for h in headers:
-                if h[0] == hpack_h[0] and h[1] == hpack_h_val:
-                    dynamic_field.append((str(header_index), h[0], h[1]))
-                    headers.remove(h)
-                header_index += 1
-        for h in headers:
-            dynamic_field.append(("", h[0], h[1]))
-
-        txt = [urwid.Text([("head", "Static Header fields")])]
-        txt.extend(common.format_keyvals(static_field))
-        txt.append(urwid.Text([("head", "Dynamic Header fields")]))
-        txt.extend(common.format_keyvals(dynamic_field))
-        return txt
-
-    def _frame_header(self, frame):
-        txt = common.format_keyvals([
-                ("Type", frame.frame_type),
-                ("Stream-ID", str(frame.stream_id)),
-                ("End stream", str(frame.end_stream))
-            ], indent=4)
-        if frame.priority:
-            txt.append(urwid.Text([("head", "Priority informations")]))
-            txt.extend(common.format_keyvals([
-                    ("Weight", str(frame.priority['weight'])),
-                    ("Depends on", str(frame.priority['depends_on'])),
-                    ("Exclusive", str(frame.priority['exclusive']))
-                ], indent=4))
-
-        txt.extend(self._format_headers(frame))
-        return txt
-
-    def _frame_push(self, frame):
-        txt = common.format_keyvals([
-                ("Type", frame.frame_type),
-                ("Stream-ID", str(frame.stream_id)),
-                ("Pushed stream-ID", str(frame.pushed_stream_id))
-            ], indent=4)
-
-        txt.extend(self._format_headers(frame))
-        return txt
-
-    def _frame_data(self, frame):
-        base_frame_info = [
-                ("Type", frame.frame_type),
-                ("Stream-ID", str(frame.stream_id)),
-                ("Flow controlled length", str(frame.length)),
-                ("End stream", str(frame.end_stream))
-            ]
-        txt = common.format_keyvals(base_frame_info, indent=4)
-        txt.append(urwid.Text([("head", "Data")]))
-        data = ""
-        return_nb = 0
-        space_nb  = 0
-        for b in frame.data.hex():
-            data += b
-            if space_nb == 3:
-                data += " "
-                if return_nb == 7:
-                    data += "\n"
-                return_nb = (return_nb + 1) % 8
-            space_nb = (space_nb + 1) % 4
-        txt.append(urwid.Text([("text", data)]))
-        return txt
-
-    def _frame_windows_update(self, frame):
-        return common.format_keyvals([
-                ("Type", frame.frame_type),
-                ("Stream-ID", str(frame.stream_id)),
-                ("Delta", str(frame.delta)),
-            ], indent=4)
-
-    def _frame_settings(self, frame):
-        txt = common.format_keyvals([
-                ("Type", frame.frame_type),
-                ("Stream-ID", str(frame.stream_id)),
-                ("Ack", str(frame.ack))
-            ], indent=4)
-        txt.append(urwid.Text([("head", "Settings")]))
-        settings = []
-        for key, val in frame.settings.items():
-            key_name = str(SettingCodes(key)).split('.')[1]
-            settings.append((key_name, str(val['new_value'])))
-        txt.extend(common.format_keyvals(settings, indent=4))
-        return txt
-
-    def _frame_ping(self, frame):
-        base_frame_info = [
-                ("Type", frame.frame_type),
-                ("Stream-ID", str(frame.stream_id)),
-                ("Ack", str(frame.ack)),
-            ]
-        txt = common.format_keyvals(base_frame_info, indent=4)
-        txt.append(urwid.Text([("head", "Ping data")]))
-        data = ""
-        return_nb = 0
-        space_nb  = 0
-        for b in frame.data.hex():
-            data += b
-            if space_nb == 3:
-                data += " "
-                if return_nb == 7:
-                    data += "\n"
-                return_nb = (return_nb + 1) % 8
-            space_nb = (space_nb + 1) % 4
-        txt.append(urwid.Text([("text", data)]))
-        return txt
-
-    def _frame_priority_update(self, frame):
-        return common.format_keyvals([
-                ("Type", frame.frame_type),
-                ("Stream-ID", str(frame.stream_id)),
-                ("Weight", str(frame.priority['weight'])),
-                ("Depends on", str(frame.priority['depends_on'])),
-                ("Exclusive", str(frame.priority['exclusive']))
-            ], indent=4)
-
-    def _frame_reset_stream(self, frame):
-        return common.format_keyvals([
-                ("Type", frame.frame_type),
-                ("Stream-ID", str(frame.stream_id)),
-                ("Error code", str(ErrorCodes(frame.error_code)).split('.')[1]),
-                ("Remote reset", str(frame.remote_reset)),
-            ], indent=4)
-
-    def _frame_goaway(self, frame):
-        return common.format_keyvals([
-                ("Type", frame.frame_type),
-                ("Stream-ID", str(frame.stream_id)),
-                ("Last stream-ID", str(frame.last_stream_id)),
-                ("Error code", str(ErrorCodes(frame.error_code)).split('.')[1]),
-                ("Additional data", str(frame.additional_data)),
-            ], indent=4)
-
     def conn_text(self, frame):
-        if isinstance(frame, http2.Http2Header):
-            txt = self._frame_header(frame)
-        elif isinstance(frame, http2.Http2Push):
-            txt = self._frame_push(frame)
-        elif isinstance(frame, http2.Http2Data):
-            txt = self._frame_data(frame)
-        elif isinstance(frame, http2.Http2WindowsUpdate):
-            txt = self._frame_windows_update(frame)
-        elif isinstance(frame, http2.Http2Settings):
-            txt = self._frame_settings(frame)
-        elif isinstance(frame, http2.Http2Ping):
-            txt = self._frame_ping(frame)
-        elif isinstance(frame, http2.Http2PriorityUpdate):
-            txt = self._frame_priority_update(frame)
-        elif isinstance(frame, http2.Http2RstStream):
-            txt = self._frame_reset_stream(frame)
-        elif isinstance(frame, http2.Http2Goaway):
-            txt = self._frame_goaway(frame)
-        elif isinstance(frame, http2.HTTP2Frame):
-            txt = self._frame_base(frame)
-        else:
-            raise exceptions.TypeError("Unknown frame type: %s" % frame)
- 
-        return searchable.Searchable(txt)
+        return flowhttp2view.conn_text(frame)
 
 
 class FlowView(urwid.Frame, layoutwidget.LayoutWidget):
