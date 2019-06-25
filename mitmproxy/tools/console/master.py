@@ -20,7 +20,7 @@ from mitmproxy import log
 from mitmproxy.addons import intercept
 from mitmproxy.addons import eventstore
 from mitmproxy.addons import readfile
-from mitmproxy.addons import viewhttp1, viewhttp2
+from mitmproxy.addons import view, viewhttp1, viewhttp2
 from mitmproxy.tools.console import consoleaddons
 from mitmproxy.tools.console import defaultkeys
 from mitmproxy.tools.console import keymap

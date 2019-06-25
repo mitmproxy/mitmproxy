@@ -20,7 +20,8 @@ def test_bind():
         km.add("key", "str", ["options", "commands"])
         assert km.get("options", "key")
         assert km.get("commands", "key")
-        assert not km.get("flowlist", "key")
+        assert not km.get("flowlist_http1", "key")
+        assert not km.get("flowlist_http2", "key")
         assert len((km.list("commands"))) == 1
 
         km.handle("unknown", "unknown")
@@ -117,7 +118,8 @@ def test_load_path(tmpdir):
         kmc.load_path(km, dst)
         assert(km.get("chooser", "key1"))
 
-        km.add("key123", "str", ["flowlist", "flowview"])
+        km.add("key123", "str", ["flowlist_http1", "flowview_http1"])
+        km.add("key123", "str", ["flowlist_http2", "flowview_http2"])
         with open(dst, 'w') as f:
             f.write(
                 """

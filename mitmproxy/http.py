@@ -168,8 +168,8 @@ class HTTPFlow(flow.Flow, viewitem.ViewItem):
         """ What mode was the proxy layer in when receiving this request? """
         self.client_stream_id = None
         self.server_stream_id = None
-        """ In case of HTTP/2 connection this is the used stream-id for this flow """
         self.flow = self
+        """ In case of HTTP/2 connection this is the used stream-id for this flow """
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     # mypy doesn't support update with kwargs

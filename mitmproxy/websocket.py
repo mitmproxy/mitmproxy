@@ -19,6 +19,7 @@ class WebSocketMessage(viewitem.ViewItem):
     def __init__(
         self, type: int, from_client: bool, content: bytes, timestamp: Optional[int]=None, killed: bool=False
     ) -> None:
+        super().__init__()
         self.type = Opcode(type)  # type: ignore
         """indicates either TEXT or BINARY (from wsproto.frame_protocol.Opcode)."""
         self.from_client = from_client
@@ -80,6 +81,8 @@ class WebSocketFlow(flow.Flow):
         """The HTTP flow containing the initial WebSocket handshake."""
         self.ended = False
         """True when the WebSocket connection has been closed."""
+        self.flow = self
+        """ In case of HTTP/2 connection this is the used stream-id for this flow """
 
         self._inject_messages_client = queue.Queue(maxsize=1)
         self._inject_messages_server = queue.Queue(maxsize=1)

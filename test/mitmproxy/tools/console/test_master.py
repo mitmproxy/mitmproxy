@@ -23,4 +23,4 @@ class TestMaster(tservers.MasterTest):
             except urwid.ExitMainLoop:
                 pass
             assert len(m.views["http1"]) == i
-            assert len(m.views["http2"]) == 0 # TODO replace by i
+            assert len(m.views["http2"]) == 0  # TODO replace by i

@@ -39,6 +39,7 @@ class TCPFlow(flow.Flow):
     def __init__(self, client_conn, server_conn, live=None):
         super().__init__("tcp", client_conn, server_conn, live)
         self.messages: List[TCPMessage] = []
+        self.flow = self
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     _stateobject_attributes["messages"] = List[TCPMessage]
