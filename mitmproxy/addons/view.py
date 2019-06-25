@@ -420,9 +420,10 @@ class View(collections.abc.Sequence):
                     self._view.remove(f)
                     self.sig_view_remove.send(self, flow=f, index=idx)
                 for name in self.filtred_views.keys():
-                    idx = self.filtred_views[name].index(f)
-                    self.filtred_views[name].remove(f)
-                    self.filtred_views_sig_view_remove[name].send(self, flow=f, index=idx)
+                    if f in self.filtred_views[name]:
+                        idx = self.filtred_views[name].index(f)
+                        self.filtred_views[name].remove(f)
+                        self.filtred_views_sig_view_remove[name].send(self.filtred_views[name], flow=f, index=idx)
                 del self._store[f.id]
                 self.sig_store_remove.send(self, flow=f)
         if len(flows) > 1:

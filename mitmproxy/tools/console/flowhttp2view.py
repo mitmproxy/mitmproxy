@@ -19,7 +19,10 @@ class Http2DetailColumns(urwid.Columns):
         """)
 
     def update_view(self, focus):
-        self.contents[1] = conn_text(focus.flow), self.contents[1][1]
+        if focus.flow:
+            self.contents[1] = conn_text(focus.flow), self.contents[1][1]
+        else:
+            self.contents[1] = searchable.Searchable([urwid.Text(""),urwid.Text([("highlight", "No informations")])]), self.contents[1][1]
 
 
 def _frame_base(frame):
