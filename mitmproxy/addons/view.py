@@ -407,8 +407,8 @@ class View(collections.abc.Sequence):
         """
         for f in flows:
             if f.id in self._store:
-                if f.killable:
-                    f.kill()
+                if f.flow.killable:
+                    f.flow.kill()
                 if f in self._view:
                     # We manually pass the index here because multiple flows may have the same
                     # sorting key, and we cannot reconstruct the index from that.

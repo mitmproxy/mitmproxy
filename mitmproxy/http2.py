@@ -94,10 +94,9 @@ class HTTP2Frame(viewitem.ViewItem):
     """
 
     def __init__(self, from_client, flow=None, events=[], stream_id=0, timestamp=None):
-        viewitem.ViewItem.__init__(self)
+        viewitem.ViewItem.__init__(self, flow)
         self.frame_type = "UNKNOWN"
         self.from_client: bool = from_client
-        self.flow = flow
         self.flow_id = flow.id if flow else None
         self._stream_id: int = stream_id
         self._events: List[h2.events.Event] = events
@@ -115,8 +114,8 @@ class HTTP2Frame(viewitem.ViewItem):
         f = super().copy()
         f.flow = self.flow
         self.flow.messages.append(f)
-        if self.reply is not None:
-            f.reply = controller.DummyReply()
+        if self.flow.reply is not None:
+            f.flow.reply = controller.DummyReply()
         return f
 
     def set_state(self, state):

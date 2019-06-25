@@ -50,10 +50,12 @@ class RawTCPLayer(base.Layer):
                             return
                         continue
 
-                    tcp_message = tcp.TCPMessage(dst == server, buf[:size].tobytes())
                     if not self.ignore:
+                        tcp_message = tcp.TCPMessage(dst == server, buf[:size].tobytes(), f)
                         f.messages.append(tcp_message)
                         self.channel.ask("tcp_message", f)
+                    else:
+                        tcp_message = tcp.TCPMessage(dst == server, buf[:size].tobytes())
                     dst.sendall(tcp_message.content)
 
         except (socket.error, exceptions.TcpException, SSL.Error) as e:

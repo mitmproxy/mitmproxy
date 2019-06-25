@@ -13,7 +13,7 @@ def test_statusbar(monkeypatch):
         ignore_hosts=["example.com", "example.org"],
         tcp_hosts=["example.tcp"],
         intercept="~q",
-        view_filter="~dst example.com",
+        view_filter_http1="~dst example.com",
         stickycookie="~dst example.com",
         stickyauth="~dst example.com",
         console_default_contentview="javascript",
@@ -27,7 +27,7 @@ def test_statusbar(monkeypatch):
         mode="transparent",
     )
 
-    m.options.update(view_order='url', console_focus_follow=True)
+    m.options.update(view_order_http1='url', console_focus_follow=True)
     monkeypatch.setattr(m.addons.get("clientplayback"), "count", lambda: 42)
     monkeypatch.setattr(m.addons.get("serverplayback"), "count", lambda: 42)
     monkeypatch.setattr(statusbar.StatusBar, "refresh", lambda x: None)

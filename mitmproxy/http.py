@@ -145,7 +145,7 @@ class HTTPFlow(flow.Flow, viewitem.ViewItem):
 
     def __init__(self, client_conn, server_conn, live=None, mode="regular"):
         flow.Flow.__init__(self, "http", client_conn, server_conn, live)
-        viewitem.ViewItem.__init__(self)
+        viewitem.ViewItem.__init__(self, self)
 
         self.request: HTTPRequest = None
         """ :py:class:`HTTPRequest` object """
@@ -168,8 +168,6 @@ class HTTPFlow(flow.Flow, viewitem.ViewItem):
         """ What mode was the proxy layer in when receiving this request? """
         self.client_stream_id = None
         self.server_stream_id = None
-        self.flow = self
-        """ In case of HTTP/2 connection this is the used stream-id for this flow """
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     # mypy doesn't support update with kwargs
@@ -178,7 +176,9 @@ class HTTPFlow(flow.Flow, viewitem.ViewItem):
         response=HTTPResponse,
         intercepted=bool,
         marked=bool,
-        mode=str
+        mode=str,
+        client_stream_id=int,
+        server_stream_id=int
     ))
 
     def __repr__(self):

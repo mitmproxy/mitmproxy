@@ -169,6 +169,8 @@ def convert_5_6(data):
 def convert_6_7(data):
     data["version"] = 7
     data["client_conn"]["tls_extensions"] = None
+    data["client_stream_id"] = None
+    data["server_stream_id"] = None
     return data
 
 

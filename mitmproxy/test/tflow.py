@@ -17,15 +17,15 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
         client_conn = tclient_conn()
     if server_conn is True:
         server_conn = tserver_conn()
+    f = tcp.TCPFlow(client_conn, server_conn)
     if messages is True:
         messages = [
-            tcp.TCPMessage(True, b"hello"),
-            tcp.TCPMessage(False, b"it's me"),
+            tcp.TCPMessage(True, b"hello", f),
+            tcp.TCPMessage(False, b"it's me", f),
         ]
     if err is True:
         err = terr()
 
-    f = tcp.TCPFlow(client_conn, server_conn)
     f.messages = messages
     f.error = err
     f.reply = controller.DummyReply()
@@ -81,9 +81,9 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
 
     if messages is True:
         messages = [
-            websocket.WebSocketMessage(websockets.OPCODE.BINARY, True, b"hello binary"),
-            websocket.WebSocketMessage(websockets.OPCODE.TEXT, True, "hello text".encode()),
-            websocket.WebSocketMessage(websockets.OPCODE.TEXT, False, "it's me".encode()),
+            websocket.WebSocketMessage(websockets.OPCODE.BINARY, True, b"hello binary", f),
+            websocket.WebSocketMessage(websockets.OPCODE.TEXT, True, "hello text".encode(), f),
+            websocket.WebSocketMessage(websockets.OPCODE.TEXT, False, "it's me".encode(), f),
         ]
     if err is True:
         err = terr()
@@ -132,6 +132,7 @@ class DummyFlow(flow.Flow):
 
     def __init__(self, client_conn, server_conn, live=None):
         super().__init__("dummy", client_conn, server_conn, live)
+        self.flow = self
 
 
 def tdummyflow(client_conn=True, server_conn=True, err=None):

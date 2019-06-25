@@ -8,7 +8,8 @@ from mitmproxy import viewitem
 
 class TCPMessage(viewitem.ViewItem):
 
-    def __init__(self, from_client, content, timestamp=None):
+    def __init__(self, from_client, content, flow: flow.Flow = None, timestamp=None):
+        super().__init__(flow)
         self.from_client = from_client
         self.content = content
         self.timestamp = timestamp or time.time()
@@ -18,10 +19,10 @@ class TCPMessage(viewitem.ViewItem):
         return cls(*state)
 
     def get_state(self):
-        return self.from_client, self.content, self.timestamp
+        return self.from_client, self.content, None, self.timestamp
 
     def set_state(self, state):
-        self.from_client, self.content, self.timestamp = state
+        self.from_client, self.content, self.flow, self.timestamp = state
 
     def __repr__(self):
         return "{direction} {content}".format(

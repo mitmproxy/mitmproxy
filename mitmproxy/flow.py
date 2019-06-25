@@ -73,7 +73,10 @@ class Flow(stateobject.StateObject):
         self.live = live
 
         self.error: typing.Optional[Error] = None
+        self.intercepted: bool = False
         self._backup: typing.Optional[Flow] = None
+        self.reply: typing.Optional[controller.Reply] = None
+        self.marked: bool = False
         self.metadata: typing.Dict[str, typing.Any] = dict()
 
     _stateobject_attributes = dict(
@@ -82,6 +85,8 @@ class Flow(stateobject.StateObject):
         client_conn=connections.ClientConnection,
         server_conn=connections.ServerConnection,
         type=str,
+        intercepted=bool,
+        marked=bool,
         metadata=typing.Dict[str, typing.Any],
     )
 
@@ -136,3 +141,42 @@ class Flow(stateobject.StateObject):
         if self._backup:
             self.set_state(self._backup)
             self._backup = None
+
+    @property
+    def killable(self):
+        return (
+            self.reply and
+            self.reply.state in {"start", "taken"} and
+            self.reply.value != exceptions.Kill
+        )
+
+    def kill(self):
+        """
+            Kill this request.
+        """
+        self.error = Error("Connection killed")
+        self.intercepted = False
+        self.reply.kill(force=True)
+        self.live = False
+
+    def intercept(self):
+        """
+            Intercept this Flow. Processing will stop until resume is
+            called.
+        """
+        if self.intercepted:
+            return
+        self.intercepted = True
+        self.reply.take()
+
+    def resume(self):
+        """
+            Continue with the flow - called after an intercept().
+        """
+        if not self.intercepted:
+            return
+        self.intercepted = False
+        # If a flow is intercepted and then duplicated, the duplicated one is not taken.
+        if self.reply.state == "taken":
+            self.reply.ack()
+            self.reply.commit()

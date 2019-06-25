@@ -298,7 +298,6 @@ def raw_format_http2_flow(f):
 def format_http2_item(i, focus):
     d = dict(
         focus=focus,
-        intercepted=i.intercepted,
         marked=i.marked,
         timestamp=datetime.fromtimestamp(i.timestamp).isoformat(),
         frame_type=i.frame_type,

@@ -31,7 +31,7 @@ class TestTCPFlow:
             b = m2.get_state()
             assert a == b
 
-        m = tcp.TCPMessage(False, 'foo')
+        m = tcp.TCPMessage(False, 'foo', f)
         m.set_state(f.messages[0].get_state())
         assert m.timestamp == f.messages[0].timestamp
 

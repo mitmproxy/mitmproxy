@@ -1,6 +1,6 @@
 
 from mitmproxy.addons import cut
-from mitmproxy.addons import view
+from mitmproxy.addons import viewhttp1
 from mitmproxy import exceptions
 from mitmproxy import certs
 from mitmproxy.test import taddons
@@ -72,7 +72,7 @@ def qr(f):
 
 @pytest.mark.asyncio
 async def test_cut_clip():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     c = cut.Cut()
     with taddons.context() as tctx:
         tctx.master.addons.add(v, c)
@@ -100,7 +100,7 @@ async def test_cut_clip():
 
 def test_cut_save(tmpdir):
     f = str(tmpdir.join("path"))
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     c = cut.Cut()
     with taddons.context() as tctx:
         tctx.master.addons.add(v, c)
@@ -128,7 +128,7 @@ def test_cut_save(tmpdir):
 @pytest.mark.asyncio
 async def test_cut_save_open(exception, log_message, tmpdir):
     f = str(tmpdir.join("path"))
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     c = cut.Cut()
     with taddons.context() as tctx:
         tctx.master.addons.add(v, c)

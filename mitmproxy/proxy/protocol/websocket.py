@@ -107,7 +107,7 @@ class WebSocketLayer(base.Layer):
 
             fb.clear()
 
-            websocket_message = WebSocketMessage(message_type, not is_server, payload)
+            websocket_message = WebSocketMessage(message_type, not is_server, payload, self.flow)
             length = len(websocket_message.content)
             self.flow.messages.append(websocket_message)
             self.channel.ask("websocket_message", self.flow)

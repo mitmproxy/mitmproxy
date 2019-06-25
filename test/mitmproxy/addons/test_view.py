@@ -2,7 +2,7 @@ import pytest
 
 from mitmproxy.test import tflow
 
-from mitmproxy.addons import view
+from mitmproxy.addons import view, viewhttp1, viewhttp2
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
 from mitmproxy import io

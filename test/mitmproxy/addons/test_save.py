@@ -6,7 +6,7 @@ from mitmproxy.test import tflow
 from mitmproxy import io
 from mitmproxy import exceptions
 from mitmproxy.addons import save
-from mitmproxy.addons import view
+from mitmproxy.addons import viewhttp1
 
 
 def test_configure(tmpdir):
@@ -70,7 +70,7 @@ def test_save_command(tmpdir):
         with pytest.raises(exceptions.CommandError):
             sa.save([tflow.tflow(resp=True)], str(tmpdir))
 
-        v = view.View()
+        v = viewhttp1.ViewHttp1()
         tctx.master.addons.add(v)
         tctx.master.addons.add(sa)
         tctx.master.commands.call_strings("save.file", ["@shown", p])

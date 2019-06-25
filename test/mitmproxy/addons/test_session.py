@@ -27,7 +27,7 @@ class TestSession:
         with taddons.context() as tctx:
             tctx.master.addons.add(s)
             tctx.options.session_path = None
-            tctx.options.view_filter = None
+            tctx.options.view_filter_http1 = None
         # To make tests quicker
         if fp:
             s._flush_period = fp
@@ -150,8 +150,8 @@ class TestSession:
         assert len(s._view) == 4
         with taddons.context() as tctx:
             tctx.master.addons.add(s)
-            tctx.options.view_filter = '~m get'
-        s.configure({"view_filter"})
+            tctx.options.view_filter_http1 = '~m get'
+        s.configure({"view_filter_http1"})
         assert [f.request.method for f in s.load_view()] == ["GET", "GET"]
         assert s.store_count() == 4
         with pytest.raises(CommandError):
@@ -233,8 +233,8 @@ class TestSession:
         assert [i.request.timestamp_start for i in s.load_view()] == [1, 2, 3, 4]
         with taddons.context() as tctx:
             tctx.master.addons.add(s)
-            tctx.options.view_order = "method"
-        s.configure({"view_order"})
+            tctx.options.view_order_http1 = "method"
+        s.configure({"view_order_http1"})
         assert [i.request.method for i in s.load_view()] == ["GET", "GET", "PUT", "PUT"]
 
         s.set_order("time")

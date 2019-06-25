@@ -47,16 +47,16 @@ class TestWebSocketFlow:
         f = tflow.twebsocketflow()
         m = f.messages[0]
         with pytest.raises(ControlException):
-            m.intercept()
-            m.resume()
-            m.kill()
+            f.intercept()
+            f.resume()
+            f.kill()
 
         f = tflow.twebsocketflow()
         m = f.messages[0]
-        m.intercept()
-        assert m.killable
-        m.kill()
-        assert not m.killable
+        f.intercept()
+        assert f.killable
+        f.kill()
+        assert not f.killable
         assert f.reply.value == Kill
 
     def test_match(self):

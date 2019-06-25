@@ -230,14 +230,21 @@ class Session:
         )
         loader.add_option(
             "view_order_http1", str, "time",
+            "Flow sort order for HTTP/1.1 view.",
+            choices=list(map(lambda c: c[1], orders))
+        )
+        loader.add_option(
             "view_order_http2", str, "time",
-            "Flow sort order.",
+            "Flow sort order for HTTP/2 view.",
             choices=list(map(lambda c: c[1], orders))
         )
         loader.add_option(
             "view_filter_http1", typing.Optional[str], None,
+            "Limit the view to matching flows HTTP/1.1."
+        )
+        loader.add_option(
             "view_filter_http2", typing.Optional[str], None,
-            "Limit the view to matching flows."
+            "Limit the view to matching flows HTTP/2."
         )
 
     def running(self):
@@ -254,6 +261,8 @@ class Session:
             self.set_order(ctx.options.view_order_http2)
         if "view_filter_http1" in updated:
             self.set_filter(ctx.options.view_filter_http1)
+        if "view_filter_http2" in updated:
+            self.set_filter(ctx.options.view_filter_http2)
 
     async def _writer(self):
         while True:
