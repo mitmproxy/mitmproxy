@@ -2,15 +2,12 @@ import math
 import sys
 from functools import lru_cache
 from typing import Optional, Union  # noqa
-from mitmproxy import exceptions
 
 import urwid
 
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import http
-from mitmproxy import http2
-from mitmproxy import flowfilter
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import flowlist
 from mitmproxy.tools.console import layoutwidget
@@ -120,7 +117,8 @@ class FlowDetailsHttp1(FlowDetails):
                 self.flow.client_conn and self.flow.client_conn.address):
             dst_addr = "{}:{}".format(self.flow.server_conn.address[0], self.flow.server_conn.address[1])
             src_addr = "{}:{}".format(self.flow.client_conn.address[0], self.flow.client_conn.address[1])
-            self.master.commands.execute("view.http2.filtred_view.add '( ( (~sid %s | ~f.pushed_stream_id %s) & ~fc ) | ( (~sid %s | ~f.pushed_stream_id %s) & ! ~fc ) ) & ~src %s & ~dst %s' 'stream_from_http1'" %
+            self.master.commands.execute("view.http2.filtred_view.add '( ( (~sid %s | ~f.pushed_stream_id %s) & ~fc ) | "
+                                         "( (~sid %s | ~f.pushed_stream_id %s) & ! ~fc ) ) & ~src %s & ~dst %s' 'stream_from_http1'" %
                                          (self.flow.client_stream_id, self.flow.client_stream_id,
                                           self.flow.server_stream_id, self.flow.server_stream_id,
                                           src_addr, dst_addr))

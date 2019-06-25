@@ -22,4 +22,5 @@ class TestMaster(tservers.MasterTest):
                 await self.dummy_cycle(m, 1, b"")
             except urwid.ExitMainLoop:
                 pass
-            assert len(m.view) == i
+            assert len(m.views["http1"]) == i
+            assert len(m.views["http2"]) == 0 # TODO replace by i

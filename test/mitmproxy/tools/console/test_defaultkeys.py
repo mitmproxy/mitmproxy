@@ -2,6 +2,7 @@ from mitmproxy.test.tflow import tflow
 from mitmproxy.tools.console import defaultkeys
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import master
+from mitmproxy.tools.console import window
 from mitmproxy import command
 
 import pytest
@@ -13,6 +14,7 @@ async def test_commands_exist():
     defaultkeys.map(km)
     assert km.bindings
     m = master.ConsoleMaster(None)
+    m.window = window.Window(m)
     await m.load_flow(tflow())
 
     for binding in km.bindings:

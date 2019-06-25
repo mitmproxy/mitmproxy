@@ -4,7 +4,6 @@ from typing import List
 
 from mitmproxy import flow
 from mitmproxy import viewitem
-from mitmproxy.coretypes import serializable
 
 
 class TCPMessage(viewitem.ViewItem):

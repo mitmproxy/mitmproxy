@@ -8,20 +8,14 @@ The View:
 - Exposes a settings store for flows that automatically expires if the flow is
   removed from the store.
 """
-import collections
 import typing
 
-import blinker
 import sortedcontainers
 
 import mitmproxy.viewitem
 from mitmproxy.addons import view
 from mitmproxy import flowfilter
-from mitmproxy import exceptions
 from mitmproxy import command
-from mitmproxy import connections
-from mitmproxy import ctx
-from mitmproxy import io
 from mitmproxy import http  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable

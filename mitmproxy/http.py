@@ -219,6 +219,7 @@ class HTTPFlow(flow.Flow, viewitem.ViewItem):
         self.reply.kill(force=True)
         self.live = False
 
+
 def make_error_response(
         status_code: int,
         message: str="",

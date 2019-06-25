@@ -18,8 +18,6 @@ import sortedcontainers
 import mitmproxy.viewitem
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
-from mitmproxy import command
-from mitmproxy import connections
 from mitmproxy import ctx
 from mitmproxy import io
 from mitmproxy import viewitem  # noqa
@@ -184,7 +182,9 @@ class View(collections.abc.Sequence):
             v = self._view.bisect_right(f)
         return self._rev(v - 1, view_name) + 1
 
-    def index(self, f: mitmproxy.viewitem.ViewItem, start: int = 0, stop: typing.Optional[int] = None, view_name: typing.Sequence[str] = None) -> int:
+    def index(self, f: mitmproxy.viewitem.ViewItem,
+              start: int = 0, stop: typing.Optional[int] = None,
+              view_name: typing.Sequence[str] = None) -> int:
         if view_name:
             return self._rev(self.filtred_views[view_name].index(f, start, stop), view_name)
         else:

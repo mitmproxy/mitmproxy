@@ -36,7 +36,7 @@ class ConsoleMaster(master.Master):
 
         self.start_err: typing.Optional[log.LogEntry] = None
 
-        self.views: Dict[str, view.View] = dict(
+        self.views: dict[str, view.View] = dict(
             http1 = viewhttp1.ViewHttp1(),
             http2 = viewhttp2.ViewHttp2(),
         )

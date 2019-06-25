@@ -2,7 +2,6 @@ from mitmproxy import flow
 from mitmproxy import controller
 from mitmproxy import viewitem
 from mitmproxy.coretypes import callbackdict
-from mitmproxy.coretypes import serializable
 import time
 from typing import List
 import typing
@@ -596,7 +595,8 @@ class Http2Goaway(HTTP2Frame):
     def from_state(cls, state, args=None):
         if not args:
             return super().from_state(state)
-        return Http2Goaway(**args, last_stream_id=state['_last_stream_id'], error_code=state['_error_code'], additional_data=state['_additional_data'])
+        return Http2Goaway(**args, last_stream_id=state['_last_stream_id'],
+                           error_code=state['_error_code'], additional_data=state['_additional_data'])
 
     @property
     def last_stream_id(self):
@@ -666,7 +666,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
                 weight=event.priority_updated.weight,
                 depends_on=event.priority_updated.depends_on,
                 exclusive=event.priority_updated.exclusive) if event.priority_updated else None,
-            end_stream=event.stream_ended != None)
+            end_stream=event.stream_ended is not None)
     elif isinstance(event, h2.events.PushedStreamReceived):
         hpack_info = dict(static=http2_source_connection.decoder.header_table.STATIC_TABLE,
                           dynamic=http2_source_connection.decoder.header_table.dynamic_entries)
@@ -686,7 +686,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
             stream_id=event.stream_id,
             data=event.data,
             flow_controlled_length=event.flow_controlled_length,
-            end_stream=event.stream_ended != None)
+            end_stream=event.stream_ended is not None)
     elif isinstance(event, h2.events.WindowUpdated):
         frame = Http2WindowsUpdate(
             from_client=from_client,
@@ -758,7 +758,7 @@ class HTTP2Flow(flow.Flow):
 
     def __init__(self, client_conn, server_conn, live=None, state="start"):
         super().__init__("http2", client_conn, server_conn, live)
-        self.messages: List[Http2Frame] = []
+        self.messages: List[HTTP2Frame] = []
         self.state = state
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()

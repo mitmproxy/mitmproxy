@@ -8,7 +8,6 @@ from wsproto.frame_protocol import Opcode
 from mitmproxy import flow
 from mitmproxy import viewitem
 from mitmproxy.net import websockets
-from mitmproxy.coretypes import serializable
 from mitmproxy.utils import strutils, human
 
 

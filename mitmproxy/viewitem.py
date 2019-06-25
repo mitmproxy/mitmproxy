@@ -1,11 +1,8 @@
-import time
 import typing  # noqa
 import uuid
 
-from mitmproxy import connections
 from mitmproxy import controller, exceptions  # noqa
 from mitmproxy import stateobject
-from mitmproxy import version
 from mitmproxy import flow
 
 
