@@ -12,7 +12,7 @@ from mitmproxy.addons import eventstore
 from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import termlog
-from mitmproxy.addons import view
+from mitmproxy.addons import viewhttp1
 from mitmproxy.addons import termstatus
 from mitmproxy.tools.web import app, webaddons, static_viewer
 
@@ -20,7 +20,7 @@ from mitmproxy.tools.web import app, webaddons, static_viewer
 class WebMaster(master.Master):
     def __init__(self, options, with_termlog=True):
         super().__init__(options)
-        self.view = view.View()
+        self.view = viewhttp1.ViewHttp1()
         self.view.sig_view_add.connect(self._sig_view_add)
         self.view.sig_view_remove.connect(self._sig_view_remove)
         self.view.sig_view_update.connect(self._sig_view_update)
