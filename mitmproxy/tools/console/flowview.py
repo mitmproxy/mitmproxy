@@ -117,13 +117,13 @@ class FlowDetailsHttp1(FlowDetails):
     def view_http2(self):
         if (self.flow.client_stream_id and self.flow.server_stream_id and
             self.flow.server_conn and self.flow.server_conn.address and
-            self.flow.client_conn and self.flow.client_conn.address):
+                self.flow.client_conn and self.flow.client_conn.address):
             dst_addr = "{}:{}".format(self.flow.server_conn.address[0], self.flow.server_conn.address[1])
             src_addr = "{}:{}".format(self.flow.client_conn.address[0], self.flow.client_conn.address[1])
             self.master.commands.execute("view.http2.filtred_view.add '( ( (~sid %s | ~f.pushed_stream_id %s) & ~fc ) | ( (~sid %s | ~f.pushed_stream_id %s) & ! ~fc ) ) & ~src %s & ~dst %s' 'stream_from_http1'" %
-                (self.flow.client_stream_id, self.flow.client_stream_id,
-                self.flow.server_stream_id, self.flow.server_stream_id,
-                src_addr, dst_addr))
+                                         (self.flow.client_stream_id, self.flow.client_stream_id,
+                                          self.flow.server_stream_id, self.flow.server_stream_id,
+                                          src_addr, dst_addr))
 
             flow_list = flowlist.FlowListBox(self.master, self.master.views['http2'], flt="stream_from_http1")
             flow_detail = flowhttp2view.conn_text(self.master.views['http2'].filtred_views_focus["stream_from_http1"].flow)

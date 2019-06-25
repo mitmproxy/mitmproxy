@@ -22,14 +22,14 @@ class Http2DetailColumns(urwid.Columns):
         if focus.flow:
             self.contents[1] = conn_text(focus.flow), self.contents[1][1]
         else:
-            self.contents[1] = searchable.Searchable([urwid.Text(""),urwid.Text([("highlight", "No informations")])]), self.contents[1][1]
+            self.contents[1] = searchable.Searchable([urwid.Text(""), urwid.Text([("highlight", "No informations")])]), self.contents[1][1]
 
 
 def _frame_base(frame):
     base_frame_info = [
-            ("Type", frame.frame_type),
-            ("Stream-ID", str(frame.stream_id)),
-        ]
+        ("Type", frame.frame_type),
+        ("Stream-ID", str(frame.stream_id)),
+    ]
     return common.format_keyvals(base_frame_info, indent=4)
 
 
@@ -64,17 +64,17 @@ def _format_headers(frame):
 
 def _frame_header(frame):
     txt = common.format_keyvals([
-            ("Type", frame.frame_type),
-            ("Stream-ID", str(frame.stream_id)),
-            ("End stream", str(frame.end_stream))
-        ], indent=4)
+        ("Type", frame.frame_type),
+        ("Stream-ID", str(frame.stream_id)),
+        ("End stream", str(frame.end_stream))
+    ], indent=4)
     if frame.priority:
         txt.append(urwid.Text([("head", "Priority informations")]))
         txt.extend(common.format_keyvals([
-                ("Weight", str(frame.priority['weight'])),
-                ("Depends on", str(frame.priority['depends_on'])),
-                ("Exclusive", str(frame.priority['exclusive']))
-            ], indent=4))
+            ("Weight", str(frame.priority['weight'])),
+            ("Depends on", str(frame.priority['depends_on'])),
+            ("Exclusive", str(frame.priority['exclusive']))
+        ], indent=4))
 
     txt.extend(_format_headers(frame))
     return txt
@@ -82,10 +82,10 @@ def _frame_header(frame):
 
 def _frame_push(frame):
     txt = common.format_keyvals([
-            ("Type", frame.frame_type),
-            ("Stream-ID", str(frame.stream_id)),
-            ("Pushed stream-ID", str(frame.pushed_stream_id))
-        ], indent=4)
+        ("Type", frame.frame_type),
+        ("Stream-ID", str(frame.stream_id)),
+        ("Pushed stream-ID", str(frame.pushed_stream_id))
+    ], indent=4)
 
     txt.extend(_format_headers(frame))
     return txt
@@ -93,11 +93,11 @@ def _frame_push(frame):
 
 def _frame_data(frame):
     base_frame_info = [
-            ("Type", frame.frame_type),
-            ("Stream-ID", str(frame.stream_id)),
-            ("Flow controlled length", str(frame.length)),
-            ("End stream", str(frame.end_stream))
-        ]
+        ("Type", frame.frame_type),
+        ("Stream-ID", str(frame.stream_id)),
+        ("Flow controlled length", str(frame.length)),
+        ("End stream", str(frame.end_stream))
+    ]
     txt = common.format_keyvals(base_frame_info, indent=4)
     txt.append(urwid.Text([("head", "Data")]))
     data = ""
@@ -117,18 +117,18 @@ def _frame_data(frame):
 
 def _frame_windows_update(frame):
     return common.format_keyvals([
-            ("Type", frame.frame_type),
-            ("Stream-ID", str(frame.stream_id)),
-            ("Delta", str(frame.delta)),
-        ], indent=4)
+        ("Type", frame.frame_type),
+        ("Stream-ID", str(frame.stream_id)),
+        ("Delta", str(frame.delta)),
+    ], indent=4)
 
 
 def _frame_settings(frame):
     txt = common.format_keyvals([
-            ("Type", frame.frame_type),
-            ("Stream-ID", str(frame.stream_id)),
-            ("Ack", str(frame.ack))
-        ], indent=4)
+        ("Type", frame.frame_type),
+        ("Stream-ID", str(frame.stream_id)),
+        ("Ack", str(frame.ack))
+    ], indent=4)
     txt.append(urwid.Text([("head", "Settings")]))
     settings = []
     for key, val in frame.settings.items():
@@ -140,10 +140,10 @@ def _frame_settings(frame):
 
 def _frame_ping(frame):
     base_frame_info = [
-            ("Type", frame.frame_type),
-            ("Stream-ID", str(frame.stream_id)),
-            ("Ack", str(frame.ack)),
-        ]
+        ("Type", frame.frame_type),
+        ("Stream-ID", str(frame.stream_id)),
+        ("Ack", str(frame.ack)),
+    ]
     txt = common.format_keyvals(base_frame_info, indent=4)
     txt.append(urwid.Text([("head", "Ping data")]))
     data = ""
@@ -163,31 +163,31 @@ def _frame_ping(frame):
 
 def _frame_priority_update(frame):
     return common.format_keyvals([
-            ("Type", frame.frame_type),
-            ("Stream-ID", str(frame.stream_id)),
-            ("Weight", str(frame.priority['weight'])),
-            ("Depends on", str(frame.priority['depends_on'])),
-            ("Exclusive", str(frame.priority['exclusive']))
-        ], indent=4)
+        ("Type", frame.frame_type),
+        ("Stream-ID", str(frame.stream_id)),
+        ("Weight", str(frame.priority['weight'])),
+        ("Depends on", str(frame.priority['depends_on'])),
+        ("Exclusive", str(frame.priority['exclusive']))
+    ], indent=4)
 
 
 def _frame_reset_stream(frame):
     return common.format_keyvals([
-            ("Type", frame.frame_type),
-            ("Stream-ID", str(frame.stream_id)),
-            ("Error code", str(ErrorCodes(frame.error_code)).split('.')[1]),
-            ("Remote reset", str(frame.remote_reset)),
-        ], indent=4)
+        ("Type", frame.frame_type),
+        ("Stream-ID", str(frame.stream_id)),
+        ("Error code", str(ErrorCodes(frame.error_code)).split('.')[1]),
+        ("Remote reset", str(frame.remote_reset)),
+    ], indent=4)
 
 
 def _frame_goaway(frame):
     return common.format_keyvals([
-            ("Type", frame.frame_type),
-            ("Stream-ID", str(frame.stream_id)),
-            ("Last stream-ID", str(frame.last_stream_id)),
-            ("Error code", str(ErrorCodes(frame.error_code)).split('.')[1]),
-            ("Additional data", str(frame.additional_data)),
-        ], indent=4)
+        ("Type", frame.frame_type),
+        ("Stream-ID", str(frame.stream_id)),
+        ("Last stream-ID", str(frame.last_stream_id)),
+        ("Error code", str(ErrorCodes(frame.error_code)).split('.')[1]),
+        ("Additional data", str(frame.additional_data)),
+    ], indent=4)
 
 
 def conn_text(frame):

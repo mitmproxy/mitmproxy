@@ -51,23 +51,23 @@ class Events:
         """
 
     # Http2 lifecycle
-    def http2_start(self, flow:mitmproxy.http2.HTTP2Flow):
+    def http2_start(self, flow: mitmproxy.http2.HTTP2Flow):
         """
             A HTTP/2 connection has started.
         """
 
-    def http2_frame(self, flow:mitmproxy.http2.HTTP2Flow):
+    def http2_frame(self, flow: mitmproxy.http2.HTTP2Flow):
         """
             A HTTP/2 connection has received a message. The most recent message
             will be flow.messages[-1]. The message is user-modifiable.
         """
 
-    def http2_error(self, flow:mitmproxy.http2.HTTP2Flow):
+    def http2_error(self, flow: mitmproxy.http2.HTTP2Flow):
         """
             A HTTP/2 error has occurred.
         """
 
-    def http2_end(self, flow:mitmproxy.http2.HTTP2Flow):
+    def http2_end(self, flow: mitmproxy.http2.HTTP2Flow):
         """
             A HTTP/2 connection has ended.
         """

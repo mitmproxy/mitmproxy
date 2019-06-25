@@ -327,9 +327,9 @@ class Http2Layer(base.Layer):
     def __call__(self):
         self._initiate_server_conn()
         self._complete_handshake()
-        f : http2Flow.HTTP2Flow = http2Flow.HTTP2Flow(self.client_conn,
-                                  self.server_conn,
-                                  live=self)
+        f: http2Flow.HTTP2Flow = http2Flow.HTTP2Flow(self.client_conn,
+                                                     self.server_conn,
+                                                     live=self)
         self.channel.tell("http2_start", f)
 
         conns = [c.connection for c in self.connections.keys()]
@@ -358,7 +358,8 @@ class Http2Layer(base.Layer):
                         source_conn.send(self.connections[source_conn].data_to_send())
 
                         f.state = "run"
-                        f.messages.append(http2Flow.frame_from_event(not is_server, f, incoming_events, http2_source_connection=self.connections[source_conn]))
+                        f.messages.append(http2Flow.frame_from_event(not is_server, f, incoming_events,
+                                                                     http2_source_connection=self.connections[source_conn]))
                         self.channel.ask("http2_frame", f)
 
                         for event in incoming_events:

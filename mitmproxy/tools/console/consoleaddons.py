@@ -546,7 +546,7 @@ class ConsoleAddon:
             Get the display mode for the current flow view.
         """
         for view_type in self.master.views.keys():
-            fv = self.master.window.current_window("flowview_%s"% view_type)
+            fv = self.master.window.current_window("flowview_%s" % view_type)
             if fv:
                 break
         if not fv:

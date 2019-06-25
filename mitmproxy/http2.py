@@ -20,7 +20,7 @@ class _EndStreamFrame():
     """
 
     def __init__(self, end_stream):
-        self._end_stream : bool = end_stream
+        self._end_stream: bool = end_stream
 
     @property
     def end_stream(self):
@@ -52,7 +52,7 @@ class _PriorityFrame():
     """
 
     def __init__(self, priority):
-        self._priority : callbackdict.CallbackDict[str, typing.Any] = callbackdict.CallbackDict(priority)
+        self._priority: callbackdict.CallbackDict[str, typing.Any] = callbackdict.CallbackDict(priority)
         self._priority.callback = self._update_priority
 
     @property
@@ -146,9 +146,9 @@ class HTTP2Frame(viewitem.ViewItem):
 
     def __repr__(self):
         return "<HTTP2Frame: {direction}, type: {type}, stream ID: {stream_id}>".format(
-                direction="->" if self.from_client else "<-",
-                type=repr(type(self)),
-                stream_id=self._stream_id)
+            direction="->" if self.from_client else "<-",
+            type=repr(type(self)),
+            stream_id=self._stream_id)
 
 
 class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
@@ -165,7 +165,7 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
             _PriorityFrame.__init__(self, priority)
         else:
             self._priority = None
-        self._headers : hpack.HeaderTuple = headers
+        self._headers: hpack.HeaderTuple = headers
         self.hpack_info = hpack_info
 
     @classmethod
@@ -173,7 +173,7 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
         if not args:
             return super().from_state(state)
         return Http2Header(**args, headers=state['_headers'], hpack_info=state['hpack_info'],
-                             priority=state['_priority'], end_stream=state['_end_stream'])
+                           priority=state['_priority'], end_stream=state['_end_stream'])
 
     def get_state(self):
         state = HTTP2Frame.get_state(self)
@@ -206,11 +206,11 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
         """
         return ("<HTTP2Frame HEADER: {direction}, type: {type}, stream ID: {stream_id}, "
                 "headers = {headers}, priority: {priority}, end_stream = {end_stream}>").format(
-                direction="->" if self.from_client else "<-",
-                type=repr(type(self)),
-                stream_id=self._stream_id,
-                priority=self._priority,
-                headers=self._headers)
+            direction="->" if self.from_client else "<-",
+            type=repr(type(self)),
+            stream_id=self._stream_id,
+            priority=self._priority,
+            headers=self._headers)
 
 
 class Http2Push(HTTP2Frame):
@@ -222,8 +222,8 @@ class Http2Push(HTTP2Frame):
     def __init__(self, from_client, pushed_stream_id, headers, hpack_info, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, stream_id, timestamp)
         self.frame_type = "PUSH PROMISE"
-        self.pushed_stream_id : int = pushed_stream_id
-        self._headers : hpack.HeaderTuple = headers
+        self.pushed_stream_id: int = pushed_stream_id
+        self._headers: hpack.HeaderTuple = headers
         self.hpack_info = hpack_info
 
     @classmethod
@@ -278,15 +278,15 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
         HTTP2Frame.__init__(self, from_client, flow, events, stream_id, timestamp)
         _EndStreamFrame.__init__(self, end_stream)
         self.frame_type = "DATA"
-        self._data : h2.events.Data = data
-        self._length : int = flow_controlled_length
+        self._data: h2.events.Data = data
+        self._length: int = flow_controlled_length
 
     @classmethod
     def from_state(cls, state, args=None):
         if not args:
             return super().from_state(state)
         return Http2Data(**args, data=state['_data'], flow_controlled_length=state['_length'],
-                             end_stream=state['_end_stream'])
+                         end_stream=state['_end_stream'])
 
     @property
     def data(self):
@@ -311,11 +311,11 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
         """
         return ("<HTTP2Frame DATA: {direction}, type: {type}, stream ID: {stream_id}, "
                 "Data: {data}, Length: {length}>").format(
-                direction="->" if self.from_client else "<-",
-                type=repr(type(self)),
-                stream_id=self._stream_id,
-                data=self._data,
-                length=self._length)
+            direction="->" if self.from_client else "<-",
+            type=repr(type(self)),
+            stream_id=self._stream_id,
+            data=self._data,
+            length=self._length)
 
 
 class Http2WindowsUpdate(HTTP2Frame):
@@ -327,7 +327,7 @@ class Http2WindowsUpdate(HTTP2Frame):
     def __init__(self, from_client, delta, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, stream_id, timestamp)
         self.frame_type = "WINDOWS UPDATE"
-        self._delta : int = delta
+        self._delta: int = delta
 
     @classmethod
     def from_state(cls, state, args=None):
@@ -368,8 +368,8 @@ class Http2Settings(HTTP2Frame):
     def __init__(self, from_client, settings, ack, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, 0, timestamp)
         self.frame_type = "SETTINGS"
-        self._ack : bool = False
-        self._settings : callbackdict.CallbackDict[int, int] = callbackdict.CallbackDict(settings)
+        self._ack: bool = False
+        self._settings: callbackdict.CallbackDict[int, int] = callbackdict.CallbackDict(settings)
         self._settings.callback = self._update_settings
 
     @classmethod
@@ -437,7 +437,7 @@ class Http2Ping(HTTP2Frame):
     def __init__(self, from_client, data, ack, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, 0, timestamp)
         self.frame_type = "PING"
-        self._data : h2.events.ping_data = data
+        self._data: h2.events.ping_data = data
         self._ack: bool = ack
 
     @classmethod
@@ -515,12 +515,12 @@ class Http2PriorityUpdate(HTTP2Frame, _PriorityFrame):
         """
         return ("<HTTP2Frame PRIORITY: {direction}, type: {type}, stream ID: {stream_id}, "
                 "weight: {weight}, depends on: {depends_on}, exclusive: {exclusive}>").format(
-                direction="->" if self.from_client else "<-",
-                type=repr(type(self)),
-                stream_id=self._stream_id,
-                weight=self._priority['weight'],
-                depends_on=self._priority['depends_on'],
-                exclusive=self._priority['exclusive'])
+            direction="->" if self.from_client else "<-",
+            type=repr(type(self)),
+            stream_id=self._stream_id,
+            weight=self._priority['weight'],
+            depends_on=self._priority['depends_on'],
+            exclusive=self._priority['exclusive'])
 
 
 class Http2RstStream(HTTP2Frame):

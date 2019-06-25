@@ -277,4 +277,3 @@ class ViewHttp1(view.View):
 
     def kill(self, f):
         self.update([f])
-

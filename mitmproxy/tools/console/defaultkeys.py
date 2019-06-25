@@ -30,8 +30,10 @@ def map(km):
     km.add("I", "set intercept_active=toggle", ["global"], "Toggle intercept")
     km.add("i", "console.command.set intercept", ["global"], "Set intercept")
     km.add("W", "console.command.set save_stream_file", ["global"], "Stream to file")
-    km.add("A", "flow.resume @all", ["flowlist_http1", "flowlist_http2", "flowview_http1", "flowview_http2"], "Resume all intercepted flows")
-    km.add("a", "flow.resume @focus", ["flowlist_http1", "flowlist_http2", "flowview_http1", "flowview_http2"], "Resume this intercepted flow")
+    km.add("A", "flow.resume @all", ["flowlist_http1", "flowlist_http2",
+                                     "flowview_http1", "flowview_http2"], "Resume all intercepted flows")
+    km.add("a", "flow.resume @focus", ["flowlist_http1", "flowlist_http2",
+                                       "flowview_http1", "flowview_http2"], "Resume this intercepted flow")
     km.add(
         "b", "console.command cut.save @focus response.content ",
         ["flowlist_http1", "flowlist_http2", "flowview_http1", "flowview_http2"],
@@ -83,7 +85,8 @@ def map(km):
     km.add("v", "set view_order_reversed=toggle", ["flowlist_http1", "flowlist_http2"], "Reverse flow list order")
     km.add("U", "flow.mark @all false", ["flowlist_http1", "flowlist_http2"], "Un-set all marks")
     km.add("w", "console.command save.file @shown ", ["flowlist_http1", "flowlist_http2"], "Save listed flows to file")
-    km.add("V", "flow.revert @focus", ["flowlist_http1", "flowlist_http2", "flowview_http1", "flowview_http2"], "Revert changes to this flow")
+    km.add("V", "flow.revert @focus", ["flowlist_http1", "flowlist_http2",
+                                       "flowview_http1", "flowview_http2"], "Revert changes to this flow")
     km.add("X", "flow.kill @focus", ["flowlist_http1", "flowlist_http2"], "Kill this flow")
     km.add("z", "view.http1.flows.remove @all", ["flowlist_http1"], "Clear flow list")
     km.add("z", "view.http2.flows.remove @all", ["flowlist_http2", "flowlist_http2"], "Clear flow list")

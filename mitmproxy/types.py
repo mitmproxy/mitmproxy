@@ -383,7 +383,7 @@ class _ViewItemType(_BaseFlowType):
             else:
                 for view_type in manager.master.views.keys():
                     if (manager.master.window.current_window("flowlist_%s" % view_type)
-                        or manager.master.window.current_window("flowview_%s" % view_type)):
+                            or manager.master.window.current_window("flowview_%s" % view_type)):
                         break
             flows = manager.call_strings("view.%s.flows.resolve" % view_type, [s])
         except exceptions.CommandError as e:
@@ -408,7 +408,7 @@ class _ViewItemsType(_BaseFlowType):
                 view_type = re.search(r'@\w+\.(\w+)', s).group(1)
             for view_type in manager.master.views.keys():
                 if (manager.master.window.current_window("flowlist_%s" % view_type)
-                    or manager.master.window.current_window("flowview_%s" % view_type)):
+                        or manager.master.window.current_window("flowview_%s" % view_type)):
                     break
             return manager.call_strings("view.%s.flows.resolve" % view_type, [s])
         except exceptions.CommandError as e:

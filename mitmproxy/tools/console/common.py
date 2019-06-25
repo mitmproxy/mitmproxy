@@ -77,15 +77,15 @@ def format_keyvals(
                     "fixed",
                     max_key_len,
                     urwid.Text([(key_format, k)])
-                ),
-                v
+        ),
+            v
         ]
         if len(e) == 3:
             line[0:0] = [((
-                        "fixed",
-                        max_index_len,
-                        urwid.Text([(index_format, i)])
-                    ))]
+                "fixed",
+                max_index_len,
+                urwid.Text([(index_format, i)])
+            ))]
         ret.append(
             urwid.Columns(
                 line,
@@ -259,6 +259,7 @@ def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
 
     return raw_format_flow(tuple(d.items()))
 
+
 @lru_cache(maxsize=800)
 def raw_format_http2_flow(f):
     f = dict(f)
@@ -275,7 +276,7 @@ def raw_format_http2_flow(f):
 
     l1.append(fcol(f['frame_type'], "frame_type"))
 
-    space_l1 = space_l2 - sum(i[1] for i in l1) + len(l1) -1
+    space_l1 = space_l2 - sum(i[1] for i in l1) + len(l1) - 1
 
     l1.append(("fixed", space_l1, urwid.Text("")))
 
@@ -292,6 +293,7 @@ def raw_format_http2_flow(f):
     pile.append(urwid.Columns(l1, dividechars=1))
     pile.append(urwid.Columns(l2, dividechars=1))
     return urwid.Pile(pile)
+
 
 def format_http2_item(i, focus):
     d = dict(

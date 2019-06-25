@@ -58,6 +58,7 @@ def _iterate_http(f: http.HTTPFlow) -> TEventGenerator:
     if f.error:
         yield "error", f
 
+
 def _iterate_http2(f: http2.HTTP2Flow) -> TEventGenerator:
     if f.state == "start":
         yield "http2_start", f
@@ -67,6 +68,7 @@ def _iterate_http2(f: http2.HTTP2Flow) -> TEventGenerator:
         yield "http2_error", f
     if f.state == "end":
         yield "http2_end", f
+
 
 def _iterate_websocket(f: websocket.WebSocketFlow) -> TEventGenerator:
     messages = f.messages

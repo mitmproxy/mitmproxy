@@ -2,7 +2,7 @@ import urwid
 
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
-import mitmproxy.tools.console.master # noqa
+import mitmproxy.tools.console.master  # noqa
 
 
 class FlowItem(urwid.WidgetWrap):
@@ -41,10 +41,11 @@ class FlowItem(urwid.WidgetWrap):
                     self.master.commands.execute("console.view.flow @focus")
                     return True
             elif self.view.flow_type == "http2":
-                    self.master.commands.execute("console.view.flow @focus")
-                    return True
+                self.master.commands.execute("console.view.flow @focus")
+                return True
             else:
                 raise NotImplementedError()
+
     def keypress(self, size, key):
         return key
 

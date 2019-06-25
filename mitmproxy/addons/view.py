@@ -78,8 +78,6 @@ class OrderKeySize(_OrderKey):
         raise NotImplementedError()
 
 
-
-
 class View(collections.abc.Sequence):
     def __init__(self):
         super().__init__()
@@ -271,7 +269,6 @@ class View(collections.abc.Sequence):
         for name, signal in self.filtred_views_sig_view_refresh.items():
             signal.send(self.filtred_views[name])
 
-
     def set_order(self, order: str) -> None:
         """
             Sets the current view order.
@@ -316,7 +313,7 @@ class View(collections.abc.Sequence):
         else:
             self.filtred_views[view_name] = self._view.copy()
             self.filtred_views_filter[view_name] = flt or self.matchall
-            self.filtred_views_sig_view_add[view_name] =  blinker.Signal()
+            self.filtred_views_sig_view_add[view_name] = blinker.Signal()
             self.filtred_views_sig_view_remove[view_name] = blinker.Signal()
             self.filtred_views_sig_view_refresh[view_name] = blinker.Signal()
             self.filtred_views_focus[view_name] = Focus(self, view_name)
@@ -343,7 +340,6 @@ class View(collections.abc.Sequence):
         self.sig_store_refresh.send(self)
         for name, signal in self.filtred_views_sig_view_refresh.items():
             signal.send(self.filtred_views[name])
-
 
     def clear_not_marked(self) -> None:
         """
@@ -428,7 +424,6 @@ class View(collections.abc.Sequence):
                 self.sig_store_remove.send(self, flow=f)
         if len(flows) > 1:
             ctx.log.alert("Removed %s flows" % len(flows))
-
 
     def resolve(self, spec: str) -> typing.Sequence[mitmproxy.viewitem.ViewItem]:
         """
@@ -554,7 +549,7 @@ class View(collections.abc.Sequence):
                         "Invalid interception filter: %s" % view_filter
                     )
             self.set_filter(filt)
-        if "view_order_%s" % self.flow_type  in updated:
+        if "view_order_%s" % self.flow_type in updated:
             view_order = getattr(ctx.options, "view_order_%s" % self.flow_type)
             if view_order not in self.orders:
                 raise exceptions.OptionsError(
@@ -628,6 +623,7 @@ class Focus:
     """
         Tracks a focus element within a View.
     """
+
     def __init__(self, v: View, view_name=None) -> None:
         self.base_view, self.view_name = v, view_name
         if view_name:

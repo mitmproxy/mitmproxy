@@ -293,7 +293,6 @@ class Dumper:
             if ctx.options.flow_detail >= 3:
                 self._echo_message(message)
 
-
     def http2_error(self, f):
         self.echo_error(
             "Error in HTTP/2 connection to {}: {}".format(
