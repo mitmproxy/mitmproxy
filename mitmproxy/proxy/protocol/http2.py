@@ -484,6 +484,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
 
         if self.pushed:
             flow.metadata['h2-pushed-stream'] = True
+            self.server_stream_id = self.client_stream_id
 
         first_line_format, method, scheme, host, port, path = http2.parse_headers(self.request_headers)
         return http.HTTPRequest(
