@@ -215,7 +215,7 @@ class Http2Layer(base.Layer):
                     other_stream_id = self.streams[eid].client_stream_id
                 else:
                     other_stream_id = self.streams[eid].server_stream_id
-                if other_stream_id is not None:
+                if other_stream_id is not None and not self.streams[other_stream_id].pushed:
                     self.connections[other_conn].safe_reset_stream(other_stream_id, event.error_code)
         return True
 
