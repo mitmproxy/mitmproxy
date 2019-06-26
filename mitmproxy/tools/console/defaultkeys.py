@@ -13,7 +13,7 @@ def map(km):
     km.add("-", "console.layout.cycle", ["global"], "Cycle to next layout")
     km.add("shift tab", "console.panes.next", ["global"], "Focus next layout pane")
     km.add("ctrl right", "console.panes.next", ["global"], "Focus next layout pane")
-    km.add("P", "console.view.flow @focus", ["global"], "View flow details")
+    km.add("P", "console.view.item @focus", ["global"], "View item details")
 
     km.add("g", "console.nav.start", ["global"], "Go to start")
     km.add("G", "console.nav.end", ["global"], "Go to end")
@@ -30,19 +30,19 @@ def map(km):
     km.add("I", "set intercept_active=toggle", ["global"], "Toggle intercept")
     km.add("i", "console.command.set intercept", ["global"], "Set intercept")
     km.add("W", "console.command.set save_stream_file", ["global"], "Stream to file")
-    km.add("A", "flow.resume @all", ["flowlist_http1", "flowlist_http2",
-                                     "flowview_http1", "flowview_http2"], "Resume all intercepted flows")
-    km.add("a", "flow.resume @focus", ["flowlist_http1", "flowlist_http2",
-                                       "flowview_http1", "flowview_http2"], "Resume this intercepted flow")
+    km.add("A", "item.resume @all", ["flowlist_http1", "flowlist_http2",
+                                     "flowview_http1", "flowview_http2"], "Resume all intercepted items")
+    km.add("a", "item.resume @focus", ["flowlist_http1", "flowlist_http2",
+                                       "flowview_http1", "flowview_http2"], "Resume this intercepted items")
     km.add(
         "b", "console.command cut.save @focus response.content ",
         ["flowlist_http1", "flowlist_http2", "flowview_http1", "flowview_http2"],
         "Save response body to file"
     )
-    km.add("d", "view.http1.flows.remove @focus", ["flowlist_http1", "flowview_http1"], "Delete flow from view")
-    km.add("d", "view.http2.flows.remove @focus", ["flowlist_http2", "flowview_http2"], "Delete flow from view")
-    km.add("D", "view.http1.flows.duplicate @focus", ["flowlist_http1", "flowview_http1"], "Duplicate flow")
-    km.add("D", "view.http2.flows.duplicate @focus", ["flowlist_http2", "flowview_http2"], "Duplicate flow")
+    km.add("d", "view.http1.items.remove @focus", ["flowlist_http1", "flowview_http1"], "Delete item from view")
+    km.add("d", "view.http2.items.remove @focus", ["flowlist_http2", "flowview_http2"], "Delete item from view")
+    km.add("D", "view.http1.items.duplicate @focus", ["flowlist_http1", "flowview_http1"], "Duplicate item")
+    km.add("D", "view.http2.items.duplicate @focus", ["flowlist_http2", "flowview_http2"], "Duplicate item")
     km.add(
         "e",
         """
@@ -62,9 +62,9 @@ def map(km):
         "Send cuts to clipboard"
     )
     km.add("L", "console.command view.load ", ["flowlist_http1", "flowlist_http2"], "Load flows from file")
-    km.add("m", "flow.mark.toggle @focus", ["flowlist_http1", "flowlist_http2"], "Toggle mark on this flow")
-    km.add("M", "view.http1.properties.marked.toggle", ["flowlist_http1"], "Toggle viewing marked flows")
-    km.add("M", "view.http2.properties.marked.toggle", ["flowlist_http2"], "Toggle viewing marked flows")
+    km.add("m", "item.mark.toggle @focus", ["flowlist_http1", "flowlist_http2"], "Toggle mark on this item")
+    km.add("M", "view.http1.properties.marked.toggle", ["flowlist_http1"], "Toggle viewing marked items")
+    km.add("M", "view.http2.properties.marked.toggle", ["flowlist_http2"], "Toggle viewing marked items")
     km.add(
         "n",
         "console.command view.flows.create get https://example.com/",
@@ -93,15 +93,15 @@ def map(km):
     km.add("S", "console.command replay.server ", ["flowlist_http1", "flowlist_http2"], "Start server replay")
     km.add("v", "set view_order_http1_reversed=toggle", ["flowlist_http1"], "Reverse flow list order")
     km.add("v", "set view_order_http2_reversed=toggle", ["flowlist_http2"], "Reverse flow list order")
-    km.add("U", "flow.mark @all false", ["flowlist_http1", "flowlist_http2"], "Un-set all marks")
+    km.add("U", "item.mark @all false", ["flowlist_http1", "flowlist_http2"], "Un-set all marks")
     km.add("w", "console.command save.file @shown ", ["flowlist_http1", "flowlist_http2"], "Save listed flows to file")
-    km.add("V", "flow.revert @focus", ["flowlist_http1", "flowlist_http2",
-                                       "flowview_http1", "flowview_http2"], "Revert changes to this flow")
-    km.add("X", "flow.kill @focus", ["flowlist_http1", "flowlist_http2"], "Kill this flow")
-    km.add("z", "view.http1.flows.remove @all", ["flowlist_http1"], "Clear flow list")
-    km.add("z", "view.http2.flows.remove @all", ["flowlist_http2", "flowlist_http2"], "Clear flow list")
-    km.add("Z", "view.http1.flows.remove @hidden", ["flowlist_http1"], "Purge all flows not showing")
-    km.add("Z", "view.http2.flows.remove @hidden", ["flowlist_http2"], "Purge all flows not showing")
+    km.add("V", "item.revert @focus", ["flowlist_http1", "flowlist_http2",
+                                       "flowview_http1", "flowview_http2"], "Revert changes to this item")
+    km.add("X", "item.kill @focus", ["flowlist_http1", "flowlist_http2"], "Kill this item")
+    km.add("z", "view.http1.items.remove @all", ["flowlist_http1"], "Clear flow list")
+    km.add("z", "view.http2.items.remove @all", ["flowlist_http2", "flowlist_http2"], "Clear flow list")
+    km.add("Z", "view.http1.items.remove @hidden", ["flowlist_http1"], "Purge all flows not showing")
+    km.add("Z", "view.http2.items.remove @hidden", ["flowlist_http2"], "Purge all flows not showing")
     km.add(
         "|",
         "console.command script.run @focus ",
@@ -122,13 +122,13 @@ def map(km):
         "f",
         "view.http1.settings.setval.toggle @focus fullcontents",
         ["flowview_http1"],
-        "Toggle viewing full contents on this flow",
+        "Toggle viewing full contents on this item",
     )
     km.add(
         "f",
         "view.http2.settings.setval.toggle @focus fullcontents",
         ["flowview_http2"],
-        "Toggle viewing full contents on this flow",
+        "Toggle viewing full contents on this item",
     )
     km.add("w", "console.command save.file @focus ", ["flowview_http1", "flowview_http2"], "Save flow to file")
     km.add("space", "view.http1.focus.next", ["flowview_http1"], "Go to next flow")
@@ -158,7 +158,7 @@ def map(km):
         "z",
         """
         console.choose "Part" request,response
-        flow.encode.toggle @focus {choice}
+        item.encode.toggle @focus {choice}
         """,
         ["flowview_http1", "flowview_http2"],
         "Encode/decode flow body"

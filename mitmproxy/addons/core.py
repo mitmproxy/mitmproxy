@@ -97,67 +97,67 @@ class Core:
         except exceptions.OptionsError as e:
             raise exceptions.CommandError(e) from e
 
-    @command.command("flow.resume")
-    def resume(self, flows: typing.Sequence[viewitem.ViewItem]) -> None:
+    @command.command("item.resume")
+    def resume(self, viewitems: typing.Sequence[viewitem.ViewItem]) -> None:
         """
-            Resume flows if they are intercepted.
+            Resume viewitems if they are intercepted.
         """
-        intercepted = [i for i in flows if i.intercepted]
+        intercepted = [i for i in viewitems if i.intercepted]
         for f in intercepted:
             f.resume()
         ctx.master.addons.trigger("update", intercepted)
 
     # FIXME: this will become view.mark later
-    @command.command("flow.mark")
-    def mark(self, flows: typing.Sequence[viewitem.ViewItem], val: bool) -> None:
+    @command.command("item.mark")
+    def mark(self, viewitems: typing.Sequence[viewitem.ViewItem], val: bool) -> None:
         """
-            Mark flows.
+            Mark viewitems.
         """
         updated = []
-        for i in flows:
+        for i in viewitems:
             if i.marked != val:
                 i.marked = val
                 updated.append(i)
         ctx.master.addons.trigger("update", updated)
 
     # FIXME: this will become view.mark.toggle later
-    @command.command("flow.mark.toggle")
-    def mark_toggle(self, flows: typing.Sequence[viewitem.ViewItem]) -> None:
+    @command.command("item.mark.toggle")
+    def mark_toggle(self, viewitems: typing.Sequence[viewitem.ViewItem]) -> None:
         """
-            Toggle mark for flows.
+            Toggle mark for viewitems.
         """
-        for i in flows:
+        for i in viewitems:
             i.marked = not i.marked
-        ctx.master.addons.trigger("update", flows)
+        ctx.master.addons.trigger("update", viewitems)
 
-    @command.command("flow.kill")
-    def kill(self, flows: typing.Sequence[viewitem.ViewItem]) -> None:
+    @command.command("item.kill")
+    def kill(self, viewitems: typing.Sequence[viewitem.ViewItem]) -> None:
         """
-            Kill running flows.
+            Kill running viewitems.
         """
         updated = []
-        for f in flows:
+        for f in viewitems:
             if f.killable:
                 f.kill()
                 updated.append(f)
-        ctx.log.alert("Killed %s flows." % len(updated))
+        ctx.log.alert("Killed %s viewitems." % len(updated))
         ctx.master.addons.trigger("update", updated)
 
     # FIXME: this will become view.revert later
-    @command.command("flow.revert")
-    def revert(self, flows: typing.Sequence[viewitem.ViewItem]) -> None:
+    @command.command("item.revert")
+    def revert(self, viewitems: typing.Sequence[viewitem.ViewItem]) -> None:
         """
             Revert flow changes.
         """
         updated = []
-        for f in flows:
+        for f in viewitems:
             if f.modified():
                 f.revert()
                 updated.append(f)
-        ctx.log.alert("Reverted %s flows." % len(updated))
+        ctx.log.alert("Reverted %s viewitems." % len(updated))
         ctx.master.addons.trigger("update", updated)
 
-    @command.command("flow.set.options")
+    @command.command("item.set.options")
     def flow_set_options(self) -> typing.Sequence[str]:
         return [
             "host",
@@ -168,16 +168,16 @@ class Core:
             "reason",
         ]
 
-    @command.command("flow.set")
-    @command.argument("spec", type=mitmproxy.types.Choice("flow.set.options"))
+    @command.command("item.set")
+    @command.argument("spec", type=mitmproxy.types.Choice("item.set.options"))
     def flow_set(
         self,
-        flows: typing.Sequence[viewitem.ViewItem],
+        viewitems: typing.Sequence[viewitem.ViewItem],
         spec: str,
         sval: str
     ) -> None:
         """
-            Quickly set a number of common values on flows.
+            Quickly set a number of common values on viewitems.
         """
         val: typing.Union[int, str] = sval
         if spec == "status_code":
@@ -189,7 +189,7 @@ class Core:
                 ) from v
 
         updated = []
-        for f in flows:
+        for f in viewitems:
             req = getattr(f, "request", None)
             rupdate = True
             if req:
@@ -225,30 +225,30 @@ class Core:
                 updated.append(f)
 
         ctx.master.addons.trigger("update", updated)
-        ctx.log.alert("Set %s on  %s flows." % (spec, len(updated)))
+        ctx.log.alert("Set %s on  %s viewitems." % (spec, len(updated)))
 
-    @command.command("flow.decode")
-    def decode(self, flows: typing.Sequence[viewitem.ViewItem], part: str) -> None:
+    @command.command("item.decode")
+    def decode(self, viewitems: typing.Sequence[viewitem.ViewItem], part: str) -> None:
         """
-            Decode flows.
+            Decode viewitems.
         """
         updated = []
-        for f in flows:
+        for f in viewitems:
             p = getattr(f, part, None)
             if p:
                 f.backup()
                 p.decode()
                 updated.append(f)
         ctx.master.addons.trigger("update", updated)
-        ctx.log.alert("Decoded %s flows." % len(updated))
+        ctx.log.alert("Decoded %s viewitems." % len(updated))
 
-    @command.command("flow.encode.toggle")
-    def encode_toggle(self, flows: typing.Sequence[viewitem.ViewItem], part: str) -> None:
+    @command.command("item.encode.toggle")
+    def encode_toggle(self, viewitems: typing.Sequence[viewitem.ViewItem], part: str) -> None:
         """
             Toggle flow encoding on and off, using deflate for encoding.
         """
         updated = []
-        for f in flows:
+        for f in viewitems:
             p = getattr(f, part, None)
             if p:
                 f.backup()
@@ -259,21 +259,21 @@ class Core:
                     p.decode()
                 updated.append(f)
         ctx.master.addons.trigger("update", updated)
-        ctx.log.alert("Toggled encoding on %s flows." % len(updated))
+        ctx.log.alert("Toggled encoding on %s viewitems." % len(updated))
 
-    @command.command("flow.encode")
-    @command.argument("enc", type=mitmproxy.types.Choice("flow.encode.options"))
+    @command.command("item.encode")
+    @command.argument("enc", type=mitmproxy.types.Choice("item.encode.options"))
     def encode(
         self,
-        flows: typing.Sequence[viewitem.ViewItem],
+        viewitems: typing.Sequence[viewitem.ViewItem],
         part: str,
         enc: str,
     ) -> None:
         """
-            Encode flows with a specified encoding.
+            Encode viewitems with a specified encoding.
         """
         updated = []
-        for f in flows:
+        for f in viewitems:
             p = getattr(f, part, None)
             if p:
                 current_enc = p.headers.get("content-encoding", "identity")
@@ -282,9 +282,9 @@ class Core:
                     p.encode(enc)
                     updated.append(f)
         ctx.master.addons.trigger("update", updated)
-        ctx.log.alert("Encoded %s flows." % len(updated))
+        ctx.log.alert("Encoded %s viewitems." % len(updated))
 
-    @command.command("flow.encode.options")
+    @command.command("item.encode.options")
     def encode_options(self) -> typing.Sequence[str]:
         """
             The possible values for an encoding specification.

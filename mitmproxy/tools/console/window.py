@@ -200,10 +200,10 @@ class Window(urwid.Frame):
 
         self.body = urwid.AttrWrap(w, "background")
 
-    def flow_changed(self, sender, flow):
+    def flow_changed(self, sender, item):
         for view in self.master.views.values():
-            if view.focus.flow:
-                if flow.id == view.focus.flow.id:
+            if view.focus.item:
+                if item.id == view.focus.item.id:
                     self.focus_changed()
 
     def focus_changed(self, *args, **kwargs):

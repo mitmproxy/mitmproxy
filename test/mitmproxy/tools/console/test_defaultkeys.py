@@ -22,6 +22,8 @@ async def test_commands_exist():
 
     for binding in km.bindings:
         cmd, *args = command.lexer(binding.command)
+        if not cmd in m.commands.commands:
+            print(cmd)
         assert cmd in m.commands.commands
 
         cmd_obj = m.commands.commands[cmd]

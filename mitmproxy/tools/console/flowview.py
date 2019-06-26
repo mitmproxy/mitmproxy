@@ -35,10 +35,10 @@ class FlowViewHeader(urwid.WidgetWrap):
 
     def focus_changed(self):
         cols, _ = self.master.ui.get_cols_rows()
-        if self.view.focus.flow:
+        if self.view.focus.item:
             if self.view.flow_type == "http1":
-                self._w = common.format_flow(
-                    self.view.focus.flow,
+                self._w = common.format_item(
+                    self.view.focus.item,
                     False,
                     extended=True,
                     hostheader=self.master.options.showhost,
@@ -46,7 +46,7 @@ class FlowViewHeader(urwid.WidgetWrap):
                 )
             elif self.view.flow_type == "http2":
                 self._w = common.format_http2_item(
-                    self.view.focus.flow,
+                    self.view.focus.item,
                     False,
                 )
             else:
@@ -63,13 +63,13 @@ class FlowDetails(tabs.Tabs):
         self.last_displayed_body = None
 
     @property
-    def flow(self):
-        return self.view.focus.flow
+    def viewitem(self):
+        return self.view.focus.item
 
 
 class FlowDetailsHttp1(FlowDetails):
     def focus_changed(self):
-        if self.view.focus.flow:
+        if self.view.focus.item:
             self.tabs = [
                 (self.tab_request, self.view_request),
                 (self.tab_response, self.view_response),
@@ -85,13 +85,13 @@ class FlowDetailsHttp1(FlowDetails):
         return self.master.views['http1']
 
     def tab_request(self):
-        if self.flow.intercepted and not self.flow.response:
+        if self.viewitem.intercepted and not self.viewitem.response:
             return "Request intercepted"
         else:
             return "Request"
 
     def tab_response(self):
-        if self.flow.intercepted and self.flow.response:
+        if self.viewitem.intercepted and self.viewitem.response:
             return "Response intercepted"
         else:
             return "Response"
@@ -103,28 +103,28 @@ class FlowDetailsHttp1(FlowDetails):
         return "HTTP/2"
 
     def view_request(self):
-        return self.conn_text(self.flow.request)
+        return self.conn_text(self.viewitem.request)
 
     def view_response(self):
-        return self.conn_text(self.flow.response)
+        return self.conn_text(self.viewitem.response)
 
     def view_details(self):
-        return flowdetailview.flowdetails(self.view, self.flow)
+        return flowdetailview.viewitemdetails(self.view, self.viewitem)
 
     def view_http2(self):
-        if (self.flow.client_stream_id and self.flow.server_stream_id and
-            self.flow.server_conn and self.flow.server_conn.address and
-                self.flow.client_conn and self.flow.client_conn.address):
-            dst_addr = "{}:{}".format(self.flow.server_conn.address[0], self.flow.server_conn.address[1])
-            src_addr = "{}:{}".format(self.flow.client_conn.address[0], self.flow.client_conn.address[1])
+        if (self.viewitem.client_stream_id and self.viewitem.server_stream_id and
+            self.viewitem.server_conn and self.viewitem.server_conn.address and
+                self.viewitem.client_conn and self.viewitem.client_conn.address):
+            dst_addr = "{}:{}".format(self.viewitem.server_conn.address[0], self.viewitem.server_conn.address[1])
+            src_addr = "{}:{}".format(self.viewitem.client_conn.address[0], self.viewitem.client_conn.address[1])
             self.master.commands.execute("view.http2.filtred_view.add '( ( (~sid %s | ~f.pushed_stream_id %s) & ~fc ) | "
                                          "( (~sid %s | ~f.pushed_stream_id %s) & ! ~fc ) ) & ~src %s & ~dst %s' 'stream_from_http1'" %
-                                         (self.flow.client_stream_id, self.flow.client_stream_id,
-                                          self.flow.server_stream_id, self.flow.server_stream_id,
+                                         (self.viewitem.client_stream_id, self.viewitem.client_stream_id,
+                                          self.viewitem.server_stream_id, self.viewitem.server_stream_id,
                                           src_addr, dst_addr))
 
             flow_list = flowlist.FlowListBox(self.master, self.master.views['http2'], flt="stream_from_http1")
-            flow_detail = flowhttp2view.conn_text(self.master.views['http2'].filtred_views_focus["stream_from_http1"].flow)
+            flow_detail = flowhttp2view.conn_text(self.master.views['http2'].filtred_views_focus["stream_from_http1"].item)
             columns = flowhttp2view.Http2DetailColumns([flow_list, flow_detail], focus_column=0)
             self.master.views['http2'].filtred_views_focus["stream_from_http1"].sig_change.connect(columns.update_view)
             return columns
@@ -268,7 +268,7 @@ class FlowDetailsHttp1(FlowDetails):
 
 class FlowDetailsHttp2(FlowDetails):
     def focus_changed(self):
-        if self.view.focus.flow:
+        if self.view.focus.item:
             self.tabs = [
                 (self.tab_frame, self.view_frame),
                 (self.tab_details, self.view_details),
@@ -288,10 +288,10 @@ class FlowDetailsHttp2(FlowDetails):
         return "Detail"
 
     def view_frame(self):
-        return self.conn_text(self.flow)
+        return self.conn_text(self.viewitem)
 
     def view_details(self):
-        return flowdetailview.flowdetails(self.view, self.flow)
+        return flowdetailview.viewitemdetails(self.view, self.viewitem)
 
     def conn_text(self, frame):
         return flowhttp2view.conn_text(frame)

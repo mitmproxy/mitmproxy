@@ -7,24 +7,24 @@ import mitmproxy.tools.console.master  # noqa
 
 class FlowItem(urwid.WidgetWrap):
 
-    def __init__(self, master, view, flow, flt=None):
-        self.master, self.view, self.flow, self.flt = master, view, flow, flt
+    def __init__(self, master, view, item, flt=None):
+        self.master, self.view, self.item, self.flt = master, view, item, flt
         w = self.get_text()
         urwid.WidgetWrap.__init__(self, w)
 
     def get_text(self):
         cols, _ = self.master.ui.get_cols_rows()
         if self.view.flow_type == "http1":
-            return common.format_flow(
-                self.flow,
-                self.flow is self.view.filtred_views_focus[self.flt].flow if self.flt else self.flow is self.view.focus.flow,
+            return common.format_item(
+                self.item,
+                self.item is self.view.filtred_views_focus[self.flt].item if self.flt else self.item is self.view.focus.item,
                 hostheader=self.master.options.showhost,
                 max_url_len=cols,
             )
         elif self.view.flow_type == "http2":
             return common.format_http2_item(
-                self.flow,
-                self.flow is self.view.filtred_views_focus[self.flt].flow if self.flt else self.flow is self.view.focus.flow,
+                self.item,
+                self.item is self.view.filtred_views_focus[self.flt].item if self.flt else self.item is self.view.focus.item,
             )
         else:
             raise NotImplementedError()
@@ -37,11 +37,11 @@ class FlowItem(urwid.WidgetWrap):
             if self.flt:
                 return
             if self.view.flow_type == "http1":
-                if self.flow.request:
-                    self.master.commands.execute("console.view.flow @focus")
+                if self.item.request:
+                    self.master.commands.execute("console.view.item @focus")
                     return True
             elif self.view.flow_type == "http2":
-                self.master.commands.execute("console.view.flow @focus")
+                self.master.commands.execute("console.view.item @focus")
                 return True
             else:
                 raise NotImplementedError()
@@ -68,17 +68,17 @@ class FlowListWalker(urwid.ListWalker):
 
     def get_focus(self):
         if self.flt:
-            if not self.view.filtred_views_focus[self.flt].flow:
+            if not self.view.filtred_views_focus[self.flt].item:
                 return None, 0
-            f = FlowItem(self.master, self.view, self.view.filtred_views_focus[self.flt].flow, self.flt)
+            i = FlowItem(self.master, self.view, self.view.filtred_views_focus[self.flt].item, self.flt)
         else:
-            if not self.view.focus.flow:
+            if not self.view.focus.item:
                 return None, 0
-            f = FlowItem(self.master, self.view, self.view.focus.flow)
+            i = FlowItem(self.master, self.view, self.view.focus.item)
         if self.flt:
-            return f, self.view.filtred_views_focus[self.flt].index
+            return i, self.view.filtred_views_focus[self.flt].index
         else:
-            return f, self.view.focus.index
+            return i, self.view.focus.index
 
     def set_focus(self, index):
         if self.master.commands.execute("view.%s.properties.inbounds %d %s" % (self.view.flow_type, index, self.flt)):
@@ -129,7 +129,7 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
         elif key == "m_select":
             if self.flt:
                 return
-            self.master.commands.execute("console.view.flow @focus")
+            self.master.commands.execute("console.view.item @focus")
         return urwid.ListBox.keypress(self, size, key)
 
     def view_changed(self):

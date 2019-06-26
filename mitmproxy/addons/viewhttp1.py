@@ -1,11 +1,11 @@
 """
 The View:
 
-- Keeps track of a store of flows
-- Maintains a filtered, ordered view onto that list of flows
+- Keeps track of a store of viewitem
+- Maintains a filtered, ordered view onto that list of viewitems
 - Exposes a number of signals so the view can be monitored
 - Tracks focus within the view
-- Exposes a settings store for flows that automatically expires if the flow is
+- Exposes a settings store for viewitems that automatically expires if the viewitem is
   removed from the store.
 """
 import typing
@@ -22,37 +22,37 @@ from mitmproxy import http  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
-# the sort order changes as the flow progresses through its lifecycle. We
+# the sort order changes as the viewitem progresses through its lifecycle. We
 # address this through two means:
 #
-# - Let order keys cache the sort value by flow ID.
+# - Let order keys cache the sort value by viewitem ID.
 #
 # - Add a facility to refresh items in the list by removing and re-adding them
 # when they are updated.
 
 
 class OrderRequestStart(view._OrderKey):
-    def generate(self, f: http.HTTPFlow) -> int:
-        return f.request.timestamp_start or 0
+    def generate(self, i: http.HTTPFlow) -> int:
+        return i.request.timestamp_start or 0
 
 
 class OrderRequestMethod(view._OrderKey):
-    def generate(self, f: http.HTTPFlow) -> str:
-        return f.request.method
+    def generate(self, i: http.HTTPFlow) -> str:
+        return i.request.method
 
 
 class OrderRequestURL(view._OrderKey):
-    def generate(self, f: http.HTTPFlow) -> str:
-        return f.request.url
+    def generate(self, i: http.HTTPFlow) -> str:
+        return i.request.url
 
 
 class OrderKeySize(view._OrderKey):
-    def generate(self, f: http.HTTPFlow) -> int:
+    def generate(self, i: http.HTTPFlow) -> int:
         s = 0
-        if f.request.raw_content:
-            s += len(f.request.raw_content)
-        if f.response and f.response.raw_content:
-            s += len(f.response.raw_content)
+        if i.request.raw_content:
+            s += len(i.request.raw_content)
+        if i.response and i.response.raw_content:
+            s += len(i.response.raw_content)
         return s
 
 
@@ -90,21 +90,21 @@ class ViewHttp1(view.View):
         """
             Go to a specified offset. Positive offests are from the beginning of
             the view, negative from the end of the view, so that 0 is the first
-            flow, -1 is the last flow.
+            viewitem, -1 is the last viewitem.
         """
         super().go(dst)
 
     @command.command("view.http1.focus.next")
     def focus_next(self) -> None:
         """
-            Set focus to the next flow.
+            Set focus to the next viewitem.
         """
         super().focus_next()
 
     @command.command("view.http1.focus.prev")
     def focus_prev(self) -> None:
         """
-            Set focus to the previous flow.
+            Set focus to the previous viewitem.
         """
         super().focus_prev()
 
@@ -157,65 +157,65 @@ class ViewHttp1(view.View):
     @command.command("view.http1.clear_unmarked")
     def clear_not_marked(self) -> None:
         """
-            Clears only the unmarked flows.
+            Clears only the unmarked viewitems.
         """
         super().clear_not_marked()
 
     # View Settings
     @command.command("view.http1.settings.getval")
-    def getvalue(self, f: mitmproxy.viewitem.ViewItem, key: str, default: str) -> str:
+    def getvalue(self, i: mitmproxy.viewitem.ViewItem, key: str, default: str) -> str:
         """
-            Get a value from the settings store for the specified flow.
+            Get a value from the settings store for the specified viewitem.
         """
-        return super().getvalue(f, key, default)
+        return super().getvalue(i, key, default)
 
     @command.command("view.http1.settings.setval.toggle")
     def setvalue_toggle(
         self,
-        flows: typing.Sequence[mitmproxy.viewitem.ViewItem],
+        viewitems: typing.Sequence[mitmproxy.viewitem.ViewItem],
         key: str
     ) -> None:
         """
             Toggle a boolean value in the settings store, setting the value to
             the string "true" or "false".
         """
-        super().setvalue_toggle(flows, key)
+        super().setvalue_toggle(viewitems, key)
 
     @command.command("view.http1.settings.setval")
     def setvalue(
         self,
-        flows: typing.Sequence[mitmproxy.viewitem.ViewItem],
+        viewitems: typing.Sequence[mitmproxy.viewitem.ViewItem],
         key: str, value: str
     ) -> None:
         """
-            Set a value in the settings store for the specified flows.
+            Set a value in the settings store for the specified items.
         """
-        super().setvalue(flows, key, value)
+        super().setvalue(viewitems, key, value)
 
     # Flows
-    @command.command("view.http1.flows.duplicate")
-    def duplicate(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
+    @command.command("view.http1.items.duplicate")
+    def duplicate(self, viewitems: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
-            Duplicates the specified flows, and sets the focus to the first
+            Duplicates the specified items, and sets the focus to the first
             duplicate.
         """
-        super().duplicate(flows)
+        super().duplicate(viewitems)
 
-    @command.command("view.http1.flows.remove")
-    def remove(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
+    @command.command("view.http1.items.remove")
+    def remove(self, viewitems: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
-            Removes the flow from the underlying store and the view.
+            Removes the item from the underlying store and the view.
         """
-        super().remove(flows)
+        super().remove(viewitems)
 
-    @command.command("view.http1.flows.resolve")
+    @command.command("view.http1.items.resolve")
     def resolve(self, spec: str) -> typing.Sequence[mitmproxy.viewitem.ViewItem]:
         """
-            Resolve a flow list specification to an actual list of flows.
+            Resolve an item list specification to an actual list of items.
         """
         return super().resolve(spec)
 
-    @command.command("view.http1.flows.create")
+    @command.command("view.http1.items.create")
     def create(self, method: str, url: str) -> None:
         try:
             req = http.HTTPRequest.make(method.upper(), url)
@@ -223,15 +223,15 @@ class ViewHttp1(view.View):
             raise exceptions.CommandError("Invalid URL: %s" % e)
         c = connections.ClientConnection.make_dummy(("", 0))
         s = connections.ServerConnection.make_dummy((req.host, req.port))
-        f = http.HTTPFlow(c, s)
-        f.request = req
-        f.request.headers["Host"] = req.host
-        self.add([f])
+        i = http.HTTPFlow(c, s)
+        i.request = req
+        i.request.headers["Host"] = req.host
+        self.add([i])
 
-    @command.command("view.http1.flows.load")
+    @command.command("view.http1.items.load")
     def load_file(self, path: mitmproxy.types.Path) -> None:
         """
-            Load flows into the view, without processing them with addons.
+            Load viewitems into the view, without processing them with addons.
         """
         super().load_file(path)
 

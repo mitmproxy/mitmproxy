@@ -1,11 +1,11 @@
 """
 The View:
 
-- Keeps track of a store of flows
-- Maintains a filtered, ordered view onto that list of flows
+- Keeps track of a store of viewitems
+- Maintains a filtered, ordered view onto that list of viewitems
 - Exposes a number of signals so the view can be monitored
 - Tracks focus within the view
-- Exposes a settings store for flows that automatically expires if the flow is
+- Exposes a settings store for viewitems that automatically expires if the viewitem is
   removed from the store.
 """
 import collections
@@ -37,42 +37,42 @@ class _OrderKey:
     def __init__(self, view):
         self.view = view
 
-    def generate(self, f: viewitem.ViewItem) -> typing.Any:  # pragma: no cover
+    def generate(self, i: viewitem.ViewItem) -> typing.Any:  # pragma: no cover
         pass
 
-    def refresh(self, f):
+    def refresh(self, i):
         k = self._key()
-        old = self.view.settings[f][k]
-        new = self.generate(f)
+        old = self.view.settings[i][k]
+        new = self.generate(i)
         if old != new:
-            self.view._view.remove(f)
-            self.view.settings[f][k] = new
-            self.view._view.add(f)
+            self.view._view.remove(i)
+            self.view.settings[i][k] = new
+            self.view._view.add(i)
             self.view.sig_view_refresh.send(self.view)
 
     def _key(self):
         return "_order_%s" % id(self)
 
-    def __call__(self, f):
-        if f.id in self.view._store:
+    def __call__(self, i):
+        if i.id in self.view._store:
             k = self._key()
-            s = self.view.settings[f]
+            s = self.view.settings[i]
             if k in s:
                 return s[k]
-            val = self.generate(f)
+            val = self.generate(i)
             s[k] = val
             return val
         else:
-            return self.generate(f)
+            return self.generate(i)
 
 
 class OrderTimestamp(_OrderKey):
-    def generate(self, f: viewitem.ViewItem) -> int:
+    def generate(self, i: viewitem.ViewItem) -> int:
         raise NotImplementedError()
 
 
 class OrderKeySize(_OrderKey):
-    def generate(self, f: viewitem.ViewItem) -> int:
+    def generate(self, i: viewitem.ViewItem) -> int:
         raise NotImplementedError()
 
 
@@ -175,36 +175,36 @@ class View(collections.abc.Sequence):
 
     # Reflect some methods to the efficient underlying implementation
 
-    def _bisect(self, f: mitmproxy.viewitem.ViewItem, view_name=None) -> int:
+    def _bisect(self, i: mitmproxy.viewitem.ViewItem, view_name=None) -> int:
         if view_name:
-            v = self.filtred_views[view_name].bisect_right(f)
+            v = self.filtred_views[view_name].bisect_right(i)
         else:
-            v = self._view.bisect_right(f)
+            v = self._view.bisect_right(i)
         return self._rev(v - 1, view_name) + 1
 
-    def index(self, f: mitmproxy.viewitem.ViewItem,
+    def index(self, i: mitmproxy.viewitem.ViewItem,
               start: int = 0, stop: typing.Optional[int] = None,
               view_name: typing.Sequence[str] = None) -> int:
         if view_name:
-            return self._rev(self.filtred_views[view_name].index(f, start, stop), view_name)
+            return self._rev(self.filtred_views[view_name].index(i, start, stop), view_name)
         else:
-            return self._rev(self._view.index(f, start, stop))
+            return self._rev(self._view.index(i, start, stop))
 
-    def __contains__(self, f: typing.Any, view_name: typing.Sequence[str] = None) -> bool:
+    def __contains__(self, i: typing.Any, view_name: typing.Sequence[str] = None) -> bool:
         if view_name:
-            return self._view[view_name].__contains__(f)
+            return self._view[view_name].__contains__(i)
         else:
-            return self._view.__contains__(f)
+            return self._view.__contains__(i)
 
     def _order_key_name(self):
         return "_order_%s" % id(self.order_key)
 
-    def _base_add(self, f, view_name=None):
-        self.settings[f][self._order_key_name()] = self.order_key(f)
+    def _base_add(self, i, view_name=None):
+        self.settings[i][self._order_key_name()] = self.order_key(i)
         if view_name:
-            self.filtred_views[view_name].add(f)
+            self.filtred_views[view_name].add(i)
         else:
-            self._view.add(f)
+            self._view.add(i)
 
     def _refilter(self):
         for view in [self._view, *self.filtred_views.values()]:
@@ -228,7 +228,7 @@ class View(collections.abc.Sequence):
         """
             Go to a specified offset. Positive offests are from the beginning of
             the view, negative from the end of the view, so that 0 is the first
-            flow, -1 is the last flow.
+            item, -1 is the last item.
         """
         if len(self) == 0:
             return
@@ -238,15 +238,15 @@ class View(collections.abc.Sequence):
             dst = 0
         if dst > len(self) - 1:
             dst = len(self) - 1
-        self.focus.flow = self[dst]
+        self.focus.item = self[dst]
 
     def focus_next(self) -> None:
         """
-            Set focus to the next flow.
+            Set focus to the next item.
         """
         idx = self.focus.index + 1
         if self.inbounds(idx):
-            self.focus.flow = self[idx]
+            self.focus.item = self[idx]
 
     def focus_prev(self) -> None:
         """
@@ -254,7 +254,7 @@ class View(collections.abc.Sequence):
         """
         idx = self.focus.index - 1
         if self.inbounds(idx):
-            self.focus.flow = self[idx]
+            self.focus.item = self[idx]
 
     # Order
     def order_options(self) -> typing.Sequence[str]:
@@ -275,7 +275,7 @@ class View(collections.abc.Sequence):
         """
         if order not in self.orders:
             raise exceptions.CommandError(
-                "Unknown flow order: %s" % order
+                "Unknown item order: %s" % order
             )
         order_key = self.orders[order]
         self.order_key = order_key
@@ -294,16 +294,16 @@ class View(collections.abc.Sequence):
         return order
 
     # Filter
-    def set_filter_cmd(self, f: str) -> None:
+    def set_filter_cmd(self, i: str) -> None:
         """
             Sets the current view filter.
         """
         filt = None
-        if f:
-            filt = flowfilter.parse(f)
+        if i:
+            filt = flowfilter.parse(i)
             if not filt:
                 raise exceptions.CommandError(
-                    "Invalid interception filter: %s" % f
+                    "Invalid interception filter: %s" % i
                 )
         self.set_filter(filt)
 
@@ -319,13 +319,13 @@ class View(collections.abc.Sequence):
             self.filtred_views_focus[view_name] = Focus(self, view_name)
         self._refilter()
 
-    def add_filtred_view(self, f: str, name: str) -> None:
+    def add_filtred_view(self, i: str, name: str) -> None:
         filt = None
-        if f:
-            filt = flowfilter.parse(f)
+        if i:
+            filt = flowfilter.parse(i)
             if not filt:
                 raise exceptions.CommandError(
-                    "Invalid interception filter: %s" % f
+                    "Invalid interception filter: %s" % i
                 )
         self.set_filter(filt, name)
 
@@ -343,25 +343,25 @@ class View(collections.abc.Sequence):
 
     def clear_not_marked(self) -> None:
         """
-            Clears only the unmarked flows.
+            Clears only the unmarked viewitem.
         """
-        for flow in self._store.copy().values():
-            if not flow.marked:
-                self._store.pop(flow.id)
+        for viewitem in self._store.copy().values():
+            if not viewitem.marked:
+                self._store.pop(viewitem.id)
 
         self._refilter()
         self.sig_store_refresh.send(self)
 
     # View Settings
-    def getvalue(self, f: mitmproxy.viewitem.ViewItem, key: str, default: str) -> str:
+    def getvalue(self, i: mitmproxy.viewitem.ViewItem, key: str, default: str) -> str:
         """
-            Get a value from the settings store for the specified flow.
+            Get a value from the settings store for the specified viewitem.
         """
-        return self.settings[f].get(key, default)
+        return self.settings[i].get(key, default)
 
     def setvalue_toggle(
         self,
-        flows: typing.Sequence[mitmproxy.viewitem.ViewItem],
+        viewitems: typing.Sequence[mitmproxy.viewitem.ViewItem],
         key: str
     ) -> None:
         """
@@ -369,65 +369,65 @@ class View(collections.abc.Sequence):
             the string "true" or "false".
         """
         updated = []
-        for f in flows:
-            current = self.settings[f].get("key", "false")
-            self.settings[f][key] = "false" if current == "true" else "true"
-            updated.append(f)
+        for i in viewitems:
+            current = self.settings[i].get("key", "false")
+            self.settings[i][key] = "false" if current == "true" else "true"
+            updated.append(i)
         ctx.master.addons.trigger("update", updated)
 
     def setvalue(
         self,
-        flows: typing.Sequence[mitmproxy.viewitem.ViewItem],
+        viewitems: typing.Sequence[mitmproxy.viewitem.ViewItem],
         key: str, value: str
     ) -> None:
         """
-            Set a value in the settings store for the specified flows.
+            Set a value in the settings store for the specified viewitems.
         """
         updated = []
-        for f in flows:
-            self.settings[f][key] = value
-            updated.append(f)
+        for i in viewitems:
+            self.settings[i][key] = value
+            updated.append(i)
         ctx.master.addons.trigger("update", updated)
 
     # Flows
-    def duplicate(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
+    def duplicate(self, viewitems: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
-            Duplicates the specified flows, and sets the focus to the first
+            Duplicates the specified viewitems, and sets the focus to the first
             duplicate.
         """
-        dups = [f.copy() for f in flows]
+        dups = [i.copy() for i in viewitems]
         if dups:
             self.add(dups)
-            self.focus.flow = dups[0]
-            ctx.log.alert("Duplicated %s flows" % len(dups))
+            self.focus.item = dups[0]
+            ctx.log.alert("Duplicated %s viewitems" % len(dups))
 
-    def remove(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
+    def remove(self, viewitems: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
             Removes the flow from the underlying store and the view.
         """
-        for f in flows:
-            if f.id in self._store:
-                if f.flow.killable:
-                    f.flow.kill()
-                if f in self._view:
-                    # We manually pass the index here because multiple flows may have the same
+        for i in viewitems:
+            if i.id in self._store:
+                if i.flow.killable:
+                    i.flow.kill()
+                if i in self._view:
+                    # We manually pass the index here because multiple viewitems may have the same
                     # sorting key, and we cannot reconstruct the index from that.
-                    idx = self._view.index(f)
-                    self._view.remove(f)
-                    self.sig_view_remove.send(self, flow=f, index=idx)
+                    idx = self._view.index(i)
+                    self._view.remove(i)
+                    self.sig_view_remove.send(self, item=i, index=idx)
                 for name in self.filtred_views.keys():
-                    if f in self.filtred_views[name]:
-                        idx = self.filtred_views[name].index(f)
-                        self.filtred_views[name].remove(f)
-                        self.filtred_views_sig_view_remove[name].send(self.filtred_views[name], flow=f, index=idx)
-                del self._store[f.id]
-                self.sig_store_remove.send(self, flow=f)
-        if len(flows) > 1:
-            ctx.log.alert("Removed %s flows" % len(flows))
+                    if i in self.filtred_views[name]:
+                        idx = self.filtred_views[name].index(i)
+                        self.filtred_views[name].remove(i)
+                        self.filtred_views_sig_view_remove[name].send(self.filtred_views[name], item=i, index=idx)
+                del self._store[i.id]
+                self.sig_store_remove.send(self, item=i)
+        if len(viewitems) > 1:
+            ctx.log.alert("Removed %s viewitems" % len(viewitems))
 
     def resolve(self, spec: str) -> typing.Sequence[mitmproxy.viewitem.ViewItem]:
         """
-            Resolve a flow list specification to an actual list of flows.
+            Resolve a viewitem list specification to an actual list of viewitems.
         """
         view_name = None
         if re.match(r'@\w+\.\w+\.\w+', spec):
@@ -439,9 +439,9 @@ class View(collections.abc.Sequence):
             return [i for i in self._store.values()]
         if spec == "@focus":
             if view_name:
-                return [self.filtred_views_focus[view_name].flow] if self.filtred_views_focus[view_name].flow else []
+                return [self.filtred_views_focus[view_name].item] if self.filtred_views_focus[view_name].item else []
             else:
-                return [self.focus.flow] if self.focus.flow else []
+                return [self.focus.item] if self.focus.item else []
         elif spec == "@shown":
             if view_name:
                 return [i for i in self.filtred_views[view_name]]
@@ -464,13 +464,13 @@ class View(collections.abc.Sequence):
 
     def load_file(self, path: mitmproxy.types.Path) -> None:
         """
-            Load flows into the view, without processing them with addons.
+            Load viewitem into the view, without processing them with addons.
         """
         try:
             with open(path, "rb") as f:
                 for i in io.FlowReader(f).stream():
                     # Do this to get a new ID, so we can load the same file N times and
-                    # get new flows each time. It would be more efficient to just have a
+                    # get new viewitem each time. It would be more efficient to just have a
                     # .newid() method or something.
                     self.add([i.copy()])
         except IOError as e:
@@ -478,25 +478,25 @@ class View(collections.abc.Sequence):
         except exceptions.FlowReadException as e:
             ctx.log.error(str(e))
 
-    def add(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
+    def add(self, viewitems: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
             Adds a flow to the state. If the flow already exists, it is
             ignored.
         """
-        for f in flows:
-            if f.id not in self._store:
-                self._store[f.id] = f
-                if self.filter(f):
-                    self._base_add(f)
+        for i in viewitems:
+            if i.id not in self._store:
+                self._store[i.id] = i
+                if self.filter(i):
+                    self._base_add(i)
                     if self.focus_follow:
-                        self.focus.flow = f
-                    self.sig_view_add.send(self, flow=f)
+                        self.focus.item = i
+                    self.sig_view_add.send(self, item=i)
                 for name, flt in self.filtred_views_filter.items():
-                    if flt(f):
-                        self._base_add(f, name)
+                    if flt(i):
+                        self._base_add(i, name)
                         if self.focus_follow:
-                            self.filtred_views_focus[name].flow = f
-                        self.filtred_views_sig_view_add[name].send(self, flow=f)
+                            self.filtred_views_focus[name].viewitem = i
+                        self.filtred_views_sig_view_add[name].send(self, item=i)
 
     def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.viewitem.ViewItem]:
         """
@@ -558,62 +558,62 @@ class View(collections.abc.Sequence):
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
 
-    def intercept(self, f):
-        self.update([f])
+    def intercept(self, i):
+        self.update([i])
 
-    def resume(self, f):
-        self.update([f])
+    def resume(self, i):
+        self.update([i])
 
-    def update(self, flows: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
+    def update(self, viewitems: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
-            Updates a list of flows. If flow is not in the state, it's ignored.
+            Updates a list of viewitems. If flow is not in the state, it's ignored.
         """
-        for f in flows:
-            if f.id in self._store:
-                if self.filter(f):
-                    if f not in self._view:
-                        self._base_add(f)
+        for i in viewitems:
+            if i.id in self._store:
+                if self.filter(i):
+                    if i not in self._view:
+                        self._base_add(i)
                         if self.focus_follow:
-                            self.focus.flow = f
-                        self.sig_view_add.send(self, flow=f)
+                            self.focus.item = i
+                        self.sig_view_add.send(self, item=i)
                     else:
                         # This is a tad complicated. The sortedcontainers
                         # implementation assumes that the order key is stable. If
                         # it changes mid-way Very Bad Things happen. We detect when
                         # this happens, and re-fresh the item.
-                        self.order_key.refresh(f)
-                        self.sig_view_update.send(self, flow=f)
+                        self.order_key.refresh(i)
+                        self.sig_view_update.send(self, item=i)
                 else:
                     try:
-                        idx = self._view.index(f)
+                        idx = self._view.index(i)
                     except ValueError:
                         pass  # The value was not in the view
                     else:
-                        self._view.remove(f)
-                        self.sig_view_remove.send(self, flow=f, index=idx)
+                        self._view.remove(i)
+                        self.sig_view_remove.send(self, item=i, index=idx)
 
                 for name, flt in self.filtred_views_filter.items():
-                    if flt(f):
-                        if f not in self._view:
-                            self._base_add(f, name)
+                    if flt(i):
+                        if i not in self._view:
+                            self._base_add(i, name)
                             if self.focus_follow:
-                                self.focus.flow = f
-                            self.filtred_views_sig_view_add[name].send(self, flow=f)
+                                self.focus.item = i
+                            self.filtred_views_sig_view_add[name].send(self, item=i)
                         else:
                             # This is a tad complicated. The sortedcontainers
                             # implementation assumes that the order key is stable. If
                             # it changes mid-way Very Bad Things happen. We detect when
                             # this happens, and re-fresh the item.
-                            self.order_key.refresh(f)
-                            self.sig_view_update.send(self, flow=f)
+                            self.order_key.refresh(i)
+                            self.sig_view_update.send(self, item=i)
                     else:
                         try:
-                            idx = self._view.index(f)
+                            idx = self._view.index(i)
                         except ValueError:
                             pass  # The value was not in the view
                         else:
-                            self._view.remove(f)
-                            self.filtred_views_sig_view_remove[name].send(self, flow=f, index=idx)
+                            self._view.remove(i)
+                            self.filtred_views_sig_view_remove[name].send(self, item=i, index=idx)
 
 
 class Focus:
@@ -627,10 +627,10 @@ class Focus:
             self.view = v.filtred_views[view_name]
         else:
             self.view = v
-        self._flow: mitmproxy.viewitem.ViewItem = None
+        self._item: mitmproxy.viewitem.ViewItem = None
         self.sig_change = blinker.Signal()
         if len(self.view):
-            self.flow = self.view[0]
+            self.item = self.view[0]
         if view_name:
             v.filtred_views_sig_view_add[view_name].connect(self._sig_view_add)
             v.filtred_views_sig_view_remove[view_name].connect(self._sig_view_remove)
@@ -641,49 +641,49 @@ class Focus:
             v.sig_view_refresh.connect(self._sig_view_refresh)
 
     @property
-    def flow(self) -> typing.Optional[mitmproxy.viewitem.ViewItem]:
-        return self._flow
+    def item(self) -> typing.Optional[mitmproxy.viewitem.ViewItem]:
+        return self._item
 
-    @flow.setter
-    def flow(self, f: typing.Optional[mitmproxy.viewitem.ViewItem]):
-        if f is not None and f not in self.view:
-            raise ValueError("Attempt to set focus to flow not in view")
-        self._flow = f
+    @item.setter
+    def item(self, i: typing.Optional[mitmproxy.viewitem.ViewItem]):
+        if i is not None and i not in self.view:
+            raise ValueError("Attempt to set focus to item not in view")
+        self._item = i
         self.sig_change.send(self)
 
     @property
     def index(self) -> typing.Optional[int]:
-        if self.flow:
-            return self.view.index(self.flow)
+        if self.item:
+            return self.view.index(self.item)
         return None
 
     @index.setter
     def index(self, idx):
         if idx < 0 or idx > len(self.view) - 1:
-            raise ValueError("Index out of view bounds")
-        self.flow = self.view[idx]
+            raise ValueError("Index out of viewitem bounds")
+        self.item = self.view[idx]
 
-    def _nearest(self, f, v):
-        return min(self.base_view._bisect(f, self.view_name), len(v) - 1)
+    def _nearest(self, i, v):
+        return min(self.base_view._bisect(i, self.view_name), len(v) - 1)
 
-    def _sig_view_remove(self, view, flow, index):
+    def _sig_view_remove(self, view, item, index):
         if len(view) == 0:
-            self.flow = None
-        elif flow is self.flow:
+            self.item = None
+        elif item is self.item:
             self.index = min(index, len(self.view) - 1)
 
     def _sig_view_refresh(self, view):
         if len(view) == 0:
-            self.flow = None
-        elif self.flow is None:
-            self.flow = view[0]
-        elif self.flow not in view:
-            self.flow = view[self._nearest(self.flow, view)]
+            self.item = None
+        elif self.item is None:
+            self.item = view[0]
+        elif self.item not in view:
+            self.item = view[self._nearest(self.item, view)]
 
-    def _sig_view_add(self, view, flow):
+    def _sig_view_add(self, view, item):
         # We only have to act if we don't have a focus element
-        if not self.flow:
-            self.flow = flow
+        if not self.item:
+            self.item = item
 
 
 class Settings(collections.abc.Mapping):
@@ -699,14 +699,14 @@ class Settings(collections.abc.Mapping):
     def __len__(self) -> int:
         return len(self._values)
 
-    def __getitem__(self, f: mitmproxy.viewitem.ViewItem) -> dict:
-        if f.id not in self.view._store:
+    def __getitem__(self, i: mitmproxy.viewitem.ViewItem) -> dict:
+        if i.id not in self.view._store:
             raise KeyError
-        return self._values.setdefault(f.id, {})
+        return self._values.setdefault(i.id, {})
 
-    def _sig_store_remove(self, view, flow):
-        if flow.id in self._values:
-            del self._values[flow.id]
+    def _sig_store_remove(self, view, item):
+        if item.id in self._values:
+            del self._values[item.id]
 
     def _sig_store_refresh(self, view):
         for fid in list(self._values.keys()):

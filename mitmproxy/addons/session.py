@@ -230,12 +230,12 @@ class Session:
         )
         loader.add_option(
             "view_order_http1", str, "time",
-            "Flow sort order for HTTP/1.1 view.",
+            "View Items sort order for HTTP/1.1 view.",
             choices=list(map(lambda c: c[1], orders))
         )
         loader.add_option(
             "view_order_http2", str, "time",
-            "Flow sort order for HTTP/2 view.",
+            "View Items sort order for HTTP/2 view.",
             choices=list(map(lambda c: c[1], orders))
         )
         loader.add_option(

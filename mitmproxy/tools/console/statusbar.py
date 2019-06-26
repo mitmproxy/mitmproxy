@@ -186,7 +186,7 @@ class StatusBar(urwid.WidgetWrap):
         self.redraw()
         signals.call_in.send(seconds=self.REFRESHTIME, callback=self.refresh)
 
-    def sig_update(self, sender, flow=None, updated=None):
+    def sig_update(self, sender, item=None, updated=None):
         self.redraw()
 
     def keypress(self, *args, **kwargs):
@@ -284,7 +284,7 @@ class StatusBar(urwid.WidgetWrap):
         t = list()
         for view_type, view in self.master.views.items():
             fc = self.master.commands.execute("view.%s.properties.length" % view.flow_type)
-            if view.focus.flow is None:
+            if view.focus.item is None:
                 offset = 0
             else:
                 offset = view.focus.index + 1

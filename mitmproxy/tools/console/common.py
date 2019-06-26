@@ -125,44 +125,44 @@ else:
 
 
 @lru_cache(maxsize=800)
-def raw_format_flow(f):
-    f = dict(f)
+def raw_format_item(i):
+    i = dict(i)
     pile = []
     req = []
-    if f["extended"]:
+    if i["extended"]:
         req.append(
             fcol(
-                human.format_timestamp(f["req_timestamp"]),
+                human.format_timestamp(i["req_timestamp"]),
                 "highlight"
             )
         )
     else:
-        req.append(fcol(">>" if f["focus"] else "  ", "focus"))
+        req.append(fcol(">>" if i["focus"] else "  ", "focus"))
 
-    if f["marked"]:
+    if i["marked"]:
         req.append(fcol(SYMBOL_MARK, "mark"))
 
-    if f["req_is_replay"]:
+    if i["req_is_replay"]:
         req.append(fcol(SYMBOL_REPLAY, "replay"))
 
-    req.append(fcol(f["req_method"], "method"))
+    req.append(fcol(i["req_method"], "method"))
 
     preamble = sum(i[1] for i in req) + len(req) - 1
 
-    if f["intercepted"] and not f["acked"]:
+    if i["intercepted"] and not i["acked"]:
         uc = "intercept"
-    elif "resp_code" in f or "err_msg" in f:
+    elif "resp_code" in i or "err_msg" in i:
         uc = "text"
     else:
         uc = "title"
 
-    url = f["req_url"]
+    url = i["req_url"]
 
-    if f["max_url_len"] and len(url) > f["max_url_len"]:
-        url = url[:f["max_url_len"]] + "…"
+    if i["max_url_len"] and len(url) > i["max_url_len"]:
+        url = url[:i["max_url_len"]] + "…"
 
-    if f["req_http_version"] not in ("HTTP/1.0", "HTTP/1.1"):
-        url += " " + f["req_http_version"]
+    if i["req_http_version"] not in ("HTTP/1.0", "HTTP/1.1"):
+        url += " " + i["req_http_version"]
     req.append(
         urwid.Text([(uc, url)])
     )
@@ -174,37 +174,37 @@ def raw_format_flow(f):
         ("fixed", preamble, urwid.Text(""))
     )
 
-    if "resp_code" in f:
+    if "resp_code" in i:
         codes = {
             2: "code_200",
             3: "code_300",
             4: "code_400",
             5: "code_500",
         }
-        ccol = codes.get(f["resp_code"] // 100, "code_other")
+        ccol = codes.get(i["resp_code"] // 100, "code_other")
         resp.append(fcol(SYMBOL_RETURN, ccol))
-        if f["resp_is_replay"]:
+        if i["resp_is_replay"]:
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
-        resp.append(fcol(f["resp_code"], ccol))
-        if f["extended"]:
-            resp.append(fcol(f["resp_reason"], ccol))
-        if f["intercepted"] and f["resp_code"] and not f["acked"]:
+        resp.append(fcol(i["resp_code"], ccol))
+        if i["extended"]:
+            resp.append(fcol(i["resp_reason"], ccol))
+        if i["intercepted"] and i["resp_code"] and not i["acked"]:
             rc = "intercept"
         else:
             rc = "text"
 
-        if f["resp_ctype"]:
-            resp.append(fcol(f["resp_ctype"], rc))
-        resp.append(fcol(f["resp_clen"], rc))
-        resp.append(fcol(f["roundtrip"], rc))
+        if i["resp_ctype"]:
+            resp.append(fcol(i["resp_ctype"], rc))
+        resp.append(fcol(i["resp_clen"], rc))
+        resp.append(fcol(i["roundtrip"], rc))
 
-    elif f["err_msg"]:
+    elif i["err_msg"]:
         resp.append(fcol(SYMBOL_RETURN, "error"))
         resp.append(
             urwid.Text([
                 (
                     "error",
-                    f["err_msg"]
+                    i["err_msg"]
                 )
             ])
         )
@@ -212,69 +212,69 @@ def raw_format_flow(f):
     return urwid.Pile(pile)
 
 
-def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
+def format_item(i, focus, extended=False, hostheader=False, max_url_len=False):
     acked = False
-    if f.reply and f.reply.state == "committed":
+    if i.reply and i.reply.state == "committed":
         acked = True
-    pushed = ' PUSH_PROMISE' if 'h2-pushed-stream' in f.metadata else ''
+    pushed = ' PUSH_PROMISE' if 'h2-pushed-stream' in i.metadata else ''
     d = dict(
         focus=focus,
         extended=extended,
         max_url_len=max_url_len,
-        intercepted=f.intercepted,
+        intercepted=i.intercepted,
         acked=acked,
-        req_timestamp=f.request.timestamp_start,
-        req_is_replay=f.request.is_replay,
-        req_method=f.request.method + pushed,
-        req_url=f.request.pretty_url if hostheader else f.request.url,
-        req_http_version=f.request.http_version,
-        err_msg=f.error.msg if f.error else None,
-        marked=f.marked,
+        req_timestamp=i.request.timestamp_start,
+        req_is_replay=i.request.is_replay,
+        req_method=i.request.method + pushed,
+        req_url=i.request.pretty_url if hostheader else i.request.url,
+        req_http_version=i.request.http_version,
+        err_msg=i.error.msg if i.error else None,
+        marked=i.marked,
     )
-    if f.response:
-        if f.response.raw_content:
-            contentdesc = human.pretty_size(len(f.response.raw_content))
-        elif f.response.raw_content is None:
+    if i.response:
+        if i.response.raw_content:
+            contentdesc = human.pretty_size(len(i.response.raw_content))
+        elif i.response.raw_content is None:
             contentdesc = "[content missing]"
         else:
             contentdesc = "[no content]"
         duration = 0
-        if f.response.timestamp_end and f.request.timestamp_start:
-            duration = f.response.timestamp_end - f.request.timestamp_start
+        if i.response.timestamp_end and i.request.timestamp_start:
+            duration = i.response.timestamp_end - i.request.timestamp_start
         roundtrip = human.pretty_duration(duration)
 
         d.update(dict(
-            resp_code=f.response.status_code,
-            resp_reason=f.response.reason,
-            resp_is_replay=f.response.is_replay,
+            resp_code=i.response.status_code,
+            resp_reason=i.response.reason,
+            resp_is_replay=i.response.is_replay,
             resp_clen=contentdesc,
             roundtrip=roundtrip,
         ))
 
-        t = f.response.headers.get("content-type")
+        t = i.response.headers.get("content-type")
         if t:
             d["resp_ctype"] = t.split(";")[0]
         else:
             d["resp_ctype"] = ""
 
-    return raw_format_flow(tuple(d.items()))
+    return raw_format_item(tuple(d.items()))
 
 
 @lru_cache(maxsize=800)
-def raw_format_http2_flow(f):
-    f = dict(f)
+def raw_format_http2_item(i):
+    i = dict(i)
     pile = []
     l1 = []
     l2 = []
 
-    l1.append(fcol(">>" if f["focus"] else "  ", "focus"))
+    l1.append(fcol(">>" if i["focus"] else "  ", "focus"))
 
-    if f["marked"]:
+    if i["marked"]:
         l1.append(fcol(SYMBOL_MARK, "mark"))
 
     space_l2 = sum(i[1] for i in l1) + len(l1) + 13
 
-    l1.append(fcol(f['frame_type'], "frame_type"))
+    l1.append(fcol(i['frame_type'], "frame_type"))
 
     space_l1 = space_l2 - sum(i[1] for i in l1) + len(l1) - 1
 
@@ -282,13 +282,13 @@ def raw_format_http2_flow(f):
 
     space_l2 = sum(i[1] for i in l1) + len(l1) - 1
 
-    l1.append(fcol(f['source_addr'], "text"))
+    l1.append(fcol(i['source_addr'], "text"))
     l1.append(fcol(SYMBOL_DIRECTION, "text"))
-    l1.append(fcol(f['dest_addr'], "text"))
+    l1.append(fcol(i['dest_addr'], "text"))
 
     l2.append(("fixed", space_l2, urwid.Text("")))
-    l2.append(fcol("Stream ID: %s" % f['stream_id'], "stream_id"))
-    l2.append(fcol("Timestamp: %s" % f['timestamp'], "text"))
+    l2.append(fcol("Stream ID: %s" % i['stream_id'], "stream_id"))
+    l2.append(fcol("Timestamp: %s" % i['timestamp'], "text"))
 
     pile.append(urwid.Columns(l1, dividechars=1))
     pile.append(urwid.Columns(l2, dividechars=1))
@@ -310,4 +310,4 @@ def format_http2_item(i, focus):
         d.update(source_addr=i.flow.server_conn.address[0],
                  dest_addr=i.flow.client_conn.address[0])
 
-    return raw_format_http2_flow(tuple(sorted(d.items())))
+    return raw_format_http2_item(tuple(sorted(d.items())))

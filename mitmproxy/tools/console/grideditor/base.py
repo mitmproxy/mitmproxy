@@ -451,9 +451,9 @@ class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         """
         raise NotImplementedError
 
-    def set_data_update(self, vals, flow):
-        self.set_data(vals, flow)
-        signals.flow_change.send(self, flow = flow)
+    def set_data_update(self, vals, item):
+        self.set_data(vals, item)
+        signals.flow_change.send(self, item = item)
 
     def key_responder(self):
         return self._w
@@ -462,14 +462,14 @@ class FocusEditor(urwid.WidgetWrap, layoutwidget.LayoutWidget):
         self.call(self._w, "layout_popping")
 
     def layout_pushed(self, prev):
-        if self.master.view.focus.flow:
+        if self.master.view.focus.item:
             self._w = BaseGridEditor(
                 self.master,
                 self.title,
                 self.columns,
-                self.get_data(self.master.view.focus.flow),
+                self.get_data(self.master.view.focus.item),
                 self.set_data_update,
-                self.master.view.focus.flow,
+                self.master.view.focus.item,
             )
         else:
             self._w = urwid.Pile([])

@@ -428,21 +428,21 @@ def test_focus_follow():
 
         v.add([tft(start=4)])
         assert v.focus.index == 0
-        assert v.focus.flow.request.timestamp_start == 4
+        assert v.focus.item.request.timestamp_start == 4
 
         v.add([tft(start=7)])
         assert v.focus.index == 2
-        assert v.focus.flow.request.timestamp_start == 7
+        assert v.focus.item.request.timestamp_start == 7
 
         mod = tft(method="put", start=6)
         v.add([mod])
         assert v.focus.index == 2
-        assert v.focus.flow.request.timestamp_start == 7
+        assert v.focus.item.request.timestamp_start == 7
 
         mod.request.method = "GET"
         v.update([mod])
         assert v.focus.index == 2
-        assert v.focus.flow.request.timestamp_start == 6
+        assert v.focus.item.request.timestamp_start == 6
 
 
 def test_focus():
@@ -451,31 +451,31 @@ def test_focus():
     v.add([tft()])
     f = view.Focus(v)
     assert f.index is 0
-    assert f.flow is v[0]
+    assert f.item is v[0]
 
     # Start empty
     v = viewhttp1.ViewHttp1()
     f = view.Focus(v)
     assert f.index is None
-    assert f.flow is None
+    assert f.item is None
 
     v.add([tft(start=1)])
     assert f.index == 0
-    assert f.flow is v[0]
+    assert f.item is v[0]
 
     # Try to set to something not in view
     with pytest.raises(ValueError):
-        f.__setattr__("flow", tft())
+        f.__setattr__("item", tft())
     with pytest.raises(ValueError):
         f.__setattr__("index", 99)
 
     v.add([tft(start=0)])
     assert f.index == 1
-    assert f.flow is v[1]
+    assert f.item is v[1]
 
     v.add([tft(start=2)])
     assert f.index == 1
-    assert f.flow is v[1]
+    assert f.item is v[1]
 
     f.index = 0
     assert f.index == 0
@@ -484,15 +484,15 @@ def test_focus():
     v.remove([v[1]])
     v[1].intercept()
     assert f.index == 1
-    assert f.flow is v[1]
+    assert f.item is v[1]
 
     v.remove([v[1]])
     assert f.index == 0
-    assert f.flow is v[0]
+    assert f.item is v[0]
 
     v.remove([v[0]])
     assert f.index is None
-    assert f.flow is None
+    assert f.item is None
 
     v.add([
         tft(method="get", start=0),
@@ -501,8 +501,8 @@ def test_focus():
         tft(method="get", start=3),
     ])
 
-    f.flow = v[2]
-    assert f.flow.request.method == "PUT"
+    f.item = v[2]
+    assert f.item.request.method == "PUT"
 
     filt = flowfilter.parse("~m get")
     v.set_filter(filt)

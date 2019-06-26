@@ -6,9 +6,9 @@ from mitmproxy.tools.console import common
 
 def test_format_flow():
     f = tflow.tflow(resp=True)
-    assert common.format_flow(f, True)
-    assert common.format_flow(f, True, hostheader=True)
-    assert common.format_flow(f, True, extended=True)
+    assert common.format_item(f, True)
+    assert common.format_item(f, True, hostheader=True)
+    assert common.format_item(f, True, extended=True)
 
 
 def test_format_keyvals():

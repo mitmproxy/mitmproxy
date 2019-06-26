@@ -122,7 +122,7 @@ class CookieAttributeEditor(base.FocusEditor):
         return ret
 
     def layout_pushed(self, prev):
-        if self.grideditor.master.view.focus.flow:
+        if self.grideditor.master.view.focus.item:
             self._w = base.BaseGridEditor(
                 self.grideditor.master,
                 self.title,

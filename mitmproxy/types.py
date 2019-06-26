@@ -339,7 +339,7 @@ class _FlowType(_BaseFlowType):
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> flow.Flow:
         try:
-            flows = manager.call_strings("view.http1.flows.resolve", [s])
+            flows = manager.call_strings("view.http1.items.resolve", [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
         if len(flows) != 1:
@@ -358,7 +358,7 @@ class _FlowsType(_BaseFlowType):
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[flow.Flow]:
         try:
-            return manager.call_strings("view.http1.flows.resolve", [s])
+            return manager.call_strings("view.http1.items.resolve", [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
 
@@ -382,7 +382,7 @@ class _ViewItemType(_BaseFlowType):
                 view_type = re.search(r'@\w+\.(\w+)', s).group(1)
             else:
                 view_type = manager.master.get_current_view_type()
-            flows = manager.call_strings("view.%s.flows.resolve" % view_type, [s])
+            flows = manager.call_strings("view.%s.items.resolve" % view_type, [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
         if len(flows) != 1:
@@ -405,7 +405,7 @@ class _ViewItemsType(_BaseFlowType):
                 view_type = re.search(r'@\w+\.(\w+)', s).group(1)
             else:
                 view_type = manager.master.get_current_view_type()
-            return manager.call_strings("view.%s.flows.resolve" % view_type, [s])
+            return manager.call_strings("view.%s.items.resolve" % view_type, [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
 

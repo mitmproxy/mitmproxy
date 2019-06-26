@@ -322,14 +322,14 @@ class ConsoleAddon:
         """View help."""
         self.master.switch_view("help")
 
-    @command.command("console.view.flow")
-    def view_flow(self, flow: viewitem.ViewItem) -> None:
-        """View a flow."""
-        if isinstance(flow, http.HTTPFlow):
-            if hasattr(flow, "request"):
+    @command.command("console.view.item")
+    def view_item(self, viewitem: viewitem.ViewItem) -> None:
+        """View a viewitem."""
+        if isinstance(viewitem, http.HTTPFlow):
+            if hasattr(viewitem, "request"):
                 # FIME: Also set focus?
                 self.master.switch_view("flowview_http1")
-        elif isinstance(flow, http2.HTTP2Frame):
+        elif isinstance(viewitem, http2.HTTP2Frame):
             self.master.switch_view("flowview_http2")
 
     @command.command("console.exit")
@@ -347,14 +347,14 @@ class ConsoleAddon:
 
     @command.command("console.bodyview")
     @command.argument("part", type=mitmproxy.types.Choice("console.bodyview.options"))
-    def bodyview(self, f: viewitem.ViewItem, part: str) -> None:
+    def bodyview(self, i: viewitem.ViewItem, part: str) -> None:
         """
             Spawn an external viewer for a flow request or response body based
             on the detected MIME type. We use the mailcap system to find the
             correct viewier, and fall back to the programs in $PAGER or $EDITOR
             if necessary.
         """
-        fpart = getattr(f, part, None)
+        fpart = getattr(i, part, None)
         if not fpart:
             raise exceptions.CommandError("Part must be either request or response, not %s." % part)
         t = fpart.headers.get("content-type")
@@ -397,19 +397,19 @@ class ConsoleAddon:
         """
             Edit a component of the currently focused flow.
         """
-        flow = self.master.view.focus.flow
+        item = self.master.view.focus.item
         # This shouldn't be necessary once this command is "console.edit @focus",
         # but for now it is.
-        if not flow:
-            raise exceptions.CommandError("No flow selected.")
-        flow.backup()
+        if not item:
+            raise exceptions.CommandError("No item selected.")
+        item.backup()
 
         require_dummy_response = (
             part in ("response-headers", "response-body", "set-cookies") and
-            flow.response is None
+            item.response is None
         )
         if require_dummy_response:
-            flow.response = http.HTTPResponse.make()
+            item.response = http.HTTPResponse.make()
         if part == "cookies":
             self.master.switch_view("edit_focus_cookies")
         elif part == "form":
@@ -424,9 +424,9 @@ class ConsoleAddon:
             self.master.switch_view("edit_focus_response_headers")
         elif part in ("request-body", "response-body"):
             if part == "request-body":
-                message = flow.request
+                message = item.request
             else:
-                message = flow.response
+                message = item.response
             c = self.master.spawn_editor(message.get_content(strict=False) or b"")
             # Fix an issue caused by some editors when editing a
             # request/response body. Many editors make it hard to save a
@@ -439,7 +439,7 @@ class ConsoleAddon:
             self.master.switch_view("edit_focus_setcookies")
         elif part in ["url", "method", "status_code", "reason"]:
             self.master.commands.execute(
-                "console.command flow.set @focus %s " % part
+                "console.command item.set @focus %s " % part
             )
 
     def _grideditor(self):
@@ -643,8 +643,8 @@ class ConsoleAddon:
     def running(self):
         self.started = True
 
-    def update(self, flows):
-        if not flows:
+    def update(self, items):
+        if not items:
             signals.update_settings.send(self)
-        for f in flows:
-            signals.flow_change.send(self, flow=f)
+        for i in items:
+            signals.flow_change.send(self, item=i)

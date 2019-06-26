@@ -63,9 +63,9 @@ class Save:
                 self.start_stream_to_path(ctx.options.save_stream_file, self.filt)
 
     @command.command("save.file")
-    def save(self, flows: typing.Sequence[viewitem.ViewItem], path: mitmproxy.types.Path) -> None:
+    def save(self, viewitems: typing.Sequence[viewitem.ViewItem], path: mitmproxy.types.Path) -> None:
         """
-            Save flows to a file. If the path starts with a +, flows are
+            Save viewitems to a file. If the path starts with a +, viewitems are
             appended to the file, otherwise it is over-written.
         """
 
@@ -74,13 +74,13 @@ class Save:
         except IOError as v:
             raise exceptions.CommandError(v) from v
         stream = io.FlowWriter(f)
-        for i in flows:
+        for i in viewitems:
             if isinstance(i, http2.HTTP2Frame):
                 i.flow.messages = [i]
                 i = i.flow
             stream.add(i)
         f.close()
-        ctx.log.alert("Saved %s flows." % len(flows))
+        ctx.log.alert("Saved %s viewitems." % len(viewitems))
 
     def tcp_start(self, flow):
         if self.stream:

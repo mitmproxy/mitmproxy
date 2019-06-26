@@ -13,18 +13,18 @@ def maybe_timestamp(base, attr):
         return "active"
 
 
-def flowdetails(state, flow: http.HTTPFlow):
+def viewitemdetails(state, viewitem: http.HTTPFlow):
     text = []
 
-    sc = flow.flow.server_conn
-    cc = flow.flow.client_conn
+    sc = viewitem.flow.server_conn
+    cc = viewitem.flow.client_conn
     req = None
     resp = None
     metadata = None
-    if isinstance(flow, http.HTTPFlow):
-        req = flow.request
-        resp = flow.response
-        metadata = flow.metadata
+    if isinstance(viewitem, http.HTTPFlow):
+        req = viewitem.request
+        resp = viewitem.response
+        metadata = viewitem.metadata
 
     if metadata is not None and len(metadata) > 0:
         parts = [(str(k), repr(v)) for k, v in metadata.items()]

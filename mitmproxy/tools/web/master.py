@@ -48,25 +48,25 @@ class WebMaster(master.Master):
             self, self.options.web_debug
         )
 
-    def _sig_view_add(self, view, flow):
+    def _sig_view_add(self, view, item):
         app.ClientConnection.broadcast(
             resource="flows",
             cmd="add",
-            data=app.flow_to_json(flow)
+            data=app.flow_to_json(item)
         )
 
-    def _sig_view_update(self, view, flow):
+    def _sig_view_update(self, view, item):
         app.ClientConnection.broadcast(
             resource="flows",
             cmd="update",
-            data=app.flow_to_json(flow)
+            data=app.flow_to_json(item)
         )
 
-    def _sig_view_remove(self, view, flow, index):
+    def _sig_view_remove(self, view, item, index):
         app.ClientConnection.broadcast(
             resource="flows",
             cmd="remove",
-            data=flow.id
+            data=item.id
         )
 
     def _sig_view_refresh(self, view):
