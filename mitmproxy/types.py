@@ -381,10 +381,7 @@ class _ViewItemType(_BaseFlowType):
             if re.search(r'@\w+\.\w+', s):
                 view_type = re.search(r'@\w+\.(\w+)', s).group(1)
             else:
-                for view_type in manager.master.views.keys():
-                    if (manager.master.window.current_window("flowlist_%s" % view_type)
-                            or manager.master.window.current_window("flowview_%s" % view_type)):
-                        break
+                view_type = manager.master.get_current_view_type()
             flows = manager.call_strings("view.%s.flows.resolve" % view_type, [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
@@ -406,10 +403,8 @@ class _ViewItemsType(_BaseFlowType):
         try:
             if re.search(r'@\w+\.\w+', s):
                 view_type = re.search(r'@\w+\.(\w+)', s).group(1)
-            for view_type in manager.master.views.keys():
-                if (manager.master.window.current_window("flowlist_%s" % view_type)
-                        or manager.master.window.current_window("flowview_%s" % view_type)):
-                    break
+            else:
+                view_type = manager.master.get_current_view_type()
             return manager.call_strings("view.%s.flows.resolve" % view_type, [s])
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e

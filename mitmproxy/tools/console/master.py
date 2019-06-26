@@ -225,6 +225,13 @@ class ConsoleMaster(master.Master):
     def switch_view(self, name):
         self.window.push(name)
 
+    def get_current_view_type(self):
+        for view_type in self.views.keys():
+            if (self.window.current_window("flowlist_%s" % view_type)
+                    or self.window.current_window("flowview_%s" % view_type)):
+                return view_type
+        return "http1"
+
     def quit(self, a):
         if a != "n":
             self.shutdown()
