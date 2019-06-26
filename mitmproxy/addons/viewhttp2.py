@@ -44,16 +44,6 @@ class OrderStreamID(view._OrderKey):
         return f.frame_type
 
 
-class OrderKeySize(view._OrderKey):
-    def generate(self, f: http2.HTTP2Frame) -> int:
-        s = 0
-        if f.request.raw_content:
-            s += len(f.request.raw_content)
-        if f.response and f.response.raw_content:
-            s += len(f.response.raw_content)
-        return s
-
-
 class ViewHttp2(view.View):
     def __init__(self):
         super().__init__()
@@ -67,8 +57,7 @@ class ViewHttp2(view.View):
         self.filter = self.matchall
         self.orders = dict(
             time = OrderTimestamp(self), method = OrderStreamID(self),
-            url = OrderFrameType(self), size = OrderKeySize(self),
-        )
+            url = OrderFrameType(self))
         self.order_key = self.default_order
         self._view = sortedcontainers.SortedListWithKey(
             key = self.order_key
