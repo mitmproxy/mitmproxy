@@ -171,6 +171,20 @@ class TestSession:
         assert len(s._hot_store) == 1
         assert s.load_storage() == [f]
         await asyncio.sleep(1)
+
+        for lflow, flow in list(zip(s.load_storage(), [f])): # TODO clean THIS
+            print("--")
+            print(lflow.__dict__['server_conn'].__dict__)
+            print(flow.__dict__['server_conn'].__dict__)
+            for k1 in lflow.__dict__.keys():
+                if hasattr(lflow.__dict__[k1], "__dict__"):
+                    for k2 in lflow.__dict__[k1].__dict__.keys():
+                        if hasattr(lflow.__dict__[k1].__dict__[k2], "__dict__"):
+                            for k3 in lflow.__dict__[k1].__dict__[k2].__dict__.keys():
+                                assert lflow.__dict__[k1].__dict__[k2].__dict__[k3] == lflow.__dict__[k1].__dict__[k2].__dict__[k3]
+                        assert lflow.__dict__[k1].__dict__[k2] == flow.__dict__[k1].__dict__[k2]
+
+            assert lflow.__dict__ == flow.__dict__
         assert all([lflow.__dict__ == flow.__dict__ for lflow, flow in list(zip(s.load_storage(), [f]))])
 
         f.server_conn.via = tflow.tserver_conn()

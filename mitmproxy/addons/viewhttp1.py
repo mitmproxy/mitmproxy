@@ -15,7 +15,9 @@ import sortedcontainers
 import mitmproxy.viewitem
 from mitmproxy.addons import view
 from mitmproxy import flowfilter
+from mitmproxy import exceptions
 from mitmproxy import command
+from mitmproxy import connections
 from mitmproxy import http  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
@@ -29,7 +31,7 @@ from mitmproxy import http  # noqa
 # when they are updated.
 
 
-class OrderTimestamp(view._OrderKey):
+class OrderRequestStart(view._OrderKey):
     def generate(self, f: http.HTTPFlow) -> int:
         return f.request.timestamp_start or 0
 
@@ -65,10 +67,10 @@ class ViewHttp1(view.View):
             ("z", "size"),
         ]
 
-        self.default_order = OrderTimestamp(self)
+        self.default_order = OrderRequestStart(self)
         self.filter = self.matchall
         self.orders = dict(
-            time = OrderTimestamp(self), method = OrderRequestMethod(self),
+            time = OrderRequestStart(self), method = OrderRequestMethod(self),
             url = OrderRequestURL(self), size = OrderKeySize(self),
         )
         self.order_key = self.default_order
@@ -188,7 +190,7 @@ class ViewHttp1(view.View):
         """
             Set a value in the settings store for the specified flows.
         """
-        super().setvalue(flows, key)
+        super().setvalue(flows, key, value)
 
     # Flows
     @command.command("view.http1.flows.duplicate")
@@ -215,7 +217,17 @@ class ViewHttp1(view.View):
 
     @command.command("view.http1.flows.create")
     def create(self, method: str, url: str) -> None:
-        super().create(method, url)
+        try:
+            req = http.HTTPRequest.make(method.upper(), url)
+        except ValueError as e:
+            raise exceptions.CommandError("Invalid URL: %s" % e)
+        c = connections.ClientConnection.make_dummy(("", 0))
+        s = connections.ServerConnection.make_dummy((req.host, req.port))
+        f = http.HTTPFlow(c, s)
+        f.request = req
+        f.request.headers["Host"] = req.host
+        self.add([f])
+
 
     @command.command("view.http1.flows.load")
     def load_file(self, path: mitmproxy.types.Path) -> None:

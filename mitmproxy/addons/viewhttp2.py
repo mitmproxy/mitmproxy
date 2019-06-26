@@ -186,7 +186,7 @@ class ViewHttp2(view.View):
         """
             Set a value in the settings store for the specified flows.
         """
-        super().setvalue(flows, key)
+        super().setvalue(flows, key, value)
 
     # Flows
     @command.command("view.http2.flows.duplicate")

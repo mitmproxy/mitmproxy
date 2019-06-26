@@ -462,9 +462,6 @@ class View(collections.abc.Sequence):
                 raise exceptions.CommandError("Invalid flow filter: %s" % spec)
             return [i for i in self._store.values() if filt(i)]
 
-    def create(self, method: str, url: str) -> None:
-        raise NotImplementedError()
-
     def load_file(self, path: mitmproxy.types.Path) -> None:
         """
             Load flows into the view, without processing them with addons.

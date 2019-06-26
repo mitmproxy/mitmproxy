@@ -18,43 +18,46 @@ def tft(*, method="get", start=0):
 
 
 def test_order_refresh():
-    v = view.View()
-    sargs = []
+    for k, v in dict(http1=viewhttp1.ViewHttp1(), http2=viewhttp2.ViewHttp2()).items():
+        sargs = []
 
-    def save(*args, **kwargs):
-        sargs.extend([args, kwargs])
+        def save(*args, **kwargs):
+            sargs.extend([args, kwargs])
 
-    v.sig_view_refresh.connect(save)
+        v.sig_view_refresh.connect(save)
 
-    tf = tflow.tflow(resp=True)
-    with taddons.context() as tctx:
-        tctx.configure(v, view_order="time")
-        v.add([tf])
-        tf.request.timestamp_start = 10
-        assert not sargs
-        v.update([tf])
-        assert sargs
+        tf = tflow.tflow(resp=True)
+        with taddons.context() as tctx:
+            tctx.configure(v, **{"view_order_%s" % k :"time"})
+            v.add([tf])
+            tf.request.timestamp_start = 10
+            assert not sargs
+            v.update([tf])
+            assert sargs
 
 
 def test_order_generators():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     tf = tflow.tflow(resp=True)
 
-    rs = view.OrderRequestStart(v)
+    rs = viewhttp1.OrderRequestStart(v)
     assert rs.generate(tf) == 946681200
 
-    rm = view.OrderRequestMethod(v)
+    rm = viewhttp1.OrderRequestMethod(v)
     assert rm.generate(tf) == tf.request.method
 
-    ru = view.OrderRequestURL(v)
+    ru = viewhttp1.OrderRequestURL(v)
     assert ru.generate(tf) == tf.request.url
 
-    sz = view.OrderKeySize(v)
+    sz = viewhttp1.OrderKeySize(v)
     assert sz.generate(tf) == len(tf.request.raw_content) + len(tf.response.raw_content)
+
+    v = viewhttp2.ViewHttp2()
+    tf = tflow.tflow(resp=True)
 
 
 def test_simple():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     f = tft(start=1)
     assert v.store_count() == 0
     v.request(f)
@@ -106,7 +109,7 @@ def test_simple():
 
 
 def test_filter():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     v.request(tft(method="get"))
     v.request(tft(method="put"))
     v.request(tft(method="get"))
@@ -142,7 +145,7 @@ def tdump(path, flows):
 
 
 def test_create():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     with taddons.context():
         v.create("get", "http://foo.com")
         assert len(v) == 1
@@ -156,40 +159,40 @@ def test_create():
 
 
 def test_orders():
-    v = view.View()
-    with taddons.context(v):
-        assert v.order_options()
+    for v in (viewhttp1.ViewHttp1(), viewhttp2.ViewHttp2()):
+        with taddons.context(v):
+            assert v.order_options()
 
 
 @pytest.mark.asyncio
 async def test_load(tmpdir):
     path = str(tmpdir.join("path"))
-    v = view.View()
-    with taddons.context() as tctx:
-        tctx.master.addons.add(v)
-        tdump(
-            path,
-            [
-                tflow.tflow(resp=True),
-                tflow.tflow(resp=True)
-            ]
-        )
-        v.load_file(path)
-        assert len(v) == 2
-        v.load_file(path)
-        assert len(v) == 4
-        try:
-            v.load_file("nonexistent_file_path")
-        except IOError:
-            assert False
-        with open(path, "wb") as f:
-            f.write(b"invalidflows")
-        v.load_file(path)
-        assert await tctx.master.await_log("Invalid data format.")
+    for v in (viewhttp1.ViewHttp1(), viewhttp2.ViewHttp2()):
+        with taddons.context() as tctx:
+            tctx.master.addons.add(v)
+            tdump(
+                path,
+                [
+                    tflow.tflow(resp=True),
+                    tflow.tflow(resp=True)
+                ]
+            )
+            v.load_file(path)
+            assert len(v) == 2
+            v.load_file(path)
+            assert len(v) == 4
+            try:
+                v.load_file("nonexistent_file_path")
+            except IOError:
+                assert False
+            with open(path, "wb") as f:
+                f.write(b"invalidflows")
+            v.load_file(path)
+            assert await tctx.master.await_log("Invalid data format.")
 
 
 def test_resolve():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     with taddons.context() as tctx:
         assert tctx.command(v.resolve, "@all") == []
         assert tctx.command(v.resolve, "@focus") == []
@@ -234,77 +237,100 @@ def test_resolve():
         with pytest.raises(exceptions.CommandError, match="Invalid flow filter"):
             tctx.command(v.resolve, "~")
 
+    v = viewhttp2.ViewHttp2()
+    with taddons.context() as tctx:
+        assert tctx.command(v.resolve, "@all") == []
+        assert tctx.command(v.resolve, "@focus") == []
+        assert tctx.command(v.resolve, "@shown") == []
+        assert tctx.command(v.resolve, "@hidden") == []
+        assert tctx.command(v.resolve, "@marked") == []
+        assert tctx.command(v.resolve, "@unmarked") == []
+        assert tctx.command(v.resolve, "~m get") == []
+        assert len(tctx.command(v.resolve, "@focus")) == 1
+        assert len(tctx.command(v.resolve, "@all")) == 1
+        assert len(tctx.command(v.resolve, "@shown")) == 1
+        assert len(tctx.command(v.resolve, "@unmarked")) == 1
+        assert tctx.command(v.resolve, "@hidden") == []
+        assert tctx.command(v.resolve, "@marked") == []
+        assert len(tctx.command(v.resolve, "@focus")) == 1
+        assert len(tctx.command(v.resolve, "@shown")) == 2
+        assert len(tctx.command(v.resolve, "@all")) == 2
+        assert tctx.command(v.resolve, "@hidden") == []
+        assert tctx.command(v.resolve, "@marked") == []
+
+        with pytest.raises(exceptions.CommandError, match="Invalid flow filter"):
+            tctx.command(v.resolve, "~")
 
 def test_movement():
-    v = view.View()
-    with taddons.context():
-        v.go(0)
-        v.add([
-            tflow.tflow(),
-            tflow.tflow(),
-            tflow.tflow(),
-            tflow.tflow(),
-            tflow.tflow(),
-        ])
-        assert v.focus.index == 0
-        v.go(-1)
-        assert v.focus.index == 4
-        v.go(0)
-        assert v.focus.index == 0
-        v.go(1)
-        assert v.focus.index == 1
-        v.go(999)
-        assert v.focus.index == 4
-        v.go(-999)
-        assert v.focus.index == 0
+    for v in (viewhttp1.ViewHttp1(), viewhttp2.ViewHttp2()):
+        with taddons.context():
+            v.go(0)
+            v.add([
+                tflow.tflow(),
+                tflow.tflow(),
+                tflow.tflow(),
+                tflow.tflow(),
+                tflow.tflow(),
+            ])
+            assert v.focus.index == 0
+            v.go(-1)
+            assert v.focus.index == 4
+            v.go(0)
+            assert v.focus.index == 0
+            v.go(1)
+            assert v.focus.index == 1
+            v.go(999)
+            assert v.focus.index == 4
+            v.go(-999)
+            assert v.focus.index == 0
 
-        v.focus_next()
-        assert v.focus.index == 1
-        v.focus_prev()
-        assert v.focus.index == 0
+            v.focus_next()
+            assert v.focus.index == 1
+            v.focus_prev()
+            assert v.focus.index == 0
 
 
 def test_duplicate():
-    v = view.View()
-    with taddons.context():
-        f = [
-            tflow.tflow(),
-            tflow.tflow(),
-        ]
-        v.add(f)
-        assert len(v) == 2
-        v.duplicate(f)
-        assert len(v) == 4
-        assert v.focus.index == 2
+    for v in (viewhttp1.ViewHttp1(), viewhttp2.ViewHttp2()):
+        with taddons.context():
+            f = [
+                tflow.tflow(),
+                tflow.tflow(),
+            ]
+            v.add(f)
+            assert len(v) == 2
+            v.duplicate(f)
+            assert len(v) == 4
+            assert v.focus.index == 2
 
 
 def test_remove():
-    v = view.View()
-    with taddons.context():
-        f = [tflow.tflow(), tflow.tflow()]
-        v.add(f)
-        assert len(v) == 2
-        v.remove(f)
-        assert len(v) == 0
+    for v in (viewhttp1.ViewHttp1(), viewhttp2.ViewHttp2()):
+        with taddons.context():
+            f = [tflow.tflow(), tflow.tflow()]
+            v.add(f)
+            assert len(v) == 2
+            v.remove(f)
+            assert len(v) == 0
 
 
 def test_setgetval():
-    v = view.View()
-    with taddons.context():
-        f = tflow.tflow()
-        v.add([f])
-        v.setvalue([f], "key", "value")
-        assert v.getvalue(f, "key", "default") == "value"
-        assert v.getvalue(f, "unknow", "default") == "default"
+    for v in (viewhttp1.ViewHttp1(), viewhttp2.ViewHttp2()):
+        with taddons.context():
+            f = tflow.tflow()
+            v.add([f])
+            v.setvalue([f], "key", "value")
+            assert v.getvalue(f, "key", "default") == "value"
+            assert v.getvalue(f, "unknow", "default") == "default"
 
-        v.setvalue_toggle([f], "key")
-        assert v.getvalue(f, "key", "default") == "true"
-        v.setvalue_toggle([f], "key")
-        assert v.getvalue(f, "key", "default") == "false"
+            v.setvalue_toggle([f], "key")
+            assert v.getvalue(f, "key", "default") == "true"
+            v.setvalue_toggle([f], "key")
+            assert v.getvalue(f, "key", "default") == "false"
 
 
 def test_order():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     v.request(tft(method="get", start=1))
     v.request(tft(method="put", start=2))
     v.request(tft(method="get", start=3))
@@ -327,8 +353,18 @@ def test_order():
         v.set_order("not_an_order")
 
 
+    v = viewhttp2.ViewHttp2()
+    v.set_order("time")
+    assert v.get_order() == "time"
+    assert [i.request.timestamp_start for i in v] == [4, 3, 2, 1]
+
+    v.set_reversed(False)
+    assert [i.request.timestamp_start for i in v] == [1, 2, 3, 4]
+    with pytest.raises(exceptions.CommandError):
+        v.set_order("not_an_order")
+
 def test_reversed():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     v.request(tft(start=1))
     v.request(tft(start=2))
     v.request(tft(start=3))
@@ -345,9 +381,11 @@ def test_reversed():
     assert v._bisect(v[0]) == 1
     assert v._bisect(v[2]) == 3
 
+    v = viewhttp2.ViewHttp2()
+
 
 def test_update():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     flt = flowfilter.parse("~m get")
     v.set_filter(flt)
 
@@ -366,6 +404,7 @@ def test_update():
     v.update([f])
     assert f in v
 
+    v = viewhttp2.ViewHttp2()
 
 class Record:
     def __init__(self):
@@ -382,7 +421,7 @@ class Record:
 
 
 def test_signals():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     rec_add = Record()
     rec_update = Record()
     rec_remove = Record()
@@ -438,11 +477,11 @@ def test_signals():
 
 
 def test_focus_follow():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     with taddons.context(v) as tctx:
         console_addon = consoleaddons.ConsoleAddon(tctx.master)
         tctx.configure(console_addon)
-        tctx.configure(v, console_focus_follow=True, view_filter="~m get")
+        tctx.configure(v, console_focus_follow=True, view_filter_http1="~m get")
 
         v.add([tft(start=5)])
         assert v.focus.index == 0
@@ -468,14 +507,14 @@ def test_focus_follow():
 
 def test_focus():
     # Special case - initialising with a view that already contains data
-    v = view.View()
-    v.add([tft()])
-    f = view.Focus(v)
-    assert f.index is 0
-    assert f.flow is v[0]
+    for v in (viewhttp1.ViewHttp1(), viewhttp2.ViewHttp2()):
+        v.add([tft()])
+        f = view.Focus(v)
+        assert f.index is 0
+        assert f.flow is v[0]
 
     # Start empty
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     f = view.Focus(v)
     assert f.index is None
     assert f.flow is None
@@ -535,7 +574,7 @@ def test_focus():
 
 
 def test_settings():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     f = tft()
 
     with pytest.raises(KeyError):
@@ -557,7 +596,7 @@ def test_settings():
 
 
 def test_properties():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     f = tft()
     v.request(f)
     assert v.get_length() == 1
@@ -568,15 +607,15 @@ def test_properties():
 
 
 def test_configure():
-    v = view.View()
+    v = viewhttp1.ViewHttp1()
     with taddons.context(v) as tctx:
-        tctx.configure(v, view_filter="~q")
+        tctx.configure(v, view_filter_http1="~q")
         with pytest.raises(Exception, match="Invalid interception filter"):
-            tctx.configure(v, view_filter="~~")
+            tctx.configure(v, view_filter_http1="~~")
 
-        tctx.configure(v, view_order="method")
+        tctx.configure(v, view_order_http1="method")
         with pytest.raises(Exception, match="Unknown flow order"):
-            tctx.configure(v, view_order="no")
+            tctx.configure(v, view_order_http1="no")
 
         tctx.configure(v, view_order_reversed=True)
 
