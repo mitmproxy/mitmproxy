@@ -171,27 +171,21 @@ class TestSession:
         assert len(s._hot_store) == 1
         assert s.load_storage() == [f]
         await asyncio.sleep(1)
-
-        for lflow, flow in list(zip(s.load_storage(), [f])): # TODO clean THIS
-            print("--")
-            print(lflow.__dict__['server_conn'].__dict__)
-            print(flow.__dict__['server_conn'].__dict__)
-            for k1 in lflow.__dict__.keys():
-                if hasattr(lflow.__dict__[k1], "__dict__"):
-                    for k2 in lflow.__dict__[k1].__dict__.keys():
-                        if hasattr(lflow.__dict__[k1].__dict__[k2], "__dict__"):
-                            for k3 in lflow.__dict__[k1].__dict__[k2].__dict__.keys():
-                                assert lflow.__dict__[k1].__dict__[k2].__dict__[k3] == lflow.__dict__[k1].__dict__[k2].__dict__[k3]
-                        assert lflow.__dict__[k1].__dict__[k2] == flow.__dict__[k1].__dict__[k2]
-
-            assert lflow.__dict__ == flow.__dict__
-        assert all([lflow.__dict__ == flow.__dict__ for lflow, flow in list(zip(s.load_storage(), [f]))])
+        f.flow = None
+        st = s.load_storage()
+        for fl in st:
+            fl.flow = None
+        assert all([lflow.__dict__ == flow.__dict__ for lflow, flow in list(zip(st, [f]))])
 
         f.server_conn.via = tflow.tserver_conn()
         s.request(f)
         await asyncio.sleep(0.6)
         assert len(s._hot_store) == 0
-        assert all([lflow.__dict__ == flow.__dict__ for lflow, flow in list(zip(s.load_storage(), [f]))])
+
+        st = s.load_storage()
+        for fl in st:
+            fl.flow = None
+        assert all([lflow.__dict__ == flow.__dict__ for lflow, flow in list(zip(st, [f]))])
 
         flows = [self.tft() for _ in range(500)]
         s.update(flows)
@@ -233,7 +227,12 @@ class TestSession:
         ).fetchall()
         assert len(rows) == 1
         assert s.db_store.body_ledger == {f.id}
-        assert all([lf.__dict__ == rf.__dict__ for lf, rf in list(zip(s.load_view(), [f, f2]))])
+        f.flow = None
+        f2.flow = None
+        st = s.load_storage()
+        for fl in st:
+            fl.flow = None
+        assert all([lf.__dict__ == rf.__dict__ for lf, rf in list(zip(st, [f, f2]))])
 
     @pytest.mark.asyncio
     async def test_storage_order(self):

@@ -74,15 +74,25 @@ def map(km):
     km.add(
         "o",
         """
-        console.choose.cmd Order view.order.options
-        set view_order={choice}
+        console.choose.cmd Order view.http1.order.options
+        set view_order_http1={choice}
         """,
-        ["flowlist_http1", "flowlist_http2"],
+        ["flowlist_http1"],
+        "Set flow list order"
+    )
+    km.add(
+        "o",
+        """
+        console.choose.cmd Order view.http2.order.options
+        set view_order_http2={choice}
+        """,
+        ["flowlist_http2"],
         "Set flow list order"
     )
     km.add("r", "replay.client @focus", ["flowlist_http1", "flowlist_http2", "flowview_http1", "flowview_http2"], "Replay this flow")
     km.add("S", "console.command replay.server ", ["flowlist_http1", "flowlist_http2"], "Start server replay")
-    km.add("v", "set view_order_reversed=toggle", ["flowlist_http1", "flowlist_http2"], "Reverse flow list order")
+    km.add("v", "set view_order_http1_reversed=toggle", ["flowlist_http1"], "Reverse flow list order")
+    km.add("v", "set view_order_http2_reversed=toggle", ["flowlist_http2"], "Reverse flow list order")
     km.add("U", "flow.mark @all false", ["flowlist_http1", "flowlist_http2"], "Un-set all marks")
     km.add("w", "console.command save.file @shown ", ["flowlist_http1", "flowlist_http2"], "Save listed flows to file")
     km.add("V", "flow.revert @focus", ["flowlist_http1", "flowlist_http2",
@@ -110,8 +120,14 @@ def map(km):
     )
     km.add(
         "f",
-        "view.settings.setval.toggle @focus fullcontents",
-        ["flowview_http1", "flowview_http2"],
+        "view.http1.settings.setval.toggle @focus fullcontents",
+        ["flowview_http1"],
+        "Toggle viewing full contents on this flow",
+    )
+    km.add(
+        "f",
+        "view.http2.settings.setval.toggle @focus fullcontents",
+        ["flowview_http2"],
         "Toggle viewing full contents on this flow",
     )
     km.add("w", "console.command save.file @focus ", ["flowview_http1", "flowview_http2"], "Save flow to file")

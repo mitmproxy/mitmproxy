@@ -49,6 +49,9 @@ class RecordingMaster(mitmproxy.master.Master):
     def clear(self):
         self.logs = []
 
+    def get_current_view_type(self):
+        return "http1"
+
 
 class context:
     """
