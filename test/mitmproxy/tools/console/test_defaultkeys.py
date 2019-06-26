@@ -6,8 +6,10 @@ from mitmproxy import command
 
 import pytest
 
+
 def master_get_current_view_type():
     return "http1"
+
 
 @pytest.mark.asyncio
 async def test_commands_exist():

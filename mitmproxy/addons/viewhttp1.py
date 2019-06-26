@@ -228,7 +228,6 @@ class ViewHttp1(view.View):
         f.request.headers["Host"] = req.host
         self.add([f])
 
-
     @command.command("view.http1.flows.load")
     def load_file(self, path: mitmproxy.types.Path) -> None:
         """

@@ -101,7 +101,7 @@ class TestProtobuf:
         pf = protobuf.dumps(f)
         lf = protobuf.loads(pf, "http")
         f.flow = None
-        lf.flow = None  
+        lf.flow = None
         assert f.__dict__ == lf.__dict__
 
     def test_roundtrip_http_flow_res(self):

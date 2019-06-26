@@ -1,13 +1,7 @@
-import pytest
-
 from mitmproxy.test import tflow
 
-from mitmproxy.addons import view, viewhttp1, viewhttp2
-from mitmproxy import flowfilter
-from mitmproxy import exceptions
-from mitmproxy import io
+from mitmproxy.addons import viewhttp1, viewhttp2
 from mitmproxy.test import taddons
-from mitmproxy.tools.console import consoleaddons
 
 
 def tft(*, method="get", start=0):
@@ -15,7 +9,6 @@ def tft(*, method="get", start=0):
     f.request.method = method
     f.request.timestamp_start = start
     return f
-
 
 
 def test_orders():

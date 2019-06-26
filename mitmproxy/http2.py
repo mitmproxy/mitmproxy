@@ -163,7 +163,7 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
             _PriorityFrame.__init__(self, priority)
         else:
             self._priority = None
-        self._headers: hpack.HeaderTuple = headers
+        self._headers: HeaderTuple = headers
         self.hpack_info = hpack_info
 
     @classmethod
@@ -221,7 +221,7 @@ class Http2Push(HTTP2Frame):
         super().__init__(from_client, flow, events, stream_id, timestamp)
         self.frame_type = "PUSH PROMISE"
         self.pushed_stream_id: int = pushed_stream_id
-        self._headers: hpack.HeaderTuple = headers
+        self._headers: HeaderTuple = headers
         self.hpack_info = hpack_info
 
     @classmethod

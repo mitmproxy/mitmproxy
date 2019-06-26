@@ -306,8 +306,6 @@ def test_order():
         v.set_order("not_an_order")
 
 
-
-
 def test_reversed():
     v = viewhttp1.ViewHttp1()
     v.request(tft(start=1))

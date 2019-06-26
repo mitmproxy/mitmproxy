@@ -45,14 +45,12 @@ class TestWebSocketFlow:
 
     def test_kill(self):
         f = tflow.twebsocketflow()
-        m = f.messages[0]
         with pytest.raises(ControlException):
             f.intercept()
             f.resume()
             f.kill()
 
         f = tflow.twebsocketflow()
-        m = f.messages[0]
         f.intercept()
         assert f.killable
         f.kill()
