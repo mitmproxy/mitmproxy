@@ -27,7 +27,7 @@ class FlowItem(urwid.WidgetWrap):
                 self.item is self.view.filtred_views_focus[self.flt].item if self.flt else self.item is self.view.focus.item,
             )
         else:
-            raise NotImplementedError()
+            raise exceptions.TypeError("Unknown flow type: %s" % self.view.flow_type)
 
     def selectable(self):
         return True
@@ -44,7 +44,7 @@ class FlowItem(urwid.WidgetWrap):
                 self.master.commands.execute("console.view.item @focus")
                 return True
             else:
-                raise NotImplementedError()
+                raise exceptions.TypeError("Unknown flow type: %s" % self.view.flow_type)
 
     def keypress(self, size, key):
         return key

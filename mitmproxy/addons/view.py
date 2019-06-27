@@ -686,7 +686,8 @@ class Focus:
 
     def _sig_view_refresh(self, view):
         if len(view) == 0:
-            self.item = None
+            if self.item is not None:
+                self.item = None
         elif self.item is None:
             self.item = view[0]
         elif self.item not in view:
