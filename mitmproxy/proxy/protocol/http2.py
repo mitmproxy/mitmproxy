@@ -215,6 +215,8 @@ class Http2Layer(base.Layer):
                     other_stream_id = self.streams[eid].client_stream_id
                 else:
                     other_stream_id = self.streams[eid].server_stream_id
+                # We define the server_stream_id attribute, but in case of a pushed stream
+                # we shouldn't close the connection. Removing the check of pushed case break the tests
                 if other_stream_id is not None and not self.streams[other_stream_id].pushed:
                     self.connections[other_conn].safe_reset_stream(other_stream_id, event.error_code)
         return True

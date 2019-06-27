@@ -160,6 +160,7 @@ class Master:
                 f.messages = last_messages
                 if flow_msg:
                     f.messages.append(flow_msg)
+            # Fix the reference from the HTTP2Frame object to the HTTPFlow object
             for m in f.messages:
                 m.flow = f
             self.waiting_flows.append(f)

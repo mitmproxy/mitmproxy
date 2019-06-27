@@ -123,19 +123,20 @@ class FlowDetailsHttp1(FlowDetails):
                                           self.viewitem.server_stream_id, self.viewitem.server_stream_id,
                                           src_addr, dst_addr))
 
+            if len(self.master.views['http2'].filtred_views['stream_from_http1']) == 0:
+                txt = [urwid.Text(""),
+                       urwid.Text([("highlight", "No HTTP/2 Exchange")])
+                ]
+                return searchable.Searchable(txt)
+
             flow_list = flowlist.FlowListBox(self.master, self.master.views['http2'], flt="stream_from_http1")
             flow_detail = flowhttp2view.conn_text(self.master.views['http2'].filtred_views_focus["stream_from_http1"].item)
             columns = flowhttp2view.Http2DetailColumns([flow_list, flow_detail], focus_column=0)
             self.master.views['http2'].filtred_views_focus["stream_from_http1"].sig_change.connect(columns.update_view)
             return columns
         else:
-            txt = [
-                urwid.Text(""),
-                urwid.Text(
-                    [
-                        ("highlight", "No HTTP/2 Exchange"),
-                    ]
-                )
+            txt = [urwid.Text(""),
+                   urwid.Text([("highlight", "No HTTP/2 Exchange")])
             ]
             return searchable.Searchable(txt)
 

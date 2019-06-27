@@ -11,6 +11,9 @@ import urwid
 class Http2DetailColumns(urwid.Columns):
 
     def _set_focus_position(self, position):
+        # We never need to have the focus on the detail part so
+        # we override this method to force the focus on the first position.
+        # If we don't do that when we swtich between each tab, from left the focus go is on the right side and we don't want this'
         super()._set_focus_position(0)
 
     focus_position = property(urwid.Columns._get_focus_position, _set_focus_position, doc="""

@@ -595,7 +595,7 @@ class Http2RstStream(HTTP2Frame):
 class Http2Goaway(HTTP2Frame):
 
     """
-    This is a class to represent a Reset stream frame
+    This is a class to represent a Goaway frame
     """
 
     def __init__(self, from_client, last_stream_id, error_code, additional_data, flow=None, events=[], stream_id=0, timestamp=None):
