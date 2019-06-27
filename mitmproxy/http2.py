@@ -257,6 +257,19 @@ class Http2Push(HTTP2Frame):
                 hpack_dynamic[index] = hpack_dynamic[index][0], hpack_dynamic[index][1].tobytes()
         return state
 
+    # Frame property
+    @property
+    def stream_id(self):
+        return self._stream_id
+
+    @stream_id.setter
+    def stream_id(self, stream_id: int):
+        self._stream_id = stream_id
+        if self._events:
+            for event in self._events:
+                if hasattr(event, "parent_stream_id"):
+                    event.parent_stream_id = stream_id
+
     @property
     def headers(self):
         return self._headers
