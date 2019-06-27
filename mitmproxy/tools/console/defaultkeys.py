@@ -68,7 +68,7 @@ def map(km):
     km.add(
         "n",
         "console.command view.flows.create get https://example.com/",
-        ["flowlist_http1", "flowlist_http2"],
+        ["flowlist_http1"],
         "Create a new flow"
     )
     km.add(

@@ -200,10 +200,6 @@ class ViewHttp2(view.View):
         """
         return super().resolve(spec)
 
-    @command.command("view.http2.items.create")
-    def create(self, method: str, url: str) -> None:
-        super().create(method, url)
-
     @command.command("view.http2.items.load")
     def load_file(self, path: mitmproxy.types.Path) -> None:
         """
