@@ -145,7 +145,7 @@ class HTTPFlow(flow.Flow, viewitem.ViewItem):
 
     def __init__(self, client_conn, server_conn, live=None, mode="regular"):
         flow.Flow.__init__(self, "http", client_conn, server_conn, live)
-        viewitem.ViewItem.__init__(self, self)
+        viewitem.ViewItem.__init__(self, flow=self)
 
         self.request: HTTPRequest = None
         """ :py:class:`HTTPRequest` object """

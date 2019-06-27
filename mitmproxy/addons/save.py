@@ -76,9 +76,9 @@ class Save:
         stream = io.FlowWriter(f)
         for i in viewitems:
             if isinstance(i, http2.HTTP2Frame):
+                # Remove all other messages in the flow object
                 i.flow.messages = [i]
-                i = i.flow
-            stream.add(i)
+            stream.add(i.flow)
         f.close()
         ctx.log.alert("Saved %s viewitems." % len(viewitems))
 
@@ -122,13 +122,22 @@ class Save:
             self.active_flows.add(flow)
 
     def http2_frame(self, flow):
+        """
+        Save the last received frame
+        """
         if self.stream:
+            # Save only the last frame
+            # it avoid to save many time the same frame
             flow_to_store = flow.copy()
             flow_to_store.messages = [flow.messages[-1]]
             self.stream.add(flow_to_store)
 
     def http2_end(self, flow):
+        """
+        Save the last flow state
+        """
         if self.stream:
+            # As we already saved each frame, just save the flow objet at his last state
             flow.messages = []
             self.stream.add(flow)
             self.active_flows.discard(flow)

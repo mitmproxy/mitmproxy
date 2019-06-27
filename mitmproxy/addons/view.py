@@ -86,6 +86,11 @@ class View(collections.abc.Sequence):
 
         self._store = collections.OrderedDict()
         self.filter = self.matchall
+        # This used to store the specific filter for the view with a other filter than the main filter
+        # key: the name of the filter
+        # value: the specific filter corresponding to the name
+        # Note that all other attributes named "filtred_views..." are generally used for this features
+        # All of theses attributes are a dic() with the same keys
         self.filtred_views_filter = {}
         # Should we show only marked flows?
         self.show_marked = False
@@ -99,7 +104,10 @@ class View(collections.abc.Sequence):
         self._view = sortedcontainers.SortedListWithKey(
             key = self.order_key
         )
-        self.filtred_views = {}
+        # This used to store a list of items with a other filter than the main filter
+        # key: the name of the filter
+        # value: the same list than "_view" but with an other filter
+        self.filtred_views: dict[str, sortedcontainer.SortedListWithKey] = {}
 
         # The sig_view* signals broadcast events that affect the view. That is,
         # an update to a flow in the store but not in the view does not trigger
@@ -146,6 +154,10 @@ class View(collections.abc.Sequence):
 
     @property
     def flow_type(self) -> str:
+        """
+        Used to specify the flow type which is contained in this view
+        Need to be specified in subclass
+        """
         raise NotImplementedError()
 
     def store_count(self):

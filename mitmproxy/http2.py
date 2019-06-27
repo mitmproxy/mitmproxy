@@ -99,11 +99,18 @@ class HTTP2Frame(viewitem.ViewItem):
         self.from_client: bool = from_client
         self.flow_id = flow.id if flow else None
         self._stream_id: int = stream_id
+        # Used to be able to update the events if the user or an addon modified this frame
+        # Note that this reference is ONLY available in live
+        # When we restore all flow (from a file), this reference contains only an empty list
         self._events: List[h2.events.Event] = events
         self.timestamp: float = timestamp or time.time()
 
     @classmethod
     def from_state(cls, state):
+        # Note that the serialization mecanisme don't support inheritance
+        # The type of the serialized object defined staticly by the type defined in "_stateobject_attributes"
+        # To be able to use a subclass for the frames we store the type of the frame when we serialize the objet
+        # When we restore the object we need to call the "from_state" method of the subclass
         cls = eval(state.pop('frame_class'))
         args = dict(from_client=state['from_client'],
                     stream_id=state['_stream_id'],
@@ -124,8 +131,12 @@ class HTTP2Frame(viewitem.ViewItem):
 
     def get_state(self):
         state = vars(self).copy()
+        # Save the type of the classe to be able to restore the good classe type
         state['frame_class'] = type(self).__name__
+        # Remove the flow reference
+        # Note that this reference is restaured by the master in the "load_flow" process
         del state["flow"]
+        # Remove the event reference. It's not usefull if we are not in live
         del state["_events"]
         return state
 
@@ -178,6 +189,8 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
         state['_headers'] = list(self._headers)
         state['hpack_info']['dynamic'] = list(self.hpack_info['dynamic'])
         hpack_dynamic = state['hpack_info']['dynamic']
+        # Note that sometime we get a memoryview object type in the hpack tuple
+        # so convert it to a type which is serializable
         for index in range(0, len(hpack_dynamic)):
             if isinstance(hpack_dynamic[index][0], memoryview):
                 hpack_dynamic[index] = hpack_dynamic[index][0].tobytes(), hpack_dynamic[index][1]
@@ -235,6 +248,8 @@ class Http2Push(HTTP2Frame):
         state['_headers'] = list(self._headers)
         state['hpack_info']['dynamic'] = list(self.hpack_info['dynamic'])
         hpack_dynamic = state['hpack_info']['dynamic']
+        # Note that sometime we get a memoryview object type in the hpack tuple
+        # so convert it to a type which is serializable
         for index in range(0, len(hpack_dynamic)):
             if isinstance(hpack_dynamic[index][0], memoryview):
                 hpack_dynamic[index] = hpack_dynamic[index][0].tobytes(), hpack_dynamic[index][1]
@@ -648,8 +663,13 @@ class Http2Goaway(HTTP2Frame):
 
 
 def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_source_connection):
-    # Detect the type of frame and create a frame object for the specific type
+    """
+    Detect the type of frame and create a frame object for the specific type
+    """
     frame = None
+    # We get an events list but in the reality the only really usefull object is the first event
+    # The other events are also generally referenced in the attributes of the first one
+    # By example the others events objects could be a priority included in the HEADER frame.
     event = events[0]
     if isinstance(event, h2.events.RequestReceived) or isinstance(event, h2.events.ResponseReceived):
         hpack_info = dict(static=http2_source_connection.decoder.header_table.STATIC_TABLE,

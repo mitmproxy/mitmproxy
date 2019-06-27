@@ -161,10 +161,7 @@ class Master:
                 if flow_msg:
                     f.messages.append(flow_msg)
             for m in f.messages:
-                try:
-                    m.flow = f
-                except:
-                    print(m)
+                m.flow = f
             self.waiting_flows.append(f)
             self._change_reverse_host(f)
 
