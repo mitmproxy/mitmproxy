@@ -154,9 +154,8 @@ class HTTP2Frame(viewitem.ViewItem):
                     event.stream_id = stream_id
 
     def __repr__(self):
-        return "<HTTP2Frame: {direction}, type: {type}, stream ID: {stream_id}>".format(
+        return "<HTTP2Frame: {direction}, stream ID: {stream_id}>".format(
             direction="->" if self.from_client else "<-",
-            type=repr(type(self)),
             stream_id=self._stream_id)
 
 
@@ -215,13 +214,13 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return ("<HTTP2Frame HEADER: {direction}, type: {type}, stream ID: {stream_id}, "
+        return ("<HTTP2Frame HEADER: {direction}, stream ID: {stream_id}, "
                 "headers = {headers}, priority: {priority}, end_stream = {end_stream}>").format(
             direction="->" if self.from_client else "<-",
-            type=repr(type(self)),
             stream_id=self._stream_id,
             priority=self._priority,
-            headers=self._headers)
+            headers=self._headers,
+            end_stream=self.end_stream)
 
 
 class Http2Push(HTTP2Frame):
@@ -233,7 +232,7 @@ class Http2Push(HTTP2Frame):
     def __init__(self, from_client, pushed_stream_id, headers, hpack_info, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, stream_id, timestamp)
         self.frame_type = "PUSH PROMISE"
-        self.pushed_stream_id: int = pushed_stream_id
+        self._pushed_stream_id: int = pushed_stream_id
         self._headers: HeaderTuple = headers
         self.hpack_info = hpack_info
 
@@ -241,7 +240,7 @@ class Http2Push(HTTP2Frame):
     def from_state(cls, state, args=None):
         if not args:
             return super().from_state(state)
-        return Http2Push(**args, headers=state['_headers'], hpack_info=state['hpack_info'])
+        return Http2Push(**args, pushed_stream_id=state['_pushed_stream_id'], headers=state['_headers'], hpack_info=state['hpack_info'])
 
     def get_state(self):
         state = HTTP2Frame.get_state(self)
@@ -271,6 +270,18 @@ class Http2Push(HTTP2Frame):
                     event.parent_stream_id = stream_id
 
     @property
+    def pushed_stream_id(self):
+        return self._pushed_stream_id
+
+    @pushed_stream_id.setter
+    def pushed_stream_id(self, pushed_stream_id: int):
+        self._pushed_stream_id = pushed_stream_id
+        if self._events:
+            for event in self._events:
+                if hasattr(event, "pushed_stream_id"):
+                    event.pushed_stream_id = pushed_stream_id
+
+    @property
     def headers(self):
         return self._headers
 
@@ -287,9 +298,8 @@ class Http2Push(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return "<HTTP2Frame PUSHED: {direction}, type: {type}, stream ID: {stream_id}, Headers: {headers}>".format(
+        return "<HTTP2Frame PUSH PROMISE: {direction}, stream ID: {stream_id}, Headers: {headers}>".format(
             direction="->" if self.from_client else "<-",
-            type=repr(type(self)),
             stream_id=self._stream_id,
             headers=self._headers)
 
@@ -335,10 +345,9 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return ("<HTTP2Frame DATA: {direction}, type: {type}, stream ID: {stream_id}, "
+        return ("<HTTP2Frame DATA: {direction}, stream ID: {stream_id}, "
                 "Data: {data}, Length: {length}>").format(
             direction="->" if self.from_client else "<-",
-            type=repr(type(self)),
             stream_id=self._stream_id,
             data=self._data,
             length=self._length)
@@ -378,9 +387,8 @@ class Http2WindowsUpdate(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return "<HTTP2Frame WINDOWS UPDATE: {direction}, type: {type}, stream ID: {stream_id}, delta: {delta}>".format(
+        return "<HTTP2Frame WINDOWS UPDATE: {direction}, stream ID: {stream_id}, delta: {delta}>".format(
             direction="->" if self.from_client else "<-",
-            type=repr(type(self)),
             stream_id=self._stream_id,
             delta=self._delta)
 
@@ -446,9 +454,8 @@ class Http2Settings(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return "<HTTP2Frame SETTINGS: {direction}, type: {type}, stream ID: {stream_id}, settings: {settings}, ack: {ack}>".format(
+        return "<HTTP2Frame SETTINGS: {direction}, stream ID: {stream_id}, settings: {settings}, ack: {ack}>".format(
             direction="->" if self.from_client else "<-",
-            type=repr(type(self)),
             stream_id=self._stream_id,
             settings=self._settings,
             ack=self._ack)
@@ -509,9 +516,8 @@ class Http2Ping(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return "<HTTP2Frame PING: {direction}, type: {type}, stream ID: {stream_id}, data: {data}, ack {ack}>".format(
+        return "<HTTP2Frame PING: {direction}, stream ID: {stream_id}, data: {data}, ack {ack}>".format(
             direction="->" if self.from_client else "<-",
-            type=repr(type(self)),
             stream_id=self._stream_id,
             data=self._data,
             ack=self._ack)
@@ -539,7 +545,7 @@ class Http2PriorityUpdate(HTTP2Frame, _PriorityFrame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return ("<HTTP2Frame PRIORITY: {direction}, type: {type}, stream ID: {stream_id}, "
+        return ("<HTTP2Frame PRIORITY: {direction}, stream ID: {stream_id}, "
                 "weight: {weight}, depends on: {depends_on}, exclusive: {exclusive}>").format(
             direction="->" if self.from_client else "<-",
             type=repr(type(self)),
@@ -596,10 +602,9 @@ class Http2RstStream(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return ("<HTTP2Frame RESET STREAM: {direction}, type: {type}, stream ID: {stream_id}, "
+        return ("<HTTP2Frame RESET STREAM: {direction}, stream ID: {stream_id}, "
                 "error code: {error_code}, remote reset: {remote_reset}>").format(
             direction="->" if self.from_client else "<-",
-            type=repr(type(self)),
             stream_id=self._stream_id,
             error_code=self._error_code,
             remote_reset=self._remote_reset)
@@ -666,10 +671,9 @@ class Http2Goaway(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return ("<HTTP2Frame GOAWAY: {direction}, type: {type}, last stream ID: {last_stream_id}, "
+        return ("<HTTP2Frame GOAWAY: {direction}, last stream ID: {last_stream_id}, "
                 "error code: {error_code}, additional data: {additional_data}>").format(
             direction="->" if self.from_client else "<-",
-            type=repr(type(self)),
             last_stream_id=self._last_stream_id,
             error_code=self._error_code,
             additional_data=self._additional_data)

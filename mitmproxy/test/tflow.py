@@ -7,6 +7,8 @@ from mitmproxy import tcp
 from mitmproxy import websocket
 from mitmproxy import controller
 from mitmproxy import http
+from mitmproxy import http2
+from hpack.table import HeaderTable
 from mitmproxy import connections
 from mitmproxy import flow
 from mitmproxy.net import http as net_http
@@ -84,6 +86,52 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
             websocket.WebSocketMessage(websockets.OPCODE.BINARY, True, b"hello binary", f),
             websocket.WebSocketMessage(websockets.OPCODE.TEXT, True, "hello text".encode(), f),
             websocket.WebSocketMessage(websockets.OPCODE.TEXT, False, "it's me".encode(), f),
+        ]
+    if err is True:
+        err = terr()
+
+    f.messages = messages
+    f.error = err
+    f.reply = controller.DummyReply()
+    return f
+
+
+def thttp2flow(client_conn=True, server_conn=True, messages=True, err=None):
+    if client_conn is True:
+        client_conn = tclient_conn()
+    if server_conn is True:
+        server_conn = tserver_conn()
+    f = http2.HTTP2Flow(client_conn, server_conn)
+    if messages is True:
+        headers = [(b':method', b'GET'),
+                   (b':path', b'/?q=&t=h_'),
+                   (b':scheme', b'https'),
+                   (b'accept', b'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'),
+                   (b'accept-encoding', b'gzip, deflate, br'),
+                   (b'upgrade-insecure-requests', b'1'),
+                   (b'cache-control', b'max-age=0'),
+                   (b'te', b'trailers')]
+        hpack_info = dict(HeaderTable.STATIC_TABLE,
+                          dynamic=(('a', 'v'),
+                                   ('x', 'vasd'),
+                                   ('sdfafd', 'asdfasdf')))
+        priority = dict(weight=200,
+                        depends_on=8,
+                        exclusive=True)
+        settings = {1: dict(original_value=4096, new_value=65536),
+                    4: dict(original_value=65535, new_value=131072),
+                    5: dict(original_value=16384, new_value=16384)}
+        messages = [
+            http2.Http2Header(True, headers, hpack_info, priority, False, f),
+            http2.Http2Push(False, 15, headers, hpack_info, f),
+            http2.Http2Data(True, b"Hey it's a data", 15, True, f),
+            http2.Http2WindowsUpdate(False, 1540201, f),
+            http2.Http2Settings(True, settings, False, f),
+            http2.Http2Ping(True, b"hello", False, f),
+            http2.Http2Ping(False, b"it's me", True, f),
+            http2.Http2PriorityUpdate(False, priority, f),
+            http2.Http2RstStream(True, 12, True, f),
+            http2.Http2Goaway(False, 13, 12, "The error", f)
         ]
     if err is True:
         err = terr()
