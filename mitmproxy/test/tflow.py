@@ -106,9 +106,9 @@ def thttp2flow(client_conn=True, server_conn=True, messages=True, err=None):
         headers = [(b':method', b'GET'),
                    (b':path', b'/?q=&t=h_'),
                    (b':scheme', b'https'),
-                   (b'accept', b'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'),
+                   (b'accept', memoryview(b'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')),
                    (b'accept-encoding', b'gzip, deflate, br'),
-                   (b'upgrade-insecure-requests', b'1'),
+                   (memoryview(b'upgrade-insecure-requests'), b'1'),
                    (b'cache-control', b'max-age=0'),
                    (b'te', b'trailers')]
         hpack_info = dict(HeaderTable.STATIC_TABLE,

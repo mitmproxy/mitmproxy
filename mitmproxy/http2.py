@@ -8,7 +8,7 @@ import typing
 
 import h2.events
 from h2.errors import ErrorCodes
-from h2.settings import SettingCodes
+from h2.settings import SettingCodes, ChangedSetting
 from hpack.hpack import HeaderTuple
 
 
@@ -75,7 +75,8 @@ class _PriorityFrame():
                         event.priority_updated = None
                     elif isinstance(event, h2.events.PriorityUpdated):
                         self._events.remove(event)
-        self._priority = priority
+        self._priority = callbackdict.CallbackDict(priority)
+        self._priority.callback = self._update_priority
         self._update_priority()
 
     def _update_priority(self):
@@ -314,7 +315,7 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
         HTTP2Frame.__init__(self, from_client, flow, events, stream_id, timestamp)
         _EndStreamFrame.__init__(self, end_stream)
         self.frame_type = "DATA"
-        self._data: h2.events.Data = data
+        self._data: bytes = data
         self._length: int = flow_controlled_length
 
     @classmethod
@@ -339,6 +340,14 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
     @property
     def length(self):
         return self._length
+
+    @length.setter
+    def length(self, length: int):
+        self._length = length
+        if self._length:
+            for event in self._events:
+                if hasattr(event, "flow_controlled_length"):
+                    event.flow_controlled_length = length
 
     def __repr__(self):
         """
@@ -402,8 +411,11 @@ class Http2Settings(HTTP2Frame):
     def __init__(self, from_client, settings, ack, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, 0, timestamp)
         self.frame_type = "SETTINGS"
-        self._ack: bool = False
+        self._ack: bool = ack
         self._settings: callbackdict.CallbackDict[int, int] = callbackdict.CallbackDict(settings)
+        for k, v in self._settings.items():
+            self._settings[k] = callbackdict.CallbackDict(v)
+            self._settings[k].callback = self._update_settings
         self._settings.callback = self._update_settings
 
     @classmethod
@@ -417,7 +429,7 @@ class Http2Settings(HTTP2Frame):
         return self._ack
 
     @ack.setter
-    def ack(self, ack: int):
+    def ack(self, ack: bool):
         if self._events:
             if ack != self._ack:
                 if ack:
@@ -446,8 +458,20 @@ class Http2Settings(HTTP2Frame):
                 if hasattr(event, "changed_settings"):
                     for key, setting in self._settings.items():
                         settings_key = SettingCodes(key)
-                        event.changed_settings[settings_key].original_value = setting['original_value']
-                        event.changed_settings[settings_key].original_value = setting['new_value']
+                        if 'original_value' not in setting and 'new_value' not in setting:
+                            raise ValueError("No settings value for key %s")
+                        if 'original_value' not in setting:
+                            setting['original_value'] = setting['new_value']
+                        if 'new_value' not in setting:
+                            setting['new_value'] = setting['original_value']
+                        if settings_key not in event.changed_settings:
+                            event.changed_settings[settings_key] = ChangedSetting(settings_key, setting['original_value'], setting['new_value'])
+                        else:
+                            event.changed_settings[settings_key].original_value = setting['original_value']
+                            event.changed_settings[settings_key].new_value = setting['new_value']
+                    for setting in event.changed_settings.copy().keys():
+                        if int(setting) not in self._settings:
+                            del event.changed_settings[setting]
 
     def __repr__(self):
         """
@@ -470,7 +494,7 @@ class Http2Ping(HTTP2Frame):
     def __init__(self, from_client, data, ack, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, 0, timestamp)
         self.frame_type = "PING"
-        self._data: h2.events.ping_data = data
+        self._data: bytes = data
         self._ack: bool = ack
 
     @classmethod
@@ -484,7 +508,7 @@ class Http2Ping(HTTP2Frame):
         return self._data
 
     @data.setter
-    def data(self, data: int):
+    def data(self, data: bytes):
         self._data = data
         if self._events:
             for event in self._events:
@@ -496,7 +520,7 @@ class Http2Ping(HTTP2Frame):
         return self._ack
 
     @ack.setter
-    def ack(self, ack: int):
+    def ack(self, ack: bool):
         if self._events:
             if ack != self._ack:
                 if ack:
@@ -748,12 +772,12 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
             events=events,
             data=event.ping_data,
             ack=False)
-    elif isinstance(event, h2.events.PingAcknowledged):
+    elif isinstance(event, h2.events.PingAckReceived):
         frame = Http2Ping(
             from_client=from_client,
             flow=flow,
             events=events,
-            ping_data=event.ping_data,
+            data=event.ping_data,
             ack=True)
     elif isinstance(event, h2.events.PriorityUpdated):
         frame = Http2PriorityUpdate(
