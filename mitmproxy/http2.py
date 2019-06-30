@@ -55,29 +55,40 @@ class _PriorityFrame():
         self._priority.callback = self._update_priority
 
     @property
+    def _prority_mandatory(self):
+        raise NotImplementedError()
+
+    @property
     def priority(self):
         return self._priority
 
     @priority.setter
     def priority(self, priority: callbackdict.CallbackDict):
         if self._events:
-            if priority and not self._priority:
-                new_event = h2.events.PriorityUpdated()
-                new_event.stream_id = self._stream_id
+            if priority:
+                if not self._priority:
+                    if "weight" not in priority or "depends_on" not in priority or "exclusive" not in priority:
+                        raise ValueError("You must set a value for 'weight', 'depends_on' and 'exclusive'")
+                    new_event = h2.events.PriorityUpdated()
+                    new_event.stream_id = self._stream_id
 
-                for event in self._events:
-                    if hasattr(event, "priority_updated"):
-                        event = new_event
-                self._events.append(new_event)
+                    for event in self._events:
+                        if hasattr(event, "priority_updated"):
+                            event.priority_updated = new_event
+                    self._events.append(new_event)
+
+                self._priority = callbackdict.CallbackDict(priority)
+                self._priority.callback = self._update_priority
+                self._update_priority()
             elif not priority:
+                if self._prority_mandatory and not priority:
+                    raise ValueError("Priority is mandatory for this frame")
                 for event in self._events:
                     if hasattr(event, "priority_updated"):
                         event.priority_updated = None
                     elif isinstance(event, h2.events.PriorityUpdated):
                         self._events.remove(event)
-        self._priority = callbackdict.CallbackDict(priority)
-        self._priority.callback = self._update_priority
-        self._update_priority()
+                self._priority = None
 
     def _update_priority(self):
         if self._events:
@@ -143,12 +154,18 @@ class HTTP2Frame(viewitem.ViewItem):
 
     # Frame property
     @property
+    def is_stream_id_modifiable(self):
+        raise NotImplementedError()
+
+    @property
     def stream_id(self):
         return self._stream_id
 
     @stream_id.setter
     def stream_id(self, stream_id: int):
         self._stream_id = stream_id
+        if not self.is_stream_id_modifiable:
+            raise NotImplementedError("You can't change the stream ID for this frame type")
         if self._events:
             for event in self._events:
                 if hasattr(event, "stream_id"):
@@ -197,6 +214,15 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
             if isinstance(hpack_dynamic[index][1], memoryview):
                 hpack_dynamic[index] = hpack_dynamic[index][0], hpack_dynamic[index][1].tobytes()
         return state
+
+    # Frame property
+    @property
+    def is_stream_id_modifiable(self):
+        return True
+
+    @property
+    def _prority_mandatory(self):
+        return False
 
     @property
     def headers(self):
@@ -258,6 +284,10 @@ class Http2Push(HTTP2Frame):
         return state
 
     # Frame property
+    @property
+    def is_stream_id_modifiable(self):
+        return True
+
     @property
     def stream_id(self):
         return self._stream_id
@@ -325,6 +355,11 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
         return Http2Data(**args, data=state['_data'], flow_controlled_length=state['_length'],
                          end_stream=state['_end_stream'])
 
+    # Frame property
+    @property
+    def is_stream_id_modifiable(self):
+        return True
+
     @property
     def data(self):
         return self._data
@@ -379,6 +414,11 @@ class Http2WindowsUpdate(HTTP2Frame):
             return super().from_state(state)
         return Http2WindowsUpdate(**args, delta=state['_delta'])
 
+    # Frame property
+    @property
+    def is_stream_id_modifiable(self):
+        return True
+
     @property
     def delta(self):
         return self._delta
@@ -423,6 +463,11 @@ class Http2Settings(HTTP2Frame):
         if not args:
             return super().from_state(state)
         return Http2Settings(**args, settings=state['_settings'], ack=state['_ack'])
+
+    # Frame property
+    @property
+    def is_stream_id_modifiable(self):
+        return False
 
     @property
     def ack(self):
@@ -507,6 +552,11 @@ class Http2Ping(HTTP2Frame):
             return super().from_state(state)
         return Http2Ping(**args, data=state['_data'], ack=state['_ack'])
 
+    # Frame property
+    @property
+    def is_stream_id_modifiable(self):
+        return False
+
     @property
     def data(self):
         return self._data
@@ -568,6 +618,15 @@ class Http2PriorityUpdate(HTTP2Frame, _PriorityFrame):
             return super().from_state(state)
         return Http2PriorityUpdate(**args, priority=state['_priority'])
 
+    # Frame property
+    @property
+    def is_stream_id_modifiable(self):
+        return True
+
+    @property
+    def _prority_mandatory(self):
+        return True
+
     def __repr__(self):
         """
         Convert this object as a string
@@ -600,6 +659,11 @@ class Http2RstStream(HTTP2Frame):
         if not args:
             return super().from_state(state)
         return Http2RstStream(**args, error_code=state['_error_code'], remote_reset=state['_remote_reset'])
+
+    # Frame property
+    @property
+    def is_stream_id_modifiable(self):
+        return True
 
     @property
     def error_code(self):
@@ -657,6 +721,11 @@ class Http2Goaway(HTTP2Frame):
             return super().from_state(state)
         return Http2Goaway(**args, last_stream_id=state['_last_stream_id'],
                            error_code=state['_error_code'], additional_data=state['_additional_data'])
+
+    # Frame property
+    @property
+    def is_stream_id_modifiable(self):
+        return False
 
     @property
     def last_stream_id(self):
@@ -788,6 +857,7 @@ def frame_from_event(from_client: bool, flow, events: h2.events.Event, http2_sou
             from_client=from_client,
             flow=flow,
             events=events,
+            stream_id=event.stream_id,
             priority=dict(
                 weight=event.weight,
                 depends_on=event.depends_on,
