@@ -9,11 +9,7 @@ from h2.settings import SettingCodes, ChangedSetting
 
 
 # TODO
-#- Add and remove property for priority
-#- Base frame representation
 #- Memoryview convertion for HEADER and PUSH
-#- Settings setter
-#- Build from unknown event -> base frame HTTP2
 
 class TestHTTP2Flow:
 
@@ -34,11 +30,15 @@ class TestHTTP2Flow:
                 validate_inbound_headers=False)))
 
     def check_stream_id(self, frame):
-        frame.stream_id = 3
-        assert frame.stream_id == 3
-        for e in frame._events:
-            if hasattr(e, "stream_id"):
-                assert e.stream_id == 3
+        if frame.is_stream_id_modifiable:
+            frame.stream_id = 3
+            assert frame.stream_id == 3
+            for e in frame._events:
+                if hasattr(e, "stream_id"):
+                    assert e.stream_id == 3
+        else:
+            with pytest.raises(NotImplementedError, match="You can't change the stream ID for this frame type"):
+                frame.stream_id = 11
 
     def test_copy(self):
         f = tflow.thttp2flow()
@@ -107,6 +107,18 @@ class TestHTTP2Flow:
             assert frame.frame_type in repr(frame)
 
     # Tests each frames
+    def test_base_frame(self):
+        f = tflow.thttp2flow()
+        connS, connC = self.get_h2_connections(f)
+
+        event = h2.events.UnknownFrameReceived()
+        frame = http2.frame_from_event(True, f, [event], connC)
+        assert '->' in repr(frame)
+        assert "HTTP2Frame" in repr(frame)
+        frame.from_client = False
+        assert '<-' in repr(frame)
+
+
     def test_frames_headers(self):
         f = tflow.thttp2flow()
         connS, connC = self.get_h2_connections(f)
@@ -172,6 +184,11 @@ class TestHTTP2Flow:
         assert event.priority_updated is None
         assert len(events) == 1
 
+        with pytest.raises(ValueError, match="You must set a value for 'weight', 'depends_on' and 'exclusive'"):
+            frame.priority = dict(weight=620,
+                                  depends_on=281,
+                                  abcd=True)
+
         frame.priority = dict(weight=620,
                               depends_on=281,
                               exclusive=True)
@@ -201,6 +218,8 @@ class TestHTTP2Flow:
                          (b'cache-control', b'max-age=0'),
                          (b'te', b'trailers')]
         frame = http2.frame_from_event(True, f, [event], connS)
+
+        assert frame.is_stream_id_modifiable == True
 
         frame.stream_id = 8
         frame.pushed_stream_id = 10
@@ -279,6 +298,8 @@ class TestHTTP2Flow:
                                                         original_value=16384, new_value=16385)}
         events = [event]
         frame = http2.frame_from_event(True, f, events, connC)
+
+        self.check_stream_id(frame)
 
         frame.ack = True
         assert frame.ack == True
@@ -360,6 +381,15 @@ class TestHTTP2Flow:
         assert frame.ack == False
         assert isinstance(events[0], h2.events.RemoteSettingsChanged)
 
+        # Test new dict setter
+        frame.settings = {2: dict(original_value=123, new_value=789)}
+
+        assert frame.settings == {2: dict(original_value=123, new_value=789)}
+        assert events[0].changed_settings[SettingCodes.ENABLE_PUSH].__dict__ == ChangedSetting(
+            setting=SettingCodes.ENABLE_PUSH,
+            original_value=123, new_value=789).__dict__
+        assert len(events[0].changed_settings) == 1
+
     def test_frames_ping(self):
         f = tflow.thttp2flow()
         connS, connC = self.get_h2_connections(f)
@@ -368,6 +398,8 @@ class TestHTTP2Flow:
         event.ping_data = b'ping'
         events = [event]
         frame = http2.frame_from_event(True, f, events, connC)
+
+        self.check_stream_id(frame)
 
         frame.data = b'hello'
         assert frame.data == b'hello'
@@ -425,6 +457,9 @@ class TestHTTP2Flow:
         assert event.depends_on == 39
         assert event.exclusive == True
 
+        with pytest.raises(ValueError, match="Priority is mandatory for this frame"):
+            frame.priority = None
+
     def test_frames_reset_stream(self):
         f = tflow.thttp2flow()
         connS, connC = self.get_h2_connections(f)
@@ -453,6 +488,8 @@ class TestHTTP2Flow:
         event.last_stream_id = 15
         event.additional_data = b'sdf'
         frame = http2.frame_from_event(True, f, [event], connC)
+
+        self.check_stream_id(frame)
 
         frame.error_code = 7
         frame.last_stream_id = 40

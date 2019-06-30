@@ -112,9 +112,9 @@ def thttp2flow(client_conn=True, server_conn=True, messages=True, err=None):
                    (b'cache-control', b'max-age=0'),
                    (b'te', b'trailers')]
         hpack_info = dict(HeaderTable.STATIC_TABLE,
-                          dynamic=(('a', 'v'),
-                                   ('x', 'vasd'),
-                                   ('sdfafd', 'asdfasdf')))
+                          dynamic=((b'accept', memoryview(b'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')),
+                                   (b'accept-encoding', b'gzip, deflate, br'),
+                                   (memoryview(b'upgrade-insecure-requests'), b'1')))
         priority = dict(weight=200,
                         depends_on=8,
                         exclusive=True)
@@ -122,8 +122,8 @@ def thttp2flow(client_conn=True, server_conn=True, messages=True, err=None):
                     4: dict(original_value=65535, new_value=131072),
                     5: dict(original_value=16384, new_value=16384)}
         messages = [
-            http2.Http2Header(True, headers, hpack_info, priority, False, f),
-            http2.Http2Push(False, 15, headers, hpack_info, f),
+            http2.Http2Header(True, headers.copy(), hpack_info.copy(), priority, False, f),
+            http2.Http2Push(False, 15, headers.copy(), hpack_info.copy(), f),
             http2.Http2Data(True, b"Hey it's a data", 15, True, f),
             http2.Http2WindowsUpdate(False, 1540201, f),
             http2.Http2Settings(True, settings, False, f),
