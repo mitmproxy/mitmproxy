@@ -8,6 +8,13 @@ from mitmproxy.test import tflow
 from h2.settings import SettingCodes, ChangedSetting
 
 
+# TODO
+#- Add and remove property for priority
+#- Base frame representation
+#- Memoryview convertion for HEADER and PUSH
+#- Settings setter
+#- Build from unknown event -> base frame HTTP2
+
 class TestHTTP2Flow:
 
     def get_h2_connections(self, f):
@@ -128,14 +135,55 @@ class TestHTTP2Flow:
                          (b'x-frame-options', memoryview(b'SAMEORIGIN')),
                          (memoryview(b'x-content-type-options'), b'nosniff'),
                          (b'referrer-policy', b'origin')]
-        frame = http2.frame_from_event(True, f, [event], connS)
+        event.priority_updated = h2.events.PriorityUpdated()
+        event.priority_updated.stream_id = 10
+        event.priority_updated.weight = 1298
+        event.priority_updated.depends_on = 18
+        event.priority_updated.exclusive = True
+        events = [event, event.priority_updated]
+        frame = http2.frame_from_event(True, f, events, connS)
 
         self.check_stream_id(frame)
-        frame.headers = [(b':status', b'400'), (b'server', b'apache')]
-        assert frame.headers == [(b':status', b'400'), (b'server', b'apache')]
-        assert event.headers == [(b':status', b'400'), (b'server', b'apache')]
 
-        # TODO check priority
+        assert frame.priority['weight'] == 1298
+        assert frame.priority['depends_on'] == 18
+        assert frame.priority['exclusive'] == True
+
+        frame.headers = [(b':status', b'400'), (b'server', b'apache')]
+        frame.priority = dict(weight=600,
+                              depends_on=28,
+                              exclusive=False)
+
+        assert frame.headers == [(b':status', b'400'), (b'server', b'apache')]
+        assert frame.priority['weight'] == 600
+        assert frame.priority['depends_on'] == 28
+        assert frame.priority['exclusive'] == False
+
+        assert event.headers == [(b':status', b'400'), (b'server', b'apache')]
+        assert event.priority_updated.weight == 600
+        assert event.priority_updated.depends_on == 28
+        assert event.priority_updated.exclusive == False
+        assert len(events) == 2
+
+        frame.priority = None
+
+        assert frame.priority is None
+
+        assert event.priority_updated is None
+        assert len(events) == 1
+
+        frame.priority = dict(weight=620,
+                              depends_on=281,
+                              exclusive=True)
+
+        assert frame.priority['weight'] == 620
+        assert frame.priority['depends_on'] == 281
+        assert frame.priority['exclusive'] == True
+
+        assert event.priority_updated.weight == 620
+        assert event.priority_updated.depends_on == 281
+        assert event.priority_updated.exclusive == True
+        assert len(events) == 2
 
     def test_frames_push(self):
         f = tflow.thttp2flow()
@@ -174,16 +222,33 @@ class TestHTTP2Flow:
         event.flow_controlled_length = 120
         event.stream_ended = h2.events.StreamEnded()
         event.stream_ended.stream_id = 10
-        frame = http2.frame_from_event(True, f, [event, event.stream_ended], connS)
+        events = [event, event.stream_ended]
+        frame = http2.frame_from_event(True, f, events, connS)
 
         self.check_stream_id(frame)
 
+        assert frame.data == b'Hello'
+        assert frame.length == 120
+        assert frame.end_stream == True
+
         frame.data = b'I\'ve changed'
         frame.length = 2
+        frame.end_stream = False
         assert frame.data == b'I\'ve changed'
-        assert event.data == b'I\'ve changed'
         assert frame.length == 2
+        assert frame.end_stream == False
+
+        assert event.data == b'I\'ve changed'
         assert event.flow_controlled_length == 2
+        assert len(events) == 1
+        assert event.stream_ended is None
+
+        frame.end_stream = True
+
+        assert frame.end_stream == True
+        assert event.stream_ended
+        assert len(events) == 2
+
 
     def test_frames_windows_update(self):
         f = tflow.thttp2flow()
@@ -333,6 +398,11 @@ class TestHTTP2Flow:
         frame = http2.frame_from_event(True, f, [event], connC)
 
         self.check_stream_id(frame)
+
+        assert frame.priority['weight'] == 1298
+        assert frame.priority['depends_on'] == 18
+        assert frame.priority['exclusive'] == True
+
         frame.priority = dict(weight=600,
                               depends_on=28,
                               exclusive=False)

@@ -28,12 +28,12 @@ class _EndStreamFrame():
     @end_stream.setter
     def end_stream(self, end_stream: bool):
         if self._events:
-            if end_stream and not self._stream_id:
+            if end_stream and not self._end_stream:
                 new_event = h2.events.StreamEnded()
                 new_event.stream_id = self._stream_id
                 for event in self._events:
                     if hasattr(event, "stream_ended"):
-                        event = new_event
+                        event.stream_ended = new_event
                 self._events.append(new_event)
             elif not end_stream:
                 for event in self._events:
@@ -449,7 +449,11 @@ class Http2Settings(HTTP2Frame):
 
     @settings.setter
     def settings(self, settings):
-        self._settings = settings
+        self._settings: callbackdict.CallbackDict[int, int] = callbackdict.CallbackDict(settings)
+        for k, v in self._settings.items():
+            self._settings[k] = callbackdict.CallbackDict(v)
+            self._settings[k].callback = self._update_settings
+        self._settings.callback = self._update_settings
         self._update_settings()
 
     def _update_settings(self):
