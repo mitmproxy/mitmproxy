@@ -127,7 +127,6 @@ def thttp2flow(client_conn=True, server_conn=True, messages=True, err=None):
             http2.Http2Data(True, b"Hey it's a data", 15, True, f),
             http2.Http2WindowsUpdate(False, 1540201, f),
             http2.Http2Settings(True, settings, False, f),
-            http2.Http2Ping(True, b"hello", False, f),
             http2.Http2Ping(False, b"it's me", True, f),
             http2.Http2PriorityUpdate(False, priority, f),
             http2.Http2RstStream(True, 12, True, f),

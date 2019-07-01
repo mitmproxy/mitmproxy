@@ -258,7 +258,7 @@ class Http2Push(HTTP2Frame):
 
     def __init__(self, from_client, pushed_stream_id, headers, hpack_info, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, stream_id, timestamp)
-        self.frame_type = "PUSH PROMISE"
+        self.frame_type = "PUSH_PROMISE"
         self._pushed_stream_id: int = pushed_stream_id
         self._headers: HeaderTuple = headers
         self.hpack_info = hpack_info
@@ -329,7 +329,7 @@ class Http2Push(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return "<HTTP2Frame PUSH PROMISE: {direction}, stream ID: {stream_id}, Headers: {headers}>".format(
+        return "<HTTP2Frame PUSH_PROMISE: {direction}, stream ID: {stream_id}, Headers: {headers}>".format(
             direction="->" if self.from_client else "<-",
             stream_id=self._stream_id,
             headers=self._headers)
@@ -405,7 +405,7 @@ class Http2WindowsUpdate(HTTP2Frame):
 
     def __init__(self, from_client, delta, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, stream_id, timestamp)
-        self.frame_type = "WINDOWS UPDATE"
+        self.frame_type = "WINDOWS_UPDATE"
         self._delta: int = delta
 
     @classmethod
@@ -436,7 +436,7 @@ class Http2WindowsUpdate(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return "<HTTP2Frame WINDOWS UPDATE: {direction}, stream ID: {stream_id}, delta: {delta}>".format(
+        return "<HTTP2Frame WINDOWS_UPDATE: {direction}, stream ID: {stream_id}, delta: {delta}>".format(
             direction="->" if self.from_client else "<-",
             stream_id=self._stream_id,
             delta=self._delta)
@@ -650,7 +650,7 @@ class Http2RstStream(HTTP2Frame):
 
     def __init__(self, from_client, error_code, remote_reset, flow=None, events=[], stream_id=0, timestamp=None):
         super().__init__(from_client, flow, events, stream_id, timestamp)
-        self.frame_type = "RESET STREAM"
+        self.frame_type = "RESET_STREAM"
         self._error_code: int = error_code
         self._remote_reset: bool = remote_reset
 
@@ -694,7 +694,7 @@ class Http2RstStream(HTTP2Frame):
         Convert this object as a string
         This make more easy to debug and give easily the possibility to see what contains this class
         """
-        return ("<HTTP2Frame RESET STREAM: {direction}, stream ID: {stream_id}, "
+        return ("<HTTP2Frame RESET_STREAM: {direction}, stream ID: {stream_id}, "
                 "error code: {error_code}, remote reset: {remote_reset}>").format(
             direction="->" if self.from_client else "<-",
             stream_id=self._stream_id,
