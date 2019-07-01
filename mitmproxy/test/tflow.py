@@ -106,9 +106,9 @@ def thttp2flow(client_conn=True, server_conn=True, messages=True, err=None):
         headers = [(b':method', b'GET'),
                    (b':path', b'/?q=&t=h_'),
                    (b':scheme', b'https'),
-                   (b'accept', memoryview(b'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8')),
+                   (b'accept', b'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'),
                    (b'accept-encoding', b'gzip, deflate, br'),
-                   (memoryview(b'upgrade-insecure-requests'), b'1'),
+                   (b'upgrade-insecure-requests', b'1'),
                    (b'cache-control', b'max-age=0'),
                    (b'te', b'trailers')]
         hpack_info = dict(HeaderTable.STATIC_TABLE,
@@ -122,15 +122,15 @@ def thttp2flow(client_conn=True, server_conn=True, messages=True, err=None):
                     4: dict(original_value=65535, new_value=131072),
                     5: dict(original_value=16384, new_value=16384)}
         messages = [
-            http2.Http2Header(True, headers.copy(), hpack_info.copy(), priority, False, f),
-            http2.Http2Push(False, 15, headers.copy(), hpack_info.copy(), f),
-            http2.Http2Data(True, b"Hey it's a data", 15, True, f),
-            http2.Http2WindowsUpdate(False, 1540201, f),
-            http2.Http2Settings(True, settings, False, f),
-            http2.Http2Ping(False, b"it's me", True, f),
-            http2.Http2PriorityUpdate(False, priority, f),
-            http2.Http2RstStream(True, 12, True, f),
-            http2.Http2Goaway(False, 13, 12, "The error", f)
+            http2.Http2Header(True, headers.copy(), hpack_info.copy(), priority, False, f, timestamp=945621202),
+            http2.Http2Push(False, 15, headers.copy(), hpack_info.copy(), f, timestamp=945621212),
+            http2.Http2Data(True, b"Hey it's a data", 15, True, f, timestamp=945621206),
+            http2.Http2WindowsUpdate(False, 1540201, f, timestamp=945651202),
+            http2.Http2Settings(True, settings, False, f, timestamp=945621502),
+            http2.Http2Ping(False, b"it's me", True, f, timestamp=945621102),
+            http2.Http2PriorityUpdate(False, priority, f, timestamp=945621002),
+            http2.Http2RstStream(True, 12, True, f, timestamp=945621292),
+            http2.Http2Goaway(False, 13, 12, "The error", f, timestamp=945221202)
         ]
     if err is True:
         err = terr()

@@ -1,13 +1,13 @@
+from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy import io
+from mitmproxy.addons import view, viewhttp1
+from mitmproxy.tools.console import consoleaddons
+
 import pytest
 
-from mitmproxy.test import tflow
-
-from mitmproxy.addons import view, viewhttp1
-from mitmproxy import flowfilter
-from mitmproxy import exceptions
-from mitmproxy import io
 from mitmproxy.test import taddons
-from mitmproxy.tools.console import consoleaddons
+from mitmproxy.test import tflow
 
 
 def tft(*, method="get", start=0):
@@ -18,6 +18,7 @@ def tft(*, method="get", start=0):
 
 
 def test_order_refresh():
+
     def save(*args, **kwargs):
         sargs.extend([args, kwargs])
 
@@ -134,6 +135,31 @@ def test_filter():
     assert len(v) == 4
 
 
+def test_filtred_view():
+    v = viewhttp1.ViewHttp1()
+    v.add_filtred_view("~m get", "test_get")
+    v.add_filtred_view("~m put", "test_put")
+    v.add_filtred_view("~m post", "test_post")
+
+    v.add([
+        tft(method="get"),
+        tft(method="get"),
+        tft(method="put"),
+        tft(method="get"),
+    ])
+
+    assert len(v.filtred_views["test_get"]) == 3
+    assert v.filtred_views_focus["test_get"].item.request.method == "GET"
+    assert len(v.filtred_views["test_put"]) == 1
+    assert v.filtred_views_focus["test_put"].item.request.method == "PUT"
+    assert len(v.filtred_views["test_post"]) == 0
+    assert v.filtred_views_focus["test_post"].item is None
+    assert len(v) == 4
+
+    with pytest.raises(exceptions.CommandError, match="Invalid interception filter:"):
+        v.add_filtred_view("~noafilter", "test_bad")
+
+
 def tdump(path, flows):
     with open(path, "wb") as f:
         w = io.FlowWriter(f)
@@ -187,24 +213,33 @@ def test_resolve():
     with taddons.context() as tctx:
         assert tctx.command(v.resolve, "@all") == []
         assert tctx.command(v.resolve, "@focus") == []
+        assert tctx.command(v.resolve, "@focus.http1") == []
         assert tctx.command(v.resolve, "@shown") == []
+        assert tctx.command(v.resolve, "@shown.http1") == []
         assert tctx.command(v.resolve, "@hidden") == []
+        assert tctx.command(v.resolve, "@hidden.http2") == []
         assert tctx.command(v.resolve, "@marked") == []
         assert tctx.command(v.resolve, "@unmarked") == []
         assert tctx.command(v.resolve, "~m get") == []
         v.request(tft(method="get"))
         assert len(tctx.command(v.resolve, "~m get")) == 1
         assert len(tctx.command(v.resolve, "@focus")) == 1
+        assert len(tctx.command(v.resolve, "@focus.http1")) == 1
         assert len(tctx.command(v.resolve, "@all")) == 1
         assert len(tctx.command(v.resolve, "@shown")) == 1
+        assert len(tctx.command(v.resolve, "@shown.http1")) == 1
         assert len(tctx.command(v.resolve, "@unmarked")) == 1
         assert tctx.command(v.resolve, "@hidden") == []
+        assert tctx.command(v.resolve, "@hidden.http1") == []
         assert tctx.command(v.resolve, "@marked") == []
         v.request(tft(method="put"))
         assert len(tctx.command(v.resolve, "@focus")) == 1
+        assert len(tctx.command(v.resolve, "@focus.http1")) == 1
         assert len(tctx.command(v.resolve, "@shown")) == 2
+        assert len(tctx.command(v.resolve, "@shown.http1")) == 2
         assert len(tctx.command(v.resolve, "@all")) == 2
         assert tctx.command(v.resolve, "@hidden") == []
+        assert tctx.command(v.resolve, "@hidden.http1") == []
         assert tctx.command(v.resolve, "@marked") == []
 
         v.request(tft(method="get"))
@@ -347,6 +382,7 @@ def test_update():
 
 
 class Record:
+
     def __init__(self):
         self.calls = []
 
@@ -511,6 +547,15 @@ def test_focus():
     filt = flowfilter.parse("~m oink")
     v.set_filter(filt)
     assert f.index is None
+
+    v.set_filter(None)
+    v.add_filtred_view("~m get", "test_get")
+    f = v.filtred_views_focus["test_get"]
+    assert f.index == 0
+
+    v.set_filter(flowfilter.parse("~m oink"), "test_get")
+    assert f.index is None
+    assert v.focus is not None
 
 
 def test_settings():

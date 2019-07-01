@@ -1,11 +1,12 @@
+from mitmproxy import flowfilter
+from mitmproxy import http2
+from mitmproxy.proxy.protocol.http2 import SafeH2Connection
+
+import h2
+from h2.settings import SettingCodes, ChangedSetting
 import pytest
 
-from mitmproxy import http2
-import h2
-from mitmproxy.proxy.protocol.http2 import SafeH2Connection
-from mitmproxy import flowfilter
 from mitmproxy.test import tflow
-from h2.settings import SettingCodes, ChangedSetting
 
 
 class TestHTTP2Flow:
