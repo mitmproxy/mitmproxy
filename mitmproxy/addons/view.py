@@ -9,18 +9,17 @@ The View:
   removed from the store.
 """
 import collections
-import typing
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy import viewitem  # noqa
+import mitmproxy.viewitem
 import re
+import typing
 
 import blinker
 import sortedcontainers
 
-import mitmproxy.viewitem
-from mitmproxy import flowfilter
-from mitmproxy import exceptions
-from mitmproxy import ctx
-from mitmproxy import io
-from mitmproxy import viewitem  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -31,8 +30,6 @@ from mitmproxy import viewitem  # noqa
 #
 # - Add a facility to refresh items in the list by removing and re-adding them
 # when they are updated.
-
-
 class _OrderKey:
     def __init__(self, view):
         self.view = view
@@ -202,11 +199,8 @@ class View(collections.abc.Sequence):
         else:
             return self._rev(self._view.index(i, start, stop))
 
-    def __contains__(self, i: typing.Any, view_name: typing.Sequence[str] = None) -> bool:
-        if view_name:
-            return self._view[view_name].__contains__(i)
-        else:
-            return self._view.__contains__(i)
+    def __contains__(self, i: typing.Any) -> bool:
+        return self._view.__contains__(i)
 
     def _order_key_name(self):
         return "_order_%s" % id(self.order_key)
@@ -236,37 +230,59 @@ class View(collections.abc.Sequence):
     """ View API """
 
     # Focus
-    def go(self, dst: int) -> None:
+    def go(self, dst: int, name: str = None) -> None:
         """
             Go to a specified offset. Positive offests are from the beginning of
             the view, negative from the end of the view, so that 0 is the first
             item, -1 is the last item.
         """
-        if len(self) == 0:
-            return
-        if dst < 0:
-            dst = len(self) + dst
-        if dst < 0:
-            dst = 0
-        if dst > len(self) - 1:
-            dst = len(self) - 1
-        self.focus.item = self[dst]
+        if name:
+            view_length = len(self.filtred_views[name])
+            if view_length == 0:
+                return
+            if dst < 0:
+                dst = view_length + dst
+            if dst < 0:
+                dst = 0
+            if dst > view_length - 1:
+                dst = view_length - 1
+            self.filtred_views_focus[name].item = self.filtred_views[name][dst]
+        else:
+            if len(self) == 0:
+                return
+            if dst < 0:
+                dst = len(self) + dst
+            if dst < 0:
+                dst = 0
+            if dst > len(self) - 1:
+                dst = len(self) - 1
+            self.focus.item = self[dst]
 
-    def focus_next(self) -> None:
+    def focus_next(self, name: str = None) -> None:
         """
             Set focus to the next item.
         """
-        idx = self.focus.index + 1
-        if self.inbounds(idx):
-            self.focus.item = self[idx]
+        if name:
+            idx = self.filtred_views_focus[name].index + 1
+            if self.inbounds(idx, name):
+                self.filtred_views_focus[name].item = self[idx]
+        else:
+            idx = self.focus.index + 1
+            if self.inbounds(idx, name):
+                self.focus.item = self[idx]
 
-    def focus_prev(self) -> None:
+    def focus_prev(self, name: str = None) -> None:
         """
             Set focus to the previous flow.
         """
-        idx = self.focus.index - 1
-        if self.inbounds(idx):
-            self.focus.item = self[idx]
+        if name:
+            idx = self.filtred_views_focus[name].index - 1
+            if self.inbounds(idx, name):
+                self.filtred_views_focus[name].item = self[idx]
+        else:
+            idx = self.focus.index - 1
+            if self.inbounds(idx):
+                self.focus.item = self[idx]
 
     # Order
     def order_options(self) -> typing.Sequence[str]:
@@ -322,6 +338,8 @@ class View(collections.abc.Sequence):
     def set_filter(self, flt: typing.Optional[flowfilter.TFilter], view_name: typing.Sequence[str] = None):
         if not view_name:
             self.filter = flt or self.matchall
+        elif view_name in self.filtred_views:
+            self.filtred_views_filter[view_name] = flt or self.matchall
         else:
             self.filtred_views[view_name] = self._view.copy()
             self.filtred_views_filter[view_name] = flt or self.matchall
@@ -348,6 +366,8 @@ class View(collections.abc.Sequence):
         """
         self._store.clear()
         self._view.clear()
+        for view in self.filtred_views.values():
+            view.clear()
         self.sig_view_refresh.send(self)
         self.sig_store_refresh.send(self)
         for name, signal in self.filtred_views_sig_view_refresh.items():
@@ -445,7 +465,7 @@ class View(collections.abc.Sequence):
         if re.match(r'@\w+\.\w+\.\w+', spec):
             spec, view_name = re.match(r'(@\w+)\.\w+\.(\w+)', spec).group(1, 2)
         if re.match(r'@\w+\.\w+', spec):
-            spec = re.match(r'(@\w+)\.\w+', spec).group(0)
+            spec = re.match(r'(@\w+)\.\w+', spec).group(1)
 
         if spec == "@all":
             return [i for i in self._store.values()]
@@ -478,17 +498,7 @@ class View(collections.abc.Sequence):
         """
             Load viewitem into the view, without processing them with addons.
         """
-        try:
-            with open(path, "rb") as f:
-                for i in io.FlowReader(f).stream():
-                    # Do this to get a new ID, so we can load the same file N times and
-                    # get new viewitem each time. It would be more efficient to just have a
-                    # .newid() method or something.
-                    self.add([i.copy()])
-        except IOError as e:
-            ctx.log.error(e.strerror)
-        except exceptions.FlowReadException as e:
-            ctx.log.error(str(e))
+        raise NotImplementedError
 
     def add(self, viewitems: typing.Sequence[mitmproxy.viewitem.ViewItem]) -> None:
         """
@@ -507,7 +517,7 @@ class View(collections.abc.Sequence):
                     if flt(i):
                         self._base_add(i, name)
                         if self.focus_follow:
-                            self.filtred_views_focus[name].viewitem = i
+                            self.filtred_views_focus[name].item = i
                         self.filtred_views_sig_view_add[name].send(self, item=i)
 
     def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.viewitem.ViewItem]:
@@ -606,10 +616,10 @@ class View(collections.abc.Sequence):
 
                 for name, flt in self.filtred_views_filter.items():
                     if flt(i):
-                        if i not in self._view:
+                        if i not in self.filtred_views[name]:
                             self._base_add(i, name)
                             if self.focus_follow:
-                                self.focus.item = i
+                                self.filtred_views_focus[name].item = i
                             self.filtred_views_sig_view_add[name].send(self, item=i)
                         else:
                             # This is a tad complicated. The sortedcontainers
@@ -620,11 +630,11 @@ class View(collections.abc.Sequence):
                             self.sig_view_update.send(self, item=i)
                     else:
                         try:
-                            idx = self._view.index(i)
+                            idx = self.filtred_views[name].index(i)
                         except ValueError:
                             pass  # The value was not in the view
                         else:
-                            self._view.remove(i)
+                            self.filtred_views[name].remove(i)
                             self.filtred_views_sig_view_remove[name].send(self, item=i, index=idx)
 
 
@@ -639,6 +649,7 @@ class Focus:
             self.view = v.filtred_views[view_name]
         else:
             self.view = v
+        self.base_view = v
         self._item: mitmproxy.viewitem.ViewItem = None
         self.sig_change = blinker.Signal()
         if len(self.view):
@@ -666,7 +677,7 @@ class Focus:
     @property
     def index(self) -> typing.Optional[int]:
         if self.item:
-            return self.view.index(self.item)
+            return self.base_view.index(self.item, view_name=self.view_name)
         return None
 
     @index.setter

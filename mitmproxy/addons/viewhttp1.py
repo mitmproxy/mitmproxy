@@ -8,17 +8,19 @@ The View:
 - Exposes a settings store for viewitems that automatically expires if the viewitem is
   removed from the store.
 """
+from mitmproxy import command
+from mitmproxy import connections
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy import http  # noqa
+from mitmproxy import io
+from mitmproxy.addons import view
+import mitmproxy.viewitem
 import typing
 
 import sortedcontainers
 
-import mitmproxy.viewitem
-from mitmproxy.addons import view
-from mitmproxy import flowfilter
-from mitmproxy import exceptions
-from mitmproxy import command
-from mitmproxy import connections
-from mitmproxy import http  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -29,8 +31,6 @@ from mitmproxy import http  # noqa
 #
 # - Add a facility to refresh items in the list by removing and re-adding them
 # when they are updated.
-
-
 class OrderRequestStart(view._OrderKey):
     def generate(self, i: http.HTTPFlow) -> int:
         return i.request.timestamp_start or 0
@@ -233,7 +233,17 @@ class ViewHttp1(view.View):
         """
             Load viewitems into the view, without processing them with addons.
         """
-        super().load_file(path)
+        try:
+            with open(path, "rb") as f:
+                for i in io.FlowReader(f).stream():
+                    # Do this to get a new ID, so we can load the same file N times and
+                    # get new viewitem each time. It would be more efficient to just have a
+                    # .newid() method or something.
+                    self.add([i.copy()])
+        except IOError as e:
+            ctx.log.error(e.strerror)
+        except exceptions.FlowReadException as e:
+            ctx.log.error(str(e))
 
     # View Properties
     @command.command("view.http1.properties.length")

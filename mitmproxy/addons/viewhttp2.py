@@ -8,15 +8,18 @@ The View:
 - Exposes a settings store for flows that automatically expires if the viewitem is
   removed from the store.
 """
+from mitmproxy import command
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flowfilter
+from mitmproxy import http2  # noqa
+from mitmproxy import io
+from mitmproxy.addons import view
+import mitmproxy.viewitem
 import typing
 
 import sortedcontainers
 
-import mitmproxy.viewitem
-from mitmproxy.addons import view
-from mitmproxy import flowfilter
-from mitmproxy import command
-from mitmproxy import http2  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -27,8 +30,6 @@ from mitmproxy import http2  # noqa
 #
 # - Add a facility to refresh items in the list by removing and re-adding them
 # when they are updated.
-
-
 class OrderTimestamp(view._OrderKey):
     def generate(self, i: http2.HTTP2Frame) -> int:
         return i.timestamp or 0
@@ -41,7 +42,7 @@ class OrderFrameType(view._OrderKey):
 
 class OrderStreamID(view._OrderKey):
     def generate(self, i: http2.HTTP2Frame) -> str:
-        return i.frame_type
+        return i.stream_id
 
 
 class ViewHttp2(view.View):
@@ -50,14 +51,14 @@ class ViewHttp2(view.View):
         self.matchall = flowfilter.parse("~http2")
         self.base_orders = [
             ("t", "time"),
-            ("f", "frametype"),
+            ("f", "frame_type"),
         ]
 
         self.default_order = OrderTimestamp(self)
         self.filter = self.matchall
         self.orders = dict(
-            time = OrderTimestamp(self), method = OrderStreamID(self),
-            url = OrderFrameType(self))
+            time = OrderTimestamp(self), stream_id = OrderStreamID(self),
+            frame_type = OrderFrameType(self))
         self.order_key = self.default_order
         self._view = sortedcontainers.SortedListWithKey(
             key = self.order_key
@@ -79,6 +80,15 @@ class ViewHttp2(view.View):
         """
         super().go(dst)
 
+    @command.command("view.http2.filtred_focus.go")
+    def f_go(self, dst: int, name: str) -> None:
+        """
+            Go to a specified offset. Positive offests are from the beginning of
+            the view, negative from the end of the view, so that 0 is the first
+            viewitem, -1 is the last viewitem.
+        """
+        super().go(dst, name)
+
     @command.command("view.http2.focus.next")
     def focus_next(self) -> None:
         """
@@ -86,12 +96,26 @@ class ViewHttp2(view.View):
         """
         super().focus_next()
 
+    @command.command("view.http2.filtred_focus.next")
+    def f_focus_next(self, name: str) -> None:
+        """
+            Set focus to the next item.
+        """
+        super().focus_next(name)
+
     @command.command("view.http2.focus.prev")
     def focus_prev(self) -> None:
         """
             Set focus to the previous item.
         """
         super().focus_prev()
+
+    @command.command("view.http2.filtred_focus.prev")
+    def f_focus_prev(self, name: str) -> None:
+        """
+            Set focus to the previous item.
+        """
+        super().focus_prev(name)
 
     # Order
     @command.command("view.http2.order.options")
@@ -203,9 +227,19 @@ class ViewHttp2(view.View):
     @command.command("view.http2.items.load")
     def load_file(self, path: mitmproxy.types.Path) -> None:
         """
-            Load viewitems into the view, without processing them with addons.
+            Load viewitem into the view, without processing them with addons.
         """
-        super().load_file(path)
+        try:
+            with open(path, "rb") as f:
+                for i in io.FlowReader(f).stream():
+                    # Do this to get a new ID, so we can load the same file N times and
+                    # get new viewitem each time. It would be more efficient to just have a
+                    # .newid() method or something.
+                    self.add([frame for frame in i.copy().messages])
+        except IOError as e:
+            ctx.log.error(e.strerror)
+        except exceptions.FlowReadException as e:
+            ctx.log.error(str(e))
 
     # View Properties
     @command.command("view.http2.properties.length")
