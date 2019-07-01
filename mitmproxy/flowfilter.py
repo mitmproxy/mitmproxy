@@ -511,6 +511,7 @@ filter_rex: Sequence[Type[_Rex]] = [
     FMethod,
     FSrc,
     FUrl,
+    FType,
 ]
 filter_int = [
     FCode,
