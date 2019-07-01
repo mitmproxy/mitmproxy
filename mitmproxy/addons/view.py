@@ -107,7 +107,7 @@ class View(collections.abc.Sequence):
         # This used to store a list of items with a other filter than the main filter
         # key: the name of the filter
         # value: the same list than "_view" but with an other filter
-        self.filtred_views: dict[str, sortedcontainer.SortedListWithKey] = {}
+        self.filtred_views: dict[str, sortedcontainers.SortedListWithKey] = {}
 
         # The sig_view* signals broadcast events that affect the view. That is,
         # an update to a flow in the store but not in the view does not trigger
@@ -357,9 +357,9 @@ class View(collections.abc.Sequence):
         """
             Clears only the unmarked viewitem.
         """
-        for viewitem in self._store.copy().values():
-            if not viewitem.marked:
-                self._store.pop(viewitem.id)
+        for item in self._store.copy().values():
+            if not item.marked:
+                self._store.pop(item.id)
 
         self._refilter()
         self.sig_store_refresh.send(self)

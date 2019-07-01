@@ -514,7 +514,8 @@ class Http2Settings(HTTP2Frame):
                         if 'new_value' not in setting:
                             setting['new_value'] = setting['original_value']
                         if settings_key not in event.changed_settings:
-                            event.changed_settings[settings_key] = ChangedSetting(settings_key, setting['original_value'], setting['new_value'])
+                            event.changed_settings[settings_key] = ChangedSetting(settings_key, setting['original_value'],
+                                                                                  setting['new_value'])
                         else:
                             event.changed_settings[settings_key].original_value = setting['original_value']
                             event.changed_settings[settings_key].new_value = setting['new_value']

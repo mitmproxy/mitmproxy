@@ -1,5 +1,6 @@
 import urwid
 
+from mitmproxy import exceptions
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
 import mitmproxy.tools.console.master  # noqa

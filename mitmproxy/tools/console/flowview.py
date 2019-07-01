@@ -126,7 +126,7 @@ class FlowDetailsHttp1(FlowDetails):
             if len(self.master.views['http2'].filtred_views['stream_from_http1']) == 0:
                 txt = [urwid.Text(""),
                        urwid.Text([("highlight", "No HTTP/2 Exchange")])
-                ]
+                       ]
                 return searchable.Searchable(txt)
 
             flow_list = flowlist.FlowListBox(self.master, self.master.views['http2'], flt="stream_from_http1")
@@ -137,7 +137,7 @@ class FlowDetailsHttp1(FlowDetails):
         else:
             txt = [urwid.Text(""),
                    urwid.Text([("highlight", "No HTTP/2 Exchange")])
-            ]
+                   ]
             return searchable.Searchable(txt)
 
     def content_view(self, viewmode, message):
