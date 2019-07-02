@@ -118,6 +118,11 @@ class TestHTTP2Flow:
         for frame in f.messages:
             assert frame.frame_type in repr(frame)
 
+    def test_content(self):
+        f = tflow.thttp2flow()
+        for frame in f.messages:
+            assert isinstance(frame.content, bytes) or frame.content is None
+
     # Tests each frames
     def test_base_frame(self):
         f = tflow.thttp2flow()

@@ -130,7 +130,7 @@ def thttp2flow(client_conn=True, server_conn=True, messages=True, err=None):
             http2.Http2Ping(False, b"it's me", True, f, timestamp=945621102),
             http2.Http2PriorityUpdate(False, priority, f, timestamp=945621002),
             http2.Http2RstStream(True, 12, True, f, timestamp=945621292),
-            http2.Http2Goaway(False, 13, 12, "The error", f, timestamp=945221202)
+            http2.Http2Goaway(False, 13, 12, b'The error', f, timestamp=945221202)
         ]
     if err is True:
         err = terr()

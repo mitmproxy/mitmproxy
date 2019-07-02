@@ -158,6 +158,10 @@ class HTTP2Frame(viewitem.ViewItem):
         raise NotImplementedError()
 
     @property
+    def content(self):
+        raise NotImplementedError()
+
+    @property
     def stream_id(self):
         return self._stream_id
 
@@ -225,6 +229,10 @@ class Http2Header(HTTP2Frame, _EndStreamFrame, _PriorityFrame):
         return False
 
     @property
+    def content(self):
+        return bytes(repr(self._headers), 'utf-8')
+
+    @property
     def headers(self):
         return self._headers
 
@@ -287,6 +295,10 @@ class Http2Push(HTTP2Frame):
     @property
     def is_stream_id_modifiable(self):
         return True
+
+    @property
+    def content(self):
+        return bytes(repr(self._headers), 'utf-8')
 
     @property
     def stream_id(self):
@@ -361,6 +373,10 @@ class Http2Data(HTTP2Frame, _EndStreamFrame):
         return True
 
     @property
+    def content(self):
+        return self._data
+
+    @property
     def data(self):
         return self._data
 
@@ -420,6 +436,10 @@ class Http2WindowsUpdate(HTTP2Frame):
         return True
 
     @property
+    def content(self):
+        return None
+
+    @property
     def delta(self):
         return self._delta
 
@@ -468,6 +488,10 @@ class Http2Settings(HTTP2Frame):
     @property
     def is_stream_id_modifiable(self):
         return False
+
+    @property
+    def content(self):
+        return bytes(repr(self._settings), 'utf-8')
 
     @property
     def ack(self):
@@ -559,6 +583,10 @@ class Http2Ping(HTTP2Frame):
         return False
 
     @property
+    def content(self):
+        return self._data
+
+    @property
     def data(self):
         return self._data
 
@@ -625,6 +653,10 @@ class Http2PriorityUpdate(HTTP2Frame, _PriorityFrame):
         return True
 
     @property
+    def content(self):
+        return bytes(repr(self._priority), 'utf-8')
+
+    @property
     def _prority_mandatory(self):
         return True
 
@@ -665,6 +697,10 @@ class Http2RstStream(HTTP2Frame):
     @property
     def is_stream_id_modifiable(self):
         return True
+
+    @property
+    def content(self):
+        return None
 
     @property
     def error_code(self):
@@ -727,6 +763,10 @@ class Http2Goaway(HTTP2Frame):
     @property
     def is_stream_id_modifiable(self):
         return False
+
+    @property
+    def content(self):
+        return self._additional_data
 
     @property
     def last_stream_id(self):
