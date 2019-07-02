@@ -13,6 +13,7 @@ import mitmproxy.net
 from ...net import tservers as net_tservers
 from mitmproxy import exceptions
 from mitmproxy import http
+from mitmproxy import http2 as http2_flow
 from mitmproxy.net.http import http1, http2
 from pathod.language import generators
 
@@ -238,17 +239,19 @@ class TestSimple(_Http2Test):
         response_body_buffer = b''
         h2_conn = self.setup_connection()
 
+        headers_sent = [
+            (b':authority', bytes("127.0.0.1:{}".format(self.server.server.address[1]), 'utf-8')),
+            (b':method', b'GET'),
+            (b':scheme', b'https'),
+            (b':path', b'/'),
+            (b'self.client-FoO', b'self.client-bar-1'),
+            (b'self.client-FoO', b'self.client-bar-2'),
+        ]
+
         self._send_request(
             self.client.wfile,
             h2_conn,
-            headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
-                (':method', 'GET'),
-                (':scheme', 'https'),
-                (':path', '/'),
-                ('self.client-FoO', 'self.client-bar-1'),
-                ('self.client-FoO', 'self.client-bar-2'),
-            ],
+            headers=headers_sent,
             body=b'request body')
 
         done = False
@@ -272,6 +275,33 @@ class TestSimple(_Http2Test):
         h2_conn.close_connection()
         self.client.wfile.write(h2_conn.data_to_send())
         self.client.wfile.flush()
+
+        frames = self.master.state.flows[0].messages
+        is_first_header = True
+        is_first_response = True
+        is_first_data = True
+        for f in frames:
+            if isinstance(f, http2_flow.Http2Header):
+                if is_first_header:
+                    is_first_header = False
+                    # Replace "FoO" by "Foo" because the don't do the difference between uper and lower case
+                    headers_sent[4] = (b'self.client-foo', b'self.client-bar-1')
+                    headers_sent[5] = (b'self.client-foo', b'self.client-bar-2')
+                    assert f.headers == headers_sent
+                elif is_first_response:
+                    is_first_response = False
+                    assert f.headers ==  [
+                        (b':status', b'200'),
+                        (b'server-foo', b'server-bar'),
+                        (bytes('föo', 'utf-8'), bytes('bär', 'utf-8')),
+                        (b'x-stream-id', bytes(str(event.stream_id), 'utf-8')),
+                    ]
+            if isinstance(f, http2_flow.Http2Data):
+                if is_first_data:
+                    is_first_data = False
+                    assert f.data == b'request body'
+        assert not is_first_header
+        assert not is_first_data
 
         assert len(self.master.state.flows) == 2
         assert self.master.state.flows[1].response.status_code == 200
@@ -321,15 +351,17 @@ class TestRequestWithPriority(_Http2Test):
 
         h2_conn = self.setup_connection()
 
+        headers_sent = [
+                (b':authority', bytes("127.0.0.1:{}".format(self.server.server.address[1]), 'utf-8')),
+                (b':method', b'GET'),
+                (b':scheme', b'https'),
+                (b':path', b'/'),
+            ]
+
         self._send_request(
             self.client.wfile,
             h2_conn,
-            headers=[
-                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
-                (':method', 'GET'),
-                (':scheme', 'https'),
-                (':path', '/'),
-            ],
+            headers=headers_sent,
             priority_exclusive=priority[0],
             priority_depends_on=priority[1],
             priority_weight=priority[2],
@@ -356,6 +388,41 @@ class TestRequestWithPriority(_Http2Test):
         self.client.wfile.flush()
 
         assert len(self.master.state.flows) == 2
+
+        frames = self.master.state.flows[0].messages
+        priority_cnt = 0
+        header_end_stream = 0
+        data_cnt = 0
+        is_first_header = True
+        for f in frames:
+            if isinstance(f, http2_flow.Http2Header):
+                if f.priority:
+                    priority_cnt += 1
+                    assert f.priority["weight"] == priority[2]
+                    assert f.priority["depends_on"] == priority[1]
+                    assert f.priority["exclusive"] == priority[0]
+                if f.end_stream:
+                    header_end_stream += 1
+                if is_first_header:
+                    is_first_header = False
+                    assert f.headers == headers_sent
+            if isinstance(f, http2_flow.Http2Data):
+                data_cnt += 1
+            if isinstance(f, http2_flow.Http2PriorityUpdate):
+                priority_cnt += 1
+                assert f.priority["weight"] == priority[2]
+                assert f.priority["depends_on"] == priority[1]
+                assert f.priority["exclusive"] == priority[0]
+
+        if priority[0]:
+            assert priority_cnt == 1
+        else:
+            assert priority_cnt == 0
+        assert header_end_stream == 1
+        assert data_cnt == 1
+        assert not is_first_header
+
+        assert isinstance(frames[0], http2_flow.Http2Settings)
 
         resp = self.master.state.flows[1].response
         assert resp.headers.get('priority_exclusive', None) == expected_priority[0]
@@ -443,6 +510,20 @@ class TestPriority(_Http2Test):
         self.client.wfile.write(h2_conn.data_to_send())
         self.client.wfile.flush()
 
+        frames = self.master.state.flows[0].messages
+        priority_cnt = 0
+        for f in frames:
+            if (isinstance(f, http2_flow.Http2Header) and f.priority) or isinstance(f, http2_flow.Http2PriorityUpdate):
+                priority_cnt += 1
+                assert f.priority["weight"] == priority[2]
+                assert f.priority["depends_on"] == priority[1]
+                assert f.priority["exclusive"] == priority[0]
+
+        if priority[0]:
+            assert priority_cnt == 1
+        else:
+            assert priority_cnt == 0
+
         assert len(self.master.state.flows) == 2
         assert self.priority_data == expected_priority
 
@@ -492,6 +573,21 @@ class TestStreamResetFromServer(_Http2Test):
         h2_conn.close_connection()
         self.client.wfile.write(h2_conn.data_to_send())
         self.client.wfile.flush()
+
+        frames = self.master.state.flows[0].messages
+
+        # Wait until the goaway frame has been send
+        cnt = 0
+        while not isinstance(frames[-1], http2_flow.Http2Goaway):
+            cnt += 1
+            assert cnt <= 10000000
+ 
+        assert isinstance(frames[-2], http2_flow.Http2RstStream)
+        assert frames[-2].error_code == 8
+        assert frames[-2].stream_id == 1
+        assert isinstance(frames[-1], http2_flow.Http2Goaway)
+        assert frames[-1].error_code == 0
+        assert frames[-1].last_stream_id == 0
 
         assert len(self.master.state.flows) == 2
         assert self.master.state.flows[1].response is None
@@ -549,6 +645,22 @@ class TestPushPromise(_Http2Test):
 
     @classmethod
     def handle_server_event(cls, event, h2_conn, rfile, wfile):
+        TestPushPromise.push_header_2 = [
+                (b':authority', bytes("127.0.0.1:{}".format(cls.port), 'utf-8')),
+                (b':method', b'GET'),
+                (b':scheme', b'https'),
+                (b':path', b'/pushed_stream_foo'),
+                (b'foo', b'bar')
+            ]
+
+        TestPushPromise.push_header_4 = [
+                (b':authority', bytes("127.0.0.1:{}".format(cls.port), 'utf-8')),
+                (b':method', b'GET'),
+                (b':scheme', b'https'),
+                (b':path', b'/pushed_stream_bar'),
+                (b'foo', b'bar')
+            ]
+
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
         elif isinstance(event, h2.events.RequestReceived):
@@ -560,23 +672,11 @@ class TestPushPromise(_Http2Test):
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
 
-            h2_conn.push_stream(1, 2, [
-                (':authority', "127.0.0.1:{}".format(cls.port)),
-                (':method', 'GET'),
-                (':scheme', 'https'),
-                (':path', '/pushed_stream_foo'),
-                ('foo', 'bar')
-            ])
+            h2_conn.push_stream(1, 2, TestPushPromise.push_header_2)
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
 
-            h2_conn.push_stream(1, 4, [
-                (':authority', "127.0.0.1:{}".format(cls.port)),
-                (':method', 'GET'),
-                (':scheme', 'https'),
-                (':path', '/pushed_stream_bar'),
-                ('foo', 'bar')
-            ])
+            h2_conn.push_stream(1, 4, TestPushPromise.push_header_4)
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
 
@@ -651,6 +751,31 @@ class TestPushPromise(_Http2Test):
 
         assert ended_streams == 3
         assert pushed_streams == 2
+
+        frames = self.master.state.flows[0].messages
+        is_first_header = True
+        push_received = 0
+        for f in frames:
+            if isinstance(f, http2_flow.Http2Header):
+                if is_first_header:
+                    is_first_header = False
+                    assert f.headers == [
+                        (b':authority', bytes("127.0.0.1:{}".format(self.server.server.address[1]), 'utf-8')),
+                        (b':method', b'GET'),
+                        (b':scheme', b'https'),
+                        (b':path', b'/'),
+                        (b'foo', b'bar')
+                    ]
+            if isinstance(f, http2_flow.Http2Push):
+                push_received +=1
+                if f.pushed_stream_id == 2:
+                    assert f.headers == TestPushPromise.push_header_2
+                elif f.pushed_stream_id == 4:
+                    assert f.headers == TestPushPromise.push_header_4
+                else:
+                    assert False
+        assert not is_first_header
+        assert push_received == 2
 
         bodies = [flow.response.content for flow in self.master.state.flows if isinstance(flow, http.HTTPFlow)]
         assert len(bodies) == 3
