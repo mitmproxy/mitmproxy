@@ -20,7 +20,8 @@ def data():
         tflow.tflow(resp=True),
         tflow.tflow(err=True),
         tflow.ttcpflow(),
-        tflow.ttcpflow(err=True)
+        tflow.ttcpflow(err=True),
+        tflow.thttp2flow()
     ]
     for flow in flows:
         w.add(flow)
