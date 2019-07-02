@@ -808,7 +808,7 @@ class TestMaxConcurrentStreams(_Http2Test):
         self.client.wfile.write(h2_conn.data_to_send())
         self.client.wfile.flush()
 
-        assert len(self.master.state.flows) == len(new_streams) + 1 # For http2 flow
+        assert len(self.master.state.flows) == len(new_streams) + 1  # For http2 flow
         for flow in self.master.state.flows:
             if isinstance(flow, http.HTTPFlow):
                 assert flow.response.status_code == 200

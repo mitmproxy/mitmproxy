@@ -71,6 +71,7 @@ class TestState:
             self.flows.append(f)
             self.f_id.append(f.id)
 
+
 class TestMaster(taddons.RecordingMaster):
 
     def __init__(self, opts):

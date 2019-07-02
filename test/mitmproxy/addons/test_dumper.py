@@ -10,7 +10,6 @@ from mitmproxy.test import tutils
 from mitmproxy.addons import dumper
 from mitmproxy import exceptions
 from mitmproxy import http
-from mitmproxy import http2
 
 
 def test_configure():
