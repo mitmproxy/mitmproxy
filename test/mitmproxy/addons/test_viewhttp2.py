@@ -422,11 +422,6 @@ def test_reversed():
     assert v._bisect(v[2], "test_data") == 2
 
 
-def test_update():
-    pass
-    # TODO maybe ??
-
-
 class Record:
     def __init__(self):
         self.calls = []
@@ -443,10 +438,15 @@ class Record:
 
 def test_signals():
     v = viewhttp2.ViewHttp2()
+    v.add_filtred_view("~ft HEADER", "test_header")
     rec_add = Record()
     rec_update = Record()
     rec_remove = Record()
     rec_refresh = Record()
+
+    rec_add_f = Record()
+    rec_remove_f = Record()
+    rec_refresh_f = Record()
 
     def clearrec():
         rec_add.calls = []
@@ -454,47 +454,65 @@ def test_signals():
         rec_remove.calls = []
         rec_refresh.calls = []
 
+        rec_add_f.calls = []
+        rec_remove_f.calls = []
+        rec_refresh_f.calls = []
+
     v.sig_view_add.connect(rec_add)
     v.sig_view_update.connect(rec_update)
     v.sig_view_remove.connect(rec_remove)
     v.sig_view_refresh.connect(rec_refresh)
 
-    assert not any([rec_add, rec_update, rec_remove, rec_refresh])
+    v.filtred_views_sig_view_add["test_header"].connect(rec_add_f)
+    v.filtred_views_sig_view_remove["test_header"].connect(rec_remove_f)
+    v.filtred_views_sig_view_refresh["test_header"].connect(rec_refresh_f)
+
+    assert not any([rec_add, rec_update, rec_remove, rec_refresh,
+                    rec_add_f, rec_remove_f, rec_refresh_f])
 
     # Simple add
     v.add([tft(frame_type="HEADER")])
     assert rec_add
-    assert not any([rec_update, rec_remove, rec_refresh])
+    assert not any([rec_update, rec_remove, rec_refresh,
+                    rec_remove_f, rec_refresh_f])
 
     # Filter change triggers refresh
     clearrec()
     v.set_filter(flowfilter.parse("~ft DATA"))
+    v.set_filter(flowfilter.parse("~ft DATA"), "test_header")
     assert rec_refresh
-    assert not any([rec_update, rec_add, rec_remove])
+    assert not any([rec_add, rec_update, rec_remove,
+                    rec_add_f, rec_remove_f])
 
     v.set_filter(flowfilter.parse("~ft HEADER"))
+    v.set_filter(flowfilter.parse("~ft HEADER"), "test_header")
 
     # An update that results in a flow being added to the view
     clearrec()
     v[0].frame_type = "DATA"
     v.update([v[0]])
     assert rec_remove
-    assert not any([rec_update, rec_refresh, rec_add])
+    assert not any([rec_add, rec_update, rec_refresh,
+                    rec_add_f, rec_refresh_f])
 
     # An update that does not affect the view just sends update
     v.set_filter(flowfilter.parse("~ft DATA"))
+    v.set_filter(flowfilter.parse("~ft DATA"), "test_header")
     clearrec()
     v.update([v[0]])
     assert rec_update
-    assert not any([rec_remove, rec_refresh, rec_add])
+    assert not any([rec_add, rec_remove, rec_refresh,
+                    rec_add_f, rec_remove_f, rec_refresh_f])
 
     # An update for a flow in state but not view does not do anything
     f = v[0]
     v.set_filter(flowfilter.parse("~ft PING"))
+    v.set_filter(flowfilter.parse("~ft PING"), "test_header")
     assert not len(v)
     clearrec()
     v.update([f])
-    assert not any([rec_add, rec_update, rec_remove, rec_refresh])
+    assert not any([rec_add, rec_update, rec_remove, rec_refresh,
+                    rec_add_f, rec_remove_f, rec_refresh_f])
 
 
 def test_focus_follow():
