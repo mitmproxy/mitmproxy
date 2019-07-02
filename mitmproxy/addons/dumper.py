@@ -305,10 +305,11 @@ class Dumper:
         if self.match(f):
             message = f.messages[-1]
             direction = "->" if message.from_client else "<-"
-            self.echo("{client} {direction} HTTP/2 {direction} {server}".format(
+            self.echo("{client} {direction} HTTP/2 {type} {direction} {server}".format(
                 client=human.format_address(f.client_conn.address),
                 server=human.format_address(f.server_conn.address),
                 direction=direction,
+                type=message.frame_type
             ))
             if ctx.options.flow_detail >= 3:
                 self._echo_message(message)

@@ -10,6 +10,7 @@ from mitmproxy.test import tutils
 from mitmproxy.addons import dumper
 from mitmproxy import exceptions
 from mitmproxy import http
+from mitmproxy import http2
 
 
 def test_configure():
@@ -208,3 +209,22 @@ def test_websocket():
         f = tflow.twebsocketflow(client_conn=True, err=True)
         d.websocket_error(f)
         assert "Error in WebSocket" in sio_err.getvalue()
+
+
+def test_http2():
+    sio = io.StringIO()
+    sio_err = io.StringIO()
+    d = dumper.Dumper(sio, sio_err)
+    with taddons.context(d) as ctx:
+        ctx.configure(d, flow_detail=3, showhost=True)
+        f = tflow.thttp2flow()
+        d.http2_frame(f)
+        assert "The error" in sio.getvalue()
+        sio.truncate(0)
+
+        f = tflow.thttp2flow()
+        d.http2_end(f)
+
+        f = tflow.thttp2flow(client_conn=True, err=True)
+        d.http2_error(f)
+        assert "Error in HTTP/2 connection" in sio_err.getvalue()
