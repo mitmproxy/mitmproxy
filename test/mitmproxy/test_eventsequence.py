@@ -54,6 +54,22 @@ def test_tcp_flow(err):
     assert next(i) == ("tcp_end", f)
 
 
+def test_http2_flow():
+    f = tflow.thttp2flow()
+    i = eventsequence.iterate(f)
+    assert next(i) == ("http2_start", f)
+    f.state = "run"
+    i = eventsequence.iterate(f)
+    assert next(i) == ("http2_frame", f)
+    assert len(f.messages) == 9
+    f.state = "error"
+    i = eventsequence.iterate(f)
+    assert next(i) == ("http2_error", f)
+    f.state = "end"
+    i = eventsequence.iterate(f)
+    assert next(i) == ("http2_end", f)
+
+
 def test_invalid():
     with pytest.raises(TypeError):
         next(eventsequence.iterate(42))
