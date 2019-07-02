@@ -96,7 +96,7 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
     return f
 
 
-def thttp2flow(client_conn=True, server_conn=True, messages=True, err=None):
+def thttp2flow(client_conn=True, server_conn=True, messages=True, err=None, state="start"):
     if client_conn is True:
         client_conn = tclient_conn()
     if server_conn is True:
@@ -137,6 +137,7 @@ def thttp2flow(client_conn=True, server_conn=True, messages=True, err=None):
 
     f.messages = messages
     f.error = err
+    f.state = state
     f.reply = controller.DummyReply()
     return f
 

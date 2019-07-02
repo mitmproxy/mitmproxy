@@ -28,14 +28,18 @@ class MasterTest:
 
     async def cycle(self, master, content):
         f = tflow.tflow(req=tutils.treq(content=content))
+        f2 = tflow.thttp2flow(state="run")
+        f2.messages = [f2.messages[0]]
         layer = mock.Mock("mitmproxy.proxy.protocol.base.Layer")
         layer.client_conn = f.client_conn
         layer.reply = controller.DummyReply()
         await master.addons.handle_lifecycle("clientconnect", layer)
         for i in eventsequence.iterate(f):
             await master.addons.handle_lifecycle(*i)
+        for i in eventsequence.iterate(f2):
+            await master.addons.handle_lifecycle(*i)
         await master.addons.handle_lifecycle("clientdisconnect", layer)
-        return f
+        return f, f2
 
     async def dummy_cycle(self, master, n, content):
         for i in range(n):
@@ -46,6 +50,9 @@ class MasterTest:
         with open(path, "wb") as f:
             fw = io.FlowWriter(f)
             t = tflow.tflow(resp=True)
+            fw.add(t)
+            t = tflow.thttp2flow()
+            t.messages = [t.messages[0]]
             fw.add(t)
 
 
