@@ -151,6 +151,7 @@ class TestSession:
         with taddons.context() as tctx:
             tctx.master.addons.add(s)
             tctx.options.view_filter_http1 = '~m get'
+            tctx.options.view_filter_http2 = '~ft HEADER'
         s.configure({"view_filter_http1"})
         assert [f.request.method for f in s.load_view()] == ["GET", "GET"]
         assert s.store_count() == 4
@@ -247,6 +248,7 @@ class TestSession:
         with taddons.context() as tctx:
             tctx.master.addons.add(s)
             tctx.options.view_order_http1 = "method"
+            tctx.options.view_order_http2 = "frame_type"
         s.configure({"view_order_http1"})
         assert [i.request.method for i in s.load_view()] == ["GET", "GET", "PUT", "PUT"]
 
