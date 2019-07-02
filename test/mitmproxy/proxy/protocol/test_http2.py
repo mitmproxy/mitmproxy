@@ -12,6 +12,7 @@ from mitmproxy import options
 import mitmproxy.net
 from ...net import tservers as net_tservers
 from mitmproxy import exceptions
+from mitmproxy import http
 from mitmproxy.net.http import http1, http2
 from pathod.language import generators
 
@@ -272,11 +273,11 @@ class TestSimple(_Http2Test):
         self.client.wfile.write(h2_conn.data_to_send())
         self.client.wfile.flush()
 
-        assert len(self.master.state.flows) == 1
-        assert self.master.state.flows[0].response.status_code == 200
-        assert self.master.state.flows[0].response.headers['server-foo'] == 'server-bar'
-        assert self.master.state.flows[0].response.headers['föo'] == 'bär'
-        assert self.master.state.flows[0].response.content == b'response body'
+        assert len(self.master.state.flows) == 2
+        assert self.master.state.flows[1].response.status_code == 200
+        assert self.master.state.flows[1].response.headers['server-foo'] == 'server-bar'
+        assert self.master.state.flows[1].response.headers['föo'] == 'bär'
+        assert self.master.state.flows[1].response.content == b'response body'
         assert self.request_body_buffer == b'request body'
         assert response_body_buffer == b'response body'
 
@@ -354,9 +355,9 @@ class TestRequestWithPriority(_Http2Test):
         self.client.wfile.write(h2_conn.data_to_send())
         self.client.wfile.flush()
 
-        assert len(self.master.state.flows) == 1
+        assert len(self.master.state.flows) == 2
 
-        resp = self.master.state.flows[0].response
+        resp = self.master.state.flows[1].response
         assert resp.headers.get('priority_exclusive', None) == expected_priority[0]
         assert resp.headers.get('priority_depends_on', None) == expected_priority[1]
         assert resp.headers.get('priority_weight', None) == expected_priority[2]
@@ -442,7 +443,7 @@ class TestPriority(_Http2Test):
         self.client.wfile.write(h2_conn.data_to_send())
         self.client.wfile.flush()
 
-        assert len(self.master.state.flows) == 1
+        assert len(self.master.state.flows) == 2
         assert self.priority_data == expected_priority
 
 
@@ -492,8 +493,8 @@ class TestStreamResetFromServer(_Http2Test):
         self.client.wfile.write(h2_conn.data_to_send())
         self.client.wfile.flush()
 
-        assert len(self.master.state.flows) == 1
-        assert self.master.state.flows[0].response is None
+        assert len(self.master.state.flows) == 2
+        assert self.master.state.flows[1].response is None
 
 
 class TestBodySizeLimit(_Http2Test):
@@ -541,7 +542,7 @@ class TestBodySizeLimit(_Http2Test):
         self.client.wfile.write(h2_conn.data_to_send())
         self.client.wfile.flush()
 
-        assert len(self.master.state.flows) == 0
+        assert len(self.master.state.flows) == 1
 
 
 class TestPushPromise(_Http2Test):
@@ -651,13 +652,13 @@ class TestPushPromise(_Http2Test):
         assert ended_streams == 3
         assert pushed_streams == 2
 
-        bodies = [flow.response.content for flow in self.master.state.flows]
+        bodies = [flow.response.content for flow in self.master.state.flows if isinstance(flow, http.HTTPFlow)]
         assert len(bodies) == 3
         assert b'regular_stream' in bodies
         assert b'pushed_stream_foo' in bodies
         assert b'pushed_stream_bar' in bodies
 
-        pushed_flows = [flow for flow in self.master.state.flows if 'h2-pushed-stream' in flow.metadata]
+        pushed_flows = [flow for flow in self.master.state.flows if isinstance(flow, http.HTTPFlow) and 'h2-pushed-stream' in flow.metadata]
         assert len(pushed_flows) == 2
 
     def test_push_promise_reset(self):
@@ -706,7 +707,7 @@ class TestPushPromise(_Http2Test):
         self.client.wfile.write(h2_conn.data_to_send())
         self.client.wfile.flush()
 
-        bodies = [flow.response.content for flow in self.master.state.flows if flow.response]
+        bodies = [flow.response.content for flow in self.master.state.flows if isinstance(flow, http.HTTPFlow) and flow.response]
         assert len(bodies) >= 1
         assert b'regular_stream' in bodies
         # the other two bodies might not be transmitted before the reset
@@ -749,8 +750,8 @@ class TestConnectionLost(_Http2Test):
             except:
                 break
 
-        if len(self.master.state.flows) == 1:
-            assert self.master.state.flows[0].response is None
+        if len(self.master.state.flows) == 2:
+            assert self.master.state.flows[1].response is None
 
 
 class TestMaxConcurrentStreams(_Http2Test):
@@ -807,10 +808,11 @@ class TestMaxConcurrentStreams(_Http2Test):
         self.client.wfile.write(h2_conn.data_to_send())
         self.client.wfile.flush()
 
-        assert len(self.master.state.flows) == len(new_streams)
+        assert len(self.master.state.flows) == len(new_streams) + 1 # For http2 flow
         for flow in self.master.state.flows:
-            assert flow.response.status_code == 200
-            assert b"Stream-ID " in flow.response.content
+            if isinstance(flow, http.HTTPFlow):
+                assert flow.response.status_code == 200
+                assert b"Stream-ID " in flow.response.content
 
 
 class TestConnectionTerminated(_Http2Test):
@@ -846,7 +848,7 @@ class TestConnectionTerminated(_Http2Test):
             except:
                 break
 
-        assert len(self.master.state.flows) == 1
+        assert len(self.master.state.flows) == 2
         assert connection_terminated_event is not None
         assert connection_terminated_event.error_code == 5
         assert connection_terminated_event.last_stream_id == 42

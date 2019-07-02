@@ -164,7 +164,6 @@ class Master:
             for m in f.messages:
                 m.flow = f
             self.waiting_flows.append(f)
-            self._change_reverse_host(f)
 
         if isinstance(f, websocket.WebSocketFlow):
             hf = [hf for hf in self.waiting_flows if hf.id == f.metadata['websocket_handshake']][0]

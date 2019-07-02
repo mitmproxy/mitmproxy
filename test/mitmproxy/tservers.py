@@ -52,6 +52,7 @@ class MasterTest:
 class TestState:
     def __init__(self):
         self.flows = []
+        self.f_id = []
 
     def request(self, f):
         if f not in self.flows:
@@ -65,6 +66,10 @@ class TestState:
         if f not in self.flows:
             self.flows.append(f)
 
+    def http2_start(self, f):
+        if f.id not in self.f_id:
+            self.flows.append(f)
+            self.f_id.append(f.id)
 
 class TestMaster(taddons.RecordingMaster):
 

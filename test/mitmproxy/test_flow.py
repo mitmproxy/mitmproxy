@@ -120,6 +120,20 @@ class TestFlowMaster:
             assert len(s.flows[1].messages) == len(f.messages)
 
     @pytest.mark.asyncio
+    async def test_load_http2_flow(self):
+        s = tservers.TestState()
+        with taddons.context(s) as ctx:
+            f = tflow.thttp2flow()
+            messages = f.messages
+            f.messages = []
+            for m in messages:
+                f.messages.append(m)
+                l_flow = f.copy()
+                l_flow.id = f.id
+                await ctx.master.load_flow(l_flow)
+            assert len(s.flows[0].messages) == len(messages)
+
+    @pytest.mark.asyncio
     async def test_all(self):
         opts = options.Options(
             mode="reverse:https://use-this-domain"
