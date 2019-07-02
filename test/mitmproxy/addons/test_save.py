@@ -56,6 +56,20 @@ def test_websocket(tmpdir):
         assert rd(p)
 
 
+def test_http2(tmpdir):
+    sa = save.Save()
+    with taddons.context(sa) as tctx:
+        p = str(tmpdir.join("foo"))
+        tctx.configure(sa, save_stream_file=p)
+
+        tt = tflow.thttp2flow()
+        sa.http2_start(tt)
+        sa.http2_frame(tt)
+        sa.http2_end(tt)
+        tctx.configure(sa, save_stream_file=None)
+        assert rd(p)
+
+
 def test_save_command(tmpdir):
     sa = save.Save()
     with taddons.context() as tctx:
@@ -66,6 +80,10 @@ def test_save_command(tmpdir):
         assert len(rd(p)) == 1
         sa.save([tflow.tflow(resp=True)], "+" + p)
         assert len(rd(p)) == 2
+        sa.save(tflow.thttp2flow().messages, p)
+        assert len(rd(p)) == 9
+        sa.save(tflow.thttp2flow().messages, "+" + p)
+        assert len(rd(p)) == 18
 
         with pytest.raises(exceptions.CommandError):
             sa.save([tflow.tflow(resp=True)], str(tmpdir))
