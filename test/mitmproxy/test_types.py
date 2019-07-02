@@ -10,6 +10,9 @@ from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy import command
 from mitmproxy import flow
+from mitmproxy import viewitem
+from mitmproxy import http
+from mitmproxy import http2
 
 from . import test_command
 
@@ -147,11 +150,24 @@ def test_strseq():
 
 class DummyConsole:
     @command.command("view.http1.items.resolve")
-    def resolve(self, spec: str) -> typing.Sequence[flow.Flow]:
+    def resolve(self, spec: str) -> typing.Sequence[viewitem.ViewItem]:
         if spec == "err":
             raise mitmproxy.exceptions.CommandError()
-        n = int(spec)
+        if "@focus" in spec:
+            n = 1
+        else:
+            n = int(spec)
         return [tflow.tflow(resp=True)] * n
+
+    @command.command("view.http2.items.resolve")
+    def resolve_h2(self, spec: str) -> typing.Sequence[viewitem.ViewItem]:
+        if spec == "err":
+            raise mitmproxy.exceptions.CommandError()
+        if "@focus" in spec:
+            n = 1
+        else:
+            n = int(spec)
+        return [tflow.thttp2flow().messages[0]] * n
 
     @command.command("cut")
     def cut(self, spec: str) -> mitmproxy.types.Data:
@@ -193,6 +209,46 @@ def test_flows():
         assert len(b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "2")) == 2
         with pytest.raises(mitmproxy.exceptions.TypeError):
             b.parse(tctx.master.commands, typing.Sequence[flow.Flow], "err")
+
+
+def test_viewitem():
+    with taddons.context() as tctx:
+        tctx.master.addons.add(DummyConsole())
+        b = mitmproxy.types._ViewItemType()
+        assert len(b.completion(tctx.master.commands, viewitem.ViewItem, "")) == len(b.valid_prefixes)
+        assert b.parse(tctx.master.commands, viewitem.ViewItem, "1")
+        assert isinstance(b.parse(tctx.master.commands, viewitem.ViewItem, "@focus.http1"), http.HTTPFlow)
+        assert isinstance(b.parse(tctx.master.commands, viewitem.ViewItem, "@focus.http2"), http2.HTTP2Frame)
+        assert b.is_valid(tctx.master.commands, viewitem.ViewItem, tflow.tflow()) is True
+        assert b.is_valid(tctx.master.commands, viewitem.ViewItem, tflow.thttp2flow().messages[0]) is True
+        assert b.is_valid(tctx.master.commands, viewitem.ViewItem, "xx") is False
+        with pytest.raises(mitmproxy.exceptions.TypeError):
+            b.parse(tctx.master.commands, viewitem.ViewItem, "0")
+        with pytest.raises(mitmproxy.exceptions.TypeError):
+            b.parse(tctx.master.commands, viewitem.ViewItem, "2")
+        with pytest.raises(mitmproxy.exceptions.TypeError):
+            b.parse(tctx.master.commands, viewitem.ViewItem, "err")
+
+
+def test_viewitems():
+    with taddons.context() as tctx:
+        tctx.master.addons.add(DummyConsole())
+        b = mitmproxy.types._ViewItemsType()
+        assert len(
+            b.completion(tctx.master.commands, typing.Sequence[viewitem.ViewItem], "")
+        ) == len(b.valid_prefixes)
+        assert b.is_valid(tctx.master.commands, typing.Sequence[viewitem.ViewItem], [tflow.tflow()]) is True
+        assert b.is_valid(tctx.master.commands, typing.Sequence[viewitem.ViewItem], tflow.thttp2flow().messages) is True
+        assert b.is_valid(tctx.master.commands, typing.Sequence[viewitem.ViewItem], "xx") is False
+        assert b.is_valid(tctx.master.commands, typing.Sequence[viewitem.ViewItem], 0) is False
+        assert len(b.parse(tctx.master.commands, typing.Sequence[viewitem.ViewItem], "0")) == 0
+        assert len(b.parse(tctx.master.commands, typing.Sequence[viewitem.ViewItem], "1")) == 1
+        assert len(b.parse(tctx.master.commands, typing.Sequence[viewitem.ViewItem], "2")) == 2
+        assert len(b.parse(tctx.master.commands, typing.Sequence[viewitem.ViewItem], "@focus.http1")) == 1
+        assert isinstance(b.parse(tctx.master.commands, viewitem.ViewItem, "@focus.http1")[0], http.HTTPFlow)
+        assert isinstance(b.parse(tctx.master.commands, viewitem.ViewItem, "@focus.http2")[0], http2.HTTP2Frame)
+        with pytest.raises(mitmproxy.exceptions.TypeError):
+            b.parse(tctx.master.commands, typing.Sequence[viewitem.ViewItem], "err")
 
 
 def test_data():
