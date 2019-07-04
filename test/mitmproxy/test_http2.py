@@ -218,6 +218,12 @@ class TestHTTP2Flow:
         assert event.priority_updated.exclusive is True
         assert len(events) == 2
 
+        frame.end_stream = True
+
+        assert frame.end_stream is True
+        assert event.stream_ended
+        assert len(events) == 3
+
     def test_frames_push(self):
         f = tflow.thttp2flow()
         connS, connC = self.get_h2_connections(f)
