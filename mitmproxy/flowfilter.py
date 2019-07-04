@@ -435,7 +435,7 @@ class FHTTP2SID(_Int):
 
 class FHTTP2PUSHEDSID(_Int):
     code = "f.pushed_stream_id"
-    help = "Match HTTP2 frame PUSHED with next stream ID"
+    help = "Match HTTP2 frame type PUSHED with the specified next stream ID"
 
     @only(http2.Http2Push)
     def __call__(self, f):
