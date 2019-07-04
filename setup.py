@@ -94,7 +94,7 @@ setup(
             "parver>=0.1,<2.0",
             "pytest-asyncio>=0.8",
             "pytest-cov>=2.5.1,<3",
-            "pytest-faulthandler>=1.3.1,<2",
+            "pytest-faulthandler>=2.0,<2.1",
             "pytest-timeout>=1.2.1,<2",
             "pytest-xdist>=1.22,<2",
             "pytest>=5.0,<5.1",
