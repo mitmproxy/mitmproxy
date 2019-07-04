@@ -51,6 +51,7 @@ class ViewHttp2(view.View):
         self.matchall = flowfilter.parse("~http2")
         self.base_orders = [
             ("t", "time"),
+            ("s", "stream_id"),
             ("f", "frame_type"),
         ]
 
