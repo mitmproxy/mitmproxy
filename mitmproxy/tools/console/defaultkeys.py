@@ -30,13 +30,13 @@ def map(km):
     km.add("I", "set intercept_active=toggle", ["global"], "Toggle intercept")
     km.add("i", "console.command.set intercept", ["global"], "Set intercept")
     km.add("W", "console.command.set save_stream_file", ["global"], "Stream to file")
-    km.add("A", "item.resume @all", ["flowlist_http1", "flowlist_http2",
-                                     "flowview_http1", "flowview_http2"], "Resume all intercepted items")
-    km.add("a", "item.resume @focus", ["flowlist_http1", "flowlist_http2",
-                                       "flowview_http1", "flowview_http2"], "Resume this intercepted items")
+    km.add("A", "item.resume @all", ["flowlist_http1",
+                                     "flowview_http1"], "Resume all intercepted items")
+    km.add("a", "item.resume @focus", ["flowlist_http1",
+                                       "flowview_http1"], "Resume this intercepted items")
     km.add(
         "b", "console.command cut.save @focus response.content ",
-        ["flowlist_http1", "flowlist_http2", "flowview_http1", "flowview_http2"],
+        ["flowlist_http1", "flowview_http1"],
         "Save response body to file"
     )
     km.add("d", "view.http1.items.remove @focus", ["flowlist_http1", "flowview_http1"], "Delete item from view")
@@ -49,7 +49,7 @@ def map(km):
         console.choose.cmd Format export.formats
         console.command export.file {choice} @focus
         """,
-        ["flowlist_http1", "flowlist_http2", "flowview_http1", "flowview_http2"],
+        ["flowlist_http1", "flowview_http1"],
         "Export this flow to file"
     )
     km.add("f", "console.command.set view_filter_http1", ["flowlist_http1"], "Set view filter")
@@ -58,7 +58,7 @@ def map(km):
     km.add(
         "ctrl l",
         "console.command cut.clip ",
-        ["flowlist_http1", "flowlist_http2", "flowview_http1", "flowview_http2"],
+        ["flowlist_http1", "flowview_http1"],
         "Send cuts to clipboard"
     )
     km.add("L", "console.command view.load ", ["flowlist_http1", "flowlist_http2"], "Load flows from file")
@@ -89,15 +89,14 @@ def map(km):
         ["flowlist_http2"],
         "Set flow list order"
     )
-    km.add("r", "replay.client @focus", ["flowlist_http1", "flowlist_http2", "flowview_http1", "flowview_http2"], "Replay this flow")
-    km.add("S", "console.command replay.server ", ["flowlist_http1", "flowlist_http2"], "Start server replay")
-    km.add("v", "set view_order_http1_reversed=toggle", ["flowlist_http1"], "Reverse flow list order")
-    km.add("v", "set view_order_http2_reversed=toggle", ["flowlist_http2"], "Reverse flow list order")
+    km.add("r", "replay.client @focus", ["flowlist_http1", "flowview_http1"], "Replay this flow")
+    km.add("S", "console.command replay.server ", ["flowlist_http1"], "Start server replay")
+    km.add("v", "set view_order_reversed=toggle", ["flowlist_http1", "flowlist_http2"], "Reverse flow list order")
     km.add("U", "item.mark @all false", ["flowlist_http1", "flowlist_http2"], "Un-set all marks")
     km.add("w", "console.command save.file @shown ", ["flowlist_http1", "flowlist_http2"], "Save listed flows to file")
-    km.add("V", "item.revert @focus", ["flowlist_http1", "flowlist_http2",
-                                       "flowview_http1", "flowview_http2"], "Revert changes to this item")
-    km.add("X", "item.kill @focus", ["flowlist_http1", "flowlist_http2"], "Kill this item")
+    km.add("V", "item.revert @focus", ["flowlist_http1",
+                                       "flowview_http1"], "Revert changes to this item")
+    km.add("X", "item.kill @focus", ["flowlist_http1"], "Kill this item")
     km.add("z", "view.http1.items.remove @all", ["flowlist_http1"], "Clear flow list")
     km.add("z", "view.http2.items.remove @all", ["flowlist_http2", "flowlist_http2"], "Clear flow list")
     km.add("Z", "view.http1.items.remove @hidden", ["flowlist_http1"], "Purge all flows not showing")
@@ -115,7 +114,7 @@ def map(km):
         console.choose.cmd Part console.edit.focus.options
         console.edit.focus {choice}
         """,
-        ["flowview_http1", "flowview_http2"],
+        ["flowview_http1"],
         "Edit a flow component"
     )
     km.add(
@@ -151,7 +150,7 @@ def map(km):
         console.choose.cmd Mode console.flowview.mode.options
         console.flowview.mode.set {choice}
         """,
-        ["flowview_http1", "flowview_http2"],
+        ["flowview_http1"],
         "Set flow view mode"
     )
     km.add(
@@ -160,7 +159,7 @@ def map(km):
         console.choose "Part" request,response
         item.encode.toggle @focus {choice}
         """,
-        ["flowview_http1", "flowview_http2"],
+        ["flowview_http1"],
         "Encode/decode flow body"
     )
 
