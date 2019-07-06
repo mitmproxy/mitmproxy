@@ -1,4 +1,5 @@
 import typing
+import shlex
 
 from mitmproxy import ctx
 from mitmproxy import command
@@ -27,10 +28,8 @@ def curl_command(f: flow.Flow) -> str:
         data += "-X %s " % request.method
     data += "'%s'" % request.url
     if request.content:
-        data += " --data-binary '%s'" % strutils.bytes_to_escaped_str(
-            request.content,
-            escape_single_quotes=True
-        )
+        data += " --data-binary "
+        data += shlex.quote(request.content.decode())
     return data
 
 
@@ -43,10 +42,8 @@ def httpie_command(f: flow.Flow) -> str:
     for k, v in request.headers.items(multi=True):
         data += " '%s:%s'" % (k, v)
     if request.content:
-        data += " <<< '%s'" % strutils.bytes_to_escaped_str(
-            request.content,
-            escape_single_quotes=True
-        )
+        data += " <<< "
+        data += shlex.quote(request.content.decode())
     return data
 
 
