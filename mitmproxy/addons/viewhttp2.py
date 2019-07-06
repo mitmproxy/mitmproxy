@@ -278,4 +278,5 @@ class ViewHttp2(view.View):
             A HTTP/2 connection has received a message. The most recent message
             will be flow.messages[-1]. The message is user-modifiable.
         """
-        self.add([flow.messages[-1]])
+        if len(flow.messages) > 0:
+            self.add([flow.messages[-1]])
