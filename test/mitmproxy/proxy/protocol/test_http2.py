@@ -544,7 +544,7 @@ class TestPriority(_Http2Test):
         for f in frames:
             if (isinstance(f, http2_flow.Http2Header) and f.priority) or isinstance(f, http2_flow.Http2PriorityUpdate):
                 priority_cnt += 1
-                assert f.stream_id == 0
+                assert f.stream_id == 1
                 assert f.from_client is True
                 assert f.priority["weight"] == priority[2]
                 assert f.priority["depends_on"] == priority[1]

@@ -637,7 +637,7 @@ class Http2PriorityUpdate(HTTP2Frame, _PriorityFrame):
     """
 
     def __init__(self, from_client, priority, flow=None, events=[], stream_id=0, timestamp=None):
-        HTTP2Frame.__init__(self, from_client, flow, events, 0, timestamp)
+        HTTP2Frame.__init__(self, from_client, flow, events, stream_id, timestamp)
         self.frame_type = "PRIORITY"
         _PriorityFrame.__init__(self, priority)
 
