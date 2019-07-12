@@ -71,7 +71,7 @@ setup(
         "kaitaistruct>=0.7,<0.9",
         "ldap3>=2.6,<2.7",
         "passlib>=1.6.5, <1.8",
-        "protobuf>=3.8,<3.9",
+        "protobuf>=3.9,<3.10",
         "pyasn1>=0.3.1,<0.5",
         "pyOpenSSL>=19.0,<19.1",
         "pyparsing>=2.4,<2.5",
