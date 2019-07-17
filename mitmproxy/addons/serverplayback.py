@@ -128,10 +128,7 @@ class ServerPlayback:
                 key.append(str(r.raw_content))
 
         if not ctx.options.server_replay_ignore_host:
-            if ctx.options.mode == "transparent":
-                key.append(r.host_header)
-            else:
-                key.append(r.host)
+            key.append(r.pretty_host)
 
         filtered = []
         ignore_params = ctx.options.server_replay_ignore_params or []
