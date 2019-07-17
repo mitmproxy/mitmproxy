@@ -370,7 +370,7 @@ class FlowContent(RequestHandler):
         original_cd = message.headers.get("Content-Disposition", None)
         filename = None
         if original_cd:
-            filename = re.search('filename=([-\w" .()]+)', original_cd)
+            filename = re.search(r'filename=([-\w" .()]+)', original_cd)
             if filename:
                 filename = filename.group(1)
         if not filename:

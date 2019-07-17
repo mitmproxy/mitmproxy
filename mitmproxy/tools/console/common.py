@@ -106,7 +106,7 @@ else:
 
 
 @lru_cache(maxsize=800)
-def raw_format_flow(f, flow):
+def raw_format_flow(f):
     f = dict(f)
     pile = []
     req = []
@@ -126,8 +126,7 @@ def raw_format_flow(f, flow):
     if f["req_is_replay"]:
         req.append(fcol(SYMBOL_REPLAY, "replay"))
 
-    pushed = ' PUSH_PROMISE' if 'h2-pushed-stream' in flow.metadata else ''
-    req.append(fcol(f["req_method"] + pushed, "method"))
+    req.append(fcol(f["req_method"], "method"))
 
     preamble = sum(i[1] for i in req) + len(req) - 1
 
@@ -198,6 +197,7 @@ def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
     acked = False
     if f.reply and f.reply.state == "committed":
         acked = True
+    pushed = ' PUSH_PROMISE' if 'h2-pushed-stream' in f.metadata else ''
     d = dict(
         focus=focus,
         extended=extended,
@@ -206,7 +206,7 @@ def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
         acked=acked,
         req_timestamp=f.request.timestamp_start,
         req_is_replay=f.request.is_replay,
-        req_method=f.request.method,
+        req_method=f.request.method + pushed,
         req_url=f.request.pretty_url if hostheader else f.request.url,
         req_http_version=f.request.http_version,
         err_msg=f.error.msg if f.error else None,
@@ -238,4 +238,4 @@ def format_flow(f, focus, extended=False, hostheader=False, max_url_len=False):
         else:
             d["resp_ctype"] = ""
 
-    return raw_format_flow(tuple(sorted(d.items())), f)
+    return raw_format_flow(tuple(sorted(d.items())))

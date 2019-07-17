@@ -124,7 +124,7 @@ doas pfctl -e
 You probably want a command like this:
 
 {{< highlight bash  >}}
-mitmproxy --mode transparent --showhost
+mitmproxy --mode transparent --listen-host 127.0.0.1 --showhost
 {{< / highlight >}}
 
 The `--mode transparent` option turns on transparent mode, and the `--showhost` argument tells
@@ -229,7 +229,7 @@ for more.
 
 ### Work-around to redirect traffic originating from the machine itself
 
-Follow the steps **1, 2** as above. In step **3** change the contents of the file **pf.conf** to
+Follow steps **1, 2** as above, but in step **2** change the contents of the file **pf.conf** to
 
 {{< highlight none >}}
 #The ports to redirect to proxy
@@ -257,7 +257,7 @@ rdr pass proto tcp from any to any port $redir_ports -> $tproxy
 pass out route-to (lo0 127.0.0.1) proto tcp from any to any port $redir_ports user $redir_users
 {{< / highlight >}}
 
-Follow steps **4-6** above. This will redirect the packets from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `nobody`. Hence step **7** should look like:
+Follow steps **3-5** above. This will redirect the packets from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `nobody`. Hence step **6** should look like:
 
 {{< highlight bash  >}}
 sudo -u nobody mitmproxy --mode transparent --showhost

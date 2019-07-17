@@ -67,7 +67,7 @@ timestamp. Looks pretty simple to mess with.
 
 Lets edit the score submission. First, select it in mitmproxy, then
 press <span data-role="kbd">enter</span> to view it. Make sure you're
-viewing the request, not the response -you can use
+viewing the request, not the response - you can use
 <span data-role="kbd">tab</span> to flick between the two. Now press
 <span data-role="kbd">e</span> for edit. You'll be prompted for the part
 of the request you want to change - press <span data-role="kbd">r</span>

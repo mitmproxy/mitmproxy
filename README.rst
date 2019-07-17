@@ -106,7 +106,7 @@ For speedier testing, we recommend you run `pytest`_ directly on individual test
 .. code-block:: bash
 
     cd test/mitmproxy/addons
-    pytest --cov mitmproxy.addons.anticache --looponfail test_anticache.py
+    pytest --cov mitmproxy.addons.anticache --cov-report term-missing --looponfail test_anticache.py
 
 As pytest does not check the code style, you probably want to run ``tox -e lint`` before committing your changes.
 
