@@ -13,6 +13,7 @@ import typing
 
 import click
 import collections
+import collections.abc
 import pydivert
 import pydivert.consts
 
@@ -171,7 +172,7 @@ def MIB_TCPTABLE_OWNER_PID(size):
 TCP_TABLE_OWNER_PID_CONNECTIONS = 4
 
 
-class TcpConnectionTable(collections.Mapping):
+class TcpConnectionTable(collections.abc.Mapping):
     DEFAULT_TABLE_SIZE = 4096
 
     def __init__(self):
