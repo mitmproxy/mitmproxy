@@ -66,6 +66,7 @@ class Script:
     """
         An addon that manages a single script.
     """
+    is_running: bool = False
 
     def __init__(self, path: str, reload: bool) -> None:
         self.name = "scriptmanager:" + path
@@ -84,6 +85,16 @@ class Script:
         else:
             self.loadscript()
 
+    def running(self):
+        self.is_running = True
+        if self.ns:
+            ctx.master.addons.invoke_addon(self.ns, "running")
+            ctx.master.addons.invoke_addon(
+                self.ns,
+                "configure",
+                ctx.options.keys()
+            )
+
     def done(self):
         if self.reloadtask:
             self.reloadtask.cancel()
@@ -101,15 +112,10 @@ class Script:
             ns = load_script(self.fullpath)
             ctx.master.addons.register(ns)
             self.ns = ns
-        if self.ns:
+        if self.is_running:
             # We're already running, so we have to explicitly register and
             # configure the addon
-            ctx.master.addons.invoke_addon(self.ns, "running")
-            ctx.master.addons.invoke_addon(
-                self.ns,
-                "configure",
-                ctx.options.keys()
-            )
+            self.running()
 
     async def watcher(self):
         last_mtime = 0

@@ -146,6 +146,7 @@ class TestScript:
                 True
             )
             tctx.master.addons.add(sc)
+            tctx.master.addons.trigger("running")
             await tctx.master.await_log("addon running")
             assert sc.ns.event_log == [
                 'scriptload', 'addonload', 'scriptconfigure', 'addonconfigure'
