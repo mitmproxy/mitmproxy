@@ -1,8 +1,5 @@
 import argparse
 
-from mitmproxy.addons import core
-
-
 def common_options(parser, opts):
     parser.add_argument(
         '--version',
