@@ -23,7 +23,7 @@ class Palette:
 
         # List and Connections
         'method',
-        'method_get', 'method_post', 'method_other', 'method_http2_push',
+        'method_get', 'method_post', 'method_delete', 'method_other', 'method_head', 'method_put', 'method_http2_push',
         'scheme_http', 'scheme_https', 'scheme_other',
         'url_punctuation', 'url_domain', 'url_filename', 'url_extension', 'url_query_key', 'url_query_value',
         'content_none', 'content_text', 'content_script', 'content_media', 'content_data', 'content_raw', 'content_other',
@@ -122,8 +122,11 @@ class LowDark(Palette):
 
         # List and Connections
         method = ('dark cyan', 'default'),
-        method_get = ('dark cyan', 'default'),
-        method_post = ('dark red', 'default'),
+        method_get = ('light green', 'default'),
+        method_post = ('brown', 'default'),
+        method_delete = ('light red', 'default'),
+        method_head = ('dark cyan', 'default'),
+        method_put = ('dark red', 'default'),
         method_other = ('dark magenta', 'default'),
         method_http2_push = ('dark gray', 'default'),
 
@@ -131,7 +134,7 @@ class LowDark(Palette):
         scheme_https = ('dark green', 'default'),
         scheme_other = ('dark magenta', 'default'),
 
-        url_punctuation = ('dark gray', 'default'),
+        url_punctuation = ('light gray', 'default'),
         url_domain = ('white', 'default'),
         url_filename = ('dark cyan', 'default'),
         url_extension = ('light gray', 'default'),
@@ -219,6 +222,33 @@ class LowLight(Palette):
 
         # List and Connections
         method = ('dark cyan', 'default'),
+        method_get = ('dark green', 'default'),
+        method_post = ('brown', 'default'),
+        method_head = ('dark cyan', 'default'),
+        method_put =  ('light red', 'default'),
+        method_delete = ('dark red', 'default'),
+        method_other = ('light magenta', 'default'),
+        method_http2_push = ('light gray','default'),
+
+        scheme_http = ('dark cyan', 'default'),
+        scheme_https = ('light green', 'default'),
+        scheme_other = ('light magenta', 'default'),
+
+        url_punctuation = ('dark gray', 'default'),
+        url_domain = ('dark gray', 'default'),
+        url_filename = ('black', 'default'),
+        url_extension = ('dark gray', 'default'),
+        url_query_key = ('light blue', 'default'),
+        url_query_value = ('dark blue', 'default'),
+
+        content_none = ('black', 'default'),
+        content_text = ('dark gray', 'default'),
+        content_script = ('light green', 'default'),
+        content_media = ('light blue', 'default'),
+        content_data = ('brown', 'default'),
+        content_raw = ('light red', 'default'),
+        content_other = ('light magenta', 'default'),
+
         focus = ('black', 'default'),
 
         code_200 = ('dark green', 'default'),
@@ -250,6 +280,7 @@ class LowLight(Palette):
         commander_invalid = ('light red', 'default'),
         commander_hint = ('light gray', 'default'),
     )
+    gen_gradient(low, ['light red', 'yellow', 'light green', 'dark green', 'dark cyan', 'dark blue'])
 
 
 class Light(LowLight):
@@ -308,7 +339,27 @@ class SolarizedLight(LowLight):
         option_active_selected = (sol_orange, sol_base2),
 
         # List and Connections
-        method = (sol_cyan, 'default'),
+
+        method = ('dark cyan', 'default'),
+        method_get = (sol_green, 'default'),
+        method_post = (sol_orange, 'default'),
+        method_head = (sol_cyan, 'default'),
+        method_put =  (sol_red, 'default'),
+        method_delete = (sol_red, 'default'),
+        method_other = (sol_magenta, 'default'),
+        method_http2_push = ('light gray','default'),
+
+        scheme_http = (sol_cyan, 'default'),
+        scheme_https = ('light green', 'default'),
+        scheme_other = ('light magenta', 'default'),
+
+        url_punctuation = ('dark gray', 'default'),
+        url_domain = ('dark gray', 'default'),
+        url_filename = ('black', 'default'),
+        url_extension = ('dark gray', 'default'),
+        url_query_key = (sol_blue, 'default'),
+        url_query_value = ('dark blue', 'default'),
+        
         focus = (sol_base01, 'default'),
 
         code_200 = (sol_green, 'default'),
@@ -363,9 +414,16 @@ class SolarizedDark(LowDark):
         option_active_selected = (sol_orange, sol_base00),
 
         # List and Connections
-        method = (sol_cyan, 'default'),
         method_http2_push = (sol_base01, 'default'),
         focus = (sol_base1, 'default'),
+
+        method = (sol_cyan, 'default'),
+        method_get = (sol_green, 'default'),
+        method_post = (sol_orange, 'default'),
+        method_delete = (sol_red, 'default'),
+        method_head = (sol_cyan, 'default'),
+        method_put = (sol_red, 'default'),
+        method_other = (sol_magenta, 'default'),
 
         url_punctuation = ('h242', 'default'),
         url_domain = ('h252', 'default'),

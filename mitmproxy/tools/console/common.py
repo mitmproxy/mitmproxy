@@ -309,6 +309,9 @@ def raw_format_flow(f):
     methods = {
         'GET': 'method_get',
         'POST': 'method_post',
+        'DELETE': 'method_delete',
+        'HEAD': 'method_head',
+        'PUT': 'method_put'
     }
     uc = methods.get(f["req_method"], "method_other")
     if f['extended']:
