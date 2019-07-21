@@ -135,6 +135,7 @@ class LowDark(Palette):
         scheme_other = ('dark magenta', 'default'),
 
         url_punctuation = ('light gray', 'default'),
+        url_punctuation = ('dark gray', 'default'),
         url_domain = ('white', 'default'),
         url_filename = ('dark cyan', 'default'),
         url_extension = ('light gray', 'default'),
@@ -414,7 +415,6 @@ class SolarizedDark(LowDark):
         option_active_selected = (sol_orange, sol_base00),
 
         # List and Connections
-        method_http2_push = (sol_base01, 'default'),
         focus = (sol_base1, 'default'),
 
         method = (sol_cyan, 'default'),
@@ -424,6 +424,7 @@ class SolarizedDark(LowDark):
         method_head = (sol_cyan, 'default'),
         method_put = (sol_red, 'default'),
         method_other = (sol_magenta, 'default'),
+        method_http2_push = (sol_base01, 'default'),
 
         url_punctuation = ('h242', 'default'),
         url_domain = ('h252', 'default'),
