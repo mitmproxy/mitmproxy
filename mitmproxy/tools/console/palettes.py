@@ -425,14 +425,6 @@ class SolarizedDark(LowDark):
         method_other = (sol_magenta, 'default'),
         method_http2_push = (sol_base01, 'default'),
 
-        method = (sol_cyan, 'default'),
-        method_get = (sol_green, 'default'),
-        method_post = (sol_orange, 'default'),
-        method_delete = (sol_red, 'default'),
-        method_head = (sol_cyan, 'default'),
-        method_put = (sol_red, 'default'),
-        method_other = (sol_magenta, 'default'),
-
         url_punctuation = ('h242', 'default'),
         url_domain = ('h252', 'default'),
         url_filename = ('h132', 'default'),

@@ -266,9 +266,95 @@ def colorize_url(url):
         ('url_punctuation', 3),  # ://
     ] + colorize_host(parts[2]) + colorize_req('/' + parts[3])
 
+@lru_cache(maxsize=800)
+def raw_format_list(f):
+    f = dict(f)
+    pile = []
+    req = []
+    if f["extended"]:
+        req.append(
+            fcol(
+                human.format_timestamp(f["req_timestamp"]),
+                "highlight"
+            )
+        )
+    else:
+        req.append(fcol(">>" if f["focus"] else "  ", "focus"))
+
+    if f["marked"]:
+        req.append(fcol(SYMBOL_MARK, "mark"))
+
+    if f["req_is_replay"]:
+        req.append(fcol(SYMBOL_REPLAY, "replay"))
+
+    req.append(fcol(f["req_method"], "method"))
+
+    preamble = sum(i[1] for i in req) + len(req) - 1
+
+    if f["intercepted"] and not f["acked"]:
+        uc = "intercept"
+    elif "resp_code" in f or "err_msg" in f:
+        uc = "text"
+    else:
+        uc = "title"
+
+    url = f["req_url"]
+
+    if f["cols"] and len(url) > f["cols"]:
+        url = url[:f["cols"]] + "…"
+
+    if f["req_http_version"] not in ("HTTP/1.0", "HTTP/1.1"):
+        url += " " + f["req_http_version"]
+    req.append(
+        urwid.Text([(uc, url)])
+    )
+
+    pile.append(urwid.Columns(req, dividechars=1))
+
+    resp = []
+    resp.append(
+        ("fixed", preamble, urwid.Text(""))
+    )
+
+    if "resp_code" in f:
+        codes = {
+            2: "code_200",
+            3: "code_300",
+            4: "code_400",
+            5: "code_500",
+        }
+        ccol = codes.get(f["resp_code"] // 100, "code_other")
+        resp.append(fcol(SYMBOL_RETURN, ccol))
+        if f["resp_is_replay"]:
+            resp.append(fcol(SYMBOL_REPLAY, "replay"))
+        resp.append(fcol(f["resp_code"], ccol))
+        if f["extended"]:
+            resp.append(fcol(f["resp_reason"], ccol))
+        if f["intercepted"] and f["resp_code"] and not f["acked"]:
+            rc = "intercept"
+        else:
+            rc = "text"
+
+        if f["resp_ctype"]:
+            resp.append(fcol(f["resp_ctype"], rc))
+        resp.append(fcol(f["resp_clen"], rc))
+        resp.append(fcol(f["duration"], rc))
+
+    elif f["err_msg"]:
+        resp.append(fcol(SYMBOL_RETURN, "error"))
+        resp.append(
+            urwid.Text([
+                (
+                    "error",
+                    f["err_msg"]
+                )
+            ])
+        )
+    pile.append(urwid.Columns(resp, dividechars=1))
+    return urwid.Pile(pile)
 
 @lru_cache(maxsize=800)
-def raw_format_flow(f):
+def raw_format_table(f):
     f = dict(f)
     pile = []
     req = []
@@ -415,14 +501,15 @@ def raw_format_flow(f):
     return urwid.Pile(pile)
 
 
-def format_flow(f, focus, extended=False, hostheader=False, cols=False):
+def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='default'):
     acked = False
     if f.reply and f.reply.state == "committed":
         acked = True
     d = dict(
         focus=focus,
         extended=extended,
-        two_line=extended or cols < 100,
+        two_line=extended or cols < 80,
+        cols=cols,
         intercepted=f.intercepted,
         acked=acked,
         req_timestamp=f.request.timestamp_start,
@@ -440,10 +527,14 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False):
     if f.response:
         if f.response.raw_content:
             content_len = len(f.response.raw_content)
+            contentdesc = human.pretty_size(len(f.response.raw_content))
         elif f.response.raw_content is None:
             content_len = -1
+            contentdesc = "[content missing]"
         else:
             content_len = -2
+            contentdesc = "[no content]"
+
         duration = None
         if f.response.timestamp_end and f.request.timestamp_start:
             duration = f.response.timestamp_end - f.request.timestamp_start
@@ -454,7 +545,11 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False):
             resp_is_replay=f.response.is_replay,
             resp_len=content_len,
             resp_ctype=f.response.headers.get("content-type"),
+            resp_clen=contentdesc,
             duration=duration,
-        ))
+       ))
 
-    return raw_format_flow(tuple(sorted(d.items())))
+    if ( (layout == 'default' and cols < 80) or layout == "list"):
+        return raw_format_list(tuple(sorted(d.items())))
+    else:
+        return raw_format_table(tuple(sorted(d.items())))

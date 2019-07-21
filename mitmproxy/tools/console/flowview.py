@@ -39,6 +39,7 @@ class FlowViewHeader(urwid.WidgetWrap):
                 extended=True,
                 hostheader=self.master.options.showhost,
                 cols=cols,
+                layout=self.master.options.console_flowlist_layout
             )
         else:
             self._w = urwid.Pile([])

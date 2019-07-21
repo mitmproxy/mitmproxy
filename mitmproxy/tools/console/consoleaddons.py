@@ -37,6 +37,12 @@ console_layouts = [
     "horizontal",
 ]
 
+console_flowlist_layout = [
+    "default",
+    "table",
+    "list"
+]
+
 
 class UnsupportedLog:
     """
@@ -112,6 +118,14 @@ class ConsoleAddon:
         loader.add_option(
             "console_mouse", bool, True,
             "Console mouse interaction."
+        )
+
+        loader.add_option( 
+                "console_flowlist_layout", 
+                str, "default",
+                "Set the flowlist layout",
+                choices=sorted(console_flowlist_layout)
+
         )
 
     @command.command("console.layout.options")

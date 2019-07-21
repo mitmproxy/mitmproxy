@@ -19,6 +19,7 @@ class FlowItem(urwid.WidgetWrap):
             self.flow is self.master.view.focus.flow,
             hostheader=self.master.options.showhost,
             cols=cols,
+            layout=self.master.options.console_flowlist_layout
         )
 
     def selectable(self):
@@ -84,6 +85,11 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
     ) -> None:
         self.master: "mitmproxy.tools.console.master.ConsoleMaster" = master
         super().__init__(FlowListWalker(master))
+        self.master.options.subscribe(
+            self.set_flowlist_layout,
+            ["console_flowlist_layout"]
+        )
+
 
     def keypress(self, size, key):
         if key == "m_start":
@@ -96,3 +102,7 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
 
     def view_changed(self):
         self.body.view_changed()
+
+    def set_flowlist_layout(self, opts, updated):
+        self.master.ui.clear()
+
