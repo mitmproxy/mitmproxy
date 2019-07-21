@@ -266,6 +266,7 @@ def colorize_url(url):
         ('url_punctuation', 3),  # ://
     ] + colorize_host(parts[2]) + colorize_req('/' + parts[3])
 
+
 @lru_cache(maxsize=800)
 def raw_format_list(f):
     f = dict(f)
@@ -352,6 +353,7 @@ def raw_format_list(f):
         )
     pile.append(urwid.Columns(resp, dividechars=1))
     return urwid.Pile(pile)
+
 
 @lru_cache(maxsize=800)
 def raw_format_table(f):
@@ -547,9 +549,9 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='
             resp_ctype=f.response.headers.get("content-type"),
             resp_clen=contentdesc,
             duration=duration,
-       ))
+        ))
 
-    if ( (layout == 'default' and cols < 80) or layout == "list"):
+    if ((layout == 'default' and cols < 80) or layout == "list"):
         return raw_format_list(tuple(sorted(d.items())))
     else:
         return raw_format_table(tuple(sorted(d.items())))

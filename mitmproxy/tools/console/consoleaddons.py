@@ -120,12 +120,11 @@ class ConsoleAddon:
             "Console mouse interaction."
         )
 
-        loader.add_option( 
-                "console_flowlist_layout", 
-                str, "default",
-                "Set the flowlist layout",
-                choices=sorted(console_flowlist_layout)
-
+        loader.add_option(
+            "console_flowlist_layout",
+            str, "default",
+            "Set the flowlist layout",
+            choices=sorted(console_flowlist_layout)
         )
 
     @command.command("console.layout.options")

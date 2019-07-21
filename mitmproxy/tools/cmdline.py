@@ -1,5 +1,6 @@
 import argparse
 
+
 def common_options(parser, opts):
     parser.add_argument(
         '--version',

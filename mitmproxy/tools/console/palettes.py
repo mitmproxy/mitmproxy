@@ -225,10 +225,10 @@ class LowLight(Palette):
         method_get = ('dark green', 'default'),
         method_post = ('brown', 'default'),
         method_head = ('dark cyan', 'default'),
-        method_put =  ('light red', 'default'),
+        method_put = ('light red', 'default'),
         method_delete = ('dark red', 'default'),
         method_other = ('light magenta', 'default'),
-        method_http2_push = ('light gray','default'),
+        method_http2_push = ('light gray', 'default'),
 
         scheme_http = ('dark cyan', 'default'),
         scheme_https = ('light green', 'default'),
@@ -344,10 +344,10 @@ class SolarizedLight(LowLight):
         method_get = (sol_green, 'default'),
         method_post = (sol_orange, 'default'),
         method_head = (sol_cyan, 'default'),
-        method_put =  (sol_red, 'default'),
+        method_put = (sol_red, 'default'),
         method_delete = (sol_red, 'default'),
         method_other = (sol_magenta, 'default'),
-        method_http2_push = ('light gray','default'),
+        method_http2_push = ('light gray', 'default'),
 
         scheme_http = (sol_cyan, 'default'),
         scheme_https = ('light green', 'default'),
@@ -359,7 +359,7 @@ class SolarizedLight(LowLight):
         url_extension = ('dark gray', 'default'),
         url_query_key = (sol_blue, 'default'),
         url_query_value = ('dark blue', 'default'),
-        
+
         focus = (sol_base01, 'default'),
 
         code_200 = (sol_green, 'default'),

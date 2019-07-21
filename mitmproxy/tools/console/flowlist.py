@@ -90,7 +90,6 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
             ["console_flowlist_layout"]
         )
 
-
     def keypress(self, size, key):
         if key == "m_start":
             self.master.commands.execute("view.focus.go 0")
@@ -105,4 +104,3 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
 
     def set_flowlist_layout(self, opts, updated):
         self.master.ui.clear()
-
