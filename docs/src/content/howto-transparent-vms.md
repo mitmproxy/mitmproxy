@@ -14,7 +14,7 @@ Internal Network* setup can be applied to other setups.
 
 ## 1. Configure Proxy VM
 
-On the proxy machine, **eth0** is connected to the internet. **eth1** is
+On the proxy machine, **eth0** or **enp0s3** (Ubuntu 15.10 and newer) is connected to the internet. **eth1**  or **enp0s8** (Ubuntu 15.10 and newer) is
 connected to the internal network that will be proxified and configured
 to use a static ip (192.168.3.1).
 
@@ -65,6 +65,7 @@ Replace **/etc/dnsmasq.conf** with the following configuration:
 {{< highlight none  >}}
 # Listen for DNS requests on the internal network
 interface=eth1
+bind-interfaces
 # Act as a DHCP server, assign IP addresses to clients
 dhcp-range=192.168.3.10,192.168.3.100,96h
 # Broadcast gateway and dns server information
@@ -93,10 +94,11 @@ IP address via DHCP:
 
 ## 3. Redirect traffic to mitmproxy
 
-To redirect traffic to mitmproxy, we need to add two iptables
+To redirect traffic to mitmproxy, we need to enable IP forwarding and add two iptables
 rules:
 
 {{< highlight bash  >}}
+sysctl -w net.ipv4.ip_forward=1
 sudo iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 80 -j REDIRECT --to-port 8080
 sudo iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 443 -j REDIRECT --to-port 8080
 {{< / highlight >}}
