@@ -76,7 +76,7 @@ setup(
         "pyOpenSSL>=19.0,<19.1",
         "pyparsing>=2.4,<2.5",
         "pyperclip>=1.6.0,<1.8",
-        "ruamel.yaml>=0.15,<0.16",
+        "ruamel.yaml>=0.16,<0.17",
         "sortedcontainers>=2.1,<2.2",
         "tornado>=6.0,<6.1",
         "urwid>=2.0.1,<2.1",
