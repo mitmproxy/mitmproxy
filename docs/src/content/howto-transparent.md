@@ -50,7 +50,7 @@ a newly created `/etc/sysctl.d/mitmproxy.conf` (see [here](https://superuser.com
 sysctl -w net.ipv4.conf.all.send_redirects=0
 {{< / highlight >}}
 
-If your test device is on the same physical network, your machine shouldn't inform the device that 
+If your test device is on the same physical network, your machine shouldn't inform the device that
 there's a shorter route available by skipping the proxy.
 
 If you want to persist this across reboots, see above.
@@ -83,7 +83,7 @@ The `--mode transparent` option turns on transparent mode, and the `--showhost` 
 
 ### 5. Finally, configure your test device.
 
-Set the test device up to use the host on which mitmproxy is running as the default gateway and 
+Set the test device up to use the host on which mitmproxy is running as the default gateway and
 [install the mitmproxy certificate authority on the test device]({{< relref "concepts-certificates" >}}).
 
 
@@ -132,7 +132,7 @@ mitmproxy to use the value of the Host header for URL display.
 
 ### 6. Finally, configure your test device.
 
-Set the test device up to use the host on which mitmproxy is running as the default gateway and 
+Set the test device up to use the host on which mitmproxy is running as the default gateway and
 [install the mitmproxy certificate authority on the test device]({{< relref "concepts-certificates" >}}).
 
 
@@ -213,7 +213,7 @@ mitmproxy to use the value of the Host header for URL display.
 
 ### 7. Finally, configure your test device.
 
-Set the test device up to use the host on which mitmproxy is running as the default gateway and 
+Set the test device up to use the host on which mitmproxy is running as the default gateway and
 [install the mitmproxy certificate authority on the test device]({{< relref "concepts-certificates" >}}).
 
 {{% note %}}
@@ -246,15 +246,9 @@ tproxy_user = "nobody"
 #This cannot involve the user which runs the
 #transparent proxy as that would cause an infinite loop.
 #
-#Here we redirect for all users which don't run transparent proxy.
-redir_users = "{ !=" $tproxy_user "}"
-
-#If you only wish to redirect traffic for particular users
-#you may also do:
-#redir_users = "{= john, = jane}"
 
 rdr pass proto tcp from any to any port $redir_ports -> $tproxy
-pass out route-to (lo0 127.0.0.1) proto tcp from any to any port $redir_ports user $redir_users
+pass out route-to (lo0 127.0.0.1) proto tcp from any to any port $redir_ports user { != $tproxy_user }
 {{< / highlight >}}
 
 Follow steps **3-5** above. This will redirect the packets from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `nobody`. Hence step **6** should look like:
