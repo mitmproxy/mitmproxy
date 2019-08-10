@@ -80,7 +80,7 @@ setup(
         "sortedcontainers>=2.1,<2.2",
         "tornado>=6.0,<6.1",
         "urwid>=2.0.1,<2.1",
-        "wsproto>=0.14,<0.15",
+        "wsproto>=0.15,<0.16",
     ],
     extras_require={
         ':sys_platform == "win32"': [
