@@ -97,7 +97,7 @@ setup(
             "pytest-faulthandler>=2.0,<2.1",
             "pytest-timeout>=1.2.1,<2",
             "pytest-xdist>=1.22,<2",
-            "pytest>=5.0,<5.1",
+            "pytest>=5.1,<5.2",
             "requests>=2.9.1, <3",
             "tox>=3.13,<3.14",
             "rstcheck>=2.2, <4.0",
