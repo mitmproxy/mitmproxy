@@ -1,8 +1,5 @@
 import argparse
 
-from mitmproxy.addons import core
-
-
 def common_options(parser, opts):
     parser.add_argument(
         '--version',
@@ -19,12 +16,6 @@ def common_options(parser, opts):
         '--commands',
         action='store_true',
         help="Show all commands and their signatures",
-    )
-    parser.add_argument(
-        "--confdir",
-        type=str, dest="confdir", default=core.CONF_DIR,
-        metavar="PATH",
-        help="Path to the mitmproxy config directory"
     )
     parser.add_argument(
         "--set",

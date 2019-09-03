@@ -320,7 +320,9 @@ class OptManager:
         update = {}
         for optname, optval in self.deferred.items():
             if optname in self._options:
-                update[optname] = self.parse_setval(self._options[optname], optval)
+                if isinstance(optval, str):
+                    optval = self.parse_setval(self._options[optname], optval)
+                update[optname] = optval
         self.update(**update)
         for k in update.keys():
             del self.deferred[k]

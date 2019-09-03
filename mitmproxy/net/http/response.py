@@ -186,7 +186,7 @@ class Response(message.Message):
                 d = parsedate_tz(self.headers[i])
                 if d:
                     new = mktime_tz(d) + delta
-                    self.headers[i] = formatdate(new)
+                    self.headers[i] = formatdate(new, usegmt=True)
         c = []
         for set_cookie_header in self.headers.get_all("set-cookie"):
             try:
