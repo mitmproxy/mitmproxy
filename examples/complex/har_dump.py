@@ -87,7 +87,7 @@ def response(flow):
     }
 
     # HAR timings are integers in ms, so we re-encode the raw timings to that format.
-    timings = dict([(k, int(1000 * v)) for k, v in timings_raw.items()])
+    timings = dict([(k, -1 if v is -1 else int(1000 * v)) for k, v in timings_raw.items()])
 
     # full_time is the sum of all timings.
     # Timings set to -1 will be ignored as per spec.
