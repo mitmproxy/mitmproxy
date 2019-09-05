@@ -471,7 +471,7 @@ def test_focus():
     v = view.View()
     v.add([tft()])
     f = view.Focus(v)
-    assert f.index is 0
+    assert f.index == 0
     assert f.flow is v[0]
 
     # Start empty
