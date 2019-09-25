@@ -1,5 +1,6 @@
 import re
 import urllib
+import time
 from typing import Optional, AnyStr, Dict, Iterable, Tuple, Union
 
 from mitmproxy.coretypes import multidict
@@ -101,6 +102,7 @@ class Request(message.Message):
         )
 
         req.url = url
+        req.timestamp_start = time.time()
 
         # Headers can be list or dict, we differentiate here.
         if isinstance(headers, dict):

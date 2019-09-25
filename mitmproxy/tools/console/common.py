@@ -4,6 +4,7 @@ import datetime
 import time
 import math
 from functools import lru_cache
+from publicsuffix2 import get_sld, get_tld
 
 import urwid
 import urwid.util
@@ -195,24 +196,29 @@ def rle_append_beginning_modify(rle, a_r):
             rle[0:0] = [(a, r)]
 
 
-def colorize_host(s):
-    if len(s) == 0 or s[0] == '[' or s.split('.')[-1].isdigit():
-        main_part = -1
-    else:
-        main_part = 1  # TODO: second-level domains (https://publicsuffix.org/list/)
-    part = 0
+def colorize_host(host):
+    tld = get_tld(host)
+    sld = get_sld(host)
+
     attr = []
-    for i in reversed(range(len(s))):
-        c = s[i]
-        if c == '.':
-            part += 1
-        if c in ".:[]":
-            a = 'url_punctuation'
-        elif part == main_part:
-            a = 'url_domain'
+
+    tld_size = len(tld)
+    sld_size = len(sld) - tld_size
+
+    for letter in reversed(range(len(host))):
+        character = host[letter]
+        if tld_size > 0:
+            style = 'url_domain'
+            tld_size -= 1
+        elif tld_size == 0:
+            style = 'text'
+            tld_size -= 1
+        elif sld_size > 0:
+            sld_size -= 1
+            style = 'url_extension'
         else:
-            a = 'text'
-        rle_append_beginning_modify(attr, (a, len(c.encode())))
+            style = 'text'
+        rle_append_beginning_modify(attr, (style, len(character.encode())))
     return attr
 
 
@@ -510,7 +516,7 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='
     d = dict(
         focus=focus,
         extended=extended,
-        two_line=extended or cols < 80,
+        two_line=extended or cols < 100,
         cols=cols,
         intercepted=f.intercepted,
         acked=acked,

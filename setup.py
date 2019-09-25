@@ -81,6 +81,7 @@ setup(
         "tornado>=4.3,<5.2",
         "urwid>=2.0.1,<2.1",
         "wsproto>=0.13.0,<0.14.0",
+        "publicsuffix2~=2.20"
     ],
     extras_require={
         ':sys_platform == "win32"': [
