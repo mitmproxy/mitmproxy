@@ -345,7 +345,8 @@ def raw_format_list(f):
         if f["resp_ctype"]:
             resp.append(fcol(f["resp_ctype"], rc))
         resp.append(fcol(f["resp_clen"], rc))
-        resp.append(fcol(f["duration"], rc))
+        pretty_duration = human.pretty_duration(f["duration"])
+        resp.append(fcol(pretty_duration, rc))
 
     elif f["err_msg"]:
         resp.append(fcol(SYMBOL_RETURN, "error"))
@@ -557,7 +558,7 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='
             duration=duration,
         ))
 
-    if ((layout == 'default' and cols < 80) or layout == "list"):
+    if ((layout == 'default' and cols < 100) or layout == "list"):
         return raw_format_list(tuple(sorted(d.items())))
     else:
         return raw_format_table(tuple(sorted(d.items())))
