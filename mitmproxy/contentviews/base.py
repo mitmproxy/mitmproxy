@@ -37,7 +37,7 @@ class View:
 
 def format_pairs(
         items: typing.Iterable[typing.Tuple[TTextType, TTextType]]
-)-> typing.Iterator[TViewLine]:
+) -> typing.Iterator[TViewLine]:
 
     """
     Helper function that accepts a list of (k,v) pairs into a list of

@@ -289,7 +289,7 @@ class Core:
         """
             The possible values for an encoding specification.
         """
-        return ["gzip", "deflate", "br"]
+        return ["gzip", "deflate", "br", "zstd"]
 
     @command.command("options.load")
     def options_load(self, path: mitmproxy.types.Path) -> None:

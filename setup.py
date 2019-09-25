@@ -82,6 +82,7 @@ setup(
         "urwid>=2.0.1,<2.1",
         "wsproto>=0.13.0,<0.14.0",
         "publicsuffix2~=2.20"
+        "zstandard>=0.11.0,<0.13.0",
     ],
     extras_require={
         ':sys_platform == "win32"': [
@@ -89,7 +90,7 @@ setup(
         ],
         'dev': [
             "asynctest>=0.12.0",
-            "flake8>=3.5,<3.7",
+            "flake8>=3.5,<=3.7.8",
             "Flask>=1.0,<1.1",
             "mypy>=0.590,<0.591",
             "parver>=0.1,<2.0",

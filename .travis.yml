@@ -52,7 +52,6 @@ matrix:
         - wget https://github.com/gohugoio/hugo/releases/download/v0.41/hugo_0.41_Linux-64bit.deb
         - sudo dpkg -i hugo*.deb
         - pip install tox virtualenv setuptools
-        - pyenv global system 3.6
       script:
         - tox
       after_success:

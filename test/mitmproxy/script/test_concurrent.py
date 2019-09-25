@@ -43,17 +43,17 @@ class TestConcurrent(tservers.MasterTest):
             assert await tctx.master.await_log("decorator not supported")
 
     def test_concurrent_class(self, tdata):
-            with taddons.context() as tctx:
-                sc = tctx.script(
-                    tdata.path(
-                        "mitmproxy/data/addonscripts/concurrent_decorator_class.py"
-                    )
+        with taddons.context() as tctx:
+            sc = tctx.script(
+                tdata.path(
+                    "mitmproxy/data/addonscripts/concurrent_decorator_class.py"
                 )
-                f1, f2 = tflow.tflow(), tflow.tflow()
-                tctx.cycle(sc, f1)
-                tctx.cycle(sc, f2)
-                start = time.time()
-                while time.time() - start < 5:
-                    if f1.reply.state == f2.reply.state == "committed":
-                        return
-                raise ValueError("Script never acked")
+            )
+            f1, f2 = tflow.tflow(), tflow.tflow()
+            tctx.cycle(sc, f1)
+            tctx.cycle(sc, f2)
+            start = time.time()
+            while time.time() - start < 5:
+                if f1.reply.state == f2.reply.state == "committed":
+                    return
+            raise ValueError("Script never acked")

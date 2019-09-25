@@ -19,6 +19,7 @@ def test_identity(encoder):
     'gzip',
     'br',
     'deflate',
+    'zstd',
 ])
 def test_encoders(encoder):
     """
