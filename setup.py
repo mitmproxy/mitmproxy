@@ -81,6 +81,7 @@ setup(
         "tornado>=6.0,<6.1",
         "urwid>=2.0.1,<2.1",
         "wsproto>=0.15,<0.16",
+        "publicsuffix2~=2.20",
         "zstandard>=0.11.0,<0.13.0",
     ],
     extras_require={
