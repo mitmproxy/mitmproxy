@@ -63,7 +63,7 @@ setup(
     install_requires=[
         "blinker>=1.4, <1.5",
         "Brotli>=1.0,<1.1",
-        "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
+        "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "click>=7.0,<7.1",
         "cryptography>=2.7,<2.8",
         "h2>=3.0.1,<4",
@@ -71,10 +71,10 @@ setup(
         "kaitaistruct>=0.7,<0.9",
         "ldap3>=2.6,<2.7",
         "passlib>=1.6.5, <1.8",
-        "protobuf>=3.9,<3.10",
+        "protobuf>=3.6.0, <3.10",
         "pyasn1>=0.3.1,<0.5",
-        "pyOpenSSL>=19.0,<19.1",
-        "pyparsing>=2.4,<2.5",
+        "pyOpenSSL>=19.0.0,<20",
+        "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.8",
         "ruamel.yaml>=0.16,<0.17",
         "sortedcontainers>=2.1,<2.2",
@@ -91,7 +91,7 @@ setup(
         'dev': [
             "asynctest>=0.12.0",
             "flake8>=3.5,<=3.7.8",
-            "Flask>=1.1,<1.2",
+            "Flask>=1.0,<1.2",
             "mypy>=0.730,<0.731",
             "parver>=0.1,<2.0",
             "pytest-asyncio>=0.8",
