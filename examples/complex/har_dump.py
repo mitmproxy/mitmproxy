@@ -88,7 +88,7 @@ def response(flow):
 
     # HAR timings are integers in ms, so we re-encode the raw timings to that format.
     timings = {
-        k: int(1000 * v) if v != -1 else -1 
+        k: int(1000 * v) if v != -1 else -1
         for k, v in timings_raw.items()
     }
 
