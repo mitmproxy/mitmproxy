@@ -31,8 +31,8 @@ def pytest_configure(config):
     global no_full_cov
 
     enable_coverage = (
-        len(config.getoption('file_or_dir')) == 0 and
-        len(config.getoption('full_cov')) > 0 and
+        config.getoption('file_or_dir') and len(config.getoption('file_or_dir')) == 0 and
+        config.getoption('full_cov') and len(config.getoption('full_cov')) > 0 and
         config.pluginmanager.getplugin("_cov") is not None and
         config.pluginmanager.getplugin("_cov").cov_controller is not None and
         config.pluginmanager.getplugin("_cov").cov_controller.cov is not None
