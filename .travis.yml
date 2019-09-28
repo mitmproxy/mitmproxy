@@ -64,9 +64,9 @@ install:
       brew update || brew update
       brew outdated pyenv || brew upgrade pyenv
       eval "$(pyenv init -)"
-      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.6.5
-      pyenv global 3.6.5
-      pyenv shell 3.6.5
+      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.6.9
+      pyenv global 3.6.9
+      pyenv shell 3.6.9
     fi
   - pip install tox virtualenv setuptools
 

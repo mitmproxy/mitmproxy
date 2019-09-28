@@ -9,6 +9,7 @@ MANIFEST
 *.egg-info/
 .coverage*
 .idea
+.vscode
 .cache/
 .tox*/
 build/
