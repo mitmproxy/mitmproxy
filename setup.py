@@ -64,12 +64,12 @@ setup(
         "blinker>=1.4, <1.5",
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
-        "click>=6.2, <7",
-        "cryptography>=2.1.4,<2.5",
+        "click>=7.0,<7.1",
+        "cryptography>=2.7,<2.8",
         "h2>=3.0.1,<4",
         "hyperframe>=5.1.0,<6",
         "kaitaistruct>=0.7,<0.9",
-        "ldap3>=2.6.1,<2.7",
+        "ldap3>=2.6,<2.7",
         "passlib>=1.6.5, <1.8",
         "protobuf>=3.6.0, <3.10",
         "pyasn1>=0.3.1,<0.5",
@@ -78,9 +78,9 @@ setup(
         "pyperclip>=1.6.0,<1.8",
         "ruamel.yaml>=0.16,<0.17",
         "sortedcontainers>=2.1.0,<2.2",
-        "tornado>=4.3,<5.2",
+        "tornado>=6.0,<6.1",
         "urwid>=2.0.1,<2.1",
-        "wsproto>=0.14.0,<0.15.0",
+        "wsproto>=0.15,<0.16",
         "publicsuffix2>=2.20190812,<3",
         "zstandard>=0.11.0,<0.13.0",
     ],
@@ -92,7 +92,7 @@ setup(
             "asynctest>=0.12.0",
             "flake8>=3.7.8,<3.8",
             "Flask>=1.0,<1.2",
-            "mypy>=0.590,<0.591",
+            "mypy>=0.730,<0.731",
             "parver>=0.1,<2.0",
             "pytest-asyncio>=0.10.0,<0.11",
             "pytest-cov>=2.7.1,<3",
@@ -104,7 +104,7 @@ setup(
             "rstcheck>=2.2,<4.0",
         ],
         'examples': [
-            "beautifulsoup4>=4.4.1,<4.7"
+            "beautifulsoup4>=4.8,<4.9"
         ]
     }
 )
