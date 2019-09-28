@@ -432,7 +432,7 @@ class Settings(RequestHandler):
     def put(self):
         update = self.json
         option_whitelist = {
-            "intercept", "showhost", "upstream_cert",
+            "intercept", "showhost", "upstream_cert", "ssl_insecure",
             "rawtcp", "http2", "websocket", "anticache", "anticomp",
             "stickycookie", "stickyauth", "stream_large_bodies"
         }
