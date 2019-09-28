@@ -14,7 +14,8 @@ CONF_BASENAME = "mitmproxy"
 
 class HostMatcher:
 
-    def __init__(self, patterns=tuple()):
+    def __init__(self, handle, patterns=tuple()):
+        self.handle = handle
         self.patterns = list(patterns)
         self.regexes = [re.compile(p, re.IGNORECASE) for p in self.patterns]
 
@@ -22,10 +23,10 @@ class HostMatcher:
         if not address:
             return False
         host = "%s:%s" % address
-        if any(rex.search(host) for rex in self.regexes):
-            return True
-        else:
-            return False
+        if self.handle in ["ignore", "tcp"]:
+            return any(rex.search(host) for rex in self.regexes)
+        else:  # self.handle == "allow"
+            return any(not rex.search(host) for rex in self.regexes)
 
     def __bool__(self):
         return bool(self.patterns)
@@ -36,7 +37,7 @@ class ProxyConfig:
     def __init__(self, options: moptions.Options) -> None:
         self.options = options
 
-        self.check_ignore: HostMatcher = None
+        self.check_filter: HostMatcher = None
         self.check_tcp: HostMatcher = None
         self.certstore: certs.CertStore = None
         self.upstream_server: typing.Optional[server_spec.ServerSpec] = None
@@ -44,10 +45,18 @@ class ProxyConfig:
         options.changed.connect(self.configure)
 
     def configure(self, options: moptions.Options, updated: typing.Any) -> None:
-        if "ignore_hosts" in updated:
-            self.check_ignore = HostMatcher(options.ignore_hosts)
+        if options.allow_hosts and options.ignore_hosts:
+            raise exceptions.OptionsError("--ignore-hosts and --allow-hosts are mutually "
+                                          "exclusive; please choose one.")
+
+        if options.ignore_hosts:
+            self.check_filter = HostMatcher("ignore", options.ignore_hosts)
+        elif options.allow_hosts:
+            self.check_filter = HostMatcher("allow", options.allow_hosts)
+        else:
+            self.check_filter = HostMatcher(False)
         if "tcp_hosts" in updated:
-            self.check_tcp = HostMatcher(options.tcp_hosts)
+            self.check_tcp = HostMatcher("tcp", options.tcp_hosts)
 
         certstore_path = os.path.expanduser(options.confdir)
         if not os.path.exists(os.path.dirname(certstore_path)):
