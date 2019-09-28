@@ -5,8 +5,8 @@ mitmproxy
 
 This repository contains the **mitmproxy** and **pathod** projects.
 
-``mitmproxy`` is an interactive, SSL-capable intercepting proxy with a console
-interface.
+``mitmproxy`` is an interactive, SSL/TLS-capable intercepting proxy with a console
+interface for HTTP/1, HTTP/2, and WebSockets.
 
 ``mitmdump`` is the command-line version of mitmproxy. Think tcpdump for HTTP.
 
@@ -28,7 +28,7 @@ and pathod websites.
 
 The documentation for mitmproxy is available on our website:
 
-|mitmproxy_docs_stable| |mitmproxy_docs_master| 
+|mitmproxy_docs_stable| |mitmproxy_docs_master|
 
 
 Join our discussion forum on Discourse to ask questions, help
@@ -153,7 +153,7 @@ with the following command:
 .. |mitmproxy_docs_stable| image:: https://shields.mitmproxy.org/api/docs-stable-brightgreen.svg
     :target: https://docs.mitmproxy.org/stable/
     :alt: mitmproxy documentation stable
-    
+
 .. |mitmproxy_docs_master| image:: https://shields.mitmproxy.org/api/docs-master-brightgreen.svg
     :target: https://docs.mitmproxy.org/master/
     :alt: mitmproxy documentation master
