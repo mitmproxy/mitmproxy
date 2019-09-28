@@ -86,6 +86,31 @@ The `--mode transparent` option turns on transparent mode, and the `--showhost` 
 Set the test device up to use the host on which mitmproxy is running as the default gateway and
 [install the mitmproxy certificate authority on the test device]({{< relref "concepts-certificates" >}}).
 
+### Work-around to redirect traffic originating from the machine itself
+
+Follow steps **1, 2** as above, but *instead* of the commands in step **3**, run the following
+
+Create a user to run the mitmproxy
+
+{{< highlight bash  >}}
+sudo useradd --create-home mitmproxyuser
+sudo -u mitmproxyuser bash -c 'cd ~ && pip install --user mitmproxy'
+{{< / highlight >}}
+
+Then, configure the iptables rules to redirect all traffic from our local machine to mitmproxy. **Note**, as soon as you run these, you won't be able to perform successful network calls *until* you start mitmproxy. If you run into issues, `iptables -t nat -F` is a heavy handed way to flush (clear) *all* the rules from the iptables `nat` table (which includes any other rules you had configured).
+
+{{< highlight bash  >}}
+iptables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 80 -j REDIRECT --to-port 8080
+iptables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 443 -j REDIRECT --to-port 8080
+ip6tables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 80 -j REDIRECT --to-port 8080
+ip6tables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 443 -j REDIRECT --to-port 8080
+{{< / highlight >}}
+
+This will redirect the packets from all users other than `mitmproxyuser` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `mitmproxyuser`. Hence step **4** should look like:
+{{< highlight bash  >}}
+sudo -u mitmproxyuser bash -c '$HOME/.local/bin/mitmproxy --mode transparent --showhost --set block_global=false'
+{{< / highlight >}}
+
 
 
 ## OpenBSD
