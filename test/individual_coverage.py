@@ -19,29 +19,29 @@ def run_tests(src, test, fail):
             e = pytest.main([
                 '-qq',
                 '--disable-pytest-warnings',
-                '--no-faulthandler',
                 '--cov', src.replace('.py', '').replace('/', '.'),
                 '--cov-fail-under', '100',
                 '--cov-report', 'term-missing:skip-covered',
+                '-o', 'faulthandler_timeout=0',
                 test
             ])
 
     if e == 0:
         if fail:
-            print("UNEXPECTED SUCCESS:", src, "Please remove this file from setup.cfg tool:individual_coverage/exclude.")
+            print("FAIL DUE TO UNEXPECTED SUCCESS:", src, "Please remove this file from setup.cfg tool:individual_coverage/exclude.")
             e = 42
         else:
-            print("SUCCESS:           ", src)
+            print("Success:", src)
     else:
         if fail:
-            print("IGNORING FAIL:     ", src)
+            print("Ignoring allowed fail:", src)
             e = 0
         else:
             cov = [l for l in stdout.getvalue().split("\n") if (src in l) or ("was never imported" in l)]
             if len(cov) == 1:
-                print("FAIL:              ", cov[0])
+                print("FAIL:", cov[0])
             else:
-                print("FAIL:              ", src, test, stdout.getvalue(), stdout.getvalue())
+                print("FAIL:", src, test, stdout.getvalue(), stdout.getvalue())
                 print(stderr.getvalue())
                 print(stdout.getvalue())
 

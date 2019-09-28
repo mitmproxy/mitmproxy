@@ -81,7 +81,7 @@ setup(
         "tornado>=4.3,<5.2",
         "urwid>=2.0.1,<2.1",
         "wsproto>=0.14.0,<0.15.0",
-        "publicsuffix2~=2.20",
+        "publicsuffix2>=2.20190812,<3",
         "zstandard>=0.11.0,<0.13.0",
     ],
     extras_require={
@@ -90,22 +90,21 @@ setup(
         ],
         'dev': [
             "asynctest>=0.12.0",
-            "flake8>=3.5,<=3.7.8",
+            "flake8>=3.7.8,<3.8",
             "Flask>=1.0,<1.2",
             "mypy>=0.590,<0.591",
             "parver>=0.1,<2.0",
-            "pytest-asyncio>=0.8",
-            "pytest-cov>=2.5.1,<3",
-            "pytest-faulthandler>=1.3.1,<2",
-            "pytest-timeout>=1.2.1,<2",
-            "pytest-xdist>=1.22,<2",
-            "pytest>=4.0,<5",
-            "requests>=2.9.1, <3",
+            "pytest-asyncio>=0.10.0,<0.11",
+            "pytest-cov>=2.7.1,<3",
+            "pytest-timeout>=1.3.3,<2",
+            "pytest-xdist>=1.29,<2",
+            "pytest>=5.1.3,<6",
+            "requests>=2.9.1,<3",
             "tox>=3.5,<3.15",
-            "rstcheck>=2.2, <4.0",
+            "rstcheck>=2.2,<4.0",
         ],
         'examples': [
-            "beautifulsoup4>=4.4.1, <4.7"
+            "beautifulsoup4>=4.4.1,<4.7"
         ]
     }
 )
