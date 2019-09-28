@@ -77,7 +77,7 @@ setup(
         "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.8",
         "ruamel.yaml>=0.16,<0.17",
-        "sortedcontainers>=2.1,<2.2",
+        "sortedcontainers>=2.1.0,<2.2",
         "tornado>=6.0,<6.1",
         "urwid>=2.0.1,<2.1",
         "wsproto>=0.15,<0.16",
@@ -101,7 +101,7 @@ setup(
             "pytest-xdist>=1.22,<2",
             "pytest>=5.1,<5.2",
             "requests>=2.9.1, <3",
-            "tox>=3.14,<3.15",
+            "tox>=3.5,<3.15",
             "rstcheck>=2.2, <4.0",
         ],
         'examples': [
