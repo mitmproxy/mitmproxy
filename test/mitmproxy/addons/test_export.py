@@ -1,4 +1,5 @@
 import os
+import shlex
 
 import pytest
 import pyperclip
@@ -44,21 +45,24 @@ def patch_request():
 def tcp_flow():
     return tflow.ttcpflow()
 
+def assert_shell_command_equivalent(command1, command2):
+    assert shlex.split(command1) == shlex.split(command2)
+
 
 class TestExportCurlCommand:
     def test_get(self, get_request):
         result = """curl -H 'header:qvalue' -H 'content-length:0' 'http://address:22/path?a=foo&a=bar&b=baz'"""
-        assert export.curl_command(get_request) == result
+        assert_shell_command_equivalent(export.curl_command(get_request), result)
 
     def test_post(self, post_request):
         result = "curl -H 'content-length:256' -X POST 'http://address:22/path' --data-binary '{}'".format(
             str(bytes(range(256)))[2:-1]
         )
-        assert export.curl_command(post_request) == result
+        assert_shell_command_equivalent(export.curl_command(post_request), result)
 
     def test_patch(self, patch_request):
         result = """curl -H 'header:qvalue' -H 'content-length:7' -X PATCH 'http://address:22/path?query=param' --data-binary 'content'"""
-        assert export.curl_command(patch_request) == result
+        assert_shell_command_equivalent(export.curl_command(patch_request), result)
 
     def test_tcp(self, tcp_flow):
         with pytest.raises(exceptions.CommandError):
@@ -68,17 +72,17 @@ class TestExportCurlCommand:
 class TestExportHttpieCommand:
     def test_get(self, get_request):
         result = """http GET http://address:22/path?a=foo&a=bar&b=baz 'header:qvalue' 'content-length:0'"""
-        assert export.httpie_command(get_request) == result
+        assert_shell_command_equivalent(export.httpie_command(get_request), result)
 
     def test_post(self, post_request):
         result = "http POST http://address:22/path 'content-length:256' <<< '{}'".format(
             str(bytes(range(256)))[2:-1]
         )
-        assert export.httpie_command(post_request) == result
+        assert_shell_command_equivalent(export.httpie_command(post_request), result)
 
     def test_patch(self, patch_request):
         result = """http PATCH http://address:22/path?query=param 'header:qvalue' 'content-length:7' <<< 'content'"""
-        assert export.httpie_command(patch_request) == result
+        assert_shell_command_equivalent(export.httpie_command(patch_request), result)
 
     def test_tcp(self, tcp_flow):
         with pytest.raises(exceptions.CommandError):
