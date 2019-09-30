@@ -21,6 +21,7 @@ CONFDIR = "~/.mitmproxy"
 CERTSTORE_BASENAME = "mitmproxy"
 CA_CERT_NAME = "mitmproxy-ca.pem"
 DEFAULT_CRAFT_ANCHOR = "/p/"
+KEY_SIZE = 2048
 
 logger = logging.getLogger('pathod')
 
@@ -54,7 +55,8 @@ class SSLOptions:
         self.alpn_select = alpn_select
         self.certstore = mcerts.CertStore.from_store(
             os.path.expanduser(confdir),
-            CERTSTORE_BASENAME
+            CERTSTORE_BASENAME,
+            KEY_SIZE
         )
         for i in certs or []:
             self.certstore.add_cert_file(*i)

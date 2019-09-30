@@ -64,9 +64,11 @@ class ProxyConfig:
                 "Certificate Authority parent directory does not exist: %s" %
                 os.path.dirname(certstore_path)
             )
+        key_size = options.key_size
         self.certstore = certs.CertStore.from_store(
             certstore_path,
-            CONF_BASENAME
+            CONF_BASENAME,
+            key_size
         )
 
         for c in options.certs:
