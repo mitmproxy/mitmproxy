@@ -14,9 +14,13 @@ Internal Network* setup can be applied to other setups.
 
 ## 1. Configure Proxy VM
 
-On the proxy machine, **eth0** or **enp0s3** (Ubuntu 15.10 and newer) is connected to the internet. **eth1**  or **enp0s8** (Ubuntu 15.10 and newer) is
-connected to the internal network that will be proxified and configured
-to use a static ip (192.168.3.1).
+First, we have to find out under which name Ubuntu has mapped our network interfaces. You can find this information with:
+
+{{< highlight bash  >}}
+ip link
+{{< / highlight >}}
+
+Usually with Ubuntu and Virtualbox, **eth0** or **enp0s3** (Ubuntu 15.10 and newer) is connected to the internet and **eth1**  or **enp0s8** (Ubuntu 15.10 and newer) is connected to the internal network that will be proxified and configured to use a static ip (192.168.3.1). If the names differ, use the ones you got from the *ip link* command.
 
 ### VirtualBox configuration
 
