@@ -9,6 +9,7 @@ LISTEN_PORT = 8080
 CONTENT_VIEW_LINES_CUTOFF = 512
 KEY_SIZE = 2048
 
+
 class Options(optmanager.OptManager):
 
     def __init__(self, **kwargs) -> None:

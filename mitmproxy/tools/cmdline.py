@@ -69,7 +69,7 @@ def common_options(parser, opts):
     opts.make_parser(group, "certs", metavar="SPEC")
     opts.make_parser(group, "ssl_insecure", short="k")
     opts.make_parser(group, "key_size", metavar="KEY_SIZE")
-    
+
     # Client replay
     group = parser.add_argument_group("Client Replay")
     opts.make_parser(group, "client_replay", metavar="PATH", short="C")
