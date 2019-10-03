@@ -115,6 +115,13 @@ def dummy_cert(privkey, cacert, commonname, sans, organization):
         cert.set_version(2)
         cert.add_extensions(
             [OpenSSL.crypto.X509Extension(b"subjectAltName", False, ss)])
+    cert.add_extensions([
+        OpenSSL.crypto.X509Extension(
+            b"extendedKeyUsage",
+            False,
+            b"serverAuth,clientAuth"
+        )
+    ])
     cert.set_pubkey(cacert.get_pubkey())
     cert.sign(privkey, "sha256")
     return Cert(cert)
