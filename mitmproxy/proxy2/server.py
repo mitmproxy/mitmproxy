@@ -12,7 +12,7 @@ import logging
 import socket
 import typing
 
-from mitmproxy import options as moptions
+from mitmproxy import options as moptions, http
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import events, commands, layers, layer
 from mitmproxy.proxy2.context import Client, Context, Connection
@@ -168,19 +168,19 @@ if __name__ == "__main__":
 
     async def handle(reader, writer):
         layer_stack = [
-            layers.ServerTLSLayer,
-            lambda ctx: layers.HTTPLayer(ctx, HTTPMode.regular),
-            lambda ctx: setattr(ctx.server, "tls", True) or layers.ClientTLSLayer(ctx),
-            layers.ServerTLSLayer,
-            layers.TCPLayer,
+            lambda ctx: layers.HTTPLayer(ctx, HTTPMode.regular)
         ]
 
         def next_layer(nl: layer.NextLayer):
             nl.layer = layer_stack.pop(0)(nl.context)
             nl.layer.debug = "  " * len(nl.context.layers)
 
+        def request(flow: http.HTTPFlow):
+            flow.response = http.HTTPResponse.make(418)
+
         await SimpleConnectionHandler(reader, writer, opts, {
-            "next_layer": next_layer
+            "next_layer": next_layer,
+            "request" :request
         }).handle_client()
 
 

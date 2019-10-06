@@ -1,6 +1,6 @@
 import wsproto
 from wsproto import events as wsevents
-from wsproto.connection import ConnectionType, WSConnection
+from wsproto import ConnectionType, WSConnection
 from wsproto.extensions import PerMessageDeflate
 
 from mitmproxy import websocket, http, flow
