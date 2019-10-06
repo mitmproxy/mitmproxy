@@ -4,13 +4,13 @@ import typing
 
 from OpenSSL import crypto
 
+from mitmproxy import certs
 from mitmproxy import exceptions
 from mitmproxy import options as moptions
-from mitmproxy import certs
 from mitmproxy.net import server_spec
 
-class HostMatcher:
 
+class HostMatcher:
     def __init__(self, handle, patterns=tuple()):
         self.handle = handle
         self.patterns = list(patterns)
