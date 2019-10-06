@@ -4,16 +4,13 @@ import typing
 
 from OpenSSL import crypto
 
+from mitmproxy import certs
 from mitmproxy import exceptions
 from mitmproxy import options as moptions
-from mitmproxy import certs
 from mitmproxy.net import server_spec
-
-CONF_BASENAME = "mitmproxy"
 
 
 class HostMatcher:
-
     def __init__(self, handle, patterns=tuple()):
         self.handle = handle
         self.patterns = list(patterns)
@@ -67,7 +64,7 @@ class ProxyConfig:
         key_size = options.key_size
         self.certstore = certs.CertStore.from_store(
             certstore_path,
-            CONF_BASENAME,
+            moptions.CONF_BASENAME,
             key_size
         )
 
