@@ -2,46 +2,67 @@
 Utility decorators that help build state machines
 """
 import functools
-from typing import Optional
+from typing import Optional, List
 
 from mitmproxy.proxy2 import events
 
 
-# This is not used at the moment.
 class Buffer:
+    """Adapted from h11"""
     def __init__(self):
-        self._buffer = bytearray()
-        self._eof = False
+        self._data = bytearray()
+        self._looked_until = 0
+        self._looked_for = b""
 
-    def add_data(self, data: bytes) -> None:
-        self._buffer.extend(data)
+    def __bool__(self):
+        return bool(len(self))
 
-    def add_eof(self):
-        if self._eof:
-            raise RuntimeError("Unexpected EOF: Already closed.")
-        self._eof = True
+    def __bytes__(self):
+        return bytes(self._data)
 
-    def peekexactly(self, n: int) -> Optional[bytes]:
-        if not 0 <= n <= len(self._buffer):
-            return None
-        return bytes(self._buffer[:n])
+    def __len__(self):
+        return len(self._data)
 
-    def readuntil(self, sep: bytes) -> Optional[bytes]:
-        offset = self._buffer.find(sep)
+    def __iadd__(self, data: bytes) -> "Buffer":
+        self._data += data
+        return self
+
+    def extract_at_most(self, count: int) -> bytes:
+        out = self._data[:count]
+        self._data = self._data[count:]
+        self._looked_until -= len(out)
+        return out
+
+    def extract_until_next(self, needle: bytes) -> Optional[bytes]:
+        # Returns extracted bytes on success (advancing offset), or None on
+        # failure
+        if self._looked_for == needle:
+            search_start = max(0, self._looked_until - len(needle) + 1)
+        else:
+            search_start = 0
+        offset = self._data.find(needle, search_start)
         if offset == -1:
+            self._looked_until = len(self._data)
+            self._looked_for = needle
             return None
+        else:
+            return self.extract_at_most(offset + len(needle))
 
-        return self.readexactly(offset + len(sep))
+    # HTTP/1.1 has a number of constructs where you keep reading lines until
+    # you see a blank one. This does that, and then returns the lines.
+    def extract_lines(self) -> Optional[List[bytes]]:
+        if self._data[:2] == b"\r\n":
+            self.extract_at_most(2)
+            return []
+        else:
+            data = self.extract_until_next(b"\r\n\r\n")
+            if data is None:
+                return None
+            lines = data.split(b"\r\n")
+            assert lines[-2] == lines[-1] == b""
+            del lines[-2:]
+            return lines
 
-    def readline(self) -> Optional[bytes]:
-        return self.readuntil(b'\n')
-
-    def readexactly(self, n: int) -> Optional[bytes]:
-        if not 0 <= n <= len(self._buffer):
-            return None
-        chunk = self._buffer[:n]
-        del self._buffer[:n]
-        return bytes(chunk)
 
 
 def expect(*event_types):
