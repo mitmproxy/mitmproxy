@@ -46,12 +46,13 @@ class TCPLayer(Layer):
             else:
                 send_to = self.context.client
 
-            if not self.ignore:
+            if self.ignore:
+                yield commands.SendData(send_to, event.data)
+            else:
                 tcp_message = tcp.TCPMessage(from_client, event.data)
                 self.flow.messages.append(tcp_message)
                 yield commands.Hook("tcp_message", self.flow)
-
-            yield commands.SendData(send_to, event.data)
+                yield commands.SendData(send_to, tcp_message.content)
 
         elif isinstance(event, events.ConnectionClosed):
             # close everything
