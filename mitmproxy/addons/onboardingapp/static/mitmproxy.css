@@ -15,7 +15,7 @@
     height: 300px;
 }
 
-.bigtitle>div {
+.bigtitle > div {
     display: table-cell;
     vertical-align: middle;
 }
@@ -31,7 +31,7 @@ section {
 
 .innerlink {
     text-decoration: none;
-    border-bottom:1px dotted;
+    border-bottom: 1px dotted;
     margin-bottom: 15px;
 }
 
