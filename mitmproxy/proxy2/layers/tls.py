@@ -173,7 +173,7 @@ class _TLSLayer(layer.Layer):
 
 class ServerTLSLayer(_TLSLayer):
     """
-    This layer manages TLS on potentially multiple server connections.
+    This layer manages TLS for a single server connection.
     """
     lazy_init: bool = False
 
