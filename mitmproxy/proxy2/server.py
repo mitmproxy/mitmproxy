@@ -176,7 +176,8 @@ if __name__ == "__main__":
             nl.layer.debug = "  " * len(nl.context.layers)
 
         def request(flow: http.HTTPFlow):
-            flow.response = http.HTTPResponse.make(418)
+            if flow.request.path == "/cached":
+                flow.response = http.HTTPResponse.make(418, flow.request.content)
 
         await SimpleConnectionHandler(reader, writer, opts, {
             "next_layer": next_layer,

@@ -2,7 +2,7 @@ import re
 from typing import Iterable, List, Optional, Tuple
 
 from mitmproxy.net import check
-from mitmproxy.net.http import headers, request, url
+from mitmproxy.net.http import headers, request, response, url
 
 
 def _parse_authority_form(hostport: bytes) -> Tuple[bytes, int]:
@@ -53,6 +53,21 @@ def _read_request_line(line: bytes) -> \
     return form, method, scheme, host, port, path, http_version
 
 
+def _read_response_line(line: bytes) -> Tuple[bytes, int, bytes]:
+    try:
+        parts = line.split(None, 2)
+        if len(parts) == 2:  # handle missing message gracefully
+            parts.append(b"")
+
+        http_version, status_code, message = parts
+        status_code = int(status_code)
+        raise_if_http_version_unknown(http_version)
+    except ValueError as e:
+        raise ValueError(f"Bad HTTP response line: {line}") from e
+
+    return http_version, status_code, message
+
+
 def _read_headers(lines: Iterable[bytes]):
     """
         Read a set of headers.
@@ -101,4 +116,25 @@ def read_request_head(lines: List[bytes]) -> request.Request:
 
     return request.Request(
         form, method, scheme, host, port, path, http_version, headers
+    )
+
+
+def read_response_head(lines: List[bytes]) -> response.Response:
+    """
+    Parse an HTTP response head (response line + headers) from an iterable of lines
+
+    Args:
+        lines: The input lines
+
+    Returns:
+        The HTTP response object (without body)
+
+    Raises:
+        ValueError: The input is malformed.
+    """
+    http_version, status_code, message = _read_response_line(lines[0])
+    headers = _read_headers(lines[1:])
+
+    return response.Response(
+        http_version, status_code, message, headers
     )
