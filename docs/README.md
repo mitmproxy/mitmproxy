@@ -8,6 +8,9 @@ This directory houses the mitmproxy documentation available at <https://docs.mit
  2. Windows users: Depending on your git settings, you may need to manually create a symlink from 
  /docs/src/examples to /examples.
 
+Make sure mitmproxy python package is installed.
+
+Run `./build-current` script in docs folder. If you skip this step, hugo will fail because files in ./src/generated are missing
 
 Now you can run `hugo server -D` in ./src.
 
