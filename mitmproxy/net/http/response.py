@@ -47,6 +47,8 @@ class Response(message.Message):
     """
     An HTTP response.
     """
+    data: ResponseData
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.data = ResponseData(*args, **kwargs)
