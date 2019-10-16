@@ -64,6 +64,8 @@ class Request(message.Message):
     """
     An HTTP request.
     """
+    data: RequestData
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.data = RequestData(*args, **kwargs)
