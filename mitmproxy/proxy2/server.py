@@ -12,12 +12,12 @@ import logging
 import socket
 import typing
 
-from mitmproxy import options as moptions, http
+from mitmproxy import http, options as moptions
 from mitmproxy.proxy.protocol.http import HTTPMode
-from mitmproxy.proxy2 import events, commands, layers, layer
-from mitmproxy.proxy2.context import Client, Context, Connection
+from mitmproxy.proxy2 import commands, events, layer, layers
+from mitmproxy.proxy2.context import Client, Connection, Context
 from mitmproxy.proxy2.layers import glue
-
+from mitmproxy.utils import human
 
 class StreamIO(typing.NamedTuple):
     r: asyncio.StreamReader
@@ -151,24 +151,37 @@ class SimpleConnectionHandler(ConnectionHandler):
         self.hook_handlers = hooks
 
     async def handle_hook(
-        self,
-        hook: commands.Hook
+            self,
+            hook: commands.Hook
     ) -> None:
         if hook.name in self.hook_handlers:
             self.hook_handlers[hook.name](hook.data)
         if hook.blocking:
             self.server_event(events.HookReply(hook))
 
+    def log(self, message: str, level: str = "info"):
+        if "Hook" not in message:
+            print(message)
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
     opts = moptions.Options()
+    opts.add_option(
+        "connection_strategy", str, "eager",
+        "Determine when server connections should be established.",
+        choices=("eager", "lazy")
+    )
     opts.mode = "regular"
+
 
     async def handle(reader, writer):
         layer_stack = [
-            lambda ctx: layers.HTTPLayer(ctx, HTTPMode.regular)
+            lambda ctx: layers.HTTPLayer(ctx, HTTPMode.regular),
+            lambda ctx: setattr(ctx.server, "tls", True) or layers.ServerTLSLayer(ctx),
+            lambda ctx: layers.ClientTLSLayer(ctx),
+            lambda ctx: layers.HTTPLayer(ctx, HTTPMode.transparent)
         ]
 
         def next_layer(nl: layer.NextLayer):
@@ -181,7 +194,7 @@ if __name__ == "__main__":
 
         await SimpleConnectionHandler(reader, writer, opts, {
             "next_layer": next_layer,
-            "request" :request
+            "request": request
         }).handle_client()
 
 
@@ -189,7 +202,7 @@ if __name__ == "__main__":
     server = loop.run_until_complete(coro)
 
     # Serve requests until Ctrl+C is pressed
-    print('Serving on {}'.format(server.sockets[0].getsockname()))
+    print(f"Serving on {human.format_address(server.sockets[0].getsockname())}")
     try:
         loop.run_forever()
     except KeyboardInterrupt:
