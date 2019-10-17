@@ -44,10 +44,19 @@ class Layer:
         if show_debug_output:
             self.debug = "  " * len(context.layers)
 
+    def __repr__(self):
+        statefun = getattr(self, "state", self._handle_event)
+        state = getattr(statefun, "__name__", "")
+        state = state.replace("state_", "")
+        if state == "_handle_event":
+            state = ""
+        else:
+            state = f"state: {state}"
+        return f"{type(self).__name__}({state})"
+
     def __debug(self, message):
         if Layer.__last_debug_message == message:
-            if "\n" in message:
-                message = message.split("\n", 1)[0].strip() + "..."
+            message = message.split("\n", 1)[0].strip()
         else:
             Layer.__last_debug_message = message
         return commands.Log(

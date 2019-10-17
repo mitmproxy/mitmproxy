@@ -92,3 +92,6 @@ class HookReply(CommandReply):
 
     def __init__(self, command: typing.Union[commands.Hook, int]):
         super().__init__(command, None)
+
+    def __repr__(self):
+        return f"HookReply({repr(self.command)[5:-1]})"

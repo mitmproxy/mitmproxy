@@ -84,6 +84,11 @@ class Hook(Command):
         self.name = name
         self.data = data
 
+    def __repr__(self):
+        return f"Hook({self.name})"
+        # data = repr(self.data).replace("\r\n", " ")
+        # return f"Hook({self.name}: {data})"
+
 
 class Log(Command):
     message: str

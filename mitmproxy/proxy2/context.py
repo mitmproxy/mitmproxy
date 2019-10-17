@@ -1,5 +1,5 @@
 import copy
-from typing import Optional, List, Union, Sequence
+from typing import Optional, List, Union, Sequence, Any
 
 from mitmproxy.options import Options
 
@@ -14,6 +14,7 @@ class Connection:
     tls_established: bool = False
     alpn: Optional[bytes] = None
     alpn_offers: Sequence[bytes] = ()
+    sni: Union[bytes, bool, None]
 
     def __repr__(self):
         return f"{type(self).__name__}({repr(self.__dict__)})"
