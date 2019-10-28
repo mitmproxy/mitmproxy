@@ -83,7 +83,7 @@ def get_message_content_view(viewname, message):
     if not viewmode:
         viewmode = get("auto")
     try:
-        content = message.content
+        content = message.raw_content
     except ValueError:
         content = message.raw_content
         enc = "[cannot decode]"
@@ -145,6 +145,7 @@ def get_content_view(viewmode: View, data: bytes, **metadata):
 
 
 # The order in which ContentViews are added is important!
+
 add(auto.ViewAuto())
 add(raw.ViewRaw())
 add(hex.ViewHex())

@@ -8,6 +8,7 @@ import urwid
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import http
+from mitmproxy import tcp
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import flowdetailview
@@ -53,7 +54,16 @@ class FlowDetails(tabs.Tabs):
         self.last_displayed_body = None
 
     def focus_changed(self):
-        if self.master.view.focus.flow:
+        flow = self.master.view.focus.flow
+        if isinstance(flow,tcp.TCPViewEntry):
+            self.tabs = [
+                (self.tab_tcp_message, self.view_tcp_message),
+                (self.tab_tcp_client, self.view_tcp_client),
+                (self.tab_tcp_server, self.view_tcp_server),
+                (self.tab_tcp_unified, self.view_tcp_unified),
+            ]
+            self.show()
+        elif flow:
             self.tabs = [
                 (self.tab_request, self.view_request),
                 (self.tab_response, self.view_response),
@@ -95,6 +105,34 @@ class FlowDetails(tabs.Tabs):
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
 
+    def tab_tcp_client(self):
+        if self.flow.intercepted and self.flow.messages[-1].from_client:
+            return "[Intercepted] Client"
+        return "Client"
+
+    def tab_tcp_server(self):
+        if self.flow.intercepted and not self.flow.messages[-1].from_client:
+            return "[Intercepted] Server"
+        return "Server"
+
+    def tab_tcp_message(self):
+        return "Message"
+
+    def tab_tcp_unified(self):
+        return "Unified"
+
+    def view_tcp_client(self):
+        return self.conn_text(self.flow.client_stream)
+
+    def view_tcp_server(self):
+        return self.conn_text(self.flow.server_stream)
+
+    def view_tcp_unified(self):
+        return self.conn_text(self.flow.flow)
+
+    def view_tcp_message(self):
+        return self.conn_text(self.flow.message)
+
     def content_view(self, viewmode, message):
         if message.raw_content is None:
             msg, body = "", [urwid.Text([("error", "[content missing]")])]
@@ -105,12 +143,25 @@ class FlowDetails(tabs.Tabs):
                 limit = sys.maxsize
             else:
                 limit = ctx.options.content_view_lines_cutoff
+            flow_modify_cache_invalidation = None
 
-            flow_modify_cache_invalidation = hash((
-                message.raw_content,
-                message.headers.fields,
-                getattr(message, "path", None),
-            ))
+            if hasattr(message, "headers"):
+                flow_modify_cache_invalidation = hash((
+                    message.raw_content,
+                    message.headers.fields,
+                    getattr(message, "path", None),
+                ))
+            elif isinstance(message, tcp.TCPStream) or isinstance(message, tcp.TCPFlow):
+                flow_modify_cache_invalidation = hash((
+                    message.raw_content
+                ))
+            elif isinstance(message, tcp.TCPMessage):
+                flow_modify_cache_invalidation = hash((
+                    message.raw_content,
+                    message.id
+                ))
+
+
             # we need to pass the message off-band because it's not hashable
             self._get_content_view_message = message
             return self._get_content_view(viewmode, limit, flow_modify_cache_invalidation)
@@ -160,27 +211,28 @@ class FlowDetails(tabs.Tabs):
     def conn_text(self, conn):
         if conn:
             hdrs = []
-            for k, v in conn.headers.fields:
-                # This will always force an ascii representation of headers. For example, if the server sends a
-                #
-                #     X-Authors: Made with ❤ in Hamburg
-                #
-                # header, mitmproxy will display the following:
-                #
-                #     X-Authors: Made with \xe2\x9d\xa4 in Hamburg.
-                #
-                # The alternative would be to just use the header's UTF-8 representation and maybe
-                # do `str.replace("\t", "\\t")` to exempt tabs from urwid's special characters escaping [1].
-                # That would in some terminals allow rendering UTF-8 characters, but the mapping
-                # wouldn't be bijective, i.e. a user couldn't distinguish "\\t" and "\t".
-                # Also, from a security perspective, a mitmproxy user couldn't be fooled by homoglyphs.
-                #
-                # 1) https://github.com/mitmproxy/mitmproxy/issues/1833
-                #    https://github.com/urwid/urwid/blob/6608ee2c9932d264abd1171468d833b7a4082e13/urwid/display_common.py#L35-L36,
+            if not isinstance(conn, tcp.TCPMessage) and not isinstance(conn, tcp.TCPStream) and not isinstance(conn, tcp.TCPFlow):
+                for k, v in conn.headers.fields:
+                    # This will always force an ascii representation of headers. For example, if the server sends a
+                    #
+                    #     X-Authors: Made with ❤ in Hamburg
+                    #
+                    # header, mitmproxy will display the following:
+                    #
+                    #     X-Authors: Made with \xe2\x9d\xa4 in Hamburg.
+                    #
+                    # The alternative would be to just use the header's UTF-8 representation and maybe
+                    # do `str.replace("\t", "\\t")` to exempt tabs from urwid's special characters escaping [1].
+                    # That would in some terminals allow rendering UTF-8 characters, but the mapping
+                    # wouldn't be bijective, i.e. a user couldn't distinguish "\\t" and "\t".
+                    # Also, from a security perspective, a mitmproxy user couldn't be fooled by homoglyphs.
+                    #
+                    # 1) https://github.com/mitmproxy/mitmproxy/issues/1833
+                    #    https://github.com/urwid/urwid/blob/6608ee2c9932d264abd1171468d833b7a4082e13/urwid/display_common.py#L35-L36,
 
-                k = strutils.bytes_to_escaped_str(k) + ":"
-                v = strutils.bytes_to_escaped_str(v)
-                hdrs.append((k, v))
+                    k = strutils.bytes_to_escaped_str(k) + ":"
+                    v = strutils.bytes_to_escaped_str(v)
+                    hdrs.append((k, v))
             txt = common.format_keyvals(
                 hdrs,
                 key_format="header"

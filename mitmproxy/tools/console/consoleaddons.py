@@ -7,6 +7,7 @@ from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
+from mitmproxy import tcp
 from mitmproxy import log
 from mitmproxy import contentviews
 from mitmproxy.utils import strutils
@@ -332,9 +333,8 @@ class ConsoleAddon:
     @command.command("console.view.flow")
     def view_flow(self, flow: flow.Flow) -> None:
         """View a flow."""
-        if hasattr(flow, "request"):
-            # FIME: Also set focus?
-            self.master.switch_view("flowview")
+        #if hasattr(flow, "request"): #TODO FIGURE OUT WHY THIS IS HERE
+        self.master.switch_view("flowview")
 
     @command.command("console.exit")
     def exit(self) -> None:
@@ -379,21 +379,28 @@ class ConsoleAddon:
         """
             Possible components for console.edit.focus.
         """
-        return [
-            "cookies",
-            "form",
-            "path",
-            "method",
-            "query",
-            "reason",
-            "request-headers",
-            "response-headers",
-            "request-body",
-            "response-body",
-            "status_code",
-            "set-cookies",
-            "url",
-        ]
+        flow = self.master.view.focus.flow
+
+        if isinstance(flow, tcp.TCPViewEntry):
+            return [
+                "Message",
+            ]
+        else:
+            return [
+                "cookies",
+                "form",
+                "path",
+                "method",
+                "query",
+                "reason",
+                "request-headers",
+                "response-headers",
+                "request-body",
+                "response-body",
+                "status_code",
+                "set-cookies",
+                "url",
+            ]
 
     @command.command("console.edit.focus")
     @command.argument("part", type=mitmproxy.types.Choice("console.edit.focus.options"))
@@ -402,54 +409,66 @@ class ConsoleAddon:
             Edit a component of the currently focused flow.
         """
         flow = self.master.view.focus.flow
-        # This shouldn't be necessary once this command is "console.edit @focus",
-        # but for now it is.
         if not flow:
             raise exceptions.CommandError("No flow selected.")
         flow.backup()
-
-        require_dummy_response = (
-            part in ("response-headers", "response-body", "set-cookies") and
-            flow.response is None
-        )
-        if require_dummy_response:
-            flow.response = http.HTTPResponse.make()
-        if part == "cookies":
-            self.master.switch_view("edit_focus_cookies")
-        elif part == "form":
-            self.master.switch_view("edit_focus_form")
-        elif part == "path":
-            self.master.switch_view("edit_focus_path")
-        elif part == "query":
-            self.master.switch_view("edit_focus_query")
-        elif part == "request-headers":
-            self.master.switch_view("edit_focus_request_headers")
-        elif part == "response-headers":
-            self.master.switch_view("edit_focus_response_headers")
-        elif part in ("request-body", "response-body"):
-            if part == "request-body":
-                message = flow.request
-            else:
-                message = flow.response
-            c = self.master.spawn_editor(message.get_content(strict=False) or b"")
-            # Fix an issue caused by some editors when editing a
-            # request/response body. Many editors make it hard to save a
-            # file without a terminating newline on the last line. When
-            # editing message bodies, this can cause problems. For now, I
-            # just strip the newlines off the end of the body when we return
-            # from an editor.
-            message.content = c.rstrip(b"\n")
-        elif part == "set-cookies":
-            self.master.switch_view("edit_focus_setcookies")
-        elif part == "url":
-            url = flow.request.url.encode()
-            edited_url = self.master.spawn_editor(url)
-            url = edited_url.rstrip(b"\n")
-            flow.request.url = url.decode()
-        elif part in ["method", "status_code", "reason"]:
-            self.master.commands.execute(
-                "console.command flow.set @focus %s " % part
+        # This shouldn't be necessary once this command is "console.edit @focus",
+        # but for now it is.
+        if isinstance(flow, tcp.TCPViewEntry):
+            self._edit_tcp(part)
+        else:
+            require_dummy_response = (
+                part in ("response-headers", "response-body", "set-cookies") and
+                flow.response is None
             )
+            if require_dummy_response:
+                flow.response = http.HTTPResponse.make()
+            if part == "cookies":
+                self.master.switch_view("edit_focus_cookies")
+            elif part == "form":
+                self.master.switch_view("edit_focus_form")
+            elif part == "path":
+                self.master.switch_view("edit_focus_path")
+            elif part == "query":
+                self.master.switch_view("edit_focus_query")
+            elif part == "request-headers":
+                self.master.switch_view("edit_focus_request_headers")
+            elif part == "response-headers":
+                self.master.switch_view("edit_focus_response_headers")
+            elif part in ("request-body", "response-body"):
+                if part == "request-body":
+                    message = flow.request
+                else:
+                    message = flow.response
+                c = self.master.spawn_editor(message.get_content(strict=False) or b"")
+                # Fix an issue caused by some editors when editing a
+                # request/response body. Many editors make it hard to save a
+                # file without a terminating newline on the last line. When
+                # editing message bodies, this can cause problems. For now, I
+                # just strip the newlines off the end of the body when we return
+                # from an editor.
+                message.content = c.rstrip(b"\n")
+            elif part == "set-cookies":
+                self.master.switch_view("edit_focus_setcookies")
+            elif part == "url":
+                url = flow.request.url.encode()
+                edited_url = self.master.spawn_editor(url)
+                url = edited_url.rstrip(b"\n")
+                flow.request.url = url.decode()
+            elif part in ["method", "status_code", "reason"]:
+                self.master.commands.execute(
+                    "console.command flow.set @focus %s " % part
+                )
+
+    def _edit_tcp(self, part):
+
+        flow = self.master.view.focus.flow
+
+        if part == "Message":
+            raw_content = flow.message.raw_content
+            content  = self.master.spawn_editor(raw_content)
+            content = content.rstrip(b"\n")
+            flow.message.raw_content = content
 
     def _grideditor(self):
         gewidget = self.master.window.current("grideditor")

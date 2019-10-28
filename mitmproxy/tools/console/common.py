@@ -10,6 +10,7 @@ import urwid
 import urwid.util
 
 from mitmproxy.utils import human
+from mitmproxy.tcp import TCPViewEntry
 
 # Detect Windows Subsystem for Linux
 IS_WSL = "Microsoft" in platform.platform()
@@ -272,9 +273,142 @@ def colorize_url(url):
         ('url_punctuation', 3),  # ://
     ] + colorize_host(parts[2]) + colorize_req('/' + parts[3])
 
+@lru_cache(maxsize=800)
+def raw_format_tcp_list(f):
+    f = dict(f)
+    pile = []
+    req = []
+
+    if f["extended"]:
+        req.append(
+            fcol(
+                human.format_timestamp(f["msg_timestamp"]),
+                "highlight"
+            )
+        )
+    else:
+        req.append(fcol(">>" if f["focus"] else "  ", "focus"))
+
+    if f["marked"]: #TODO
+        req.append(fcol(SYMBOL_MARK, "mark"))
+
+    if f["msg_is_replay"]: #TODO 
+        req.append(fcol(SYMBOL_REPLAY, "replay"))
+
+    preamble = sum(i[1] for i in req) + len(req) - 1
+
+    req.append(fcol("STREAM: "+ f["tcp_stream_index"], "method")) #RENAME
+
+    if f["intercepted"] and not f["acked"]:
+        uc = "intercept"
+
+    elif "resp_code" in f or "err_msg" in f:
+        uc = "text"
+    else:
+        uc = "title"
+
+    connection = f["msg_connection"]
+    line = list()
+
+    req.append(fcol(f["msg_index"] + "/" + f["msg_total"], "text")) #YES? 
+    req.append(fcol(f["msg_len"], "text")) #YES? 
+
+    if f["intercepted"] and f["active"]:
+        con_mark = "active_intercept"
+        line.append((uc,connection))
+        line.append((con_mark,SYMBOL_MARK))
+    elif f["active"] and not f["intercepted"]:
+        con_mark = "active"
+        line.append((uc,connection))
+        line.append((con_mark,SYMBOL_MARK))
+    else:
+        line.append((uc,connection))
+
+    if f["cols"] and len(connection) > f["cols"]:
+         connection = connection[:f["cols"]] + "…"
+
+    req.append(
+        urwid.Text([(uc, connection)])
+    )
+    pile.append(urwid.Columns(req, dividechars=1))
+
+    return urwid.Pile(pile)
 
 @lru_cache(maxsize=800)
-def raw_format_list(f):
+def raw_format_tcp_table(f):
+    f = dict(f)
+    pile = []
+    req = []
+
+    cursor = [' ', 'focus']
+    if f.get('resp_is_replay', False):
+        cursor[0] = SYMBOL_REPLAY
+        cursor[1] = 'replay'
+    if f['marked']:
+        if cursor[0] == ' ':
+            cursor[0] = SYMBOL_MARK
+        cursor[1] = 'mark'
+    if f['focus']:
+        cursor[0] = '>'
+
+    req.append(fcol(*cursor))
+
+    if f["intercepted"] and not f["acked"]:
+        uc = "intercept"
+    elif f["active"] or f["focus"]:
+        uc = "title"
+    else:
+        uc = "text"
+
+    if f["extended"]:
+        s = human.format_timestamp(f["msg_timestamp"])
+    else:
+        s = datetime.datetime.fromtimestamp(time.mktime(time.localtime(f["msg_timestamp"]))).strftime("%H:%M:%S")
+    req.append(fcol(s, uc))
+    req.append(("fixed", 4, truncated_plain("TCP", "method_get")))
+    req.append(fcol(fixlen("PROTO", 8), "scheme_other"))
+    req.append(fcol(fixlen("S:" + f["stream_index"], 8), "scheme_other"))
+    req.append(fcol(fixlen("M:" + f["msg_index"], 8), "scheme_other"))
+    req.append(fcol(f["client"], uc))
+    req.append(fcol(fixlen(f["direction"], 3), "scheme_other"))
+    req.append(('weight', 0.08, TruncatedText(f["server"], colorize_req(f["server"]), 'left')))
+
+    if f['active']:
+        uc = "method_get"
+    else:
+        uc = "text"
+
+    ret = (' ' * len(SYMBOL_RETURN), 'text')
+    status = ('', 'text')
+    content = ('', 'text')
+    size = ('', 'text')
+    duration = ('', 'text')
+
+    if f["intercepted"]  and not f["acked"]:
+        rc = "intercept"
+    else:
+        rc = "white"
+
+    contentdesc = f['msg_len'] 
+    content = (contentdesc, rc)
+
+    rc = 'gradient_%02d' % int(99 - 100 * min(math.log2(1 + int(f["msg_len"])) / 20, 0.99))
+
+    pretty_duration = human.pretty_duration(f["duration"])
+    size_str = human.pretty_size(int(f["msg_len"]))
+
+    req.append(fcol(size_str, "text"))
+    if f["duration"] != 0:
+        req.append(fcol(pretty_duration, rc))
+    else:
+        req.append(fcol("     ", rc))
+
+    pile.append(urwid.Columns(req, dividechars=1, min_width=15))
+
+    return urwid.Pile(pile)
+
+@lru_cache(maxsize=800)
+def raw_format_http_list(f):
     f = dict(f)
     pile = []
     req = []
@@ -363,7 +497,7 @@ def raw_format_list(f):
 
 
 @lru_cache(maxsize=800)
-def raw_format_table(f):
+def raw_format_http_table(f):
     f = dict(f)
     pile = []
     req = []
@@ -514,51 +648,77 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='
     acked = False
     if f.reply and f.reply.state == "committed":
         acked = True
-    d = dict(
-        focus=focus,
-        extended=extended,
-        two_line=extended or cols < 100,
-        cols=cols,
-        intercepted=f.intercepted,
-        acked=acked,
-        req_timestamp=f.request.timestamp_start,
-        req_is_replay=f.request.is_replay,
-        req_method=f.request.method,
-        req_promise='h2-pushed-stream' in f.metadata,
-        req_url=f.request.pretty_url if hostheader else f.request.url,
-        req_scheme=f.request.scheme,
-        req_host=f.request.pretty_host if hostheader else f.request.host,
-        req_path=f.request.path,
-        req_http_version=f.request.http_version,
-        err_msg=f.error.msg if f.error else None,
-        marked=f.marked,
-    )
-    if f.response:
-        if f.response.raw_content:
-            content_len = len(f.response.raw_content)
-            contentdesc = human.pretty_size(len(f.response.raw_content))
-        elif f.response.raw_content is None:
-            content_len = -1
-            contentdesc = "[content missing]"
+    if isinstance(f, TCPViewEntry):
+        d = dict(
+            focus=focus,
+            extended=extended,
+            cols=cols,
+            intercepted=f.intercepted,
+            active=f.server_conn.connected(),
+            acked=acked,
+            msg_timestamp=f.timestamp,
+            msg_is_replay=False,
+            stream_index=str(f.stream_index),
+            direction=str(f.direction),
+            client=str(f.client),
+            server=str(f.server),
+            msg_index=str(f.message_index),
+            msg_total=str(len(f.messages)),
+            msg_len=str(len(f.message.content)),
+            err_msg=f.error.msg if f.error else None,
+            duration=f.duration,
+            marked=f.marked,
+        )
+        if ((layout == 'default' and cols < 100) or layout == "list"):
+            return raw_format_tcp_list(tuple(sorted(d.items())))
         else:
-            content_len = -2
-            contentdesc = "[no content]"
-
-        duration = None
-        if f.response.timestamp_end and f.request.timestamp_start:
-            duration = f.response.timestamp_end - f.request.timestamp_start
-
-        d.update(dict(
-            resp_code=f.response.status_code,
-            resp_reason=f.response.reason,
-            resp_is_replay=f.response.is_replay,
-            resp_len=content_len,
-            resp_ctype=f.response.headers.get("content-type"),
-            resp_clen=contentdesc,
-            duration=duration,
-        ))
-
-    if ((layout == 'default' and cols < 100) or layout == "list"):
-        return raw_format_list(tuple(sorted(d.items())))
+            return raw_format_tcp_table(tuple(sorted(d.items())))
     else:
-        return raw_format_table(tuple(sorted(d.items())))
+        d = dict(
+            focus=focus,
+            extended=extended,
+            two_line=extended or cols < 100,
+            cols=cols,
+            intercepted=f.intercepted,
+            acked=acked,
+            req_timestamp=f.request.timestamp_start,
+            req_is_replay=f.request.is_replay,
+            req_method=f.request.method,
+            req_promise='h2-pushed-stream' in f.metadata,
+            req_url=f.request.pretty_url if hostheader else f.request.url,
+            req_scheme=f.request.scheme,
+            req_host=f.request.pretty_host if hostheader else f.request.host,
+            req_path=f.request.path,
+            req_http_version=f.request.http_version,
+            err_msg=f.error.msg if f.error else None,
+            marked=f.marked,
+        )
+        if f.response:
+            if f.response.raw_content:
+                content_len = len(f.response.raw_content)
+                contentdesc = human.pretty_size(len(f.response.raw_content))
+            elif f.response.raw_content is None:
+                content_len = -1
+                contentdesc = "[content missing]"
+            else:
+                content_len = -2
+                contentdesc = "[no content]"
+
+            duration = None
+            if f.response.timestamp_end and f.request.timestamp_start:
+                duration = f.response.timestamp_end - f.request.timestamp_start
+
+            d.update(dict(
+                resp_code=f.response.status_code,
+                resp_reason=f.response.reason,
+                resp_is_replay=f.response.is_replay,
+                resp_len=content_len,
+                resp_ctype=f.response.headers.get("content-type"),
+                resp_clen=contentdesc,
+                duration=duration,
+            ))
+
+        if ((layout == 'default' and cols < 100) or layout == "list"):
+            return raw_format_http_list(tuple(sorted(d.items())))
+        else:
+            return raw_format_http_table(tuple(sorted(d.items())))

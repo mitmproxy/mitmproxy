@@ -37,12 +37,15 @@ class Intercept:
         if self.filt:
             should_intercept = all([
                 self.filt(f),
-                not f.request.is_replay,
+                #TODO #not f.request.is_replay,
             ])
             if should_intercept and ctx.options.intercept_active:
                 f.intercept()
 
     # Handlers
+
+    def tcp_message(self, f):
+        self.process_flow(f)
 
     def request(self, f):
         self.process_flow(f)

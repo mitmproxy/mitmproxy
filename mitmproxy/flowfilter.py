@@ -76,6 +76,13 @@ class _Action(_Token):
     def make(klass, s, loc, toks):
         return klass(*toks[1:])
 
+class FAll(_Action):
+    code = "all"
+    help = "Show all types of flows"
+
+    @only(tcp.TCPFlow, http.HTTPFlow, websocket.WebSocketFlow)
+    def __call__(self, f):
+        return True
 
 class FErr(_Action):
     code = "e"
@@ -513,7 +520,7 @@ def _make():
 
     # A naked rex is a URL rex:
     f = rex.copy()
-    f.setParseAction(FUrl.make)
+    f.setParseAction(FAll)
     parts.append(f)
 
     atom = pp.MatchFirst(parts)

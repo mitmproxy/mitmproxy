@@ -1,5 +1,4 @@
-"""
-The View:
+"""The View:
 
 - Keeps track of a store of flows
 - Maintains a filtered, ordered view onto that list of flows
@@ -22,6 +21,7 @@ from mitmproxy import connections
 from mitmproxy import ctx
 from mitmproxy import io
 from mitmproxy import http  # noqa
+from mitmproxy import tcp  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -69,6 +69,7 @@ class _OrderKey:
 
 class OrderRequestStart(_OrderKey):
     def generate(self, f: http.HTTPFlow) -> int:
+        return 0
         return f.request.timestamp_start or 0
 
 
@@ -207,10 +208,14 @@ class View(collections.abc.Sequence):
     def _refilter(self):
         self._view.clear()
         for i in self._store.values():
-            if self.show_marked and not i.marked:
+            flow = i
+            if isinstance(flow, tcp.TCPViewEntry):
+                flow = i.flow
+
+            if self.show_marked and not flow.marked:
                 continue
-            if self.filter(i):
-                self._base_add(i)
+            if self.filter(flow):
+                    self._base_add(i)
         self.sig_view_refresh.send(self)
 
     """ View API """
@@ -466,7 +471,12 @@ class View(collections.abc.Sequence):
         for f in flows:
             if f.id not in self._store:
                 self._store[f.id] = f
-                if self.filter(f):
+
+                filt = self.filter(f)
+                if isinstance(f, tcp.TCPViewEntry):
+                    filt = self.filter(f.flow)
+
+                if filt:
                     self._base_add(f)
                     if self.focus_follow:
                         self.focus.flow = f
@@ -549,13 +559,20 @@ class View(collections.abc.Sequence):
     def kill(self, f):
         self.update([f])
 
+    def tcp_message(self, f):
+        view = tcp.TCPViewEntry(flow=f, message_id=f.messages[-1].id)
+        self.add([view])
+
     def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Updates a list of flows. If flow is not in the state, it's ignored.
         """
         for f in flows:
             if f.id in self._store:
-                if self.filter(f):
+                filt = self.filter(f)
+                if isinstance(f, tcp.TCPViewEntry):
+                    filt = self.filter(f.flow)
+                if filt:
                     if f not in self._view:
                         self._base_add(f)
                         if self.focus_follow:
