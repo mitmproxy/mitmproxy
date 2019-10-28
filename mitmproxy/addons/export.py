@@ -11,6 +11,15 @@ import mitmproxy.types
 import pyperclip
 
 
+def cleanup_for_commands(request):
+    if ('content-length' in request.headers.keys() and
+            request.headers['content-length'] == '0' and
+            request.method == 'GET'):
+        request.headers.pop('content-length')
+    request.headers.pop(':authority', None)
+    return request
+
+
 def raise_if_missing_request(f: flow.Flow) -> None:
     if not hasattr(f, "request"):
         raise exceptions.CommandError("Can't export flow with no request.")
@@ -21,10 +30,15 @@ def curl_command(f: flow.Flow) -> str:
     data = "curl "
     request = f.request.copy()  # type: ignore
     request.decode(strict=False)
+    request = cleanup_for_commands(request)
     for k, v in request.headers.items(multi=True):
         data += "-H '%s:%s' " % (k, v)
     if request.method != "GET":
         data += "-X %s " % request.method
+    for header in request.headers.keys():
+        if ('accept-encoding' == header.lower() and
+                any(comp in request.headers[header] for comp in ['gzip', 'deflate'])):
+            data += "--compressed "
     data += "'%s'" % request.url
     if request.content:
         data += " --data-binary '%s'" % strutils.bytes_to_escaped_str(
@@ -39,6 +53,7 @@ def httpie_command(f: flow.Flow) -> str:
     request = f.request.copy()  # type: ignore
     data = "http %s " % request.method
     request.decode(strict=False)
+    request = cleanup_for_commands(request)
     data += "%s" % request.url
     for k, v in request.headers.items(multi=True):
         data += " '%s:%s'" % (k, v)
