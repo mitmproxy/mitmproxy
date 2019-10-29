@@ -11,7 +11,12 @@ import mitmproxy.types
 import pyperclip
 
 
-def cleanup_for_commands(request):
+def cleanup_request(f: flow.Flow):
+    if not hasattr(f, "request"):
+        raise exceptions.CommandError("Can't export flow with no request.")
+    request = f.request.copy()
+    request.decode(strict=False)
+    # a bit of clean-up
     if ('content-length' in request.headers.keys() and
             request.headers['content-length'] == '0' and
             request.method == 'GET'):
@@ -20,25 +25,14 @@ def cleanup_for_commands(request):
     return request
 
 
-def raise_if_missing_request(f: flow.Flow) -> None:
-    if not hasattr(f, "request"):
-        raise exceptions.CommandError("Can't export flow with no request.")
-
-
 def curl_command(f: flow.Flow) -> str:
-    raise_if_missing_request(f)
     data = "curl "
-    request = f.request.copy()  # type: ignore
-    request.decode(strict=False)
-    request = cleanup_for_commands(request)
+    request = cleanup_request(f)
     for k, v in request.headers.items(multi=True):
+        data += "--compressed " if k == 'accept-encoding' else ""
         data += "-H '%s:%s' " % (k, v)
     if request.method != "GET":
         data += "-X %s " % request.method
-    for header in request.headers.keys():
-        if ('accept-encoding' == header.lower() and
-                any(comp in request.headers[header] for comp in ['gzip', 'deflate'])):
-            data += "--compressed "
     data += "'%s'" % request.url
     if request.content:
         data += " --data-binary '%s'" % strutils.bytes_to_escaped_str(
@@ -49,12 +43,8 @@ def curl_command(f: flow.Flow) -> str:
 
 
 def httpie_command(f: flow.Flow) -> str:
-    raise_if_missing_request(f)
-    request = f.request.copy()  # type: ignore
-    data = "http %s " % request.method
-    request.decode(strict=False)
-    request = cleanup_for_commands(request)
-    data += "%s" % request.url
+    request = cleanup_request(f)
+    data = "http %s %s" % (request.method, request.url)
     for k, v in request.headers.items(multi=True):
         data += " '%s:%s'" % (k, v)
     if request.content:
@@ -66,8 +56,7 @@ def httpie_command(f: flow.Flow) -> str:
 
 
 def raw(f: flow.Flow) -> bytes:
-    raise_if_missing_request(f)
-    return assemble.assemble_request(f.request)  # type: ignore
+    return assemble.assemble_request(cleanup_request(f))  # type: ignore
 
 
 formats = dict(
