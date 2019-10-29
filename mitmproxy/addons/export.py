@@ -14,7 +14,7 @@ import pyperclip
 def cleanup_request(f: flow.Flow):
     if not hasattr(f, "request"):
         raise exceptions.CommandError("Can't export flow with no request.")
-    request = f.request.copy()
+    request = f.request.copy()  # type: ignore
     request.decode(strict=False)
     # a bit of clean-up
     if ('content-length' in request.headers.keys() and
