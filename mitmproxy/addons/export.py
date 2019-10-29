@@ -17,9 +17,7 @@ def cleanup_request(f: flow.Flow):
     request = f.request.copy()  # type: ignore
     request.decode(strict=False)
     # a bit of clean-up
-    if ('content-length' in request.headers.keys() and
-            request.headers['content-length'] == '0' and
-            request.method == 'GET'):
+    if request.method == 'GET' and request.headers.get("content-length", None) == "0":
         request.headers.pop('content-length')
     request.headers.pop(':authority', None)
     return request
