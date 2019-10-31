@@ -14,12 +14,12 @@ def lookup(address, port, s):
     address = re.sub(r"^::ffff:(?=\d+.\d+.\d+.\d+$)", "", address)
     s = s.decode()
 
-    # ALL tcp 192.168.1.13:57474 -> 23.205.82.58:443       ESTABLISHED:ESTABLISHED
+    # ALL tcp 192.168.1.13:57474 -> 23.205.82.58:443       ESTABLISHED:ESTABLISHED
     specv4 = "%s:%s" % (address, port)
-    
-    # ALL tcp 2a01:e35:8bae:50f0:9d9b:ef0d:2de3:b733[58505] -> 2606:4700:30::681f:4ad0[443]       ESTABLISHED:ESTABLISHED
+
+    # ALL tcp 2a01:e35:8bae:50f0:9d9b:ef0d:2de3:b733[58505] -> 2606:4700:30::681f:4ad0[443]       ESTABLISHED:ESTABLISHED
     specv6 = "%s[%s]" % (address, port)
-    
+
     for i in s.split("\n"):
         if "ESTABLISHED:ESTABLISHED" in i and specv4 in i:
             s = i.split()
