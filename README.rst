@@ -21,8 +21,7 @@ Documentation & Help
 --------------------
 
 
-General information, tutorials, and precompiled binaries can be found on the mitmproxy
-and pathod websites.
+General information, tutorials, and precompiled binaries can be found on the mitmproxy website.
 
 |mitmproxy_site|
 
@@ -52,7 +51,7 @@ Contributing
 As an open source project, mitmproxy welcomes contributions of all forms. If you would like to bring the project forward,
 please consider contributing in the following areas:
 
-- **Maintenance:** We are *incredibly* thankful for individuals who are stepping up and helping with maintenance. This includes (but is not limited to) triaging issues, reviewing pull requests and picking up stale ones, helping out other users in our forums_, creating minimal, complete and verifiable examples or test cases for existing bug reports, updating documentation, or fixing minor bugs that have recently been reported.
+- **Maintenance:** We are *incredibly* thankful for individuals who are stepping up and helping with maintenance. This includes (but is not limited to) triaging issues, reviewing pull requests and picking up stale ones, helping out other users on StackOverflow_, creating minimal, complete and verifiable examples or test cases for existing bug reports, updating documentation, or fixing minor bugs that have recently been reported.
 - **Code Contributions:** We actively mark issues that we consider are `good first contributions`_. If you intend to work on a larger contribution to the project, please come talk to us first.
 
 Development Setup
@@ -193,5 +192,5 @@ with the following command:
 .. _yarn: https://yarnpkg.com/en/
 .. _PEP8: https://www.python.org/dev/peps/pep-0008
 .. _`Google Style Guide`: https://google.github.io/styleguide/pyguide.html
-.. _forums: https://discourse.mitmproxy.org/
+.. _StackOverflow: https://stackoverflow.com/questions/tagged/mitmproxy
 .. _`good first contributions`: https://github.com/mitmproxy/mitmproxy/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22
