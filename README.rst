@@ -30,12 +30,10 @@ The documentation for mitmproxy is available on our website:
 
 |mitmproxy_docs_stable| |mitmproxy_docs_master|
 
+If you have questions on how to use mitmproxy, please
+ask them on StackOverflow!
 
-Join our discussion forum on Discourse to ask questions, help
-each other solve problems, and come up with new ideas for the project.
-
-|mitmproxy_discourse|
-
+|mitmproxy_stackoverflow|
 
 Join our developer chat on Slack if you would like to contribute to mitmproxy itself.
 
@@ -146,21 +144,21 @@ with the following command:
     tox -e lint
 
 
-.. |mitmproxy_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-mitmproxy.org-blue.svg
+.. |mitmproxy_site| image:: https://shields.mitmproxy.org/badge/https%3A%2F%2F-mitmproxy.org-blue.svg
     :target: https://mitmproxy.org/
     :alt: mitmproxy.org
 
-.. |mitmproxy_docs_stable| image:: https://shields.mitmproxy.org/api/docs-stable-brightgreen.svg
+.. |mitmproxy_docs_stable| image:: https://shields.mitmproxy.org/badge/docs-stable-brightgreen.svg
     :target: https://docs.mitmproxy.org/stable/
     :alt: mitmproxy documentation stable
 
-.. |mitmproxy_docs_master| image:: https://shields.mitmproxy.org/api/docs-master-brightgreen.svg
+.. |mitmproxy_docs_master| image:: https://shields.mitmproxy.org/badge/docs-master-brightgreen.svg
     :target: https://docs.mitmproxy.org/master/
     :alt: mitmproxy documentation master
 
-.. |mitmproxy_discourse| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-discourse.mitmproxy.org-orange.svg
-    :target: https://discourse.mitmproxy.org
-    :alt: Discourse: mitmproxy
+.. |mitmproxy_stackoverflow| image:: https://shields.mitmproxy.org/stackexchange/stackoverflow/t/mitmproxy?color=orange&label=stackoverflow%20questions
+    :target: https://stackoverflow.com/questions/tagged/mitmproxy
+    :alt: StackOverflow: mitmproxy
 
 .. |slack| image:: http://slack.mitmproxy.org/badge.svg
     :target: http://slack.mitmproxy.org/
