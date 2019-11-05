@@ -67,8 +67,7 @@ class Layer:
     @abstractmethod
     def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
         """Handle a proxy server event"""
-        if False:
-            yield
+        yield from ()
 
     def handle_event(self, event: events.Event) -> commands.TCommandGenerator:
         if self._paused:
@@ -96,7 +95,10 @@ class Layer:
         processing any other commands.
         """
         try:
-            command = command_generator.send(send)
+            if isinstance(send, Exception):
+                command = command_generator.throw(type(send), send)
+            else:
+                command = command_generator.send(send)
         except StopIteration:
             return
 

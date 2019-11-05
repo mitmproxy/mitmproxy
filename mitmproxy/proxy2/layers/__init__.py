@@ -1,9 +1,8 @@
 from . import modes
 from .glue import GlueLayer
-from .old_http import OldHTTPLayer
+from mitmproxy.proxy2.layers.old.old_http import OldHTTPLayer
 from .http.http import HTTPLayer
-from .http.http1 import ClientHTTP1Layer, ServerHTTP1Layer
-from .http.http2 import ClientHTTP2Layer, ServerHTTP2Layer
+from mitmproxy.proxy2.layers.old.http1 import ClientHTTP1Layer, ServerHTTP1Layer
 from .tcp import TCPLayer
 from .tls import ClientTLSLayer, ServerTLSLayer
 from .websocket import WebsocketLayer
