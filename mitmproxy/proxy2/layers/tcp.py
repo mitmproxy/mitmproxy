@@ -38,14 +38,14 @@ class TCPLayer(Layer):
     _handle_event = start
 
     @expect(events.DataReceived, events.ConnectionClosed)
-    def relay_messages(self, event: events.Event) -> commands.TCommandGenerator:
-        if isinstance(event, events.DataReceived):
-            from_client = event.connection == self.context.client
-            if from_client:
-                send_to = self.context.server
-            else:
-                send_to = self.context.client
+    def relay_messages(self, event: events.ConnectionEvent) -> commands.TCommandGenerator:
+        from_client = event.connection == self.context.client
+        if from_client:
+            send_to = self.context.server
+        else:
+            send_to = self.context.client
 
+        if isinstance(event, events.DataReceived):
             if self.ignore:
                 yield commands.SendData(send_to, event.data)
             else:
@@ -55,9 +55,7 @@ class TCPLayer(Layer):
                 yield commands.SendData(send_to, tcp_message.content)
 
         elif isinstance(event, events.ConnectionClosed):
-            # close everything
-            if event.connection == self.context.server:
-                yield commands.CloseConnection(self.context.client)
+            yield commands.CloseConnection(send_to)
             if not self.ignore:
                 yield commands.Hook("tcp_end", self.flow)
             self._handle_event = self.done

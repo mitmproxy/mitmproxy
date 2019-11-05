@@ -132,6 +132,8 @@ class _TLSLayer(layer.Layer):
         except SSL.WantReadError:
             yield from self.tls_interact()
             return False
+        except SSL.ZeroReturnError:
+            raise  # TODO: Figure out what to do when handshake fails.
         else:
             self.conn.tls_established = True
             self.conn.alpn = self.tls_conn.get_alpn_proto_negotiated()
@@ -188,6 +190,7 @@ class ServerTLSLayer(_TLSLayer):
     def negotiate(self, data: bytes) -> Generator[commands.Command, Any, bool]:
         done = yield from super().negotiate(data)
         if done:
+            assert self.command_to_reply_to
             yield from self.event_to_child(EstablishServerTLSReply(self.command_to_reply_to, None))
             self.command_to_reply_to = None
         return done
@@ -196,6 +199,7 @@ class ServerTLSLayer(_TLSLayer):
         for command in super().event_to_child(event):
             if isinstance(command, EstablishServerTLS):
                 assert isinstance(command.connection, context.Server)
+                assert not self.command_to_reply_to
                 self.command_to_reply_to = command
                 yield from self.start_server_tls(command.connection)
             else:
@@ -275,6 +279,7 @@ class ClientTLSLayer(_TLSLayer):
                 client.alpn_offers = client_hello.alpn_protocols
 
                 client_tls_requires_server_connection = (
+                        self.context.server and
                         self.context.server.tls and
                         self.context.options.upstream_cert and
                         (
@@ -325,7 +330,7 @@ class ClientTLSLayer(_TLSLayer):
             return err
 
     def start_client_tls(self):
-        # FIXME: Do this properly
+        # FIXME: Do this properly. Also adjust error message in negotiate()
         client = self.context.client
         server = self.context.server
         context = SSL.Context(SSL.SSLv23_METHOD)
@@ -359,3 +364,15 @@ class ClientTLSLayer(_TLSLayer):
 
         yield from self.negotiate(bytes(self.recv_buffer))
         self.recv_buffer = None
+
+    def negotiate(self, data: bytes) -> Generator[commands.Command, Any, bool]:
+        try:
+            done = yield from super().negotiate(data)
+            return done
+        except SSL.ZeroReturnError:
+            yield commands.Log(
+                f"Client TLS Handshake failed. "
+                f"The client may not trust the proxy's certificate (SNI: {self.context.client.sni})."
+                # TODO: Also use other sources than SNI
+            )
+            yield commands.CloseConnection(self.context.client)

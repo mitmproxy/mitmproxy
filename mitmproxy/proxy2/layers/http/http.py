@@ -11,7 +11,7 @@ from mitmproxy.net.http import http1
 from mitmproxy.net.http.http1 import read_sansio as http1_sansio
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events
-from mitmproxy.proxy2.context import Connection, Context, Server
+from mitmproxy.proxy2.context import Connection, Context, Server, Client
 from mitmproxy.proxy2.layer import Layer, NextLayer
 from mitmproxy.proxy2.layers.tls import EstablishServerTLS, EstablishServerTLSReply
 from mitmproxy.proxy2.utils import expect
@@ -104,14 +104,15 @@ TBodyReader = typing.Union[ChunkedReader, Http10Reader, ContentLengthReader]
 
 
 class Http1Connection(ABC):
-    context: Context
-    flow: http.HTTPFlow
+    conn: Connection
+    flow: http.HTTPFlow = None
     state: typing.Callable[[events.Event], HttpEventGenerator]
     body_reader: TBodyReader
     buf: ReceiveBuffer
 
-    def __init__(self, context):
-        self.context = context
+    def __init__(self, conn: Connection):
+        assert isinstance(conn, Connection)
+        self.conn = conn
         self.buf = ReceiveBuffer()
 
     def handle_event(self, event: events.Event) -> HttpEventGenerator:
@@ -168,8 +169,11 @@ class Http1Connection(ABC):
 
 
 class Http1Server(Http1Connection):
-    def __init__(self, context: Context):
-        super().__init__(context)
+    """A simple HTTP/1 server with no pipelining support."""
+    conn: Client
+
+    def __init__(self, conn: Client):
+        super().__init__(conn)
         self.state = self.read_request_headers
 
     def send(self, event: HttpEvent) -> commands.TCommandGenerator:
@@ -179,7 +183,7 @@ class Http1Server(Http1Connection):
                 assert self.state == self.wait
                 self.body_reader = self.make_body_reader(-1)
                 self.state = self.read_request_body
-                yield from self.state(events.DataReceived(self.context.client, b""))
+                yield from self.state(events.DataReceived(self.conn, b""))
         elif isinstance(event, ResponseData):
             if "chunked" in event.flow.response.headers.get("transfer-encoding", "").lower():
                 raw = b"%x\r\n%s\r\n" % (len(event.data), event.data)
@@ -190,14 +194,17 @@ class Http1Server(Http1Connection):
                 raw = b"0\r\n\r\n"
             else:
                 raw = False
-            assert self.state == self.wait
-            self.state = self.read_request_headers
-            yield from self.state(events.DataReceived(self.context.client, b""))
+            if http1.expected_http_body_size(self.flow.request, self.flow.response) == -1:
+                yield commands.CloseConnection(self.conn)
+                return
+            else:
+                self.state = self.read_request_headers
+                yield from self.state(events.DataReceived(self.conn, b""))
         else:
             raise NotImplementedError(f"{event}")
 
         if raw:
-            yield commands.SendData(self.context.client, raw)
+            yield commands.SendData(self.conn, raw)
 
     def read_request_headers(self, event: events.Event) -> HttpEventGenerator:
         if isinstance(event, events.DataReceived):
@@ -206,8 +213,8 @@ class Http1Server(Http1Connection):
                 request_head = [bytes(x) for x in request_head]  # TODO: Make url.parse compatible with bytearrays
                 request = http.HTTPRequest.wrap(http1_sansio.read_request_head(request_head))
                 self.flow = http.HTTPFlow(
-                    self.context.client,
-                    self.context.server,
+                    self.conn,
+                    None,
                 )
                 self.flow.request = request
                 yield RequestHeaders(self.flow)
@@ -237,13 +244,27 @@ class Http1Server(Http1Connection):
 
 
 class Http1Client(Http1Connection):
-    def __init__(self, context: Context):
-        super().__init__(context)
+    conn: Server
+    send_queue: typing.List[HttpEvent]
+    """A queue of send events for flows other than the one that is currently being transmitted."""
+
+    def __init__(self, conn: Server):
+        super().__init__(conn)
         self.state = self.read_response_headers
+        self.send_queue = []
 
     def send(self, event: HttpEvent) -> commands.TCommandGenerator:
-        if isinstance(event, RequestHeaders):
+        if not self.flow:
+            assert isinstance(event, RequestHeaders)
             self.flow = event.flow
+        if self.flow != event.flow:
+            # Assuming an h2 server, we may have multiple Streams that try to send requests
+            # over a single h1 connection. To keep things relatively simple, we don't do any HTTP/1 pipelining
+            # but keep a queue of still-to-send requests.
+            self.send_queue.append(event)
+            return
+
+        if isinstance(event, RequestHeaders):
             raw = http1.assemble_request_head(event.flow.request)
         elif isinstance(event, RequestData):
             if "chunked" in event.flow.request.headers.get("transfer-encoding", "").lower():
@@ -259,7 +280,7 @@ class Http1Client(Http1Connection):
             raise NotImplementedError(f"{event}")
 
         if raw:
-            yield commands.SendData(self.context.server, raw)
+            yield commands.SendData(self.conn, raw)
 
     def read_response_headers(self, event: events.ConnectionEvent) -> HttpEventGenerator:
         if isinstance(event, events.DataReceived):
@@ -276,15 +297,24 @@ class Http1Client(Http1Connection):
                 self.state = self.read_response_body
                 yield from self.state(event)
         elif isinstance(event, events.ConnectionClosed):
-            return  # TODO: Teardown?
+            if self.flow:
+                raise NotImplementedError(f"{event}")
+            else:
+                return
         else:
             raise ValueError(f"Unexpected event: {event}")
 
     def read_response_body(self, event: events.ConnectionEvent) -> HttpEventGenerator:
         for e in self.read_body(event, False):
+            yield e
             if isinstance(e, ResponseEndOfMessage):
                 self.state = self.read_response_headers
-            yield e
+                self.flow = None
+                if self.send_queue:
+                    events = self.send_queue
+                    self.send_queue = []
+                    for e in events:
+                        yield from self.send(e)
 
 
 class HttpStream(Layer):
@@ -316,6 +346,8 @@ class HttpStream(Layer):
             yield from self.handle_connect()
             return
         else:
+            if self.context.server:
+                self.flow.server_conn = self.context.server
             yield commands.Hook("requestheaders", self.flow)
 
         if self.flow.request.headers.get("expect", "").lower() == "100-continue":
@@ -324,7 +356,7 @@ class HttpStream(Layer):
             # request.headers.pop("expect")
 
         if self.flow.request.stream:
-            raise NotImplementedError
+            raise NotImplementedError  # FIXME
         else:
             self._handle_event = self.read_request_body
 
@@ -479,7 +511,7 @@ class HTTPLayer(Layer):
         self.mode = mode
 
         self.connections = {
-            context.client: Http1Server(context)
+            context.client: Http1Server(context.client)
         }
         self.waiting_for_connection = collections.defaultdict(list)
         self.streams = {}
@@ -508,10 +540,10 @@ class HTTPLayer(Layer):
                 raise
             if isinstance(event, events.OpenConnectionReply):
                 self.connections[event.command.connection] = stream
-            self.event_to_stream(stream, event)
+            self.event_to_child(stream, event)
         elif isinstance(event, events.ConnectionEvent):
             handler = self.connections[event.connection]
-            self.event_to_stream(handler, event)
+            self.event_to_child(handler, event)
         else:
             raise ValueError(f"Unexpected event: {event}")
 
@@ -521,7 +553,7 @@ class HTTPLayer(Layer):
                 self.streams[event.flow.id] = self.make_stream()
             if isinstance(event, HttpEvent):
                 stream = self.streams[event.flow.id]
-                self.event_to_stream(stream, event)
+                self.event_to_child(stream, event)
             elif isinstance(event, SendHttp):
                 conn = self.connections[event.connection]
                 evts = conn.send(event.event)
@@ -529,7 +561,7 @@ class HTTPLayer(Layer):
             elif isinstance(event, OpenHttpConnection):
                 if event.connection in self.connections:
                     stream = self.stream_by_command.pop(event)
-                    self.event_to_stream(stream, OpenHttpConnectionReply(event, None))
+                    self.event_to_child(stream, OpenHttpConnectionReply(event, None))
                 else:
                     if event.connection not in self.waiting_for_connection:
                         open_command = commands.OpenConnection(event.connection)
@@ -552,23 +584,23 @@ class HTTPLayer(Layer):
         stream = HttpStream(ctx)
         if self.debug:
             stream.debug = self.debug + "  "
-        self.event_to_stream(stream, events.Start())
+        self.event_to_child(stream, events.Start())
         return stream
 
     def make_http_connection(self, connection: Server):
         if connection.tls_established and connection.alpn == b"h2":
             raise NotImplementedError
         else:
-            self.connections[connection] = Http1Client(self.context)
+            self.connections[connection] = Http1Client(connection)
 
         waiting = self.waiting_for_connection.pop(connection)
         for cmd in waiting:
             stream = self.stream_by_command.pop(cmd)
-            self.event_to_stream(stream, OpenHttpConnectionReply(cmd, None))  # TODO: Error handling.
+            self.event_to_child(stream, OpenHttpConnectionReply(cmd, None))  # TODO: Error handling.
 
-    def event_to_stream(
+    def event_to_child(
             self,
-            stream: HttpStream,
+            stream: typing.Union[Http1Connection, HttpStream],
             event: events.Event,
     ) -> None:
         stream_events = list(stream.handle_event(event))
