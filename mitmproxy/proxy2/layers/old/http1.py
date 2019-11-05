@@ -1,15 +1,11 @@
 import time
-from typing import Dict, List  # noqa
 
 import h11
-from mitmproxy import http
-from mitmproxy.net.http import Headers
-from mitmproxy.proxy2 import events, commands
 from mitmproxy.proxy2.layer import Layer
-from mitmproxy.proxy2.layers.old_http import _make_event_from_request
-from mitmproxy.proxy2.layers.http import semantics
-from mitmproxy.proxy2.layers.http.http_commands import *
-from mitmproxy.proxy2.layers.http.http_events import *
+from mitmproxy.proxy2.layers.old.old_http import _make_event_from_request
+from mitmproxy.proxy2.layers.old import semantics
+from mitmproxy.proxy2.layers.old.http_commands import *
+from mitmproxy.proxy2.layers.old.http_events import *
 from mitmproxy.proxy2.utils import expect
 
 
