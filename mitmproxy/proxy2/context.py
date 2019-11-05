@@ -1,7 +1,14 @@
-import copy
-from typing import Optional, List, Union, Sequence, Any
+from enum import Flag, auto
+from typing import List, Optional, Sequence, Union
 
 from mitmproxy.options import Options
+
+
+class ConnectionState(Flag):
+    CLOSED = 0
+    CAN_READ = auto()
+    CAN_WRITE = auto()
+    OPEN = CAN_READ | CAN_WRITE
 
 
 class Connection:
@@ -9,12 +16,16 @@ class Connection:
     Connections exposed to the layers only contain metadata, no socket objects.
     """
     address: tuple
-    connected: bool = False
+    state: ConnectionState
     tls: bool = False
     tls_established: bool = False
     alpn: Optional[bytes] = None
     alpn_offers: Sequence[bytes] = ()
     sni: Union[bytes, bool, None]
+
+    @property
+    def connected(self):
+        return self.state is ConnectionState.OPEN
 
     def __repr__(self):
         return f"{type(self).__name__}({repr(self.__dict__)})"
@@ -25,7 +36,7 @@ class Client(Connection):
 
     def __init__(self, address):
         self.address = address
-        self.connected = True
+        self.state = ConnectionState.OPEN
 
 
 class Server(Connection):
@@ -35,6 +46,7 @@ class Server(Connection):
 
     def __init__(self, address: Optional[tuple]):
         self.address = address
+        self.state = ConnectionState.CLOSED
 
 
 class Context:
