@@ -279,7 +279,6 @@ class ClientTLSLayer(_TLSLayer):
                 client.alpn_offers = client_hello.alpn_protocols
 
                 client_tls_requires_server_connection = (
-                        self.context.server and
                         self.context.server.tls and
                         self.context.options.upstream_cert and
                         (
@@ -372,7 +371,8 @@ class ClientTLSLayer(_TLSLayer):
         except SSL.ZeroReturnError:
             yield commands.Log(
                 f"Client TLS Handshake failed. "
-                f"The client may not trust the proxy's certificate (SNI: {self.context.client.sni})."
+                f"The client may not trust the proxy's certificate (SNI: {self.context.client.sni}).",
+                level="warn"
                 # TODO: Also use other sources than SNI
             )
             yield commands.CloseConnection(self.context.client)

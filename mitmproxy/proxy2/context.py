@@ -68,3 +68,9 @@ class Context:
         self.options = options
         self.server = Server(None)
         self.layers = []
+
+    def fork(self) -> "Context":
+        ret = Context(self.client, self.options)
+        ret.server = self.server
+        ret.layers = self.layers.copy()
+        return ret

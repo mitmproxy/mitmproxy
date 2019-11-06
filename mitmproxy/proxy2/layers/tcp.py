@@ -25,10 +25,11 @@ class TCPLayer(Layer):
             yield commands.Hook("tcp_start", self.flow)
 
         if not self.context.server.connected:
-            err = yield commands.OpenConnection(self.context.server)
-            if err:
+            try:
+                yield commands.OpenConnection(self.context.server)
+            except IOError as e:
                 if not self.ignore:
-                    self.flow.error = flow.Error(err)
+                    self.flow.error = flow.Error(str(e))
                     yield commands.Hook("tcp_error", self.flow)
                 yield commands.CloseConnection(self.context.client)
                 self._handle_event = self.done
