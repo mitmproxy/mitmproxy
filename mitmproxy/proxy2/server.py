@@ -10,6 +10,7 @@ import abc
 import asyncio
 import logging
 import socket
+import sys
 import traceback
 import typing
 
@@ -54,7 +55,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self.server_event(events.Start())
         await self.handle_connection(self.client)
 
-        self.log("[sans-io] clientdisconnect")
+        self.log("[sans-io] clientdisconnected")
 
         if self.transports:
             self.log("[sans-io] closing transports...")
@@ -91,6 +92,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             else:
                 if connection.state is ConnectionState.CAN_READ:
                     await self.close_connection(connection)
+                else:
+                    connection.state &= ~ConnectionState.CAN_READ
                 self.server_event(events.ConnectionClosed(connection))
                 break
 
@@ -110,7 +113,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             command.connection.state = ConnectionState.OPEN
             self.server_event(events.OpenConnectionReply(command, None))
             await self.handle_connection(command.connection)
-            self.log("serverdisconnect")
+            self.log("serverdisconnected")
 
     @abc.abstractmethod
     async def handle_hook(self, hook: commands.Hook) -> None:
@@ -121,17 +124,24 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
     def server_event(self, event: events.Event) -> None:
         try:
-            layer_commands = list(self.layer.handle_event(event))
+            self._server_event(event)
         except Exception:
             self.log(f"mitmproxy has crashed!\n{traceback.format_exc()}", level="error")
-            return
+
+    def _server_event(self, event: events.Event) -> None:
+        layer_commands = self.layer.handle_event(event)
         for command in layer_commands:
             if isinstance(command, commands.OpenConnection):
                 asyncio.ensure_future(
                     self.open_connection(command)
                 )
             elif isinstance(command, commands.SendData):
-                self.transports[command.connection].w.write(command.data)
+                try:
+                    io = self.transports[command.connection]
+                except KeyError:
+                    raise RuntimeError(f"Cannot write to closed connection: {command.connection}")
+                else:
+                    io.w.write(command.data)
             elif isinstance(command, commands.CloseConnection):
                 if command.connection == self.client:
                     asyncio.ensure_future(
@@ -173,7 +183,7 @@ class SimpleConnectionHandler(ConnectionHandler):
 
     def log(self, message: str, level: str = "info"):
         if "Hook" not in message:
-            print(message)
+            print(message, file=sys.stderr if level in ("error", "warn") else sys.stdout)
 
 
 if __name__ == "__main__":
@@ -181,7 +191,7 @@ if __name__ == "__main__":
 
     opts = moptions.Options()
     opts.add_option(
-        "connection_strategy", str, "eager",
+        "connection_strategy", str, "lazy",
         "Determine when server connections should be established.",
         choices=("eager", "lazy")
     )
@@ -201,8 +211,15 @@ if __name__ == "__main__":
             nl.layer.debug = "  " * len(nl.context.layers)
 
         def request(flow: http.HTTPFlow):
-            if flow.request.path == "/cached":
-                flow.response = http.HTTPResponse.make(418, flow.request.content)
+            if "cached" in flow.request.path:
+                flow.response = http.HTTPResponse.make(418, f"(cached) {flow.request.text}")
+            if "toggle-tls" in flow.request.path:
+                if flow.request.url.startswith("https://"):
+                    flow.request.url = flow.request.url.replace("https://", "http://")
+                else:
+                    flow.request.url = flow.request.url.replace("http://", "https://")
+            if "redirect" in flow.request.path:
+                flow.request.url = "https://httpbin.org/robots.txt"
 
         await SimpleConnectionHandler(reader, writer, opts, {
             "next_layer": next_layer,
