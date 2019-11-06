@@ -601,8 +601,11 @@ class HTTPLayer(Layer):
                 self.connections[event.command.connection] = stream
             self.event_to_child(stream, event)
         elif isinstance(event, events.ConnectionEvent):
-            handler = self.connections[event.connection]
-            self.event_to_child(handler, event)
+            if event.connection == self.context.server and self.context.server not in self.connections:
+                pass
+            else:
+                handler = self.connections[event.connection]
+                self.event_to_child(handler, event)
         else:
             raise ValueError(f"Unexpected event: {event}")
 
@@ -623,6 +626,15 @@ class HTTPLayer(Layer):
                 yield event
             else:
                 raise ValueError(f"Unexpected event: {event}")
+
+    def make_stream(self) -> HttpStream:
+        ctx = self.context.fork()
+
+        stream = HttpStream(ctx)
+        if self.debug:
+            stream.debug = self.debug + "  "
+        self.event_to_child(stream, events.Start())
+        return stream
 
     def get_connection(self, event: GetHttpConnection):
         # Do we already have a connection we can re-use?
@@ -646,6 +658,7 @@ class HTTPLayer(Layer):
                 return
         # Can we reuse context.server?
         can_reuse_context_connection = (
+                self.context.server not in self.connections and
                 self.context.server.connected and
                 self.context.server.tls == event.tls
         )
@@ -660,15 +673,6 @@ class HTTPLayer(Layer):
             open_command = commands.OpenConnection(connection)
             open_command.blocking = object()
             yield open_command
-
-    def make_stream(self) -> HttpStream:
-        ctx = self.context.fork()
-
-        stream = HttpStream(ctx)
-        if self.debug:
-            stream.debug = self.debug + "  "
-        self.event_to_child(stream, events.Start())
-        return stream
 
     def make_http_connection(self, connection: Server) -> None:
         if connection.tls and not connection.tls_established:
