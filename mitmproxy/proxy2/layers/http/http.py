@@ -349,6 +349,14 @@ class Http1Client(Http1Connection):
                         yield from self.send(e)
 
 
+class Http2Server:
+    pass  # TODO
+
+
+class Http2Client:
+    pass  # TODO
+
+
 class HttpStream(Layer):
     request_body_buf: bytes
     response_body_buf: bytes
@@ -617,9 +625,17 @@ class HTTPLayer(Layer):
                 raise ValueError(f"Unexpected event: {event}")
 
     def get_connection(self, event: GetHttpConnection):
-        # Do we already have a connection?
+        # Do we already have a connection we can re-use?
         for connection, handler in self.connections.items():
-            if event.connection_spec_matches(connection) and isinstance(handler, Http1Client):
+            connection_suitable = (
+                    event.connection_spec_matches(connection) and
+                    (
+                            isinstance(handler, Http2Client) or
+                            # see "tricky multiplexing edge case" in make_http_connection for an explanation
+                            isinstance(handler, Http1Client) and self.context.client.alpn != b"h2"
+                    )
+            )
+            if connection_suitable:
                 stream = self.stream_by_command.pop(event)
                 self.event_to_child(stream, GetHttpConnectionReply(event, (connection, None)))
                 return
@@ -661,7 +677,7 @@ class HTTPLayer(Layer):
             yield new_command
             return
 
-        if connection.tls_established and connection.alpn == b"h2":
+        if connection.alpn == b"h2":
             raise NotImplementedError
         else:
             self.connections[connection] = Http1Client(connection)
@@ -670,6 +686,21 @@ class HTTPLayer(Layer):
         for cmd in waiting:
             stream = self.stream_by_command.pop(cmd)
             self.event_to_child(stream, GetHttpConnectionReply(cmd, (connection, None)))
+
+            # Tricky multiplexing edge case: Assume a h2 client that sends two requests (or receives two responses)
+            # that neither have a content-length specified nor a chunked transfer encoding.
+            # We can't process these two flows to the same h1 connection as they would both have
+            # "read until eof" semantics. We could force chunked transfer encoding for requests, but can't enforce that
+            # for responses. The only workaround left is to open a separate connection for each flow.
+            if self.context.client.alpn == b"h2" and connection.alpn != b"h2":
+                for cmd in waiting[1:]:
+                    new_connection = Server(connection.address)
+                    new_connection.tls = connection.tls
+                    self.waiting_for_connection[new_connection].append(cmd)
+                    open_command = commands.OpenConnection(new_connection)
+                    open_command.blocking = object()
+                    yield open_command
+                break
 
     def event_to_child(
             self,
