@@ -191,7 +191,7 @@ if __name__ == "__main__":
 
     opts = moptions.Options()
     opts.add_option(
-        "connection_strategy", str, "lazy",
+        "connection_strategy", str, "eager",
         "Determine when server connections should be established.",
         choices=("eager", "lazy")
     )
@@ -200,6 +200,7 @@ if __name__ == "__main__":
 
     async def handle(reader, writer):
         layer_stack = [
+            lambda ctx: layers.ServerTLSLayer(ctx),
             lambda ctx: layers.HTTPLayer(ctx, HTTPMode.regular),
             lambda ctx: setattr(ctx.server, "tls", True) or layers.ServerTLSLayer(ctx),
             lambda ctx: layers.ClientTLSLayer(ctx),
