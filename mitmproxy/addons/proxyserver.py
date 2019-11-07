@@ -30,11 +30,12 @@ class ProxyConnectionHandler(server.ConnectionHandler):
         super().__init__(r, w, options)
 
     async def handle_hook(self, hook: commands.Hook) -> None:
-        hook.data.reply = AsyncReply(hook.data)
-        await self.master.addons.handle_lifecycle(hook.name, hook.data)
-        await hook.data.reply.done.wait()
-        if hook.blocking:
-            self.server_event(events.HookReply(hook))
+        with self.timeout_watchdog.disarm():
+            hook.data.reply = AsyncReply(hook.data)
+            await self.master.addons.handle_lifecycle(hook.name, hook.data)
+            await hook.data.reply.done.wait()
+            if hook.blocking:
+                self.server_event(events.HookReply(hook))
 
     def log(self, message: str, level: str = "info") -> None:
         x = log.LogEntry(message, level)
@@ -97,9 +98,10 @@ class Proxyserver:
         self.server = None
 
     async def handle_connection(self, r, w):
-        await ProxyConnectionHandler(
+        handler = ProxyConnectionHandler(
             self.master,
             r,
             w,
             self.options
-        ).handle_client()
+        )
+        await handler.handle_client()

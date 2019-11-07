@@ -1,11 +1,10 @@
-import functools
 import typing
 
-from mitmproxy import ctx, log
+from mitmproxy import ctx
 from mitmproxy.net.tls import is_tls_record_magic
 from mitmproxy.proxy.config import HostMatcher
 from mitmproxy.proxy.protocol.http import HTTPMode
-from mitmproxy.proxy2 import layer, layers, context
+from mitmproxy.proxy2 import context, layer, layers
 from mitmproxy.proxy2.layers import modes
 from mitmproxy.proxy2.layers.glue import GLUE_DEBUG
 
@@ -28,7 +27,7 @@ class NextLayer:
     check_tcp: HostMatcher
 
     def __init__(self):
-        self.check_tcp = HostMatcher()
+        self.check_tcp = HostMatcher("tcp")
 
     def configure(self, updated):
         if "tcp_hosts" in updated:
@@ -59,30 +58,35 @@ class NextLayer:
             raise NotImplementedError()
 
         # 2. Always insert a TLS layer as second layer, even if there's neither client nor server
-        # tls. An addon may upgrade from http to https, in which case we need a TLS layer.
-        if s((modes.HttpProxy, modes.ReverseProxy)):
-            if client_tls:
-                # For HttpProxy, this is a "Secure Web Proxy" (https://www.chromium.org/developers/design-documents/secure-web-proxy)
-                return layers.ClientTLSLayer(context)
-            else:
-                return layers.ServerTLSLayer(context)
+        # tls. An addon may upgrade from http to https, in which case we need a server TLS layer.
+        if s(modes.HttpProxy) or s(modes.ReverseProxy):
+            return layers.ServerTLSLayer(context)
         elif len(context.layers) == 1:
             raise NotImplementedError()
+
+        if s(modes.HttpProxy, layers.ServerTLSLayer) and client_tls:
+            # For HttpProxy, this is a "Secure Web Proxy" (https://www.chromium.org/developers/design-documents/secure-web-proxy)
+            return layers.ClientTLSLayer(context)
 
         # 3. Setup the first HTTP layer for a regular HTTP proxy or an upstream proxy.
         if any([
             s(modes.HttpProxy, layers.ServerTLSLayer),
-            s(modes.HttpProxy, layers.ClientTLSLayer, layers.ServerTLSLayer),
+            s(modes.HttpProxy, layers.ServerTLSLayer, layers.ClientTLSLayer),
         ]):
-            return layers.OldHTTPLayer(context, HTTPMode.regular)
+            return layers.HTTPLayer(context, HTTPMode.regular)
 
-        if ctx.options.mode.startswith("upstream:") and len(context.layers) <= 3 and isinstance(top_layer, layers.ServerTLSLayer):
+        if ctx.options.mode.startswith("upstream:") and len(context.layers) <= 3 and isinstance(top_layer,
+                                                                                                layers.ServerTLSLayer):
             raise NotImplementedError()
 
         # 4. Check for other TLS cases (e.g. after CONNECT).
         if client_tls:
-            context.server.tls = True
-            return layers.ClientTLSLayer(context)
+            # client tls requires a server tls layer as parent layer
+            if not isinstance(top_layer, layers.ServerTLSLayer):
+                context.server.tls = True
+                return layers.ServerTLSLayer(context)
+            else:
+                return layers.ClientTLSLayer(context)
 
         # 5. Check for --tcp
         if self.check_tcp(context.server.address):
@@ -92,7 +96,7 @@ class NextLayer:
         if isinstance(top_layer, layers.ServerTLSLayer):
             alpn = context.client.alpn
             if alpn == b"http/1.1":
-                return layers.OldHTTPLayer(context, HTTPMode.transparent) # TODO: replace this with ClientHTTP1Layer
+                return layers.OldHTTPLayer(context, HTTPMode.transparent)  # TODO: replace this with ClientHTTP1Layer
             elif alpn == b"h2":
                 return layers.ClientHTTP2Layer(context)
 
@@ -103,8 +107,7 @@ class NextLayer:
             return layers.TCPLayer(context)
 
         # 8. Assume HTTP1 by default.
-        return layers.GlueLayer(context)  # TODO
-        # return layers.OldHTTPLayer(context, HTTPMode.transparent)
+        return layers.HTTPLayer(context, HTTPMode.transparent)
 
     def make_top_layer(self, context):
         if ctx.options.mode == "regular":
@@ -118,4 +121,4 @@ class NextLayer:
         elif ctx.options.mode.startswith("upstream:"):
             raise NotImplementedError("Mode not implemented.")
         else:
-            raise NotImplementedError("Mode not implemented.")
+            raise NotImplementedError("Unknown mode.")
