@@ -1,6 +1,7 @@
-from mitmproxy.proxy2 import commands, events
-from mitmproxy.proxy2.layers import tcp
-from .. import tutils
+from mitmproxy.proxy2.commands import CloseConnection, Hook, OpenConnection, SendData
+from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
+from mitmproxy.proxy2.layers import TCPLayer
+from ..tutils import Placeholder, playbook, reply
 
 
 def test_open_connection(tctx):
@@ -9,82 +10,59 @@ def test_open_connection(tctx):
     because the server may send data first.
     """
     assert (
-        tutils.playbook(tcp.TCPLayer(tctx, True))
-        << commands.OpenConnection(tctx.server)
+            playbook(TCPLayer(tctx, True))
+            << OpenConnection(tctx.server)
     )
 
     tctx.server.connected = True
     assert (
-        tutils.playbook(tcp.TCPLayer(tctx, True))
-        << None
+            playbook(TCPLayer(tctx, True))
+            << None
     )
 
 
 def test_open_connection_err(tctx):
-    f = tutils.Placeholder()
+    f = Placeholder()
     assert (
-        tutils.playbook(tcp.TCPLayer(tctx))
-        << commands.Hook("tcp_start", f)
-        >> events.HookReply(-1)
-        << commands.OpenConnection(tctx.server)
-        >> events.OpenConnectionReply(-1, "Connect call failed")
-        << commands.Hook("tcp_error", f)
-        >> events.HookReply(-1)
-        << commands.CloseConnection(tctx.client)
+            playbook(TCPLayer(tctx))
+            << Hook("tcp_start", f)
+            >> reply()
+            << OpenConnection(tctx.server)
+            >> reply("Connect call failed")
+            << Hook("tcp_error", f)
+            >> reply()
+            << CloseConnection(tctx.client)
     )
 
 
 def test_simple(tctx):
     """open connection, receive data, send it to peer"""
-    f = tutils.Placeholder()
-    playbook = tutils.playbook(tcp.TCPLayer(tctx))
+    f = Placeholder()
 
     assert (
-        playbook
-        << commands.Hook("tcp_start", f)
-        >> events.HookReply(-1)
-        << commands.OpenConnection(tctx.server)
-        >> events.OpenConnectionReply(-1, None)
-        >> events.DataReceived(tctx.client, b"hello!")
-        << commands.Hook("tcp_message", f)
-        >> events.HookReply(-1)
-        << commands.SendData(tctx.server, b"hello!")
-        >> events.DataReceived(tctx.server, b"hi")
-        << commands.Hook("tcp_message", f)
-        >> events.HookReply(-1)
-        << commands.SendData(tctx.client, b"hi")
-        >> events.ConnectionClosed(tctx.server)
-        << commands.CloseConnection(tctx.client)
-        << commands.Hook("tcp_end", f)
-        >> events.HookReply(-1)
-        >> events.ConnectionClosed(tctx.client)
-        << None
+            playbook(TCPLayer(tctx))
+            << Hook("tcp_start", f)
+            >> reply()
+            << OpenConnection(tctx.server)
+            >> reply(None)
+            >> DataReceived(tctx.client, b"hello!")
+            << Hook("tcp_message", f)
+            >> reply()
+            << SendData(tctx.server, b"hello!")
+            >> DataReceived(tctx.server, b"hi")
+            << Hook("tcp_message", f)
+            >> reply()
+            << SendData(tctx.client, b"hi")
+            >> ConnectionClosed(tctx.server)
+            << CloseConnection(tctx.client)
+            >> ConnectionClosed(tctx.client)
+            << CloseConnection(tctx.server)
+            << Hook("tcp_end", f)
+            >> reply()
+            >> ConnectionClosed(tctx.client)
+            << None
     )
     assert len(f().messages) == 2
-
-
-def test_simple_explicit(tctx):
-    """
-    For comparison, test_simple without the playbook() sugar.
-    This is not substantially more code, but the playbook syntax feels cleaner to me.
-    """
-    layer = tcp.TCPLayer(tctx)
-    tcp_start, = layer.handle_event(events.Start())
-    flow = tcp_start.data
-    assert tutils._eq(tcp_start, commands.Hook("tcp_start", flow))
-    open_conn, = layer.handle_event(events.HookReply(tcp_start))
-    assert tutils._eq(open_conn, commands.OpenConnection(tctx.server))
-    assert list(layer.handle_event(events.OpenConnectionReply(open_conn, None))) == []
-    tcp_msg, = layer.handle_event(events.DataReceived(tctx.client, b"hello!"))
-    assert tutils._eq(tcp_msg, commands.Hook("tcp_message", flow))
-    assert flow.messages[0].content == b"hello!"
-
-    send, = layer.handle_event(events.HookReply(tcp_msg))
-    assert tutils._eq(send, commands.SendData(tctx.server, b"hello!"))
-    close, tcp_end = layer.handle_event(events.ConnectionClosed(tctx.server))
-    assert tutils._eq(close, commands.CloseConnection(tctx.client))
-    assert tutils._eq(tcp_end, commands.Hook("tcp_end", flow))
-    assert list(layer.handle_event(events.HookReply(tcp_end))) == []
 
 
 def test_receive_data_before_server_connected(tctx):
@@ -92,38 +70,41 @@ def test_receive_data_before_server_connected(tctx):
     assert that data received before a server connection is established
     will still be forwarded.
     """
-    f = tutils.Placeholder()
+    f = Placeholder()
     assert (
-        tutils.playbook(tcp.TCPLayer(tctx))
-        << commands.Hook("tcp_start", f)
-        >> events.HookReply(-1)
-        << commands.OpenConnection(tctx.server)
-        >> events.DataReceived(tctx.client, b"hello!")
-        >> events.OpenConnectionReply(-2, None)
-        << commands.Hook("tcp_message", f)
-        >> events.HookReply(-1)
-        << commands.SendData(tctx.server, b"hello!")
+            playbook(TCPLayer(tctx))
+            << Hook("tcp_start", f)
+            >> reply()
+            << OpenConnection(tctx.server)
+            >> DataReceived(tctx.client, b"hello!")
+            >> reply(None, to=-2)
+            << Hook("tcp_message", f)
+            >> reply()
+            << SendData(tctx.server, b"hello!")
     )
     assert f().messages
 
 
-def test_receive_data_after_server_disconnected(tctx):
+def test_receive_data_after_half_close(tctx):
     """
-    data received after a connection has been closed should just be discarded.
+    data received after the other connection has been half-closed should still be forwarded.
     """
-    f = tutils.Placeholder()
+    f = Placeholder()
     assert (
-        tutils.playbook(tcp.TCPLayer(tctx))
-        << commands.Hook("tcp_start", f)
-        >> events.HookReply(-1)
-        << commands.OpenConnection(tctx.server)
-        >> events.OpenConnectionReply(-1, None)
-        >> events.ConnectionClosed(tctx.server)
-        << commands.CloseConnection(tctx.client)
-        << commands.Hook("tcp_end", f)
-        >> events.HookReply(-1)
-        >> events.DataReceived(tctx.client, b"i'm late")
-        << None
+            playbook(TCPLayer(tctx))
+            << Hook("tcp_start", f)
+            >> reply()
+            << OpenConnection(tctx.server)
+            >> reply(None)
+            >> ConnectionClosed(tctx.server)
+            << CloseConnection(tctx.client)
+            >> DataReceived(tctx.client, b"i'm late")
+            << Hook("tcp_message", f)
+            >> reply()
+            << SendData(tctx.server, b"i'm late")
+            >> ConnectionClosed(tctx.client)
+            << CloseConnection(tctx.server)
+            << Hook("tcp_end", f)
+            >> reply()
+            << None
     )
-    # not included here as it has not been sent to the server.
-    assert not f().messages

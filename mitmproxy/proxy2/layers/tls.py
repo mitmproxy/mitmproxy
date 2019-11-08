@@ -6,7 +6,7 @@ from OpenSSL import SSL
 
 from mitmproxy.certs import CertStore
 from mitmproxy.net.tls import ClientHello
-from mitmproxy.proxy.protocol import tls
+from mitmproxy.proxy.protocol.tls import DEFAULT_CLIENT_CIPHERS
 from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2 import context
 from mitmproxy.proxy2.utils import expect
@@ -362,7 +362,7 @@ class ClientTLSLayer(_TLSLayer):
         ).get_cert(client.sni, (client.sni,))
         context.use_privatekey(privkey)
         context.use_certificate(cert.x509)
-        context.set_cipher_list(tls.DEFAULT_CLIENT_CIPHERS)
+        context.set_cipher_list(DEFAULT_CLIENT_CIPHERS)
 
         def alpn_select_callback(conn_, options):
             if server.alpn in options:

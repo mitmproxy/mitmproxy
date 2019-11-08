@@ -31,7 +31,7 @@ class StreamIO(typing.NamedTuple):
 
 class TimeoutWatchdog:
     last_activity: float
-    CONNECTION_TIMEOUT = 120
+    CONNECTION_TIMEOUT = 10 * 60
     can_timeout: asyncio.Event
     blocker: int
 
@@ -197,6 +197,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         asyncio.ensure_future(
                             self.shutdown_connection(command.connection)
                         )
+                elif isinstance(command, commands.GetSocket):
+                    socket = self.transports[command.connection].w.get_extra_info("socket")
+                    self.server_event(events.GetSocketReply(command, socket))
                 elif isinstance(command, glue.GlueGetConnectionHandler):
                     self.server_event(glue.GlueGetConnectionHandlerReply(command, self))
                 elif isinstance(command, commands.Hook):

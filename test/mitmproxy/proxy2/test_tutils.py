@@ -22,7 +22,7 @@ class TCommand(commands.Command):
 
 
 class TCommandReply(events.CommandReply):
-    pass
+    command: TCommand
 
 
 class TLayer(Layer):
@@ -52,7 +52,7 @@ def test_simple(tplaybook):
 
 
 def test_mismatch(tplaybook):
-    with pytest.raises(AssertionError, message="Playbook mismatch"):
+    with pytest.raises(AssertionError, match="Playbook mismatch"):
         assert (
             tplaybook
             >> TEvent([])
@@ -135,7 +135,7 @@ def test_fork_placeholder(tplaybook):
     assert f2() == p2_flow
 
     # re-using the old placeholder does not work.
-    with pytest.raises(AssertionError, message="Playbook mismatch"):
+    with pytest.raises(AssertionError, match="Playbook mismatch"):
         assert (
             p2
             >> TEvent([p2_flow])
@@ -146,7 +146,7 @@ def test_fork_placeholder(tplaybook):
 def test_unfinished(tplaybook):
     """We show a warning when playbooks aren't asserted."""
     tplaybook >> TEvent()
-    with pytest.raises(RuntimeError, message="Unfinished playbook"):
+    with pytest.raises(RuntimeError, match="Unfinished playbook"):
         tplaybook.__del__()
     tplaybook._errored = True
     tplaybook.__del__()

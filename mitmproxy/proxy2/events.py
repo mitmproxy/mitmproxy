@@ -3,6 +3,7 @@ When IO actions occur at the proxy server, they are passed down to layers as eve
 Events represent the only way for layers to receive new data from sockets.
 The counterpart to events are commands.
 """
+import socket
 import typing
 
 from mitmproxy.proxy2 import commands
@@ -62,7 +63,7 @@ class CommandReply(Event):
     Emitted when a command has been finished, e.g.
     when the master has replied or when we have established a server connection.
     """
-    command: typing.Union[commands.Command, int]
+    command: commands.Command
     reply: typing.Any
 
     def __init__(self, command: typing.Union[commands.Command, int], reply: typing.Any):
@@ -74,10 +75,19 @@ class CommandReply(Event):
             raise TypeError("CommandReply may not be instantiated directly.")
         return super().__new__(cls)
 
+    def __init_subclass__(cls, **kwargs):
+        command_cls = cls.__annotations__["command"]
+        if not issubclass(command_cls, commands.Command) and command_cls is not commands.Command:
+            raise RuntimeError(f"{command_cls} needs a properly annotated command attribute.")
+        command_reply_subclasses[command_cls] = cls
+
+
+command_reply_subclasses: typing.Dict[commands.Command, typing.Type[CommandReply]] = {}
+
 
 class OpenConnectionReply(CommandReply):
-    command: typing.Union[commands.OpenConnection, int]
-    reply: str
+    command: commands.OpenConnection
+    reply: typing.Optional[str]
 
     def __init__(
             self,
@@ -88,10 +98,22 @@ class OpenConnectionReply(CommandReply):
 
 
 class HookReply(CommandReply):
-    command: typing.Union[commands.Hook, int]
+    command: commands.Hook
 
-    def __init__(self, command: typing.Union[commands.Hook, int]):
+    def __init__(self, command: commands.Hook):
         super().__init__(command, None)
 
     def __repr__(self):
         return f"HookReply({repr(self.command)[5:-1]})"
+
+
+class GetSocketReply(CommandReply):
+    command: commands.GetSocket
+    reply: socket.socket
+
+    def __init__(
+            self,
+            command: typing.Union[commands.GetSocket, int],
+            socket: socket.socket
+    ):
+        super().__init__(command, socket)
