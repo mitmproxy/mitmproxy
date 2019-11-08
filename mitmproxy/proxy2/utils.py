@@ -18,7 +18,8 @@ def expect(*event_types):
             if isinstance(event, event_types):
                 yield from f(self, event)
             else:
-                raise AssertionError(f"Unexpected event type at {f}: Expected {event_types}, got {event}.")
+                event_types_str = '|'.join(e.__name__ for e in event_types)
+                raise AssertionError(f"Unexpected event type at {f.__qualname__}: Expected {event_types_str}, got {event}.")
 
         return wrapper
 

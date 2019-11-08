@@ -1,12 +1,13 @@
+import collections.abc
 import copy
 import difflib
 import itertools
 import typing
 
-import collections
-
 from mitmproxy.proxy2 import commands, context
 from mitmproxy.proxy2 import events
+from mitmproxy.proxy2.context import ConnectionState
+from mitmproxy.proxy2.events import command_reply_subclasses
 from mitmproxy.proxy2.layer import Layer, NextLayer
 
 TPlaybookEntry = typing.Union[commands.Command, events.Event]
@@ -14,8 +15,8 @@ TPlaybook = typing.List[TPlaybookEntry]
 
 
 def _eq(
-    a: TPlaybookEntry,
-    b: TPlaybookEntry
+        a: TPlaybookEntry,
+        b: TPlaybookEntry
 ) -> bool:
     """Compare two commands/events, and possibly update placeholders."""
     if type(a) != type(b):
@@ -43,24 +44,28 @@ def _eq(
 
 
 def eq(
-    a: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]],
-    b: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]]
+        a: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]],
+        b: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]]
 ):
     """
     Compare an indiviual event/command or a list of events/commands.
     """
-    if isinstance(a, collections.Iterable) and isinstance(b, collections.Iterable):
+    if isinstance(a, collections.abc.Iterable) and isinstance(b, collections.abc.Iterable):
         return all(
             _eq(x, y) for x, y in itertools.zip_longest(a, b)
         )
     return _eq(a, b)
 
 
-T = typing.TypeVar('T', bound=Layer)
+def _str(x: typing.Union[events.Event, commands.Command]):
+    arrow = ">>" if isinstance(x, events.Event) else "<<"
+    x = str(x) \
+        .replace('Placeholder:None', '<unset placeholder>') \
+        .replace('Placeholder:', '')
+    return f"{arrow} {x}"
 
 
-# noinspection PyPep8Naming
-class playbook(typing.Generic[T]):
+class playbook:
     """
     Assert that a layer emits the expected commands in reaction to a given sequence of events.
     For example, the following code asserts that the TCP layer emits an OpenConnection command
@@ -80,7 +85,7 @@ class playbook(typing.Generic[T]):
     x2 = list(t.handle_event(events.OpenConnectionReply(x1[-1])))
     assert x2 == []
     """
-    layer: T
+    layer: Layer
     """The base layer"""
     expected: TPlaybook
     """expected command/event sequence"""
@@ -92,10 +97,10 @@ class playbook(typing.Generic[T]):
     """If True, log statements are ignored."""
 
     def __init__(
-        self,
-        layer: T,
-        expected: typing.Optional[TPlaybook] = None,
-        ignore_log: bool = True
+            self,
+            layer: Layer,
+            expected: typing.Optional[TPlaybook] = None,
+            ignore_log: bool = True
     ):
         if expected is None:
             expected = [
@@ -130,11 +135,12 @@ class playbook(typing.Generic[T]):
             if isinstance(x, commands.Command):
                 pass
             else:
-                if isinstance(x, events.CommandReply):
-                    if isinstance(x.command, int) and abs(x.command) < len(self.actual):
-                        x.command = self.actual[x.command]
-                if hasattr(x, "_playbook_eval"):
-                    x._playbook_eval(self)
+                if hasattr(x, "playbook_eval"):
+                    x = self.expected[i] = x.playbook_eval(self)
+                if isinstance(x, events.OpenConnectionReply):
+                    x.command.connection.state = ConnectionState.OPEN
+                elif isinstance(x, events.ConnectionClosed):
+                    x.connection.state &= ~ConnectionState.CAN_READ
 
                 self.actual.append(x)
                 self.actual.extend(
@@ -148,14 +154,6 @@ class playbook(typing.Generic[T]):
 
         if not eq(self.expected, self.actual):
             self._errored = True
-
-            def _str(x):
-                arrow = ">>" if isinstance(x, events.Event) else "<<"
-                x = str(x) \
-                    .replace('Placeholder:None', '<unset placeholder>') \
-                    .replace('Placeholder:', '')
-                return f"{arrow} {x}"
-
             diff = "\n".join(difflib.ndiff(
                 [_str(x) for x in self.expected],
                 [_str(x) for x in self.actual]
@@ -178,6 +176,48 @@ class playbook(typing.Generic[T]):
         Returns a new playbook instance.
         """
         return copy.deepcopy(self)
+
+
+class reply(events.Event):
+    args: typing.Tuple[typing.Any, ...]
+    to: typing.Union[commands.Command, int]
+    side_effect: typing.Callable[[commands.Command], typing.Any]
+
+    def __init__(
+            self,
+            *args,
+            to: typing.Union[commands.Command, int] = -1,
+            side_effect: typing.Callable[[commands.Command], typing.Any] = lambda cmd: None
+    ):
+        """Utility method to reply to the latest hook in playbooks."""
+        self.args = args
+        self.to = to
+        self.side_effect = side_effect
+
+    def playbook_eval(self, playbook: playbook) -> events.CommandReply:
+        if isinstance(self.to, int):
+            expected = playbook.expected[:playbook.expected.index(self)]
+            assert abs(self.to) < len(expected)
+            to = expected[self.to]
+            if not isinstance(to, commands.Command):
+                raise AssertionError(f"There is no command at offset {self.to}: {to}")
+            else:
+                self.to = to
+        for cmd in reversed(playbook.actual):
+            if eq(self.to, cmd):
+                self.to = cmd
+                break
+        else:
+            actual_str = "\n".join(_str(x) for x in playbook.actual)
+            raise AssertionError(f"Expected command ({self.to}) did not occur:\n{actual_str}")
+
+        self.side_effect(self.to)
+        reply_cls = command_reply_subclasses[type(self.to)]
+        try:
+            inst = reply_cls(self.to, *self.args)
+        except TypeError as e:
+            raise ValueError(f"Cannot instantiate {reply_cls.__name__}: {e}")
+        return inst
 
 
 class _Placeholder:
@@ -209,6 +249,7 @@ class _Placeholder:
         return f"Placeholder:{str(self.obj)}"
 
 
+# noinspection PyPep8Naming
 def Placeholder() -> typing.Any:
     return _Placeholder()
 
@@ -222,7 +263,7 @@ class EchoLayer(Layer):
 
 
 def next_layer(
-    layer: typing.Union[typing.Type[Layer], typing.Callable[[context.Context], Layer]]
+        layer: typing.Union[typing.Type[Layer], typing.Callable[[context.Context], Layer]]
 ) -> events.HookReply:
     """
     Helper function to simplify the syntax for next_layer events from this:
@@ -238,7 +279,9 @@ def next_layer(
 
         << commands.Hook("next_layer", next_layer)
         >> tutils.next_layer(next_layer, tutils.EchoLayer)
+        >> tutils.reply(side_effect=lambda cmd: cmd.layer = tutils.EchoLayer(cmd.data.context)
     """
+    raise RuntimeError("Does tutils.reply(side_effect=lambda cmd: cmd.layer = tutils.EchoLayer(cmd.data.context) work?")
     if isinstance(layer, type):
         def make_layer(ctx: context.Context) -> Layer:
             return layer(ctx)

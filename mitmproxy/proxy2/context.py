@@ -27,6 +27,15 @@ class Connection:
     def connected(self):
         return self.state is ConnectionState.OPEN
 
+    @connected.setter
+    def connected(self, val: bool) -> None:
+        # We should really set .state, but verdict is still due if we even want to keep .state around.
+        # We allow setting .connected while we figure that out.
+        if val:
+            self.state = ConnectionState.OPEN
+        else:
+            self.state = ConnectionState.CLOSED
+
     def __repr__(self):
         return f"{type(self).__name__}({repr(self.__dict__)})"
 

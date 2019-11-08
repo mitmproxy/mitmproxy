@@ -1,4 +1,6 @@
-from mitmproxy import tcp, flow
+from typing import Optional
+
+from mitmproxy import flow, tcp
 from mitmproxy.proxy2 import commands, events
 from mitmproxy.proxy2.context import Context
 from mitmproxy.proxy2.layer import Layer
@@ -10,26 +12,25 @@ class TCPLayer(Layer):
     Simple TCP layer that just relays messages right now.
     """
     context: Context
-    ignore: bool
-    flow: tcp.TCPFlow
+    flow: Optional[tcp.TCPFlow]
 
     def __init__(self, context: Context, ignore: bool = False):
         super().__init__(context)
-        self.ignore = ignore
-        self.flow = None
+        if ignore:
+            self.flow = None
+        else:
+            self.flow = tcp.TCPFlow(self.context.client, self.context.server, True)
 
     @expect(events.Start)
     def start(self, _) -> commands.TCommandGenerator:
-        if not self.ignore:
-            self.flow = tcp.TCPFlow(self.context.client, self.context.server, True)
+        if self.flow:
             yield commands.Hook("tcp_start", self.flow)
 
         if not self.context.server.connected:
-            try:
-                yield commands.OpenConnection(self.context.server)
-            except IOError as e:
-                if not self.ignore:
-                    self.flow.error = flow.Error(str(e))
+            err = yield commands.OpenConnection(self.context.server)
+            if err:
+                if self.flow:
+                    self.flow.error = flow.Error(str(err))
                     yield commands.Hook("tcp_error", self.flow)
                 yield commands.CloseConnection(self.context.client)
                 self._handle_event = self.done
@@ -47,19 +48,21 @@ class TCPLayer(Layer):
             send_to = self.context.client
 
         if isinstance(event, events.DataReceived):
-            if self.ignore:
-                yield commands.SendData(send_to, event.data)
-            else:
+            if self.flow:
                 tcp_message = tcp.TCPMessage(from_client, event.data)
                 self.flow.messages.append(tcp_message)
                 yield commands.Hook("tcp_message", self.flow)
                 yield commands.SendData(send_to, tcp_message.content)
+            else:
+                yield commands.SendData(send_to, event.data)
 
         elif isinstance(event, events.ConnectionClosed):
             yield commands.CloseConnection(send_to)
-            if not self.ignore:
-                yield commands.Hook("tcp_end", self.flow)
-            self._handle_event = self.done
+            all_done = (not self.context.client.connected and not self.context.server.connected)
+            if all_done:
+                self._handle_event = self.done
+                if self.flow:
+                    yield commands.Hook("tcp_end", self.flow)
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def done(self, _):
