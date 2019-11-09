@@ -24,7 +24,7 @@ def test_open_connection(tctx):
 def test_open_connection_err(tctx):
     f = Placeholder()
     assert (
-            playbook(TCPLayer(tctx))
+            playbook(TCPLayer(tctx), hooks=True)
             << Hook("tcp_start", f)
             >> reply()
             << OpenConnection(tctx.server)
@@ -40,7 +40,7 @@ def test_simple(tctx):
     f = Placeholder()
 
     assert (
-            playbook(TCPLayer(tctx))
+            playbook(TCPLayer(tctx), hooks=True)
             << Hook("tcp_start", f)
             >> reply()
             << OpenConnection(tctx.server)
@@ -70,41 +70,27 @@ def test_receive_data_before_server_connected(tctx):
     assert that data received before a server connection is established
     will still be forwarded.
     """
-    f = Placeholder()
     assert (
             playbook(TCPLayer(tctx))
-            << Hook("tcp_start", f)
-            >> reply()
             << OpenConnection(tctx.server)
             >> DataReceived(tctx.client, b"hello!")
             >> reply(None, to=-2)
-            << Hook("tcp_message", f)
-            >> reply()
             << SendData(tctx.server, b"hello!")
     )
-    assert f().messages
 
 
 def test_receive_data_after_half_close(tctx):
     """
     data received after the other connection has been half-closed should still be forwarded.
     """
-    f = Placeholder()
     assert (
-            playbook(TCPLayer(tctx))
-            << Hook("tcp_start", f)
-            >> reply()
+            playbook(TCPLayer(tctx), hooks=False)
             << OpenConnection(tctx.server)
             >> reply(None)
             >> ConnectionClosed(tctx.server)
             << CloseConnection(tctx.client)
             >> DataReceived(tctx.client, b"i'm late")
-            << Hook("tcp_message", f)
-            >> reply()
             << SendData(tctx.server, b"i'm late")
             >> ConnectionClosed(tctx.client)
             << CloseConnection(tctx.server)
-            << Hook("tcp_end", f)
-            >> reply()
-            << None
     )

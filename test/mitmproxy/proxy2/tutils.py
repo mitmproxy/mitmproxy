@@ -57,7 +57,7 @@ def eq(
     return _eq(a, b)
 
 
-def _str(x: typing.Union[events.Event, commands.Command]):
+def _fmt_entry(x: TPlaybookEntry):
     arrow = ">>" if isinstance(x, events.Event) else "<<"
     x = str(x) \
         .replace('Placeholder:None', '<unset placeholder>') \
@@ -93,14 +93,17 @@ class playbook:
     """actual command/event sequence"""
     _errored: bool
     """used to check if playbook as been fully asserted"""
-    ignore_log: bool
-    """If True, log statements are ignored."""
+    logs: bool
+    """If False, the playbook specification doesn't contain log commands."""
+    hooks: bool
+    """If False, the playbook specification doesn't include hooks or hook replies. They are automatically replied to."""
 
     def __init__(
             self,
             layer: Layer,
+            hooks: bool = False,
+            logs: bool = False,
             expected: typing.Optional[TPlaybook] = None,
-            ignore_log: bool = True
     ):
         if expected is None:
             expected = [
@@ -111,11 +114,14 @@ class playbook:
         self.expected = expected
         self.actual = []
         self._errored = False
-        self.ignore_log = ignore_log
+        self.logs = logs
+        self.hooks = hooks
 
     def __rshift__(self, e):
         """Add an event to send"""
         assert isinstance(e, events.Event)
+        if not self.hooks and isinstance(e, events.HookReply):
+            raise ValueError(f"Playbook must not contain hook replies if hooks=False: {e}")
         self.expected.append(e)
         return self
 
@@ -124,39 +130,48 @@ class playbook:
         if c is None:
             return self
         assert isinstance(c, commands.Command)
-        assert not (self.ignore_log and isinstance(c, commands.Log))
+        if not self.logs and isinstance(c, commands.Log):
+            raise ValueError(f"Playbook must not contain log commands if logs=False: {c}")
+        if not self.hooks and isinstance(c, commands.Hook):
+            raise ValueError(f"Playbook must not contain hook commands if hooks=False: {c}")
         self.expected.append(c)
         return self
 
     def __bool__(self):
         """Determine if playbook is correct."""
         already_asserted = len(self.actual)
-        for i, x in enumerate(self.expected[already_asserted:], already_asserted):
+        i = already_asserted
+        while i < len(self.expected):
+            x = self.expected[i]
             if isinstance(x, commands.Command):
                 pass
             else:
                 if hasattr(x, "playbook_eval"):
                     x = self.expected[i] = x.playbook_eval(self)
-                if isinstance(x, events.OpenConnectionReply):
+                if isinstance(x, events.OpenConnectionReply) and not x.reply:
                     x.command.connection.state = ConnectionState.OPEN
                 elif isinstance(x, events.ConnectionClosed):
                     x.connection.state &= ~ConnectionState.CAN_READ
 
                 self.actual.append(x)
-                self.actual.extend(
-                    self.layer.handle_event(x)
-                )
-
-        if self.ignore_log:
-            self.actual = [
-                x for x in self.actual if not isinstance(x, commands.Log)
-            ]
+                cmds = list(self.layer.handle_event(x))
+                self.actual.extend(cmds)
+                if not self.logs:
+                    for offset, cmd in enumerate(cmds):
+                        if isinstance(cmd, commands.Log):
+                            self.expected.insert(i + 1 + offset, cmd)
+                if not self.hooks:
+                    last_cmd = self.actual[-1]
+                    if isinstance(last_cmd, commands.Hook):
+                        self.expected.insert(i + len(cmds), last_cmd)
+                        self.expected.insert(i + len(cmds) + 1, events.HookReply(last_cmd))
+            i += 1
 
         if not eq(self.expected, self.actual):
             self._errored = True
             diff = "\n".join(difflib.ndiff(
-                [_str(x) for x in self.expected],
-                [_str(x) for x in self.actual]
+                [_fmt_entry(x) for x in self.expected],
+                [_fmt_entry(x) for x in self.actual]
             ))
             raise AssertionError(f"Playbook mismatch!\n{diff}")
         else:
@@ -208,7 +223,7 @@ class reply(events.Event):
                 self.to = cmd
                 break
         else:
-            actual_str = "\n".join(_str(x) for x in playbook.actual)
+            actual_str = "\n".join(_fmt_entry(x) for x in playbook.actual)
             raise AssertionError(f"Expected command ({self.to}) did not occur:\n{actual_str}")
 
         self.side_effect(self.to)
