@@ -1,12 +1,10 @@
-import os
 import struct
+import time
 from typing import Any, Dict, Generator, Iterator, Optional, Tuple
 
 from OpenSSL import SSL
 
-from mitmproxy.certs import CertStore
-from mitmproxy.net.tls import ClientHello
-from mitmproxy.proxy.protocol.tls import DEFAULT_CLIENT_CIPHERS
+from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2 import context
 from mitmproxy.proxy2.utils import expect
@@ -69,7 +67,7 @@ def get_client_hello(data: bytes) -> Optional[bytes]:
     return None
 
 
-def parse_client_hello(data: bytes) -> Optional[ClientHello]:
+def parse_client_hello(data: bytes) -> Optional[net_tls.ClientHello]:
     """
     Check if the supplied bytes contain a full ClientHello message,
     and if so, parse it.
@@ -84,8 +82,11 @@ def parse_client_hello(data: bytes) -> Optional[ClientHello]:
     # Check if ClientHello is complete
     client_hello = get_client_hello(data)
     if client_hello:
-        return ClientHello(client_hello[4:])
+        return net_tls.ClientHello(client_hello[4:])
     return None
+
+
+HTTP_ALPNS = (b"h2", b"http/1.1", b"http/1.0", b"http/0.9")
 
 
 class EstablishServerTLS(commands.ConnectionCommand):
@@ -99,9 +100,17 @@ class EstablishServerTLSReply(events.CommandReply):
     """error message"""
 
 
+class TlsStart:
+    def __init__(self, conn: context.Connection, context: context.Context) -> None:
+        self.conn = conn
+        self.context = context
+        self.ssl_conn = None
+
+
 class _TLSLayer(layer.Layer):
     tls: Dict[context.Connection, SSL.Connection]
     child_layer: layer.Layer
+    ssl_context: Optional[SSL.Context] = None
 
     def __init__(self, context: context.Context):
         super().__init__(context)
@@ -140,15 +149,18 @@ class _TLSLayer(layer.Layer):
         except SSL.WantReadError:
             yield from self.tls_interact(conn)
             return False, None
-        except SSL.ZeroReturnError as e:
+        except SSL.Error as e:
             return False, repr(e)
         else:
             conn.tls_established = True
+            conn.sni = self.tls[conn].get_servername()
             conn.alpn = self.tls[conn].get_alpn_proto_negotiated()
+            conn.cipher_list = self.tls[conn].get_cipher_list()
+            conn.tls_version = self.tls[conn].get_protocol_version_name()
+            conn.timestamp_tls_setup = time.time()
             yield commands.Log(f"TLS established: {conn}")
             yield from self.receive(conn, b"")
             # TODO: Set all other connection attributes here
-            # there might already be data in the OpenSSL BIO, so we need to trigger its processing.
             return True, None
 
     def receive(self, conn: context.Connection, data: bytes):
@@ -213,8 +225,8 @@ class ServerTLSLayer(_TLSLayer):
         self.command_to_reply_to = {}
         self.child_layer = layer.NextLayer(self.context)
 
-    def negotiate(self, conn: context.Connection, data: bytes) -> Generator[
-        commands.Command, Any, Tuple[bool, Optional[str]]]:
+    def negotiate(self, conn: context.Connection, data: bytes) \
+            -> Generator[commands.Command, Any, Tuple[bool, Optional[str]]]:
         done, err = yield from super().negotiate(conn, data)
         if done or err:
             cmd = self.command_to_reply_to.pop(conn)
@@ -232,19 +244,11 @@ class ServerTLSLayer(_TLSLayer):
     def start_server_tls(self, conn: context.Server):
         assert conn not in self.tls
         assert conn.connected
+        conn.tls = True
 
-        ssl_context = SSL.Context(SSL.SSLv23_METHOD)
-        if conn.alpn_offers:
-            ssl_context.set_alpn_protos(conn.alpn_offers)
-        self.tls[conn] = SSL.Connection(ssl_context)
-
-        if conn.sni:
-            if conn.sni is True:
-                if self.context.client.sni:
-                    conn.sni = self.context.client.sni
-                else:
-                    conn.sni = conn.address[0].encode()
-            self.tls[conn].set_tlsext_host_name(conn.sni)
+        tls_start = TlsStart(conn, self.context)
+        yield commands.Hook("tls_start", tls_start)
+        self.tls[conn] = tls_start.ssl_conn
         self.tls[conn].set_connect_state()
 
         yield from self.negotiate(conn, b"")
@@ -274,6 +278,7 @@ class ClientTLSLayer(_TLSLayer):
         super().__init__(context)
         self.recv_buffer = bytearray()
         self.child_layer = layer.NextLayer(self.context)
+        self._handle_event = self.state_start
 
     @expect(events.Start)
     def state_start(self, _) -> commands.TCommandGenerator:
@@ -281,9 +286,6 @@ class ClientTLSLayer(_TLSLayer):
         self._handle_event = self.state_wait_for_clienthello
         yield from ()
 
-    _handle_event = state_start
-
-    @expect(events.DataReceived, events.ConnectionClosed)
     def state_wait_for_clienthello(self, event: events.Event):
         client = self.context.client
         if isinstance(event, events.DataReceived) and event.connection == client:
@@ -296,8 +298,7 @@ class ClientTLSLayer(_TLSLayer):
             if client_hello:
                 yield commands.Log(f"Client Hello: {client_hello}")
 
-                # TODO: Don't do double conversion
-                client.sni = client_hello.sni.encode("idna")
+                client.sni = client_hello.sni
                 client.alpn_offers = client_hello.alpn_protocols
 
                 client_tls_requires_server_connection = (
@@ -322,8 +323,10 @@ class ClientTLSLayer(_TLSLayer):
 
                 # In any case, we now have enough information to start server TLS if needed.
                 yield from self.event_to_child(events.Start())
+        elif isinstance(event, events.ConnectionClosed) and event.connection == client:
+            self.recv_buffer.clear()
         else:
-            raise NotImplementedError(event)  # TODO
+            yield from self.event_to_child(event)
 
     def start_server_tls(self):
         """
@@ -339,11 +342,6 @@ class ClientTLSLayer(_TLSLayer):
                 )
                 return err
 
-        server.alpn_offers = [
-            x for x in self.context.client.alpn_offers
-            if not (x.startswith(b"h2-") or x.startswith(b"spdy"))
-        ]
-
         err = yield EstablishServerTLS(server)
         if err:
             yield commands.Log(
@@ -352,36 +350,10 @@ class ClientTLSLayer(_TLSLayer):
             return err
 
     def start_client_tls(self) -> commands.TCommandGenerator:
-        # FIXME: Do this properly. Also adjust error message in negotiate()
         client = self.context.client
-        server = self.context.server
-        context = SSL.Context(SSL.SSLv23_METHOD)
-        cert, privkey, cert_chain = CertStore.from_store(
-            os.path.expanduser("~/.mitmproxy"), "mitmproxy",
-            self.context.options.key_size
-        ).get_cert(client.sni, (client.sni,))
-        context.use_privatekey(privkey)
-        context.use_certificate(cert.x509)
-        context.set_cipher_list(DEFAULT_CLIENT_CIPHERS)
-
-        def alpn_select_callback(conn_, options):
-            if server.alpn in options:
-                return server.alpn
-            elif b"h2" in options:
-                return b"h2"
-            elif b"http/1.1" in options:
-                return b"http/1.1"
-            elif b"http/1.0" in options:
-                return b"http/1.0"
-            elif b"http/0.9" in options:
-                return b"http/0.9"
-            else:
-                # FIXME: We MUST return something here. At this point we are at loss.
-                return options[0]
-
-        context.set_alpn_select_callback(alpn_select_callback)
-
-        self.tls[client] = SSL.Connection(context)
+        tls_start = TlsStart(client, self.context)
+        yield commands.Hook("tls_start", tls_start)
+        self.tls[client] = tls_start.ssl_conn
         self.tls[client].set_accept_state()
 
         yield from self.negotiate(client, bytes(self.recv_buffer))
@@ -390,11 +362,16 @@ class ClientTLSLayer(_TLSLayer):
     def negotiate(self, conn: context.Connection, data: bytes) -> Generator[commands.Command, Any, bool]:
         done, err = yield from super().negotiate(conn, data)
         if err:
+            if self.context.client.sni:
+                # TODO: Also use other sources than SNI
+                dest = " for " + self.context.client.sni.decode("idna")
+            else:
+                dest = ""
             yield commands.Log(
                 f"Client TLS Handshake failed. "
-                f"The client may not trust the proxy's certificate (SNI: {self.context.client.sni}).",
+                f"The client may not trust the proxy's certificate{dest} ({err}).",
                 level="warn"
-                # TODO: Also use other sources than SNI
+
             )
             yield commands.CloseConnection(self.context.client)
         return done

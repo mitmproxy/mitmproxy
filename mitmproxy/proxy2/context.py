@@ -21,7 +21,11 @@ class Connection:
     tls_established: bool = False
     alpn: Optional[bytes] = None
     alpn_offers: Sequence[bytes] = ()
+    cipher_list: Sequence[bytes] = ()
+    tls_version: Optional[str] = None
     sni: Union[bytes, bool, None]
+
+    timestamp_tls_setup: Optional[float] = None
 
     @property
     def connected(self):

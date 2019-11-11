@@ -2,6 +2,7 @@ import collections.abc
 import copy
 import difflib
 import itertools
+import sys
 import typing
 
 from mitmproxy.proxy2 import commands, context
@@ -101,7 +102,7 @@ class playbook:
     def __init__(
             self,
             layer: Layer,
-            hooks: bool = False,
+            hooks: bool = True,
             logs: bool = False,
             expected: typing.Optional[TPlaybook] = None,
     ):
@@ -196,13 +197,13 @@ class playbook:
 class reply(events.Event):
     args: typing.Tuple[typing.Any, ...]
     to: typing.Union[commands.Command, int]
-    side_effect: typing.Callable[[commands.Command], typing.Any]
+    side_effect: typing.Callable[[typing.Any], typing.Any]
 
     def __init__(
             self,
             *args,
             to: typing.Union[commands.Command, int] = -1,
-            side_effect: typing.Callable[[commands.Command], typing.Any] = lambda cmd: None
+            side_effect: typing.Callable[[typing.Any], None] = lambda x: None
     ):
         """Utility method to reply to the latest hook in playbooks."""
         self.args = args
@@ -226,6 +227,7 @@ class reply(events.Event):
             actual_str = "\n".join(_fmt_entry(x) for x in playbook.actual)
             raise AssertionError(f"Expected command ({self.to}) did not occur:\n{actual_str}")
 
+        assert isinstance(self.to, commands.Command)
         self.side_effect(self.to)
         reply_cls = command_reply_subclasses[type(self.to)]
         try:
@@ -272,14 +274,16 @@ def Placeholder() -> typing.Any:
 class EchoLayer(Layer):
     """Echo layer that sends all data back to the client in lowercase."""
 
-    def _handle_event(self, event: events.Event):
+    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
         if isinstance(event, events.DataReceived):
             yield commands.SendData(event.connection, event.data.lower())
 
 
 def next_layer(
-        layer: typing.Union[typing.Type[Layer], typing.Callable[[context.Context], Layer]]
-) -> events.HookReply:
+        layer: typing.Union[typing.Type[Layer], typing.Callable[[context.Context], Layer]],
+        *args,
+        **kwargs
+) -> reply:
     """
     Helper function to simplify the syntax for next_layer events from this:
 
@@ -294,21 +298,10 @@ def next_layer(
 
         << commands.Hook("next_layer", next_layer)
         >> tutils.next_layer(next_layer, tutils.EchoLayer)
-        >> tutils.reply(side_effect=lambda cmd: cmd.layer = tutils.EchoLayer(cmd.data.context)
     """
-    raise RuntimeError("Does tutils.reply(side_effect=lambda cmd: cmd.layer = tutils.EchoLayer(cmd.data.context) work?")
-    if isinstance(layer, type):
-        def make_layer(ctx: context.Context) -> Layer:
-            return layer(ctx)
-    else:
-        make_layer = layer
 
-    def set_layer(playbook: playbook) -> None:
-        last_command = playbook.actual[-1]
-        assert isinstance(last_command, commands.Hook)
-        assert isinstance(last_command.data, NextLayer)
-        last_command.data.layer = make_layer(last_command.data.context)
+    def set_layer(hook: commands.Hook) -> None:
+        assert isinstance(hook.data, NextLayer)
+        hook.data.layer = layer(hook.data.context)
 
-    reply = events.HookReply(-1)
-    reply._playbook_eval = set_layer
-    return reply
+    return reply(*args, side_effect=set_layer, **kwargs)
