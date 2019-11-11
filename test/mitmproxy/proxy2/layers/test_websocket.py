@@ -5,7 +5,7 @@ import pytest
 
 from mitmproxy.net.websockets import Frame, OPCODE
 from mitmproxy.proxy2 import commands, events
-from mitmproxy.proxy2.layers import websocket
+from mitmproxy.proxy2.layers.old import websocket
 from mitmproxy.test import tflow
 from .. import tutils
 
