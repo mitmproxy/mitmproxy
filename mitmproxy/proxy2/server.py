@@ -20,7 +20,6 @@ from mitmproxy import http, options as moptions
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events, layer, layers
 from mitmproxy.proxy2.context import Client, Connection, ConnectionState, Context
-from mitmproxy.proxy2.layers import glue
 from mitmproxy.utils import human
 
 
@@ -200,8 +199,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 elif isinstance(command, commands.GetSocket):
                     socket = self.transports[command.connection].w.get_extra_info("socket")
                     self.server_event(events.GetSocketReply(command, socket))
-                elif isinstance(command, glue.GlueGetConnectionHandler):
-                    self.server_event(glue.GlueGetConnectionHandlerReply(command, self))
                 elif isinstance(command, commands.Hook):
                     asyncio.ensure_future(
                         self.handle_hook(command)

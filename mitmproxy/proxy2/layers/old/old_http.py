@@ -12,7 +12,7 @@ from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import events, commands, context
 from mitmproxy.proxy2.context import Context
 from mitmproxy.proxy2.layer import Layer, NextLayer
-from mitmproxy.proxy2.layers import websocket
+from mitmproxy.proxy2.layers.old import websocket
 from mitmproxy.proxy2.utils import expect
 
 
