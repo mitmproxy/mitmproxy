@@ -196,17 +196,14 @@ CIPHER_ID_NAME_MAP = {
 }
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
-# https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
+# https://ssl-config.mozilla.org/#config=old
 DEFAULT_CLIENT_CIPHERS = (
-    "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:"
-    "ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:"
-    "ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:"
-    "ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:"
-    "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:"
-    "DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:"
-    "AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:"
-    "HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:"
-    "!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
+    b"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:"
+    b"ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:"
+    b"DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:"
+    b"ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:"
+    b"ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:"
+    b"AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA"
 )
 
 
@@ -330,7 +327,7 @@ class TlsLayer(base.Layer):
         if self._custom_server_sni is False:
             return None
         else:
-            return self._custom_server_sni or self._client_hello and self._client_hello.sni
+            return self._custom_server_sni or self._client_hello and self._client_hello.sni.decode("idna")
 
     @property
     def alpn_for_client_connection(self):
@@ -393,9 +390,9 @@ class TlsLayer(base.Layer):
         except exceptions.TlsException as e:
             raise exceptions.ClientHandshakeException(
                 "Cannot establish TLS with client (sni: {sni}): {e}".format(
-                    sni=self._client_hello.sni, e=repr(e)
+                    sni=self._client_hello.sni.decode("idna"), e=repr(e)
                 ),
-                self._client_hello.sni or repr(self.server_conn.address)
+                self._client_hello.sni.decode("idna") or repr(self.server_conn.address)
             )
 
     def _establish_tls_with_server(self):
@@ -493,7 +490,7 @@ class TlsLayer(base.Layer):
                 organization = upstream_cert.organization
         # Also add SNI values.
         if self._client_hello.sni:
-            sans.add(self._client_hello.sni.encode("idna"))
+            sans.add(self._client_hello.sni)
         if self._custom_server_sni:
             sans.add(self._custom_server_sni.encode("idna"))
 

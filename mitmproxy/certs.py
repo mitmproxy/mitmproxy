@@ -123,7 +123,7 @@ def dummy_cert(privkey, cacert, commonname, sans, organization):
         )
     ])
     cert.set_pubkey(cacert.get_pubkey())
-    cert.sign(privkey, "sha256")
+    cert.sign(privkey, b"sha256")
     return Cert(cert)
 
 
@@ -315,7 +315,12 @@ class CertStore:
             ret.append(b"*." + b".".join(parts[i:]))
         return ret
 
-    def get_cert(self, commonname: typing.Optional[bytes], sans: typing.List[bytes], organization: typing.Optional[bytes] = None):
+    def get_cert(
+            self,
+            commonname: typing.Optional[bytes],
+            sans: typing.List[bytes],
+            organization: typing.Optional[bytes] = None
+    ) -> typing.Tuple["Cert", OpenSSL.SSL.PKey, str]:
         """
             Returns an (cert, privkey, cert_chain) tuple.
 

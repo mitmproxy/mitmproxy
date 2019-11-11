@@ -95,7 +95,7 @@ class TestServerConnection:
     def test_repr(self):
         c = tflow.tserver_conn()
 
-        c.sni = 'foobar'
+        c.sni = b'foobar'
         c.tls_established = True
         c.alpn_proto_negotiated = b'h2'
         assert 'address:22' in repr(c)
