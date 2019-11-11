@@ -5,13 +5,13 @@ from test.mitmproxy.proxy2 import tutils
 class TestNextLayer:
     def test_simple(self, tctx):
         nl = layer.NextLayer(tctx)
-        playbook = tutils.playbook(nl)
+        playbook = tutils.playbook(nl, hooks=True)
 
         assert (
             playbook
             >> events.DataReceived(tctx.client, b"foo")
             << commands.Hook("next_layer", nl)
-            >> events.HookReply(-1)
+            >> tutils.reply()
             >> events.DataReceived(tctx.client, b"bar")
             << commands.Hook("next_layer", nl)
         )
@@ -21,7 +21,7 @@ class TestNextLayer:
         nl.layer = tutils.EchoLayer(tctx)
         assert (
             playbook
-            >> events.HookReply(-1)
+            >> tutils.reply()
             << commands.SendData(tctx.client, b"foo")
             << commands.SendData(tctx.client, b"bar")
         )
@@ -45,7 +45,7 @@ class TestNextLayer:
 
         assert (
             playbook
-            >> events.HookReply(-2)
+            >> tutils.reply(to=-2)
             << commands.SendData(tctx.client, b"foo")
             << commands.SendData(tctx.client, b"bar")
         )
@@ -63,7 +63,7 @@ class TestNextLayer:
         handle = nl.handle_event
         assert (
             playbook
-            >> events.HookReply(-1)
+            >> tutils.reply()
             << commands.SendData(tctx.client, b"foo")
         )
         sd, = handle(events.DataReceived(tctx.client, b"bar"))

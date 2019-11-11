@@ -24,7 +24,7 @@ def test_open_connection(tctx):
 def test_open_connection_err(tctx):
     f = Placeholder()
     assert (
-            playbook(TCPLayer(tctx), hooks=True)
+            playbook(TCPLayer(tctx))
             << Hook("tcp_start", f)
             >> reply()
             << OpenConnection(tctx.server)
@@ -40,7 +40,7 @@ def test_simple(tctx):
     f = Placeholder()
 
     assert (
-            playbook(TCPLayer(tctx), hooks=True)
+            playbook(TCPLayer(tctx))
             << Hook("tcp_start", f)
             >> reply()
             << OpenConnection(tctx.server)
@@ -71,7 +71,7 @@ def test_receive_data_before_server_connected(tctx):
     will still be forwarded.
     """
     assert (
-            playbook(TCPLayer(tctx))
+            playbook(TCPLayer(tctx), hooks=False)
             << OpenConnection(tctx.server)
             >> DataReceived(tctx.client, b"hello!")
             >> reply(None, to=-2)

@@ -38,7 +38,7 @@ class TLayer(Layer):
 
 @pytest.fixture
 def tplaybook(tctx):
-    return tutils.playbook(TLayer(tctx), [])
+    return tutils.playbook(TLayer(tctx), expected=[])
 
 
 def test_simple(tplaybook):
@@ -158,7 +158,7 @@ def test_command_reply(tplaybook):
         tplaybook
         >> TEvent()
         << TCommand()
-        >> TCommandReply(-1, 42)
+        >> tutils.reply(42)
     )
     assert tplaybook.actual[1] == tplaybook.actual[2].command
 

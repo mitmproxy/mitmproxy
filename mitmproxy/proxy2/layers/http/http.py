@@ -13,7 +13,7 @@ from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events
 from mitmproxy.proxy2.context import Client, Connection, Context, Server
 from mitmproxy.proxy2.layer import Layer, NextLayer
-from mitmproxy.proxy2.layers.tls import EstablishServerTLS, EstablishServerTLSReply
+from mitmproxy.proxy2.layers.tls import EstablishServerTLS, EstablishServerTLSReply, HTTP_ALPNS
 from mitmproxy.proxy2.utils import expect
 from mitmproxy.utils import human
 
@@ -676,6 +676,9 @@ class HTTPLayer(Layer):
 
     def make_http_connection(self, connection: Server) -> None:
         if connection.tls and not connection.tls_established:
+            connection.alpn_offers = list(HTTP_ALPNS)
+            if not self.context.options.http2:
+                connection.alpn_offers.remove(b"h2")
             new_command = EstablishServerTLS(connection)
             new_command.blocking = object()
             yield new_command
