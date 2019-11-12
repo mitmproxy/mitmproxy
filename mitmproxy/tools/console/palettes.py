@@ -13,24 +13,34 @@ class Palette:
 
         # Status bar & heading
         'heading', 'heading_key', 'heading_inactive',
+        'focus','header', 
 
         # Help
-        'key', 'head', 'text',
+        'key', 'head', 'text','error', "warn", "alert",'highlight', 
 
         # Options
         'option_selected', 'option_active', 'option_active_selected',
         'option_selected_key',
 
-        # List and Connections
-        'method',
-        'method_get', 'method_post', 'method_delete', 'method_other', 'method_head', 'method_put', 'method_http2_push',
+        # Methods 
+        'method', 'method_get', 'method_post', 'method_delete', 'method_other', 'method_head', 'method_put', 
+        'method_http2_push',
+
+        # Schemes
         'scheme_http', 'scheme_https', 'scheme_other',
+        
+        # URL
         'url_punctuation', 'url_domain', 'url_filename', 'url_extension', 'url_query_key', 'url_query_value',
         'content_none', 'content_text', 'content_script', 'content_media', 'content_data', 'content_raw', 'content_other',
-        'focus',
+
+         # Resoponse  
         'code_200', 'code_300', 'code_400', 'code_500', 'code_other',
-        'error', "warn", "alert",
-        'header', 'highlight', 'intercept', 'replay', 'mark',
+        
+        # TCP Message
+        'open_connection', 'closed_connection',
+
+        # States
+        'intercept', 'replay', 'mark',
 
         # Hex view
         'offset',
@@ -175,6 +185,10 @@ class LowDark(Palette):
         focusfield_error = ('dark red', 'light gray'),
         field_error = ('dark red', 'default'),
         editfield = ('white', 'default'),
+
+        # TCP Message
+        open_connection = ('dark green', 'default'),
+        closed_connection = ('dark gray', 'default'),
 
 
         commander_command = ('white,bold', 'default'),
@@ -450,6 +464,10 @@ class SolarizedDark(LowDark):
         highlight = (sol_base01, 'default'),
         intercept = (sol_red, 'default',),
         replay = (sol_green, 'default',),
+
+        # TCP Message
+        open_connection = ('light green', 'default'),
+        closed_connection = ('light gray', 'default'),
 
         # Hex view
         offset = (sol_cyan, 'default'),

@@ -355,7 +355,7 @@ def raw_format_tcp_table(f):
 
     if f["intercepted"] and not f["acked"]:
         uc = "intercept"
-    elif f["active"] or f["focus"]:
+    elif f["focus"]:
         uc = "title"
     else:
         uc = "text"
@@ -369,9 +369,16 @@ def raw_format_tcp_table(f):
     req.append(fcol(fixlen("PROTO", 8), "scheme_other"))
     req.append(fcol(fixlen("S:" + f["stream_index"], 8), "scheme_other"))
     req.append(fcol(fixlen("M:" + f["msg_index"], 8), "scheme_other"))
+    req.append(fcol(fixlen("T:" + f["msg_total"], 8), "scheme_other"))
     req.append(fcol(f["client"], uc))
-    req.append(fcol(fixlen(f["direction"], 3), "scheme_other"))
-    req.append(('weight', 0.08, TruncatedText(f["server"], colorize_req(f["server"]), 'left')))
+
+    if f['active']:
+        direction_color = "open_connection"
+    else:
+        direction_color = "closed_connection"
+
+    req.append(fcol(fixlen(f["direction"], 3), direction_color ))
+    req.append(truncated_plain(f["server"], uc,align='left'))
 
     if f['active']:
         uc = "method_get"
@@ -649,11 +656,26 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='
     if f.reply and f.reply.state == "committed":
         acked = True
     if isinstance(f, TCPViewEntry):
+        total: int
+        message_index: int
+        intercept: bool
+
+        message_index = f.message_index
+        intercept = False
+
+        if f.messages is not None:
+            total = len(f.messages) 
+        else:
+            total = 0
+
+        if message_index == (total - 1):
+            intercept = True
+
         d = dict(
             focus=focus,
             extended=extended,
             cols=cols,
-            intercepted=f.intercepted,
+            intercepted=intercept,
             active=f.server_conn.connected(),
             acked=acked,
             msg_timestamp=f.timestamp,
@@ -662,8 +684,8 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='
             direction=str(f.direction),
             client=str(f.client),
             server=str(f.server),
-            msg_index=str(f.message_index),
-            msg_total=str(len(f.messages)),
+            msg_index=str(message_index),
+            msg_total=str(total),
             msg_len=str(len(f.message.content)),
             err_msg=f.error.msg if f.error else None,
             duration=f.duration,

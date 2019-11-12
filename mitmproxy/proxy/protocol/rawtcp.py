@@ -56,7 +56,7 @@ class RawTCPLayer(base.Layer):
                     if not self.ignore:
                         f.new_message(tcp_message)
                         self.channel.ask("tcp_message", f)
-                    dst.sendall(tcp_message.content)
+                    dst.sendall(tcp_message.raw_content)
 
         except (socket.error, exceptions.TcpException, SSL.Error) as e:
             if not self.ignore:

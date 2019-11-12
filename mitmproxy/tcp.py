@@ -15,6 +15,7 @@ class TCPMessage(serializable.Serializable):
         self.id = str(uuid.uuid4())
         self._raw_content = raw 
         self.timestamp = timestamp or time.time()
+        self.encoding = None
 
     @classmethod
     def from_state(cls, state):
@@ -22,13 +23,13 @@ class TCPMessage(serializable.Serializable):
 
     @property
     def content(self):
-        return self.raw_content
-        #TODO figure out raw/content distinction 
+        if self.encoding is None:
+            return  self._raw_content
+        #TODO ADD ENCODING SUPPORT
 
     @property
     def raw_content(self):
         return self._raw_content
-        #TODO figure out raw/content distinction 
 
     @raw_content.setter
     def raw_content(self, raw):
@@ -70,18 +71,6 @@ class TCPFlow(flow.Flow):
     def messages(self):
         return list(map(lambda entry: self._messages[entry], self._message_order)) 
 
-    def get_message_by_id(self, message_id):
-        return self._messages[message_id]
-
-    def get_message_index(self, message_id):
-        return self._message_order.index(message_id)
-
-    def get_message_by_index(self, index):
-        return self._messages[self._message_order[index]]
-
-    def __repr__(self):
-        return "<TCPFlow ({} messages)>".format(len(self.messages))
-
     @property
     def raw_content(self):
         raw = bytes()
@@ -95,6 +84,18 @@ class TCPFlow(flow.Flow):
         for message in self.messages:
            content += message.content
         return content
+
+    def get_message_by_id(self, message_id):
+        return self._messages[message_id]
+
+    def get_message_index(self, message_id):
+        return self._message_order.index(message_id)
+
+    def get_message_by_index(self, index):
+        return self._messages[self._message_order[index]]
+
+    def __repr__(self):
+        return "<TCPFlow ({} messages)>".format(len(self.messages))
 
 
 class TCPViewEntry(flow.Flow):
@@ -117,9 +118,11 @@ class TCPViewEntry(flow.Flow):
     def direction(self):
         direction = self.message.from_client
         return "-->" if direction else "<--"
+
     @property
     def client(self):
         return human.format_address(self.client_conn.address)
+
     @property
     def server(self):
         return human.format_address(self.server_conn.address)
@@ -133,6 +136,7 @@ class TCPViewEntry(flow.Flow):
             prev = self.flow.get_message_by_index(index-1).timestamp
             current = self.message.timestamp
             return current-prev
+
     @property
     def messages(self):
         return self.flow.messages 
@@ -193,6 +197,10 @@ class TCPViewEntry(flow.Flow):
     def metadata(self):
         return self.flow.metadata
  
+    @property
+    def killable(self):
+        return self.flow.killable()
+
     def get_state(self):
         return self.flow.get_state()
 
@@ -210,10 +218,6 @@ class TCPViewEntry(flow.Flow):
 
     def revert(self):
         self.flow.revert()
-
-    @property
-    def killable(self):
-        return self.flow.killable()
 
     def kill(self):
         self.flow.kill()
@@ -237,12 +241,3 @@ class TCPStream(TCPFlow):
     @property
     def messages(self):
         return self._messages
-
-    def get_message_by_id(self, message_id):
-        raise NotImplemented
-
-    def get_message_index(self, message_id):
-        raise NotImplemented
-
-    def get_message_by_index(self, index):
-        return self.messages[index]

@@ -563,6 +563,9 @@ class View(collections.abc.Sequence):
         view = tcp.TCPViewEntry(flow=f, message_id=f.messages[-1].id)
         self.add([view])
 
+    def tcp_end(self, f):
+        self.sig_view_refresh.send(self)
+
     def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Updates a list of flows. If flow is not in the state, it's ignored.
