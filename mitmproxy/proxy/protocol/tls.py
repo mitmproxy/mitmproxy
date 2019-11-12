@@ -198,12 +198,12 @@ CIPHER_ID_NAME_MAP = {
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://ssl-config.mozilla.org/#config=old
 DEFAULT_CLIENT_CIPHERS = (
-    b"ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:"
-    b"ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:"
-    b"DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:"
-    b"ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:"
-    b"ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:"
-    b"AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA"
+    "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:"
+    "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:"
+    "DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:"
+    "ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:"
+    "ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:"
+    "AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA"
 )
 
 
@@ -320,14 +320,18 @@ class TlsLayer(base.Layer):
         return self._server_tls
 
     @property
-    def server_sni(self):
+    def server_sni(self) -> Optional[str]:
         """
         The Server Name Indication we want to send with the next server TLS handshake.
         """
         if self._custom_server_sni is False:
             return None
+        elif self._custom_server_sni:
+            return self._custom_server_sni
+        elif self._client_hello and self._client_hello.sni:
+            return self._client_hello.sni.decode("idna")
         else:
-            return self._custom_server_sni or self._client_hello and self._client_hello.sni.decode("idna")
+            return None
 
     @property
     def alpn_for_client_connection(self):
@@ -388,11 +392,12 @@ class TlsLayer(base.Layer):
             # raises ann error.
             self.client_conn.rfile.peek(1)
         except exceptions.TlsException as e:
+            sni_str = self._client_hello.sni and self._client_hello.sni.decode("idna")
             raise exceptions.ClientHandshakeException(
                 "Cannot establish TLS with client (sni: {sni}): {e}".format(
-                    sni=self._client_hello.sni.decode("idna"), e=repr(e)
+                    sni=sni_str, e=repr(e)
                 ),
-                self._client_hello.sni.decode("idna") or repr(self.server_conn.address)
+                sni_str or repr(self.server_conn.address)
             )
 
     def _establish_tls_with_server(self):

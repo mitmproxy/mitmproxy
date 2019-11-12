@@ -57,7 +57,8 @@ class RootContext:
                 except exceptions.TlsProtocolException as e:
                     self.log("Cannot parse Client Hello: %s" % repr(e), "error")
                 else:
-                    is_filtered = self.config.check_filter((client_hello.sni.decode("idna"), 443))
+                    sni_str = client_hello.sni and client_hello.sni.decode("idna")
+                    is_filtered = self.config.check_filter((sni_str, 443))
             if is_filtered:
                 return protocol.RawTCPLayer(top_layer, ignore=True)
 

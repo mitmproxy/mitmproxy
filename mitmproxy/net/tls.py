@@ -474,8 +474,7 @@ class ClientHello:
             return cls(raw_client_hello)
         except EOFError as e:
             raise exceptions.TlsProtocolException(
-                'Cannot parse Client Hello: %s, Raw Client Hello: %s' %
-                (repr(e), binascii.hexlify(raw_client_hello))
+                f"Cannot parse Client Hello: {e!r}, Raw Client Hello: {binascii.hexlify(raw_client_hello)!r}"
             )
 
     def __repr__(self):

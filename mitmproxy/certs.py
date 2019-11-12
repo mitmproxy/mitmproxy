@@ -123,7 +123,7 @@ def dummy_cert(privkey, cacert, commonname, sans, organization):
         )
     ])
     cert.set_pubkey(cacert.get_pubkey())
-    cert.sign(privkey, b"sha256")
+    cert.sign(privkey, "sha256")
     return Cert(cert)
 
 

@@ -584,7 +584,7 @@ class Focus:
     """
     def __init__(self, v: View) -> None:
         self.view = v
-        self._flow: mitmproxy.flow.Flow = None
+        self._flow: typing.Optional[mitmproxy.flow.Flow] = None
         self.sig_change = blinker.Signal()
         if len(self.view):
             self.flow = self.view[0]

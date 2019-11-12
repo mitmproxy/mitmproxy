@@ -1,10 +1,10 @@
+import codecs
 import io
 import re
-import codecs
-from typing import AnyStr, Optional, cast, Iterable
+from typing import Iterable, Optional, Union, cast
 
 
-def always_bytes(str_or_bytes: Optional[AnyStr], *encode_args) -> Optional[bytes]:
+def always_bytes(str_or_bytes: Union[str, bytes, None], *encode_args) -> Optional[bytes]:
     if isinstance(str_or_bytes, bytes) or str_or_bytes is None:
         return cast(Optional[bytes], str_or_bytes)
     elif isinstance(str_or_bytes, str):
@@ -13,13 +13,15 @@ def always_bytes(str_or_bytes: Optional[AnyStr], *encode_args) -> Optional[bytes
         raise TypeError("Expected str or bytes, but got {}.".format(type(str_or_bytes).__name__))
 
 
-def always_str(str_or_bytes: Optional[AnyStr], *decode_args) -> Optional[str]:
+def always_str(str_or_bytes: Union[str, bytes, None], *decode_args) -> Optional[str]:
     """
     Returns,
         str_or_bytes unmodified, if
     """
-    if isinstance(str_or_bytes, str) or str_or_bytes is None:
-        return cast(Optional[str], str_or_bytes)
+    if str_or_bytes is None:
+        return None
+    if isinstance(str_or_bytes, str):
+        return cast(str, str_or_bytes)
     elif isinstance(str_or_bytes, bytes):
         return str_or_bytes.decode(*decode_args)
     else:
@@ -38,7 +40,6 @@ _control_char_trans[127] = ord(".")  # 0x2421
 _control_char_trans_newline = _control_char_trans.copy()
 for x in ("\r", "\n", "\t"):
     del _control_char_trans_newline[ord(x)]
-
 
 _control_char_trans = str.maketrans(_control_char_trans)
 _control_char_trans_newline = str.maketrans(_control_char_trans_newline)

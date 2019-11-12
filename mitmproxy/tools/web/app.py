@@ -5,6 +5,7 @@ import logging
 import os.path
 import re
 from io import BytesIO
+from typing import ClassVar, Optional
 
 import tornado.escape
 import tornado.web
@@ -50,6 +51,8 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         f["error"] = flow.error.get_state()
 
     if isinstance(flow, http.HTTPFlow):
+        content_length: Optional[int]
+        content_hash: Optional[str]
         if flow.request:
             if flow.request.raw_content:
                 content_length = len(flow.request.raw_content)
@@ -193,7 +196,7 @@ class FilterHelp(RequestHandler):
 
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
-    connections: set = None
+    connections: ClassVar[set]
 
     def open(self):
         self.connections.add(self)
@@ -213,7 +216,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
 
 class ClientConnection(WebSocketEventBroadcaster):
-    connections: set = set()
+    connections: ClassVar[set] = set()
 
 
 class Flows(RequestHandler):

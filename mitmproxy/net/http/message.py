@@ -82,7 +82,7 @@ class Message(serializable.Serializable):
     def raw_content(self, content):
         self.data.content = content
 
-    def get_content(self, strict: bool=True) -> bytes:
+    def get_content(self, strict: bool=True) -> Optional[bytes]:
         """
         The uncompressed HTTP message body as bytes.
 
@@ -195,10 +195,9 @@ class Message(serializable.Serializable):
 
         See also: :py:attr:`content`, :py:class:`raw_content`
         """
-        if self.raw_content is None:
-            return None
-
         content = self.get_content(strict)
+        if content is None:
+            return None
         enc = self._guess_encoding(content)
         try:
             return encoding.decode(content, enc)
