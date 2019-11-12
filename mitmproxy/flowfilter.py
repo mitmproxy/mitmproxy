@@ -44,7 +44,7 @@ from mitmproxy import flow
 from mitmproxy.utils import strutils
 
 import pyparsing as pp
-from typing import Callable, Sequence, Type  # noqa
+from typing import Callable, Sequence, Type, Optional, ClassVar
 
 
 def only(*types):
@@ -69,8 +69,8 @@ class _Token:
 
 
 class _Action(_Token):
-    code: str = None
-    help: str = None
+    code: ClassVar[str]
+    help: ClassVar[str]
 
     @classmethod
     def make(klass, s, loc, toks):
@@ -539,7 +539,7 @@ bnf = _make()
 TFilter = Callable[[flow.Flow], bool]
 
 
-def parse(s: str) -> TFilter:
+def parse(s: str) -> Optional[TFilter]:
     try:
         flt = bnf.parseString(s, parseAll=True)[0]
         flt.pattern = s

@@ -55,7 +55,7 @@ class CommandBuffer:
         self.text = self.flatten(start)
         # Cursor is always within the range [0:len(buffer)].
         self._cursor = len(self.text)
-        self.completion: CompletionState = None
+        self.completion: typing.Optional[CompletionState] = None
 
     @property
     def cursor(self) -> int:
