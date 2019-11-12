@@ -13,7 +13,7 @@ import sys
 from mitmproxy import exceptions
 import mitmproxy.types
 
-def maybequote(value):
+def escape_and_quote(value):
     """
     This function takes the output from the lexer and puts it between quotes 
     in the following cases:
@@ -245,7 +245,7 @@ class CommandManager(mitmproxy.types._CommandBase):
             #     ctx.log.info('[gilga] before parse.append. value = %s' % parts[i])
             parse.append(
                 ParseResult(
-                    value=maybequote(parts[i]),
+                    value=escape_and_quote(parts[i]),
                     type=typ,
                     valid=valid,
                 )
