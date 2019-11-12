@@ -70,16 +70,11 @@ class CommandBuffer:
         else:
             self._cursor = x
 
-    def maybequote(self, value):
-        if " " in value and not value.startswith("\""):
-            return "\"%s\"" % value
-        return value
-
     def parse_quoted(self, txt):
         parts, remhelp = self.master.commands.parse_partial(txt)
         for i, p in enumerate(parts):
             parts[i] = mitmproxy.command.ParseResult(
-                value = self.maybequote(p.value),
+                value = p.value,
                 type = p.type,
                 valid = p.valid
             )
@@ -145,7 +140,7 @@ class CommandBuffer:
     def backspace(self) -> None:
         if self.cursor == 0:
             return
-        self.text = self.flatten(self.text[:self.cursor - 1] + self.text[self.cursor:])
+        self.text = self.text[:self.cursor - 1] + self.text[self.cursor:]
         self.cursor = self.cursor - 1
         self.completion = None
 
@@ -153,8 +148,8 @@ class CommandBuffer:
         """
             Inserts text at the cursor.
         """
-        self.text = self.flatten(self.text[:self.cursor] + k + self.text[self.cursor:])
-        self.cursor += 1
+        self.text = self.text[:self.cursor] + k + self.text[self.cursor:]
+        self.cursor += len(k)
         self.completion = None
 
 

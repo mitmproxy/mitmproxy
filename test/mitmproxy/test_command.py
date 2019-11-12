@@ -249,10 +249,10 @@ class TestCommand:
                 ["str"]
             ],
             [
-                "flow \"one two\"",
+                "flow \"three four\"",
                 [
                     command.ParseResult(value = "flow", type = mitmproxy.types.Cmd, valid = True),
-                    command.ParseResult(value = "one two", type = flow.Flow, valid = False),
+                    command.ParseResult(value = '"three four"', type = flow.Flow, valid = False),
                 ],
                 ["str"]
             ],
@@ -270,7 +270,7 @@ def test_simple():
         c = command.CommandManager(tctx.master)
         a = TAddon()
         c.add("one.two", a.cmd1)
-        assert c.commands["one.two"].help == "cmd1 help"
+        assert(c.commands["one.two"].help == "cmd1 help")
         assert(c.execute("one.two foo") == "ret foo")
         assert(c.call("one.two", "foo") == "ret foo")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
@@ -281,7 +281,7 @@ def test_simple():
             c.execute("one.two too many args")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.call("nonexistent")
-        with pytest.raises(exceptions.CommandError, match="No escaped"):
+        with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.execute("\\")
 
         c.add("empty", a.empty)

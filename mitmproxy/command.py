@@ -13,6 +13,46 @@ import sys
 from mitmproxy import exceptions
 import mitmproxy.types
 
+def maybequote(value):
+    """
+    This function takes the output from the lexer and puts it between quotes 
+    in the following cases:
+        * There is a space in the string: The only way a token from the lexer can have a space in it is if it was between quotes
+        * There is one or more quotes in the middle of the string: The only way for a token to have a quote in it that is not escaped is if it was escaped prior to being processed by the lexer. For example, the string `"s1 \" s2"` would come back from the lexer as `s1 " s2`.
+
+    Any quotes that are in the middle of the string and that are not escaped will also be escaped (by placing a \ in front of it).
+    This function only deals with double quotes and they are the only ones that should be used. 
+    """
+
+    new_value = ""
+    last_pos = len(value) - 1
+
+    for pos, char in enumerate(value):
+        if pos == 0:
+            new_value += char
+            continue
+
+        # if pos == last_pos:
+        #     new_value += char
+        #     break
+
+        if char in " \n\r\t":
+            new_value += char
+            continue
+
+        if char == '"':
+            if value[pos-1] != '\\':
+                new_value += '\\'
+
+        new_value += char
+
+    value = new_value
+
+    if ((" " in value) or ('"' in value)) and not (value.startswith("\"") or value.startswith("'")):
+        return "\"%s\"" % value
+
+    return value
+
 
 def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
     sig = inspect.signature(f)
@@ -201,9 +241,11 @@ class CommandManager(mitmproxy.types._CommandBase):
                 else:
                     valid = True
 
+            # if ctx.log:
+            #     ctx.log.info('[gilga] before parse.append. value = %s' % parts[i])
             parse.append(
                 ParseResult(
-                    value=parts[i],
+                    value=maybequote(parts[i]),
                     type=typ,
                     valid=valid,
                 )
@@ -236,13 +278,21 @@ class CommandManager(mitmproxy.types._CommandBase):
         """
             Execute a command string. May raise CommandError.
         """
+        if cmdstr == '':
+            raise exceptions.CommandError("Invalid command: %s" % cmdstr)
+
         try:
-            parts = list(lexer(cmdstr))
+            parts, _ = self.parse_partial(cmdstr)
         except ValueError as e:
             raise exceptions.CommandError("Command error: %s" % e)
-        if not len(parts) >= 1:
+        if len(parts) == 0:
             raise exceptions.CommandError("Invalid command: %s" % cmdstr)
-        return self.call_strings(parts[0], parts[1:])
+
+        params = []
+        for p in parts:
+            params.append(p.value)
+
+        return self.call_strings(params[0], params[1:])
 
     def dump(self, out=sys.stdout) -> None:
         cmds = list(self.commands.values())

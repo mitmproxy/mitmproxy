@@ -501,6 +501,7 @@ def _make():
         pp.Word(alphlatinB) |\
         pp.QuotedString("\"", escChar='\\') |\
         pp.QuotedString("'", escChar='\\')
+
     for klass in filter_rex:
         f = pp.Literal("~%s" % klass.code) + pp.WordEnd() + rex.copy()
         f.setParseAction(klass.make)
