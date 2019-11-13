@@ -1,5 +1,6 @@
 from mitmproxy import lexer
 import pytest
+import io
 
 
 class TestScripts:
@@ -47,6 +48,10 @@ class TestScripts:
                 "text": '\n\n\rHello\n World With Spaces\n\n',
                 "result": ['Hello', 'World', 'With', 'Spaces']
             },
+            {
+                "text": r'\" Escaping characters without reason',
+                "result": ['\\"', 'Escaping', 'characters', 'without', 'reason']
+            },
         ]
 
         for t in cases:
@@ -61,3 +66,12 @@ class TestScripts:
         lex = lexer.Lexer(text)
         with pytest.raises(ValueError, match="No closing quotation"):
             assert list(lex)
+
+    def test_stringio_text(self):
+        text = io.StringIO(r'Increase test coverage')
+        lex = lexer.Lexer(text)
+        tokens = list(lex)
+        result = ['Increase', 'test', 'coverage']
+        assert(tokens == result)
+
+

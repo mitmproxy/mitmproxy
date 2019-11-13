@@ -90,9 +90,6 @@ class Lexer:
                     acc += ch
                 else:
                     acc += ch
-            else:
-                print("This shouldn't have happened")
-                exit(-1)
 
         self._token = acc
 
