@@ -5,7 +5,6 @@ import inspect
 import types
 import io
 import typing
-import shlex
 import textwrap
 import functools
 import sys
