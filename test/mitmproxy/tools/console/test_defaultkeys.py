@@ -6,7 +6,6 @@ from mitmproxy import command
 
 import pytest
 
-
 @pytest.mark.asyncio
 async def test_commands_exist():
     km = keymap.Keymap(None)
@@ -16,7 +15,8 @@ async def test_commands_exist():
     await m.load_flow(tflow())
 
     for binding in km.bindings:
-        cmd, *args = command.lexer(binding.command)
+        cmd, *args = command.get_lexer(binding.command)
+
         assert cmd in m.commands.commands
 
         cmd_obj = m.commands.commands[cmd]
