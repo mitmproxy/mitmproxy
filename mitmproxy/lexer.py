@@ -69,6 +69,8 @@ class Lexer:
         text = self.text
         i = 0
 
+        whitespace = "\r\n\t "
+
         #self.text.seek(self._text_pos)
 
         while True:
@@ -98,7 +100,7 @@ class Lexer:
                 self._state = self._states.pop()
 
             elif self._state == State.TEXT:
-                if ch == ' ':
+                if ch in whitespace:
                     if acc != '':
                         break
                 elif ch == '"' or ch == "'":
@@ -141,6 +143,7 @@ if __name__ == '__main__':
     cases.append(r'   ')
     cases.append(r'    ')
     cases.append(r'Hello World ')
+    cases.append('\n\n\rHello\n World With Spaces\n\n')
 
     for s in cases:
         lex = Lexer(s)
