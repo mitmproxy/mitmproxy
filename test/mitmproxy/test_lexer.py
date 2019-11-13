@@ -61,4 +61,3 @@ class TestScripts:
         lex = lexer.Lexer(text)
         with pytest.raises(ValueError, match="No closing quotation"):
             assert list(lex)
-

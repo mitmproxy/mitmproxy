@@ -1,7 +1,6 @@
 from enum import Enum
 import io
-from typing import Union
-import pdb
+from typing import Union, List
 
 
 class State(Enum):
@@ -12,13 +11,12 @@ class State(Enum):
 
 class Lexer:
 
-    def __init__(self, text: Union[str, io.StringIO]):
-        self._tokens = []
+    def __init__(self, text: Union[str, io.StringIO]) -> None:
         self._count = 0
         self._parsed = False
 
         self._state = State.TEXT
-        self._states = []
+        self._states: List[State] = []
         self._text_pos = 0
         self._quote_start_pos = 0
 
@@ -39,46 +37,23 @@ class Lexer:
         return t
 
     def get_token(self):
-
         try:
             return self.parse()
-        except ValueError as e:
+        except ValueError:
             raise
-
-        if len(self._tokens) > 0:
-            ret = self._tokens[0]
-            self._tokens = self._tokens[1:]
-        else:
-            ret = None
-        return ret
-
-    #def get_remainder(self):
-    #    try:
-    #        self.parse()
-    #    except ValueError as e:
-    #        return self.text
-    #        
-
-    #    return ' '.join(self._tokens)
 
     def parse(self):
         acc = ''
-        quote = '' # used by the parser
-        tokens = []
+        quote = ''
         self._state = State.TEXT
-        text = self.text
-        i = 0
 
         whitespace = "\r\n\t "
 
-        #self.text.seek(self._text_pos)
+        self.text.seek(self._text_pos)
 
         while True:
             ch = self.text.read(1)
             self._text_pos += 1
-
-            #pdb.set_trace()
-
 
             # If this is the last char of the string, let's save the token
             if ch == '' or ch is None:
@@ -110,7 +85,6 @@ class Lexer:
                     self._state = State.QUOTE
                     acc += ch
                 elif ch == '\\':
-                    # TODO: Does it make sense to go to State.ESCAPE from State.TEXT?
                     self._states.append(self._state)
                     self._state = State.ESCAPE
                     acc += ch
@@ -126,32 +100,3 @@ class Lexer:
             raise ValueError("No closing quotation for quote in position %d" % self._quote_start_pos)
 
         return self._token
-
-
-if __name__ == '__main__':
-
-    cases = []
-    cases.append(r'abc')
-    cases.append(r'Hello World')
-    cases.append(r'"Hello \" World"')
-    cases.append(r"'Hello \' World'")
-    cases.append(r'"\""')
-    cases.append(r'abc "def\" \x bla \z \\ \e \ " xpto')
-    cases.append(r'')
-    cases.append(r' ')
-    cases.append(r'  ')
-    cases.append(r'   ')
-    cases.append(r'    ')
-    cases.append(r'Hello World ')
-    cases.append('\n\n\rHello\n World With Spaces\n\n')
-
-    for s in cases:
-        lex = Lexer(s)
-        tokens = list(lex)
-
-        if len(tokens) == 1:
-            print('%s = %d token' % (str(tokens), len(tokens)))
-        else:
-            print('%s = %d tokens' % (str(tokens), len(tokens)))
-
-

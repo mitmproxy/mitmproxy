@@ -13,6 +13,7 @@ from mitmproxy import exceptions
 from mitmproxy import lexer
 import mitmproxy.types
 
+
 def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
     sig = inspect.signature(f)
     try:
