@@ -66,7 +66,7 @@ class CommandReply(Event):
     command: commands.Command
     reply: typing.Any
 
-    def __init__(self, command: typing.Union[commands.Command, int], reply: typing.Any):
+    def __init__(self, command: commands.Command, reply: typing.Any):
         self.command = command
         self.reply = reply
 
@@ -91,7 +91,7 @@ class OpenConnectionReply(CommandReply):
 
     def __init__(
             self,
-            command: typing.Union[commands.OpenConnection, int],
+            command: commands.OpenConnection,
             err: typing.Optional[str]
     ):
         super().__init__(command, err)
@@ -113,7 +113,7 @@ class GetSocketReply(CommandReply):
 
     def __init__(
             self,
-            command: typing.Union[commands.GetSocket, int],
+            command: commands.GetSocket,
             socket: socket.socket
     ):
         super().__init__(command, socket)

@@ -5,7 +5,7 @@ from test.mitmproxy.proxy2 import tutils
 class TestNextLayer:
     def test_simple(self, tctx):
         nl = layer.NextLayer(tctx)
-        playbook = tutils.playbook(nl, hooks=True)
+        playbook = tutils.Playbook(nl, hooks=True)
 
         assert (
             playbook
@@ -32,7 +32,7 @@ class TestNextLayer:
         a reply from the proxy core.
         """
         nl = layer.NextLayer(tctx)
-        playbook = tutils.playbook(nl)
+        playbook = tutils.Playbook(nl)
 
         assert (
             playbook
@@ -52,7 +52,7 @@ class TestNextLayer:
 
     def test_func_references(self, tctx):
         nl = layer.NextLayer(tctx)
-        playbook = tutils.playbook(nl)
+        playbook = tutils.Playbook(nl)
 
         assert (
             playbook

@@ -2,7 +2,8 @@ import collections.abc
 import copy
 import difflib
 import itertools
-import sys
+import re
+import traceback
 import typing
 
 from mitmproxy.proxy2 import commands, context
@@ -10,14 +11,15 @@ from mitmproxy.proxy2 import events
 from mitmproxy.proxy2.context import ConnectionState
 from mitmproxy.proxy2.events import command_reply_subclasses
 from mitmproxy.proxy2.layer import Layer, NextLayer
+from mitmproxy.proxy2.layers import tls
 
-TPlaybookEntry = typing.Union[commands.Command, events.Event]
-TPlaybook = typing.List[TPlaybookEntry]
+PlaybookEntry = typing.Union[commands.Command, events.Event]
+PlaybookEntryList = typing.List[PlaybookEntry]
 
 
 def _eq(
-        a: TPlaybookEntry,
-        b: TPlaybookEntry
+        a: PlaybookEntry,
+        b: PlaybookEntry
 ) -> bool:
     """Compare two commands/events, and possibly update placeholders."""
     if type(a) != type(b):
@@ -45,8 +47,8 @@ def _eq(
 
 
 def eq(
-        a: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]],
-        b: typing.Union[TPlaybookEntry, typing.Iterable[TPlaybookEntry]]
+        a: typing.Union[PlaybookEntry, typing.Iterable[PlaybookEntry]],
+        b: typing.Union[PlaybookEntry, typing.Iterable[PlaybookEntry]]
 ):
     """
     Compare an indiviual event/command or a list of events/commands.
@@ -58,15 +60,39 @@ def eq(
     return _eq(a, b)
 
 
-def _fmt_entry(x: TPlaybookEntry):
+def _fmt_entry(x: PlaybookEntry):
     arrow = ">>" if isinstance(x, events.Event) else "<<"
-    x = str(x) \
-        .replace('Placeholder:None', '<unset placeholder>') \
-        .replace('Placeholder:', '')
+    x = str(x)
+    x = re.sub('Placeholder:None', '<unset placeholder>', x, flags=re.IGNORECASE)
+    x = re.sub('Placeholder:', '', x, flags=re.IGNORECASE)
     return f"{arrow} {x}"
 
 
-class playbook:
+def _merge_sends(lst: PlaybookEntryList) -> PlaybookEntryList:
+    merged = lst[:1]
+    for x in lst[1:]:
+        prev = merged[-1]
+        two_subsequent_sends_to_the_same_remote = (
+                isinstance(x, commands.SendData) and
+                isinstance(prev, commands.SendData) and
+                x.connection is prev.connection
+        )
+        if two_subsequent_sends_to_the_same_remote:
+            prev.data += x.data
+        else:
+            merged.append(x)
+    return merged
+
+
+class _TracebackInPlaybook(commands.Command):
+    def __init__(self, exc):
+        self.e = exc
+
+    def __repr__(self):
+        return self.e
+
+
+class Playbook:
     """
     Assert that a layer emits the expected commands in reaction to a given sequence of events.
     For example, the following code asserts that the TCP layer emits an OpenConnection command
@@ -88,9 +114,9 @@ class playbook:
     """
     layer: Layer
     """The base layer"""
-    expected: TPlaybook
+    expected: PlaybookEntryList
     """expected command/event sequence"""
-    actual: TPlaybook
+    actual: PlaybookEntryList
     """actual command/event sequence"""
     _errored: bool
     """used to check if playbook as been fully asserted"""
@@ -98,13 +124,15 @@ class playbook:
     """If False, the playbook specification doesn't contain log commands."""
     hooks: bool
     """If False, the playbook specification doesn't include hooks or hook replies. They are automatically replied to."""
+    merge_sends: bool
+    """If True, subsequent SendData commands to the same remote will be merged in both expected and actual playbook."""
 
     def __init__(
             self,
             layer: Layer,
             hooks: bool = True,
             logs: bool = False,
-            expected: typing.Optional[TPlaybook] = None,
+            expected: typing.Optional[PlaybookEntryList] = None,
     ):
         if expected is None:
             expected = [
@@ -121,8 +149,6 @@ class playbook:
     def __rshift__(self, e):
         """Add an event to send"""
         assert isinstance(e, events.Event)
-        if not self.hooks and isinstance(e, events.HookReply):
-            raise ValueError(f"Playbook must not contain hook replies if hooks=False: {e}")
         self.expected.append(e)
         return self
 
@@ -131,10 +157,6 @@ class playbook:
         if c is None:
             return self
         assert isinstance(c, commands.Command)
-        if not self.logs and isinstance(c, commands.Log):
-            raise ValueError(f"Playbook must not contain log commands if logs=False: {c}")
-        if not self.hooks and isinstance(c, commands.Hook):
-            raise ValueError(f"Playbook must not contain hook commands if hooks=False: {c}")
         self.expected.append(c)
         return self
 
@@ -149,24 +171,40 @@ class playbook:
             else:
                 if hasattr(x, "playbook_eval"):
                     x = self.expected[i] = x.playbook_eval(self)
+                for name, value in vars(x).items():
+                    if isinstance(value, _Placeholder):
+                        setattr(x, name, value())
                 if isinstance(x, events.OpenConnectionReply) and not x.reply:
                     x.command.connection.state = ConnectionState.OPEN
                 elif isinstance(x, events.ConnectionClosed):
                     x.connection.state &= ~ConnectionState.CAN_READ
 
                 self.actual.append(x)
-                cmds = list(self.layer.handle_event(x))
+                try:
+                    cmds = list(self.layer.handle_event(x))
+                except Exception:
+                    self.actual.append(_TracebackInPlaybook(traceback.format_exc()))
+                    break
                 self.actual.extend(cmds)
                 if not self.logs:
                     for offset, cmd in enumerate(cmds):
-                        if isinstance(cmd, commands.Log):
-                            self.expected.insert(i + 1 + offset, cmd)
+                        pos = i + 1 + offset
+                        if isinstance(cmd, commands.Log) and not isinstance(self.expected[pos], commands.Log):
+                            self.expected.insert(pos, cmd)
                 if not self.hooks:
                     last_cmd = self.actual[-1]
-                    if isinstance(last_cmd, commands.Hook):
-                        self.expected.insert(i + len(cmds), last_cmd)
-                        self.expected.insert(i + len(cmds) + 1, events.HookReply(last_cmd))
+                    pos = i + len(cmds)
+                    need_to_emulate_hook = (
+                            isinstance(last_cmd, commands.Hook) and
+                            not (isinstance(self.expected[pos], commands.Hook) and self.expected[pos].name == last_cmd.name)
+                    )
+                    if need_to_emulate_hook:
+                        self.expected.insert(pos, last_cmd)
+                        self.expected.insert(pos + 1, events.HookReply(last_cmd))
             i += 1
+
+        self.actual = _merge_sends(self.actual)
+        self.expected = _merge_sends(self.expected)
 
         if not eq(self.expected, self.actual):
             self._errored = True
@@ -210,7 +248,7 @@ class reply(events.Event):
         self.to = to
         self.side_effect = side_effect
 
-    def playbook_eval(self, playbook: playbook) -> events.CommandReply:
+    def playbook_eval(self, playbook: Playbook) -> events.CommandReply:
         if isinstance(self.to, int):
             expected = playbook.expected[:playbook.expected.index(self)]
             assert abs(self.to) < len(expected)
@@ -225,7 +263,7 @@ class reply(events.Event):
                 break
         else:
             actual_str = "\n".join(_fmt_entry(x) for x in playbook.actual)
-            raise AssertionError(f"Expected command ({self.to}) did not occur:\n{actual_str}")
+            raise AssertionError(f"Expected command {self.to} did not occur:\n{actual_str}")
 
         assert isinstance(self.to, commands.Command)
         self.side_effect(self.to)
@@ -279,23 +317,12 @@ class EchoLayer(Layer):
             yield commands.SendData(event.connection, event.data.lower())
 
 
-def next_layer(
+def reply_next_layer(
         layer: typing.Union[typing.Type[Layer], typing.Callable[[context.Context], Layer]],
         *args,
         **kwargs
 ) -> reply:
-    """
-    Helper function to simplify the syntax for next_layer events from this:
-
-            << commands.Hook("next_layer", next_layer)
-        )
-        next_layer().layer = tutils.EchoLayer(next_layer().context)
-        assert (
-            playbook
-            >> events.HookReply(-1)
-
-    to this:
-
+    """Helper function to simplify the syntax for next_layer events to this:
         << commands.Hook("next_layer", next_layer)
         >> tutils.next_layer(next_layer, tutils.EchoLayer)
     """
@@ -305,3 +332,15 @@ def next_layer(
         hook.data.layer = layer(hook.data.context)
 
     return reply(*args, side_effect=set_layer, **kwargs)
+
+
+def reply_establish_server_tls(**kwargs) -> reply:
+    """Helper function to simplify the syntax for EstablishServerTls events to this:
+        << tls.EstablishServerTLS(server)
+        >> tutils.reply_establish_server_tls()
+    """
+
+    def fake_tls(cmd: tls.EstablishServerTLS) -> None:
+        cmd.connection.tls_established = True
+
+    return reply(None, side_effect=fake_tls, **kwargs)
