@@ -89,21 +89,28 @@ class CommandBuffer:
         """
         parts, remhelp = self.parse_quoted(self.text)
         ret = []
-        for p in parts:
-            if p.valid:
-                if p.type == mitmproxy.types.Cmd:
-                    ret.append(("commander_command", p.value))
+        if parts == []:
+            # Means we just received the leader, so we need to give a blank
+            # text to the widget to render or it crashes
+            ret.append(("text", ""))
+            ret.append(("text", " "))
+        else:
+            for p in parts:
+                if p.valid:
+                    if p.type == mitmproxy.types.Cmd:
+                        ret.append(("commander_command", p.value))
+                    else:
+                        ret.append(("text", p.value))
+                elif p.value:
+                    ret.append(("commander_invalid", p.value))
                 else:
-                    ret.append(("text", p.value))
-            elif p.value:
-                ret.append(("commander_invalid", p.value))
-            else:
-                ret.append(("text", ""))
-            ret.append(("text", " "))
-        if remhelp:
-            ret.append(("text", " "))
-            for v in remhelp:
-                ret.append(("commander_hint", "%s " % v))
+                    ret.append(("text", ""))
+                ret.append(("text", " "))
+            if remhelp:
+                ret.append(("text", " "))
+                for v in remhelp:
+                    ret.append(("commander_hint", "%s " % v))
+
         return ret
 
     def flatten(self, txt):
