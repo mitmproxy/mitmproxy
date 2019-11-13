@@ -497,6 +497,8 @@ class HttpStream(Layer):
                 self.flow.error = flow.Error(err)
                 yield commands.Hook("error", self.flow)
                 return
+            else:
+                self.flow.server_conn = connection
 
             yield SendHttp(RequestHeaders(self.flow.request, self.stream_id), connection)
 
@@ -660,6 +662,7 @@ class HTTPLayer(Layer):
         can_reuse_context_connection = (
                 self.context.server not in self.connections and
                 self.context.server.connected and
+                self.context.server.address == event.address and
                 self.context.server.tls == event.tls
         )
         if can_reuse_context_connection:

@@ -38,7 +38,7 @@ class TLayer(Layer):
 
 @pytest.fixture
 def tplaybook(tctx):
-    return tutils.playbook(TLayer(tctx), expected=[])
+    return tutils.Playbook(TLayer(tctx), expected=[])
 
 
 def test_simple(tplaybook):
@@ -164,7 +164,7 @@ def test_command_reply(tplaybook):
 
 
 def test_default_playbook(tctx):
-    p = tutils.playbook(TLayer(tctx))
+    p = tutils.Playbook(TLayer(tctx))
     assert p
     assert len(p.actual) == 1
     assert isinstance(p.actual[0], events.Start)

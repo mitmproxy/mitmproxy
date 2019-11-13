@@ -1,7 +1,7 @@
 from mitmproxy.proxy2.commands import CloseConnection, Hook, OpenConnection, SendData
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import TCPLayer
-from ..tutils import Placeholder, playbook, reply
+from ..tutils import Placeholder, Playbook, reply
 
 
 def test_open_connection(tctx):
@@ -10,13 +10,13 @@ def test_open_connection(tctx):
     because the server may send data first.
     """
     assert (
-            playbook(TCPLayer(tctx, True))
+            Playbook(TCPLayer(tctx, True))
             << OpenConnection(tctx.server)
     )
 
     tctx.server.connected = True
     assert (
-            playbook(TCPLayer(tctx, True))
+            Playbook(TCPLayer(tctx, True))
             << None
     )
 
@@ -24,7 +24,7 @@ def test_open_connection(tctx):
 def test_open_connection_err(tctx):
     f = Placeholder()
     assert (
-            playbook(TCPLayer(tctx))
+            Playbook(TCPLayer(tctx))
             << Hook("tcp_start", f)
             >> reply()
             << OpenConnection(tctx.server)
@@ -40,7 +40,7 @@ def test_simple(tctx):
     f = Placeholder()
 
     assert (
-            playbook(TCPLayer(tctx))
+            Playbook(TCPLayer(tctx))
             << Hook("tcp_start", f)
             >> reply()
             << OpenConnection(tctx.server)
@@ -71,7 +71,7 @@ def test_receive_data_before_server_connected(tctx):
     will still be forwarded.
     """
     assert (
-            playbook(TCPLayer(tctx), hooks=False)
+            Playbook(TCPLayer(tctx), hooks=False)
             << OpenConnection(tctx.server)
             >> DataReceived(tctx.client, b"hello!")
             >> reply(None, to=-2)
@@ -84,7 +84,7 @@ def test_receive_data_after_half_close(tctx):
     data received after the other connection has been half-closed should still be forwarded.
     """
     assert (
-            playbook(TCPLayer(tctx), hooks=False)
+            Playbook(TCPLayer(tctx), hooks=False)
             << OpenConnection(tctx.server)
             >> reply(None)
             >> ConnectionClosed(tctx.server)

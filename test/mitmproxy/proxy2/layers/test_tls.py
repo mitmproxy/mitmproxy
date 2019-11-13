@@ -87,7 +87,7 @@ class SSLTest:
         )
 
 
-def _test_echo(playbook: tutils.playbook, tssl: SSLTest, conn: context.Connection) -> None:
+def _test_echo(playbook: tutils.Playbook, tssl: SSLTest, conn: context.Connection) -> None:
     tssl.obj.write(b"Hello World")
     data = tutils.Placeholder()
     assert (
@@ -110,7 +110,7 @@ class TlsEchoLayer(tutils.EchoLayer):
             yield from super()._handle_event(event)
 
 
-def interact(playbook: tutils.playbook, conn: context.Connection, tssl: SSLTest):
+def interact(playbook: tutils.Playbook, conn: context.Connection, tssl: SSLTest):
     data = tutils.Placeholder()
     assert (
             playbook
@@ -149,7 +149,7 @@ class TestServerTLS:
 
         # Handshake
         assert (
-                tutils.playbook(layer)
+                tutils.Playbook(layer)
                 >> events.DataReceived(tctx.client, b"Hello World")
                 << commands.SendData(tctx.client, b"hello world")
                 >> events.DataReceived(tctx.server, b"Foo")
@@ -158,7 +158,7 @@ class TestServerTLS:
 
     def test_simple(self, tctx):
         layer = tls.ServerTLSLayer(tctx)
-        playbook = tutils.playbook(layer)
+        playbook = tutils.Playbook(layer)
         tctx.server.connected = True
         tctx.server.address = ("example.com", 443)
 
@@ -170,7 +170,7 @@ class TestServerTLS:
                 playbook
                 >> events.DataReceived(tctx.client, b"establish-server-tls")
                 << commands.Hook("next_layer", tutils.Placeholder())
-                >> tutils.next_layer(TlsEchoLayer)
+                >> tutils.reply_next_layer(TlsEchoLayer)
                 << commands.Hook("tls_start", tutils.Placeholder())
                 >> reply_tls_start()
                 << commands.SendData(tctx.server, data)
@@ -196,21 +196,21 @@ class TestServerTLS:
         _test_echo(playbook, tssl, tctx.server)
 
 
-def _make_client_tls_layer(tctx: context.Context) -> typing.Tuple[tutils.playbook, tls.ClientTLSLayer]:
+def _make_client_tls_layer(tctx: context.Context) -> typing.Tuple[tutils.Playbook, tls.ClientTLSLayer]:
     # This is a bit contrived as the client layer expects a server layer as parent.
     # We also set child layers manually to avoid NextLayer noise.
     server_layer = tls.ServerTLSLayer(tctx)
     client_layer = tls.ClientTLSLayer(tctx)
     server_layer.child_layer = client_layer
     client_layer.child_layer = TlsEchoLayer(tctx)
-    playbook = tutils.playbook(server_layer)
+    playbook = tutils.Playbook(server_layer)
     return playbook, client_layer
 
 
 def _test_tls_client_server(
         tctx: context.Context,
         sni: typing.Optional[bytes]
-) -> typing.Tuple[tutils.playbook, tls.ClientTLSLayer, SSLTest]:
+) -> typing.Tuple[tutils.Playbook, tls.ClientTLSLayer, SSLTest]:
     playbook, client_layer = _make_client_tls_layer(tctx)
     tctx.server.tls = True
     tctx.server.address = ("example.com", 443)

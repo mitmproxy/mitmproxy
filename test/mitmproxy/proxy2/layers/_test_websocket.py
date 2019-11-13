@@ -13,7 +13,7 @@ from .. import tutils
 @pytest.fixture
 def ws_playbook(tctx):
     tctx.server.connected = True
-    playbook = tutils.playbook(
+    playbook = tutils.Playbook(
         websocket.WebsocketLayer(
             tctx,
             tflow.twebsocketflow().handshake_flow
