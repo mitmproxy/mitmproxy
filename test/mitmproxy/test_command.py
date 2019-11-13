@@ -139,7 +139,7 @@ class TestCommand:
             ],
             [
                 "",
-                [command.ParseResult(value = "", type = mitmproxy.types.Cmd, valid = False)],
+                [],
                 []
             ],
             [
@@ -283,6 +283,10 @@ def test_simple():
             c.call("nonexistent")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.execute("\\")
+        with pytest.raises(exceptions.CommandError, match="Unknown"):
+            c.execute(r"\'")
+        with pytest.raises(exceptions.CommandError, match="Unknown"):
+            c.execute(r"\"")
 
         c.add("empty", a.empty)
         c.execute("empty")

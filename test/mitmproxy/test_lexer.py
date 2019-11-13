@@ -73,5 +73,3 @@ class TestScripts:
         tokens = list(lex)
         result = ['Increase', 'test', 'coverage']
         assert(tokens == result)
-
-
