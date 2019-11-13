@@ -165,8 +165,9 @@ class CommandManager(mitmproxy.types._CommandBase):
             if not t:
                 break
             parts.append(t)
+
         if not parts:
-            parts = [""]
+            parts = []
         elif cmdstr.endswith(" "):
             parts.append("")
 
@@ -233,19 +234,13 @@ class CommandManager(mitmproxy.types._CommandBase):
         """
             Execute a command string. May raise CommandError.
         """
-        if cmdstr == '':
-            raise exceptions.CommandError("Invalid command: %s" % cmdstr)
-
-        try:
-            parts, _ = self.parse_partial(cmdstr)
-        except ValueError as e:
-            raise exceptions.CommandError("Command error: %s" % e)
-        if len(parts) == 0:
-            raise exceptions.CommandError("Invalid command: %s" % cmdstr)
-
+        parts, _ = self.parse_partial(cmdstr)
         params = []
         for p in parts:
             params.append(p.value)
+
+        if len(parts) == 0:
+            raise exceptions.CommandError("Invalid command: %s" % cmdstr)
 
         return self.call_strings(params[0], params[1:])
 
