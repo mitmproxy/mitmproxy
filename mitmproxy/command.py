@@ -11,48 +11,8 @@ import functools
 import sys
 
 from mitmproxy import exceptions
+from mitmproxy import lexer
 import mitmproxy.types
-
-def escape_and_quote(value):
-    """
-    This function takes the output from the lexer and puts it between quotes 
-    in the following cases:
-        * There is a space in the string: The only way a token from the lexer can have a space in it is if it was between quotes
-        * There is one or more quotes in the middle of the string: The only way for a token to have a quote in it that is not escaped is if it was escaped prior to being processed by the lexer. For example, the string `"s1 \" s2"` would come back from the lexer as `s1 " s2`.
-
-    Any quotes that are in the middle of the string and that are not escaped will also be escaped (by placing a \ in front of it).
-    This function only deals with double quotes and they are the only ones that should be used. 
-    """
-
-    new_value = ""
-    last_pos = len(value) - 1
-
-    for pos, char in enumerate(value):
-        if pos == 0:
-            new_value += char
-            continue
-
-        # if pos == last_pos:
-        #     new_value += char
-        #     break
-
-        if char in " \n\r\t":
-            new_value += char
-            continue
-
-        if char == '"':
-            if value[pos-1] != '\\':
-                new_value += '\\'
-
-        new_value += char
-
-    value = new_value
-
-    if ((" " in value) or ('"' in value)) and not (value.startswith("\"") or value.startswith("'")):
-        return "\"%s\"" % value
-
-    return value
-
 
 def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
     sig = inspect.signature(f)
@@ -62,13 +22,8 @@ def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
         raise exceptions.CommandError("command argument mismatch: %s" % v.args[0])
 
 
-def lexer(s):
-    # mypy mis-identifies shlex.shlex as abstract
-    lex = shlex.shlex(s, posix=True)  # type: ignore
-    lex.wordchars += "."
-    lex.whitespace_split = True
-    lex.commenters = ''
-    return lex
+def get_lexer(s):
+    return lexer.Lexer(s)
 
 
 def typename(t: type) -> str:
@@ -199,7 +154,7 @@ class CommandManager(mitmproxy.types._CommandBase):
         """
         buf = io.StringIO(cmdstr)
         parts: typing.List[str] = []
-        lex = lexer(buf)
+        lex = get_lexer(buf)
         while 1:
             remainder = cmdstr[buf.tell():]
             try:
@@ -245,7 +200,7 @@ class CommandManager(mitmproxy.types._CommandBase):
             #     ctx.log.info('[gilga] before parse.append. value = %s' % parts[i])
             parse.append(
                 ParseResult(
-                    value=escape_and_quote(parts[i]),
+                    value=parts[i],
                     type=typ,
                     valid=valid,
                 )
