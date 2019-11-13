@@ -1,6 +1,6 @@
-
 from mitmproxy.tools.console.commander import commander
 from mitmproxy.test import taddons
+import pytest
 
 
 class TestListCompleter:
@@ -26,6 +26,18 @@ class TestListCompleter:
             c = commander.ListCompleter(start, options)
             for expected in cycle:
                 assert c.cycle() == expected
+
+
+class TestCommandEdit:
+    def test_open_command_bar(self):
+        with taddons.context() as tctx:
+            history = commander.CommandHistory(tctx.master, size=3)
+            edit = commander.CommandEdit(tctx.master, '', history)
+
+            try:
+                edit.update()
+            except IndexError:
+                pytest.faied("Unexpected IndexError")
 
 
 class TestCommandHistory:
