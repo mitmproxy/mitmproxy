@@ -17,8 +17,6 @@ from mitmproxy import optmanager
 from mitmproxy import proxy
 from mitmproxy.utils import debug, arg_check
 
-OPTIONS_FILE_NAME = "config.yaml"
-
 
 def assert_utf8_env():
     spec = ""
@@ -89,7 +87,8 @@ def run(
         opts.set(*args.setoptions, defer=True)
         optmanager.load_paths(
             opts,
-            os.path.join(opts.confdir, OPTIONS_FILE_NAME),
+            os.path.join(opts.confdir, "config.yaml"),
+            os.path.join(opts.confdir, "config.yml"),
         )
         pconf = process_options(parser, opts, args)
         server: typing.Any = None
