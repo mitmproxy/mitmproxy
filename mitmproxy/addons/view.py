@@ -238,18 +238,24 @@ class View(collections.abc.Sequence):
         """
             Set focus to the next flow.
         """
-        idx = self.focus.index + 1
-        if self.inbounds(idx):
-            self.focus.flow = self[idx]
+        if self.focus.index is not None:
+            idx = self.focus.index + 1
+            if self.inbounds(idx):
+                self.focus.flow = self[idx]
+        else:
+            pass
 
     @command.command("view.focus.prev")
     def focus_prev(self) -> None:
         """
             Set focus to the previous flow.
         """
-        idx = self.focus.index - 1
-        if self.inbounds(idx):
-            self.focus.flow = self[idx]
+        if self.focus.index is not None:
+            idx = self.focus.index - 1
+            if self.inbounds(idx):
+                self.focus.flow = self[idx]
+        else:
+            pass
 
     # Order
     @command.command("view.order.options")
