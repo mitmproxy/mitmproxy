@@ -67,8 +67,6 @@ def run(
         options.
     """
     debug.register_info_dumpers()
-    # Be tolerant as the yml is often recommended
-    OPTIONS_FILE_NAMES = ["config.yaml", "config.yml"]
 
     opts = options.Options()
     master = master_cls(opts)
@@ -87,11 +85,11 @@ def run(
         sys.exit(1)
     try:
         opts.set(*args.setoptions, defer=True)
-        for conf_file in OPTIONS_FILE_NAMES:
-            optmanager.load_paths(
-                opts,
-                os.path.join(opts.confdir, conf_file),
-            )
+        optmanager.load_paths(
+            opts,
+            os.path.join(opts.confdir, "config.yaml"),
+            os.path.join(opts.confdir, "config.yml"),
+        )
         pconf = process_options(parser, opts, args)
         server: typing.Any = None
         if pconf.options.server:
