@@ -472,7 +472,8 @@ class Request(message.Message):
         return ()
 
     def _set_multipart_form(self, value):
-        raise NotImplementedError()
+        self.content = mitmproxy.net.http.multipart.encode(self.headers, value)
+        self.headers["content-type"] = "multipart/form-data"
 
     @property
     def multipart_form(self):

@@ -53,6 +53,7 @@ class StickyCookie:
                 self.flt = None
 
     def response(self, flow: http.HTTPFlow):
+        assert flow.response
         if self.flt:
             for name, (value, attrs) in flow.response.cookies.items(multi=True):
                 # FIXME: We now know that Cookie.py screws up some cookies with

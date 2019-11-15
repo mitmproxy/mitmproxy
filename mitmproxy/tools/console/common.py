@@ -38,7 +38,7 @@ KEY_MAX = 30
 
 
 def format_keyvals(
-        entries: typing.List[typing.Tuple[str, typing.Union[None, str, urwid.Widget]]],
+        entries: typing.Iterable[typing.Tuple[str, typing.Union[None, str, urwid.Widget]]],
         key_format: str = "key",
         value_format: str = "text",
         indent: int = 0

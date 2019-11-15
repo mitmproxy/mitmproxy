@@ -25,7 +25,7 @@ class Daemon:
     def __enter__(self):
         return self
 
-    def __exit__(self, type, value, traceback) -> bool:
+    def __exit__(self, type, value, traceback):
         self.logfp.truncate(0)
         self.shutdown()
         return False

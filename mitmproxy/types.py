@@ -423,7 +423,7 @@ class TypeManager:
         for t in types:
             self.typemap[t.typ] = t()
 
-    def get(self, t: type, default=None) -> _BaseType:
+    def get(self, t: typing.Optional[typing.Type], default=None) -> _BaseType:
         if type(t) in self.typemap:
             return self.typemap[type(t)]
         return self.typemap.get(t, default)

@@ -315,7 +315,12 @@ class CertStore:
             ret.append(b"*." + b".".join(parts[i:]))
         return ret
 
-    def get_cert(self, commonname: typing.Optional[bytes], sans: typing.List[bytes], organization: typing.Optional[bytes] = None):
+    def get_cert(
+            self,
+            commonname: typing.Optional[bytes],
+            sans: typing.List[bytes],
+            organization: typing.Optional[bytes] = None
+    ) -> typing.Tuple["Cert", OpenSSL.SSL.PKey, str]:
         """
             Returns an (cert, privkey, cert_chain) tuple.
 

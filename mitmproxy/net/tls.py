@@ -295,6 +295,17 @@ def create_client_context(
     return context
 
 
+def accept_all(
+        conn_: SSL.Connection,
+        x509: SSL.X509,
+        errno: int,
+        err_depth: int,
+        is_cert_verified: bool,
+) -> bool:
+    # Return true to prevent cert verification error
+    return True
+
+
 def create_server_context(
         cert: typing.Union[certs.Cert, str],
         key: SSL.PKey,
@@ -323,16 +334,6 @@ def create_server_context(
         we may be able to make the proper behaviour the default again, but
         until then we're conservative.
     """
-
-    def accept_all(
-            conn_: SSL.Connection,
-            x509: SSL.X509,
-            errno: int,
-            err_depth: int,
-            is_cert_verified: bool,
-    ) -> bool:
-        # Return true to prevent cert verification error
-        return True
 
     if request_client_cert:
         verify = SSL.VERIFY_PEER
@@ -425,7 +426,7 @@ class ClientHello:
         return self._client_hello.cipher_suites.cipher_suites
 
     @property
-    def sni(self):
+    def sni(self) -> typing.Optional[bytes]:
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 is_valid_sni_extension = (
@@ -435,7 +436,7 @@ class ClientHello:
                     check.is_valid_host(extension.body.server_names[0].host_name)
                 )
                 if is_valid_sni_extension:
-                    return extension.body.server_names[0].host_name.decode("idna")
+                    return extension.body.server_names[0].host_name
         return None
 
     @property
@@ -473,10 +474,8 @@ class ClientHello:
             return cls(raw_client_hello)
         except EOFError as e:
             raise exceptions.TlsProtocolException(
-                'Cannot parse Client Hello: %s, Raw Client Hello: %s' %
-                (repr(e), binascii.hexlify(raw_client_hello))
+                f"Cannot parse Client Hello: {e!r}, Raw Client Hello: {binascii.hexlify(raw_client_hello)!r}"
             )
 
     def __repr__(self):
-        return "ClientHello(sni: %s, alpn_protocols: %s, cipher_suites: %s)" % \
-               (self.sni, self.alpn_protocols, self.cipher_suites)
+        return f"ClientHello(sni: {self.sni}, alpn_protocols: {self.alpn_protocols})"

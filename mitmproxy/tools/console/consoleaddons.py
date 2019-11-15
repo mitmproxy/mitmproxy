@@ -381,7 +381,8 @@ class ConsoleAddon:
         """
         return [
             "cookies",
-            "form",
+            "urlencoded form",
+            "multipart form",
             "path",
             "method",
             "query",
@@ -416,8 +417,10 @@ class ConsoleAddon:
             flow.response = http.HTTPResponse.make()
         if part == "cookies":
             self.master.switch_view("edit_focus_cookies")
-        elif part == "form":
-            self.master.switch_view("edit_focus_form")
+        elif part == "urlencoded form":
+            self.master.switch_view("edit_focus_urlencoded_form")
+        elif part == "multipart form":
+            self.master.switch_view("edit_focus_multipart_form")
         elif part == "path":
             self.master.switch_view("edit_focus_path")
         elif part == "query":
