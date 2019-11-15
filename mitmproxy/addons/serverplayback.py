@@ -135,7 +135,7 @@ class ServerPlayback:
                 key.append(str(r.raw_content))
 
         if not ctx.options.server_replay_ignore_host:
-            key.append(r.host)
+            key.append(r.pretty_host)
         if not ctx.options.server_replay_ignore_port:
             key.append(r.port)
 
