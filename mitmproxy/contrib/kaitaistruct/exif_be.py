@@ -1,12 +1,8 @@
 # This is a generated file! Please edit source .ksy file and use kaitai-struct-compiler to rebuild
 
-import array
-import struct
-import zlib
-from enum import Enum
 from pkg_resources import parse_version
-
 from kaitaistruct import __version__ as ks_version, KaitaiStruct, KaitaiStream, BytesIO
+from enum import Enum
 
 
 if parse_version(ks_version) < parse_version('0.7'):
@@ -17,6 +13,9 @@ class ExifBe(KaitaiStruct):
         self._io = _io
         self._parent = _parent
         self._root = _root if _root else self
+        self._read()
+
+    def _read(self):
         self.version = self._io.read_u2be()
         self.ifd0_ofs = self._io.read_u4be()
 
@@ -25,6 +24,9 @@ class ExifBe(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
             self.num_fields = self._io.read_u2be()
             self.fields = [None] * (self.num_fields)
             for i in range(self.num_fields):
@@ -54,6 +56,9 @@ class ExifBe(KaitaiStruct):
             word = 3
             dword = 4
             rational = 5
+            undefined = 7
+            slong = 9
+            srational = 10
 
         class TagEnum(Enum):
             image_width = 256
@@ -518,6 +523,9 @@ class ExifBe(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
+            self._read()
+
+        def _read(self):
             self.tag = self._root.IfdField.TagEnum(self._io.read_u2be())
             self.field_type = self._root.IfdField.FieldTypeEnum(self._io.read_u2be())
             self.length = self._io.read_u4be()
@@ -552,7 +560,7 @@ class ExifBe(KaitaiStruct):
             if hasattr(self, '_m_data'):
                 return self._m_data if hasattr(self, '_m_data') else None
 
-            if not self.is_immediate_data:
+            if not (self.is_immediate_data):
                 io = self._root._io
                 _pos = io.pos()
                 io.seek(self.ofs_or_data)

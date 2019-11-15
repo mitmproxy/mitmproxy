@@ -28,6 +28,9 @@ class TestParsing:
         self._dump(p)
         assert len(p.lst) == 2
 
+    def test_non_ascii(self):
+        assert flowfilter.parse("~s шгн")
+
     def test_naked_url(self):
         a = flowfilter.parse("foobar ~h rex")
         assert a.lst[0].expr == "foobar"
@@ -173,10 +176,30 @@ class TestMatchingHTTPFlow:
         assert not self.q("~bq message", q)
         assert not self.q("~bq message", s)
 
+        s.response.text = 'яч'           # Cyrillic
+        assert self.q("~bs яч", s)
+        s.response.text = '测试'          # Chinese
+        assert self.q('~bs 测试', s)
+        s.response.text = 'ॐ'            # Hindi
+        assert self.q('~bs ॐ', s)
+        s.response.text = 'لله'           # Arabic
+        assert self.q('~bs لله', s)
+        s.response.text = 'θεός'          # Greek
+        assert self.q('~bs θεός', s)
+        s.response.text = 'לוהים'          # Hebrew
+        assert self.q('~bs לוהים', s)
+        s.response.text = '神'            # Japanese
+        assert self.q('~bs 神', s)
+        s.response.text = '하나님'         # Korean
+        assert self.q('~bs 하나님', s)
+        s.response.text = 'Äÿ'            # Latin
+        assert self.q('~bs Äÿ', s)
+
         assert not self.q("~bs nomatch", s)
         assert not self.q("~bs content", q)
         assert not self.q("~bs content", s)
         assert not self.q("~bs message", q)
+        s.response.text = 'message'
         assert self.q("~bs message", s)
 
     def test_body(self):

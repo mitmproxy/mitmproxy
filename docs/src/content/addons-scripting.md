@@ -27,6 +27,6 @@ You can look at the [http][] module, or the [Request][], and
 [Response][] classes for other attributes that you can use when
 scripting.
 
-[http][]: https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/http.py
+[http]: https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/http.py
 [Request]: https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/net/http/request.py
 [Response]: https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/net/http/response.py

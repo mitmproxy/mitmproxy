@@ -184,7 +184,7 @@ class AddonManager:
                 raise exceptions.AddonManagerError("No such addon: %s" % n)
             self.chain = [i for i in self.chain if i is not a]
             del self.lookup[_get_name(a)]
-        self.invoke_addon(a, "done")
+        self.invoke_addon(addon, "done")
 
     def __len__(self):
         return len(self.chain)

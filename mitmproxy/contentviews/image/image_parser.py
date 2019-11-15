@@ -54,7 +54,7 @@ def parse_gif(data: bytes) -> Metadata:
         entries = block.body.body.entries
         for entry in entries:
             comment = entry.bytes
-            if comment is not b'':
+            if comment != b'':
                 parts.append(('comment', str(comment)))
     return parts
 

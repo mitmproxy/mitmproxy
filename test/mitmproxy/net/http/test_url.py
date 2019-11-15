@@ -49,6 +49,17 @@ def test_parse():
         url.parse('http://lo[calhost')
 
 
+def test_ascii_check():
+
+    test_url = "https://xyz.tax-edu.net?flag=selectCourse&lc_id=42825&lc_name=茅莽莽猫氓猫氓".encode()
+    scheme, host, port, full_path = url.parse(test_url)
+    assert scheme == b'https'
+    assert host == b'xyz.tax-edu.net'
+    assert port == 443
+    assert full_path == b'/?flag%3DselectCourse%26lc_id%3D42825%26lc_name%3D%E8%8C%85%E8%8E%BD%E8%8E' \
+                        b'%BD%E7%8C%AB%E6%B0%93%E7%8C%AB%E6%B0%93'
+
+
 @pytest.mark.skipif(sys.version_info < (3, 6), reason='requires Python 3.6 or higher')
 def test_parse_port_range():
     # Port out of range
@@ -61,6 +72,7 @@ def test_unparse():
     assert url.unparse("http", "foo.com", 80, "/bar") == "http://foo.com/bar"
     assert url.unparse("https", "foo.com", 80, "") == "https://foo.com:80"
     assert url.unparse("https", "foo.com", 443, "") == "https://foo.com"
+    assert url.unparse("https", "foo.com", 443, "*") == "https://foo.com"
 
 
 # We ignore the byte 126: '~' because of an incompatibility in Python 3.6 and 3.7
@@ -131,3 +143,7 @@ def test_unquote():
     assert url.unquote("foo") == "foo"
     assert url.unquote("foo%20bar") == "foo bar"
     assert url.unquote(surrogates_quoted) == surrogates
+
+
+def test_hostport():
+    assert url.hostport(b"https", b"foo.com", 8080) == b"foo.com:8080"

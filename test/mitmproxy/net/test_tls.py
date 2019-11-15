@@ -87,13 +87,13 @@ def test_get_client_hello():
     rfile = io.BufferedReader(io.BytesIO(
         FULL_CLIENT_HELLO_NO_EXTENSIONS[:30]
     ))
-    with pytest.raises(exceptions.TlsProtocolException, message="Unexpected EOF"):
+    with pytest.raises(exceptions.TlsProtocolException, match="Unexpected EOF"):
         tls.get_client_hello(rfile)
 
     rfile = io.BufferedReader(io.BytesIO(
         b"GET /"
     ))
-    with pytest.raises(exceptions.TlsProtocolException, message="Expected TLS record"):
+    with pytest.raises(exceptions.TlsProtocolException, match="Expected TLS record"):
         tls.get_client_hello(rfile)
 
 
@@ -116,7 +116,7 @@ class TestClientHello:
         )
         c = tls.ClientHello(data)
         assert repr(c)
-        assert c.sni == 'example.com'
+        assert c.sni == b'example.com'
         assert c.cipher_suites == [
             49195, 49199, 49196, 49200, 52393, 52392, 52244, 52243, 49161,
             49171, 49162, 49172, 156, 157, 47, 53, 10
@@ -153,5 +153,5 @@ class TestClientHello:
             b"\x01\x00\x00\x03" +  # handshake header
             b"foo"
         ))
-        with pytest.raises(exceptions.TlsProtocolException, message='Cannot parse Client Hello'):
+        with pytest.raises(exceptions.TlsProtocolException, match='Cannot parse Client Hello'):
             tls.ClientHello.from_file(rfile)

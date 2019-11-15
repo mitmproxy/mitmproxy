@@ -35,6 +35,7 @@ class DummyServer:
 class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
+    channel: controller.Channel
 
     def __init__(self, config: config.ProxyConfig) -> None:
         """
@@ -53,7 +54,6 @@ class ProxyServer(tcp.TCPServer):
             raise exceptions.ServerException(
                 'Error starting proxy server: ' + repr(e)
             ) from e
-        self.channel: controller.Channel = None
 
     def set_channel(self, channel):
         self.channel = channel

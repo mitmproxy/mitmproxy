@@ -36,7 +36,7 @@ mitmproxy currently does not support HTTP/2 Cleartext (h2c) since none of the
 major browser vendors have implemented it.
 
 Some websites are still having problems with correct HTTP/2 support in their
-webservers and can cause errors, dropped connectiones, or simply no response at
+webservers and can cause errors, dropped connections, or simply no response at
 all. We are trying to be as tolerant and forgiving as possible with the types of
 data we send and receive, but
 [some](https://github.com/mitmproxy/mitmproxy/issues/1745)

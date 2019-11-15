@@ -12,18 +12,25 @@ import mitmproxy.types
 import pyperclip
 
 
-def raise_if_missing_request(f: flow.Flow) -> None:
+def cleanup_request(f: flow.Flow):
     if not hasattr(f, "request"):
         raise exceptions.CommandError("Can't export flow with no request.")
+    request = f.request.copy()  # type: ignore
+    request.decode(strict=False)
+    # a bit of clean-up
+    if request.method == 'GET' and request.headers.get("content-length", None) == "0":
+        request.headers.pop('content-length')
+    request.headers.pop(':authority', None)
+    return request
 
 
 def curl_command(f: flow.Flow) -> str:
-    raise_if_missing_request(f)
+    request = cleanup_request(f)
     args = ["curl"]
-    request = f.request.copy()  # type: ignore
-    request.decode(strict=False)
     for k, v in request.headers.items(multi=True):
+        args += ["--compressed "] if k == 'accept-encoding' else []
         args += ["-H", "%s:%s" % (k, v)]
+
     if request.method != "GET":
         args += ["-X", request.method]
     args.append(request.url)
@@ -39,9 +46,7 @@ def curl_command(f: flow.Flow) -> str:
 
 
 def httpie_command(f: flow.Flow) -> str:
-    raise_if_missing_request(f)
-    request = f.request.copy()  # type: ignore
-    request.decode(strict=False)
+    request = cleanup_request(f)
     args = ["http", request.method, request.url]
     for k, v in request.headers.items(multi=True):
         args.append("%s:%s" % (k, v))
@@ -58,8 +63,7 @@ def httpie_command(f: flow.Flow) -> str:
 
 
 def raw(f: flow.Flow) -> bytes:
-    raise_if_missing_request(f)
-    return assemble.assemble_request(f.request)  # type: ignore
+    return assemble.assemble_request(cleanup_request(f))  # type: ignore
 
 
 formats = dict(

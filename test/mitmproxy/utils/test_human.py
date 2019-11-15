@@ -47,6 +47,7 @@ def test_pretty_duration():
     assert human.pretty_duration(10000) == "10000s"
     assert human.pretty_duration(1.123) == "1.12s"
     assert human.pretty_duration(0.123) == "123ms"
+    assert human.pretty_duration(None) == ""
 
 
 def test_format_address():

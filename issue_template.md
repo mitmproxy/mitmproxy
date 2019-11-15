@@ -14,4 +14,4 @@
 <!-- Paste the output of "mitmproxy --version" here. -->
 
 
-<!-- Please use the mitmproxy forums (https://discourse.mitmproxy.org/) for support/how-to questions. Thanks! :) -->
+<!-- Please use StackOverflow (https://stackoverflow.com/questions/tagged/mitmproxy) for support/how-to questions. Thanks! :) -->

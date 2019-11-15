@@ -15,29 +15,23 @@ from unittest import mock
 @pytest.fixture
 def get_request():
     return tflow.tflow(
-        req=tutils.treq(
-            method=b'GET',
-            content=b'',
-            path=b"/path?a=foo&a=bar&b=baz"
-        )
-    )
+        req=tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz"))
 
 
 @pytest.fixture
 def post_request():
     return tflow.tflow(
-        req=tutils.treq(
-            method=b'POST',
-            headers=(),
-            content=bytes(range(256))
-        )
-    )
+        req=tutils.treq(method=b'POST', headers=(), content=bytes(range(256))))
 
 
 @pytest.fixture
 def patch_request():
     return tflow.tflow(
-        req=tutils.treq(method=b'PATCH', path=b"/path?query=param")
+        req=tutils.treq(
+            method=b'PATCH',
+            content=b'content',
+            path=b"/path?query=param"
+        )
     )
 
 
@@ -48,7 +42,7 @@ def tcp_flow():
 
 class TestExportCurlCommand:
     def test_get(self, get_request):
-        result = """curl -H header:qvalue -H content-length:0 'http://address:22/path?a=foo&a=bar&b=baz'"""
+        result = """curl -H header:qvalue 'http://address:22/path?a=foo&a=bar&b=baz'"""
         assert export.curl_command(get_request) == result
 
     def test_post(self, post_request):
@@ -85,7 +79,7 @@ class TestExportCurlCommand:
 
 class TestExportHttpieCommand:
     def test_get(self, get_request):
-        result = """http GET 'http://address:22/path?a=foo&a=bar&b=baz' header:qvalue content-length:0"""
+        result = """http GET 'http://address:22/path?a=foo&a=bar&b=baz' header:qvalue"""
         assert export.httpie_command(get_request) == result
 
     def test_post(self, post_request):

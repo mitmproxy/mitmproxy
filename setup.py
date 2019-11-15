@@ -18,7 +18,7 @@ with open(os.path.join(here, "mitmproxy", "version.py")) as f:
 setup(
     name="mitmproxy",
     version=VERSION,
-    description="An interactive, SSL-capable, man-in-the-middle HTTP proxy for penetration testers and software developers.",
+    description="An interactive, SSL/TLS-capable intercepting proxy for HTTP/1, HTTP/2, and WebSockets.",
     long_description=long_description,
     url="http://mitmproxy.org",
     author="Aldo Cortesi",
@@ -62,25 +62,28 @@ setup(
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
         "blinker>=1.4, <1.5",
-        "brotlipy>=0.7.0,<0.8",
-        "certifi>=2015.11.20.1",  # no semver here - this should always be on the last release!
-        "click>=6.2, <7",
+        "Brotli>=1.0,<1.1",
+        "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
+        "click>=7.0,<8",
         "cryptography>=2.1.4,<2.5",
+        "flask>=1.1.1,<1.2",
         "h2>=3.0.1,<4",
         "hyperframe>=5.1.0,<6",
         "kaitaistruct>=0.7,<0.9",
-        "ldap3>=2.5,<2.6",
+        "ldap3>=2.6.1,<2.7",
         "passlib>=1.6.5, <1.8",
-        "protobuf>=3.6.0, <3.7",
+        "protobuf>=3.6.0, <3.11",
         "pyasn1>=0.3.1,<0.5",
-        "pyOpenSSL>=17.5,<18.1",
-        "pyparsing>=2.1.3,<2.4",
+        "pyOpenSSL>=19.0.0,<20",
+        "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.8",
-        "ruamel.yaml>=0.15,<0.16",
-        "sortedcontainers>=1.5.4,<2.1",
-        "tornado>=4.3,<5.2",
+        "ruamel.yaml>=0.16,<0.17",
+        "sortedcontainers>=2.1.0,<2.2",
+        "tornado>=4.3,<7",
         "urwid>=2.0.1,<2.1",
-        "wsproto>=0.12.0,<0.13.0",
+        "wsproto>=0.14.0,<0.15.0",
+        "publicsuffix2>=2.20190812,<3",
+        "zstandard>=0.11.0,<0.13.0",
     ],
     extras_require={
         ':sys_platform == "win32"': [
@@ -88,22 +91,21 @@ setup(
         ],
         'dev': [
             "asynctest>=0.12.0",
-            "flake8>=3.5,<3.7",
-            "Flask>=1.0,<1.1",
-            "mypy>=0.590,<0.591",
+            "flake8>=3.7.8,<3.8",
+            "Flask>=1.0,<1.2",
+            "mypy>=0.740,<0.741",
             "parver>=0.1,<2.0",
-            "pytest-asyncio>=0.8",
-            "pytest-cov>=2.5.1,<3",
-            "pytest-faulthandler>=1.3.1,<2",
-            "pytest-timeout>=1.2.1,<2",
-            "pytest-xdist>=1.22,<2",
-            "pytest>=4.0,<5",
-            "requests>=2.9.1, <3",
-            "tox>=3.5,<3.6",
-            "rstcheck>=2.2, <4.0",
+            "pytest-asyncio>=0.10.0,<0.11",
+            "pytest-cov>=2.7.1,<3",
+            "pytest-timeout>=1.3.3,<2",
+            "pytest-xdist>=1.29,<2",
+            "pytest>=5.1.3,<6",
+            "requests>=2.9.1,<3",
+            "tox>=3.5,<3.15",
+            "rstcheck>=2.2,<4.0",
         ],
         'examples': [
-            "beautifulsoup4>=4.4.1, <4.7"
+            "beautifulsoup4>=4.4.1,<4.9"
         ]
     }
 )

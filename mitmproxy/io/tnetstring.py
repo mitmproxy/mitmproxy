@@ -192,22 +192,22 @@ def parse(data_type: int, data: bytes) -> TSerializable:
         try:
             return int(data)
         except ValueError:
-            raise ValueError("not a tnetstring: invalid integer literal: {}".format(data))
+            raise ValueError(f"not a tnetstring: invalid integer literal: {data!r}")
     if data_type == ord(b'^'):
         try:
             return float(data)
         except ValueError:
-            raise ValueError("not a tnetstring: invalid float literal: {}".format(data))
+            raise ValueError(f"not a tnetstring: invalid float literal: {data!r}")
     if data_type == ord(b'!'):
         if data == b'true':
             return True
         elif data == b'false':
             return False
         else:
-            raise ValueError("not a tnetstring: invalid boolean literal: {}".format(data))
+            raise ValueError(f"not a tnetstring: invalid boolean literal: {data!r}")
     if data_type == ord(b'~'):
         if data:
-            raise ValueError("not a tnetstring: invalid null literal")
+            raise ValueError(f"not a tnetstring: invalid null literal: {data!r}")
         return None
     if data_type == ord(b']'):
         l = []
@@ -236,7 +236,7 @@ def pop(data: bytes) -> typing.Tuple[TSerializable, bytes]:
         blength, data = data.split(b':', 1)
         length = int(blength)
     except ValueError:
-        raise ValueError("not a tnetstring: missing or invalid length prefix: {}".format(data))
+        raise ValueError(f"not a tnetstring: missing or invalid length prefix: {data!r}")
     try:
         data, data_type, remain = data[:length], data[length], data[length + 1:]
     except IndexError:

@@ -10,7 +10,7 @@ menu:
 There are two main reasons why you may want to exempt some traffic from
 mitmproxy's interception mechanism:
 
-- **Certificate pinning:** Some traffic is is protected using [Certificate
+- **Certificate pinning:** Some traffic is protected using [Certificate
   Pinning](https://security.stackexchange.com/questions/29988/what-is-certificate-pinning)
   and mitmproxy's interception leads to errors. For example, the Twitter app,
   Windows Update or the Apple App Store fail to work if mitmproxy is active.

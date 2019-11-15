@@ -304,7 +304,7 @@ def refresh_set_cookie_header(c: str, delta: int) -> str:
             e = email.utils.parsedate_tz(attrs["expires"])
             if e:
                 f = email.utils.mktime_tz(e) + delta
-                attrs.set_all("expires", [email.utils.formatdate(f)])
+                attrs.set_all("expires", [email.utils.formatdate(f, usegmt=True)])
             else:
                 # This can happen when the expires tag is invalid.
                 # reddit.com sends a an expires tag like this: "Thu, 31 Dec

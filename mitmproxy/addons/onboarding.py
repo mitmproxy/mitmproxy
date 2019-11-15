@@ -10,7 +10,7 @@ class Onboarding(wsgiapp.WSGIApp):
     name = "onboarding"
 
     def __init__(self):
-        super().__init__(app.Adapter(app.application), None, None)
+        super().__init__(app, None, None)
 
     def load(self, loader):
         loader.add_option(
@@ -32,6 +32,7 @@ class Onboarding(wsgiapp.WSGIApp):
     def configure(self, updated):
         self.host = ctx.options.onboarding_host
         self.port = ctx.options.onboarding_port
+        app.config["CONFDIR"] = ctx.options.confdir
 
     def request(self, f):
         if ctx.options.onboarding:

@@ -320,7 +320,9 @@ class OptManager:
         update = {}
         for optname, optval in self.deferred.items():
             if optname in self._options:
-                update[optname] = self.parse_setval(self._options[optname], optval)
+                if isinstance(optval, str):
+                    optval = self.parse_setval(self._options[optname], optval)
+                update[optname] = optval
         self.update(**update)
         for k in update.keys():
             del self.deferred[k]
@@ -549,7 +551,9 @@ def serialize(opts: OptManager, text: str, defaults: bool = False) -> str:
     for k in list(data.keys()):
         if k not in opts._options:
             del data[k]
-    return ruamel.yaml.round_trip_dump(data)
+    ret = ruamel.yaml.round_trip_dump(data)
+    assert ret
+    return ret
 
 
 def save(opts: OptManager, path: str, defaults: bool =False) -> None:
