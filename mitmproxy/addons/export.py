@@ -23,6 +23,14 @@ def cleanup_request(f: flow.Flow):
     return request
 
 
+def cleanup_response(f: flow.Flow):
+    if not hasattr(f, "response"):
+        raise exceptions.CommandError("Can't export flow with no response.")
+    response = f.response.copy()  # type: ignore
+    response.decode(strict=False)
+    return response
+
+
 def curl_command(f: flow.Flow) -> str:
     data = "curl "
     request = cleanup_request(f)
@@ -53,14 +61,18 @@ def httpie_command(f: flow.Flow) -> str:
     return data
 
 
-def raw(f: flow.Flow) -> bytes:
+def raw_request(f: flow.Flow) -> bytes:
     return assemble.assemble_request(cleanup_request(f))  # type: ignore
+
+def raw_response(f: flow.Flow) -> bytes:
+    return assemble.assemble_response(cleanup_response(f))  # type: ignore
 
 
 formats = dict(
     curl = curl_command,
     httpie = httpie_command,
-    raw = raw,
+    raw_request = raw_request,
+    raw_response = raw_response,
 )
 
 
