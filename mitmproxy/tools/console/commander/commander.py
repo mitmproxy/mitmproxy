@@ -103,8 +103,6 @@ class CommandBuffer:
                         ret.append(("text", p.value))
                 elif p.value:
                     ret.append(("commander_invalid", p.value))
-                else:
-                    ret.append(("text", ""))
 
             if remhelp:
                 ret.append(("text", " "))
