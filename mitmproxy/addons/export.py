@@ -30,6 +30,7 @@ def cleanup_request(f: flow.Flow) -> http.HTTPRequest:
 def request_content_for_console(request: http.HTTPRequest) -> str:
     try:
         text = request.get_text(strict=True)
+        assert text
     except ValueError:
         # shlex.quote doesn't support a bytes object
         # see https://github.com/python/cpython/pull/10871

@@ -77,6 +77,14 @@ class TestExportCurlCommand:
         assert shlex.split(command)[-2] == '-d'
         assert shlex.split(command)[-1] == "'&#"
 
+    def test_strip_unnecessary(self, get_request):
+        get_request.request.headers.clear()
+        get_request.request.headers["host"] = "address"
+        get_request.request.headers[":authority"] = "address"
+        get_request.request.headers["accept-encoding"] = "br"
+        result = """curl --compressed 'http://address:22/path?a=foo&a=bar&b=baz'"""
+        assert export.curl_command(get_request) == result
+
 
 class TestExportHttpieCommand:
     def test_get(self, get_request):
