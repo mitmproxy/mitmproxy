@@ -52,7 +52,7 @@ CompletionState = typing.NamedTuple(
 class CommandBuffer:
     def __init__(self, master: mitmproxy.master.Master, start: str = "") -> None:
         self.master = master
-        self.text = self.flatten(start)
+        self.text = start
         # Cursor is always within the range [0:len(buffer)].
         self._cursor = len(self.text)
         self.completion: CompletionState = None
@@ -105,18 +105,13 @@ class CommandBuffer:
                     ret.append(("commander_invalid", p.value))
                 else:
                     ret.append(("text", ""))
-                ret.append(("text", " "))
+
             if remhelp:
                 ret.append(("text", " "))
                 for v in remhelp:
                     ret.append(("commander_hint", "%s " % v))
 
         return ret
-
-    def flatten(self, txt):
-        parts, _ = self.parse_quoted(txt)
-        ret = [x.value for x in parts]
-        return " ".join(ret)
 
     def left(self) -> None:
         self.cursor = self.cursor - 1
@@ -141,7 +136,7 @@ class CommandBuffer:
             nxt = self.completion.completer.cycle()
             buf = " ".join([i.value for i in self.completion.parse[:-1]]) + " " + nxt
             buf = buf.strip()
-            self.text = self.flatten(buf)
+            self.text = buf
             self.cursor = len(self.text)
 
     def backspace(self) -> None:
@@ -155,6 +150,11 @@ class CommandBuffer:
         """
             Inserts text at the cursor.
         """
+
+        # We don't want to insert a space before the command
+        if k == ' ' and self.text[0:self.cursor].strip() == '':
+            return
+
         self.text = self.text[:self.cursor] + k + self.text[self.cursor:]
         self.cursor += len(k)
         self.completion = None
