@@ -165,7 +165,6 @@ class ServerPlayback:
             Returns the next flow object, or None if no matching flow was
             found.
         """
-        request = flow.request
         hash = self._hash(flow)
         if hash in self.flowmap:
             if ctx.options.server_replay_nopop:

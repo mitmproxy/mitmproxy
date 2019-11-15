@@ -1,13 +1,13 @@
 import urllib
+
 import pytest
 
-from mitmproxy.test import taddons
-from mitmproxy.test import tflow
-
 import mitmproxy.test.tutils
-from mitmproxy.addons import serverplayback
 from mitmproxy import exceptions
 from mitmproxy import io
+from mitmproxy.addons import serverplayback
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 def tdump(path, flows):
@@ -321,7 +321,7 @@ def test_server_playback_full():
     with taddons.context(s) as tctx:
         tctx.configure(
             s,
-            server_replay_refresh = True,
+            server_replay_refresh=True,
         )
 
         f = tflow.tflow()
@@ -345,7 +345,7 @@ def test_server_playback_kill():
     with taddons.context(s) as tctx:
         tctx.configure(
             s,
-            server_replay_refresh = True,
+            server_replay_refresh=True,
             server_replay_kill_extra=True
         )
 
@@ -357,3 +357,25 @@ def test_server_playback_kill():
         f.request.host = "nonexistent"
         tctx.cycle(s, f)
         assert f.reply.value == exceptions.Kill
+
+
+def test_server_playback_response_deleted():
+    """
+    The server playback addon holds references to flows that can be modified by the user in the meantime.
+    One thing that can happen is that users remove the response object. This happens for example when doing a client
+    replay at the same time.
+    """
+    sp = serverplayback.ServerPlayback()
+    with taddons.context(sp) as tctx:
+        tctx.configure(sp)
+        f1 = tflow.tflow(resp=True)
+        f2 = tflow.tflow(resp=True)
+
+        assert not sp.flowmap
+
+        sp.load_flows([f1, f2])
+        assert sp.flowmap
+
+        f1.response = f2.response = None
+        assert not sp.next_flow(f1)
+        assert not sp.flowmap
