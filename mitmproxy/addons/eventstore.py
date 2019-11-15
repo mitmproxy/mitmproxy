@@ -14,7 +14,7 @@ class EventStore:
         self.sig_refresh = blinker.Signal()
 
     @property
-    def size(self) -> int:
+    def size(self) -> typing.Optional[int]:
         return self.data.maxlen
 
     def log(self, entry: LogEntry) -> None:

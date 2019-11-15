@@ -50,7 +50,7 @@ a newly created `/etc/sysctl.d/mitmproxy.conf` (see [here](https://superuser.com
 sysctl -w net.ipv4.conf.all.send_redirects=0
 {{< / highlight >}}
 
-If your test device is on the same physical network, your machine shouldn't inform the device that 
+If your test device is on the same physical network, your machine shouldn't inform the device that
 there's a shorter route available by skipping the proxy.
 
 If you want to persist this across reboots, see above.
@@ -83,8 +83,33 @@ The `--mode transparent` option turns on transparent mode, and the `--showhost` 
 
 ### 5. Finally, configure your test device.
 
-Set the test device up to use the host on which mitmproxy is running as the default gateway and 
+Set the test device up to use the host on which mitmproxy is running as the default gateway and
 [install the mitmproxy certificate authority on the test device]({{< relref "concepts-certificates" >}}).
+
+### Work-around to redirect traffic originating from the machine itself
+
+Follow steps **1, 2** as above, but *instead* of the commands in step **3**, run the following
+
+Create a user to run the mitmproxy
+
+{{< highlight bash  >}}
+sudo useradd --create-home mitmproxyuser
+sudo -u mitmproxyuser bash -c 'cd ~ && pip install --user mitmproxy'
+{{< / highlight >}}
+
+Then, configure the iptables rules to redirect all traffic from our local machine to mitmproxy. **Note**, as soon as you run these, you won't be able to perform successful network calls *until* you start mitmproxy. If you run into issues, `iptables -t nat -F` is a heavy handed way to flush (clear) *all* the rules from the iptables `nat` table (which includes any other rules you had configured).
+
+{{< highlight bash  >}}
+iptables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 80 -j REDIRECT --to-port 8080
+iptables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 443 -j REDIRECT --to-port 8080
+ip6tables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 80 -j REDIRECT --to-port 8080
+ip6tables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 443 -j REDIRECT --to-port 8080
+{{< / highlight >}}
+
+This will redirect the packets from all users other than `mitmproxyuser` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `mitmproxyuser`. Hence step **4** should look like:
+{{< highlight bash  >}}
+sudo -u mitmproxyuser bash -c '$HOME/.local/bin/mitmproxy --mode transparent --showhost --set block_global=false'
+{{< / highlight >}}
 
 
 
@@ -132,7 +157,7 @@ mitmproxy to use the value of the Host header for URL display.
 
 ### 6. Finally, configure your test device.
 
-Set the test device up to use the host on which mitmproxy is running as the default gateway and 
+Set the test device up to use the host on which mitmproxy is running as the default gateway and
 [install the mitmproxy certificate authority on the test device]({{< relref "concepts-certificates" >}}).
 
 
@@ -213,7 +238,7 @@ mitmproxy to use the value of the Host header for URL display.
 
 ### 7. Finally, configure your test device.
 
-Set the test device up to use the host on which mitmproxy is running as the default gateway and 
+Set the test device up to use the host on which mitmproxy is running as the default gateway and
 [install the mitmproxy certificate authority on the test device]({{< relref "concepts-certificates" >}}).
 
 {{% note %}}
@@ -229,7 +254,7 @@ for more.
 
 ### Work-around to redirect traffic originating from the machine itself
 
-Follow the steps **1, 2** as above. In step **3** change the contents of the file **pf.conf** to
+Follow steps **1, 2** as above, but in step **2** change the contents of the file **pf.conf** to
 
 {{< highlight none >}}
 #The ports to redirect to proxy
@@ -246,18 +271,12 @@ tproxy_user = "nobody"
 #This cannot involve the user which runs the
 #transparent proxy as that would cause an infinite loop.
 #
-#Here we redirect for all users which don't run transparent proxy.
-redir_users = "{ !=" $tproxy_user "}"
-
-#If you only wish to redirect traffic for particular users
-#you may also do:
-#redir_users = "{= john, = jane}"
 
 rdr pass proto tcp from any to any port $redir_ports -> $tproxy
-pass out route-to (lo0 127.0.0.1) proto tcp from any to any port $redir_ports user $redir_users
+pass out route-to (lo0 127.0.0.1) proto tcp from any to any port $redir_ports user { != $tproxy_user }
 {{< / highlight >}}
 
-Follow steps **4-6** above. This will redirect the packets from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `nobody`. Hence step **7** should look like:
+Follow steps **3-5** above. This will redirect the packets from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `nobody`. Hence step **6** should look like:
 
 {{< highlight bash  >}}
 sudo -u nobody mitmproxy --mode transparent --showhost

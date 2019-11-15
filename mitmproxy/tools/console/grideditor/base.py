@@ -254,7 +254,7 @@ FIRST_WIDTH_MAX = 40
 
 
 class BaseGridEditor(urwid.WidgetWrap):
-    title = ""
+    title: str = ""
     keyctx = "grideditor"
 
     def __init__(
@@ -402,8 +402,8 @@ class BaseGridEditor(urwid.WidgetWrap):
 
 
 class GridEditor(BaseGridEditor):
-    title: str = None
-    columns: typing.Sequence[Column] = None
+    title = ""
+    columns: typing.Sequence[Column] = ()
     keyctx = "grideditor"
 
     def __init__(

@@ -148,7 +148,7 @@ class TestResponseUtils:
     def test_refresh(self):
         r = tresp()
         n = time.time()
-        r.headers["date"] = email.utils.formatdate(n)
+        r.headers["date"] = email.utils.formatdate(n, usegmt=True)
         pre = r.headers["date"]
         r.refresh(946681202)
         assert pre == r.headers["date"]

@@ -7,7 +7,8 @@ This directory houses the mitmproxy documentation available at <https://docs.mit
  1. Install [hugo](https://gohugo.io/).
  2. Windows users: Depending on your git settings, you may need to manually create a symlink from 
  /docs/src/examples to /examples.
-
+ 3. Make sure the mitmproxy Python package is installed.
+ 4. Run `./build-current` to generate the documentation source files in `./src/generated`.
 
 Now you can run `hugo server -D` in ./src.
 

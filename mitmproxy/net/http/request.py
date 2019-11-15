@@ -1,5 +1,6 @@
 import re
 import urllib
+import time
 from typing import Optional, AnyStr, Dict, Iterable, Tuple, Union
 
 from mitmproxy.coretypes import multidict
@@ -63,6 +64,8 @@ class Request(message.Message):
     """
     An HTTP request.
     """
+    data: RequestData
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.data = RequestData(*args, **kwargs)
@@ -101,6 +104,7 @@ class Request(message.Message):
         )
 
         req.url = url
+        req.timestamp_start = time.time()
 
         # Headers can be list or dict, we differentiate here.
         if isinstance(headers, dict):
@@ -421,7 +425,7 @@ class Request(message.Message):
             self.headers["accept-encoding"] = (
                 ', '.join(
                     e
-                    for e in {"gzip", "identity", "deflate", "br"}
+                    for e in {"gzip", "identity", "deflate", "br", "zstd"}
                     if e in accept_encoding
                 )
             )

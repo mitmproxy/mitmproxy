@@ -5,8 +5,10 @@ from mitmproxy.net import tls
 
 
 CONF_DIR = "~/.mitmproxy"
+CONF_BASENAME = "mitmproxy"
 LISTEN_PORT = 8080
 CONTENT_VIEW_LINES_CUTOFF = 512
+KEY_SIZE = 2048
 
 
 class Options(optmanager.OptManager):
@@ -66,6 +68,10 @@ class Options(optmanager.OptManager):
             the hostname should be used. The supplied value is interpreted as a
             regular expression and matched on the ip or the hostname.
             """
+        )
+        self.add_option(
+            "allow_hosts", Sequence[str], [],
+            "Opposite of --ignore-hosts."
         )
         self.add_option(
             "listen_host", str, "",
@@ -167,6 +173,12 @@ class Options(optmanager.OptManager):
             """
             Flow content view lines limit. Limit is enabled by default to
             speedup flows browsing.
+            """
+        )
+        self.add_option(
+            "key_size", int, KEY_SIZE,
+            """
+            TLS key size for certificates and CA.
             """
         )
 

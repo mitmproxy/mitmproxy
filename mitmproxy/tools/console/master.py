@@ -120,7 +120,7 @@ class ConsoleMaster(master.Master):
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
         # if no EDITOR is set, assume 'vi'
-        c = os.environ.get("EDITOR") or "vi"
+        c = os.environ.get("MITMPROXY_EDITOR") or os.environ.get("EDITOR") or "vi"
         cmd = shlex.split(c)
         cmd.append(name)
         with self.uistopped():
@@ -159,7 +159,7 @@ class ConsoleMaster(master.Master):
                 shell = True
         if not cmd:
             # hm which one should get priority?
-            c = os.environ.get("PAGER") or os.environ.get("EDITOR")
+            c = os.environ.get("MITMPROXY_EDITOR") or os.environ.get("PAGER") or os.environ.get("EDITOR")
             if not c:
                 c = "less"
             cmd = shlex.split(c)

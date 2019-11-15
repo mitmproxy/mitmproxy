@@ -35,20 +35,20 @@ from ..conftest import skip_windows
 class TestCertStore:
 
     def test_create_explicit(self, tmpdir):
-        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        ca = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         assert ca.get_cert(b"foo", [])
 
-        ca2 = certs.CertStore.from_store(str(tmpdir), "test")
+        ca2 = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         assert ca2.get_cert(b"foo", [])
 
         assert ca.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
 
     def test_create_no_common_name(self, tmpdir):
-        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        ca = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         assert ca.get_cert(None, [])[0].cn is None
 
     def test_create_tmp(self, tmpdir):
-        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        ca = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         assert ca.get_cert(b"foo.com", [])
         assert ca.get_cert(b"foo.com", [])
         assert ca.get_cert(b"*.foo.com", [])
@@ -57,7 +57,7 @@ class TestCertStore:
         assert r[1] == ca.default_privatekey
 
     def test_sans(self, tmpdir):
-        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        ca = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         c1 = ca.get_cert(b"foo.com", [b"*.bar.com"])
         ca.get_cert(b"foo.bar.com", [])
         # assert c1 == c2
@@ -65,13 +65,13 @@ class TestCertStore:
         assert not c1 == c3
 
     def test_sans_change(self, tmpdir):
-        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        ca = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         ca.get_cert(b"foo.com", [b"*.bar.com"])
         cert, key, chain_file = ca.get_cert(b"foo.bar.com", [b"*.baz.com"])
         assert b"*.baz.com" in cert.altnames
 
     def test_expire(self, tmpdir):
-        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        ca = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         ca.STORE_CAP = 3
         ca.get_cert(b"one.com", [])
         ca.get_cert(b"two.com", [])
@@ -95,8 +95,8 @@ class TestCertStore:
         assert (b"four.com", ()) in ca.certs
 
     def test_overrides(self, tmpdir):
-        ca1 = certs.CertStore.from_store(str(tmpdir.join("ca1")), "test")
-        ca2 = certs.CertStore.from_store(str(tmpdir.join("ca2")), "test")
+        ca1 = certs.CertStore.from_store(str(tmpdir.join("ca1")), "test", 2048)
+        ca2 = certs.CertStore.from_store(str(tmpdir.join("ca2")), "test", 2048)
         assert not ca1.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
 
         dc = ca2.get_cert(b"foo.com", [b"sans.example.com"])
@@ -124,7 +124,7 @@ class TestCertStore:
 class TestDummyCert:
 
     def test_with_ca(self, tmpdir):
-        ca = certs.CertStore.from_store(str(tmpdir), "test")
+        ca = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         r = certs.dummy_cert(
             ca.default_privatekey,
             ca.default_ca,

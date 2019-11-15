@@ -36,9 +36,9 @@ rD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=
 """
 
 
-def create_ca(organization, cn, exp):
+def create_ca(organization, cn, exp, key_size):
     key = OpenSSL.crypto.PKey()
-    key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
+    key.generate_key(OpenSSL.crypto.TYPE_RSA, key_size)
     cert = OpenSSL.crypto.X509()
     cert.set_serial_number(int(time.time() * 10000))
     cert.set_version(2)
@@ -115,6 +115,13 @@ def dummy_cert(privkey, cacert, commonname, sans, organization):
         cert.set_version(2)
         cert.add_extensions(
             [OpenSSL.crypto.X509Extension(b"subjectAltName", False, ss)])
+    cert.add_extensions([
+        OpenSSL.crypto.X509Extension(
+            b"extendedKeyUsage",
+            False,
+            b"serverAuth,clientAuth"
+        )
+    ])
     cert.set_pubkey(cacert.get_pubkey())
     cert.sign(privkey, "sha256")
     return Cert(cert)
@@ -182,10 +189,10 @@ class CertStore:
             return dh
 
     @classmethod
-    def from_store(cls, path, basename):
+    def from_store(cls, path, basename, key_size):
         ca_path = os.path.join(path, basename + "-ca.pem")
         if not os.path.exists(ca_path):
-            key, ca = cls.create_store(path, basename)
+            key, ca = cls.create_store(path, basename, key_size)
         else:
             with open(ca_path, "rb") as f:
                 raw = f.read()
@@ -215,14 +222,14 @@ class CertStore:
             os.umask(original_umask)
 
     @staticmethod
-    def create_store(path, basename, organization=None, cn=None, expiry=DEFAULT_EXP):
+    def create_store(path, basename, key_size, organization=None, cn=None, expiry=DEFAULT_EXP):
         if not os.path.exists(path):
             os.makedirs(path)
 
         organization = organization or basename
         cn = cn or basename
 
-        key, ca = create_ca(organization=organization, cn=cn, exp=expiry)
+        key, ca = create_ca(organization=organization, cn=cn, exp=expiry, key_size=key_size)
         # Dump the CA plus private key
         with CertStore.umask_secret(), open(os.path.join(path, basename + "-ca.pem"), "wb") as f:
             f.write(
@@ -308,7 +315,12 @@ class CertStore:
             ret.append(b"*." + b".".join(parts[i:]))
         return ret
 
-    def get_cert(self, commonname: typing.Optional[bytes], sans: typing.List[bytes], organization: typing.Optional[bytes] = None):
+    def get_cert(
+            self,
+            commonname: typing.Optional[bytes],
+            sans: typing.List[bytes],
+            organization: typing.Optional[bytes] = None
+    ) -> typing.Tuple["Cert", OpenSSL.SSL.PKey, str]:
         """
             Returns an (cert, privkey, cert_chain) tuple.
 

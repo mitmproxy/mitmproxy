@@ -1,14 +1,18 @@
 import re
-from typing import Optional, Union  # noqa
+from typing import Optional  # noqa
 
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import encoding
 from mitmproxy.coretypes import serializable
-from mitmproxy.net.http import headers
+from mitmproxy.net.http import headers as mheaders
 
 
 class MessageData(serializable.Serializable):
-    content: bytes = None
+    headers: mheaders.Headers
+    content: bytes
+    http_version: bytes
+    timestamp_start: float
+    timestamp_end: float
 
     def __eq__(self, other):
         if isinstance(other, MessageData):
@@ -18,7 +22,7 @@ class MessageData(serializable.Serializable):
     def set_state(self, state):
         for k, v in state.items():
             if k == "headers":
-                v = headers.Headers.from_state(v)
+                v = mheaders.Headers.from_state(v)
             setattr(self, k, v)
 
     def get_state(self):
@@ -28,12 +32,12 @@ class MessageData(serializable.Serializable):
 
     @classmethod
     def from_state(cls, state):
-        state["headers"] = headers.Headers.from_state(state["headers"])
+        state["headers"] = mheaders.Headers.from_state(state["headers"])
         return cls(**state)
 
 
 class Message(serializable.Serializable):
-    data: MessageData = None
+    data: MessageData
 
     def __eq__(self, other):
         if isinstance(other, Message):
@@ -48,7 +52,7 @@ class Message(serializable.Serializable):
 
     @classmethod
     def from_state(cls, state):
-        state["headers"] = headers.Headers.from_state(state["headers"])
+        state["headers"] = mheaders.Headers.from_state(state["headers"])
         return cls(**state)
 
     @property
@@ -78,7 +82,7 @@ class Message(serializable.Serializable):
     def raw_content(self, content):
         self.data.content = content
 
-    def get_content(self, strict: bool=True) -> bytes:
+    def get_content(self, strict: bool=True) -> Optional[bytes]:
         """
         The uncompressed HTTP message body as bytes.
 
@@ -160,7 +164,7 @@ class Message(serializable.Serializable):
         self.data.timestamp_end = timestamp_end
 
     def _get_content_type_charset(self) -> Optional[str]:
-        ct = headers.parse_content_type(self.headers.get("content-type", ""))
+        ct = mheaders.parse_content_type(self.headers.get("content-type", ""))
         if ct:
             return ct[2].get("charset")
         return None
@@ -191,10 +195,9 @@ class Message(serializable.Serializable):
 
         See also: :py:attr:`content`, :py:class:`raw_content`
         """
-        if self.raw_content is None:
-            return None
-
         content = self.get_content(strict)
+        if content is None:
+            return None
         enc = self._guess_encoding(content)
         try:
             return encoding.decode(content, enc)
@@ -213,9 +216,9 @@ class Message(serializable.Serializable):
             self.content = encoding.encode(text, enc)
         except ValueError:
             # Fall back to UTF-8 and update the content-type header.
-            ct = headers.parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
+            ct = mheaders.parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
             ct[2]["charset"] = "utf-8"
-            self.headers["content-type"] = headers.assemble_content_type(*ct)
+            self.headers["content-type"] = mheaders.assemble_content_type(*ct)
             enc = "utf8"
             self.content = text.encode(enc, "surrogateescape")
 
@@ -236,7 +239,7 @@ class Message(serializable.Serializable):
 
     def encode(self, e):
         """
-        Encodes body with the encoding e, where e is "gzip", "deflate", "identity", or "br".
+        Encodes body with the encoding e, where e is "gzip", "deflate", "identity", "br", or "zstd".
         Any existing content-encodings are overwritten,
         the content is not decoded beforehand.
 

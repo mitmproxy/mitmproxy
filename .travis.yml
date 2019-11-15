@@ -51,8 +51,7 @@ matrix:
       install:
         - wget https://github.com/gohugoio/hugo/releases/download/v0.41/hugo_0.41_Linux-64bit.deb
         - sudo dpkg -i hugo*.deb
-        - pip install tox virtualenv setuptools
-        - pyenv global system 3.6
+        - pip install -U tox virtualenv setuptools
       script:
         - tox
       after_success:
@@ -65,11 +64,11 @@ install:
       brew update || brew update
       brew outdated pyenv || brew upgrade pyenv
       eval "$(pyenv init -)"
-      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.6.5
-      pyenv global 3.6.5
-      pyenv shell 3.6.5
+      env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install --skip-existing 3.6.9
+      pyenv global 3.6.9
+      pyenv shell 3.6.9
     fi
-  - pip install tox virtualenv setuptools
+  - pip install -U tox virtualenv setuptools
 
 script:
   # All these steps MUST succeed for the job to be successful!

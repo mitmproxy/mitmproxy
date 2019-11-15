@@ -135,19 +135,19 @@ function changeTo(device) {
 <h2 class="text-center"> Click to install your mitmproxy certificate </h2>
 <div id="certbank" class="row">
     <div class="col-md-3">
-        <a onclick="changeTo('apple')" href="/cert/pem"><i class="fa fa-apple fa-5x"></i></a>
+        <a target="_blank" onclick="changeTo('apple')" href="/cert/pem"><i class="fa fa-apple fa-5x"></i></a>
         <p>Apple</p>
     </div>
     <div class="col-md-3">
-        <a onclick="changeTo('windows')" href="/cert/p12"><i class="fa fa-windows fa-5x"></i></a>
+        <a target="_blank" onclick="changeTo('windows')" href="/cert/p12"><i class="fa fa-windows fa-5x"></i></a>
         <p>Windows</p>
     </div>
     <div class="col-md-3">
-        <a onclick="changeTo('android')" href="/cert/pem"><i class="fa fa-android fa-5x"></i></a>
+        <a target="_blank" onclick="changeTo('android')" href="/cert/pem"><i class="fa fa-android fa-5x"></i></a>
         <p>Android</p>
     </div>
     <div class="col-md-3">
-        <a onclick="changeTo('asterisk')" href="/cert/pem"><i class="fa fa-asterisk fa-5x"></i></a>
+        <a target="_blank" onclick="changeTo('asterisk')" href="/cert/pem"><i class="fa fa-asterisk fa-5x"></i></a>
         <p>Other</p>
     </div>
 </div>
@@ -167,4 +167,4 @@ function changeTo(device) {
     between mitmproxy installations.
 </div>
 
-{% end %}
+{% endblock %}

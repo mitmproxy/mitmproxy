@@ -21,16 +21,25 @@ def parse(url):
         Raises:
             ValueError, if the URL is not properly formatted.
     """
-    parsed = urllib.parse.urlparse(url)
+    # Size of Ascii character after encoding is 1 byte which is same as its size
+    # But non-Ascii character's size after encoding will be more than its size
+    def ascii_check(l):
+        if len(l) == len(str(l).encode()):
+            return True
+        return False
 
+    if isinstance(url, bytes):
+        url = url.decode()
+        if not ascii_check(url):
+            url = urllib.parse.urlsplit(url)
+            url = list(url)
+            url[3] = urllib.parse.quote(url[3])
+            url = urllib.parse.urlunsplit(url)
+
+    parsed = urllib.parse.urlparse(url)
     if not parsed.hostname:
         raise ValueError("No hostname given")
 
-    if isinstance(url, bytes):
-        host = parsed.hostname
-
-        # this should not raise a ValueError,
-        # but we try to be very forgiving here and accept just everything.
     else:
         host = parsed.hostname.encode("idna")
         if isinstance(parsed, urllib.parse.ParseResult):

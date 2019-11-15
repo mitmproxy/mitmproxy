@@ -37,6 +37,12 @@ console_layouts = [
     "horizontal",
 ]
 
+console_flowlist_layout = [
+    "default",
+    "table",
+    "list"
+]
+
 
 class UnsupportedLog:
     """
@@ -112,6 +118,13 @@ class ConsoleAddon:
         loader.add_option(
             "console_mouse", bool, True,
             "Console mouse interaction."
+        )
+
+        loader.add_option(
+            "console_flowlist_layout",
+            str, "default",
+            "Set the flowlist layout",
+            choices=sorted(console_flowlist_layout)
         )
 
     @command.command("console.layout.options")
@@ -428,7 +441,12 @@ class ConsoleAddon:
             message.content = c.rstrip(b"\n")
         elif part == "set-cookies":
             self.master.switch_view("edit_focus_setcookies")
-        elif part in ["url", "method", "status_code", "reason"]:
+        elif part == "url":
+            url = flow.request.url.encode()
+            edited_url = self.master.spawn_editor(url)
+            url = edited_url.rstrip(b"\n")
+            flow.request.url = url.decode()
+        elif part in ["method", "status_code", "reason"]:
             self.master.commands.execute(
                 "console.command flow.set @focus %s " % part
             )
