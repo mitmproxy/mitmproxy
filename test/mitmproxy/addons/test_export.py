@@ -42,22 +42,23 @@ def tcp_flow():
 
 class TestExportCurlCommand:
     def test_get(self, get_request):
-        result = """curl -H header:qvalue 'http://address:22/path?a=foo&a=bar&b=baz'"""
+        result = """curl -H 'header: qvalue' 'http://address:22/path?a=foo&a=bar&b=baz'"""
         assert export.curl_command(get_request) == result
 
     def test_post(self, post_request):
         post_request.request.content = b'nobinarysupport'
-        result = "curl -H content-length:15 -X POST http://address:22/path --data-binary nobinarysupport"
+        result = "curl -X POST http://address:22/path -d nobinarysupport"
         assert export.curl_command(post_request) == result
 
     def test_fails_with_binary_data(self, post_request):
         # shlex.quote doesn't support a bytes object
         # see https://github.com/python/cpython/pull/10871
+        post_request.request.headers["Content-Type"] = "application/json; charset=utf-8"
         with pytest.raises(exceptions.CommandError):
             export.curl_command(post_request)
 
     def test_patch(self, patch_request):
-        result = """curl -H header:qvalue -H content-length:7 -X PATCH 'http://address:22/path?query=param' --data-binary content"""
+        result = """curl -H 'header: qvalue' -X PATCH 'http://address:22/path?query=param' -d content"""
         assert export.curl_command(patch_request) == result
 
     def test_tcp(self, tcp_flow):
@@ -73,28 +74,29 @@ class TestExportCurlCommand:
             )
         )
         command = export.curl_command(request)
-        assert shlex.split(command)[-2] == '--data-binary'
+        assert shlex.split(command)[-2] == '-d'
         assert shlex.split(command)[-1] == "'&#"
 
 
 class TestExportHttpieCommand:
     def test_get(self, get_request):
-        result = """http GET 'http://address:22/path?a=foo&a=bar&b=baz' header:qvalue"""
+        result = """http GET 'http://address:22/path?a=foo&a=bar&b=baz' 'header: qvalue'"""
         assert export.httpie_command(get_request) == result
 
     def test_post(self, post_request):
         post_request.request.content = b'nobinarysupport'
-        result = "http POST http://address:22/path content-length:15 <<< nobinarysupport"
+        result = "http POST http://address:22/path <<< nobinarysupport"
         assert export.httpie_command(post_request) == result
 
     def test_fails_with_binary_data(self, post_request):
         # shlex.quote doesn't support a bytes object
         # see https://github.com/python/cpython/pull/10871
+        post_request.request.headers["Content-Type"] = "application/json; charset=utf-8"
         with pytest.raises(exceptions.CommandError):
             export.httpie_command(post_request)
 
     def test_patch(self, patch_request):
-        result = """http PATCH 'http://address:22/path?query=param' header:qvalue content-length:7 <<< content"""
+        result = """http PATCH 'http://address:22/path?query=param' 'header: qvalue' <<< content"""
         assert export.httpie_command(patch_request) == result
 
     def test_tcp(self, tcp_flow):
