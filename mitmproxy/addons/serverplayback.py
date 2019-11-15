@@ -1,16 +1,19 @@
 import hashlib
-import urllib
 import typing
+import urllib
 
-from mitmproxy import ctx
-from mitmproxy import flow
-from mitmproxy import exceptions
-from mitmproxy import io
-from mitmproxy import command
 import mitmproxy.types
+from mitmproxy import command
+from mitmproxy import ctx, http
+from mitmproxy import exceptions
+from mitmproxy import flow
+from mitmproxy import io
 
 
 class ServerPlayback:
+    flowmap: typing.Dict[typing.Hashable, typing.List[http.HTTPFlow]]
+    configured: bool
+
     def __init__(self):
         self.flowmap = {}
         self.configured = False
@@ -82,10 +85,10 @@ class ServerPlayback:
             Replay server responses from flows.
         """
         self.flowmap = {}
-        for i in flows:
-            if i.response:  # type: ignore
-                l = self.flowmap.setdefault(self._hash(i), [])
-                l.append(i)
+        for f in flows:
+            if isinstance(f, http.HTTPFlow):
+                lst = self.flowmap.setdefault(self._hash(f), [])
+                lst.append(f)
         ctx.master.addons.trigger("update", [])
 
     @command.command("replay.server.file")
@@ -108,12 +111,11 @@ class ServerPlayback:
     def count(self) -> int:
         return sum([len(i) for i in self.flowmap.values()])
 
-    def _hash(self, flow):
+    def _hash(self, flow: http.HTTPFlow) -> typing.Hashable:
         """
             Calculates a loose hash of the flow request.
         """
         r = flow.request
-
         _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
@@ -158,20 +160,33 @@ class ServerPlayback:
             repr(key).encode("utf8", "surrogateescape")
         ).digest()
 
-    def next_flow(self, request):
+    def next_flow(self, flow: http.HTTPFlow) -> typing.Optional[http.HTTPFlow]:
         """
             Returns the next flow object, or None if no matching flow was
             found.
         """
-        hsh = self._hash(request)
-        if hsh in self.flowmap:
+        request = flow.request
+        hash = self._hash(flow)
+        if hash in self.flowmap:
             if ctx.options.server_replay_nopop:
-                return self.flowmap[hsh][0]
+                return next((
+                    flow
+                    for flow in self.flowmap[hash]
+                    if flow.response
+                ), None)
             else:
-                ret = self.flowmap[hsh].pop(0)
-                if not self.flowmap[hsh]:
-                    del self.flowmap[hsh]
+                ret = self.flowmap[hash].pop(0)
+                while not ret.response:
+                    if self.flowmap[hash]:
+                        ret = self.flowmap[hash].pop(0)
+                    else:
+                        del self.flowmap[hash]
+                        return None
+                if not self.flowmap[hash]:
+                    del self.flowmap[hash]
                 return ret
+        else:
+            return None
 
     def configure(self, updated):
         if not self.configured and ctx.options.server_replay:
@@ -182,10 +197,11 @@ class ServerPlayback:
                 raise exceptions.OptionsError(str(e))
             self.load_flows(flows)
 
-    def request(self, f):
+    def request(self, f: http.HTTPFlow) -> None:
         if self.flowmap:
             rflow = self.next_flow(f)
             if rflow:
+                assert rflow.response
                 response = rflow.response.copy()
                 response.is_replay = True
                 if ctx.options.server_replay_refresh:
@@ -197,4 +213,5 @@ class ServerPlayback:
                         f.request.url
                     )
                 )
+                assert f.reply
                 f.reply.kill()
