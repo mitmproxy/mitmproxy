@@ -173,15 +173,8 @@ class CommandManager(mitmproxy.types._CommandBase):
 
         rex = rex.copy().leaveWhitespace()
 
-        remainder = cmdstr
-
         for t, start, end in rex.scanString(cmdstr):
-
-            remainder = cmdstr[end:]
             parts.append(t[0])
-
-        if remainder != '':
-            parts.append(remainder)
 
         if not parts:
             parts = []
