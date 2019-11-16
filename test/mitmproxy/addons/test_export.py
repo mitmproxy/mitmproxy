@@ -24,6 +24,13 @@ def get_response():
 
 
 @pytest.fixture
+def get_flow():
+    return tflow.tflow(
+        req=tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz"),
+        resp=tutils.tresp(status_code=404, content=b"Test Response Body"))
+
+
+@pytest.fixture
 def post_request():
     return tflow.tflow(
         req=tutils.treq(method=b'POST', headers=(), content=bytes(range(256))))
@@ -85,17 +92,50 @@ class TestExportHttpieCommand:
             export.httpie_command(tcp_flow)
 
 
-class TestRawRequest:
-    def test_get(self, get_request):
-        assert b"header: qvalue" in export.raw_request(get_request)
+class TestRaw:
+    def test_req_and_resp_present(self, get_flow):
+        assert b"header: qvalue" in export.raw(get_flow)
+        assert b"header-response: svalue" in export.raw(get_flow)
+
+    def test_get_request_present(self, get_request):
+        assert b"header: qvalue" in export.raw(get_request)
+
+    def test_get_response_present(self, get_response):
+        delattr(get_response, 'request')
+        assert b"header-response: svalue" in export.raw(get_response)
+
+    def test_missing_both(self, get_request):
+        delattr(get_request, 'request')
+        delattr(get_request, 'response')
+        with pytest.raises(exceptions.CommandError):
+            export.raw(get_request)
 
     def test_tcp(self, tcp_flow):
         with pytest.raises(exceptions.CommandError):
             export.raw_request(tcp_flow)
 
+
+class TestRawRequest:
+    def test_get(self, get_request):
+        assert b"header: qvalue" in export.raw_request(get_request)
+
+    def test_no_request(self, get_response):
+        delattr(get_response, 'request')
+        with pytest.raises(exceptions.CommandError):
+            export.raw_request(get_response)
+
+    def test_tcp(self, tcp_flow):
+        with pytest.raises(exceptions.CommandError):
+            export.raw_request(tcp_flow)
+
+
 class TestRawResponse:
     def test_get(self, get_response):
         assert b"header-response: svalue" in export.raw_response(get_response)
+
+    def test_no_response(self, get_request):
+        with pytest.raises(exceptions.CommandError):
+            export.raw_response(get_request)
 
     def test_tcp(self, tcp_flow):
         with pytest.raises(exceptions.CommandError):
@@ -111,7 +151,7 @@ def test_export(tmpdir):
     f = str(tmpdir.join("path"))
     e = export.Export()
     with taddons.context():
-        assert e.formats() == ["curl", "httpie", "raw_request", "raw_response"]
+        assert e.formats() == ["curl", "httpie", "raw", "raw_request", "raw_response"]
         with pytest.raises(exceptions.CommandError):
             e.file("nonexistent", tflow.tflow(resp=True), f)
 

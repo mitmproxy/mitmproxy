@@ -12,7 +12,7 @@ import pyperclip
 
 
 def cleanup_request(f: flow.Flow):
-    if not hasattr(f, "request"):
+    if not hasattr(f, "request") or not f.request:  # type: ignore
         raise exceptions.CommandError("Can't export flow with no request.")
     request = f.request.copy()  # type: ignore
     request.decode(strict=False)
@@ -24,7 +24,7 @@ def cleanup_request(f: flow.Flow):
 
 
 def cleanup_response(f: flow.Flow):
-    if not hasattr(f, "response"):
+    if not hasattr(f, "response") or not f.response:  # type: ignore
         raise exceptions.CommandError("Can't export flow with no response.")
     response = f.response.copy()  # type: ignore
     response.decode(strict=False)
@@ -62,15 +62,33 @@ def httpie_command(f: flow.Flow) -> str:
 
 
 def raw_request(f: flow.Flow) -> bytes:
-    return assemble.assemble_request(cleanup_request(f))  # type: ignore
+    return assemble.assemble_request(cleanup_request(f))
+
 
 def raw_response(f: flow.Flow) -> bytes:
-    return assemble.assemble_response(cleanup_response(f))  # type: ignore
+    return assemble.assemble_response(cleanup_response(f))
+
+
+def raw(f: flow.Flow, separator=b"\r\n\r\n") -> bytes:
+    """Return either the request or response if only one exists, otherwise return both"""
+    request_present = hasattr(f, "request") and f.request  # type: ignore
+    response_present = hasattr(f, "response") and f.response  # type: ignore
+
+    if not (request_present or response_present):
+        raise exceptions.CommandError("Can't export flow with no request or response.")
+
+    if request_present and response_present:
+        return b"".join([raw_request(f), separator, raw_response(f)])
+    elif not request_present:
+        return raw_response(f)
+    else:
+        return raw_request(f)
 
 
 formats = dict(
     curl = curl_command,
     httpie = httpie_command,
+    raw = raw,
     raw_request = raw_request,
     raw_response = raw_response,
 )
