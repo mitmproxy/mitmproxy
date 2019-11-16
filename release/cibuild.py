@@ -152,14 +152,14 @@ class BuildEnviron:
         return ret
 
     @property
-    def branch(self) -> Optional[str]:
+    def branch(self) -> str:
         if self.travis_branch:
             return self.travis_branch
         if self.appveyor_repo_branch:
             return self.appveyor_repo_branch
         if self.github_ref and self.github_ref.startswith("refs/heads/"):
             return self.github_ref.replace("refs/heads/", "")
-        return None
+        return ""
 
     @property
     def build_dir(self) -> str:
@@ -282,14 +282,14 @@ class BuildEnviron:
         ])
 
     @property
-    def tag(self) -> Optional[str]:
+    def tag(self) -> str:
         if self.travis_tag:
             return self.travis_tag
         if self.appveyor_repo_tag_name:
             return self.appveyor_repo_tag_name
         if self.github_ref and self.github_ref.startswith("refs/tags/"):
             return self.github_ref.replace("refs/tags/", "")
-        return None
+        return ""
 
     @property
     def upload_dir(self) -> str:

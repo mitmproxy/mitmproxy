@@ -58,13 +58,41 @@ def test_buildenviron_pr():
     )
     assert be.is_pull_request
 
-    # Mini test for appveyor
-    be = cibuild.BuildEnviron(
-        appveyor_pull_request_number="xxxx",
+
+def test_ci_systems():
+    appveyor = cibuild.BuildEnviron(
+        appveyor_pull_request_number="1234",
+        appveyor_repo_branch="foo",
+        appveyor_repo_tag_name="qux",
     )
-    assert be.is_pull_request
-    assert not be.is_prod_release
-    assert not be.is_maintenance_branch
+    assert appveyor.is_pull_request
+    assert appveyor.branch == "foo"
+    assert appveyor.tag == "qux"
+
+    travis = cibuild.BuildEnviron(
+        travis_pull_request="1234",
+        travis_branch="foo",
+        travis_tag="foo",
+    )
+    assert travis.is_pull_request
+    assert travis.branch == "foo"
+    assert travis.tag == "foo"
+
+    github = cibuild.BuildEnviron(
+        github_event_name="pull_request",
+        github_ref="refs/heads/master"
+    )
+    assert github.is_pull_request
+    assert github.branch == "master"
+    assert github.tag == ""
+
+    github2 = cibuild.BuildEnviron(
+        github_event_name="pull_request",
+        github_ref="refs/tags/qux"
+    )
+    assert github2.is_pull_request
+    assert github2.branch == ""
+    assert github2.tag == "qux"
 
 
 def test_buildenviron_commit():
