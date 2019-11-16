@@ -65,3 +65,7 @@ jobs:
         tox -e cibuild -- build
         tox -e cibuild -- upload
     
+  printenv:
+    runs-on: ubuntu-latest
+    steps:
+      - run: printenv
