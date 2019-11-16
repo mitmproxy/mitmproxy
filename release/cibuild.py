@@ -12,6 +12,7 @@ import sys
 import tarfile
 import urllib.request
 import zipfile
+from typing import Optional
 
 import click
 import cryptography.fernet
@@ -48,9 +49,8 @@ class BuildEnviron:
         appveyor_repo_tag_name="",
         appveyor_repo_branch="",
         appveyor_pull_request_number="",
-#        github_actions_repo_tag_name="",
-#        appveyor_repo_branch="",
-#        appveyor_pull_request_number="",
+        github_ref="",
+        github_event_name="",
         should_build_wheel=False,
         should_build_docker=False,
         should_build_pyinstaller=False,
@@ -83,6 +83,9 @@ class BuildEnviron:
         self.appveyor_repo_branch = appveyor_repo_branch
         self.appveyor_pull_request_number = appveyor_pull_request_number
 
+        self.github_ref = github_ref
+        self.github_event_name = github_event_name
+
         self.has_aws_creds = has_aws_creds
         self.has_twine_creds = has_twine_creds
         self.docker_username = docker_username
@@ -100,6 +103,8 @@ class BuildEnviron:
             appveyor_repo_tag_name=os.environ.get("APPVEYOR_REPO_TAG_NAME", ""),
             appveyor_repo_branch=os.environ.get("APPVEYOR_REPO_BRANCH", ""),
             appveyor_pull_request_number=os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER"),
+            github_ref=os.environ.get("GITHUB_REF"),
+            github_event_name=os.environ.get("GITHUB_EVENT_NAME"),
             should_build_wheel="WHEEL" in os.environ,
             should_build_pyinstaller="PYINSTALLER" in os.environ,
             should_build_wininstaller="WININSTALLER" in os.environ,
@@ -146,26 +151,31 @@ class BuildEnviron:
         return ret
 
     @property
-    def branch(self):
-        return self.travis_branch or self.appveyor_repo_branch
+    def branch(self) -> Optional[str]:
+        if self.travis_branch:
+            return self.travis_branch
+        if self.appveyor_repo_branch:
+            return self.appveyor_repo_branch
+        if self.github_ref and self.github_ref.startswith("refs/heads/"):
+            return self.github_ref.replace("refs/heads/", "")
 
     @property
-    def build_dir(self):
+    def build_dir(self) -> str:
         return os.path.join(self.release_dir, "build")
 
     @property
-    def dist_dir(self):
+    def dist_dir(self) -> str:
         return os.path.join(self.release_dir, "dist")
 
     @property
-    def docker_tag(self):
+    def docker_tag(self) -> str:
         if self.branch == "master":
             t = "dev"
         else:
             t = self.version
         return "mitmproxy/mitmproxy:{}".format(t)
 
-    def dump_info(self, fp=sys.stdout):
+    def dump_info(self, fp=sys.stdout) -> None:
         lst = [
             "version",
             "tag",
@@ -235,6 +245,8 @@ class BuildEnviron:
 
     @property
     def is_pull_request(self) -> bool:
+        if self.github_event_name == "pull_request":
+            return True
         if self.appveyor_pull_request_number:
             return True
         if self.travis_pull_request and self.travis_pull_request != "false":
@@ -242,13 +254,13 @@ class BuildEnviron:
         return False
 
     @property
-    def platform_tag(self):
+    def platform_tag(self) -> str:
         if self.system in self.PLATFORM_TAGS:
             return self.PLATFORM_TAGS[self.system]
         raise BuildError("Unsupported platform: %s" % self.system)
 
     @property
-    def release_dir(self):
+    def release_dir(self) -> str:
         return os.path.join(self.root_dir, "release")
 
     @property
@@ -268,18 +280,23 @@ class BuildEnviron:
         ])
 
     @property
-    def tag(self):
-        return self.travis_tag or self.appveyor_repo_tag_name
+    def tag(self) -> Optional[str]:
+        if self.travis_tag:
+            return self.travis_tag
+        if self.appveyor_repo_tag_name:
+            return self.appveyor_repo_tag_name
+        if self.github_ref and self.github_ref.startswith("refs/tags/"):
+            return self.github_ref.replace("refs/tags/","")
 
     @property
-    def upload_dir(self):
+    def upload_dir(self) -> str:
         if self.tag:
             return self.version
         else:
             return "branches/%s" % self.version
 
     @property
-    def version(self):
+    def version(self) -> str:
         if self.tag:
             if self.tag.startswith("v"):
                 try:

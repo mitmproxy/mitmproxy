@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request, create]
+on: [push, pull_request]
 
 jobs:
   lint:
@@ -42,7 +42,7 @@ jobs:
       run: |
         pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
     - run: codecov
-  deploy:
+  build:
     strategy:
       fail-fast: false  # FIXME
       matrix:
@@ -63,15 +63,13 @@ jobs:
         pip install -r requirements.txt
     - run: |
         tox -e cibuild -- build
-        tox -e cibuild -- upload
-    
-  printenv:
+    - uses: actions/upload-artifact@master
+      with:
+        name: binaries
+        path: release/dist
+
+  deploy:
     runs-on: ubuntu-latest
-    steps:
-      - run: printenv
-      - run: echo $GITHUB_REF
-      - run: env
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+    if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
+    needs: build
+        tox -e cibuild -- upload
