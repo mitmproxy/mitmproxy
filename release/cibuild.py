@@ -15,8 +15,9 @@ import zipfile
 from typing import Optional
 
 import click
-import cryptography.fernet
 import parver
+
+import cryptography.fernet
 
 
 @contextlib.contextmanager
@@ -39,27 +40,27 @@ class BuildEnviron:
     }
 
     def __init__(
-        self,
-        *,
-        system="",
-        root_dir="",
-        travis_tag="",
-        travis_branch="",
-        travis_pull_request="",
-        appveyor_repo_tag_name="",
-        appveyor_repo_branch="",
-        appveyor_pull_request_number="",
-        github_ref="",
-        github_event_name="",
-        should_build_wheel=False,
-        should_build_docker=False,
-        should_build_pyinstaller=False,
-        should_build_wininstaller=False,
-        has_aws_creds=False,
-        has_twine_creds=False,
-        docker_username="",
-        docker_password="",
-        rtool_key="",
+            self,
+            *,
+            system="",
+            root_dir="",
+            travis_tag="",
+            travis_branch="",
+            travis_pull_request="",
+            appveyor_repo_tag_name="",
+            appveyor_repo_branch="",
+            appveyor_pull_request_number="",
+            github_ref="",
+            github_event_name="",
+            should_build_wheel=False,
+            should_build_docker=False,
+            should_build_pyinstaller=False,
+            should_build_wininstaller=False,
+            has_aws_creds=False,
+            has_twine_creds=False,
+            docker_username="",
+            docker_password="",
+            rtool_key="",
     ):
         self.system = system
         self.root_dir = root_dir
@@ -111,8 +112,8 @@ class BuildEnviron:
             should_build_docker="DOCKER" in os.environ,
             has_aws_creds="AWS_ACCESS_KEY_ID" in os.environ,
             has_twine_creds=(
-                "TWINE_USERNAME" in os.environ and
-                "TWINE_PASSWORD" in os.environ
+                    "TWINE_USERNAME" in os.environ and
+                    "TWINE_PASSWORD" in os.environ
             ),
             docker_username=os.environ.get("DOCKER_USERNAME"),
             docker_password=os.environ.get("DOCKER_PASSWORD"),
@@ -286,7 +287,7 @@ class BuildEnviron:
         if self.appveyor_repo_tag_name:
             return self.appveyor_repo_tag_name
         if self.github_ref and self.github_ref.startswith("refs/tags/"):
-            return self.github_ref.replace("refs/tags/","")
+            return self.github_ref.replace("refs/tags/", "")
 
     @property
     def upload_dir(self) -> str:
@@ -445,7 +446,7 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
             def report(block, blocksize, total):
                 done = block * blocksize
                 if round(100 * done / total) != round(100 * (done - blocksize) / total):
-                    click.secho(f"Downloading... {round(100*done/total)}%")
+                    click.secho(f"Downloading... {round(100 * done / total)}%")
 
             urllib.request.urlretrieve(
                 f"https://clients.bitrock.com/installbuilder/installbuilder-enterprise-{IB_VERSION}-windows-installer.exe",

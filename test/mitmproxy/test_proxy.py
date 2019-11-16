@@ -1,20 +1,19 @@
 import argparse
 import platform
 from unittest import mock
+
 import pytest
 
-from mitmproxy.tools import cmdline
-from mitmproxy.tools import main
 from mitmproxy import options
 from mitmproxy.proxy import ProxyConfig
-from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from mitmproxy.proxy import config
-
+from mitmproxy.proxy.server import ConnectionHandler, DummyServer, ProxyServer
+from mitmproxy.tools import cmdline
+from mitmproxy.tools import main
 from ..conftest import skip_windows
 
 
 class MockParser(argparse.ArgumentParser):
-
     """
     argparse.ArgumentParser sys.exits() by default.
     Make it more testable by throwing an exception instead.
@@ -54,7 +53,7 @@ class TestProxyServer:
 
     @skip_windows
     @pytest.mark.skipif(
-        platform.mac_ver()[0] and tuple(int(x) for x in platform.mac_ver()[0].split('.')) >= (10,14), 
+        platform.mac_ver()[0] and tuple(int(x) for x in platform.mac_ver()[0].split('.')) >= (10, 14),  # noqa
         reason='Skipping due to recent macOS version'
     )
     def test_err(self):
