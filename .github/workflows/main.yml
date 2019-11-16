@@ -26,11 +26,14 @@ jobs:
         mypy .
   test:
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/setup-python@v1
+      with:
+        architecture: 'x86'  # fixme
     - uses: actions/checkout@v1
     - name: Install dependencies
       run: |
