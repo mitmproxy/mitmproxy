@@ -395,8 +395,10 @@ def get_XSS_data(body: Union[str, bytes], request_URL: str, injection_point: str
 
 # response is mitmproxy's entry point
 def response(flow: http.HTTPFlow) -> None:
+    assert flow.response
     cookies_dict = get_cookies(flow)
     resp = flow.response.get_text(strict=False)
+    assert resp
     # Example: http://xss.guru/unclaimedScriptTag.html
     find_unclaimed_URLs(resp, flow.request.url)
     results = test_end_of_URL_injection(resp, flow.request.url, cookies_dict)

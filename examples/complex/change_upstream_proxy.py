@@ -24,4 +24,4 @@ def request(flow: http.HTTPFlow) -> None:
         return
     address = proxy_address(flow)
     if flow.live:
-        flow.live.change_upstream_proxy_server(address)
+        flow.live.change_upstream_proxy_server(address)  # type: ignore

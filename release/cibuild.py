@@ -190,7 +190,9 @@ class BuildEnviron:
         """
         with open(pathlib.Path(self.root_dir) / "mitmproxy" / "version.py") as f:
             contents = f.read()
-        version = re.search(r'^VERSION = "(.+?)"', contents, re.M).group(1)
+        match = re.search(r'^VERSION = "(.+?)"', contents, re.M)
+        assert match
+        version = match.group(1)
 
         if self.is_prod_release:
             # For production releases, we require strict version equality
