@@ -27,7 +27,7 @@ def cleanup_request(f: flow.Flow) -> http.HTTPRequest:
     return request
 
 
-def cleanup_response(f: flow.Flow)-> http.HTTPResponse:
+def cleanup_response(f: flow.Flow) -> http.HTTPResponse:
     if not hasattr(f, "response") or not f.response:
         raise exceptions.CommandError("Can't export flow with no response.")
     assert isinstance(f, http.HTTPFlow)
