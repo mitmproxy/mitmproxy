@@ -2,6 +2,17 @@ name: CI
 
 on: [push, pull_request]
 
+setup-python:
+  - &setup-python
+    if: "!startsWith(runner.os, 'Windows')"
+    uses: actions/setup-python@v1
+  - &setup-python-win
+    if: startsWith(runner.os, 'Windows')
+    uses: actions/setup-python@v1
+    with:
+      python-version: '3.7'
+      architecture: 'x86'  # FIXME: Update cryptography
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -25,13 +36,8 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - if: matrix.os != 'windows-latest'
-      uses: actions/setup-python@v1
-    - if: matrix.os == 'windows-latest'
-      uses: actions/setup-python@v1
-      with:
-        python-version: '3.7'
-        architecture: 'x86'  # fixme: cryptography update
+    - *setup-python
+    - *setup-python-win
     - uses: actions/checkout@v1
     - name: Install dependencies
       run: |
@@ -51,13 +57,8 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - if: "!startsWith(runner.os, 'Windows')"
-      uses: actions/setup-python@v1
-    - if: startsWith(runner.os, 'Windows')
-      uses: actions/setup-python@v1
-      with:
-        python-version: '3.7'
-        architecture: 'x86'  # fixme: cryptography update
+    - *setup-python
+    - *setup-python-win
     - uses: actions/checkout@v1
     - name: Install dependencies
       run: |
