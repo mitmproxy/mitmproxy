@@ -16,7 +16,7 @@ from mitmproxy import ctx
 import mitmproxy.types as mtypes
 
 
-def load_script(path: str) -> types.ModuleType:
+def load_script(path: str) -> typing.Optional[types.ModuleType]:
     fullname = "__mitmproxy_script__.{}".format(
         os.path.splitext(os.path.basename(path))[0]
     )

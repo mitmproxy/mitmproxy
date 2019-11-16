@@ -6,19 +6,16 @@ Feel free to import and use whatever new package you deem necessary.
 import os
 import sys
 import asyncio
-import argparse  # noqa
-import signal  # noqa
-import typing  # noqa
+import argparse
+import signal
+import typing
 
-from mitmproxy.tools import cmdline  # noqa
-from mitmproxy import exceptions, master  # noqa
-from mitmproxy import options  # noqa
-from mitmproxy import optmanager  # noqa
-from mitmproxy import proxy  # noqa
-from mitmproxy import log  # noqa
-from mitmproxy.utils import debug, arg_check  # noqa
-
-OPTIONS_FILE_NAME = "config.yaml"
+from mitmproxy.tools import cmdline
+from mitmproxy import exceptions, master
+from mitmproxy import options
+from mitmproxy import optmanager
+from mitmproxy import proxy
+from mitmproxy.utils import debug, arg_check
 
 
 def assert_utf8_env():
@@ -90,7 +87,8 @@ def run(
         opts.set(*args.setoptions, defer=True)
         optmanager.load_paths(
             opts,
-            os.path.join(opts.confdir, OPTIONS_FILE_NAME),
+            os.path.join(opts.confdir, "config.yaml"),
+            os.path.join(opts.confdir, "config.yml"),
         )
         pconf = process_options(parser, opts, args)
         server: typing.Any = None

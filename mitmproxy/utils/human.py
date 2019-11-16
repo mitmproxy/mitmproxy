@@ -48,12 +48,14 @@ def parse_size(s: typing.Optional[str]) -> typing.Optional[int]:
     raise ValueError("Invalid size specification.")
 
 
-def pretty_duration(secs):
+def pretty_duration(secs: typing.Optional[float]) -> str:
     formatters = [
         (100, "{:.0f}s"),
         (10, "{:2.1f}s"),
         (1, "{:1.2f}s"),
     ]
+    if secs is None:
+        return ""
 
     for limit, formatter in formatters:
         if secs >= limit:

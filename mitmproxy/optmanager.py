@@ -551,7 +551,9 @@ def serialize(opts: OptManager, text: str, defaults: bool = False) -> str:
     for k in list(data.keys()):
         if k not in opts._options:
             del data[k]
-    return ruamel.yaml.round_trip_dump(data)
+    ret = ruamel.yaml.round_trip_dump(data)
+    assert ret
+    return ret
 
 
 def save(opts: OptManager, path: str, defaults: bool =False) -> None:

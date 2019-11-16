@@ -1,7 +1,7 @@
 import threading
 import time
 import functools
-from typing import Dict, Callable, Any, List  # noqa
+from typing import Dict, Callable, Any, List, Optional  # noqa
 
 import h2.exceptions
 from h2 import connection
@@ -382,15 +382,15 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             ctx, name="Http2SingleStreamLayer-{}".format(stream_id)
         )
         self.h2_connection = h2_connection
-        self.zombie: float = None
+        self.zombie: Optional[float] = None
         self.client_stream_id: int = stream_id
-        self.server_stream_id: int = None
+        self.server_stream_id: Optional[int] = None
         self.request_headers = request_headers
-        self.response_headers: mitmproxy.net.http.Headers = None
+        self.response_headers: Optional[mitmproxy.net.http.Headers] = None
         self.pushed = False
 
-        self.timestamp_start: float = None
-        self.timestamp_end: float = None
+        self.timestamp_start: Optional[float] = None
+        self.timestamp_end: Optional[float] = None
 
         self.request_arrived = threading.Event()
         self.request_data_queue: queue.Queue[bytes] = queue.Queue()
@@ -404,9 +404,9 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
 
         self.no_body = False
 
-        self.priority_exclusive: bool = None
-        self.priority_depends_on: int = None
-        self.priority_weight: int = None
+        self.priority_exclusive: bool
+        self.priority_depends_on: Optional[int] = None
+        self.priority_weight: Optional[int] = None
         self.handled_priority_event: Any = None
 
     def kill(self):

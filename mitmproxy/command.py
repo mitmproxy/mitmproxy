@@ -44,6 +44,8 @@ def typename(t: type) -> str:
 
 
 class Command:
+    returntype: typing.Optional[typing.Type]
+
     def __init__(self, manager, path, func) -> None:
         self.path = path
         self.manager = manager
@@ -177,7 +179,7 @@ class CommandManager(mitmproxy.types._CommandBase):
 
         parse: typing.List[ParseResult] = []
         params: typing.List[type] = []
-        typ: typing.Type = None
+        typ: typing.Type
         for i in range(len(parts)):
             if i == 0:
                 typ = mitmproxy.types.Cmd

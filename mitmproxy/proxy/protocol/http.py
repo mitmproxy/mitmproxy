@@ -263,7 +263,7 @@ class HttpLayer(base.Layer):
                 else:
                     msg = "Unexpected CONNECT request."
                     self.send_error_response(400, msg)
-                    raise exceptions.ProtocolException(msg)
+                    return False
 
             validate_request_form(self.mode, request)
             self.channel.ask("requestheaders", f)
@@ -289,9 +289,12 @@ class HttpLayer(base.Layer):
             f.request = None
             f.error = flow.Error(str(e))
             self.channel.ask("error", f)
-            raise exceptions.ProtocolException(
-                "HTTP protocol error in client request: {}".format(e)
-            ) from e
+            self.log(
+                "request",
+                "warn",
+                ["HTTP protocol error in client request: {}".format(e)]
+            )
+            return False
 
         self.log("request", "debug", [repr(request)])
 
@@ -448,8 +451,8 @@ class HttpLayer(base.Layer):
                 return False  # should never be reached
 
         except (exceptions.ProtocolException, exceptions.NetlibException) as e:
-            self.send_error_response(502, repr(e))
             if not f.response:
+                self.send_error_response(502, repr(e))
                 f.error = flow.Error(str(e))
                 self.channel.ask("error", f)
                 return False

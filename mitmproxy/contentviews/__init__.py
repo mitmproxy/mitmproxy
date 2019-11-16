@@ -135,7 +135,9 @@ def get_content_view(viewmode: View, data: bytes, **metadata):
     # Third-party viewers can fail in unexpected ways...
     except Exception:
         desc = "Couldn't parse: falling back to Raw"
-        _, content = get("Raw")(data, **metadata)
+        raw = get("Raw")
+        assert raw
+        content = raw(data, **metadata)[1]
         error = "{} Content viewer failed: \n{}".format(
             getattr(viewmode, "name"),
             traceback.format_exc()

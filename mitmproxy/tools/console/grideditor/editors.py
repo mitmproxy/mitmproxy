@@ -53,14 +53,30 @@ class ResponseHeaderEditor(HeaderEditor):
         flow.response.headers = Headers(vals)
 
 
-class RequestFormEditor(base.FocusEditor):
-    title = "Edit URL-encoded Form"
+class RequestMultipartEditor(base.FocusEditor):
+    title = "Edit Multipart Form"
     columns = [
         col_text.Column("Key"),
         col_text.Column("Value")
     ]
 
     def get_data(self, flow):
+
+        return flow.request.multipart_form.items(multi=True)
+
+    def set_data(self, vals, flow):
+        flow.request.multipart_form = vals
+
+
+class RequestUrlEncodedEditor(base.FocusEditor):
+    title = "Edit UrlEncoded Form"
+    columns = [
+        col_text.Column("Key"),
+        col_text.Column("Value")
+    ]
+
+    def get_data(self, flow):
+
         return flow.request.urlencoded_form.items(multi=True)
 
     def set_data(self, vals, flow):
@@ -107,7 +123,7 @@ class CookieAttributeEditor(base.FocusEditor):
         col_text.Column("Name"),
         col_text.Column("Value"),
     ]
-    grideditor: base.BaseGridEditor = None
+    grideditor: base.BaseGridEditor
 
     def data_in(self, data):
         return [(k, v or "") for k, v in data]
@@ -169,7 +185,7 @@ class SetCookieEditor(base.FocusEditor):
 
 
 class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
-    title: str = None
+    title = ""
     columns = [
         col_text.Column("")
     ]
@@ -189,7 +205,7 @@ class OptionsEditor(base.GridEditor, layoutwidget.LayoutWidget):
 
 
 class DataViewer(base.GridEditor, layoutwidget.LayoutWidget):
-    title: str = None
+    title = ""
 
     def __init__(
             self,

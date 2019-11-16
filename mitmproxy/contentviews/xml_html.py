@@ -1,7 +1,7 @@
 import io
 import re
 import textwrap
-from typing import Iterable
+from typing import Iterable, Optional
 
 from mitmproxy.contentviews import base
 from mitmproxy.utils import sliding_window
@@ -124,14 +124,14 @@ def indent_text(data: str, prefix: str) -> str:
     return textwrap.indent(dedented, prefix[:32])
 
 
-def is_inline_text(a: Token, b: Token, c: Token) -> bool:
+def is_inline_text(a: Optional[Token], b: Optional[Token], c: Optional[Token]) -> bool:
     if isinstance(a, Tag) and isinstance(b, Text) and isinstance(c, Tag):
         if a.is_opening and "\n" not in b.data and c.is_closing and a.tag == c.tag:
             return True
     return False
 
 
-def is_inline(prev2: Token, prev1: Token, t: Token, next1: Token, next2: Token) -> bool:
+def is_inline(prev2: Optional[Token], prev1: Optional[Token], t: Optional[Token], next1: Optional[Token], next2: Optional[Token]) -> bool:
     if isinstance(t, Text):
         return is_inline_text(prev1, t, next1)
     elif isinstance(t, Tag):

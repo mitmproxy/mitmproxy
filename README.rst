@@ -21,8 +21,7 @@ Documentation & Help
 --------------------
 
 
-General information, tutorials, and precompiled binaries can be found on the mitmproxy
-and pathod websites.
+General information, tutorials, and precompiled binaries can be found on the mitmproxy website.
 
 |mitmproxy_site|
 
@@ -30,12 +29,10 @@ The documentation for mitmproxy is available on our website:
 
 |mitmproxy_docs_stable| |mitmproxy_docs_master|
 
+If you have questions on how to use mitmproxy, please
+ask them on StackOverflow!
 
-Join our discussion forum on Discourse to ask questions, help
-each other solve problems, and come up with new ideas for the project.
-
-|mitmproxy_discourse|
-
+|mitmproxy_stackoverflow|
 
 Join our developer chat on Slack if you would like to contribute to mitmproxy itself.
 
@@ -54,7 +51,7 @@ Contributing
 As an open source project, mitmproxy welcomes contributions of all forms. If you would like to bring the project forward,
 please consider contributing in the following areas:
 
-- **Maintenance:** We are *incredibly* thankful for individuals who are stepping up and helping with maintenance. This includes (but is not limited to) triaging issues, reviewing pull requests and picking up stale ones, helping out other users in our forums_, creating minimal, complete and verifiable examples or test cases for existing bug reports, updating documentation, or fixing minor bugs that have recently been reported.
+- **Maintenance:** We are *incredibly* thankful for individuals who are stepping up and helping with maintenance. This includes (but is not limited to) triaging issues, reviewing pull requests and picking up stale ones, helping out other users on StackOverflow_, creating minimal, complete and verifiable examples or test cases for existing bug reports, updating documentation, or fixing minor bugs that have recently been reported.
 - **Code Contributions:** We actively mark issues that we consider are `good first contributions`_. If you intend to work on a larger contribution to the project, please come talk to us first.
 
 Development Setup
@@ -146,21 +143,21 @@ with the following command:
     tox -e lint
 
 
-.. |mitmproxy_site| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-mitmproxy.org-blue.svg
+.. |mitmproxy_site| image:: https://shields.mitmproxy.org/badge/https%3A%2F%2F-mitmproxy.org-blue.svg
     :target: https://mitmproxy.org/
     :alt: mitmproxy.org
 
-.. |mitmproxy_docs_stable| image:: https://shields.mitmproxy.org/api/docs-stable-brightgreen.svg
+.. |mitmproxy_docs_stable| image:: https://shields.mitmproxy.org/badge/docs-stable-brightgreen.svg
     :target: https://docs.mitmproxy.org/stable/
     :alt: mitmproxy documentation stable
 
-.. |mitmproxy_docs_master| image:: https://shields.mitmproxy.org/api/docs-master-brightgreen.svg
+.. |mitmproxy_docs_master| image:: https://shields.mitmproxy.org/badge/docs-master-brightgreen.svg
     :target: https://docs.mitmproxy.org/master/
     :alt: mitmproxy documentation master
 
-.. |mitmproxy_discourse| image:: https://shields.mitmproxy.org/api/https%3A%2F%2F-discourse.mitmproxy.org-orange.svg
-    :target: https://discourse.mitmproxy.org
-    :alt: Discourse: mitmproxy
+.. |mitmproxy_stackoverflow| image:: https://shields.mitmproxy.org/stackexchange/stackoverflow/t/mitmproxy?color=orange&label=stackoverflow%20questions
+    :target: https://stackoverflow.com/questions/tagged/mitmproxy
+    :alt: StackOverflow: mitmproxy
 
 .. |slack| image:: http://slack.mitmproxy.org/badge.svg
     :target: http://slack.mitmproxy.org/
@@ -195,5 +192,5 @@ with the following command:
 .. _yarn: https://yarnpkg.com/en/
 .. _PEP8: https://www.python.org/dev/peps/pep-0008
 .. _`Google Style Guide`: https://google.github.io/styleguide/pyguide.html
-.. _forums: https://discourse.mitmproxy.org/
+.. _StackOverflow: https://stackoverflow.com/questions/tagged/mitmproxy
 .. _`good first contributions`: https://github.com/mitmproxy/mitmproxy/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22

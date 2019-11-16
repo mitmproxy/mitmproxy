@@ -52,7 +52,7 @@ class Palette:
         'commander_command', 'commander_invalid', 'commander_hint'
     ]
     _fields.extend(['gradient_%02d' % i for i in range(100)])
-    high: typing.Mapping[str, typing.Sequence[str]] = None
+    high: typing.Optional[typing.Mapping[str, typing.Sequence[str]]] = None
 
     def palette(self, transparent):
         l = []

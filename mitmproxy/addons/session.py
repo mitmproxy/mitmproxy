@@ -215,8 +215,8 @@ class Session:
     def __init__(self):
         self.db_store: SessionDB = None
         self._hot_store: collections.OrderedDict = collections.OrderedDict()
-        self._order_store: typing.Dict[str, typing.Dict[str, typing.Union[int, float, str]]] = {}
-        self._view: typing.List[typing.Tuple[typing.Union[int, float, str], str]] = []
+        self._order_store: typing.Dict[str, typing.Dict[str, typing.Union[int, float, str, None]]] = {}
+        self._view: typing.List[typing.Tuple[typing.Union[int, float, str, None], str]] = []
         self.order: str = orders[0]
         self.filter = matchall
         self._flush_period: float = self._FP_DEFAULT

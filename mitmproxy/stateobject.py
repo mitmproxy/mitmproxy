@@ -1,7 +1,5 @@
-import typing
-from typing import Any  # noqa
-from typing import MutableMapping  # noqa
 import json
+import typing
 
 from mitmproxy.coretypes import serializable
 from mitmproxy.utils import typecheck
@@ -15,7 +13,7 @@ class StateObject(serializable.Serializable):
     or StateObject instances themselves.
     """
 
-    _stateobject_attributes: MutableMapping[str, Any] = None
+    _stateobject_attributes: typing.ClassVar[typing.MutableMapping[str, typing.Any]]
     """
     An attribute-name -> class-or-type dict containing all attributes that
     should be serialized. If the attribute is a class, it must implement the
@@ -42,7 +40,7 @@ class StateObject(serializable.Serializable):
             if val is None:
                 setattr(self, attr, val)
             else:
-                curr = getattr(self, attr)
+                curr = getattr(self, attr, None)
                 if hasattr(curr, "set_state"):
                     curr.set_state(val)
                 else:

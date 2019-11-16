@@ -243,18 +243,24 @@ class View(collections.abc.Sequence):
         """
             Set focus to the next flow.
         """
-        idx = self.focus.index + 1
-        if self.inbounds(idx):
-            self.focus.flow = self[idx]
+        if self.focus.index is not None:
+            idx = self.focus.index + 1
+            if self.inbounds(idx):
+                self.focus.flow = self[idx]
+        else:
+            pass
 
     @command.command("view.focus.prev")
     def focus_prev(self) -> None:
         """
             Set focus to the previous flow.
         """
-        idx = self.focus.index - 1
-        if self.inbounds(idx):
-            self.focus.flow = self[idx]
+        if self.focus.index is not None:
+            idx = self.focus.index - 1
+            if self.inbounds(idx):
+                self.focus.flow = self[idx]
+        else:
+            pass
 
     # Order
     @command.command("view.order.options")
@@ -604,7 +610,7 @@ class Focus:
     """
     def __init__(self, v: View) -> None:
         self.view = v
-        self._flow: mitmproxy.flow.Flow = None
+        self._flow: typing.Optional[mitmproxy.flow.Flow] = None
         self.sig_change = blinker.Signal()
         if len(self.view):
             self.flow = self.view[0]
