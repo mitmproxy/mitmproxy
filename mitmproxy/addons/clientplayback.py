@@ -1,23 +1,23 @@
 import queue
 import threading
-import typing
 import time
+import typing
 
-from mitmproxy import log
-from mitmproxy import controller
-from mitmproxy import exceptions
-from mitmproxy import http
-from mitmproxy import flow
-from mitmproxy import options
+import mitmproxy.types
+from mitmproxy import command
 from mitmproxy import connections
+from mitmproxy import controller
+from mitmproxy import ctx
+from mitmproxy import exceptions
+from mitmproxy import flow
+from mitmproxy import http
+from mitmproxy import io
+from mitmproxy import log
+from mitmproxy import options
+from mitmproxy.coretypes import basethread
 from mitmproxy.net import server_spec, tls
 from mitmproxy.net.http import http1
-from mitmproxy.coretypes import basethread
 from mitmproxy.utils import human
-from mitmproxy import ctx
-from mitmproxy import io
-from mitmproxy import command
-import mitmproxy.types
 
 
 class RequestReplayThread(basethread.BaseThread):
@@ -117,7 +117,7 @@ class RequestReplayThread(basethread.BaseThread):
         finally:
             r.first_line_format = first_line_format_backup
             f.live = False
-            if server.connected():
+            if server and server.connected():
                 server.finish()
                 server.close()
 
