@@ -8,5 +8,3 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - uses: TrueBrain/actions-flake8@v1.2
-      with:
-        only_warn: 1
