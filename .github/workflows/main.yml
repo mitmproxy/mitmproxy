@@ -60,6 +60,7 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - run: printenv
       - if: "!startsWith(runner.os, 'Windows')"
         uses: actions/setup-python@v1
       - if: startsWith(runner.os, 'Windows')
