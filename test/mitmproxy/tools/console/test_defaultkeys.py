@@ -29,7 +29,4 @@ async def test_commands_exist():
         try:
             cmd_obj.prepare_args(args)
         except Exception as e:
-
-            import pdb
-            pdb.set_trace()
             raise ValueError("Invalid command: {}".format(binding.command)) from e

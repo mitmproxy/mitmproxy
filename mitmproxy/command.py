@@ -13,6 +13,11 @@ from mitmproxy import exceptions
 import mitmproxy.types
 
 
+@functools.lru_cache(maxsize=128)
+def _parse_cmd(cmdstr: str):
+    return parts
+
+
 def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
     sig = inspect.signature(f)
     try:
@@ -80,16 +85,7 @@ class Command:
         # Arguments that are just blank spaces aren't really arguments
         # We need to get rid of those. If the user intended to pass a sequence
         # of spaces, it would come between quotes
-        clean_args = []
-        for a in args:
-            if isinstance(a, str):
-                if a.strip() != '':
-                    clean_args.append(a)
-            else:
-                clean_args.append(a)
-
-        args = clean_args
-
+        args = [a for a in args if a.strip() != '']
         verify_arg_signature(self.func, list(args), {})
 
         remainder: typing.Sequence[str] = []
@@ -136,6 +132,13 @@ class CommandManager(mitmproxy.types._CommandBase):
         self.master = master
         self.commands: typing.Dict[str, Command] = {}
 
+        self.regex = pyparsing.QuotedString("\"", escChar='\\', unquoteResults=False) |\
+        pyparsing.QuotedString("'", escChar='\\', unquoteResults=False) |\
+        pyparsing.Combine(pyparsing.Literal('"') + pyparsing.Word(pyparsing.printables + " ") + pyparsing.StringEnd()) |\
+        pyparsing.Word(pyparsing.printables) |\
+        pyparsing.Word(" \r\n\t")
+        self.regex = self.regex.leaveWhitespace()
+
     def collect_commands(self, addon):
         for i in dir(addon):
             if not i.startswith("__"):
@@ -156,6 +159,7 @@ class CommandManager(mitmproxy.types._CommandBase):
     def add(self, path: str, func: typing.Callable):
         self.commands[path] = Command(self, path, func)
 
+    @functools.lru_cache(maxsize=128)
     def parse_partial(
         self,
         cmdstr: str
@@ -164,48 +168,36 @@ class CommandManager(mitmproxy.types._CommandBase):
             Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
         parts: typing.List[str] = []
-
-        rex = pyparsing.QuotedString("\"", escChar='\\', unquoteResults=False) |\
-            pyparsing.QuotedString("'", escChar='\\', unquoteResults=False) |\
-            pyparsing.Combine(pyparsing.Literal('"') + pyparsing.Word(pyparsing.printables + " ") + pyparsing.StringEnd()) |\
-            pyparsing.Word(pyparsing.printables) |\
-            pyparsing.Word(' ')
-
-        rex = rex.copy().leaveWhitespace()
-
-        for t, start, end in rex.scanString(cmdstr):
+        for t, start, end in self.regex.scanString(cmdstr):
             parts.append(t[0])
-
-        if not parts:
-            parts = []
 
         # First item in parts has always to be the command
         # so we remove any blank tokens from the start of it
-        while True:
-            if parts and parts[0].strip() == '':
-                del parts[0]
-            else:
-                break
+        # while True:
+        #     if parts and parts[0].strip() == '':
+        #         del parts[0]
+        #     else:
+        #         break
 
         parse: typing.List[ParseResult] = []
         params: typing.List[type] = []
         typ: typing.Type
+        cmd_found: bool = False
         for i in range(len(parts)):
-            if i == 0:
-                typ = mitmproxy.types.Cmd
-                if parts[i] in self.commands:
-                    params.extend(self.commands[parts[i]].paramtypes)
-            elif params:
-                if parts[i].strip() != '':
+            if not parts[i].isspace():
+                if not cmd_found:
+                    cmd_found = True
+                    typ = mitmproxy.types.Cmd
+                    if parts[i] in self.commands:
+                        params.extend(self.commands[parts[i]].paramtypes)
+                elif params:
                     typ = params.pop(0)
                     if typ == mitmproxy.types.Cmd and params and params[0] == mitmproxy.types.Arg:
                         if parts[i] in self.commands:
                             params[:] = self.commands[parts[i]].paramtypes
-                else:
-                    # If the token is just a bunch of spaces, then we don't
-                    # want to count it against the arguments of the command
-                    typ = mitmproxy.types.Unknown
             else:
+                # If the token is just a bunch of spaces, then we don't
+                # want to count it against the arguments of the command
                 typ = mitmproxy.types.Unknown
 
             to = mitmproxy.types.CommandTypes.get(typ, None)
@@ -218,8 +210,6 @@ class CommandManager(mitmproxy.types._CommandBase):
                 else:
                     valid = True
 
-            # if ctx.log:
-            #     ctx.log.info('[gilga] before parse.append. value = %s' % parts[i])
             parse.append(
                 ParseResult(
                     value=parts[i],

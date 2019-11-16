@@ -92,8 +92,6 @@ class TestCommand:
             c = command.Command(cm, "varargs", a.varargs)
             assert c.signature_help() == "varargs str *str -> [str]"
             assert c.call(["one", "two", "three"]) == ["two", "three"]
-            with pytest.raises(exceptions.CommandError):
-                c.call(["one", "two", 3])
 
     def test_call(self):
         with taddons.context() as tctx:
@@ -333,18 +331,20 @@ class TestCommand:
                 [],
             ],
             [
-                "    spaces_at_the_begining_are_stripped",
+                "    spaces_at_the_begining_are_not_stripped",
                 [
-                    command.ParseResult(value = "spaces_at_the_begining_are_stripped", type = mitmproxy.types.Cmd, valid = False),
+                    command.ParseResult(value = "    ", type = mitmproxy.types.Unknown, valid = False),
+                    command.ParseResult(value = "spaces_at_the_begining_are_not_stripped", type = mitmproxy.types.Cmd, valid = False),
                 ],
                 [],
             ],
             [
-                "    spaces_at_the_begining_are_stripped but_not_at_the_end      ",
+                "    spaces_at_the_begining_are_not_stripped neither_at_the_end      ",
                 [
-                    command.ParseResult(value = "spaces_at_the_begining_are_stripped", type = mitmproxy.types.Cmd, valid = False),
+                    command.ParseResult(value = "    ", type = mitmproxy.types.Unknown, valid = False),
+                    command.ParseResult(value = "spaces_at_the_begining_are_not_stripped", type = mitmproxy.types.Cmd, valid = False),
                     command.ParseResult(value = " ", type = mitmproxy.types.Unknown, valid = False),
-                    command.ParseResult(value = "but_not_at_the_end", type = mitmproxy.types.Unknown, valid = False),
+                    command.ParseResult(value = "neither_at_the_end", type = mitmproxy.types.Unknown, valid = False),
                     command.ParseResult(value = "      ", type = mitmproxy.types.Unknown, valid = False),
                 ],
                 [],

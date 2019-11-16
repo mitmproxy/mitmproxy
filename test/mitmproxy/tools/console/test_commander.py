@@ -165,3 +165,21 @@ class TestCommandBuffer:
             cb = commander.CommandBuffer(tctx.master)
             cb.text = "foo"
             assert cb.render()
+
+            cb.text = 'set view_filter=~bq test'
+            ret = cb.render()
+            assert ret[0] == ('commander_command', 'set')
+            assert ret[1] == ('commander_invalid', ' ')
+            assert ret[2] == ('text', 'view_filter=~bq')
+            assert ret[3] == ('commander_invalid', ' ')
+            assert ret[4] == ('commander_invalid', 'test')
+
+            cb.text = "set"
+            ret = cb.render()
+            assert ret[0] == ('commander_command', 'set')
+            assert ret[1] == ('text', ' ')
+            assert ret[2] == ('commander_hint', 'str ')
+
+            # import pdb
+            # pdb.set_trace()
+            # print('x')
