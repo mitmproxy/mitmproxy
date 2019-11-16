@@ -128,10 +128,10 @@ class CommandManager(mitmproxy.types._CommandBase):
         self.commands: typing.Dict[str, Command] = {}
 
         self.regex = pyparsing.QuotedString("\"", escChar='\\', unquoteResults=False) |\
-        pyparsing.QuotedString("'", escChar='\\', unquoteResults=False) |\
-        pyparsing.Combine(pyparsing.Literal('"') + pyparsing.Word(pyparsing.printables + " ") + pyparsing.StringEnd()) |\
-        pyparsing.Word(pyparsing.printables) |\
-        pyparsing.Word(" \r\n\t")
+            pyparsing.QuotedString("'", escChar='\\', unquoteResults=False) |\
+            pyparsing.Combine(pyparsing.Literal('"') + pyparsing.Word(pyparsing.printables + " ") + pyparsing.StringEnd()) |\
+            pyparsing.Word(pyparsing.printables) |\
+            pyparsing.Word(" \r\n\t")
         self.regex = self.regex.leaveWhitespace()
 
     def collect_commands(self, addon):
@@ -220,7 +220,7 @@ class CommandManager(mitmproxy.types._CommandBase):
             raise exceptions.CommandError("Unknown command: %s" % path)
         return self.commands[path].func(*args)
 
-    def call_strings(self, path: str, args: typing.Sequence[str]) -> typing.Any:
+    def _call_strings(self, path: str, args: typing.Sequence[str]) -> typing.Any:
         """
             Call a command using a list of string arguments. May raise CommandError.
         """
@@ -236,12 +236,13 @@ class CommandManager(mitmproxy.types._CommandBase):
         parts, _ = self.parse_partial(cmdstr)
         params = []
         for p in parts:
-            params.append(p.value)
+            if p.value.strip() != '':
+                params.append(p.value)
 
         if len(parts) == 0:
             raise exceptions.CommandError("Invalid command: %s" % cmdstr)
 
-        return self.call_strings(params[0], params[1:])
+        return self._call_strings(params[0], params[1:])
 
     def dump(self, out=sys.stdout) -> None:
         cmds = list(self.commands.values())

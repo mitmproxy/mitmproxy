@@ -47,7 +47,7 @@ class Choice:
 class _CommandBase:
     commands: typing.MutableMapping[str, typing.Any] = {}
 
-    def call_strings(self, path: str, args: typing.Sequence[str]) -> typing.Any:
+    def _call_strings(self, path: str, args: typing.Sequence[str]) -> typing.Any:
         raise NotImplementedError
 
     def execute(self, cmd: str) -> typing.Any:
@@ -337,7 +337,7 @@ class _FlowType(_BaseFlowType):
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> flow.Flow:
         try:
-            flows = manager.call_strings("view.flows.resolve", [s])
+            flows = manager.execute("view.flows.resolve %s" % (s))
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
         if len(flows) != 1:
@@ -356,7 +356,7 @@ class _FlowsType(_BaseFlowType):
 
     def parse(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[flow.Flow]:
         try:
-            return manager.call_strings("view.flows.resolve", [s])
+            return manager.execute("view.flows.resolve %s" % (s))
         except exceptions.CommandError as e:
             raise exceptions.TypeError from e
 
