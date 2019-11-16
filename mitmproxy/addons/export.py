@@ -13,7 +13,7 @@ from mitmproxy.utils import strutils
 
 
 def cleanup_request(f: flow.Flow) -> http.HTTPRequest:
-    if not hasattr(f, "request") or not f.request:
+    if not getattr(f, "request", None):
         raise exceptions.CommandError("Can't export flow with no request.")
     assert isinstance(f, http.HTTPFlow)
     request = f.request.copy()
@@ -28,7 +28,7 @@ def cleanup_request(f: flow.Flow) -> http.HTTPRequest:
 
 
 def cleanup_response(f: flow.Flow) -> http.HTTPResponse:
-    if not hasattr(f, "response") or not f.response:
+    if not getattr(f, "response", None):
         raise exceptions.CommandError("Can't export flow with no response.")
     assert isinstance(f, http.HTTPFlow)
     response = f.response.copy()  # type: ignore
