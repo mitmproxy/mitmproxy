@@ -166,14 +166,6 @@ class CommandManager(mitmproxy.types._CommandBase):
         for t, start, end in self.regex.scanString(cmdstr):
             parts.append(t[0])
 
-        # First item in parts has always to be the command
-        # so we remove any blank tokens from the start of it
-        # while True:
-        #     if parts and parts[0].strip() == '':
-        #         del parts[0]
-        #     else:
-        #         break
-
         parse: typing.List[ParseResult] = []
         params: typing.List[type] = []
         typ: typing.Type
