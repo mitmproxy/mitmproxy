@@ -31,9 +31,12 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/setup-python@v1
+    - if: matrix.os != 'windows-latest'
+      uses: actions/setup-python@v1
+    - if: matrix.os == 'windows-latest'
+      uses: actions/setup-python@v1
       with:
-        architecture: 'x86'  # fixme
+        architecture: 'x86'  # fixme: cryptography update
     - uses: actions/checkout@v1
     - name: Install dependencies
       run: |
