@@ -60,6 +60,10 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
       - run: printenv
       - if: "!startsWith(runner.os, 'Windows')"
         uses: actions/setup-python@v1
