@@ -54,7 +54,7 @@ class TestProxyServer:
 
     @skip_windows
     @pytest.mark.skipif(
-        tuple(int(x) for x in platform.mac_ver()[0].split('.')) >= (10,14),
+        tuple(int(x) for x in platform.mac_ver()[0].split('.')) >= (10,14), 
         reason='Skipping due to recent macOS version'
     )
     def test_err(self):
