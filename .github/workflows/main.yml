@@ -69,6 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: printenv
+      - run: echo $GITHUB_REF
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
