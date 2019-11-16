@@ -31,6 +31,7 @@ def request(flow: http.HTTPFlow) -> None:
 
 
 def response(flow: http.HTTPFlow) -> None:
+    assert flow.response
     flow.response.headers.pop('Strict-Transport-Security', None)
     flow.response.headers.pop('Public-Key-Pins', None)
 
