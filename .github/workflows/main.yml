@@ -79,7 +79,7 @@ jobs:
         with:
           name: binaries
           path: release/dist
-      - run: ls
+      - run: ls release/dist
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
