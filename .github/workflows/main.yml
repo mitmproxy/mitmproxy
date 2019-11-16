@@ -70,7 +70,7 @@ jobs:
     steps:
       - run: printenv
       - run: echo $GITHUB_REF
-      - run env
+      - run: env
       - name: Dump GitHub context
         env:
           GITHUB_CONTEXT: ${{ toJson(github) }}
