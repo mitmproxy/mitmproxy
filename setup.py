@@ -13,7 +13,9 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 with open(os.path.join(here, "mitmproxy", "version.py")) as f:
-    VERSION = re.search(r'VERSION = "(.+?)"', f.read()).group(1)
+    match = re.search(r'VERSION = "(.+?)"', f.read())
+    assert match
+    VERSION = match.group(1)
 
 setup(
     name="mitmproxy",
