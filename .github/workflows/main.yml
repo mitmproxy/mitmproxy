@@ -20,7 +20,7 @@ jobs:
         mypy .
   test:
     strategy:
-      fail-fast: false
+      fail-fast: false  # fixme
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
@@ -44,3 +44,22 @@ jobs:
     - uses: codecov/codecov-action@v1.0.3
       with:
         token: ${{secrets.CODECOV_TOKEN}} #required
+  build:
+    strategy:
+      fail-fast: false  # fixme
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - if: !startsWith(runner.os, 'Windows')
+      uses: actions/setup-python@v1
+    - if: startsWith(runner.os, 'Windows')
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.7'
+        architecture: 'x86'  # fixme: cryptography update
+    - uses: actions/checkout@v1
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
