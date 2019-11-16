@@ -2,17 +2,6 @@ name: CI
 
 on: [push, pull_request]
 
-setup-python:
-  - &setup-python
-    if: "!startsWith(runner.os, 'Windows')"
-    uses: actions/setup-python@v1
-  - &setup-python-win
-    if: startsWith(runner.os, 'Windows')
-    uses: actions/setup-python@v1
-    with:
-      python-version: '3.7'
-      architecture: 'x86'  # FIXME: Update cryptography
-
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -31,13 +20,18 @@ jobs:
         mypy .
   test:
     strategy:
-      fail-fast: false  # fixme
+      fail-fast: false  # FIXME
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - *setup-python
-    - *setup-python-win
+    - if: matrix.os != 'windows-latest'
+      uses: actions/setup-python@v1
+    - if: matrix.os == 'windows-latest'
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.7'
+        architecture: 'x86'  # FIXME: cryptography update
     - uses: actions/checkout@v1
     - name: Install dependencies
       run: |
@@ -47,20 +41,27 @@ jobs:
     - name: Test with pytest
       run: |
         pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
-    - uses: codecov/codecov-action@v1.0.3
-      with:
-        token: ${{secrets.CODECOV_TOKEN}} #required
-  build:
+    - run: codecov
+  deploy:
     strategy:
-      fail-fast: false  # fixme
+      fail-fast: false  # FIXME
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - *setup-python
-    - *setup-python-win
+    - if: "!startsWith(runner.os, 'Windows')"
+      uses: actions/setup-python@v1
+    - if: startsWith(runner.os, 'Windows')
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.7'
+        architecture: 'x86'  # FIXME: cryptography update
     - uses: actions/checkout@v1
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+    - run: |
+        tox -e cibuild -- build
+        tox -e cibuild -- upload
+    
