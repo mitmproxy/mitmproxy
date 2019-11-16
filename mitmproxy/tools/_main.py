@@ -11,7 +11,6 @@ import signal
 import typing
 
 from mitmproxy.tools import cmdline
-from mitmproxy.tools.console.master import ConsoleMaster
 from mitmproxy import exceptions, master
 from mitmproxy import options
 from mitmproxy import optmanager
@@ -115,10 +114,7 @@ def run(
         loop = asyncio.get_event_loop()
         for signame in ('SIGINT', 'SIGTERM'):
             try:
-                if isinstance(master, ConsoleMaster):
-                    loop.add_signal_handler(getattr(signal, signame), master.prompt_for_exit)
-                else:
-                    loop.add_signal_handler(getattr(signal, signame), master.shutdown)
+                loop.add_signal_handler(getattr(signal, signame), getattr(master, "prompt_for_exit", master.shutdown))
             except NotImplementedError:
                 # Not supported on Windows
                 pass
