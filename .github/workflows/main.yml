@@ -40,9 +40,7 @@ jobs:
     - run: mitmdump --version
     - name: Test with pytest
       run: |
-        pytest --timeout 60 --cov-report=xml \
-          --cov=mitmproxy --cov=pathod \
-          --full-cov=mitmproxy/ --full-cov=pathod/
+        pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
     - uses: codecov/codecov-action@v1.0.3
       with:
         token: ${{secrets.CODECOV_TOKEN}} #required
