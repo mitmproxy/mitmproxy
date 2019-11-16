@@ -13,11 +13,6 @@ from mitmproxy import exceptions
 import mitmproxy.types
 
 
-@functools.lru_cache(maxsize=128)
-def _parse_cmd(cmdstr: str):
-    return parts
-
-
 def verify_arg_signature(f: typing.Callable, args: list, kwargs: dict) -> None:
     sig = inspect.signature(f)
     try:
