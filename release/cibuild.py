@@ -159,6 +159,7 @@ class BuildEnviron:
             return self.appveyor_repo_branch
         if self.github_ref and self.github_ref.startswith("refs/heads/"):
             return self.github_ref.replace("refs/heads/", "")
+        return None
 
     @property
     def build_dir(self) -> str:
@@ -288,6 +289,7 @@ class BuildEnviron:
             return self.appveyor_repo_tag_name
         if self.github_ref and self.github_ref.startswith("refs/tags/"):
             return self.github_ref.replace("refs/tags/", "")
+        return None
 
     @property
     def upload_dir(self) -> str:

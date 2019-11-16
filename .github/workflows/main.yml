@@ -82,7 +82,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
-    needs: build
+    needs: [test, build]
     steps:
       - uses: actions/setup-python@v1
       - uses: actions/checkout@v1
