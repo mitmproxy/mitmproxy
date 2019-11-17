@@ -9,7 +9,7 @@ on: [push, pull_request]
 env:
   CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
   # Codecov
-  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  CODECOV_TOKEN: "0409bdfd-57a4-477d-a8af-f6172ef431d3"
   # Codecov: workaround for missing github actions support
   VCS_PULL_REQUEST: ${{ github.event.number }}
   VCS_SLUG: ${{ github.repository }}
