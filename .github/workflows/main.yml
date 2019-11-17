@@ -50,15 +50,21 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: '3.7'
-      - run: pip install -r requirements.txt codecov
-      - run: mitmdump --version
-      - run: pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
-      # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
-      - if: github.head_ref == ''
-        run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-      - if: github.head_ref != ''
-        run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-      - run: codecov -X gcov -X search -f coverage.xml --name python-${{ matrix.os }}
+      - run: pip install tox
+      - run: tox -e py37
+      - name: codecov
+        run: |
+          # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
+          git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+          pip install codecov
+          codecov -X gcov -X search -f coverage.xml --name python-${{ matrix.os }}
+  test-py35:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.5'
+    - run: pip install tox
+    - run: tox -e py35
   build-wheel:
     runs-on: ubuntu-latest
     env:
@@ -121,13 +127,12 @@ jobs:
         run: yarn
       - working-directory: ./web
         run: npm test
-      # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
-      - if: github.head_ref == ''
-        run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-      - if: github.head_ref != ''
-        run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-      - working-directory: ./web
-        run: $(yarn global bin)/codecov
+      - name: codecov
+        working-directory: ./web
+        run: |
+          # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
+          git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+          $(yarn global bin)/codecov
 
   docs:
     runs-on: ubuntu-latest
