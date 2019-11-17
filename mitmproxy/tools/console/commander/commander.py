@@ -207,7 +207,7 @@ class CommandEdit(urwid.WidgetWrap):
         self.history = history
         self.update()
 
-    def keypress(self, size, key):
+    def keypress(self, size, key) -> None:
         if key == "backspace":
             self.cbuf.backspace()
         elif key == "left":
@@ -225,21 +225,21 @@ class CommandEdit(urwid.WidgetWrap):
             self.cbuf.insert(key)
         self.update()
 
-    def update(self):
+    def update(self) -> None:
         self._w.set_text([self.leader, self.cbuf.render()])
 
-    def render(self, size, focus=False):
+    def render(self, size, focus=False) -> urwid.Canvas:
         (maxcol,) = size
         canv = self._w.render((maxcol,))
         canv = urwid.CompositeCanvas(canv)
         canv.cursor = self.get_cursor_coords((maxcol,))
         return canv
 
-    def get_cursor_coords(self, size):
+    def get_cursor_coords(self, size) -> typing.Tuple[int, int]:
         p = self.cbuf.cursor + len(self.leader)
         trans = self._w.get_line_translation(size[0])
         x, y = calc_coords(self._w.get_text()[0], trans, p)
         return x, y
 
-    def get_edit_text(self):
+    def get_edit_text(self) -> str:
         return self.cbuf.text
