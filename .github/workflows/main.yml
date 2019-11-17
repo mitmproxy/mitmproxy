@@ -51,12 +51,12 @@ jobs:
       - run: pip install -r requirements.txt codecov
       - run: mitmdump --version
       - run: pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
-      - name: codecov
-        shell: bash
-        # workaround for missing github actions support
-        run: |
-          git checkout -b ${GITHUB_REF#refs/heads/}
-          codecov
+      # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
+      - if: github.head_ref == ''
+        run: git checkout "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+      - if: github.head_ref != ''
+        run: git checkout "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+      - run: codecov
   build-wheel:
     runs-on: ubuntu-latest
     env:
@@ -188,9 +188,10 @@ jobs:
         run: yarn
       - working-directory: ./web
         run: npm test
+      # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
+      - if: github.head_ref == ''
+        run: git checkout "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+      - if: github.head_ref != ''
+        run: git checkout "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
       - working-directory: ./web
-        shell: bash
-        # workaround for missing github actions support
-        run: |
-          git checkout -b ${GITHUB_REF#refs/heads/}
-          $(yarn global bin)/codecov
+        run: $(yarn global bin)/codecov
