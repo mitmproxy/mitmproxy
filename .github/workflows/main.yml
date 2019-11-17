@@ -50,9 +50,9 @@ jobs:
       # codecov's GitHub action only supports Linux. https://github.com/codecov/codecov-action/issues/7
       # codecov's Python uploader has no github actions support yet. https://github.com/codecov/codecov-python/pull/214
       - name: Extract branch name  # https://stackoverflow.com/a/58035262/934719
-          shell: bash
-          run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-          id: extract_branch
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
       - run: pip install codecov
       - run: >
           codecov -f coverage.xml
