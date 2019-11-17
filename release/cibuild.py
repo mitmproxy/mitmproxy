@@ -59,7 +59,7 @@ class BuildEnviron:
             has_twine_creds=False,
             docker_username="",
             docker_password="",
-            rtool_key="",
+            build_key="",
     ):
         self.system = system
         self.root_dir = root_dir
@@ -90,7 +90,7 @@ class BuildEnviron:
         self.has_twine_creds = has_twine_creds
         self.docker_username = docker_username
         self.docker_password = docker_password
-        self.rtool_key = rtool_key
+        self.build_key = build_key
 
     @classmethod
     def from_env(cls):
@@ -116,7 +116,7 @@ class BuildEnviron:
             ),
             docker_username=os.environ.get("DOCKER_USERNAME"),
             docker_password=os.environ.get("DOCKER_PASSWORD"),
-            rtool_key=os.environ.get("CI_BUILD_KEY"),
+            build_key=os.environ.get("CI_BUILD_KEY"),
         )
 
     def archive(self, path):
@@ -441,6 +441,8 @@ def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
 
 
 def build_wininstaller(be: BuildEnviron):  # pragma: no cover
+    if not be.build_key:
+        raise BuildError("Cannot build windows installer without secret key.")
     click.echo("Building wininstaller package...")
 
     IB_VERSION = "18.8.0"
@@ -471,7 +473,7 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
         assert os.path.isfile(IB_CLI)
 
     click.echo("Decrypt InstallBuilder license...")
-    f = cryptography.fernet.Fernet(be.rtool_key.encode())
+    f = cryptography.fernet.Fernet(be.build_key.encode())
     with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, open(IB_LICENSE,
                                                                         "wb") as outfile:
         outfile.write(f.decrypt(infile.read()))
@@ -515,7 +517,7 @@ def build():  # pragma: no cover
         build_docker_image(be)
     if be.should_build_pyinstaller:
         build_pyinstaller(be)
-    if be.should_build_wininstaller and be.rtool_key:
+    if be.should_build_wininstaller:
         build_wininstaller(be)
 
 
