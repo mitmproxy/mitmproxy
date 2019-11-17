@@ -53,9 +53,9 @@ jobs:
       - run: pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
       # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
       - if: github.head_ref == ''
-        run: git checkout "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+        run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
       - if: github.head_ref != ''
-        run: git checkout "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+        run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
       - run: codecov
   build-wheel:
     runs-on: ubuntu-latest
@@ -82,7 +82,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CI_BUILD_PYINSTALLER: 1
-      CI_BUILD_WININSTALLER: "${{ (matrix.os == 'windows-latest') && '1' || '' }}"
     steps:
       - run: printenv
       - uses: actions/checkout@v1
@@ -97,6 +96,10 @@ jobs:
       - run: printenv
       - run: pip install tox
       - run: tox -e cibuild -- build
+      - if: matrix.os == 'windows-latest'
+        run: tox -e cibuild -- build
+        env:
+          CI_BUILD_WININSTALLER: 1
       # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
       - uses: actions/upload-artifact@master
         with:
@@ -190,8 +193,8 @@ jobs:
         run: npm test
       # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
       - if: github.head_ref == ''
-        run: git checkout "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+        run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
       - if: github.head_ref != ''
-        run: git checkout "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+        run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
       - working-directory: ./web
         run: $(yarn global bin)/codecov
