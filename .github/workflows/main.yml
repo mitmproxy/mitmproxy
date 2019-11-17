@@ -39,7 +39,7 @@ jobs:
       - run: mypy .
   test:
     strategy:
-      fail-fast: false  # FIXME
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
@@ -74,7 +74,7 @@ jobs:
           path: release/dist
   build-binaries:
     strategy:
-      fail-fast: false  # FIXME
+      fail-fast: false
       matrix:
         # Old Ubuntu version for old glibc
         os: [macos-latest, windows-latest, ubuntu-16.04]
@@ -142,7 +142,7 @@ jobs:
 
   # Separate from everything else because slow.
   build-and-deploy-docker:
-    # FIXME if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
+    if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
     needs: build-wheel
     runs-on: ubuntu-latest
     env:
@@ -161,7 +161,7 @@ jobs:
       - run: tox -e cibuild -- upload
 
   deploy:
-    # FIXME if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
+    if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
     runs-on: ubuntu-latest
     needs: [test, test-web-ui, build-wheel, build-binaries]
     env:
