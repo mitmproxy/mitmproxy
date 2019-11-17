@@ -8,6 +8,8 @@ on: [push, pull_request]
 
 env:
   CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
+  TWINE_USERNAME: mitmproxy
+  DOCKER_USERNAME: mitmbot
   # Codecov
   CODECOV_TOKEN: "0409bdfd-57a4-477d-a8af-f6172ef431d3"
   # Codecov: workaround for missing github actions support

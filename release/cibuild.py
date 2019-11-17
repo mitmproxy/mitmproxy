@@ -539,6 +539,7 @@ def upload():  # pragma: no cover
         Pushes the Docker image to Docker Hub.
     """
     be = BuildEnviron.from_env()
+    be.dump_info()
 
     if be.is_pull_request:
         click.echo("Refusing to upload artifacts from a pull request!")
