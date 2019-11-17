@@ -84,7 +84,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CI_BUILD_PYINSTALLER: 1
-      CI_BUILD_WININSTALLER: ${{ (matrix.os == "windows-latest") || '' }}
+      CI_BUILD_WININSTALLER: ${{ (matrix.os == 'windows-latest') || '' }}
     steps:
       - if: "!startsWith(runner.os, 'Windows')"
         uses: actions/setup-python@v1
