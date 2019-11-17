@@ -82,16 +82,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CI_BUILD_PYINSTALLER: 1
-      FOO: ${{ matrix.os == 'windows-latest' }}
-      FOOX: ${{ matrix.os == 'windows-latest' || '' }}
-      FOOXY: ${{ (matrix.os == 'windows-latest') || '' }}
-      FOOXX: ${{ matrix.os == 'windows-latest' && '1' || '0' }}
+      FOO: ${{ matrix.os == 'windows-latest' || '' }}
     steps:
       - run: printenv
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
           python-version: '3.7'
+      - run: |
+          python -c "import os; print(1, "FOO" in os.environ)"
+          python -c "import os; print(2, bool(os.environ.get('FOO',''))"
       - if: matrix.os == 'windows-latest'
         uses: actions/cache@v1
         with:
