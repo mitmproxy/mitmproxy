@@ -78,8 +78,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CI_BUILD_PYINSTALLER: 1
-      CI_BUILD_WININSTALLER: "${{ (matrix.os == 'windows-latest') || '' }}"
+      CI_BUILD_WININSTALLER: "${{ (matrix.os == 'windows-latest') && '1' || '' }}"
     steps:
+      - run: printenv
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
@@ -167,6 +168,7 @@ jobs:
   web-ui:
     runs-on: ubuntu-latest
     steps:
+      - run: git rev-parse --abbrev-ref HEAD
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
       - id: yarn-cache

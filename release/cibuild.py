@@ -190,6 +190,7 @@ class BuildEnviron:
             "upload_dir",
             "should_build_wheel",
             "should_build_pyinstaller",
+            "should_build_wininstaller",
             "should_build_docker",
             "should_upload_docker",
             "should_upload_pypi",
