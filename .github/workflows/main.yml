@@ -95,7 +95,8 @@ jobs:
           key: installbuilder
       - run: printenv
       - run: pip install tox
-      - run: tox -e cibuild -- build
+      - if: matrix.os != 'windows-latest'
+        run: tox -e cibuild -- build
       - if: matrix.os == 'windows-latest'
         run: tox -e cibuild -- build
         env:
