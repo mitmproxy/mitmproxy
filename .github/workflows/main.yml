@@ -181,6 +181,6 @@ jobs:
       - working-directory: ./web
         run: yarn
       - working-directory: ./web
-        run: |
-          npm test
-          codecov
+        run: npm test
+      - working-directory: ./web
+        run: yarn run codecov
