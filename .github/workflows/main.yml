@@ -185,4 +185,7 @@ jobs:
       - working-directory: ./web
         run: npm test
       - working-directory: ./web
-        run: $(yarn global bin)/codecov
+        shell: bash
+        run: |
+          git checkout -b ${GITHUB_REF#refs/heads/}
+          $(yarn global bin)/codecov
