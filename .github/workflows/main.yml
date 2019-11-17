@@ -44,22 +44,6 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT"
-      - name: Dump steps context
-        env:
-          STEPS_CONTEXT: ${{ toJson(steps) }}
-        run: echo "$STEPS_CONTEXT"
-      - name: Dump runner context
-        env:
-          RUNNER_CONTEXT: ${{ toJson(runner) }}
-        run: echo "$RUNNER_CONTEXT"
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
@@ -82,7 +66,6 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: '3.7'
-      - run: printenv
       - run: pip install tox
       - run: tox -e cibuild -- build
       - uses: actions/upload-artifact@master
@@ -100,7 +83,6 @@ jobs:
       CI_BUILD_PYINSTALLER: 1
       CI_BUILD_WININSTALLER: ${{ matrix.os == 'windows-latest' }}
     steps:
-      - run: printenv
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
@@ -110,7 +92,6 @@ jobs:
         with:
           path: release/installbuilder/setup
           key: installbuilder
-      - run: printenv
       - run: pip install tox
       - run: tox -e cibuild -- build
       # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
