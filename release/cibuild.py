@@ -448,7 +448,7 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
         return
     click.echo("Building wininstaller package...")
 
-    IB_VERSION = "18.8.0"
+    IB_VERSION = "19.10.0"
     IB_DIR = pathlib.Path(be.release_dir) / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
     IB_CLI = fr"C:\Program Files (x86)\BitRock InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
