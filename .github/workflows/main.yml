@@ -19,7 +19,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/chceckout@v1
+      - uses: actions/checkout@v1
       - uses: TrueBrain/actions-flake8@v1.2
   lint-local:
     # do not use external action when secrets are exposed.
