@@ -367,6 +367,8 @@ def test_simple():
         c.add("one.two", a.cmd1)
         assert(c.commands["one.two"].help == "cmd1 help")
         assert(c.execute("one.two foo") == "ret foo")
+        assert(c.execute("one.two \"foo\"") == "ret foo")
+        assert(c.execute("one.two \"foo bar\"") == "ret \"foo bar\"")
         assert(c.call("one.two", "foo") == "ret foo")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.execute("nonexistent")
@@ -380,6 +382,8 @@ def test_simple():
             c.execute("\\")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.execute(r"\'")
+        with pytest.raises(exceptions.CommandError, match="Unknown"):
+            c.execute(r"\"")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.execute(r"\"")
 
