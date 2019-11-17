@@ -168,8 +168,8 @@ jobs:
   web-ui:
     runs-on: ubuntu-latest
     steps:
-      - run: git rev-parse --abbrev-ref HEAD
       - uses: actions/checkout@v1
+      - run: git rev-parse --abbrev-ref HEAD
       - uses: actions/setup-node@v1
       - id: yarn-cache
         run: echo "::set-output name=dir::$(yarn cache dir)"
