@@ -106,10 +106,70 @@ jobs:
           name: binaries.${{ matrix.os }}
           path: release/dist
 
+  test-web-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: git rev-parse --abbrev-ref HEAD
+      - uses: actions/setup-node@v1
+      - id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - run: yarn global add codecov
+      - working-directory: ./web
+        run: yarn
+      - working-directory: ./web
+        run: npm test
+      # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
+      - if: github.head_ref == ''
+        run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+      - if: github.head_ref != ''
+        run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+      - working-directory: ./web
+        run: $(yarn global bin)/codecov
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.7'
+      - run: pip install tox
+      - run: |
+          wget https://github.com/gohugoio/hugo/releases/download/v0.59.1/hugo_0.59.1_Linux-64bit.deb
+          sudo dpkg -i hugo*.deb
+      - run: tox -e docs
+
+  # Separate from everything else because slow.
+  build-and-deploy-docker:
+    # FIXME if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
+    needs: build-wheel
+    runs-on: ubuntu-latest
+    env:
+      CI_BUILD_DOCKER: 1
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.7'
+      - run: pip install tox
+      - uses: actions/download-artifact@master
+        with:
+          name: wheel
+          path: release/dist
+      - run: tox -e cibuild -- build
+      - run: tox -e cibuild -- upload
+
   deploy:
     # FIXME if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
     runs-on: ubuntu-latest
-    needs: [build-wheel, build-binaries]
+    needs: [test, test-web-ui, build-wheel, build-binaries]
     env:
       CI_BUILD_WHEEL: 1
       CI_BUILD_PYINSTALLER: 1
@@ -139,62 +199,3 @@ jobs:
       - run: ls release/dist
       - run: pip install tox
       - run: tox -e cibuild -- upload
-
-  # Separate from everything else because slow.
-  build-and-deploy-docker:
-    if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    env:
-      CI_BUILD_DOCKER: 1
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
-        with:
-          python-version: '3.7'
-      - run: pip install tox
-      - uses: actions/download-artifact@master
-        with:
-          name: wheel
-          path: release/dist
-      - run: tox -e cibuild -- build
-      - run: tox -e cibuild -- upload
-
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
-        with:
-          python-version: '3.7'
-      - run: pip install tox
-      - run: |
-          wget https://github.com/gohugoio/hugo/releases/download/v0.59.1/hugo_0.59.1_Linux-64bit.deb
-          sudo dpkg -i hugo*.deb
-      - run: tox -e docs
-
-  web-ui:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - run: git rev-parse --abbrev-ref HEAD
-      - uses: actions/setup-node@v1
-      - id: yarn-cache
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-      - uses: actions/cache@v1
-        with:
-          path: ${{ steps.yarn-cache.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - run: yarn global add codecov
-      - working-directory: ./web
-        run: yarn
-      - working-directory: ./web
-        run: npm test
-      # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
-      - if: github.head_ref == ''
-        run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-      - if: github.head_ref != ''
-        run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-      - working-directory: ./web
-        run: $(yarn global bin)/codecov
