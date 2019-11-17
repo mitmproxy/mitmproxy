@@ -102,7 +102,6 @@ class BuildEnviron:
 
     @classmethod
     def from_env(cls):
-        print(os.environ)
         return cls(
             system=platform.system(),
             root_dir=os.path.normpath(os.path.join(os.path.dirname(__file__), "..")),
@@ -461,7 +460,7 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
     IB_CLI = fr"C:\Program Files (x86)\BitRock InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
     IB_LICENSE = IB_DIR / "license.xml"
 
-    if True or not os.path.isfile(IB_CLI):
+    if not os.path.isfile(IB_CLI):
         if not os.path.isfile(IB_SETUP):
             click.echo("Downloading InstallBuilder...")
 
@@ -478,14 +477,13 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
             shutil.move(IB_SETUP.with_suffix(".tmp"), IB_SETUP)
 
         click.echo("Install InstallBuilder...")
-        subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"],
-                       check=True)
+        subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"], check=True)
         assert os.path.isfile(IB_CLI)
 
     click.echo("Decrypt InstallBuilder license...")
     f = cryptography.fernet.Fernet(be.build_key.encode())
-    with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, open(IB_LICENSE,
-                                                                        "wb") as outfile:
+    with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, \
+            open(IB_LICENSE, "wb") as outfile:
         outfile.write(f.decrypt(infile.read()))
 
     click.echo("Run InstallBuilder...")

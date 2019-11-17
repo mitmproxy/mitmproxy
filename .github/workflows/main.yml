@@ -149,6 +149,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CI_BUILD_DOCKER: 1
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
@@ -170,6 +171,9 @@ jobs:
       CI_BUILD_WHEEL: 1
       CI_BUILD_PYINSTALLER: 1
       CI_BUILD_WININSTALLER: 1
+      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
