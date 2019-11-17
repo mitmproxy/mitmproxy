@@ -32,7 +32,7 @@ class BuildError(Exception):
 
 
 def bool_from_env(envvar: str) -> bool:
-    val = os.environ.get(envvar, False)
+    val = os.environ.get(envvar, "")
     if not val or val.lower() in ("0", "false"):
         return False
     else:
