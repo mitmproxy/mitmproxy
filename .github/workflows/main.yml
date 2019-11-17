@@ -60,7 +60,6 @@ jobs:
           --commit ${{ github.sha }}
           --build $GITHUB_ACTION
           --slug ${{ github.repository }}
-          --pr ${{ github.event.number }}
           --branch ${{ steps.extract_branch.outputs.branch }}
   test-py35:
     runs-on: ubuntu-latest
