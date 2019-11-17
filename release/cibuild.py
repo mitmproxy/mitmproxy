@@ -102,6 +102,7 @@ class BuildEnviron:
 
     @classmethod
     def from_env(cls):
+        print(os.environ)
         return cls(
             system=platform.system(),
             root_dir=os.path.normpath(os.path.join(os.path.dirname(__file__), "..")),
@@ -199,6 +200,7 @@ class BuildEnviron:
             "should_build_pyinstaller",
             "should_build_wininstaller",
             "should_build_docker",
+            "should_upload_aws",
             "should_upload_docker",
             "should_upload_pypi",
         ]

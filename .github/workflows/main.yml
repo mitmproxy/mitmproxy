@@ -193,5 +193,6 @@ jobs:
           name: binaries.ubuntu-16.04
           path: release/dist
       - run: ls release/dist
+      - run: printenv
       - run: pip install tox
       - run: tox -e cibuild -- upload
