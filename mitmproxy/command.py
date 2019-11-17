@@ -236,8 +236,20 @@ class CommandManager(mitmproxy.types._CommandBase):
         parts, _ = self.parse_partial(cmdstr)
         params = []
         for p in parts:
-            if p.value.strip() != '':
-                params.append(p.value)
+            v = p.value.strip()
+            if v != '':
+                if ((v.startswith("'") and v.endswith("'")) or
+                   (v.startswith("\"") and v.endswith("\""))) and \
+                   len(v.split(' ')) == 1:
+                    # If this parameter is between quotes but has no spaces in
+                    # it, then it is safe to remove the quotes to pass it down
+                    # This allows any commands that take a simple spaceless
+                    # string as a parameter to work. For example
+                    # view.flows.create get "http://www.example.com" won't work
+                    # if the quotes are there as it won't see the param as a URL
+                    v = v[1:-1]
+
+                params.append(v)
 
         if len(parts) == 0:
             raise exceptions.CommandError("Invalid command: %s" % cmdstr)
