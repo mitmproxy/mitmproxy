@@ -9,9 +9,6 @@ on: [push, pull_request]
 env:
   # Codecov
   CODECOV_TOKEN: "0409bdfd-57a4-477d-a8af-f6172ef431d3"
-  # Codecov: workaround for missing github actions support
-  VCS_PULL_REQUEST: ${{ github.event.number }}
-  VCS_SLUG: ${{ github.repository }}
 
 jobs:
   lint-pr:
@@ -43,20 +40,28 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - run: printenv
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
           python-version: '3.7'
       - run: pip install tox
       - run: tox -e py37
-      # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
-      - if: github.head_ref == ''
-        run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-      - if: github.head_ref != ''
-        run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-      - run: |
-          pip install codecov
-          codecov -X gcov -X search -f coverage.xml --name python-${{ matrix.os }}
+      # codecov's GitHub action only supports Linux. https://github.com/codecov/codecov-action/issues/7
+      # codecov's Python uploader has no github actions support yet. https://github.com/codecov/codecov-python/pull/214
+      - name: Extract branch name  # https://stackoverflow.com/a/58035262/934719
+          shell: bash
+          run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+          id: extract_branch
+      - run: pip install codecov
+      - run: >
+          codecov -f coverage.xml
+            --name python-${{ matrix.os }}
+            --commit ${{ github.sha }}
+            --build $GITHUB_ACTION
+            --slug ${{ github.repository }}
+            --pr ${{ github.event.number }}
+            --branch ${{ steps.extract_branch.outputs.branch }}
   test-py35:
     runs-on: ubuntu-latest
     steps:
@@ -124,18 +129,11 @@ jobs:
           key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-yarn-
-      - run: yarn global add codecov
       - working-directory: ./web
         run: yarn
       - working-directory: ./web
         run: npm test
-      # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
-      - if: github.head_ref == ''
-        run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-      - if: github.head_ref != ''
-        run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-      - working-directory: ./web
-        run: $(yarn global bin)/codecov
+      - run: bash <(curl -s https://codecov.io/bash)
 
   docs:
     env:
@@ -210,6 +208,5 @@ jobs:
           name: binaries.ubuntu-16.04
           path: release/dist
       - run: ls release/dist
-      - run: printenv
       - run: pip install tox
       - run: tox -e cibuild -- upload
