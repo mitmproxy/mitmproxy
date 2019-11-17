@@ -8,6 +8,10 @@ on: [push, pull_request]
 
 env:
   CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
+  # Codecov
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  VCS_PULL_REQUEST: ${{ github.event.number }}
+  VCS_SLUG: ${{ github.repository }}
 
 jobs:
   lint-pr:
@@ -49,10 +53,6 @@ jobs:
         run: |
           pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
       - run: codecov
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-          VCS_PULL_REQUEST: ${{ github.event.number }}
-          VCS_SLUG: ${{ github.repository }}
   build-wheel:
     runs-on: ubuntu-latest
     env:
@@ -95,7 +95,7 @@ jobs:
       # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
       - uses: actions/upload-artifact@master
         with:
-          name: binaries/${{ matrix.os }}
+          name: binaries.${{ matrix.os }}
           path: release/dist
 
   deploy:
@@ -118,15 +118,15 @@ jobs:
           path: release/dist
       - uses: actions/download-artifact@master
         with:
-          name: binaries/windows-latest
+          name: binaries.windows-latest
           path: release/dist
       - uses: actions/download-artifact@master
         with:
-          name: binaries/macos-latest
+          name: binaries.macos-latest
           path: release/dist
       - uses: actions/download-artifact@master
         with:
-          name: binaries/ubuntu-16.04
+          name: binaries.ubuntu-16.04
           path: release/dist
       - run: ls release/dist
       - run: pip install tox
@@ -163,3 +163,24 @@ jobs:
           wget https://github.com/gohugoio/hugo/releases/download/v0.59.1/hugo_0.59.1_Linux-64bit.deb
           sudo dpkg -i hugo*.deb
       - run: tox -e docs
+
+  web-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+      - id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - run: yarn global add codecov
+      - working-directory: ./web
+        run: yarn
+      - working-directory: ./web
+        run: |
+          npm test
+          codecov
