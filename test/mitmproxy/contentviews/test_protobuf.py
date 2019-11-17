@@ -8,7 +8,7 @@ datadir = "mitmproxy/contentviews/test_protobuf_data/"
 
 def test_view_protobuf_request(tdata):
     v = full_eval(protobuf.ViewProtobuf())
-    p = tdata.path(datadir + "protobuf01")
+    p = tdata.path(datadir + "protobuf01.bin")
 
     with open(p, "rb") as f:
         raw = f.read()
@@ -19,12 +19,12 @@ def test_view_protobuf_request(tdata):
         v(b'foobar')
 
 
-@pytest.mark.parametrize("filename", ["protobuf02", "protobuf03"])
+@pytest.mark.parametrize("filename", ["protobuf02.bin", "protobuf03.bin"])
 def test_format_pbuf(filename, tdata):
     path = tdata.path(datadir + filename)
     with open(path, "rb") as f:
         input = f.read()
-    with open(path + "-decoded") as f:
+    with open(path.replace(".bin", "-decoded.bin")) as f:
         expected = f.read()
 
     assert protobuf.format_pbuf(input) == expected
