@@ -103,6 +103,8 @@ jobs:
     needs: [build-wheel, build-binaries]
     env:
       CI_BUILD_WHEEL: 1
+      CI_BUILD_PYINSTALLER: 1
+      CI_BUILD_WININSTALLER: 1
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
@@ -122,18 +124,18 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CI_BUILD_DOCKER: 1
-      steps:
-        - uses: actions/checkout@v1
-        - uses: actions/setup-python@v1
-          with:
-            python-version: '3.7'
-        - run: pip install tox
-        - uses: actions/download-artifact@master
-          with:
-            name: wheel
-            path: release/dist
-        - run: tox -e cibuild -- build
-        - run: tox -e cibuild -- upload
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.7'
+      - run: pip install tox
+      - uses: actions/download-artifact@master
+        with:
+          name: wheel
+          path: release/dist
+      - run: tox -e cibuild -- build
+      - run: tox -e cibuild -- upload
 
   docs:
     runs-on: ubuntu-latest

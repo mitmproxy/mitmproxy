@@ -273,6 +273,13 @@ class BuildEnviron:
         ])
 
     @property
+    def should_upload_aws(self) -> bool:
+        return all([
+            self.has_aws_creds,
+            (self.should_build_wheel or self.should_build_pyinstaller or self.should_build_wininstaller),
+        ])
+
+    @property
     def should_upload_pypi(self) -> bool:
         return all([
             self.is_prod_release,
@@ -526,7 +533,7 @@ def upload():  # pragma: no cover
         click.echo("Refusing to upload artifacts from a pull request!")
         return
 
-    if be.has_aws_creds:
+    if be.should_upload_aws:
         subprocess.check_call([
             "aws", "s3", "cp",
             "--acl", "public-read",
