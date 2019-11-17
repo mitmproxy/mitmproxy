@@ -158,6 +158,8 @@ class BuildEnviron:
             return self.appveyor_repo_branch
         if self.github_ref and self.github_ref.startswith("refs/heads/"):
             return self.github_ref.replace("refs/heads/", "")
+        if self.github_ref and self.github_ref.startswith("refs/pull/"):
+            return "pr-" + self.github_ref.split("/")[2]
         return ""
 
     @property
