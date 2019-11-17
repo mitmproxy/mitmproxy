@@ -82,6 +82,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CI_BUILD_PYINSTALLER: 1
+      FOO: ${{ matrix.os == 'windows-latest' }}
+      FOOX: ${{ matrix.os == 'windows-latest' || '' }}
+      FOOXY: ${{ (matrix.os == 'windows-latest') || '' }}
+      FOOXX: ${{ matrix.os == 'windows-latest' && '1' || '0' }}
     steps:
       - run: printenv
       - uses: actions/checkout@v1
