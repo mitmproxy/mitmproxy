@@ -44,7 +44,6 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: '3.7'
-          architecture: 'x86'
       - uses: actions/checkout@v1
       - name: Install dependencies
         run: |
