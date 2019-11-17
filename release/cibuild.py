@@ -444,7 +444,8 @@ def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
 
 def build_wininstaller(be: BuildEnviron):  # pragma: no cover
     if not be.build_key:
-        raise BuildError("Cannot build windows installer without secret key.")
+        click.echo("Cannot build windows installer without secret key.")
+        return
     click.echo("Building wininstaller package...")
 
     IB_VERSION = "18.8.0"
