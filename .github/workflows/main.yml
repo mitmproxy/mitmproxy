@@ -92,9 +92,10 @@ jobs:
       - run: printenv
       - run: pip install tox
       - run: tox -e cibuild -- build
+      # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
       - uses: actions/upload-artifact@master
         with:
-          name: binaries
+          name: binaries/${{ matrix.os }}
           path: release/dist
 
   deploy:
@@ -110,9 +111,22 @@ jobs:
       - uses: actions/setup-python@v1
         with:
           python-version: '3.7'
+      # artifacts must be downloaded individually, see https://github.com/actions/download-artifact/issues/6
       - uses: actions/download-artifact@master
         with:
-          name: binaries
+          name: wheel
+          path: release/dist
+      - uses: actions/download-artifact@master
+        with:
+          name: binaries/windows-latest
+          path: release/dist
+      - uses: actions/download-artifact@master
+        with:
+          name: binaries/macos-latest
+          path: release/dist
+      - uses: actions/download-artifact@master
+        with:
+          name: binaries/ubuntu-16.04
           path: release/dist
       - run: ls release/dist
       - run: pip install tox
