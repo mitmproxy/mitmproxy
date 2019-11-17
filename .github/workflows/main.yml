@@ -91,7 +91,7 @@ jobs:
           python-version: '3.7'
       - run: |
           python -c "import os; print(1, "FOO" in os.environ)"
-          python -c "import os; print(2, bool(os.environ.get('FOO',''))"
+          python -c "import os; print(2, bool(os.environ.get('FOO','')))"
       - if: matrix.os == 'windows-latest'
         uses: actions/cache@v1
         with:
