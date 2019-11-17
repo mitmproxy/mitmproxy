@@ -67,6 +67,8 @@ jobs:
     steps:
       - run: printenv
       - uses: actions/setup-python@v1
+        with:
+          python-version: '3.7'
       - uses: actions/checkout@v1
       - name: Install dependencies
         run: |
@@ -82,7 +84,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CI_BUILD_PYINSTALLER: 1
-      CI_BUILD_WININSTALLER: ${{ (matrix.os == 'windows-latest') || '' }}
+      CI_BUILD_WININSTALLER: "${{ (matrix.os == 'windows-latest') || '' }}"
     steps:
       # zstandard currently doesn't have 3.8 wheels,
       # also we'd need to upgrade cryptography from version 2.4.
@@ -94,6 +96,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      # TODO: Cache InstallBuilder
       - run: |
           printenv
           tox -e cibuild -- build
@@ -117,5 +120,5 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install tox
       - run: tox -e cibuild -- upload
