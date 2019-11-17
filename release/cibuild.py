@@ -322,13 +322,14 @@ def build_wheel(be: BuildEnviron):  # pragma: no cover
         "bdist_wheel",
         "--dist-dir", be.dist_dir,
     ])
-    whl = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))[0]
+    whl, = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))
     click.echo("Found wheel package: {}".format(whl))
     subprocess.check_call(["tox", "-e", "wheeltest", "--", whl])
     return whl
 
 
-def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
+def build_docker_image(be: BuildEnviron):  # pragma: no cover
+    whl, = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))
     click.echo("Building Docker images...")
     subprocess.check_call([
         "docker",
@@ -501,10 +502,9 @@ def build():  # pragma: no cover
     os.makedirs(be.dist_dir, exist_ok=True)
 
     if be.should_build_wheel:
-        whl = build_wheel(be)
-        # Docker image requires wheels
-        if be.should_build_docker:
-            build_docker_image(be, whl)
+        build_wheel(be)
+    if be.should_build_docker:
+        build_docker_image(be)
     if be.should_build_pyinstaller:
         build_pyinstaller(be)
     if be.should_build_wininstaller and be.rtool_key:
