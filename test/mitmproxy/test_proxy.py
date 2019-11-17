@@ -52,7 +52,7 @@ class TestProcessProxyOptions:
 class TestProxyServer:
 
     @skip_windows
-    @pytest.mark.skipif(platform.system() != "Linux")
+    @pytest.mark.skipif(platform.system() != "Linux", reason="Linux-only")
     def test_err(self):
         # binding to 0.0.0.0:1 works without special permissions on Windows and macOS Mojave+
         conf = ProxyConfig(options.Options(listen_port=1))
