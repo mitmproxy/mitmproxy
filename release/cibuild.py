@@ -12,7 +12,6 @@ import sys
 import tarfile
 import urllib.request
 import zipfile
-from typing import Optional
 
 import click
 import parver
