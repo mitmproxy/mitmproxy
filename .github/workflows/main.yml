@@ -2,6 +2,9 @@ name: CI
 
 on: [push, pull_request]
 
+env:
+  CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
+
 jobs:
   lint-pr:
     if: github.event_name == 'pull_request'
@@ -58,18 +61,31 @@ jobs:
         env:
           VCS_PULL_REQUEST: ${{ github.event.number }}
           VCS_SLUG: ${{ github.repository }}
-  build:
+  build-wheel-and-docker:
+    runs-on: ubuntu-latest
+    env:
+      CI_BUILD_WHEEL: 1
+      CI_BUILD_DOCKER: 1
+    steps:
+      - run: printenv
+      - uses: actions/setup-python@v1
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox
+      - run: tox -e cibuild -- build
+  build-binaries:
     strategy:
       fail-fast: false  # FIXME
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        # Old Ubuntu version for old glibc
+        os: [macos-latest, windows-latest, ubuntu-16.04]
     runs-on: ${{ matrix.os }}
+    env:
+      CI_BUILD_PYINSTALLER: 1
+      CI_BUILD_WININSTALLER: ${{ startsWith(runner.os, 'Windows') || '' }}
     steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - run: printenv
       - if: "!startsWith(runner.os, 'Windows')"
         uses: actions/setup-python@v1
       - if: startsWith(runner.os, 'Windows')
@@ -83,13 +99,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - run: |
+          printenv
           tox -e cibuild -- build
-        env:
-          CI_BUILD_WHEEL: ${{ startsWith(runner.os, 'Linux') }}
-          CI_BUILD_DOCKER: ${{ startsWith(runner.os, 'Linux') }}
-          CI_BUILD_PYINSTALLER: 1
-          CI_BUILD_WININSTALLER: ${{ startsWith(runner.os, 'Windows') }}
-          CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
       - uses: actions/upload-artifact@master
         with:
           name: binaries
@@ -98,7 +109,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
-    needs: [test, build]
+    needs: [build-wheel-and-docker, build-binaries]
     steps:
       - uses: actions/setup-python@v1
       - uses: actions/checkout@v1

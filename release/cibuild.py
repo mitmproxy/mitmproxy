@@ -104,11 +104,11 @@ class BuildEnviron:
             appveyor_repo_branch=os.environ.get("APPVEYOR_REPO_BRANCH", ""),
             appveyor_pull_request_number=os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER", ""),
             github_ref=os.environ.get("GITHUB_REF", ""),
-            github_event_name=os.environ.get("GITHUB_EVENT_NAME", "0") != "0",
-            should_build_wheel=os.environ.get("CI_BUILD_WHEEL", "0") != "0",
-            should_build_pyinstaller=os.environ.get("CI_BUILD_PYINSTALLER", "0") != "0",
-            should_build_wininstaller=os.environ.get("CI_BUILD_WININSTALLER", "0") != "0",
-            should_build_docker=os.environ.get("CI_BUILD_DOCKER", ""),
+            github_event_name=os.environ.get("GITHUB_EVENT_NAME", ""),
+            should_build_wheel="CI_BUILD_WHEEL" in os.environ,
+            should_build_pyinstaller="CI_BUILD_PYINSTALLER" in os.environ,
+            should_build_wininstaller="CI_BUILD_WININSTALLER" in os.environ,
+            should_build_docker="CI_BUILD_DOCKER" in os.environ,
             has_aws_creds="AWS_ACCESS_KEY_ID" in os.environ,
             has_twine_creds=(
                     "TWINE_USERNAME" in os.environ and
