@@ -7,9 +7,6 @@ on: [push, pull_request]
 # - we need to upgrade cryptography from version 2.4, which also doesn't have wheels
 
 env:
-  CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
-  TWINE_USERNAME: mitmproxy
-  DOCKER_USERNAME: mitmbot
   # Codecov
   CODECOV_TOKEN: "0409bdfd-57a4-477d-a8af-f6172ef431d3"
   # Codecov: workaround for missing github actions support
@@ -92,6 +89,7 @@ jobs:
     env:
       CI_BUILD_PYINSTALLER: 1
       CI_BUILD_WININSTALLER: ${{ matrix.os == 'windows-latest' }}
+      CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
@@ -137,6 +135,9 @@ jobs:
           $(yarn global bin)/codecov
 
   docs:
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -156,6 +157,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CI_BUILD_DOCKER: 1
+      DOCKER_USERNAME: mitmbot
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
     steps:
       - uses: actions/checkout@v1
@@ -178,6 +180,7 @@ jobs:
       CI_BUILD_WHEEL: 1
       CI_BUILD_PYINSTALLER: 1
       CI_BUILD_WININSTALLER: 1
+      TWINE_USERNAME: mitmproxy
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
