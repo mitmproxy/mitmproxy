@@ -59,12 +59,14 @@ jobs:
           pip install codecov
           codecov -X gcov -X search -f coverage.xml --name python-${{ matrix.os }}
   test-py35:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-python@v1
-      with:
-        python-version: '3.5'
-    - run: pip install tox
-    - run: tox -e py35
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+        with:
+          python-version: '3.5'
+      - run: pip install tox
+      - run: tox -e py35
   build-wheel:
     runs-on: ubuntu-latest
     env:
