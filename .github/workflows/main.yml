@@ -49,12 +49,12 @@ jobs:
           python-version: '3.7'
       - run: pip install tox
       - run: tox -e py37
-      - name: codecov
-        run: |
-          # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
-          git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-          pip install codecov
-          codecov -X gcov -X search -f coverage.xml --name python-${{ matrix.os }}
+      # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
+      - if: github.head_ref == ''
+        run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+      - if: github.head_ref != ''
+        run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+      - run: codecov -X gcov -X search -f coverage.xml --name python-${{ matrix.os }}
   test-py35:
     runs-on: ubuntu-latest
     steps:
@@ -127,12 +127,13 @@ jobs:
         run: yarn
       - working-directory: ./web
         run: npm test
-      - name: codecov
-        working-directory: ./web
-        run: |
-          # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
-          git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-          $(yarn global bin)/codecov
+      # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
+      - if: github.head_ref == ''
+        run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+      - if: github.head_ref != ''
+        run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
+      - working-directory: ./web
+        run: $(yarn global bin)/codecov
 
   docs:
     env:
