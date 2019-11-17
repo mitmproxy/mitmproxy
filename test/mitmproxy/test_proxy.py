@@ -52,13 +52,9 @@ class TestProcessProxyOptions:
 class TestProxyServer:
 
     @skip_windows
-    @pytest.mark.skipif(
-        platform.mac_ver()[0] and tuple(int(x) for x in platform.mac_ver()[0].split('.')) >= (10, 14),  # noqa
-        reason='Skipping due to recent macOS version'
-    )
+    @pytest.mark.skipif(platform.system() != "Linux")
     def test_err(self):
-        # binding to 0.0.0.0:1 works without special permissions on Windows and
-        # macOS Mojave
+        # binding to 0.0.0.0:1 works without special permissions on Windows and macOS Mojave+
         conf = ProxyConfig(options.Options(listen_port=1))
         with pytest.raises(Exception, match="Error starting proxy server"):
             ProxyServer(conf)
