@@ -50,7 +50,7 @@ jobs:
           python-version: '3.7'
       - run: pip install -r requirements.txt codecov
       - run: mitmdump --version
-      - run: pytest --timeout 60 --cov-report xml --cov mitmproxy --cov pathod --full-cov mitmproxy/ --full-cov pathod/
+      - run: pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
       # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
       - if: github.head_ref == ''
         run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
