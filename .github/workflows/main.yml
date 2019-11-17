@@ -44,6 +44,14 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Dump runner context
+        env:
+          RUNNER_CONTEXT: ${{ toJson(runner) }}
+        run: echo "$RUNNER_CONTEXT"
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
@@ -128,7 +136,7 @@ jobs:
       - if: github.head_ref != ''
         run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
       - working-directory: ./web
-        run: $(yarn global bin)/codecov --name js
+        run: $(yarn global bin)/codecov
 
   docs:
     runs-on: ubuntu-latest
