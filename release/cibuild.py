@@ -31,6 +31,14 @@ class BuildError(Exception):
     pass
 
 
+def bool_from_env(envvar: str) -> bool:
+    val = os.environ.get(envvar, False)
+    if not val or val.lower() in ("0", "false"):
+        return False
+    else:
+        return True
+
+
 class BuildEnviron:
     PLATFORM_TAGS = {
         "Darwin": "osx",
@@ -105,18 +113,15 @@ class BuildEnviron:
             appveyor_pull_request_number=os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER", ""),
             github_ref=os.environ.get("GITHUB_REF", ""),
             github_event_name=os.environ.get("GITHUB_EVENT_NAME", ""),
-            should_build_wheel="CI_BUILD_WHEEL" in os.environ,
-            should_build_pyinstaller="CI_BUILD_PYINSTALLER" in os.environ,
-            should_build_wininstaller="CI_BUILD_WININSTALLER" in os.environ,
-            should_build_docker="CI_BUILD_DOCKER" in os.environ,
-            has_aws_creds="AWS_ACCESS_KEY_ID" in os.environ,
-            has_twine_creds=(
-                    "TWINE_USERNAME" in os.environ and
-                    "TWINE_PASSWORD" in os.environ
-            ),
-            docker_username=os.environ.get("DOCKER_USERNAME"),
-            docker_password=os.environ.get("DOCKER_PASSWORD"),
-            build_key=os.environ.get("CI_BUILD_KEY"),
+            should_build_wheel=bool_from_env("CI_BUILD_WHEEL"),
+            should_build_pyinstaller=bool_from_env("CI_BUILD_PYINSTALLER"),
+            should_build_wininstaller=bool_from_env("CI_BUILD_WININSTALLER"),
+            should_build_docker=bool_from_env("CI_BUILD_DOCKER"),
+            has_aws_creds=bool_from_env("AWS_ACCESS_KEY_ID"),
+            has_twine_creds=bool_from_env("TWINE_USERNAME") and bool_from_env("TWINE_PASSWORD"),
+            docker_username=os.environ.get("DOCKER_USERNAME", ""),
+            docker_password=os.environ.get("DOCKER_PASSWORD", ""),
+            build_key=os.environ.get("CI_BUILD_KEY", ""),
         )
 
     def archive(self, path):

@@ -82,16 +82,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CI_BUILD_PYINSTALLER: 1
-      FOO: ${{ matrix.os == 'windows-latest' || '' }}
+      CI_BUILD_WININSTALLER: ${{ matrix.os == 'windows-latest' }}
     steps:
       - run: printenv
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
           python-version: '3.7'
-      - run: |
-          python -c "import os; print(1, 'FOO' in os.environ)"
-          python -c "import os; print(2, bool(os.environ.get('FOO','')))"
       - if: matrix.os == 'windows-latest'
         uses: actions/cache@v1
         with:
@@ -99,12 +96,7 @@ jobs:
           key: installbuilder
       - run: printenv
       - run: pip install tox
-      - if: matrix.os != 'windows-latest'
-        run: tox -e cibuild -- build
-      - if: matrix.os == 'windows-latest'
-        run: tox -e cibuild -- build
-        env:
-          CI_BUILD_WININSTALLER: 1
+      - run: tox -e cibuild -- build
       # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
       - uses: actions/upload-artifact@master
         with:

@@ -98,19 +98,20 @@ def test_ci_systems():
 def test_buildenviron_commit():
     # Simulates an ordinary commit on the master branch.
     be = cibuild.BuildEnviron(
-        travis_tag="",
-        travis_branch="master",
-        travis_pull_request="false",
+        github_ref="refs/heads/master",
+        github_event_name="push",
         should_build_wheel=True,
         should_build_pyinstaller=True,
         should_build_docker=True,
         docker_username="foo",
         docker_password="bar",
+        has_aws_creds=True,
     )
     assert be.docker_tag == "mitmproxy/mitmproxy:dev"
     assert be.should_upload_docker
     assert not be.should_upload_pypi
     assert be.should_upload_docker
+    assert be.should_upload_aws
     assert not be.is_prod_release
     assert not be.is_maintenance_branch
 
@@ -272,3 +273,20 @@ def test_buildenviron_check_version(version, tag, ok, tmpdir):
     else:
         with pytest.raises(ValueError):
             be.check_version()
+
+
+def test_bool_from_env(monkeypatch):
+    monkeypatch.setenv("FOO", "1")
+    assert cibuild.bool_from_env("FOO")
+
+    monkeypatch.setenv("FOO", "0")
+    assert not cibuild.bool_from_env("FOO")
+
+    monkeypatch.setenv("FOO", "false")
+    assert not cibuild.bool_from_env("FOO")
+
+    monkeypatch.setenv("FOO", "")
+    assert not cibuild.bool_from_env("FOO")
+
+    monkeypatch.delenv("FOO")
+    assert not cibuild.bool_from_env("FOO")
