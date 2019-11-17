@@ -39,13 +39,12 @@ jobs:
         os: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - if: matrix.os != 'windows-latest'
-        uses: actions/setup-python@v1
-      - if: matrix.os == 'windows-latest'
-        uses: actions/setup-python@v1
+      # zstandard currently doesn't have 3.8 wheels,
+      # also we'd need to upgrade cryptography from version 2.4.
+      - uses: actions/setup-python@v1
         with:
           python-version: '3.7'
-          architecture: 'x86'  # FIXME: cryptography update
+          architecture: 'x86'
       - uses: actions/checkout@v1
       - name: Install dependencies
         run: |
@@ -86,13 +85,12 @@ jobs:
       CI_BUILD_PYINSTALLER: 1
       CI_BUILD_WININSTALLER: ${{ (matrix.os == 'windows-latest') || '' }}
     steps:
-      - if: "!startsWith(runner.os, 'Windows')"
-        uses: actions/setup-python@v1
-      - if: startsWith(runner.os, 'Windows')
-        uses: actions/setup-python@v1
+      # zstandard currently doesn't have 3.8 wheels,
+      # also we'd need to upgrade cryptography from version 2.4.
+      - uses: actions/setup-python@v1
         with:
           python-version: '3.7'
-          architecture: 'x86'  # FIXME: cryptography update
+          architecture: 'x86'
       - uses: actions/checkout@v1
       - name: Install dependencies
         run: |
