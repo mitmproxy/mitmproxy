@@ -54,13 +54,14 @@ jobs:
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
       - run: pip install codecov
-      - run: "codecov -f coverage.xml\
-            --name python-${{ matrix.os }}\
-            --commit ${{ github.sha }}\
-            --build $GITHUB_ACTION\
-            --slug ${{ github.repository }}\
-            --pr ${{ github.event.number }}\
-            --branch ${{ steps.extract_branch.outputs.branch }}"
+      - run: >
+          codecov -f coverage.xml
+          --name python-${{ matrix.os }}
+          --commit ${{ github.sha }}
+          --build $GITHUB_ACTION
+          --slug ${{ github.repository }}
+          --pr ${{ github.event.number }}
+          --branch ${{ steps.extract_branch.outputs.branch }}
   test-py35:
     runs-on: ubuntu-latest
     steps:
