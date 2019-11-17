@@ -50,13 +50,13 @@ jobs:
           python-version: '3.7'
       - run: pip install -r requirements.txt codecov
       - run: mitmdump --version
-      - run: pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
+      - run: pytest --timeout 60 --cov-report xml --cov mitmproxy --cov pathod --full-cov mitmproxy/ --full-cov pathod/
       # codecov has no github actions support yet and wants a branch (https://github.com/actions/checkout/issues/6)
       - if: github.head_ref == ''
         run: git checkout -b "$(echo ${{ github.ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
       - if: github.head_ref != ''
         run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
-      - run: codecov
+      - run: codecov -X gcov -X search -f coverage.xml --name python-${{ matrix.os }}
   build-wheel:
     runs-on: ubuntu-latest
     env:
@@ -128,7 +128,7 @@ jobs:
       - if: github.head_ref != ''
         run: git checkout -b "$(echo ${{ github.head_ref }} | sed -E 's|refs/[a-zA-Z]+/||')"
       - working-directory: ./web
-        run: $(yarn global bin)/codecov
+        run: $(yarn global bin)/codecov --name js
 
   docs:
     runs-on: ubuntu-latest
