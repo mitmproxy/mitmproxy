@@ -58,7 +58,6 @@ jobs:
           codecov -f coverage.xml
           --name python-${{ matrix.os }}
           --commit ${{ github.sha }}
-          --build $GITHUB_ACTION
           --slug ${{ github.repository }}
           --branch ${{ steps.extract_branch.outputs.branch }}
   test-py35:
