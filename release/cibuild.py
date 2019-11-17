@@ -545,6 +545,8 @@ def upload():  # pragma: no cover
         return
 
     if be.should_upload_aws:
+        num_files = len([name for name in os.listdir(be.dist_dir) if os.path.isfile(name)])
+        click.echo(f"Uploading {num_files} files to AWS dir {be.upload_dir}...")
         subprocess.check_call([
             "aws", "s3", "cp",
             "--acl", "public-read",
