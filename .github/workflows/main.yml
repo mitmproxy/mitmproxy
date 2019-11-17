@@ -52,7 +52,9 @@ jobs:
       - name: Test with pytest
         run: |
           pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
-      - run: codecov
+      - run: |
+          pip install codecov
+          codecov
         env:
           VCS_PULL_REQUEST: ${{ github.event.number }}
           VCS_SLUG: ${{ github.repository }}
