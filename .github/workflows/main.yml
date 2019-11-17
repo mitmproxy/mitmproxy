@@ -10,6 +10,7 @@ env:
   CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
   # Codecov
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  # Codecov: workaround for missing github actions support
   VCS_PULL_REQUEST: ${{ github.event.number }}
   VCS_SLUG: ${{ github.repository }}
 
@@ -49,10 +50,13 @@ jobs:
           python-version: '3.7'
       - run: pip install -r requirements.txt codecov
       - run: mitmdump --version
-      - name: Test with pytest
+      - run: pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
+      - name: codecov
+        shell: bash
+        # workaround for missing github actions support
         run: |
-          pytest --timeout 60 --cov-report=xml --cov=mitmproxy --cov=pathod --full-cov=mitmproxy/ --full-cov=pathod/
-      - run: codecov
+          git checkout -b ${GITHUB_REF#refs/heads/}
+          codecov
   build-wheel:
     runs-on: ubuntu-latest
     env:
@@ -186,6 +190,7 @@ jobs:
         run: npm test
       - working-directory: ./web
         shell: bash
+        # workaround for missing github actions support
         run: |
           git checkout -b ${GITHUB_REF#refs/heads/}
           $(yarn global bin)/codecov
