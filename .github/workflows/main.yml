@@ -84,6 +84,12 @@ jobs:
           pip install -r requirements.txt
       - run: |
           tox -e cibuild -- build
+        env:
+          CI_BUILD_WHEEL: ${{ startsWith(runner.os, 'Linux') }}
+          CI_BUILD_DOCKER: ${{ startsWith(runner.os, 'Linux') }}
+          CI_BUILD_PYINSTALLER: 1
+          CI_BUILD_WININSTALLER: ${{ startsWith(runner.os, 'Windows') }}
+          CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
       - uses: actions/upload-artifact@master
         with:
           name: binaries

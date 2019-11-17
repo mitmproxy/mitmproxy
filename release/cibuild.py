@@ -102,13 +102,13 @@ class BuildEnviron:
             travis_pull_request=os.environ.get("TRAVIS_PULL_REQUEST"),
             appveyor_repo_tag_name=os.environ.get("APPVEYOR_REPO_TAG_NAME", ""),
             appveyor_repo_branch=os.environ.get("APPVEYOR_REPO_BRANCH", ""),
-            appveyor_pull_request_number=os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER"),
-            github_ref=os.environ.get("GITHUB_REF"),
-            github_event_name=os.environ.get("GITHUB_EVENT_NAME"),
-            should_build_wheel="WHEEL" in os.environ,
-            should_build_pyinstaller="PYINSTALLER" in os.environ,
-            should_build_wininstaller="WININSTALLER" in os.environ,
-            should_build_docker="DOCKER" in os.environ,
+            appveyor_pull_request_number=os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER", ""),
+            github_ref=os.environ.get("GITHUB_REF", ""),
+            github_event_name=os.environ.get("GITHUB_EVENT_NAME", "0") != "0",
+            should_build_wheel=os.environ.get("CI_BUILD_WHEEL", "0") != "0",
+            should_build_pyinstaller=os.environ.get("CI_BUILD_PYINSTALLER", "0") != "0",
+            should_build_wininstaller=os.environ.get("CI_BUILD_WININSTALLER", "0") != "0",
+            should_build_docker=os.environ.get("CI_BUILD_DOCKER", ""),
             has_aws_creds="AWS_ACCESS_KEY_ID" in os.environ,
             has_twine_creds=(
                     "TWINE_USERNAME" in os.environ and
@@ -116,7 +116,7 @@ class BuildEnviron:
             ),
             docker_username=os.environ.get("DOCKER_USERNAME"),
             docker_password=os.environ.get("DOCKER_PASSWORD"),
-            rtool_key=os.environ.get("RTOOL_KEY"),
+            rtool_key=os.environ.get("CI_BUILD_KEY"),
         )
 
     def archive(self, path):
