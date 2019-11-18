@@ -168,7 +168,7 @@ class TestCommand:
                 ],
                 [
                     command.CommandParameter('cmd', mitmproxy.types.Cmd),
-                    command.CommandParameter('*args', mitmproxy.types.CmdArgs),
+                    command.CommandParameter('args', mitmproxy.types.CmdArgs, kind=inspect.Parameter.VAR_POSITIONAL),
                 ],
             ],
             [
