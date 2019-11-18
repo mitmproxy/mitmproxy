@@ -1,10 +1,12 @@
+import pytest
+
+import mitmproxy.types
+from mitmproxy import command
+from mitmproxy import ctx
 from mitmproxy.test.tflow import tflow
 from mitmproxy.tools.console import defaultkeys
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import master
-from mitmproxy import command
-from mitmproxy import ctx
-import pytest
 
 
 @pytest.mark.asyncio
@@ -18,10 +20,13 @@ async def test_commands_exist():
     await m.load_flow(tflow())
 
     for binding in km.bindings:
-        results = command_manager.parse_partial(binding.command.strip())
+        parsed, _ = command_manager.parse_partial(binding.command.strip())
 
-        cmd = results[0][0].value
-        args = [a.value for a in results[0][1:]]
+        cmd = parsed[0].value
+        args = [
+            a.value for a in parsed[1:]
+            if a.type != mitmproxy.types.Space
+        ]
 
         assert cmd in m.commands.commands
 

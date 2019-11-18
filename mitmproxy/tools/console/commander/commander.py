@@ -88,7 +88,7 @@ class CommandBuffer:
                 if parts[-1].type != mitmproxy.types.Space:
                     ret.append(("text", " "))
                 for param in remaining:
-                    ret.append(("commander_hint", f"{param.display_name} "))
+                    ret.append(("commander_hint", f"{param} "))
 
         return ret
 

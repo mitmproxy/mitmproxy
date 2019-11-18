@@ -197,7 +197,7 @@ class _ArgType(_BaseType):
         return []
 
     def parse(self, manager: "CommandManager", t: type, s: str) -> str:
-        raise exceptions.TypeError("Arguments for unknown command.")
+        return s
 
     def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, str)

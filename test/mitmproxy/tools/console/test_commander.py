@@ -25,7 +25,7 @@ class TestListCompleter:
         for start, options, cycle in tests:
             c = commander.ListCompleter(start, options)
             for expected in cycle:
-                assert c.cycle() == expected
+                assert c.cycle(True) == expected
 
 
 class TestCommandEdit:
@@ -252,7 +252,7 @@ class TestCommandBuffer:
             cb = commander.CommandBuffer(tctx.master)
             cb.text = "foo bar"
             cb.cursor = len(cb.text)
-            cb.cycle_completion()
+            cb.cycle_completion(True)
 
             ch = commander.CommandHistory(tctx.master, 30)
             ce = commander.CommandEdit(tctx.master, "se", ch)
@@ -261,7 +261,7 @@ class TestCommandBuffer:
             ret = ce.cbuf.render()
             assert ret[0] == ('commander_command', 'set')
             assert ret[1] == ('text', ' ')
-            assert ret[2] == ('commander_hint', 'str ')
+            assert ret[2] == ('commander_hint', '*options ')
 
     def test_render(self):
         with taddons.context() as tctx:
@@ -272,13 +272,13 @@ class TestCommandBuffer:
             cb.text = 'set view_filter=~bq test'
             ret = cb.render()
             assert ret[0] == ('commander_command', 'set')
-            assert ret[1] == ('commander_invalid', ' ')
+            assert ret[1] == ('text', ' ')
             assert ret[2] == ('text', 'view_filter=~bq')
-            assert ret[3] == ('commander_invalid', ' ')
-            assert ret[4] == ('commander_invalid', 'test')
+            assert ret[3] == ('text', ' ')
+            assert ret[4] == ('text', 'test')
 
             cb.text = "set"
             ret = cb.render()
             assert ret[0] == ('commander_command', 'set')
             assert ret[1] == ('text', ' ')
-            assert ret[2] == ('commander_hint', 'str ')
+            assert ret[2] == ('commander_hint', '*options ')

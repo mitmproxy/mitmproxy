@@ -128,8 +128,7 @@ def test_arg():
     with taddons.context() as tctx:
         b = mitmproxy.types._ArgType()
         assert b.completion(tctx.master.commands, mitmproxy.types.CmdArgs, "") == []
-        with pytest.raises(mitmproxy.exceptions.TypeError):
-            b.parse(tctx.master.commands, mitmproxy.types.CmdArgs, "foo")
+        assert b.parse(tctx.master.commands, mitmproxy.types.CmdArgs, "foo") == "foo"
         assert b.is_valid(tctx.master.commands, mitmproxy.types.CmdArgs, 1) is False
 
 

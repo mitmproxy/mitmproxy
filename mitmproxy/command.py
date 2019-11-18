@@ -41,8 +41,15 @@ def _empty_as_none(x: typing.Any) -> typing.Any:
 
 
 class CommandParameter(typing.NamedTuple):
-    display_name: str
+    name: str
     type: typing.Type
+    kind: inspect._ParameterKind = inspect.Parameter.POSITIONAL_OR_KEYWORD
+
+    def __str__(self):
+        if self.kind is inspect.Parameter.VAR_POSITIONAL:
+            return f"*{self.name}"
+        else:
+            return self.name
 
 
 class Command:
@@ -77,16 +84,14 @@ class Command:
 
     @property
     def parameters(self) -> typing.List[CommandParameter]:
-        """Returns a list of (display name, type) tuples."""
+        """Returns a list of CommandParameters."""
         ret = []
         for name, param in self.signature.parameters.items():
-            if param.kind is param.VAR_POSITIONAL:
-                name = f"*{name}"
-            ret.append(CommandParameter(name, param.annotation))
+            ret.append(CommandParameter(name, param.annotation, param.kind))
         return ret
 
     def signature_help(self) -> str:
-        params = " ".join(name for name, t in self.parameters)
+        params = " ".join(str(param) for param in self.parameters)
         if self.return_type:
             ret = f" -> {typename(self.return_type)}"
         else:
@@ -184,6 +189,7 @@ class CommandManager:
             CommandParameter("", mitmproxy.types.Cmd),
             CommandParameter("", mitmproxy.types.CmdArgs),
         ]
+        expected: typing.Optional[CommandParameter] = None
         for part in parts:
             if part.isspace():
                 parsed.append(
@@ -195,16 +201,18 @@ class CommandManager:
                 )
                 continue
 
-            if next_params:
-                expected_type: typing.Type = next_params.pop(0).type
+            if expected and expected.kind is inspect.Parameter.VAR_POSITIONAL:
+                assert not next_params
+            elif next_params:
+                expected = next_params.pop(0)
             else:
-                expected_type = mitmproxy.types.Unknown
+                expected = CommandParameter("", mitmproxy.types.Unknown)
 
             arg_is_known_command = (
-                    expected_type == mitmproxy.types.Cmd and part in self.commands
+                    expected.type == mitmproxy.types.Cmd and part in self.commands
             )
             arg_is_unknown_command = (
-                    expected_type == mitmproxy.types.Cmd and part not in self.commands
+                    expected.type == mitmproxy.types.Cmd and part not in self.commands
             )
             command_args_following = (
                     next_params and next_params[0].type == mitmproxy.types.CmdArgs
@@ -214,11 +222,11 @@ class CommandManager:
             if arg_is_unknown_command and command_args_following:
                 next_params.pop(0)
 
-            to = mitmproxy.types.CommandTypes.get(expected_type, None)
+            to = mitmproxy.types.CommandTypes.get(expected.type, None)
             valid = False
             if to:
                 try:
-                    to.parse(self, expected_type, part)
+                    to.parse(self, expected.type, part)
                 except exceptions.TypeError:
                     valid = False
                 else:
@@ -227,7 +235,7 @@ class CommandManager:
             parsed.append(
                 ParseResult(
                     value=part,
-                    type=expected_type,
+                    type=expected.type,
                     valid=valid,
                 )
             )
