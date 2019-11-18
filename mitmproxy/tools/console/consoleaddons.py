@@ -287,21 +287,21 @@ class ConsoleAddon:
         )
 
     @command.command("console.command")
-    def console_command(self, *partial: str) -> None:
+    def console_command(self, *cmdstr: str) -> None:
         """
         Prompt the user to edit a command with a (possibly empty) starting value.
         """
-        signals.status_prompt_command.send(partial=" ".join(partial))  # type: ignore
+        signals.status_prompt_command.send(partial=" ".join(cmdstr))  # type: ignore
 
     @command.command("console.command.set")
-    def console_command_set(self, option: str) -> None:
+    def console_command_set(self, option_name: str) -> None:
         """
         Prompt the user to set an option of the form "key[=value]".
         """
-        option_value = getattr(self.master.options, option, None)
+        option_value = getattr(self.master.options, option_name, None)
         current_value = option_value if option_value else ""
         self.master.commands.execute(
-            "console.command set %s=%s" % (option, current_value)
+            "console.command set %s=%s" % (option_name, current_value)
         )
 
     @command.command("console.view.keybindings")
@@ -351,14 +351,14 @@ class ConsoleAddon:
 
     @command.command("console.bodyview")
     @command.argument("part", type=mitmproxy.types.Choice("console.bodyview.options"))
-    def bodyview(self, f: flow.Flow, part: str) -> None:
+    def bodyview(self, flow: flow.Flow, part: str) -> None:
         """
             Spawn an external viewer for a flow request or response body based
             on the detected MIME type. We use the mailcap system to find the
             correct viewier, and fall back to the programs in $PAGER or $EDITOR
             if necessary.
         """
-        fpart = getattr(f, part, None)
+        fpart = getattr(flow, part, None)
         if not fpart:
             raise exceptions.CommandError("Part must be either request or response, not %s." % part)
         t = fpart.headers.get("content-type")
@@ -397,8 +397,8 @@ class ConsoleAddon:
         ]
 
     @command.command("console.edit.focus")
-    @command.argument("part", type=mitmproxy.types.Choice("console.edit.focus.options"))
-    def edit_focus(self, part: str) -> None:
+    @command.argument("flow_part", type=mitmproxy.types.Choice("console.edit.focus.options"))
+    def edit_focus(self, flow_part: str) -> None:
         """
             Edit a component of the currently focused flow.
         """
@@ -410,27 +410,27 @@ class ConsoleAddon:
         flow.backup()
 
         require_dummy_response = (
-            part in ("response-headers", "response-body", "set-cookies") and
-            flow.response is None
+                flow_part in ("response-headers", "response-body", "set-cookies") and
+                flow.response is None
         )
         if require_dummy_response:
             flow.response = http.HTTPResponse.make()
-        if part == "cookies":
+        if flow_part == "cookies":
             self.master.switch_view("edit_focus_cookies")
-        elif part == "urlencoded form":
+        elif flow_part == "urlencoded form":
             self.master.switch_view("edit_focus_urlencoded_form")
-        elif part == "multipart form":
+        elif flow_part == "multipart form":
             self.master.switch_view("edit_focus_multipart_form")
-        elif part == "path":
+        elif flow_part == "path":
             self.master.switch_view("edit_focus_path")
-        elif part == "query":
+        elif flow_part == "query":
             self.master.switch_view("edit_focus_query")
-        elif part == "request-headers":
+        elif flow_part == "request-headers":
             self.master.switch_view("edit_focus_request_headers")
-        elif part == "response-headers":
+        elif flow_part == "response-headers":
             self.master.switch_view("edit_focus_response_headers")
-        elif part in ("request-body", "response-body"):
-            if part == "request-body":
+        elif flow_part in ("request-body", "response-body"):
+            if flow_part == "request-body":
                 message = flow.request
             else:
                 message = flow.response
@@ -442,16 +442,16 @@ class ConsoleAddon:
             # just strip the newlines off the end of the body when we return
             # from an editor.
             message.content = c.rstrip(b"\n")
-        elif part == "set-cookies":
+        elif flow_part == "set-cookies":
             self.master.switch_view("edit_focus_setcookies")
-        elif part == "url":
+        elif flow_part == "url":
             url = flow.request.url.encode()
             edited_url = self.master.spawn_editor(url)
             url = edited_url.rstrip(b"\n")
             flow.request.url = url.decode()
-        elif part in ["method", "status_code", "reason"]:
+        elif flow_part in ["method", "status_code", "reason"]:
             self.master.commands.execute(
-                "console.command flow.set @focus %s " % part
+                "console.command flow.set @focus %s " % flow_part
             )
 
     def _grideditor(self):

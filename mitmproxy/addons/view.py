@@ -217,7 +217,7 @@ class View(collections.abc.Sequence):
 
     # Focus
     @command.command("view.focus.go")
-    def go(self, dst: int) -> None:
+    def go(self, offset: int) -> None:
         """
             Go to a specified offset. Positive offests are from the beginning of
             the view, negative from the end of the view, so that 0 is the first
@@ -225,13 +225,13 @@ class View(collections.abc.Sequence):
         """
         if len(self) == 0:
             return
-        if dst < 0:
-            dst = len(self) + dst
-        if dst < 0:
-            dst = 0
-        if dst > len(self) - 1:
-            dst = len(self) - 1
-        self.focus.flow = self[dst]
+        if offset < 0:
+            offset = len(self) + offset
+        if offset < 0:
+            offset = 0
+        if offset > len(self) - 1:
+            offset = len(self) - 1
+        self.focus.flow = self[offset]
 
     @command.command("view.focus.next")
     def focus_next(self) -> None:
@@ -266,20 +266,20 @@ class View(collections.abc.Sequence):
         return list(sorted(self.orders.keys()))
 
     @command.command("view.order.reverse")
-    def set_reversed(self, value: bool) -> None:
-        self.order_reversed = value
+    def set_reversed(self, boolean: bool) -> None:
+        self.order_reversed = boolean
         self.sig_view_refresh.send(self)
 
     @command.command("view.order.set")
-    def set_order(self, order: str) -> None:
+    def set_order(self, order_key: str) -> None:
         """
             Sets the current view order.
         """
-        if order not in self.orders:
+        if order_key not in self.orders:
             raise exceptions.CommandError(
-                "Unknown flow order: %s" % order
+                "Unknown flow order: %s" % order_key
             )
-        order_key = self.orders[order]
+        order_key = self.orders[order_key]
         self.order_key = order_key
         newview = sortedcontainers.SortedListWithKey(key=order_key)
         newview.update(self._view)
@@ -298,16 +298,16 @@ class View(collections.abc.Sequence):
 
     # Filter
     @command.command("view.filter.set")
-    def set_filter_cmd(self, f: str) -> None:
+    def set_filter_cmd(self, filtstr: str) -> None:
         """
             Sets the current view filter.
         """
         filt = None
-        if f:
-            filt = flowfilter.parse(f)
+        if filtstr:
+            filt = flowfilter.parse(filtstr)
             if not filt:
                 raise exceptions.CommandError(
-                    "Invalid interception filter: %s" % f
+                    "Invalid interception filter: %s" % filtstr
                 )
         self.set_filter(filt)
 
@@ -340,11 +340,11 @@ class View(collections.abc.Sequence):
 
     # View Settings
     @command.command("view.settings.getval")
-    def getvalue(self, f: mitmproxy.flow.Flow, key: str, default: str) -> str:
+    def getvalue(self, flow: mitmproxy.flow.Flow, key: str, default: str) -> str:
         """
             Get a value from the settings store for the specified flow.
         """
-        return self.settings[f].get(key, default)
+        return self.settings[flow].get(key, default)
 
     @command.command("view.settings.setval.toggle")
     def setvalue_toggle(
@@ -412,26 +412,26 @@ class View(collections.abc.Sequence):
             ctx.log.alert("Removed %s flows" % len(flows))
 
     @command.command("view.flows.resolve")
-    def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
+    def resolve(self, flowspec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
         """
             Resolve a flow list specification to an actual list of flows.
         """
-        if spec == "@all":
+        if flowspec == "@all":
             return [i for i in self._store.values()]
-        if spec == "@focus":
+        if flowspec == "@focus":
             return [self.focus.flow] if self.focus.flow else []
-        elif spec == "@shown":
+        elif flowspec == "@shown":
             return [i for i in self]
-        elif spec == "@hidden":
+        elif flowspec == "@hidden":
             return [i for i in self._store.values() if i not in self._view]
-        elif spec == "@marked":
+        elif flowspec == "@marked":
             return [i for i in self._store.values() if i.marked]
-        elif spec == "@unmarked":
+        elif flowspec == "@unmarked":
             return [i for i in self._store.values() if not i.marked]
         else:
-            filt = flowfilter.parse(spec)
+            filt = flowfilter.parse(flowspec)
             if not filt:
-                raise exceptions.CommandError("Invalid flow filter: %s" % spec)
+                raise exceptions.CommandError("Invalid flow filter: %s" % flowspec)
             return [i for i in self._store.values() if filt(i)]
 
     @command.command("view.flows.create")
