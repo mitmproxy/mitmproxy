@@ -172,6 +172,28 @@ class TestCommand:
                 ],
             ],
             [
+                "varargs one",
+                [
+                    command.ParseResult(value="varargs", type=mitmproxy.types.Cmd, valid=True),
+                    command.ParseResult(value=" ", type=mitmproxy.types.Space, valid=True),
+                    command.ParseResult(value="one", type=str, valid=True),
+                ],
+                [command.CommandParameter('var', str, kind=inspect.Parameter.VAR_POSITIONAL)]
+            ],
+            [
+                "varargs one two three",
+                [
+                    command.ParseResult(value="varargs", type=mitmproxy.types.Cmd, valid=True),
+                    command.ParseResult(value=" ", type=mitmproxy.types.Space, valid=True),
+                    command.ParseResult(value="one", type=str, valid=True),
+                    command.ParseResult(value=" ", type=mitmproxy.types.Space, valid=True),
+                    command.ParseResult(value="two", type=str, valid=True),
+                    command.ParseResult(value=" ", type=mitmproxy.types.Space, valid=True),
+                    command.ParseResult(value="three", type=str, valid=True),
+                ],
+                [],
+            ],
+            [
                 "subcommand cmd3 ",
                 [
                     command.ParseResult(value="subcommand", type=mitmproxy.types.Cmd, valid=True),
@@ -402,7 +424,7 @@ def test_simple():
         assert (c.commands["one.two"].help == "cmd1 help")
         assert (c.execute("one.two foo") == "ret foo")
         assert (c.execute("one.two \"foo\"") == "ret foo")
-        assert (c.execute("one.two \"foo bar\"") == "ret foo bar")
+        assert (c.execute("one.two 'foo bar'") == "ret foo bar")
         assert (c.call("one.two", "foo") == "ret foo")
         with pytest.raises(exceptions.CommandError, match="Unknown"):
             c.execute("nonexistent")
