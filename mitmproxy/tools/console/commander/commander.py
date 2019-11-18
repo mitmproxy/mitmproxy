@@ -1,52 +1,49 @@
 import abc
+import collections
 import copy
 import typing
-import collections
 
 import urwid
 from urwid.text_layout import calc_coords
 
+import mitmproxy.command
 import mitmproxy.flow
 import mitmproxy.master
-import mitmproxy.command
 import mitmproxy.types
 
 
-class Completer:  # pragma: no cover
+class Completer:
     @abc.abstractmethod
-    def cycle(self) -> str:
-        pass
+    def cycle(self, forward: bool) -> str:
+        raise NotImplementedError()
 
 
 class ListCompleter(Completer):
     def __init__(
-        self,
-        start: str,
-        options: typing.Sequence[str],
+            self,
+            start: str,
+            options: typing.Sequence[str],
     ) -> None:
         self.start = start
-        self.options: typing.Sequence[str] = []
+        self.options: typing.List[str] = []
         for o in options:
             if o.startswith(start):
                 self.options.append(o)
         self.options.sort()
         self.offset = 0
 
-    def cycle(self) -> str:
+    def cycle(self, forward: bool) -> str:
         if not self.options:
             return self.start
         ret = self.options[self.offset]
-        self.offset = (self.offset + 1) % len(self.options)
+        delta = 1 if forward else -1
+        self.offset = (self.offset + delta) % len(self.options)
         return ret
 
 
-CompletionState = typing.NamedTuple(
-    "CompletionState",
-    [
-        ("completer", Completer),
-        ("parse", typing.Sequence[mitmproxy.command.ParseResult])
-    ]
-)
+class CompletionState(typing.NamedTuple):
+    completer: Completer
+    parsed: typing.Sequence[mitmproxy.command.ParseResult]
 
 
 class CommandBuffer:
@@ -70,30 +67,13 @@ class CommandBuffer:
         else:
             self._cursor = x
 
-    def parse_quoted(self, txt):
-        parts, remhelp = self.master.commands.parse_partial(txt)
-        for i, p in enumerate(parts):
-            parts[i] = mitmproxy.command.ParseResult(
-                value = p.value,
-                type = p.type,
-                valid = p.valid
-            )
-        return parts, remhelp
-
     def render(self):
-        """
-            This function is somewhat tricky - in order to make the cursor
-            position valid, we have to make sure there is a
-            character-for-character offset match in the rendered output, up
-            to the cursor. Beyond that, we can add stuff.
-        """
-        parts, remhelp = self.parse_quoted(self.text)
+        parts, remaining = self.master.commands.parse_partial(self.text)
         ret = []
-        if parts == []:
+        if not parts:
             # Means we just received the leader, so we need to give a blank
             # text to the widget to render or it crashes
             ret.append(("text", ""))
-            ret.append(("text", " "))
         else:
             for p in parts:
                 if p.valid:
@@ -104,10 +84,11 @@ class CommandBuffer:
                 elif p.value:
                     ret.append(("commander_invalid", p.value))
 
-            if remhelp:
-                ret.append(("text", " "))
-                for v in remhelp:
-                    ret.append(("commander_hint", "%s " % v))
+            if remaining:
+                if parts[-1].type != mitmproxy.types.Space:
+                    ret.append(("text", " "))
+                for param in remaining:
+                    ret.append(("commander_hint", f"{param.display_name} "))
 
         return ret
 
@@ -117,23 +98,31 @@ class CommandBuffer:
     def right(self) -> None:
         self.cursor = self.cursor + 1
 
-    def cycle_completion(self) -> None:
+    def cycle_completion(self, forward: bool) -> None:
         if not self.completion:
-            parts, remainhelp = self.master.commands.parse_partial(self.text[:self.cursor])
-            last = parts[-1]
-            ct = mitmproxy.types.CommandTypes.get(last.type, None)
+            parts, remaining = self.master.commands.parse_partial(self.text[:self.cursor])
+            if parts and parts[-1].type != mitmproxy.types.Space:
+                type_to_complete = parts[-1].type
+                cycle_prefix = parts[-1].value
+                parsed = parts[:-1]
+            elif remaining:
+                type_to_complete = remaining[0].type
+                cycle_prefix = ""
+                parsed = parts
+            else:
+                return
+            ct = mitmproxy.types.CommandTypes.get(type_to_complete, None)
             if ct:
                 self.completion = CompletionState(
-                    completer = ListCompleter(
-                        parts[-1].value,
-                        ct.completion(self.master.commands, last.type, parts[-1].value)
+                    completer=ListCompleter(
+                        cycle_prefix,
+                        ct.completion(self.master.commands, type_to_complete, cycle_prefix)
                     ),
-                    parse = parts,
+                    parsed=parsed,
                 )
         if self.completion:
-            nxt = self.completion.completer.cycle()
-            buf = " ".join([i.value for i in self.completion.parse[:-1]]) + " " + nxt
-            buf = buf.strip()
+            nxt = self.completion.completer.cycle(forward)
+            buf = "".join([i.value for i in self.completion.parsed]) + nxt
             self.text = buf
             self.cursor = len(self.text)
 
@@ -159,7 +148,7 @@ class CommandBuffer:
 
 
 class CommandHistory:
-    def __init__(self, master: mitmproxy.master.Master, size: int=30) -> None:
+    def __init__(self, master: mitmproxy.master.Master, size: int = 30) -> None:
         self.saved_commands: collections.deque = collections.deque(
             [CommandBuffer(master, "")],
             maxlen=size
@@ -182,7 +171,7 @@ class CommandHistory:
             return self.saved_commands[self.index]
         return None
 
-    def add_command(self, command: CommandBuffer, execution: bool=False) -> None:
+    def add_command(self, command: CommandBuffer, execution: bool = False) -> None:
         if self.index == self.last_index or execution:
             last_item = self.saved_commands[-1]
             last_item_empty = not last_item.text
@@ -219,8 +208,10 @@ class CommandEdit(urwid.WidgetWrap):
             self.cbuf = self.history.get_prev() or self.cbuf
         elif key == "down":
             self.cbuf = self.history.get_next() or self.cbuf
+        elif key == "shift tab":
+            self.cbuf.cycle_completion(False)
         elif key == "tab":
-            self.cbuf.cycle_completion()
+            self.cbuf.cycle_completion(True)
         elif len(key) == 1:
             self.cbuf.insert(key)
         self.update()

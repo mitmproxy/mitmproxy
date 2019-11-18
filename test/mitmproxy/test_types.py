@@ -2,7 +2,6 @@ import pytest
 import os
 import typing
 import contextlib
-from unittest import mock
 
 import mitmproxy.exceptions
 import mitmproxy.types
@@ -64,13 +63,14 @@ def test_int():
             b.parse(tctx.master.commands, int, "foo")
 
 
-def test_path(tdata):
+def test_path(tdata, monkeypatch):
     with taddons.context() as tctx:
         b = mitmproxy.types._PathType()
         assert b.parse(tctx.master.commands, mitmproxy.types.Path, "/foo") == "/foo"
         assert b.parse(tctx.master.commands, mitmproxy.types.Path, "/bar") == "/bar"
-        with mock.patch.dict("os.environ", {"HOME": "/home/test"}):
-            assert b.parse(tctx.master.commands, mitmproxy.types.Path, "~/mitm") == "/home/test/mitm"
+        monkeypatch.setenv("HOME", "/home/test")
+        monkeypatch.setenv("USERPROFILE", "/home/test")
+        assert b.parse(tctx.master.commands, mitmproxy.types.Path, "~/mitm") == "/home/test/mitm"
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Path, "foo") is True
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Path, "~/mitm") is True
         assert b.is_valid(tctx.master.commands, mitmproxy.types.Path, 3) is False
@@ -127,10 +127,10 @@ def test_cutspec():
 def test_arg():
     with taddons.context() as tctx:
         b = mitmproxy.types._ArgType()
-        assert b.completion(tctx.master.commands, mitmproxy.types.Arg, "") == []
-        assert b.parse(tctx.master.commands, mitmproxy.types.Arg, "foo") == "foo"
-        assert b.is_valid(tctx.master.commands, mitmproxy.types.Arg, "foo") is True
-        assert b.is_valid(tctx.master.commands, mitmproxy.types.Arg, 1) is False
+        assert b.completion(tctx.master.commands, mitmproxy.types.CmdArgs, "") == []
+        with pytest.raises(mitmproxy.exceptions.TypeError):
+            b.parse(tctx.master.commands, mitmproxy.types.CmdArgs, "foo")
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.CmdArgs, 1) is False
 
 
 def test_strseq():

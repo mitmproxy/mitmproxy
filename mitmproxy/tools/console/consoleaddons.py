@@ -238,7 +238,7 @@ class ConsoleAddon:
         prompt: str,
         choices: typing.Sequence[str],
         cmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.Arg
+        *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
@@ -264,7 +264,7 @@ class ConsoleAddon:
         prompt: str,
         choicecmd: mitmproxy.types.Cmd,
         subcmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.Arg
+        *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
@@ -573,7 +573,7 @@ class ConsoleAddon:
         contexts: typing.Sequence[str],
         key: str,
         cmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.Arg
+        *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Bind a shortcut key.
