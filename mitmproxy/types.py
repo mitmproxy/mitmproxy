@@ -5,7 +5,7 @@ import typing
 from mitmproxy import exceptions
 from mitmproxy import flow
 
-if typing.TYPE_CHECKING:
+if typing.TYPE_CHECKING:  # pragma: no cover
     from mitmproxy.command import CommandManager
 
 
