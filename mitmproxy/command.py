@@ -3,6 +3,7 @@
 """
 import functools
 import inspect
+import re
 import sys
 import textwrap
 import types
@@ -284,11 +285,25 @@ class CommandManager:
 
 
 def unquote(x: str) -> str:
-    if x.startswith("'") and x.endswith("'"):
-        return x[1:-1]
-    if x.startswith('"') and x.endswith('"'):
-        return x[1:-1]
+    quoted = (
+            (x.startswith('"') and x.endswith('"'))
+            or
+            (x.startswith("'") and x.endswith("'"))
+    )
+    if quoted:
+        x = x[1:-1]
+        # not sure if this is the right place, but pypyarsing doesn't process escape sequences.
+        x = re.sub(r"\\(.)", r"\g<1>", x)
+        return x
     return x
+
+
+def quote(val: str) -> str:
+    if not val:
+        return '""'
+    if all(ws not in val for ws in " \r\n\t"):
+        return val
+    return repr(val)
 
 
 def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
@@ -304,14 +319,14 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
         raise exceptions.CommandError from e
 
 
-def command(name: typing.Optional[str]):
+def command(name: typing.Optional[str] = None):
     def decorator(function):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
             verify_arg_signature(function, args, kwargs)
             return function(*args, **kwargs)
 
-        wrapper.__dict__["command_name"] = name or function.__name__
+        wrapper.__dict__["command_name"] = name or function.__name__.replace("_", ".")
         return wrapper
 
     return decorator

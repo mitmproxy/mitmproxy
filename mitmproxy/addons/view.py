@@ -298,16 +298,16 @@ class View(collections.abc.Sequence):
 
     # Filter
     @command.command("view.filter.set")
-    def set_filter_cmd(self, filtstr: str) -> None:
+    def set_filter_cmd(self, filter_expr: str) -> None:
         """
             Sets the current view filter.
         """
         filt = None
-        if filtstr:
-            filt = flowfilter.parse(filtstr)
+        if filter_expr:
+            filt = flowfilter.parse(filter_expr)
             if not filt:
                 raise exceptions.CommandError(
-                    "Invalid interception filter: %s" % filtstr
+                    "Invalid interception filter: %s" % filter_expr
                 )
         self.set_filter(filt)
 
@@ -412,26 +412,26 @@ class View(collections.abc.Sequence):
             ctx.log.alert("Removed %s flows" % len(flows))
 
     @command.command("view.flows.resolve")
-    def resolve(self, flowspec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
+    def resolve(self, flow_spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
         """
             Resolve a flow list specification to an actual list of flows.
         """
-        if flowspec == "@all":
+        if flow_spec == "@all":
             return [i for i in self._store.values()]
-        if flowspec == "@focus":
+        if flow_spec == "@focus":
             return [self.focus.flow] if self.focus.flow else []
-        elif flowspec == "@shown":
+        elif flow_spec == "@shown":
             return [i for i in self]
-        elif flowspec == "@hidden":
+        elif flow_spec == "@hidden":
             return [i for i in self._store.values() if i not in self._view]
-        elif flowspec == "@marked":
+        elif flow_spec == "@marked":
             return [i for i in self._store.values() if i.marked]
-        elif flowspec == "@unmarked":
+        elif flow_spec == "@unmarked":
             return [i for i in self._store.values() if not i.marked]
         else:
-            filt = flowfilter.parse(flowspec)
+            filt = flowfilter.parse(flow_spec)
             if not filt:
-                raise exceptions.CommandError("Invalid flow filter: %s" % flowspec)
+                raise exceptions.CommandError("Invalid flow filter: %s" % flow_spec)
             return [i for i in self._store.values() if filt(i)]
 
     @command.command("view.flows.create")

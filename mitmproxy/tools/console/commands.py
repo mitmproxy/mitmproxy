@@ -25,7 +25,7 @@ class CommandItem(urwid.WidgetWrap):
         if self.cmd.parameters:
             parts += [
                 ("text", " "),
-                ("text", " ".join(name for name, t in self.cmd.parameters)),
+                ("text", " ".join(str(param) for param in self.cmd.parameters)),
             ]
         if self.cmd.return_type:
             parts += [

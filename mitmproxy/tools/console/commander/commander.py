@@ -14,7 +14,7 @@ import mitmproxy.types
 
 class Completer:
     @abc.abstractmethod
-    def cycle(self, forward: bool) -> str:
+    def cycle(self, forward: bool = True) -> str:
         raise NotImplementedError()
 
 
@@ -32,7 +32,7 @@ class ListCompleter(Completer):
         self.options.sort()
         self.offset = 0
 
-    def cycle(self, forward: bool) -> str:
+    def cycle(self, forward: bool = True) -> str:
         if not self.options:
             return self.start
         ret = self.options[self.offset]
@@ -98,7 +98,7 @@ class CommandBuffer:
     def right(self) -> None:
         self.cursor = self.cursor + 1
 
-    def cycle_completion(self, forward: bool) -> None:
+    def cycle_completion(self, forward: bool = True) -> None:
         if not self.completion:
             parts, remaining = self.master.commands.parse_partial(self.text[:self.cursor])
             if parts and parts[-1].type != mitmproxy.types.Space:
@@ -211,7 +211,7 @@ class CommandEdit(urwid.WidgetWrap):
         elif key == "shift tab":
             self.cbuf.cycle_completion(False)
         elif key == "tab":
-            self.cbuf.cycle_completion(True)
+            self.cbuf.cycle_completion()
         elif len(key) == 1:
             self.cbuf.insert(key)
         self.update()

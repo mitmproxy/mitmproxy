@@ -25,7 +25,7 @@ class TestListCompleter:
         for start, options, cycle in tests:
             c = commander.ListCompleter(start, options)
             for expected in cycle:
-                assert c.cycle(True) == expected
+                assert c.cycle() == expected
 
 
 class TestCommandEdit:
@@ -252,7 +252,7 @@ class TestCommandBuffer:
             cb = commander.CommandBuffer(tctx.master)
             cb.text = "foo bar"
             cb.cursor = len(cb.text)
-            cb.cycle_completion(True)
+            cb.cycle_completion()
 
             ch = commander.CommandHistory(tctx.master, 30)
             ce = commander.CommandEdit(tctx.master, "se", ch)

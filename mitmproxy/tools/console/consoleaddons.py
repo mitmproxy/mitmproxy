@@ -287,21 +287,22 @@ class ConsoleAddon:
         )
 
     @command.command("console.command")
-    def console_command(self, *cmdstr: str) -> None:
+    def console_command(self, *cmd_str: str) -> None:
         """
         Prompt the user to edit a command with a (possibly empty) starting value.
         """
-        signals.status_prompt_command.send(partial=" ".join(cmdstr))  # type: ignore
+        cmd_str = (command.quote(x) if x else "" for x in cmd_str)
+        signals.status_prompt_command.send(partial=" ".join(cmd_str))  # type: ignore
 
     @command.command("console.command.set")
     def console_command_set(self, option_name: str) -> None:
         """
-        Prompt the user to set an option of the form "key[=value]".
+        Prompt the user to set an option.
         """
         option_value = getattr(self.master.options, option_name, None)
-        current_value = option_value if option_value else ""
+        option_value = command.quote(option_value)
         self.master.commands.execute(
-            "console.command set %s=%s" % (option_name, current_value)
+            f"console.command set {option_name} {option_value}"
         )
 
     @command.command("console.view.keybindings")
