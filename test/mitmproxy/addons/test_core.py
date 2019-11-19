@@ -11,7 +11,7 @@ def test_set():
     sa = core.Core()
     with taddons.context(loadcore=False) as tctx:
         assert tctx.master.options.server
-        tctx.command(sa.set, "server=false")
+        tctx.command(sa.set, "server", "false")
         assert not tctx.master.options.server
 
         with pytest.raises(exceptions.CommandError):
