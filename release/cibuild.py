@@ -14,8 +14,9 @@ import urllib.request
 import zipfile
 
 import click
-import cryptography.fernet
 import parver
+
+import cryptography.fernet
 
 
 @contextlib.contextmanager
@@ -30,6 +31,14 @@ class BuildError(Exception):
     pass
 
 
+def bool_from_env(envvar: str) -> bool:
+    val = os.environ.get(envvar, "")
+    if not val or val.lower() in ("0", "false"):
+        return False
+    else:
+        return True
+
+
 class BuildEnviron:
     PLATFORM_TAGS = {
         "Darwin": "osx",
@@ -38,25 +47,27 @@ class BuildEnviron:
     }
 
     def __init__(
-        self,
-        *,
-        system="",
-        root_dir="",
-        travis_tag="",
-        travis_branch="",
-        travis_pull_request="",
-        appveyor_repo_tag_name="",
-        appveyor_repo_branch="",
-        appveyor_pull_request_number="",
-        should_build_wheel=False,
-        should_build_docker=False,
-        should_build_pyinstaller=False,
-        should_build_wininstaller=False,
-        has_aws_creds=False,
-        has_twine_creds=False,
-        docker_username="",
-        docker_password="",
-        rtool_key="",
+            self,
+            *,
+            system="",
+            root_dir="",
+            travis_tag="",
+            travis_branch="",
+            travis_pull_request="",
+            appveyor_repo_tag_name="",
+            appveyor_repo_branch="",
+            appveyor_pull_request_number="",
+            github_ref="",
+            github_event_name="",
+            should_build_wheel=False,
+            should_build_docker=False,
+            should_build_pyinstaller=False,
+            should_build_wininstaller=False,
+            has_aws_creds=False,
+            has_twine_creds=False,
+            docker_username="",
+            docker_password="",
+            build_key="",
     ):
         self.system = system
         self.root_dir = root_dir
@@ -80,11 +91,14 @@ class BuildEnviron:
         self.appveyor_repo_branch = appveyor_repo_branch
         self.appveyor_pull_request_number = appveyor_pull_request_number
 
+        self.github_ref = github_ref
+        self.github_event_name = github_event_name
+
         self.has_aws_creds = has_aws_creds
         self.has_twine_creds = has_twine_creds
         self.docker_username = docker_username
         self.docker_password = docker_password
-        self.rtool_key = rtool_key
+        self.build_key = build_key
 
     @classmethod
     def from_env(cls):
@@ -96,19 +110,18 @@ class BuildEnviron:
             travis_pull_request=os.environ.get("TRAVIS_PULL_REQUEST"),
             appveyor_repo_tag_name=os.environ.get("APPVEYOR_REPO_TAG_NAME", ""),
             appveyor_repo_branch=os.environ.get("APPVEYOR_REPO_BRANCH", ""),
-            appveyor_pull_request_number=os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER"),
-            should_build_wheel="WHEEL" in os.environ,
-            should_build_pyinstaller="PYINSTALLER" in os.environ,
-            should_build_wininstaller="WININSTALLER" in os.environ,
-            should_build_docker="DOCKER" in os.environ,
-            has_aws_creds="AWS_ACCESS_KEY_ID" in os.environ,
-            has_twine_creds=(
-                "TWINE_USERNAME" in os.environ and
-                "TWINE_PASSWORD" in os.environ
-            ),
-            docker_username=os.environ.get("DOCKER_USERNAME"),
-            docker_password=os.environ.get("DOCKER_PASSWORD"),
-            rtool_key=os.environ.get("RTOOL_KEY"),
+            appveyor_pull_request_number=os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER", ""),
+            github_ref=os.environ.get("GITHUB_REF", ""),
+            github_event_name=os.environ.get("GITHUB_EVENT_NAME", ""),
+            should_build_wheel=bool_from_env("CI_BUILD_WHEEL"),
+            should_build_pyinstaller=bool_from_env("CI_BUILD_PYINSTALLER"),
+            should_build_wininstaller=bool_from_env("CI_BUILD_WININSTALLER"),
+            should_build_docker=bool_from_env("CI_BUILD_DOCKER"),
+            has_aws_creds=bool_from_env("AWS_ACCESS_KEY_ID"),
+            has_twine_creds=bool_from_env("TWINE_USERNAME") and bool_from_env("TWINE_PASSWORD"),
+            docker_username=os.environ.get("DOCKER_USERNAME", ""),
+            docker_password=os.environ.get("DOCKER_PASSWORD", ""),
+            build_key=os.environ.get("CI_BUILD_KEY", ""),
         )
 
     def archive(self, path):
@@ -143,26 +156,34 @@ class BuildEnviron:
         return ret
 
     @property
-    def branch(self):
-        return self.travis_branch or self.appveyor_repo_branch
+    def branch(self) -> str:
+        if self.travis_branch:
+            return self.travis_branch
+        if self.appveyor_repo_branch:
+            return self.appveyor_repo_branch
+        if self.github_ref and self.github_ref.startswith("refs/heads/"):
+            return self.github_ref.replace("refs/heads/", "")
+        if self.github_ref and self.github_ref.startswith("refs/pull/"):
+            return "pr-" + self.github_ref.split("/")[2]
+        return ""
 
     @property
-    def build_dir(self):
+    def build_dir(self) -> str:
         return os.path.join(self.release_dir, "build")
 
     @property
-    def dist_dir(self):
+    def dist_dir(self) -> str:
         return os.path.join(self.release_dir, "dist")
 
     @property
-    def docker_tag(self):
+    def docker_tag(self) -> str:
         if self.branch == "master":
             t = "dev"
         else:
             t = self.version
         return "mitmproxy/mitmproxy:{}".format(t)
 
-    def dump_info(self, fp=sys.stdout):
+    def dump_info(self, fp=sys.stdout) -> None:
         lst = [
             "version",
             "tag",
@@ -176,7 +197,9 @@ class BuildEnviron:
             "upload_dir",
             "should_build_wheel",
             "should_build_pyinstaller",
+            "should_build_wininstaller",
             "should_build_docker",
+            "should_upload_aws",
             "should_upload_docker",
             "should_upload_pypi",
         ]
@@ -232,6 +255,8 @@ class BuildEnviron:
 
     @property
     def is_pull_request(self) -> bool:
+        if self.github_event_name == "pull_request":
+            return True
         if self.appveyor_pull_request_number:
             return True
         if self.travis_pull_request and self.travis_pull_request != "false":
@@ -239,13 +264,13 @@ class BuildEnviron:
         return False
 
     @property
-    def platform_tag(self):
+    def platform_tag(self) -> str:
         if self.system in self.PLATFORM_TAGS:
             return self.PLATFORM_TAGS[self.system]
         raise BuildError("Unsupported platform: %s" % self.system)
 
     @property
-    def release_dir(self):
+    def release_dir(self) -> str:
         return os.path.join(self.root_dir, "release")
 
     @property
@@ -257,6 +282,13 @@ class BuildEnviron:
         ])
 
     @property
+    def should_upload_aws(self) -> bool:
+        return all([
+            self.has_aws_creds,
+            (self.should_build_wheel or self.should_build_pyinstaller or self.should_build_wininstaller),
+        ])
+
+    @property
     def should_upload_pypi(self) -> bool:
         return all([
             self.is_prod_release,
@@ -265,18 +297,24 @@ class BuildEnviron:
         ])
 
     @property
-    def tag(self):
-        return self.travis_tag or self.appveyor_repo_tag_name
+    def tag(self) -> str:
+        if self.travis_tag:
+            return self.travis_tag
+        if self.appveyor_repo_tag_name:
+            return self.appveyor_repo_tag_name
+        if self.github_ref and self.github_ref.startswith("refs/tags/"):
+            return self.github_ref.replace("refs/tags/", "")
+        return ""
 
     @property
-    def upload_dir(self):
+    def upload_dir(self) -> str:
         if self.tag:
             return self.version
         else:
             return "branches/%s" % self.version
 
     @property
-    def version(self):
+    def version(self) -> str:
         if self.tag:
             if self.tag.startswith("v"):
                 try:
@@ -300,13 +338,14 @@ def build_wheel(be: BuildEnviron):  # pragma: no cover
         "bdist_wheel",
         "--dist-dir", be.dist_dir,
     ])
-    whl = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))[0]
+    whl, = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))
     click.echo("Found wheel package: {}".format(whl))
     subprocess.check_call(["tox", "-e", "wheeltest", "--", whl])
     return whl
 
 
-def build_docker_image(be: BuildEnviron, whl: str):  # pragma: no cover
+def build_docker_image(be: BuildEnviron):  # pragma: no cover
+    whl, = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))
     click.echo("Building Docker images...")
     subprocess.check_call([
         "docker",
@@ -410,22 +449,25 @@ def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
 
 
 def build_wininstaller(be: BuildEnviron):  # pragma: no cover
+    if not be.build_key:
+        click.echo("Cannot build windows installer without secret key.")
+        return
     click.echo("Building wininstaller package...")
 
-    IB_VERSION = "18.8.0"
+    IB_VERSION = "19.10.0"
     IB_DIR = pathlib.Path(be.release_dir) / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
     IB_CLI = fr"C:\Program Files (x86)\BitRock InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
     IB_LICENSE = IB_DIR / "license.xml"
 
-    if True or not os.path.isfile(IB_CLI):
+    if not os.path.isfile(IB_CLI):
         if not os.path.isfile(IB_SETUP):
             click.echo("Downloading InstallBuilder...")
 
             def report(block, blocksize, total):
                 done = block * blocksize
                 if round(100 * done / total) != round(100 * (done - blocksize) / total):
-                    click.secho(f"Downloading... {round(100*done/total)}%")
+                    click.secho(f"Downloading... {round(100 * done / total)}%")
 
             urllib.request.urlretrieve(
                 f"https://clients.bitrock.com/installbuilder/installbuilder-enterprise-{IB_VERSION}-windows-installer.exe",
@@ -435,14 +477,13 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
             shutil.move(IB_SETUP.with_suffix(".tmp"), IB_SETUP)
 
         click.echo("Install InstallBuilder...")
-        subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"],
-                       check=True)
+        subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"], check=True)
         assert os.path.isfile(IB_CLI)
 
     click.echo("Decrypt InstallBuilder license...")
-    f = cryptography.fernet.Fernet(be.rtool_key.encode())
-    with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, open(IB_LICENSE,
-                                                                        "wb") as outfile:
+    f = cryptography.fernet.Fernet(be.build_key.encode())
+    with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, \
+            open(IB_LICENSE, "wb") as outfile:
         outfile.write(f.decrypt(infile.read()))
 
     click.echo("Run InstallBuilder...")
@@ -479,13 +520,12 @@ def build():  # pragma: no cover
     os.makedirs(be.dist_dir, exist_ok=True)
 
     if be.should_build_wheel:
-        whl = build_wheel(be)
-        # Docker image requires wheels
-        if be.should_build_docker:
-            build_docker_image(be, whl)
+        build_wheel(be)
+    if be.should_build_docker:
+        build_docker_image(be)
     if be.should_build_pyinstaller:
         build_pyinstaller(be)
-    if be.should_build_wininstaller and be.rtool_key:
+    if be.should_build_wininstaller:
         build_wininstaller(be)
 
 
@@ -499,12 +539,15 @@ def upload():  # pragma: no cover
         Pushes the Docker image to Docker Hub.
     """
     be = BuildEnviron.from_env()
+    be.dump_info()
 
     if be.is_pull_request:
         click.echo("Refusing to upload artifacts from a pull request!")
         return
 
-    if be.has_aws_creds:
+    if be.should_upload_aws:
+        num_files = len([name for name in os.listdir(be.dist_dir) if os.path.isfile(name)])
+        click.echo(f"Uploading {num_files} files to AWS dir {be.upload_dir}...")
         subprocess.check_call([
             "aws", "s3", "cp",
             "--acl", "public-read",

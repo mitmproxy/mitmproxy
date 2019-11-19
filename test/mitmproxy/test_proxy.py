@@ -1,20 +1,19 @@
 import argparse
 import platform
 from unittest import mock
+
 import pytest
 
-from mitmproxy.tools import cmdline
-from mitmproxy.tools import main
 from mitmproxy import options
 from mitmproxy.proxy import ProxyConfig
-from mitmproxy.proxy.server import DummyServer, ProxyServer, ConnectionHandler
 from mitmproxy.proxy import config
-
+from mitmproxy.proxy.server import ConnectionHandler, DummyServer, ProxyServer
+from mitmproxy.tools import cmdline
+from mitmproxy.tools import main
 from ..conftest import skip_windows
 
 
 class MockParser(argparse.ArgumentParser):
-
     """
     argparse.ArgumentParser sys.exits() by default.
     Make it more testable by throwing an exception instead.
@@ -53,11 +52,9 @@ class TestProcessProxyOptions:
 class TestProxyServer:
 
     @skip_windows
-    @pytest.mark.skipif(platform.mac_ver()[0].split('.')[:2] == ['10', '14'],
-                        reason='Skipping due to macOS Mojave')
+    @pytest.mark.skipif(platform.system() != "Linux", reason="Linux-only")
     def test_err(self):
-        # binding to 0.0.0.0:1 works without special permissions on Windows and
-        # macOS Mojave
+        # binding to 0.0.0.0:1 works without special permissions on Windows and macOS Mojave+
         conf = ProxyConfig(options.Options(listen_port=1))
         with pytest.raises(Exception, match="Error starting proxy server"):
             ProxyServer(conf)
