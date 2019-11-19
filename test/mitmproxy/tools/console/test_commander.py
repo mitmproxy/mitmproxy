@@ -259,26 +259,33 @@ class TestCommandBuffer:
             ce.keypress(1, 'tab')
             ce.update()
             ret = ce.cbuf.render()
-            assert ret[0] == ('commander_command', 'set')
-            assert ret[1] == ('text', ' ')
-            assert ret[2] == ('commander_hint', '*options ')
-
+            assert ret == [
+                ('commander_command', 'set'),
+                ('text', ' '),
+                ('commander_hint', 'option '),
+                ('commander_hint', 'value '),
+            ]
     def test_render(self):
         with taddons.context() as tctx:
             cb = commander.CommandBuffer(tctx.master)
             cb.text = "foo"
             assert cb.render()
 
-            cb.text = 'set view_filter ~bq test'
+            cb.text = "set view_filter '~bq test'"
             ret = cb.render()
-            assert ret[0] == ('commander_command', 'set')
-            assert ret[1] == ('text', ' ')
-            assert ret[2] == ('text', 'view_filter=~bq')
-            assert ret[3] == ('text', ' ')
-            assert ret[4] == ('text', 'test')
+            assert ret == [
+                ('commander_command', 'set'),
+                ('text', ' '),
+                ('text', 'view_filter'),
+                ('text', ' '),
+                ('text', "'~bq test'"),
+            ]
 
             cb.text = "set"
             ret = cb.render()
-            assert ret[0] == ('commander_command', 'set')
-            assert ret[1] == ('text', ' ')
-            assert ret[2] == ('commander_hint', '*options ')
+            assert ret == [
+                ('commander_command', 'set'),
+                ('text', ' '),
+                ('commander_hint', 'option '),
+                ('commander_hint', 'value '),
+            ]
