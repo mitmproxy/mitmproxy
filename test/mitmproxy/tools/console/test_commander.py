@@ -269,7 +269,7 @@ class TestCommandBuffer:
             cb.text = "foo"
             assert cb.render()
 
-            cb.text = 'set view_filter=~bq test'
+            cb.text = 'set view_filter ~bq test'
             ret = cb.render()
             assert ret[0] == ('commander_command', 'set')
             assert ret[1] == ('text', ' ')

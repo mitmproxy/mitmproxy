@@ -1,21 +1,18 @@
 import csv
-import shlex
 import typing
 
+import mitmproxy.types
+from mitmproxy import command, command_lexer
+from mitmproxy import contentviews
 from mitmproxy import ctx
-from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import log
-from mitmproxy import contentviews
-from mitmproxy.utils import strutils
-import mitmproxy.types
-
-
+from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import keymap
+from mitmproxy.utils import strutils
 
 console_palettes = [
     "lowlight",
@@ -48,10 +45,12 @@ class UnsupportedLog:
     """
         A small addon to dump info on flow types we don't support yet.
     """
+
     def websocket_message(self, f):
         message = f.messages[-1]
         ctx.log.info(f.message_info(message))
-        ctx.log.debug(message.content if isinstance(message.content, str) else strutils.bytes_to_escaped_str(message.content))
+        ctx.log.debug(
+            message.content if isinstance(message.content, str) else strutils.bytes_to_escaped_str(message.content))
 
     def websocket_end(self, f):
         ctx.log.info("WebSocket connection closed by {}: {} {}, {}".format(
@@ -78,6 +77,7 @@ class ConsoleAddon:
         An addon that exposes console-specific commands, and hooks into required
         events.
     """
+
     def __init__(self, master):
         self.master = master
         self.started = False
@@ -86,7 +86,7 @@ class ConsoleAddon:
         loader.add_option(
             "console_default_contentview", str, "auto",
             "The default content view mode.",
-            choices = [i.name.lower() for i in contentviews.views]
+            choices=[i.name.lower() for i in contentviews.views]
         )
         loader.add_option(
             "console_eventlog_verbosity", str, 'info',
@@ -142,7 +142,7 @@ class ConsoleAddon:
         opts = self.layout_options()
         off = self.layout_options().index(ctx.options.console_layout)
         ctx.options.update(
-            console_layout = opts[(off + 1) % len(opts)]
+            console_layout=opts[(off + 1) % len(opts)]
         )
 
     @command.command("console.panes.next")
@@ -234,17 +234,18 @@ class ConsoleAddon:
 
     @command.command("console.choose")
     def console_choose(
-        self,
-        prompt: str,
-        choices: typing.Sequence[str],
-        cmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.CmdArgs
+            self,
+            prompt: str,
+            choices: typing.Sequence[str],
+            cmd: mitmproxy.types.Cmd,
+            *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
             invoke another command with all occurrences of {choice} replaced by
             the choice the user made.
         """
+
         def callback(opt):
             # We're now outside of the call context...
             repl = cmd + " " + " ".join(args)
@@ -260,11 +261,11 @@ class ConsoleAddon:
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
-        self,
-        prompt: str,
-        choicecmd: mitmproxy.types.Cmd,
-        subcmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.CmdArgs
+            self,
+            prompt: str,
+            choicecmd: mitmproxy.types.Cmd,
+            subcmd: mitmproxy.types.Cmd,
+            *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
@@ -275,7 +276,7 @@ class ConsoleAddon:
 
         def callback(opt):
             # We're now outside of the call context...
-            repl = shlex.quote(" ".join(args))
+            repl = " ".join(command_lexer.quote(x) for x in args)
             repl = repl.replace("{choice}", opt)
             try:
                 self.master.commands.execute(subcmd + " " + repl)
@@ -287,22 +288,24 @@ class ConsoleAddon:
         )
 
     @command.command("console.command")
-    def console_command(self, *cmd_str: str) -> None:
+    def console_command(self, *command_str: str) -> None:
         """
         Prompt the user to edit a command with a (possibly empty) starting value.
         """
-        cmd_str = (command.quote(x) if x else "" for x in cmd_str)
-        signals.status_prompt_command.send(partial=" ".join(cmd_str))  # type: ignore
+        quoted = " ".join(command_lexer.quote(x) for x in command_str)
+        signals.status_prompt_command.send(partial=quoted)
 
     @command.command("console.command.set")
     def console_command_set(self, option_name: str) -> None:
         """
         Prompt the user to set an option.
         """
-        option_value = getattr(self.master.options, option_name, None)
-        option_value = command.quote(option_value)
-        self.master.commands.execute(
-            f"console.command set {option_name} {option_value}"
+        option_value = getattr(self.master.options, option_name, None) or ""
+        set_command = f"set {option_name} {option_value!r}"
+        cursor = len(set_command) - 1
+        signals.status_prompt_command.send(
+            partial=set_command,
+            cursor=cursor
         )
 
     @command.command("console.view.keybindings")
@@ -570,11 +573,11 @@ class ConsoleAddon:
 
     @command.command("console.key.bind")
     def key_bind(
-        self,
-        contexts: typing.Sequence[str],
-        key: str,
-        cmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.CmdArgs
+            self,
+            contexts: typing.Sequence[str],
+            key: str,
+            cmd: mitmproxy.types.Cmd,
+            *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Bind a shortcut key.

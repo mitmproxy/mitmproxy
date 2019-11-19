@@ -26,7 +26,7 @@ def map(km):
     km.add("ctrl f", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl b", "console.nav.pageup", ["global"], "Page up")
 
-    km.add("I", "set intercept_active=toggle", ["global"], "Toggle intercept")
+    km.add("I", "set intercept_active toggle", ["global"], "Toggle intercept")
     km.add("i", "console.command.set intercept", ["global"], "Set intercept")
     km.add("W", "console.command.set save_stream_file", ["global"], "Stream to file")
     km.add("A", "flow.resume @all", ["flowlist", "flowview"], "Resume all intercepted flows")
@@ -48,7 +48,7 @@ def map(km):
         "Export this flow to file"
     )
     km.add("f", "console.command.set view_filter", ["flowlist"], "Set view filter")
-    km.add("F", "set console_focus_follow=toggle", ["flowlist"], "Set focus follow")
+    km.add("F", "set console_focus_follow toggle", ["flowlist"], "Set focus follow")
     km.add(
         "ctrl l",
         "console.command cut.clip ",
@@ -68,14 +68,14 @@ def map(km):
         "o",
         """
         console.choose.cmd Order view.order.options
-        set view_order={choice}
+        set view_order {choice}
         """,
         ["flowlist"],
         "Set flow list order"
     )
     km.add("r", "replay.client @focus", ["flowlist", "flowview"], "Replay this flow")
     km.add("S", "console.command replay.server ", ["flowlist"], "Start server replay")
-    km.add("v", "set view_order_reversed=toggle", ["flowlist"], "Reverse flow list order")
+    km.add("v", "set view_order_reversed toggle", ["flowlist"], "Reverse flow list order")
     km.add("U", "flow.mark @all false", ["flowlist"], "Un-set all marks")
     km.add("w", "console.command save.file @shown ", ["flowlist"], "Save listed flows to file")
     km.add("V", "flow.revert @focus", ["flowlist", "flowview"], "Revert changes to this flow")

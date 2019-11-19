@@ -3,16 +3,14 @@
 """
 import functools
 import inspect
-import re
 import sys
 import textwrap
 import types
 import typing
 
-import pyparsing
-
 import mitmproxy.types
-from mitmproxy import exceptions
+from mitmproxy import exceptions, command_lexer
+from mitmproxy.command_lexer import unquote
 
 
 def verify_arg_signature(f: typing.Callable, args: typing.Iterable[typing.Any], kwargs: dict) -> None:
@@ -144,16 +142,6 @@ class CommandManager:
         self.master = master
         self.commands = {}
 
-        self.expr_parser = pyparsing.ZeroOrMore(
-            pyparsing.QuotedString('"', escChar='\\', unquoteResults=False)
-            | pyparsing.QuotedString("'", escChar='\\', unquoteResults=False)
-            | pyparsing.Combine(pyparsing.Literal('"')
-                                + pyparsing.Word(pyparsing.printables + " ")
-                                + pyparsing.StringEnd())
-            | pyparsing.Word(pyparsing.printables)
-            | pyparsing.Word(" \r\n\t")
-        ).leaveWhitespace()
-
     def collect_commands(self, addon):
         for i in dir(addon):
             if not i.startswith("__"):
@@ -183,7 +171,7 @@ class CommandManager:
         Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
         """
 
-        parts: typing.List[str] = self.expr_parser.parseString(cmdstr)
+        parts: typing.List[str] = command_lexer.expr.parseString(cmdstr, parseAll=True)
 
         parsed: typing.List[ParseResult] = []
         next_params: typing.List[CommandParameter] = [
@@ -282,28 +270,6 @@ class CommandManager:
                 print("# " + hl, file=out)
             print(c.signature_help(), file=out)
             print(file=out)
-
-
-def unquote(x: str) -> str:
-    quoted = (
-            (x.startswith('"') and x.endswith('"'))
-            or
-            (x.startswith("'") and x.endswith("'"))
-    )
-    if quoted:
-        x = x[1:-1]
-        # not sure if this is the right place, but pypyarsing doesn't process escape sequences.
-        x = re.sub(r"\\(.)", r"\g<1>", x)
-        return x
-    return x
-
-
-def quote(val: str) -> str:
-    if not val:
-        return '""'
-    if all(ws not in val for ws in " \r\n\t"):
-        return val
-    return repr(val)
 
 
 def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:

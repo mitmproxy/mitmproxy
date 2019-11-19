@@ -90,8 +90,7 @@ class Core:
             are emptied. Boolean values can be true, false or toggle.
             Multiple values are concatenated with a single space.
         """
-        value = " ".join(value)
-        strspec = f"{option}={value}"
+        strspec = f"{option}={' '.join(value)}"
         try:
             ctx.options.set(strspec)
         except exceptions.OptionsError as e:
