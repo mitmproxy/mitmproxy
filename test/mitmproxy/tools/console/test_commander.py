@@ -1,6 +1,7 @@
-from mitmproxy.tools.console.commander import commander
-from mitmproxy.test import taddons
 import pytest
+
+from mitmproxy.test import taddons
+from mitmproxy.tools.console.commander import commander
 
 
 class TestListCompleter:
@@ -265,6 +266,7 @@ class TestCommandBuffer:
                 ('commander_hint', 'option '),
                 ('commander_hint', 'value '),
             ]
+
     def test_render(self):
         with taddons.context() as tctx:
             cb = commander.CommandBuffer(tctx.master)
