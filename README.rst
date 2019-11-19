@@ -1,7 +1,7 @@
 mitmproxy
 ^^^^^^^^^
 
-|travis| |appveyor| |coverage| |latest_release| |python_versions|
+|ci_status| |coverage| |latest_release| |python_versions|
 
 This repository contains the **mitmproxy** and **pathod** projects.
 
@@ -163,13 +163,9 @@ with the following command:
     :target: http://slack.mitmproxy.org/
     :alt: Slack Developer Chat
 
-.. |travis| image:: https://shields.mitmproxy.org/travis/mitmproxy/mitmproxy/master.svg?label=travis%20ci
-    :target: https://travis-ci.org/mitmproxy/mitmproxy
-    :alt: Travis Build Status
-
-.. |appveyor| image:: https://shields.mitmproxy.org/appveyor/ci/mitmproxy/mitmproxy/master.svg?label=appveyor%20ci
-    :target: https://ci.appveyor.com/project/mitmproxy/mitmproxy
-    :alt: Appveyor Build Status
+.. |ci_status| image:: https://github.com/mitmproxy/mitmproxy/workflows/CI/badge.svg?branch=master
+    :target: https://github.com/mitmproxy/mitmproxy/actions?query=branch%3Amaster
+    :alt: Continuous Integration Status
 
 .. |coverage| image:: https://shields.mitmproxy.org/codecov/c/github/mitmproxy/mitmproxy/master.svg?label=codecov
     :target: https://codecov.io/gh/mitmproxy/mitmproxy
