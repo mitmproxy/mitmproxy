@@ -16,8 +16,10 @@ parameters are passed as the ``query`` keyword argument.
 import traceback
 from typing import Dict, Optional  # noqa
 from typing import List  # noqa
+from types import GeneratorType
 
 from mitmproxy import exceptions
+from mitmproxy import tcp
 from mitmproxy.net import http
 from mitmproxy.utils import strutils
 from . import (
@@ -80,6 +82,10 @@ def get_message_content_view(viewname, message):
     Like get_content_view, but also handles message encoding.
     """
     viewmode = get(viewname)
+    description = None
+    lines = None
+    error = None
+
     if not viewmode:
         viewmode = get("auto")
     try:
@@ -103,15 +109,60 @@ def get_message_content_view(viewname, message):
         metadata["query"] = message.query
     if isinstance(message, http.Message):
         metadata["headers"] = message.headers
+        
+    if  isinstance(message, tcp.TCPFlow) and isinstance(viewmode, hex.ViewHex):
+        message_lines = list()
+        count = 0
+        client_offset = 0
+        server_offset = 0 
 
-    description, lines, error = get_content_view(
-        viewmode, content, **metadata
-    )
+        for tcpmessage in message.messages:
+            data = tcpmessage.content
+            metadata["from_client"] = tcpmessage.from_client
+
+            if tcpmessage.from_client:
+                metadata['offset'] = client_offset
+                client_offset += len(data)
+            else:
+                metadata['offset'] = server_offset 
+                server_offset += len(data)
+
+            description, line, error = get_content_view(
+                viewmode, data , **metadata
+            )
+
+            message_lines.append(line)
+            count += 1
+
+        lines = line_gen(message_lines)
+
+    else:
+        description, lines, error = get_content_view(
+            viewmode, content, **metadata
+        )
+
 
     if enc:
         description = "{} {}".format(enc, description)
 
     return description, lines, error
+
+def line_gen(lines):
+    """
+      Creates a generator for a list of lines
+
+      Args: 
+         lines: A list of lines
+      Returns:
+          Generator of lines
+    """
+    for line in lines:
+        if isinstance(line, GeneratorType):
+            for item in line:
+                yield item
+        else:
+            yield line
+
 
 
 def get_content_view(viewmode: View, data: bytes, **metadata):

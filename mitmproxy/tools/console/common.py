@@ -10,7 +10,7 @@ import urwid
 import urwid.util
 
 from mitmproxy.utils import human
-from mitmproxy.tcp import TCPViewEntry
+from mitmproxy.tcp import TCPViewEntry, TCPFlowEntry, TCPMessageEntry
 
 # Detect Windows Subsystem for Linux
 IS_WSL = "Microsoft" in platform.platform()
@@ -368,7 +368,11 @@ def raw_format_tcp_table(f):
     req.append(("fixed", 4, truncated_plain("TCP", "method_get")))
     req.append(fcol(fixlen("PROTO", 8), "scheme_other"))
     req.append(fcol(fixlen("S:" + f["stream_index"], 8), "scheme_other"))
-    req.append(fcol(fixlen("M:" + f["msg_index"], 8), "scheme_other"))
+    if f["msg_type"] != TCPFlowEntry:
+        req.append(fcol(fixlen("M:" + f["msg_index"], 8), "scheme_other"))
+    else:
+        req.append(fcol(fixlen(" ", 8), "scheme_other"))
+
     req.append(fcol(fixlen("T:" + f["msg_total"], 8), "scheme_other"))
     req.append(fcol(f["client"], uc))
 
@@ -660,7 +664,15 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='
         message_index: int
         intercept: bool
 
-        message_index = f.message_index
+        message_index = -1 
+        msg_len = 0
+        
+        if isinstance(f, TCPMessageEntry):
+            message_index = f.message_index
+            msg_len=str(len(f.message.content))
+        else:
+            msg_len = str(len(f.flow.raw_content))
+
         intercept = False
 
         if f.messages is not None:
@@ -684,9 +696,10 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='
             direction=str(f.direction),
             client=str(f.client),
             server=str(f.server),
+            msg_type=type(f),
             msg_index=str(message_index),
             msg_total=str(total),
-            msg_len=str(len(f.message.content)),
+            msg_len=msg_len,
             err_msg=f.error.msg if f.error else None,
             duration=f.duration,
             marked=f.marked,

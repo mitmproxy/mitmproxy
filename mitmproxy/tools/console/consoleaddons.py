@@ -383,7 +383,8 @@ class ConsoleAddon:
 
         if isinstance(flow, tcp.TCPViewEntry):
             return [
-                "Message",
+                "Packet",
+                "TCP Stream",
             ]
         else:
             return [
@@ -563,7 +564,17 @@ class ConsoleAddon:
         """
             Returns the valid options for the flowview mode.
         """
-        return [i.name.lower() for i in contentviews.views]
+
+        flow = self.master.view.focus.flow
+
+        if isinstance(flow, tcp.TCPViewEntry):
+            return [
+                "ascii",
+                "hex",
+                "raw",
+            ]
+        else:
+            return [i.name.lower() for i in contentviews.views]
 
     @command.command("console.flowview.mode")
     def flowview_mode(self) -> str:

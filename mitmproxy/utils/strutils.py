@@ -128,13 +128,13 @@ def clean_hanging_newline(t):
     return t
 
 
-def hexdump(s):
+def hexdump(s, byte_offset=0):
     """
         Returns:
             A generator of (offset, hex, str) tuples
     """
     for i in range(0, len(s), 16):
-        offset = "{:0=10x}".format(i)
+        offset = "{:0=10x}".format(i+byte_offset)
         part = s[i:i + 16]
         x = " ".join("{:0=2x}".format(i) for i in part)
         x = x.ljust(47)  # 16*2 + 15

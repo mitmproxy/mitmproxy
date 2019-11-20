@@ -57,10 +57,8 @@ class FlowDetails(tabs.Tabs):
         flow = self.master.view.focus.flow
         if isinstance(flow,tcp.TCPViewEntry):
             self.tabs = [
-                (self.tab_tcp_message, self.view_tcp_message),
-                (self.tab_tcp_client, self.view_tcp_client),
-                (self.tab_tcp_server, self.view_tcp_server),
-                (self.tab_tcp_unified, self.view_tcp_unified),
+                (self.tab_tcp_stream, self.view_tcp_stream),
+                (self.tab_tcp_packets, self.view_tcp_packets),
             ]
             self.show()
         elif flow:
@@ -105,32 +103,16 @@ class FlowDetails(tabs.Tabs):
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
 
-    def tab_tcp_client(self):
-        if self.flow.intercepted and self.flow.messages[-1].from_client:
-            return "[Intercepted] Client"
-        return "Client"
+    def tab_tcp_packets(self):
+        return "Packet"
 
-    def tab_tcp_server(self):
-        if self.flow.intercepted and not self.flow.messages[-1].from_client:
-            return "[Intercepted] Server"
-        return "Server"
+    def tab_tcp_stream(self):
+        return "TCP Stream"
 
-    def tab_tcp_message(self):
-        return "Message"
-
-    def tab_tcp_unified(self):
-        return "Unified"
-
-    def view_tcp_client(self):
-        return self.conn_text(self.flow.client_stream)
-
-    def view_tcp_server(self):
-        return self.conn_text(self.flow.server_stream)
-
-    def view_tcp_unified(self):
+    def view_tcp_stream(self):
         return self.conn_text(self.flow.flow)
 
-    def view_tcp_message(self):
+    def view_tcp_packets(self):
         return self.conn_text(self.flow.message)
 
     def content_view(self, viewmode, message):

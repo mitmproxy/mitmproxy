@@ -23,6 +23,7 @@ from mitmproxy import io
 from mitmproxy import http  # noqa
 from mitmproxy import tcp  # noqa
 
+
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
 # the sort order changes as the flow progresses through its lifecycle. We
@@ -104,10 +105,20 @@ orders = [
 ]
 
 
+class DFS(collections.OrderedDict):
+
+    def __init__(self):
+        super().__init__()
+
+    def __contains__(self, f):
+        return super().__contains__(f)        
+
+
+
 class View(collections.abc.Sequence):
     def __init__(self):
         super().__init__()
-        self._store = collections.OrderedDict()
+        self._store = DFS()
         self.filter = matchall
         # Should we show only marked flows?
         self.show_marked = False
@@ -565,11 +576,17 @@ class View(collections.abc.Sequence):
     def kill(self, f):
         self.update([f])
 
+    def tcp_start(self,f):
+        view = tcp.TCPFlowEntry(flow=f)
+        self.add([view])
+
     def tcp_message(self, f):
-        view = tcp.TCPViewEntry(flow=f, message_id=f.messages[-1].id)
+        view = tcp.TCPMessageEntry(flow=f, message=f.messages[-1])
         self.add([view])
 
     def tcp_end(self, f):
+        view = tcp.TCPEndEntry(flow=f, message=f.messages[-1])
+        self.add([view])
         self.sig_view_refresh.send(self)
 
     def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:

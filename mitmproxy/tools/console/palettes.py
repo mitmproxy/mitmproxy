@@ -37,7 +37,7 @@ class Palette:
         'code_200', 'code_300', 'code_400', 'code_500', 'code_other',
         
         # TCP Message
-        'open_connection', 'closed_connection',
+        'open_connection', 'closed_connection', "from_client", "from_server",
 
         # States
         'intercept', 'replay', 'mark',
@@ -189,6 +189,9 @@ class LowDark(Palette):
         # TCP Message
         open_connection = ('dark green', 'default'),
         closed_connection = ('dark gray', 'default'),
+
+        from_client  = ('dark red', 'default'),
+        from_server  = ('dark blue', 'default'),
 
 
         commander_command = ('white,bold', 'default'),

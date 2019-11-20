@@ -502,13 +502,11 @@ def _make():
         parts.append(f)
 
     # A naked rex is a URL rex:
-<<<<<<< HEAD
-    f = rex.copy()
-    f.setParseAction(FAll)
-=======
     f = regex.copy()
-    f.setParseAction(FUrl.make)
->>>>>>> 698f7e2e177baf313e6af62ec0f79a26693e430b
+    f.setParseAction(FAll)
+    #TODO REMOVE
+#   f = regex.copy()
+#   f.setParseAction(FUrl.make)
     parts.append(f)
 
     atom = pp.MatchFirst(parts)

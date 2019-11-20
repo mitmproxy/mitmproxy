@@ -1,5 +1,7 @@
-import json
 import typing
+from typing import Any  # noqa
+from typing import MutableMapping  # noqa
+import json
 
 from mitmproxy.coretypes import serializable
 from mitmproxy.utils import typecheck
@@ -13,7 +15,7 @@ class StateObject(serializable.Serializable):
     or StateObject instances themselves.
     """
 
-    _stateobject_attributes: typing.ClassVar[typing.MutableMapping[str, typing.Any]]
+    _stateobject_attributes: MutableMapping[str, Any] = None
     """
     An attribute-name -> class-or-type dict containing all attributes that
     should be serialized. If the attribute is a class, it must implement the
@@ -40,7 +42,7 @@ class StateObject(serializable.Serializable):
             if val is None:
                 setattr(self, attr, val)
             else:
-                curr = getattr(self, attr, None)
+                curr = getattr(self, attr)
                 if hasattr(curr, "set_state"):
                     curr.set_state(val)
                 else:
@@ -61,6 +63,9 @@ def _process(typeinfo: typecheck.Type, val: typing.Any, make: bool) -> typing.An
 
     if typename.startswith("typing.List"):
         T = typecheck.sequence_type(typeinfo)
+        import rpdb;rpdb.set_trace()
+        for x in val:
+            _process(T, x, make)
         return [_process(T, x, make) for x in val]
     elif typename.startswith("typing.Tuple"):
         Ts = typecheck.tuple_types(typeinfo)
