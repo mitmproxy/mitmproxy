@@ -369,17 +369,14 @@ def raw_format_table(f):
     req = []
 
     cursor = [' ', 'focus']
-    if f.get('resp_is_replay', False):
-        cursor[0] = SYMBOL_REPLAY
-        cursor[1] = 'replay'
-    if f['marked']:
-        if cursor[0] == ' ':
-            cursor[0] = SYMBOL_MARK
-        cursor[1] = 'mark'
     if f['focus']:
         cursor[0] = '>'
-
     req.append(fcol(*cursor))
+
+    if f.get('resp_is_replay', False) or f.get('req_is_replay', False):
+        req.append(fcol(SYMBOL_REPLAY, 'replay'))
+    if f['marked']:
+        req.append(fcol(SYMBOL_MARK, 'mark'))
 
     if f["two_line"]:
         req.append(TruncatedText(f["req_url"], colorize_url(f["req_url"]), 'left'))
