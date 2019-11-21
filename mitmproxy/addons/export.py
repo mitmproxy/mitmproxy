@@ -121,14 +121,14 @@ class Export():
         return list(sorted(formats.keys()))
 
     @command.command("export.file")
-    def file(self, fmt: str, f: flow.Flow, path: mitmproxy.types.Path) -> None:
+    def file(self, format: str, flow: flow.Flow, path: mitmproxy.types.Path) -> None:
         """
             Export a flow to path.
         """
-        if fmt not in formats:
-            raise exceptions.CommandError("No such export format: %s" % fmt)
-        func: typing.Any = formats[fmt]
-        v = func(f)
+        if format not in formats:
+            raise exceptions.CommandError("No such export format: %s" % format)
+        func: typing.Any = formats[format]
+        v = func(flow)
         try:
             with open(path, "wb") as fp:
                 if isinstance(v, bytes):
@@ -139,14 +139,14 @@ class Export():
             ctx.log.error(str(e))
 
     @command.command("export.clip")
-    def clip(self, fmt: str, f: flow.Flow) -> None:
+    def clip(self, format: str, flow: flow.Flow) -> None:
         """
             Export a flow to the system clipboard.
         """
-        if fmt not in formats:
-            raise exceptions.CommandError("No such export format: %s" % fmt)
-        func: typing.Any = formats[fmt]
-        v = strutils.always_str(func(f))
+        if format not in formats:
+            raise exceptions.CommandError("No such export format: %s" % format)
+        func: typing.Any = formats[format]
+        v = strutils.always_str(func(flow))
         try:
             pyperclip.copy(v)
         except pyperclip.PyperclipException as e:

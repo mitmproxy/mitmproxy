@@ -1,6 +1,7 @@
+import pytest
 
-from mitmproxy.tools.console.commander import commander
 from mitmproxy.test import taddons
+from mitmproxy.tools.console.commander import commander
 
 
 class TestListCompleter:
@@ -26,6 +27,112 @@ class TestListCompleter:
             c = commander.ListCompleter(start, options)
             for expected in cycle:
                 assert c.cycle() == expected
+
+
+class TestCommandEdit:
+    def test_open_command_bar(self):
+        with taddons.context() as tctx:
+            history = commander.CommandHistory(tctx.master, size=3)
+            edit = commander.CommandEdit(tctx.master, '', history)
+
+            try:
+                edit.update()
+            except IndexError:
+                pytest.faied("Unexpected IndexError")
+
+    def test_insert(self):
+        with taddons.context() as tctx:
+            history = commander.CommandHistory(tctx.master, size=3)
+            edit = commander.CommandEdit(tctx.master, '', history)
+            edit.keypress(1, 'a')
+            assert edit.get_edit_text() == 'a'
+
+            # Don't let users type a space before starting a command
+            # as a usability feature
+            history = commander.CommandHistory(tctx.master, size=3)
+            edit = commander.CommandEdit(tctx.master, '', history)
+            edit.keypress(1, ' ')
+            assert edit.get_edit_text() == ''
+
+    def test_backspace(self):
+        with taddons.context() as tctx:
+            history = commander.CommandHistory(tctx.master, size=3)
+            edit = commander.CommandEdit(tctx.master, '', history)
+            edit.keypress(1, 'a')
+            edit.keypress(1, 'b')
+            assert edit.get_edit_text() == 'ab'
+            edit.keypress(1, 'backspace')
+            assert edit.get_edit_text() == 'a'
+
+    def test_left(self):
+        with taddons.context() as tctx:
+            history = commander.CommandHistory(tctx.master, size=3)
+            edit = commander.CommandEdit(tctx.master, '', history)
+            edit.keypress(1, 'a')
+            assert edit.cbuf.cursor == 1
+            edit.keypress(1, 'left')
+            assert edit.cbuf.cursor == 0
+
+            # Do it again to make sure it won't go negative
+            edit.keypress(1, 'left')
+            assert edit.cbuf.cursor == 0
+
+    def test_right(self):
+        with taddons.context() as tctx:
+            history = commander.CommandHistory(tctx.master, size=3)
+            edit = commander.CommandEdit(tctx.master, '', history)
+            edit.keypress(1, 'a')
+            assert edit.cbuf.cursor == 1
+
+            # Make sure cursor won't go past the text
+            edit.keypress(1, 'right')
+            assert edit.cbuf.cursor == 1
+
+            # Make sure cursor goes left and then back right
+            edit.keypress(1, 'left')
+            assert edit.cbuf.cursor == 0
+            edit.keypress(1, 'right')
+            assert edit.cbuf.cursor == 1
+
+    def test_up_and_down(self):
+        with taddons.context() as tctx:
+            history = commander.CommandHistory(tctx.master, size=3)
+            edit = commander.CommandEdit(tctx.master, '', history)
+
+            buf = commander.CommandBuffer(tctx.master, 'cmd1')
+            history.add_command(buf)
+            buf = commander.CommandBuffer(tctx.master, 'cmd2')
+            history.add_command(buf)
+
+            edit.keypress(1, 'up')
+            assert edit.get_edit_text() == 'cmd2'
+            edit.keypress(1, 'up')
+            assert edit.get_edit_text() == 'cmd1'
+            edit.keypress(1, 'up')
+            assert edit.get_edit_text() == 'cmd1'
+
+            history = commander.CommandHistory(tctx.master, size=5)
+            edit = commander.CommandEdit(tctx.master, '', history)
+            edit.keypress(1, 'a')
+            edit.keypress(1, 'b')
+            edit.keypress(1, 'c')
+            assert edit.get_edit_text() == 'abc'
+            edit.keypress(1, 'up')
+            assert edit.get_edit_text() == ''
+            edit.keypress(1, 'down')
+            assert edit.get_edit_text() == 'abc'
+            edit.keypress(1, 'down')
+            assert edit.get_edit_text() == 'abc'
+
+            history = commander.CommandHistory(tctx.master, size=5)
+            edit = commander.CommandEdit(tctx.master, '', history)
+            buf = commander.CommandBuffer(tctx.master, 'cmd3')
+            history.add_command(buf)
+            edit.keypress(1, 'z')
+            edit.keypress(1, 'up')
+            assert edit.get_edit_text() == 'cmd3'
+            edit.keypress(1, 'down')
+            assert edit.get_edit_text() == 'z'
 
 
 class TestCommandHistory:
@@ -148,13 +255,39 @@ class TestCommandBuffer:
             cb.cursor = len(cb.text)
             cb.cycle_completion()
 
+            ch = commander.CommandHistory(tctx.master, 30)
+            ce = commander.CommandEdit(tctx.master, "se", ch)
+            ce.keypress(1, 'tab')
+            ce.update()
+            ret = ce.cbuf.render()
+            assert ret == [
+                ('commander_command', 'set'),
+                ('text', ' '),
+                ('commander_hint', 'option '),
+                ('commander_hint', 'value '),
+            ]
+
     def test_render(self):
         with taddons.context() as tctx:
             cb = commander.CommandBuffer(tctx.master)
             cb.text = "foo"
             assert cb.render()
 
-    def test_flatten(self):
-        with taddons.context() as tctx:
-            cb = commander.CommandBuffer(tctx.master)
-            assert cb.flatten("foo  bar") == "foo bar"
+            cb.text = "set view_filter '~bq test'"
+            ret = cb.render()
+            assert ret == [
+                ('commander_command', 'set'),
+                ('text', ' '),
+                ('text', 'view_filter'),
+                ('text', ' '),
+                ('text', "'~bq test'"),
+            ]
+
+            cb.text = "set"
+            ret = cb.render()
+            assert ret == [
+                ('commander_command', 'set'),
+                ('text', ' '),
+                ('commander_hint', 'option '),
+                ('commander_hint', 'value '),
+            ]

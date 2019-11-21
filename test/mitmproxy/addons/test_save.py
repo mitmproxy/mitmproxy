@@ -73,7 +73,7 @@ def test_save_command(tmpdir):
         v = view.View()
         tctx.master.addons.add(v)
         tctx.master.addons.add(sa)
-        tctx.master.commands.call_strings("save.file", ["@shown", p])
+        tctx.master.commands.execute("save.file @shown %s" % p)
 
 
 def test_simple(tmpdir):

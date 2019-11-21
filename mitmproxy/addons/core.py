@@ -83,15 +83,14 @@ class Core:
                     )
 
     @command.command("set")
-    def set(self, *spec: str) -> None:
+    def set(self, option: str, value: str = "") -> None:
         """
-            Set an option of the form "key[=value]". When the value is omitted,
-            booleans are set to true, strings and integers are set to None (if
-            permitted), and sequences are emptied. Boolean values can be true,
-            false or toggle. If multiple specs are passed, they are joined
-            into one separated by spaces.
+            Set an option. When the value is omitted, booleans are set to true,
+            strings and integers are set to None (if permitted), and sequences
+            are emptied. Boolean values can be true, false or toggle.
+            Multiple values are concatenated with a single space.
         """
-        strspec = " ".join(spec)
+        strspec = f"{option}={value}"
         try:
             ctx.options.set(strspec)
         except exceptions.OptionsError as e:
@@ -109,14 +108,14 @@ class Core:
 
     # FIXME: this will become view.mark later
     @command.command("flow.mark")
-    def mark(self, flows: typing.Sequence[flow.Flow], val: bool) -> None:
+    def mark(self, flows: typing.Sequence[flow.Flow], boolean: bool) -> None:
         """
             Mark flows.
         """
         updated = []
         for i in flows:
-            if i.marked != val:
-                i.marked = val
+            if i.marked != boolean:
+                i.marked = boolean
                 updated.append(i)
         ctx.master.addons.trigger("update", updated)
 
@@ -169,18 +168,18 @@ class Core:
         ]
 
     @command.command("flow.set")
-    @command.argument("spec", type=mitmproxy.types.Choice("flow.set.options"))
+    @command.argument("attr", type=mitmproxy.types.Choice("flow.set.options"))
     def flow_set(
         self,
         flows: typing.Sequence[flow.Flow],
-        spec: str,
-        sval: str
+        attr: str,
+        value: str
     ) -> None:
         """
             Quickly set a number of common values on flows.
         """
-        val: typing.Union[int, str] = sval
-        if spec == "status_code":
+        val: typing.Union[int, str] = value
+        if attr == "status_code":
             try:
                 val = int(val)  # type: ignore
             except ValueError as v:
@@ -193,13 +192,13 @@ class Core:
             req = getattr(f, "request", None)
             rupdate = True
             if req:
-                if spec == "method":
+                if attr == "method":
                     req.method = val
-                elif spec == "host":
+                elif attr == "host":
                     req.host = val
-                elif spec == "path":
+                elif attr == "path":
                     req.path = val
-                elif spec == "url":
+                elif attr == "url":
                     try:
                         req.url = val
                     except ValueError as e:
@@ -212,11 +211,11 @@ class Core:
             resp = getattr(f, "response", None)
             supdate = True
             if resp:
-                if spec == "status_code":
+                if attr == "status_code":
                     resp.status_code = val
                     if val in status_codes.RESPONSES:
                         resp.reason = status_codes.RESPONSES[val]  # type: ignore
-                elif spec == "reason":
+                elif attr == "reason":
                     resp.reason = val
                 else:
                     supdate = False
@@ -225,7 +224,7 @@ class Core:
                 updated.append(f)
 
         ctx.master.addons.trigger("update", updated)
-        ctx.log.alert("Set %s on  %s flows." % (spec, len(updated)))
+        ctx.log.alert("Set %s on  %s flows." % (attr, len(updated)))
 
     @command.command("flow.decode")
     def decode(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
@@ -262,12 +261,12 @@ class Core:
         ctx.log.alert("Toggled encoding on %s flows." % len(updated))
 
     @command.command("flow.encode")
-    @command.argument("enc", type=mitmproxy.types.Choice("flow.encode.options"))
+    @command.argument("encoding", type=mitmproxy.types.Choice("flow.encode.options"))
     def encode(
         self,
         flows: typing.Sequence[flow.Flow],
         part: str,
-        enc: str,
+        encoding: str,
     ) -> None:
         """
             Encode flows with a specified encoding.
@@ -279,7 +278,7 @@ class Core:
                 current_enc = p.headers.get("content-encoding", "identity")
                 if current_enc == "identity":
                     f.backup()
-                    p.encode(enc)
+                    p.encode(encoding)
                     updated.append(f)
         ctx.master.addons.trigger("update", updated)
         ctx.log.alert("Encoded %s flows." % len(updated))

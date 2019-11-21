@@ -1,4 +1,5 @@
 import os.path
+from typing import Optional
 
 import urwid
 
@@ -98,10 +99,15 @@ class ActionBar(urwid.WidgetWrap):
         self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
         self.prompting = PromptStub(callback, args)
 
-    def sig_prompt_command(self, sender, partial=""):
+    def sig_prompt_command(self, sender, partial: str = "", cursor: Optional[int] = None):
         signals.focus.send(self, section="footer")
-        self._w = commander.CommandEdit(self.master, partial,
-                                        self.command_history)
+        self._w = commander.CommandEdit(
+            self.master,
+            partial,
+            self.command_history,
+        )
+        if cursor is not None:
+            self._w.cbuf.cursor = cursor
         self.prompting = commandexecutor.CommandExecutor(self.master)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
