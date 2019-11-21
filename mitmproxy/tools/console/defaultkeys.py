@@ -55,7 +55,7 @@ def map(km):
         ["flowlist", "flowview"],
         "Send cuts to clipboard"
     )
-    km.add("L", "console.command view.load ", ["flowlist"], "Load flows from file")
+    km.add("L", "console.command view.flows.load ", ["flowlist"], "Load flows from file")
     km.add("m", "flow.mark.toggle @focus", ["flowlist"], "Toggle mark on this flow")
     km.add("M", "view.properties.marked.toggle", ["flowlist"], "Toggle viewing marked flows")
     km.add(
