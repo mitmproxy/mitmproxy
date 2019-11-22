@@ -196,7 +196,11 @@ class Playbook:
                     pos = i + len(cmds)
                     need_to_emulate_hook = (
                             isinstance(last_cmd, commands.Hook) and
-                            not (isinstance(self.expected[pos], commands.Hook) and self.expected[pos].name == last_cmd.name)
+                            (
+                                    pos >= len(self.expected) or
+                                    (not (isinstance(self.expected[pos], commands.Hook)
+                                          and self.expected[pos].name == last_cmd.name))
+                            )
                     )
                     if need_to_emulate_hook:
                         self.expected.insert(pos, last_cmd)
