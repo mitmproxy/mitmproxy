@@ -69,16 +69,20 @@ class SSLTest:
     """Helper container for Python's builtin SSL object."""
 
     def __init__(self, server_side: bool = False, alpn: typing.Optional[typing.List[str]] = None,
-                 sni: typing.Optional[bytes] = b"example.com"):
+                 sni: typing.Optional[bytes] = b"example.mitmproxy.org"):
         self.inc = ssl.MemoryBIO()
         self.out = ssl.MemoryBIO()
-        self.ctx = ssl.SSLContext()
+        self.ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER if server_side else ssl.PROTOCOL_TLS_CLIENT)
         if alpn:
             self.ctx.set_alpn_protocols(alpn)
         if server_side:
             self.ctx.load_cert_chain(
-                certfile=tlsdata.path("../../net/data/verificationcerts/trusted-root.crt"),
-                keyfile=tlsdata.path("../../net/data/verificationcerts/trusted-root.key"),
+                certfile=tlsdata.path("../../data/verificationcerts/trusted-leaf.crt"),
+                keyfile=tlsdata.path("../../data/verificationcerts/trusted-leaf.key"),
+            )
+        else:
+            self.ctx.load_verify_locations(
+                cafile=tlsdata.path("../../data/verificationcerts/trusted-root.crt"),
             )
         self.obj = self.ctx.wrap_bio(
             self.inc,
@@ -106,7 +110,9 @@ class TlsEchoLayer(tutils.EchoLayer):
     def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
         if isinstance(event, events.DataReceived) and event.data == b"establish-server-tls":
             # noinspection PyTypeChecker
-            self.err = yield tls.EstablishServerTLS(self.context.server)
+            err = yield tls.EstablishServerTLS(self.context.server)
+            if err:
+                yield commands.SendData(event.connection, f"server-tls-failed: {err}".encode())
         else:
             yield from super()._handle_event(event)
 
@@ -121,7 +127,7 @@ def interact(playbook: tutils.Playbook, conn: context.Connection, tssl: SSLTest)
     tssl.inc.write(data())
 
 
-def reply_tls_start(alpn: typing.Optional[bytes] = None,*args, **kwargs) -> tutils.reply:
+def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tutils.reply:
     """
     Helper function to simplify the syntax for tls_start hooks.
     """
@@ -132,10 +138,14 @@ def reply_tls_start(alpn: typing.Optional[bytes] = None,*args, **kwargs) -> tuti
         ssl_context = SSL.Context(SSL.SSLv23_METHOD)
         if tls_start.conn == tls_start.context.client:
             ssl_context.use_privatekey_file(
-                tlsdata.path("../../net/data/verificationcerts/trusted-leaf.key")
+                tlsdata.path("../../data/verificationcerts/trusted-leaf.key")
             )
             ssl_context.use_certificate_chain_file(
-                tlsdata.path("../../net/data/verificationcerts/trusted-leaf.crt")
+                tlsdata.path("../../data/verificationcerts/trusted-leaf.crt")
+            )
+        else:
+            ssl_context.load_verify_locations(
+                cafile=tlsdata.path("../../data/verificationcerts/trusted-root.crt")
             )
         if alpn is not None:
             if tls_start.conn == tls_start.context.client:
@@ -144,6 +154,26 @@ def reply_tls_start(alpn: typing.Optional[bytes] = None,*args, **kwargs) -> tuti
                 ssl_context.set_alpn_protos([alpn])
 
         tls_start.ssl_conn = SSL.Connection(ssl_context)
+
+        if tls_start.conn != tls_start.context.client:
+            # Set SNI
+            tls_start.ssl_conn.set_tlsext_host_name(tls_start.conn.sni)
+
+            # Manually enable hostname verification.
+            # Recent OpenSSL versions provide slightly nicer ways to do this, but they are not exposed in
+            # cryptography and likely a PITA to add.
+            # https://wiki.openssl.org/index.php/Hostname_validation
+            param = SSL._lib.SSL_get0_param(tls_start.ssl_conn._ssl)
+            # Common Name matching is disabled in both Chrome and Firefox, so we should disable it, too.
+            # https://www.chromestatus.com/feature/4981025180483584
+            SSL._lib.X509_VERIFY_PARAM_set_hostflags(
+                param,
+                SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT
+            )
+            SSL._openssl_assert(
+                SSL._lib.X509_VERIFY_PARAM_set1_host(param, tls_start.conn.sni, 0) == 1
+            )
+            SSL._lib.SSL_set_verify(tls_start.ssl_conn._ssl, SSL.VERIFY_PEER, SSL._ffi.NULL)
 
     return tutils.reply(*args, side_effect=make_conn, **kwargs)
 
@@ -167,7 +197,8 @@ class TestServerTLS:
         layer = tls.ServerTLSLayer(tctx)
         playbook = tutils.Playbook(layer)
         tctx.server.connected = True
-        tctx.server.address = ("example.com", 443)
+        tctx.server.address = ("example.mitmproxy.org", 443)
+        tctx.server.sni = b"example.mitmproxy.org"
 
         tssl = SSLTest(server_side=True)
 
@@ -202,6 +233,41 @@ class TestServerTLS:
         # Echo
         _test_echo(playbook, tssl, tctx.server)
 
+    def test_untrusted_cert(self, tctx):
+        """If the certificate is not trusted, we should fail."""
+        layer = tls.ServerTLSLayer(tctx)
+        playbook = tutils.Playbook(layer)
+        tctx.server.connected = True
+        tctx.server.address = ("wrong.host.mitmproxy.org", 443)
+        tctx.server.sni = b"wrong.host.mitmproxy.org"
+
+        tssl = SSLTest(server_side=True)
+
+        # send ClientHello
+        data = tutils.Placeholder()
+        assert (
+                playbook
+                >> events.DataReceived(tctx.client, b"establish-server-tls")
+                << commands.Hook("next_layer", tutils.Placeholder())
+                >> tutils.reply_next_layer(TlsEchoLayer)
+                << commands.Hook("tls_start", tutils.Placeholder())
+                >> reply_tls_start()
+                << commands.SendData(tctx.server, data)
+        )
+
+        # receive ServerHello, finish client handshake
+        tssl.inc.write(data())
+        with pytest.raises(ssl.SSLWantReadError):
+            tssl.obj.do_handshake()
+
+        assert (
+                playbook
+                >> events.DataReceived(tctx.server, tssl.out.read())
+                << commands.SendData(tctx.client,
+                                     b"server-tls-failed: Error([('SSL routines', 'tls_process_server_certificate', 'certificate verify failed')])")
+        )
+        assert not tctx.server.tls_established
+
 
 def _make_client_tls_layer(tctx: context.Context) -> typing.Tuple[tutils.Playbook, tls.ClientTLSLayer]:
     # This is a bit contrived as the client layer expects a server layer as parent.
@@ -214,15 +280,13 @@ def _make_client_tls_layer(tctx: context.Context) -> typing.Tuple[tutils.Playboo
     return playbook, client_layer
 
 
-def _test_tls_client_server(
-        tctx: context.Context,
-        sni: typing.Optional[bytes] = b"example.com",
-        alpn: typing.Optional[typing.List[str]] = None
-) -> typing.Tuple[tutils.Playbook, tls.ClientTLSLayer, SSLTest]:
+def _test_tls_client_server(tctx: context.Context, **kwargs) -> typing.Tuple[
+    tutils.Playbook, tls.ClientTLSLayer, SSLTest]:
     playbook, client_layer = _make_client_tls_layer(tctx)
     tctx.server.tls = True
-    tctx.server.address = ("example.com", 443)
-    tssl_client = SSLTest(sni=sni, alpn=alpn)
+    tctx.server.address = ("example.mitmproxy.org", 443)
+    tctx.server.sni = b"example.mitmproxy.org"
+    tssl_client = SSLTest(**kwargs)
 
     # Send ClientHello
     with pytest.raises(ssl.SSLWantReadError):
@@ -296,7 +360,7 @@ class TestClientTLS:
         to establish TLS with the client.
         """
         tssl_server = SSLTest(server_side=True, alpn=["quux"])
-        playbook, client_layer, tssl_client = _test_tls_client_server(tctx, sni=None, alpn=["quux"])
+        playbook, client_layer, tssl_client = _test_tls_client_server(tctx, alpn=["quux"])
 
         # We should now get instructed to open a server connection.
         data = tutils.Placeholder()
