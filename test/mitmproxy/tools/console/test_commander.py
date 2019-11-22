@@ -97,6 +97,7 @@ class TestCommandEdit:
     def test_up_and_down(self):
         with taddons.context() as tctx:
             history = commander.CommandHistory(tctx.master, size=3)
+            history.clear_history()
             edit = commander.CommandEdit(tctx.master, '', history)
 
             buf = commander.CommandBuffer(tctx.master, 'cmd1')
@@ -112,6 +113,7 @@ class TestCommandEdit:
             assert edit.get_edit_text() == 'cmd1'
 
             history = commander.CommandHistory(tctx.master, size=5)
+            history.clear_history()
             edit = commander.CommandEdit(tctx.master, '', history)
             edit.keypress(1, 'a')
             edit.keypress(1, 'b')
@@ -139,6 +141,7 @@ class TestCommandHistory:
     def fill_history(self, commands):
         with taddons.context() as tctx:
             history = commander.CommandHistory(tctx.master, size=3)
+            history.clear_history()
             for c in commands:
                 cbuf = commander.CommandBuffer(tctx.master, c)
                 history.add_command(cbuf)
@@ -183,7 +186,7 @@ class TestCommandHistory:
         for i in range(3):
             assert history.get_next().text == expected_items[i]
         # We are at the last item of the history
-        assert history.get_next() is None
+        assert history.get_next().text == expected_items[-1]
 
     def test_get_prev(self):
         commands = ["command1", "command2"]
@@ -194,7 +197,7 @@ class TestCommandHistory:
         for i in range(3):
             assert history.get_prev().text == expected_items[i]
         # We are at the first item of the history
-        assert history.get_prev() is None
+        assert history.get_prev().text == expected_items[-1]
 
 
 class TestCommandBuffer:
