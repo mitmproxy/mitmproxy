@@ -30,17 +30,33 @@ class TlsConfig:
     # This may require patches to pyOpenSSL, as some functionality is only exposed on contexts.
 
     def get_cert(self, context: context.Context) -> Tuple[certs.Cert, SSL.PKey, str]:
+        # FIXME
         return self.certstore.get_cert(
             context.client.sni, [context.client.sni]
         )
 
-    def tls_start(self, tls_start: tls.TlsStart):
+    def tls_clienthello(self, tls_clienthello: tls.ClientHelloHookData):
+        context = tls_clienthello.context
+        only_non_http_alpns = (
+                context.client.alpn_offers and
+                all(x not in tls.HTTP_ALPNS for x in context.client.alpn_offers)
+        )
+        tls_clienthello.establish_server_tls_first = context.server.tls and (
+                context.options.connection_strategy == "eager" or
+                context.options.add_upstream_certs_to_client_chain or
+                context.options.upstream_cert and (
+                        only_non_http_alpns or
+                        not context.client.sni
+                )
+        )
+
+    def tls_start(self, tls_start: tls.StartHookData):
         if tls_start.conn == tls_start.context.client:
             self.create_client_proxy_ssl_conn(tls_start)
         else:
             self.create_proxy_server_ssl_conn(tls_start)
 
-    def create_client_proxy_ssl_conn(self, tls_start: tls.TlsStart) -> None:
+    def create_client_proxy_ssl_conn(self, tls_start: tls.StartHookData) -> None:
         tls_method, tls_options = net_tls.VERSION_CHOICES[ctx.options.ssl_version_client]
         cert, key, chain_file = self.get_cert(tls_start.context)
         if ctx.options.add_upstream_certs_to_client_chain:
@@ -63,7 +79,7 @@ class TlsConfig:
             "server_alpn": tls_start.context.server.alpn
         })
 
-    def create_proxy_server_ssl_conn(self, tls_start: tls.TlsStart) -> None:
+    def create_proxy_server_ssl_conn(self, tls_start: tls.StartHookData) -> None:
         client = tls_start.context.client
         server: context.Server = tls_start.conn
 

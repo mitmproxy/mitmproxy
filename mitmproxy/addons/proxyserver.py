@@ -62,7 +62,7 @@ class Proxyserver:
 
     def load(self, loader):
         loader.add_option(
-            "connection_strategy", str, "eager",
+            "connection_strategy", str, "lazy",
             "Determine when server connections should be established.",
             choices=("eager", "lazy")
         )

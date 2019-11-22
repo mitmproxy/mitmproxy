@@ -100,11 +100,24 @@ class EstablishServerTLSReply(events.CommandReply):
     """error message"""
 
 
-class TlsStart:
-    def __init__(self, conn: context.Connection, context: context.Context) -> None:
+class StartHookData:
+    conn: context.Connection
+    context: context.Context
+    ssl_conn: Optional[SSL.Connection]
+
+    def __init__(self, conn, context) -> None:
         self.conn = conn
         self.context = context
         self.ssl_conn = None
+
+
+class ClientHelloHookData:
+    context: context.Context
+    establish_server_tls_first: bool
+
+    def __init__(self, context) -> None:
+        self.context = context
+        self.establish_server_tls_first = False
 
 
 class _TLSLayer(layer.Layer):
@@ -246,7 +259,7 @@ class ServerTLSLayer(_TLSLayer):
         assert conn.connected
         conn.tls = True
 
-        tls_start = TlsStart(conn, self.context)
+        tls_start = StartHookData(conn, self.context)
         yield commands.Hook("tls_start", tls_start)
         self.tls[conn] = tls_start.ssl_conn
         self.tls[conn].set_connect_state()
@@ -296,23 +309,12 @@ class ClientTLSLayer(_TLSLayer):
                 raise NotImplementedError from e  # TODO
 
             if client_hello:
-                yield commands.Log(f"Client Hello: {client_hello}")
-
                 client.sni = client_hello.sni
                 client.alpn_offers = client_hello.alpn_protocols
+                tls_clienthello = ClientHelloHookData(self.context)
+                yield commands.Hook("tls_clienthello", tls_clienthello)
 
-                client_tls_requires_server_connection = (
-                        self.context.server.tls and
-                        self.context.options.upstream_cert and
-                        (
-                                self.context.options.add_upstream_certs_to_client_chain or
-                                # client.alpn_offers or
-                                not client.sni
-                        )
-                )
-
-                # What do we do with the client connection now?
-                if client_tls_requires_server_connection and not self.context.server.tls_established:
+                if tls_clienthello.establish_server_tls_first and not self.context.server.tls_established:
                     err = yield from self.start_server_tls()
                     if err:
                         yield commands.Log("Unable to establish TLS connection with server. "
@@ -351,7 +353,7 @@ class ClientTLSLayer(_TLSLayer):
 
     def start_client_tls(self) -> commands.TCommandGenerator:
         client = self.context.client
-        tls_start = TlsStart(client, self.context)
+        tls_start = StartHookData(client, self.context)
         yield commands.Hook("tls_start", tls_start)
         self.tls[client] = tls_start.ssl_conn
         self.tls[client].set_accept_state()
