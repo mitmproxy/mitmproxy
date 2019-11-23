@@ -327,7 +327,9 @@ class ClientTLSLayer(_TLSLayer):
             try:
                 client_hello = parse_client_hello(self.recv_buffer)
             except ValueError as e:
-                raise NotImplementedError from e  # TODO
+                yield commands.Log(f"Cannot parse ClientHello: {self.recv_buffer.hex()}")
+                yield commands.CloseConnection(client)
+                return
 
             if client_hello:
                 client.sni = client_hello.sni
@@ -378,9 +380,13 @@ class ClientTLSLayer(_TLSLayer):
                 dest = self.context.client.sni.decode("idna")
             else:
                 dest = human.format_address(self.context.server.address)
+            if "Unknown CA" in err:
+                keyword = "does not"
+            else:
+                keyword = "may not"
             yield commands.Log(
                 f"Client TLS Handshake failed. "
-                f"The client may not trust the proxy's certificate for {dest} ({err}).",
+                f"The client {keyword} trust the proxy's certificate for {dest} ({err}).",
                 level="warn"
             )
             yield commands.CloseConnection(self.context.client)
