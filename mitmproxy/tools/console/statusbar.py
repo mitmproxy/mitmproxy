@@ -3,10 +3,11 @@ from typing import Optional
 
 import urwid
 
+import mitmproxy.tools.console.master # noqa
+from mitmproxy import command_lexer
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import commandexecutor
-import mitmproxy.tools.console.master # noqa
 from mitmproxy.tools.console.commander import commander
 
 
@@ -42,8 +43,6 @@ class ActionBar(urwid.WidgetWrap):
         signals.status_prompt.connect(self.sig_prompt)
         signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
         signals.status_prompt_command.connect(self.sig_prompt_command)
-
-        self.command_history = commander.CommandHistory(master)
 
         self.prompting = None
 
@@ -104,7 +103,6 @@ class ActionBar(urwid.WidgetWrap):
         self._w = commander.CommandEdit(
             self.master,
             partial,
-            self.command_history,
         )
         if cursor is not None:
             self._w.cbuf.cursor = cursor
@@ -134,7 +132,7 @@ class ActionBar(urwid.WidgetWrap):
     def keypress(self, size, k):
         if self.prompting:
             if k == "esc":
-                self.command_history.index = self.command_history.last_index
+                self.master.commands.execute('command_history.cancel')
                 self.prompt_done()
             elif self.onekey:
                 if k == "enter":
@@ -142,7 +140,8 @@ class ActionBar(urwid.WidgetWrap):
                 elif k in self.onekey:
                     self.prompt_execute(k)
             elif k == "enter":
-                self.command_history.add_command(self._w.cbuf, True)
+                cmd = command_lexer.quote(self._w.cbuf.text)
+                self.master.commands.execute(f"command_history.add {cmd} true")
                 self.prompt_execute(self._w.get_edit_text())
             else:
                 if common.is_keypress(k):

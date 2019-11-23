@@ -12,6 +12,7 @@ import mitmproxy.flow
 import mitmproxy.master
 import mitmproxy.types
 
+from mitmproxy import command_lexer
 
 class Completer:
     @abc.abstractmethod
@@ -148,88 +149,13 @@ class CommandBuffer:
         self.completion = None
 
 
-# TODO: This class should be a Singleton
-class CommandHistory:
-    def __init__(self, master: mitmproxy.master.Master, size: int = 300) -> None:
-        self.saved_commands: collections.deque = collections.deque(
-            [CommandBuffer(master, "")],
-            maxlen=size
-        )
-        self.index: int = 0
-        self.size: int = size
-        self.master: mitmproxy.master.Master = master
-
-        _command_history_path = os.path.join(os.path.expanduser(mitmproxy.options.CONF_DIR), 'command_history')
-        if os.path.exists(_command_history_path):
-            with open(_command_history_path, 'r') as f:
-                for l in f.readlines():
-                    cbuf = CommandBuffer(master, l.strip())
-                    self.add_command(cbuf)
-                f.close()
-
-        self.command_history_file = open(_command_history_path, 'w')
-
-    @property
-    def last_index(self):
-        return len(self.saved_commands) - 1
-
-    def clear_history(self):
-        """
-        Needed for test suite.
-        TODO: Maybe create a command to clear the history?
-        """
-        self.saved_commands: collections.deque = collections.deque(
-            [CommandBuffer(self.master, "")],
-            maxlen=self.size
-        )
-
-        self.index = 0
-        self.command_history_file.truncate(0)
-        self.command_history_file.seek(0)
-        self.command_history_file.flush()
-
-    def get_next(self) -> typing.Optional[CommandBuffer]:
-        if self.index < self.last_index:
-            self.index = self.index + 1
-        return self.saved_commands[self.index]
-
-    def get_prev(self) -> typing.Optional[CommandBuffer]:
-        if self.index > 0:
-            self.index = self.index - 1
-        return self.saved_commands[self.index]
-
-    def add_command(self, command: CommandBuffer, execution: bool = False) -> None:
-        if self.index == self.last_index or execution:
-            last_item = self.saved_commands[-1]
-            last_item_empty = not last_item.text
-            if last_item.text == command.text or (last_item_empty and execution):
-                self.saved_commands[-1] = copy.copy(command)
-            else:
-                self.saved_commands.append(command)
-                if not execution and self.index < self.last_index:
-                    self.index += 1
-            if execution:
-                self.index = self.last_index
-
-            # This prevents the constructor from trying to overwrite the file
-            # that it is currently reading
-            if hasattr(self, 'command_history_file'):
-                _history_str = "\n".join([c.text for c in self.saved_commands])
-                self.command_history_file.truncate(0)
-                self.command_history_file.seek(0)
-                self.command_history_file.write(_history_str)
-                self.command_history_file.flush()
-
-
 class CommandEdit(urwid.WidgetWrap):
     leader = ": "
 
-    def __init__(self, master: mitmproxy.master.Master,
-                 text: str, history: CommandHistory) -> None:
+    def __init__(self, master: mitmproxy.master.Master, text: str) -> None:
         super().__init__(urwid.Text(self.leader))
         self.master = master
         self.cbuf = CommandBuffer(master, text)
-        self.history = history
         self.update()
 
     def keypress(self, size, key) -> None:
@@ -240,10 +166,15 @@ class CommandEdit(urwid.WidgetWrap):
         elif key == "right":
             self.cbuf.right()
         elif key == "up":
-            self.history.add_command(self.cbuf)
-            self.cbuf = self.history.get_prev() or self.cbuf
+            _cmd = command_lexer.quote(self.cbuf.text)
+            self.master.commands.execute("command_history.filter %s" % _cmd)
+            cmd = self.master.commands.execute("command_history.prev")
+            self.cbuf = CommandBuffer(self.master, cmd)
         elif key == "down":
-            self.cbuf = self.history.get_next() or self.cbuf
+            _cmd = command_lexer.quote(self.cbuf.text)
+            self.master.commands.execute("command_history.filter %s" % _cmd)
+            cmd = self.master.commands.execute("command_history.next")
+            self.cbuf = CommandBuffer(self.master, cmd)
         elif key == "shift tab":
             self.cbuf.cycle_completion(False)
         elif key == "tab":
