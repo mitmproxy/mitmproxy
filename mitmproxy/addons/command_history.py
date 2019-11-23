@@ -7,6 +7,7 @@ import mitmproxy.options
 import mitmproxy.types
 
 from mitmproxy import command
+from mitmproxy import ctx
 from mitmproxy.tools.console.commander.commander import CommandBuffer
 
 
@@ -22,8 +23,10 @@ class CommandHistory:
         self.filtered_commands: typing.Deque[str] = collections.deque()
         self.filter_active: bool = True
 
-        _command_history_path = os.path.join(os.path.expanduser(mitmproxy.options.CONF_DIR), 'command_history')
-        _history_lines = open(_command_history_path, 'r').readlines()
+        _command_history_path = os.path.join(os.path.expanduser(ctx.options.confdir), 'command_history')
+        _history_lines = []
+        if os.path.exists(_command_history_path):
+            _history_lines = open(_command_history_path, 'r').readlines()
 
         self.command_history_file = open(_command_history_path, 'w')
 
