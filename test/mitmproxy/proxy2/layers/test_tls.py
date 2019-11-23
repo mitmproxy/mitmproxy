@@ -428,3 +428,17 @@ class TestClientTLS:
         assert tctx.server.alpn == b"quux"
         _test_echo(playbook, tssl_server, tctx.server)
         _test_echo(playbook, tssl_client, tctx.client)
+
+    def test_cannot_parse_clienthello(self, tctx: context.Context):
+        """We have a client layer, but we only receive garbage."""
+        playbook, client_layer = _make_client_tls_layer(tctx)
+
+        invalid = b"\x16\x03\x01\x00\x00"
+
+        assert (
+                playbook
+                >> events.DataReceived(tctx.client, invalid)
+                << commands.Log(f"Cannot parse ClientHello: {invalid.hex()}")
+                << commands.CloseConnection(tctx.client)
+        )
+        assert not tctx.client.tls_established
