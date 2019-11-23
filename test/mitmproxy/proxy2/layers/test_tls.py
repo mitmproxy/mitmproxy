@@ -155,7 +155,10 @@ def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tut
 
         tls_start.ssl_conn = SSL.Connection(ssl_context)
 
-        if tls_start.conn != tls_start.context.client:
+        if tls_start.conn == tls_start.context.client:
+            tls_start.ssl_conn.set_accept_state()
+        else:
+            tls_start.ssl_conn.set_connect_state()
             # Set SNI
             tls_start.ssl_conn.set_tlsext_host_name(tls_start.conn.sni)
 
@@ -233,6 +236,16 @@ class TestServerTLS:
         # Echo
         _test_echo(playbook, tssl, tctx.server)
 
+        with pytest.raises(ssl.SSLWantReadError):
+            tssl.obj.unwrap()
+        assert (
+                playbook
+                >> events.DataReceived(tctx.server, tssl.out.read())
+                << commands.CloseConnection(tctx.server)
+                >> events.ConnectionClosed(tctx.server)
+                << None
+        )
+
     def test_untrusted_cert(self, tctx):
         """If the certificate is not trusted, we should fail."""
         layer = tls.ServerTLSLayer(tctx)
@@ -263,8 +276,7 @@ class TestServerTLS:
         assert (
                 playbook
                 >> events.DataReceived(tctx.server, tssl.out.read())
-                << commands.SendData(tctx.client,
-                                     b"server-tls-failed: Error([('SSL routines', 'tls_process_server_certificate', 'certificate verify failed')])")
+                << commands.SendData(tctx.client, b"server-tls-failed: Certificate verify failed: Hostname mismatch")
         )
         assert not tctx.server.tls_established
 

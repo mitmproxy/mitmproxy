@@ -189,7 +189,14 @@ class Playbook:
                 if not self.logs:
                     for offset, cmd in enumerate(cmds):
                         pos = i + 1 + offset
-                        if isinstance(cmd, commands.Log) and not isinstance(self.expected[pos], commands.Log):
+                        need_to_emulate_log = (
+                                isinstance(cmd, commands.Log) and
+                                (
+                                        pos >= len(self.expected)
+                                        or not isinstance(self.expected[pos], commands.Log)
+                                )
+                        )
+                        if need_to_emulate_log:
                             self.expected.insert(pos, cmd)
                 if not self.hooks:
                     last_cmd = self.actual[-1]
@@ -319,6 +326,8 @@ class EchoLayer(Layer):
     def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
         if isinstance(event, events.DataReceived):
             yield commands.SendData(event.connection, event.data.lower())
+        if isinstance(event, events.ConnectionClosed):
+            yield commands.CloseConnection(event.connection)
 
 
 def reply_next_layer(

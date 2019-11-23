@@ -39,6 +39,7 @@ def sign(cert: str, subject: str):
        f"-extfile \"openssl-{cert}.conf\" "
        f"-out {cert}.crt"
        )
+    os.remove(f"openssl-{cert}.conf")
 
 
 def mkcert(cert, subject):
@@ -63,7 +64,7 @@ h = do("openssl x509 -hash -noout -in trusted-root.crt").decode("ascii").strip()
 shutil.copyfile("trusted-root.crt", "{}.0".format(h))
 
 # create trusted leaf cert.
-mkcert("trusted-leaf", f'DNS:{SUBJECT}' )
+mkcert("trusted-leaf", f'DNS:{SUBJECT}')
 
 # create self-signed cert
 genrsa("self-signed")
