@@ -1,14 +1,9 @@
 import collections
-import copy
 import os
 import typing
 
-import mitmproxy.options
-import mitmproxy.types
-
 from mitmproxy import command
 from mitmproxy import ctx
-from mitmproxy.tools.console.commander.commander import CommandBuffer
 
 
 class CommandHistory:
@@ -66,12 +61,11 @@ class CommandHistory:
             if self.index == -1:
                 ret = ''
             elif self.index < self.last_index:
-                self.index = self.index + 1 
+                self.index = self.index + 1
                 ret = self.saved_commands[self.index]
             else:
                 self.index = -1
                 ret = ''
-
 
         return ret
 
@@ -112,7 +106,7 @@ class CommandHistory:
                 self.filtered_index = 0
         else:
             self.filter = command
-            _filtered_commands = [c for c in self.saved_commands if c.startswith(command)] 
+            _filtered_commands = [c for c in self.saved_commands if c.startswith(command)]
             self.filtered_commands = collections.deque(_filtered_commands)
 
             if command not in self.filtered_commands:

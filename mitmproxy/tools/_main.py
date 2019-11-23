@@ -77,7 +77,6 @@ def run(
         arg_check.check()
         sys.exit(1)
 
-
     try:
         opts.set(*args.setoptions, defer=True)
         opts.confdir = os.path.expanduser(opts.confdir)
@@ -95,9 +94,7 @@ def run(
         print("-R is used for specifying replacements.\n"
               "To use mitmproxy in reverse mode please use --mode reverse:SPEC instead")
 
-        
     try:
-
         optmanager.load_paths(
             opts,
             os.path.join(opts.confdir, "config.yaml"),

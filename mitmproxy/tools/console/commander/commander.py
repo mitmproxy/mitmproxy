@@ -1,8 +1,5 @@
 import abc
-import collections
-import copy
 import typing
-import os
 
 import urwid
 from urwid.text_layout import calc_coords
@@ -13,6 +10,7 @@ import mitmproxy.master
 import mitmproxy.types
 
 from mitmproxy import command_lexer
+
 
 class Completer:
     @abc.abstractmethod
