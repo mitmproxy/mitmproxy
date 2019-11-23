@@ -4,10 +4,12 @@ from typing import Any, Dict, Generator, Iterator, Optional, Tuple
 
 from OpenSSL import SSL
 
+from mitmproxy import certs
 from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2 import context
 from mitmproxy.proxy2.utils import expect
+from mitmproxy.utils import human
 
 
 def is_tls_handshake_record(d: bytes) -> bool:
@@ -142,6 +144,17 @@ class _TLSLayer(layer.Layer):
             state = ", ".join(conn_states)
         return f"{type(self).__name__}({state})"
 
+    def start_tls(self, conn: context.Connection, initial_data: bytes = b""):
+        assert conn not in self.tls
+        assert conn.connected
+        conn.tls = True
+
+        tls_start = StartHookData(conn, self.context)
+        yield commands.Hook("tls_start", tls_start)
+        self.tls[conn] = tls_start.ssl_conn
+
+        yield from self.negotiate(conn, initial_data)
+
     def tls_interact(self, conn: context.Connection) -> commands.TCommandGenerator:
         while True:
             try:
@@ -163,17 +176,37 @@ class _TLSLayer(layer.Layer):
             yield from self.tls_interact(conn)
             return False, None
         except SSL.Error as e:
-            return False, repr(e)
+            # provide more detailed information for some errors.
+            last_err = e.args[0][-1]
+            if last_err == ('SSL routines', 'tls_process_server_certificate', 'certificate verify failed'):
+                verify_result = SSL._lib.SSL_get_verify_result(self.tls[conn]._ssl)
+                error = SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(verify_result)).decode()
+                return False, f"Certificate verify failed: {error}"
+            elif last_err == ('SSL routines', 'ssl3_read_bytes', 'tlsv1 alert unknown ca'):
+                return False, "TLS Alert: Unknown CA"
+            else:
+                return False, repr(e)
         else:
+            # Get all peer certificates.
+            # https://www.openssl.org/docs/man1.1.1/man3/SSL_get_peer_cert_chain.html
+            # If called on the client side, the stack also contains the peer's certificate; if called on the server
+            # side, the peer's certificate must be obtained separately using SSL_get_peer_certificate(3).
+            all_certs = self.tls[conn].get_peer_cert_chain() or []
+            if conn == self.context.client:
+                cert = self.tls[conn].get_peer_certificate()
+                if cert:
+                    all_certs.insert(0, cert)
+
+
             conn.tls_established = True
             conn.sni = self.tls[conn].get_servername()
             conn.alpn = self.tls[conn].get_alpn_proto_negotiated()
+            conn.certificate_chain = [certs.Cert(x) for x in all_certs]
             conn.cipher_list = self.tls[conn].get_cipher_list()
             conn.tls_version = self.tls[conn].get_protocol_version_name()
             conn.timestamp_tls_setup = time.time()
             yield commands.Log(f"TLS established: {conn}")
             yield from self.receive(conn, b"")
-            # TODO: Set all other connection attributes here
             return True, None
 
     def receive(self, conn: context.Connection, data: bytes):
@@ -250,21 +283,9 @@ class ServerTLSLayer(_TLSLayer):
         for command in super().event_to_child(event):
             if isinstance(command, EstablishServerTLS):
                 self.command_to_reply_to[command.connection] = command
-                yield from self.start_server_tls(command.connection)
+                yield from self.start_tls(command.connection)
             else:
                 yield command
-
-    def start_server_tls(self, conn: context.Server):
-        assert conn not in self.tls
-        assert conn.connected
-        conn.tls = True
-
-        tls_start = StartHookData(conn, self.context)
-        yield commands.Hook("tls_start", tls_start)
-        self.tls[conn] = tls_start.ssl_conn
-        self.tls[conn].set_connect_state()
-
-        yield from self.negotiate(conn, b"")
 
 
 class ClientTLSLayer(_TLSLayer):
@@ -320,13 +341,12 @@ class ClientTLSLayer(_TLSLayer):
                         yield commands.Log("Unable to establish TLS connection with server. "
                                            "Trying to establish TLS with client anyway.")
 
-                yield from self.start_client_tls()
+                yield from self.start_tls(client, bytes(self.recv_buffer))
+                self.recv_buffer.clear()
                 self._handle_event = super()._handle_event
 
                 # In any case, we now have enough information to start server TLS if needed.
                 yield from self.event_to_child(events.Start())
-        elif isinstance(event, events.ConnectionClosed) and event.connection == client:
-            self.recv_buffer.clear()
         else:
             yield from self.event_to_child(event)
 
@@ -351,29 +371,17 @@ class ClientTLSLayer(_TLSLayer):
             )
             return err
 
-    def start_client_tls(self) -> commands.TCommandGenerator:
-        client = self.context.client
-        tls_start = StartHookData(client, self.context)
-        yield commands.Hook("tls_start", tls_start)
-        self.tls[client] = tls_start.ssl_conn
-        self.tls[client].set_accept_state()
-
-        yield from self.negotiate(client, bytes(self.recv_buffer))
-        self.recv_buffer.clear()
-
     def negotiate(self, conn: context.Connection, data: bytes) -> Generator[commands.Command, Any, bool]:
         done, err = yield from super().negotiate(conn, data)
         if err:
             if self.context.client.sni:
-                # TODO: Also use other sources than SNI
-                dest = " for " + self.context.client.sni.decode("idna")
+                dest = self.context.client.sni.decode("idna")
             else:
-                dest = ""
+                dest = human.format_address(self.context.server.address)
             yield commands.Log(
                 f"Client TLS Handshake failed. "
-                f"The client may not trust the proxy's certificate{dest} ({err}).",
+                f"The client may not trust the proxy's certificate for {dest} ({err}).",
                 level="warn"
-
             )
             yield commands.CloseConnection(self.context.client)
         return done

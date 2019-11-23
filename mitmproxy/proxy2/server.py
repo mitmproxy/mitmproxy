@@ -16,11 +16,16 @@ import traceback
 import typing
 from contextlib import contextmanager
 
+from OpenSSL import SSL
+
 from mitmproxy import http, options as moptions
+from mitmproxy.addons import tlsconfig
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events, layer, layers
 from mitmproxy.proxy2.context import Client, Connection, ConnectionState, Context
+from mitmproxy.proxy2.layers import tls
 from mitmproxy.utils import human
+from test.mitmproxy.proxy2.layers.test_tls import tlsdata
 
 
 class StreamIO(typing.NamedTuple):
@@ -270,9 +275,29 @@ if __name__ == "__main__":
             if "redirect" in flow.request.path:
                 flow.request.host = "httpbin.org"
 
+        def tls_start(tls_start: tls.StartHookData):
+            # INSECURE
+            ssl_context = SSL.Context(SSL.SSLv23_METHOD)
+            if tls_start.conn == tls_start.context.client:
+                ssl_context.use_privatekey_file(
+                    tlsdata.path("../../data/verificationcerts/trusted-leaf.key")
+                )
+                ssl_context.use_certificate_chain_file(
+                    tlsdata.path("../../data/verificationcerts/trusted-leaf.crt")
+                )
+
+            tls_start.ssl_conn = SSL.Connection(ssl_context)
+
+            if tls_start.conn == tls_start.context.client:
+                tls_start.ssl_conn.set_accept_state()
+            else:
+                tls_start.ssl_conn.set_connect_state()
+                tls_start.ssl_conn.set_tlsext_host_name(tls_start.context.client.sni)
+
         await SimpleConnectionHandler(reader, writer, opts, {
             "next_layer": next_layer,
-            "request": request
+            "request": request,
+            "tls_start": tls_start,
         }).handle_client()
 
 

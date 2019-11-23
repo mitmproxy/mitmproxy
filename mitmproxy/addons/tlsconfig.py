@@ -78,6 +78,8 @@ class TlsConfig:
         tls_start.ssl_conn.set_app_data({
             "server_alpn": tls_start.context.server.alpn
         })
+        tls_start.ssl_conn.set_accept_state()
+
 
     def create_proxy_server_ssl_conn(self, tls_start: tls.StartHookData) -> None:
         client = tls_start.context.client
@@ -126,6 +128,7 @@ class TlsConfig:
             **args
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
+        tls_start.ssl_conn.set_connect_state()
 
     def configure(self, updated):
         if not any(x in updated for x in ["confdir", "certs"]):

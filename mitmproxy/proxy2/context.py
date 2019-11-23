@@ -1,6 +1,7 @@
 from enum import Flag, auto
 from typing import List, Optional, Sequence, Union
 
+from mitmproxy import certs
 from mitmproxy.options import Options
 
 
@@ -19,6 +20,7 @@ class Connection:
     state: ConnectionState
     tls: bool = False
     tls_established: bool = False
+    certificate_chain: Optional[Sequence[certs.Cert]] = None
     alpn: Optional[bytes] = None
     alpn_offers: Sequence[bytes] = ()
     cipher_list: Sequence[bytes] = ()
