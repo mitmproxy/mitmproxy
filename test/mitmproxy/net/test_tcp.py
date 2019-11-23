@@ -219,7 +219,7 @@ class TestInvalidTrustFile(tservers.ServerTestBase):
                 c.convert_to_tls(
                     sni="example.mitmproxy.org",
                     verify=SSL.VERIFY_PEER,
-                    ca_pemfile=tdata.path("mitmproxy/net/data/verificationcerts/generate.py")
+                    ca_pemfile=cdata.path("data/verificationcerts/generate.py")
                 )
 
 
@@ -265,7 +265,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
                 c.convert_to_tls(
                     sni="example.mitmproxy.org",
                     verify=SSL.VERIFY_PEER,
-                    ca_pemfile=tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
+                    ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt")
                 )
 
             assert c.ssl_verification_error
@@ -289,7 +289,7 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
             with pytest.raises(exceptions.TlsException):
                 c.convert_to_tls(
                     verify=SSL.VERIFY_PEER,
-                    ca_pemfile=tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
+                    ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt")
                 )
 
     def test_mode_none_should_pass_without_sni(self, tdata):
@@ -297,10 +297,10 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
         with c.connect():
             c.convert_to_tls(
                 verify=SSL.VERIFY_NONE,
-                ca_path=tdata.path("mitmproxy/net/data/verificationcerts/")
+                ca_path=cdata.path("data/verificationcerts/")
             )
 
-            assert "'no-hostname' doesn't match" in str(c.ssl_verification_error)
+            assert "Cannot validate hostname, SNI missing." in str(c.ssl_verification_error)
 
     def test_should_fail(self, tdata):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -309,7 +309,7 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
                 c.convert_to_tls(
                     sni="mitmproxy.org",
                     verify=SSL.VERIFY_PEER,
-                    ca_pemfile=tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
+                    ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt")
                 )
             assert c.ssl_verification_error
 
@@ -328,7 +328,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
             c.convert_to_tls(
                 sni="example.mitmproxy.org",
                 verify=SSL.VERIFY_PEER,
-                ca_pemfile=tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.crt")
+                ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt")
             )
 
             assert c.ssl_verification_error is None
@@ -344,7 +344,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
             c.convert_to_tls(
                 sni="example.mitmproxy.org",
                 verify=SSL.VERIFY_PEER,
-                ca_path=tdata.path("mitmproxy/net/data/verificationcerts/")
+                ca_path=cdata.path("data/verificationcerts/")
             )
 
             assert c.ssl_verification_error is None
@@ -376,14 +376,14 @@ class TestSSLClientCert(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_tls(
-                cert=tdata.path("mitmproxy/net/data/clientcert/client.pem"))
+                cert=cdata.path("data/clientcert/client.pem"))
             assert c.rfile.readline().strip() == b"1"
 
     def test_clientcert_err(self, tdata):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             with pytest.raises(exceptions.TlsException):
-                c.convert_to_tls(cert=tdata.path("mitmproxy/net/data/clientcert/make"))
+                c.convert_to_tls(cert=cdata.path("data/clientcert/make"))
 
 
 class TestSNI(tservers.ServerTestBase):

@@ -7,14 +7,13 @@ import os
 import struct
 import threading
 import typing
-from ssl import match_hostname, CertificateError
 
 import certifi
 from OpenSSL import SSL
 from kaitaistruct import KaitaiStream
 
-import mitmproxy.options  # noqa
-from mitmproxy import exceptions, certs
+import mitmproxy.options
+from mitmproxy import certs, exceptions
 from mitmproxy.contrib.kaitaistruct import tls_client_hello
 from mitmproxy.net import check
 
@@ -237,33 +236,11 @@ def create_client_context(
             depth: int,
             is_cert_verified: bool
     ) -> bool:
-        if is_cert_verified and depth == 0:
-            # Verify hostname of leaf certificate.
-            cert = certs.Cert(x509)
-            try:
-                crt: typing.Dict[str, typing.Any] = dict(
-                    subjectAltName=[("DNS", x.decode("ascii", "strict")) for x in cert.altnames]
-                )
-                if cert.cn:
-                    crt["subject"] = [[["commonName", cert.cn.decode("ascii", "strict")]]]
-                if sni:
-                    # SNI hostnames allow support of IDN by using ASCII-Compatible Encoding
-                    # Conversion algorithm is in RFC 3490 which is implemented by idna codec
-                    # https://docs.python.org/3/library/codecs.html#text-encodings
-                    # https://tools.ietf.org/html/rfc6066#section-3
-                    # https://tools.ietf.org/html/rfc4985#section-3
-                    hostname = sni.encode("idna").decode("ascii")
-                else:
-                    hostname = "no-hostname"
-                match_hostname(crt, hostname)
-            except (ValueError, CertificateError) as e:
-                conn.cert_error = exceptions.InvalidCertificateException(
-                    "Certificate verification error for {}: {}".format(
-                        sni or repr(address),
-                        str(e)
-                    )
-                )
-                is_cert_verified = False
+        if is_cert_verified and depth == 0 and not sni:
+            conn.cert_error = exceptions.InvalidCertificateException(
+                f"Certificate verification error for {address}: Cannot validate hostname, SNI missing."
+            )
+            is_cert_verified = False
         elif is_cert_verified:
             pass
         else:
@@ -284,6 +261,20 @@ def create_client_context(
         verify_callback=verify_callback,
         **sslctx_kwargs,
     )
+
+    if sni:
+        # Manually enable hostname verification on the context object.
+        # https://wiki.openssl.org/index.php/Hostname_validation
+        param = SSL._lib.SSL_CTX_get0_param(context._context)
+        # Matching on the CN is disabled in both Chrome and Firefox, so we disable it, too.
+        # https://www.chromestatus.com/feature/4981025180483584
+        SSL._lib.X509_VERIFY_PARAM_set_hostflags(
+            param,
+            SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT
+        )
+        SSL._openssl_assert(
+            SSL._lib.X509_VERIFY_PARAM_set1_host(param, sni.encode("idna"), 0) == 1
+        )
 
     # Client Certs
     if cert:
