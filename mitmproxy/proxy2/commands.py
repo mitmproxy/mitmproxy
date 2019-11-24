@@ -6,6 +6,8 @@ possibly to the master and addons.
 
 The counterpart to commands are events.
 """
+import dataclasses
+import re
 import typing
 
 from mitmproxy.proxy2.context import Connection, Server
@@ -16,7 +18,7 @@ class Command:
     Base class for all commands
     """
 
-    blocking: bool = False
+    blocking: typing.ClassVar[bool] = False
     """
     Determines if the command blocks until it has been completed.
 
@@ -77,17 +79,37 @@ class Hook(Command):
     Callback to the master (like ".ask()")
     """
     blocking = True
-    name: str
-    data: typing.Any
+    name: typing.ClassVar[str]
 
-    def __init__(self, name: str, data: typing.Any) -> None:
-        self.name = name
-        self.data = data
+    def __new__(cls, *args, **kwargs):
+        if cls is Hook:
+            raise TypeError("Hook may not be instantiated directly.")
+        return super().__new__(cls)
+
+    def __init_subclass__(cls, **kwargs):
+        # initialize .name attribute.
+        if not getattr(cls, "name", None):
+            cls.name = re.sub('(?!^)([A-Z]+)', r'_\1', cls.__name__.replace("Hook", "")).lower()
+        if cls.name in all_hooks:
+            other = all_hooks[cls.name]
+            raise RuntimeError(f"Two conflicting hooks for {cls.name}: {cls} and {other}")
+        all_hooks[cls.name] = cls
+
+        # a bit hacky: add a default constructor.
+        dataclasses.dataclass(cls, repr=False, eq=False)
 
     def __repr__(self):
         return f"Hook({self.name})"
-        # data = repr(self.data).replace("\r\n", " ")
-        # return f"Hook({self.name}: {data})"
+
+    def as_tuple(self) -> typing.List[typing.Any]:
+        args = []
+        # noinspection PyDataclass
+        for field in dataclasses.fields(self):
+            args.append(getattr(self, field.name))
+        return args
+
+
+all_hooks: typing.Dict[str, typing.Type[Hook]] = {}
 
 
 class GetSocket(ConnectionCommand):
@@ -102,7 +124,7 @@ class Log(Command):
     message: str
     level: str
 
-    def __init__(self, message: str, level: str="info"):
+    def __init__(self, message: str, level: str = "info"):
         self.message = message
         self.level = level
 

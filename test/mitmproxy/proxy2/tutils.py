@@ -6,7 +6,7 @@ import re
 import traceback
 import typing
 
-from mitmproxy.proxy2 import commands, context
+from mitmproxy.proxy2 import commands, context, layer
 from mitmproxy.proxy2 import events
 from mitmproxy.proxy2.context import ConnectionState
 from mitmproxy.proxy2.events import command_reply_subclasses
@@ -277,8 +277,12 @@ class reply(events.Event):
             raise AssertionError(f"Expected command {self.to} did not occur:\n{actual_str}")
 
         assert isinstance(self.to, commands.Command)
-        self.side_effect(self.to)
-        reply_cls = command_reply_subclasses[type(self.to)]
+        if isinstance(self.to, commands.Hook):
+            self.side_effect(*self.to.as_tuple())
+            reply_cls = events.HookReply
+        else:
+            self.side_effect(self.to)
+            reply_cls = command_reply_subclasses[type(self.to)]
         try:
             inst = reply_cls(self.to, *self.args)
         except TypeError as e:
@@ -331,7 +335,7 @@ class EchoLayer(Layer):
 
 
 def reply_next_layer(
-        layer: typing.Union[typing.Type[Layer], typing.Callable[[context.Context], Layer]],
+        child_layer: typing.Union[typing.Type[Layer], typing.Callable[[context.Context], Layer]],
         *args,
         **kwargs
 ) -> reply:
@@ -340,9 +344,8 @@ def reply_next_layer(
         >> tutils.next_layer(next_layer, tutils.EchoLayer)
     """
 
-    def set_layer(hook: commands.Hook) -> None:
-        assert isinstance(hook.data, NextLayer)
-        hook.data.layer = layer(hook.data.context)
+    def set_layer(next_layer: layer.NextLayer) -> None:
+        next_layer.layer = child_layer(next_layer.context)
 
     return reply(*args, side_effect=set_layer, **kwargs)
 

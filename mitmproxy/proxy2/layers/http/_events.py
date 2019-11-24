@@ -1,5 +1,5 @@
 from mitmproxy import http
-from .base import HttpEvent, StreamId
+from ._base import HttpEvent, StreamId
 
 
 class RequestHeaders(HttpEvent):

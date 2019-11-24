@@ -1,6 +1,6 @@
 import asyncio
 
-from mitmproxy import ctx, controller, log, options, master
+from mitmproxy import ctx, controller, log, options, master, eventsequence
 from mitmproxy.proxy2 import commands
 from mitmproxy.proxy2 import events
 from mitmproxy.proxy2 import server
@@ -31,9 +31,11 @@ class ProxyConnectionHandler(server.ConnectionHandler):
 
     async def handle_hook(self, hook: commands.Hook) -> None:
         with self.timeout_watchdog.disarm():
-            hook.data.reply = AsyncReply(hook.data)
-            await self.master.addons.handle_lifecycle(hook.name, hook.data)
-            await hook.data.reply.done.wait()
+            # TODO: We currently only support single-argument hooks.
+            data, = hook.as_tuple()
+            data.reply = AsyncReply(data)
+            await self.master.addons.handle_lifecycle(hook.name, data)
+            await data.reply.done.wait()
             if hook.blocking:
                 self.server_event(events.HookReply(hook))
 
@@ -65,6 +67,10 @@ class Proxyserver:
             "connection_strategy", str, "lazy",
             "Determine when server connections should be established.",
             choices=("eager", "lazy")
+        )
+        # Hack: Update allowed events to include new ones.
+        eventsequence.Events = frozenset(
+            eventsequence.Events | set(commands.all_hooks.keys())
         )
 
     def running(self):

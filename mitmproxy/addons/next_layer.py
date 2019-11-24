@@ -113,7 +113,7 @@ class NextLayer:
             if isinstance(top_layer, layers.ServerTLSLayer):
                 return layers.ClientTLSLayer(context)
             else:
-                if not s(modes.HttpProxy):
+                if s(modes.HttpProxy):
                     # A "Secure Web Proxy" (https://www.chromium.org/developers/design-documents/secure-web-proxy)
                     # This does not imply TLS on the server side.
                     pass

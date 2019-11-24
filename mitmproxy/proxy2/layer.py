@@ -1,15 +1,15 @@
 """
 Base class for protocol layers.
 """
+import collections
 import textwrap
 import typing
 from abc import abstractmethod
 
-import collections
-
 from mitmproxy import log
 from mitmproxy.proxy2 import commands, events
-from mitmproxy.proxy2.context import Context, Connection
+from mitmproxy.proxy2.commands import Hook
+from mitmproxy.proxy2.context import Connection, Context
 
 
 class Paused(typing.NamedTuple):
@@ -38,8 +38,8 @@ class Layer:
         self._paused_event_queue = collections.deque()
 
         show_debug_output = (
-            "termlog_verbosity" in context.options and
-            log.log_tier(context.options.termlog_verbosity) >= log.log_tier("debug")
+                "termlog_verbosity" in context.options and
+                log.log_tier(context.options.termlog_verbosity) >= log.log_tier("debug")
         )
         if show_debug_output:
             self.debug = "  " * len(context.layers)
@@ -73,8 +73,8 @@ class Layer:
         if self._paused:
             # did we just receive the reply we were waiting for?
             pause_finished = (
-                isinstance(event, events.CommandReply) and
-                event.command is self._paused.command
+                    isinstance(event, events.CommandReply) and
+                    event.command is self._paused.command
             )
             if self.debug is not None:
                 yield self.__debug(f"{'>>' if pause_finished else '>!'} {event}")
@@ -132,6 +132,10 @@ class Layer:
 mevents = events  # alias here because autocomplete above should not have aliased version.
 
 
+class NextLayerHook(Hook):
+    data: "NextLayer"
+
+
 class NextLayer(Layer):
     layer: typing.Optional[Layer]
     """The next layer. To be set by an addon."""
@@ -168,7 +172,7 @@ class NextLayer(Layer):
         Manually trigger a next_layer hook.
         The only use at the moment is to make sure that the top layer is initialized.
         """
-        yield commands.Hook("next_layer", self)
+        yield NextLayerHook(self)
 
         # Has an addon decided on the next layer yet?
         if self.layer:

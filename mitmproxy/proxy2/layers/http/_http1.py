@@ -10,9 +10,9 @@ from mitmproxy.net.http import http1
 from mitmproxy.net.http.http1 import read_sansio as http1_sansio
 from mitmproxy.proxy2 import commands, events
 from mitmproxy.proxy2.context import Client, Connection, Server
-from mitmproxy.proxy2.layers.http.base import StreamId
-from .base import HttpConnection
-from .events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, ResponseData, ResponseEndOfMessage, \
+from mitmproxy.proxy2.layers.http._base import StreamId
+from ._base import HttpConnection
+from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, ResponseData, ResponseEndOfMessage, \
     ResponseHeaders
 
 TBodyReader = typing.Union[ChunkedReader, Http10Reader, ContentLengthReader]

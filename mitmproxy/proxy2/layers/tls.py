@@ -1,5 +1,6 @@
 import struct
 import time
+from dataclasses import dataclass
 from typing import Any, Dict, Generator, Iterator, Optional, Tuple
 
 from OpenSSL import SSL
@@ -8,6 +9,7 @@ from mitmproxy import certs
 from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2 import context
+from mitmproxy.proxy2.commands import Hook
 from mitmproxy.proxy2.utils import expect
 from mitmproxy.utils import human
 
@@ -105,24 +107,27 @@ class EstablishServerTLSReply(events.CommandReply):
     """error message"""
 
 
-class StartHookData:
+# We need these classes as hooks can only have one argument at the moment.
+
+@dataclass
+class TlsStartData:
     conn: context.Connection
     context: context.Context
-    ssl_conn: Optional[SSL.Connection]
-
-    def __init__(self, conn, context) -> None:
-        self.conn = conn
-        self.context = context
-        self.ssl_conn = None
+    ssl_conn: Optional[SSL.Connection] = None
 
 
-class ClientHelloHookData:
+@dataclass
+class ClientHelloData:
     context: context.Context
-    establish_server_tls_first: bool
+    establish_server_tls_first: bool = False
 
-    def __init__(self, context) -> None:
-        self.context = context
-        self.establish_server_tls_first = False
+
+class TlsStartHook(Hook):
+    data: TlsStartData
+
+
+class TlsClienthelloHook(Hook):
+    data: ClientHelloData
 
 
 class _TLSLayer(layer.Layer):
@@ -152,8 +157,8 @@ class _TLSLayer(layer.Layer):
         assert conn.connected
         conn.tls = True
 
-        tls_start = StartHookData(conn, self.context)
-        yield commands.Hook("tls_start", tls_start)
+        tls_start = TlsStartData(conn, self.context)
+        yield TlsStartHook(tls_start)
         self.tls[conn] = tls_start.ssl_conn
 
         yield from self.negotiate(conn, initial_data)
@@ -353,8 +358,8 @@ class ClientTLSLayer(_TLSLayer):
             if client_hello:
                 client.sni = client_hello.sni
                 client.alpn_offers = client_hello.alpn_protocols
-                tls_clienthello = ClientHelloHookData(self.context)
-                yield commands.Hook("tls_clienthello", tls_clienthello)
+                tls_clienthello = ClientHelloData(self.context)
+                yield TlsClienthelloHook(tls_clienthello)
 
                 if tls_clienthello.establish_server_tls_first and not self.context.server.tls_established:
                     err = yield from self.start_server_tls()

@@ -79,6 +79,9 @@ class CommandReply(Event):
         command_cls = cls.__annotations__["command"]
         if not issubclass(command_cls, commands.Command) and command_cls is not commands.Command:
             raise RuntimeError(f"{command_cls} needs a properly annotated command attribute.")
+        if command_cls in command_reply_subclasses:
+            other = command_reply_subclasses[command_cls]
+            raise RuntimeError(f"Two conflicting subclasses for {command_cls}: {cls} and {other}")
         command_reply_subclasses[command_cls] = cls
 
 
