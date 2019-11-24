@@ -24,7 +24,7 @@ def alpn_select_callback(conn: SSL.Connection, options):
 
 
 class TlsConfig:
-    certstore: certs.CertStore
+    certstore: certs.CertStore = None
 
     # TODO: We should re-use SSL.Context options here, if only for TLS session resumption.
     # This may require patches to pyOpenSSL, as some functionality is only exposed on contexts.
@@ -35,7 +35,7 @@ class TlsConfig:
             context.client.sni, [context.client.sni]
         )
 
-    def tls_clienthello(self, tls_clienthello: tls.ClientHelloHookData):
+    def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         context = tls_clienthello.context
         only_non_http_alpns = (
                 context.client.alpn_offers and
@@ -50,13 +50,13 @@ class TlsConfig:
                 )
         )
 
-    def tls_start(self, tls_start: tls.StartHookData):
+    def tls_start(self, tls_start: tls.TlsStartData):
         if tls_start.conn == tls_start.context.client:
             self.create_client_proxy_ssl_conn(tls_start)
         else:
             self.create_proxy_server_ssl_conn(tls_start)
 
-    def create_client_proxy_ssl_conn(self, tls_start: tls.StartHookData) -> None:
+    def create_client_proxy_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
         tls_method, tls_options = net_tls.VERSION_CHOICES[ctx.options.ssl_version_client]
         cert, key, chain_file = self.get_cert(tls_start.context)
         if ctx.options.add_upstream_certs_to_client_chain:
@@ -81,7 +81,7 @@ class TlsConfig:
         tls_start.ssl_conn.set_accept_state()
 
 
-    def create_proxy_server_ssl_conn(self, tls_start: tls.StartHookData) -> None:
+    def create_proxy_server_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
         client = tls_start.context.client
         server: context.Server = tls_start.conn
 
@@ -131,7 +131,7 @@ class TlsConfig:
         tls_start.ssl_conn.set_connect_state()
 
     def configure(self, updated):
-        if not any(x in updated for x in ["confdir", "certs"]):
+        if self.certstore and not any(x in updated for x in ["confdir", "certs"]):
             return
 
         certstore_path = os.path.expanduser(ctx.options.confdir)

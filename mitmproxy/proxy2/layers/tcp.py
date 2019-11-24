@@ -2,9 +2,26 @@ from typing import Optional
 
 from mitmproxy import flow, tcp
 from mitmproxy.proxy2 import commands, events
+from mitmproxy.proxy2.commands import Hook
 from mitmproxy.proxy2.context import Context
 from mitmproxy.proxy2.layer import Layer
 from mitmproxy.proxy2.utils import expect
+
+
+class TcpStartHook(Hook):
+    flow: tcp.TCPFlow
+
+
+class TcpMessageHook(Hook):
+    flow: tcp.TCPFlow
+
+
+class TcpEndHook(Hook):
+    flow: tcp.TCPFlow
+
+
+class TcpErrorHook(Hook):
+    flow: tcp.TCPFlow
 
 
 class TCPLayer(Layer):
@@ -24,14 +41,14 @@ class TCPLayer(Layer):
     @expect(events.Start)
     def start(self, _) -> commands.TCommandGenerator:
         if self.flow:
-            yield commands.Hook("tcp_start", self.flow)
+            yield TcpStartHook(self.flow)
 
         if not self.context.server.connected:
             err = yield commands.OpenConnection(self.context.server)
             if err:
                 if self.flow:
                     self.flow.error = flow.Error(str(err))
-                    yield commands.Hook("tcp_error", self.flow)
+                    yield TcpErrorHook(self.flow)
                 yield commands.CloseConnection(self.context.client)
                 self._handle_event = self.done
                 return
@@ -51,7 +68,7 @@ class TCPLayer(Layer):
             if self.flow:
                 tcp_message = tcp.TCPMessage(from_client, event.data)
                 self.flow.messages.append(tcp_message)
-                yield commands.Hook("tcp_message", self.flow)
+                yield TcpMessageHook(self.flow)
                 yield commands.SendData(send_to, tcp_message.content)
             else:
                 yield commands.SendData(send_to, event.data)
@@ -62,7 +79,7 @@ class TCPLayer(Layer):
             if all_done:
                 self._handle_event = self.done
                 if self.flow:
-                    yield commands.Hook("tcp_end", self.flow)
+                    yield TcpEndHook(self.flow)
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def done(self, _):

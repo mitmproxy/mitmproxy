@@ -10,10 +10,10 @@ class TestNextLayer:
         assert (
             playbook
             >> events.DataReceived(tctx.client, b"foo")
-            << commands.Hook("next_layer", nl)
+            << layer.NextLayerHook(nl)
             >> tutils.reply()
             >> events.DataReceived(tctx.client, b"bar")
-            << commands.Hook("next_layer", nl)
+            << layer.NextLayerHook(nl)
         )
         assert nl.data_client() == b"foobar"
         assert nl.data_server() == b""
@@ -37,7 +37,7 @@ class TestNextLayer:
         assert (
             playbook
             >> events.DataReceived(tctx.client, b"foo")
-            << commands.Hook("next_layer", nl)
+            << layer.NextLayerHook(nl)
             >> events.DataReceived(tctx.client, b"bar")
         )
         assert nl.data_client() == b"foo"  # "bar" is paused.
@@ -57,7 +57,7 @@ class TestNextLayer:
         assert (
             playbook
             >> events.DataReceived(tctx.client, b"foo")
-            << commands.Hook("next_layer", nl)
+            << layer.NextLayerHook(nl)
         )
         nl.layer = tutils.EchoLayer(tctx)
         handle = nl.handle_event
