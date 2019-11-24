@@ -276,12 +276,17 @@ class TestServerTLS:
         assert (
                 playbook
                 >> events.DataReceived(tctx.server, tssl.out.read())
+                << commands.Log("Server TLS handshake failed. Certificate verify failed: Hostname mismatch","warn")
+                << commands.CloseConnection(tctx.server)
                 << commands.SendData(tctx.client, b"server-tls-failed: Certificate verify failed: Hostname mismatch")
         )
         assert not tctx.server.tls_established
 
 
-def _make_client_tls_layer(tctx: context.Context) -> typing.Tuple[tutils.Playbook, tls.ClientTLSLayer]:
+def make_client_tls_layer(
+        tctx: context.Context,
+        **kwargs
+) -> typing.Tuple[tutils.Playbook, tls.ClientTLSLayer, SSLTest]:
     # This is a bit contrived as the client layer expects a server layer as parent.
     # We also set child layers manually to avoid NextLayer noise.
     server_layer = tls.ServerTLSLayer(tctx)
@@ -289,18 +294,13 @@ def _make_client_tls_layer(tctx: context.Context) -> typing.Tuple[tutils.Playboo
     server_layer.child_layer = client_layer
     client_layer.child_layer = TlsEchoLayer(tctx)
     playbook = tutils.Playbook(server_layer)
-    return playbook, client_layer
 
-
-def _test_tls_client_server(tctx: context.Context, **kwargs) -> typing.Tuple[
-    tutils.Playbook, tls.ClientTLSLayer, SSLTest]:
-    playbook, client_layer = _make_client_tls_layer(tctx)
-    tctx.server.tls = True
+    # Add some server config, this is needed anyways.
     tctx.server.address = ("example.mitmproxy.org", 443)
     tctx.server.sni = b"example.mitmproxy.org"
-    tssl_client = SSLTest(**kwargs)
 
-    # Send ClientHello
+    tssl_client = SSLTest(**kwargs)
+    # Start handshake.
     with pytest.raises(ssl.SSLWantReadError):
         tssl_client.obj.do_handshake()
 
@@ -310,69 +310,43 @@ def _test_tls_client_server(tctx: context.Context, **kwargs) -> typing.Tuple[
 class TestClientTLS:
     def test_client_only(self, tctx: context.Context):
         """Test TLS with client only"""
-        playbook, client_layer = _make_client_tls_layer(tctx)
-        tssl = SSLTest()
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
         assert not tctx.client.tls_established
 
-        # Start Handshake, send ClientHello and ServerHello
-        with pytest.raises(ssl.SSLWantReadError):
-            tssl.obj.do_handshake()
+        # Send ClientHello, receive ServerHello
         data = tutils.Placeholder()
         assert (
                 playbook
-                >> events.DataReceived(tctx.client, tssl.out.read())
+                >> events.DataReceived(tctx.client, tssl_client.out.read())
                 << commands.Hook("tls_clienthello", tutils.Placeholder())
                 >> tutils.reply()
                 << commands.Hook("tls_start", tutils.Placeholder())
                 >> reply_tls_start()
                 << commands.SendData(tctx.client, data)
         )
-        tssl.inc.write(data())
-        tssl.obj.do_handshake()
+        tssl_client.inc.write(data())
+        tssl_client.obj.do_handshake()
         # Finish Handshake
-        interact(playbook, tctx.client, tssl)
+        interact(playbook, tctx.client, tssl_client)
 
-        assert tssl.obj.getpeercert(True)
+        assert tssl_client.obj.getpeercert(True)
         assert tctx.client.tls_established
 
         # Echo
-        _test_echo(playbook, tssl, tctx.client)
+        _test_echo(playbook, tssl_client, tctx.client)
         assert (
                 playbook
                 >> events.DataReceived(tctx.server, b"Plaintext")
                 << commands.SendData(tctx.server, b"plaintext")
         )
 
-    def test_server_not_required(self, tctx):
-        """
-        Here we test the scenario where a server connection is _not_ required
-        to establish TLS with the client. After determining this when parsing the ClientHello,
-        we only establish a connection with the client. The server connection may ultimately
-        be established when OpenConnection is called.
-        """
-        playbook, client_layer, tssl = _test_tls_client_server(tctx)
-        data = tutils.Placeholder()
-        assert (
-                playbook
-                >> events.DataReceived(tctx.client, tssl.out.read())
-                << commands.Hook("tls_clienthello", tutils.Placeholder())
-                >> tutils.reply()
-                << commands.Hook("tls_start", tutils.Placeholder())
-                >> reply_tls_start()
-                << commands.SendData(tctx.client, data)
-        )
-        tssl.inc.write(data())
-        tssl.obj.do_handshake()
-        interact(playbook, tctx.client, tssl)
-        assert tctx.client.tls_established
-
     def test_server_required(self, tctx):
         """
-        Here we test the scenario where a server connection is required (for example, because SNI is missing)
+        Test the scenario where a server connection is required (for example, because of an unknown ALPN)
         to establish TLS with the client.
         """
         tssl_server = SSLTest(server_side=True, alpn=["quux"])
-        playbook, client_layer, tssl_client = _test_tls_client_server(tctx, alpn=["quux"])
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx, alpn=["quux"])
 
         # We should now get instructed to open a server connection.
         data = tutils.Placeholder()
@@ -430,8 +404,8 @@ class TestClientTLS:
         _test_echo(playbook, tssl_client, tctx.client)
 
     def test_cannot_parse_clienthello(self, tctx: context.Context):
-        """We have a client layer, but we only receive garbage."""
-        playbook, client_layer = _make_client_tls_layer(tctx)
+        """Test the scenario where we cannot parse the ClientHello"""
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx)
 
         invalid = b"\x16\x03\x01\x00\x00"
 
@@ -442,3 +416,49 @@ class TestClientTLS:
                 << commands.CloseConnection(tctx.client)
         )
         assert not tctx.client.tls_established
+
+    def test_mitmproxy_ca_is_untrusted(self, tctx: context.Context):
+        """Test the scenario where the client doesn't trust the mitmproxy CA."""
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx, sni=b"wrong.host.mitmproxy.org")
+
+        data = tutils.Placeholder()
+        assert (
+                playbook
+                >> events.DataReceived(tctx.client, tssl_client.out.read())
+                << commands.Hook("tls_clienthello", tutils.Placeholder())
+                >> tutils.reply()
+                << commands.Hook("tls_start", tutils.Placeholder())
+                >> reply_tls_start()
+                << commands.SendData(tctx.client, data)
+        )
+        tssl_client.inc.write(data())
+        with pytest.raises(ssl.SSLCertVerificationError):
+            tssl_client.obj.do_handshake()
+        # Finish Handshake
+        assert (
+                playbook
+                >> events.DataReceived(tctx.client, tssl_client.out.read())
+                << commands.Log("Client TLS handshake failed. The client does not trust the proxy's certificate "
+                                "for wrong.host.mitmproxy.org (sslv3 alert bad certificate)", "warn")
+                << commands.CloseConnection(tctx.client)
+        )
+        assert not tctx.client.tls_established
+
+    def test_mitmproxy_ca_is_untrusted_immediate_disconnect(self, tctx: context.Context):
+        """Test the scenario where the client doesn't trust the mitmproxy CA."""
+        playbook, client_layer, tssl_client = make_client_tls_layer(tctx, sni=b"wrong.host.mitmproxy.org")
+
+        data = tutils.Placeholder()
+        assert (
+                playbook
+                >> events.DataReceived(tctx.client, tssl_client.out.read())
+                << commands.Hook("tls_clienthello", tutils.Placeholder())
+                >> tutils.reply()
+                << commands.Hook("tls_start", tutils.Placeholder())
+                >> reply_tls_start()
+                << commands.SendData(tctx.client, data)
+                >> events.ConnectionClosed(tctx.client)
+                << commands.Log("Client TLS handshake failed. The client may not trust the proxy's certificate "
+                                "for wrong.host.mitmproxy.org (connection closed without notice)", "warn")
+                << commands.CloseConnection(tctx.client)
+        )

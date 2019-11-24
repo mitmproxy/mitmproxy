@@ -92,6 +92,9 @@ HTTP_ALPNS = (b"h2", b"http/1.1", b"http/1.0", b"http/0.9")
 
 
 class EstablishServerTLS(commands.ConnectionCommand):
+    """Establish TLS on the given connection.
+
+    If TLS establishment fails, the connection will automatically be closed by the TLS layer."""
     connection: context.Server
     blocking = True
 
@@ -177,15 +180,20 @@ class _TLSLayer(layer.Layer):
             return False, None
         except SSL.Error as e:
             # provide more detailed information for some errors.
-            last_err = e.args[0][-1]
+            last_err = e.args and isinstance(e.args[0], list) and e.args[0] and e.args[0][-1]
             if last_err == ('SSL routines', 'tls_process_server_certificate', 'certificate verify failed'):
                 verify_result = SSL._lib.SSL_get_verify_result(self.tls[conn]._ssl)
                 error = SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(verify_result)).decode()
-                return False, f"Certificate verify failed: {error}"
-            elif last_err == ('SSL routines', 'ssl3_read_bytes', 'tlsv1 alert unknown ca'):
-                return False, "TLS Alert: Unknown CA"
+                err = f"Certificate verify failed: {error}"
+            elif last_err in [
+                ('SSL routines', 'ssl3_read_bytes', 'tlsv1 alert unknown ca'),
+                ('SSL routines', 'ssl3_read_bytes', 'sslv3 alert bad certificate')
+            ]:
+                err = last_err[2]
             else:
-                return False, repr(e)
+                err = repr(e)
+            yield from self.on_handshake_error(conn, err)
+            return False, err
         else:
             # Get all peer certificates.
             # https://www.openssl.org/docs/man1.1.1/man3/SSL_get_peer_cert_chain.html
@@ -196,7 +204,6 @@ class _TLSLayer(layer.Layer):
                 cert = self.tls[conn].get_peer_certificate()
                 if cert:
                     all_certs.insert(0, cert)
-
 
             conn.tls_established = True
             conn.sni = self.tls[conn].get_servername()
@@ -250,14 +257,19 @@ class _TLSLayer(layer.Layer):
                 yield from self.negotiate(event.connection, event.data)
             else:
                 yield from self.receive(event.connection, event.data)
-        elif (
-                isinstance(event, events.ConnectionClosed) and
-                event.connection in self.tls and
-                self.tls[event.connection].get_shutdown() & SSL.RECEIVED_SHUTDOWN
-        ):
-            pass  # We have already dispatched a ConnectionClosed to the child layer.
+        elif isinstance(event, events.ConnectionClosed) and event.connection in self.tls:
+            if event.connection.tls_established:
+                if self.tls[event.connection].get_shutdown() & SSL.RECEIVED_SHUTDOWN:
+                    pass  # We have already dispatched a ConnectionClosed to the child layer.
+                else:
+                    yield from self.event_to_child(event)
+            else:
+                yield from self.on_handshake_error(event.connection, "connection closed without notice")
         else:
             yield from self.event_to_child(event)
+
+    def on_handshake_error(self, conn: context.Connection, err: str) -> commands.TCommandGenerator:
+        yield commands.CloseConnection(conn)
 
 
 class ServerTLSLayer(_TLSLayer):
@@ -286,6 +298,13 @@ class ServerTLSLayer(_TLSLayer):
                 yield from self.start_tls(command.connection)
             else:
                 yield command
+
+    def on_handshake_error(self, conn: context.Connection, err: str) -> commands.TCommandGenerator:
+        yield commands.Log(
+            f"Server TLS handshake failed. {err}",
+            level="warn"
+        )
+        yield from super().on_handshake_error(conn, err)
 
 
 class ClientTLSLayer(_TLSLayer):
@@ -320,13 +339,13 @@ class ClientTLSLayer(_TLSLayer):
         self._handle_event = self.state_wait_for_clienthello
         yield from ()
 
-    def state_wait_for_clienthello(self, event: events.Event):
+    def state_wait_for_clienthello(self, event: events.Event) -> commands.TCommandGenerator:
         client = self.context.client
         if isinstance(event, events.DataReceived) and event.connection == client:
             self.recv_buffer.extend(event.data)
             try:
                 client_hello = parse_client_hello(self.recv_buffer)
-            except ValueError as e:
+            except ValueError:
                 yield commands.Log(f"Cannot parse ClientHello: {self.recv_buffer.hex()}")
                 yield commands.CloseConnection(client)
                 return
@@ -373,21 +392,18 @@ class ClientTLSLayer(_TLSLayer):
             )
             return err
 
-    def negotiate(self, conn: context.Connection, data: bytes) -> Generator[commands.Command, Any, bool]:
-        done, err = yield from super().negotiate(conn, data)
-        if err:
-            if self.context.client.sni:
-                dest = self.context.client.sni.decode("idna")
-            else:
-                dest = human.format_address(self.context.server.address)
-            if "Unknown CA" in err:
-                keyword = "does not"
-            else:
-                keyword = "may not"
-            yield commands.Log(
-                f"Client TLS Handshake failed. "
-                f"The client {keyword} trust the proxy's certificate for {dest} ({err}).",
-                level="warn"
-            )
-            yield commands.CloseConnection(self.context.client)
-        return done
+    def on_handshake_error(self, conn: context.Connection, err: str) -> commands.TCommandGenerator:
+        if conn.sni:
+            dest = conn.sni.decode("idna")
+        else:
+            dest = human.format_address(self.context.server.address)
+        if "unknown ca" in err or "bad certificate" in err:
+            keyword = "does not"
+        else:
+            keyword = "may not"
+        yield commands.Log(
+            f"Client TLS handshake failed. "
+            f"The client {keyword} trust the proxy's certificate for {dest} ({err})",
+            level="warn"
+        )
+        yield from super().on_handshake_error(conn, err)
