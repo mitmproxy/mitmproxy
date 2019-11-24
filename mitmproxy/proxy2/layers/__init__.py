@@ -1,5 +1,5 @@
 from . import modes
-from .http.http import HTTPLayer
+from .http import HTTPLayer
 from .tcp import TCPLayer
 from .tls import ClientTLSLayer, ServerTLSLayer
 
