@@ -69,6 +69,7 @@ def run(
     debug.register_info_dumpers()
 
     opts = options.Options()
+    master = master_cls(opts)
     parser = make_parser(opts)
 
     try:
@@ -77,24 +78,13 @@ def run(
         arg_check.check()
         sys.exit(1)
 
-    try:
-        opts.set(*args.setoptions, defer=True)
-        opts.confdir = os.path.expanduser(opts.confdir)
-        if not os.path.isdir(opts.confdir):
-            os.makedirs(opts.confdir)
-
-    except exceptions.OptionsError as e:
-        print("%s: %s" % (sys.argv[0], e), file=sys.stderr)
-        sys.exit(1)
-
-    master = master_cls(opts)
-
     # To make migration from 2.x to 3.0 bearable.
     if "-R" in sys.argv and sys.argv[sys.argv.index("-R") + 1].startswith("http"):
         print("-R is used for specifying replacements.\n"
               "To use mitmproxy in reverse mode please use --mode reverse:SPEC instead")
 
     try:
+        opts.set(*args.setoptions, defer=True)
         optmanager.load_paths(
             opts,
             os.path.join(opts.confdir, "config.yaml"),
