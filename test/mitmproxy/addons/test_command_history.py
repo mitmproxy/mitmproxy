@@ -77,6 +77,8 @@ class TestCommandHistory:
         saved_commands = [cmd for cmd in history.saved_commands]
         assert saved_commands == ['cmd4', 'cmd3', 'cmd2']
 
+        history.command_history_file.close()
+
     def test_get_next_and_prev(self, tctx):
         history = command_history.CommandHistory(5)
 
@@ -150,6 +152,8 @@ class TestCommandHistory:
         assert history.get_next() == ''
         assert history.get_next() == ''
 
+        history.command_history_file.close()
+
     def test_clear(self, tctx):
         history = command_history.CommandHistory(3)
 
@@ -164,6 +168,8 @@ class TestCommandHistory:
         assert history.get_next() == ''
         assert history.get_prev() == ''
         assert history.get_prev() == ''
+
+        history.command_history_file.close()
 
     def test_filter(self, tctx):
         history = command_history.CommandHistory(3)
@@ -196,3 +202,5 @@ class TestCommandHistory:
         assert history.get_next() == 'abc'
         assert history.get_next() == ''
         assert history.get_next() == ''
+
+        history.command_history_file.close()
