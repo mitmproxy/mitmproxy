@@ -153,26 +153,46 @@ class CommandEdit(urwid.WidgetWrap):
     def __init__(self, master: mitmproxy.master.Master, text: str) -> None:
         super().__init__(urwid.Text(self.leader))
         self.master = master
+        self.active_filter = False
+        self.filter_str = ''
         self.cbuf = CommandBuffer(master, text)
         self.update()
 
     def keypress(self, size, key) -> None:
         if key == "backspace":
             self.cbuf.backspace()
+            if self.cbuf.text == '':
+                self.active_filter = False
+                self.master.commands.execute("command_history.filter ''")
+                self.filter_str = ''
         elif key == "left":
             self.cbuf.left()
         elif key == "right":
             self.cbuf.right()
         elif key == "up":
-            _cmd = command_lexer.quote(self.cbuf.text)
-            self.master.commands.execute("command_history.filter %s" % _cmd)
+            if self.active_filter is False:
+                self.active_filter = True
+                self.filter_str = self.cbuf.text
+                _cmd = command_lexer.quote(self.cbuf.text)
+                self.master.commands.execute("command_history.filter %s" % _cmd)
+
             cmd = self.master.commands.execute("command_history.prev")
             self.cbuf = CommandBuffer(self.master, cmd)
         elif key == "down":
-            _cmd = command_lexer.quote(self.cbuf.text)
-            self.master.commands.execute("command_history.filter %s" % _cmd)
+            prev_cmd = self.cbuf.text
             cmd = self.master.commands.execute("command_history.next")
-            self.cbuf = CommandBuffer(self.master, cmd)
+
+            if cmd == '':
+                if prev_cmd == self.filter_str:
+                    self.cbuf = CommandBuffer(self.master, prev_cmd)
+                else:
+                    self.active_filter = False
+                    self.master.commands.execute("command_history.filter ''")
+                    self.filter_str = ''
+                    self.cbuf = CommandBuffer(self.master, '')
+            else:
+                self.cbuf = CommandBuffer(self.master, cmd)
+
         elif key == "shift tab":
             self.cbuf.cycle_completion(False)
         elif key == "tab":
