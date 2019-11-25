@@ -1,6 +1,7 @@
 import collections
 import os
 import typing
+import atexit
 
 from mitmproxy import command
 from mitmproxy import ctx
@@ -27,6 +28,12 @@ class CommandHistory:
 
         for l in _history_lines:
             self.add_command(l.strip())
+
+        atexit.register(self.cleanup)
+
+    def cleanup(self):
+        if self.command_history_file:
+            self.command_history_file.close()
 
     @property
     def last_filtered_index(self):
