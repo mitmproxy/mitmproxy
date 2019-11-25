@@ -11,11 +11,6 @@ from OpenSSL import SSL
 from mitmproxy import version
 
 
-def remote_debug(host='localhost', port=4444):
-    import remote_pdb
-    remote_pdb.RemotePdb(host, port).set_trace()
-
-
 def dump_system_info():
     mitmproxy_version = version.get_dev_version()
 
