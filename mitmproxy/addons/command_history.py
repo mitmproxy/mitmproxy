@@ -15,7 +15,7 @@ class CommandHistory:
         self.filter_str: str = ''
 
         _command_history_path = os.path.join(os.path.expanduser(ctx.options.confdir), 'command_history')
-        _history_lines = []
+        _history_lines: typing.List[str] = []
         if os.path.exists(_command_history_path):
             _history_lines = open(_command_history_path, 'r').readlines()
 
