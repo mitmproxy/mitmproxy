@@ -1,7 +1,5 @@
 import os
 import pytest
-import shutil
-import uuid
 
 from mitmproxy import options
 from mitmproxy.addons import command_history
@@ -9,24 +7,22 @@ from mitmproxy.test import taddons
 
 
 @pytest.fixture(autouse=True)
-def tctx():
+def tctx(tmpdir):
     # This runs before each test
-    dir_id = str(uuid.uuid4())
-    confdir = os.path.expanduser(f"~/.mitmproxy-test-suite-{dir_id}")
-    if not os.path.exists(confdir):
-        os.makedirs(confdir)
+    dir_name = tmpdir.mkdir('mitmproxy').dirname
+    confdir = dir_name
 
     opts = options.Options()
     opts.set(*[f"confdir={confdir}"])
     tctx = taddons.context(options=opts)
     ch = command_history.CommandHistory()
     tctx.master.addons.add(ch)
+    ch.configure([])
 
     yield tctx
 
     # This runs after each test
     ch.cleanup()
-    shutil.rmtree(confdir)
 
 
 class TestCommandHistory:
@@ -38,6 +34,7 @@ class TestCommandHistory:
         f.close()
 
         history = command_history.CommandHistory()
+        history.configure([])
 
         saved_commands = [cmd for cmd in history.saved_commands]
         assert saved_commands == ['cmd1', 'cmd2', 'cmd3']
@@ -46,6 +43,7 @@ class TestCommandHistory:
 
     def test_add_command(self, tctx):
         history = command_history.CommandHistory(3)
+        history.configure([])
 
         history.add_command('cmd1')
         history.add_command('cmd2')
@@ -81,6 +79,7 @@ class TestCommandHistory:
 
     def test_get_next_and_prev(self, tctx):
         history = command_history.CommandHistory(5)
+        history.configure([])
 
         history.add_command('cmd1')
 
@@ -156,6 +155,7 @@ class TestCommandHistory:
 
     def test_clear(self, tctx):
         history = command_history.CommandHistory(3)
+        history.configure([])
 
         history.add_command('cmd1')
         history.add_command('cmd2')
@@ -173,6 +173,7 @@ class TestCommandHistory:
 
     def test_filter(self, tctx):
         history = command_history.CommandHistory(3)
+        history.configure([])
 
         history.add_command('cmd1')
         history.add_command('cmd2')
@@ -206,7 +207,6 @@ class TestCommandHistory:
         history.cleanup()
 
     def test_multiple_instances(self, tctx):
-
         instances = [
             command_history.CommandHistory(10),
             command_history.CommandHistory(10),
@@ -214,6 +214,7 @@ class TestCommandHistory:
         ]
 
         for i in instances:
+            i.configure([])
             saved_commands = [cmd for cmd in i.saved_commands]
             assert saved_commands == []
 
@@ -253,6 +254,7 @@ class TestCommandHistory:
         assert saved_commands == ['cmd1', 'cmd2', 'cmd3', 'cmd4']
 
         instances.append(command_history.CommandHistory(10))
+        instances[3].configure([])
         saved_commands = [cmd for cmd in instances[3].saved_commands]
         assert saved_commands == ['cmd1', 'cmd2', 'cmd3', 'cmd4']
 
@@ -274,3 +276,31 @@ class TestCommandHistory:
         lines = open(_path, 'r').readlines()
         saved_commands = [cmd.strip() for cmd in lines]
         assert saved_commands == ['cmd1', 'cmd2', 'cmd3', 'cmd4', 'cmd_before_close', 'new_cmd']
+
+        instances = [
+            command_history.CommandHistory(10),
+            command_history.CommandHistory(10)
+        ]
+
+        for i in instances:
+            i.configure([])
+            i.clear_history()
+            saved_commands = [cmd for cmd in i.saved_commands]
+            assert saved_commands == []
+
+        instances[0].add_command('cmd1')
+        instances[0].add_command('cmd2')
+        instances[1].add_command('cmd3')
+        instances[1].add_command('cmd4')
+        instances[1].add_command('cmd5')
+
+        saved_commands = [cmd for cmd in instances[1].saved_commands]
+        assert saved_commands == ['cmd1', 'cmd2', 'cmd3', 'cmd4', 'cmd5']
+
+        instances.pop()
+        instances.pop()
+
+        _path = os.path.join(tctx.options.confdir, 'command_history')
+        lines = open(_path, 'r').readlines()
+        saved_commands = [cmd.strip() for cmd in lines]
+        assert saved_commands == ['cmd1', 'cmd2', 'cmd3', 'cmd4', 'cmd5']

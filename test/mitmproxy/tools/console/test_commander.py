@@ -1,7 +1,4 @@
-import os
 import pytest
-import shutil
-import uuid
 
 from mitmproxy import options
 from mitmproxy.addons import command_history
@@ -10,24 +7,22 @@ from mitmproxy.tools.console.commander import commander
 
 
 @pytest.fixture(autouse=True)
-def tctx():
+def tctx(tmpdir):
     # This runs before each test
-    dir_id = str(uuid.uuid4())
-    confdir = os.path.expanduser(f"~/.mitmproxy-test-suite-{dir_id}")
-    if not os.path.exists(confdir):
-        os.makedirs(confdir)
+    dir_name = tmpdir.mkdir('mitmproxy').dirname
+    confdir = dir_name
 
     opts = options.Options()
     opts.set(*[f"confdir={confdir}"])
     tctx = taddons.context(options=opts)
     ch = command_history.CommandHistory()
     tctx.master.addons.add(ch)
+    ch.configure([])
 
     yield tctx
 
     # This runs after each test
-    ch.command_history_file.close()
-    shutil.rmtree(confdir)
+    ch.cleanup()
 
 
 class TestListCompleter:
