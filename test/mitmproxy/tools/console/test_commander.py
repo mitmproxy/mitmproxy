@@ -26,6 +26,7 @@ def tctx():
     yield tctx
 
     # This runs after each test
+    ch.command_history_file.close()
     shutil.rmtree(confdir)
 
 
