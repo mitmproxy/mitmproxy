@@ -1,7 +1,7 @@
+import atexit
 import collections
 import os
 import typing
-import atexit
 
 from mitmproxy import command
 from mitmproxy import ctx
@@ -19,12 +19,12 @@ class CommandHistory:
         if not os.path.exists(_command_history_dir):
             os.makedirs(_command_history_dir)
 
-        _command_history_path = os.path.join(_command_history_dir, 'command_history')
+        self.command_history_path = os.path.join(_command_history_dir, 'command_history')
         _history_lines: typing.List[str] = []
-        if os.path.exists(_command_history_path):
-            _history_lines = open(_command_history_path, 'r').readlines()
+        if os.path.exists(self.command_history_path):
+            _history_lines = open(self.command_history_path, 'r').readlines()
 
-        self.command_history_file = open(_command_history_path, 'w')
+        self.command_history_file = open(self.command_history_path, 'w')
 
         for l in _history_lines:
             self.add_command(l.strip())
@@ -32,7 +32,8 @@ class CommandHistory:
         atexit.register(self.cleanup)
 
     def cleanup(self):
-        if self.command_history_file:
+        self._reload_saved_commands()
+        if self.command_history_file and not self.command_history_file.closed:
             self.command_history_file.close()
 
     @property
@@ -99,9 +100,10 @@ class CommandHistory:
         if command.strip() == '':
             return
 
+        self._reload_saved_commands()
+
         if command in self.saved_commands:
             self.saved_commands.remove(command)
-
         self.saved_commands.append(command)
 
         _history_str = "\n".join(self.saved_commands)
@@ -111,3 +113,17 @@ class CommandHistory:
         self.command_history_file.flush()
 
         self.restart()
+
+    def _reload_saved_commands(self):
+        # First read all commands from the file to merge anything that may
+        # have come from a different instance of the mitmproxy or sister tools
+        if not os.path.exists(self.command_history_path):
+            return
+
+        _history_lines = open(self.command_history_path, 'r').readlines()
+        self.saved_commands.clear()
+        for l in _history_lines:
+            l = l.strip()
+            if l in self.saved_commands:
+                self.saved_commands.remove(l)
+            self.saved_commands.append(l.strip())
