@@ -5,6 +5,7 @@ The counterpart to events are commands.
 """
 import socket
 import typing
+from dataclasses import dataclass
 
 from mitmproxy.proxy2 import commands
 from mitmproxy.proxy2.context import Connection
@@ -27,14 +28,12 @@ class Start(Event):
     pass
 
 
+@dataclass
 class ConnectionEvent(Event):
     """
     All events involving connection IO.
     """
     connection: Connection
-
-    def __init__(self, connection: Connection):
-        self.connection = connection
 
 
 class ConnectionClosed(ConnectionEvent):
@@ -44,20 +43,19 @@ class ConnectionClosed(ConnectionEvent):
     pass
 
 
+@dataclass
 class DataReceived(ConnectionEvent):
     """
     Remote has sent some data.
     """
-
-    def __init__(self, connection: Connection, data: bytes) -> None:
-        super().__init__(connection)
-        self.data = data
+    data: bytes
 
     def __repr__(self):
         target = type(self.connection).__name__.lower()
         return f"DataReceived({target}, {self.data})"
 
 
+@dataclass
 class CommandReply(Event):
     """
     Emitted when a command has been finished, e.g.
@@ -65,10 +63,6 @@ class CommandReply(Event):
     """
     command: commands.Command
     reply: typing.Any
-
-    def __init__(self, command: commands.Command, reply: typing.Any):
-        self.command = command
-        self.reply = reply
 
     def __new__(cls, *args, **kwargs):
         if cls is CommandReply:
@@ -88,35 +82,23 @@ class CommandReply(Event):
 command_reply_subclasses: typing.Dict[commands.Command, typing.Type[CommandReply]] = {}
 
 
+@dataclass
 class OpenConnectionReply(CommandReply):
     command: commands.OpenConnection
     reply: typing.Optional[str]
-
-    def __init__(
-            self,
-            command: commands.OpenConnection,
-            err: typing.Optional[str]
-    ):
-        super().__init__(command, err)
+    """error message"""
 
 
+@dataclass
 class HookReply(CommandReply):
     command: commands.Hook
-
-    def __init__(self, command: commands.Hook):
-        super().__init__(command, None)
+    reply: None = None
 
     def __repr__(self):
         return f"HookReply({repr(self.command)[5:-1]})"
 
 
+@dataclass
 class GetSocketReply(CommandReply):
     command: commands.GetSocket
     reply: socket.socket
-
-    def __init__(
-            self,
-            command: commands.GetSocket,
-            socket: socket.socket
-    ):
-        super().__init__(command, socket)

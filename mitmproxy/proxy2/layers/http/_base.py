@@ -1,18 +1,16 @@
 import abc
 import typing
+from dataclasses import dataclass
 
 from mitmproxy.proxy2 import commands, events
 
 StreamId = int
 
 
+@dataclass
 class HttpEvent(events.Event):
-    stream_id: StreamId
-
     # we need stream ids on every event to avoid race conditions
-
-    def __init__(self, stream_id: StreamId):
-        self.stream_id = stream_id
+    stream_id: StreamId
 
     def __repr__(self) -> str:
         x = self.__dict__.copy()

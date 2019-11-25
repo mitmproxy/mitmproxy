@@ -1,9 +1,9 @@
 import pytest
 
-from mitmproxy.http import HTTPResponse, HTTPFlow
+from mitmproxy.http import HTTPFlow, HTTPResponse
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import layer
-from mitmproxy.proxy2.commands import OpenConnection, SendData
+from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import http, tls
 from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, reply_establish_server_tls, reply_next_layer
@@ -168,6 +168,22 @@ def test_http_reply_from_proxy(tctx):
     )
 
 
+def test_response_until_eof(tctx):
+    """Test scenario where the server response body is terminated by EOF."""
+    server = Placeholder()
+    assert (
+            Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+            >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            >> DataReceived(server, b"HTTP/1.1 200 OK\r\n\r\nfoo")
+            >> ConnectionClosed(server)
+            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\n\r\nfoo")
+            << CloseConnection(tctx.client)
+    )
+
+
 def test_disconnect_while_intercept(tctx):
     """Test a server disconnect while a request is intercepted."""
     tctx.options.connection_strategy = "eager"
@@ -198,3 +214,130 @@ def test_disconnect_while_intercept(tctx):
     )
     assert server1() != server2()
     assert flow().server_conn == server2()
+
+
+def test_response_streaming(tctx):
+    """Test HTTP response streaming"""
+    server = Placeholder()
+    flow = Placeholder()
+
+    def enable_streaming(flow: HTTPFlow):
+        flow.response.stream = lambda x: x.upper()
+
+    assert (
+            Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+            >> DataReceived(tctx.client, b"GET http://example.com/largefile HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"GET /largefile HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nabc")
+            << http.HttpResponseHeadersHook(flow)
+            >> reply(side_effect=enable_streaming)
+            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nABC")
+            >> DataReceived(server, b"def")
+            << SendData(tctx.client, b"DEF")
+    )
+
+
+@pytest.mark.parametrize("response", ["normal response", "early response", "early close", "early kill"])
+def test_request_streaming(tctx, response):
+    """
+    Test HTTP request streaming
+
+    This is a bit more contrived as we may receive server data while we are still sending the request.
+    """
+    server = Placeholder()
+    flow = Placeholder()
+    playbook = Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+
+    def enable_streaming(flow: HTTPFlow):
+        flow.request.stream = lambda x: x.upper()
+
+    assert (
+            playbook
+            >> DataReceived(tctx.client, b"POST http://example.com/ HTTP/1.1\r\n"
+                                         b"Host: example.com\r\n"
+                                         b"Content-Length: 6\r\n\r\n"
+                                         b"abc")
+            << http.HttpRequestHeadersHook(flow)
+            >> reply(side_effect=enable_streaming)
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"POST / HTTP/1.1\r\n"
+                                b"Host: example.com\r\n"
+                                b"Content-Length: 6\r\n\r\n"
+                                b"ABC")
+    )
+    if response == "normal response":
+        assert (
+                playbook
+                >> DataReceived(tctx.client, b"def")
+                << SendData(server, b"DEF")
+                >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+                << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+        )
+    elif response == "early response":
+        # We may receive a response before we have finished sending our request.
+        # We continue sending unless the server closes the connection.
+        # https://tools.ietf.org/html/rfc7231#section-6.5.11
+        assert (
+                playbook
+                >> DataReceived(server, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
+                << SendData(tctx.client, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
+                >> DataReceived(tctx.client, b"def")
+                << SendData(server, b"DEF")
+        )
+    elif response == "early close":
+        assert (
+                playbook
+                >> DataReceived(server, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
+                << SendData(tctx.client, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
+                >> ConnectionClosed(server)
+                << CloseConnection(server)
+                << CloseConnection(tctx.client)
+        )
+    elif response == "early kill":
+        err = Placeholder()
+        assert (
+                playbook
+                >> ConnectionClosed(server)
+                << CloseConnection(server)
+                << SendData(tctx.client, err)
+                << CloseConnection(tctx.client)
+        )
+        assert b"502 Bad Gateway" in err()
+    else:  # pragma: no cover
+        assert False
+
+
+@pytest.mark.parametrize("data", [
+    None,
+    b"I don't speak HTTP.",
+    b"HTTP/1.1 200 OK\r\nContent-Length: 10\r\n\r\nweee"
+])
+def test_server_aborts(tctx, data):
+    """Test the scenario where the server doesn't serve a response"""
+    server = Placeholder()
+    flow = Placeholder()
+    err = Placeholder()
+    playbook = Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+    assert (
+            playbook
+            >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+    )
+    if data:
+        playbook >> DataReceived(server, data)
+    assert (
+            playbook
+            >> ConnectionClosed(server)
+            << CloseConnection(server)
+            << http.HttpErrorHook(flow)
+            >> reply()
+            << SendData(tctx.client, err)
+            << CloseConnection(tctx.client)
+    )
+    assert flow().error
+    assert b"502 Bad Gateway" in err()

@@ -112,6 +112,9 @@ class Hook(Command):
 all_hooks: typing.Dict[str, typing.Type[Hook]] = {}
 
 
+# TODO: Move descriptions from addons/events.py into hooks and have hook documentation generated from all_hooks.
+
+
 class GetSocket(ConnectionCommand):
     """
     Get the underlying socket.
