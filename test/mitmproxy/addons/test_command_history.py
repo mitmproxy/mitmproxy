@@ -42,6 +42,8 @@ class TestCommandHistory:
         saved_commands = [cmd for cmd in history.saved_commands]
         assert saved_commands == ['cmd1', 'cmd2', 'cmd3']
 
+        history.command_history_file.close()
+
     def test_add_command(self, tctx):
         history = command_history.CommandHistory(3)
 
