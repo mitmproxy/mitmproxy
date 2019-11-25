@@ -70,18 +70,19 @@ def run(
 
     opts = options.Options()
     master = master_cls(opts)
+
     parser = make_parser(opts)
+
+    # To make migration from 2.x to 3.0 bearable.
+    if "-R" in sys.argv and sys.argv[sys.argv.index("-R") + 1].startswith("http"):
+        print("-R is used for specifying replacements.\n"
+              "To use mitmproxy in reverse mode please use --mode reverse:SPEC instead")
 
     try:
         args = parser.parse_args(arguments)
     except SystemExit:
         arg_check.check()
         sys.exit(1)
-
-    # To make migration from 2.x to 3.0 bearable.
-    if "-R" in sys.argv and sys.argv[sys.argv.index("-R") + 1].startswith("http"):
-        print("-R is used for specifying replacements.\n"
-              "To use mitmproxy in reverse mode please use --mode reverse:SPEC instead")
 
     try:
         opts.set(*args.setoptions, defer=True)
