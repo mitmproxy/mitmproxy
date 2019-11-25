@@ -222,13 +222,19 @@ class CommandEdit(urwid.WidgetWrap):
                 pos = len(self.cbuf.text)
             self.cbuf.cursor = pos
         elif key == "ctrl w":
-            txt = self.cbuf.text.strip()
-            if(txt != ''):
-                chunks = txt.split(' ')[0:-1]
-                if len(chunks) == 0:
-                    self.cbuf.set_text(' '.join(chunks))
-                else:
-                    self.cbuf.set_text(' '.join(chunks) + ' ')
+            prev_cursor = self.cbuf.cursor
+            pos = self.cbuf.text.rfind(' ', 0, self.cbuf.cursor - 1)
+            if pos == -1:
+                new_text = self.cbuf.text[self.cbuf.cursor:]
+                cursor_pos = 0
+            else:
+                txt_after = self.cbuf.text[self.cbuf.cursor:]
+                txt_before = self.cbuf.text[0:pos]
+                new_text = f"{txt_before} {txt_after}"
+                cursor_pos = prev_cursor - (prev_cursor - pos) + 1
+
+            self.cbuf.set_text(new_text)
+            self.cbuf.cursor = cursor_pos
         elif key == "backspace":
             self.cbuf.backspace()
         elif key == "left" or key == "ctrl b":
