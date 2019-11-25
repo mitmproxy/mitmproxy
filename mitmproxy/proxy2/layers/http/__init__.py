@@ -10,8 +10,10 @@ from mitmproxy.proxy2.layers.tls import EstablishServerTLS, EstablishServerTLSRe
 from mitmproxy.proxy2.utils import expect
 from mitmproxy.utils import human
 from ._base import HttpConnection, StreamId
-from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, ResponseData, ResponseEndOfMessage, \
-    ResponseHeaders
+from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
+    ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
+from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, HttpRequestHook, HttpResponseHeadersHook, \
+    HttpResponseHook
 from ._http1 import Http1Client, Http1Server
 from ._http2 import Http2Client
 
@@ -42,8 +44,8 @@ class GetHttpConnection(HttpCommand):
 
 class GetHttpConnectionReply(events.CommandReply):
     command: GetHttpConnection
-    reply: typing.Optional[str]
-    """error message"""
+    reply: typing.Tuple[typing.Optional[Connection], typing.Optional[str]]
+    """connection object, error message"""
 
 
 class SendHttp(HttpCommand):
@@ -56,35 +58,6 @@ class SendHttp(HttpCommand):
 
     def __repr__(self) -> str:
         return f"Send({self.event})"
-
-
-class HttpRequestHeadersHook(commands.Hook):
-    name = "requestheaders"
-    flow: http.HTTPFlow
-
-
-class HttpRequestHook(commands.Hook):
-    name = "request"
-    flow: http.HTTPFlow
-
-
-class HttpResponseHook(commands.Hook):
-    name = "response"
-    flow: http.HTTPFlow
-
-
-class HttpResponseHeadersHook(commands.Hook):
-    name = "responseheaders"
-    flow: http.HTTPFlow
-
-
-class HttpConnectHook(commands.Hook):
-    flow: http.HTTPFlow
-
-
-class HttpErrorHook(commands.Hook):
-    name = "error"
-    flow: http.HTTPFlow
 
 
 class HttpStream(Layer):
@@ -103,15 +76,22 @@ class HttpStream(Layer):
         super().__init__(context)
         self.request_body_buf = b""
         self.response_body_buf = b""
-        self._handle_event = self.start
+        self.client_state = self.state_uninitialized
+        self.server_state = self.state_uninitialized
 
-    @expect(events.Start)
-    def start(self, event: events.Event) -> commands.TCommandGenerator:
-        self._handle_event = self.read_request_headers
-        yield from ()
+    @expect(events.Start, HttpEvent)
+    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+        if isinstance(event, events.Start):
+            self.client_state = self.state_wait_for_request_headers
+        elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
+            yield from self.handle_protocol_error(event)
+        elif isinstance(event, (RequestHeaders, RequestData, RequestEndOfMessage)):
+            yield from self.client_state(event)
+        else:
+            yield from self.server_state(event)
 
     @expect(RequestHeaders)
-    def read_request_headers(self, event: RequestHeaders) -> commands.TCommandGenerator:
+    def state_wait_for_request_headers(self, event: RequestHeaders) -> commands.TCommandGenerator:
         self.stream_id = event.stream_id
         self.flow = http.HTTPFlow(
             self.context.client,
@@ -122,72 +102,12 @@ class HttpStream(Layer):
         if self.flow.request.first_line_format == "authority":
             yield from self.handle_connect()
             return
-        else:
-            yield HttpRequestHeadersHook(self.flow)
 
         if self.flow.request.headers.get("expect", "").lower() == "100-continue":
             raise NotImplementedError("expect nothing")
             # self.send_response(http.expect_continue_response)
             # request.headers.pop("expect")
 
-        if self.flow.request.stream:
-            raise NotImplementedError  # FIXME
-        else:
-            self._handle_event = self.read_request_body
-
-    @expect(RequestData, RequestEndOfMessage)
-    def read_request_body(self, event: events.Event) -> commands.TCommandGenerator:
-        if isinstance(event, RequestData):
-            self.request_body_buf += event.data
-        elif isinstance(event, RequestEndOfMessage):
-            self.flow.request.data.content = self.request_body_buf
-            self.request_body_buf = b""
-            yield from self.handle_request()
-
-    def handle_connect(self) -> commands.TCommandGenerator:
-        yield HttpConnectHook(self.flow)
-
-        self.context.server = Server((self.flow.request.host, self.flow.request.port))
-        if self.context.options.connection_strategy == "eager":
-            err = yield commands.OpenConnection(self.context.server)
-            if err:
-                self.flow.response = http.HTTPResponse.make(
-                    502, f"Cannot connect to {human.format_address(self.context.server.address)}: {err}"
-                )
-
-        if not self.flow.response:
-            self.flow.response = http.make_connect_response(self.flow.request.data.http_version)
-
-        yield SendHttp(ResponseHeaders(self.flow.response, self.stream_id), self.context.client)
-
-        if 200 <= self.flow.response.status_code < 300:
-            self.child_layer = NextLayer(self.context)
-            yield from self.child_layer.handle_event(events.Start())
-            self._handle_event = self.passthrough
-        else:
-            yield SendHttp(ResponseData(self.flow.response.data.content, self.stream_id), self.context.client)
-            yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
-
-    @expect(RequestData, RequestEndOfMessage, events.Event)
-    def passthrough(self, event: events.Event) -> commands.TCommandGenerator:
-        # HTTP events -> normal connection events
-        if isinstance(event, RequestData):
-            event = events.DataReceived(self.context.client, event.data)
-        elif isinstance(event, RequestEndOfMessage):
-            event = events.ConnectionClosed(self.context.client)
-
-        for command in self.child_layer.handle_event(event):
-            # normal connection events -> HTTP events
-            if isinstance(command, commands.SendData) and command.connection == self.context.client:
-                yield SendHttp(ResponseData(command.data, self.stream_id), self.context.client)
-            elif isinstance(command, commands.CloseConnection) and command.connection == self.context.client:
-                yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
-            elif isinstance(command, commands.OpenConnection) and command.connection == self.context.server:
-                yield from self.passthrough(events.OpenConnectionReply(command, None))
-            else:
-                yield command
-
-    def handle_request(self) -> commands.TCommandGenerator:
         # set first line format to relative in regular mode,
         # see https://github.com/mitmproxy/mitmproxy/issues/1759
         if self.mode is HTTPMode.regular and self.flow.request.first_line_format == "absolute":
@@ -210,68 +130,174 @@ class HttpStream(Layer):
             self.flow.request.port = self.context.server.address[1]
             self.flow.request.host_header = host_header  # set again as .host overwrites this.
             self.flow.request.scheme = "https" if self.context.server.tls else "http"
-        yield HttpRequestHook(self.flow)
 
-        if self.flow.response:
-            # response was set by an inline script.
-            # we now need to emulate the responseheaders hook.
-            yield HttpResponseHeadersHook(self.flow)
-            yield from self.handle_response()
-        else:
-            connection, err = yield GetHttpConnection(
-                (self.flow.request.host, self.flow.request.port),
-                self.flow.request.scheme == "https"
-            )
-            if err:
-                yield from self.send_error_response(502, err)
-                self.flow.error = flow.Error(err)
-                yield HttpErrorHook(self.flow)
+        yield HttpRequestHeadersHook(self.flow)
+
+        if self.flow.request.stream:
+            if self.flow.response:
+                raise NotImplementedError("Can't set a response and enable streaming at the same time.")
+            ok = yield from self.make_server_connection()
+            if not ok:
                 return
-            else:
-                self.flow.server_conn = connection
+            yield SendHttp(RequestHeaders(self.stream_id, self.flow.request), self.context.server)
+            self.client_state = self.state_stream_request_body
+        else:
+            self.client_state = self.state_consume_request_body
+        self.server_state = self.state_wait_for_response_headers
 
-            yield SendHttp(RequestHeaders(self.flow.request, self.stream_id), connection)
-
-            if self.flow.request.stream:
-                raise NotImplementedError
+    @expect(RequestData, RequestEndOfMessage)
+    def state_stream_request_body(self, event: events.Event) -> commands.TCommandGenerator:
+        if isinstance(event, RequestData):
+            if callable(self.flow.request.stream):
+                data = self.flow.request.stream(event.data)
             else:
-                yield SendHttp(RequestData(self.flow.request.data.content, self.stream_id), connection)
-                yield SendHttp(RequestEndOfMessage(self.stream_id), connection)
-            self._handle_event = self.read_response_headers
+                data = event.data
+            yield SendHttp(RequestData(self.stream_id, data), self.context.server)
+        elif isinstance(event, RequestEndOfMessage):
+            yield SendHttp(RequestEndOfMessage(self.stream_id), self.context.server)
+            self.client_state = self.state_done
+
+    @expect(RequestData, RequestEndOfMessage)
+    def state_consume_request_body(self, event: events.Event) -> commands.TCommandGenerator:
+        if isinstance(event, RequestData):
+            self.request_body_buf += event.data
+        elif isinstance(event, RequestEndOfMessage):
+            self.flow.request.data.content = self.request_body_buf
+            self.request_body_buf = b""
+            yield HttpRequestHook(self.flow)
+            if self.flow.response:
+                # response was set by an inline script.
+                # we now need to emulate the responseheaders hook.
+                yield HttpResponseHeadersHook(self.flow)
+                yield from self.send_response()
+            else:
+                ok = yield from self.make_server_connection()
+                if not ok:
+                    return
+
+                yield SendHttp(RequestHeaders(self.stream_id, self.flow.request), self.context.server)
+                yield SendHttp(RequestData(self.stream_id, self.flow.request.data.content), self.context.server)
+                yield SendHttp(RequestEndOfMessage(self.stream_id), self.context.server)
+
+            self.client_state = self.state_done
 
     @expect(ResponseHeaders)
-    def read_response_headers(self, event: ResponseHeaders) -> commands.TCommandGenerator:
+    def state_wait_for_response_headers(self, event: ResponseHeaders) -> commands.TCommandGenerator:
         self.flow.response = event.response
         yield HttpResponseHeadersHook(self.flow)
-        if not self.flow.response.stream:
-            self._handle_event = self.read_response_body
+        if self.flow.response.stream:
+            yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)
+            self.server_state = self.state_stream_response_body
         else:
-            raise NotImplementedError
+            self.server_state = self.state_consume_response_body
 
     @expect(ResponseData, ResponseEndOfMessage)
-    def read_response_body(self, event: events.Event) -> commands.TCommandGenerator:
+    def state_stream_response_body(self, event: events.Event) -> commands.TCommandGenerator:
+        if isinstance(event, ResponseData):
+            if callable(self.flow.response.stream):
+                data = self.flow.response.stream(event.data)
+            else:
+                data = event.data
+            yield SendHttp(ResponseData(self.stream_id, data), self.context.client)
+        elif isinstance(event, ResponseEndOfMessage):
+            yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
+            self.server_state = self.state_done
+
+    @expect(ResponseData, ResponseEndOfMessage)
+    def state_consume_response_body(self, event: events.Event) -> commands.TCommandGenerator:
         if isinstance(event, ResponseData):
             self.response_body_buf += event.data
         elif isinstance(event, ResponseEndOfMessage):
             self.flow.response.data.content = self.response_body_buf
             self.response_body_buf = b""
-            yield from self.handle_response()
+            yield from self.send_response()
 
-    def handle_response(self):
+    def send_response(self):
         yield HttpResponseHook(self.flow)
-        yield SendHttp(ResponseHeaders(self.flow.response, self.stream_id), self.context.client)
+        yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)
+        yield SendHttp(ResponseData(self.stream_id, self.flow.response.data.content), self.context.client)
+        yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
+        self.server_state = self.state_done
 
-        if self.flow.response.stream:
-            raise NotImplementedError
+    def handle_protocol_error(
+            self,
+            event: typing.Union[RequestProtocolError, ResponseProtocolError]
+    ) -> commands.TCommandGenerator:
+        self.flow.error = flow.Error(event.message)
+        yield HttpErrorHook(self.flow)
+
+        if isinstance(event, RequestProtocolError):
+            yield SendHttp(event, self.context.server)
         else:
-            yield SendHttp(ResponseData(self.flow.response.data.content, self.stream_id), self.context.client)
+            yield SendHttp(event, self.context.client)
+        return
+
+    def make_server_connection(self) -> typing.Generator[commands.Command, typing.Any, bool]:
+        connection, err = yield GetHttpConnection(
+            (self.flow.request.host, self.flow.request.port),
+            self.flow.request.scheme == "https"
+        )
+        if err:
+            yield from self.handle_protocol_error(ResponseProtocolError(self.stream_id, err))
+            return False
+        else:
+            self.context.server = self.flow.server_conn = connection
+            return True
+
+    def handle_connect(self) -> commands.TCommandGenerator:
+        yield HttpConnectHook(self.flow)
+
+        self.context.server = Server((self.flow.request.host, self.flow.request.port))
+        if self.context.options.connection_strategy == "eager":
+            err = yield commands.OpenConnection(self.context.server)
+            if err:
+                self.flow.response = http.HTTPResponse.make(
+                    502, f"Cannot connect to {human.format_address(self.context.server.address)}: {err}"
+                )
+
+        if not self.flow.response:
+            self.flow.response = http.make_connect_response(self.flow.request.data.http_version)
+
+        yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)
+
+        if 200 <= self.flow.response.status_code < 300:
+            self.child_layer = NextLayer(self.context)
+            yield from self.child_layer.handle_event(events.Start())
+            self._handle_event = self.passthrough
+        else:
+            yield SendHttp(ResponseData(self.stream_id, self.flow.response.data.content), self.context.client)
             yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
-    def send_error_response(self, status_code: int, message: str, headers=None):
-        response = http.make_error_response(status_code, message, headers)
-        yield SendHttp(ResponseHeaders(response, self.stream_id), self.context.client)
-        yield SendHttp(ResponseData(response.data.content, self.stream_id), self.context.client)
-        yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
+    @expect(RequestData, RequestEndOfMessage, events.Event)
+    def passthrough(self, event: events.Event) -> commands.TCommandGenerator:
+        # HTTP events -> normal connection events
+        if isinstance(event, RequestData):
+            event = events.DataReceived(self.context.client, event.data)
+        elif isinstance(event, RequestEndOfMessage):
+            event = events.ConnectionClosed(self.context.client)
+
+        for command in self.child_layer.handle_event(event):
+            # normal connection events -> HTTP events
+            if isinstance(command, commands.SendData) and command.connection == self.context.client:
+                yield SendHttp(ResponseData(self.stream_id, command.data), self.context.client)
+            elif isinstance(command, commands.CloseConnection) and command.connection == self.context.client:
+                yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
+            elif isinstance(command, commands.OpenConnection) and command.connection == self.context.server:
+                yield from self.passthrough(events.OpenConnectionReply(command, None))
+            else:
+                yield command
+
+    @expect()
+    def state_uninitialized(self, _) -> commands.TCommandGenerator:
+        yield from ()
+
+    @expect()
+    def state_done(self, _) -> commands.TCommandGenerator:
+        yield from ()
+
+    def state_errored(self, _) -> commands.TCommandGenerator:
+        # silently consume every event.
+        yield from ()
 
 
 class HTTPLayer(Layer):
@@ -304,8 +330,6 @@ class HTTPLayer(Layer):
         self.connections = {
             context.client: Http1Server(context.client)
         }
-        if self.context.server.connected:
-            self.make_http_connection(self.context.server)
 
     def __repr__(self):
         return f"HTTPLayer(conns: {len(self.connections)}, events: {[type(e).__name__ for e in self.event_queue]})"
@@ -322,8 +346,6 @@ class HTTPLayer(Layer):
                     self.event_to_child(stream, GetHttpConnectionReply(cmd, (None, event.reply)))
             else:
                 yield from self.make_http_connection(event.command.connection)
-        elif isinstance(event, EstablishServerTLSReply) and event.command.connection in self.waiting_for_connection:
-            yield from self.make_http_connection(event.command.connection)
         elif isinstance(event, events.CommandReply):
             try:
                 stream = self.stream_by_command.pop(event.command)

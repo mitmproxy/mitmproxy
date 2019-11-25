@@ -1,37 +1,27 @@
+from dataclasses import dataclass
+
 from mitmproxy import http
-from ._base import HttpEvent, StreamId
+from ._base import HttpEvent
 
 
+@dataclass
 class RequestHeaders(HttpEvent):
     request: http.HTTPRequest
 
-    def __init__(self, request: http.HTTPRequest, stream_id: StreamId):
-        super().__init__(stream_id)
-        self.request = request
 
-
+@dataclass
 class ResponseHeaders(HttpEvent):
     response: http.HTTPResponse
 
-    def __init__(self, response: http.HTTPResponse, stream_id: StreamId):
-        super().__init__(stream_id)
-        self.response = response
 
-
+@dataclass
 class RequestData(HttpEvent):
     data: bytes
 
-    def __init__(self, data: bytes, stream_id: StreamId):
-        super().__init__(stream_id)
-        self.data = data
 
-
+@dataclass
 class ResponseData(HttpEvent):
     data: bytes
-
-    def __init__(self, data: bytes, stream_id: StreamId):
-        super().__init__(stream_id)
-        self.data = data
 
 
 class RequestEndOfMessage(HttpEvent):
@@ -42,6 +32,18 @@ class ResponseEndOfMessage(HttpEvent):
     pass
 
 
+@dataclass
+class RequestProtocolError(HttpEvent):
+    message: str
+    code: int = 400
+
+
+@dataclass
+class ResponseProtocolError(HttpEvent):
+    message: str
+    code: int = 502
+
+
 __all__ = [
     "HttpEvent",
     "RequestHeaders",
@@ -50,4 +52,6 @@ __all__ = [
     "ResponseHeaders",
     "ResponseData",
     "ResponseEndOfMessage",
+    "RequestProtocolError",
+    "ResponseProtocolError",
 ]
