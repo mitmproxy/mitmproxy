@@ -67,6 +67,11 @@ class CommandBuffer:
         else:
             self._cursor = x
 
+    def set_text(self, text: str) -> None:
+        self.text = text
+        self._cursor = len(self.text)
+        self.render()
+
     def render(self):
         parts, remaining = self.master.commands.parse_partial(self.text)
         ret = []
@@ -133,6 +138,12 @@ class CommandBuffer:
         self.cursor = self.cursor - 1
         self.completion = None
 
+    def delete(self) -> None:
+        if self.cursor == len(self.text):
+            return
+        self.text = self.text[:self.cursor] + self.text[self.cursor + 1:]
+        self.completion = None
+
     def insert(self, k: str) -> None:
         """
             Inserts text at the cursor.
@@ -197,16 +208,42 @@ class CommandEdit(urwid.WidgetWrap):
         self.update()
 
     def keypress(self, size, key) -> None:
-        if key == "backspace":
+        if key == "delete":
+            self.cbuf.delete()
+        elif key == "ctrl a" or key == 'home':
+            self.cbuf.cursor = 0
+        elif key == "ctrl e" or key == 'end':
+            self.cbuf.cursor = len(self.cbuf.text)
+        elif key == "meta b":
+            self.cbuf.cursor = self.cbuf.text.rfind(' ', 0, self.cbuf.cursor)
+        elif key == "meta f":
+            pos = self.cbuf.text.find(' ', self.cbuf.cursor + 1)
+            if pos == -1:
+                pos = len(self.cbuf.text)
+            self.cbuf.cursor = pos
+        elif key == "ctrl w":
+            prev_cursor = self.cbuf.cursor
+            pos = self.cbuf.text.rfind(' ', 0, self.cbuf.cursor - 1)
+            if pos == -1:
+                new_text = self.cbuf.text[self.cbuf.cursor:]
+                cursor_pos = 0
+            else:
+                txt_after = self.cbuf.text[self.cbuf.cursor:]
+                txt_before = self.cbuf.text[0:pos]
+                new_text = f"{txt_before} {txt_after}"
+                cursor_pos = prev_cursor - (prev_cursor - pos) + 1
+            self.cbuf.set_text(new_text)
+            self.cbuf.cursor = cursor_pos
+        elif key == "backspace":
             self.cbuf.backspace()
-        elif key == "left":
+        elif key == "left" or key == "ctrl b":
             self.cbuf.left()
-        elif key == "right":
+        elif key == "right" or key == "ctrl f":
             self.cbuf.right()
-        elif key == "up":
+        elif key == "up" or key == "ctrl p":
             self.history.add_command(self.cbuf)
             self.cbuf = self.history.get_prev() or self.cbuf
-        elif key == "down":
+        elif key == "down" or key == "ctrl n":
             self.cbuf = self.history.get_next() or self.cbuf
         elif key == "shift tab":
             self.cbuf.cycle_completion(False)
