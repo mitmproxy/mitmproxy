@@ -9,8 +9,6 @@ import mitmproxy.flow
 import mitmproxy.master
 import mitmproxy.types
 
-from mitmproxy import command_lexer
-
 
 class Completer:
     @abc.abstractmethod
@@ -163,7 +161,7 @@ class CommandEdit(urwid.WidgetWrap):
             self.cbuf.backspace()
             if self.cbuf.text == '':
                 self.active_filter = False
-                self.master.commands.execute("command_history.filter ''")
+                self.master.commands.call("commands.history.filter", "")
                 self.filter_str = ''
         elif key == "left":
             self.cbuf.left()
@@ -173,21 +171,20 @@ class CommandEdit(urwid.WidgetWrap):
             if self.active_filter is False:
                 self.active_filter = True
                 self.filter_str = self.cbuf.text
-                _cmd = command_lexer.quote(self.cbuf.text)
-                self.master.commands.execute("command_history.filter %s" % _cmd)
+                self.master.commands.call("commands.history.filter", self.cbuf.text)
 
-            cmd = self.master.commands.execute("command_history.prev")
+            cmd = self.master.commands.execute("commands.history.prev")
             self.cbuf = CommandBuffer(self.master, cmd)
         elif key == "down":
             prev_cmd = self.cbuf.text
-            cmd = self.master.commands.execute("command_history.next")
+            cmd = self.master.commands.execute("commands.history.next")
 
             if cmd == '':
                 if prev_cmd == self.filter_str:
                     self.cbuf = CommandBuffer(self.master, prev_cmd)
                 else:
                     self.active_filter = False
-                    self.master.commands.execute("command_history.filter ''")
+                    self.master.commands.call("commands.history.filter", "")
                     self.filter_str = ''
                     self.cbuf = CommandBuffer(self.master, '')
             else:

@@ -132,7 +132,6 @@ class ActionBar(urwid.WidgetWrap):
     def keypress(self, size, k):
         if self.prompting:
             if k == "esc":
-                self.master.commands.execute('command_history.cancel')
                 self.prompt_done()
             elif self.onekey:
                 if k == "enter":
@@ -140,9 +139,9 @@ class ActionBar(urwid.WidgetWrap):
                 elif k in self.onekey:
                     self.prompt_execute(k)
             elif k == "enter":
-                cmd = command_lexer.quote(self._w.cbuf.text)
-                self.master.commands.execute(f"command_history.add {cmd}")
-                self.prompt_execute(self._w.get_edit_text())
+                text = self._w.get_edit_text()
+                self.prompt_execute(text)
+                self.master.commands.call("commands.history.add", text)
             else:
                 if common.is_keypress(k):
                     self._w.keypress(size, k)
