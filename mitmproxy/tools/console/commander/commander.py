@@ -232,7 +232,6 @@ class CommandEdit(urwid.WidgetWrap):
                 txt_before = self.cbuf.text[0:pos]
                 new_text = f"{txt_before} {txt_after}"
                 cursor_pos = prev_cursor - (prev_cursor - pos) + 1
-
             self.cbuf.set_text(new_text)
             self.cbuf.cursor = cursor_pos
         elif key == "backspace":
