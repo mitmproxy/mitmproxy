@@ -114,8 +114,8 @@ class TestCommandEdit:
     def test_up_and_down(self, tctx):
         edit = commander.CommandEdit(tctx.master, '')
 
-        tctx.master.commands.execute('command_history.clear')
-        tctx.master.commands.execute('command_history.add "cmd1"')
+        tctx.master.commands.execute('commands.history.clear')
+        tctx.master.commands.execute('commands.history.add "cmd1"')
 
         edit.keypress(1, 'up')
         assert edit.get_edit_text() == 'cmd1'
@@ -131,9 +131,9 @@ class TestCommandEdit:
 
         edit = commander.CommandEdit(tctx.master, '')
 
-        tctx.master.commands.execute('command_history.clear')
-        tctx.master.commands.execute('command_history.add "cmd1"')
-        tctx.master.commands.execute('command_history.add "cmd2"')
+        tctx.master.commands.execute('commands.history.clear')
+        tctx.master.commands.execute('commands.history.add "cmd1"')
+        tctx.master.commands.execute('commands.history.add "cmd2"')
 
         edit.keypress(1, 'up')
         assert edit.get_edit_text() == 'cmd2'
@@ -168,7 +168,7 @@ class TestCommandEdit:
         assert edit.get_edit_text() == 'abc'
 
         edit = commander.CommandEdit(tctx.master, '')
-        tctx.master.commands.execute('command_history.add "cmd3"')
+        tctx.master.commands.execute('commands.history.add "cmd3"')
 
         edit.keypress(1, 'z')
         edit.keypress(1, 'up')
