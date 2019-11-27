@@ -4,7 +4,6 @@ from typing import Optional
 import urwid
 
 import mitmproxy.tools.console.master # noqa
-from mitmproxy import command_lexer
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import commandexecutor
