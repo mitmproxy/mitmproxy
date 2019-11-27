@@ -7,6 +7,7 @@ from mitmproxy import flow
 from mitmproxy import exceptions
 from mitmproxy import io
 from mitmproxy import command
+from mitmproxy import tcp 
 import mitmproxy.types
 
 
@@ -83,6 +84,8 @@ class ServerPlayback:
         """
         self.flowmap = {}
         for i in flows:
+            if isinstance(i, tcp.TCPViewEntry):
+                raise exceptions.CommandError("TCP replay is not implemented")
             if i.response:  # type: ignore
                 l = self.flowmap.setdefault(self._hash(i), [])
                 l.append(i)

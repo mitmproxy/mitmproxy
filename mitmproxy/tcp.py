@@ -107,6 +107,7 @@ class TCPViewEntry(flow.Flow):
         self.flow = flow
         self.message = message
         self.id = str(uuid.uuid4())
+        self.marked = False
 
     @property
     def client_stream(self):
@@ -190,16 +191,12 @@ class TCPViewEntry(flow.Flow):
         return self.flow.reply
 
     @property
-    def marked(self):
-        return self.flow.marked
-
-    @property
     def metadata(self):
         return self.flow.metadata
  
     @property
     def killable(self):
-        return self.flow.killable()
+        return self.flow.killable
 
     def get_state(self):
         return self.flow.get_state()
@@ -248,6 +245,7 @@ class TCPFlowEntry(TCPViewEntry):
         self.flow = flow
         self.id = str(uuid.uuid4())
         self._timestamp = time.time()
+        self.marked = False
 
     @property
     def timestamp(self):

@@ -9,6 +9,7 @@ from mitmproxy import command
 from mitmproxy import flow
 from mitmproxy import optmanager
 from mitmproxy import platform
+from mitmproxy import tcp
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import status_codes
 import mitmproxy.types
@@ -135,6 +136,7 @@ class Core:
         """
             Kill running flows.
         """
+        import rpdb;rpdb.set_trace()
         updated = []
         for f in flows:
             if f.killable:
@@ -151,6 +153,8 @@ class Core:
         """
         updated = []
         for f in flows:
+            if isinstance(f, tcp.TCPViewEntry):
+                raise exceptions.CommandError("TCP revert is not supported") 
             if f.modified():
                 f.revert()
                 updated.append(f)

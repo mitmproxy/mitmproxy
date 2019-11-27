@@ -9,11 +9,13 @@ class ViewASCII(base.View):
 
     def __call__(self, data, **metadata):
         style="text"
+        from_client=False
 
         if "from_client" in metadata:
             if metadata['from_client']:
                 style="from_client"
+                from_client=True
             else:
                 style="from_server"
 
-        return "ASCII", base.format_text(strutils.bytes_to_escaped_str(data, True), style=style, from_client=metadata['from_client'])
+        return "ASCII", base.format_text(strutils.bytes_to_escaped_str(data, True), style=style, from_client=from_client)

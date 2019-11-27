@@ -70,27 +70,41 @@ class _OrderKey:
 
 class OrderRequestStart(_OrderKey):
     def generate(self, f: http.HTTPFlow) -> int:
-        return 0
-        return f.request.timestamp_start or 0
+        if isinstance(f, http.HTTPFlow):
+            return f.request.timestamp_start or 0
+        else:
+            return f.timestamp
 
 
 class OrderRequestMethod(_OrderKey):
     def generate(self, f: http.HTTPFlow) -> str:
-        return f.request.method
+        if isinstance(f, http.HTTPFlow):
+            return f.request.method
+        else:
+            return "TCP"
 
 
 class OrderRequestURL(_OrderKey):
     def generate(self, f: http.HTTPFlow) -> str:
-        return f.request.url
-
+        if isinstance(f, http.HTTPFlow):
+            return f.request.url
+        else:
+            return f.server
 
 class OrderKeySize(_OrderKey):
     def generate(self, f: http.HTTPFlow) -> int:
         s = 0
-        if f.request.raw_content:
-            s += len(f.request.raw_content)
-        if f.response and f.response.raw_content:
-            s += len(f.response.raw_content)
+        if isinstance(f, http.HTTPFlow):
+            if f.request.raw_content:
+                s += len(f.request.raw_content)
+            if f.response and f.response.raw_content:
+                s += len(f.response.raw_content)
+        else: 
+            if isinstance(f, tcp.TCPMessageEntry):
+                message_index = f.message_index
+                s = len(f.message.content)
+            else:
+                s = len(f.flow.raw_content)
         return s
 
 
@@ -401,7 +415,14 @@ class View(collections.abc.Sequence):
             Duplicates the specified flows, and sets the focus to the first
             duplicate.
         """
-        dups = [f.copy() for f in flows]
+        
+        dups = list()
+        for f in flows:
+
+            if isinstance(flows[0], tcp.TCPViewEntry):
+                raise exceptions.CommandError("TCP duplication is not implemented")
+            else:
+                dups.append(f.copy())
         if dups:
             self.add(dups)
             self.focus.flow = dups[0]

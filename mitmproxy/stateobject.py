@@ -63,7 +63,6 @@ def _process(typeinfo: typecheck.Type, val: typing.Any, make: bool) -> typing.An
 
     if typename.startswith("typing.List"):
         T = typecheck.sequence_type(typeinfo)
-        import rpdb;rpdb.set_trace()
         for x in val:
             _process(T, x, make)
         return [_process(T, x, make) for x in val]

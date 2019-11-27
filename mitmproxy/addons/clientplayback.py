@@ -8,6 +8,7 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import flow
+from mitmproxy import tcp
 from mitmproxy import options
 from mitmproxy import connections
 from mitmproxy.net import server_spec, tls
@@ -187,6 +188,8 @@ class ClientPlayback:
         """
         lst = []
         for f in flows:
+            if isinstance(f, tcp.TCPViewEntry):
+                raise exceptions.CommandError("TCP replay is not implemented")
             hf = typing.cast(http.HTTPFlow, f)
 
             err = self.check(hf)
