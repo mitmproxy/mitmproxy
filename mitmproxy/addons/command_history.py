@@ -33,11 +33,12 @@ class CommandHistory:
         if "command_history" in updated or "confdir" in updated:
             if ctx.options.command_history and self.history_file.is_file():
                 self.history = self.history_file.read_text().splitlines()
+                self.set_filter('')
 
     def done(self):
         if ctx.options.command_history and len(self.history) > self.VACUUM_SIZE:
             # vacuum history so that it doesn't grow indefinitely.
-            history_str = "\n".join(self.history[-self.VACUUM_SIZE/2:]) + "\n"
+            history_str = "\n".join(self.history[-self.VACUUM_SIZE / 2:]) + "\n"
             self.history_file.write_text(history_str)
 
     @command.command("commands.history.add")
@@ -49,6 +50,9 @@ class CommandHistory:
         if ctx.options.command_history:
             with self.history_file.open("a") as f:
                 f.write(f"{command}\n")
+                f.close()
+
+        self.set_filter('')
 
     @command.command("commands.history.get")
     def get_history(self) -> typing.Sequence[str]:
@@ -57,8 +61,10 @@ class CommandHistory:
 
     @command.command("commands.history.clear")
     def clear_history(self):
-        self.history_file.unlink()
+        if self.history_file.exists():
+            self.history_file.unlink()
         self.history = []
+        self.set_filter('')
 
     # Functionality to provide a filtered list that can be iterated through.
 
