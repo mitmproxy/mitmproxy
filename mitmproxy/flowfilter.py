@@ -80,7 +80,7 @@ class FAll(_Action):
     code = "all"
     help = "Show all types of flows"
 
-    @only(tcp.TCPFlow, http.HTTPFlow, websocket.WebSocketFlow)
+    @only(tcp.TCPViewEntry, http.HTTPFlow, websocket.WebSocketFlow)
     def __call__(self, f):
         return True
 
@@ -105,7 +105,7 @@ class FHTTP(_Action):
     help = "Match HTTP flows"
 
     @only(http.HTTPFlow)
-    def __call__(self, f):
+    def __call__(i, f):
         return True
 
 
@@ -118,13 +118,23 @@ class FWebSocket(_Action):
         return True
 
 
-class FTCP(_Action):
-    code = "tcp"
-    help = "Match TCP flows"
 
-    @only(tcp.TCPFlow)
+class FTCPPacket(_Action):
+    code = "tcppacket"
+    help = "Match all TCP packets"
+
+    @only(tcp.TCPMessageEntry)
     def __call__(self, f):
         return True
+
+class FTCPStream(_Action):
+    code = "tcpstream"
+    help = "Match all TCP streams"
+
+    @only(tcp.TCPFlowEntry)
+    def __call__(self, f):
+        return True
+
 
 
 class FReq(_Action):
@@ -449,7 +459,8 @@ filter_unary: Sequence[Type[_Action]] = [
     FMarked,
     FReq,
     FResp,
-    FTCP,
+    FTCPStream,
+    FTCPPacket,
     FWebSocket,
 ]
 filter_rex: Sequence[Type[_Rex]] = [

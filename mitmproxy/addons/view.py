@@ -219,19 +219,19 @@ class View(collections.abc.Sequence):
     def _refilter(self):
         self._view.clear()
         for i in self._store.values():
-            flow = i
-            if isinstance(flow, tcp.TCPViewEntry):
-                flow = i.flow
-
-            if self.show_marked and not flow.marked:
+            if self.show_marked and not i.marked:
                 continue
-            if self.filter(flow):
+            if self.filter(i):
                     self._base_add(i)
         self.sig_view_refresh.send(self)
 
     """ View API """
 
+    @command.command("refilt")
+    def refilt(self) -> None:
+        self._refilter()
     # Focus
+
     @command.command("view.focus.go")
     def go(self, dst: int) -> None:
         """
@@ -489,11 +489,7 @@ class View(collections.abc.Sequence):
             if f.id not in self._store:
                 self._store[f.id] = f
 
-                filt = self.filter(f)
-                if isinstance(f, tcp.TCPViewEntry):
-                    filt = self.filter(f.flow)
-
-                if filt:
+                if self.filter(f):
                     self._base_add(f)
                     if self.focus_follow:
                         self.focus.flow = f
@@ -585,8 +581,6 @@ class View(collections.abc.Sequence):
         self.add([view])
 
     def tcp_end(self, f):
-        view = tcp.TCPEndEntry(flow=f, message=f.messages[-1])
-        self.add([view])
         self.sig_view_refresh.send(self)
 
     def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
@@ -595,10 +589,7 @@ class View(collections.abc.Sequence):
         """
         for f in flows:
             if f.id in self._store:
-                filt = self.filter(f)
-                if isinstance(f, tcp.TCPViewEntry):
-                    filt = self.filter(f.flow)
-                if filt:
+                if self.filter(f):
                     if f not in self._view:
                         self._base_add(f)
                         if self.focus_follow:

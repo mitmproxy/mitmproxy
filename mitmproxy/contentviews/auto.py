@@ -22,7 +22,7 @@ class ViewAuto(base.View):
         if metadata.get("query"):
             return contentviews.get("Query")(data, **metadata)
         if data and strutils.is_mostly_bin(data):
-            return contentviews.get("Hex")(data)
+            return contentviews.get("Hex")(data, **metadata)
         if not data:
             return "No content", []
-        return contentviews.get("Raw")(data)
+        return contentviews.get("ASCII")(data, **metadata)

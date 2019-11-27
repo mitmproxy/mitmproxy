@@ -569,6 +569,7 @@ class ConsoleAddon:
 
         if isinstance(flow, tcp.TCPViewEntry):
             return [
+                "auto",
                 "ascii",
                 "hex",
                 "raw",

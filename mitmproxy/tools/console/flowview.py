@@ -55,7 +55,12 @@ class FlowDetails(tabs.Tabs):
 
     def focus_changed(self):
         flow = self.master.view.focus.flow
-        if isinstance(flow,tcp.TCPViewEntry):
+        if isinstance(flow,tcp.TCPFlowEntry):
+            self.tabs = [
+                (self.tab_tcp_stream, self.view_tcp_stream),
+            ]
+            self.show()
+        elif isinstance(flow,tcp.TCPMessageEntry):
             self.tabs = [
                 (self.tab_tcp_stream, self.view_tcp_stream),
                 (self.tab_tcp_packets, self.view_tcp_packets),

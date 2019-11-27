@@ -81,9 +81,11 @@ def format_dict(
     return format_pairs(d.items())
 
 
-def format_text(text: TTextType) -> typing.Iterator[TViewLine]:
+def format_text(text: TTextType,style="text", from_client="False") -> typing.Iterator[TViewLine]:
     """
     Helper function that transforms bytes into the view output format.
     """
     for line in text.splitlines():
-        yield [("text", line)]
+        if not from_client:
+           line = "    " + line 
+        yield [(style, line)]

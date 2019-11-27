@@ -23,7 +23,7 @@ from mitmproxy import tcp
 from mitmproxy.net import http
 from mitmproxy.utils import strutils
 from . import (
-    auto, raw, hex, json, xml_html, wbxml, javascript, css,
+    auto, raw, hex, ascii, json, xml_html, wbxml, javascript, css,
     urlencoded, multipart, image, query, protobuf
 )
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
@@ -110,7 +110,7 @@ def get_message_content_view(viewname, message):
     if isinstance(message, http.Message):
         metadata["headers"] = message.headers
         
-    if  isinstance(message, tcp.TCPFlow) and isinstance(viewmode, hex.ViewHex):
+    if  isinstance(message, tcp.TCPFlow):
         message_lines = list()
         count = 0
         client_offset = 0
@@ -200,6 +200,7 @@ def get_content_view(viewmode: View, data: bytes, **metadata):
 # The order in which ContentViews are added is important!
 
 add(auto.ViewAuto())
+add(ascii.ViewASCII())
 add(raw.ViewRaw())
 add(hex.ViewHex())
 add(json.ViewJSON())
