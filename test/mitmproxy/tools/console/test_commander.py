@@ -17,12 +17,12 @@ def tctx(tmpdir):
     tctx = taddons.context(options=opts)
     ch = command_history.CommandHistory()
     tctx.master.addons.add(ch)
-    ch.configure([])
+    ch.configure('command_history')
 
     yield tctx
 
     # This runs after each test
-    ch.cleanup()
+    ch.clear_history()
 
 
 class TestListCompleter:
