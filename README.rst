@@ -183,7 +183,6 @@ with the following command:
     :target: https://pypi.python.org/pypi/mitmproxy
     :alt: Supported Python versions
 
-.. _`advanced installation`: https://docs.mitmproxy.org/stable/overview-installation/#advanced-installation
 .. _virtualenv: https://virtualenv.pypa.io/
 .. _`pytest`: http://pytest.org/
 .. _tox: https://tox.readthedocs.io/
