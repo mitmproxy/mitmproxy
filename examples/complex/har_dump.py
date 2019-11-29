@@ -99,8 +99,8 @@ def response(flow):
     started_date_time = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
 
     # Response body size and encoding
-    response_body_size = len(flow.response.raw_content)
-    response_body_decoded_size = len(flow.response.content)
+    response_body_size = len(flow.response.raw_content) if flow.response.raw_content else 0
+    response_body_decoded_size = len(flow.response.content) if flow.response.content else 0
     response_body_compression = response_body_decoded_size - response_body_size
 
     entry = {
