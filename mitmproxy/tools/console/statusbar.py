@@ -142,7 +142,8 @@ class ActionBar(urwid.WidgetWrap):
                 elif k in self.onekey:
                     self.prompt_execute(k)
             elif k == "enter":
-                self.command_history.add_command(self._w.cbuf, True)
+                if isinstance(self._w, commander.CommandEdit):
+                    self.command_history.add_command(self._w.cbuf, True)
                 self.prompt_execute(self._w.get_edit_text())
             else:
                 if common.is_keypress(k):
