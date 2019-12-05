@@ -120,7 +120,7 @@ class FlowDetails(tabs.Tabs):
         message = self._get_content_view_message
         self._get_content_view_message = None
         description, lines, error = contentviews.get_message_content_view(
-            viewmode, message
+            viewmode, message, self.flow
         )
         if error:
             self.master.log.debug(error)

@@ -65,7 +65,7 @@ def save_flows_content(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) ->
             t = time.time()
             if message:
                 description, lines, error = contentviews.get_message_content_view(
-                    'Auto', message
+                    'Auto', message, f
                 )
             else:
                 description, lines = 'No content.', []

@@ -5,6 +5,7 @@ from mitmproxy import contentviews
 from mitmproxy.exceptions import ContentViewException
 from mitmproxy.net.http import Headers
 from mitmproxy.test import tutils
+from mitmproxy.test import tflow
 
 
 class TestContentView(contentviews.View):
@@ -60,21 +61,22 @@ def test_get_content_view():
 
 
 def test_get_message_content_view():
+    f = tflow.tflow()
     r = tutils.treq()
-    desc, lines, err = contentviews.get_message_content_view("raw", r)
+    desc, lines, err = contentviews.get_message_content_view("raw", r, f)
     assert desc == "Raw"
 
-    desc, lines, err = contentviews.get_message_content_view("unknown", r)
+    desc, lines, err = contentviews.get_message_content_view("unknown", r, f)
     assert desc == "Raw"
 
     r.encode("gzip")
-    desc, lines, err = contentviews.get_message_content_view("raw", r)
+    desc, lines, err = contentviews.get_message_content_view("raw", r, f)
     assert desc == "[decoded gzip] Raw"
 
     r.headers["content-encoding"] = "deflate"
-    desc, lines, err = contentviews.get_message_content_view("raw", r)
+    desc, lines, err = contentviews.get_message_content_view("raw", r, f)
     assert desc == "[cannot decode] Raw"
 
     r.content = None
-    desc, lines, err = contentviews.get_message_content_view("raw", r)
+    desc, lines, err = contentviews.get_message_content_view("raw", r, f)
     assert list(lines) == [[("error", "content missing")]]
