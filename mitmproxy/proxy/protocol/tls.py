@@ -242,6 +242,8 @@ class TlsLayer(base.Layer):
                 self._client_hello = net_tls.ClientHello.from_file(self.client_conn.rfile)
             except exceptions.TlsProtocolException as e:
                 self.log("Cannot parse Client Hello: %s" % repr(e), "error")
+                # Without knowning the ClientHello we cannot proceed in this connection.
+                return
 
         # Do we need to do a server handshake now?
         # There are two reasons why we would want to establish TLS with the server now:
