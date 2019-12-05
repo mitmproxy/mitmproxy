@@ -103,6 +103,7 @@ def get_message_content_view(viewname, message):
         metadata["query"] = message.query
     if isinstance(message, http.Message):
         metadata["headers"] = message.headers
+    metadata["message"] = message
 
     description, lines, error = get_content_view(
         viewmode, content, **metadata
