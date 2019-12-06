@@ -86,10 +86,11 @@ class Dumper:
             )
             self.echo(out, ident=4)
 
-    def _echo_message(self, message):
+    def _echo_message(self, message, flow):
         _, lines, error = contentviews.get_message_content_view(
             ctx.options.dumper_default_contentview,
-            message
+            message,
+            flow
         )
         if error:
             ctx.log.debug(error)
@@ -218,14 +219,14 @@ class Dumper:
             if ctx.options.flow_detail >= 2:
                 self._echo_headers(f.request.headers)
             if ctx.options.flow_detail >= 3:
-                self._echo_message(f.request)
+                self._echo_message(f.request, f)
 
         if f.response:
             self._echo_response_line(f)
             if ctx.options.flow_detail >= 2:
                 self._echo_headers(f.response.headers)
             if ctx.options.flow_detail >= 3:
-                self._echo_message(f.response)
+                self._echo_message(f.response, f)
 
         if f.error:
             msg = strutils.escape_control_characters(f.error.msg)
@@ -263,7 +264,7 @@ class Dumper:
             if ctx.options.flow_detail >= 3:
                 message = message.from_state(message.get_state())
                 message.content = message.content.encode() if isinstance(message.content, str) else message.content
-                self._echo_message(message)
+                self._echo_message(message, f)
 
     def websocket_end(self, f):
         if self.match(f):
@@ -291,4 +292,4 @@ class Dumper:
                 direction=direction,
             ))
             if ctx.options.flow_detail >= 3:
-                self._echo_message(message)
+                self._echo_message(message, f)
