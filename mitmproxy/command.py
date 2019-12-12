@@ -100,8 +100,10 @@ class Command:
     def prepare_args(self, args: typing.Sequence[str]) -> inspect.BoundArguments:
         try:
             bound_arguments = self.signature.bind(*args)
-        except TypeError as v:
-            raise exceptions.CommandError(f"Command argument mismatch: {v.args[0]}")
+        except TypeError:
+            expected = f'Expected: {str(self.signature.parameters)}'
+            received = f'Received: {str(args)}'
+            raise exceptions.CommandError(f"Command argument mismatch: \n\t{expected}\n\t{received}")
 
         for name, value in bound_arguments.arguments.items():
             convert_to = self.signature.parameters[name].annotation

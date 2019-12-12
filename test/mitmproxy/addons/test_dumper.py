@@ -123,7 +123,7 @@ def test_echo_body():
     d = dumper.Dumper(sio, sio_err)
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=3)
-        d._echo_message(f.response)
+        d._echo_message(f.response, f)
         t = sio.getvalue()
         assert "cut off" in t
 

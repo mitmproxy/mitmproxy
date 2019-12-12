@@ -83,6 +83,7 @@ def run(
     except SystemExit:
         arg_check.check()
         sys.exit(1)
+
     try:
         opts.set(*args.setoptions, defer=True)
         optmanager.load_paths(

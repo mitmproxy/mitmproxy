@@ -1,6 +1,4 @@
 import abc
-import collections
-import copy
 import typing
 
 import urwid
@@ -158,53 +156,15 @@ class CommandBuffer:
         self.completion = None
 
 
-class CommandHistory:
-    def __init__(self, master: mitmproxy.master.Master, size: int = 30) -> None:
-        self.saved_commands: collections.deque = collections.deque(
-            [CommandBuffer(master, "")],
-            maxlen=size
-        )
-        self.index: int = 0
-
-    @property
-    def last_index(self):
-        return len(self.saved_commands) - 1
-
-    def get_next(self) -> typing.Optional[CommandBuffer]:
-        if self.index < self.last_index:
-            self.index = self.index + 1
-            return self.saved_commands[self.index]
-        return None
-
-    def get_prev(self) -> typing.Optional[CommandBuffer]:
-        if self.index > 0:
-            self.index = self.index - 1
-            return self.saved_commands[self.index]
-        return None
-
-    def add_command(self, command: CommandBuffer, execution: bool = False) -> None:
-        if self.index == self.last_index or execution:
-            last_item = self.saved_commands[-1]
-            last_item_empty = not last_item.text
-            if last_item.text == command.text or (last_item_empty and execution):
-                self.saved_commands[-1] = copy.copy(command)
-            else:
-                self.saved_commands.append(command)
-                if not execution and self.index < self.last_index:
-                    self.index += 1
-            if execution:
-                self.index = self.last_index
-
-
 class CommandEdit(urwid.WidgetWrap):
     leader = ": "
 
-    def __init__(self, master: mitmproxy.master.Master,
-                 text: str, history: CommandHistory) -> None:
+    def __init__(self, master: mitmproxy.master.Master, text: str) -> None:
         super().__init__(urwid.Text(self.leader))
         self.master = master
+        self.active_filter = False
+        self.filter_str = ''
         self.cbuf = CommandBuffer(master, text)
-        self.history = history
         self.update()
 
     def keypress(self, size, key) -> None:
@@ -236,15 +196,35 @@ class CommandEdit(urwid.WidgetWrap):
             self.cbuf.cursor = cursor_pos
         elif key == "backspace":
             self.cbuf.backspace()
+            if self.cbuf.text == '':
+                self.active_filter = False
+                self.master.commands.call("commands.history.filter", "")
+                self.filter_str = ''
         elif key == "left" or key == "ctrl b":
             self.cbuf.left()
         elif key == "right" or key == "ctrl f":
             self.cbuf.right()
         elif key == "up" or key == "ctrl p":
-            self.history.add_command(self.cbuf)
-            self.cbuf = self.history.get_prev() or self.cbuf
+            if self.active_filter is False:
+                self.active_filter = True
+                self.filter_str = self.cbuf.text
+                self.master.commands.call("commands.history.filter", self.cbuf.text)
+            cmd = self.master.commands.execute("commands.history.prev")
+            self.cbuf = CommandBuffer(self.master, cmd)
         elif key == "down" or key == "ctrl n":
-            self.cbuf = self.history.get_next() or self.cbuf
+            prev_cmd = self.cbuf.text
+            cmd = self.master.commands.execute("commands.history.next")
+
+            if cmd == '':
+                if prev_cmd == self.filter_str:
+                    self.cbuf = CommandBuffer(self.master, prev_cmd)
+                else:
+                    self.active_filter = False
+                    self.master.commands.call("commands.history.filter", "")
+                    self.filter_str = ''
+                    self.cbuf = CommandBuffer(self.master, '')
+            else:
+                self.cbuf = CommandBuffer(self.master, cmd)
         elif key == "shift tab":
             self.cbuf.cycle_completion(False)
         elif key == "tab":
