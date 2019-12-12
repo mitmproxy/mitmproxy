@@ -134,7 +134,8 @@ class ActionBar(urwid.WidgetWrap):
     def keypress(self, size, k):
         if self.prompting:
             if k == "esc":
-                self.command_history.index = self.command_history.last_index
+                if isinstance(self._w, commander.CommandEdit):
+                    self.command_history.index = self.command_history.last_index
                 self.prompt_done()
             elif self.onekey:
                 if k == "enter":
