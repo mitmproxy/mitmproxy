@@ -75,16 +75,16 @@ function styles(files, dev){
         .pipe(livereload({auto: false}));
 }
 gulp.task("styles-app-dev", function () {
-    styles(conf.css.app, true);
+    return styles(conf.css.app, true);
 });
 gulp.task("styles-vendor-dev", function () {
-    styles(conf.css.vendor, true);
+    return styles(conf.css.vendor, true);
 });
 gulp.task("styles-app-prod", function () {
-    styles(conf.css.app, false);
+    return styles(conf.css.app, false);
 });
 gulp.task("styles-vendor-prod", function () {
-    styles(conf.css.vendor, false);
+    return styles(conf.css.vendor, false);
 });
 
 
@@ -189,7 +189,7 @@ gulp.task("peg", function () {
 
 gulp.task(
     "dev",
-    [
+    gulp.series(
         "copy",
         "styles-vendor-dev",
         "styles-app-dev",
@@ -197,11 +197,11 @@ gulp.task(
         "peg",
         "scripts-app-dev",
         "templates"
-    ]
+    )
 );
 gulp.task(
     "prod",
-    [
+    gulp.series(
         "copy",
         "styles-vendor-prod",
         "styles-app-prod",
@@ -209,17 +209,20 @@ gulp.task(
         "peg",
         "scripts-app-prod",
         "templates"
-    ]
+    )
 );
 
-gulp.task("default", ["dev"], function () {
-    livereload.listen({auto: true});
-    gulp.watch(["src/css/vendor*"], ["styles-vendor-dev"]);
-    gulp.watch(["src/css/**"], ["styles-app-dev"]);
+gulp.task("default", gulp.series(
+    "dev",
+    function () {
+        livereload.listen({auto: true});
+        gulp.watch(["src/css/vendor*"], gulp.series("styles-vendor-dev"));
+        gulp.watch(["src/css/**"], gulp.series("styles-app-dev"));
 
-    gulp.watch(conf.templates, ["templates"]);
-    gulp.watch(conf.peg, ["peg"]);
-    gulp.watch(["src/js/**"], ["eslint"]);
-    // other JS is handled by watchify.
-    gulp.watch(conf.copy, ["copy"]);
-});
+        gulp.watch(conf.templates, gulp.series("templates"));
+        gulp.watch(conf.peg, gulp.series("peg"));
+        gulp.watch(["src/js/**"], gulp.series("eslint"));
+        // other JS is handled by watchify.
+        gulp.watch(conf.copy, gulp.series("copy"));
+    })
+);
