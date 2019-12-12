@@ -1,3 +1,46 @@
+16 December 2019: mitmproxy 5.0
+
+  ** Major Changes **
+    * Added new Table UI (@Jessonsotoventura)
+    * Added EKU extension to certificates. This fixes support for macOS Catalina (@vin01)
+
+  ** Security Fixes **
+    * Fixed command injection vulnerabilities when exporting flows as curl/httpie commands (@cript0nauta)
+    * Do not echo unsanitized user input in HTTP error responses (@fimad)
+
+  ** Full Changelog **
+    * Moved to Github CI for Continuous Integration, dropping support for old Linux and macOS releases. (#3728)
+    * Vastly improved command parsing, in particular for setting flow filters (@typoon)
+    * Added a new flow export for raw responses (@mckeimic)
+    * URLs are now edited in an external editor (@Jessonsotoventura)
+    * mitmproxy now has a command history (@typoon)
+    * Added terminal like keyboard shortcuts for the command bar (ctrl+w, ctrl+a, ctrl+f, ...) (@typoon)
+    * Fixed issue with improper handling of non-ascii characters in URLs (@rjt-gupta)
+    * Filtering can now use unicode characters (@rjt-gupta)
+    * Fixed issue with user keybindings not being able to override default keybindings
+    * Improved installation instructions
+    * Added support for IPV6-only environments (@sethb157)
+    * Fixed bug with server replay (@rjt-gupta)
+    * Fixed issue with duplicate error responses (@ccssrryy)
+    * Users can now set a specific external editor using $MITMPROXY_EDITOR (@rjt-gupta)
+    * Config file can now be called `config.yml` or `config.yaml` (@ylmrx)
+    * Fixed crash on `view.focus.[next|prev]` (@ylmrx)
+    * Updated documentation to help using mitmproxy certificate on Android (@jannst)
+    * Added support to parse IPv6 entries from `pfctl` on MacOS. (@tomlabaude)
+    * Fixed instructions on how to build the documentation (@jannst)
+    * Added a new `--allow-hosts` option (@pierlon)
+    * Added support for zstd content-encoding (@tsaaristo)
+    * Fixed issue where the replay server would corrupt the Date header (@tonyb486)
+    * Improve speed for WebSocket interception (@MathieuBordere)
+    * Fixed issue with parsing JPEG files. (@lusceu)
+    * Improve example code style (@BoboTiG)
+    * Fixed issue converting void responses to HAR (@worldmind)
+    * Color coded http status codes in mitmweb (@arun-94)
+    * Added organization to generated certificates (@Abcdefghijklmnopqrstuvwxyzxyz)
+    * Errors are now displayed on sys.stderr (@JessicaFavin)
+    * Fixed issue with replay timestamps (@rjt-gupta)
+    * Fixed copying in mitmweb on macOS (@XZzYassin)
+
 31 July 2018: mitmproxy 4.0.4
 
     * Security: Protect mitmweb against DNS rebinding. (CVE-2018-14505, @atx)

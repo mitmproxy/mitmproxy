@@ -3,10 +3,10 @@ from typing import Optional
 
 import urwid
 
-import mitmproxy.tools.console.master # noqa
+import mitmproxy.tools.console.master  # noqa
+from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console.commander import commander
 
 
@@ -57,6 +57,7 @@ class ActionBar(urwid.WidgetWrap):
             def cb(*args):
                 if w == self._w:
                     self.clear()
+
             signals.call_in.send(seconds=expire, callback=cb)
 
     def prep_prompt(self, p):
@@ -105,7 +106,13 @@ class ActionBar(urwid.WidgetWrap):
         )
         if cursor is not None:
             self._w.cbuf.cursor = cursor
-        self.prompting = commandexecutor.CommandExecutor(self.master)
+        self.prompting = self.execute_command
+
+    def execute_command(self, txt):
+        if txt.strip():
+            self.master.commands.call("commands.history.add", txt)
+        execute = commandexecutor.CommandExecutor(self.master)
+        execute(txt)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
         """
@@ -140,7 +147,6 @@ class ActionBar(urwid.WidgetWrap):
             elif k == "enter":
                 text = self._w.get_edit_text()
                 self.prompt_execute(text)
-                self.master.commands.call("commands.history.add", text)
             else:
                 if common.is_keypress(k):
                     self._w.keypress(size, k)
@@ -170,7 +176,7 @@ class StatusBar(urwid.WidgetWrap):
     keyctx = ""
 
     def __init__(
-        self, master: "mitmproxy.tools.console.master.ConsoleMaster"
+            self, master: "mitmproxy.tools.console.master.ConsoleMaster"
     ) -> None:
         self.master = master
         self.ib = urwid.WidgetWrap(urwid.Text(""))
