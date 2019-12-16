@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request, create]
+on: [push, pull_request]
 
 # We currently use Python 3.7 for most things:
 # - zstandard currently doesn't have 3.8 wheels,
