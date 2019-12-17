@@ -93,7 +93,7 @@ setup(
             "asynctest>=0.12.0",
             "flake8>=3.7.8,<3.8",
             "Flask>=1.0,<1.2",
-            "mypy>=0.750,<0.751",
+            "mypy>=0.760,<0.761",
             "parver>=0.1,<2.0",
             "pytest-asyncio>=0.10.0,<0.11",
             "pytest-cov>=2.7.1,<3",
