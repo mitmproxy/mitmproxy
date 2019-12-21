@@ -95,7 +95,7 @@ def fcol(s, attr):
     )
 
 
-if urwid.util.detected_encoding and not IS_WSL:
+if urwid.util.detected_encoding:
     SYMBOL_REPLAY = u"\u21ba"
     SYMBOL_RETURN = u"\u2190"
     SYMBOL_MARK = u"\u25cf"
