@@ -8,7 +8,7 @@ from h11._receivebuffer import ReceiveBuffer
 from mitmproxy import http
 from mitmproxy.net.http import http1
 from mitmproxy.net.http.http1 import read_sansio as http1_sansio
-from mitmproxy.proxy2 import commands, events
+from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2.context import Client, Connection, Server
 from mitmproxy.proxy2.layers.http._base import StreamId
 from ._base import HttpConnection
@@ -40,7 +40,7 @@ class Http1Connection(HttpConnection):
         yield from self.state(event)
 
     @abstractmethod
-    def send(self, event: HttpEvent) -> commands.TCommandGenerator:
+    def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
         yield from ()
 
     def make_body_reader(self, expected_size: typing.Optional[int]) -> TBodyReader:
@@ -106,7 +106,7 @@ class Http1Server(Http1Connection):
         self.stream_id = 1
         self.state = self.read_request_headers
 
-    def send(self, event: HttpEvent) -> commands.TCommandGenerator:
+    def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
         assert event.stream_id == self.stream_id
         if isinstance(event, ResponseHeaders):
             self.response = event.response
@@ -197,7 +197,7 @@ class Http1Client(Http1Connection):
         self.state = self.read_response_headers
         self.send_queue = []
 
-    def send(self, event: HttpEvent) -> commands.TCommandGenerator:
+    def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
         if not self.stream_id:
             assert isinstance(event, RequestHeaders)
             self.stream_id = event.stream_id

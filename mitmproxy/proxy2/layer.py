@@ -8,8 +8,14 @@ from abc import abstractmethod
 
 from mitmproxy import log
 from mitmproxy.proxy2 import commands, events
-from mitmproxy.proxy2.commands import Hook
+from mitmproxy.proxy2.commands import Command, Hook
 from mitmproxy.proxy2.context import Connection, Context
+
+T = typing.TypeVar('T')
+CommandGenerator = typing.Generator[Command, typing.Optional[events.CommandReply], T]
+"""
+A function annotated with CommandGenerator[bool] may yield commands and ultimately return a boolean value.
+"""
 
 
 class Paused(typing.NamedTuple):
@@ -17,7 +23,7 @@ class Paused(typing.NamedTuple):
     State of a layer that's paused because it is waiting for a command reply.
     """
     command: commands.Command
-    generator: commands.TCommandGenerator
+    generator: CommandGenerator
 
 
 class Layer:
@@ -65,11 +71,11 @@ class Layer:
         )
 
     @abstractmethod
-    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+    def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
         """Handle a proxy server event"""
         yield from ()  # pragma: no cover
 
-    def handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+    def handle_event(self, event: events.Event) -> CommandGenerator[None]:
         if self._paused:
             # did we just receive the reply we were waiting for?
             pause_finished = (
@@ -88,7 +94,7 @@ class Layer:
             command_generator = self._handle_event(event)
             yield from self.__process(command_generator)
 
-    def __process(self, command_generator: commands.TCommandGenerator, send=None):
+    def __process(self, command_generator: CommandGenerator, send=None):
         """
         yield all commands from a generator.
         if a command is blocking, the layer is paused and this function returns before

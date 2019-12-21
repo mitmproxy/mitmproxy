@@ -4,13 +4,12 @@ from wsproto import ConnectionType, WSConnection
 from wsproto.extensions import PerMessageDeflate
 
 from mitmproxy import websocket, http, flow
-from mitmproxy.proxy2 import events, commands
+from mitmproxy.proxy2 import events, commands, layer
 from mitmproxy.proxy2.context import Context
-from mitmproxy.proxy2.layer import Layer
 from mitmproxy.proxy2.utils import expect
 
 
-class WebsocketLayer(Layer):
+class WebsocketLayer(layer.Layer):
     """
     WebSocket layer that intercepts and relays messages.
     """
@@ -29,7 +28,7 @@ class WebsocketLayer(Layer):
         assert context.server.connected
 
     @expect(events.Start)
-    def start(self, _) -> commands.TCommandGenerator:
+    def start(self, _) -> layer.CommandGenerator[None]:
         extensions = []
         if 'Sec-WebSocket-Extensions' in self.handshake_flow.response.headers:
             if PerMessageDeflate.name in self.handshake_flow.response.headers['Sec-WebSocket-Extensions']:
@@ -60,7 +59,7 @@ class WebsocketLayer(Layer):
     _handle_event = start
 
     @expect(events.DataReceived, events.ConnectionClosed)
-    def process_data(self, event: events.Event) -> commands.TCommandGenerator:
+    def process_data(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived):
             from_client = event.connection == self.context.client
             if from_client:

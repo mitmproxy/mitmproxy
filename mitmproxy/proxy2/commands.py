@@ -40,7 +40,7 @@ class ConnectionCommand(Command):
     """
     connection: Connection
 
-    def __init__(self, connection: Connection) -> None:
+    def __init__(self, connection: Connection):
         self.connection = connection
 
 
@@ -50,7 +50,7 @@ class SendData(ConnectionCommand):
     """
     data: bytes
 
-    def __init__(self, connection: Connection, data: bytes) -> None:
+    def __init__(self, connection: Connection, data: bytes):
         super().__init__(connection)
         self.data = data
 
@@ -72,6 +72,16 @@ class CloseConnection(ConnectionCommand):
     Close a connection. If the client connection is closed,
     all other connections will ultimately be closed during cleanup.
     """
+
+
+class ProtocolError(Command):
+    """
+    Indicate that an unrecoverable protocol error has occured.
+    """
+    message: str
+
+    def __init__(self, message: str):
+        self.message = message
 
 
 class Hook(Command):
@@ -135,4 +145,3 @@ class Log(Command):
         return f"Log({self.message}, {self.level})"
 
 
-TCommandGenerator = typing.Generator[Command, typing.Any, None]

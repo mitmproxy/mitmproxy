@@ -1,10 +1,9 @@
 from typing import Optional
 
 from mitmproxy import flow, tcp
-from mitmproxy.proxy2 import commands, events
+from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2.commands import Hook
 from mitmproxy.proxy2.context import Context
-from mitmproxy.proxy2.layer import Layer
 from mitmproxy.proxy2.utils import expect
 
 
@@ -24,7 +23,7 @@ class TcpErrorHook(Hook):
     flow: tcp.TCPFlow
 
 
-class TCPLayer(Layer):
+class TCPLayer(layer.Layer):
     """
     Simple TCP layer that just relays messages right now.
     """
@@ -39,7 +38,7 @@ class TCPLayer(Layer):
             self.flow = tcp.TCPFlow(self.context.client, self.context.server, True)
 
     @expect(events.Start)
-    def start(self, _) -> commands.TCommandGenerator:
+    def start(self, _) -> layer.CommandGenerator[None]:
         if self.flow:
             yield TcpStartHook(self.flow)
 
@@ -57,7 +56,7 @@ class TCPLayer(Layer):
     _handle_event = start
 
     @expect(events.DataReceived, events.ConnectionClosed)
-    def relay_messages(self, event: events.ConnectionEvent) -> commands.TCommandGenerator:
+    def relay_messages(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
         from_client = event.connection == self.context.client
         if from_client:
             send_to = self.context.server
@@ -68,7 +67,7 @@ class TCPLayer(Layer):
             if self.flow:
                 tcp_message = tcp.TCPMessage(from_client, event.data)
                 self.flow.messages.append(tcp_message)
-                yield TcpMessageHook(self.flow)
+                yield TcpMessageHook(self.flow)t
                 yield commands.SendData(send_to, tcp_message.content)
             else:
                 yield commands.SendData(send_to, event.data)
@@ -82,5 +81,5 @@ class TCPLayer(Layer):
                     yield TcpEndHook(self.flow)
 
     @expect(events.DataReceived, events.ConnectionClosed)
-    def done(self, _):
+    def done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
