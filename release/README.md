@@ -29,9 +29,11 @@ These steps assume you are on the correct branch and have a git remote called `o
   `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>`
 
 ### Docker
-- The docker image is built on Travis and pushed to Docker Hub automatically.
-- Please check https://hub.docker.com/r/mitmproxy/mitmproxy/tags/ about the latest version.
-- Update `latest` tag: `export VERSION=4.0.3 && docker pull mitmproxy/mitmproxy:$VERSION && docker tag mitmproxy/mitmproxy:$VERSION mitmproxy/mitmproxy:latest && docker push mitmproxy/mitmproxy:latest`.
+- The docker image is built by our CI workers and pushed to Docker Hub automatically.
+- Please verify that https://hub.docker.com/r/mitmproxy/mitmproxy/tags/ has the latest version.
+- The latest and latest-ARMv7 tags should auto-update. @mhils introduced this after the 5.0.0 release.
+  Please verify that this is the case and remove this notice. For reference, this is how to do it manually:
+  `export VERSION=4.0.3 && docker pull mitmproxy/mitmproxy:$VERSION && docker tag mitmproxy/mitmproxy:$VERSION mitmproxy/mitmproxy:latest && docker push mitmproxy/mitmproxy:latest`.
 
 ### Docs
   - `./build-current`. If everything looks alright, continue with
