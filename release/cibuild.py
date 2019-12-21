@@ -569,8 +569,11 @@ def upload():  # pragma: no cover
             "-u", be.docker_username,
             "-p", be.docker_password,
         ])
-        subprocess.check_call(["docker", "push", be.docker_tag])
-        subprocess.check_call(["docker", "push", be.docker_tag + "-ARMv7"])
+        for variant in ["", "-ARMv7"]:
+            subprocess.check_call(["docker", "push", be.docker_tag + variant])
+            if be.is_prod_release:
+                subprocess.check_call(["docker", "tag", be.docker_tag + variant, "mitmproxy/mitmproxy:latest" + variant])
+                subprocess.check_call(["docker", "push", "mitmproxy/mitmproxy:latest" + variant])
 
 
 if __name__ == "__main__":  # pragma: no cover
