@@ -2,8 +2,7 @@ import typing
 
 import pytest
 
-from mitmproxy.proxy2 import events, commands
-from mitmproxy.proxy2.layer import Layer
+from mitmproxy.proxy2 import events, commands, layer
 from . import tutils
 
 
@@ -25,12 +24,12 @@ class TCommandReply(events.CommandReply):
     command: TCommand
 
 
-class TLayer(Layer):
+class TLayer(layer.Layer):
     """
     Simple echo layer
     """
 
-    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, TEvent):
             for x in event.commands:
                 yield TCommand(x)

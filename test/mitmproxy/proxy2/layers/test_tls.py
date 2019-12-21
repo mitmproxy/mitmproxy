@@ -109,7 +109,7 @@ def _test_echo(playbook: tutils.Playbook, tssl: SSLTest, conn: context.Connectio
 class TlsEchoLayer(tutils.EchoLayer):
     err: typing.Optional[str] = None
 
-    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived) and event.data == b"establish-server-tls":
             # noinspection PyTypeChecker
             err = yield tls.EstablishServerTLS(self.context.server)

@@ -7,7 +7,7 @@ from mitmproxy.proxy2.utils import expect
 
 class ReverseProxy(layer.Layer):
     @expect(events.Start)
-    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         spec = server_spec.parse_with_mode(self.context.options.mode)[1]
         self.context.server = Server(spec.address)
         if spec.scheme not in ("http", "tcp"):
@@ -21,7 +21,7 @@ class ReverseProxy(layer.Layer):
 
 class HttpProxy(layer.Layer):
     @expect(events.Start)
-    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         child_layer = layer.NextLayer(self.context)
         self._handle_event = child_layer.handle_event
         yield from child_layer.handle_event(event)
@@ -29,7 +29,7 @@ class HttpProxy(layer.Layer):
 
 class TransparentProxy(layer.Layer):
     @expect(events.Start)
-    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         socket = yield commands.GetSocket(self.context.client)
         try:
             self.context.server.address = platform.original_addr(socket)

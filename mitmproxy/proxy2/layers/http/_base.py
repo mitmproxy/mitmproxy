@@ -2,7 +2,7 @@ import abc
 import typing
 from dataclasses import dataclass
 
-from mitmproxy.proxy2 import commands, events
+from mitmproxy.proxy2 import events, layer
 
 StreamId = int
 
@@ -24,7 +24,7 @@ class HttpConnection(abc.ABC):
         yield from ()
 
     @abc.abstractmethod
-    def send(self, event: HttpEvent) -> commands.TCommandGenerator:
+    def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
         yield from ()
 
 

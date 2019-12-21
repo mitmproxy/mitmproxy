@@ -3,9 +3,8 @@ import typing
 
 from mitmproxy import flow, http
 from mitmproxy.proxy.protocol.http import HTTPMode
-from mitmproxy.proxy2 import commands, events
+from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2.context import Connection, Context, Server
-from mitmproxy.proxy2.layer import Layer, NextLayer
 from mitmproxy.proxy2.layers.tls import EstablishServerTLS, EstablishServerTLSReply, HTTP_ALPNS
 from mitmproxy.proxy2.utils import expect
 from mitmproxy.utils import human
@@ -60,12 +59,12 @@ class SendHttp(HttpCommand):
         return f"Send({self.event})"
 
 
-class HttpStream(Layer):
+class HttpStream(layer.Layer):
     request_body_buf: bytes
     response_body_buf: bytes
     flow: http.HTTPFlow
     stream_id: StreamId
-    child_layer: typing.Optional[Layer] = None
+    child_layer: typing.Optional[layer.Layer] = None
 
     @property
     def mode(self):
@@ -80,7 +79,7 @@ class HttpStream(Layer):
         self.server_state = self.state_uninitialized
 
     @expect(events.Start, HttpEvent)
-    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.Start):
             self.client_state = self.state_wait_for_request_headers
         elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
@@ -91,7 +90,7 @@ class HttpStream(Layer):
             yield from self.server_state(event)
 
     @expect(RequestHeaders)
-    def state_wait_for_request_headers(self, event: RequestHeaders) -> commands.TCommandGenerator:
+    def state_wait_for_request_headers(self, event: RequestHeaders) -> layer.CommandGenerator[None]:
         self.stream_id = event.stream_id
         self.flow = http.HTTPFlow(
             self.context.client,
@@ -146,7 +145,7 @@ class HttpStream(Layer):
         self.server_state = self.state_wait_for_response_headers
 
     @expect(RequestData, RequestEndOfMessage)
-    def state_stream_request_body(self, event: events.Event) -> commands.TCommandGenerator:
+    def state_stream_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             if callable(self.flow.request.stream):
                 data = self.flow.request.stream(event.data)
@@ -158,7 +157,7 @@ class HttpStream(Layer):
             self.client_state = self.state_done
 
     @expect(RequestData, RequestEndOfMessage)
-    def state_consume_request_body(self, event: events.Event) -> commands.TCommandGenerator:
+    def state_consume_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             self.request_body_buf += event.data
         elif isinstance(event, RequestEndOfMessage):
@@ -182,7 +181,7 @@ class HttpStream(Layer):
             self.client_state = self.state_done
 
     @expect(ResponseHeaders)
-    def state_wait_for_response_headers(self, event: ResponseHeaders) -> commands.TCommandGenerator:
+    def state_wait_for_response_headers(self, event: ResponseHeaders) -> layer.CommandGenerator[None]:
         self.flow.response = event.response
         yield HttpResponseHeadersHook(self.flow)
         if self.flow.response.stream:
@@ -192,7 +191,7 @@ class HttpStream(Layer):
             self.server_state = self.state_consume_response_body
 
     @expect(ResponseData, ResponseEndOfMessage)
-    def state_stream_response_body(self, event: events.Event) -> commands.TCommandGenerator:
+    def state_stream_response_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, ResponseData):
             if callable(self.flow.response.stream):
                 data = self.flow.response.stream(event.data)
@@ -204,7 +203,7 @@ class HttpStream(Layer):
             self.server_state = self.state_done
 
     @expect(ResponseData, ResponseEndOfMessage)
-    def state_consume_response_body(self, event: events.Event) -> commands.TCommandGenerator:
+    def state_consume_response_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, ResponseData):
             self.response_body_buf += event.data
         elif isinstance(event, ResponseEndOfMessage):
@@ -222,7 +221,7 @@ class HttpStream(Layer):
     def handle_protocol_error(
             self,
             event: typing.Union[RequestProtocolError, ResponseProtocolError]
-    ) -> commands.TCommandGenerator:
+    ) -> layer.CommandGenerator[None]:
         self.flow.error = flow.Error(event.message)
         yield HttpErrorHook(self.flow)
 
@@ -232,7 +231,7 @@ class HttpStream(Layer):
             yield SendHttp(event, self.context.client)
         return
 
-    def make_server_connection(self) -> typing.Generator[commands.Command, typing.Any, bool]:
+    def make_server_connection(self) -> layer.CommandGenerator[bool]:
         connection, err = yield GetHttpConnection(
             (self.flow.request.host, self.flow.request.port),
             self.flow.request.scheme == "https"
@@ -244,7 +243,7 @@ class HttpStream(Layer):
             self.context.server = self.flow.server_conn = connection
             return True
 
-    def handle_connect(self) -> commands.TCommandGenerator:
+    def handle_connect(self) -> layer.CommandGenerator[None]:
         yield HttpConnectHook(self.flow)
 
         self.context.server = Server((self.flow.request.host, self.flow.request.port))
@@ -261,7 +260,7 @@ class HttpStream(Layer):
         yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)
 
         if 200 <= self.flow.response.status_code < 300:
-            self.child_layer = NextLayer(self.context)
+            self.child_layer = layer.NextLayer(self.context)
             yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
         else:
@@ -269,7 +268,7 @@ class HttpStream(Layer):
             yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
     @expect(RequestData, RequestEndOfMessage, events.Event)
-    def passthrough(self, event: events.Event) -> commands.TCommandGenerator:
+    def passthrough(self, event: events.Event) -> layer.CommandGenerator[None]:
         # HTTP events -> normal connection events
         if isinstance(event, RequestData):
             event = events.DataReceived(self.context.client, event.data)
@@ -288,14 +287,14 @@ class HttpStream(Layer):
                 yield command
 
     @expect()
-    def state_uninitialized(self, _) -> commands.TCommandGenerator:
+    def state_uninitialized(self, _) -> layer.CommandGenerator[None]:
         yield from ()
 
     @expect()
-    def state_done(self, _) -> commands.TCommandGenerator:
+    def state_done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
 
-    def state_errored(self, _) -> commands.TCommandGenerator:
+    def state_errored(self, _) -> layer.CommandGenerator[None]:
         # silently consume every event.
         yield from ()
 

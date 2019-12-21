@@ -327,7 +327,7 @@ def Placeholder() -> typing.Any:
 class EchoLayer(Layer):
     """Echo layer that sends all data back to the client in lowercase."""
 
-    def _handle_event(self, event: events.Event) -> commands.TCommandGenerator:
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived):
             yield commands.SendData(event.connection, event.data.lower())
         if isinstance(event, events.ConnectionClosed):
