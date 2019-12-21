@@ -10,7 +10,7 @@ These steps assume you are on the correct branch and have a git remote called `o
     - `git push origin v4.0.0`
 - Wait for tag CI to complete.
 
-## GitHub Release
+### GitHub Releases
 - Create release notice on Github
   [here](https://github.com/mitmproxy/mitmproxy/releases/new) if not already
   auto-created by the tag.
@@ -18,33 +18,36 @@ These steps assume you are on the correct branch and have a git remote called `o
   following snippet to the notice:
   `You can find the latest release packages at https://mitmproxy.org/downloads/.`
 
-## PyPi
+### PyPi
 - The created wheel is uploaded to PyPi automatically.
-- Please check https://pypi.python.org/pypi/mitmproxy about the latest version.
+- Please verify that https://pypi.python.org/pypi/mitmproxy has the latest version.
 
-## Homebrew
+### Homebrew
 - The Homebrew maintainers are typically very fast and detect our new relese
   within a day.
 - If you feel the need, you can run this from a macOS machine:
   `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>`
 
-## Docker
+### Docker
 - The docker image is built on Travis and pushed to Docker Hub automatically.
 - Please check https://hub.docker.com/r/mitmproxy/mitmproxy/tags/ about the latest version.
 - Update `latest` tag: `export VERSION=4.0.3 && docker pull mitmproxy/mitmproxy:$VERSION && docker tag mitmproxy/mitmproxy:$VERSION mitmproxy/mitmproxy:latest && docker push mitmproxy/mitmproxy:latest`.
 
-## Website
+### Docs
+  - `./build-current`. If everything looks alright, continue with
+  - `./upload-stable`,
+  - `./build-archive`, and
+  - `./upload-archive v4`. Doing this now already saves you from switching back to an old state on the next release.
+
+### Website
  - Update version here:
    https://github.com/mitmproxy/www/blob/master/src/config.toml
+ - Update docs menu here:
+   https://github.com/mitmproxy/www/blob/master/src/themes/mitmproxy/layouts/partials/header.html
  - Run `./build && ./upload-test`.
- - If everything looks alright at http://www-test.mitmproxy.org, run `./upload-prod`.
+ - If everything looks alright at https://www-test.mitmproxy.org, run `./upload-prod`.
 
-## Docs
-  - Make sure you've uploaded the previous version's docs to archive
-  - If everything looks alright:
-    - `./build-current`
-    - `./upload-stable`
 
-## Prepare for next release
+### Prepare for next release
  - Last but not least, bump the major version on master in
    [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) and add a `.dev` suffix.

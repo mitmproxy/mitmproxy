@@ -1,5 +1,4 @@
 #!/bin/sh
 set -e
 
-cd src
-DOCS_ARCHIVE=true hugo
+DOCS_ARCHIVE=true ./build-current
