@@ -1,18 +1,13 @@
 # Release Checklist
 
-Make sure to run all these steps on the correct branch you want to create a new
-release for! The command examples assume that you have a git remote called
-`upstream` that points to the `mitmproxy/mitmproxy` repo.
+These steps assume you are on the correct branch and have a git remote called `origin` that points to the `mitmproxy/mitmproxy` repo. If necessary, create a major version branch starting off the release tag (e.g. `git checkout -b v4.x v4.0.0`) first.
 
-- Verify that `mitmproxy/version.py` is correct.
 - Update CHANGELOG.
 - Verify that all CI tests pass.
-- If needed, create a major version branch - e.g. `v4.x`. Assuming you have a remote repo called `upstream` that points to the mitmproxy/mitmproxy repo::
-  - `git checkout -b v4.x upstream/master`
-  - `git push -u upstream v4.x`
+- Verify that `mitmproxy/version.py` is correct. Remove `.dev` suffix if it exists.
 - Tag the release and push to Github.
     - `git tag v4.0.0`
-    - `git push upstream v4.0.0`
+    - `git push origin v4.0.0`
 - Wait for tag CI to complete.
 
 ## GitHub Release
@@ -51,5 +46,5 @@ release for! The command examples assume that you have a git remote called
     - `./upload-stable`
 
 ## Prepare for next release
- - Last but not least, bump the version on master in
-   [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) for major releases.
+ - Last but not least, bump the major version on master in
+   [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) and add a `.dev` suffix.
