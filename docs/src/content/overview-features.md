@@ -82,7 +82,7 @@ Replace `foo` with `bar` in requests:
 :~q:foo:bar
 {{< / highlight >}}
 
-Replace `foo` with with the data read from `~/xss-exploit`:
+Replace `foo` with the data read from `~/xss-exploit`:
 
 {{< highlight bash  >}}
 mitmdump --replacements :~q:foo:@~/xss-exploit
