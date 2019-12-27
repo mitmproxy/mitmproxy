@@ -1,8 +1,6 @@
-import abc
-import typing
 from dataclasses import dataclass
 
-from mitmproxy.proxy2 import events, layer
+from mitmproxy.proxy2 import events, layer, commands
 
 StreamId = int
 
@@ -18,14 +16,22 @@ class HttpEvent(events.Event):
         return f"{type(self).__name__}({repr(x) if x else ''})"
 
 
-class HttpConnection(abc.ABC):
-    @abc.abstractmethod
-    def handle_event(self, event: events.Event) -> typing.Iterator[HttpEvent]:
-        yield from ()
+class HttpConnection(layer.Layer):
+    pass
 
-    @abc.abstractmethod
-    def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
-        yield from ()
+
+class HttpCommand(commands.Command):
+    pass
+
+
+class ReceiveHttp(HttpCommand):
+    event: HttpEvent
+
+    def __init__(self, event: HttpEvent):
+        self.event = event
+
+    def __repr__(self) -> str:
+        return f"Receive({self.event})"
 
 
 __all__ = [

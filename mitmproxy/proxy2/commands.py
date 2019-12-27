@@ -74,16 +74,6 @@ class CloseConnection(ConnectionCommand):
     """
 
 
-class ProtocolError(Command):
-    """
-    Indicate that an unrecoverable protocol error has occured.
-    """
-    message: str
-
-    def __init__(self, message: str):
-        self.message = message
-
-
 class Hook(Command):
     """
     Callback to the master (like ".ask()")
@@ -143,5 +133,3 @@ class Log(Command):
 
     def __repr__(self):
         return f"Log({self.message}, {self.level})"
-
-

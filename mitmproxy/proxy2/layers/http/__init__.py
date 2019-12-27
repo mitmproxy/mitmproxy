@@ -5,20 +5,16 @@ from mitmproxy import flow, http
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2.context import Connection, Context, Server
-from mitmproxy.proxy2.layers.tls import EstablishServerTLS, EstablishServerTLSReply, HTTP_ALPNS
+from mitmproxy.proxy2.layers import tls
 from mitmproxy.proxy2.utils import expect
 from mitmproxy.utils import human
-from ._base import HttpConnection, StreamId
+from ._base import HttpConnection, StreamId, HttpCommand, ReceiveHttp
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
 from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, HttpRequestHook, HttpResponseHeadersHook, \
     HttpResponseHook
 from ._http1 import Http1Client, Http1Server
 from ._http2 import Http2Client
-
-
-class HttpCommand(commands.Command):
-    pass
 
 
 class GetHttpConnection(HttpCommand):
@@ -47,6 +43,18 @@ class GetHttpConnectionReply(events.CommandReply):
     """connection object, error message"""
 
 
+class RegisterHttpConnection(HttpCommand):
+    """
+    Register that a HTTP connection has been successfully established.
+    """
+    connection: Connection
+    err: str
+
+    def __init__(self, connection: Connection, err: str):
+        self.connection = connection
+        self.err = err
+
+
 class SendHttp(HttpCommand):
     connection: Connection
     event: HttpEvent
@@ -57,6 +65,8 @@ class SendHttp(HttpCommand):
 
     def __repr__(self) -> str:
         return f"Send({self.event})"
+
+
 
 
 class HttpStream(layer.Layer):
@@ -299,7 +309,7 @@ class HttpStream(layer.Layer):
         yield from ()
 
 
-class HTTPLayer(Layer):
+class HTTPLayer(layer.Layer):
     """
     ConnectionEvent: We have received b"GET /\r\n\r\n" from the client.
     HttpEvent: We have received request headers
@@ -311,47 +321,34 @@ class HTTPLayer(Layer):
     mode: HTTPMode
     stream_by_command: typing.Dict[commands.Command, HttpStream]
     streams: typing.Dict[int, HttpStream]
-    connections: typing.Dict[Connection, typing.Union[HttpConnection, HttpStream]]
-    waiting_for_connection: typing.DefaultDict[Connection, typing.List[GetHttpConnection]]
-    event_queue: typing.Deque[
-        typing.Union[HttpEvent, HttpCommand, commands.Command]
-    ]
+    connections: typing.Dict[Connection, typing.Union[layer.Layer, HttpStream]]
+    waiting_for_establishment: typing.DefaultDict[Connection, typing.List[GetHttpConnection]]
+    command_queue: typing.Deque[commands.Command]
 
     def __init__(self, context: Context, mode: HTTPMode):
         super().__init__(context)
         self.mode = mode
 
-        self.waiting_for_connection = collections.defaultdict(list)
+        self.waiting_for_establishment = collections.defaultdict(list)
         self.streams = {}
         self.stream_by_command = {}
-        self.event_queue = collections.deque()
+        self.command_queue = collections.deque()
 
         self.connections = {
-            context.client: Http1Server(context.client)
+            context.client: Http1Server(context.fork())
         }
 
     def __repr__(self):
-        return f"HTTPLayer(conns: {len(self.connections)}, events: {[type(e).__name__ for e in self.event_queue]})"
+        return f"HTTPLayer(conns: {len(self.connections)}, queue: {[type(e).__name__ for e in self.command_queue]})"
 
     def _handle_event(self, event: events.Event):
         if isinstance(event, events.Start):
             return
-        elif isinstance(event, (EstablishServerTLSReply, events.OpenConnectionReply)) and \
-                event.command.connection in self.waiting_for_connection:
-            if event.reply:
-                waiting = self.waiting_for_connection.pop(event.command.connection)
-                for cmd in waiting:
-                    stream = self.stream_by_command.pop(cmd)
-                    self.event_to_child(stream, GetHttpConnectionReply(cmd, (None, event.reply)))
-            else:
-                yield from self.make_http_connection(event.command.connection)
         elif isinstance(event, events.CommandReply):
             try:
                 stream = self.stream_by_command.pop(event.command)
             except KeyError:
                 raise
-            if isinstance(event, events.OpenConnectionReply):
-                self.connections[event.command.connection] = stream
             self.event_to_child(stream, event)
         elif isinstance(event, events.ConnectionEvent):
             if event.connection == self.context.server and self.context.server not in self.connections:
@@ -362,117 +359,129 @@ class HTTPLayer(Layer):
         else:
             raise ValueError(f"Unexpected event: {event}")
 
-        while self.event_queue:
-            event = self.event_queue.popleft()
-            if isinstance(event, RequestHeaders):
-                self.streams[event.stream_id] = self.make_stream()
-            if isinstance(event, HttpEvent):
-                stream = self.streams[event.stream_id]
-                self.event_to_child(stream, event)
-            elif isinstance(event, SendHttp):
-                conn = self.connections[event.connection]
-                evts = conn.send(event.event)
-                self.event_queue.extend(evts)
-            elif isinstance(event, GetHttpConnection):
-                yield from self.get_connection(event)
-            elif isinstance(event, commands.Command):
-                yield event
-            else:
-                raise ValueError(f"Unexpected event: {event}")
+        while self.command_queue:
+            command = self.command_queue.popleft()
+            if isinstance(command, ReceiveHttp):
+                if isinstance(command.event, RequestHeaders):
+                    self.streams[command.event.stream_id] = self.make_stream()
+                stream = self.streams[command.event.stream_id]
+                self.event_to_child(stream, command.event)
+            elif isinstance(command, SendHttp):
+                conn = self.connections[command.connection]
+                self.event_to_child(conn, command.event)
+            elif isinstance(command, GetHttpConnection):
+                self.get_connection(command)
+            elif isinstance(command, RegisterHttpConnection):
+                yield from self.register_connection(command)
+            elif isinstance(command, commands.Command):
+                yield command
+            else:  # pragma: no cover
+                raise ValueError(f"Not a command command: {command}")
 
     def make_stream(self) -> HttpStream:
         ctx = self.context.fork()
-
         stream = HttpStream(ctx)
         if self.debug:
             stream.debug = self.debug + "  "
         self.event_to_child(stream, events.Start())
         return stream
 
-    def get_connection(self, event: GetHttpConnection):
+    def get_connection(self, event: GetHttpConnection, *, reuse: bool = True):
         # Do we already have a connection we can re-use?
-        for connection, handler in self.connections.items():
+        for connection, layer in self.connections.items():
             connection_suitable = (
+                    reuse and
                     event.connection_spec_matches(connection) and
                     (
-                            isinstance(handler, Http2Client) or
-                            # see "tricky multiplexing edge case" in make_http_connection for an explanation
-                            isinstance(handler, Http1Client) and self.context.client.alpn != b"h2"
+                        # see "tricky multiplexing edge case" in make_http_connection for an explanation
+                        connection.alpn == b"h2" or self.context.client.alpn != b"h2"
                     )
             )
             if connection_suitable:
-                stream = self.stream_by_command.pop(event)
-                self.event_to_child(stream, GetHttpConnectionReply(event, (connection, None)))
+                if connection in self.waiting_for_establishment:
+                    self.waiting_for_establishment[connection].append(event)
+                else:
+                    stream = self.stream_by_command.pop(event)
+                    self.event_to_child(stream, GetHttpConnectionReply(event, (layer, None)))
                 return
-        # Are we waiting for one?
-        for connection in self.waiting_for_connection:
-            if event.connection_spec_matches(connection):
-                self.waiting_for_connection[connection].append(event)
-                return
-        # Can we reuse context.server?
+
         can_reuse_context_connection = (
                 self.context.server not in self.connections and
                 self.context.server.connected and
-                self.context.server.address == event.address and
-                self.context.server.tls == event.tls
+                event.connection_spec_matches(self.context.server)
         )
-        if can_reuse_context_connection:
-            self.waiting_for_connection[self.context.server].append(event)
-            yield from self.make_http_connection(self.context.server)
-        # We need a new one.
+        context = self.context.fork()
+        layer = HttpClient(context)
+        if not can_reuse_context_connection:
+            context.server = Server(event.address)
+            if event.tls:
+                context.server.tls = True
+                # TODO: This is a bit ugly, let's make up nicer syntax, e.g. using __truediv__
+                orig = layer
+                layer = tls.ServerTLSLayer(context)
+                layer.child_layer = orig
+            # TODO: Here we should create other sublayer(s) for upstream proxy etc.
+
+        self.connections[context.server] = layer
+        self.waiting_for_establishment[context.server].append(event)
+
+        self.event_to_child(layer, events.Start())
+
+    def register_connection(self, command: RegisterHttpConnection):
+        waiting = self.waiting_for_establishment.pop(command.connection)
+
+        if command.err:
+            reply = (None, command.err)
+            self.connections.pop(command.connection)
         else:
-            connection = Server(event.address)
-            connection.tls = event.tls
-            self.waiting_for_connection[connection].append(event)
-            open_command = commands.OpenConnection(connection)
-            open_command.blocking = object()
-            yield open_command
+            reply = (command.connection, None)
 
-    def make_http_connection(self, connection: Server) -> None:
-        if connection.tls and not connection.tls_established:
-            connection.alpn_offers = list(HTTP_ALPNS)
-            if not self.context.options.http2:
-                connection.alpn_offers.remove(b"h2")
-            new_command = EstablishServerTLS(connection)
-            new_command.blocking = object()
-            yield new_command
-            return
-
-        if connection.alpn == b"h2":
-            raise NotImplementedError
-        else:
-            self.connections[connection] = Http1Client(connection)
-
-        waiting = self.waiting_for_connection.pop(connection)
         for cmd in waiting:
             stream = self.stream_by_command.pop(cmd)
-            self.event_to_child(stream, GetHttpConnectionReply(cmd, (connection, None)))
+            self.event_to_child(stream, GetHttpConnectionReply(cmd, reply))
 
             # Tricky multiplexing edge case: Assume a h2 client that sends two requests (or receives two responses)
             # that neither have a content-length specified nor a chunked transfer encoding.
             # We can't process these two flows to the same h1 connection as they would both have
             # "read until eof" semantics. We could force chunked transfer encoding for requests, but can't enforce that
             # for responses. The only workaround left is to open a separate connection for each flow.
-            if self.context.client.alpn == b"h2" and connection.alpn != b"h2":
+            if not command.err and self.context.client.alpn == b"h2" and command.connection.alpn != b"h2":
                 for cmd in waiting[1:]:
-                    new_connection = Server(connection.address)
-                    new_connection.tls = connection.tls
-                    self.waiting_for_connection[new_connection].append(cmd)
-                    open_command = commands.OpenConnection(new_connection)
-                    open_command.blocking = object()
-                    yield open_command
+                    yield from self.get_connection(cmd, reuse=False)
                 break
 
     def event_to_child(
             self,
-            stream: typing.Union[HttpConnection, HttpStream],
+            child: typing.Union[layer.Layer, HttpStream],
             event: events.Event,
     ) -> None:
-        stream_events = list(stream.handle_event(event))
-        for se in stream_events:
+        child_commands = list(child.handle_event(event))
+        for cmd in child_commands:
+            assert isinstance(cmd, commands.Command)
             # Streams may yield blocking commands, which ultimately generate CommandReply events.
             # Those need to be routed back to the correct stream, so we need to keep track of that.
-            if isinstance(se, commands.Command) and se.blocking:
-                self.stream_by_command[se] = stream
+            if isinstance(cmd, commands.OpenConnection):
+                self.connections[cmd.connection] = child
 
-        self.event_queue.extend(stream_events)
+            if cmd.blocking:
+                self.stream_by_command[cmd] = child
+
+        self.command_queue.extend(child_commands)
+
+
+class HttpClient(layer.Layer):
+    @expect(events.Start)
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if self.context.server.connected:
+            err = None
+        else:
+            err = yield commands.OpenConnection(self.context.server)
+        yield RegisterHttpConnection(self.context.server, err)
+        if err:
+            return
+
+        if self.context.server.alpn == b"h2":
+            raise NotImplementedError
+        else:
+            child_layer = Http1Client(self.context)
+            self._handle_event = child_layer.handle_event

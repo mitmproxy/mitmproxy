@@ -4,8 +4,6 @@ import typing
 import pytest
 from OpenSSL import SSL
 
-import mitmproxy.proxy2.layer
-import mitmproxy.proxy2.layers.tls
 from mitmproxy.proxy2 import commands, context, events, layer
 from mitmproxy.proxy2.layers import tls
 from mitmproxy.utils import data
@@ -110,11 +108,11 @@ class TlsEchoLayer(tutils.EchoLayer):
     err: typing.Optional[str] = None
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.DataReceived) and event.data == b"establish-server-tls":
+        if isinstance(event, events.DataReceived) and event.data == b"open-connection":
             # noinspection PyTypeChecker
-            err = yield tls.EstablishServerTLS(self.context.server)
+            err = yield commands.OpenConnection(self.context.server)
             if err:
-                yield commands.SendData(event.connection, f"server-tls-failed: {err}".encode())
+                yield commands.SendData(event.connection, f"open-connection failed: {err}".encode())
         else:
             yield from super()._handle_event(event)
 
@@ -208,9 +206,6 @@ class TestServerTLS:
         data = tutils.Placeholder()
         assert (
                 playbook
-                >> events.DataReceived(tctx.client, b"establish-server-tls")
-                << layer.NextLayerHook(tutils.Placeholder())
-                >> tutils.reply_next_layer(TlsEchoLayer)
                 << tls.TlsStartHook(tutils.Placeholder())
                 >> reply_tls_start()
                 << commands.SendData(tctx.server, data)
@@ -233,6 +228,13 @@ class TestServerTLS:
         assert tctx.server.tls_established
 
         # Echo
+        assert (
+                playbook
+                >> events.DataReceived(tctx.client, b"foo")
+                << layer.NextLayerHook(tutils.Placeholder())
+                >> tutils.reply_next_layer(TlsEchoLayer)
+                << commands.SendData(tctx.client, b"foo")
+        )
         _test_echo(playbook, tssl, tctx.server)
 
         with pytest.raises(ssl.SSLWantReadError):
@@ -274,7 +276,7 @@ class TestServerTLS:
         assert (
                 playbook
                 >> events.DataReceived(tctx.server, tssl.out.read())
-                << commands.Log("Server TLS handshake failed. Certificate verify failed: Hostname mismatch","warn")
+                << commands.Log("Server TLS handshake failed. Certificate verify failed: Hostname mismatch", "warn")
                 << commands.CloseConnection(tctx.server)
                 << commands.SendData(tctx.client, b"server-tls-failed: Certificate verify failed: Hostname mismatch")
         )
