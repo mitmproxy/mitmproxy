@@ -1,3 +1,8 @@
+27 December 2019: mitmproxy 5.0.1
+
+    * Fixed precompiled Linux binaries to not crash in table mode
+    * Display webp images in mitmweb (@cixtor)
+
 16 December 2019: mitmproxy 5.0
 
   ** Major Changes **
