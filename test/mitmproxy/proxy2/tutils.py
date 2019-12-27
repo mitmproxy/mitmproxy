@@ -170,7 +170,11 @@ class Playbook:
                 pass
             else:
                 if hasattr(x, "playbook_eval"):
-                    x = self.expected[i] = x.playbook_eval(self)
+                    try:
+                        x = self.expected[i] = x.playbook_eval(self)
+                    except Exception:
+                        self.actual.append(_TracebackInPlaybook(traceback.format_exc()))
+                        break
                 for name, value in vars(x).items():
                     if isinstance(value, _Placeholder):
                         setattr(x, name, value())
@@ -273,8 +277,7 @@ class reply(events.Event):
                 self.to = cmd
                 break
         else:
-            actual_str = "\n".join(_fmt_entry(x) for x in playbook.actual)
-            raise AssertionError(f"Expected command {self.to} did not occur:\n{actual_str}")
+            raise AssertionError(f"Expected command {self.to} did not occur.")
 
         assert isinstance(self.to, commands.Command)
         if isinstance(self.to, commands.Hook):

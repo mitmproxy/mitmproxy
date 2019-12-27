@@ -1,5 +1,5 @@
+import abc
 import typing
-from abc import abstractmethod
 
 import h11
 from h11._readers import ChunkedReader, ContentLengthReader, Http10Reader
@@ -9,8 +9,9 @@ from mitmproxy import http
 from mitmproxy.net.http import http1
 from mitmproxy.net.http.http1 import read_sansio as http1_sansio
 from mitmproxy.proxy2 import commands, events, layer
-from mitmproxy.proxy2.context import Client, Connection, Server
-from mitmproxy.proxy2.layers.http._base import StreamId
+from mitmproxy.proxy2.context import Client, Connection, Context, Server
+from mitmproxy.proxy2.layers.http._base import ReceiveHttp, StreamId
+from mitmproxy.proxy2.utils import expect
 from ._base import HttpConnection
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
@@ -18,28 +19,32 @@ from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders
 TBodyReader = typing.Union[ChunkedReader, Http10Reader, ContentLengthReader]
 
 
-class Http1Connection(HttpConnection):
+class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     conn: Connection
     stream_id: typing.Optional[StreamId] = None
     request: typing.Optional[http.HTTPRequest] = None
     response: typing.Optional[http.HTTPResponse] = None
     request_done: bool = False
     response_done: bool = False
-    state: typing.Callable[[events.Event], typing.Iterator[HttpEvent]]
+    state: typing.Callable[[events.Event], layer.CommandGenerator[None]]
     body_reader: TBodyReader
     buf: ReceiveBuffer
 
-    def __init__(self, conn: Connection):
+    def __init__(self, context: Context, conn: Connection):
+        super().__init__(context)
         assert isinstance(conn, Connection)
         self.conn = conn
         self.buf = ReceiveBuffer()
 
-    def handle_event(self, event: events.Event) -> typing.Iterator[HttpEvent]:
-        if isinstance(event, events.DataReceived):
-            self.buf += event.data
-        yield from self.state(event)
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if isinstance(event, HttpEvent):
+            yield from self.send(event)
+        else:
+            if isinstance(event, events.DataReceived):
+                self.buf += event.data
+            yield from self.state(event)
 
-    @abstractmethod
+    @abc.abstractmethod
     def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
         yield from ()
 
@@ -51,7 +56,7 @@ class Http1Connection(HttpConnection):
         else:
             return ContentLengthReader(expected_size)
 
-    def read_body(self, event: events.Event, is_request: bool) -> typing.Iterator[HttpEvent]:
+    def read_body(self, event: events.Event, is_request: bool) -> layer.CommandGenerator[None]:
         while True:
             try:
                 if isinstance(event, events.DataReceived):
@@ -63,9 +68,9 @@ class Http1Connection(HttpConnection):
             except h11.ProtocolError as e:
                 yield commands.CloseConnection(self.conn)
                 if is_request:
-                    yield RequestProtocolError(self.stream_id, str(e))
+                    yield ReceiveHttp(RequestProtocolError(self.stream_id, str(e)))
                 else:
-                    yield ResponseProtocolError(self.stream_id, str(e))
+                    yield ReceiveHttp(ResponseProtocolError(self.stream_id, str(e)))
                 return
 
             if h11_event is None:
@@ -73,17 +78,17 @@ class Http1Connection(HttpConnection):
             elif isinstance(h11_event, h11.Data):
                 h11_event.data: bytearray  # type checking
                 if is_request:
-                    yield RequestData(self.stream_id, bytes(h11_event.data))
+                    yield ReceiveHttp(RequestData(self.stream_id, bytes(h11_event.data)))
                 else:
-                    yield ResponseData(self.stream_id, bytes(h11_event.data))
+                    yield ReceiveHttp(ResponseData(self.stream_id, bytes(h11_event.data)))
             elif isinstance(h11_event, h11.EndOfMessage):
                 if is_request:
-                    yield RequestEndOfMessage(self.stream_id)
+                    yield ReceiveHttp(RequestEndOfMessage(self.stream_id))
                 else:
-                    yield ResponseEndOfMessage(self.stream_id)
+                    yield ReceiveHttp(ResponseEndOfMessage(self.stream_id))
                 return
 
-    def wait(self, event: events.Event) -> typing.Iterator[HttpEvent]:
+    def wait(self, event: events.Event) -> layer.CommandGenerator[None]:
         """
         We wait for the current flow to be finished before parsing the next message,
         as we may want to upgrade to WebSocket or plain TCP before that.
@@ -101,8 +106,8 @@ class Http1Server(Http1Connection):
     """A simple HTTP/1 server with no pipelining support."""
     conn: Client
 
-    def __init__(self, conn: Client):
-        super().__init__(conn)
+    def __init__(self, context: Context):
+        super().__init__(context, context.client)
         self.stream_id = 1
         self.state = self.read_request_headers
 
@@ -138,7 +143,7 @@ class Http1Server(Http1Connection):
         else:
             raise NotImplementedError(f"{event}")
 
-    def mark_done(self, *, request: bool = False, response: bool = False):
+    def mark_done(self, *, request: bool = False, response: bool = False) -> layer.CommandGenerator[None]:
         if request:
             self.request_done = True
         if response:
@@ -152,13 +157,13 @@ class Http1Server(Http1Connection):
         elif self.request_done:
             self.state = self.wait
 
-    def read_request_headers(self, event: events.Event) -> typing.Iterator[HttpEvent]:
+    def read_request_headers(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived):
             request_head = self.buf.maybe_extract_lines()
             if request_head:
                 request_head = [bytes(x) for x in request_head]  # TODO: Make url.parse compatible with bytearrays
                 self.request = http.HTTPRequest.wrap(http1_sansio.read_request_head(request_head))
-                yield RequestHeaders(self.stream_id, self.request)
+                yield ReceiveHttp(RequestHeaders(self.stream_id, self.request))
 
                 if self.request.first_line_format == "authority":
                     # The previous proxy server implementation tried to read the request body here:
@@ -180,10 +185,10 @@ class Http1Server(Http1Connection):
         else:
             raise ValueError(f"Unexpected event: {event}")
 
-    def read_request_body(self, event: events.Event) -> typing.Iterator[HttpEvent]:
+    def read_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         for e in self.read_body(event, True):
             yield e
-            if isinstance(e, RequestEndOfMessage):
+            if isinstance(e, ReceiveHttp) and isinstance(e.event, RequestEndOfMessage):
                 yield from self.mark_done(request=True)
 
 
@@ -192,8 +197,8 @@ class Http1Client(Http1Connection):
     send_queue: typing.List[HttpEvent]
     """A queue of send events for flows other than the one that is currently being transmitted."""
 
-    def __init__(self, conn: Server):
-        super().__init__(conn)
+    def __init__(self, context: Context):
+        super().__init__(context, context.server)
         self.state = self.read_response_headers
         self.send_queue = []
 
@@ -231,7 +236,7 @@ class Http1Client(Http1Connection):
         else:
             raise NotImplementedError(f"{event}")
 
-    def mark_done(self, *, request: bool = False, response: bool = False):
+    def mark_done(self, *, request: bool = False, response: bool = False) -> layer.CommandGenerator[None]:
         if request:
             self.request_done = True
         if response:
@@ -246,15 +251,15 @@ class Http1Client(Http1Connection):
                 for ev in send_queue:
                     yield from self.send(ev)
 
-    def read_response_headers(self, event: events.Event) -> typing.Iterator[HttpEvent]:
-        assert isinstance(event, events.ConnectionEvent)
+    @expect(events.ConnectionEvent)
+    def read_response_headers(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived):
             response_head = self.buf.maybe_extract_lines()
 
             if response_head:
                 response_head = [bytes(x) for x in response_head]
                 self.response = http.HTTPResponse.wrap(http1_sansio.read_response_head(response_head))
-                yield ResponseHeaders(self.stream_id, self.response)
+                yield ReceiveHttp(ResponseHeaders(self.stream_id, self.response))
 
                 expected_size = http1.expected_http_body_size(self.request, self.response)
                 self.body_reader = self.make_body_reader(expected_size)
@@ -266,23 +271,24 @@ class Http1Client(Http1Connection):
         elif isinstance(event, events.ConnectionClosed):
             if self.stream_id:
                 if self.buf:
-                    yield ResponseProtocolError(self.stream_id, f"unexpected server response: {bytes(self.buf)}")
+                    yield ReceiveHttp(
+                        ResponseProtocolError(self.stream_id, f"unexpected server response: {bytes(self.buf)}"))
                 else:
                     # The server has closed the connection to prevent us from continuing.
                     # We need to signal that to the stream.
                     # https://tools.ietf.org/html/rfc7231#section-6.5.11
-                    yield ResponseProtocolError(self.stream_id, "server closed connection")
+                    yield ReceiveHttp(ResponseProtocolError(self.stream_id, "server closed connection"))
             else:
                 return
             yield commands.CloseConnection(self.conn)
         else:
             raise ValueError(f"Unexpected event: {event}")
 
-    def read_response_body(self, event: events.Event) -> typing.Iterator[HttpEvent]:
-        assert isinstance(event, events.ConnectionEvent)
+    @expect(events.ConnectionEvent)
+    def read_response_body(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
         for e in self.read_body(event, False):
             yield e
-            if isinstance(e, ResponseEndOfMessage):
+            if isinstance(e, ReceiveHttp) and isinstance(e.event, ResponseEndOfMessage):
                 self.state = self.read_response_headers
                 yield from self.mark_done(response=True)
 

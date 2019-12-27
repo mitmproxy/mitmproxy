@@ -67,7 +67,7 @@ class TCPLayer(layer.Layer):
             if self.flow:
                 tcp_message = tcp.TCPMessage(from_client, event.data)
                 self.flow.messages.append(tcp_message)
-                yield TcpMessageHook(self.flow)t
+                yield TcpMessageHook(self.flow)
                 yield commands.SendData(send_to, tcp_message.content)
             else:
                 yield commands.SendData(send_to, event.data)

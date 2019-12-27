@@ -1,7 +1,7 @@
 import struct
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Generator, Iterator, Optional, Tuple
+from typing import Iterator, Optional, Tuple
 
 from OpenSSL import SSL
 
@@ -93,20 +93,6 @@ def parse_client_hello(data: bytes) -> Optional[net_tls.ClientHello]:
 HTTP_ALPNS = (b"h2", b"http/1.1", b"http/1.0", b"http/0.9")
 
 
-class EstablishServerTLS(commands.ConnectionCommand):
-    """Establish TLS on the given connection.
-
-    If TLS establishment fails, the connection will automatically be closed by the TLS layer."""
-    connection: context.Server
-    blocking = True
-
-
-class EstablishServerTLSReply(events.CommandReply):
-    command: EstablishServerTLS
-    reply: Optional[str]
-    """error message"""
-
-
 # We need these classes as hooks can only have one argument at the moment.
 
 @dataclass
@@ -131,62 +117,61 @@ class TlsClienthelloHook(Hook):
 
 
 class _TLSLayer(layer.Layer):
-    tls: Dict[context.Connection, SSL.Connection]
+    conn: context.Connection
+    """The connection for which we do TLS"""
+    tls: SSL.Connection = None
+    """The OpenSSL connection object"""
     child_layer: layer.Layer
-    ssl_context: Optional[SSL.Context] = None
 
-    def __init__(self, context: context.Context):
+    def __init__(self, context: context.Context, conn: context.Connection):
         super().__init__(context)
-        self.tls = {}
+        self.conn = conn
 
     def __repr__(self):
         if not self.tls:
             state = "inactive"
+        elif self.conn.tls_established:
+            state = f"passthrough {self.conn.sni} {self.conn.alpn}"
         else:
-            conn_states = []
-            for conn in self.tls:
-                if conn.tls_established:
-                    conn_states.append(f"passthrough {conn.sni} {conn.alpn}")
-                else:
-                    conn_states.append(f"negotiating {conn.sni} {conn.alpn}")
-            state = ", ".join(conn_states)
+            state = f"negotiating {self.conn.sni} {self.conn.alpn}"
         return f"{type(self).__name__}({state})"
 
-    def start_tls(self, conn: context.Connection, initial_data: bytes = b""):
-        assert conn not in self.tls
-        assert conn.connected
-        conn.tls = True
+    def start_tls(self, initial_data: bytes = b""):
+        assert not self.tls
+        assert self.conn.connected
+        self.conn.tls = True
 
-        tls_start = TlsStartData(conn, self.context)
+        tls_start = TlsStartData(self.conn, self.context)
         yield TlsStartHook(tls_start)
-        self.tls[conn] = tls_start.ssl_conn
+        assert tls_start.ssl_conn
+        self.tls = tls_start.ssl_conn
 
-        yield from self.negotiate(conn, initial_data)
+        yield from self.negotiate(initial_data)
 
-    def tls_interact(self, conn: context.Connection) -> layer.CommandGenerator[None]:
+    def tls_interact(self) -> layer.CommandGenerator[None]:
         while True:
             try:
-                data = self.tls[conn].bio_read(65535)
+                data = self.tls.bio_read(65535)
             except SSL.WantReadError:
                 # Okay, nothing more waiting to be sent.
                 return
             else:
-                yield commands.SendData(conn, data)
+                yield commands.SendData(self.conn, data)
 
-    def negotiate(self, conn: context.Connection, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def negotiate(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
         # bio_write errors for b"", so we need to check first if we actually received something.
         if data:
-            self.tls[conn].bio_write(data)
+            self.tls.bio_write(data)
         try:
-            self.tls[conn].do_handshake()
+            self.tls.do_handshake()
         except SSL.WantReadError:
-            yield from self.tls_interact(conn)
+            yield from self.tls_interact()
             return False, None
         except SSL.Error as e:
             # provide more detailed information for some errors.
             last_err = e.args and isinstance(e.args[0], list) and e.args[0] and e.args[0][-1]
             if last_err == ('SSL routines', 'tls_process_server_certificate', 'certificate verify failed'):
-                verify_result = SSL._lib.SSL_get_verify_result(self.tls[conn]._ssl)
+                verify_result = SSL._lib.SSL_get_verify_result(self.tls._ssl)
                 error = SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(verify_result)).decode()
                 err = f"Certificate verify failed: {error}"
             elif last_err in [
@@ -196,40 +181,40 @@ class _TLSLayer(layer.Layer):
                 err = last_err[2]
             else:
                 err = repr(e)
-            yield from self.on_handshake_error(conn, err)
+            yield from self.on_handshake_error(err)
             return False, err
         else:
             # Get all peer certificates.
             # https://www.openssl.org/docs/man1.1.1/man3/SSL_get_peer_cert_chain.html
             # If called on the client side, the stack also contains the peer's certificate; if called on the server
             # side, the peer's certificate must be obtained separately using SSL_get_peer_certificate(3).
-            all_certs = self.tls[conn].get_peer_cert_chain() or []
-            if conn == self.context.client:
-                cert = self.tls[conn].get_peer_certificate()
+            all_certs = self.tls.get_peer_cert_chain() or []
+            if self.conn == self.context.client:
+                cert = self.tls.get_peer_certificate()
                 if cert:
                     all_certs.insert(0, cert)
 
-            conn.tls_established = True
-            conn.sni = self.tls[conn].get_servername()
-            conn.alpn = self.tls[conn].get_alpn_proto_negotiated()
-            conn.certificate_chain = [certs.Cert(x) for x in all_certs]
-            conn.cipher_list = self.tls[conn].get_cipher_list()
-            conn.tls_version = self.tls[conn].get_protocol_version_name()
-            conn.timestamp_tls_setup = time.time()
-            yield commands.Log(f"TLS established: {conn}")
-            yield from self.receive(conn, b"")
+            self.conn.tls_established = True
+            self.conn.sni = self.tls.get_servername()
+            self.conn.alpn = self.tls.get_alpn_proto_negotiated()
+            self.conn.certificate_chain = [certs.Cert(x) for x in all_certs]
+            self.conn.cipher_list = self.tls.get_cipher_list()
+            self.conn.tls_version = self.tls.get_protocol_version_name()
+            self.conn.timestamp_tls_setup = time.time()
+            yield commands.Log(f"TLS established: {self.conn}")
+            yield from self.receive(b"")
             return True, None
 
-    def receive(self, conn: context.Connection, data: bytes):
+    def receive(self, data: bytes):
         if data:
-            self.tls[conn].bio_write(data)
-        yield from self.tls_interact(conn)
+            self.tls.bio_write(data)
+        yield from self.tls_interact()
 
         plaintext = bytearray()
         close = False
         while True:
             try:
-                plaintext.extend(self.tls[conn].recv(65535))
+                plaintext.extend(self.tls.recv(65535))
             except SSL.WantReadError:
                 break
             except SSL.ZeroReturnError:
@@ -238,76 +223,90 @@ class _TLSLayer(layer.Layer):
 
         if plaintext:
             yield from self.event_to_child(
-                events.DataReceived(conn, bytes(plaintext))
+                events.DataReceived(self.conn, bytes(plaintext))
             )
         if close:
-            conn.state &= ~context.ConnectionState.CAN_READ
-            yield commands.Log(f"TLS close_notify {conn=}")
+            self.conn.state &= ~context.ConnectionState.CAN_READ
+            yield commands.Log(f"TLS close_notify {self.conn}")
             yield from self.event_to_child(
-                events.ConnectionClosed(conn)
+                events.ConnectionClosed(self.conn)
             )
 
     def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
         for command in self.child_layer.handle_event(event):
-            if isinstance(command, commands.SendData) and command.connection in self.tls:
-                self.tls[command.connection].sendall(command.data)
-                yield from self.tls_interact(command.connection)
+            if isinstance(command, commands.SendData) and command.connection == self.conn:
+                self.tls.sendall(command.data)
+                yield from self.tls_interact()
             else:
                 yield command
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.DataReceived) and event.connection in self.tls:
+        if isinstance(event, events.DataReceived) and event.connection == self.conn:
             if not event.connection.tls_established:
-                yield from self.negotiate(event.connection, event.data)
+                yield from self.negotiate(event.data)
             else:
-                yield from self.receive(event.connection, event.data)
-        elif isinstance(event, events.ConnectionClosed) and event.connection in self.tls:
+                yield from self.receive(event.data)
+        elif isinstance(event, events.ConnectionClosed) and event.connection == self.conn:
             if event.connection.tls_established:
-                if self.tls[event.connection].get_shutdown() & SSL.RECEIVED_SHUTDOWN:
+                if self.tls.get_shutdown() & SSL.RECEIVED_SHUTDOWN:
                     pass  # We have already dispatched a ConnectionClosed to the child layer.
                 else:
                     yield from self.event_to_child(event)
             else:
-                yield from self.on_handshake_error(event.connection, "connection closed without notice")
+                yield from self.on_handshake_error("connection closed without notice")
         else:
             yield from self.event_to_child(event)
 
-    def on_handshake_error(self, conn: context.Connection, err: str) -> layer.CommandGenerator[None]:
-        yield commands.CloseConnection(conn)
+    def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
+        yield commands.CloseConnection(self.conn)
 
 
 class ServerTLSLayer(_TLSLayer):
     """
-    This layer manages TLS for  potentially multiple server connections.
+    This layer establishes TLS for a single server connection.
     """
-    command_to_reply_to: Dict[context.Connection, commands.OpenConnection]
+    command_to_reply_to: Optional[commands.OpenConnection] = None
 
     def __init__(self, context: context.Context):
-        super().__init__(context)
-        self.command_to_reply_to = {}
+        super().__init__(context, context.server)
         self.child_layer = layer.NextLayer(self.context)
 
-    def negotiate(self, conn: context.Connection, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
-        done, err = yield from super().negotiate(conn, data)
+    @expect(events.Start)
+    def state_start(self, _) -> layer.CommandGenerator[None]:
+        self.context.server.tls = True
+        if self.context.server.connected:
+            yield from self.start_tls()
+        self._handle_event = super()._handle_event
+
+    _handle_event = state_start
+
+    def negotiate(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+        done, err = yield from super().negotiate(data)
         if done or err:
-            cmd = self.command_to_reply_to.pop(conn)
+            cmd = self.command_to_reply_to
             yield from self.event_to_child(events.OpenConnectionReply(cmd, err))
+            self.command_to_reply_to = None
         return done, err
 
     def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
         for command in super().event_to_child(event):
-            if isinstance(command, EstablishServerTLS):
-                self.command_to_reply_to[command.connection] = command
-                yield from self.start_tls(command.connection)
+            if isinstance(command, commands.OpenConnection) and command.connection == self.context.server:
+                # create our own OpenConnection command object that blocks here.
+                err = yield commands.OpenConnection(command.connection)
+                if err:
+                    yield from self.event_to_child(events.OpenConnectionReply(command, err))
+                else:
+                    self.command_to_reply_to = command
+                    yield from self.start_tls()
             else:
                 yield command
 
-    def on_handshake_error(self, conn: context.Connection, err: str) -> layer.CommandGenerator[None]:
+    def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
         yield commands.Log(
             f"Server TLS handshake failed. {err}",
             level="warn"
         )
-        yield from super().on_handshake_error(conn, err)
+        yield from super().on_handshake_error(err)
 
 
 class ClientTLSLayer(_TLSLayer):
@@ -331,10 +330,9 @@ class ClientTLSLayer(_TLSLayer):
 
     def __init__(self, context: context.Context):
         assert isinstance(context.layers[-1], ServerTLSLayer)
-        super().__init__(context)
+        super().__init__(context, self.context.client)
         self.recv_buffer = bytearray()
         self.child_layer = layer.NextLayer(self.context)
-        self._handle_event = self.state_start
 
     @expect(events.Start)
     def state_start(self, _) -> layer.CommandGenerator[None]:
@@ -342,20 +340,21 @@ class ClientTLSLayer(_TLSLayer):
         self._handle_event = self.state_wait_for_clienthello
         yield from ()
 
+    _handle_event = state_start
+
     def state_wait_for_clienthello(self, event: events.Event) -> layer.CommandGenerator[None]:
-        client = self.context.client
-        if isinstance(event, events.DataReceived) and event.connection == client:
+        if isinstance(event, events.DataReceived) and event.connection == self.conn:
             self.recv_buffer.extend(event.data)
             try:
                 client_hello = parse_client_hello(self.recv_buffer)
             except ValueError:
                 yield commands.Log(f"Cannot parse ClientHello: {self.recv_buffer.hex()}")
-                yield commands.CloseConnection(client)
+                yield commands.CloseConnection(self.conn)
                 return
 
             if client_hello:
-                client.sni = client_hello.sni
-                client.alpn_offers = client_hello.alpn_protocols
+                self.conn.sni = client_hello.sni
+                self.conn.alpn_offers = client_hello.alpn_protocols
                 tls_clienthello = ClientHelloData(self.context)
                 yield TlsClienthelloHook(tls_clienthello)
 
@@ -365,7 +364,7 @@ class ClientTLSLayer(_TLSLayer):
                         yield commands.Log("Unable to establish TLS connection with server. "
                                            "Trying to establish TLS with client anyway.")
 
-                yield from self.start_tls(client, bytes(self.recv_buffer))
+                yield from self.start_tls(bytes(self.recv_buffer))
                 self.recv_buffer.clear()
                 self._handle_event = super()._handle_event
 
@@ -379,25 +378,16 @@ class ClientTLSLayer(_TLSLayer):
         We often need information from the upstream connection to establish TLS with the client.
         For example, we need to check if the client does ALPN or not.
         """
-        server = self.context.server
-        if not server.connected:
-            err = yield commands.OpenConnection(server)
-            if err:
-                yield commands.Log(
-                    f"Cannot establish server connection: {err}"
-                )
-                return err
-
-        err = yield EstablishServerTLS(server)
+        err = yield commands.OpenConnection(self.context.server)
         if err:
-            yield commands.Log(
-                f"Cannot establish TLS with server: {err}"
-            )
+            yield commands.Log(f"Cannot establish server connection: {err}")
             return err
+        else:
+            return None
 
-    def on_handshake_error(self, conn: context.Connection, err: str) -> layer.CommandGenerator[None]:
-        if conn.sni:
-            dest = conn.sni.decode("idna")
+    def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
+        if self.conn.sni:
+            dest = self.conn.sni.decode("idna")
         else:
             dest = human.format_address(self.context.server.address)
         if "unknown ca" in err or "bad certificate" in err:
@@ -409,4 +399,4 @@ class ClientTLSLayer(_TLSLayer):
             f"The client {keyword} trust the proxy's certificate for {dest} ({err})",
             level="warn"
         )
-        yield from super().on_handshake_error(conn, err)
+        yield from super().on_handshake_error(err)
