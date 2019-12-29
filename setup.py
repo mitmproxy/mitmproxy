@@ -43,6 +43,7 @@ setup(
         "Topic :: Internet :: Proxy Servers",
         "Topic :: System :: Networking :: Monitoring",
         "Topic :: Software Development :: Testing",
+        "Typing :: Typed",
     ],
     packages=find_packages(include=[
         "mitmproxy", "mitmproxy.*",
