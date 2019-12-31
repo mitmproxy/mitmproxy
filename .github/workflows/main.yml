@@ -17,22 +17,35 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: TrueBrain/actions-flake8@v1.2
-  lint-local:
-    # do not use external action when secrets are exposed.
+  flake8:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
-      - run: pip install flake8
-      - run: flake8 mitmproxy pathod examples test release
+      - run: pip install tox
+      - run: tox -e flake8
+  filename_matching:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+      - run: pip install tox
+      - run: tox -e filename_matching
   mypy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
-      - run: pip install mypy
-      - run: mypy .
+      - run: pip install tox
+      - run: tox -e mypy
+  individual_coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v1
+      - run: pip install tox
+      - run: tox -e individual_coverage
   test:
     strategy:
       fail-fast: false

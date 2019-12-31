@@ -95,12 +95,15 @@ Testing
 -------
 
 If you've followed the procedure above, you already have all the development
-requirements installed, and you can run the full test suite with tox_:
+requirements installed, and you can run the basic test suite with tox_:
 
 .. code-block:: bash
 
-    tox -e py    # runs Python tests
-    tox -e lint  # checks code style
+    tox -e py37    # runs Python tests
+    tox -e flake8  # checks code style style
+    tox -e mypy    # checks static types
+
+Our CI system has additional tox environments that are run on every pull request and branch on GitHub.
 
 For speedier testing, we recommend you run `pytest`_ directly on individual test files or folders:
 
@@ -109,7 +112,7 @@ For speedier testing, we recommend you run `pytest`_ directly on individual test
     cd test/mitmproxy/addons
     pytest --cov mitmproxy.addons.anticache --cov-report term-missing --looponfail test_anticache.py
 
-Pytest does not check the code style, so you want to run ``tox -e lint`` again before committing.
+Pytest does not check the code style, so you want to run ``tox -e flake8`` again before committing.
 
 Please ensure that all patches are accompanied by matching changes in the test
 suite. The project tries to maintain 100% test coverage and enforces this strictly for some parts of the codebase.
