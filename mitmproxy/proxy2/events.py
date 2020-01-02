@@ -5,7 +5,7 @@ The counterpart to events are commands.
 """
 import socket
 import typing
-from dataclasses import dataclass
+from dataclasses import dataclass, is_dataclass
 
 from mitmproxy.proxy2 import commands
 from mitmproxy.proxy2.context import Connection
@@ -55,7 +55,6 @@ class DataReceived(ConnectionEvent):
         return f"DataReceived({target}, {self.data})"
 
 
-@dataclass
 class CommandReply(Event):
     """
     Emitted when a command has been finished, e.g.
@@ -65,6 +64,7 @@ class CommandReply(Event):
     reply: typing.Any
 
     def __new__(cls, *args, **kwargs):
+        assert is_dataclass(cls)
         if cls is CommandReply:
             raise TypeError("CommandReply may not be instantiated directly.")
         return super().__new__(cls)

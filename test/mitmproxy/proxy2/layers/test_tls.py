@@ -5,6 +5,7 @@ import pytest
 from OpenSSL import SSL
 
 from mitmproxy.proxy2 import commands, context, events, layer
+from mitmproxy.proxy2.context import ConnectionState
 from mitmproxy.proxy2.layers import tls
 from mitmproxy.utils import data
 from test.mitmproxy.proxy2 import tutils
@@ -109,7 +110,6 @@ class TlsEchoLayer(tutils.EchoLayer):
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived) and event.data == b"open-connection":
-            # noinspection PyTypeChecker
             err = yield commands.OpenConnection(self.context.server)
             if err:
                 yield commands.SendData(event.connection, f"open-connection failed: {err}".encode())
@@ -180,23 +180,20 @@ def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tut
 
 
 class TestServerTLS:
-    def test_no_tls(self, tctx: context.Context):
-        """Test TLS layer without TLS"""
+    def test_not_connected(self, tctx: context.Context):
+        """Test that we don't do anything if no server connection exists."""
         layer = tls.ServerTLSLayer(tctx)
         layer.child_layer = TlsEchoLayer(tctx)
 
-        # Handshake
         assert (
                 tutils.Playbook(layer)
                 >> events.DataReceived(tctx.client, b"Hello World")
                 << commands.SendData(tctx.client, b"hello world")
-                >> events.DataReceived(tctx.server, b"Foo")
-                << commands.SendData(tctx.server, b"foo")
         )
 
     def test_simple(self, tctx):
         playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
-        tctx.server.connected = True
+        tctx.server.state = ConnectionState.OPEN
         tctx.server.address = ("example.mitmproxy.org", 443)
         tctx.server.sni = b"example.mitmproxy.org"
 
@@ -250,7 +247,6 @@ class TestServerTLS:
     def test_untrusted_cert(self, tctx):
         """If the certificate is not trusted, we should fail."""
         playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
-        tctx.server.connected = True
         tctx.server.address = ("wrong.host.mitmproxy.org", 443)
         tctx.server.sni = b"wrong.host.mitmproxy.org"
 
@@ -260,9 +256,11 @@ class TestServerTLS:
         data = tutils.Placeholder()
         assert (
                 playbook
-                >> events.DataReceived(tctx.client, b"establish-server-tls")
+                >> events.DataReceived(tctx.client, b"open-connection")
                 << layer.NextLayerHook(tutils.Placeholder())
                 >> tutils.reply_next_layer(TlsEchoLayer)
+                << commands.OpenConnection(tctx.server)
+                >> tutils.reply(None)
                 << tls.TlsStartHook(tutils.Placeholder())
                 >> reply_tls_start()
                 << commands.SendData(tctx.server, data)
@@ -278,7 +276,8 @@ class TestServerTLS:
                 >> events.DataReceived(tctx.server, tssl.out.read())
                 << commands.Log("Server TLS handshake failed. Certificate verify failed: Hostname mismatch", "warn")
                 << commands.CloseConnection(tctx.server)
-                << commands.SendData(tctx.client, b"server-tls-failed: Certificate verify failed: Hostname mismatch")
+                << commands.SendData(tctx.client,
+                                     b"open-connection failed: Certificate verify failed: Hostname mismatch")
         )
         assert not tctx.server.tls_established
 
@@ -334,10 +333,11 @@ class TestClientTLS:
 
         # Echo
         _test_echo(playbook, tssl_client, tctx.client)
+        other_server = context.Server(None)
         assert (
                 playbook
-                >> events.DataReceived(tctx.server, b"Plaintext")
-                << commands.SendData(tctx.server, b"plaintext")
+                >> events.DataReceived(other_server, b"Plaintext")
+                << commands.SendData(other_server, b"plaintext")
         )
 
     def test_server_required(self, tctx):
@@ -419,6 +419,7 @@ class TestClientTLS:
     def test_mitmproxy_ca_is_untrusted(self, tctx: context.Context):
         """Test the scenario where the client doesn't trust the mitmproxy CA."""
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx, sni=b"wrong.host.mitmproxy.org")
+        playbook.logs = True
 
         data = tutils.Placeholder()
         assert (
@@ -440,6 +441,7 @@ class TestClientTLS:
                 << commands.Log("Client TLS handshake failed. The client does not trust the proxy's certificate "
                                 "for wrong.host.mitmproxy.org (sslv3 alert bad certificate)", "warn")
                 << commands.CloseConnection(tctx.client)
+                >> events.ConnectionClosed(tctx.client)
         )
         assert not tctx.client.tls_established
 

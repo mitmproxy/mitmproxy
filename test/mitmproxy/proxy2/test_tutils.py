@@ -1,4 +1,5 @@
 import typing
+from dataclasses import dataclass
 
 import pytest
 
@@ -20,6 +21,7 @@ class TCommand(commands.Command):
         self.x = x
 
 
+@dataclass
 class TCommandReply(events.CommandReply):
     command: TCommand
 
@@ -157,7 +159,7 @@ def test_command_reply(tplaybook):
         tplaybook
         >> TEvent()
         << TCommand()
-        >> tutils.reply(42)
+        >> tutils.reply()
     )
     assert tplaybook.actual[1] == tplaybook.actual[2].command
 

@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 from mitmproxy import http
 from mitmproxy.proxy2 import commands
 

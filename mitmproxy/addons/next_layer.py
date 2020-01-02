@@ -86,12 +86,11 @@ class NextLayer:
 
     def next_layer(self, nextlayer: layer.NextLayer):
         nextlayer.layer = self._next_layer(nextlayer.context, nextlayer.data_client())
+        # nextlayer.layer.debug = "  " * len(nextlayer.context.layers)
 
     def _next_layer(self, context: context.Context, data_client: bytes) -> typing.Optional[layer.Layer]:
         if len(context.layers) == 0:
             return self.make_top_layer(context)
-        if len(context.layers) == 1:
-            return layers.ServerTLSLayer(context)
 
         if len(data_client) < 3:
             return
@@ -113,21 +112,14 @@ class NextLayer:
             if isinstance(top_layer, layers.ServerTLSLayer):
                 return layers.ClientTLSLayer(context)
             else:
-                if s(modes.HttpProxy):
-                    # A "Secure Web Proxy" (https://www.chromium.org/developers/design-documents/secure-web-proxy)
-                    # This does not imply TLS on the server side.
-                    pass
-                else:
-                    # In all other cases, client TLS implies TLS for both ends.
-                    context.server.tls = True
                 return layers.ServerTLSLayer(context)
 
         # 3. Setup the HTTP layer for a regular HTTP proxy or an upstream proxy.
         if any([
-            s(modes.HttpProxy, layers.ServerTLSLayer),
-            s(modes.HttpProxy, layers.ServerTLSLayer, layers.ClientTLSLayer),
+            s(modes.HttpProxy),
+            s(modes.HttpProxy, layers.ClientTLSLayer),
         ]):
-            return layers.HTTPLayer(context, HTTPMode.regular)
+            return layers.HttpLayer(context, HTTPMode.regular)
         if ctx.options.mode.startswith("upstream:") and len(context.layers) <= 3 and isinstance(top_layer,
                                                                                                 layers.ServerTLSLayer):
             raise NotImplementedError()
@@ -153,7 +145,7 @@ class NextLayer:
             return layers.TCPLayer(context)
 
         # 6. Assume HTTP by default.
-        return layers.HTTPLayer(context, HTTPMode.transparent)
+        return layers.HttpLayer(context, HTTPMode.transparent)
 
     def make_top_layer(self, context: context.Context) -> layer.Layer:
         if ctx.options.mode == "regular":

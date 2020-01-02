@@ -1,11 +1,11 @@
 from . import modes
-from .http import HTTPLayer
+from .http import HttpLayer
 from .tcp import TCPLayer
 from .tls import ClientTLSLayer, ServerTLSLayer
 
 __all__ = [
     "modes",
-    "HTTPLayer",
+    "HttpLayer",
     "TCPLayer",
     "ClientTLSLayer", "ServerTLSLayer",
 ]

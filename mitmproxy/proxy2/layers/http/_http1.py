@@ -12,6 +12,7 @@ from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2.context import Client, Connection, Context, Server
 from mitmproxy.proxy2.layers.http._base import ReceiveHttp, StreamId
 from mitmproxy.proxy2.utils import expect
+from mitmproxy.utils import human
 from ._base import HttpConnection
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
@@ -131,7 +132,7 @@ class Http1Server(Http1Connection):
         elif isinstance(event, ResponseEndOfMessage):
             if "chunked" in self.response.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
-            elif http1.expected_http_body_size(self.request, self.response) == -1:
+            elif http1.expected_http_body_size(self.request, self.response) == -1 or self.request.first_line_format == "authority":
                 yield commands.CloseConnection(self.conn)
             yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):
@@ -162,7 +163,13 @@ class Http1Server(Http1Connection):
             request_head = self.buf.maybe_extract_lines()
             if request_head:
                 request_head = [bytes(x) for x in request_head]  # TODO: Make url.parse compatible with bytearrays
-                self.request = http.HTTPRequest.wrap(http1_sansio.read_request_head(request_head))
+                try:
+                    self.request = http.HTTPRequest.wrap(http1_sansio.read_request_head(request_head))
+                except ValueError as e:
+                    yield commands.Log(f"{human.format_address(self.conn.address)}: {e}")
+                    yield commands.CloseConnection(self.conn)
+                    self.state = self.wait
+                    return
                 yield ReceiveHttp(RequestHeaders(self.stream_id, self.request))
 
                 if self.request.first_line_format == "authority":
@@ -181,6 +188,7 @@ class Http1Server(Http1Connection):
         elif isinstance(event, events.ConnectionClosed):
             if bytes(self.buf).strip():
                 yield commands.Log(f"Client closed connection before sending request headers: {bytes(self.buf)}")
+                yield commands.Log(f"Receive Buffer: {bytes(self.buf)}", level="debug")
             yield commands.CloseConnection(self.conn)
         else:
             raise ValueError(f"Unexpected event: {event}")

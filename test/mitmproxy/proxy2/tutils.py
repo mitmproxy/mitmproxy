@@ -10,8 +10,7 @@ from mitmproxy.proxy2 import commands, context, layer
 from mitmproxy.proxy2 import events
 from mitmproxy.proxy2.context import ConnectionState
 from mitmproxy.proxy2.events import command_reply_subclasses
-from mitmproxy.proxy2.layer import Layer, NextLayer
-from mitmproxy.proxy2.layers import tls
+from mitmproxy.proxy2.layer import Layer
 
 PlaybookEntry = typing.Union[commands.Command, events.Event]
 PlaybookEntryList = typing.List[PlaybookEntry]
@@ -101,7 +100,7 @@ class Playbook:
 
     assert playbook(tcp.TCPLayer(tctx)) \
         << commands.OpenConnection(tctx.server)
-        >> events.OpenConnectionReply(-1, "ok")  # -1 = reply to command in previous line.
+        >> reply(None)
         << None  # this line is optional.
 
     This is syntactic sugar for the following:
@@ -351,15 +350,3 @@ def reply_next_layer(
         next_layer.layer = child_layer(next_layer.context)
 
     return reply(*args, side_effect=set_layer, **kwargs)
-
-
-def reply_establish_server_tls(**kwargs) -> reply:
-    """Helper function to simplify the syntax for EstablishServerTls events to this:
-        << tls.EstablishServerTLS(server)
-        >> tutils.reply_establish_server_tls()
-    """
-
-    def fake_tls(cmd: tls.EstablishServerTLS) -> None:
-        cmd.connection.tls_established = True
-
-    return reply(None, side_effect=fake_tls, **kwargs)
