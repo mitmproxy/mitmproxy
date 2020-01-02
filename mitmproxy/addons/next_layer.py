@@ -86,7 +86,6 @@ class NextLayer:
 
     def next_layer(self, nextlayer: layer.NextLayer):
         nextlayer.layer = self._next_layer(nextlayer.context, nextlayer.data_client())
-        # nextlayer.layer.debug = "  " * len(nextlayer.context.layers)
 
     def _next_layer(self, context: context.Context, data_client: bytes) -> typing.Optional[layer.Layer]:
         if len(context.layers) == 0:
@@ -148,15 +147,17 @@ class NextLayer:
         return layers.HttpLayer(context, HTTPMode.transparent)
 
     def make_top_layer(self, context: context.Context) -> layer.Layer:
-        if ctx.options.mode == "regular":
+        if ctx.options.mode == "regular" or ctx.options.mode.startswith("upstream:"):
             return layers.modes.HttpProxy(context)
+
         elif ctx.options.mode == "transparent":
-            raise NotImplementedError("Mode not implemented.")
-        elif ctx.options.mode == "socks5":
-            raise NotImplementedError("Mode not implemented.")
+            return layers.modes.TransparentProxy(context)
+
         elif ctx.options.mode.startswith("reverse:"):
             return layers.modes.ReverseProxy(context)
-        elif ctx.options.mode.startswith("upstream:"):
+
+        elif ctx.options.mode == "socks5":
             raise NotImplementedError("Mode not implemented.")
+
         else:
             raise NotImplementedError("Unknown mode.")

@@ -287,9 +287,8 @@ class ServerTLSLayer(_TLSLayer):
 
     def negotiate(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
         done, err = yield from super().negotiate(data)
-        if done or err:
-            cmd = self.command_to_reply_to
-            yield from self.event_to_child(events.OpenConnectionReply(cmd, err))
+        if (done or err) and self.command_to_reply_to:
+            yield from self.event_to_child(events.OpenConnectionReply(self.command_to_reply_to, err))
             self.command_to_reply_to = None
         return done, err
 

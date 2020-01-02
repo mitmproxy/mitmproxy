@@ -2,6 +2,7 @@ from enum import Flag, auto
 from typing import List, Literal, Optional, Sequence, Union
 
 from mitmproxy import certs
+from mitmproxy.net import server_spec
 from mitmproxy.options import Options
 
 
@@ -53,7 +54,7 @@ class Client(Connection):
 class Server(Connection):
     sni = True
     """True: client SNI, False: no SNI, bytes: custom value"""
-    via: Optional["Server"] = None
+    via: Sequence["Server"] = ()
 
     def __init__(self, address: Optional[tuple]):
         self.address = address
