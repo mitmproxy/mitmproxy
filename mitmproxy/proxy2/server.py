@@ -145,7 +145,11 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             while True:
                 try:
                     data = await reader.read(65535)
-                except (socket.error, asyncio.CancelledError):
+                except socket.error:
+                    data = b""
+                except asyncio.CancelledError:
+                    if connection.state & ConnectionState.CAN_WRITE:
+                        self.close_our_end(connection)
                     data = b""
                 if data:
                     self.server_event(events.DataReceived(connection, data))

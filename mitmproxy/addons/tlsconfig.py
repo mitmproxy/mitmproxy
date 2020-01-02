@@ -130,6 +130,7 @@ class TlsConfig:
             **args
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
+        tls_start.ssl_conn.set_tlsext_host_name(server.sni)
         tls_start.ssl_conn.set_connect_state()
 
     def configure(self, updated):
