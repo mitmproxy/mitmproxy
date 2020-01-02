@@ -5,11 +5,10 @@ from dataclasses import dataclass
 from mitmproxy import flow, http
 from mitmproxy.net import server_spec
 from mitmproxy.proxy.protocol.http import HTTPMode
-from mitmproxy.proxy2 import commands, events, layer
+from mitmproxy.proxy2 import commands, events, layer, tunnel
 from mitmproxy.proxy2.context import Connection, Context, Server
 from mitmproxy.proxy2.layers import tls
 from mitmproxy.proxy2.layers.http import upstream_proxy
-from mitmproxy.proxy2.layers.http.upstream_proxy import TunnelStack
 from mitmproxy.proxy2.utils import expect
 from mitmproxy.utils import human
 from ._base import HttpCommand, HttpConnection, ReceiveHttp, StreamId
@@ -28,20 +27,22 @@ class GetHttpConnection(HttpCommand):
     blocking = True
     address: typing.Tuple[str, int]
     tls: bool
-    via: typing.List[server_spec.ServerSpec]
+    via: typing.Sequence[server_spec.ServerSpec]
 
-    def __init__(self, address: typing.Tuple[str, int], tls: bool, via: typing.List[str]):
+    def __init__(self, address: typing.Tuple[str, int], tls: bool, via: typing.Sequence[str]):
         self.address = address
         self.tls = tls
-        self.via = via
+        self.via = tuple(via)
 
     def connection_spec_matches(self, connection: Connection) -> bool:
         return (
+                isinstance(connection, Server)
+                and
                 self.address == connection.address
                 and
                 self.tls == connection.tls
                 and
-                False  # FIXME
+                self.via == connection.via
         )
 
 
@@ -421,7 +422,7 @@ class HttpLayer(layer.Layer):
         )
         context = self.context.fork()
 
-        stack = TunnelStack()
+        stack = tunnel.LayerStack()
 
         if not can_reuse_context_connection:
             context.server = Server(event.address)
@@ -499,3 +500,4 @@ class HttpClient(layer.Layer):
         else:
             child_layer = Http1Client(self.context)
             self._handle_event = child_layer.handle_event
+        yield from self._handle_event(event)

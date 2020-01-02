@@ -132,7 +132,8 @@ class Http1Server(Http1Connection):
         elif isinstance(event, ResponseEndOfMessage):
             if "chunked" in self.response.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
-            elif http1.expected_http_body_size(self.request, self.response) == -1 or self.request.first_line_format == "authority":
+            elif http1.expected_http_body_size(self.request,
+                                               self.response) == -1 or self.request.first_line_format == "authority":
                 yield commands.CloseConnection(self.conn)
             yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):
@@ -207,7 +208,7 @@ class Http1Client(Http1Connection):
 
     def __init__(self, context: Context):
         super().__init__(context, context.server)
-        self.state = self.read_response_headers
+        self.state = self.start
         self.send_queue = []
 
     def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
@@ -258,6 +259,11 @@ class Http1Client(Http1Connection):
                 self.send_queue = []
                 for ev in send_queue:
                     yield from self.send(ev)
+
+    @expect(events.Start)
+    def start(self, event: events.Start) -> layer.CommandGenerator[None]:
+        self.state = self.read_response_headers
+        yield from ()
 
     @expect(events.ConnectionEvent)
     def read_response_headers(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
