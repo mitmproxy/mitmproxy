@@ -13,9 +13,11 @@ from mitmproxy.proxy2.layers import tls
 
 def alpn_select_callback(conn: SSL.Connection, options):
     server_alpn = conn.get_app_data()["server_alpn"]
+    http2 = conn.get_app_data()["http2"]
     if server_alpn and server_alpn in options:
         return server_alpn
-    for alpn in tls.HTTP_ALPNS:
+    http_alpns = tls.HTTP_ALPNS if http2 else tls.HTTP1_ALPNS
+    for alpn in http_alpns:
         if alpn in options:
             return alpn
     else:
@@ -76,10 +78,10 @@ class TlsConfig:
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
         tls_start.ssl_conn.set_app_data({
-            "server_alpn": tls_start.context.server.alpn
+            "server_alpn": tls_start.context.server.alpn,
+            "http2": ctx.options.http2,
         })
         tls_start.ssl_conn.set_accept_state()
-
 
     def create_proxy_server_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
         client = tls_start.context.client
@@ -120,7 +122,7 @@ class TlsConfig:
                 if os.path.exists(path):
                     client_cert = path
 
-        args["cipher_list"] = ':'.join(server.cipher_list) if server.cipher_list else None
+        args["cipher_list"] = b':'.join(server.cipher_list) if server.cipher_list else None
         ssl_ctx = net_tls.create_client_context(
             cert=client_cert,
             sni=server.sni.decode("idna"),  # FIXME: Should pass-through here.

@@ -15,6 +15,7 @@ import time
 import traceback
 import typing
 from contextlib import contextmanager
+from dataclasses import dataclass
 
 from OpenSSL import SSL
 
@@ -25,11 +26,6 @@ from mitmproxy.proxy2.context import Client, Connection, ConnectionState, Contex
 from mitmproxy.proxy2.layers import tls
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
-
-
-class StreamIO(typing.NamedTuple):
-    r: asyncio.StreamReader
-    w: asyncio.StreamWriter
 
 
 class TimeoutWatchdog:
@@ -72,8 +68,15 @@ class TimeoutWatchdog:
                 self.can_timeout.set()
 
 
+@dataclass
+class ConnectionIO:
+    handler: typing.Optional[asyncio.Task] = None
+    reader: typing.Optional[asyncio.StreamReader] = None
+    writer: typing.Optional[asyncio.StreamWriter] = None
+
+
 class ConnectionHandler(metaclass=abc.ABCMeta):
-    transports: typing.MutableMapping[Connection, StreamIO]
+    transports: typing.MutableMapping[Connection, ConnectionIO]
     timeout_watchdog: TimeoutWatchdog
 
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, options: moptions.Options) -> None:
@@ -81,92 +84,85 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
         self.client = Client(addr)
         self.context = Context(self.client, options)
-        self.layer = layer.NextLayer(self.context)
-        self.timeout_watchdog = TimeoutWatchdog(self.on_timeout)
+        self.transports = {
+            self.client: ConnectionIO(handler=None, reader=reader, writer=writer)
+        }
 
         # Ask for the first layer right away.
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
         # on protocols that start with a server greeting.
-        self.layer.ask_now()
+        self.layer = layer.NextLayer(self.context, ask_on_start=True)
 
-        self.transports = {
-            self.client: StreamIO(reader, writer)
-        }
+        self.timeout_watchdog = TimeoutWatchdog(self.on_timeout)
 
     async def handle_client(self) -> None:
-        # FIXME: Work around log suppression in core.
+        # Hack: Work around log suppression in core.
         logging.getLogger('asyncio').setLevel(logging.DEBUG)
-
+        asyncio.get_event_loop().set_debug(True)
         watch = asyncio.ensure_future(self.timeout_watchdog.watch())
+
         self.log("[sans-io] clientconnect")
 
+        handler = asyncio.create_task(
+            self.handle_connection(self.client)
+        )
+        self.transports[self.client].handler = handler
         self.server_event(events.Start())
-        await self.handle_connection(self.client)
+        await handler
 
         self.log("[sans-io] clientdisconnected")
         watch.cancel()
 
         if self.transports:
             self.log("[sans-io] closing transports...")
-            await asyncio.wait([
-                self.close_connection(x)
-                for x in self.transports
-            ])
+            for x in self.transports.values():
+                x.handler.cancel()
+            await asyncio.wait([x.handler for x in self.transports.values()])
             self.log("[sans-io] transports closed!")
-
-    async def on_timeout(self) -> None:
-        self.log(f"Closing connection due to inactivity: {self.client}")
-        await self.close_connection(self.client)
-
-    async def close_connection(self, connection: Connection) -> None:
-        self.log(f"closing {connection}", "debug")
-        connection.state = ConnectionState.CLOSED
-        io = self.transports.pop(connection)
-        io.w.close()
-        await io.w.wait_closed()
-
-    async def shutdown_connection(self, connection: Connection) -> None:
-        assert connection.state & ConnectionState.CAN_WRITE
-        io = self.transports[connection]
-        self.log(f"shutting down {connection}", "debug")
-
-        io.w.write_eof()
-        connection.state &= ~ConnectionState.CAN_WRITE
-
-    async def handle_connection(self, connection: Connection) -> None:
-        reader, writer = self.transports[connection]
-        while True:
-            try:
-                data = await reader.read(65535)
-            except socket.error:
-                data = b""
-            if data:
-                self.server_event(events.DataReceived(connection, data))
-            else:
-                if connection.state is ConnectionState.CAN_READ:
-                    await self.close_connection(connection)
-                else:
-                    connection.state &= ~ConnectionState.CAN_READ
-                self.server_event(events.ConnectionClosed(connection))
-                break
 
     async def open_connection(self, command: commands.OpenConnection) -> None:
         if not command.connection.address:
             raise ValueError("Cannot open connection, no hostname given.")
-        assert command.connection not in self.transports
         try:
-            reader, writer = await asyncio.open_connection(
-                *command.connection.address
-            )
-        except IOError as e:
+            reader, writer = await asyncio.open_connection(*command.connection.address)
+        except (IOError, asyncio.CancelledError) as e:
             self.server_event(events.OpenConnectionReply(command, str(e)))
         else:
-            self.log("serverconnect")
-            self.transports[command.connection] = StreamIO(reader, writer)
+            self.log(f"serverconnect {command.connection.address}")
+            self.transports[command.connection].reader = reader
+            self.transports[command.connection].writer = writer
             command.connection.state = ConnectionState.OPEN
             self.server_event(events.OpenConnectionReply(command, None))
-            await self.handle_connection(command.connection)
-            self.log("serverdisconnected")
+            try:
+                await self.handle_connection(command.connection)
+            finally:
+                self.log("serverdisconnected")
+
+    async def handle_connection(self, connection: Connection) -> None:
+        reader = self.transports[connection].reader
+        assert reader
+        try:
+            while True:
+                try:
+                    data = await reader.read(65535)
+                except (socket.error, asyncio.CancelledError):
+                    data = b""
+                if data:
+                    self.server_event(events.DataReceived(connection, data))
+                else:
+                    connection.state &= ~ConnectionState.CAN_READ
+                    self.server_event(events.ConnectionClosed(connection))
+                    if connection.state is ConnectionState.CLOSED:
+                        self.transports[connection].handler.cancel()
+                    await asyncio.Event().wait()  # wait for cancellation
+        except asyncio.CancelledError:
+            connection.state = ConnectionState.CLOSED
+            io = self.transports.pop(connection)
+            io.writer.close()
+
+    async def on_timeout(self) -> None:
+        self.log(f"Closing connection due to inactivity: {self.client}")
+        self.transports[self.client].handler.cancel()
 
     @abc.abstractmethod
     async def handle_hook(self, hook: commands.Hook) -> None:
@@ -180,31 +176,24 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         try:
             layer_commands = self.layer.handle_event(event)
             for command in layer_commands:
+
                 if isinstance(command, commands.OpenConnection):
-                    asyncio.ensure_future(
+                    assert command.connection not in self.transports
+                    handler = asyncio.create_task(
                         self.open_connection(command)
                     )
+                    self.transports[command.connection] = ConnectionIO(handler=handler)
+                elif isinstance(command, commands.ConnectionCommand) and command.connection not in self.transports:
+                    return  # The connection has already been closed.
                 elif isinstance(command, commands.SendData):
-                    try:
-                        io = self.transports[command.connection]
-                    except KeyError:
-                        raise RuntimeError(f"Cannot write to closed connection: {command.connection}")
-                    else:
-                        io.w.write(command.data)
+                    self.transports[command.connection].writer.write(command.data)
                 elif isinstance(command, commands.CloseConnection):
-                    if command.connection == self.client:
-                        asyncio.ensure_future(
-                            self.close_connection(command.connection)
-                        )
-                    else:
-                        asyncio.ensure_future(
-                            self.shutdown_connection(command.connection)
-                        )
+                    self.close_our_end(command.connection)
                 elif isinstance(command, commands.GetSocket):
-                    socket = self.transports[command.connection].w.get_extra_info("socket")
+                    socket = self.transports[command.connection].writer.get_extra_info("socket")
                     self.server_event(events.GetSocketReply(command, socket))
                 elif isinstance(command, commands.Hook):
-                    asyncio.ensure_future(
+                    asyncio.create_task(
                         self.handle_hook(command)
                     )
                 elif isinstance(command, commands.Log):
@@ -213,6 +202,22 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     raise RuntimeError(f"Unexpected command: {command}")
         except Exception:
             self.log(f"mitmproxy has crashed!\n{traceback.format_exc()}", level="error")
+
+    def close_our_end(self, connection):
+        assert connection.state & ConnectionState.CAN_WRITE
+        self.log(f"shutting down {connection}", "debug")
+        try:
+            self.transports[connection].writer.write_eof()
+        except socket.error:
+            connection.state = ConnectionState.CLOSED
+        connection.state &= ~ConnectionState.CAN_WRITE
+
+        # if we are closing the client connection, we should destroy everything.
+        if connection == self.client:
+            self.transports[connection].handler.cancel()
+        # If we have already received a close, let's finish everything.
+        elif connection.state is ConnectionState.CLOSED:
+            self.transports[connection].handler.cancel()
 
 
 class SimpleConnectionHandler(ConnectionHandler):
@@ -253,10 +258,10 @@ if __name__ == "__main__":
     async def handle(reader, writer):
         layer_stack = [
             lambda ctx: layers.ServerTLSLayer(ctx),
-            lambda ctx: layers.HTTPLayer(ctx, HTTPMode.regular),
+            lambda ctx: layers.HttpLayer(ctx, HTTPMode.regular),
             lambda ctx: setattr(ctx.server, "tls", True) or layers.ServerTLSLayer(ctx),
             lambda ctx: layers.ClientTLSLayer(ctx),
-            lambda ctx: layers.HTTPLayer(ctx, HTTPMode.transparent)
+            lambda ctx: layers.HttpLayer(ctx, HTTPMode.transparent)
         ]
 
         def next_layer(nl: layer.NextLayer):

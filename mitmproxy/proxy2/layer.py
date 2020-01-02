@@ -5,6 +5,7 @@ import collections
 import textwrap
 import typing
 from abc import abstractmethod
+from dataclasses import dataclass
 
 from mitmproxy import log
 from mitmproxy.proxy2 import commands, events
@@ -149,11 +150,14 @@ class NextLayer(Layer):
     events: typing.List[mevents.Event]
     """All events that happened before a decision was made."""
 
-    def __init__(self, context: Context) -> None:
+    _ask_on_start: bool
+
+    def __init__(self, context: Context, ask_on_start: bool = False) -> None:
         super().__init__(context)
         self.context.layers.remove(self)
-        self.events = []
         self.layer = None
+        self.events = []
+        self._ask_on_start = ask_on_start
         self._handle = None
 
     def __repr__(self):
@@ -169,11 +173,13 @@ class NextLayer(Layer):
         self.events.append(event)
 
         # We receive new data. Let's find out if we can determine the next layer now?
-        if isinstance(event, mevents.DataReceived):
+        if self._ask_on_start and isinstance(event, events.Start):
+            yield from self._ask()
+        elif isinstance(event, mevents.DataReceived):
             # For now, we only ask if we have received new data to reduce hook noise.
-            yield from self.ask_now()
+            yield from self._ask()
 
-    def ask_now(self):
+    def _ask(self):
         """
         Manually trigger a next_layer hook.
         The only use at the moment is to make sure that the top layer is initialized.

@@ -1,4 +1,5 @@
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
+from mitmproxy.proxy2.context import ConnectionState
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import tcp
 from ..tutils import Placeholder, Playbook, reply
@@ -14,7 +15,7 @@ def test_open_connection(tctx):
             << OpenConnection(tctx.server)
     )
 
-    tctx.server.connected = True
+    tctx.server.state = ConnectionState.OPEN
     assert (
             Playbook(tcp.TCPLayer(tctx, True))
             << None

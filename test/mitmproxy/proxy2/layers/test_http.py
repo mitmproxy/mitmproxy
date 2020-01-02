@@ -6,7 +6,7 @@ from mitmproxy.proxy2 import layer
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import http, tls
-from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, reply_establish_server_tls, reply_next_layer
+from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, reply_next_layer
 
 
 def test_http_proxy(tctx):
@@ -14,7 +14,7 @@ def test_http_proxy(tctx):
     server = Placeholder()
     flow = Placeholder()
     assert (
-            Playbook(http.HTTPLayer(tctx, HTTPMode.regular))
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular))
             >> DataReceived(tctx.client, b"GET http://example.com/foo?hello=1 HTTP/1.1\r\nHost: example.com\r\n\r\n")
             << http.HttpRequestHeadersHook(flow)
             >> reply()
@@ -39,7 +39,7 @@ def test_https_proxy(strategy, tctx):
     """Test a CONNECT request, followed by a HTTP GET /"""
     server = Placeholder()
     flow = Placeholder()
-    playbook = Playbook(http.HTTPLayer(tctx, HTTPMode.regular))
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
     tctx.options.connection_strategy = strategy
 
     (playbook
@@ -54,7 +54,7 @@ def test_https_proxy(strategy, tctx):
      << SendData(tctx.client, b'HTTP/1.1 200 Connection established\r\n\r\n')
      >> DataReceived(tctx.client, b"GET /foo?hello=1 HTTP/1.1\r\nHost: example.com\r\n\r\n")
      << layer.NextLayerHook(Placeholder())
-     >> reply_next_layer(lambda ctx: http.HTTPLayer(ctx, HTTPMode.transparent))
+     >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
      << http.HttpRequestHeadersHook(flow)
      >> reply()
      << http.HttpRequestHook(flow)
@@ -77,12 +77,15 @@ def test_https_proxy(strategy, tctx):
 @pytest.mark.parametrize("https_client", [False, True])
 @pytest.mark.parametrize("https_server", [False, True])
 @pytest.mark.parametrize("strategy", ["lazy", "eager"])
-def test_redirect(strategy, https_server, https_client, tctx):
+def test_redirect(strategy, https_server, https_client, tctx, monkeypatch):
     """Test redirects between http:// and https:// in regular proxy mode."""
     server = Placeholder()
     flow = Placeholder()
     tctx.options.connection_strategy = strategy
-    p = Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+    p = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+
+    if https_server:
+        monkeypatch.setattr(tls, "ServerTLSLayer", tls.MockTLSLayer)
 
     def redirect(flow: HTTPFlow):
         if https_server:
@@ -98,16 +101,13 @@ def test_redirect(strategy, https_server, https_client, tctx):
         p << SendData(tctx.client, b'HTTP/1.1 200 Connection established\r\n\r\n')
         p >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
         p << layer.NextLayerHook(Placeholder())
-        p >> reply_next_layer(lambda ctx: http.HTTPLayer(ctx, HTTPMode.transparent))
+        p >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
     else:
         p >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
     p << http.HttpRequestHook(flow)
     p >> reply(side_effect=redirect)
     p << OpenConnection(server)
     p >> reply(None)
-    if https_server:
-        pass  # p << tls.EstablishServerTLS(server)
-        # p >> reply_establish_server_tls()
     p << SendData(server, b"GET / HTTP/1.1\r\nHost: redirected.site\r\n\r\n")
     p >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\r\nHello World!")
     p << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\r\nHello World!")
@@ -123,7 +123,7 @@ def test_multiple_server_connections(tctx):
     """Test multiple requests being rewritten to different targets."""
     server1 = Placeholder()
     server2 = Placeholder()
-    playbook = Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
 
     def redirect(to: str):
         def side_effect(flow: HTTPFlow):
@@ -164,7 +164,7 @@ def test_http_reply_from_proxy(tctx):
         flow.response = HTTPResponse.make(418)
 
     assert (
-            Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
             << http.HttpRequestHook(Placeholder())
             >> reply(side_effect=reply_from_proxy)
@@ -176,7 +176,7 @@ def test_response_until_eof(tctx):
     """Test scenario where the server response body is terminated by EOF."""
     server = Placeholder()
     assert (
-            Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
             << OpenConnection(server)
             >> reply(None)
@@ -197,7 +197,7 @@ def test_disconnect_while_intercept(tctx):
     flow = Placeholder()
 
     assert (
-            Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n")
             << http.HttpConnectHook(Placeholder())
             >> reply()
@@ -206,7 +206,7 @@ def test_disconnect_while_intercept(tctx):
             << SendData(tctx.client, b'HTTP/1.1 200 Connection established\r\n\r\n')
             >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
             << layer.NextLayerHook(Placeholder())
-            >> reply_next_layer(lambda ctx: http.HTTPLayer(ctx, HTTPMode.transparent))
+            >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
             << http.HttpRequestHook(flow)
             >> ConnectionClosed(server1)
             >> reply(to=-2)
@@ -229,7 +229,7 @@ def test_response_streaming(tctx):
         flow.response.stream = lambda x: x.upper()
 
     assert (
-            Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"GET http://example.com/largefile HTTP/1.1\r\nHost: example.com\r\n\r\n")
             << OpenConnection(server)
             >> reply(None)
@@ -252,7 +252,7 @@ def test_request_streaming(tctx, response):
     """
     server = Placeholder()
     flow = Placeholder()
-    playbook = Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
 
     def enable_streaming(flow: HTTPFlow):
         flow.request.stream = lambda x: x.upper()
@@ -324,7 +324,7 @@ def test_server_aborts(tctx, data):
     server = Placeholder()
     flow = Placeholder()
     err = Placeholder()
-    playbook = Playbook(http.HTTPLayer(tctx, HTTPMode.regular), hooks=False)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     assert (
             playbook
             >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")

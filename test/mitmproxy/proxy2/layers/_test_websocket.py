@@ -6,13 +6,15 @@ import pytest
 from mitmproxy.net.websockets import Frame, OPCODE
 from mitmproxy.proxy2 import commands, events
 from mitmproxy.proxy2.layers.old import websocket
+
+from mitmproxy.proxy2.context import ConnectionState
 from mitmproxy.test import tflow
 from .. import tutils
 
 
 @pytest.fixture
 def ws_playbook(tctx):
-    tctx.server.connected = True
+    tctx.server.state = ConnectionState.OPEN
     playbook = tutils.Playbook(
         websocket.WebsocketLayer(
             tctx,

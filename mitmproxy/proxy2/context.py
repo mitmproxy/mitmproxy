@@ -1,5 +1,5 @@
 from enum import Flag, auto
-from typing import List, Optional, Sequence, Union
+from typing import List, Literal, Optional, Sequence, Union
 
 from mitmproxy import certs
 from mitmproxy.options import Options
@@ -16,7 +16,7 @@ class Connection:
     """
     Connections exposed to the layers only contain metadata, no socket objects.
     """
-    address: tuple
+    address: Optional[tuple]
     state: ConnectionState
     tls: bool = False
     tls_established: bool = False
@@ -25,7 +25,7 @@ class Connection:
     alpn_offers: Sequence[bytes] = ()
     cipher_list: Sequence[bytes] = ()
     tls_version: Optional[str] = None
-    sni: Union[bytes, bool, None]
+    sni: Union[bytes, Literal[True], None]
 
     timestamp_tls_setup: Optional[float] = None
 
@@ -33,21 +33,17 @@ class Connection:
     def connected(self):
         return self.state is ConnectionState.OPEN
 
-    @connected.setter
-    def connected(self, val: bool) -> None:
-        # We should really set .state, but verdict is still due if we even want to keep .state around.
-        # We allow setting .connected while we figure that out.
-        if val:
-            self.state = ConnectionState.OPEN
-        else:
-            self.state = ConnectionState.CLOSED
-
     def __repr__(self):
-        return f"{type(self).__name__}({repr(self.__dict__)})"
+        attrs = repr({
+            k: {"cipher_list": lambda: f"<{len(v)} ciphers>"}.get(k,lambda: v)()
+            for k, v in self.__dict__.items()
+        })
+        return f"{type(self).__name__}({attrs})"
 
 
 class Client(Connection):
-    sni: Optional[bytes] = None
+    sni: Union[bytes, None] = None
+    address: tuple
 
     def __init__(self, address):
         self.address = address
@@ -55,9 +51,9 @@ class Client(Connection):
 
 
 class Server(Connection):
-    sni: Union[bytes, bool] = True
+    sni = True
     """True: client SNI, False: no SNI, bytes: custom value"""
-    address: Optional[tuple]
+    via: Optional["Server"] = None
 
     def __init__(self, address: Optional[tuple]):
         self.address = address

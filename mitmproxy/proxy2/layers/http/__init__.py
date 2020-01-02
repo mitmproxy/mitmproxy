@@ -1,5 +1,6 @@
 import collections
 import typing
+from dataclasses import dataclass
 
 from mitmproxy import flow, http
 from mitmproxy.proxy.protocol.http import HTTPMode
@@ -8,7 +9,7 @@ from mitmproxy.proxy2.context import Connection, Context, Server
 from mitmproxy.proxy2.layers import tls
 from mitmproxy.proxy2.utils import expect
 from mitmproxy.utils import human
-from ._base import HttpConnection, StreamId, HttpCommand, ReceiveHttp
+from ._base import HttpCommand, HttpConnection, ReceiveHttp, StreamId
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
 from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, HttpRequestHook, HttpResponseHeadersHook, \
@@ -37,6 +38,7 @@ class GetHttpConnection(HttpCommand):
         )
 
 
+@dataclass
 class GetHttpConnectionReply(events.CommandReply):
     command: GetHttpConnection
     reply: typing.Tuple[typing.Optional[Connection], typing.Optional[str]]
@@ -67,8 +69,6 @@ class SendHttp(HttpCommand):
         return f"Send({self.event})"
 
 
-
-
 class HttpStream(layer.Layer):
     request_body_buf: bytes
     response_body_buf: bytes
@@ -78,7 +78,7 @@ class HttpStream(layer.Layer):
 
     @property
     def mode(self):
-        parent: HTTPLayer = self.context.layers[-2]
+        parent: HttpLayer = self.context.layers[-2]
         return parent.mode
 
     def __init__(self, context: Context):
@@ -309,7 +309,7 @@ class HttpStream(layer.Layer):
         yield from ()
 
 
-class HTTPLayer(layer.Layer):
+class HttpLayer(layer.Layer):
     """
     ConnectionEvent: We have received b"GET /\r\n\r\n" from the client.
     HttpEvent: We have received request headers
@@ -339,22 +339,22 @@ class HTTPLayer(layer.Layer):
         }
 
     def __repr__(self):
-        return f"HTTPLayer(conns: {len(self.connections)}, queue: {[type(e).__name__ for e in self.command_queue]})"
+        return f"HttpLayer(conns: {len(self.connections)}, queue: {[type(e).__name__ for e in self.command_queue]})"
 
     def _handle_event(self, event: events.Event):
         if isinstance(event, events.Start):
             return
         elif isinstance(event, events.CommandReply):
-            try:
-                stream = self.stream_by_command.pop(event.command)
-            except KeyError:
-                raise
+            stream = self.stream_by_command.pop(event.command)
             self.event_to_child(stream, event)
         elif isinstance(event, events.ConnectionEvent):
             if event.connection == self.context.server and self.context.server not in self.connections:
                 pass
             else:
-                handler = self.connections[event.connection]
+                try:
+                    handler = self.connections[event.connection]
+                except KeyError:
+                    raise
                 self.event_to_child(handler, event)
         else:
             raise ValueError(f"Unexpected event: {event}")
@@ -388,7 +388,7 @@ class HTTPLayer(layer.Layer):
 
     def get_connection(self, event: GetHttpConnection, *, reuse: bool = True):
         # Do we already have a connection we can re-use?
-        for connection, layer in self.connections.items():
+        for connection in self.connections:
             connection_suitable = (
                     reuse and
                     event.connection_spec_matches(connection) and
@@ -402,7 +402,7 @@ class HTTPLayer(layer.Layer):
                     self.waiting_for_establishment[connection].append(event)
                 else:
                     stream = self.stream_by_command.pop(event)
-                    self.event_to_child(stream, GetHttpConnectionReply(event, (layer, None)))
+                    self.event_to_child(stream, GetHttpConnectionReply(event, (connection, None)))
                 return
 
         can_reuse_context_connection = (
@@ -414,8 +414,11 @@ class HTTPLayer(layer.Layer):
         layer = HttpClient(context)
         if not can_reuse_context_connection:
             context.server = Server(event.address)
+            if context.options.http2:
+                context.server.alpn_offers = tls.HTTP_ALPNS
+            else:
+                context.server.alpn_offers = tls.HTTP1_ALPNS
             if event.tls:
-                context.server.tls = True
                 # TODO: This is a bit ugly, let's make up nicer syntax, e.g. using __truediv__
                 orig = layer
                 layer = tls.ServerTLSLayer(context)
@@ -432,7 +435,6 @@ class HTTPLayer(layer.Layer):
 
         if command.err:
             reply = (None, command.err)
-            self.connections.pop(command.connection)
         else:
             reply = (command.connection, None)
 
