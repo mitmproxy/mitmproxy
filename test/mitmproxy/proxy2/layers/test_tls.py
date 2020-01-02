@@ -411,7 +411,7 @@ class TestClientTLS:
         assert (
                 playbook
                 >> events.DataReceived(tctx.client, invalid)
-                << commands.Log(f"Cannot parse ClientHello: {invalid.hex()}")
+                << commands.Log(f"Client TLS handshake failed. Cannot parse ClientHello: {invalid.hex()}", level="warn")
                 << commands.CloseConnection(tctx.client)
         )
         assert not tctx.client.tls_established
