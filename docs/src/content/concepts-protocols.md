@@ -73,6 +73,8 @@ If an endpoint sends a PING to mitmproxy, a PONG will be sent back immediately
 PING (without a payload) is sent to the other endpoint. Unsolicited PONG's are
 not forwarded. All PING's and PONG's are logged (with payload if present).
 
+Please note that message interception, modification or replay are not possible yet.
+
 ## Raw TCP / TCP Proxy / Fallback
 
 In case mitmproxy does not handle a specific protocol, you can exempt
@@ -83,7 +85,7 @@ but differs in two important aspects:
   * The raw TCP messages are printed to the event log.
   * SSL connections will be intercepted.
 
-Please note that message interception or modification are not possible yet. If
+Please note that message interception, modification or replay are not possible yet. If
 you are not interested in the raw TCP messages, you should use the ignore
 domains feature.
 
