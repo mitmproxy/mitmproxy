@@ -54,7 +54,7 @@ class Client(Connection):
 class Server(Connection):
     sni = True
     """True: client SNI, False: no SNI, bytes: custom value"""
-    via: Sequence["Server"] = ()
+    via: Sequence[server_spec.ServerSpec] = ()
 
     def __init__(self, address: Optional[tuple]):
         self.address = address

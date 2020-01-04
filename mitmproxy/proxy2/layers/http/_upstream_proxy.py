@@ -5,25 +5,33 @@ from h11._receivebuffer import ReceiveBuffer
 from mitmproxy import http
 from mitmproxy.net.http import http1
 from mitmproxy.net.http.http1 import read_sansio as http1_sansio
-from mitmproxy.proxy2 import commands, context, events, layer, tunnel
+from mitmproxy.proxy2 import commands, context, layer, tunnel
 from mitmproxy.utils import human
 
 
 class HttpUpstreamProxy(tunnel.TunnelLayer):
     buf: ReceiveBuffer
+    send_connect: bool
 
-    def __init__(self, ctx: context.Context, address: tuple):
-        s = context.Server(address)
-        ctx.server.via = (*ctx.server.via, s)
-        super().__init__(ctx, tunnel_connection=s, conn=ctx.server)
+    def __init__(self, ctx: context.Context, address: tuple, send_connect: bool):
+        super().__init__(
+            ctx,
+            tunnel_connection=context.Server(address),
+            conn=ctx.server
+        )
         self.buf = ReceiveBuffer()
+        self.send_connect = send_connect
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
+        if not self.send_connect:
+            return (yield from super().start_handshake())
         req = http.make_connect_request(self.conn.address)
         raw = http1.assemble_request(req)
         yield commands.SendData(self.tunnel_connection, raw)
 
     def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+        if not self.send_connect:
+            return (yield from super().receive_handshake_data(data))
         self.buf += data
         response_head = self.buf.maybe_extract_lines()
         if response_head:
