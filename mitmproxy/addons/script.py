@@ -76,7 +76,8 @@ class Script:
         self.ns = None
 
         if not os.path.isfile(self.fullpath):
-            raise exceptions.OptionsError('No such script')
+            ctx.log.error('No such script: %s' % path)
+            return
 
         self.reloadtask = None
         if reload:
