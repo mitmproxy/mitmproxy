@@ -1,6 +1,7 @@
 import pytest
 
 from mitmproxy.http import HTTPFlow, HTTPResponse
+from mitmproxy.net import server_spec
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import layer
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
@@ -345,3 +346,107 @@ def test_server_aborts(tctx, data):
     )
     assert flow().error
     assert b"502 Bad Gateway" in err()
+
+
+@pytest.mark.parametrize("redirect", [None, "proxy", "destination"])
+@pytest.mark.parametrize("scheme", ["http", "https"])
+@pytest.mark.parametrize("strategy", ["eager", "lazy"])
+def test_upstream_proxy(tctx, redirect, scheme, strategy):
+    """Test that an upstream HTTP proxy is used."""
+    server = Placeholder()
+    server2 = Placeholder()
+    flow = Placeholder()
+    tctx.options.mode = "upstream:http://proxy:8080"
+    tctx.options.connection_strategy = strategy
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+
+    if scheme == "http":
+        playbook >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        playbook << OpenConnection(server)
+        playbook >> reply(None)
+        # FIXME: We really shouldn't have the port here.
+        playbook << SendData(server, b"GET http://example.com:80/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+    else:
+        playbook >> DataReceived(tctx.client, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
+        playbook << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
+        playbook >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        playbook << layer.NextLayerHook(Placeholder())
+        playbook >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
+        playbook << OpenConnection(server)
+        playbook >> reply(None)
+        playbook << SendData(server, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
+        playbook >> DataReceived(server, b"HTTP/1.1 200 Connection established\r\n\r\n")
+        playbook << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+
+    playbook >> DataReceived(server, b"HTTP/1.1 418 OK\r\nContent-Length: 0\r\n\r\n")
+    playbook << SendData(tctx.client, b"HTTP/1.1 418 OK\r\nContent-Length: 0\r\n\r\n")
+
+    assert playbook
+    assert server().address == ("proxy", 8080)
+
+    if scheme == "http":
+        playbook >> DataReceived(tctx.client, b"GET http://example.com/two HTTP/1.1\r\nHost: example.com\r\n\r\n")
+    else:
+        playbook >> DataReceived(tctx.client, b"GET /two HTTP/1.1\r\nHost: example.com\r\n\r\n")
+
+    assert (playbook << http.HttpRequestHook(flow))
+    if redirect == "proxy":
+        flow().request.via = [server_spec.ServerSpec("http", ("other-proxy", 1234))]
+    elif redirect == "destination":
+        flow().request.host = "other-server"
+        flow().request.host_header = "example.com"
+    playbook >> reply()
+
+    if redirect:
+        # Protocol-wise we wouldn't need to open a new connection for plain http host redirects,
+        # but we disregard this edge case to simplify implementation.
+        playbook << OpenConnection(server2)
+        playbook >> reply(None)
+    else:
+        server2 = server
+
+    if scheme == "http":
+        if redirect == "destination":
+            playbook << SendData(server2, b"GET http://other-server:80/two HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        else:
+            playbook << SendData(server2, b"GET http://example.com:80/two HTTP/1.1\r\nHost: example.com\r\n\r\n")
+    else:
+        if redirect:
+            if redirect == "destination":
+                playbook << SendData(server2, b"CONNECT other-server:443 HTTP/1.1\r\n\r\n")
+            else:
+                playbook << SendData(server2, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
+            playbook >> DataReceived(server2, b"HTTP/1.1 200 Connection established\r\n\r\n")
+        playbook << SendData(server2, b"GET /two HTTP/1.1\r\nHost: example.com\r\n\r\n")
+
+    playbook >> DataReceived(server2, b"HTTP/1.1 418 OK\r\nContent-Length: 0\r\n\r\n")
+    playbook << SendData(tctx.client, b"HTTP/1.1 418 OK\r\nContent-Length: 0\r\n\r\n")
+
+    assert playbook
+
+    if redirect == "proxy":
+        assert server2().address == ("other-proxy", 1234)
+    else:
+        assert server2().address == ("proxy", 8080)
+
+    assert (
+            playbook
+            >> ConnectionClosed(tctx.client)
+            << CloseConnection(tctx.client)
+    )
+
+
+@pytest.mark.xfail(reason="h11 enforces host headers by default")
+def test_no_headers(tctx):
+    """Test that we can correctly reassemble requests/responses with no headers."""
+    server = Placeholder()
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+            >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\n\r\n")
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"GET / HTTP/1.1\r\n\r\n")
+            >> DataReceived(server, b"HTTP/1.1 204 No Content\r\n\r\n")
+            << SendData(tctx.client, b"HTTP/1.1 204 No Content\r\n\r\n")
+    )
+    assert server().address == ("example.com", 80)

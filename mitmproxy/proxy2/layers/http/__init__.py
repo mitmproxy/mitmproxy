@@ -8,7 +8,7 @@ from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events, layer, tunnel
 from mitmproxy.proxy2.context import Connection, Context, Server
 from mitmproxy.proxy2.layers import tls
-from mitmproxy.proxy2.layers.http import upstream_proxy
+from mitmproxy.proxy2.layers.http import _upstream_proxy
 from mitmproxy.proxy2.utils import expect
 from mitmproxy.utils import human
 from ._base import HttpCommand, HttpConnection, ReceiveHttp, StreamId
@@ -29,7 +29,7 @@ class GetHttpConnection(HttpCommand):
     tls: bool
     via: typing.Sequence[server_spec.ServerSpec]
 
-    def __init__(self, address: typing.Tuple[str, int], tls: bool, via: typing.Sequence[str]):
+    def __init__(self, address: typing.Tuple[str, int], tls: bool, via: typing.Sequence[server_spec.ServerSpec]):
         self.address = address
         self.tls = tls
         self.via = tuple(via)
@@ -116,37 +116,32 @@ class HttpStream(layer.Layer):
         )
         self.flow.request = event.request
 
-        if self.flow.request.first_line_format == "authority":
-            yield from self.handle_connect()
-            return
-
         if self.flow.request.headers.get("expect", "").lower() == "100-continue":
             raise NotImplementedError("expect nothing")
             # self.send_response(http.expect_continue_response)
             # request.headers.pop("expect")
 
-        # set first line format to relative in regular mode,
-        # see https://github.com/mitmproxy/mitmproxy/issues/1759
-        if self.mode is HTTPMode.regular and self.flow.request.first_line_format == "absolute":
-            self.flow.request.first_line_format = "relative"
+        if self.flow.request.first_line_format == "authority":
+            yield from self.handle_connect()
+            return
 
-        # update host header in reverse proxy mode
-        if self.context.options.mode.startswith("reverse:") and not self.context.options.keep_host_header:
-            self.flow.request.host_header = self.context.server.address[0]
-
-        # Determine .scheme, .host and .port attributes for inline scripts. For
-        # absolute-form requests, they are directly given in the request. For
-        # authority-form requests, we only need to determine the request
-        # scheme. For relative-form requests, we need to determine host and
-        # port as well.
-        if self.mode is HTTPMode.transparent:
-            # Setting request.host also updates the host header, which we want
-            # to preserve
+        # Determine .scheme, .host and .port attributes for relative-form requests
+        if self.flow.request.first_line_format in "relative":
+            # Setting request.host also updates the host header, which we want to preserve
             host_header = self.flow.request.host_header
             self.flow.request.host = self.context.server.address[0]
             self.flow.request.port = self.context.server.address[1]
             self.flow.request.host_header = host_header  # set again as .host overwrites this.
             self.flow.request.scheme = "https" if self.context.server.tls else "http"
+
+        # set first line format to relative in regular mode,
+        # see https://github.com/mitmproxy/mitmproxy/issues/1759
+        if self.context.options.mode == "regular" and self.flow.request.first_line_format == "absolute":
+            self.flow.request.first_line_format = "relative"
+
+        # update host header in reverse proxy mode
+        if self.context.options.mode.startswith("reverse:") and not self.context.options.keep_host_header:
+            self.flow.request.host_header = self.context.server.address[0]
 
         self.flow.request.via = []  # FIXME: Make this an official attribute.
         if self.context.options.mode.startswith("upstream:"):
@@ -272,7 +267,13 @@ class HttpStream(layer.Layer):
         yield HttpConnectHook(self.flow)
 
         self.context.server = Server((self.flow.request.host, self.flow.request.port))
-        if self.context.options.connection_strategy == "eager":
+
+        # We must not connect to the actual destination in upstream mode.
+        connect_now = (
+                self.context.options.connection_strategy == "eager"
+                and not self.context.options.mode.startswith("upstream:")
+        )
+        if connect_now:
             err = yield commands.OpenConnection(self.context.server)
             if err:
                 self.flow.response = http.HTTPResponse.make(
@@ -426,13 +427,17 @@ class HttpLayer(layer.Layer):
 
         if not can_reuse_context_connection:
             context.server = Server(event.address)
+            context.server.via = event.via
             if context.options.http2:
                 context.server.alpn_offers = tls.HTTP_ALPNS
             else:
                 context.server.alpn_offers = tls.HTTP1_ALPNS
 
             for via in reversed(event.via):
-                stack /= upstream_proxy.HttpUpstreamProxy(context, via.address)
+                needs_http_connect = (
+                        self.mode != HTTPMode.regular or via != event.via[-1]
+                )
+                stack /= _upstream_proxy.HttpUpstreamProxy(context, via.address, needs_http_connect)
             if event.tls:
                 stack /= tls.ServerTLSLayer(context)
 
