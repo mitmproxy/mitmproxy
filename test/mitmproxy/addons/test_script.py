@@ -61,10 +61,11 @@ def test_load_fullname(tdata):
 
 
 class TestScript:
-    def test_notfound(self):
-        with taddons.context():
-            with pytest.raises(exceptions.OptionsError):
-                script.Script("nonexistent", False)
+    @pytest.mark.asyncio
+    async def test_notfound(self):
+        with taddons.context() as tctx:
+            script.Script("nonexistent", False)
+            assert await tctx.master.await_log("No such script")
 
     def test_quotes_around_filename(self, tdata):
         """
