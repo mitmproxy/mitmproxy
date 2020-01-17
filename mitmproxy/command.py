@@ -103,7 +103,7 @@ class Command:
         except TypeError:
             expected = f'Expected: {str(self.signature.parameters)}'
             received = f'Received: {str(args)}'
-            raise exceptions.CommandError(f"Command argument mismatch: \n\t{expected}\n\t{received}")
+            raise exceptions.CommandError(f"Command argument mismatch: \n    {expected}\n    {received}")
 
         for name, value in bound_arguments.arguments.items():
             convert_to = self.signature.parameters[name].annotation
