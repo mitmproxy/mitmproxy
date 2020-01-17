@@ -276,11 +276,11 @@ class ConsoleAddon:
 
         def callback(opt):
             # We're now outside of the call context...
-            repl = " ".join(command_lexer.quote(x) for x in args)
-            repl = repl.replace("{choice}", opt)
+            repl = " ".join(command_lexer.quote(x.replace("{choice}", opt)) for x in args)
             try:
                 self.master.commands.execute(subcmd + " " + repl)
             except exceptions.CommandError as e:
+                ctx.log.error(str(e))
                 signals.status_message.send(message=str(e))
 
         self.master.overlay(
@@ -539,9 +539,10 @@ class ConsoleAddon:
             raise exceptions.CommandError("Invalid flowview mode.")
 
         try:
-            cmd = 'view.settings.setval @focus flowview_mode_%s %s' % (idx, mode)
+            cmd = 'view.settings.setval @focus flowview_mode_%s %s' % (idx, command_lexer.quote(mode))
             self.master.commands.execute(cmd)
         except exceptions.CommandError as e:
+            ctx.log.error(e)
             signals.status_message.send(message=str(e))
 
     @command.command("console.flowview.mode.options")
