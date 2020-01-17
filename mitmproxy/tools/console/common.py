@@ -34,7 +34,7 @@ def highlight_key(str, key, textattr="text", keyattr="key"):
     return l
 
 
-KEY_MAX = 30
+KEY_MAX = 50
 
 
 def format_keyvals(
