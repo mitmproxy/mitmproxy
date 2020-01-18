@@ -2,6 +2,7 @@ import typing
 
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy import ctx
 
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
@@ -15,8 +16,10 @@ class CommandExecutor:
         if cmd.strip():
             try:
                 ret = self.master.commands.execute(cmd)
-            except exceptions.CommandError as v:
-                signals.status_message.send(message=str(v))
+            except exceptions.CommandError as e:
+                msg = str(e)
+                ctx.log.error(msg)
+                signals.status_message.send(message=msg)
             else:
                 if ret:
                     if type(ret) == typing.Sequence[flow.Flow]:
