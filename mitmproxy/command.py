@@ -241,7 +241,7 @@ class CommandManager:
             raise exceptions.CommandError("Unknown command: %s" % command_name)
         return self.commands[command_name].func(*args)
 
-    def _call_strings(self, command_name: str, args: typing.Sequence[str]) -> typing.Any:
+    def call_strings(self, command_name: str, args: typing.Sequence[str]) -> typing.Any:
         """
         Call a command using a list of string arguments. May raise CommandError.
         """
@@ -262,7 +262,7 @@ class CommandManager:
             for part in parts
             if part.type != mitmproxy.types.Space
         ]
-        return self._call_strings(command_name, args)
+        return self.call_strings(command_name, args)
 
     def dump(self, out=sys.stdout) -> None:
         cmds = list(self.commands.values())
