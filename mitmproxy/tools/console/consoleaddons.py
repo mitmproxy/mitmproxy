@@ -252,9 +252,7 @@ class ConsoleAddon:
             try:
                 self.master.commands.call_strings(cmd, repl)
             except exceptions.CommandError as e:
-                msg = str(e)
-                ctx.log.error(msg)
-                signals.status_message.send(message=msg)
+                ctx.log.error(str(e))
 
         self.master.overlay(
             overlay.Chooser(self.master, prompt, choices, "", callback)
@@ -281,9 +279,7 @@ class ConsoleAddon:
             try:
                 self.master.commands.call_strings(subcmd, repl)
             except exceptions.CommandError as e:
-                msg = str(e)
-                ctx.log.error(msg)
-                signals.status_message.send(message=msg)
+                ctx.log.error(str(e))
 
         self.master.overlay(
             overlay.Chooser(self.master, prompt, choices, "", callback)
@@ -547,9 +543,7 @@ class ConsoleAddon:
                 ["@focus", "flowview_mode_%s" % (idx,), mode]
             )
         except exceptions.CommandError as e:
-            msg = str(e)
-            ctx.log.error(msg)
-            signals.status_message.send(message=msg)
+            ctx.log.error(str(e))
 
     @command.command("console.flowview.mode.options")
     def flowview_mode_options(self) -> typing.Sequence[str]:

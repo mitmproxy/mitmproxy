@@ -17,9 +17,7 @@ class CommandExecutor:
             try:
                 ret = self.master.commands.execute(cmd)
             except exceptions.CommandError as e:
-                msg = str(e)
-                ctx.log.error(msg)
-                signals.status_message.send(message=msg)
+                ctx.log.error(str(e))
             else:
                 if ret:
                     if type(ret) == typing.Sequence[flow.Flow]:
