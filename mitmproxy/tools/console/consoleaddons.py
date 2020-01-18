@@ -160,7 +160,7 @@ class ConsoleAddon:
         fv = self.master.window.current("options")
         if not fv:
             raise exceptions.CommandError("Not viewing options.")
-        self.master.commands.execute("options.reset.one %s" % fv.current_name())
+        self.master.commands.execute("options.reset.one %s" % command_lexer.quote(fv.current_name()))
 
     @command.command("console.nav.start")
     def nav_start(self) -> None:
@@ -280,8 +280,9 @@ class ConsoleAddon:
             try:
                 self.master.commands.execute(subcmd + " " + repl)
             except exceptions.CommandError as e:
-                ctx.log.error(str(e))
-                signals.status_message.send(message=str(e))
+                msg = str(e)
+                ctx.log.error(msg)
+                signals.status_message.send(message=msg)
 
         self.master.overlay(
             overlay.Chooser(self.master, prompt, choices, "", callback)
@@ -455,7 +456,7 @@ class ConsoleAddon:
             flow.request.url = url.decode()
         elif flow_part in ["method", "status_code", "reason"]:
             self.master.commands.execute(
-                "console.command flow.set @focus %s " % flow_part
+                "console.command flow.set @focus %s " % command_lexer.quote(flow_part)
             )
 
     def _grideditor(self):
@@ -542,8 +543,9 @@ class ConsoleAddon:
             cmd = 'view.settings.setval @focus flowview_mode_%s %s' % (idx, command_lexer.quote(mode))
             self.master.commands.execute(cmd)
         except exceptions.CommandError as e:
-            ctx.log.error(e)
-            signals.status_message.send(message=str(e))
+            msg = str(e)
+            ctx.log.error(msg)
+            signals.status_message.send(message=msg)
 
     @command.command("console.flowview.mode.options")
     def flowview_mode_options(self) -> typing.Sequence[str]:
@@ -562,7 +564,7 @@ class ConsoleAddon:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
 
-        cmd = 'view.settings.getval @focus flowview_mode_%s %s' % (idx, self.master.options.console_default_contentview)
+        cmd = 'view.settings.getval @focus flowview_mode_%s %s' % (idx, command_lexer.quote(self.master.options.console_default_contentview))
         return self.master.commands.execute(cmd)
 
     @command.command("console.key.contexts")
