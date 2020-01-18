@@ -284,7 +284,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     try:
         return t.parse(manager, argtype, spec)
     except exceptions.TypeError as e:
-        raise exceptions.CommandError from e
+        raise exceptions.CommandError(str(e)) from e
 
 
 def command(name: typing.Optional[str] = None):
