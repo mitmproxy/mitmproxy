@@ -134,7 +134,7 @@ class _IntType(_BaseType):
         try:
             return int(s)
         except ValueError as e:
-            raise exceptions.TypeError from e
+            raise exceptions.TypeError(str(e)) from e
 
     def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, int)
@@ -328,7 +328,7 @@ class _FlowType(_BaseFlowType):
         try:
             flows = manager.execute("view.flows.resolve %s" % (s))
         except exceptions.CommandError as e:
-            raise exceptions.TypeError from e
+            raise exceptions.TypeError(str(e)) from e
         if len(flows) != 1:
             raise exceptions.TypeError(
                 "Command requires one flow, specification matched %s." % len(flows)
@@ -347,7 +347,7 @@ class _FlowsType(_BaseFlowType):
         try:
             return manager.execute("view.flows.resolve %s" % (s))
         except exceptions.CommandError as e:
-            raise exceptions.TypeError from e
+            raise exceptions.TypeError(str(e)) from e
 
     def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         try:

@@ -103,7 +103,7 @@ class Command:
         except TypeError:
             expected = f'Expected: {str(self.signature.parameters)}'
             received = f'Received: {str(args)}'
-            raise exceptions.CommandError(f"Command argument mismatch: \n\t{expected}\n\t{received}")
+            raise exceptions.CommandError(f"Command argument mismatch: \n    {expected}\n    {received}")
 
         for name, value in bound_arguments.arguments.items():
             convert_to = self.signature.parameters[name].annotation
@@ -241,7 +241,7 @@ class CommandManager:
             raise exceptions.CommandError("Unknown command: %s" % command_name)
         return self.commands[command_name].func(*args)
 
-    def _call_strings(self, command_name: str, args: typing.Sequence[str]) -> typing.Any:
+    def call_strings(self, command_name: str, args: typing.Sequence[str]) -> typing.Any:
         """
         Call a command using a list of string arguments. May raise CommandError.
         """
@@ -262,7 +262,7 @@ class CommandManager:
             for part in parts
             if part.type != mitmproxy.types.Space
         ]
-        return self._call_strings(command_name, args)
+        return self.call_strings(command_name, args)
 
     def dump(self, out=sys.stdout) -> None:
         cmds = list(self.commands.values())
@@ -284,7 +284,7 @@ def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     try:
         return t.parse(manager, argtype, spec)
     except exceptions.TypeError as e:
-        raise exceptions.CommandError from e
+        raise exceptions.CommandError(str(e)) from e
 
 
 def command(name: typing.Optional[str] = None):
