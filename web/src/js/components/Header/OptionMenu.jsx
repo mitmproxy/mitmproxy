@@ -31,7 +31,7 @@ function OptionMenu({ openOptions }) {
                             Use host header for display
                         </SettingsToggle>
                         <SettingsToggle setting="ssl_insecure">
-                            Verify server certificates
+                            Don't verify server certificates
                         </SettingsToggle>
                     </div>
                     <div className="menu-legend">Quick Options</div>
