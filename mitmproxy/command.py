@@ -149,9 +149,10 @@ class CommandManager:
             if not i.startswith("__"):
                 o = getattr(addon, i)
                 try:
-                    is_command = hasattr(o, "command_name")
+                    # hasattr is not enough, see https://github.com/mitmproxy/mitmproxy/issues/3794
+                    is_command = isinstance(getattr(o, "command_name", None), str)
                 except Exception:
-                    pass  # hasattr may raise if o implements __getattr__.
+                    pass  # getattr may raise if o implements __getattr__.
                 else:
                     if is_command:
                         try:
