@@ -512,9 +512,15 @@ class TAttr:
         raise IOError
 
 
+class TAttr2:
+    def __getattr__(self, item):
+        return TAttr2()
+
+
 class TCmds(TAttr):
     def __init__(self):
         self.TAttr = TAttr()
+        self.TAttr2 = TAttr2()
 
     @command.command("empty")
     def empty(self) -> None:
@@ -524,7 +530,8 @@ class TCmds(TAttr):
 @pytest.mark.asyncio
 async def test_collect_commands():
     """
-        This tests for the error thrown by hasattr()
+        This tests for errors thrown by getattr() or __getattr__ implementations
+        that return an object for .command_name.
     """
     with taddons.context() as tctx:
         c = command.CommandManager(tctx.master)
