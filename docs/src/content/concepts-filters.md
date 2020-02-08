@@ -49,3 +49,8 @@ Requests whose body contains the string "test":
 Anything but requests with a text/html content type:
 
     !(~q & ~t "text/html")
+
+Replace entire GET string in a request (quotes required to make it work):
+
+   ":~q ~m GET:.*:/replacement.html"
+   
