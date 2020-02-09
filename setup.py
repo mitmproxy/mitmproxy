@@ -68,7 +68,7 @@ setup(
         "click>=7.0,<8",
         "cryptography>=2.8,<2.9",
         "flask>=1.1.1,<1.2",
-        "h2>=3.0.1,<4",
+        "h2>=3.2.0,<4",
         "hyperframe>=5.1.0,<6",
         "kaitaistruct>=0.7,<0.9",
         "ldap3>=2.6,<2.7",
