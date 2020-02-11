@@ -496,6 +496,71 @@ class TestStreamResetFromServer(_Http2Test):
         assert self.master.state.flows[0].response is None
 
 
+class TestAllStreamResetsFromServer(_Http2Test):
+
+    current_error_name = None
+    current_error_code = None
+
+    @classmethod
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        elif isinstance(event, h2.events.RequestReceived):
+            h2_conn.reset_stream(event.stream_id, int(cls.current_error_code))
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        return True
+
+    def test_all_stream_reset_error_codes(self):
+        for error_name, error_code in h2.errors.ErrorCodes.__members__.items():
+            self.__class__.current_error_name = error_name
+            self.__class__.current_error_code = error_code
+            try:
+                self.run_test_for_stream_reset()
+            except:
+                print('Exception occurred during test for error code {} ({})'.format(
+                    error_name, error_code
+                ))
+                raise
+
+    def run_test_for_stream_reset(self):
+        h2_conn = self.setup_connection()
+
+        self._send_request(
+            self.client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+            ],
+        )
+
+        self.client.rfile.o.settimeout(1)
+
+        done = False
+        while not done:
+            try:
+                raw = b''.join(http2.read_raw_frame(self.client.rfile))
+                events = h2_conn.receive_data(raw)
+            except exceptions.HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            self.client.wfile.write(h2_conn.data_to_send())
+            self.client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.StreamReset):
+                    assert event.error_code == int(self.current_error_code)
+                    done = True
+
+        h2_conn.close_connection()
+        self.client.wfile.write(h2_conn.data_to_send())
+        self.client.wfile.flush()
+
+
 class TestBodySizeLimit(_Http2Test):
 
     @classmethod
