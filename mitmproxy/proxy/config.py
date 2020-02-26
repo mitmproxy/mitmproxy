@@ -23,7 +23,7 @@ class HostMatcher:
         if self.handle in ["ignore", "tcp"]:
             return any(rex.search(host) for rex in self.regexes)
         else:  # self.handle == "allow"
-            return any(not rex.search(host) for rex in self.regexes)
+            return not any(rex.search(host) for rex in self.regexes)
 
     def __bool__(self):
         return bool(self.patterns)
