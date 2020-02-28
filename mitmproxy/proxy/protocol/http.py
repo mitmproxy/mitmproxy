@@ -1,3 +1,5 @@
+import textwrap
+
 import h2.exceptions
 import time
 import enum
@@ -142,13 +144,13 @@ def validate_request_form(mode, request):
     allowed_request_forms = MODE_REQUEST_FORMS[mode]
     if request.first_line_format not in allowed_request_forms:
         if mode == HTTPMode.transparent:
-            err_message = (
+            err_message = textwrap.dedent((
                 """
                 Mitmproxy received an {} request even though it is not running
                 in regular mode. This usually indicates a misconfiguration,
                 please see the mitmproxy mode documentation for details.
                 """
-            ).format("HTTP CONNECT" if request.first_line_format == "authority" else "absolute-form")
+            )).strip().format("HTTP CONNECT" if request.first_line_format == "authority" else "absolute-form")
         else:
             err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
                 " or ".join(allowed_request_forms), request.first_line_format
