@@ -3,6 +3,7 @@ from typing import Optional, Tuple
 from h11._receivebuffer import ReceiveBuffer
 
 from mitmproxy import http
+from mitmproxy.net import server_spec
 from mitmproxy.net.http import http1
 from mitmproxy.net.http.http1 import read_sansio as http1_sansio
 from mitmproxy.proxy2 import commands, context, layer, tunnel
@@ -12,6 +13,8 @@ from mitmproxy.utils import human
 class HttpUpstreamProxy(tunnel.TunnelLayer):
     buf: ReceiveBuffer
     send_connect: bool
+    conn: context.Server
+    tunnel_connection: context.Server
 
     def __init__(self, ctx: context.Context, address: tuple, send_connect: bool):
         super().__init__(
@@ -19,6 +22,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             tunnel_connection=context.Server(address),
             conn=ctx.server
         )
+        self.conn.via = server_spec.ServerSpec("http", self.tunnel_connection.address)
         self.buf = ReceiveBuffer()
         self.send_connect = send_connect
 

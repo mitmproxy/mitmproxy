@@ -18,6 +18,7 @@ class Connection:
     Connections exposed to the layers only contain metadata, no socket objects.
     """
     address: Optional[tuple]
+    local_address: Optional[tuple]
     state: ConnectionState
     tls: bool = False
     tls_established: bool = False
@@ -45,20 +46,22 @@ class Connection:
 class Client(Connection):
     sni: Union[bytes, None] = None
     address: tuple
+    state = ConnectionState.OPEN
 
-    def __init__(self, address):
+    def __init__(self, address, local_address):
         self.address = address
-        self.state = ConnectionState.OPEN
+        self.local_address = local_address
 
 
 class Server(Connection):
     sni = True
     """True: client SNI, False: no SNI, bytes: custom value"""
-    via: Sequence[server_spec.ServerSpec] = ()
+    via: Optional[server_spec.ServerSpec] = None
+    state = ConnectionState.CLOSED
+    local_address = None
 
     def __init__(self, address: Optional[tuple]):
         self.address = address
-        self.state = ConnectionState.CLOSED
 
 
 class Context:

@@ -13,14 +13,20 @@ def expect(*event_types):
     """
 
     def decorator(f):
-        @functools.wraps(f)
-        def wrapper(self, event: events.Event):
-            if isinstance(event, event_types):
-                yield from f(self, event)
-            else:
-                event_types_str = '|'.join(e.__name__ for e in event_types) or "no events"
-                raise AssertionError(f"Unexpected event type at {f.__qualname__}: Expected {event_types_str}, got {event}.")
+        if __debug__ is True:
+            @functools.wraps(f)
+            def _check_event_type(self, event: events.Event):
+                if isinstance(event, event_types):
+                    yield from f(self, event)
+                else:
+                    event_types_str = '|'.join(e.__name__ for e in event_types) or "no events"
+                    raise AssertionError(
+                        f"Unexpected event type at {f.__qualname__}: "
+                        f"Expected {event_types_str}, got {event}."
+                    )
 
-        return wrapper
+            return _check_event_type
+        else:
+            return f
 
     return decorator
