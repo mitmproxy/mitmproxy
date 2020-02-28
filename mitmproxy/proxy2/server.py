@@ -253,7 +253,7 @@ if __name__ == "__main__":
 
     opts = moptions.Options()
     opts.add_option(
-        "connection_strategy", str, "eager",
+        "connection_strategy", str, "lazy",
         "Determine when server connections should be established.",
         choices=("eager", "lazy")
     )

@@ -5,8 +5,8 @@ from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import layer
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
-from mitmproxy.proxy2.layers import http, tls, TCPLayer
-from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, reply_next_layer, EchoLayer
+from mitmproxy.proxy2.layers import TCPLayer, http, tls
+from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, reply_next_layer
 
 
 def test_http_proxy(tctx):
@@ -510,11 +510,10 @@ def test_proxy_chain(tctx, strategy):
     playbook >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
     playbook << SendData(tctx.client,
                          b"HTTP/1.1 502 Bad Gateway\r\n"
-                         b"content-length: 189\r\n"
+                         b"content-length: 198\r\n"
                          b"\r\n"
-                         b"Mitmproxy received an HTTP CONNECT request even though it is not running\n"
-                         b"in regular mode. This usually indicates a misconfiguration,\n"
-                         b"please see the mitmproxy mode documentation for details.")
+                         b"mitmproxy received an HTTP CONNECT request even though it is not running in regular/upstream mode. "
+                         b"This usually indicates a misconfiguration, please see the mitmproxy mode documentation for details.")
 
     assert playbook
 
@@ -535,9 +534,8 @@ def test_no_headers(tctx):
     assert server().address == ("example.com", 80)
 
 
-@pytest.mark.xfail
 def test_http_proxy_relative_request(tctx):
-    """Test handling of a relative-form "GET /"."""
+    """Test handling of a relative-form "GET /" in regular proxy mode."""
     server = Placeholder()
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
@@ -549,3 +547,15 @@ def test_http_proxy_relative_request(tctx):
             << SendData(tctx.client, b"HTTP/1.1 204 No Content\r\n\r\n")
     )
     assert server().address == ("example.com", 80)
+
+
+def test_http_proxy_relative_request_no_host_header(tctx):
+    """Test handling of a relative-form "GET /" in regular proxy mode, but without a host header."""
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+            >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
+            << SendData(tctx.client, b"HTTP/1.1 400 Bad Request\r\n"
+                                     b"content-length: 53\r\n"
+                                     b"\r\n"
+                                     b"HTTP request has no host header, destination unknown.")
+    )
