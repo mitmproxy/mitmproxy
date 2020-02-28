@@ -77,11 +77,12 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
             if h11_event is None:
                 return
             elif isinstance(h11_event, h11.Data):
-                h11_event.data: bytearray  # type checking
-                if is_request:
-                    yield ReceiveHttp(RequestData(self.stream_id, bytes(h11_event.data)))
-                else:
-                    yield ReceiveHttp(ResponseData(self.stream_id, bytes(h11_event.data)))
+                data: bytes = bytes(h11_event.data)
+                if data:
+                    if is_request:
+                        yield ReceiveHttp(RequestData(self.stream_id, data))
+                    else:
+                        yield ReceiveHttp(ResponseData(self.stream_id, data))
             elif isinstance(h11_event, h11.EndOfMessage):
                 if is_request:
                     yield ReceiveHttp(RequestEndOfMessage(self.stream_id))
@@ -128,14 +129,15 @@ class Http1Server(Http1Connection):
                 raw = b"%x\r\n%s\r\n" % (len(event.data), event.data)
             else:
                 raw = event.data
-            yield commands.SendData(self.conn, raw)
+            if raw:
+                yield commands.SendData(self.conn, raw)
         elif isinstance(event, ResponseEndOfMessage):
             if "chunked" in self.response.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
-            elif http1.expected_http_body_size(self.request,
-                                               self.response) == -1 or self.request.first_line_format == "authority":
+            elif http1.expected_http_body_size(self.request, self.response) == -1:
                 yield commands.CloseConnection(self.conn)
-            yield from self.mark_done(response=True)
+            elif self.request.first_line_format != "authority":
+                yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):
             if not self.response:
                 resp = http.make_error_response(event.code, event.message)
@@ -231,7 +233,8 @@ class Http1Client(Http1Connection):
                 raw = b"%x\r\n%s\r\n" % (len(event.data), event.data)
             else:
                 raw = event.data
-            yield commands.SendData(self.conn, raw)
+            if raw:
+                yield commands.SendData(self.conn, raw)
         elif isinstance(event, RequestEndOfMessage):
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")

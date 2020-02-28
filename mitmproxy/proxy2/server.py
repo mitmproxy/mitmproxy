@@ -81,8 +81,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, options: moptions.Options) -> None:
         addr = writer.get_extra_info('peername')
+        local_addr = writer.get_extra_info('sockname')
 
-        self.client = Client(addr)
+        self.client = Client(addr, local_addr)
         self.context = Context(self.client, options)
         self.transports = {
             self.client: ConnectionIO(handler=None, reader=reader, writer=writer)

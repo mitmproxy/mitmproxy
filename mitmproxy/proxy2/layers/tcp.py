@@ -1,10 +1,9 @@
-from dataclasses import dataclass
 from typing import Optional
 
 from mitmproxy import flow, tcp
 from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2.commands import Hook
-from mitmproxy.proxy2.context import Context
+from mitmproxy.proxy2.context import ConnectionState, Context
 from mitmproxy.proxy2.utils import expect
 
 
@@ -75,7 +74,11 @@ class TCPLayer(layer.Layer):
 
         elif isinstance(event, events.ConnectionClosed):
             yield commands.CloseConnection(send_to)
-            all_done = (not self.context.client.connected and not self.context.server.connected)
+            all_done = not (
+                    (self.context.client.state & ConnectionState.CAN_READ)
+                    or
+                    (self.context.server.state & ConnectionState.CAN_READ)
+            )
             if all_done:
                 self._handle_event = self.done
                 if self.flow:

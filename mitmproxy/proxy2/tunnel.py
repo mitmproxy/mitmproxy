@@ -27,8 +27,8 @@ class TunnelLayer(layer.Layer):
     def __init__(
             self,
             context: context.Context,
-            tunnel_connection: Optional[context.Connection],
-            conn: Optional[context.Connection],
+            tunnel_connection: context.Connection,
+            conn: context.Connection,
     ):
         super().__init__(context)
         self.tunnel_connection = tunnel_connection
@@ -132,3 +132,15 @@ class LayerStack:
             self._stack[-1].child_layer = other
         self._stack.append(other)
         return self
+
+
+class OpenConnectionStub(layer.Layer):
+    done = False
+    err = None
+
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if isinstance(event, events.Start):
+            self.err = yield commands.OpenConnection(self.context.server)
+            self.done = not self.err
+        else:
+            self.err = event

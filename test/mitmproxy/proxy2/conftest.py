@@ -10,6 +10,9 @@ def tctx():
     opts = options.Options()
     Proxyserver().load(opts)
     return context.Context(
-        context.Client(("client", 1234)),
+        context.Client(
+            ("client", 1234),
+            ("127.0.0.1", 8080)
+        ),
         opts
     )
