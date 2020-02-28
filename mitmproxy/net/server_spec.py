@@ -1,13 +1,17 @@
 """
 Parse scheme, host and port from a string.
 """
-import collections
 import re
+import typing
 from typing import Tuple
 
 from mitmproxy.net import check
 
-ServerSpec = collections.namedtuple("ServerSpec", ["scheme", "address"])
+
+class ServerSpec(typing.NamedTuple):
+    scheme: str
+    address: typing.Tuple[str, int]
+
 
 server_spec_re = re.compile(
     r"""
