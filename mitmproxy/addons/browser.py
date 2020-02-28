@@ -2,7 +2,6 @@ import shutil
 import subprocess
 import tempfile
 import typing
-import webbrowser
 
 from mitmproxy import command
 from mitmproxy import ctx
@@ -69,45 +68,9 @@ class Browser:
             stderr = subprocess.DEVNULL,
         )
 
-    def running(self):
-        if hasattr(ctx.options, "web_open_browser") and ctx.options.web_open_browser:
-            web_url = "http://{}:{}/".format(ctx.options.web_iface, ctx.options.web_port)
-            success = open_browser(web_url)
-            if not success:
-                ctx.log.info(
-                    "No web browser found. Please open a browser and point it to {}".format(web_url),
-                )
-
     def done(self):
         if self.browser:
             self.browser.kill()
             self.tdir.cleanup()
         self.browser = None
         self.tdir = None
-
-
-def open_browser(url: str) -> bool:
-    """
-    Open a URL in a browser window.
-    In contrast to webbrowser.open, we limit the list of suitable browsers.
-    This gracefully degrades to a no-op on headless servers, where webbrowser.open
-    would otherwise open lynx.
-
-    Returns:
-        True, if a browser has been opened
-        False, if no suitable browser has been found.
-    """
-    browsers = (
-        "windows-default", "macosx",
-        "google-chrome", "chrome", "chromium", "chromium-browser",
-        "firefox", "opera", "safari",
-    )
-    for browser in browsers:
-        try:
-            b = webbrowser.get(browser)
-        except webbrowser.Error:
-            pass
-        else:
-            b.open(url)
-            return True
-    return False
