@@ -8,6 +8,7 @@ import json
 import re
 import os
 import urllib.request
+from typing import List
 
 import dns.query
 import dns.rdatatype
@@ -22,14 +23,15 @@ from mitmproxy import ctx
 blocklist_filename = 'blocklist.json'
 
 # additional hostnames to block
-additional_doh_names = [
+additional_doh_names: List[str] = [
     'dns.google.com'
 ]
 
 # additional IPs to block
-additional_doh_ips = [
+additional_doh_ips: List[str] = [
 
 ]
+
 
 def get_doh_providers():
     """
@@ -78,7 +80,10 @@ def get_doh_providers():
                         yield {
                             'name': provider_name,
                             'website': website,
-                            'url': 'https://{}{}{}'.format(doh_url[0], ':{}'.format(doh_url[1]) if len(doh_url[1]) != 0 else '', doh_url[2]),
+                            'url': 'https://{}{}{}'.format(doh_url[0],
+                                                           ':{}'.format(doh_url[1])
+                                                           if len(doh_url[1]) != 0
+                                                           else '', doh_url[2]),
                             'hostname': doh_url[0],
                             'port': doh_url[1] if len(doh_url[1]) != 0 else '443',
                             'path': doh_url[2],
@@ -86,6 +91,7 @@ def get_doh_providers():
             if found_table and line.startswith('#'):
                 break
     return
+
 
 def get_ips(hostname):
     """
@@ -106,6 +112,7 @@ def get_ips(hostname):
                 if isinstance(i, dns.rdtypes.IN.A.A) or isinstance(i, dns.rdtypes.IN.AAAA.AAAA):
                     ips.append(str(i.address))
     return ips
+
 
 def load_blocklist():
     """
@@ -135,6 +142,7 @@ def load_blocklist():
         json.dump(obj, fp=fp)
     return doh_hostnames, doh_ips
 
+
 # load DoH hostnames and IP addresses to block
 doh_hostnames, doh_ips = load_blocklist()
 ctx.log.info('DoH blocklist loaded')
@@ -157,6 +165,7 @@ def _has_dns_message_content_type(flow):
             return True
     return False
 
+
 def _request_has_dns_query_string(flow):
     """
     Check if the query string of a request contains the parameter 'dns'
@@ -165,6 +174,7 @@ def _request_has_dns_query_string(flow):
     :return: True is 'dns' is a parameter in the query string, False otherwise
     """
     return 'dns' in flow.request.query
+
 
 def _request_is_dns_json(flow):
     """
@@ -190,6 +200,7 @@ def _request_is_dns_json(flow):
         return True
     return False
 
+
 def _request_has_doh_looking_path(flow):
     """
     Check if the path looks like it's DoH.
@@ -204,6 +215,7 @@ def _request_has_doh_looking_path(flow):
     path = flow.request.path.split('?')[0]
     return path in doh_paths
 
+
 def _requested_hostname_is_in_doh_blacklist(flow):
     """
     Check if server hostname is in our DoH provider blacklist.
@@ -217,6 +229,7 @@ def _requested_hostname_is_in_doh_blacklist(flow):
     ip = flow.server_conn.address
     return hostname in doh_hostnames or hostname in doh_ips or ip in doh_ips
 
+
 doh_request_detection_checks = [
     _has_dns_message_content_type,
     _request_has_dns_query_string,
@@ -224,6 +237,7 @@ doh_request_detection_checks = [
     _requested_hostname_is_in_doh_blacklist,
     _request_has_doh_looking_path
 ]
+
 
 def request(flow):
     for check in doh_request_detection_checks:
