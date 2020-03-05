@@ -2,6 +2,7 @@
 
 | Filename                 | Description                                                                                   |
 |:-------------------------|:----------------------------------------------------------------------------------------------|
+| block_dns_over_https.py  | Use mitmproxy to block DNS over HTTPS (DoH) queries                                           |
 | change_upstream_proxy.py | Dynamically change the upstream proxy.                                                        |
 | dns_spoofing.py          | Use mitmproxy in a DNS spoofing scenario.                                                     |
 | dup_and_replay.py        | Duplicates each request, changes it, and then replays the modified request.                   |
