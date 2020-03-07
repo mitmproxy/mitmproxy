@@ -112,7 +112,7 @@ class Script:
                     ctx.options.keys()
                 )
             except exceptions.OptionsError as e:
-                script_error_handler(self.fullpath,e,str(e))
+                script_error_handler(self.fullpath, e, msg=str(e))
 
     async def watcher(self):
         last_mtime = 0
