@@ -135,7 +135,7 @@ class TestScript:
 
             assert await tctx.master.await_log("ValueError: Error!")
             assert await tctx.master.await_log("error.py")
-        
+
     @pytest.mark.asyncio
     async def test_optionexceptions(self, tdata):
         with taddons.context() as tctx:
