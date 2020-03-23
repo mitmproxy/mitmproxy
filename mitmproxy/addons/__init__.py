@@ -9,6 +9,7 @@ from mitmproxy.addons import core
 from mitmproxy.addons import cut
 from mitmproxy.addons import disable_h2c
 from mitmproxy.addons import export
+from mitmproxy.addons import mapeditor
 from mitmproxy.addons import onboarding
 from mitmproxy.addons import proxyauth
 from mitmproxy.addons import replace
@@ -35,6 +36,7 @@ def default_addons():
         cut.Cut(),
         disable_h2c.DisableH2C(),
         export.Export(),
+        mapeditor.MapEditor(),
         onboarding.Onboarding(),
         proxyauth.ProxyAuth(),
         replace.Replace(),

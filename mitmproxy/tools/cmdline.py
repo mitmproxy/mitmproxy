@@ -89,6 +89,10 @@ def common_options(parser, opts):
     group = parser.add_argument_group("Set Headers")
     opts.make_parser(group, "setheaders", metavar="PATTERN", short="H")
 
+    # Map editor
+    group = parser.add_argument_group("Map editor")
+    opts.make_parser(group, "mapeditor")
+
 
 def mitmproxy(opts):
     parser = argparse.ArgumentParser(usage="%(prog)s [options]")
