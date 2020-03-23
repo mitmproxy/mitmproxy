@@ -50,7 +50,7 @@ class MapEditor:
         for _, path_to_file, flt in self.map_list:
             if flt(f):
                 try:
-                    with open(path_to_file) as tmp_f:
+                    with open(path_to_file, "rb") as tmp_f:
                         response.content = tmp_f.read()
                 except Exception as e:
                     # TODO: add an IO exception
