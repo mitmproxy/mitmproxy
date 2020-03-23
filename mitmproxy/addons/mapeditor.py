@@ -9,11 +9,11 @@ def parse_mapeditor(mexpr):
         Returns a (pattern, path_to_file) tuple
 
         example:
-            ~u .*://example.com/script.js>MAP_TO>/etc/hostname
+            ~u .*://example.com/script.js:MAP_TO:/etc/hostname
             ^                            ^      ^            ^
             |------filter_expression-----|--sep-|path_to_file|
     """
-    parts = mexpr.split(">MAP_TO>")
+    parts = mexpr.split(":MAP_TO:")
     if len(parts) != 2:
         raise exceptions.OptionsError(
             "Invalid map editor specifier: %s" % mexpr
@@ -34,7 +34,7 @@ class MapEditor:
             """
         )
     
-    def contifure(self, updated):
+    def configure(self, updated):
         self.map_list = []
         for mpatt in ctx.options.mapeditor:
             fpatt, path_to_file = parse_mapeditor(mpatt)
