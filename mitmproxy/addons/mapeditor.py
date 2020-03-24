@@ -4,6 +4,7 @@ from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import ctx
 
+
 def parse_mapeditor(mexpr):
     """
         Returns a (pattern, path_to_file) tuple
@@ -20,6 +21,7 @@ def parse_mapeditor(mexpr):
         )
     return parts[0], parts[1]
 
+
 # TODO: add test for map editor
 class MapEditor:
     def __init__(self):
@@ -33,7 +35,7 @@ class MapEditor:
             all response body matched by 'pattern' will be replaced to the content of file
             """
         )
-    
+
     def configure(self, updated):
         self.map_list = []
         for mpatt in ctx.options.mapeditor:
@@ -45,19 +47,19 @@ class MapEditor:
                     "Invalid map editor filter pattern: %s" % fpatt
                 )
             self.map_list.append((fpatt, path_to_file, flt))
-    
+
     def run(self, f, response):
         for _, path_to_file, flt in self.map_list:
             if flt(f):
                 try:
                     with open(path_to_file, "rb") as tmp_f:
                         response.content = tmp_f.read()
-                except Exception as e:
+                except Exception:
                     # TODO: add an IO exception
                     raise exceptions.MitmproxyException(
                         "Failed to open file: %s" % path_to_file
                     )
-    
+
     def response(self, flow):
         if not flow.reply.has_message:
             self.run(flow, flow.response)
