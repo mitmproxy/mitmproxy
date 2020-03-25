@@ -78,6 +78,20 @@ class TestHeaders:
         headers.replace(r"Host: example.com", r"Host: example.de")
         assert headers.get_all("Host") == ["example.de", "example.org"]
 
+    def test_replace_multi_count(self):
+        headers = self._2host()
+        replaced = headers.replace('example', 'testing', count=1)
+
+        assert replaced == 1
+        assert headers.get_all("HOST") == ["testing.com", "example.org"]
+
+    def test_replace_multi_count_all(self):
+        headers = self._2host()
+        replaced = headers.replace('example', 'testing', count=2)
+
+        assert replaced == 2
+        assert headers.get_all("HOST") == ["testing.com", "testing.org"]
+
     def test_replace_remove_spacer(self):
         headers = Headers(Host="example.com")
         replacements = headers.replace(r"Host: ", "X-Host ")

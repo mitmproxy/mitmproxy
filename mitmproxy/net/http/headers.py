@@ -172,11 +172,12 @@ class Headers(multidict.MultiDict):
                 # There's not much we can do about this, so we just keep the header as-is.
                 pass
             else:
-                replacements += n
                 if flag_count:
-                    count -= n
                     if count == 0:
+                        fields += self.fields[len(fields):]
                         break
+                    count -= n
+                replacements += n
             fields.append((name, value))
         self.fields = tuple(fields)
         return replacements
