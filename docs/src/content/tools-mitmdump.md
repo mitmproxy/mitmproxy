@@ -53,7 +53,7 @@ See the [client-side replay]({{< relref "overview-features#client-side-replay"
 ### Running a script
 
 {{< highlight bash  >}}
-mitmdump -s examples/add_header.py
+mitmdump -s examples/simple/add_header.py
 {{< / highlight >}}
 
 This runs the **add_header.py** example script, which simply adds a new
@@ -62,7 +62,7 @@ header to all responses.
 ### Scripted data transformation
 
 {{< highlight bash  >}}
-mitmdump -ns examples/add_header.py -r srcfile -w dstfile
+mitmdump -ns examples/simple/add_header.py -r srcfile -w dstfile
 {{< / highlight >}}
 
 This command loads flows from **srcfile**, transforms it according to
