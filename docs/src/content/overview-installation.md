@@ -48,6 +48,9 @@ After installation, you'll find shortcuts for mitmweb and mitmdump in the start
 menu. Both executables are added to your PATH and can be invoked from the
 command line.
 
+## Note: 
+mitmproxy requires UTF encoding - en_US, en_IN, or anything else to run.The user has to configure the terminal & environment properly for the same.
+
 
 # Advanced Installation
 
@@ -95,4 +98,3 @@ that everything remains current.
 
 As a general principle, mitmproxy does not "phone home" and consequently will not do any update checks.
 
-Note: mitmproxy requires UTF encoding - en_US, en_IN, or anything else to run.The user has to configure the terminal & environment properly for the same.
