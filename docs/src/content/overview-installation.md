@@ -32,6 +32,7 @@ OpenSUSE, etc.). We are not involved in the maintenance of downstream packaging
 efforts, and they often lag behind the current mitmproxy release. Please contact
 the repository maintainers directly for issues with native packages.
 
+
 ## Windows
 
 
@@ -93,3 +94,5 @@ If you use our binary packages, please make sure you update regularly to ensure
 that everything remains current.
 
 As a general principle, mitmproxy does not "phone home" and consequently will not do any update checks.
+
+Note: mitmproxy requires UTF encoding - en_US, en_IN, or anything else to run.The user has to configure the terminal & environment properly for the same.
