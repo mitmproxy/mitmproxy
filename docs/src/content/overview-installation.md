@@ -51,6 +51,13 @@ command line.
 ## Note: 
 mitmproxy requires UTF encoding - en_US, en_IN, or anything else to run.The user has to configure the terminal & environment properly for the same.
 
+The followinng instructions can be followed to set UTF environment in linux :
+
+$ sudo update-locale LANG=LANG=en_IN.UTF-8 LANGUAGE
+OR
+$ sudo localectl set-locale LANG=en_IN.UTF-8
+
+
 
 # Advanced Installation
 
