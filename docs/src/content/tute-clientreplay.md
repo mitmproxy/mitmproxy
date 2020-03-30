@@ -42,7 +42,7 @@ And that's it\! You now have a serialised version of the login process
 in the file wireless-login, and you can replay it at any time like this:
 
 {{< highlight bash  >}}
-mitmdump -c wireless-login
+mitmdump -C wireless-login
 {{< / highlight >}}
 
 ## Embellishments
