@@ -88,6 +88,8 @@ class TestHeaders:
         headers = Headers(Host="foobarfoo.com", Accept="foo/bar")
         replacements = headers.replace("foo", "bar", count=1)
         assert replacements == 1
+        assert headers["Host"] == "barbarfoo.com"
+        assert headers["Accept"] == "foo/bar"
 
 
 def test_parse_content_type():
