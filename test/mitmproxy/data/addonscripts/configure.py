@@ -1,27 +1,21 @@
 import typing
 
-from mitmproxy import ctx
 from mitmproxy import exceptions
 
 
-class TestHeader:
+class OptionAddon:
     def load(self, loader):
         loader.add_option(
-            name = "testheader",
+            name = "optionaddon",
             typespec = typing.Optional[int],
             default = None,
-            help = "test header",
+            help = "Option Addon",
         )
 
     def configure(self, updates):
         raise exceptions.OptionsError("Options Error")
 
-    def response(self, flow):
-        if ctx.options.testheader is not None:
-            flow.response.headers["testheader"] = str(ctx.options.testheader)
-
-
 addons = [
-    TestHeader()
+    OptionAddon()
 ]
 
