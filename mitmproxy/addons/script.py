@@ -105,11 +105,14 @@ class Script:
             # We're already running, so we have to explicitly register and
             # configure the addon
             ctx.master.addons.invoke_addon(self.ns, "running")
-            ctx.master.addons.invoke_addon(
-                self.ns,
-                "configure",
-                ctx.options.keys()
-            )
+            try:
+                ctx.master.addons.invoke_addon(
+                    self.ns,
+                    "configure",
+                    ctx.options.keys()
+                )
+            except exceptions.OptionsError as e:
+                script_error_handler(self.fullpath, e, msg=str(e))
 
     async def watcher(self):
         last_mtime = 0
