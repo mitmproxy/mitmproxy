@@ -7,6 +7,17 @@ from setuptools import setup, find_packages
 # Based on https://github.com/pypa/sampleproject/blob/master/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/
 
+#This is being done for proper UTF8 checks on startup instead and fail with a useful error message here.
+
+lang_var = os.getenv('LANG')
+#print(lang_var)
+if (lang_var.endswith(".UTF-8")):
+    #print("UTTF-8 encoding detected")
+    ...
+else: 
+    print("ERROR:mitmproxy requires UTF-8 encoding - en_US, en_IN, or anything else to run.You have to configure the terminal & environment properly for the same.")
+    exit()
+
 here = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
