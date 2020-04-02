@@ -474,7 +474,7 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
                 IB_SETUP.with_suffix(".tmp"),
                 reporthook=report
             )
-            shutil.move(IB_SETUP.with_suffix(".tmp"), IB_SETUP)
+            shutil.move(str(IB_SETUP.with_suffix(".tmp")), str(IB_SETUP))
 
         click.echo("Install InstallBuilder...")
         subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"], check=True)
