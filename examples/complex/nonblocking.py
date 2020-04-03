@@ -1,7 +1,6 @@
 import time
 
 from mitmproxy.script import concurrent
-from mitmproxy import ctx
 
 
 @concurrent  # Remove this and see what happens
