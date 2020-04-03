@@ -66,7 +66,7 @@ setup(
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "click>=7.0,<8",
-        "cryptography>=2.1.4,<2.5",
+        "cryptography>=2.9,<3.0",
         "flask>=1.1.1,<1.2",
         "h2>=3.2.0,<4",
         "hyperframe>=5.1.0,<6",
@@ -75,7 +75,7 @@ setup(
         "passlib>=1.6.5, <1.8",
         "protobuf>=3.6.0, <3.11",
         "pyasn1>=0.3.1,<0.5",
-        "pyOpenSSL==19.0.0",
+        "pyOpenSSL>=19.1.0,<19.2",
         "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.8",
         "ruamel.yaml>=0.16,<0.17",
