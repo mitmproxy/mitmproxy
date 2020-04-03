@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
-      - run: pip install mypy
+      - run: pip install mypy==0.770
       - run: mypy .
   test:
     strategy:
