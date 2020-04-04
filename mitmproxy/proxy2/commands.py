@@ -87,7 +87,7 @@ class Hook(Command):
         return super().__new__(cls)
 
     def __init_subclass__(cls, **kwargs):
-        # initialize .name attribute.
+        # initialize .name attribute. HttpRequestHook -> http_request
         if not getattr(cls, "name", None):
             cls.name = re.sub('(?!^)([A-Z]+)', r'_\1', cls.__name__.replace("Hook", "")).lower()
         if cls.name in all_hooks:

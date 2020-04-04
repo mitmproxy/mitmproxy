@@ -559,3 +559,26 @@ def test_http_proxy_relative_request_no_host_header(tctx):
                                      b"\r\n"
                                      b"HTTP request has no host header, destination unknown.")
     )
+
+
+def test_http_expect(tctx):
+    """Test handling of a 'Expect: 100-continue' header."""
+    server = Placeholder()
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+            >> DataReceived(tctx.client, b"PUT http://example.com/large-file HTTP/1.1\r\n"
+                                         b"Host: example.com\r\n"
+                                         b"Content-Length: 15\r\n"
+                                         b"Expect: 100-continue\r\n\r\n")
+            << SendData(tctx.client, b"HTTP/1.1 100 Continue\r\n\r\n")
+            >> DataReceived(tctx.client, b"lots of content")
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"PUT /large-file HTTP/1.1\r\n"
+                                b"Host: example.com\r\n"
+                                b"Content-Length: 15\r\n\r\n"
+                                b"lots of content")
+            >> DataReceived(server, b"HTTP/1.1 201 Created\r\nContent-Length: 0\r\n\r\n")
+            << SendData(tctx.client, b"HTTP/1.1 201 Created\r\nContent-Length: 0\r\n\r\n")
+    )
+    assert server().address == ("example.com", 80)
