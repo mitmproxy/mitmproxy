@@ -368,7 +368,8 @@ class HttpStream(layer.Layer):
             yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
         else:
-            return (yield from self.send_response())
+            yield from self.send_response()
+            return SendHttp(ResponseProtocolError(self.stream_id, "EOF"), self.context.client)
 
     @expect(RequestData, RequestEndOfMessage, events.Event)
     def passthrough(self, event: events.Event) -> layer.CommandGenerator[None]:
