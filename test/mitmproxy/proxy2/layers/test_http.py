@@ -339,7 +339,8 @@ def test_server_unreachable(tctx, connect):
     playbook << CloseConnection(tctx.client)
 
     assert playbook
-    assert flow().error
+    if not connect:
+        assert flow().error
     assert b"502 Bad Gateway" in err()
     assert b"Connection failed" in err()
 
