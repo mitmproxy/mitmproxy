@@ -220,8 +220,8 @@ def expected_http_body_size(
             if size < 0:
                 raise ValueError()
             return size
-        except ValueError:
-            raise exceptions.HttpSyntaxException("Unparseable Content Length")
+        except ValueError as e:
+            raise exceptions.HttpSyntaxException("Unparseable Content Length") from e
     if not response:
         return 0
     return -1
