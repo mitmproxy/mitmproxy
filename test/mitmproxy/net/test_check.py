@@ -36,7 +36,7 @@ def test_is_valid_host():
     assert not check.is_valid_host(b'!.example.com')
 
     # Every label must be between 1 and 63 chars
-    #assert not check.is_valid_host('.tld')
+    assert not check.is_valid_host(b'.tld')
     assert check.is_valid_host(b'x' * 1 + b'.tld')
     assert check.is_valid_host(b'x' * 30 + b'.tld')
     assert not check.is_valid_host(b'x' * 64 + b'.tld')
@@ -55,7 +55,7 @@ def test_is_valid_host():
     assert not check.is_valid_host(b'a._example_')
     assert not check.is_valid_host(b'a.example_')
 
-	# Misc Dash/Hyphen/Minus Test Cases
+    # Misc Dash/Hyphen/Minus Test Cases
     assert check.is_valid_host(b'-example')
     assert check.is_valid_host(b'-example_')
     assert check.is_valid_host(b'example-')

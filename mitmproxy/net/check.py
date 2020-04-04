@@ -15,7 +15,9 @@ we'll go with the least restrictive rules while still providing a sanity check.
 """
 
 # label regex: in total between 4 and 255 chars, tld 2 to 63 chars, each label 1 to 63 chars
-_label_valid = re.compile(br"^(?=.{4,255}$)([A-Z0-9_-]([A-Z0-9_-]{0,61}[A-Z0-9_-])?\.){1,126}[A-Z0-9][A-Z0-9-]{0,61}[A-Z0-9]$", re.IGNORECASE)
+_label_valid = re.compile(
+                    br"^(?=.{4,255}$)([A-Z0-9_-]([A-Z0-9_-]{0,61}[A-Z0-9_-])?\.)"
+                    br"{1,126}[A-Z0-9][A-Z0-9-]{0,61}[A-Z0-9]$", re.IGNORECASE)
 _host_valid = re.compile(br"[A-Z0-9\-_]{1,63}$", re.IGNORECASE)
 
 
