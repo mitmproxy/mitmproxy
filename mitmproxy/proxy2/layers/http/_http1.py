@@ -182,7 +182,7 @@ class Http1Server(Http1Connection):
                     # https://http2.github.io/http2-spec/#CONNECT
                     self.state = self.wait
                 else:
-                    expected_size = http1.expected_http_body_size(self.request)
+                    expected_size = http1.expected_http_body_size(self.request, expect_continue_as_0=False)
                     self.body_reader = self.make_body_reader(expected_size)
                     self.state = self.read_request_body
                     yield from self.state(event)

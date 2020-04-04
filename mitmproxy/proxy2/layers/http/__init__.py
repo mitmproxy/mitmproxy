@@ -137,11 +137,6 @@ class HttpStream(layer.Layer):
         )
         self.flow.request = event.request
 
-        if self.flow.request.headers.get("expect", "").lower() == "100-continue":
-            raise NotImplementedError("expect nothing")
-            # self.send_response(http.expect_continue_response)
-            # request.headers.pop("expect")
-
         if err := validate_request(self.mode, self.flow.request):
             self.flow.response = http.HTTPResponse.make(502, str(err))
             self.client_state = self.state_errored
@@ -187,6 +182,12 @@ class HttpStream(layer.Layer):
             self.flow.request.host_header = self.context.server.address[0]
 
         yield HttpRequestHeadersHook(self.flow)
+
+        if self.flow.request.headers.get("expect", "").lower() == "100-continue":
+            continue_response = http.HTTPResponse.make(100)
+            continue_response.headers.clear()
+            yield SendHttp(ResponseHeaders(self.stream_id, continue_response), self.context.client)
+            self.flow.request.headers.pop("expect")
 
         if self.flow.request.stream:
             if self.flow.response:
