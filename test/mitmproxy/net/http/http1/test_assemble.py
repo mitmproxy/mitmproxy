@@ -15,7 +15,6 @@ def test_assemble_request():
         b"GET /path HTTP/1.1\r\n"
         b"header: qvalue\r\n"
         b"content-length: 7\r\n"
-        b"host: address:22\r\n"
         b"\r\n"
         b"content"
     )
@@ -82,17 +81,6 @@ def test_assemble_request_headers():
     r.headers["Transfer-Encoding"] = "chunked"
     c = _assemble_request_headers(r.data)
     assert b"Transfer-Encoding" in c
-
-
-def test_assemble_request_headers_host_header():
-    r = treq()
-    r.headers = Headers()
-    c = _assemble_request_headers(r.data)
-    assert b"host" in c
-
-    r.host = None
-    c = _assemble_request_headers(r.data)
-    assert b"host" not in c
 
 
 def test_assemble_response_headers():
