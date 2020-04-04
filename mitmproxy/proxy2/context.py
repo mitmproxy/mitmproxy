@@ -58,7 +58,6 @@ class Client(Connection):
 
 class Server(Connection):
     state = ConnectionState.CLOSED
-
     peername = None
     sockname = None
     address: Optional[tuple]

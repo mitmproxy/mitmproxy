@@ -5,7 +5,7 @@ import h11
 from h11._readers import ChunkedReader, ContentLengthReader, Http10Reader
 from h11._receivebuffer import ReceiveBuffer
 
-from mitmproxy import http
+from mitmproxy import exceptions, http
 from mitmproxy.net.http import http1
 from mitmproxy.net.http.http1 import read_sansio as http1_sansio
 from mitmproxy.proxy2 import commands, events, layer
@@ -167,12 +167,14 @@ class Http1Server(Http1Connection):
             if request_head:
                 request_head = [bytes(x) for x in request_head]  # TODO: Make url.parse compatible with bytearrays
                 try:
-                    self.request = http.HTTPRequest.wrap(http1_sansio.read_request_head(request_head))
-                except ValueError as e:
-                    yield commands.Log(f"{human.format_address(self.conn.address)}: {e}")
+                    req = http1_sansio.read_request_head(request_head)
+                    expected_body_size = http1.expected_http_body_size(req, expect_continue_as_0=False)
+                except (ValueError, exceptions.HttpSyntaxException) as e:
+                    yield commands.Log(f"{human.format_address(self.conn.peername)}: {e}")
                     yield commands.CloseConnection(self.conn)
                     self.state = self.wait
                     return
+                self.request = http.HTTPRequest.wrap(req)
                 yield ReceiveHttp(RequestHeaders(self.stream_id, self.request))
 
                 if self.request.first_line_format == "authority":
@@ -182,8 +184,7 @@ class Http1Server(Http1Connection):
                     # https://http2.github.io/http2-spec/#CONNECT
                     self.state = self.wait
                 else:
-                    expected_size = http1.expected_http_body_size(self.request, expect_continue_as_0=False)
-                    self.body_reader = self.make_body_reader(expected_size)
+                    self.body_reader = self.make_body_reader(expected_body_size)
                     self.state = self.read_request_body
                     yield from self.state(event)
             else:
@@ -271,14 +272,24 @@ class Http1Client(Http1Connection):
     @expect(events.ConnectionEvent)
     def read_response_headers(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived):
+            if not self.request:
+                # we just received some data for an unknown request.
+                yield commands.Log(f"Unexpected data from server: {bytes(self.buf)!r}")
+                yield commands.CloseConnection(self.conn)
+                return
+
             response_head = self.buf.maybe_extract_lines()
-
             if response_head:
-                response_head = [bytes(x) for x in response_head]
-                self.response = http.HTTPResponse.wrap(http1_sansio.read_response_head(response_head))
+                response_head = [bytes(x) for x in response_head]  # TODO: Make url.parse compatible with bytearrays
+                try:
+                    resp = http1_sansio.read_response_head(response_head)
+                    expected_size = http1.expected_http_body_size(self.request, resp)
+                except (ValueError, exceptions.HttpSyntaxException) as e:
+                    yield ReceiveHttp(ResponseProtocolError(self.stream_id, f"Cannot parse HTTP response: {e}"))
+                    yield commands.CloseConnection(self.conn)
+                    return
+                self.response = http.HTTPResponse.wrap(resp)
                 yield ReceiveHttp(ResponseHeaders(self.stream_id, self.response))
-
-                expected_size = http1.expected_http_body_size(self.request, self.response)
                 self.body_reader = self.make_body_reader(expected_size)
 
                 self.state = self.read_response_body
@@ -288,8 +299,8 @@ class Http1Client(Http1Connection):
         elif isinstance(event, events.ConnectionClosed):
             if self.stream_id:
                 if self.buf:
-                    yield ReceiveHttp(
-                        ResponseProtocolError(self.stream_id, f"unexpected server response: {bytes(self.buf)}"))
+                    yield ReceiveHttp(ResponseProtocolError(self.stream_id,
+                                                            f"unexpected server response: {bytes(self.buf)!r}"))
                 else:
                     # The server has closed the connection to prevent us from continuing.
                     # We need to signal that to the stream.
