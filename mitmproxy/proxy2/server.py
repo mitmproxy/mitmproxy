@@ -80,10 +80,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     timeout_watchdog: TimeoutWatchdog
 
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, options: moptions.Options) -> None:
-        addr = writer.get_extra_info('peername')
-        local_addr = writer.get_extra_info('sockname')
-
-        self.client = Client(addr, local_addr)
+        self.client = Client(
+            writer.get_extra_info('peername'),
+            writer.get_extra_info('sockname')
+        )
         self.context = Context(self.client, options)
         self.transports = {
             self.client: ConnectionIO(handler=None, reader=reader, writer=writer)
@@ -133,6 +133,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.transports[command.connection].reader = reader
             self.transports[command.connection].writer = writer
             command.connection.state = ConnectionState.OPEN
+            command.connection.peername = writer.get_extra_info('peername')
+            command.connection.sockname = writer.get_extra_info('sockname')
             self.server_event(events.OpenConnectionReply(command, None))
             try:
                 await self.handle_connection(command.connection)

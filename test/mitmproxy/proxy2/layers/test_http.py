@@ -518,7 +518,6 @@ def test_proxy_chain(tctx, strategy):
     assert playbook
 
 
-@pytest.mark.xfail(reason="h11 enforces host headers by default")
 def test_no_headers(tctx):
     """Test that we can correctly reassemble requests/responses with no headers."""
     server = Placeholder()
