@@ -314,6 +314,36 @@ def test_request_streaming(tctx, response):
         assert False
 
 
+@pytest.mark.parametrize("connect", [True, False])
+def test_server_unreachable(tctx, connect):
+    """Test the scenario where the target server is unreachable."""
+    tctx.options.connection_strategy = "eager"
+    server = Placeholder()
+    flow = Placeholder()
+    err = Placeholder()
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+    if connect:
+        playbook >> DataReceived(tctx.client, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
+    else:
+        playbook >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\n\r\n")
+
+    playbook << OpenConnection(server)
+    playbook >> reply("Connection failed")
+    if not connect:
+        # Our API isn't ideal here, there is no error hook for CONNECT requests currently.
+        # We could fix this either by having CONNECT request go through all our regular hooks,
+        # or by adding dedicated ok/error hooks.
+        playbook << http.HttpErrorHook(flow)
+        playbook >> reply()
+    playbook << SendData(tctx.client, err)
+    playbook << CloseConnection(tctx.client)
+
+    assert playbook
+    assert flow().error
+    assert b"502 Bad Gateway" in err()
+    assert b"Connection failed" in err()
+
+
 @pytest.mark.parametrize("data", [
     None,
     b"I don't speak HTTP.",
