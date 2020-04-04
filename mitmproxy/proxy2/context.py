@@ -17,9 +17,10 @@ class Connection:
     """
     Connections exposed to the layers only contain metadata, no socket objects.
     """
-    address: Optional[tuple]
-    local_address: Optional[tuple]
     state: ConnectionState
+    peername: Optional[tuple]
+    sockname: Optional[tuple]
+
     tls: bool = False
     tls_established: bool = False
     certificate_chain: Optional[Sequence[certs.Cert]] = None
@@ -37,28 +38,34 @@ class Connection:
 
     def __repr__(self):
         attrs = repr({
-            k: {"cipher_list": lambda: f"<{len(v)} ciphers>"}.get(k,lambda: v)()
+            k: {"cipher_list": lambda: f"<{len(v)} ciphers>"}.get(k, lambda: v)()
             for k, v in self.__dict__.items()
         })
         return f"{type(self).__name__}({attrs})"
 
 
 class Client(Connection):
-    sni: Union[bytes, None] = None
-    address: tuple
     state = ConnectionState.OPEN
+    peername: tuple
+    sockname: tuple
 
-    def __init__(self, address, local_address):
-        self.address = address
-        self.local_address = local_address
+    sni: Union[bytes, None] = None
+
+    def __init__(self, peername, sockname):
+        self.peername = peername
+        self.sockname = sockname
 
 
 class Server(Connection):
+    state = ConnectionState.CLOSED
+
+    peername = None
+    sockname = None
+    address: Optional[tuple]
+
     sni = True
     """True: client SNI, False: no SNI, bytes: custom value"""
     via: Optional[server_spec.ServerSpec] = None
-    state = ConnectionState.CLOSED
-    local_address = None
 
     def __init__(self, address: Optional[tuple]):
         self.address = address
