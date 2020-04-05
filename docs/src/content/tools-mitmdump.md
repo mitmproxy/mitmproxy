@@ -35,16 +35,16 @@ and write to outfile.
 ### Client replay
 
 {{< highlight bash  >}}
-mitmdump -nc outfile
+mitmdump -nC outfile
 {{< / highlight >}}
 
 Start mitmdump without binding to the proxy port (`-n`), then replay all
-requests from outfile (`-c filename`). Flags combine in the obvious way,
+requests from outfile (`-C filename`). Flags combine in the obvious way,
 so you can replay requests from one file, and write the resulting flows
 to another:
 
 {{< highlight bash  >}}
-mitmdump -nc srcfile -w dstfile
+mitmdump -nC srcfile -w dstfile
 {{< / highlight >}}
 
 See the [client-side replay]({{< relref "overview-features#client-side-replay"
