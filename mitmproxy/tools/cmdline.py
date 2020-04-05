@@ -127,7 +127,7 @@ def mitmweb(opts):
     group = parser.add_argument_group("Mitmweb")
     opts.make_parser(group, "web_open_browser")
     opts.make_parser(group, "web_port", metavar="PORT")
-    opts.make_parser(group, "web_iface", metavar="INTERFACE")
+    opts.make_parser(group, "web_host", metavar="HOST")
 
     common_options(parser, opts)
     group = parser.add_argument_group(

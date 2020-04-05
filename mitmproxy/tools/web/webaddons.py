@@ -18,13 +18,13 @@ class WebAddon:
             "Web UI port."
         )
         loader.add_option(
-            "web_iface", str, "127.0.0.1",
-            "Web UI interface."
+            "web_host", str, "127.0.0.1",
+            "Web UI host."
         )
 
     def running(self):
         if hasattr(ctx.options, "web_open_browser") and ctx.options.web_open_browser:
-            web_url = "http://{}:{}/".format(ctx.options.web_iface, ctx.options.web_port)
+            web_url = "http://{}:{}/".format(ctx.options.web_host, ctx.options.web_port)
             success = open_browser(web_url)
             if not success:
                 ctx.log.info(
