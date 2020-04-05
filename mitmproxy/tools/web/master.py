@@ -105,8 +105,8 @@ class WebMaster(master.Master):
         AsyncIOMainLoop().install()
         iol = tornado.ioloop.IOLoop.instance()
         http_server = tornado.httpserver.HTTPServer(self.app)
-        http_server.listen(self.options.web_port, self.options.web_iface)
-        web_url = "http://{}:{}/".format(self.options.web_iface, self.options.web_port)
+        http_server.listen(self.options.web_port, self.options.web_host)
+        web_url = "http://{}:{}/".format(self.options.web_host, self.options.web_port)
         self.log.info(
             "Web server listening at {}".format(web_url),
         )

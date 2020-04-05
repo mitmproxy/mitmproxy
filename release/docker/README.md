@@ -23,7 +23,7 @@ $ docker run --rm -it -p 8080:8080 mitmproxy/mitmproxy mitmdump
 For `mitmweb`, you also need to expose port 8081:
 ```sh
 # this makes :8081 accessible to the local machine only
-$ docker run --rm -it -p 8080:8080 -p 127.0.0.1:8081:8081 mitmproxy/mitmproxy mitmweb --web-iface 0.0.0.0
+$ docker run --rm -it -p 8080:8080 -p 127.0.0.1:8081:8081 mitmproxy/mitmproxy mitmweb --web-host 0.0.0.0
 ```
 
 You can also pass options directly via the CLI:
