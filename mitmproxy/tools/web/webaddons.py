@@ -21,6 +21,10 @@ class WebAddon:
             "web_host", str, "127.0.0.1",
             "Web UI host."
         )
+        loader.add_option(
+            "web_dark_mode", bool, False,
+            "Toggle dark mode."
+        )
 
     def running(self):
         if hasattr(ctx.options, "web_open_browser") and ctx.options.web_open_browser:
