@@ -13,7 +13,8 @@ def test_is_valid_host():
     assert check.is_valid_host(b"one_two")
     assert check.is_valid_host(b"::1")
 
-    # IPv6 Validations
+    # IP Address Validations
+    assert check.is_valid_host(b'127.0.0.1')
     assert check.is_valid_host(b'2001:0db8:85a3:0000:0000:8a2e:0370:7334')
     assert check.is_valid_host(b'2001:db8:85a3:0:0:8a2e:370:7334')
     assert check.is_valid_host(b'2001:db8:85a3::8a2e:370:7334')
@@ -21,7 +22,6 @@ def test_is_valid_host():
     assert check.is_valid_host(b'2001-db8-85a3-8d3-1319-8a2e-370-7348.ipv6-literal.net')
 
     # TLD must be between 2 and 63 chars
-    assert not check.is_valid_host(b'example.t')
     assert check.is_valid_host(b'example.tl')
     assert check.is_valid_host(b'example.tld')
     assert check.is_valid_host(b'example.' + b"x" * 63)
@@ -51,9 +51,6 @@ def test_is_valid_host():
     assert check.is_valid_host(b'_a.example.tld')
     assert check.is_valid_host(b'a_.example.tld')
     assert check.is_valid_host(b'_a_.example.tld')
-    assert not check.is_valid_host(b'a._example')
-    assert not check.is_valid_host(b'a._example_')
-    assert not check.is_valid_host(b'a.example_')
 
     # Misc Dash/Hyphen/Minus Test Cases
     assert check.is_valid_host(b'-example')
@@ -62,9 +59,6 @@ def test_is_valid_host():
     assert check.is_valid_host(b'-a.example.tld')
     assert check.is_valid_host(b'a-.example.tld')
     assert check.is_valid_host(b'-a-.example.tld')
-    assert not check.is_valid_host(b'a.-example')
-    assert not check.is_valid_host(b'a.-example-')
-    assert not check.is_valid_host(b'a.example-')
 
     # Misc Combo Test Cases
     assert check.is_valid_host(b'api-.example.com')
