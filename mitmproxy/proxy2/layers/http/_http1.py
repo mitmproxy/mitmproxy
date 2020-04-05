@@ -285,8 +285,8 @@ class Http1Client(Http1Connection):
                     resp = http1_sansio.read_response_head(response_head)
                     expected_size = http1.expected_http_body_size(self.request, resp)
                 except (ValueError, exceptions.HttpSyntaxException) as e:
-                    yield ReceiveHttp(ResponseProtocolError(self.stream_id, f"Cannot parse HTTP response: {e}"))
                     yield commands.CloseConnection(self.conn)
+                    yield ReceiveHttp(ResponseProtocolError(self.stream_id, f"Cannot parse HTTP response: {e}"))
                     return
                 self.response = http.HTTPResponse.wrap(resp)
                 yield ReceiveHttp(ResponseHeaders(self.stream_id, self.response))
@@ -297,6 +297,7 @@ class Http1Client(Http1Connection):
             else:
                 pass  # FIXME: protect against header size DoS
         elif isinstance(event, events.ConnectionClosed):
+            yield commands.CloseConnection(self.conn)
             if self.stream_id:
                 if self.buf:
                     yield ReceiveHttp(ResponseProtocolError(self.stream_id,
@@ -308,7 +309,6 @@ class Http1Client(Http1Connection):
                     yield ReceiveHttp(ResponseProtocolError(self.stream_id, "server closed connection"))
             else:
                 return
-            yield commands.CloseConnection(self.conn)
         else:
             raise ValueError(f"Unexpected event: {event}")
 
