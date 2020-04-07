@@ -110,6 +110,7 @@ class WebSocketLayer(base.Layer):
             websocket_message = WebSocketMessage(message_type, not is_server, payload)
             length = len(websocket_message.content)
             self.flow.messages.append(websocket_message)
+            while(len(self.flow.messages)>1000): self.flow.messages.pop(0)
             self.channel.ask("websocket_message", self.flow)
 
             if not self.flow.stream and not websocket_message.killed:
