@@ -2,10 +2,6 @@ name: CI
 
 on: [push, pull_request]
 
-env:
-  # Codecov
-  CODECOV_TOKEN: "0409bdfd-57a4-477d-a8af-f6172ef431d3"
-
 jobs:
   lint-pr:
     if: github.event_name == 'pull_request'
@@ -13,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: TrueBrain/actions-flake8@v1.2
-  flake8:
+  lint-local:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -21,7 +17,7 @@ jobs:
       - uses: actions/setup-python@v1
       - run: pip install tox
       - run: tox -e flake8
-  filename_matching:
+  filename-matching:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -35,7 +31,7 @@ jobs:
       - uses: actions/setup-python@v1
       - run: pip install tox
       - run: tox -e mypy
-  individual_coverage:
+  individual-coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -56,19 +52,11 @@ jobs:
           python-version: '3.8'
       - run: pip install tox
       - run: tox -e py38
-      # codecov's GitHub action only supports Linux. https://github.com/codecov/codecov-action/issues/7
-      # codecov's Python uploader has no github actions support yet. https://github.com/codecov/codecov-python/pull/214
-      - name: Extract branch name  # https://stackoverflow.com/a/58035262/934719
-        shell: bash
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
-      - run: pip install codecov
-      - run: >
-          codecov -f coverage.xml
-          --name python-${{ matrix.os }}
-          --commit ${{ github.sha }}
-          --slug ${{ github.repository }}
-          --branch ${{ steps.extract_branch.outputs.branch }}
+      - uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml
+          name: ${{ matrix.os }}
+          fail_ci_if_error: true
   test-py35:
     runs-on: ubuntu-latest
     steps:
@@ -140,7 +128,11 @@ jobs:
         run: yarn
       - working-directory: ./web
         run: npm test
-      - run: bash <(curl -s https://codecov.io/bash)
+      - uses: codecov/codecov-action@v1
+        with:
+          file: ./web/coverage/coverage-final.json
+          name: web
+          fail_ci_if_error: true
 
   docs:
     env:
