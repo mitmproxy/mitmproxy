@@ -162,8 +162,12 @@ class Headers(multidict.MultiDict):
         pattern = re.compile(pattern, flags)
         replacements = 0
         flag_count = count > 0
+        count_reached = False
         fields = []
         for name, value in self.fields:
+            if count_reached:
+                fields.append((name, value))
+                continue
             line, n = pattern.subn(repl, name + b": " + value, count=count)
             try:
                 name, value = line.split(b": ", 1)
@@ -173,10 +177,12 @@ class Headers(multidict.MultiDict):
                 pass
             else:
                 replacements += n
+                fields.append((name, value))
                 if flag_count:
                     count -= n
                     if count == 0:
-                        break
+                        count_reached = True
+                continue
             fields.append((name, value))
         self.fields = tuple(fields)
         return replacements

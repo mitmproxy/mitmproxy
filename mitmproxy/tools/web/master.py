@@ -1,5 +1,3 @@
-import webbrowser
-
 import tornado.httpserver
 import tornado.ioloop
 from tornado.platform.asyncio import AsyncIOMainLoop
@@ -107,43 +105,9 @@ class WebMaster(master.Master):
         AsyncIOMainLoop().install()
         iol = tornado.ioloop.IOLoop.instance()
         http_server = tornado.httpserver.HTTPServer(self.app)
-        http_server.listen(self.options.web_port, self.options.web_iface)
-        web_url = "http://{}:{}/".format(self.options.web_iface, self.options.web_port)
+        http_server.listen(self.options.web_port, self.options.web_host)
+        web_url = "http://{}:{}/".format(self.options.web_host, self.options.web_port)
         self.log.info(
             "Web server listening at {}".format(web_url),
         )
-        # FIXME: This should be in an addon hooked to the "running" event, not in master
-        if self.options.web_open_browser:
-            success = open_browser(web_url)
-            if not success:
-                self.log.info(
-                    "No web browser found. Please open a browser and point it to {}".format(web_url),
-                )
         self.run_loop(iol.start)
-
-
-def open_browser(url: str) -> bool:
-    """
-    Open a URL in a browser window.
-    In contrast to webbrowser.open, we limit the list of suitable browsers.
-    This gracefully degrades to a no-op on headless servers, where webbrowser.open
-    would otherwise open lynx.
-
-    Returns:
-        True, if a browser has been opened
-        False, if no suitable browser has been found.
-    """
-    browsers = (
-        "windows-default", "macosx",
-        "google-chrome", "chrome", "chromium", "chromium-browser",
-        "firefox", "opera", "safari",
-    )
-    for browser in browsers:
-        try:
-            b = webbrowser.get(browser)
-        except webbrowser.Error:
-            pass
-        else:
-            b.open(url)
-            return True
-    return False

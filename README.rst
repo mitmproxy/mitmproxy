@@ -124,12 +124,10 @@ The following tools are required to build the mitmproxy docs:
 
 - Hugo_
 - modd_
-- yarn_
 
 .. code-block:: bash
 
     cd docs
-    yarn
     modd
 
 
@@ -191,7 +189,6 @@ with the following command:
 .. _tox: https://tox.readthedocs.io/
 .. _Hugo: https://gohugo.io/
 .. _modd: https://github.com/cortesi/modd
-.. _yarn: https://yarnpkg.com/en/
 .. _PEP8: https://www.python.org/dev/peps/pep-0008
 .. _`Google Style Guide`: https://google.github.io/styleguide/pyguide.html
 .. _StackOverflow: https://stackoverflow.com/questions/tagged/mitmproxy

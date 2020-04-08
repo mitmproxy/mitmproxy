@@ -2,10 +2,6 @@ name: CI
 
 on: [push, pull_request]
 
-# We currently use Python 3.7 for most things:
-# - zstandard currently doesn't have 3.8 wheels,
-# - we need to upgrade cryptography from version 2.4, which also doesn't have wheels
-
 env:
   # Codecov
   CODECOV_TOKEN: "0409bdfd-57a4-477d-a8af-f6172ef431d3"
@@ -57,9 +53,9 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - run: pip install tox
-      - run: tox -e py37
+      - run: tox -e py38
       # codecov's GitHub action only supports Linux. https://github.com/codecov/codecov-action/issues/7
       # codecov's Python uploader has no github actions support yet. https://github.com/codecov/codecov-python/pull/214
       - name: Extract branch name  # https://stackoverflow.com/a/58035262/934719
@@ -90,7 +86,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - run: pip install tox
       - run: tox -e cibuild -- build
       - uses: actions/upload-artifact@master
@@ -155,10 +151,10 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       - run: pip install tox
       - run: |
-          wget https://github.com/gohugoio/hugo/releases/download/v0.59.1/hugo_0.59.1_Linux-64bit.deb
+          wget https://github.com/gohugoio/hugo/releases/download/v0.65.3/hugo_extended_0.65.3_Linux-64bit.deb
           sudo dpkg -i hugo*.deb
       - run: tox -e docs
 
@@ -200,7 +196,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
-          python-version: '3.7'
+          python-version: '3.8'
       # artifacts must be downloaded individually, see https://github.com/actions/download-artifact/issues/6
       - uses: actions/download-artifact@master
         with:

@@ -31,9 +31,8 @@ mitmdump -w wireless-login
 
 ## 2. Point your browser at the mitmdump instance.
 
-I use a tiny Firefox addon called [Toggle
-Proxy](https://addons.mozilla.org/en-us/firefox/addon/toggle-proxy-51740/) to
-switch quickly to and from mitmproxy. I'm assuming you've already [configured
+There is a Firefox addon called [FoxyProxy](https://addons.mozilla.org/fi/firefox/addon/foxyproxy-standard/) that
+lets you switch quickly to and from mitmproxy. I'm assuming you've already [configured
 your browser with mitmproxy's SSL certificate authority]({{< relref
 "concepts-certificates" >}}).
 
@@ -43,7 +42,7 @@ And that's it\! You now have a serialised version of the login process
 in the file wireless-login, and you can replay it at any time like this:
 
 {{< highlight bash  >}}
-mitmdump -c wireless-login
+mitmdump -C wireless-login
 {{< / highlight >}}
 
 ## Embellishments

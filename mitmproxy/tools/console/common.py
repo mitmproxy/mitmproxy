@@ -543,7 +543,7 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='
 
         duration = None
         if f.response.timestamp_end and f.request.timestamp_start:
-            duration = f.response.timestamp_end - f.request.timestamp_start
+            duration = max([f.response.timestamp_end - f.request.timestamp_start, 0])
 
         d.update(dict(
             resp_code=f.response.status_code,

@@ -160,7 +160,7 @@ class ConsoleAddon:
         fv = self.master.window.current("options")
         if not fv:
             raise exceptions.CommandError("Not viewing options.")
-        self.master.commands.execute("options.reset.one %s" % fv.current_name())
+        self.master.commands.call_strings("options.reset.one", [fv.current_name()])
 
     @command.command("console.nav.start")
     def nav_start(self) -> None:
@@ -248,12 +248,11 @@ class ConsoleAddon:
 
         def callback(opt):
             # We're now outside of the call context...
-            repl = cmd + " " + " ".join(args)
-            repl = repl.replace("{choice}", opt)
+            repl = [arg.replace("{choice}", opt) for arg in args]
             try:
-                self.master.commands.execute(repl)
+                self.master.commands.call_strings(cmd, repl)
             except exceptions.CommandError as e:
-                signals.status_message.send(message=str(e))
+                ctx.log.error(str(e))
 
         self.master.overlay(
             overlay.Chooser(self.master, prompt, choices, "", callback)
@@ -276,12 +275,11 @@ class ConsoleAddon:
 
         def callback(opt):
             # We're now outside of the call context...
-            repl = " ".join(command_lexer.quote(x) for x in args)
-            repl = repl.replace("{choice}", opt)
+            repl = [arg.replace("{choice}", opt) for arg in args]
             try:
-                self.master.commands.execute(subcmd + " " + repl)
+                self.master.commands.call_strings(subcmd, repl)
             except exceptions.CommandError as e:
-                signals.status_message.send(message=str(e))
+                ctx.log.error(str(e))
 
         self.master.overlay(
             overlay.Chooser(self.master, prompt, choices, "", callback)
@@ -454,8 +452,9 @@ class ConsoleAddon:
             url = edited_url.rstrip(b"\n")
             flow.request.url = url.decode()
         elif flow_part in ["method", "status_code", "reason"]:
-            self.master.commands.execute(
-                "console.command flow.set @focus %s " % flow_part
+            self.master.commands.call_strings(
+                "console.command",
+                ["flow.set", "@focus", flow_part]
             )
 
     def _grideditor(self):
@@ -539,10 +538,12 @@ class ConsoleAddon:
             raise exceptions.CommandError("Invalid flowview mode.")
 
         try:
-            cmd = 'view.settings.setval @focus flowview_mode_%s %s' % (idx, mode)
-            self.master.commands.execute(cmd)
+            self.master.commands.call_strings(
+                "view.settings.setval",
+                ["@focus", "flowview_mode_%s" % (idx,), mode]
+            )
         except exceptions.CommandError as e:
-            signals.status_message.send(message=str(e))
+            ctx.log.error(str(e))
 
     @command.command("console.flowview.mode.options")
     def flowview_mode_options(self) -> typing.Sequence[str]:
@@ -561,8 +562,10 @@ class ConsoleAddon:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
 
-        cmd = 'view.settings.getval @focus flowview_mode_%s %s' % (idx, self.master.options.console_default_contentview)
-        return self.master.commands.execute(cmd)
+        return self.master.commands.call_strings(
+            "view.settings.getval",
+            ["@focus", "flowview_mode_%s" % (idx,), self.master.options.console_default_contentview]
+        )
 
     @command.command("console.key.contexts")
     def key_contexts(self) -> typing.Sequence[str]:

@@ -87,6 +87,18 @@ class Http2Layer(base.Layer):
         # mypy type hints
         client_conn: connections.ClientConnection = None
 
+    class H2ConnLogger:
+        def __init__(self, name, log):
+            self.name = name
+            self.log = log
+
+        def debug(self, fmtstr, *args):
+            msg = "H2Conn {}: {}".format(self.name, fmtstr % args)
+            self.log(msg, "debug")
+
+        def trace(self, fmtstr, *args):
+            pass
+
     def __init__(self, ctx, mode: str) -> None:
         super().__init__(ctx)
         self.mode = mode
@@ -98,7 +110,8 @@ class Http2Layer(base.Layer):
             client_side=False,
             header_encoding=False,
             validate_outbound_headers=False,
-            validate_inbound_headers=False)
+            validate_inbound_headers=False,
+            logger=self.H2ConnLogger("client", self.log))
         self.connections[self.client_conn] = SafeH2Connection(self.client_conn, config=config)
 
     def _initiate_server_conn(self):
@@ -107,7 +120,8 @@ class Http2Layer(base.Layer):
                 client_side=True,
                 header_encoding=False,
                 validate_outbound_headers=False,
-                validate_inbound_headers=False)
+                validate_inbound_headers=False,
+                logger=self.H2ConnLogger("server", self.log))
             self.connections[self.server_conn] = SafeH2Connection(self.server_conn, config=config)
         self.connections[self.server_conn].initiate_connection()
         self.server_conn.send(self.connections[self.server_conn].data_to_send())
@@ -195,10 +209,12 @@ class Http2Layer(base.Layer):
         else:
             self.streams[eid].data_queue.put(event.data)
             self.streams[eid].queued_data_length += len(event.data)
-            self.connections[source_conn].safe_acknowledge_received_data(
-                event.flow_controlled_length,
-                event.stream_id
-            )
+
+        # always acknowledge receved data with a WINDOW_UPDATE frame
+        self.connections[source_conn].safe_acknowledge_received_data(
+            event.flow_controlled_length,
+            event.stream_id
+        )
         return True
 
     def _handle_stream_ended(self, eid):
@@ -209,13 +225,12 @@ class Http2Layer(base.Layer):
     def _handle_stream_reset(self, eid, event, is_server, other_conn):
         if eid in self.streams:
             self.streams[eid].kill()
-            if event.error_code == h2.errors.ErrorCodes.CANCEL:
-                if is_server:
-                    other_stream_id = self.streams[eid].client_stream_id
-                else:
-                    other_stream_id = self.streams[eid].server_stream_id
-                if other_stream_id is not None:
-                    self.connections[other_conn].safe_reset_stream(other_stream_id, event.error_code)
+            if is_server:
+                other_stream_id = self.streams[eid].client_stream_id
+            else:
+                other_stream_id = self.streams[eid].server_stream_id
+            if other_stream_id is not None:
+                self.connections[other_conn].safe_reset_stream(other_stream_id, event.error_code)
         return True
 
     def _handle_remote_settings_changed(self, event, other_conn):
@@ -461,7 +476,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         if self.zombie is not None or connection_closed:
             if pre_command is not None:
                 pre_command()
-            raise exceptions.Http2ZombieException("Connection already dead")
+            raise exceptions.Http2ZombieException("Connection or stream already dead: {}, {}".format(self.zombie, connection_closed))
 
     @detect_zombie_stream
     def read_request_headers(self, flow):
@@ -643,7 +658,8 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         try:
             layer()
         except exceptions.Http2ZombieException:  # pragma: no cover
-            pass
+            # zombies can be safely terminated - no need to kill them twice
+            return
         except exceptions.ProtocolException as e:  # pragma: no cover
             self.log(repr(e), "info")
         except exceptions.SetServerNotAllowedException as e:  # pragma: no cover

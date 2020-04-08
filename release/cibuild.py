@@ -454,10 +454,10 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
         return
     click.echo("Building wininstaller package...")
 
-    IB_VERSION = "19.10.0"
+    IB_VERSION = "20.3.0"
     IB_DIR = pathlib.Path(be.release_dir) / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
-    IB_CLI = fr"C:\Program Files (x86)\BitRock InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
+    IB_CLI = fr"C:\Program Files (x86)\VMware InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
     IB_LICENSE = IB_DIR / "license.xml"
 
     if not os.path.isfile(IB_CLI):
@@ -470,11 +470,11 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
                     click.secho(f"Downloading... {round(100 * done / total)}%")
 
             urllib.request.urlretrieve(
-                f"https://clients.bitrock.com/installbuilder/installbuilder-enterprise-{IB_VERSION}-windows-installer.exe",
+                f"https://installbuilder.com/installbuilder-enterprise-{IB_VERSION}-windows-installer.exe",
                 IB_SETUP.with_suffix(".tmp"),
                 reporthook=report
             )
-            shutil.move(IB_SETUP.with_suffix(".tmp"), IB_SETUP)
+            shutil.move(str(IB_SETUP.with_suffix(".tmp")), str(IB_SETUP))
 
         click.echo("Install InstallBuilder...")
         subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"], check=True)

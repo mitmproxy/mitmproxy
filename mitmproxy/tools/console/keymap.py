@@ -202,7 +202,7 @@ class KeymapConfig:
                 user_ctxs = v.get("ctx", ["global"])
                 try:
                     km._check_contexts(user_ctxs)
-                    km.remove(v["key"], Contexts)
+                    km.remove(v["key"], user_ctxs)
                     km.add(
                         key = v["key"],
                         command = v["cmd"],

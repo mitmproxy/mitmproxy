@@ -2,6 +2,8 @@ import time
 import sys
 import re
 
+import typing
+
 from mitmproxy.net.http import request
 from mitmproxy.net.http import response
 from mitmproxy.net.http import headers
@@ -171,8 +173,15 @@ def connection_close(http_version, headers):
     return http_version != "HTTP/1.1" and http_version != b"HTTP/1.1"
 
 
-def expected_http_body_size(request, response=None):
+def expected_http_body_size(
+        request: request.Request,
+        response: typing.Optional[response.Response] = None,
+        expect_continue_as_0: bool = True
+):
     """
+        Args:
+            - expect_continue_as_0: If true, incorrectly predict a body size of 0 for requests which are waiting
+              for a 100 Continue response.
         Returns:
             The expected body length:
             - a positive integer, if the size is known in advance
@@ -186,24 +195,17 @@ def expected_http_body_size(request, response=None):
     # http://tools.ietf.org/html/rfc7230#section-3.3
     if not response:
         headers = request.headers
-        response_code = None
-        is_request = True
+        if expect_continue_as_0 and headers.get("expect", "").lower() == "100-continue":
+            return 0
     else:
         headers = response.headers
-        response_code = response.status_code
-        is_request = False
-
-    if is_request:
-        if headers.get("expect", "").lower() == "100-continue":
-            return 0
-    else:
         if request.method.upper() == "HEAD":
             return 0
-        if 100 <= response_code <= 199:
+        if 100 <= response.status_code <= 199:
             return 0
-        if response_code == 200 and request.method.upper() == "CONNECT":
+        if response.status_code == 200 and request.method.upper() == "CONNECT":
             return 0
-        if response_code in (204, 304):
+        if response.status_code in (204, 304):
             return 0
 
     if "chunked" in headers.get("transfer-encoding", "").lower():
@@ -218,9 +220,9 @@ def expected_http_body_size(request, response=None):
             if size < 0:
                 raise ValueError()
             return size
-        except ValueError:
-            raise exceptions.HttpSyntaxException("Unparseable Content Length")
-    if is_request:
+        except ValueError as e:
+            raise exceptions.HttpSyntaxException("Unparseable Content Length") from e
+    if not response:
         return 0
     return -1
 
