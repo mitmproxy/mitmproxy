@@ -99,9 +99,7 @@ requirements installed, and you can run the basic test suite with tox_:
 
 .. code-block:: bash
 
-    tox -e py37    # runs Python tests
-    tox -e flake8  # checks code style style
-    tox -e mypy    # checks static types
+    tox -e py      # runs Python tests
 
 Our CI system has additional tox environments that are run on every pull request and branch on GitHub.
 
@@ -141,11 +139,12 @@ good reason not to.
 
 This is automatically enforced on every PR. If we detect a linting error, the
 PR checks will fail and block merging. You can run our lint checks yourself
-with the following command:
+with the following commands:
 
 .. code-block:: bash
 
-    tox -e lint
+    tox -e flake8
+    tox -e mypy    # checks static types
 
 
 .. |mitmproxy_site| image:: https://shields.mitmproxy.org/badge/https%3A%2F%2F-mitmproxy.org-blue.svg

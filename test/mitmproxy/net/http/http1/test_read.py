@@ -161,7 +161,8 @@ def test_connection_close():
 def test_expected_http_body_size():
     # Expect: 100-continue
     assert expected_http_body_size(
-        treq(headers=Headers(expect="100-continue", content_length="42"))
+        treq(headers=Headers(expect="100-continue", content_length="42")),
+        expect_continue_as_0=True
     ) == 0
     # Expect: 100-continue
     assert expected_http_body_size(
