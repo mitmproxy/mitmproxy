@@ -331,7 +331,8 @@ def _read_headers(rfile):
     while True:
         line = rfile.readline()
         if not line or line == b"\r\n" or line == b"\n":
-            break
+            # we do have coverage of this, but coverage.py does not detect it.
+            break  # pragma: no cover
         if line[0] in b" \t":
             if not ret:
                 raise exceptions.HttpSyntaxException("Invalid headers")

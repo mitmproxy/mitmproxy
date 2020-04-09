@@ -27,7 +27,7 @@ class CommandHistory:
     def running(self):
         # FIXME: We have a weird bug where the contract for configure is not followed and it is never called with
         # confdir or command_history as updated.
-        self.configure("command_history")
+        self.configure("command_history")  # pragma: no cover
 
     def configure(self, updated):
         if "command_history" in updated or "confdir" in updated:
@@ -36,9 +36,9 @@ class CommandHistory:
                 self.set_filter('')
 
     def done(self):
-        if ctx.options.command_history and len(self.history) > self.VACUUM_SIZE:
+        if ctx.options.command_history and len(self.history) >= self.VACUUM_SIZE:
             # vacuum history so that it doesn't grow indefinitely.
-            history_str = "\n".join(self.history[-self.VACUUM_SIZE / 2:]) + "\n"
+            history_str = "\n".join(self.history[-self.VACUUM_SIZE // 2:]) + "\n"
             self.history_file.write_text(history_str)
 
     @command.command("commands.history.add")

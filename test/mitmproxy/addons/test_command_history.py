@@ -5,15 +5,22 @@ from mitmproxy.test import taddons
 
 
 class TestCommandHistory:
-    def test_load_from_file(self, tmpdir):
-        commands = ['cmd1', 'cmd2', 'cmd3']
-        with open(tmpdir.join('command_history'), 'w') as f:
+    def test_load_and_save(self, tmpdir):
+        history_file = tmpdir.join('command_history')
+        commands = ["cmd1", "cmd2", "cmd3"]
+        with open(history_file, 'w') as f:
             f.write("\n".join(commands))
 
         ch = command_history.CommandHistory()
+        ch.VACUUM_SIZE = 4
         with taddons.context(ch) as tctx:
             tctx.options.confdir = str(tmpdir)
             assert ch.history == commands
+            ch.add_command("cmd4")
+            ch.done()
+
+        with open(history_file, "r") as f:
+            assert f.read() == "cmd3\ncmd4\n"
 
     def test_add_command(self):
         history = command_history.CommandHistory()

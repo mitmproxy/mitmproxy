@@ -92,9 +92,8 @@ setup(
         ],
         'dev': [
             "asynctest>=0.12.0",
-            "flake8>=3.7.8,<3.8",
             "Flask>=1.0,<1.2",
-            "mypy>=0.740,<0.771",
+            "hypothesis>=5.8,<5.9",
             "parver>=0.1,<2.0",
             "pytest-asyncio>=0.10.0,<0.11",
             "pytest-cov>=2.7.1,<3",
@@ -103,7 +102,6 @@ setup(
             "pytest>=5.1.3,<6",
             "requests>=2.9.1,<3",
             "tox>=3.5,<3.15",
-            "rstcheck>=2.2,<4.0",
         ],
         'examples': [
             "beautifulsoup4>=4.4.1,<4.9"
