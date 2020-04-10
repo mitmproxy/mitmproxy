@@ -10,6 +10,7 @@ import urwid
 import urwid.util
 
 from mitmproxy.utils import human
+from mitmproxy.tcp import TCPFlow
 
 # Detect Windows Subsystem for Linux
 IS_WSL = "Microsoft" in platform.platform()
@@ -507,7 +508,64 @@ def raw_format_table(f):
     return urwid.Pile(pile)
 
 
+# TODO: this function can replace repeated code in raw_format_table() in the future
+def raw_format_cursor(f):
+    cursor = [" ", "focus"]
+    if f["focus"]:
+        cursor[0] = ">"
+    return fcol(*cursor)
+
+
+# TODO: this function can replace repeated code in raw_format_table() in the future
+def raw_format_timestamp(timestamp, extended):
+    if extended:
+        s = human.format_timestamp(timestamp)
+    else:
+        s = datetime.datetime.fromtimestamp(time.mktime(time.localtime(timestamp))).strftime("%H:%M:%S")
+    return fcol(s, "title")
+
+
+@lru_cache(maxsize=800)
+def raw_format_tcp_table(f):
+    # If you'll remove this line TypeError: unhashable type: 'dict' will occur
+    # because of @lru_cache
+    f = dict(f)
+
+    pile = []
+
+    columns = [
+        raw_format_cursor(f),
+        raw_format_timestamp(f["timestamp_start"], f["extended"]),
+        fcol("TCP", "tcp"),
+        fcol(f["client"], "client"),
+        fcol("---", "direction"),
+        fcol(f["server"], "server"),
+    ]
+
+    m = [c for c in columns]
+
+    pile.append(urwid.Columns(m, dividechars=1))
+
+    return urwid.Pile(pile)
+
+
 def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='default'):
+
+    if isinstance(f, TCPFlow):
+        d = dict(
+            focus=focus,
+            extended=extended,
+            timestamp_start=f.timestamp_start,
+            client=human.format_address(f.client_conn.address),
+            server=human.format_address(f.server_conn.address),
+        )
+
+        # If you'll remove this line TypeError: unhashable type: 'dict' will occur
+        # because of @lru_cache.
+        t = tuple(sorted(d.items()))
+
+        return raw_format_tcp_table(t)
+
     acked = False
     if f.reply and f.reply.state == "committed":
         acked = True

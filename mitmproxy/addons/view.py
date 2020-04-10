@@ -22,6 +22,7 @@ from mitmproxy import connections
 from mitmproxy import ctx
 from mitmproxy import io
 from mitmproxy import http  # noqa
+from mitmproxy import tcp  # noqa
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -69,30 +70,42 @@ class _OrderKey:
 
 class OrderRequestStart(_OrderKey):
     def generate(self, f: http.HTTPFlow) -> int:
-        return f.request.timestamp_start or 0
+        if isinstance(f, http.HTTPFlow):
+            return f.request.timestamp_start or 0
+        else:
+            return f.timestamp_start
 
 
 class OrderRequestMethod(_OrderKey):
     def generate(self, f: http.HTTPFlow) -> str:
-        return f.request.method
+        if isinstance(f, http.HTTPFlow):
+            return f.request.method
+        else:
+            return "TCP" # Stub
 
 
 class OrderRequestURL(_OrderKey):
     def generate(self, f: http.HTTPFlow) -> str:
-        return f.request.url
+        if isinstance(f, http.HTTPFlow):
+            return f.request.url
+        else:
+            return "f.server" # Stub
 
 
 class OrderKeySize(_OrderKey):
     def generate(self, f: http.HTTPFlow) -> int:
         s = 0
-        if f.request.raw_content:
-            s += len(f.request.raw_content)
-        if f.response and f.response.raw_content:
-            s += len(f.response.raw_content)
+        if isinstance(f, http.HTTPFlow):
+            if f.request.raw_content:
+                s += len(f.request.raw_content)
+            if f.response and f.response.raw_content:
+                s += len(f.response.raw_content)
+        else:
+            s = 1337 # Stub
         return s
 
 
-matchall = flowfilter.parse(".")
+matchall = flowfilter.parse(". | ~tcp")
 
 
 orders = [
@@ -553,6 +566,18 @@ class View(collections.abc.Sequence):
         self.update([f])
 
     def kill(self, f):
+        self.update([f])
+
+    def tcp_start(self,f):
+        self.add([f])
+
+    def tcp_message(self, f):
+        self.update([f])
+
+    def tcp_error(self, f):
+        self.update([f])
+
+    def tcp_end(self, f):
         self.update([f])
 
     def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
