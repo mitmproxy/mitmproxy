@@ -8,5 +8,7 @@ for script in scripts/* ; do
   "$script" > "src/generated/${output%.*}.html"
 done
 
+python3 render_examples > src/content/addons-examples.md
+
 cd src
 hugo
