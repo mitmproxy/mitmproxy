@@ -40,9 +40,9 @@ current_level = 2
 for ex in examples:
     if os.path.dirname(ex) != current_dir:
         current_dir = os.path.dirname(ex)
-        print("#"*current_level, current_dir)
+        print("#" * current_level, current_dir)
 
     print(textwrap.dedent("""
         {} {}
         {{{{< example src="{}" lang="py" >}}}}
-    """.format("#"*(current_level+1), ex, "/examples/"+ex)))
+    """.format("#" * (current_level + 1), ex, "/examples/" + ex)))
