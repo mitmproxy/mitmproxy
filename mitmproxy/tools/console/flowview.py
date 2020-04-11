@@ -35,11 +35,8 @@ class FlowViewHeader(urwid.WidgetWrap):
         if self.master.view.focus.flow:
             self._w = common.format_flow(
                 self.master.view.focus.flow,
-                False,
-                extended=True,
+                render_mode=common.RenderMode.DETAILVIEW,
                 hostheader=self.master.options.showhost,
-                cols=cols,
-                layout=self.master.options.console_flowlist_layout
             )
         else:
             self._w = urwid.Pile([])

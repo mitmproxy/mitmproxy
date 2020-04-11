@@ -112,7 +112,7 @@ class ConsoleAddon:
             choices=sorted(console_palettes),
         )
         loader.add_option(
-            "console_palette_transparent", bool, False,
+            "console_palette_transparent", bool, True,
             "Set transparent background for palette."
         )
         loader.add_option(
