@@ -9,6 +9,7 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import log
+from mitmproxy import tcp
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
@@ -334,9 +335,10 @@ class ConsoleAddon:
     @command.command("console.view.flow")
     def view_flow(self, flow: flow.Flow) -> None:
         """View a flow."""
-        if hasattr(flow, "request"):
-            # FIME: Also set focus?
+        if isinstance(flow, (http.HTTPFlow, tcp.TCPFlow)):
             self.master.switch_view("flowview")
+        else:
+            ctx.log.warn(f"No detail view for {type(flow).__name__}.")
 
     @command.command("console.exit")
     def exit(self) -> None:
