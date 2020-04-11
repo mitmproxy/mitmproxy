@@ -386,7 +386,6 @@ class ConsoleAddon:
         if isinstance(flow, tcp.TCPViewEntry):
             return [
                 "Packet",
-                "TCP Stream",
             ]
         else:
             return [
@@ -419,7 +418,7 @@ class ConsoleAddon:
         # This shouldn't be necessary once this command is "console.edit @focus",
         # but for now it is.
         if isinstance(flow, tcp.TCPViewEntry):
-            self._edit_tcp(part)
+            self._edit_tcp(flow_part)
         else:
             require_dummy_response = (
                     flow_part in ("response-headers", "response-body", "set-cookies") and
@@ -466,12 +465,13 @@ class ConsoleAddon:
                 self.master.commands.call_strings(
                     "console.command",
                     ["flow.set", "@focus", flow_part]
+                )
 
-    def _edit_tcp(self, part):
+    def _edit_tcp(self, flow_part):
 
         flow = self.master.view.focus.flow
 
-        if part == "Message":
+        if flow_part == "Packet":
             raw_content = flow.message.raw_content
             content  = self.master.spawn_editor(raw_content)
             content = content.rstrip(b"\n")

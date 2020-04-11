@@ -366,14 +366,12 @@ def raw_format_tcp_table(f):
         s = datetime.datetime.fromtimestamp(time.mktime(time.localtime(f["msg_timestamp"]))).strftime("%H:%M:%S")
     req.append(fcol(s, uc))
     req.append(("fixed", 4, truncated_plain("TCP", "method_get")))
-    req.append(fcol(fixlen("PROTO", 8), "scheme_other"))
     req.append(fcol(fixlen("S:" + f["stream_index"], 8), "scheme_other"))
     if f["msg_type"] != TCPFlowEntry:
         req.append(fcol(fixlen("M:" + f["msg_index"], 8), "scheme_other"))
     else:
         req.append(fcol(fixlen(" ", 8), "scheme_other"))
 
-    req.append(fcol(fixlen("T:" + f["msg_total"], 8), "scheme_other"))
     req.append(fcol(f["client"], uc))
 
     if f['active']:

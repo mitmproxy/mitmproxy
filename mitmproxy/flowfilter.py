@@ -348,6 +348,21 @@ class FDomain(_Rex):
             self.re.search(f.request.pretty_host)
         )
 
+class FIP(_Rex):
+    code = "ip"
+    help = "IP"
+    is_binary = False
+
+    # FUrl is special, because it can be "naked".
+
+    @only(tcp.TCPFlow, tcp.TCPMessageEntry)
+    def __call__(self, f):
+        if ":" in self.expr:
+            return self.re.search(f.client) or self.re.search(f.server)
+        else:
+            return self.re.search(f.client.split(":")[0]) or self.re.search(f.server.split(":")[0]) #TODO FIX FOR IPv6 support
+            
+
 
 class FUrl(_Rex):
     code = "u"
@@ -477,6 +492,7 @@ filter_rex: Sequence[Type[_Rex]] = [
     FHeadResponse,
     FMethod,
     FSrc,
+    FIP,
     FUrl,
 ]
 filter_int = [
