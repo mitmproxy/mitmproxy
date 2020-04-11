@@ -173,6 +173,10 @@ class HTTPFlow(flow.Flow):
         s += ">"
         return s.format(flow=self)
 
+    @property
+    def timestamp_start(self) -> float:
+        return self.request.timestamp_start
+
     def copy(self):
         f = super().copy()
         if self.request:

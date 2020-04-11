@@ -21,8 +21,10 @@ from mitmproxy import command
 from mitmproxy import connections
 from mitmproxy import ctx
 from mitmproxy import io
-from mitmproxy import http  # noqa
-from mitmproxy import tcp  # noqa
+from mitmproxy import http
+from mitmproxy import tcp
+from mitmproxy.utils import human
+
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -39,7 +41,7 @@ class _OrderKey:
     def __init__(self, view):
         self.view = view
 
-    def generate(self, f: http.HTTPFlow) -> typing.Any:  # pragma: no cover
+    def generate(self, f: mitmproxy.flow.Flow) -> typing.Any:  # pragma: no cover
         pass
 
     def refresh(self, f):
@@ -69,44 +71,49 @@ class _OrderKey:
 
 
 class OrderRequestStart(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> int:
-        if isinstance(f, http.HTTPFlow):
-            return f.request.timestamp_start or 0
-        else:
-            return f.timestamp_start
+    def generate(self, f: mitmproxy.flow.Flow) -> float:
+        return f.timestamp_start
 
 
 class OrderRequestMethod(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> str:
+    def generate(self, f: mitmproxy.flow.Flow) -> str:
         if isinstance(f, http.HTTPFlow):
             return f.request.method
+        elif isinstance(f, tcp.TCPFlow):
+            return "TCP"
         else:
-            return "TCP" # Stub
+            raise NotImplementedError()
 
 
 class OrderRequestURL(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> str:
+    def generate(self, f: mitmproxy.flow.Flow) -> str:
         if isinstance(f, http.HTTPFlow):
             return f.request.url
+        elif isinstance(f, tcp.TCPFlow):
+            return human.format_address(f.server_conn.address)
         else:
-            return "f.server" # Stub
+            raise NotImplementedError()
 
 
 class OrderKeySize(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> int:
-        s = 0
+    def generate(self, f: mitmproxy.flow.Flow) -> int:
         if isinstance(f, http.HTTPFlow):
+            size = 0
             if f.request.raw_content:
-                s += len(f.request.raw_content)
+                size += len(f.request.raw_content)
             if f.response and f.response.raw_content:
-                s += len(f.response.raw_content)
+                size += len(f.response.raw_content)
+            return size
+        elif isinstance(f, tcp.TCPFlow):
+            size = 0
+            for message in f.messages:
+                size += len(message.content)
+            return size
         else:
-            s = 1337 # Stub
-        return s
+            raise NotImplementedError()
 
 
-matchall = flowfilter.parse(". | ~tcp")
-
+matchall = flowfilter.parse("~http | ~tcp")
 
 orders = [
     ("t", "time"),
