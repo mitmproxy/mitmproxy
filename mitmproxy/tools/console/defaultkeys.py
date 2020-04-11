@@ -1,14 +1,14 @@
 
 def map(km):
     km.add(":", "console.command ", ["commonkey", "global"], "Command prompt")
-    km.add("?", "console.view.help", ["commonkey","global"], "View help")
+    km.add("?", "console.view.help", ["commonkey", "global"], "View help")
     km.add("B", "browser.start", ["global"], "Start an attached browser")
     km.add("C", "console.view.commands", ["global"], "View commands")
     km.add("K", "console.view.keybindings", ["global"], "View key bindings")
     km.add("O", "console.view.options", ["commonkey", "global"], "View options")
     km.add("E", "console.view.eventlog", ["commonkey", "global"], "View event log")
     km.add("Q", "console.exit", ["commonkey", "global"], "Exit immediately")
-    km.add("q", "console.view.pop", ["commonkey", "global"], "Exit the current views")
+    km.add("q", "console.view.pop", ["commonkey", "global"], "Exit the current view")
     km.add("-", "console.layout.cycle", ["global"], "Cycle to next layout")
     km.add("shift tab", "console.panes.next", ["global"], "Focus next layout pane")
     km.add("ctrl right", "console.panes.next", ["global"], "Focus next layout pane")
