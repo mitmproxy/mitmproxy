@@ -1,4 +1,0 @@
-#!/bin/sh
-set -e
-
-DOCS_ARCHIVE=true ./build-current

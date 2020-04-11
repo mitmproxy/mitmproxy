@@ -14,10 +14,12 @@ menu:
 
 # Examples of Addons and Scripts
 
+The most recent set of examples is also available [on our GitHub project](https://github.com/mitmproxy/mitmproxy/tree/master/examples).
+
 """)
 
 base = os.path.dirname(os.path.realpath(__file__))
-examples_path = os.path.join(base, '../src/examples/')
+examples_path = os.path.join(base, 'src/examples/')
 pathlist = Path(examples_path).glob('**/*.py')
 
 examples = [os.path.relpath(str(p), examples_path) for p in sorted(pathlist)]
@@ -33,7 +35,7 @@ for ex in examples:
         print("  * [Examples: {}]({{{{< relref \"addons-examples#{}\">}}}})".format(current_dir, sanitized))
 
     sanitized = ex.replace('/', '').replace('.', '')
-    print("    * [{}]({{{{< relref \"addons-examples#{}\">}}}})".format(ex, sanitized))
+    print("    * [{}]({{{{< relref \"addons-examples#example-{}\">}}}})".format(os.path.basename(ex), sanitized))
 
 current_dir = None
 current_level = 2
@@ -43,6 +45,6 @@ for ex in examples:
         print("#" * current_level, current_dir)
 
     print(textwrap.dedent("""
-        {} {}
+        {} Example: {}
         {{{{< example src="{}" lang="py" >}}}}
-    """.format("#" * (current_level + 1), ex, "/examples/" + ex)))
+    """.format("#" * (current_level + 1), ex, "examples/" + ex)))

@@ -1,5 +1,9 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+# set -o xtrace
 
 aws configure set preview.cloudfront true
 aws --profile mitmproxy \
