@@ -104,7 +104,7 @@ setup(
             "tox>=3.5,<3.15",
         ],
         'examples': [
-            "beautifulsoup4>=4.4.1,<4.9"
+            "beautifulsoup4>=4.9,<4.10"
         ]
     }
 )
