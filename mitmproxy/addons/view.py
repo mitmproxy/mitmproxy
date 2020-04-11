@@ -575,7 +575,7 @@ class View(collections.abc.Sequence):
     def kill(self, f):
         self.update([f])
 
-    def tcp_start(self,f):
+    def tcp_start(self, f):
         self.add([f])
 
     def tcp_message(self, f):

@@ -36,7 +36,7 @@ def test_order_refresh():
         assert sargs
 
 
-def test_order_generators():
+def test_order_generators_http():
     v = view.View()
     tf = tflow.tflow(resp=True)
 
@@ -51,6 +51,23 @@ def test_order_generators():
 
     sz = view.OrderKeySize(v)
     assert sz.generate(tf) == len(tf.request.raw_content) + len(tf.response.raw_content)
+
+
+def test_order_generators_tcp():
+    v = view.View()
+    tf = tflow.ttcpflow()
+
+    rs = view.OrderRequestStart(v)
+    assert rs.generate(tf) == 946681200
+
+    rm = view.OrderRequestMethod(v)
+    assert rm.generate(tf) == "TCP"
+
+    ru = view.OrderRequestURL(v)
+    assert ru.generate(tf) == "address:22"
+
+    sz = view.OrderKeySize(v)
+    assert sz.generate(tf) == sum(len(m.content) for m in tf.messages)
 
 
 def test_simple():
@@ -103,6 +120,21 @@ def test_simple():
     v.clear()
     assert len(v) == 0
     assert len(v._store) == 0
+
+
+def test_simple_tcp():
+    v = view.View()
+    f = tflow.ttcpflow()
+    assert v.store_count() == 0
+    v.tcp_start(f)
+    assert list(v) == [f]
+
+    # These all just call update
+    v.tcp_start(f)
+    v.tcp_message(f)
+    v.tcp_error(f)
+    v.tcp_end(f)
+    assert list(v) == [f]
 
 
 def test_filter():
