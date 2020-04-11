@@ -13,10 +13,13 @@
     {{ with .Site.Params.author }}
     <meta name="author" content="{{ . }}">
     {{ end }}
-    <link rel="stylesheet" href="/css/style.css">
+
+    {{ $style := resources.Get "style.scss" | toCSS | minify }}
+    <link rel="stylesheet" href="{{ $style.Permalink }}">
+
     {{ if .RSSLink -}}
     <link href="{{ .RSSLink }}" rel="feed" type="application/rss+xml" title="{{ .Site.Title }}">
     {{- end }}
-    {{ .Hugo.Generator }}
+    {{ hugo.Generator }}
 </head>
 <body>

@@ -117,6 +117,21 @@ def test_load_path(tmpdir):
         kmc.load_path(km, dst)
         assert(km.get("chooser", "key1"))
 
+        with open(dst, 'w') as f:
+            f.write(
+                """
+                    -   key: key2
+                        ctx: [flowlist]
+                        cmd: foo
+                    -   key: key2
+                        ctx: [flowview]
+                        cmd: bar
+                """
+            )
+        kmc.load_path(km, dst)
+        assert(km.get("flowlist", "key2"))
+        assert(km.get("flowview", "key2"))
+
         km.add("key123", "str", ["flowlist", "flowview"])
         with open(dst, 'w') as f:
             f.write(
@@ -127,10 +142,9 @@ def test_load_path(tmpdir):
                 """
             )
         kmc.load_path(km, dst)
-        for b in km.bindings:
-            if b.key == "key123":
-                assert b.contexts == ["options"]
-                break
+        assert(km.get("flowlist", "key123"))
+        assert(km.get("flowview", "key123"))
+        assert(km.get("options", "key123"))
 
 
 def test_parse():

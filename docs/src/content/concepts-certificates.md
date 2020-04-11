@@ -48,7 +48,7 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 - [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx)
 
 {{< highlight bash  >}}
-certutil.exe -importpfx Root mitmproxy-ca-cert.p12
+certutil -addstore root mitmproxy-ca-cert.cer
 {{< / highlight >}}
 
 - [Mac OS X](https://support.apple.com/kb/PH20129)

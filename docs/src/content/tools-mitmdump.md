@@ -35,16 +35,16 @@ and write to outfile.
 ### Client replay
 
 {{< highlight bash  >}}
-mitmdump -nc outfile
+mitmdump -nC outfile
 {{< / highlight >}}
 
 Start mitmdump without binding to the proxy port (`-n`), then replay all
-requests from outfile (`-c filename`). Flags combine in the obvious way,
+requests from outfile (`-C filename`). Flags combine in the obvious way,
 so you can replay requests from one file, and write the resulting flows
 to another:
 
 {{< highlight bash  >}}
-mitmdump -nc srcfile -w dstfile
+mitmdump -nC srcfile -w dstfile
 {{< / highlight >}}
 
 See the [client-side replay]({{< relref "overview-features#client-side-replay"
@@ -53,7 +53,7 @@ See the [client-side replay]({{< relref "overview-features#client-side-replay"
 ### Running a script
 
 {{< highlight bash  >}}
-mitmdump -s examples/add_header.py
+mitmdump -s examples/simple/add_header.py
 {{< / highlight >}}
 
 This runs the **add_header.py** example script, which simply adds a new
@@ -62,7 +62,7 @@ header to all responses.
 ### Scripted data transformation
 
 {{< highlight bash  >}}
-mitmdump -ns examples/add_header.py -r srcfile -w dstfile
+mitmdump -ns examples/simple/add_header.py -r srcfile -w dstfile
 {{< / highlight >}}
 
 This command loads flows from **srcfile**, transforms it according to

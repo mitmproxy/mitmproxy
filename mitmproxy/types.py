@@ -5,6 +5,9 @@ import typing
 from mitmproxy import exceptions
 from mitmproxy import flow
 
+if typing.TYPE_CHECKING:  # pragma: no cover
+    from mitmproxy.command import CommandManager
+
 
 class Path(str):
     pass
@@ -14,11 +17,15 @@ class Cmd(str):
     pass
 
 
-class Arg(str):
+class CmdArgs(str):
     pass
 
 
 class Unknown(str):
+    pass
+
+
+class Space(str):
     pass
 
 
@@ -40,27 +47,11 @@ class Choice:
         return False
 
 
-# One of the many charming things about mypy is that introducing type
-# annotations can cause circular dependencies where there were none before.
-# Rather than putting types and the CommandManger in the same file, we introduce
-# a stub type with the signature we use.
-class _CommandBase:
-    commands: typing.MutableMapping[str, typing.Any] = {}
-
-    def call_strings(self, path: str, args: typing.Sequence[str]) -> typing.Any:
-        raise NotImplementedError
-
-    def execute(self, cmd: str) -> typing.Any:
-        raise NotImplementedError
-
-
 class _BaseType:
     typ: typing.Type = object
     display: str = ""
 
-    def completion(
-        self, manager: _CommandBase, t: typing.Any, s: str
-    ) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: typing.Any, s: str) -> typing.Sequence[str]:
         """
             Returns a list of completion strings for a given prefix. The strings
             returned don't necessarily need to be suffixes of the prefix, since
@@ -68,9 +59,7 @@ class _BaseType:
         """
         raise NotImplementedError
 
-    def parse(
-        self, manager: _CommandBase, typ: typing.Any, s: str
-    ) -> typing.Any:
+    def parse(self, manager: "CommandManager", typ: typing.Any, s: str) -> typing.Any:
         """
             Parse a string, given the specific type instance (to allow rich type annotations like Choice) and a string.
 
@@ -78,7 +67,7 @@ class _BaseType:
         """
         raise NotImplementedError
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         """
             Check if data is valid for this type.
         """
@@ -89,10 +78,10 @@ class _BoolType(_BaseType):
     typ = bool
     display = "bool"
 
-    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
         return ["false", "true"]
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> bool:
+    def parse(self, manager: "CommandManager", t: type, s: str) -> bool:
         if s == "true":
             return True
         elif s == "false":
@@ -102,7 +91,7 @@ class _BoolType(_BaseType):
                 "Booleans are 'true' or 'false', got %s" % s
             )
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return val in [True, False]
 
 
@@ -110,13 +99,13 @@ class _StrType(_BaseType):
     typ = str
     display = "str"
 
-    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
         return []
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> str:
+    def parse(self, manager: "CommandManager", t: type, s: str) -> str:
         return s
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, str)
 
 
@@ -124,13 +113,13 @@ class _UnknownType(_BaseType):
     typ = Unknown
     display = "unknown"
 
-    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
         return []
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> str:
+    def parse(self, manager: "CommandManager", t: type, s: str) -> str:
         return s
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return False
 
 
@@ -138,16 +127,16 @@ class _IntType(_BaseType):
     typ = int
     display = "int"
 
-    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
         return []
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> int:
+    def parse(self, manager: "CommandManager", t: type, s: str) -> int:
         try:
             return int(s)
         except ValueError as e:
-            raise exceptions.TypeError from e
+            raise exceptions.TypeError(str(e)) from e
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, int)
 
 
@@ -155,7 +144,7 @@ class _PathType(_BaseType):
     typ = Path
     display = "path"
 
-    def completion(self, manager: _CommandBase, t: type, start: str) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: type, start: str) -> typing.Sequence[str]:
         if not start:
             start = "./"
         path = os.path.expanduser(start)
@@ -177,10 +166,10 @@ class _PathType(_BaseType):
         ret.sort()
         return ret
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> str:
+    def parse(self, manager: "CommandManager", t: type, s: str) -> str:
         return os.path.expanduser(s)
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, str)
 
 
@@ -188,43 +177,43 @@ class _CmdType(_BaseType):
     typ = Cmd
     display = "cmd"
 
-    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
         return list(manager.commands.keys())
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> str:
+    def parse(self, manager: "CommandManager", t: type, s: str) -> str:
         if s not in manager.commands:
             raise exceptions.TypeError("Unknown command: %s" % s)
         return s
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return val in manager.commands
 
 
 class _ArgType(_BaseType):
-    typ = Arg
+    typ = CmdArgs
     display = "arg"
 
-    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
         return []
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> str:
+    def parse(self, manager: "CommandManager", t: type, s: str) -> str:
         return s
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, str)
 
 
 class _StrSeqType(_BaseType):
     typ = typing.Sequence[str]
-    display = "[str]"
+    display = "str[]"
 
-    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
         return []
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
+    def parse(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
         return [x.strip() for x in s.split(",")]
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         if isinstance(val, str) or isinstance(val, bytes):
             return False
         try:
@@ -238,7 +227,7 @@ class _StrSeqType(_BaseType):
 
 class _CutSpecType(_BaseType):
     typ = CutSpec
-    display = "[cut]"
+    display = "cut[]"
     valid_prefixes = [
         "request.method",
         "request.scheme",
@@ -277,7 +266,7 @@ class _CutSpecType(_BaseType):
         "server_conn.tls_established",
     ]
 
-    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
         spec = s.split(",")
         opts = []
         for pref in self.valid_prefixes:
@@ -285,11 +274,11 @@ class _CutSpecType(_BaseType):
             opts.append(",".join(spec))
         return opts
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> CutSpec:
+    def parse(self, manager: "CommandManager", t: type, s: str) -> CutSpec:
         parts: typing.Any = s.split(",")
         return parts
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         if not isinstance(val, str):
             return False
         parts = [x.strip() for x in val.split(",")]
@@ -327,7 +316,7 @@ class _BaseFlowType(_BaseType):
         "~c",
     ]
 
-    def completion(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[str]:
         return self.valid_prefixes
 
 
@@ -335,32 +324,32 @@ class _FlowType(_BaseFlowType):
     typ = flow.Flow
     display = "flow"
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> flow.Flow:
+    def parse(self, manager: "CommandManager", t: type, s: str) -> flow.Flow:
         try:
-            flows = manager.call_strings("view.flows.resolve", [s])
+            flows = manager.execute("view.flows.resolve %s" % (s))
         except exceptions.CommandError as e:
-            raise exceptions.TypeError from e
+            raise exceptions.TypeError(str(e)) from e
         if len(flows) != 1:
             raise exceptions.TypeError(
                 "Command requires one flow, specification matched %s." % len(flows)
             )
         return flows[0]
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         return isinstance(val, flow.Flow)
 
 
 class _FlowsType(_BaseFlowType):
     typ = typing.Sequence[flow.Flow]
-    display = "[flow]"
+    display = "flow[]"
 
-    def parse(self, manager: _CommandBase, t: type, s: str) -> typing.Sequence[flow.Flow]:
+    def parse(self, manager: "CommandManager", t: type, s: str) -> typing.Sequence[flow.Flow]:
         try:
-            return manager.call_strings("view.flows.resolve", [s])
+            return manager.execute("view.flows.resolve %s" % (s))
         except exceptions.CommandError as e:
-            raise exceptions.TypeError from e
+            raise exceptions.TypeError(str(e)) from e
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         try:
             for v in val:
                 if not isinstance(v, flow.Flow):
@@ -372,19 +361,19 @@ class _FlowsType(_BaseFlowType):
 
 class _DataType(_BaseType):
     typ = Data
-    display = "[data]"
+    display = "data[][]"
 
     def completion(
-        self, manager: _CommandBase, t: type, s: str
+        self, manager: "CommandManager", t: type, s: str
     ) -> typing.Sequence[str]:  # pragma: no cover
         raise exceptions.TypeError("data cannot be passed as argument")
 
     def parse(
-        self, manager: _CommandBase, t: type, s: str
+        self, manager: "CommandManager", t: type, s: str
     ) -> typing.Any:  # pragma: no cover
         raise exceptions.TypeError("data cannot be passed as argument")
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         # FIXME: validate that all rows have equal length, and all columns have equal types
         try:
             for row in val:
@@ -400,16 +389,16 @@ class _ChoiceType(_BaseType):
     typ = Choice
     display = "choice"
 
-    def completion(self, manager: _CommandBase, t: Choice, s: str) -> typing.Sequence[str]:
+    def completion(self, manager: "CommandManager", t: Choice, s: str) -> typing.Sequence[str]:
         return manager.execute(t.options_command)
 
-    def parse(self, manager: _CommandBase, t: Choice, s: str) -> str:
+    def parse(self, manager: "CommandManager", t: Choice, s: str) -> str:
         opts = manager.execute(t.options_command)
         if s not in opts:
             raise exceptions.TypeError("Invalid choice.")
         return s
 
-    def is_valid(self, manager: _CommandBase, typ: typing.Any, val: typing.Any) -> bool:
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
         try:
             opts = manager.execute(typ.options_command)
         except exceptions.CommandError:
@@ -423,7 +412,7 @@ class TypeManager:
         for t in types:
             self.typemap[t.typ] = t()
 
-    def get(self, t: typing.Optional[typing.Type], default=None) -> _BaseType:
+    def get(self, t: typing.Optional[typing.Type], default=None) -> typing.Optional[_BaseType]:
         if type(t) in self.typemap:
             return self.typemap[type(t)]
         return self.typemap.get(t, default)

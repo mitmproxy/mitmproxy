@@ -83,6 +83,7 @@ def run(
     except SystemExit:
         arg_check.check()
         sys.exit(1)
+
     try:
         opts.set(*args.setoptions, defer=True)
         optmanager.load_paths(
@@ -112,12 +113,12 @@ def run(
             opts.update(**extra(args))
 
         loop = asyncio.get_event_loop()
-        for signame in ('SIGINT', 'SIGTERM'):
-            try:
-                loop.add_signal_handler(getattr(signal, signame), master.shutdown)
-            except NotImplementedError:
-                # Not supported on Windows
-                pass
+        try:
+            loop.add_signal_handler(signal.SIGINT, getattr(master, "prompt_for_exit", master.shutdown))
+            loop.add_signal_handler(signal.SIGTERM, master.shutdown)
+        except NotImplementedError:
+            # Not supported on Windows
+            pass
 
         # Make sure that we catch KeyboardInterrupts on Windows.
         # https://stackoverflow.com/a/36925722/934719

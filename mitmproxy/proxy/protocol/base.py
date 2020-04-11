@@ -160,10 +160,10 @@ class ServerConnectionMixin:
         """
         if not self.server_conn.address:
             raise exceptions.ProtocolException("Cannot connect to server, no server address given.")
-        self.log("serverconnect", "debug", [repr(self.server_conn.address)])
-        self.channel.ask("serverconnect", self.server_conn)
         try:
             self.server_conn.connect()
+            self.log("serverconnect", "debug", [repr(self.server_conn.address)])
+            self.channel.ask("serverconnect", self.server_conn)
         except exceptions.TcpException as e:
             raise exceptions.ProtocolException(
                 "Server connection to {} failed: {}".format(

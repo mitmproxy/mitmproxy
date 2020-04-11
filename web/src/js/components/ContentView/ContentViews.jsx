@@ -7,7 +7,7 @@ import { MessageUtils } from '../../flow/utils'
 import CodeEditor from './CodeEditor'
 
 
-const isImage = /^image\/(png|jpe?g|gif|vnc.microsoft.icon|x-icon)$/i
+const isImage = /^image\/(png|jpe?g|gif|webp|vnc.microsoft.icon|x-icon)$/i
 ViewImage.matches = msg => isImage.test(MessageUtils.getContentType(msg))
 ViewImage.propTypes = {
     flow: PropTypes.object.isRequired,

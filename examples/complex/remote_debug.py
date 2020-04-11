@@ -15,5 +15,5 @@ Usage:
 
 
 def load(l):
-    import pydevd
-    pydevd.settrace("localhost", port=5678, stdoutToServer=True, stderrToServer=True)
+    import pydevd_pycharm
+    pydevd_pycharm.settrace("localhost", port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)

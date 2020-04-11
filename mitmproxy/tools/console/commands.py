@@ -1,6 +1,8 @@
 import urwid
 import blinker
 import textwrap
+
+from mitmproxy import command
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
 
@@ -10,7 +12,7 @@ command_focus_change = blinker.Signal()
 
 
 class CommandItem(urwid.WidgetWrap):
-    def __init__(self, walker, cmd, focused):
+    def __init__(self, walker, cmd: command.Command, focused: bool):
         self.walker, self.cmd, self.focused = walker, cmd, focused
         super().__init__(None)
         self._w = self.get_widget()
@@ -18,15 +20,18 @@ class CommandItem(urwid.WidgetWrap):
     def get_widget(self):
         parts = [
             ("focus", ">> " if self.focused else "   "),
-            ("title", self.cmd.path),
-            ("text", " "),
-            ("text", " ".join(self.cmd.paramnames())),
+            ("title", self.cmd.name)
         ]
-        if self.cmd.returntype:
-            parts.append([
+        if self.cmd.parameters:
+            parts += [
+                ("text", " "),
+                ("text", " ".join(str(param) for param in self.cmd.parameters)),
+            ]
+        if self.cmd.return_type:
+            parts += [
                 ("title", " -> "),
-                ("text", self.cmd.retname()),
-            ])
+                ("text", command.typename(self.cmd.return_type)),
+            ]
 
         return urwid.AttrMap(
             urwid.Padding(urwid.Text(parts)),
@@ -92,7 +97,7 @@ class CommandsList(urwid.ListBox):
     def keypress(self, size, key):
         if key == "m_select":
             foc, idx = self.get_focus()
-            signals.status_prompt_command.send(partial=foc.cmd.path + " ")
+            signals.status_prompt_command.send(partial=foc.cmd.name + " ")
         elif key == "m_start":
             self.set_focus(0)
             self.walker._modified()

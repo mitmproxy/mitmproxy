@@ -1,11 +1,12 @@
 import os.path
+from typing import Optional
 
 import urwid
 
+import mitmproxy.tools.console.master  # noqa
+from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import commandexecutor
-import mitmproxy.tools.console.master # noqa
 from mitmproxy.tools.console.commander import commander
 
 
@@ -42,8 +43,6 @@ class ActionBar(urwid.WidgetWrap):
         signals.status_prompt_onekey.connect(self.sig_prompt_onekey)
         signals.status_prompt_command.connect(self.sig_prompt_command)
 
-        self.command_history = commander.CommandHistory(master)
-
         self.prompting = None
 
         self.onekey = False
@@ -58,6 +57,7 @@ class ActionBar(urwid.WidgetWrap):
             def cb(*args):
                 if w == self._w:
                     self.clear()
+
             signals.call_in.send(seconds=expire, callback=cb)
 
     def prep_prompt(self, p):
@@ -98,11 +98,21 @@ class ActionBar(urwid.WidgetWrap):
         self._w = urwid.Edit(self.prep_prompt(prompt), text or "")
         self.prompting = PromptStub(callback, args)
 
-    def sig_prompt_command(self, sender, partial=""):
+    def sig_prompt_command(self, sender, partial: str = "", cursor: Optional[int] = None):
         signals.focus.send(self, section="footer")
-        self._w = commander.CommandEdit(self.master, partial,
-                                        self.command_history)
-        self.prompting = commandexecutor.CommandExecutor(self.master)
+        self._w = commander.CommandEdit(
+            self.master,
+            partial,
+        )
+        if cursor is not None:
+            self._w.cbuf.cursor = cursor
+        self.prompting = self.execute_command
+
+    def execute_command(self, txt):
+        if txt.strip():
+            self.master.commands.call("commands.history.add", txt)
+        execute = commandexecutor.CommandExecutor(self.master)
+        execute(txt)
 
     def sig_prompt_onekey(self, sender, prompt, keys, callback, args=()):
         """
@@ -128,7 +138,6 @@ class ActionBar(urwid.WidgetWrap):
     def keypress(self, size, k):
         if self.prompting:
             if k == "esc":
-                self.command_history.index = self.command_history.last_index
                 self.prompt_done()
             elif self.onekey:
                 if k == "enter":
@@ -136,8 +145,8 @@ class ActionBar(urwid.WidgetWrap):
                 elif k in self.onekey:
                     self.prompt_execute(k)
             elif k == "enter":
-                self.command_history.add_command(self._w.cbuf, True)
-                self.prompt_execute(self._w.get_edit_text())
+                text = self._w.get_edit_text()
+                self.prompt_execute(text)
             else:
                 if common.is_keypress(k):
                     self._w.keypress(size, k)
@@ -167,7 +176,7 @@ class StatusBar(urwid.WidgetWrap):
     keyctx = ""
 
     def __init__(
-        self, master: "mitmproxy.tools.console.master.ConsoleMaster"
+            self, master: "mitmproxy.tools.console.master.ConsoleMaster"
     ) -> None:
         self.master = master
         self.ib = urwid.WidgetWrap(urwid.Text(""))

@@ -5,7 +5,7 @@ from mitmproxy import exceptions
 
 
 def test_load(tdata):
-    with open(tdata.path("mitmproxy/data/dumpfile-011"), "rb") as f:
+    with open(tdata.path("mitmproxy/data/dumpfile-011.bin"), "rb") as f:
         flow_reader = io.FlowReader(f)
         flows = list(flow_reader.stream())
         assert len(flows) == 1
@@ -13,7 +13,7 @@ def test_load(tdata):
 
 
 def test_load_018(tdata):
-    with open(tdata.path("mitmproxy/data/dumpfile-018"), "rb") as f:
+    with open(tdata.path("mitmproxy/data/dumpfile-018.bin"), "rb") as f:
         flow_reader = io.FlowReader(f)
         flows = list(flow_reader.stream())
         assert len(flows) == 1
@@ -21,7 +21,7 @@ def test_load_018(tdata):
 
 
 def test_cannot_convert(tdata):
-    with open(tdata.path("mitmproxy/data/dumpfile-010"), "rb") as f:
+    with open(tdata.path("mitmproxy/data/dumpfile-010.bin"), "rb") as f:
         flow_reader = io.FlowReader(f)
         with pytest.raises(exceptions.FlowReadException):
             list(flow_reader.stream())

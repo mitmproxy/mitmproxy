@@ -60,13 +60,3 @@ just replay flows for a specific domain:
 {{< highlight none  >}}
 :replay.client "~d google.com"
 {{< /highlight >}}
-
-
-
-
-
-
-
-
-
-

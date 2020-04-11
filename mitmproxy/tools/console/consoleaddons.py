@@ -1,22 +1,19 @@
 import csv
-import shlex
 import typing
 
+import mitmproxy.types
+from mitmproxy import command, command_lexer
+from mitmproxy import contentviews
 from mitmproxy import ctx
-from mitmproxy import command
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import log
-from mitmproxy import contentviews
-from mitmproxy.utils import strutils
-import mitmproxy.types
-
-
+from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import keymap
+from mitmproxy.utils import strutils
 
 console_palettes = [
     "lowlight",
@@ -49,10 +46,12 @@ class UnsupportedLog:
     """
         A small addon to dump info on flow types we don't support yet.
     """
+
     def websocket_message(self, f):
         message = f.messages[-1]
         ctx.log.info(f.message_info(message))
-        ctx.log.debug(message.content if isinstance(message.content, str) else strutils.bytes_to_escaped_str(message.content))
+        ctx.log.debug(
+            message.content if isinstance(message.content, str) else strutils.bytes_to_escaped_str(message.content))
 
     def websocket_end(self, f):
         ctx.log.info("WebSocket connection closed by {}: {} {}, {}".format(
@@ -79,6 +78,7 @@ class ConsoleAddon:
         An addon that exposes console-specific commands, and hooks into required
         events.
     """
+
     def __init__(self, master):
         self.master = master
         self.started = False
@@ -87,7 +87,7 @@ class ConsoleAddon:
         loader.add_option(
             "console_default_contentview", str, "auto",
             "The default content view mode.",
-            choices = [i.name.lower() for i in contentviews.views]
+            choices=[i.name.lower() for i in contentviews.views]
         )
         loader.add_option(
             "console_eventlog_verbosity", str, 'info',
@@ -143,7 +143,7 @@ class ConsoleAddon:
         opts = self.layout_options()
         off = self.layout_options().index(ctx.options.console_layout)
         ctx.options.update(
-            console_layout = opts[(off + 1) % len(opts)]
+            console_layout=opts[(off + 1) % len(opts)]
         )
 
     @command.command("console.panes.next")
@@ -161,7 +161,7 @@ class ConsoleAddon:
         fv = self.master.window.current("options")
         if not fv:
             raise exceptions.CommandError("Not viewing options.")
-        self.master.commands.execute("options.reset.one %s" % fv.current_name())
+        self.master.commands.call_strings("options.reset.one", [fv.current_name()])
 
     @command.command("console.nav.start")
     def nav_start(self) -> None:
@@ -235,25 +235,25 @@ class ConsoleAddon:
 
     @command.command("console.choose")
     def console_choose(
-        self,
-        prompt: str,
-        choices: typing.Sequence[str],
-        cmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.Arg
+            self,
+            prompt: str,
+            choices: typing.Sequence[str],
+            cmd: mitmproxy.types.Cmd,
+            *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
             invoke another command with all occurrences of {choice} replaced by
             the choice the user made.
         """
+
         def callback(opt):
             # We're now outside of the call context...
-            repl = cmd + " " + " ".join(args)
-            repl = repl.replace("{choice}", opt)
+            repl = [arg.replace("{choice}", opt) for arg in args]
             try:
-                self.master.commands.execute(repl)
+                self.master.commands.call_strings(cmd, repl)
             except exceptions.CommandError as e:
-                signals.status_message.send(message=str(e))
+                ctx.log.error(str(e))
 
         self.master.overlay(
             overlay.Chooser(self.master, prompt, choices, "", callback)
@@ -261,48 +261,50 @@ class ConsoleAddon:
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
-        self,
-        prompt: str,
-        choicecmd: mitmproxy.types.Cmd,
-        subcmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.Arg
+            self,
+            prompt: str,
+            choicecmd: mitmproxy.types.Cmd,
+            subcmd: mitmproxy.types.Cmd,
+            *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
             command, then invoke another command with all occurrences of {choice}
             replaced by the choice the user made.
         """
-        choices = ctx.master.commands.call_strings(choicecmd, [])
+        choices = ctx.master.commands.execute(choicecmd)
 
         def callback(opt):
             # We're now outside of the call context...
-            repl = shlex.quote(" ".join(args))
-            repl = repl.replace("{choice}", opt)
+            repl = [arg.replace("{choice}", opt) for arg in args]
             try:
-                self.master.commands.execute(subcmd + " " + repl)
+                self.master.commands.call_strings(subcmd, repl)
             except exceptions.CommandError as e:
-                signals.status_message.send(message=str(e))
+                ctx.log.error(str(e))
 
         self.master.overlay(
             overlay.Chooser(self.master, prompt, choices, "", callback)
         )
 
     @command.command("console.command")
-    def console_command(self, *partial: str) -> None:
+    def console_command(self, *command_str: str) -> None:
         """
         Prompt the user to edit a command with a (possibly empty) starting value.
         """
-        signals.status_prompt_command.send(partial=" ".join(partial))  # type: ignore
+        quoted = " ".join(command_lexer.quote(x) for x in command_str)
+        signals.status_prompt_command.send(partial=quoted)
 
     @command.command("console.command.set")
-    def console_command_set(self, option: str) -> None:
+    def console_command_set(self, option_name: str) -> None:
         """
-        Prompt the user to set an option of the form "key[=value]".
+        Prompt the user to set an option.
         """
-        option_value = getattr(self.master.options, option, None)
-        current_value = option_value if option_value else ""
-        self.master.commands.execute(
-            "console.command set %s=%s" % (option, current_value)
+        option_value = getattr(self.master.options, option_name, None) or ""
+        set_command = f"set {option_name} {option_value!r}"
+        cursor = len(set_command) - 1
+        signals.status_prompt_command.send(
+            partial=set_command,
+            cursor=cursor
         )
 
     @command.command("console.view.keybindings")
@@ -351,14 +353,14 @@ class ConsoleAddon:
 
     @command.command("console.bodyview")
     @command.argument("part", type=mitmproxy.types.Choice("console.bodyview.options"))
-    def bodyview(self, f: flow.Flow, part: str) -> None:
+    def bodyview(self, flow: flow.Flow, part: str) -> None:
         """
             Spawn an external viewer for a flow request or response body based
             on the detected MIME type. We use the mailcap system to find the
             correct viewier, and fall back to the programs in $PAGER or $EDITOR
             if necessary.
         """
-        fpart = getattr(f, part, None)
+        fpart = getattr(flow, part, None)
         if not fpart:
             raise exceptions.CommandError("Part must be either request or response, not %s." % part)
         t = fpart.headers.get("content-type")
@@ -404,8 +406,8 @@ class ConsoleAddon:
             ]
 
     @command.command("console.edit.focus")
-    @command.argument("part", type=mitmproxy.types.Choice("console.edit.focus.options"))
-    def edit_focus(self, part: str) -> None:
+    @command.argument("flow_part", type=mitmproxy.types.Choice("console.edit.focus.options"))
+    def edit_focus(self, flow_part: str) -> None:
         """
             Edit a component of the currently focused flow.
         """
@@ -413,31 +415,35 @@ class ConsoleAddon:
         if not flow:
             raise exceptions.CommandError("No flow selected.")
         flow.backup()
+
         # This shouldn't be necessary once this command is "console.edit @focus",
         # but for now it is.
         if isinstance(flow, tcp.TCPViewEntry):
             self._edit_tcp(part)
         else:
             require_dummy_response = (
-                part in ("response-headers", "response-body", "set-cookies") and
-                flow.response is None
+                    flow_part in ("response-headers", "response-body", "set-cookies") and
+                    flow.response is None
             )
+            
             if require_dummy_response:
                 flow.response = http.HTTPResponse.make()
-            if part == "cookies":
+            if flow_part == "cookies":
                 self.master.switch_view("edit_focus_cookies")
-            elif part == "form":
-                self.master.switch_view("edit_focus_form")
-            elif part == "path":
+            elif flow_part == "urlencoded form":
+                self.master.switch_view("edit_focus_urlencoded_form")
+            elif flow_part == "multipart form":
+                self.master.switch_view("edit_focus_multipart_form")
+            elif flow_part == "path":
                 self.master.switch_view("edit_focus_path")
-            elif part == "query":
+            elif flow_part == "query":
                 self.master.switch_view("edit_focus_query")
-            elif part == "request-headers":
+            elif flow_part == "request-headers":
                 self.master.switch_view("edit_focus_request_headers")
-            elif part == "response-headers":
+            elif flow_part == "response-headers":
                 self.master.switch_view("edit_focus_response_headers")
-            elif part in ("request-body", "response-body"):
-                if part == "request-body":
+            elif flow_part in ("request-body", "response-body"):
+                if flow_part == "request-body":
                     message = flow.request
                 else:
                     message = flow.response
@@ -449,17 +455,17 @@ class ConsoleAddon:
                 # just strip the newlines off the end of the body when we return
                 # from an editor.
                 message.content = c.rstrip(b"\n")
-            elif part == "set-cookies":
+            elif flow_part == "set-cookies":
                 self.master.switch_view("edit_focus_setcookies")
-            elif part == "url":
+            elif flow_part == "url":
                 url = flow.request.url.encode()
                 edited_url = self.master.spawn_editor(url)
                 url = edited_url.rstrip(b"\n")
                 flow.request.url = url.decode()
-            elif part in ["method", "status_code", "reason"]:
-                self.master.commands.execute(
-                    "console.command flow.set @focus %s " % part
-                )
+            elif flow_part in ["method", "status_code", "reason"]:
+                self.master.commands.call_strings(
+                    "console.command",
+                    ["flow.set", "@focus", flow_part]
 
     def _edit_tcp(self, part):
 
@@ -554,10 +560,10 @@ class ConsoleAddon:
         try:
             self.master.commands.call_strings(
                 "view.settings.setval",
-                ["@focus", "flowview_mode_%s" % idx, mode]
+                ["@focus", "flowview_mode_%s" % (idx,), mode]
             )
         except exceptions.CommandError as e:
-            signals.status_message.send(message=str(e))
+            ctx.log.error(str(e))
 
     @command.command("console.flowview.mode.options")
     def flowview_mode_options(self) -> typing.Sequence[str]:
@@ -586,13 +592,10 @@ class ConsoleAddon:
         if not fv:
             raise exceptions.CommandError("Not viewing a flow.")
         idx = fv.body.tab_offset
+
         return self.master.commands.call_strings(
             "view.settings.getval",
-            [
-                "@focus",
-                "flowview_mode_%s" % idx,
-                self.master.options.console_default_contentview,
-            ]
+            ["@focus", "flowview_mode_%s" % (idx,), self.master.options.console_default_contentview]
         )
 
     @command.command("console.key.contexts")
@@ -604,11 +607,11 @@ class ConsoleAddon:
 
     @command.command("console.key.bind")
     def key_bind(
-        self,
-        contexts: typing.Sequence[str],
-        key: str,
-        cmd: mitmproxy.types.Cmd,
-        *args: mitmproxy.types.Arg
+            self,
+            contexts: typing.Sequence[str],
+            key: str,
+            cmd: mitmproxy.types.Cmd,
+            *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Bind a shortcut key.

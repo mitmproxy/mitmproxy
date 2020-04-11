@@ -96,7 +96,7 @@ def fcol(s, attr):
     )
 
 
-if urwid.util.detected_encoding and not IS_WSL:
+if urwid.util.detected_encoding:
     SYMBOL_REPLAY = u"\u21ba"
     SYMBOL_RETURN = u"\u2190"
     SYMBOL_MARK = u"\u25cf"
@@ -514,17 +514,14 @@ def raw_format_http_table(f):
     req = []
 
     cursor = [' ', 'focus']
-    if f.get('resp_is_replay', False):
-        cursor[0] = SYMBOL_REPLAY
-        cursor[1] = 'replay'
-    if f['marked']:
-        if cursor[0] == ' ':
-            cursor[0] = SYMBOL_MARK
-        cursor[1] = 'mark'
     if f['focus']:
         cursor[0] = '>'
-
     req.append(fcol(*cursor))
+
+    if f.get('resp_is_replay', False) or f.get('req_is_replay', False):
+        req.append(fcol(SYMBOL_REPLAY, 'replay'))
+    if f['marked']:
+        req.append(fcol(SYMBOL_MARK, 'mark'))
 
     if f["two_line"]:
         req.append(TruncatedText(f["req_url"], colorize_url(f["req_url"]), 'left'))
@@ -708,6 +705,23 @@ def format_flow(f, focus, extended=False, hostheader=False, cols=False, layout='
             return raw_format_tcp_list(tuple(sorted(d.items())))
         else:
             return raw_format_tcp_table(tuple(sorted(d.items())))
+
+        duration = None
+        if f.response.timestamp_end and f.request.timestamp_start:
+            duration = max([f.response.timestamp_end - f.request.timestamp_start, 0])
+
+        d.update(dict(
+            resp_code=f.response.status_code,
+            resp_reason=f.response.reason,
+            resp_is_replay=f.response.is_replay,
+            resp_len=content_len,
+            resp_ctype=f.response.headers.get("content-type"),
+            resp_clen=contentdesc,
+            duration=duration,
+        ))
+
+    if ((layout == 'default' and cols < 100) or layout == "list"):
+        return raw_format_list(tuple(sorted(d.items())))
     else:
         d = dict(
             focus=focus,
