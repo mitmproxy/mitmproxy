@@ -1,3 +1,23 @@
+XX April 2020: mitmproxy 5.1
+
+  ** Major Changes **
+    * Initial Support for TLS 1.3
+
+  ** Full Changelog **
+    * Reduce leaf certificate validity to one year due to upcoming browser changes (@mhils)
+    * Rename mitmweb's web_iface option to web_host for consistency (@oxr463)
+    * Sending a SIGTERM now exits mitmproxy without prompt, SIGINT still asks (@ThinkChaos)
+    * Don't force host header on outgoing requests (@mhils)
+    * Additional documentation and examples for WebSockets (@Kriechi)
+    * Gracefully handle hyphens in domain names (@matosconsulting)
+    * Fix header replacement count (@naivekun)
+    * Emit serverconnect event only after a connection has been established (@Prinzhorn)
+    * Fix ValueError in table mode of server replay flow (@ylmrx)
+    * HTTP/2: send all stream reset types to other connection (@rohfle)
+    * HTTP/2: fix WINDOW_UPDATE swallowed on closed streams (@Kriechi)
+    * Fix wrong behavior of --allow-hosts options (@BlownSnail)
+    * Additional and updated documentation for examples, WebSockets, Getting Started (@Kriechi)
+
 27 December 2019: mitmproxy 5.0.1
 
     * Fixed precompiled Linux binaries to not crash in table mode
@@ -64,10 +84,10 @@
     * Fix IPv6 scope suffixes in block addon (#3164)
     * Fix options update when added (#3157)
     * Fix "Edit Flow" button in mitmweb (#3136)
-    
+
 15 June 2018: mitmproxy 4.0.2
     * Skipped!
-    
+
 
 17 May 2018: mitmproxy 4.0.1
 
