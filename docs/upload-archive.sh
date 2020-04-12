@@ -1,5 +1,9 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+# set -o xtrace
 
 if [[ $# -eq 0 ]] ; then
     echo "Please supply a version, e.g. 'v3'"

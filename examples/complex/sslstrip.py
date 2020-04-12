@@ -51,9 +51,11 @@ def response(flow: http.HTTPFlow) -> None:
         flow.response.headers['Location'] = location.replace('https://', 'http://', 1)
 
     # strip upgrade-insecure-requests in Content-Security-Policy header
-    if re.search('upgrade-insecure-requests', flow.response.headers.get('Content-Security-Policy', ''), flags=re.IGNORECASE):
+    csp_header = flow.response.headers.get('Content-Security-Policy', '')
+    if re.search('upgrade-insecure-requests', csp_header, flags=re.IGNORECASE):
         csp = flow.response.headers['Content-Security-Policy']
-        flow.response.headers['Content-Security-Policy'] = re.sub(r'upgrade-insecure-requests[;\s]*', '', csp, flags=re.IGNORECASE)
+        new_header = re.sub(r'upgrade-insecure-requests[;\s]*', '', csp, flags=re.IGNORECASE)
+        flow.response.headers['Content-Security-Policy'] = new_header
 
     # strip secure flag from 'Set-Cookie' headers
     cookies = flow.response.headers.get_all('Set-Cookie')

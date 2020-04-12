@@ -4,9 +4,11 @@ For general debugging purposes, it is easier to just debug mitmdump within PyCha
 
 Usage:
     - pip install pydevd on the mitmproxy machine
-    - Open the Run/Debug Configuration dialog box in PyCharm, and select the Python Remote Debug configuration type.
-    - Debugging works in the way that mitmproxy connects to the debug server on startup.
-      Specify host and port that mitmproxy can use to reach your PyCharm instance on startup.
+    - Open the Run/Debug Configuration dialog box in PyCharm, and select the
+      Python Remote Debug configuration type.
+    - Debugging works in the way that mitmproxy connects to the debug server
+      on startup. Specify host and port that mitmproxy can use to reach your
+      PyCharm instance on startup.
     - Adjust this inline script accordingly.
     - Start debug server in PyCharm
     - Set breakpoints

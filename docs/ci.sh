@@ -1,9 +1,13 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
 
-# This script gets run from CI to render and upload docs
+set -o errexit
+set -o pipefail
+set -o nounset
+# set -o xtrace
 
-./build-current
+# This script gets run from CI to render and upload docs for the master branch.
+
+./build.sh
 
 # Only upload if we have defined credentials - we only have these defined for
 # trusted commits (i.e. not PRs).

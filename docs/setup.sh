@@ -1,5 +1,11 @@
-#!/bin/sh
-set -e
+#!/usr/bin/env bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+# set -o xtrace
+
+# This is only needed once to provision a new fresh empty S3 bucket.
 
 aws configure set preview.cloudfront true
 aws --profile mitmproxy \

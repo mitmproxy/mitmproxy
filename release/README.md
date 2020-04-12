@@ -37,10 +37,10 @@ These steps assume you are on the correct branch and have a git remote called `o
   `export VERSION=4.0.3 && docker pull mitmproxy/mitmproxy:$VERSION && docker tag mitmproxy/mitmproxy:$VERSION mitmproxy/mitmproxy:latest && docker push mitmproxy/mitmproxy:latest`.
 
 ### Docs
-  - `./build-current`. If everything looks alright, continue with
-  - `./upload-stable`,
-  - `./build-archive`, and
-  - `./upload-archive v4`. Doing this now already saves you from switching back to an old state on the next release.
+  - `./build.sh`. If everything looks alright, continue with
+  - `./upload-stable.sh`,
+  - `DOCS_ARCHIVE=true ./build.sh`, and
+  - `./upload-archive.sh v4`. Doing this now already saves you from switching back to an old state on the next release.
 
 ### Website
  - Update version here:
