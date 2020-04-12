@@ -14,3 +14,5 @@ def test_view_json():
     assert v(b"{}")
     assert not v(b"{")
     assert v(b"[1, 2, 3, 4, 5]")
+    assert v(b'{"foo" : 3}')
+    assert v(b'{"foo": true, "nullvalue": null}')
