@@ -20,21 +20,20 @@ function changeTo(device) {
                             </ul>
                         </div>
                         <div class="col-md-4">
+                          <h3 class="text-center">How to install on iOS 13+</h3>
+                          <ul>
+                            <li>Install and active the new Profile</li>
+                            <li>Goto Settings -> General -> About -> Certificate Trust Settings</li>
+                            <li>Toggle mitmproxy to ON</li>
+                            <li>Done!</li>
+                        </div>
+                        <div class="col-md-4">
                           <h3 class="text-center">How to install on browsers</h3>
                           <ul>
                             <li>Safari on macOS uses the macOS keychain. So installing our CA in the system is enough.</li>
                             <li>Chrome on macOS uses the macOS keychain. So installing our CA in the system is enough.</li>
                             <li>Firefox on macOS has its own CA store and needs to be installed with Firefox-specific instructions that can be found  <a href="https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox">HERE</a> .</li>
                           </ul>
-                        </div>
-                        <div class="col-md-4">
-                          <h3 class="text-center">How to install on iOS v10.3</h3>
-                          <ul>
-                            <li>After certificate installation, open Settings</li>
-                            <li>Navigate to General and then About</li>
-                            <li>Select Certificate Trust Settings</li>
-                            <li>Each root that has been installed via a profile will be listed below the heading Enable Full Trust For Root Certificates. Toggle mitmproxy on</li>
-                            <li>Done!</li>
                         </div>
                       </div>
                     </div>`;

@@ -36,12 +36,12 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 `~/.mitmproxy` after it has been generated at the first start of mitmproxy.
 
 - [IOS](http://jasdev.me/intercepting-ios-traffic)
-  On iOS 10.3 and onwards, you also need to enable full trust for the mitmproxy
+  On recent iOS versions you also need to enable full trust for the mitmproxy
   root certificate:
     1. Go to Settings > General > About > Certificate Trust Settings.
     2. Under "Enable full trust for root certificates", turn on trust for
-        the mitmproxy certificate.
-- [IOS Simulator](https://github.com/ADVTOOLS/ADVTrustStore#how-to-use-advtruststore)
+       the mitmproxy certificate.
+- [iOS Simulator](https://github.com/ADVTOOLS/ADVTrustStore#how-to-use-advtruststore)
 - [Java](https://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html)
 - [Android/Android Simulator](http://wiki.cacert.org/FAQ/ImportRootCert#Android_Phones_.26_Tablets)
 - [Windows](https://web.archive.org/web/20160612045445/http://windows.microsoft.com/en-ca/windows/import-export-certificates-private-keys#1TC=windows-7)
