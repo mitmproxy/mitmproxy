@@ -356,15 +356,6 @@ def build_docker_image(be: BuildEnviron):  # pragma: no cover
         "--file", "release/docker/Dockerfile",
         "."
     ])
-    subprocess.check_call([
-        "docker",
-        "build",
-        "--tag", be.docker_tag + "-ARMv7",
-        "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
-        "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
-        "--file", "release/docker/DockerfileARMv7",
-        "."
-    ])
 
 
 def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
@@ -569,11 +560,10 @@ def upload():  # pragma: no cover
             "-u", be.docker_username,
             "-p", be.docker_password,
         ])
-        for variant in ["", "-ARMv7"]:
-            subprocess.check_call(["docker", "push", be.docker_tag + variant])
-            if be.is_prod_release:
-                subprocess.check_call(["docker", "tag", be.docker_tag + variant, "mitmproxy/mitmproxy:latest" + variant])
-                subprocess.check_call(["docker", "push", "mitmproxy/mitmproxy:latest" + variant])
+        subprocess.check_call(["docker", "push", be.docker_tag])
+        if be.is_prod_release:
+            subprocess.check_call(["docker", "tag", be.docker_tag, "mitmproxy/mitmproxy:latest"])
+            subprocess.check_call(["docker", "push", "mitmproxy/mitmproxy:latest"])
 
 
 if __name__ == "__main__":  # pragma: no cover

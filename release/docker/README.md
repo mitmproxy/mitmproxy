@@ -40,8 +40,7 @@ The available release tags can be seen
 
 * `master` always tracks the git-master branch and represents the unstable development tree.
 * `latest` always points to the same image as the most recent stable release, including bugfix releases (e.g., `4.0.0` and `4.0.1`).
-* `X.Y.Z` tags contain the mitmproxy release with this version number.  
-* `*-ARMv7` are images built for Raspbian / Raspberry Pi systems.
+* `X.Y.Z` tags contain the mitmproxy release with this version number.
 
 # Security Notice
 
