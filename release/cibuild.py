@@ -356,6 +356,20 @@ def build_docker_image(be: BuildEnviron):  # pragma: no cover
         "--file", "release/docker/Dockerfile",
         "."
     ])
+    # smoke-test the newly built docker image
+    r = subprocess.run([
+        "docker",
+        "run",
+        "--rm",
+        "--it",
+        "mitmproxy/mitmproxy:" + be.docker_tag,
+        "mitmproxy",
+        "--version",
+    ], check=True)
+    assert "Mitmproxy: " + be.version in r.stdout.decode()
+    assert "Python: " in r.stdout.decode()
+    assert "OpenSSL: " in r.stdout.decode()
+    assert "Platform: " in r.stdout.decode()
 
 
 def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
