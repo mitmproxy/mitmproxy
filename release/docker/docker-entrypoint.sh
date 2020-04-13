@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/sh
+# WARNING: do not change the shebang - the Docker base image might not have what you want!
 
 set -o errexit
 set -o pipefail
