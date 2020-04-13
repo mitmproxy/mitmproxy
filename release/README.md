@@ -27,7 +27,7 @@ These steps assume you are on the correct branch and have a git remote called `o
 - The Homebrew maintainers are typically very fast and detect our new relese
   within a day.
 - If you feel the need, you can run this from a macOS machine:
-  `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>`
+  `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>.tar.gz mitmproxy`
 
 ### Docker
 - The docker image is built by our CI workers and pushed to Docker Hub automatically.
