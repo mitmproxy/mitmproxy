@@ -11,6 +11,7 @@ menu:
 
 - [Anticache](#anticache)
 - [Client-side replay](#client-side-replay)
+- [Map Editor](#map-editor)
 - [Proxy Authentication](#proxy-authentication)
 - [Replacements](#replacements)
 - [Server-side replay](#server-side-replay)
@@ -40,6 +41,18 @@ conversation, where requests may have been made concurrently.
 
 You may want to use client-side replay in conjunction with the `anticache`
 option, to make sure the server responds with complete data.
+
+## Map Editor
+
+the `mapeditor` option lets you specify a local file to be replaced to responses, based on a filter pattern. A `mapeditor` expression looks like this:
+
+{{< highlight none  >}}
+~u .*://example.com/script.js:MAP_TO:/etc/hostname
+^                            ^      ^            ^
+|------filter_expression-----|--sep-|path_to_file|
+{{< / highlight >}}
+
+**filter_expression** is a mitmproxy filter expression that defines which flows to replace response, and **path_to_file** is the path to local file. When a connection flow matches the filter expression, the response text will be replaced to the content of file.
 
 ## Proxy Authentication
 
