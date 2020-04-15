@@ -1,5 +1,6 @@
-import pytest
 import os
+import pytest
+import platform
 
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
@@ -24,12 +25,19 @@ class TestMapEditor:
     def test_mapeditor(self):
         me = mapeditor.MapEditor()
         with taddons.context(me) as tctx:
-            with open("/tmp/mapeditor_test", "w") as f:
+            if platform.system() == "Windows":
+                none_exist_file_path = "C:\\windows\\temp\\none_exist_file"
+                test_file_path = "C:\\windows\\temp\\mapeditor_test"
+            else:
+                none_exist_file_path = "/tmp/none_exist_file"
+                test_file_path = "/tmp/mapeditor_test"
+
+            with open(test_file_path, "w") as f:
                 f.write("TEST FOR MAPEDITOR PAGE: replaced by mapeditor")
             tctx.configure(
                 me,
                 mapeditor = [
-                    "~u .*://example.com/script.js:MAP_TO:/tmp/mapeditor_test"
+                    "~u .*://example.com/script.js:MAP_TO:" + test_file_path
                 ]
             )
 
@@ -50,7 +58,7 @@ class TestMapEditor:
             tctx.configure(
                 me,
                 mapeditor = [
-                    "~u .*://example.com/script.js:MAP_TO:/tmp/none_exist_file"
+                    "~u .*://example.com/script.js:MAP_TO:" + none_exist_file_path
                 ]
             )
             # test none exist file
@@ -61,4 +69,4 @@ class TestMapEditor:
                 me.response(f)
 
             # clear tmp file
-            os.system("rm /tmp/mapeditor_test")
+            os.remove(test_file_path)
