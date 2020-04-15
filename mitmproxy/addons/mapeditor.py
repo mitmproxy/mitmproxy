@@ -22,7 +22,6 @@ def parse_mapeditor(mexpr):
     return parts[0], parts[1]
 
 
-# TODO: add test for map editor
 class MapEditor:
     def __init__(self):
         self.map_list = []
