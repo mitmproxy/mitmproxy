@@ -154,6 +154,7 @@ def mitmdump(args=None) -> typing.Optional[int]:  # pragma: no cover
     def extra(args):
         if args.filter_args:
             v = " ".join(args.filter_args)
+            print(f"Only processing flows that match {v!r}")
             return dict(
                 save_stream_filter=v,
                 readfile_filter=v,
