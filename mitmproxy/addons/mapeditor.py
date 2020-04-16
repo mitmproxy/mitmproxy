@@ -68,7 +68,11 @@ class MapEditor:
                     "Invalid map editor filter pattern: %s" % fpatt
                 )
             self.map_list.append((fpatt, path_to_file, flt))
-        self.map_choice = mapchoice_option_mapper[ctx.options.mapeditor_choice] | mapchoice_option_mapper[ctx.options.mapeditor_choice]
+
+        m_options = ctx.options.mapeditor_choice.split(" + ")
+        self.map_choice = 0
+        for op in m_options:
+            self.map_choice |= mapchoice_option_mapper[op]
 
     def run(self, f, flow):
         for _, path_to_file, flt in self.map_list:
