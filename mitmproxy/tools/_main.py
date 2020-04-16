@@ -110,6 +110,8 @@ def run(
             master.commands.dump()
             sys.exit(0)
         if extra:
+            if(args.filter_args):
+                master.log.info(f"Only processing flows that match \"{' & '.join(args.filter_args)}\"")
             opts.update(**extra(args))
 
         loop = asyncio.get_event_loop()
