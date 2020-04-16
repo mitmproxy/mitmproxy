@@ -22,7 +22,7 @@ class TestMapEditor:
                 tctx.configure(me, mapeditor = ["~b:MAP_TO:/etc/hostname"])
             tctx.configure(me, mapeditor = ["foo:MAP_TO:/etc/hostname"])
 
-    def test_mapeditor(self):
+    def test_mapeditor_matching(self):
         me = mapeditor.MapEditor()
         with taddons.context(me) as tctx:
             # test matching rules
@@ -50,6 +50,9 @@ class TestMapEditor:
             assert f.response.text == "TEST FOR MAPEDITOR PAGE: not replaced"
             os.remove(text_test_fp)
 
+    def test_mapeditor_binary_replace(self):
+        me = mapeditor.MapEditor()
+        with taddons.context(me) as tctx:
             # test for binary text
             binary_test_fp = os.path.join(tempfile.gettempdir(), os.urandom(24).hex())
             with open(binary_test_fp, "wb") as f:
@@ -67,6 +70,9 @@ class TestMapEditor:
             assert f.response.raw_content == b"TEST FOR MAPEDITOR PAGE: binary\x01\x02\xff"
             os.remove(binary_test_fp)
 
+    def test_mapeditor_none_exist_file(self):
+        me = mapeditor.MapEditor()
+        with taddons.context(me) as tctx:
             # test none exist file
             none_exist_tempf = tempfile.mktemp(prefix="mitmproxy_test")
             tctx.configure(
@@ -80,3 +86,7 @@ class TestMapEditor:
             f.response.text = "TEST FOR MAPEDITOR PAGE: not replaced"
             with pytest.raises(Exception, match="Failed to open file"):
                 me.response(f)
+    
+    def test_mapeditor_choice(self):
+        # TODO
+        pass
