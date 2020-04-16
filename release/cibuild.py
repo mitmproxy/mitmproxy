@@ -364,7 +364,7 @@ def build_docker_image(be: BuildEnviron):  # pragma: no cover
         "-i",
         "-t",
         be.docker_tag,
-        "mitmproxy",
+        "mitmdump",
         "--version",
     ], check=True)
     assert "Mitmproxy: " + be.version in r.stdout.decode()
