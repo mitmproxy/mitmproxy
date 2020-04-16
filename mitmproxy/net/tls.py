@@ -297,7 +297,7 @@ def create_client_context(
     if cert:
         try:
             context.use_privatekey_file(cert)
-            context.use_certificate_file(cert)
+            context.use_certificate_chain_file(cert)
         except SSL.Error as v:
             raise exceptions.TlsException("SSL client certificate error: %s" % str(v))
     return context
