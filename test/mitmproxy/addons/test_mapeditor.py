@@ -86,7 +86,7 @@ class TestMapEditor:
             f.response.text = "TEST FOR MAPEDITOR PAGE: not replaced"
             with pytest.raises(Exception, match="Failed to open file"):
                 me.response(f)
-    
+
     def test_mapeditor_choice_request(self):
         me = mapeditor.MapEditor()
         with taddons.context(me) as tctx:
