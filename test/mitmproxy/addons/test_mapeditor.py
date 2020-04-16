@@ -1,3 +1,4 @@
+import tempfile
 import os
 import pytest
 import platform
@@ -25,22 +26,17 @@ class TestMapEditor:
     def test_mapeditor(self):
         me = mapeditor.MapEditor()
         with taddons.context(me) as tctx:
-            if platform.system() == "Windows":
-                none_exist_file_path = "C:\\windows\\temp\\none_exist_file"
-                test_file_path = "C:\\windows\\temp\\mapeditor_test"
-            else:
-                none_exist_file_path = "/tmp/none_exist_file"
-                test_file_path = "/tmp/mapeditor_test"
-
-            with open(test_file_path, "w") as f:
+            # test matching rules
+            text_tempf = tempfile.NamedTemporaryFile(prefix="mitmproxy_test")
+            text_test_fp = text_tempf.name
+            with open(text_test_fp, "w") as f:
                 f.write("TEST FOR MAPEDITOR PAGE: replaced by mapeditor")
             tctx.configure(
                 me,
                 mapeditor = [
-                    "~u .*://example.com/script.js:MAP_TO:" + test_file_path
+                    "~u .*://example.com/script.js:MAP_TO:" + text_test_fp
                 ]
             )
-
             # match the filter, response should be replaced
             f = tflow.tflow(resp=True)
             f.request.url = "http://example.com/script.js"
@@ -54,19 +50,36 @@ class TestMapEditor:
             f.response.text = "TEST FOR MAPEDITOR PAGE: not replaced"
             me.response(f)
             assert f.response.text == "TEST FOR MAPEDITOR PAGE: not replaced"
+            text_tempf.close()
 
+            # test for binary text
+            binary_tempf = tempfile.NamedTemporaryFile(prefix="mitmproxy_test")
+            binary_test_fp = binary_tempf.name
+            with open(binary_test_fp, "wb") as f:
+                f.write(b"TEST FOR MAPEDITOR PAGE: binary\x01\x02\xff")
             tctx.configure(
                 me,
                 mapeditor = [
-                    "~u .*://example.com/script.js:MAP_TO:" + none_exist_file_path
+                    "~u .*://example.com/script.js:MAP_TO:" + binary_test_fp
                 ]
             )
+            f = tflow.tflow(resp=True)
+            f.request.url = "http://example.com/script.js"
+            f.response.content = b"TEST FOR MAPEDITOR PAGE: not replaced"
+            me.response(f)
+            assert f.response.raw_content == b"TEST FOR MAPEDITOR PAGE: binary\x01\x02\xff"
+            binary_tempf.close()
+
             # test none exist file
+            none_exist_tempf = tempfile.mktemp(prefix="mitmproxy_test")
+            tctx.configure(
+                me,
+                mapeditor = [
+                    "~u .*://example.com/script.js:MAP_TO:" + none_exist_tempf
+                ]
+            )
             f = tflow.tflow(resp=True)
             f.request.url = "http://example.com/script.js"
             f.response.text = "TEST FOR MAPEDITOR PAGE: not replaced"
             with pytest.raises(Exception, match="Failed to open file"):
                 me.response(f)
-
-            # clear tmp file
-            os.remove(test_file_path)
