@@ -87,6 +87,107 @@ class TestMapEditor:
             with pytest.raises(Exception, match="Failed to open file"):
                 me.response(f)
     
-    def test_mapeditor_choice(self):
-        # TODO
-        pass
+    def test_mapeditor_choice_request(self):
+        me = mapeditor.MapEditor()
+        with taddons.context(me) as tctx:
+            # test mapeditor choice
+            text_test_fp = os.path.join(tempfile.gettempdir(), os.urandom(24).hex())
+            with open(text_test_fp, "w") as f:
+                f.write("TEST FOR MAPEDITOR PAGE: replaced by mapeditor")
+
+            tctx.configure(
+                me,
+                mapeditor = [
+                    "~u .*://example.com/script.js:MAP_TO:" + text_test_fp
+                ],
+                mapeditor_choice = "request"
+            )
+            f = tflow.tflow()
+            f.request.url = "http://example.com/script.js"
+            f.request.text = "TEST FOR MAPEDITOR PAGE: not replaced"
+            me.request(f)
+            assert f.request.text == "TEST FOR MAPEDITOR PAGE: replaced by mapeditor"
+
+            tctx.configure(
+                me,
+                mapeditor = [
+                    "~u .*://example.com/script.js:MAP_TO:" + text_test_fp
+                ],
+                mapeditor_choice = "request"
+            )
+            f = tflow.tflow(resp=True)
+            f.request.url = "http://example.com/script.js"
+            f.response.text = "TEST FOR MAPEDITOR PAGE: not replaced"
+            me.response(f)
+            assert f.response.text == "TEST FOR MAPEDITOR PAGE: not replaced"
+            os.remove(text_test_fp)
+
+    def test_mapeditor_choice_response(self):
+        me = mapeditor.MapEditor()
+        with taddons.context(me) as tctx:
+            # test mapeditor choice
+            text_test_fp = os.path.join(tempfile.gettempdir(), os.urandom(24).hex())
+            with open(text_test_fp, "w") as f:
+                f.write("TEST FOR MAPEDITOR PAGE: replaced by mapeditor")
+
+            tctx.configure(
+                me,
+                mapeditor = [
+                    "~u .*://example.com/script.js:MAP_TO:" + text_test_fp
+                ],
+                mapeditor_choice = "response"
+            )
+            f = tflow.tflow()
+            f.request.url = "http://example.com/script.js"
+            f.request.text = "TEST FOR MAPEDITOR PAGE: not replaced"
+            me.request(f)
+            assert f.request.text == "TEST FOR MAPEDITOR PAGE: not replaced"
+
+            tctx.configure(
+                me,
+                mapeditor = [
+                    "~u .*://example.com/script.js:MAP_TO:" + text_test_fp
+                ],
+                mapeditor_choice = "response"
+            )
+            f = tflow.tflow(resp=True)
+            f.request.url = "http://example.com/script.js"
+            f.response.text = "TEST FOR MAPEDITOR PAGE: not replaced"
+            me.response(f)
+            assert f.response.text == "TEST FOR MAPEDITOR PAGE: replaced by mapeditor"
+            os.remove(text_test_fp)
+
+    def test_mapeditor_choice_response_and_request(self):
+        me = mapeditor.MapEditor()
+        with taddons.context(me) as tctx:
+            # test mapeditor choice
+            text_test_fp = os.path.join(tempfile.gettempdir(), os.urandom(24).hex())
+            with open(text_test_fp, "w") as f:
+                f.write("TEST FOR MAPEDITOR PAGE: replaced by mapeditor")
+
+            tctx.configure(
+                me,
+                mapeditor = [
+                    "~u .*://example.com/script.js:MAP_TO:" + text_test_fp
+                ],
+                mapeditor_choice = "response + request"
+            )
+            f = tflow.tflow()
+            f.request.url = "http://example.com/script.js"
+            f.request.text = "TEST FOR MAPEDITOR PAGE: not replaced"
+            me.request(f)
+            assert f.request.text == "TEST FOR MAPEDITOR PAGE: replaced by mapeditor"
+
+            tctx.configure(
+                me,
+                mapeditor = [
+                    "~u .*://example.com/script.js:MAP_TO:" + text_test_fp
+                ],
+                mapeditor_choice = "response + request"
+            )
+            f = tflow.tflow(resp=True)
+            f.request.url = "http://example.com/script.js"
+            f.response.text = "TEST FOR MAPEDITOR PAGE: not replaced"
+            me.response(f)
+            assert f.response.text == "TEST FOR MAPEDITOR PAGE: replaced by mapeditor"
+            os.remove(text_test_fp)
