@@ -21,6 +21,7 @@ def parse_mapeditor(mexpr):
         )
     return parts[0], parts[1]
 
+
 # performance optimize
 # 0b01 for request
 # 0b10 for response
@@ -28,6 +29,7 @@ mapchoice_option_mapper = {
     "request": 0b01,
     "response": 0b10,
 }
+
 
 class MapEditor:
     def __init__(self):
