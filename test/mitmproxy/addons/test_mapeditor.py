@@ -1,7 +1,5 @@
 import tempfile
-import os
 import pytest
-import platform
 
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
