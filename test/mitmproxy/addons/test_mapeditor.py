@@ -1,4 +1,5 @@
 import tempfile
+import os
 import pytest
 
 from mitmproxy.test import tflow
@@ -25,8 +26,7 @@ class TestMapEditor:
         me = mapeditor.MapEditor()
         with taddons.context(me) as tctx:
             # test matching rules
-            text_tempf = tempfile.NamedTemporaryFile(prefix="mitmproxy_test")
-            text_test_fp = text_tempf.name
+            text_test_fp = os.path.join(tempfile.gettempdir(), os.urandom(24).hex())
             with open(text_test_fp, "w") as f:
                 f.write("TEST FOR MAPEDITOR PAGE: replaced by mapeditor")
             tctx.configure(
@@ -48,11 +48,10 @@ class TestMapEditor:
             f.response.text = "TEST FOR MAPEDITOR PAGE: not replaced"
             me.response(f)
             assert f.response.text == "TEST FOR MAPEDITOR PAGE: not replaced"
-            text_tempf.close()
+            os.remove(text_test_fp)
 
             # test for binary text
-            binary_tempf = tempfile.NamedTemporaryFile(prefix="mitmproxy_test")
-            binary_test_fp = binary_tempf.name
+            binary_test_fp = os.path.join(tempfile.gettempdir(), os.urandom(24).hex())
             with open(binary_test_fp, "wb") as f:
                 f.write(b"TEST FOR MAPEDITOR PAGE: binary\x01\x02\xff")
             tctx.configure(
@@ -66,7 +65,7 @@ class TestMapEditor:
             f.response.content = b"TEST FOR MAPEDITOR PAGE: not replaced"
             me.response(f)
             assert f.response.raw_content == b"TEST FOR MAPEDITOR PAGE: binary\x01\x02\xff"
-            binary_tempf.close()
+            os.remove(binary_test_fp)
 
             # test none exist file
             none_exist_tempf = tempfile.mktemp(prefix="mitmproxy_test")
