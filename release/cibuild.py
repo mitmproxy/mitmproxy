@@ -361,8 +361,9 @@ def build_docker_image(be: BuildEnviron):  # pragma: no cover
         "docker",
         "run",
         "--rm",
-        "--it",
-        "mitmproxy/mitmproxy:" + be.docker_tag,
+        "-i",
+        "-t",
+        be.docker_tag,
         "mitmproxy",
         "--version",
     ], check=True)
