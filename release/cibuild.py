@@ -361,8 +361,6 @@ def build_docker_image(be: BuildEnviron):  # pragma: no cover
         "docker",
         "run",
         "--rm",
-        "-i",
-        "-t",
         be.docker_tag,
         "mitmdump",
         "--version",
