@@ -53,18 +53,25 @@ proxy mode.
 ## Replacements
 
 The `replacements` option lets you specify an arbitrary number of patterns that
-define text replacements within flows. A replacement pattern looks like this:
+define text replacements within flows. Replacement patterns look like this:
 
 {{< highlight none  >}}
 /patt/regex/replacement
+/patt/replacement
+/patt/regex/@file_path
+/patt/@file_path
 {{< / highlight >}}
 
-Here, **patt** is a mitmproxy filter expression that defines which flows a
-replacement applies to, **regex** is a valid Python regular expression that
-defines what gets replaced, and **replacement** is a string literal that is
-substituted in. The separator is arbitrary, and defined by the first character.
-If the replacement string literal starts with `@`, it is treated as a file path
+`patt` is a mitmproxy **filter expression** that defines which flows a
+replacement applies to.
+
+`regex` is an _optional_ valid Python **regular expression** that
+defines what gets replaced. If omitted it defaults to `.*` which replaces everything.
+
+`replacement` is a **string literal** that is substituted in. If the replacement starts with `@` as in `@file_path`, it is treated as a **file path**
 from which the replacement is read.
+
+The _separator_ is arbitrary, and defined by the **first character**.
 
 Replace hooks fire when either a client request or a server response is
 received. Only the matching flow component is affected: so, for example,
