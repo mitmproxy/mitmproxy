@@ -361,15 +361,12 @@ def build_docker_image(be: BuildEnviron):  # pragma: no cover
         "docker",
         "run",
         "--rm",
-        "--it",
-        "mitmproxy/mitmproxy:" + be.docker_tag,
-        "mitmproxy",
+        be.docker_tag,
+        "mitmdump",
         "--version",
-    ], check=True)
-    assert "Mitmproxy: " + be.version in r.stdout.decode()
-    assert "Python: " in r.stdout.decode()
-    assert "OpenSSL: " in r.stdout.decode()
-    assert "Platform: " in r.stdout.decode()
+    ], check=True, capture_output=True)
+    print(r.stdout.decode())
+    assert "Mitmproxy: " in r.stdout.decode()
 
 
 def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
