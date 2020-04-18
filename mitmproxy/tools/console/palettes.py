@@ -22,9 +22,8 @@ class Palette:
         'option_selected_key',
 
         # List and Connections
-        'method',
         'method_get', 'method_post', 'method_delete', 'method_other', 'method_head', 'method_put', 'method_http2_push',
-        'scheme_http', 'scheme_https', 'scheme_other',
+        'scheme_http', 'scheme_https', 'scheme_tcp', 'scheme_other',
         'url_punctuation', 'url_domain', 'url_filename', 'url_extension', 'url_query_key', 'url_query_value',
         'content_none', 'content_text', 'content_script', 'content_media', 'content_data', 'content_raw', 'content_other',
         'focus',
@@ -121,7 +120,6 @@ class LowDark(Palette):
         option_active_selected = ('light red', 'light gray'),
 
         # List and Connections
-        method = ('dark cyan', 'default'),
         method_get = ('light green', 'default'),
         method_post = ('brown', 'default'),
         method_delete = ('light red', 'default'),
@@ -132,6 +130,7 @@ class LowDark(Palette):
 
         scheme_http = ('dark cyan', 'default'),
         scheme_https = ('dark green', 'default'),
+        scheme_tcp=('dark magenta', 'default'),
         scheme_other = ('dark magenta', 'default'),
 
         url_punctuation = ('light gray', 'default'),
@@ -221,7 +220,6 @@ class LowLight(Palette):
         option_active_selected = ('light red', 'light gray'),
 
         # List and Connections
-        method = ('dark cyan', 'default'),
         method_get = ('dark green', 'default'),
         method_post = ('brown', 'default'),
         method_head = ('dark cyan', 'default'),
@@ -232,6 +230,7 @@ class LowLight(Palette):
 
         scheme_http = ('dark cyan', 'default'),
         scheme_https = ('light green', 'default'),
+        scheme_tcp=('light magenta', 'default'),
         scheme_other = ('light magenta', 'default'),
 
         url_punctuation = ('dark gray', 'default'),
@@ -340,7 +339,6 @@ class SolarizedLight(LowLight):
 
         # List and Connections
 
-        method = ('dark cyan', 'default'),
         method_get = (sol_green, 'default'),
         method_post = (sol_orange, 'default'),
         method_head = (sol_cyan, 'default'),
@@ -351,6 +349,7 @@ class SolarizedLight(LowLight):
 
         scheme_http = (sol_cyan, 'default'),
         scheme_https = ('light green', 'default'),
+        scheme_tcp=('light magenta', 'default'),
         scheme_other = ('light magenta', 'default'),
 
         url_punctuation = ('dark gray', 'default'),
@@ -416,7 +415,6 @@ class SolarizedDark(LowDark):
         # List and Connections
         focus = (sol_base1, 'default'),
 
-        method = (sol_cyan, 'default'),
         method_get = (sol_green, 'default'),
         method_post = (sol_orange, 'default'),
         method_delete = (sol_red, 'default'),

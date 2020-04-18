@@ -254,6 +254,10 @@ class TestHTTPFlow:
         f.response.decode()
         assert f.response.raw_content == b"abarb"
 
+    def test_timestamp_start(self):
+        f = tflow.tflow()
+        assert f.timestamp_start == f.request.timestamp_start
+
 
 def test_make_error_response():
     resp = http.make_error_response(543, 'foobar', Headers())
