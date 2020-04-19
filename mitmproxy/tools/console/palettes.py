@@ -34,6 +34,9 @@ class Palette:
         # Hex view
         'offset',
 
+        # JSON view
+        'json_string', 'json_number', 'json_boolean',
+
         # Grid Editor
         'focusfield', 'focusfield_error', 'field_error', 'editfield',
 
@@ -169,6 +172,11 @@ class LowDark(Palette):
         # Hex view
         offset = ('dark cyan', 'default'),
 
+        # JSON view
+        json_string = ('dark blue', 'default'),
+        json_number = ('light magenta', 'default'),
+        json_boolean = ('dark magenta', 'default'),
+
         # Grid Editor
         focusfield = ('black', 'light gray'),
         focusfield_error = ('dark red', 'light gray'),
@@ -268,6 +276,11 @@ class LowLight(Palette):
 
         # Hex view
         offset = ('dark blue', 'default'),
+
+        # JSON view
+        json_string = ('dark blue', 'default'),
+        json_number = ('light magenta', 'default'),
+        json_boolean = ('dark magenta', 'default'),
 
         # Grid Editor
         focusfield = ('black', 'light gray'),
@@ -379,6 +392,11 @@ class SolarizedLight(LowLight):
         # Hex view
         offset = (sol_cyan, 'default'),
 
+        # JSON view
+        json_string = (sol_cyan, 'default'),
+        json_number = (sol_blue, 'default'),
+        json_boolean = (sol_magenta, 'default'),
+
         # Grid Editor
         focusfield = (sol_base00, sol_base2),
         focusfield_error = (sol_red, sol_base2),
@@ -451,6 +469,11 @@ class SolarizedDark(LowDark):
 
         # Hex view
         offset = (sol_cyan, 'default'),
+
+        # JSON view
+        json_string = (sol_cyan, 'default'),
+        json_number = (sol_blue, 'default'),
+        json_boolean = (sol_magenta, 'default'),
 
         # Grid Editor
         focusfield = (sol_base0, sol_base02),
