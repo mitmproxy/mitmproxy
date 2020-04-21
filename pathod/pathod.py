@@ -36,7 +36,7 @@ class PathodError(Exception):
 class SSLOptions:
     def __init__(
         self,
-        confdir=CONFDIR,
+        confdir=CONF_DIR,
         cn=None,
         sans=(),
         not_after_connect=None,
