@@ -17,7 +17,10 @@ import typing  # noqa
 
 
 DEFAULT_CERT_DOMAIN = b"pathod.net"
-CONFDIR = "~/.mitmproxy"
+CONF_DIR = "~/.mitmproxy"
+if not os.path.isdir(os.path.expanduser(CONF_DIR)):
+    CONF_DIR = os.getenv('XDG_CONFIG_HOME', '~/.config') + '/mitmproxy'
+
 CERTSTORE_BASENAME = "mitmproxy"
 CA_CERT_NAME = "mitmproxy-ca.pem"
 DEFAULT_CRAFT_ANCHOR = "/p/"

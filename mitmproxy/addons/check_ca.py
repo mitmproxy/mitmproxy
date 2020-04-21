@@ -1,6 +1,11 @@
+import os
 import mitmproxy
 from mitmproxy import ctx
 
+
+CONF_DIR = "~/.mitmproxy"
+if not os.path.isdir(os.path.expanduser(CONF_DIR)):
+    CONF_DIR = os.getenv('XDG_CONFIG_HOME', '~/.config') + '/mitmproxy'
 
 class CheckCA:
     def __init__(self):
@@ -18,7 +23,7 @@ class CheckCA:
             if self.failed:
                 ctx.log.warn(
                     "The mitmproxy certificate authority has expired!\n"
-                    "Please delete all CA-related files in your ~/.mitmproxy folder.\n"
+                    "Please delete all CA-related files in your " + CONF_DIR + " folder.\n"
                     "The CA will be regenerated automatically after restarting mitmproxy.\n"
                     "Then make sure all your clients have the new CA installed.",
                 )

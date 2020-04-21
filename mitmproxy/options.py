@@ -1,10 +1,15 @@
 from typing import Optional, Sequence
 
+import os
+
 from mitmproxy import optmanager
 from mitmproxy.net import tls
 
 
 CONF_DIR = "~/.mitmproxy"
+if not os.path.isdir(os.path.expanduser(CONF_DIR)):
+    CONF_DIR = os.getenv('XDG_CONFIG_HOME', '~/.config') + '/mitmproxy'
+
 CONF_BASENAME = "mitmproxy"
 LISTEN_PORT = 8080
 CONTENT_VIEW_LINES_CUTOFF = 512

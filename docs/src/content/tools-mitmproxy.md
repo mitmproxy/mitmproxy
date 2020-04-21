@@ -18,9 +18,14 @@ documentation from any **mitmproxy** screen.
 
 ### Key binding configuration
 
-Mitmproxy's key bindings can be customized through in the
-`~/.mitmproxy/keys.yaml` file. This file consists of a sequence of maps, with
-the following keys:
+Mitmproxy's key bindings can be customized through in the `keys.yaml` file in
+your mitmproxy configuration directory:
+
+* `~/.mitmproxy` if exists.
+* `$XDG_CONFIG_HOME/mitmproxy` else, where `$XDG_CONFIG_HOME` defaults to
+  `~/.config`.
+
+This file consists of a sequence of maps, with the following keys:
 
 * `key` (**mandatory**): The key to bind.
 * `cmd` (**mandatory**): The command to execute when the key is pressed.

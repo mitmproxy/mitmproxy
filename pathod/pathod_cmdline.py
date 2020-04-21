@@ -9,6 +9,9 @@ from mitmproxy.utils import human
 from mitmproxy import version
 from . import pathod
 
+CONF_DIR = "~/.mitmproxy"
+if not os.path.isdir(os.path.expanduser(CONF_DIR)):
+    CONF_DIR = os.getenv('XDG_CONFIG_HOME', '~/.config') + '/mitmproxy'
 
 def parse_anchor_spec(s):
     """
@@ -64,8 +67,8 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
     )
     parser.add_argument(
         "--confdir",
-        action="store", type=str, dest="confdir", default='~/.mitmproxy',
-        help="Configuration directory. (~/.mitmproxy)"
+        action="store", type=str, dest="confdir", default=CONF_DIR,
+        help="Configuration directory. " + CONF_DIR
     )
     parser.add_argument(
         "-d", dest='staticdir', default=None, type=str,

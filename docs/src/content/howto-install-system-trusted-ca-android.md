@@ -18,7 +18,8 @@ Please note, that apps can decide to ignore the system certificate store and mai
   - Emulator from Android SDK with proxy settings pointing to mitmproxy
 
   - Mitmproxy CA certificate
-    - Usually located in `~/.mitmproxy/mitmproxy-ca-cert.cer`
+    - Usually located in `~/.mitmproxy/mitmproxy-ca-cert.cer` or
+      `~/.config/mitmproxy/mitmproxy-ca-cert.cer`
     - If the folder is empty or does not exist, run `mitmproxy` in order to generate the certificates
     
 ## 2. Rename certificate

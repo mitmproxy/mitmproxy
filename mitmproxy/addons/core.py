@@ -15,6 +15,9 @@ import mitmproxy.types
 
 
 CONF_DIR = "~/.mitmproxy"
+if not os.path.isdir(os.path.expanduser(CONF_DIR)):
+    CONF_DIR = os.getenv('XDG_CONFIG_HOME', '~/.config') + '/mitmproxy'
+
 LISTEN_PORT = 8080
 
 

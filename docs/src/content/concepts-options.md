@@ -8,13 +8,19 @@ menu:
 # Options
 
 The mitmproxy tools share a common [YAML](http://yaml.org/) configuration file
-located at `~/.mitmproxy/config.yaml`. This file controls **options** - typed
-values that determine the behaviour of mitmproxy. The options mechanism is very
-comprehensive - in fact, options control all of mitmproxy's runtime behaviour.
-Most command-line flags are simply aliases for underlying options, and
-interactive settings changes made in **mitmproxy** and **mitmweb** just change
-values in our runtime options store. This means that almost any facet of
-mitmproxy's behaviour can be controlled through options.
+located at:
+
+* `~/.mitmproxy/config.yaml` if the folder exists.
+* `$XDG_CONFIG_HOME/mitmproxy/config.yaml` else, where `$XDG_CONFIG_HOME`
+  defaults to `~/.config`.
+
+This file controls **options** - typed values that determine the behaviour of
+mitmproxy. The options mechanism is very comprehensive - in fact, options
+control all of mitmproxy's runtime behaviour. Most command-line flags are
+simply aliases for underlying options, and interactive settings changes made in
+**mitmproxy** and **mitmweb** just change values in our runtime options store.
+This means that almost any facet of mitmproxy's behaviour can be controlled
+through options.
 
 The canonical reference for options is the `--options` flag, which is exposed by
 each of the mitmproxy tools. Passing this flag will dump an annotated YAML
