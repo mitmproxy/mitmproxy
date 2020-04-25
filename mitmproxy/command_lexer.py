@@ -16,7 +16,7 @@ PartialQuotedString = pyparsing.Regex(
                 |
                 (?:\\.)  # escape sequence
             )*
-            (?:\1|$)  # end quote
+            (?:\1?|$)  # end quote
         ''',
         re.VERBOSE
     )
