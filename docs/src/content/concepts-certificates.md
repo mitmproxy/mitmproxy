@@ -65,7 +65,7 @@ SSL sites that your client visits. Since your browser won't trust the mitmproxy
 CA out of the box, you will see an SSL certificate warning every time you visit
 a new SSL domain through mitmproxy. When you are testing a single site through a
 browser, just accepting the bogus SSL cert manually is not too much trouble, but
-there are a many circumstances where you will want to configure your testing
+there are many circumstances where you will want to configure your testing
 system or browser to trust the mitmproxy CA as a signing root authority. For
 security reasons, the mitmproxy CA is generated uniquely on the first start and
 is not shared between mitmproxy installations on different devices.
