@@ -38,8 +38,7 @@ def process_options(parser, opts, args):
     if args.version:
         print(debug.dump_system_info())
         sys.exit(0)
-    if args.quiet or args.options or args.commands:
-        # also reduce log verbosity if --options or --commands is passed,
+    if args.quiet:
         # we don't want log messages from regular startup then.
         args.termlog_verbosity = 'error'
         args.flow_detail = 0
@@ -84,6 +83,13 @@ def run(
         arg_check.check()
         sys.exit(1)
 
+    if args.options:
+        print(optmanager.dump_defaults(opts))
+        sys.exit(0)
+    if args.commands:
+        master.commands.dump()
+        sys.exit(0)
+
     try:
         opts.set(*args.setoptions, defer=True)
         optmanager.load_paths(
@@ -103,12 +109,6 @@ def run(
             server = proxy.server.DummyServer(pconf)
 
         master.server = server
-        if args.options:
-            print(optmanager.dump_defaults(opts))
-            sys.exit(0)
-        if args.commands:
-            master.commands.dump()
-            sys.exit(0)
         if extra:
             if(args.filter_args):
                 master.log.info(f"Only processing flows that match \"{' & '.join(args.filter_args)}\"")
