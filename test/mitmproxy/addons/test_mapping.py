@@ -1,3 +1,4 @@
+from typing import TextIO, Callable
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -5,6 +6,7 @@ from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
 from mitmproxy.addons.mapping import MappingAddon, MappingAddonConfig
+from mitmproxy.utils.urldict import URLDict
 
 
 class TestConfig:
@@ -145,3 +147,20 @@ class TestMappingAddon:
         with open(tmpfile, "r") as tfile:
             results = tfile.read()
         assert mapping_content in results
+
+    def mock_dump(self, f: TextIO, value_dumper: Callable):
+        assert value_dumper(None) == "None"
+        try:
+            value_dumper("Test")
+        except RuntimeError:
+            assert True
+        else:
+            assert False
+
+    def test_dump(selfself, tmpdir):
+        tmpfile = tmpdir.join("tmpfile")
+        with open(tmpfile, "w") as tfile:
+            tfile.write("{}")
+        mapping = MappingAddon(tmpfile, persistent=True)
+        with mock.patch('mitmproxy.utils.urldict.URLDict.dump', selfself.mock_dump):
+            mapping.done()

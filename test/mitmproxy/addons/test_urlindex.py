@@ -3,13 +3,23 @@ from json import JSONDecodeError
 from pathlib import Path
 from unittest import mock
 from typing import List
+from unittest.mock import patch
 
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
-from mitmproxy.addons.urlindex import SetEncoder, JSONUrlIndexWriter, TextUrlIndexWriter, WRITER, filter_404, \
+from mitmproxy.addons.urlindex import UrlIndexWriter, SetEncoder, JSONUrlIndexWriter, TextUrlIndexWriter, WRITER, filter_404, \
     UrlIndexAddon
 
+class TestBaseClass:
+
+    @patch.multiple(UrlIndexWriter, __abstractmethods__=set())
+    def test_base_class(self, tmpdir):
+        tmpfile = tmpdir.join("tmpfile")
+        index_writer = UrlIndexWriter(tmpfile)
+        index_writer.load()
+        index_writer.add_url(tflow.tflow())
+        index_writer.save()
 
 class TestSetEncoder:
 
