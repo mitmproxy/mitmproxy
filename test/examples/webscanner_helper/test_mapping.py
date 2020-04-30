@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
-from examples.complex.mapping import MappingAddon, MappingAddonConfig
+from examples.complex.webscanner_helper.mapping import MappingAddon, MappingAddonConfig
 
 
 class TestConfig:
@@ -161,5 +161,5 @@ class TestMappingAddon:
         with open(tmpfile, "w") as tfile:
             tfile.write("{}")
         mapping = MappingAddon(tmpfile, persistent=True)
-        with mock.patch('examples.complex.urldict.URLDict.dump', selfself.mock_dump):
+        with mock.patch('examples.complex.webscanner_helper.urldict.URLDict.dump', selfself.mock_dump):
             mapping.done()

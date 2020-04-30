@@ -5,7 +5,7 @@ from mitmproxy import flowfilter
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
-from examples.complex.urlinjection import InjectionGenerator, HTMLInjection, RobotsInjection, SitemapInjection, \
+from examples.complex.webscanner_helper.urlinjection import InjectionGenerator, HTMLInjection, RobotsInjection, SitemapInjection, \
     UrlInjectionAddon, logger
 
 index = json.loads(
