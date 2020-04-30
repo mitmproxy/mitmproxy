@@ -1,5 +1,5 @@
 from mitmproxy.test import tflow, tutils
-from mitmproxy.utils.urldict import URLDict
+from examples.complex.urldict import URLDict
 
 url = "http://10.10.10.10"
 new_content_body = "New Body"

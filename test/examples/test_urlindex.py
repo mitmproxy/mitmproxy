@@ -8,8 +8,10 @@ from unittest.mock import patch
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
-from mitmproxy.addons.urlindex import UrlIndexWriter, SetEncoder, JSONUrlIndexWriter, TextUrlIndexWriter, WRITER, filter_404, \
+from examples.complex.urlindex import UrlIndexWriter, SetEncoder, JSONUrlIndexWriter, TextUrlIndexWriter, WRITER, \
+    filter_404, \
     UrlIndexAddon
+
 
 class TestBaseClass:
 
@@ -20,6 +22,7 @@ class TestBaseClass:
         index_writer.load()
         index_writer.add_url(tflow.tflow())
         index_writer.save()
+
 
 class TestSetEncoder:
 
@@ -199,7 +202,7 @@ class TestUrlIndexAddon:
             tfile.write("")
         url_index = UrlIndexAddon(tmpfile, append=False)
         f = tflow.tflow(resp=tutils.tresp())
-        with mock.patch('mitmproxy.addons.urlindex.JSONUrlIndexWriter.add_url'):
+        with mock.patch('examples.complex.urlindex.JSONUrlIndexWriter.add_url'):
             url_index.response(f)
         assert not Path(tmpfile).exists()
 
@@ -207,7 +210,7 @@ class TestUrlIndexAddon:
         tmpfile = tmpdir.join("tmpfile")
         url_index = UrlIndexAddon(tmpfile)
         f = tflow.tflow(resp=tutils.tresp())
-        with mock.patch('mitmproxy.addons.urlindex.JSONUrlIndexWriter.add_url') as mock_add_url:
+        with mock.patch('examples.complex.urlindex.JSONUrlIndexWriter.add_url') as mock_add_url:
             url_index.response(f)
         mock_add_url.assert_called()
 
@@ -226,6 +229,6 @@ class TestUrlIndexAddon:
     def test_done(self, tmpdir):
         tmpfile = tmpdir.join("tmpfile")
         url_index = UrlIndexAddon(tmpfile)
-        with mock.patch('mitmproxy.addons.urlindex.JSONUrlIndexWriter.save') as mock_save:
+        with mock.patch('examples.complex.urlindex.JSONUrlIndexWriter.save') as mock_save:
             url_index.done()
         mock_save.assert_called()

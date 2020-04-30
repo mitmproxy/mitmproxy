@@ -6,7 +6,7 @@ from typing import Dict
 from bs4 import BeautifulSoup
 
 from mitmproxy.http import HTTPFlow
-from mitmproxy.utils.urldict import URLDict
+from examples.complex.urldict import URLDict
 
 NO_CONTENT = object()
 

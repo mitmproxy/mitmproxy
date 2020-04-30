@@ -8,7 +8,7 @@ from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 import multiprocessing
 
-from mitmproxy.addons.watchdog import WatchdogAddon, logger
+from examples.complex.watchdog import WatchdogAddon, logger
 
 
 class TestWatchdog:
