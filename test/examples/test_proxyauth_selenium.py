@@ -7,7 +7,7 @@ from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.http import HTTPFlow
 
-from mitmproxy.addons.proxyauth_selenium import logger, randomString, AuthorizationOracle, SeleniumAddon
+from examples.complex.proxyauth_selenium import logger, randomString, AuthorizationOracle, SeleniumAddon
 
 
 class TestRandomString:
@@ -79,7 +79,7 @@ class TestSeleniumAddon:
         selenium_addon.set_cookies = False
         assert not selenium_addon.set_cookies
         with mock.patch.object(logger, 'debug') as mock_debug:
-            with mock.patch('mitmproxy.addons.proxyauth_selenium.SeleniumAddon.login',
+            with mock.patch('examples.complex.proxyauth_selenium.SeleniumAddon.login',
                             return_value=[{"name": "cookie", "value": "test"}]) as mock_login:
                 selenium_addon.request(f)
         mock_debug.assert_called()
@@ -104,7 +104,7 @@ class TestSeleniumAddon:
         f = tflow.tflow(resp=tutils.tresp())
         f.request.url = "http://example.com/login.php"
         selenium_addon.set_cookies = False
-        with mock.patch('mitmproxy.addons.proxyauth_selenium.SeleniumAddon.login', return_value=[]) as mock_login:
+        with mock.patch('examples.complex.proxyauth_selenium.SeleniumAddon.login', return_value=[]) as mock_login:
             selenium_addon.response(f)
         mock_login.assert_called()
 
@@ -112,7 +112,7 @@ class TestSeleniumAddon:
         f = tflow.tflow(resp=tutils.tresp())
         f.request.url = "http://example.com/login.php"
         selenium_addon.set_cookies = False
-        with mock.patch('mitmproxy.addons.proxyauth_selenium.SeleniumAddon.login',
+        with mock.patch('examples.complex.proxyauth_selenium.SeleniumAddon.login',
                         return_value=[{"name": "cookie", "value": "test"}]) as mock_login:
             selenium_addon.response(f)
         mock_login.assert_called()
