@@ -9,7 +9,7 @@ menu:
 
 [Since Android 7, apps ignore user certificates](https://android-developers.googleblog.com/2016/07/changes-to-trusted-certificate.html), unless they are configured to use them.
 As most applications do not explicitly opt in to use user certificates, we need to place our mitmproxy CA certificate in the system certificate store,
-in order to avid having to patch each application, which we want to monitor.
+in order to avoid having to patch each application, which we want to monitor.
 
 Please note, that apps can decide to ignore the system certificate store and maintain their own CA certificates. In this case you have to patch the application.
 
