@@ -116,6 +116,16 @@ def get_message_content_view(viewname, message, flow):
     return description, lines, error
 
 
+def get_tcp_content_view(viewname: str, data: bytes):
+    viewmode = get(viewname)
+    if not viewmode:
+        viewmode = get("auto")
+
+    description, lines, error = get_content_view(viewmode, data)
+
+    return description, lines, error
+
+
 def get_content_view(viewmode: View, data: bytes, **metadata):
     """
         Args:

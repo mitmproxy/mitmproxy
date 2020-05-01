@@ -115,26 +115,21 @@ class FlowDetails(tabs.Tabs):
         if not flow.messages:
             return searchable.Searchable([urwid.Text(("highlight", "No messages."))])
 
-        from_client = None
-        messages = []
-        for message in flow.messages:
-            if message.from_client is not from_client:
-                messages.append(message.content)
-                from_client = message.from_client
-            else:
-                messages[-1] += message.content
+        viewmode = self.master.commands.call("console.flowview.mode")
 
-        from_client = flow.messages[0].from_client
         parts = []
-        for message in messages:
-            parts.append(
-                (
-                    "head" if from_client else "key",
-                    message
-                )
-            )
-            from_client = not from_client
-        return searchable.Searchable([urwid.Text(parts)])
+        for message in flow.messages:
+            _, lines, _ = contentviews.get_tcp_content_view(viewmode, message.content)
+
+            for line in lines:
+                if message.from_client:
+                    line.insert(0, "--> ")
+                else:
+                    line.insert(0, "<-- ")
+
+                parts.append(urwid.Text(line))
+
+        return searchable.Searchable(parts)
 
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
