@@ -12,9 +12,9 @@ PartialQuotedString = pyparsing.Regex(
         r'''
             (["'])  # start quote
             (?:
-                (?!\1)[^\\]  # unescaped character that is not our quote nor the begin of an escape sequence. We can't use \1 in []
-                |
                 (?:\\.)  # escape sequence
+                |
+                (?!\1).  # unescaped character that is not our quote nor the begin of an escape sequence. We can't use \1 in []
             )*
             (?:\1|$)  # end quote
         ''',

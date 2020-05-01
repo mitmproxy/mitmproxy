@@ -16,6 +16,7 @@ from mitmproxy import command_lexer
         ("'foo'x", False),
         ('''"foo    ''', True),
         ('''"foo 'bar'   ''', True),
+        ('"foo\\', True),
     ]
 )
 def test_partial_quoted_string(test_input, valid):
@@ -34,6 +35,7 @@ def test_partial_quoted_string(test_input, valid):
         ("'foo'x", ["'foo'", 'x']),
         ('''"foo''', ['"foo']),
         ('''"foo 'bar' ''', ['''"foo 'bar' ''']),
+        ('"foo\\', ['"foo\\']),
     ]
 )
 def test_expr(test_input, expected):
