@@ -157,7 +157,6 @@ class FlowDetails(tabs.Tabs):
                     "from_client": message.from_client,
                 })
 
-
         widget_lines = []
 
         widget_lines.append(self._contentview_status_bar(viewmode.capitalize(), viewmode))
