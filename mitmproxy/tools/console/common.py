@@ -104,6 +104,8 @@ if urwid.util.detected_encoding:
     SYMBOL_UP = u"\u21E7"
     SYMBOL_DOWN = u"\u21E9"
     SYMBOL_ELLIPSIS = u"\u2026"
+    SYMBOL_FROM_CLIENT = u"\u21d2"
+    SYMBOL_TO_CLIENT = u"\u21d0"
 else:
     SYMBOL_REPLAY = u"[r]"
     SYMBOL_RETURN = u"<-"
@@ -111,6 +113,8 @@ else:
     SYMBOL_UP = "^"
     SYMBOL_DOWN = " "
     SYMBOL_ELLIPSIS = "~"
+    SYMBOL_FROM_CLIENT = u"->"
+    SYMBOL_TO_CLIENT = u"<-"
 
 SCHEME_STYLES = {
     'http': 'scheme_http',
