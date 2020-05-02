@@ -108,6 +108,26 @@ class FlowDetails(tabs.Tabs):
         assert isinstance(flow, http.HTTPFlow)
         return self.conn_text(flow.response)
 
+    def _contentview_status_bar(self, description: str, viewmode: str):
+        cols = [
+            urwid.Text(
+                [
+                    ("heading", description),
+                ]
+            ),
+            urwid.Text(
+                [
+                    " ",
+                    ('heading', "["),
+                    ('heading_key', "m"),
+                    ('heading', (":%s]" % viewmode)),
+                ],
+                align="right"
+            )
+        ]
+        contentview_status_bar = urwid.AttrWrap(urwid.Columns(cols), "heading")
+        return contentview_status_bar
+
     def view_tcp_stream(self) -> urwid.Widget:
         flow = self.flow
         assert isinstance(flow, tcp.TCPFlow)
@@ -139,6 +159,9 @@ class FlowDetails(tabs.Tabs):
 
 
         widget_lines = []
+
+        widget_lines.append(self._contentview_status_bar(viewmode.capitalize(), viewmode))
+
         for message in merged_messages:
             _, lines, _ = contentviews.get_tcp_content_view(viewmode, message["content"])
 
