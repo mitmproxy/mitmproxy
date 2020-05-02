@@ -117,19 +117,40 @@ class FlowDetails(tabs.Tabs):
 
         viewmode = self.master.commands.call("console.flowview.mode")
 
-        parts = []
+        # Merge adjacent TCP "messages". For detailed explanation of this code block see:
+        # https://github.com/mitmproxy/mitmproxy/pull/3970/files/469bd32582f764f9a29607efa4f5b04bd87961fb#r418670880
+        merged_messages = []
         for message in flow.messages:
-            _, lines, _ = contentviews.get_tcp_content_view(viewmode, message.content)
+
+            if not merged_messages:
+                merged_messages.append({
+                    "content": message.content,
+                    "from_client": message.from_client,
+                })
+                continue
+
+            if merged_messages[-1]["from_client"] == message.from_client:
+                merged_messages[-1]["content"] += message.content
+            else:
+                merged_messages.append({
+                    "content": message.content,
+                    "from_client": message.from_client,
+                })
+
+
+        widget_lines = []
+        for message in merged_messages:
+            _, lines, _ = contentviews.get_tcp_content_view(viewmode, message["content"])
 
             for line in lines:
-                if message.from_client:
+                if message["from_client"]:
                     line.insert(0, "--> ")
                 else:
                     line.insert(0, "<-- ")
 
-                parts.append(urwid.Text(line))
+                widget_lines.append(urwid.Text(line))
 
-        return searchable.Searchable(parts)
+        return searchable.Searchable(widget_lines)
 
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
