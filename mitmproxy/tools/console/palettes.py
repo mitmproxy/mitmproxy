@@ -37,6 +37,9 @@ class Palette:
         # JSON view
         'json_string', 'json_number', 'json_boolean',
 
+        # TCP flow details
+        'from_client', 'to_client',
+
         # Grid Editor
         'focusfield', 'focusfield_error', 'field_error', 'editfield',
 
@@ -177,6 +180,10 @@ class LowDark(Palette):
         json_number = ('light magenta', 'default'),
         json_boolean = ('dark magenta', 'default'),
 
+        # TCP flow details
+        from_client = ('light blue', 'default'),
+        to_client = ('light red', 'default'),
+
         # Grid Editor
         focusfield = ('black', 'light gray'),
         focusfield_error = ('dark red', 'light gray'),
@@ -281,6 +288,10 @@ class LowLight(Palette):
         json_string = ('dark blue', 'default'),
         json_number = ('light magenta', 'default'),
         json_boolean = ('dark magenta', 'default'),
+
+        # TCP flow details
+        from_client = ('dark blue', 'default'),
+        to_client = ('dark red', 'default'),
 
         # Grid Editor
         focusfield = ('black', 'light gray'),
@@ -397,6 +408,10 @@ class SolarizedLight(LowLight):
         json_number = (sol_blue, 'default'),
         json_boolean = (sol_magenta, 'default'),
 
+        # TCP flow details
+        from_client = (sol_blue, 'default'),
+        to_client = (sol_red, 'default'),
+
         # Grid Editor
         focusfield = (sol_base00, sol_base2),
         focusfield_error = (sol_red, sol_base2),
@@ -474,6 +489,10 @@ class SolarizedDark(LowDark):
         json_string = (sol_cyan, 'default'),
         json_number = (sol_blue, 'default'),
         json_boolean = (sol_magenta, 'default'),
+
+        # TCP flow details
+        from_client = (sol_blue, 'default'),
+        to_client = (sol_red, 'default'),
 
         # Grid Editor
         focusfield = (sol_base0, sol_base02),

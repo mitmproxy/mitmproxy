@@ -144,9 +144,9 @@ class FlowDetails(tabs.Tabs):
 
             for line in lines:
                 if message["from_client"]:
-                    line.insert(0, f"{common.SYMBOL_FROM_CLIENT} ")
+                    line.insert(0, ("from_client", f"{common.SYMBOL_FROM_CLIENT} "))
                 else:
-                    line.insert(0, f"{common.SYMBOL_TO_CLIENT} ")
+                    line.insert(0, ("to_client", f"{common.SYMBOL_TO_CLIENT} "))
 
                 widget_lines.append(urwid.Text(line))
 
