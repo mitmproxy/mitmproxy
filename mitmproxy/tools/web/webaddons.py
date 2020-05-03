@@ -35,7 +35,8 @@ class WebAddon:
 def open_browser(url: str) -> bool:
     """
     Open a URL in a browser window.
-    In contrast to webbrowser.open, we limit the list of suitable browsers.
+    In contrast to webbrowser.open, we only open a browser if it will run in
+    the background.
     This gracefully degrades to a no-op on headless servers, where webbrowser.open
     would otherwise open lynx.
 
@@ -43,17 +44,15 @@ def open_browser(url: str) -> bool:
         True, if a browser has been opened
         False, if no suitable browser has been found.
     """
-    browsers = (
-        "windows-default", "macosx",
-        "google-chrome", "chrome", "chromium", "chromium-browser",
-        "firefox", "opera", "safari",
-    )
-    for browser in browsers:
-        try:
-            b = webbrowser.get(browser)
-        except webbrowser.Error:
-            pass
-        else:
-            b.open(url)
-            return True
+    try:
+        b = webbrowser.get()
+    except webbrowser.Error:
+        return False
+
+    browsers = tuple(getattr(webbrowser, name, type(None)) for name in [
+        'WindowsDefault', 'MacOSX', 'MacOSXOSAScript',
+        'BackgroundBrowser', 'Konqueror', 'Grail',
+    ])
+    if isinstance(b, browsers) or (isinstance(b, webbrowser.UnixBrowser) and b.background):
+        return b.open(url)
     return False
