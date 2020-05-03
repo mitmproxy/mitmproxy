@@ -139,38 +139,32 @@ class FlowDetails(tabs.Tabs):
 
         # Merge adjacent TCP "messages". For detailed explanation of this code block see:
         # https://github.com/mitmproxy/mitmproxy/pull/3970/files/469bd32582f764f9a29607efa4f5b04bd87961fb#r418670880
-        merged_messages = []
+        from_client = None
+        messages = []
         for message in flow.messages:
-
-            if not merged_messages:
-                merged_messages.append({
-                    "content": message.content,
-                    "from_client": message.from_client,
-                })
-                continue
-
-            if merged_messages[-1]["from_client"] == message.from_client:
-                merged_messages[-1]["content"] += message.content
+            if message.from_client is not from_client:
+                messages.append(message.content)
+                from_client = message.from_client
             else:
-                merged_messages.append({
-                    "content": message.content,
-                    "from_client": message.from_client,
-                })
+                messages[-1] += message.content
 
         widget_lines = []
 
-        widget_lines.append(self._contentview_status_bar(viewmode.capitalize(), viewmode))
-
-        for message in merged_messages:
-            _, lines, _ = contentviews.get_tcp_content_view(viewmode, message["content"])
+        from_client = flow.messages[0].from_client
+        for m in messages:
+            _, lines, _ = contentviews.get_tcp_content_view(viewmode, m)
 
             for line in lines:
-                if message["from_client"]:
+                if from_client:
                     line.insert(0, ("from_client", f"{common.SYMBOL_FROM_CLIENT} "))
                 else:
                     line.insert(0, ("to_client", f"{common.SYMBOL_TO_CLIENT} "))
 
                 widget_lines.append(urwid.Text(line))
+
+            from_client = not from_client
+
+        widget_lines.insert(0, self._contentview_status_bar(viewmode.capitalize(), viewmode))
 
         return searchable.Searchable(widget_lines)
 
