@@ -108,6 +108,26 @@ class FlowDetails(tabs.Tabs):
         assert isinstance(flow, http.HTTPFlow)
         return self.conn_text(flow.response)
 
+    def _contentview_status_bar(self, description: str, viewmode: str):
+        cols = [
+            urwid.Text(
+                [
+                    ("heading", description),
+                ]
+            ),
+            urwid.Text(
+                [
+                    " ",
+                    ('heading', "["),
+                    ('heading_key', "m"),
+                    ('heading', (":%s]" % viewmode)),
+                ],
+                align="right"
+            )
+        ]
+        contentview_status_bar = urwid.AttrWrap(urwid.Columns(cols), "heading")
+        return contentview_status_bar
+
     def view_tcp_stream(self) -> urwid.Widget:
         flow = self.flow
         assert isinstance(flow, tcp.TCPFlow)
@@ -115,6 +135,10 @@ class FlowDetails(tabs.Tabs):
         if not flow.messages:
             return searchable.Searchable([urwid.Text(("highlight", "No messages."))])
 
+        viewmode = self.master.commands.call("console.flowview.mode")
+
+        # Merge adjacent TCP "messages". For detailed explanation of this code block see:
+        # https://github.com/mitmproxy/mitmproxy/pull/3970/files/469bd32582f764f9a29607efa4f5b04bd87961fb#r418670880
         from_client = None
         messages = []
         for message in flow.messages:
@@ -124,17 +148,25 @@ class FlowDetails(tabs.Tabs):
             else:
                 messages[-1] += message.content
 
+        widget_lines = []
+
         from_client = flow.messages[0].from_client
-        parts = []
-        for message in messages:
-            parts.append(
-                (
-                    "head" if from_client else "key",
-                    message
-                )
-            )
+        for m in messages:
+            _, lines, _ = contentviews.get_tcp_content_view(viewmode, m)
+
+            for line in lines:
+                if from_client:
+                    line.insert(0, ("from_client", f"{common.SYMBOL_FROM_CLIENT} "))
+                else:
+                    line.insert(0, ("to_client", f"{common.SYMBOL_TO_CLIENT} "))
+
+                widget_lines.append(urwid.Text(line))
+
             from_client = not from_client
-        return searchable.Searchable([urwid.Text(parts)])
+
+        widget_lines.insert(0, self._contentview_status_bar(viewmode.capitalize(), viewmode))
+
+        return searchable.Searchable(widget_lines)
 
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
