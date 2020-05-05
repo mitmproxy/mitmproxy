@@ -1,7 +1,6 @@
 import codecs
 import io
 import re
-import chardet
 from typing import Iterable, Optional, Union, cast
 
 
@@ -24,9 +23,6 @@ def always_str(str_or_bytes: Union[str, bytes, None], *decode_args) -> Optional[
     if isinstance(str_or_bytes, str):
         return cast(str, str_or_bytes)
     elif isinstance(str_or_bytes, bytes):
-        if not decode_args:
-            encoding = chardet.detect(str_or_bytes)['encoding']
-            return str_or_bytes.decode(encoding)
         return str_or_bytes.decode(*decode_args)
     else:
         raise TypeError("Expected str or bytes, but got {}.".format(type(str_or_bytes).__name__))
