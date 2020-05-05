@@ -106,7 +106,10 @@ def dummy_cert(privkey, cacert, commonname, sans, organization):
     cert.gmtime_adj_notBefore(-3600 * 48)
     cert.gmtime_adj_notAfter(DEFAULT_EXP_DUMMY_CERT)
     cert.set_issuer(cacert.get_subject())
-    if commonname is not None and len(commonname) < 64:
+    is_valid_commonname = (
+        commonname is not None and len(commonname) < 64
+    )
+    if is_valid_commonname:
         cert.get_subject().CN = commonname
     if organization is not None:
         cert.get_subject().O = organization
@@ -114,7 +117,13 @@ def dummy_cert(privkey, cacert, commonname, sans, organization):
     if ss:
         cert.set_version(2)
         cert.add_extensions(
-            [OpenSSL.crypto.X509Extension(b"subjectAltName", False, ss)])
+            [OpenSSL.crypto.X509Extension(
+                b"subjectAltName",
+                # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
+                not is_valid_commonname,
+                ss
+            )]
+        )
     cert.add_extensions([
         OpenSSL.crypto.X509Extension(
             b"extendedKeyUsage",
