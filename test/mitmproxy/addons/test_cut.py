@@ -115,9 +115,9 @@ def test_cut_save(tmpdir):
 
         v.add([tflow.tflow(resp=True)])
         tctx.command(c.save, "@all", "request.method", f)
-        assert qr(f).splitlines() == [b"GET", b"GET"]
+        assert qr(f).splitlines() == [b"'GET'", b"'GET'"]
         tctx.command(c.save, "@all", "request.method,request.content", f)
-        assert qr(f).splitlines() == [b"GET,content", b"GET,content"]
+        assert qr(f).splitlines() == [b"'GET',b'content'", b"'GET',b'content'"]
 
 
 @pytest.mark.parametrize("exception, log_message", [
