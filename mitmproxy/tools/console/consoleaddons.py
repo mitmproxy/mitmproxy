@@ -292,6 +292,8 @@ class ConsoleAddon:
         Prompt the user to edit a command with a (possibly empty) starting value.
         """
         quoted = " ".join(command_lexer.quote(x) for x in command_str)
+        if quoted:
+            quoted = quoted + " "
         signals.status_prompt_command.send(partial=quoted)
 
     @command.command("console.command.set")
