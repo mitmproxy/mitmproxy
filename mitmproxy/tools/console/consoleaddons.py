@@ -398,6 +398,7 @@ class ConsoleAddon:
             "status_code",
             "set-cookies",
             "url",
+            "tcp-message"
         ]
 
     @command.command("console.edit.focus")
@@ -458,6 +459,10 @@ class ConsoleAddon:
                 "console.command",
                 ["flow.set", "@focus", flow_part]
             )
+        elif flow_part == "tcp-message":
+            message = flow.messages[-1]
+            c = self.master.spawn_editor(message.content or b"")
+            message.content = c.rstrip(b"\n")
 
     def _grideditor(self):
         gewidget = self.master.window.current("grideditor")
