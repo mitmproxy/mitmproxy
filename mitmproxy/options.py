@@ -181,5 +181,11 @@ class Options(optmanager.OptManager):
             TLS key size for certificates and CA.
             """
         )
+        self.add_option(
+            "relax_http_form_validation", bool, False,
+            """
+            Disable HTTP form validation.
+            """
+        )
 
         self.update(**kwargs)

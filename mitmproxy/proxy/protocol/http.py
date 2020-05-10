@@ -267,10 +267,12 @@ class HttpLayer(base.Layer):
                     self.send_error_response(400, msg)
                     return False
 
-            validate_request_form(self.mode, request)
+            if not self.config.options.relax_http_form_validation:
+                validate_request_form(self.mode, request)
             self.channel.ask("requestheaders", f)
             # Re-validate request form in case the user has changed something.
-            validate_request_form(self.mode, request)
+            if not self.config.options.relax_http_form_validation:
+                validate_request_form(self.mode, request)
 
             if request.headers.get("expect", "").lower() == "100-continue":
                 # TODO: We may have to use send_response_headers for HTTP2
