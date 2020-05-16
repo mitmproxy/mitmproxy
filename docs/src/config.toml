@@ -8,9 +8,7 @@ googleAnalytics = "UA-4150636-13"
 pygmentsCodefences = true
 
 [indexes]
-  tag = "tags"
+tag = "tags"
 
-[markup]
-  [markup.goldmark]
-    [markup.goldmark.renderer]
-      unsafe = true
+[markup.goldmark.renderer]
+unsafe = true
