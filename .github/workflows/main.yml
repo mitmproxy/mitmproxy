@@ -146,7 +146,7 @@ jobs:
           python-version: '3.8'
       - run: pip install tox
       - run: |
-          wget https://github.com/gohugoio/hugo/releases/download/v0.65.3/hugo_extended_0.65.3_Linux-64bit.deb
+          wget https://github.com/gohugoio/hugo/releases/download/v0.70.0/hugo_extended_0.70.0_Linux-64bit.deb
           sudo dpkg -i hugo*.deb
       - run: tox -e docs
 

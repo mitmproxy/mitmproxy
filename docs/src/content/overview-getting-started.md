@@ -34,7 +34,7 @@ environment variables, etc.
 
 You can check that your web traffic is going through mitmproxy by browsing to
 http://mitm.it - it should present you with a [simple page]({{< relref
-"concepts-certificates/#quick-setup">}}) to install the mitmproxy Certificate
+"concepts-certificates#quick-setup">}}) to install the mitmproxy Certificate
 Authority - which is also the next steps. Follow the instructions for your OS /
 system and install the CA (and make sure to enable it, some system require
 multiple steps!).
