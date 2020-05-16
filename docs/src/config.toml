@@ -9,3 +9,8 @@ pygmentsCodefences = true
 
 [indexes]
   tag = "tags"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
