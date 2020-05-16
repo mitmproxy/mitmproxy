@@ -1,11 +1,11 @@
 ---
-title: "Ignoring Domains"
+title: "Allowing/Ignoring Domains"
 menu:
     howto:
         weight: 2
 ---
 
-# Ignoring Domains
+# Allowing/Ignoring Domains
 
 There are two main reasons why you may want to exempt some traffic from
 mitmproxy's interception mechanism:
@@ -23,17 +23,26 @@ If you want to peek into (SSL-protected) non-HTTP connections, check out the
 **tcp_proxy** feature. If you want to ignore traffic from mitmproxy's processing
 because of large response bodies, take a look at the [streaming]({{< relref "overview-features#streaming" >}}) feature.
 
-
 ## ignore_hosts
 
 The `ignore_hosts` option allows you to specify a regex which is matched against
-a `host:port` string (e.g. "example.com:443") of a connection. Matching hosts
+a `host:port` string (e.g. "example.com:443" or "1.2.3.4:443") of a connection. Matching hosts
 are excluded from interception, and passed on unmodified.
 
 |                    |                                                                    |
 | ------------------ | ------------------------------------------------------------------ |
 | command-line alias | `--ignore-hosts regex`                                             |
 | mitmproxy option   | `ignore_hosts` |
+
+## allow_hosts
+
+The `allow_hosts` option is inverse to the `ignore_hosts` option. Only hosts that matching all regexes
+are intercepted, others are passed on unmodified. The regexes must match against the ip address and hostname in transparent mode.
+
+|                    |                                                                    |
+| ------------------ | ------------------------------------------------------------------ |
+| command-line alias | `--allow-hosts regex`                                             |
+| mitmproxy option   | `allow_hosts` |
 
 
 ## Limitations
@@ -87,6 +96,17 @@ Here are some other examples for ignore patterns:
 --ignore-hosts 17\.178\.96\.59:443
 # IP address range:
 --ignore-hosts 17\.178\.\d+\.\d+:443
+
+# Only intercept example.com
+--allow-hosts example.com:443
+
+# Only intercept example.com in transparent mode:
+--allow-hosts '^(example.com|\d+\.\d+\.\d+\.\d+):443$'
+# Only intercept 1.2.3.4 in transparent mode:
+--allow-hosts '^(1.2.3.4|.*[a-zA-Z].*):443$'
+
+# Only intercept example.com with ip 93.184.216.34
+--allow-hosts '^(example.com|93.184.216.34):443$'
 {{< / highlight >}}
 
 This option can also be used to whitelist some domains through negative lookahead expressions. However, ignore patterns are always matched against the IP address of the target before being matched against its domain name. Thus, the pattern must allow any IP addresses using an expression like `^(?![0-9\.]+:)` in order for domains whitelisting to work. Here are examples of such patterns:
