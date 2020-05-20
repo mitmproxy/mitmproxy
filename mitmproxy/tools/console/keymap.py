@@ -34,7 +34,7 @@ Contexts = {
 navkeys = [
     "m_start", "m_end", "m_next", "m_select",
     "up", "down", "page_up", "page_down",
-    "left", "right"
+    "left", "right", "halfpage_up", "halfpage_down"
 ]
 
 

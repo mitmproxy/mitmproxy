@@ -25,6 +25,8 @@ def map(km):
     km.add("space", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl f", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl b", "console.nav.pageup", ["global"], "Page up")
+    km.add("ctrl u", "console.nav.halfpageup", ["global"], "Half page up")
+    km.add("ctrl d", "console.nav.halfpagedown", ["global"], "Half page down")
 
     km.add("I", "set intercept_active toggle", ["global"], "Toggle intercept")
     km.add("i", "console.command.set intercept", ["global"], "Set intercept")

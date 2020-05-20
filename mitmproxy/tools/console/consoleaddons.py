@@ -212,12 +212,26 @@ class ConsoleAddon:
         """
         self.master.inject_key("page up")
 
+    @command.command("console.nav.halfpageup")
+    def nav_halfpageup(self) -> None:
+        """
+            Go up.
+        """
+        self.master.inject_key("halfpage_up")
+
     @command.command("console.nav.pagedown")
     def nav_pagedown(self) -> None:
         """
             Go down.
         """
         self.master.inject_key("page down")
+
+    @command.command("console.nav.halfpagedown")
+    def nav_halfpagedown(self) -> None:
+        """
+            Go down.
+        """
+        self.master.inject_key("halfpage_down")
 
     @command.command("console.nav.left")
     def nav_left(self) -> None:
