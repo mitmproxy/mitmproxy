@@ -164,6 +164,10 @@ class FlowDetails(tabs.Tabs):
 
             from_client = not from_client
 
+        if flow.intercepted:
+            markup = widget_lines[-1].get_text()[0]
+            widget_lines[-1].set_text(("intercept", markup))
+
         widget_lines.insert(0, self._contentview_status_bar(viewmode.capitalize(), viewmode))
 
         return searchable.Searchable(widget_lines)
