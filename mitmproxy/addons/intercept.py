@@ -51,4 +51,5 @@ class Intercept:
         self.process_flow(f)
 
     def tcp_message(self, f):
-        f.intercept()
+        if self.filt:
+            f.intercept()
