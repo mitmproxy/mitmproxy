@@ -342,6 +342,11 @@ class ConsoleAddon:
         else:
             ctx.log.warn(f"No detail view for {type(flow).__name__}.")
 
+    @command.command("console.view.flowlist")
+    def view_flowlist(self) -> None:
+        """View flowlist."""
+        self.master.switch_view("flowlist")
+
     @command.command("console.exit")
     def exit(self) -> None:
         """Exit mitmproxy."""
