@@ -383,23 +383,30 @@ class ConsoleAddon:
         """
             Possible components for console.edit.focus.
         """
-        return [
-            "cookies",
-            "urlencoded form",
-            "multipart form",
-            "path",
-            "method",
-            "query",
-            "reason",
-            "request-headers",
-            "response-headers",
-            "request-body",
-            "response-body",
-            "status_code",
-            "set-cookies",
-            "url",
-            "tcp-message"
-        ]
+        flow = self.master.view.focus.flow
+        focus_options = []
+
+        if type(flow) == tcp.TCPFlow:
+            focus_options = ["tcp-message"]
+        elif type(flow) == http.HTTPFlow:
+            focus_options = [
+                "cookies",
+                "urlencoded form",
+                "multipart form",
+                "path",
+                "method",
+                "query",
+                "reason",
+                "request-headers",
+                "response-headers",
+                "request-body",
+                "response-body",
+                "status_code",
+                "set-cookies",
+                "url",
+            ]
+
+        return focus_options
 
     @command.command("console.edit.focus")
     @command.argument("flow_part", type=mitmproxy.types.Choice("console.edit.focus.options"))
