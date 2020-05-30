@@ -101,16 +101,14 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
             self.master.commands.execute("view.focus.go -1")
         elif key == "m_select":
             self.master.commands.execute("console.view.flow @focus")
-        elif key == "halfpage_up":
+        elif key == "halfpage_up" or key=="halfpage_down":
             (maxcol, maxrow) = size
             maxrow = maxrow // 2
             size = (maxcol, maxrow)
-            key = "page up"
-        elif key == "halfpage_down":
-            (maxcol, maxrow) = size
-            maxrow = maxrow // 2
-            size = (maxcol, maxrow)
-            key = "page down"
+            if key == "halfpage_up":
+                key = "page up"
+            else:
+                key = "page down"
         return urwid.ListBox.keypress(self, size, key)
 
     def view_changed(self):
