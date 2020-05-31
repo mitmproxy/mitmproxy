@@ -42,7 +42,7 @@ class Searchable(urwid.ListBox):
             self.set_focus(len(self.walker) - 1)
             self.walker._modified()
         else:
-            if key == "halfpage_up" or key=="halfpage_down":
+            if key == "halfpage_up" or key == "halfpage_down":
                 (maxcol, maxrow) = size
                 maxrow = maxrow // 2
                 size = (maxcol, maxrow)
