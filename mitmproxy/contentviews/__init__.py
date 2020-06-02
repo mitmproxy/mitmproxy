@@ -20,7 +20,7 @@ from mitmproxy.net import http
 from mitmproxy.utils import strutils
 from . import (
     auto, raw, hex, json, xml_html, wbxml, javascript, css,
-    urlencoded, multipart, image, query, protobuf, msgpack
+    urlencoded, multipart, image, query, protobuf, msgpack, graphql
 )
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 from ..http import HTTPFlow
@@ -176,6 +176,7 @@ add(auto.ViewAuto())
 add(raw.ViewRaw())
 add(hex.ViewHex())
 add(json.ViewJSON())
+add(graphql.ViewGraphQL())
 add(xml_html.ViewXmlHtml())
 add(wbxml.ViewWBXML())
 add(javascript.ViewJavaScript())
