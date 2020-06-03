@@ -17,17 +17,13 @@ def parse_json(s: bytes) -> typing.Any:
 
 
 def format_graphql(data):
-    return """# Operation:
-{operationName}
-
+    query = data["query"]
+    header_data = data.copy()
+    del header_data["query"]
+    return """{header}
 ---
-# Query:
 {query}
-
----
-# Variables
-{variables}
-""".format(operationName = data["operationName"], query = data["query"], variables = data["variables"])
+""".format(header=json.dumps(header_data, indent=2), query = query)
 
 class ViewGraphQL(base.View):
     name = "GraphQL"
