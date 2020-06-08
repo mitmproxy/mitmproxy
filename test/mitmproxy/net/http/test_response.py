@@ -77,6 +77,12 @@ class TestResponseCore:
         resp.data.reason = b'cr\xe9e'
         assert resp.reason == "crée"
 
+        # HTTP2 responses do not contain a reason phrase and self.data.reason will be None.
+        # This should render to an empty reason phrase so that functions
+        # expecting a string work properly.
+        resp.data.reason = None
+        assert resp.reason == ""
+
 
 class TestResponseUtils:
     """

@@ -122,10 +122,14 @@ class Response(message.Message):
     def reason(self):
         """
         HTTP Reason Phrase, e.g. "Not Found".
-        This is always :py:obj:`None` for HTTP2 requests, because HTTP2 responses do not contain a reason phrase.
+        HTTP2 responses do not contain a reason phrase and self.data.reason will be :py:obj:`None`.
+        When :py:obj:`None` return an empty reason phrase so that functions expecting a string work properly.
         """
         # Encoding: http://stackoverflow.com/a/16674906/934719
-        return self.data.reason.decode("ISO-8859-1", "surrogateescape")
+        if self.data.reason is not None:
+            return self.data.reason.decode("ISO-8859-1", "surrogateescape")
+        else:
+            return ""
 
     @reason.setter
     def reason(self, reason):
