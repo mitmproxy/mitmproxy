@@ -59,6 +59,11 @@ class ConsoleMaster(master.Master):
             keymap.KeymapConfig(),
         )
 
+        def sigint_handler(*args, **kwargs):
+            self.prompt_for_exit()
+
+        signal.signal(signal.SIGINT, sigint_handler)
+
         self.window = None
 
     def __setattr__(self, name, value):
@@ -69,6 +74,17 @@ class ConsoleMaster(master.Master):
         signals.status_message.send(
             message=str(exc),
             expire=1
+        )
+
+    def prompt_for_exit(self):
+        signals.status_prompt_onekey.send(
+            self,
+            prompt = "Quit",
+            keys = (
+                ("yes", "y"),
+                ("no", "n"),
+            ),
+            callback = self.quit,
         )
 
     def sig_add_log(self, event_store, entry: log.LogEntry):
