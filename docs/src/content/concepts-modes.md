@@ -24,7 +24,7 @@ Mitmproxy's regular mode is the simplest and the easiest to set up.
 
 1. Start mitmproxy.
 2. Configure your client to use mitmproxy by explicitly setting an HTTP
-    proxy.
+    proxy. By default, mitmproxy listens on port 8080.
 3. Quick Check: You should already be able to visit an unencrypted HTTP
     site through the proxy.
 4. Open the magic domain **mitm.it** and install the certificate for your
