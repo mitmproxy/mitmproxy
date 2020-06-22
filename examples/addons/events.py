@@ -1,11 +1,9 @@
+"""Generic event hooks."""
 import typing
 
 import mitmproxy.addonmanager
 import mitmproxy.connections
-import mitmproxy.http
 import mitmproxy.log
-import mitmproxy.tcp
-import mitmproxy.websocket
 import mitmproxy.proxy.protocol
 
 

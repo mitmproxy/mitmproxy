@@ -1,3 +1,5 @@
+"""Add an HTTP header to each response."""
+
 
 class AddHeader:
     def __init__(self):

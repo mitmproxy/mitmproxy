@@ -13,7 +13,7 @@ receive `Flow` objects as arguments - by modifying these objects, addons can
 change traffic on the fly. For instance, here is an addon that adds a response
 header with a count of the number of responses seen:
 
-{{< example src="examples/addons/addheader.py" lang="py" >}}
+{{< example src="examples/addons/http-add-header.py" lang="py" >}}
 
 
 ## Supported Events

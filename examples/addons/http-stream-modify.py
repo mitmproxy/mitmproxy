@@ -1,7 +1,8 @@
 """
-This inline script modifies a streamed response.
-If you do not need streaming, see the modify_response_body example.
-Be aware that content replacement isn't trivial:
+Modify a streamed response.
+
+Generally speaking, we recommend *not* to stream messages you need to modify.
+Modifying streamed responses is tricky and brittle:
     - If the transfer encoding isn't chunked, you cannot simply change the content length.
     - If you want to replace all occurrences of "foobar", make sure to catch the cases
       where one chunk ends with [...]foo" and the next starts with "bar[...].

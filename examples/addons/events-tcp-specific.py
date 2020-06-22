@@ -1,8 +1,8 @@
+"""TCP-specific events."""
 import mitmproxy.tcp
 
 
 class Events:
-    # TCP lifecycle
     def tcp_start(self, flow: mitmproxy.tcp.TCPFlow):
         """
             A TCP connection has started.

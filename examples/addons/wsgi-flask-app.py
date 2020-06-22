@@ -1,4 +1,6 @@
 """
+Host a WSGI app in mitmproxy.
+
 This example shows how to graft a WSGI app onto mitmproxy. In this
 instance, we're using the Flask framework (http://flask.pocoo.org/) to expose
 a single simplest-possible page.

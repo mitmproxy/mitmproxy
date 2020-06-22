@@ -1,5 +1,5 @@
 """
-This script enables remote debugging of the mitmproxy *UI* with PyCharm.
+This script enables remote debugging of the mitmproxy console *UI* with PyCharm.
 For general debugging purposes, it is easier to just debug mitmdump within PyCharm.
 
 Usage:

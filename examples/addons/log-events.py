@@ -1,3 +1,4 @@
+"""Post messages to mitmproxy's event log."""
 from mitmproxy import ctx
 
 

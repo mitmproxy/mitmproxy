@@ -189,7 +189,7 @@ You can also use a script to customise exactly which requests or responses are
 streamed. Requests/Responses that should be tagged for streaming by setting
 their ``.stream`` attribute to ``True``:
 
-{{< example src="examples/complex/stream.py" lang="py" >}}
+{{< example src="examples/addons/http-stream-simple.py" lang="py" >}}
 
 
 ### Websockets

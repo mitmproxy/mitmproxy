@@ -1,5 +1,7 @@
 """
-This script reflects all content passing through the proxy.
+Mirror all web pages.
+
+Useful if you are living down under.
 """
 from mitmproxy import http
 

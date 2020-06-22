@@ -1,6 +1,4 @@
-"""
-This example shows two ways to redirect flows to another server.
-"""
+"""Redirect HTTP requests to another server."""
 from mitmproxy import http
 
 

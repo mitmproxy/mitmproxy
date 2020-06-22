@@ -1,4 +1,6 @@
 """
+Inject a WebSocket message into a running connection.
+
 This example shows how to inject a WebSocket message to the client.
 Every new WebSocket connection will trigger a new asyncio task that
 periodically injects a new message to the client.
@@ -8,12 +10,11 @@ import mitmproxy.websocket
 
 
 class InjectWebSocketMessage:
-
     async def inject(self, flow: mitmproxy.websocket.WebSocketFlow):
         i = 0
         while not flow.ended and not flow.error:
             await asyncio.sleep(5)
-            flow.inject_message(flow.client_conn, 'This is the #{} injected message!'.format(i))
+            flow.inject_message(flow.client_conn, f'This is the #{i} injected message!')
             i += 1
 
     def websocket_start(self, flow):

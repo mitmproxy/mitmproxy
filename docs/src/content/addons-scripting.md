@@ -13,13 +13,13 @@ module as a whole to be treated as an addon object. This lets us place event
 handler functions in the module scope. For instance, here is a complete script
 that adds a header to every request.
 
-{{< example src="examples/addons/scripting-headers.py" lang="py" >}}
+{{< example src="examples/addons/scripting-minimal-example.py" lang="py" >}}
 
 
 Here's another example that intercepts requests to a particular URL and sends
 an arbitrary response instead:
 
-{{< example src="examples/simple/send_reply_from_proxy.py" lang="py" >}}
+{{< example src="examples/addons/http-reply-from-proxy.py" lang="py" >}}
 
 All events around the HTTP protocol [can be found here]({{< relref "addons-events#http-events">}}).
 
@@ -31,7 +31,7 @@ scripting.
 
 The WebSocket protocol initially looks like a regular HTTP request, before the client and server agree to upgrade the connection to WebSocket. All scripting events for initial HTTP handshake, and also the dedicated WebSocket events [can be found here]({{< relref "addons-events#websocket-events">}}).
 
-{{< example src="examples/simple/websocket_messages.py" lang="py" >}}
+{{< example src="examples/addons/websocket-simple.py" lang="py" >}}
 
 For WebSocket-related objects please look at the [websocket][] module to find
 all attributes that you can use when scripting.
@@ -43,7 +43,7 @@ all attributes that you can use when scripting.
 
 All events around the TCP protocol [can be found here]({{< relref "addons-events#tcp-events">}}).
 
-{{< example src="examples/complex/tcp_message.py" lang="py" >}}
+{{< example src="examples/addons/tcp-simple.py" lang="py" >}}
 
 For WebSocket-related objects please look at the [tcp][] module to find
 all attributes that you can use when scripting.

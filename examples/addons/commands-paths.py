@@ -1,3 +1,4 @@
+"""Handle file paths as command arguments."""
 import typing
 
 from mitmproxy import command
@@ -7,9 +8,6 @@ from mitmproxy import types
 
 
 class MyAddon:
-    def __init__(self):
-        self.num = 0
-
     @command.command("myaddon.histogram")
     def histogram(
         self,

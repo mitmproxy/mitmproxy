@@ -15,9 +15,5 @@ for script in scripts/* ; do
   "${script}" > "${output}"
 done
 
-output="src/content/addons-examples.md"
-echo "Generating examples content page into ${output} ..."
-./render_examples.py > "${output}"
-
 cd src
 hugo
