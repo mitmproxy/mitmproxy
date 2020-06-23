@@ -1,8 +1,8 @@
+"""HTTP-specific events."""
 import mitmproxy.http
 
 
 class Events:
-    # HTTP lifecycle
     def http_connect(self, flow: mitmproxy.http.HTTPFlow):
         """
             An HTTP CONNECT request was received. Setting a non 2xx response on

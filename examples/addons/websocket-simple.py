@@ -1,3 +1,4 @@
+"""Process individual messages from a WebSocket connection."""
 import re
 from mitmproxy import ctx
 

@@ -1,3 +1,4 @@
+"""WebSocket-specific events."""
 import mitmproxy.http
 import mitmproxy.websocket
 

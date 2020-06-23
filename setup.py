@@ -102,9 +102,6 @@ setup(
             "pytest>=5.1.3,<6",
             "requests>=2.9.1,<3",
             "tox>=3.5,<3.15",
-        ],
-        'examples': [
-            "beautifulsoup4>=4.4.1,<4.9"
         ]
     }
 )

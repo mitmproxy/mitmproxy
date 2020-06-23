@@ -10,35 +10,21 @@ from ..mitmproxy import tservers
 class TestScripts(tservers.MasterTest):
     def test_add_header(self, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/simple/add_header.py"))
-            f = tflow.tflow(resp=tutils.tresp())
-            a.response(f)
-            assert f.response.headers["newheader"] == "foo"
+            a = tctx.script(tdata.path("../examples/addons/scripting-minimal-example.py"))
+            f = tflow.tflow()
+            a.request(f)
+            assert f.request.headers["myheader"] == "value"
 
     def test_custom_contentviews(self, tdata):
         with taddons.context() as tctx:
-            tctx.script(tdata.path("../examples/simple/custom_contentview.py"))
+            tctx.script(tdata.path("../examples/addons/contentview.py"))
             swapcase = contentviews.get("swapcase")
             _, fmt = swapcase(b"<html>Test!</html>")
             assert any(b'tEST!' in val[0][1] for val in fmt)
 
-    def test_iframe_injector(self, tdata):
-        with taddons.context() as tctx:
-            sc = tctx.script(tdata.path("../examples/simple/modify_body_inject_iframe.py"))
-            tctx.configure(
-                sc,
-                iframe = "http://example.org/evil_iframe"
-            )
-            f = tflow.tflow(
-                resp=tutils.tresp(content=b"<html><body>mitmproxy</body></html>")
-            )
-            tctx.master.addons.invoke_addon(sc, "response", f)
-            content = f.response.content
-            assert b'iframe' in content and b'evil_iframe' in content
-
     def test_modify_form(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(tdata.path("../examples/simple/modify_form.py"))
+            sc = tctx.script(tdata.path("../examples/addons/http-modify-form.py"))
 
             form_header = Headers(content_type="application/x-www-form-urlencoded")
             f = tflow.tflow(req=tutils.treq(headers=form_header))
@@ -52,7 +38,7 @@ class TestScripts(tservers.MasterTest):
 
     def test_modify_querystring(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(tdata.path("../examples/simple/modify_querystring.py"))
+            sc = tctx.script(tdata.path("../examples/addons/http-modify-query-string.py"))
             f = tflow.tflow(req=tutils.treq(path="/search?q=term"))
 
             sc.request(f)
@@ -64,36 +50,14 @@ class TestScripts(tservers.MasterTest):
 
     def test_redirect_requests(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(tdata.path("../examples/simple/redirect_requests.py"))
+            sc = tctx.script(tdata.path("../examples/addons/http-redirect-requests.py"))
             f = tflow.tflow(req=tutils.treq(host="example.org"))
             sc.request(f)
             assert f.request.host == "mitmproxy.org"
 
     def test_send_reply_from_proxy(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(tdata.path("../examples/simple/send_reply_from_proxy.py"))
+            sc = tctx.script(tdata.path("../examples/addons/http-reply-from-proxy.py"))
             f = tflow.tflow(req=tutils.treq(host="example.com", port=80))
             sc.request(f)
             assert f.response.content == b"Hello World"
-
-    def test_dns_spoofing(self, tdata):
-        with taddons.context() as tctx:
-            sc = tctx.script(tdata.path("../examples/complex/dns_spoofing.py"))
-
-            original_host = "example.com"
-
-            host_header = Headers(host=original_host)
-            f = tflow.tflow(req=tutils.treq(headers=host_header, port=80))
-
-            tctx.master.addons.invoke_addon(sc, "requestheaders", f)
-
-            # Rewrite by reverse proxy mode
-            f.request.scheme = "https"
-            f.request.port = 443
-
-            tctx.master.addons.invoke_addon(sc, "request", f)
-
-            assert f.request.scheme == "http"
-            assert f.request.port == 80
-
-            assert f.request.headers["Host"] == original_host
