@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from mitmproxy.proxy2 import events, layer, commands
+from mitmproxy.proxy2.context import Connection, Context
 
 StreamId = int
 
@@ -17,7 +18,12 @@ class HttpEvent(events.Event):
 
 
 class HttpConnection(layer.Layer):
-    pass
+    conn: Connection
+
+    def __init__(self, context: Context, conn: Connection):
+        super().__init__(context)
+        assert isinstance(conn, Connection)
+        self.conn = conn
 
 
 class HttpCommand(commands.Command):

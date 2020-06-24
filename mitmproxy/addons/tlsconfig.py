@@ -96,6 +96,9 @@ class TlsConfig:
             elif client.alpn_offers:
                 server.alpn_offers = client.alpn_offers
 
+        # FIXME hardcode
+        server.alpn_offers = tls.HTTP1_ALPNS
+
         # We pass through the list of ciphers send by the client, because some HTTP/2 servers
         # will select a non-HTTP/2 compatible cipher from our default list and then hang up
         # because it's incompatible with h2.
@@ -140,7 +143,8 @@ class TlsConfig:
         certstore_path = os.path.expanduser(ctx.options.confdir)
         if not os.path.exists(os.path.dirname(certstore_path)):
             raise exceptions.OptionsError(
-                f"Certificate Authority parent directory does not exist: {os.path.dirname(certstore_path)}")
+                f"Certificate Authority parent directory does not exist: {os.path.dirname(certstore_path)}"
+            )
         self.certstore = certs.CertStore.from_store(
             path=certstore_path,
             basename=CONF_BASENAME,
