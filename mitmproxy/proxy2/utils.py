@@ -21,7 +21,7 @@ def expect(*event_types):
                 else:
                     event_types_str = '|'.join(e.__name__ for e in event_types) or "no events"
                     raise AssertionError(
-                        f"Unexpected event type at {f.__qualname__}: "
+                        f"Unexpected event type at t{f.__qualname__}: "
                         f"Expected {event_types_str}, got {event}."
                     )
 

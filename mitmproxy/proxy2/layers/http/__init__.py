@@ -18,7 +18,7 @@ from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders
 from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, HttpRequestHook, HttpResponseHeadersHook, \
     HttpResponseHook
 from ._http1 import Http1Client, Http1Server
-from ._http2 import Http2Client
+from ._http2 import Http2Client, Http2Server
 
 # This regex extracts splits the host header into host and port.
 # Handles the edge case of IPv6 addresses containing colons.
@@ -27,7 +27,7 @@ parse_host_header = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
 
 def validate_request(mode, request) -> typing.Optional[str]:
-    if request.scheme not in ("http", None):
+    if request.scheme not in ("http", "https", None):
         return f"Invalid request scheme: {request.scheme}"
     if mode is HTTPMode.transparent:
         if request.first_line_format == "authority":
@@ -424,8 +424,13 @@ class HttpLayer(layer.Layer):
         self.streams = {}
         self.command_sources = {}
 
+        if self.context.client.alpn == b"h2":
+            http_conn = Http2Server(context.fork())
+        else:
+            http_conn = Http1Server(context.fork())
+
         self.connections = {
-            context.client: Http1Server(context.fork())
+            context.client: http_conn
         }
 
     def __repr__(self):
@@ -433,6 +438,7 @@ class HttpLayer(layer.Layer):
 
     def _handle_event(self, event: events.Event):
         if isinstance(event, events.Start):
+            yield from self.event_to_child(self.connections[self.context.client], event)
             if self.mode is HTTPMode.upstream:
                 self.context.server.via = server_spec.parse_with_mode(self.context.options.mode)[1]
         elif isinstance(event, events.CommandReply):

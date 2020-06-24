@@ -21,7 +21,6 @@ TBodyReader = typing.Union[ChunkedReader, Http10Reader, ContentLengthReader]
 
 
 class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
-    conn: Connection
     stream_id: typing.Optional[StreamId] = None
     request: typing.Optional[http.HTTPRequest] = None
     response: typing.Optional[http.HTTPResponse] = None
@@ -32,9 +31,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     buf: ReceiveBuffer
 
     def __init__(self, context: Context, conn: Connection):
-        super().__init__(context)
-        assert isinstance(conn, Connection)
-        self.conn = conn
+        super().__init__(context, conn)
         self.buf = ReceiveBuffer()
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -106,12 +103,11 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
 
 class Http1Server(Http1Connection):
     """A simple HTTP/1 server with no pipelining support."""
-    conn: Client
 
     def __init__(self, context: Context):
         super().__init__(context, context.client)
         self.stream_id = 1
-        self.state = self.read_request_headers
+        self.state = self.start
 
     def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
         assert event.stream_id == self.stream_id
@@ -161,6 +157,11 @@ class Http1Server(Http1Connection):
         elif self.request_done:
             self.state = self.wait
 
+    @expect(events.Start)
+    def start(self, event: events.Start) -> layer.CommandGenerator[None]:
+        self.state = self.read_request_headers
+        yield from ()
+
     def read_request_headers(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived):
             request_head = self.buf.maybe_extract_lines()
@@ -205,7 +206,6 @@ class Http1Server(Http1Connection):
 
 
 class Http1Client(Http1Connection):
-    conn: Server
     send_queue: typing.List[HttpEvent]
     """A queue of send events for flows other than the one that is currently being transmitted."""
 

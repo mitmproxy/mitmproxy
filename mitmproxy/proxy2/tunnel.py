@@ -49,7 +49,8 @@ class TunnelLayer(layer.Layer):
                 if self.tunnel_state is TunnelState.ESTABLISHING:
                     done, err = yield from self.receive_handshake_data(event.data)
                     if done:
-                        self.conn.state = context.ConnectionState.OPEN
+                        if self.conn != self.tunnel_connection:
+                            self.conn.state = context.ConnectionState.OPEN
                         self.tunnel_state = TunnelState.OPEN
                     if err:
                         self.tunnel_state = TunnelState.CLOSED
@@ -60,7 +61,8 @@ class TunnelLayer(layer.Layer):
                 else:
                     yield from self.receive_data(event.data)
             elif isinstance(event, events.ConnectionClosed):
-                self.conn.state &= ~context.ConnectionState.CAN_READ
+                if self.conn != self.tunnel_connection:
+                    self.conn.state &= ~context.ConnectionState.CAN_READ
                 if self.tunnel_state is TunnelState.OPEN:
                     yield from self.receive_close()
                 elif self.tunnel_state is TunnelState.ESTABLISHING:
@@ -76,7 +78,8 @@ class TunnelLayer(layer.Layer):
                 if isinstance(command, commands.SendData):
                     yield from self.send_data(command.data)
                 elif isinstance(command, commands.CloseConnection):
-                    self.conn.state &= ~context.ConnectionState.CAN_WRITE
+                    if self.conn != self.tunnel_connection:
+                        self.conn.state &= ~context.ConnectionState.CAN_WRITE
                     yield from self.send_close()
                 elif isinstance(command, commands.OpenConnection):
                     # create our own OpenConnection command object that blocks here.

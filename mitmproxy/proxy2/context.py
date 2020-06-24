@@ -1,3 +1,4 @@
+import warnings
 from enum import Flag, auto
 from typing import List, Literal, Optional, Sequence, Union
 
@@ -54,6 +55,11 @@ class Client(Connection):
     def __init__(self, peername, sockname):
         self.peername = peername
         self.sockname = sockname
+
+    @property
+    def address(self):
+        warnings.warn("Client.address is deprecated, use Client.peername instead.", PendingDeprecationWarning)
+        return self.peername
 
 
 class Server(Connection):
