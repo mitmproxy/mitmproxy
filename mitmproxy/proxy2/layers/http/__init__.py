@@ -283,9 +283,7 @@ class HttpStream(layer.Layer):
         self.flow.error = flow.Error(event.message)
         yield HttpErrorHook(self.flow)
 
-        if isinstance(event, RequestProtocolError):
-            yield SendHttp(event, self.context.server)
-        else:
+        if isinstance(event, ResponseProtocolError):
             yield SendHttp(event, self.context.client)
 
     def make_server_connection(self) -> layer.CommandGenerator[bool]:

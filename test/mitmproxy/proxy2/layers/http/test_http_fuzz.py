@@ -111,7 +111,7 @@ def test_fuzz_request(opts, data):
 @example([b'0 OK\r\n\r\n', b'\r\n', b'5\r\n12345\r\n0\r\n\r\n'])
 def test_fuzz_response(opts, data):
     tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), opts)
-    server = Placeholder()
+    server = Placeholder(context.Server)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     assert (
             playbook

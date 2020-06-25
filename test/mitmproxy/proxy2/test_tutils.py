@@ -44,67 +44,82 @@ def tplaybook(tctx):
 
 def test_simple(tplaybook):
     assert (
-        tplaybook
-        >> TEvent()
-        << TCommand()
-        >> TEvent([])
-        << None
+            tplaybook
+            >> TEvent()
+            << TCommand()
+            >> TEvent([])
+            << None
     )
 
 
 def test_mismatch(tplaybook):
     with pytest.raises(AssertionError, match="Playbook mismatch"):
         assert (
-            tplaybook
-            >> TEvent([])
-            << TCommand()
+                tplaybook
+                >> TEvent([])
+                << TCommand()
         )
 
 
 def test_partial_assert(tplaybook):
     """Developers can assert parts of a playbook and the continue later on."""
     assert (
-        tplaybook
-        >> TEvent()
-        << TCommand()
+            tplaybook
+            >> TEvent()
+            << TCommand()
     )
     assert (
-        tplaybook
-        >> TEvent()
-        << TCommand()
+            tplaybook
+            >> TEvent()
+            << TCommand()
     )
     assert len(tplaybook.actual) == len(tplaybook.expected) == 4
 
 
-def test_placeholder(tplaybook):
+@pytest.mark.parametrize("typed", [True, False])
+def test_placeholder(tplaybook, typed):
     """Developers can specify placeholders for yet unknown attributes."""
-    f = tutils.Placeholder()
+    if typed:
+        f = tutils.Placeholder(int)
+    else:
+        f = tutils.Placeholder()
     assert (
-        tplaybook
-        >> TEvent([42])
-        << TCommand(f)
+            tplaybook
+            >> TEvent([42])
+            << TCommand(f)
     )
     assert f() == 42
+
+
+def test_placeholder_type_mismatch(tplaybook):
+    """Developers can specify placeholders for yet unknown attributes."""
+    f = tutils.Placeholder(str)
+    with pytest.raises(TypeError, match="Placeholder type error for TCommand.x: expected str, got int."):
+        assert (
+                tplaybook
+                >> TEvent([42])
+                << TCommand(f)
+        )
 
 
 def test_fork(tplaybook):
     """Playbooks can be forked to test multiple execution streams."""
     assert (
-        tplaybook
-        >> TEvent()
-        << TCommand()
+            tplaybook
+            >> TEvent()
+            << TCommand()
     )
     p2 = tplaybook.fork()
     p3 = tplaybook.fork()
     assert (
-        tplaybook
-        >> TEvent()
-        << TCommand()
+            tplaybook
+            >> TEvent()
+            << TCommand()
     )
     assert (
-        p2
-        >> TEvent()
-        << TCommand()
+            p2
+            >> TEvent()
+            << TCommand()
     )
     assert len(tplaybook.actual) == len(tplaybook.expected) == 4
     assert len(p2.actual) == len(p2.expected) == 4
@@ -116,9 +131,9 @@ def test_fork_placeholder(tplaybook):
     f = tutils.Placeholder()
     flow = object()
     assert (
-        tplaybook
-        >> TEvent([flow])
-        << TCommand(f)
+            tplaybook
+            >> TEvent([flow])
+            << TCommand(f)
     )
     assert f() == flow
     p2 = tplaybook.fork()
@@ -129,18 +144,18 @@ def test_fork_placeholder(tplaybook):
     # As we have forked, we need a new placeholder.
     f2 = tutils.Placeholder()
     assert (
-        p2
-        >> TEvent([p2_flow])
-        << TCommand(f2)
+            p2
+            >> TEvent([p2_flow])
+            << TCommand(f2)
     )
     assert f2() == p2_flow
 
     # re-using the old placeholder does not work.
     with pytest.raises(AssertionError, match="Playbook mismatch"):
         assert (
-            p2
-            >> TEvent([p2_flow])
-            << TCommand(f)
+                p2
+                >> TEvent([p2_flow])
+                << TCommand(f)
         )
 
 
@@ -156,10 +171,10 @@ def test_unfinished(tplaybook):
 def test_command_reply(tplaybook):
     """CommandReplies can use relative offsets to point to the matching command."""
     assert (
-        tplaybook
-        >> TEvent()
-        << TCommand()
-        >> tutils.reply()
+            tplaybook
+            >> TEvent()
+            << TCommand()
+            >> tutils.reply()
     )
     assert tplaybook.actual[1] == tplaybook.actual[2].command
 
@@ -192,5 +207,5 @@ def test_eq_placeholder():
     assert a.foo == b.foo() == 42
     assert a.bar() == b.bar == 43
 
-    b.foo.obj = 44
+    b.foo._obj = 44
     assert not tutils._eq(a, b)

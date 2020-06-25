@@ -95,7 +95,7 @@ class SSLTest:
 
 def _test_echo(playbook: tutils.Playbook, tssl: SSLTest, conn: context.Connection) -> None:
     tssl.obj.write(b"Hello World")
-    data = tutils.Placeholder()
+    data = tutils.Placeholder(bytes)
     assert (
             playbook
             >> events.DataReceived(conn, tssl.out.read())
@@ -118,7 +118,7 @@ class TlsEchoLayer(tutils.EchoLayer):
 
 
 def interact(playbook: tutils.Playbook, conn: context.Connection, tssl: SSLTest):
-    data = tutils.Placeholder()
+    data = tutils.Placeholder(bytes)
     assert (
             playbook
             >> events.DataReceived(conn, tssl.out.read())
@@ -200,7 +200,7 @@ class TestServerTLS:
         tssl = SSLTest(server_side=True)
 
         # send ClientHello
-        data = tutils.Placeholder()
+        data = tutils.Placeholder(bytes)
         assert (
                 playbook
                 << tls.TlsStartHook(tutils.Placeholder())
@@ -253,7 +253,7 @@ class TestServerTLS:
         tssl = SSLTest(server_side=True)
 
         # send ClientHello
-        data = tutils.Placeholder()
+        data = tutils.Placeholder(bytes)
         assert (
                 playbook
                 >> events.DataReceived(tctx.client, b"open-connection")
@@ -313,7 +313,7 @@ class TestClientTLS:
         assert not tctx.client.tls_established
 
         # Send ClientHello, receive ServerHello
-        data = tutils.Placeholder()
+        data = tutils.Placeholder(bytes)
         assert (
                 playbook
                 >> events.DataReceived(tctx.client, tssl_client.out.read())
@@ -349,8 +349,7 @@ class TestClientTLS:
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx, alpn=["quux"])
 
         # We should now get instructed to open a server connection.
-        data = tutils.Placeholder()
-        tls_clienthello = tutils.Placeholder()
+        data = tutils.Placeholder(bytes)
 
         def require_server_conn(client_hello: tls.ClientHelloData) -> None:
             client_hello.establish_server_tls_first = True
@@ -358,7 +357,7 @@ class TestClientTLS:
         assert (
                 playbook
                 >> events.DataReceived(tctx.client, tssl_client.out.read())
-                << tls.TlsClienthelloHook(tls_clienthello)
+                << tls.TlsClienthelloHook(tutils.Placeholder())
                 >> tutils.reply(side_effect=require_server_conn)
                 << commands.OpenConnection(tctx.server)
                 >> tutils.reply(None)
@@ -372,7 +371,7 @@ class TestClientTLS:
         with pytest.raises(ssl.SSLWantReadError):
             tssl_server.obj.do_handshake()
 
-        data = tutils.Placeholder()
+        data = tutils.Placeholder(bytes)
         assert (
                 playbook
                 >> events.DataReceived(tctx.server, tssl_server.out.read())
@@ -383,7 +382,7 @@ class TestClientTLS:
         assert tctx.server.tls_established
         # Server TLS is established, we can now reply to the client handshake...
 
-        data = tutils.Placeholder()
+        data = tutils.Placeholder(bytes)
         assert (
                 playbook
                 >> reply_tls_start(alpn=b"quux")
@@ -421,7 +420,7 @@ class TestClientTLS:
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx, sni=b"wrong.host.mitmproxy.org")
         playbook.logs = True
 
-        data = tutils.Placeholder()
+        data = tutils.Placeholder(bytes)
         assert (
                 playbook
                 >> events.DataReceived(tctx.client, tssl_client.out.read())
@@ -449,7 +448,6 @@ class TestClientTLS:
         """Test the scenario where the client doesn't trust the mitmproxy CA."""
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx, sni=b"wrong.host.mitmproxy.org")
 
-        data = tutils.Placeholder()
         assert (
                 playbook
                 >> events.DataReceived(tctx.client, tssl_client.out.read())
@@ -457,7 +455,7 @@ class TestClientTLS:
                 >> tutils.reply()
                 << tls.TlsStartHook(tutils.Placeholder())
                 >> reply_tls_start()
-                << commands.SendData(tctx.client, data)
+                << commands.SendData(tctx.client, tutils.Placeholder())
                 >> events.ConnectionClosed(tctx.client)
                 << commands.Log("Client TLS handshake failed. The client may not trust the proxy's certificate "
                                 "for wrong.host.mitmproxy.org (connection closed without notice)", "warn")
