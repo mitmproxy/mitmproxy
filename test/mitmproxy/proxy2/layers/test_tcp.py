@@ -2,6 +2,7 @@ from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.proxy2.context import ConnectionState
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import tcp
+from mitmproxy.tcp import TCPFlow
 from ..tutils import Placeholder, Playbook, reply
 
 
@@ -23,7 +24,7 @@ def test_open_connection(tctx):
 
 
 def test_open_connection_err(tctx):
-    f = Placeholder()
+    f = Placeholder(TCPFlow)
     assert (
             Playbook(tcp.TCPLayer(tctx))
             << tcp.TcpStartHook(f)
@@ -38,7 +39,7 @@ def test_open_connection_err(tctx):
 
 def test_simple(tctx):
     """open connection, receive data, send it to peer"""
-    f = Placeholder()
+    f = Placeholder(TCPFlow)
 
     assert (
             Playbook(tcp.TCPLayer(tctx))

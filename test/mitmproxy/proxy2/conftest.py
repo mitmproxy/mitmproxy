@@ -6,7 +6,7 @@ from mitmproxy.proxy2 import context
 
 
 @pytest.fixture
-def tctx():
+def tctx() -> context.Context:
     opts = options.Options()
     Proxyserver().load(opts)
     return context.Context(

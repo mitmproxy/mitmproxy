@@ -28,12 +28,13 @@ class H2ConnectionLogger(h2.config.DummyLogger):
 class SendH2Data(NamedTuple):
     data: bytes
     end_stream: bool
-    pad_length: Optional[int]
 
 
 class BufferedH2Connection(h2.connection.H2Connection):
     """
     This class wrap's hyper-h2's H2Connection and adds internal send buffers.
+
+    To simplify implementation, padding is unsupported.
     """
     stream_buffers: DefaultDict[int, Deque[SendH2Data]]
 
@@ -46,37 +47,32 @@ class BufferedH2Connection(h2.connection.H2Connection):
             stream_id: int,
             data: bytes,
             end_stream: bool = False,
-            pad_length: Optional[int] = None
+            pad_length: None = None
     ) -> None:
         """
         Send data on a given stream.
 
-        In contrast to plain h2, this method will not emit
-        either FlowControlError or FrameTooLargeError.
-        Instead, data is buffered and split up.
+        In contrast to plain hyper-h2, this method will not raise if the data cannot be sent immediately.
+        Data is split up and buffered internally.
         """
         frame_size = len(data)
-        if pad_length is not None:
-            frame_size += pad_length + 1
+        assert pad_length is None
 
         while frame_size > self.max_outbound_frame_size:
-            chunk_1 = data[:self.max_outbound_frame_size]
-            pad_1 = max(0, self.max_outbound_frame_size - len(data))
-            self.send_data(stream_id, chunk_1, end_stream=False, pad_length=pad_1 or None)
+            chunk_data = data[:self.max_outbound_frame_size]
+            self.send_data(stream_id, chunk_data, end_stream=False)
 
             data = data[self.max_outbound_frame_size:]
-            if pad_length:
-                pad_length -= pad_1
-            frame_size -= len(chunk_1) + pad_1
+            frame_size -= len(chunk_data)
 
         available_window = self.local_flow_control_window(stream_id)
-        if frame_size > available_window:
-            self.stream_buffers[stream_id].append(
-                SendH2Data(data, end_stream, pad_length)
-            )
+        if frame_size <= available_window:
+            super().send_data(stream_id, data, end_stream)
         else:
             # We can't send right now, so we buffer.
-            super().send_data(stream_id, data, end_stream, pad_length)
+            self.stream_buffers[stream_id].append(
+                SendH2Data(data, end_stream)
+            )
 
     def receive_data(self, data: bytes):
         events = super().receive_data(data)
@@ -112,16 +108,14 @@ class BufferedH2Connection(h2.connection.H2Connection):
                     SendH2Data(
                         data=chunk.data[available_window:],
                         end_stream=chunk.end_stream,
-                        pad_length=chunk.pad_length,
                     )
                 )
                 chunk = SendH2Data(
                     data=chunk.data[:available_window],
                     end_stream=False,
-                    pad_length=None,
                 )
 
-            super().send_data(stream_id, data=chunk.data, end_stream=chunk.end_stream, pad_length=chunk.pad_length)
+            self.send_data(stream_id, data=chunk.data, end_stream=chunk.end_stream)
 
             available_window -= len(chunk.data)
             if not self.stream_buffers[stream_id]:

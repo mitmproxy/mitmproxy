@@ -1,9 +1,12 @@
+from typing import Callable
+
 import pytest
 
 from mitmproxy.http import HTTPFlow, HTTPResponse
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import layer
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
+from mitmproxy.proxy2.context import Server
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import TCPLayer, http, tls
 from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, reply_next_layer
@@ -11,8 +14,8 @@ from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, reply_nex
 
 def test_http_proxy(tctx):
     """Test a simple HTTP GET / request"""
-    server = Placeholder()
-    flow = Placeholder()
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.regular))
             >> DataReceived(tctx.client, b"GET http://example.com/foo?hello=1 HTTP/1.1\r\nHost: example.com\r\n\r\n")
@@ -37,8 +40,8 @@ def test_http_proxy(tctx):
 @pytest.mark.parametrize("strategy", ["lazy", "eager"])
 def test_https_proxy(strategy, tctx):
     """Test a CONNECT request, followed by a HTTP GET /"""
-    server = Placeholder()
-    flow = Placeholder()
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
     tctx.options.connection_strategy = strategy
 
@@ -79,8 +82,8 @@ def test_https_proxy(strategy, tctx):
 @pytest.mark.parametrize("strategy", ["lazy", "eager"])
 def test_redirect(strategy, https_server, https_client, tctx, monkeypatch):
     """Test redirects between http:// and https:// in regular proxy mode."""
-    server = Placeholder()
-    flow = Placeholder()
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
     tctx.options.connection_strategy = strategy
     p = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
 
@@ -121,8 +124,8 @@ def test_redirect(strategy, https_server, https_client, tctx, monkeypatch):
 
 def test_multiple_server_connections(tctx):
     """Test multiple requests being rewritten to different targets."""
-    server1 = Placeholder()
-    server2 = Placeholder()
+    server1 = Placeholder(Server)
+    server2 = Placeholder(Server)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
 
     def redirect(to: str):
@@ -174,7 +177,7 @@ def test_http_reply_from_proxy(tctx):
 
 def test_response_until_eof(tctx):
     """Test scenario where the server response body is terminated by EOF."""
-    server = Placeholder()
+    server = Placeholder(Server)
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
@@ -192,14 +195,14 @@ def test_disconnect_while_intercept(tctx):
     """Test a server disconnect while a request is intercepted."""
     tctx.options.connection_strategy = "eager"
 
-    server1 = Placeholder()
-    server2 = Placeholder()
-    flow = Placeholder()
+    server1 = Placeholder(Server)
+    server2 = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
 
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n")
-            << http.HttpConnectHook(Placeholder())
+            << http.HttpConnectHook(Placeholder(HTTPFlow))
             >> reply()
             << OpenConnection(server1)
             >> reply(None)
@@ -222,8 +225,8 @@ def test_disconnect_while_intercept(tctx):
 
 def test_response_streaming(tctx):
     """Test HTTP response streaming"""
-    server = Placeholder()
-    flow = Placeholder()
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
 
     def enable_streaming(flow: HTTPFlow):
         flow.response.stream = lambda x: x.upper()
@@ -250,8 +253,8 @@ def test_request_streaming(tctx, response):
 
     This is a bit more contrived as we may receive server data while we are still sending the request.
     """
-    server = Placeholder()
-    flow = Placeholder()
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
 
     def enable_streaming(flow: HTTPFlow):
@@ -301,7 +304,7 @@ def test_request_streaming(tctx, response):
                 << CloseConnection(tctx.client)
         )
     elif response == "early kill":
-        err = Placeholder()
+        err = Placeholder(bytes)
         assert (
                 playbook
                 >> ConnectionClosed(server)
@@ -318,9 +321,9 @@ def test_request_streaming(tctx, response):
 def test_server_unreachable(tctx, connect):
     """Test the scenario where the target server is unreachable."""
     tctx.options.connection_strategy = "eager"
-    server = Placeholder()
-    flow = Placeholder()
-    err = Placeholder()
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    err = Placeholder(bytes)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     if connect:
         playbook >> DataReceived(tctx.client, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
@@ -352,9 +355,9 @@ def test_server_unreachable(tctx, connect):
 ])
 def test_server_aborts(tctx, data):
     """Test the scenario where the server doesn't serve a response"""
-    server = Placeholder()
-    flow = Placeholder()
-    err = Placeholder()
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    err = Placeholder(bytes)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     assert (
             playbook
@@ -383,9 +386,9 @@ def test_server_aborts(tctx, data):
 @pytest.mark.parametrize("strategy", ["eager", "lazy"])
 def test_upstream_proxy(tctx, redirect, scheme, strategy):
     """Test that an upstream HTTP proxy is used."""
-    server = Placeholder()
-    server2 = Placeholder()
-    flow = Placeholder()
+    server = Placeholder(Server)
+    server2 = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
     tctx.options.mode = "upstream:http://proxy:8080"
     tctx.options.connection_strategy = strategy
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.upstream), hooks=False)
@@ -471,8 +474,8 @@ def test_upstream_proxy(tctx, redirect, scheme, strategy):
 @pytest.mark.parametrize("strategy", ["eager", "lazy"])
 def test_http_proxy_tcp(tctx, mode, strategy):
     """Test TCP over HTTP CONNECT."""
-    server = Placeholder()
-    flow = Placeholder()
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
 
     if mode == "upstream":
         tctx.options.mode = "upstream:http://proxy:8080"
@@ -526,7 +529,7 @@ def test_http_proxy_tcp(tctx, mode, strategy):
 
 @pytest.mark.parametrize("strategy", ["eager", "lazy"])
 def test_proxy_chain(tctx, strategy):
-    server = Placeholder()
+    server = Placeholder(Server)
     tctx.options.connection_strategy = strategy
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
 
@@ -551,7 +554,7 @@ def test_proxy_chain(tctx, strategy):
 
 def test_no_headers(tctx):
     """Test that we can correctly reassemble requests/responses with no headers."""
-    server = Placeholder()
+    server = Placeholder(Server)
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\n\r\n")
@@ -566,7 +569,7 @@ def test_no_headers(tctx):
 
 def test_http_proxy_relative_request(tctx):
     """Test handling of a relative-form "GET /" in regular proxy mode."""
-    server = Placeholder()
+    server = Placeholder(Server)
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
@@ -593,7 +596,7 @@ def test_http_proxy_relative_request_no_host_header(tctx):
 
 def test_http_expect(tctx):
     """Test handling of a 'Expect: 100-continue' header."""
-    server = Placeholder()
+    server = Placeholder(Server)
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"PUT http://example.com/large-file HTTP/1.1\r\n"
@@ -612,3 +615,47 @@ def test_http_expect(tctx):
             << SendData(tctx.client, b"HTTP/1.1 201 Created\r\nContent-Length: 0\r\n\r\n")
     )
     assert server().address == ("example.com", 80)
+
+
+@pytest.mark.parametrize("stream", [True, False])
+def test_http_client_aborts(tctx, stream):
+    """Test handling of the case where a client aborts during request transmission."""
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=True)
+
+    def enable_streaming(flow: HTTPFlow):
+        flow.request.stream = True
+
+    assert (
+            playbook
+            >> DataReceived(tctx.client, b"POST http://example.com/ HTTP/1.1\r\n"
+                                         b"Host: example.com\r\n"
+                                         b"Content-Length: 6\r\n\r\n"
+                                         b"abc")
+            << http.HttpRequestHeadersHook(flow)
+    )
+    if stream:
+        assert (
+                playbook
+                >> reply(side_effect=enable_streaming)
+                << OpenConnection(server)
+                >> reply(None)
+                << SendData(server, b"POST / HTTP/1.1\r\n"
+                                    b"Host: example.com\r\n"
+                                    b"Content-Length: 6\r\n\r\n"
+                                    b"abc")
+        )
+    else:
+        assert playbook >> reply()
+    assert (
+            playbook
+            >> ConnectionClosed(tctx.client)
+            << CloseConnection(tctx.client)
+            << http.HttpErrorHook(flow)
+            >> reply()
+
+    )
+
+    flow: Callable[[], HTTPFlow]
+    assert "peer closed connection" in flow().error.msg
