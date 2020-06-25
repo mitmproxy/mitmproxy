@@ -120,7 +120,7 @@ Documentation
 
 The following tools are required to build the mitmproxy docs:
 
-- Hugo_
+- Hugo_ (the extended version ``hugo_extended`` is required)
 - modd_
 
 .. code-block:: bash
