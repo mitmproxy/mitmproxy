@@ -16,7 +16,7 @@ def parse_setheader(s):
         The first character specifies the separator. Example:
 
             :foo:bar:~q
-        
+
         If only two clauses are specified, the pattern is set to match
         universally (i.e. ".*"). Example:
 
