@@ -55,7 +55,7 @@ class SafeH2Connection(connection.H2Connection):
             self.send_headers(stream_id, headers.fields, **kwargs)
             self.conn.send(self.data_to_send())
 
-    def safe_send_body(self, raise_zombie: Callable, stream_id: int, chunks: List[bytes]):
+    def safe_send_body(self, raise_zombie: Callable, stream_id: int, chunks: List[bytes], end_stream=True):
         for chunk in chunks:
             position = 0
             while position < len(chunk):
@@ -75,10 +75,11 @@ class SafeH2Connection(connection.H2Connection):
                 finally:
                     self.lock.release()
                 position += max_outbound_frame_size
-        with self.lock:
-            raise_zombie()
-            self.end_stream(stream_id)
-            self.conn.send(self.data_to_send())
+        if end_stream:
+            with self.lock:
+                raise_zombie()
+                self.end_stream(stream_id)
+                self.conn.send(self.data_to_send())
 
 
 class Http2Layer(base.Layer):
@@ -170,7 +171,7 @@ class Http2Layer(base.Layer):
         elif isinstance(event, events.PriorityUpdated):
             return self._handle_priority_updated(eid, event)
         elif isinstance(event, events.TrailersReceived):
-            raise NotImplementedError('TrailersReceived not implemented')
+            return self._handle_trailers(eid, event, is_server, other_conn)
 
         # fail-safe for unhandled events
         return True
@@ -231,6 +232,11 @@ class Http2Layer(base.Layer):
                 other_stream_id = self.streams[eid].server_stream_id
             if other_stream_id is not None:
                 self.connections[other_conn].safe_reset_stream(other_stream_id, event.error_code)
+        return True
+
+    def _handle_trailers(self, eid, event, is_server, other_conn):
+        headers = mitmproxy.net.http.Headers([[k, v] for k, v in event.headers])
+        self.streams[eid].update_trailers(headers)
         return True
 
     def _handle_remote_settings_changed(self, event, other_conn):
@@ -418,6 +424,8 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         self.response_data_finished = threading.Event()
 
         self.no_body = False
+        self.has_tailers = False
+        self.trailers_header = None
 
         self.priority_exclusive: bool
         self.priority_depends_on: Optional[int] = None
@@ -591,6 +599,23 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
                 chunks
             )
 
+
+    @detect_zombie_stream
+    def update_trailers(self, headers):
+        self.trailers_header = headers
+        self.has_tailers = True
+
+    @detect_zombie_stream
+    def send_trailers_headers(self):
+        if self.has_tailers and self.trailers_header:
+            with self.connections[self.client_conn].lock:
+                self.connections[self.client_conn].safe_send_headers(
+                    self.raise_zombie,
+                    self.client_stream_id,
+                    self.trailers_header,
+                    end_stream = True
+                )
+
     @detect_zombie_stream
     def send_request(self, message):
         self.send_request_headers(message)
@@ -646,8 +671,11 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         self.connections[self.client_conn].safe_send_body(
             self.raise_zombie,
             self.client_stream_id,
-            chunks
+            chunks,
+            end_stream = not self.has_tailers
         )
+        if self.has_tailers:
+            self.send_trailers_headers()
 
     def __call__(self):  # pragma: no cover
         raise EnvironmentError('Http2SingleStreamLayer must be run as thread')
