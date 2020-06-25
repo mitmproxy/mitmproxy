@@ -131,11 +131,11 @@ then the respective recorded responses are simply replayed by mitmproxy.
 Otherwise, the unmatched requests is forwarded to the upstream server. If
 forwarding is not desired, you can use the --kill (-k) switch to prevent that.
 
-## Set Headers
+## Modify Headers
 
-The `setheaders` option lets you specify a set of headers to be modified.
+The `modify_headers` option lets you specify a set of headers to be modified.
 New headers can be added, and existing headers can be overwritten or removed.
-A `setheaders` expression looks like this:
+A `modify_headers` expression looks like this:
 
 {{< highlight none  >}}
 /name/value[/filter-expression]

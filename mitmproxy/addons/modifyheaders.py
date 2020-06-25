@@ -5,11 +5,11 @@ from mitmproxy import flowfilter
 from mitmproxy import ctx
 
 
-def parse_setheader(s):
+def parse_modify_headers(s):
     """
         Returns a (header_name, header_value, flow_filter) tuple.
 
-        The general form for a setheader hook is as follows:
+        The general form for a modify_headers hook is as follows:
 
             /header_name/header_value/flow_filter
 
@@ -42,29 +42,29 @@ def parse_setheader(s):
     return header_name, header_value, flow_filter
 
 
-class SetHeaders:
+class ModifyHeaders:
     def __init__(self):
         self.lst = []
 
     def load(self, loader):
         loader.add_option(
-            "setheaders", typing.Sequence[str], [],
+            "modify_headers", typing.Sequence[str], [],
             """
-            Header set pattern of the form "/header-name/header-value[/flow-filter]", where the
+            Header modify pattern of the form "/header-name/header-value[/flow-filter]", where the
             separator can be any character. An empty header-value removes existing header-name headers.
             """
         )
 
     def configure(self, updated):
-        if "setheaders" in updated:
+        if "modify_headers" in updated:
             self.lst = []
-            for shead in ctx.options.setheaders:
-                header, value, flow_pattern = parse_setheader(shead)
+            for shead in ctx.options.modify_headers:
+                header, value, flow_pattern = parse_modify_headers(shead)
 
                 flow_filter = flowfilter.parse(flow_pattern)
                 if not flow_filter:
                     raise exceptions.OptionsError(
-                        "Invalid setheader filter pattern %s" % flow_pattern
+                        "Invalid modify_headers flow filter %s" % flow_pattern
                     )
                 self.lst.append((header, value, flow_pattern, flow_filter))
 

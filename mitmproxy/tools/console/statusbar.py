@@ -206,7 +206,7 @@ class StatusBar(urwid.WidgetWrap):
         sreplay = self.master.commands.call("replay.server.count")
         creplay = self.master.commands.call("replay.client.count")
 
-        if len(self.master.options.setheaders):
+        if len(self.master.options.modify_headers):
             r.append("[")
             r.append(("heading_key", "H"))
             r.append("eaders]")
