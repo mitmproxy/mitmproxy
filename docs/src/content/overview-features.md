@@ -131,19 +131,24 @@ then the respective recorded responses are simply replayed by mitmproxy.
 Otherwise, the unmatched requests is forwarded to the upstream server. If
 forwarding is not desired, you can use the --kill (-k) switch to prevent that.
 
-## Set Headers
+## Modify Headers
 
-The `setheaders` option lets you specify a set of headers to be added to
-requests or responses, based on a filter pattern. A `setheaders` expression
-looks like this:
+The `modify_headers` option lets you specify a set of headers to be modified.
+New headers can be added, and existing headers can be overwritten or removed.
+A `modify_headers` expression looks like this:
 
 {{< highlight none  >}}
-/patt/name/value
+/name/value[/filter-expression]
 {{< / highlight >}}
 
-Here, **patt** is a mitmproxy filter expression that defines which flows to set
-headers on, and **name** and **value** are the header name and the value to set
-respectively.
+Here, **name** and **value** are the header name and the value to set respectively,
+e.g., ``/Host/example.org``. An empty **value** removes existing headers with
+**name**, e.g., ``/Host/``. The optional **filter-expression** is a mitmproxy
+[filter expression]({{< relref "concepts-filters">}}) that defines
+which flows to modify headers on, e.g., only on responses using ``~s``.
+Existing headers are overwritten by default.
+This can be changed using filter-expressions, e.g., ``!~h Host:`` to ignore
+requests and responses with an existing ``Host`` header.
 
 ## Sticky auth
 
