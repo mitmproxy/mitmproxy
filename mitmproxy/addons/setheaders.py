@@ -7,22 +7,23 @@ from mitmproxy import ctx
 
 def parse_setheader(s):
     """
-        Returns a (header_name, header_value, flow_pattern) tuple.
+        Returns a (header_name, header_value, flow_filter) tuple.
 
         The general form for a setheader hook is as follows:
 
-            /header_name/header_value/flow_pattern
+            /header_name/header_value/flow_filter
 
         The first character specifies the separator. Example:
 
             :foo:bar:~q
+        
         If only two clauses are specified, the pattern is set to match
         universally (i.e. ".*"). Example:
 
             /foo/bar/
 
         Clauses are parsed from left to right. Extra separators are taken to be
-        part of the final clause. For instance, the flow-pattern clause below is
+        part of the final clause. For instance, the flow filter below is
         "foo/bar/":
 
             /one/two/foo/bar/
@@ -30,15 +31,15 @@ def parse_setheader(s):
     sep, rem = s[0], s[1:]
     parts = rem.split(sep, 2)
     if len(parts) == 2:
-        flow_pattern = ".*"
+        flow_filter = ".*"
         header_name, header_value = parts
     elif len(parts) == 3:
-        header_name, header_value, flow_pattern = parts
+        header_name, header_value, flow_filter = parts
     else:
         raise exceptions.OptionsError(
             "Invalid replacement specifier: %s" % s
         )
-    return header_name, header_value, flow_pattern
+    return header_name, header_value, flow_filter
 
 
 class SetHeaders:
