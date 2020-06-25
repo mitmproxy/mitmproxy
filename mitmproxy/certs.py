@@ -503,3 +503,7 @@ class Cert(serializable.Serializable):
                         altnames.append(e)
 
         return altnames
+
+    @property
+    def version(self):
+        return self.x509.get_version()
