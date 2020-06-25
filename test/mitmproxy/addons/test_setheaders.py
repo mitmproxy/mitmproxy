@@ -68,3 +68,37 @@ class TestSetHeaders:
             f.request.headers["one"] = "xxx"
             sh.request(f)
             assert f.request.headers.get_all("one") == ["two", "three"]
+
+            # test removal of existing header
+            tctx.configure(
+                sh,
+                setheaders = [
+                    "/one//~q",
+                    "/one//~s"
+                ]
+            )
+            f = tflow.tflow()
+            f.request.headers["one"] = "xxx"
+            sh.request(f)
+            assert "one" not in f.request.headers
+
+            f = tflow.tflow(resp=True)
+            f.response.headers["one"] = "xxx"
+            sh.response(f)
+            assert "one" not in f.response.headers
+
+            tctx.configure(
+                sh,
+                setheaders = [
+                    "/one/"
+                ]
+            )
+            f = tflow.tflow()
+            f.request.headers["one"] = "xxx"
+            sh.request(f)
+            assert "one" not in f.request.headers
+
+            f = tflow.tflow(resp=True)
+            f.response.headers["one"] = "xxx"
+            sh.response(f)
+            assert "one" not in f.response.headers

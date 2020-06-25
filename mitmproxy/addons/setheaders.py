@@ -50,7 +50,7 @@ class SetHeaders:
             "setheaders", typing.Sequence[str], [],
             """
             Header set pattern of the form "/header-name/header-value[/flow-filter]", where the
-            separator can be any character.
+            separator can be any character. An empty header-value removes existing header-name headers.
             """
         )
 
@@ -72,7 +72,7 @@ class SetHeaders:
             if flow_filter(f):
                 hdrs.pop(header, None)
         for header, value, _, flow_filter in self.lst:
-            if flow_filter(f):
+            if flow_filter(f) and value:
                 hdrs.add(header, value)
 
     def request(self, flow):
