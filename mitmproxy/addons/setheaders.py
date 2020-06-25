@@ -7,23 +7,22 @@ from mitmproxy import ctx
 
 def parse_setheader(s):
     """
-        Returns a (pattern, regex, replacement) tuple.
+        Returns a (header_name, header_value, flow_pattern) tuple.
 
-        The general form for a replacement hook is as follows:
+        The general form for a setheader hook is as follows:
 
-            /patt/regex/replacement
+            /header_name/header_value/flow_pattern
 
         The first character specifies the separator. Example:
 
-            :~q:foo:bar
-
+            :foo:bar:~q
         If only two clauses are specified, the pattern is set to match
         universally (i.e. ".*"). Example:
 
             /foo/bar/
 
         Clauses are parsed from left to right. Extra separators are taken to be
-        part of the final clause. For instance, the replacement clause below is
+        part of the final clause. For instance, the flow-pattern clause below is
         "foo/bar/":
 
             /one/two/foo/bar/
@@ -31,15 +30,15 @@ def parse_setheader(s):
     sep, rem = s[0], s[1:]
     parts = rem.split(sep, 2)
     if len(parts) == 2:
-        patt = ".*"
-        a, b = parts
+        flow_pattern = ".*"
+        header_name, header_value = parts
     elif len(parts) == 3:
-        patt, a, b = parts
+        header_name, header_value, flow_pattern = parts
     else:
         raise exceptions.OptionsError(
             "Invalid replacement specifier: %s" % s
         )
-    return patt, a, b
+    return header_name, header_value, flow_pattern
 
 
 class SetHeaders:
@@ -50,7 +49,7 @@ class SetHeaders:
         loader.add_option(
             "setheaders", typing.Sequence[str], [],
             """
-            Header set pattern of the form "/pattern/header/value", where the
+            Header set pattern of the form "/header-name/header-value[/flow-filter]", where the
             separator can be any character.
             """
         )
@@ -59,21 +58,21 @@ class SetHeaders:
         if "setheaders" in updated:
             self.lst = []
             for shead in ctx.options.setheaders:
-                fpatt, header, value = parse_setheader(shead)
+                header, value, flow_pattern = parse_setheader(shead)
 
-                flt = flowfilter.parse(fpatt)
-                if not flt:
+                flow_filter = flowfilter.parse(flow_pattern)
+                if not flow_filter:
                     raise exceptions.OptionsError(
-                        "Invalid setheader filter pattern %s" % fpatt
+                        "Invalid setheader filter pattern %s" % flow_pattern
                     )
-                self.lst.append((fpatt, header, value, flt))
+                self.lst.append((header, value, flow_pattern, flow_filter))
 
     def run(self, f, hdrs):
-        for _, header, value, flt in self.lst:
-            if flt(f):
+        for header, value, _, flow_filter in self.lst:
+            if flow_filter(f):
                 hdrs.pop(header, None)
-        for _, header, value, flt in self.lst:
-            if flt(f):
+        for header, value, _, flow_filter in self.lst:
+            if flow_filter(f):
                 hdrs.add(header, value)
 
     def request(self, flow):

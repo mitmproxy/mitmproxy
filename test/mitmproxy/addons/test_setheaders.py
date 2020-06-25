@@ -13,7 +13,7 @@ class TestSetHeaders:
         x = setheaders.parse_setheader("/foo/bar/vo/ing/")
         assert x == ("foo", "bar", "vo/ing/")
         x = setheaders.parse_setheader("/bar/voing")
-        assert x == (".*", "bar", "voing")
+        assert x == ("bar", "voing", ".*")
         with pytest.raises(Exception, match="Invalid replacement"):
             setheaders.parse_setheader("/")
 
@@ -21,7 +21,7 @@ class TestSetHeaders:
         sh = setheaders.SetHeaders()
         with taddons.context(sh) as tctx:
             with pytest.raises(Exception, match="Invalid setheader filter pattern"):
-                tctx.configure(sh, setheaders = ["/~b/one/two"])
+                tctx.configure(sh, setheaders = ["/one/two/~b"])
             tctx.configure(sh, setheaders = ["/foo/bar/voing"])
 
     def test_setheaders(self):
@@ -30,8 +30,8 @@ class TestSetHeaders:
             tctx.configure(
                 sh,
                 setheaders = [
-                    "/~q/one/two",
-                    "/~s/one/three"
+                    "/one/two/~q",
+                    "/one/three/~s"
                 ]
             )
             f = tflow.tflow()
@@ -47,8 +47,8 @@ class TestSetHeaders:
             tctx.configure(
                 sh,
                 setheaders = [
-                    "/~s/one/two",
-                    "/~s/one/three"
+                    "/one/two/~s",
+                    "/one/three/~s"
                 ]
             )
             f = tflow.tflow(resp=True)
@@ -60,8 +60,8 @@ class TestSetHeaders:
             tctx.configure(
                 sh,
                 setheaders = [
-                    "/~q/one/two",
-                    "/~q/one/three"
+                    "/one/two/~q",
+                    "/one/three/~q"
                 ]
             )
             f = tflow.tflow()
