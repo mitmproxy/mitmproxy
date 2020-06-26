@@ -140,7 +140,7 @@ class HTTPFlow(flow.Flow):
     """
     request: HTTPRequest
     response: Optional[HTTPResponse] = None
-    trailers: http.Headers
+    trailers: Optional[http.Headers] = None
     error: Optional[flow.Error] = None
     """
     Note that it's possible for a Flow to have both a response and an error

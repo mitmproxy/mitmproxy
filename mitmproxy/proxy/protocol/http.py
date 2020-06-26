@@ -407,10 +407,9 @@ class HttpLayer(base.Layer):
                 self.channel.ask("responseheaders", f)
 
             self.log("response", "debug", [repr(f.response)])
-            self.channel.ask("response", f)
-
             if hasattr(self, 'has_tailers') and self.has_tailers:
                 f.trailers = self.read_trailers_headers()
+            self.channel.ask("response", f)
 
             if not f.response.stream:
                 # no streaming:
