@@ -5,6 +5,7 @@ import typing
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import ctx
+from mitmproxy.utils import strutils
 
 
 def parse_hook(s):
@@ -105,13 +106,28 @@ class Replace:
         if not flow.reply.has_message:
             self.execute(flow)
 
-    def replace(self, obj, rex, s):
-        if s.startswith("@"):
-            s = os.path.expanduser(s[1:])
+    def replace(self, obj, search, replace):
+        """
+        Replaces a regular expression pattern with repl in the body of the message.
+        Encoded body will be decoded before replacement, and re-encoded afterwards.
+
+        Returns:
+            The number of replacements made.
+        """
+        if replace.startswith("@"):
+            replace = os.path.expanduser(replace[1:])
             try:
-                with open(s, "rb") as f:
-                    s = f.read()
+                with open(replace, "rb") as f:
+                    replace = f.read()
             except IOError:
-                ctx.log.warn("Could not read replacement file: %s" % s)
+                ctx.log.warn("Could not read replacement file: %s" % replace)
                 return
-        obj.replace(rex, s, flags=re.DOTALL)
+
+        if isinstance(search, str):
+            search = strutils.escaped_str_to_bytes(search)
+        if isinstance(replace, str):
+            replace = strutils.escaped_str_to_bytes(replace)
+        replacements = 0
+        if obj.content:
+            obj.content, replacements = re.subn(search, replace, obj.content, flags=re.DOTALL)
+        return replacements
