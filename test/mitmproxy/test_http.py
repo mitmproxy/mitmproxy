@@ -44,16 +44,6 @@ class TestHTTPRequest:
         assert r.url == "https://address:22/path"
         assert r.pretty_url == "https://foo.com:22/path"
 
-    def test_replace(self):
-        r = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
-        r.path = "path/foo"
-        r.headers["Foo"] = "fOo"
-        r.content = b"afoob"
-        assert r.replace("(?i)foo", "boo") == 4
-        assert r.path == "path/boo"
-        assert b"foo" not in r.content
-        assert r.headers["boo"] == "boo"
-
     def test_constrain_encoding(self):
         r = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
         r.headers["accept-encoding"] = "gzip, oink"
@@ -77,14 +67,6 @@ class TestHTTPResponse:
         resp = f.response
         resp2 = resp.copy()
         assert resp2.get_state() == resp.get_state()
-
-    def test_replace(self):
-        r = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
-        r.headers["Foo"] = "fOo"
-        r.content = b"afoob"
-        assert r.replace("(?i)foo", "boo") == 3
-        assert b"foo" not in r.content
-        assert r.headers["boo"] == "boo"
 
     def test_get_content_type(self):
         resp = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
@@ -211,48 +193,6 @@ class TestHTTPFlow:
         f.resume()
         f2.resume()
         assert f.intercepted is f2.intercepted is False
-
-    def test_replace_unicode(self):
-        f = tflow.tflow(resp=True)
-        f.response.content = b"\xc2foo"
-        f.replace(b"foo", u"bar")
-
-    def test_replace_no_content(self):
-        f = tflow.tflow()
-        f.request.content = None
-        assert f.replace("foo", "bar") == 0
-
-    def test_replace(self):
-        f = tflow.tflow(resp=True)
-        f.request.headers["foo"] = "foo"
-        f.request.content = b"afoob"
-
-        f.response.headers["foo"] = "foo"
-        f.response.content = b"afoob"
-
-        assert f.replace("foo", "bar") == 6
-
-        assert f.request.headers["bar"] == "bar"
-        assert f.request.content == b"abarb"
-        assert f.response.headers["bar"] == "bar"
-        assert f.response.content == b"abarb"
-
-    def test_replace_encoded(self):
-        f = tflow.tflow(resp=True)
-        f.request.content = b"afoob"
-        f.request.encode("gzip")
-        f.response.content = b"afoob"
-        f.response.encode("gzip")
-
-        f.replace("foo", "bar")
-
-        assert f.request.raw_content != b"abarb"
-        f.request.decode()
-        assert f.request.raw_content == b"abarb"
-
-        assert f.response.raw_content != b"abarb"
-        f.response.decode()
-        assert f.response.raw_content == b"abarb"
 
     def test_timestamp_start(self):
         f = tflow.tflow()

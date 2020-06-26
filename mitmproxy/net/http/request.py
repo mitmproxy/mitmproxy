@@ -128,27 +128,6 @@ class Request(message.Message):
 
         return req
 
-    def replace(self, pattern, repl, flags=0, count=0):
-        """
-            Replaces a regular expression pattern with repl in the headers, the
-            request path and the body of the request. Encoded content will be
-            decoded before replacement, and re-encoded afterwards.
-
-            Returns:
-                The number of replacements made.
-        """
-        if isinstance(pattern, str):
-            pattern = strutils.escaped_str_to_bytes(pattern)
-        if isinstance(repl, str):
-            repl = strutils.escaped_str_to_bytes(repl)
-
-        c = super().replace(pattern, repl, flags, count)
-        self.path, pc = re.subn(
-            pattern, repl, self.data.path, flags=flags, count=count
-        )
-        c += pc
-        return c
-
     @property
     def first_line_format(self):
         """
