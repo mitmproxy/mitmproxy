@@ -599,7 +599,6 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
                 chunks
             )
 
-
     @detect_zombie_stream
     def update_trailers(self, headers):
         self.trailers_header = headers
@@ -640,6 +639,10 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             timestamp_start=self.timestamp_start,
             timestamp_end=self.timestamp_end,
         )
+
+    @detect_zombie_stream
+    def read_trailers_headers(self):
+        return self.trailers_header
 
     @detect_zombie_stream
     def read_response_body(self, request, response):
