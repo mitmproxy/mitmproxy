@@ -8,13 +8,13 @@ from mitmproxy import ctx
 from mitmproxy.utils import strutils
 
 
-def parse_hook(s):
+def parse_replacements(s):
     """
-        Returns a (pattern, regex, replacement) tuple.
+        Returns a (flow_filter, regex, replacement) tuple.
 
-        The general form for a replacement hook is as follows:
+        The general form for a replacements hook is as follows:
 
-            /patt/regex/replacement
+            [/flow_filter]/regex/replacement
 
         The first character specifies the separator. Example:
 
@@ -23,7 +23,7 @@ def parse_hook(s):
         If only two clauses are specified, the pattern is set to match
         universally (i.e. ".*"). Example:
 
-            /foo/bar/
+            /foo/bar
 
         Clauses are parsed from left to right. Extra separators are taken to be
         part of the final clause. For instance, the replacement clause below is
@@ -34,15 +34,15 @@ def parse_hook(s):
     sep, rem = s[0], s[1:]
     parts = rem.split(sep, 2)
     if len(parts) == 2:
-        patt = ".*"
-        a, b = parts
+        flow_filter = ".*"
+        regex, repl = parts
     elif len(parts) == 3:
-        patt, a, b = parts
+        flow_filter, regex, repl = parts
     else:
         raise exceptions.OptionsError(
-            "Invalid replacement specifier: %s" % s
+            "Invalid replacements specifier: %s" % s
         )
-    return patt, a, b
+    return flow_filter, regex, repl
 
 
 class Replace:
@@ -53,50 +53,50 @@ class Replace:
         loader.add_option(
             "replacements", typing.Sequence[str], [],
             """
-            Replacement patterns of the form "/pattern/regex/replacement", where
+            Replacement pattern of the form "[/flow-filter]/regex/replacement", where
             the separator can be any character.
             """
         )
 
     def configure(self, updated):
         """
-            .replacements is a list of tuples (fpat, rex, s):
+            .replacements is a list of tuples (flow_filter_pattern, regex, repl):
 
-            fpatt: a string specifying a filter pattern.
-            rex: a regular expression, as string.
-            s: the replacement string
+            flow_filter_pattern: a string specifying a flow filter pattern.
+            regex: a regular expression, as string.
+            repl: the replacement string
         """
         if "replacements" in updated:
             lst = []
             for rep in ctx.options.replacements:
-                fpatt, rex, s = parse_hook(rep)
+                flow_filter_pattern, regex, repl = parse_replacements(rep)
 
-                flt = flowfilter.parse(fpatt)
-                if not flt:
+                flow_filter = flowfilter.parse(flow_filter_pattern)
+                if not flow_filter:
                     raise exceptions.OptionsError(
-                        "Invalid filter pattern: %s" % fpatt
+                        "Invalid replacements flow filter: %s" % flow_filter_pattern
                     )
                 try:
                     # We should ideally escape here before trying to compile
-                    re.compile(rex)
+                    re.compile(regex)
                 except re.error as e:
                     raise exceptions.OptionsError(
-                        "Invalid regular expression: %s - %s" % (rex, str(e))
+                        "Invalid regular expression: %s - %s" % (regex, str(e))
                     )
-                if s.startswith("@") and not os.path.isfile(s[1:]):
+                if repl.startswith("@") and not os.path.isfile(repl[1:]):
                     raise exceptions.OptionsError(
-                        "Invalid file path: {}".format(s[1:])
+                        "Invalid file path: {}".format(repl[1:])
                     )
-                lst.append((rex, s, flt))
+                lst.append((regex, repl, flow_filter))
             self.lst = lst
 
     def execute(self, f):
-        for rex, s, flt in self.lst:
-            if flt(f):
+        for regex, repl, flow_filter in self.lst:
+            if flow_filter(f):
                 if f.response:
-                    self.replace(f.response, rex, s)
+                    self.replace(f.response, regex, repl)
                 else:
-                    self.replace(f.request, rex, s)
+                    self.replace(f.request, regex, repl)
 
     def request(self, flow):
         if not flow.reply.has_message:
@@ -106,7 +106,7 @@ class Replace:
         if not flow.reply.has_message:
             self.execute(flow)
 
-    def replace(self, obj, search, replace):
+    def replace(self, obj, search, repl):
         """
         Replaces a regular expression pattern with repl in the body of the message.
         Encoded body will be decoded before replacement, and re-encoded afterwards.
@@ -114,20 +114,20 @@ class Replace:
         Returns:
             The number of replacements made.
         """
-        if replace.startswith("@"):
-            replace = os.path.expanduser(replace[1:])
+        if repl.startswith("@"):
+            repl = os.path.expanduser(repl[1:])
             try:
-                with open(replace, "rb") as f:
-                    replace = f.read()
+                with open(repl, "rb") as f:
+                    repl = f.read()
             except IOError:
-                ctx.log.warn("Could not read replacement file: %s" % replace)
+                ctx.log.warn("Could not read replacement file: %s" % repl)
                 return
 
         if isinstance(search, str):
             search = strutils.escaped_str_to_bytes(search)
-        if isinstance(replace, str):
-            replace = strutils.escaped_str_to_bytes(replace)
+        if isinstance(repl, str):
+            repl = strutils.escaped_str_to_bytes(repl)
         replacements = 0
         if obj.content:
-            obj.content, replacements = re.subn(search, replace, obj.content, flags=re.DOTALL)
+            obj.content, replacements = re.subn(search, repl, obj.content, flags=re.DOTALL)
         return replacements

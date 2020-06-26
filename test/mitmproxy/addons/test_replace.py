@@ -6,21 +6,21 @@ from mitmproxy.test import tflow
 
 
 class TestReplace:
-    def test_parse_hook(self):
-        x = replace.parse_hook("/foo/bar/voing")
+    def test_parse_replacements(self):
+        x = replace.parse_replacements("/foo/bar/voing")
         assert x == ("foo", "bar", "voing")
-        x = replace.parse_hook("/foo/bar/vo/ing/")
+        x = replace.parse_replacements("/foo/bar/vo/ing/")
         assert x == ("foo", "bar", "vo/ing/")
-        x = replace.parse_hook("/bar/voing")
+        x = replace.parse_replacements("/bar/voing")
         assert x == (".*", "bar", "voing")
-        with pytest.raises(Exception, match="Invalid replacement"):
-            replace.parse_hook("/")
+        with pytest.raises(Exception, match="Invalid replacements"):
+            replace.parse_replacements("/")
 
     def test_configure(self):
         r = replace.Replace()
         with taddons.context(r) as tctx:
             tctx.configure(r, replacements=["one/two/three"])
-            with pytest.raises(Exception, match="Invalid filter pattern"):
+            with pytest.raises(Exception, match="Invalid replacements flow filter"):
                 tctx.configure(r, replacements=["/~b/two/three"])
             with pytest.raises(Exception, match="Invalid regular expression"):
                 tctx.configure(r, replacements=["/foo/+/three"])
