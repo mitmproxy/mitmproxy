@@ -210,8 +210,8 @@ class StatusBar(urwid.WidgetWrap):
             r.append("[")
             r.append(("heading_key", "H"))
             r.append("eaders]")
-        if len(self.master.options.replacements):
-            r.append("[%d replacements]" % len(self.master.options.replacements))
+        if len(self.master.options.modify_body):
+            r.append("[%d body modifications]" % len(self.master.options.modify_body))
         if creplay:
             r.append("[")
             r.append(("heading_key", "cplayback"))

@@ -8,11 +8,11 @@ from mitmproxy import ctx
 from mitmproxy.utils import strutils
 
 
-def parse_replacements(s):
+def parse_modify_body(s):
     """
         Returns a (flow_filter, regex, replacement) tuple.
 
-        The general form for a replacements hook is as follows:
+        The general form for a modify_body hook is as follows:
 
             [/flow_filter]/regex/replacement
 
@@ -40,41 +40,42 @@ def parse_replacements(s):
         flow_filter, regex, repl = parts
     else:
         raise exceptions.OptionsError(
-            "Invalid replacements specifier: %s" % s
+            "Invalid modify_body specifier: %s" % s
         )
     return flow_filter, regex, repl
 
 
-class Replace:
+class ModifyBody:
     def __init__(self):
         self.lst = []
 
     def load(self, loader):
         loader.add_option(
-            "replacements", typing.Sequence[str], [],
+            "modify_body", typing.Sequence[str], [],
             """
-            Replacement pattern of the form "[/flow-filter]/regex/replacement", where
-            the separator can be any character.
+            Replacement pattern of the form "[/flow-filter]/regex/[@]replacement", where
+            the separator can be any character. The @ allows to provide a file path that
+            is used to read the replacement string.
             """
         )
 
     def configure(self, updated):
         """
-            .replacements is a list of tuples (flow_filter_pattern, regex, repl):
+            .modify_body is a list of tuples (flow_filter_pattern, regex, repl):
 
             flow_filter_pattern: a string specifying a flow filter pattern.
             regex: a regular expression, as string.
             repl: the replacement string
         """
-        if "replacements" in updated:
+        if "modify_body" in updated:
             lst = []
-            for rep in ctx.options.replacements:
-                flow_filter_pattern, regex, repl = parse_replacements(rep)
+            for rep in ctx.options.modify_body:
+                flow_filter_pattern, regex, repl = parse_modify_body(rep)
 
                 flow_filter = flowfilter.parse(flow_filter_pattern)
                 if not flow_filter:
                     raise exceptions.OptionsError(
-                        "Invalid replacements flow filter: %s" % flow_filter_pattern
+                        "Invalid modify_body flow filter: %s" % flow_filter_pattern
                     )
                 try:
                     # We should ideally escape here before trying to compile
