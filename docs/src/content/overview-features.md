@@ -11,10 +11,10 @@ menu:
 
 - [Anticache](#anticache)
 - [Client-side replay](#client-side-replay)
+- [Modify Body](#modify-body)
+- [Modify Headers](#modify-headers)
 - [Proxy Authentication](#proxy-authentication)
-- [Replacements](#replacements)
 - [Server-side replay](#server-side-replay)
-- [Set Headers](#set-headers)
 - [Sticky Auth](#sticky-auth)
 - [Sticky Cookies](#sticky-cookies)
 - [Streaming](#streaming)
@@ -41,30 +41,22 @@ conversation, where requests may have been made concurrently.
 You may want to use client-side replay in conjunction with the `anticache`
 option, to make sure the server responds with complete data.
 
-## Proxy Authentication
 
-Asks the user for authentication before they are permitted to use the proxy.
-Authentication headers are stripped from the flows, so they are not passed to
-upstream servers. For now, only HTTP Basic authentication is supported. The
-proxy auth options are not compatible with the transparent, socks or reverse
-proxy mode.
+## Modify Body
 
-
-## Replacements
-
-The `replacements` option lets you specify an arbitrary number of patterns that
-define text replacements within flows. A replacement pattern looks like this:
+The `modify-body` option lets you specify an arbitrary number of patterns that
+define replacements within bodies of flows. A replacement pattern looks like this:
 
 {{< highlight none  >}}
-/patt/regex/replacement
+[/patt]/regex/replacement
 {{< / highlight >}}
 
-Here, **patt** is a mitmproxy filter expression that defines which flows a
-replacement applies to, **regex** is a valid Python regular expression that
-defines what gets replaced, and **replacement** is a string literal that is
-substituted in. The separator is arbitrary, and defined by the first character.
-If the replacement string literal starts with `@`, it is treated as a file path
-from which the replacement is read.
+Here, **patt** is a mitmproxy [filter expression]({{< relref "concepts-filters">}})
+that defines which flows a replacement applies to, **regex** is a valid Python
+regular expression that defines what gets replaced, and **replacement** is a string
+literal that is substituted in. The separator is arbitrary, and defined by the
+first character. If the replacement string literal starts with `@`, it is treated
+as a file path from which the replacement is read.
 
 Replace hooks fire when either a client request or a server response is
 received. Only the matching flow component is affected: so, for example,
@@ -76,7 +68,7 @@ to create a script using the replacement API on Flow components.
 
 ### Examples
 
-Replace `foo` with `bar` in requests:
+Replace `foo` with `bar` in bodies of requests:
 
 {{< highlight none  >}}
 :~q:foo:bar
@@ -85,8 +77,37 @@ Replace `foo` with `bar` in requests:
 Replace `foo` with the data read from `~/xss-exploit`:
 
 {{< highlight bash  >}}
-mitmdump --replacements :~q:foo:@~/xss-exploit
+mitmdump --modify-body :~q:foo:@~/xss-exploit
 {{< / highlight >}}
+
+
+## Modify Headers
+
+The `modify_headers` option lets you specify a set of headers to be modified.
+New headers can be added, and existing headers can be overwritten or removed.
+A `modify_headers` expression looks like this:
+
+{{< highlight none  >}}
+/name/value[/filter-expression]
+{{< / highlight >}}
+
+Here, **name** and **value** are the header name and the value to set respectively,
+e.g., ``/Host/example.org``. An empty **value** removes existing headers with
+**name**, e.g., ``/Host/``. The optional **filter-expression** is a mitmproxy
+[filter expression]({{< relref "concepts-filters">}}) that defines
+which flows to modify headers on, e.g., only on responses using ``~s``.
+Existing headers are overwritten by default.
+This can be changed using filter-expressions, e.g., ``!~h Host:`` to ignore
+requests and responses with an existing ``Host`` header.
+
+
+## Proxy Authentication
+
+Asks the user for authentication before they are permitted to use the proxy.
+Authentication headers are stripped from the flows, so they are not passed to
+upstream servers. For now, only HTTP Basic authentication is supported. The
+proxy auth options are not compatible with the transparent, socks or reverse
+proxy mode.
 
 
 ## Server-side replay
@@ -131,24 +152,6 @@ then the respective recorded responses are simply replayed by mitmproxy.
 Otherwise, the unmatched requests is forwarded to the upstream server. If
 forwarding is not desired, you can use the --kill (-k) switch to prevent that.
 
-## Modify Headers
-
-The `modify_headers` option lets you specify a set of headers to be modified.
-New headers can be added, and existing headers can be overwritten or removed.
-A `modify_headers` expression looks like this:
-
-{{< highlight none  >}}
-/name/value[/filter-expression]
-{{< / highlight >}}
-
-Here, **name** and **value** are the header name and the value to set respectively,
-e.g., ``/Host/example.org``. An empty **value** removes existing headers with
-**name**, e.g., ``/Host/``. The optional **filter-expression** is a mitmproxy
-[filter expression]({{< relref "concepts-filters">}}) that defines
-which flows to modify headers on, e.g., only on responses using ``~s``.
-Existing headers are overwritten by default.
-This can be changed using filter-expressions, e.g., ``!~h Host:`` to ignore
-requests and responses with an existing ``Host`` header.
 
 ## Sticky auth
 
@@ -158,6 +161,7 @@ seen. This is enough to allow you to access a server resource using HTTP Basic
 authentication through the proxy. Note that <span
 data-role="program">mitmproxy</span> doesn't (yet) support replay of HTTP Digest
 authentication.
+
 
 ## Sticky cookies
 
@@ -175,6 +179,7 @@ Sticky cookies are especially powerful when used in conjunction with [client
 replay]({{< relref "#client-side-replay" >}}) - you can record the
 authentication process once, and simply replay it on startup every time you need
 to interact with the secured resources.
+
 
 ## Streaming
 
@@ -196,7 +201,6 @@ their ``.stream`` attribute to ``True``:
 
 {{< example src="examples/addons/http-stream-simple.py" lang="py" >}}
 
-
 ### Websockets
 
 The `stream_websockets` option enables an analogous behaviour for websockets.
@@ -205,6 +209,7 @@ changes to the WebSocket message payloads will not have any effect on the actual
 payload sent to the server as the frames are immediately forwarded to the
 server. In contrast to HTTP streaming, where the body is not stored, the message
 payload will still be stored in the WebSocket flow.
+
 
 ## Upstream Certificates
 
