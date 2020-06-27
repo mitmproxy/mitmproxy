@@ -97,6 +97,7 @@ class HTTPResponse(http.Response):
             reason,
             headers,
             content,
+            trailers=None,
             timestamp_start=None,
             timestamp_end=None,
             is_replay=False
@@ -108,6 +109,7 @@ class HTTPResponse(http.Response):
             reason,
             headers,
             content,
+            trailers,
             timestamp_start=timestamp_start,
             timestamp_end=timestamp_end,
         )
@@ -127,6 +129,7 @@ class HTTPResponse(http.Response):
             reason=response.data.reason,
             headers=response.data.headers,
             content=response.data.content,
+            trailers=response.data.trailers,
             timestamp_start=response.data.timestamp_start,
             timestamp_end=response.data.timestamp_end,
         )
@@ -140,7 +143,6 @@ class HTTPFlow(flow.Flow):
     """
     request: HTTPRequest
     response: Optional[HTTPResponse] = None
-    trailers: Optional[http.Headers] = None
     error: Optional[flow.Error] = None
     """
     Note that it's possible for a Flow to have both a response and an error

@@ -22,6 +22,7 @@ class ResponseData(message.MessageData):
         reason=None,
         headers=(),
         content=None,
+        trailers=None,
         timestamp_start=None,
         timestamp_end=None
     ):
@@ -39,6 +40,7 @@ class ResponseData(message.MessageData):
         self.reason = reason
         self.headers = headers
         self.content = content
+        self.trailers = trailers
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
 

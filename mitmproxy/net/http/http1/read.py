@@ -98,7 +98,7 @@ def read_response_head(rfile):
         # more accurate timestamp_start
         timestamp_start = rfile.first_byte_timestamp
 
-    return response.Response(http_version, status_code, message, headers, None, timestamp_start)
+    return response.Response(http_version, status_code, message, headers, None, None, timestamp_start)
 
 
 def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):

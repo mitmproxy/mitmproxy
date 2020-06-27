@@ -30,6 +30,7 @@ def convert_013_014(data):
         str(x) for x in data[b"response"].pop(b"httpversion")).encode()
     data[b"response"][b"status_code"] = data[b"response"].pop(b"code")
     data[b"response"][b"body"] = data[b"response"].pop(b"content")
+    data[b"response"][b"trailers"] = None
     data[b"server_conn"].pop(b"state")
     data[b"server_conn"][b"via"] = None
     data[b"version"] = (0, 14)
