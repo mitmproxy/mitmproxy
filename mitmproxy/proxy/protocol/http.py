@@ -407,7 +407,7 @@ class HttpLayer(base.Layer):
                 self.channel.ask("responseheaders", f)
 
             self.log("response", "debug", [repr(f.response)])
-            if hasattr(self, 'has_tailers') and self.has_tailers:
+            if hasattr(self, 'has_trailers') and self.has_trailers:
                 f.response.data.trailers = self.read_trailers_headers()
             self.channel.ask("response", f)
 

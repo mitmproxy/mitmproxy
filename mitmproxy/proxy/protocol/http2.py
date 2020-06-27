@@ -424,7 +424,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         self.response_data_finished = threading.Event()
 
         self.no_body = False
-        self.has_tailers = False
+        self.has_trailers = False
         self.trailers_header = None
 
         self.priority_exclusive: bool
@@ -602,11 +602,11 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
     @detect_zombie_stream
     def update_trailers(self, headers):
         self.trailers_header = headers
-        self.has_tailers = True
+        self.has_trailers = True
 
     @detect_zombie_stream
     def send_trailers_headers(self):
-        if self.has_tailers and self.trailers_header:
+        if self.has_trailers and self.trailers_header:
             with self.connections[self.client_conn].lock:
                 self.connections[self.client_conn].safe_send_headers(
                     self.raise_zombie,
@@ -675,9 +675,9 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             self.raise_zombie,
             self.client_stream_id,
             chunks,
-            end_stream = not self.has_tailers
+            end_stream = not self.has_trailers
         )
-        if self.has_tailers:
+        if self.has_trailers:
             self.send_trailers_headers()
 
     def __call__(self):  # pragma: no cover
