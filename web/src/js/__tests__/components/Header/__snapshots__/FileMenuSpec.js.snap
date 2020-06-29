@@ -22,9 +22,9 @@ exports[`FileMenu Component should render correctly 1`] = `
         onClick={[Function]}
       >
         <i
-          className="fa fa-fw fa-file"
+          className="fa fa-fw fa-trash"
         />
-         New
+         Clear All
       </a>
        
     </li>
