@@ -13,15 +13,15 @@ class TestModifyHeaders:
         x = modifyheaders.parse_modify_headers("/foo/bar/vo/ing/")
         assert x == ("foo", "bar", "vo/ing/")
         x = modifyheaders.parse_modify_headers("/bar/voing")
-        assert x == ("bar", "voing", ".*")
-        with pytest.raises(Exception, match="Invalid replacement"):
+        assert x == (".*", "bar", "voing")
+        with pytest.raises(Exception, match="Invalid modify_headers specifier"):
             modifyheaders.parse_modify_headers("/")
 
     def test_configure(self):
         sh = modifyheaders.ModifyHeaders()
         with taddons.context(sh) as tctx:
             with pytest.raises(Exception, match="Invalid modify_headers flow filter"):
-                tctx.configure(sh, modify_headers = ["/one/two/~b"])
+                tctx.configure(sh, modify_headers = ["/~b/one/two"])
             tctx.configure(sh, modify_headers = ["/foo/bar/voing"])
 
     def test_modify_headers(self):
@@ -30,8 +30,8 @@ class TestModifyHeaders:
             tctx.configure(
                 sh,
                 modify_headers = [
-                    "/one/two/~q",
-                    "/one/three/~s"
+                    "/~q/one/two",
+                    "/~s/one/three"
                 ]
             )
             f = tflow.tflow()
@@ -47,8 +47,8 @@ class TestModifyHeaders:
             tctx.configure(
                 sh,
                 modify_headers = [
-                    "/one/two/~s",
-                    "/one/three/~s"
+                    "/~s/one/two",
+                    "/~s/one/three"
                 ]
             )
             f = tflow.tflow(resp=True)
@@ -60,8 +60,8 @@ class TestModifyHeaders:
             tctx.configure(
                 sh,
                 modify_headers = [
-                    "/one/two/~q",
-                    "/one/three/~q"
+                    "/~q/one/two",
+                    "/~q/one/three"
                 ]
             )
             f = tflow.tflow()
@@ -73,8 +73,8 @@ class TestModifyHeaders:
             tctx.configure(
                 sh,
                 modify_headers = [
-                    "/one//~q",
-                    "/one//~s"
+                    "/~q/one/",
+                    "/~s/one/"
                 ]
             )
             f = tflow.tflow()

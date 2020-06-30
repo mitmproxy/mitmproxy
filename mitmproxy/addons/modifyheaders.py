@@ -7,23 +7,23 @@ from mitmproxy import ctx
 
 def parse_modify_headers(s):
     """
-        Returns a (header_name, header_value, flow_filter) tuple.
+        Returns a (flow_filter, header_name, header_value) tuple.
 
         The general form for a modify_headers hook is as follows:
 
-            /header_name/header_value/flow_filter
+            [/flow_filter]/header_name/header_value
 
         The first character specifies the separator. Example:
 
-            :foo:bar:~q
+            :~q:foo:bar
 
         If only two clauses are specified, the pattern is set to match
         universally (i.e. ".*"). Example:
 
-            /foo/bar/
+            /foo/bar
 
         Clauses are parsed from left to right. Extra separators are taken to be
-        part of the final clause. For instance, the flow filter below is
+        part of the final clause. For instance, the replacement clause below is
         "foo/bar/":
 
             /one/two/foo/bar/
@@ -34,12 +34,12 @@ def parse_modify_headers(s):
         flow_filter = ".*"
         header_name, header_value = parts
     elif len(parts) == 3:
-        header_name, header_value, flow_filter = parts
+        flow_filter, header_name, header_value = parts
     else:
         raise exceptions.OptionsError(
-            "Invalid replacement specifier: %s" % s
+            "Invalid modify_headers specifier: %s" % s
         )
-    return header_name, header_value, flow_filter
+    return flow_filter, header_name, header_value
 
 
 class ModifyHeaders:
@@ -50,7 +50,7 @@ class ModifyHeaders:
         loader.add_option(
             "modify_headers", typing.Sequence[str], [],
             """
-            Header modify pattern of the form "/header-name/header-value[/flow-filter]", where the
+            Header modify pattern of the form "[/flow-filter]/header-name/header-value", where the
             separator can be any character. An empty header-value removes existing header-name headers.
             """
         )
@@ -59,20 +59,20 @@ class ModifyHeaders:
         if "modify_headers" in updated:
             self.lst = []
             for shead in ctx.options.modify_headers:
-                header, value, flow_pattern = parse_modify_headers(shead)
+                flow_pattern, header, value = parse_modify_headers(shead)
 
                 flow_filter = flowfilter.parse(flow_pattern)
                 if not flow_filter:
                     raise exceptions.OptionsError(
                         "Invalid modify_headers flow filter %s" % flow_pattern
                     )
-                self.lst.append((header, value, flow_pattern, flow_filter))
+                self.lst.append((flow_pattern, flow_filter, header, value))
 
     def run(self, f, hdrs):
-        for header, value, _, flow_filter in self.lst:
+        for _, flow_filter, header, value in self.lst:
             if flow_filter(f):
                 hdrs.pop(header, None)
-        for header, value, _, flow_filter in self.lst:
+        for _, flow_filter, header, value in self.lst:
             if flow_filter(f) and value:
                 hdrs.add(header, value)
 

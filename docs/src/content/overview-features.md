@@ -88,17 +88,16 @@ New headers can be added, and existing headers can be overwritten or removed.
 A `modify_headers` expression looks like this:
 
 {{< highlight none  >}}
-/name/value[/filter-expression]
+[/patt]/name/value
 {{< / highlight >}}
 
-Here, **name** and **value** are the header name and the value to set respectively,
-e.g., ``/Host/example.org``. An empty **value** removes existing headers with
-**name**, e.g., ``/Host/``. The optional **filter-expression** is a mitmproxy
-[filter expression]({{< relref "concepts-filters">}}) that defines
-which flows to modify headers on, e.g., only on responses using ``~s``.
-Existing headers are overwritten by default.
-This can be changed using filter-expressions, e.g., ``!~h Host:`` to ignore
-requests and responses with an existing ``Host`` header.
+Here, **patt** is a mitmproxy [filter expression]({{< relref "concepts-filters">}})
+that defines which flows to modify headers on, e.g., only on responses using ``~s``.
+The parameters **name** and **value** are the header name and the value to set
+respectively, e.g., ``/Host/example.org``. An empty **value** removes existing
+headers with **name**, e.g., ``/Host/``. Existing headers are overwritten by
+default. This can be changed using filter-expressions, e.g., ``!~h Host:`` to
+ignore requests and responses with an existing ``Host`` header.
 
 
 ## Proxy Authentication
