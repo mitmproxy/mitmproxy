@@ -2,10 +2,11 @@ import typing
 
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
+from mitmproxy.utils import strutils
 from mitmproxy import ctx
 
 
-def parse_modify_headers(s):
+def parse_modify_hook(s):
     """
         Returns a (flow_filter, header_name, header_value) tuple.
 
@@ -36,9 +37,15 @@ def parse_modify_headers(s):
     elif len(parts) == 3:
         flow_filter, header_name, header_value = parts
     else:
-        raise exceptions.OptionsError(
-            "Invalid modify_headers specifier: %s" % s
+        raise ValueError(
+            "Invalid modify_* specifier: %s" % s
         )
+
+    if isinstance(header_name, str):
+        header_name = strutils.escaped_str_to_bytes(header_name)
+    if isinstance(header_value, str):
+        header_value = strutils.escaped_str_to_bytes(header_value)
+
     return flow_filter, header_name, header_value
 
 
@@ -59,14 +66,19 @@ class ModifyHeaders:
         if "modify_headers" in updated:
             self.lst = []
             for shead in ctx.options.modify_headers:
-                flow_pattern, header, value = parse_modify_headers(shead)
+                try:
+                    flow_filter_pattern, header, value = parse_modify_hook(shead)
+                except ValueError as e:
+                    raise exceptions.OptionsError(
+                        "Invalid modify_headers option: %s" % shead
+                    ) from e
 
-                flow_filter = flowfilter.parse(flow_pattern)
+                flow_filter = flowfilter.parse(flow_filter_pattern)
                 if not flow_filter:
                     raise exceptions.OptionsError(
-                        "Invalid modify_headers flow filter %s" % flow_pattern
+                        "Invalid modify_headers flow filter %s" % flow_filter_pattern
                     )
-                self.lst.append((flow_pattern, flow_filter, header, value))
+                self.lst.append((flow_filter_pattern, flow_filter, header, value))
 
     def run(self, f, hdrs):
         for _, flow_filter, header, value in self.lst:

@@ -1,25 +1,28 @@
 import pytest
 
 from mitmproxy.addons import modifybody
+from mitmproxy.addons.modifyheaders import parse_modify_hook
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
 
 class TestModifyBody:
-    def test_parse_modify_body(self):
-        x = modifybody.parse_modify_body("/foo/bar/voing")
-        assert x == ("foo", "bar", "voing")
-        x = modifybody.parse_modify_body("/foo/bar/vo/ing/")
-        assert x == ("foo", "bar", "vo/ing/")
-        x = modifybody.parse_modify_body("/bar/voing")
-        assert x == (".*", "bar", "voing")
-        with pytest.raises(Exception, match="Invalid modify_body specifier"):
-            modifybody.parse_modify_body("/")
+    def test_parse_modify_hook(self):
+        x = parse_modify_hook("/foo/bar/voing")
+        assert x == ("foo", b"bar", b"voing")
+        x = parse_modify_hook("/foo/bar/vo/ing/")
+        assert x == ("foo", b"bar", b"vo/ing/")
+        x = parse_modify_hook("/bar/voing")
+        assert x == (".*", b"bar", b"voing")
+        with pytest.raises(Exception, match="Invalid modify_\\* specifier"):
+            parse_modify_hook("/")
 
     def test_configure(self):
         mb = modifybody.ModifyBody()
         with taddons.context(mb) as tctx:
             tctx.configure(mb, modify_body=["one/two/three"])
+            with pytest.raises(Exception, match="Invalid modify_body option"):
+                tctx.configure(mb, modify_body = ["/"])
             with pytest.raises(Exception, match="Invalid modify_body flow filter"):
                 tctx.configure(mb, modify_body=["/~b/two/three"])
             with pytest.raises(Exception, match="Invalid regular expression"):

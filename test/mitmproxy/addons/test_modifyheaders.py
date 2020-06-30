@@ -7,19 +7,21 @@ from mitmproxy.addons import modifyheaders
 
 
 class TestModifyHeaders:
-    def test_parse_modifyheaders(self):
-        x = modifyheaders.parse_modify_headers("/foo/bar/voing")
-        assert x == ("foo", "bar", "voing")
-        x = modifyheaders.parse_modify_headers("/foo/bar/vo/ing/")
-        assert x == ("foo", "bar", "vo/ing/")
-        x = modifyheaders.parse_modify_headers("/bar/voing")
-        assert x == (".*", "bar", "voing")
-        with pytest.raises(Exception, match="Invalid modify_headers specifier"):
-            modifyheaders.parse_modify_headers("/")
+    def test_parse_modify_hook(self):
+        x = modifyheaders.parse_modify_hook("/foo/bar/voing")
+        assert x == ("foo", b"bar", b"voing")
+        x = modifyheaders.parse_modify_hook("/foo/bar/vo/ing/")
+        assert x == ("foo", b"bar", b"vo/ing/")
+        x = modifyheaders.parse_modify_hook("/bar/voing")
+        assert x == (".*", b"bar", b"voing")
+        with pytest.raises(Exception, match="Invalid modify_\\* specifier"):
+            modifyheaders.parse_modify_hook("/")
 
     def test_configure(self):
         sh = modifyheaders.ModifyHeaders()
         with taddons.context(sh) as tctx:
+            with pytest.raises(Exception, match="Invalid modify_headers option"):
+                tctx.configure(sh, modify_headers = ["/"])
             with pytest.raises(Exception, match="Invalid modify_headers flow filter"):
                 tctx.configure(sh, modify_headers = ["/~b/one/two"])
             tctx.configure(sh, modify_headers = ["/foo/bar/voing"])

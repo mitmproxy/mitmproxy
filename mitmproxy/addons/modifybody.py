@@ -5,44 +5,7 @@ import typing
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import ctx
-from mitmproxy.utils import strutils
-
-
-def parse_modify_body(s):
-    """
-        Returns a (flow_filter, regex, replacement) tuple.
-
-        The general form for a modify_body hook is as follows:
-
-            [/flow_filter]/regex/replacement
-
-        The first character specifies the separator. Example:
-
-            :~q:foo:bar
-
-        If only two clauses are specified, the pattern is set to match
-        universally (i.e. ".*"). Example:
-
-            /foo/bar
-
-        Clauses are parsed from left to right. Extra separators are taken to be
-        part of the final clause. For instance, the replacement clause below is
-        "foo/bar/":
-
-            /one/two/foo/bar/
-    """
-    sep, rem = s[0], s[1:]
-    parts = rem.split(sep, 2)
-    if len(parts) == 2:
-        flow_filter = ".*"
-        regex, repl = parts
-    elif len(parts) == 3:
-        flow_filter, regex, repl = parts
-    else:
-        raise exceptions.OptionsError(
-            "Invalid modify_body specifier: %s" % s
-        )
-    return flow_filter, regex, repl
+from mitmproxy.addons.modifyheaders import parse_modify_hook
 
 
 class ModifyBody:
@@ -70,7 +33,12 @@ class ModifyBody:
         if "modify_body" in updated:
             lst = []
             for rep in ctx.options.modify_body:
-                flow_filter_pattern, regex, repl = parse_modify_body(rep)
+                try:
+                    flow_filter_pattern, regex, repl = parse_modify_hook(rep)
+                except ValueError as e:
+                    raise exceptions.OptionsError(
+                        "Invalid modify_body option: %s" % rep
+                    ) from e
 
                 flow_filter = flowfilter.parse(flow_filter_pattern)
                 if not flow_filter:
@@ -84,7 +52,7 @@ class ModifyBody:
                     raise exceptions.OptionsError(
                         "Invalid regular expression: %s - %s" % (regex, str(e))
                     )
-                if repl.startswith("@") and not os.path.isfile(repl[1:]):
+                if repl.startswith(b"@") and not os.path.isfile(repl[1:]):
                     raise exceptions.OptionsError(
                         "Invalid file path: {}".format(repl[1:])
                     )
@@ -115,7 +83,7 @@ class ModifyBody:
         Returns:
             The number of replacements made.
         """
-        if repl.startswith("@"):
+        if repl.startswith(b"@"):
             repl = os.path.expanduser(repl[1:])
             try:
                 with open(repl, "rb") as f:
@@ -124,10 +92,6 @@ class ModifyBody:
                 ctx.log.warn("Could not read replacement file: %s" % repl)
                 return
 
-        if isinstance(search, str):
-            search = strutils.escaped_str_to_bytes(search)
-        if isinstance(repl, str):
-            repl = strutils.escaped_str_to_bytes(repl)
         replacements = 0
         if obj.content:
             obj.content, replacements = re.subn(search, repl, obj.content, flags=re.DOTALL)
