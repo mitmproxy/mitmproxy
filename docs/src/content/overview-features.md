@@ -44,7 +44,7 @@ option, to make sure the server responds with complete data.
 
 ## Modify Body
 
-The `modify-body` option lets you specify an arbitrary number of patterns that
+The `modify_body` option lets you specify an arbitrary number of patterns that
 define replacements within bodies of flows. A replacement pattern looks like this:
 
 {{< highlight none  >}}
