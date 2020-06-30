@@ -1,5 +1,6 @@
-from typing import Callable, List
+from typing import Callable, List, Tuple
 
+import hpack
 import hyperframe.frame
 import pytest
 
@@ -11,12 +12,6 @@ from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import http
 from test.mitmproxy.proxy2.layers.http.hyper_h2_test_helpers import FrameFactory
 from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply
-
-
-@pytest.fixture
-def frame_factory() -> FrameFactory:
-    return FrameFactory()
-
 
 example_request_headers = (
     (b':authority', b'example.com'),
@@ -32,6 +27,9 @@ example_response_headers = (
 
 
 def decode_frames(data: bytes) -> List[hyperframe.frame.Frame]:
+    # swallow preamble
+    if data.startswith(b"PRI * HTTP/2.0"):
+        data = data[24:]
     frames = []
     while data:
         f, length = hyperframe.frame.Frame.parse_frame_header(data[:9])
@@ -41,8 +39,10 @@ def decode_frames(data: bytes) -> List[hyperframe.frame.Frame]:
     return frames
 
 
-def start_h2(tctx: Context, frame_factory: FrameFactory) -> Playbook:
+
+def start_h2_client(tctx: Context) -> Tuple[Playbook, FrameFactory]:
     tctx.client.alpn = b"h2"
+    frame_factory = FrameFactory()
 
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
     assert (
@@ -51,7 +51,7 @@ def start_h2(tctx: Context, frame_factory: FrameFactory) -> Playbook:
             >> DataReceived(tctx.client, frame_factory.preamble())
             >> DataReceived(tctx.client, frame_factory.build_settings_frame({}, ack=True).serialize())
     )
-    return playbook
+    return playbook, frame_factory
 
 
 def make_h2(open_connection: OpenConnection) -> None:
@@ -59,31 +59,28 @@ def make_h2(open_connection: OpenConnection) -> None:
 
 
 @pytest.mark.parametrize("stream", [True, False])
-def test_http2_client_aborts(tctx, frame_factory, stream):
+def test_http2_client_aborts(tctx, stream):
     """Test handling of the case where a client aborts during request transmission."""
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
-    playbook = start_h2(tctx, frame_factory)
+    playbook, cff = start_h2_client(tctx)
 
     def enable_streaming(flow: HTTPFlow):
         flow.request.stream = True
 
     assert (
             playbook
-            >> DataReceived(tctx.client, frame_factory.build_headers_frame(example_request_headers).serialize())
+            >> DataReceived(tctx.client, cff.build_headers_frame(example_request_headers).serialize())
             << http.HttpRequestHeadersHook(flow)
     )
     if stream:
-        pytest.xfail("h2 client not implemented yet")
         assert (
                 playbook
                 >> reply(side_effect=enable_streaming)
                 << OpenConnection(server)
-                >> reply(None, side_effect=make_h2)
-                << SendData(server, b"POST / HTTP/1.1\r\n"
-                                    b"Host: example.com\r\n"
-                                    b"Content-Length: 6\r\n\r\n"
-                                    b"abc")
+                >> reply(None)
+                << SendData(server, b"GET / HTTP/1.1\r\n"
+                                    b"Host: example.com\r\n\r\n")
         )
     else:
         assert playbook >> reply()
@@ -100,6 +97,63 @@ def test_http2_client_aborts(tctx, frame_factory, stream):
 
 
 @pytest.mark.xfail
-def test_no_normalization():
+def test_no_normalization(tctx):
     """Test that we don't normalize headers when we just pass them through."""
-    raise NotImplementedError
+
+    server = Placeholder(Server)
+    flow = Placeholder(HTTPFlow)
+    playbook, cff = start_h2_client(tctx)
+
+    request_headers = example_request_headers + (
+        (b"Should-Not-Be-Capitalized! ", b" :) "),
+    )
+    response_headers = example_response_headers + (
+        (b"Same", b"Here"),
+    )
+
+    initial = Placeholder(bytes)
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(request_headers, flags=["END_STREAM"]).serialize())
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None, side_effect=make_h2)
+            << SendData(server, initial)
+    )
+    frames = decode_frames(initial())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.HeadersFrame,
+        hyperframe.frame.DataFrame
+    ]
+    assert hpack.hpack.Decoder().decode(frames[1].data, True) == list(request_headers)
+
+    sff = FrameFactory()
+    assert (
+            playbook
+            << SendData(server, sff.build_headers_frame(request_headers, flags=["END_STREAM"]).serialize())
+            >> DataReceived(server, sff.build_headers_frame(response_headers, flags=["END_STREAM"]).serialize())
+            << http.HttpResponseHeadersHook(flow)
+            >> reply()
+            << http.HttpResponseHook(flow)
+            >> reply()
+            << SendData(tctx.client, cff.build_headers_frame(response_headers, flags=["END_STREAM"]).serialize())
+    )
+    assert flow().request.headers.fields == request_headers
+    assert flow().response.headers.fields == response_headers
+
+
+def start_h2_server(playbook: Playbook) -> FrameFactory:
+    frame_factory = FrameFactory()
+    server = Placeholder(Server)
+    assert (
+            playbook
+            >> reply(None, side_effect=make_h2)
+            << SendData(server, Placeholder())
+    )
+    playbook >> DataReceived(server, frame_factory.build_settings_frame({}, ack=True))
+    return frame_factory

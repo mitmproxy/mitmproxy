@@ -570,9 +570,9 @@ class HttpClient(layer.Layer):
             err = yield commands.OpenConnection(self.context.server)
         if not err:
             if self.context.server.alpn == b"h2":
-                raise NotImplementedError
+                child_layer = Http2Client(self.context)
             else:
                 child_layer = Http1Client(self.context)
-                self._handle_event = child_layer.handle_event
+            self._handle_event = child_layer.handle_event
             yield from self._handle_event(event)
         yield RegisterHttpConnection(self.context.server, err)
