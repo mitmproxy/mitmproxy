@@ -1,7 +1,8 @@
-This PR fixes #<issue-numer>.
+#### Description
 
-This PR introduces a new feature to ...
+<!-- describe your changes here -->
 
-**Please add a new entry for the changes in this PR to the CHANGELOG in the unreleased section at the top!**
+#### Checklist
 
-**Please make sure all automated tests and checks pass - we will not consider your PR for merging with failing checks!**
+ - [ ] I have updated tests where applicable.
+ - [ ] I have added an entry to the CHANGELOG.
