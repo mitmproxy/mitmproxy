@@ -28,7 +28,6 @@ class ModifyBody:
                 try:
                     spec = parse_modify_spec(option)
                     try:
-                        # We should ideally escape here before trying to compile
                         re.compile(spec.subject)
                     except re.error:
                         raise ValueError(f"Invalid regular expression: {spec.subject}")

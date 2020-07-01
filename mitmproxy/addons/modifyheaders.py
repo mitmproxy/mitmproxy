@@ -59,12 +59,10 @@ def parse_modify_spec(option) -> ModifySpec:
     if not flow_filter:
         raise ValueError(f"Invalid filter pattern: {flow_filter_pattern}")
 
-    if isinstance(subject, str):
-        subject = strutils.escaped_str_to_bytes(subject)
-    if isinstance(replacement, str):
-        replacement = strutils.escaped_str_to_bytes(replacement)
+    subject = strutils.escaped_str_to_bytes(subject)
+    replacement = strutils.escaped_str_to_bytes(replacement)
 
-    if replacement.startswith(b"@") and not os.path.isfile(replacement[1:]):
+    if replacement.startswith(b"@") and not os.path.isfile(os.path.expanduser(replacement[1:])):
         raise ValueError(f"Invalid file path: {replacement[1:]}")
 
     return ModifySpec(flow_filter_pattern, flow_filter, subject, replacement)
