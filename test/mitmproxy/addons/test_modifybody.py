@@ -1,31 +1,37 @@
 import pytest
 
 from mitmproxy.addons import modifybody
-from mitmproxy.addons.modifyheaders import parse_modify_hook
+from mitmproxy.addons.modifyheaders import parse_modify_spec
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
 
 class TestModifyBody:
-    def test_parse_modify_hook(self):
-        x = parse_modify_hook("/foo/bar/voing")
-        assert x == ("foo", b"bar", b"voing")
-        x = parse_modify_hook("/foo/bar/vo/ing/")
-        assert x == ("foo", b"bar", b"vo/ing/")
-        x = parse_modify_hook("/bar/voing")
-        assert x == (".*", b"bar", b"voing")
-        with pytest.raises(Exception, match="Invalid modify_\\* specifier"):
-            parse_modify_hook("/")
+    def test_parse_modify_spec(self):
+        x = parse_modify_spec("/foo/bar/voing")
+        assert [x[0], x[2], x[3]] == ["foo", b"bar", b"voing"]
+
+        x = parse_modify_spec("/foo/bar/vo/ing/")
+        assert [x[0], x[2], x[3]] == ["foo", b"bar", b"vo/ing/"]
+
+        x = parse_modify_spec("/bar/voing")
+        assert [x[0], x[2], x[3]] == [".*", b"bar", b"voing"]
+
+        with pytest.raises(Exception, match="Invalid number of parameters"):
+            parse_modify_spec("/")
+
+        with pytest.raises(Exception, match="Invalid filter pattern"):
+            parse_modify_spec("/~b/one/two")
 
     def test_configure(self):
         mb = modifybody.ModifyBody()
         with taddons.context(mb) as tctx:
             tctx.configure(mb, modify_body=["one/two/three"])
-            with pytest.raises(Exception, match="Invalid modify_body option"):
+            with pytest.raises(Exception, match="Cannot parse modify_body .* Invalid number"):
                 tctx.configure(mb, modify_body = ["/"])
-            with pytest.raises(Exception, match="Invalid modify_body flow filter"):
+            with pytest.raises(Exception, match="Cannot parse modify_body .* Invalid filter"):
                 tctx.configure(mb, modify_body=["/~b/two/three"])
-            with pytest.raises(Exception, match="Invalid regular expression"):
+            with pytest.raises(Exception, match="Cannot parse modify_body .* Invalid regular expression"):
                 tctx.configure(mb, modify_body=["/foo/+/three"])
             tctx.configure(mb, modify_body=["/a/b/c/"])
 

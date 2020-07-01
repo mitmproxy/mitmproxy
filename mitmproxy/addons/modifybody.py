@@ -3,14 +3,13 @@ import re
 import typing
 
 from mitmproxy import exceptions
-from mitmproxy import flowfilter
 from mitmproxy import ctx
-from mitmproxy.addons.modifyheaders import parse_modify_hook
+from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifySpec
 
 
 class ModifyBody:
     def __init__(self):
-        self.lst = []
+        self.replacements: typing.List[ModifySpec] = []
 
     def load(self, loader):
         loader.add_option(
@@ -23,62 +22,42 @@ class ModifyBody:
         )
 
     def configure(self, updated):
-        """
-            .modify_body is a list of tuples (flow_filter_pattern, regex, repl):
-
-            flow_filter_pattern: a string specifying a flow filter pattern.
-            regex: a regular expression, as string.
-            repl: the replacement string
-        """
         if "modify_body" in updated:
-            lst = []
-            for rep in ctx.options.modify_body:
+            self.replacements = []
+            for option in ctx.options.modify_body:
                 try:
-                    flow_filter_pattern, regex, repl = parse_modify_hook(rep)
+                    spec = parse_modify_spec(option)
+                    try:
+                        # We should ideally escape here before trying to compile
+                        re.compile(spec.subject)
+                    except re.error:
+                        raise ValueError(f"Invalid regular expression: {spec.subject}")
                 except ValueError as e:
                     raise exceptions.OptionsError(
-                        "Invalid modify_body option: %s" % rep
+                        f"Cannot parse modify_body option {option}: {e}"
                     ) from e
 
-                flow_filter = flowfilter.parse(flow_filter_pattern)
-                if not flow_filter:
-                    raise exceptions.OptionsError(
-                        "Invalid modify_body flow filter: %s" % flow_filter_pattern
-                    )
-                try:
-                    # We should ideally escape here before trying to compile
-                    re.compile(regex)
-                except re.error as e:
-                    raise exceptions.OptionsError(
-                        "Invalid regular expression: %s - %s" % (regex, str(e))
-                    )
-                if repl.startswith(b"@") and not os.path.isfile(repl[1:]):
-                    raise exceptions.OptionsError(
-                        "Invalid file path: {}".format(repl[1:])
-                    )
-                lst.append((regex, repl, flow_filter))
-            self.lst = lst
+                self.replacements.append(spec)
 
-    def execute(self, f):
-        for regex, repl, flow_filter in self.lst:
-            if flow_filter(f):
-                if f.response:
-                    self.replace(f.response, regex, repl)
+    def run(self, flow):
+        for spec in self.replacements:
+            if spec.matches(flow):
+                if flow.response:
+                    self.replace(flow.response, spec.subject, spec.replacement)
                 else:
-                    self.replace(f.request, regex, repl)
+                    self.replace(flow.request, spec.subject, spec.replacement)
 
     def request(self, flow):
         if not flow.reply.has_message:
-            self.execute(flow)
+            self.run(flow)
 
     def response(self, flow):
         if not flow.reply.has_message:
-            self.execute(flow)
+            self.run(flow)
 
     def replace(self, obj, search, repl):
         """
-        Replaces a regular expression pattern with repl in the body of the message.
-        Encoded body will be decoded before replacement, and re-encoded afterwards.
+        Replaces all matches of the regex search in the body of the message with repl.
 
         Returns:
             The number of replacements made.

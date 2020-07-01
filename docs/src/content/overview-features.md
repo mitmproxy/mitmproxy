@@ -48,19 +48,19 @@ The `modify_body` option lets you specify an arbitrary number of patterns that
 define replacements within bodies of flows. A replacement pattern looks like this:
 
 {{< highlight none  >}}
-[/patt]/regex/replacement
+[/flow-filter]/regex/replacement
 {{< / highlight >}}
 
-Here, **patt** is a mitmproxy [filter expression]({{< relref "concepts-filters">}})
+Here, **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
 that defines which flows a replacement applies to, **regex** is a valid Python
 regular expression that defines what gets replaced, and **replacement** is a string
 literal that is substituted in. The separator is arbitrary, and defined by the
 first character. If the replacement string literal starts with `@`, it is treated
 as a file path from which the replacement is read.
 
-Replace hooks fire when either a client request or a server response is
+Modify hooks fire when either a client request or a server response is
 received. Only the matching flow component is affected: so, for example,
-if a replace hook is triggered on server response, the replacement is
+if a modify hook is triggered on server response, the replacement is
 only run on the Response object leaving the Request intact. You control
 whether the hook triggers on the request, response or both using the
 filter pattern. If you need finer-grained control than this, it's simple
@@ -88,16 +88,17 @@ New headers can be added, and existing headers can be overwritten or removed.
 A `modify_headers` expression looks like this:
 
 {{< highlight none  >}}
-[/patt]/name/value
+[/flow-filter]/name/value
 {{< / highlight >}}
 
-Here, **patt** is a mitmproxy [filter expression]({{< relref "concepts-filters">}})
+Here, **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
 that defines which flows to modify headers on, e.g., only on responses using ``~s``.
 The parameters **name** and **value** are the header name and the value to set
 respectively, e.g., ``/Host/example.org``. An empty **value** removes existing
-headers with **name**, e.g., ``/Host/``. Existing headers are overwritten by
-default. This can be changed using filter-expressions, e.g., ``!~h Host:`` to
-ignore requests and responses with an existing ``Host`` header.
+headers with **name**, e.g., ``/Host/``. If **value** starts with `@`, it is treated
+as a file path from which the header value is read. Existing headers are overwritten
+by default. This can be changed using a filter expression, e.g., the filter
+``!~h Host:`` ignores requests and responses with an existing ``Host`` header.
 
 
 ## Proxy Authentication
