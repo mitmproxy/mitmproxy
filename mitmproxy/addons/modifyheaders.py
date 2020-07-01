@@ -53,7 +53,7 @@ def parse_modify_spec(option) -> ModifySpec:
     elif len(parts) == 3:
         flow_filter_pattern, subject, replacement = parts
     else:
-        raise ValueError(f"Invalid number of parameters (2 or 3 are expected)")
+        raise ValueError("Invalid number of parameters (2 or 3 are expected)")
 
     flow_filter = flowfilter.parse(flow_filter_pattern)
     if not flow_filter:
