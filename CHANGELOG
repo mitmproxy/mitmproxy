@@ -1,4 +1,28 @@
+Unreleased: mitmproxy next
+
+  ** Full Changelog **
+    * Add Filter message to mitmdump (@sarthak212)
+    * Display TCP flows at flow list (@Jessonsotoventura, @nikitastupin, @mhils)
+    * Colorize JSON Contentview (@sarthak212)
+    * Fix console crash when entering regex escape character in half-open string (@sarthak212)
+    * Integrate contentviews to TCP flow details (@nikitastupin)
+    * Added add-ons that enhance the performance of web application scanners (@anneborcherding)
+    * Increase WebSocket message timestamp precision (@JustAnotherArchivist)
+    * Fix HTTP reason value on HTTP/2 reponses (@rbdixon)
+    * mitmweb: support wslview to open a web browser (@G-Rath)
+    * Fix dev version detection with parent git repo (@JustAnotherArchivist)
+    * Restructure examples and supported addons (@mhils)
+    * Certificate generation: mark SAN as critical if no CN is set (@mhils)
+    * Simplify Replacements with new ModifyBody addon (@mplattner)
+    * Rename SetHeaders addon to ModifyHeaders (@mplattner)
+    * mitmweb: "New -> File" menu option has been renamed to "Clear All" (@yogeshojha)
+
+    * --- TODO: add new PRs above this line ---
+
+    * ... and various other fixes, documentation improvements, dependency version bumps, etc.
+
 13 April 2020: mitmproxy 5.1.1
+
     * Fixed Docker images not starting due to missing shell
 
 13 April 2020: mitmproxy 5.1
