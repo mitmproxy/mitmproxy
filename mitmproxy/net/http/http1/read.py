@@ -59,7 +59,7 @@ def read_request_head(rfile):
         timestamp_start = rfile.first_byte_timestamp
 
     return request.Request(
-        form, method, scheme, host, port, path, http_version, headers, None, timestamp_start
+        form, method, scheme, host, port, path, http_version, headers, None, None, timestamp_start
     )
 
 

@@ -235,8 +235,10 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_trailers(self, eid, event, is_server, other_conn):
-        headers = mitmproxy.net.http.Headers([[k, v] for k, v in event.headers])
-        self.streams[eid].update_trailers(headers)
+        trailers = mitmproxy.net.http.Headers([[k, v] for k, v in event.headers])
+        # TODO: support request trailers as well!
+        self.streams[eid].response_trailers = trailers
+        self.streams[eid].response_trailers_arrived.set()
         return True
 
     def _handle_remote_settings_changed(self, event, other_conn):
@@ -417,15 +419,17 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         self.request_data_queue: queue.Queue[bytes] = queue.Queue()
         self.request_queued_data_length = 0
         self.request_data_finished = threading.Event()
+        self.request_trailers_arrived = threading.Event()
+        self.request_trailers = None
 
         self.response_arrived = threading.Event()
         self.response_data_queue: queue.Queue[bytes] = queue.Queue()
         self.response_queued_data_length = 0
         self.response_data_finished = threading.Event()
+        self.response_trailers_arrived = threading.Event()
+        self.response_trailers = None
 
         self.no_body = False
-        self.has_trailers = False
-        self.trailers_header = None
 
         self.priority_exclusive: bool
         self.priority_depends_on: Optional[int] = None
@@ -437,8 +441,10 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             self.zombie = time.time()
             self.request_data_finished.set()
             self.request_arrived.set()
+            self.request_trailers_arrived.set()
             self.response_arrived.set()
             self.response_data_finished.set()
+            self.response_trailers_arrived.set()
 
     def connect(self):  # pragma: no cover
         raise exceptions.Http2ProtocolException("HTTP2 layer should already have a connection.")
@@ -527,6 +533,14 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             self.raise_zombie()
 
     @detect_zombie_stream
+    def read_request_trailers(self, request):
+        if "trailer" in request.headers:
+            self.request_trailers_arrived.wait()
+            self.raise_zombie()
+            return self.request_trailers
+        return None
+
+    @detect_zombie_stream
     def send_request_headers(self, request):
         if self.pushed:
             # nothing to do here
@@ -600,25 +614,14 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             )
 
     @detect_zombie_stream
-    def update_trailers(self, headers):
-        self.trailers_header = headers
-        self.has_trailers = True
+    def send_request_trailers(self, request):
+        self._send_trailers(self.server_conn, self.request_trailers)
 
     @detect_zombie_stream
-    def send_trailers_headers(self):
-        if self.has_trailers and self.trailers_header:
-            with self.connections[self.client_conn].lock:
-                self.connections[self.client_conn].safe_send_headers(
-                    self.raise_zombie,
-                    self.client_stream_id,
-                    self.trailers_header,
-                    end_stream = True
-                )
-
-    @detect_zombie_stream
-    def send_request(self, message):
-        self.send_request_headers(message)
-        self.send_request_body(message, [message.content])
+    def send_request(self, request):
+        self.send_request_headers(request)
+        self.send_request_body(request, [request.content])
+        self.send_request_trailers(request)
 
     @detect_zombie_stream
     def read_response_headers(self):
@@ -641,10 +644,6 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         )
 
     @detect_zombie_stream
-    def read_trailers_headers(self):
-        return self.trailers_header
-
-    @detect_zombie_stream
     def read_response_body(self, request, response):
         while True:
             try:
@@ -659,6 +658,14 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             self.raise_zombie()
 
     @detect_zombie_stream
+    def read_response_trailers(self, request, response):
+        if "trailer" in response.headers:
+            self.response_trailers_arrived.wait()
+            self.raise_zombie()
+            return self.response_trailers
+        return None
+
+    @detect_zombie_stream
     def send_response_headers(self, response):
         headers = response.headers.copy()
         headers.insert(0, ":status", str(response.status_code))
@@ -670,15 +677,28 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             )
 
     @detect_zombie_stream
-    def send_response_body(self, _response, chunks):
+    def send_response_body(self, response, chunks):
         self.connections[self.client_conn].safe_send_body(
             self.raise_zombie,
             self.client_stream_id,
             chunks,
-            end_stream = not self.has_trailers
+            end_stream=("trailer" not in response.headers)
         )
-        if self.has_trailers:
-            self.send_trailers_headers()
+
+    @detect_zombie_stream
+    def send_response_trailers(self, _response):
+        self._send_trailers(self.client_conn, self.response_trailers)
+
+    def _send_trailers(self, conn, trailers):
+        if not trailers:
+            return
+        with self.connections[conn].lock:
+            self.connections[conn].safe_send_headers(
+                self.raise_zombie,
+                self.client_stream_id,
+                trailers,
+                end_stream=True
+            )
 
     def __call__(self):  # pragma: no cover
         raise EnvironmentError('Http2SingleStreamLayer must be run as thread')

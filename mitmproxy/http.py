@@ -26,6 +26,7 @@ class HTTPRequest(http.Request):
             http_version,
             headers,
             content,
+            trailers=None,
             timestamp_start=None,
             timestamp_end=None,
             is_replay=False,
@@ -41,6 +42,7 @@ class HTTPRequest(http.Request):
             http_version,
             headers,
             content,
+            trailers,
             timestamp_start,
             timestamp_end,
         )
@@ -73,6 +75,7 @@ class HTTPRequest(http.Request):
             http_version=request.data.http_version,
             headers=request.data.headers,
             content=request.data.content,
+            trailers=request.data.trailers,
             timestamp_start=request.data.timestamp_start,
             timestamp_end=request.data.timestamp_end,
         )

@@ -1034,37 +1034,19 @@ class TestResponseStreaming(_Http2Test):
 
 
 class TestTrailers(_Http2Test):
-    request_body_buffer = b''
-
     @classmethod
     def handle_server_event(cls, event, h2_conn, rfile, wfile):
         if isinstance(event, h2.events.ConnectionTerminated):
             return False
-        elif isinstance(event, h2.events.RequestReceived):
-            assert (b'self.client-foo', b'self.client-bar-1') in event.headers
-            assert (b'self.client-foo', b'self.client-bar-2') in event.headers
         elif isinstance(event, h2.events.StreamEnded):
-            import warnings
-            with warnings.catch_warnings():
-                # Ignore UnicodeWarning:
-                # h2/utilities.py:64: UnicodeWarning: Unicode equal comparison
-                # failed to convert both arguments to Unicode - interpreting
-                # them as being unequal.
-                #     elif header[0] in (b'cookie', u'cookie') and len(header[1]) < 20:
-
-                warnings.simplefilter("ignore")
-                h2_conn.send_headers(event.stream_id, [
-                    (':status', '200'),
-                    ('server-foo', 'server-bar'),
-                    ('föo', 'bär'),
-                    ('X-Stream-ID', str(event.stream_id)),
-                ])
+            h2_conn.send_headers(event.stream_id, [
+                (':status', '200'),
+                ('trailer', 'x-my-trailers')
+            ])
             h2_conn.send_data(event.stream_id, b'response body')
-            h2_conn.send_headers(event.stream_id, [('trailers', 'trailers-foo')], end_stream=True)
+            h2_conn.send_headers(event.stream_id, [('x-my-trailers', 'foobar')], end_stream=True)
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
-        elif isinstance(event, h2.events.DataReceived):
-            cls.request_body_buffer += event.data
         return True
 
     def test_trailers(self):
@@ -1079,11 +1061,9 @@ class TestTrailers(_Http2Test):
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/'),
-                ('self.client-FoO', 'self.client-bar-1'),
-                ('self.client-FoO', 'self.client-bar-2'),
-            ],
-            body=b'request body')
+            ])
 
+        trailers_buffer = None
         done = False
         while not done:
             try:
@@ -1099,6 +1079,8 @@ class TestTrailers(_Http2Test):
             for event in events:
                 if isinstance(event, h2.events.DataReceived):
                     response_body_buffer += event.data
+                elif isinstance(event, h2.events.TrailersReceived):
+                    trailers_buffer = event.headers
                 elif isinstance(event, h2.events.StreamEnded):
                     done = True
 
@@ -1108,9 +1090,7 @@ class TestTrailers(_Http2Test):
 
         assert len(self.master.state.flows) == 1
         assert self.master.state.flows[0].response.status_code == 200
-        assert self.master.state.flows[0].response.headers['server-foo'] == 'server-bar'
-        assert self.master.state.flows[0].response.headers['föo'] == 'bär'
         assert self.master.state.flows[0].response.content == b'response body'
-        assert self.request_body_buffer == b'request body'
         assert response_body_buffer == b'response body'
-        assert self.master.state.flows[0].response.data.trailers['trailers'] == 'trailers-foo'
+        assert self.master.state.flows[0].response.data.trailers['x-my-trailers'] == 'foobar'
+        assert trailers_buffer == [(b'x-my-trailers', b'foobar')]

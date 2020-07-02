@@ -29,6 +29,7 @@ class RequestData(message.MessageData):
         http_version,
         headers=(),
         content=None,
+        trailers=None,
         timestamp_start=None,
         timestamp_end=None
     ):
@@ -46,6 +47,8 @@ class RequestData(message.MessageData):
             headers = nheaders.Headers(headers)
         if isinstance(content, str):
             raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
+        if trailers is not None and not isinstance(trailers, nheaders.Headers):
+            trailers = nheaders.Headers(trailers)
 
         self.first_line_format = first_line_format
         self.method = method
@@ -56,6 +59,7 @@ class RequestData(message.MessageData):
         self.http_version = http_version
         self.headers = headers
         self.content = content
+        self.trailers = trailers
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
 

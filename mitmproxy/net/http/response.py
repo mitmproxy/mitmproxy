@@ -34,6 +34,8 @@ class ResponseData(message.MessageData):
             headers = nheaders.Headers(headers)
         if isinstance(content, str):
             raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
+        if trailers is not None and not isinstance(trailers, nheaders.Headers):
+            trailers = nheaders.Headers(trailers)
 
         self.http_version = http_version
         self.status_code = status_code

@@ -135,6 +135,20 @@ class Message(serializable.Serializable):
     content = property(get_content, set_content)
 
     @property
+    def trailers(self):
+        """
+        Message trailers object
+
+        Returns:
+            mitmproxy.net.http.Headers
+        """
+        return self.data.trailers
+
+    @trailers.setter
+    def trailers(self, h):
+        self.data.trailers = h
+
+    @property
     def http_version(self):
         """
         Version string, e.g. "HTTP/1.1"

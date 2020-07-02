@@ -174,6 +174,7 @@ def convert_6_7(data):
 
 def convert_7_8(data):
     data["version"] = 8
+    data["request"]["trailers"] = None
     data["response"]["trailers"] = None
     return data
 

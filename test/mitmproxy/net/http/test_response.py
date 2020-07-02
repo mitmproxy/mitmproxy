@@ -20,8 +20,11 @@ class TestResponseData:
             tresp(reason="fööbär")
         with pytest.raises(ValueError):
             tresp(content="foobar")
+        with pytest.raises(ValueError):
+            tresp(trailers="foobar")
 
         assert isinstance(tresp(headers=()).headers, Headers)
+        assert isinstance(tresp(trailers=()).trailers, Headers)
 
 
 class TestResponseCore:

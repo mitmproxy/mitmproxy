@@ -20,6 +20,9 @@ class _HttpTransmissionLayer(base.Layer):
     def read_request_body(self, request):
         raise NotImplementedError()
 
+    def read_request_trailers(self, request):
+        raise NotImplementedError()
+
     def send_request(self, request):
         raise NotImplementedError()
 
@@ -30,11 +33,15 @@ class _HttpTransmissionLayer(base.Layer):
         raise NotImplementedError()
         yield "this is a generator"  # pragma: no cover
 
+    def read_response_trailers(self, request, response):
+        raise NotImplementedError()
+
     def read_response(self, request):
         response = self.read_response_headers()
         response.data.content = b"".join(
             self.read_response_body(request, response)
         )
+        response.data.trailers = self.read_response_trailers(request, response)
         return response
 
     def send_response(self, response):
@@ -42,11 +49,15 @@ class _HttpTransmissionLayer(base.Layer):
             raise exceptions.HttpException("Cannot assemble flow with missing content")
         self.send_response_headers(response)
         self.send_response_body(response, [response.data.content])
+        self.send_response_trailers(response)
 
     def send_response_headers(self, response):
         raise NotImplementedError()
 
     def send_response_body(self, response, chunks):
+        raise NotImplementedError()
+
+    def send_response_trailers(self, response, chunks):
         raise NotImplementedError()
 
     def check_close_connection(self, f):
@@ -255,6 +266,7 @@ class HttpLayer(base.Layer):
                 f.request.data.content = b"".join(
                     self.read_request_body(f.request)
                 )
+                f.request.data.trailers = self.read_request_trailers(f.request)
                 f.request.timestamp_end = time.time()
                 self.channel.ask("http_connect", f)
 
@@ -282,6 +294,9 @@ class HttpLayer(base.Layer):
                 f.request.data.content = None
             else:
                 f.request.data.content = b"".join(self.read_request_body(request))
+
+            f.request.data.trailers = self.read_request_trailers(f.request)
+
             request.timestamp_end = time.time()
         except exceptions.HttpException as e:
             # We optimistically guess there might be an HTTP client on the
@@ -348,6 +363,8 @@ class HttpLayer(base.Layer):
                     else:
                         self.send_request_body(f.request, [f.request.data.content])
 
+                    self.send_request_trailers(f.request)
+
                     f.response = self.read_response_headers()
 
                 try:
@@ -406,10 +423,9 @@ class HttpLayer(base.Layer):
                 # we now need to emulate the responseheaders hook.
                 self.channel.ask("responseheaders", f)
 
+            f.response.data.trailers = self.read_response_trailers(f.request, f.response)
+
             self.log("response", "debug", [repr(f.response)])
-            # not support HTTP/1.1 trailers
-            if f.request.http_version == "HTTP/2.0":
-                f.response.data.trailers = self.read_trailers_headers()
             self.channel.ask("response", f)
 
             if not f.response.stream:

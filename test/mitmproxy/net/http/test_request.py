@@ -21,8 +21,11 @@ class TestRequestData:
             treq(headers="foobar")
         with pytest.raises(ValueError):
             treq(content="foobar")
+        with pytest.raises(ValueError):
+            treq(trailers="foobar")
 
         assert isinstance(treq(headers=()).headers, Headers)
+        assert isinstance(treq(trailers=()).trailers, Headers)
 
 
 class TestRequestCore:
