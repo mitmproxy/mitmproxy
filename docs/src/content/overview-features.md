@@ -9,16 +9,23 @@ menu:
 # Mitmproxy Core Features
 
 
-- [Anticache](#anticache)
-- [Client-side replay](#client-side-replay)
-- [Modify Body](#modify-body)
-- [Modify Headers](#modify-headers)
-- [Proxy Authentication](#proxy-authentication)
-- [Server-side replay](#server-side-replay)
-- [Sticky Auth](#sticky-auth)
-- [Sticky Cookies](#sticky-cookies)
-- [Streaming](#streaming)
-- [Upstream Certificates](#upstream-certificates)
+- [Mitmproxy Core Features](#mitmproxy-core-features)
+  - [Anticache](#anticache)
+  - [Client-side replay](#client-side-replay)
+  - [Modify Body](#modify-body)
+    - [Examples](#examples)
+  - [Modify Headers](#modify-headers)
+    - [Examples](#examples-1)
+  - [Proxy Authentication](#proxy-authentication)
+  - [Server-side replay](#server-side-replay)
+    - [Response refreshing](#response-refreshing)
+    - [Replaying a session recorded in Reverse-proxy Mode](#replaying-a-session-recorded-in-reverse-proxy-mode)
+  - [Sticky auth](#sticky-auth)
+  - [Sticky cookies](#sticky-cookies)
+  - [Streaming](#streaming)
+    - [Customizing Streaming](#customizing-streaming)
+    - [Websockets](#websockets)
+  - [Upstream Certificates](#upstream-certificates)
 
 
 ## Anticache
@@ -45,18 +52,24 @@ option, to make sure the server responds with complete data.
 ## Modify Body
 
 The `modify_body` option lets you specify an arbitrary number of patterns that
-define replacements within bodies of flows. A replacement pattern looks like this:
+define replacements within bodies of flows. `modify_body` patterns looks like this:
 
 {{< highlight none  >}}
-[/flow-filter]/regex/replacement
+/flow-filter/regex/replacement
+/flow-filter/regex/@file-path
+/regex/replacement
+/regex/@file-path
 {{< / highlight >}}
 
-Here, **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
-that defines which flows a replacement applies to, **regex** is a valid Python
-regular expression that defines what gets replaced, and **replacement** is a string
-literal that is substituted in. The separator is arbitrary, and defined by the
-first character. If the replacement string literal starts with `@`, it is treated
-as a file path from which the replacement is read.
+* **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
+that defines which flows a replacement applies to
+
+* **regex** is a valid Python regular expression that defines what gets replaced
+
+* **replacement** is a string literal that is substituted in. If the replacement string
+literal starts with `@` as in `@file-path`, it is treated as a **file path** from which the replacement is read.
+
+The _separator_ is arbitrary, and is defined by the first character. 
 
 Modify hooks fire when either a client request or a server response is
 received. Only the matching flow component is affected: so, for example,
@@ -71,7 +84,7 @@ to create a script using the replacement API on Flow components.
 Replace `foo` with `bar` in bodies of requests:
 
 {{< highlight none  >}}
-:~q:foo:bar
+/~q/foo/bar
 {{< / highlight >}}
 
 Replace `foo` with the data read from `~/xss-exploit`:
@@ -85,21 +98,64 @@ mitmdump --modify-body :~q:foo:@~/xss-exploit
 
 The `modify_headers` option lets you specify a set of headers to be modified.
 New headers can be added, and existing headers can be overwritten or removed.
-A `modify_headers` expression looks like this:
+`modify_headers` patterns look like this:
 
 {{< highlight none  >}}
-[/flow-filter]/name/value
+/flow-filter/name/value
+/flow-filter/name/@file-path
+/name/value
+/name/@file-path
 {{< / highlight >}}
 
-Here, **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
-that defines which flows to modify headers on, e.g., only on responses using ``~s``.
-The parameters **name** and **value** are the header name and the value to set
-respectively, e.g., ``/Host/example.org``. An empty **value** removes existing
-headers with **name**, e.g., ``/Host/``. If **value** starts with `@`, it is treated
-as a file path from which the header value is read. Existing headers are overwritten
-by default. This can be changed using a filter expression, e.g., the filter
-``!~h Host:`` ignores requests and responses with an existing ``Host`` header.
+* **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
+that defines which flows to modify headers on.
 
+* **name** is the header name to be set, replaced or removed.
+
+* **value** is the header value to be set or replaced. An empty **value** removes existing
+headers with **name**. If the value string literal starts with `@` as in
+`@file-path`, it is treated as a **file path** from which the replacement is read.
+
+The _separator_ is arbitrary, and is defined by the first character.
+
+Existing headers are overwritten by default. This can be changed using a filter expression.
+
+Modify hooks fire when either a client request or a server response is
+received. Only the matching flow component is affected: so, for example,
+if a modify hook is triggered on server response, the replacement is
+only run on the Response object leaving the Request intact. You control
+whether the hook triggers on the request, response or both using the
+filter pattern. If you need finer-grained control than this, it's simple
+to create a script using the replacement API on Flow components.
+
+### Examples
+
+Set the `Host` header to `example.org` for all requests (existing `Host`
+headers are replaced):
+
+{{< highlight none  >}}
+/~q/Host/example.org
+{{< / highlight >}}
+
+Set the `Host` header to `example.org` for all requests that do not have an
+existing `Host` header:
+
+{{< highlight none  >}}
+/~q & !~h Host:/Host/example.org
+{{< / highlight >}}
+
+Set the `User-Agent` header to the data read from `~/useragent.txt` for all requests
+(existing `User-Agent` headers are replaced):
+
+{{< highlight none  >}}
+/~q/Host/@~/useragent.txt
+{{< / highlight >}}
+
+Remove existing `Host` headers from all requests:
+
+{{< highlight none  >}}
+/~q/Host/
+{{< / highlight >}}
 
 ## Proxy Authentication
 
