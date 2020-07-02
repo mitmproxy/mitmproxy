@@ -30,7 +30,6 @@ def convert_013_014(data):
         str(x) for x in data[b"response"].pop(b"httpversion")).encode()
     data[b"response"][b"status_code"] = data[b"response"].pop(b"code")
     data[b"response"][b"body"] = data[b"response"].pop(b"content")
-    data[b"response"][b"trailers"] = None
     data[b"server_conn"].pop(b"state")
     data[b"server_conn"][b"via"] = None
     data[b"version"] = (0, 14)
@@ -172,6 +171,10 @@ def convert_6_7(data):
     data["client_conn"]["tls_extensions"] = None
     return data
 
+def convert_7_8(data):
+    data["version"] = 8
+    data["response"]["trailers"] = None
+    return data
 
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
@@ -227,6 +230,7 @@ converters = {
     4: convert_4_5,
     5: convert_5_6,
     6: convert_6_7,
+    7: convert_7_8,
 }
 
 

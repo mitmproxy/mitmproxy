@@ -28,6 +28,8 @@ class MessageData(serializable.Serializable):
     def get_state(self):
         state = vars(self).copy()
         state["headers"] = state["headers"].get_state()
+        if 'trailers' in state and state["trailers"] is not None:
+            state["trailers"] = state["trailers"].get_state()
         return state
 
     @classmethod
@@ -53,6 +55,8 @@ class Message(serializable.Serializable):
     @classmethod
     def from_state(cls, state):
         state["headers"] = mheaders.Headers.from_state(state["headers"])
+        if 'trailers' in state and state["trailers"] is not None:
+            state["trailers"] = mheaders.Headers.from_state(state["trailers"])
         return cls(**state)
 
     @property
