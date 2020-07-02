@@ -171,10 +171,12 @@ def convert_6_7(data):
     data["client_conn"]["tls_extensions"] = None
     return data
 
+
 def convert_7_8(data):
     data["version"] = 8
     data["response"]["trailers"] = None
     return data
+
 
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):

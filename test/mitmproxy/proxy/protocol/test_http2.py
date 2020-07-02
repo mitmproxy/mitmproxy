@@ -1060,9 +1060,7 @@ class TestTrailers(_Http2Test):
                     ('X-Stream-ID', str(event.stream_id)),
                 ])
             h2_conn.send_data(event.stream_id, b'response body')
-            h2_conn.send_headers(event.stream_id, [
-                    ('trailers', 'trailers-foo'),
-                ], end_stream=True)
+            h2_conn.send_headers(event.stream_id, [('trailers', 'trailers-foo')], end_stream=True)
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
         elif isinstance(event, h2.events.DataReceived):
