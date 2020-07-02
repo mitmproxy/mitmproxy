@@ -100,16 +100,6 @@ class TestMessage:
     def test_http_version(self):
         _test_decoded_attr(tutils.tresp(), "http_version")
 
-    def test_replace(self):
-        r = tutils.tresp()
-        r.content = b"foofootoo"
-        r.replace(b"foo", "gg")
-        assert r.content == b"ggggtoo"
-
-        r.content = b"foofootoo"
-        r.replace(b"foo", "gg", count=1)
-        assert r.content == b"ggfootoo"
-
 
 class TestMessageContentEncoding:
     def test_simple(self):

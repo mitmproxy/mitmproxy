@@ -75,8 +75,7 @@ def run(
 
     # To make migration from 2.x to 3.0 bearable.
     if "-R" in sys.argv and sys.argv[sys.argv.index("-R") + 1].startswith("http"):
-        print("-R is used for specifying replacements.\n"
-              "To use mitmproxy in reverse mode please use --mode reverse:SPEC instead")
+        print("To use mitmproxy in reverse mode please use --mode reverse:SPEC instead")
 
     try:
         args = parser.parse_args(arguments)

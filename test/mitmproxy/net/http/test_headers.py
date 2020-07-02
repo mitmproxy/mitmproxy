@@ -65,32 +65,6 @@ class TestHeaders:
         headers = Headers()
         assert bytes(headers) == b""
 
-    def test_replace_simple(self):
-        headers = Headers(Host="example.com", Accept="text/plain")
-        replacements = headers.replace("Host: ", "X-Host: ")
-        assert replacements == 1
-        assert headers["X-Host"] == "example.com"
-        assert "Host" not in headers
-        assert headers["Accept"] == "text/plain"
-
-    def test_replace_multi(self):
-        headers = self._2host()
-        headers.replace(r"Host: example.com", r"Host: example.de")
-        assert headers.get_all("Host") == ["example.de", "example.org"]
-
-    def test_replace_remove_spacer(self):
-        headers = Headers(Host="example.com")
-        replacements = headers.replace(r"Host: ", "X-Host ")
-        assert replacements == 0
-        assert headers["Host"] == "example.com"
-
-    def test_replace_with_count(self):
-        headers = Headers(Host="foobarfoo.com", Accept="foo/bar")
-        replacements = headers.replace("foo", "bar", count=1)
-        assert replacements == 1
-        assert headers["Host"] == "barbarfoo.com"
-        assert headers["Accept"] == "foo/bar"
-
 
 def test_parse_content_type():
     p = parse_content_type

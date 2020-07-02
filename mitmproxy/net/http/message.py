@@ -250,24 +250,3 @@ class Message(serializable.Serializable):
         self.content = self.raw_content
         if "content-encoding" not in self.headers:
             raise ValueError("Invalid content encoding {}".format(repr(e)))
-
-    def replace(self, pattern, repl, flags=0, count=0):
-        """
-        Replaces a regular expression pattern with repl in both the headers
-        and the body of the message. Encoded body will be decoded
-        before replacement, and re-encoded afterwards.
-
-        Returns:
-            The number of replacements made.
-        """
-        if isinstance(pattern, str):
-            pattern = strutils.escaped_str_to_bytes(pattern)
-        if isinstance(repl, str):
-            repl = strutils.escaped_str_to_bytes(repl)
-        replacements = 0
-        if self.content:
-            self.content, replacements = re.subn(
-                pattern, repl, self.content, flags=flags, count=count
-            )
-        replacements += self.headers.replace(pattern, repl, flags=flags, count=count)
-        return replacements

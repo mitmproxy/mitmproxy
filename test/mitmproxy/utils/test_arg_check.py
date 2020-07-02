@@ -24,8 +24,9 @@ from mitmproxy.utils import arg_check
                          'SPEC Format: "username:pass", "any" to accept any user/pass combination,\n'
                          '"@path" to use an Apache htpasswd file, or\n'
                          '"ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" '
-                         'for LDAP authentication.')
-
+                         'for LDAP authentication.'),
+    (["--replacements"], "--replacements is deprecated.\n"
+                         "Please use `--modify-body` or `--modify-headers` instead.")
 ])
 def test_check_args(arg, output):
     f = io.StringIO()

@@ -55,6 +55,7 @@ REPLACED = """
 --insecure
 -c
 --replace
+--replacements
 -i
 -f
 --filter
@@ -97,6 +98,7 @@ REPLACEMENTS = {
     "--insecure": "--ssl-insecure",
     "-c": "-C",
     "--replace": "--replacements",
+    "--replacements": ["--modify-body", "--modify-headers"],
     "-i": "--intercept",
     "-f": "--view-filter",
     "--filter": "--view-filter",
@@ -129,11 +131,15 @@ def check():
 
     for option in REPLACED.splitlines():
         if option in args:
+            if isinstance(REPLACEMENTS.get(option), list):
+                new_options = REPLACEMENTS.get(option)
+            else:
+                new_options = [REPLACEMENTS.get(option)]
             print(
                 "{} is deprecated.\n"
                 "Please use `{}` instead.".format(
                     option,
-                    REPLACEMENTS.get(option)
+                    "` or `".join(new_options)
                 )
             )
 

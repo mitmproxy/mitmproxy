@@ -185,19 +185,6 @@ class HTTPFlow(flow.Flow):
             f.response = self.response.copy()
         return f
 
-    def replace(self, pattern, repl, *args, **kwargs):
-        """
-            Replaces a regular expression pattern with repl in both request and
-            response of the flow. Encoded content will be decoded before
-            replacement, and re-encoded afterwards.
-
-            Returns the number of replacements made.
-        """
-        c = self.request.replace(pattern, repl, *args, **kwargs)
-        if self.response:
-            c += self.response.replace(pattern, repl, *args, **kwargs)
-        return c
-
 
 def make_error_response(
         status_code: int,

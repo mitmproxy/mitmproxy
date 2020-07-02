@@ -81,9 +81,9 @@ def common_options(parser, opts):
     opts.make_parser(group, "server_replay_nopop")
     opts.make_parser(group, "server_replay_refresh")
 
-    # Replacements
-    group = parser.add_argument_group("Replacements")
-    opts.make_parser(group, "replacements", metavar="PATTERN", short="R")
+    # Modify Body
+    group = parser.add_argument_group("Modify Body")
+    opts.make_parser(group, "modify_body", metavar="PATTERN", short="B")
 
     # Modify headers
     group = parser.add_argument_group("Modify Headers")

@@ -11,9 +11,9 @@ from mitmproxy.addons import disable_h2c
 from mitmproxy.addons import export
 from mitmproxy.addons import onboarding
 from mitmproxy.addons import proxyauth
-from mitmproxy.addons import replace
 from mitmproxy.addons import script
 from mitmproxy.addons import serverplayback
+from mitmproxy.addons import modifybody
 from mitmproxy.addons import modifyheaders
 from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
@@ -37,9 +37,9 @@ def default_addons():
         export.Export(),
         onboarding.Onboarding(),
         proxyauth.ProxyAuth(),
-        replace.Replace(),
         script.ScriptLoader(),
         serverplayback.ServerPlayback(),
+        modifybody.ModifyBody(),
         modifyheaders.ModifyHeaders(),
         stickyauth.StickyAuth(),
         stickycookie.StickyCookie(),
