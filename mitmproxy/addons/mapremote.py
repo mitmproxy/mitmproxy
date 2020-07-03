@@ -4,7 +4,6 @@ import typing
 
 from mitmproxy import exceptions
 from mitmproxy import ctx
-from mitmproxy.utils import strutils
 from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifySpec
 
 
@@ -62,5 +61,5 @@ class MapRemote:
                 return
 
         replacements = 0
-        obj.url, replacements = re.subn(search, repl, strutils.escaped_str_to_bytes(obj.pretty_url), flags=re.DOTALL)
+        obj.url, replacements = re.subn(search, repl, obj.pretty_url.encode("utf8", "surrogateescape"), flags=re.DOTALL)
         return replacements

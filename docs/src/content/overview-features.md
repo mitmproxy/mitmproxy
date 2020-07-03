@@ -49,13 +49,15 @@ The `map_remote` option lets you specify an arbitrary number of patterns that
 define replacements within HTTP request URLs before they are sent to a server.
 The substituted URL is fetched instead of the original resource
 and the corresponding HTTP response is returned transparently to the client.
+Note that if the original destination uses HTTP2, the substituted destination
+needs to support HTTP2 as well, otherwise the substituted request may fail.
 `map_remote` patterns looks like this:
 
 ```
-:flow-filter:regex:replacement
-:flow-filter:regex:@file-path
-:regex:replacement
-:regex:@file-path
+|flow-filter|regex|replacement
+|flow-filter|regex|@file-path
+|regex|replacement
+|regex|@file-path
 ```
 
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
@@ -70,10 +72,12 @@ The _separator_ is arbitrary, and is defined by the first character.
 
 ### Examples
 
-Map all requests ending with `.jpg` to `https://placedog.net/640/480?random`:
+Map all requests ending with `.jpg` to `https://placedog.net/640/480?random`.
+Note that this might fail if the original HTTP request destination uses HTTP2 but the replaced
+destination does not support HTTP2.
 
 ```
-:.*\.jpg$:https://placedog.net/640/480?random
+|.*\.jpg$|https://placedog.net/640/480?random
 ```
 
 Re-route all GET requests from `example.org` to `mitmproxy.org` (using `|` as the separator):
