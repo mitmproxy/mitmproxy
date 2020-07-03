@@ -81,6 +81,8 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                     else:
                         yield ReceiveHttp(ResponseData(self.stream_id, data))
             elif isinstance(h11_event, h11.EndOfMessage):
+                if h11_event.headers:
+                    raise NotImplementedError(f"HTTP trailers are not implemented yet.")
                 if is_request:
                     yield ReceiveHttp(RequestEndOfMessage(self.stream_id))
                 else:
