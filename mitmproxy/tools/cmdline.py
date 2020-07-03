@@ -81,6 +81,10 @@ def common_options(parser, opts):
     opts.make_parser(group, "server_replay_nopop")
     opts.make_parser(group, "server_replay_refresh")
 
+    # Map Remote
+    group = parser.add_argument_group("Map Remote")
+    opts.make_parser(group, "map_remote", metavar="PATTERN", short="M")
+
     # Modify Body
     group = parser.add_argument_group("Modify Body")
     opts.make_parser(group, "modify_body", metavar="PATTERN", short="B")
