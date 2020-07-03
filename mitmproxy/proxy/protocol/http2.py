@@ -615,7 +615,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
 
     @detect_zombie_stream
     def send_request_trailers(self, request):
-        self._send_trailers(self.server_conn, self.request_trailers)
+        self._send_trailers(self.server_conn, request.trailers)
 
     @detect_zombie_stream
     def send_request(self, request):
@@ -686,8 +686,8 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         )
 
     @detect_zombie_stream
-    def send_response_trailers(self, _response):
-        self._send_trailers(self.client_conn, self.response_trailers)
+    def send_response_trailers(self, response):
+        self._send_trailers(self.client_conn, response.trailers)
 
     def _send_trailers(self, conn, trailers):
         if not trailers:
