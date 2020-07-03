@@ -9,23 +9,17 @@ menu:
 # Mitmproxy Core Features
 
 
-- [Mitmproxy Core Features](#mitmproxy-core-features)
-  - [Anticache](#anticache)
-  - [Client-side replay](#client-side-replay)
-  - [Modify Body](#modify-body)
-    - [Examples](#examples)
-  - [Modify Headers](#modify-headers)
-    - [Examples](#examples-1)
-  - [Proxy Authentication](#proxy-authentication)
-  - [Server-side replay](#server-side-replay)
-    - [Response refreshing](#response-refreshing)
-    - [Replaying a session recorded in Reverse-proxy Mode](#replaying-a-session-recorded-in-reverse-proxy-mode)
-  - [Sticky auth](#sticky-auth)
-  - [Sticky cookies](#sticky-cookies)
-  - [Streaming](#streaming)
-    - [Customizing Streaming](#customizing-streaming)
-    - [Websockets](#websockets)
-  - [Upstream Certificates](#upstream-certificates)
+- [Anticache](#anticache)
+- [Client-side replay](#client-side-replay)
+- [Map Remote](#map-remote)
+- [Modify Body](#modify-body)
+- [Modify Headers](#modify-headers)
+- [Proxy Authentication](#proxy-authentication)
+- [Server-side replay](#server-side-replay)
+- [Sticky Auth](#sticky-auth)
+- [Sticky Cookies](#sticky-cookies)
+- [Streaming](#streaming)
+- [Upstream Certificates](#upstream-certificates)
 
 
 ## Anticache
@@ -49,10 +43,54 @@ You may want to use client-side replay in conjunction with the `anticache`
 option, to make sure the server responds with complete data.
 
 
+## Map Remote
+
+The `map_remote` option lets you specify an arbitrary number of patterns that
+define replacements within HTTP request URLs before they are sent to a server.
+The substituted URL is fetched instead of the original resource
+and the corresponding HTTP response is returned transparently to the client.
+Note that if the original destination uses HTTP2, the substituted destination
+needs to support HTTP2 as well, otherwise the substituted request may fail.
+`map_remote` patterns looks like this:
+
+```
+|flow-filter|regex|replacement
+|flow-filter|regex|@file-path
+|regex|replacement
+|regex|@file-path
+```
+
+* **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
+that defines which requests a replacement applies to.
+
+* **regex** is a valid Python regular expression that defines what gets replaced in the URLs of requests.
+
+* **replacement** is a string literal that is substituted in. If the replacement string
+literal starts with `@` as in `@file-path`, it is treated as a **file path** from which the replacement is read.
+
+The _separator_ is arbitrary, and is defined by the first character.
+
+### Examples
+
+Map all requests ending with `.jpg` to `https://placedog.net/640/480?random`.
+Note that this might fail if the original HTTP request destination uses HTTP2 but the replaced
+destination does not support HTTP2.
+
+```
+|.*\.jpg$|https://placedog.net/640/480?random
+```
+
+Re-route all GET requests from `example.org` to `mitmproxy.org` (using `|` as the separator):
+
+```
+|~m GET|//example.org/|//mitmproxy.org/
+```
+
+
 ## Modify Body
 
 The `modify_body` option lets you specify an arbitrary number of patterns that
-define replacements within bodies of flows. `modify_body` patterns looks like this:
+define replacements within bodies of flows. `modify_body` patterns look like this:
 
 {{< highlight none  >}}
 /flow-filter/regex/replacement
@@ -62,14 +100,14 @@ define replacements within bodies of flows. `modify_body` patterns looks like th
 {{< / highlight >}}
 
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
-that defines which flows a replacement applies to
+that defines which flows a replacement applies to.
 
-* **regex** is a valid Python regular expression that defines what gets replaced
+* **regex** is a valid Python regular expression that defines what gets replaced.
 
 * **replacement** is a string literal that is substituted in. If the replacement string
 literal starts with `@` as in `@file-path`, it is treated as a **file path** from which the replacement is read.
 
-The _separator_ is arbitrary, and is defined by the first character. 
+The _separator_ is arbitrary, and is defined by the first character.
 
 Modify hooks fire when either a client request or a server response is
 received. Only the matching flow component is affected: so, for example,

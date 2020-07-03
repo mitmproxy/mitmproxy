@@ -16,6 +16,7 @@ Unreleased: mitmproxy next
     * Simplify Replacements with new ModifyBody addon (@mplattner)
     * Rename SetHeaders addon to ModifyHeaders (@mplattner)
     * mitmweb: "New -> File" menu option has been renamed to "Clear All" (@yogeshojha)
+    * Add new MapRemote addon to rewrite URLs of requests (@mplattner)
 
     * --- TODO: add new PRs above this line ---
 
