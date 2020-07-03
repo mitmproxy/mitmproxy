@@ -45,19 +45,18 @@ option, to make sure the server responds with complete data.
 
 ## Map Remote
 
-The `map_remote` option lets you specifyan arbitrary number of patterns that
-define replacements within the URLs of requests. 
-he substituted URL is fetched transparently instead of the original resource
-and the content is replaced accordingly.
-`map_remote` patterns looks like
-this:
+The `map_remote` option lets you specify an arbitrary number of patterns that
+define replacements within HTTP request URLs before they are sent to a server.
+The substituted URL is fetched instead of the original resource
+and the corresponding HTTP response is returned transparently to the client.
+`map_remote` patterns looks like this:
 
-{{< highlight none  >}}
-/flow-filter/regex/replacement
-/flow-filter/regex/@file-path
-/regex/replacement
-/regex/@file-path
-{{< / highlight >}}
+```
+:flow-filter:regex:replacement
+:flow-filter:regex:@file-path
+:regex:replacement
+:regex:@file-path
+```
 
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
 that defines which requests a replacement applies to.
@@ -71,17 +70,17 @@ The _separator_ is arbitrary, and is defined by the first character.
 
 ### Examples
 
-Replace `example.org` in all request URLs to with `mitmproxy.org`:
+Map all requests ending with `.jpg` to `https://placedog.net/640/480?random`:
 
-{{< highlight none  >}}
-/example.org/mitmproxy.org
-{{< / highlight >}}
+```
+:.*\.jpg$:https://placedog.net/640/480?random
+```
 
-Replace all request URLs that contain `jpg` in them with `https://example.org/image.jpg` (separator is `^`):
+Re-route all GET requests from `example.org` to `mitmproxy.org` (using `|` as the separator):
 
-{{< highlight none  >}}
-^.*.jpg.*^https://example.org/image.jpg
-{{< / highlight >}}
+```
+|~m GET|//example.org/|//mitmproxy.org/
+```
 
 
 ## Modify Body
