@@ -16,9 +16,9 @@ Internal Network* setup can be applied to other setups.
 
 First, we have to find out under which name Ubuntu has mapped our network interfaces. You can find this information with:
 
-{{< highlight bash  >}}
+```bash
 ip link
-{{< / highlight >}}
+```
 
 Usually with Ubuntu and Virtualbox, **eth0** or **enp0s3** (Ubuntu 15.10 and newer) is connected to the internet and **eth1**  or **enp0s8** (Ubuntu 15.10 and newer) is connected to the internal network that will be proxified and configured to use a static ip (192.168.3.1). If the names differ, use the ones you got from the *ip link* command.
 
@@ -46,27 +46,27 @@ case, this needs to be disabled by changing `dns=dnsmasq` to `#dns=dnsmasq` in
 **/etc/NetworkManager/NetworkManager.conf** and if on Ubuntu 16.04 or newer
 running:
 
-{{< highlight bash  >}}
+```bash
 sudo systemctl restart NetworkManager
-{{< / highlight >}}
+```
 
 If on Ubuntu 12.04 or 14.04 running:
 
-{{< highlight bash  >}}
+```bash
 sudo restart network-manager
-{{< / highlight >}}
+```
 
 afterwards.
 
 Now, dnsmasq can be be installed and configured:
 
-{{< highlight bash  >}}
+```bash
 sudo apt-get install dnsmasq
-{{< / highlight >}}
+```
 
 Replace **/etc/dnsmasq.conf** with the following configuration:
 
-{{< highlight none  >}}
+```
 # Listen for DNS requests on the internal network
 interface=eth1
 bind-interfaces
@@ -75,21 +75,21 @@ dhcp-range=192.168.3.10,192.168.3.100,96h
 # Broadcast gateway and dns server information
 dhcp-option=option:router,192.168.3.1
 dhcp-option=option:dns-server,192.168.3.1
-{{< / highlight >}}
+```
 
 Apply changes:
 
 If on Ubuntu 16.04 or newer:
 
-{{< highlight bash  >}}
+```bash
 sudo systemctl restart dnsmasq
-{{< / highlight >}}
+```
 
 If on Ubuntu 12.04 or 14.04:
 
-{{< highlight bash  >}}
+```bash
 sudo service dnsmasq restart
-{{< / highlight >}}
+```
 
 Your **proxied machine** in the internal virtual network should now receive an
 IP address via DHCP:
@@ -101,19 +101,19 @@ IP address via DHCP:
 To redirect traffic to mitmproxy, we need to enable IP forwarding and add two iptables
 rules:
 
-{{< highlight bash  >}}
+```bash
 sudo sysctl -w net.ipv4.ip_forward=1
 sudo iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 80 -j REDIRECT --to-port 8080
 sudo iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 443 -j REDIRECT --to-port 8080
-{{< / highlight >}}
+```
 
 ## 4. Run mitmproxy
 
 Finally, we can run mitmproxy in transparent mode with
 
-{{< highlight bash  >}}
+```bash
 mitmproxy --mode transparent
-{{< / highlight >}}
+```
 
 The proxied machine cannot to leak any data outside of HTTP or DNS requests. If
 required, you can now [install the mitmproxy certificates on the proxied

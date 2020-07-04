@@ -15,9 +15,9 @@ Please follow the steps for your operating system.
 The recommended way to install mitmproxy on macOS is to use
 [Homebrew](https://brew.sh/):
 
-{{< highlight bash  >}}
+```bash
 brew install mitmproxy
-{{< / highlight >}}
+```
 
 Alternatively, you can download standalone binaries on [mitmproxy.org](https://mitmproxy.org/).
 

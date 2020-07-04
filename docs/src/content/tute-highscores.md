@@ -33,13 +33,13 @@ of leaderboards and so forth. Then, right at the end, there's a POST to
 this tantalising
 URL:
 
-{{< highlight none  >}}
+```
 https://service.gc.apple.com/WebObjects/GKGameStatsService.woa/wa/submitScore
-{{< / highlight >}}
+```
 
 The contents of the submission are particularly interesting:
 
-{{< highlight xml  >}}
+```xml
 <plist version="1.0">
   <dict>
     <key>scores</key>
@@ -57,7 +57,7 @@ The contents of the submission are particularly interesting:
     </array>
   </dict>
 </plist>
-{{< / highlight >}}
+```
 
 This is a [property list](https://en.wikipedia.org/wiki/Property_list),
 containing an identifier for the game, a score (55, in this case), and a
@@ -75,7 +75,7 @@ for raw body. Your preferred editor (taken from the EDITOR environment
 variable) will now fire up. Lets bump the score up to something a bit
 more ambitious:
 
-{{< highlight xml  >}}
+```xml
 <plist version="1.0">
   <dict>
     <key>scores</key>
@@ -93,7 +93,7 @@ more ambitious:
     </array>
   </dict>
 </plist>
-{{< / highlight >}}
+```
 
 Save the file and exit your editor.
 

@@ -92,12 +92,12 @@ Re-route all GET requests from `example.org` to `mitmproxy.org` (using `|` as th
 The `modify_body` option lets you specify an arbitrary number of patterns that
 define replacements within bodies of flows. `modify_body` patterns look like this:
 
-{{< highlight none  >}}
+```
 /flow-filter/regex/replacement
 /flow-filter/regex/@file-path
 /regex/replacement
 /regex/@file-path
-{{< / highlight >}}
+```
 
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
 that defines which flows a replacement applies to.
@@ -121,15 +121,15 @@ to create a script using the replacement API on Flow components.
 
 Replace `foo` with `bar` in bodies of requests:
 
-{{< highlight none  >}}
+```
 /~q/foo/bar
-{{< / highlight >}}
+```
 
 Replace `foo` with the data read from `~/xss-exploit`:
 
-{{< highlight bash  >}}
+```bash
 mitmdump --modify-body :~q:foo:@~/xss-exploit
-{{< / highlight >}}
+```
 
 
 ## Modify Headers
@@ -138,12 +138,12 @@ The `modify_headers` option lets you specify a set of headers to be modified.
 New headers can be added, and existing headers can be overwritten or removed.
 `modify_headers` patterns look like this:
 
-{{< highlight none  >}}
+```
 /flow-filter/name/value
 /flow-filter/name/@file-path
 /name/value
 /name/@file-path
-{{< / highlight >}}
+```
 
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
 that defines which flows to modify headers on.
@@ -171,29 +171,29 @@ to create a script using the replacement API on Flow components.
 Set the `Host` header to `example.org` for all requests (existing `Host`
 headers are replaced):
 
-{{< highlight none  >}}
+```
 /~q/Host/example.org
-{{< / highlight >}}
+```
 
 Set the `Host` header to `example.org` for all requests that do not have an
 existing `Host` header:
 
-{{< highlight none  >}}
+```
 /~q & !~h Host:/Host/example.org
-{{< / highlight >}}
+```
 
 Set the `User-Agent` header to the data read from `~/useragent.txt` for all requests
 (existing `User-Agent` headers are replaced):
 
-{{< highlight none  >}}
+```
 /~q/Host/@~/useragent.txt
-{{< / highlight >}}
+```
 
 Remove existing `Host` headers from all requests:
 
-{{< highlight none  >}}
+```
 /~q/Host/
-{{< / highlight >}}
+```
 
 ## Proxy Authentication
 

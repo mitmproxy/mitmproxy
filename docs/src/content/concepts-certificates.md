@@ -47,9 +47,9 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 - [Windows](https://web.archive.org/web/20160612045445/http://windows.microsoft.com/en-ca/windows/import-export-certificates-private-keys#1TC=windows-7)
 - [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx)
 
-{{< highlight bash  >}}
+```bash
 certutil -addstore root mitmproxy-ca-cert.cer
-{{< / highlight >}}
+```
 
 - [Mac OS X](https://support.apple.com/kb/PH20129)
 - [Ubuntu/Debian]( https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861)
@@ -117,26 +117,26 @@ file roughly looks like this:
 For example, you can generate a certificate in this format using these
 instructions:
 
-{{< highlight bash  >}}
+```bash
 openssl genrsa -out cert.key 2048
 # (Specify the mitm domain as Common Name, e.g. \*.google.com)
 openssl req -new -x509 -key cert.key -out cert.crt
 cat cert.key cert.crt > cert.pem
-{{< / highlight >}}
+```
 
 Now, you can run mitmproxy with the generated certificate:
 
 **For all domain names**
 
-{{< highlight bash  >}}
+```bash
 mitmproxy --cert *=cert.pem
-{{< / highlight >}}
+```
 
 **For specific domain names**
 
-{{< highlight bash  >}}
+```bash
 mitmproxy --cert *.example.com=cert.pem
-{{< / highlight >}}
+```
 
 **Note:** `*.example.com` is for all the subdomains. You can also use
 `www.example.com` for a particular subdomain.

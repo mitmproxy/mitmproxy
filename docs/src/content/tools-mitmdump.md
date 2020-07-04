@@ -16,17 +16,17 @@ documentation.
 
 ### Example: Saving traffic
 
-{{< highlight bash  >}}
+```bash
 mitmdump -w outfile
-{{< / highlight >}}
+```
 
 Start up mitmdump in proxy mode, and write all traffic to **outfile**.
 
 ### Filtering saved traffic
 
-{{< highlight bash  >}}
+```bash
 mitmdump -nr infile -w outfile "~m post"
-{{< / highlight >}}
+```
 
 Start mitmdump without binding to the proxy port (`-n`), read all flows
 from infile, apply the specified filter expression (only match POSTs),
@@ -34,36 +34,36 @@ and write to outfile.
 
 ### Client replay
 
-{{< highlight bash  >}}
+```bash
 mitmdump -nC outfile
-{{< / highlight >}}
+```
 
 Start mitmdump without binding to the proxy port (`-n`), then replay all
 requests from outfile (`-C filename`). Flags combine in the obvious way,
 so you can replay requests from one file, and write the resulting flows
 to another:
 
-{{< highlight bash  >}}
+```bash
 mitmdump -nC srcfile -w dstfile
-{{< / highlight >}}
+```
 
 See the [client-side replay]({{< relref "overview-features#client-side-replay"
 >}}) section for more information.
 
 ### Running a script
 
-{{< highlight bash  >}}
+```bash
 mitmdump -s examples/simple/add_header.py
-{{< / highlight >}}
+```
 
 This runs the **add_header.py** example script, which simply adds a new
 header to all responses.
 
 ### Scripted data transformation
 
-{{< highlight bash  >}}
+```bash
 mitmdump -ns examples/simple/add_header.py -r srcfile -w dstfile
-{{< / highlight >}}
+```
 
 This command loads flows from **srcfile**, transforms it according to
 the specified script, then writes it back to **dstfile**.
