@@ -1,4 +1,3 @@
-import sys
 import abc
 import typing
 
@@ -29,12 +28,12 @@ class ListCompleter(Completer):
             if o.startswith(start):
                 self.options.append(o)
         self.options.sort()
-        self.pos = sys.maxsize
+        self.pos = -1
 
     def cycle(self, forward: bool = True) -> str:
         if not self.options:
             return self.start
-        if self.pos == sys.maxsize:
+        if self.pos == -1:
             self.pos = 0 if forward else len(self.options) - 1
         else:
             delta = 1 if forward else -1
