@@ -23,16 +23,16 @@ Let's begin with a simple example.
 
 To see this example in action, start mitmproxy console with the addon loaded:
 
-{{< highlight bash  >}}
+```bash
 > mitmproxy -s ./examples/addons/commands-simple.py
-{{< /highlight >}}
+```
 
 Now, make sure the event log is showing, and then execute the command at the
 prompt (started by typing ":"):
 
-{{< highlight none>}}
+```
 :myaddon.inc
-{{< /highlight >}}
+```
 
 Notice that tab completion works - our addon command has complete parity with
 builtin commands. There are a few things to note about this example:
@@ -67,28 +67,28 @@ filters]({{< relref addons-options >}}) available. Let's try it out.
 Start by loading the addon into mitmproxy and sending some traffic through so we
 have flows to work with:
 
-{{< highlight bash  >}}
+```bash
 > mitmproxy -s ./examples/addons/commands-flows.py
-{{< /highlight >}}
+```
 
 We can now invoke our toy command in various ways. Let's begin by running it
 just on the currently focused flow:
 
-{{< highlight none  >}}
+```
 :myaddon.addheader @focus
-{{< /highlight >}}
+```
 
 We can also invoke it on all flows:
 
-{{< highlight none  >}}
+```
 :myaddon.addheader @all
-{{< /highlight >}}
+```
 
 Or only flows from **google.com**:
 
-{{< highlight none  >}}
+```
 :myaddon.addheader ~d google.com
-{{< /highlight >}}
+```
 
 What's more, we can trivially bind these commands to keyboard shortcuts within
 mitmproxy if we plan to use them frequently. Flow selectors combined with
@@ -107,9 +107,9 @@ Our command calculates a histogram of the domains in the specified set of flows,
 and writes it to a path which is specified as the second argument to the
 command. Try invoking it like this:
 
-{{< highlight none  >}}
+```
 :myaddon.histogram @all /tmp/xxx
-{{< /highlight >}}
+```
 
 Notice that mitmproxy provides tab completion both for the flow specification
 and the path.

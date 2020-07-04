@@ -34,10 +34,10 @@ achieve transparent mode.
 
 ### 1. Enable IP forwarding.
 
-{{< highlight bash  >}}
+```bash
 sysctl -w net.ipv4.ip_forward=1
 sysctl -w net.ipv6.conf.all.forwarding=1
-{{< / highlight >}}
+```
 
 This makes sure that your machine forwards packets instead of rejecting them.
 
@@ -46,9 +46,9 @@ a newly created `/etc/sysctl.d/mitmproxy.conf` (see [here](https://superuser.com
 
 ### 2. Disable ICMP redirects.
 
-{{< highlight bash  >}}
+```bash
 sysctl -w net.ipv4.conf.all.send_redirects=0
-{{< / highlight >}}
+```
 
 If your test device is on the same physical network, your machine shouldn't inform the device that
 there's a shorter route available by skipping the proxy.
@@ -60,12 +60,12 @@ If you want to persist this across reboots, see above.
 Details will differ according to your setup, but the ruleset should look
 something like this:
 
-{{< highlight bash  >}}
+```bash
 iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
 iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8080
 ip6tables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 8080
 ip6tables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8080
-{{< / highlight >}}
+```
 
 If you want to persist this across reboots, you can use the `iptables-persistent` package (see
 [here](http://www.microhowto.info/howto/make_the_configuration_of_iptables_persistent_on_debian.html)).
@@ -74,9 +74,9 @@ If you want to persist this across reboots, you can use the `iptables-persistent
 
 You probably want a command like this:
 
-{{< highlight bash  >}}
+```bash
 mitmproxy --mode transparent --showhost
-{{< / highlight >}}
+```
 
 The `--mode transparent` option turns on transparent mode, and the `--showhost` argument tells
  mitmproxy to use the value of the Host header for URL display.
@@ -92,24 +92,24 @@ Follow steps **1, 2** as above, but *instead* of the commands in step **3**, run
 
 Create a user to run the mitmproxy
 
-{{< highlight bash  >}}
+```bash
 sudo useradd --create-home mitmproxyuser
 sudo -u mitmproxyuser bash -c 'cd ~ && pip install --user mitmproxy'
-{{< / highlight >}}
+```
 
 Then, configure the iptables rules to redirect all traffic from our local machine to mitmproxy. **Note**, as soon as you run these, you won't be able to perform successful network calls *until* you start mitmproxy. If you run into issues, `iptables -t nat -F` is a heavy handed way to flush (clear) *all* the rules from the iptables `nat` table (which includes any other rules you had configured).
 
-{{< highlight bash  >}}
+```bash
 iptables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 80 -j REDIRECT --to-port 8080
 iptables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 443 -j REDIRECT --to-port 8080
 ip6tables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 80 -j REDIRECT --to-port 8080
 ip6tables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 443 -j REDIRECT --to-port 8080
-{{< / highlight >}}
+```
 
 This will redirect the packets from all users other than `mitmproxyuser` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `mitmproxyuser`. Hence step **4** should look like:
-{{< highlight bash  >}}
+```bash
 sudo -u mitmproxyuser bash -c '$HOME/.local/bin/mitmproxy --mode transparent --showhost --set block_global=false'
-{{< / highlight >}}
+```
 
 
 
@@ -117,16 +117,16 @@ sudo -u mitmproxyuser bash -c '$HOME/.local/bin/mitmproxy --mode transparent --s
 
 ### 1. Enable IP forwarding.
 
-{{< highlight bash  >}}
+```bash
 sudo sysctl -w net.inet.ip.forwarding=1
-{{< / highlight >}}
+```
 
 ### 2. Place the following two lines in **/etc/pf.conf**.
 
-{{< highlight none  >}}
+```
 mitm_if = "re2"
 pass in quick proto tcp from $mitm_if to port { 80, 443 } divert-to 127.0.0.1 port 8080
-{{< / highlight >}}
+```
 
 These rules tell pf to divert all traffic from `$mitm_if` destined for port 80
 or 443 to the local mitmproxy instance running on port 8080. You should replace
@@ -134,23 +134,23 @@ or 443 to the local mitmproxy instance running on port 8080. You should replace
 
 ### 3. Configure pf with the rules.
 
-{{< highlight bash  >}}
+```bash
 doas pfctl -f /etc/pf.conf
-{{< / highlight >}}
+```
 
 ### 4. And now enable it.
 
-{{< highlight bash  >}}
+```bash
 doas pfctl -e
-{{< / highlight >}}
+```
 
 ### 5. Fire up mitmproxy.
 
 You probably want a command like this:
 
-{{< highlight bash  >}}
+```bash
 mitmproxy --mode transparent --listen-host 127.0.0.1 --showhost
-{{< / highlight >}}
+```
 
 The `--mode transparent` option turns on transparent mode, and the `--showhost` argument tells
 mitmproxy to use the value of the Host header for URL display.
@@ -184,16 +184,16 @@ for earlier versions of OSX.
 
 ### 1. Enable IP forwarding.
 
-{{< highlight bash  >}}
+```bash
 sudo sysctl -w net.inet.ip.forwarding=1
-{{< / highlight >}}
+```
 
 ### 2. Place the following line in a file called, say, **pf.conf**.
 
 
-{{< highlight none  >}}
+```
 rdr pass on en0 inet proto tcp to any port {80, 443} -> 127.0.0.1 port 8080
-{{< / highlight >}}
+```
 
 This rule tells pf to redirect all traffic destined for port 80 or 443
 to the local mitmproxy instance running on port 8080. You should replace
@@ -201,24 +201,24 @@ to the local mitmproxy instance running on port 8080. You should replace
 
 ### 3. Configure pf with the rules.
 
-{{< highlight bash  >}}
+```bash
 sudo pfctl -f pf.conf
-{{< / highlight >}}
+```
 
 ### 4. And now enable it.
 
-{{< highlight bash  >}}
+```bash
 sudo pfctl -e
-{{< / highlight >}}
+```
 
 ### 5. Configure sudoers to allow mitmproxy to access pfctl.
 
 Edit the file **/etc/sudoers** on your system as root. Add the following line to
 the end of the file:
 
-{{< highlight none  >}}
+```
 ALL ALL=NOPASSWD: /sbin/pfctl -s state
-{{< / highlight >}}
+```
 
 Note that this allows any user on the system to run the command `/sbin/pfctl -s
 state` as root without a password. This only allows inspection of the state
@@ -229,9 +229,9 @@ tighten the restriction up to the user running mitmproxy.
 
 You probably want a command like this:
 
-{{< highlight bash  >}}
+```bash
 mitmproxy --mode transparent --showhost
-{{< / highlight >}}
+```
 
 The `--mode transparent` flag turns on transparent mode, and the `--showhost` argument tells
 mitmproxy to use the value of the Host header for URL display.
@@ -256,7 +256,7 @@ for more.
 
 Follow steps **1, 2** as above, but in step **2** change the contents of the file **pf.conf** to
 
-{{< highlight none >}}
+```
 #The ports to redirect to proxy
 redir_ports = "{http, https}"
 
@@ -274,13 +274,13 @@ tproxy_user = "nobody"
 
 rdr pass proto tcp from any to any port $redir_ports -> $tproxy
 pass out route-to (lo0 127.0.0.1) proto tcp from any to any port $redir_ports user { != $tproxy_user }
-{{< / highlight >}}
+```
 
 Follow steps **3-5** above. This will redirect the packets from all users other than `nobody` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `nobody`. Hence step **6** should look like:
 
-{{< highlight bash  >}}
+```bash
 sudo -u nobody mitmproxy --mode transparent --showhost
-{{< / highlight >}}
+```
 
 ## "Full" transparent mode on Linux
 
@@ -289,7 +289,7 @@ connections. In case this isn't desired, the --spoof-source-address argument can
 be used to use the client's IP address for server-side connections. The
 following config is required for this mode to work:
 
-{{< highlight bash  >}}
+```bash
 CLIENT_NET=192.168.1.0/24
 TABLE_ID=100
 MARK=1
@@ -303,15 +303,15 @@ iptables -t nat \
 
 ip rule add fwmark $MARK lookup $TABLE_ID
 ip route add local $CLIENT_NET dev lo table $TABLE_ID
-{{< / highlight >}}
+```
 
 This mode does require root privileges though. There's a wrapper in the examples
 directory called 'mitmproxy_shim.c', which will enable you to use this mode with
 dropped privileges. It can be used as follows:
 
-{{< highlight bash  >}}
+```bash
 gcc examples/complex/full_transparency_shim.c -o mitmproxy_shim -lcap
 sudo chown root:root mitmproxy_shim
 sudo chmod u+s mitmproxy_shim
 ./mitmproxy_shim $(which mitmproxy) --mode transparent --set spoof-source-address
-{{< / highlight >}}
+```

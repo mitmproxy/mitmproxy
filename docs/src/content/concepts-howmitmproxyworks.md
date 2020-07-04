@@ -25,9 +25,9 @@ usually reliable. In the simplest possible interaction with mitmproxy, a
 client connects directly to the proxy, and makes a request that looks
 like this:
 
-{{< highlight http  >}}
+```http
 GET http://example.com/index.html HTTP/1.1
-{{< / highlight >}}
+```
 
 This is a proxy GET request - an extended form of the vanilla HTTP GET
 request that includes a schema and host specification, and it includes
@@ -47,9 +47,9 @@ The process for an explicitly proxied HTTPS connection is quite
 different. The client connects to the proxy and makes a request that
 looks like this:
 
-{{< highlight http  >}}
+```http
 CONNECT example.com:443 HTTP/1.1
-{{< / highlight >}}
+```
 
 A conventional proxy can neither view nor manipulate a TLS-encrypted
 data stream, so a CONNECT request simply asks the proxy to open a pipe
@@ -91,9 +91,9 @@ blush, it seems that the CONNECT request above gives us all we need - in this
 example, both of these values are "example.com". But what if the client had
 initiated the connection as follows:
 
-{{< highlight http  >}}
+```http
 CONNECT 10.1.1.1:443 HTTP/1.1
-{{< / highlight >}}
+```
 
 Using the IP address is perfectly legitimate because it gives us enough
 information to initiate the pipe, even though it doesn't reveal the
@@ -182,9 +182,9 @@ server - [iptables](http://www.netfilter.org/) on Linux or
 client has initiated the connection, it makes a vanilla HTTP request,
 which might look something like this:
 
-{{< highlight http  >}}
+```http
 GET /index.html HTTP/1.1
-{{< / highlight >}}
+```
 
 Note that this request differs from the explicit proxy variation, in
 that it omits the scheme and hostname. How, then, do we know which

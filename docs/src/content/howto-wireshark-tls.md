@@ -13,9 +13,9 @@ Wireshark can use these log files to decrypt packets. See the [Wireshark wiki](h
 
 Key logging is enabled by setting the environment variable `SSLKEYLOGFILE` so
 that it points to a writable text file:
-{{< highlight bash  >}}
+```bash
 SSLKEYLOGFILE="$PWD/.mitmproxy/sslkeylogfile.txt" mitmproxy
-{{< / highlight >}}
+```
 You can also `export` this environment variable to make it persistent for all applications started from your current shell session.
 
 You can specify the key file path in Wireshark via `Edit -> Preferences ->

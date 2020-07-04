@@ -28,15 +28,15 @@ allows addons declare options and commands. In this case, the addon adds a
 single `addheader` option with type `bool`. Let's try this out by running the
 script in mitmproxy console:
 
-{{< highlight bash  >}}
+```bash
 > mitmproxy -s ./examples/addons/options-simple.py
-{{< /highlight >}}
+```
 
 You can now use CURL to make a request through the proxy like this:
 
-{{< highlight bash  >}}
+```bash
 > env http_proxy=http://localhost:8080 curl -I http://google.com
-{{< /highlight >}}
+```
 
 If you run this request immediately, you'll notice that no count header is
 added. This is because our default value for the option was `false`. Press `O`
@@ -45,22 +45,22 @@ mitmproxy knows this is a boolean, and lets you toggle the value between true
 and false. Set the value to `true`, and you should see a result something like
 this:
 
-{{< highlight bash  >}}
+```bash
 > env http_proxy=http://localhost:8080 curl -I http://google.com
 HTTP/1.1 301 Moved Permanently
 Location: http://www.google.com/
 Content-Length: 219
 count: 1
-{{< /highlight >}}
+```
 
 When this addon is loaded, the `addheader` setting is available in the
 persistent [YAML configuration file]({{< relref "concepts-options" >}}). You can
 also over-ride the value directly from the command-line for any of the tools
 using the `--set` flag:
 
-{{< highlight bash  >}}
+```bash
 mitmproxy -s ./examples/addons/options-simple.py --set addheader=true
-{{< /highlight >}}
+```
 
 
 ## Handling configuration updates
@@ -85,11 +85,11 @@ called with our default value (`None`), and then later with an updated value if
 the option is changed. If we try to load the script with an incorrect value, we
 now see an error:
 
-{{< highlight none  >}}
+```
 > mitmdump -s ./examples/addons/options-configure.py --set addheader=1000
 Loading script: ./examples/addons/options-configure.py
 /Users/cortesi/mitmproxy/mitmproxy/venv/bin/mitmdump: addheader must be <= 100
-{{< /highlight >}}
+```
 
 
 ## Supported Types

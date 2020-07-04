@@ -23,22 +23,22 @@ Please note, that apps can decide to ignore the system certificate store and mai
     
 ## 2. Rename certificate
 Enter your certificate folder
-{{< highlight bash  >}}
+```bash
 cd ~/.mitmproxy/
-{{< / highlight >}}
+```
 
   - CA Certificates in Android are stored by the name of their hash, with a '0' as extension
   - Now generate the hash of your certificate
   
-{{< highlight bash  >}}
+```bash
 openssl x509 -inform PEM -subject_hash_old -in mitmproxy-ca-cert.cer | head -1
-{{< / highlight >}}
+```
 Lets assume, the output is `c8450d0d`
 
 We can now copy `mitmproxy-ca-cert.cer` to `c8450d0d.0` and our system certificate is ready to use
-{{< highlight bash  >}}
+```bash
 cp mitmproxy-ca-cert.cer c8450d0d.0
-{{< / highlight >}}
+```
 
 ## 3. Insert certificate into system certificate store
 
@@ -50,37 +50,37 @@ Note, that Android 9 (API LEVEL 28) was used to test the following steps and tha
      - Keep in mind, that the **emulator will load a clean system image when starting without `-writable-system` option**.
      - This means you always have to start the emulator with `-writable-system` option in order to use your certificate
 
-{{< highlight bash  >}}
+```bash
 emulator -avd <avd_name_here> -writable-system
-{{< / highlight >}}
+```
 
   - Restart adb as root
   
-{{< highlight bash  >}}
+```bash
 adb root
-{{< / highlight >}}
+```
 
   - Get write access to `/system` on the device
   - In earlier versions (API LEVEL < 28) of Android you have to use `adb shell "mount -o rw,remount /system"`
   
-{{< highlight bash  >}}
+```bash
 adb shell "mount -o rw,remount /"
-{{< / highlight >}}
+```
 
   - Push your certificate to the system certificate store and set file permissions
   
-{{< highlight bash  >}}
+```bash
 adb push c8450d0d.0 /system/etc/security/cacerts
 adb shell "chmod 664 /system/etc/security/cacerts/c8450d0d.0"
-{{< / highlight >}}
+```
 
 ## 4. Reboot device and enjoy decrypted TLS traffic
 
   - Reboot your device. 
      - You CA certificate should now be system trusted
          
-{{< highlight bash  >}}
+```bash
 adb reboot
-{{< / highlight >}}
+```
 
 **Remember**: You **always** have to start the emulator using the `-writable-system` option in order to use your certificate
