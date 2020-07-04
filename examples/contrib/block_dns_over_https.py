@@ -154,14 +154,14 @@ def _request_has_doh_looking_path(flow):
     return path in doh_paths
 
 
-def _requested_hostname_is_in_doh_blacklist(flow):
+def _requested_hostname_is_in_doh_blocklist(flow):
     """
-    Check if server hostname is in our DoH provider blacklist.
+    Check if server hostname is in our DoH provider blocklist.
 
-    The current blacklist is taken from https://github.com/curl/curl/wiki/DNS-over-HTTPS.
+    The current blocklist is taken from https://github.com/curl/curl/wiki/DNS-over-HTTPS.
 
     :param flow: mitmproxy flow
-    :return: True if server's hostname is in DoH blacklist, otherwise False
+    :return: True if server's hostname is in DoH blocklist, otherwise False
     """
     hostname = flow.request.host
     ip = flow.server_conn.address
@@ -172,7 +172,7 @@ doh_request_detection_checks = [
     _has_dns_message_content_type,
     _request_has_dns_query_string,
     _request_is_dns_json,
-    _requested_hostname_is_in_doh_blacklist,
+    _requested_hostname_is_in_doh_blocklist,
     _request_has_doh_looking_path
 ]
 

@@ -437,13 +437,13 @@ class Settings(RequestHandler):
 
     def put(self):
         update = self.json
-        option_whitelist = {
+        allowed_options = {
             "intercept", "showhost", "upstream_cert", "ssl_insecure",
             "rawtcp", "http2", "websocket", "anticache", "anticomp",
             "stickycookie", "stickyauth", "stream_large_bodies"
         }
         for k in update:
-            if k not in option_whitelist:
+            if k not in allowed_options:
                 raise APIError(400, "Unknown setting {}".format(k))
         self.master.options.update(**update)
 

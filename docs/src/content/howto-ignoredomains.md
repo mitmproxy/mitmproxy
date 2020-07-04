@@ -89,7 +89,10 @@ Here are some other examples for ignore patterns:
 --ignore-hosts 17\.178\.\d+\.\d+:443
 ```
 
-This option can also be used to whitelist some domains through negative lookahead expressions. However, ignore patterns are always matched against the IP address of the target before being matched against its domain name. Thus, the pattern must allow any IP addresses using an expression like `^(?![0-9\.]+:)` in order for domains whitelisting to work. Here are examples of such patterns:
+This option can also be used to only allow some specific domains through negative lookahead expressions. However, ignore
+patterns are always matched against the IP address of the target before being matched against its domain name. Thus, the
+pattern must allow any IP addresses using an expression like `^(?![0-9\.]+:)` in order for this to work.
+Here are examples of such patterns:
 
 ```
 # Ignore everything but example.com and mitmproxy.org (not subdomains):
