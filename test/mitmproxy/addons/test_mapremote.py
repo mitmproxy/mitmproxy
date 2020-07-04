@@ -12,7 +12,7 @@ class TestMapRemote:
         with taddons.context(mr) as tctx:
             tctx.configure(mr, map_remote=["one/two/three"])
             with pytest.raises(Exception, match="Cannot parse map_remote .* Invalid number"):
-                tctx.configure(mr, map_remote = ["/"])
+                tctx.configure(mr, map_remote=["/"])
             with pytest.raises(Exception, match="Cannot parse map_remote .* Invalid filter"):
                 tctx.configure(mr, map_remote=["/~b/two/three"])
             with pytest.raises(Exception, match="Cannot parse map_remote .* Invalid regular expression"):
@@ -33,6 +33,16 @@ class TestMapRemote:
             mr.request(f)
             assert f.request.url == "https://mitmproxy.org/img/test.jpg"
 
+    def test_has_reply(self):
+        mr = mapremote.MapRemote()
+        with taddons.context(mr) as tctx:
+            tctx.configure(mr, map_remote=[":example.org:mitmproxy.org"])
+            f = tflow.tflow()
+            f.request.url = b"https://example.org/images/test.jpg"
+            f.kill()
+            mr.request(f)
+            assert f.request.url == "https://example.org/images/test.jpg"
+
 
 class TestMapRemoteFile:
     def test_simple(self, tmpdir):
@@ -42,7 +52,7 @@ class TestMapRemoteFile:
             tmpfile.write("mitmproxy.org")
             tctx.configure(
                 mr,
-                map_remote=[":example.org:@" + str(tmpfile)]
+                map_remote=["|example.org|@" + str(tmpfile)]
             )
             f = tflow.tflow()
             f.request.url = b"https://example.org/test"
@@ -63,7 +73,7 @@ class TestMapRemoteFile:
             tmpfile.write("mitmproxy.org")
             tctx.configure(
                 mr,
-                map_remote=[":example.org:@" + str(tmpfile)]
+                map_remote=["|example.org|@" + str(tmpfile)]
             )
             tmpfile.remove()
             f = tflow.tflow()

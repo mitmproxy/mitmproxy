@@ -3,49 +3,53 @@ import pytest
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
 
-from mitmproxy.addons import modifyheaders
+from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifyHeaders
+
+
+def test_parse_modify_spec():
+    spec = parse_modify_spec("/foo/bar/voing", True)
+    assert spec.matches.pattern == "foo"
+    assert spec.subject == b"bar"
+    assert spec.read_replacement() == b"voing"
+
+    spec = parse_modify_spec("/foo/bar/vo/ing/", False)
+    assert spec.matches.pattern == "foo"
+    assert spec.subject == b"bar"
+    assert spec.read_replacement() == b"vo/ing/"
+
+    spec = parse_modify_spec("/bar/voing", False)
+    assert spec.matches(tflow.tflow())
+    assert spec.subject == b"bar"
+    assert spec.read_replacement() == b"voing"
+
+    with pytest.raises(ValueError, match="Invalid number of parameters"):
+        parse_modify_spec("/", False)
+
+    with pytest.raises(ValueError, match="Invalid filter pattern"):
+        parse_modify_spec("/~b/one/two", False)
+
+    with pytest.raises(ValueError, match="Invalid filter pattern"):
+        parse_modify_spec("/~b/one/two", False)
+
+    with pytest.raises(ValueError, match="Invalid regular expression"):
+        parse_modify_spec("/[/two", True)
 
 
 class TestModifyHeaders:
-    def test_parse_modify_spec(self):
-        x = modifyheaders.parse_modify_spec("/foo/bar/voing")
-        assert [x[0], x[2], x[3]] == ["foo", b"bar", b"voing"]
-
-        x = modifyheaders.parse_modify_spec("/foo/bar/vo/ing/")
-        assert [x[0], x[2], x[3]] == ["foo", b"bar", b"vo/ing/"]
-
-        x = modifyheaders.parse_modify_spec("/bar/voing")
-        assert [x[0], x[2], x[3]] == [".*", b"bar", b"voing"]
-
-        with pytest.raises(Exception, match="Invalid number of parameters"):
-            modifyheaders.parse_modify_spec("/")
-
-        with pytest.raises(Exception, match="Invalid filter pattern"):
-            modifyheaders.parse_modify_spec("/~b/one/two")
-
-        with pytest.raises(Exception, match="Invalid file path"):
-            modifyheaders.parse_modify_spec("/~q/foo/@nonexistent")
 
     def test_configure(self):
-        mh = modifyheaders.ModifyHeaders()
+        mh = ModifyHeaders()
         with taddons.context(mh) as tctx:
-            with pytest.raises(Exception, match="Cannot parse modify_headers .* Invalid number"):
-                tctx.configure(mh, modify_headers = ["/"])
-
-            with pytest.raises(Exception, match="Cannot parse modify_headers .* Invalid filter"):
-                tctx.configure(mh, modify_headers = ["/~b/one/two"])
-
-            with pytest.raises(Exception, match="Cannot parse modify_headers .* Invalid file"):
-                tctx.configure(mh, modify_headers = ["/~q/foo/@nonexistent"])
-
-            tctx.configure(mh, modify_headers = ["/foo/bar/voing"])
+            with pytest.raises(Exception, match="Cannot parse modify_headers"):
+                tctx.configure(mh, modify_headers=["/"])
+            tctx.configure(mh, modify_headers=["/foo/bar/voing"])
 
     def test_modify_headers(self):
-        mh = modifyheaders.ModifyHeaders()
+        mh = ModifyHeaders()
         with taddons.context(mh) as tctx:
             tctx.configure(
                 mh,
-                modify_headers = [
+                modify_headers=[
                     "/~q/one/two",
                     "/~s/one/three"
                 ]
@@ -62,7 +66,7 @@ class TestModifyHeaders:
 
             tctx.configure(
                 mh,
-                modify_headers = [
+                modify_headers=[
                     "/~s/one/two",
                     "/~s/one/three"
                 ]
@@ -75,7 +79,7 @@ class TestModifyHeaders:
 
             tctx.configure(
                 mh,
-                modify_headers = [
+                modify_headers=[
                     "/~q/one/two",
                     "/~q/one/three"
                 ]
@@ -88,7 +92,7 @@ class TestModifyHeaders:
             # test removal of existing headers
             tctx.configure(
                 mh,
-                modify_headers = [
+                modify_headers=[
                     "/~q/one/",
                     "/~s/one/"
                 ]
@@ -105,7 +109,7 @@ class TestModifyHeaders:
 
             tctx.configure(
                 mh,
-                modify_headers = [
+                modify_headers=[
                     "/one/"
                 ]
             )
@@ -122,7 +126,7 @@ class TestModifyHeaders:
 
 class TestModifyHeadersFile:
     def test_simple(self, tmpdir):
-        mh = modifyheaders.ModifyHeaders()
+        mh = ModifyHeaders()
         with taddons.context(mh) as tctx:
             tmpfile = tmpdir.join("replacement")
             tmpfile.write("two")
@@ -137,7 +141,7 @@ class TestModifyHeadersFile:
 
     @pytest.mark.asyncio
     async def test_nonexistent(self, tmpdir):
-        mh = modifyheaders.ModifyHeaders()
+        mh = ModifyHeaders()
         with taddons.context(mh) as tctx:
             with pytest.raises(Exception, match="Cannot parse modify_headers .* Invalid file path"):
                 tctx.configure(

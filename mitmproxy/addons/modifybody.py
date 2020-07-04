@@ -1,4 +1,3 @@
-import os
 import re
 import typing
 
@@ -26,25 +25,11 @@ class ModifyBody:
             self.replacements = []
             for option in ctx.options.modify_body:
                 try:
-                    spec = parse_modify_spec(option)
-                    try:
-                        re.compile(spec.subject)
-                    except re.error:
-                        raise ValueError(f"Invalid regular expression: {spec.subject}")
+                    spec = parse_modify_spec(option, True)
                 except ValueError as e:
-                    raise exceptions.OptionsError(
-                        f"Cannot parse modify_body option {option}: {e}"
-                    ) from e
+                    raise exceptions.OptionsError(f"Cannot parse modify_body option {option}: {e}") from e
 
                 self.replacements.append(spec)
-
-    def run(self, flow):
-        for spec in self.replacements:
-            if spec.matches(flow):
-                if flow.response:
-                    self.replace(flow.response, spec.subject, spec.replacement)
-                else:
-                    self.replace(flow.request, spec.subject, spec.replacement)
 
     def request(self, flow):
         if not flow.reply.has_message:
@@ -54,23 +39,15 @@ class ModifyBody:
         if not flow.reply.has_message:
             self.run(flow)
 
-    def replace(self, obj, search, repl):
-        """
-        Replaces all matches of the regex search in the body of the message with repl.
-
-        Returns:
-            The number of replacements made.
-        """
-        if repl.startswith(b"@"):
-            repl = os.path.expanduser(repl[1:])
-            try:
-                with open(repl, "rb") as f:
-                    repl = f.read()
-            except IOError:
-                ctx.log.warn("Could not read replacement file: %s" % repl)
-                return
-
-        replacements = 0
-        if obj.content:
-            obj.content, replacements = re.subn(search, repl, obj.content, flags=re.DOTALL)
-        return replacements
+    def run(self, flow):
+        for spec in self.replacements:
+            if spec.matches(flow):
+                try:
+                    replacement = spec.read_replacement()
+                except IOError as e:
+                    ctx.log.warn(f"Could not read replacement file: {e}")
+                    continue
+                if flow.response:
+                    flow.response.content = re.sub(spec.subject, replacement, flow.response.content, flags=re.DOTALL)
+                else:
+                    flow.request.content = re.sub(spec.subject, replacement, flow.request.content, flags=re.DOTALL)
