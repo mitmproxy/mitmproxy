@@ -3,6 +3,7 @@ from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.test import taddons
 from mitmproxy.net.http import Headers
+from mitmproxy.utils import typecheck
 
 from ..mitmproxy import tservers
 
