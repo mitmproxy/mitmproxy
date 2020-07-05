@@ -28,15 +28,17 @@ class ListCompleter(Completer):
             if o.startswith(start):
                 self.options.append(o)
         self.options.sort()
-        self.offset = 0
+        self.pos = -1
 
     def cycle(self, forward: bool = True) -> str:
         if not self.options:
             return self.start
-        ret = self.options[self.offset]
-        delta = 1 if forward else -1
-        self.offset = (self.offset + delta) % len(self.options)
-        return ret
+        if self.pos == -1:
+            self.pos = 0 if forward else len(self.options) - 1
+        else:
+            delta = 1 if forward else -1
+            self.pos = (self.pos + delta) % len(self.options)
+        return self.options[self.pos]
 
 
 class CompletionState(typing.NamedTuple):

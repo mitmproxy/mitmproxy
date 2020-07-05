@@ -31,23 +31,35 @@ class TestListCompleter:
             [
                 "",
                 ["a", "b", "c"],
-                ["a", "b", "c", "a"]
+                ["a", "b", "c", "a"],
+                ["c", "b", "a", "c"],
+                ["a", "c", "a", "c"]
             ],
             [
                 "xxx",
                 ["a", "b", "c"],
+                ["xxx", "xxx", "xxx"],
+                ["xxx", "xxx", "xxx"],
                 ["xxx", "xxx", "xxx"]
             ],
             [
                 "b",
                 ["a", "b", "ba", "bb", "c"],
-                ["b", "ba", "bb", "b"]
+                ["b", "ba", "bb", "b"],
+                ["bb", "ba", "b", "bb"],
+                ["b", "bb", "b", "bb"]
             ],
         ]
-        for start, opts, cycle in tests:
+        for start, opts, cycle, cycle_reverse, cycle_mix in tests:
             c = commander.ListCompleter(start, opts)
             for expected in cycle:
                 assert c.cycle() == expected
+            for expected in cycle_reverse:
+                assert c.cycle(False) == expected
+            forward = True
+            for expected in cycle_mix:
+                assert c.cycle(forward) == expected
+                forward = not forward
 
 
 class TestCommandEdit:
