@@ -10,9 +10,11 @@ body.
 from mitmproxy import http
 from mitmproxy.net.http import Headers
 
+
 def request(flow: http.HTTPFlow):
     if flow.request.trailers:
         print("HTTP Trailers detected! Request contains:", flow.request.trailers)
+
 
 def response(flow: http.HTTPFlow):
     if flow.response.trailers:
