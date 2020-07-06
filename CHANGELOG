@@ -18,6 +18,7 @@ Unreleased: mitmproxy next
     * mitmweb: "New -> File" menu option has been renamed to "Clear All" (@yogeshojha)
     * Add new MapRemote addon to rewrite URLs of requests (@mplattner)
     * Add support for HTTP Trailers to the HTTP/2 protocol (@sanlengjingvv and @Kriechi)
+    * Fix certificate runtime error during expire cleanup (@gorogoroumaru)
 
     * --- TODO: add new PRs above this line ---
 

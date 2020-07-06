@@ -173,9 +173,7 @@ class CertStore:
         self.expire_queue.append(entry)
         if len(self.expire_queue) > self.STORE_CAP:
             d = self.expire_queue.pop(0)
-            for k, v in list(self.certs.items()):
-                if v == d:
-                    del self.certs[k]
+            self.certs = {k: v for k, v in self.certs.items() if v != d}
 
     @staticmethod
     def load_dhparam(path):
