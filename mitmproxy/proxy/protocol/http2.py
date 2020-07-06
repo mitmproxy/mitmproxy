@@ -180,7 +180,6 @@ class Http2Layer(base.Layer):
         headers = mitmproxy.net.http.Headers([[k, v] for k, v in event.headers])
         self.streams[eid] = Http2SingleStreamLayer(self, self.connections[self.client_conn], eid, headers)
         self.streams[eid].timestamp_start = time.time()
-        self.streams[eid].no_request_body = (event.stream_ended is not None)
         if event.priority_updated is not None:
             self.streams[eid].priority_exclusive = event.priority_updated.exclusive
             self.streams[eid].priority_depends_on = event.priority_updated.depends_on
@@ -424,8 +423,6 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         self.request_message = self.Message(request_headers)
         self.response_message = self.Message()
 
-        self.no_request_body = False
-
         self.priority_exclusive: bool
         self.priority_depends_on: Optional[int] = None
         self.priority_weight: Optional[int] = None
@@ -594,7 +591,6 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
                 self.raise_zombie,
                 self.server_stream_id,
                 headers,
-                end_stream=self.no_request_body,
                 priority_exclusive=priority_exclusive,
                 priority_depends_on=priority_depends_on,
                 priority_weight=priority_weight,
@@ -611,12 +607,12 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             # nothing to do here
             return
 
-        if not self.no_request_body:
-            self.connections[self.server_conn].safe_send_body(
-                self.raise_zombie,
-                self.server_stream_id,
-                chunks
-            )
+        self.connections[self.server_conn].safe_send_body(
+            self.raise_zombie,
+            self.server_stream_id,
+            chunks,
+            end_stream=(request.trailers is None),
+        )
 
     @detect_zombie_stream
     def send_request_trailers(self, request):
@@ -683,7 +679,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             self.raise_zombie,
             self.client_stream_id,
             chunks,
-            end_stream=("trailer" not in response.headers)
+            end_stream=(response.trailers is None),
         )
 
     @detect_zombie_stream
