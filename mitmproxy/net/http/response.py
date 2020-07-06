@@ -22,6 +22,7 @@ class ResponseData(message.MessageData):
         reason=None,
         headers=(),
         content=None,
+        trailers=None,
         timestamp_start=None,
         timestamp_end=None
     ):
@@ -33,12 +34,15 @@ class ResponseData(message.MessageData):
             headers = nheaders.Headers(headers)
         if isinstance(content, str):
             raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
+        if trailers is not None and not isinstance(trailers, nheaders.Headers):
+            trailers = nheaders.Headers(trailers)
 
         self.http_version = http_version
         self.status_code = status_code
         self.reason = reason
         self.headers = headers
         self.content = content
+        self.trailers = trailers
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
 
