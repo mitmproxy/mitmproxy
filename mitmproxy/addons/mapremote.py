@@ -25,7 +25,7 @@ class MapRemote:
             self.replacements = []
             for option in ctx.options.map_remote:
                 try:
-                    spec = parse_modify_spec(option, True)
+                    spec = parse_modify_spec(option, True, False)
                 except ValueError as e:
                     raise exceptions.OptionsError(f"Cannot parse map_remote option {option}: {e}") from e
 

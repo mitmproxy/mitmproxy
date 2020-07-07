@@ -33,7 +33,7 @@ def _match_all(flow) -> bool:
     return True
 
 
-def parse_modify_spec(option, subject_is_regex: bool) -> ModifySpec:
+def parse_modify_spec(option, subject_is_regex: bool, replacement_is_path: bool) -> ModifySpec:
     """
         The form for the modify_* options is as follows:
 
@@ -78,12 +78,20 @@ def parse_modify_spec(option, subject_is_regex: bool) -> ModifySpec:
         except re.error as e:
             raise ValueError(f"Invalid regular expression {subject!r} ({e})")
 
+    if replacement_is_path:
+        path = Path(replacement)
+        try:
+            replacement = path.expanduser().resolve(strict=True)
+        except FileNotFoundError as e:
+            raise ValueError(f"Invalid file path: {replacement} ({e})")
+
     spec = ModifySpec(flow_filter, subject, replacement)
 
-    try:
-        spec.read_replacement()
-    except IOError as e:
-        raise ValueError(f"Invalid file path: {replacement[1:]} ({e})")
+    if not replacement_is_path:
+        try:
+            spec.read_replacement()
+        except IOError as e:
+            raise ValueError(f"Invalid file path: {replacement[1:]} ({e})")
 
     return spec
 
@@ -107,7 +115,7 @@ class ModifyHeaders:
         if "modify_headers" in updated:
             for option in ctx.options.modify_headers:
                 try:
-                    spec = parse_modify_spec(option, False)
+                    spec = parse_modify_spec(option, False, False)
                 except ValueError as e:
                     raise exceptions.OptionsError(f"Cannot parse modify_headers option {option}: {e}") from e
                 self.replacements.append(spec)

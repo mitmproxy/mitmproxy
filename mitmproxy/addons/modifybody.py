@@ -25,7 +25,7 @@ class ModifyBody:
             self.replacements = []
             for option in ctx.options.modify_body:
                 try:
-                    spec = parse_modify_spec(option, True)
+                    spec = parse_modify_spec(option, True, False)
                 except ValueError as e:
                     raise exceptions.OptionsError(f"Cannot parse modify_body option {option}: {e}") from e
 
