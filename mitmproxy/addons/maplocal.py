@@ -1,3 +1,4 @@
+import mimetypes
 import re
 import typing
 import urllib
@@ -77,6 +78,14 @@ class MapLocal:
 
         return candidates
 
+    def get_mime_type(self, file_path):
+        mimetype = (
+            mimetypes.guess_type(file_path)[0]
+            or "text/plain"
+        )
+        return mimetype
+
+
     def request(self, flow: http.HTTPFlow) -> None:
         if flow.reply and flow.reply.has_message:
             return
@@ -84,8 +93,10 @@ class MapLocal:
             req = flow.request
             url = req.pretty_url
             base_path = Path(spec.replacement_str)
+
             if spec.matches(flow) and re.search(spec.subject, url.encode("utf8", "surrogateescape")):
                 file_candidates = self.file_candidates(url, spec)
+                
                 for file_candidate in file_candidates:
                     file_candidate = Path(file_candidate)
                     if self.sanitize_candidate_path(file_candidate, base_path):
@@ -97,8 +108,7 @@ class MapLocal:
                             return
 
                         flow.response = http.HTTPResponse.make( 
-                            200,  # (optional) status code
-                            replacement,  # (optional) content
-                            # todo: guess mime type
-                            {"Content-Type": "image/jpeg"}  # (optional) headers
+                            200,
+                            replacement,
+                            {"Content-Type": self.get_mime_type(str(file_candidate))}
                         )
