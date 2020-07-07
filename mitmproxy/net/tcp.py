@@ -126,8 +126,8 @@ class Reader(_FileLike):
                 # operation. In this case a call to SSL_get_error with the return value of
                 # SSL_read() will yield SSL_ERROR_WANT_READ or SSL_ERROR_WANT_WRITE.
                 # 300 is OpenSSL default timeout
-                self.timeout = self.o.gettimeout() or 300
-                if (time.time() - start) < self.timeout:
+                timeout = self.o.gettimeout() or 300
+                if (time.time() - start) < timeout:
                     time.sleep(0.1)
                     continue
                 else:
