@@ -41,15 +41,15 @@ class MapLocal:
 
     def sanitize_candidate_path(self, candidate_path, base_path):
         try:
-            candidate_path.resolve(strict=True)
-            if base_path in candidate_path.parents:
+            candidate_path = candidate_path.resolve(strict=True)
+            if base_path == candidate_path or base_path in candidate_path.parents:
                 return candidate_path
         except FileNotFoundError:
             pass
         return None
 
     def file_candidates(self, url: str, spec: ModifySpec) -> typing.List[Path]:
-        replacement = spec.replacement_str
+        replacement = spec.replacement
         candidates = []
 
         if replacement.is_file():
@@ -85,30 +85,26 @@ class MapLocal:
         )
         return mimetype
 
-
     def request(self, flow: http.HTTPFlow) -> None:
         if flow.reply and flow.reply.has_message:
             return
         for spec in self.replacements:
             req = flow.request
             url = req.pretty_url
-            base_path = Path(spec.replacement_str)
+            base_path = Path(spec.replacement)
 
             if spec.matches(flow) and re.search(spec.subject, url.encode("utf8", "surrogateescape")):
                 file_candidates = self.file_candidates(url, spec)
-                
+
                 for file_candidate in file_candidates:
                     file_candidate = Path(file_candidate)
                     if self.sanitize_candidate_path(file_candidate, base_path):
                         try:
-                            with open(file_candidate, "rb") as file:
-                                replacement = file.read()
+                            flow.response = http.HTTPResponse.make(
+                                200,
+                                file_candidate.read_bytes(),
+                                {"Content-Type": self.get_mime_type(str(file_candidate))}
+                            )
                         except IOError:
                             ctx.log.warn(f"Could not read replacement file {file_candidate}")
                             return
-
-                        flow.response = http.HTTPResponse.make( 
-                            200,
-                            replacement,
-                            {"Content-Type": self.get_mime_type(str(file_candidate))}
-                        )

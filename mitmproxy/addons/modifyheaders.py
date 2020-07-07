@@ -12,7 +12,7 @@ from mitmproxy import ctx
 class ModifySpec(typing.NamedTuple):
     matches: flowfilter.TFilter
     subject: bytes
-    replacement_str: str
+    replacement: str
 
     def read_replacement(self) -> bytes:
         """
@@ -22,11 +22,11 @@ class ModifySpec(typing.NamedTuple):
         Raises:
             - IOError if the file cannot be read.
         """
-        if self.replacement_str.startswith("@"):
-            return Path(self.replacement_str[1:]).expanduser().read_bytes()
+        if self.replacement.startswith("@"):
+            return Path(self.replacement[1:]).expanduser().read_bytes()
         else:
             # We could cache this at some point, but unlikely to be a problem.
-            return strutils.escaped_str_to_bytes(self.replacement_str)
+            return strutils.escaped_str_to_bytes(self.replacement)
 
 
 def _match_all(flow) -> bool:
