@@ -1,8 +1,7 @@
 import re
 import typing
 
-from mitmproxy import exceptions, http
-from mitmproxy import ctx
+from mitmproxy import ctx, exceptions, http
 from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifySpec
 
 
@@ -14,9 +13,10 @@ class MapRemote:
         loader.add_option(
             "map_remote", typing.Sequence[str], [],
             """
-            Replacement pattern of the form "[/flow-filter]/regex/[@]replacement", where
-            the separator can be any character. The @ allows to provide a file path that
-            is used to read the replacement string.
+            Map remote resources to another remote URL using a pattern of the form
+            "[/flow-filter]/url-regex/[@]replacement", where the separator can
+            be any character. The @ allows to provide a file path that is
+            used to read the replacement string.
             """
         )
 

@@ -1,8 +1,7 @@
 import re
 import typing
 
-from mitmproxy import exceptions
-from mitmproxy import ctx
+from mitmproxy import ctx, exceptions, http
 from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifySpec
 
 

@@ -3,11 +3,45 @@ import re
 import typing
 import urllib
 from pathlib import Path
+from werkzeug.security import safe_join
 
-from mitmproxy import exceptions
-from mitmproxy import ctx
-from mitmproxy import http
+from mitmproxy import ctx, exceptions, http
 from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifySpec
+
+
+def get_mime_type(file_path: str) -> str:
+    mimetype = (
+        mimetypes.guess_type(file_path)[0]
+        or "application/octet-stream"
+    )
+    return mimetype
+
+
+def file_candidates(url: str, base_path: str) -> typing.List[Path]:
+    candidates = []
+    parsed_url = urllib.parse.urlparse(url)
+    path_components = parsed_url.path.lstrip("/").split("/")
+    filename = path_components.pop()
+
+    # todo: we may want to consider other filenames such as index.htm)
+    if not filename:
+        filename = 'index.html'
+
+    # construct all possible paths
+    while True:
+        components_with_filename = tuple(path_components + [filename])
+        candidate_path = safe_join(base_path, *components_with_filename)
+        if candidate_path:
+            candidates.append(
+                Path(candidate_path)
+            )
+
+        if not path_components:
+            break
+
+        path_components.pop()
+
+    return candidates
 
 
 class MapLocal:
@@ -18,9 +52,9 @@ class MapLocal:
         loader.add_option(
             "map_local", typing.Sequence[str], [],
             """
-            Replacement pattern of the form "[/flow-filter]/regex/file-or-directory", where
-            the separator can be any character. The @ allows to provide a file path that
-            is used to read the replacement string.
+            Map remote resources to a local file using a pattern of the form
+            "[/flow-filter]/url-regex/file-or-directory-path", where the
+            separator can be any character.
             """
         )
 
@@ -35,76 +69,36 @@ class MapLocal:
 
                 self.replacements.append(spec)
 
-    def construct_candidate_path(self, base_path, path_components, filename):
-        candidate_path = base_path.joinpath("/".join(path_components + [filename]))
-        return str(candidate_path)
-
-    def sanitize_candidate_path(self, candidate_path, base_path):
-        try:
-            candidate_path = candidate_path.resolve(strict=True)
-            if base_path == candidate_path or base_path in candidate_path.parents:
-                return candidate_path
-        except FileNotFoundError:
-            pass
-        return None
-
-    def file_candidates(self, url: str, spec: ModifySpec) -> typing.List[Path]:
-        replacement = spec.replacement
-        candidates = []
-
-        if replacement.is_file():
-            candidates.append(replacement)
-
-        elif replacement.is_dir():
-            parsed_url = urllib.parse.urlparse(url)
-
-            path_components = parsed_url.path.lstrip("/").split("/")
-            filename = path_components.pop()
-
-            # todo: this can be improved (e.g., also consider index.htm)
-            if not filename:
-                filename = 'index.html'
-
-            # construct all possible paths
-            while True:
-                candidates.append(
-                    self.construct_candidate_path(replacement, path_components, filename)
-                )
-
-                if not path_components:
-                    break
-
-                path_components.pop()
-
-        return candidates
-
-    def get_mime_type(self, file_path):
-        mimetype = (
-            mimetypes.guess_type(file_path)[0]
-            or "text/plain"
-        )
-        return mimetype
-
     def request(self, flow: http.HTTPFlow) -> None:
         if flow.reply and flow.reply.has_message:
             return
+
         for spec in self.replacements:
             req = flow.request
             url = req.pretty_url
             base_path = Path(spec.replacement)
 
             if spec.matches(flow) and re.search(spec.subject, url.encode("utf8", "surrogateescape")):
-                file_candidates = self.file_candidates(url, spec)
+                replacement_path = None
+                if base_path.is_file():
+                    replacement_path = base_path
+                elif base_path.is_dir():
+                    candidates = file_candidates(url, str(base_path))
+                    for candidate in candidates:
+                        # check that path is not outside of the user-defined base_path
+                        if candidate.is_file() and base_path in candidate.parents:
+                            replacement_path = candidate
+                            break
 
-                for file_candidate in file_candidates:
-                    file_candidate = Path(file_candidate)
-                    if self.sanitize_candidate_path(file_candidate, base_path):
-                        try:
-                            flow.response = http.HTTPResponse.make(
-                                200,
-                                file_candidate.read_bytes(),
-                                {"Content-Type": self.get_mime_type(str(file_candidate))}
-                            )
-                        except IOError:
-                            ctx.log.warn(f"Could not read replacement file {file_candidate}")
-                            return
+                if replacement_path:
+                    try:
+                        flow.response = http.HTTPResponse.make(
+                            200,
+                            replacement_path.read_bytes(),
+                            {"Content-Type": get_mime_type(str(replacement_path))}
+                        )
+                        # only set flow.response once, for the first matching rule
+                        break
+                    except IOError:
+                        ctx.log.warn(f"Could not read replacement file {replacement_path}")
+                        return

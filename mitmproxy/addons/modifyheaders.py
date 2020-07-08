@@ -2,11 +2,9 @@ import re
 import typing
 from pathlib import Path
 
-from mitmproxy import exceptions, http
-from mitmproxy import flowfilter
+from mitmproxy import ctx, exceptions, flowfilter, http
 from mitmproxy.net.http import Headers
 from mitmproxy.utils import strutils
-from mitmproxy import ctx
 
 
 class ModifySpec(typing.NamedTuple):
@@ -35,13 +33,16 @@ def _match_all(flow) -> bool:
 
 def parse_modify_spec(option, subject_is_regex: bool, replacement_is_path: bool) -> ModifySpec:
     """
-        The form for the modify_* options is as follows:
+        The form for the modify_*, map_remote, and map_local options is as follows:
 
+            * modify_body:    [/flow-filter]/body-regex/[@]replacement
             * modify_headers: [/flow-filter]/header-name/[@]header-value
-            * modify_body: [/flow-filter]/search-regex/[@]replace
+            * map_local:      [:flow-filter]:url-regex:path
+            * map_remote:     [:flow-filter]:url-regex:[@]replacement
 
         The @ allows to provide a file path that is used to read the respective option.
-        Both ModifyHeaders and ModifyBody use ModifySpec to represent a single rule.
+        The addons ModifyHeaders, ModifyBody, MapRemote, and MapLocal use ModifySpec
+        to represent a single rule.
 
         The first character specifies the separator. Example:
 
@@ -53,8 +54,8 @@ def parse_modify_spec(option, subject_is_regex: bool, replacement_is_path: bool)
             /foo/bar
 
         Clauses are parsed from left to right. Extra separators are taken to be
-        part of the final clause. For instance, the last parameter (header-value or
-        replace) below is "foo/bar/":
+        part of the final clause. For instance, the last parameter (header-value,
+        replace, or path) below is "foo/bar/":
 
             /one/two/foo/bar/
     """
@@ -81,7 +82,7 @@ def parse_modify_spec(option, subject_is_regex: bool, replacement_is_path: bool)
     if replacement_is_path:
         path = Path(replacement)
         try:
-            replacement = path.expanduser().resolve(strict=True)
+            replacement = str(path.expanduser().resolve(strict=True))
         except FileNotFoundError as e:
             raise ValueError(f"Invalid file path: {replacement} ({e})")
 
