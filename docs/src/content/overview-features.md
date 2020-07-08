@@ -11,6 +11,7 @@ menu:
 
 - [Anticache](#anticache)
 - [Client-side replay](#client-side-replay)
+- [Map Local](#map-local)
 - [Map Remote](#map-remote)
 - [Modify Body](#modify-body)
 - [Modify Headers](#modify-headers)
@@ -43,6 +44,58 @@ You may want to use client-side replay in conjunction with the `anticache`
 option, to make sure the server responds with complete data.
 
 
+## Map Local
+
+The `map_local` option lets you specify an arbitrary number of patterns that
+define redirections of HTTP requests to local files or diretories.
+The local file is fetched instead of the original resource
+and the corresponding HTTP response is returned transparently to the client.
+The mime type of the local file is guessed to set the `Content-Type` header.
+`map_local` patterns looks like this:
+
+```
+|flow-filter|url-regex|file-path
+|flow-filter|url-regex|diretory-path
+|url-regex|file-path
+|url-regex|diretory-path
+```
+
+* **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
+that defines which requests the `map_local` option applies to.
+
+* **url-regex** is a valid Python regular expression on the request URL that defines which requests the `map_local` option applies to.
+
+* **file-path** is a path to a file that is served instead of the original resource.
+
+* **diretory-path** is a path to a directory that is used to look for the resource
+to serve instead of the original resource. mitmproxy tries to select the correct file
+within **diretory-path** automatically. It first tries `diretory-path/url-path` and
+strips the deepest directory repeatedly until it finds an existing file.
+For example, with the **diretory-path** `/local` and the request URL `http://example.org/media/img/foo.jpg`,
+mitmproxy looks for `/local/media/img/foo.jpg`, `/local/media/foo.jpg`, and `/local/foo.jpg`,
+in this order. If no file is found, the original resource is served instead.
+
+### Examples
+
+Map all requests for `example.org/css/*` to the local directory `~/local-css`.
+
+```
+|//example.org/css/|~/local-css
+```
+
+Map all requests for `example.org/js/main.js` to the local file `~/main-local.js`.
+
+```
+|example.org/js/main.js|~/main-local.js
+```
+
+Map all requests ending with `.jpg` to the local file `~/foo.jpg`.
+
+```
+|.*\.jpg$|~/foo.jpg
+```
+
+
 ## Map Remote
 
 The `map_remote` option lets you specify an arbitrary number of patterns that
@@ -54,16 +107,16 @@ needs to support HTTP2 as well, otherwise the substituted request may fail.
 `map_remote` patterns looks like this:
 
 ```
-|flow-filter|regex|replacement
-|flow-filter|regex|@file-path
+|flow-filter|url-regex|replacement
+|flow-filter|url-regex|@file-path
 |regex|replacement
 |regex|@file-path
 ```
 
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
-that defines which requests a replacement applies to.
+that defines which requests the `map_remote` option applies to.
 
-* **regex** is a valid Python regular expression that defines what gets replaced in the URLs of requests.
+* **url-regex** is a valid Python regular expression that defines what gets replaced in the URLs of requests.
 
 * **replacement** is a string literal that is substituted in. If the replacement string
 literal starts with `@` as in `@file-path`, it is treated as a **file path** from which the replacement is read.
