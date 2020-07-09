@@ -25,15 +25,14 @@ how.
 
 ## 1. Run mitmdump to record our HTTP conversation to a file.
 
-{{< highlight bash  >}}
+```bash
 mitmdump -w wireless-login
-{{< / highlight >}}
+```
 
 ## 2. Point your browser at the mitmdump instance.
 
-I use a tiny Firefox addon called [Toggle
-Proxy](https://addons.mozilla.org/en-us/firefox/addon/toggle-proxy-51740/) to
-switch quickly to and from mitmproxy. I'm assuming you've already [configured
+There is a Firefox addon called [FoxyProxy](https://addons.mozilla.org/fi/firefox/addon/foxyproxy-standard/) that
+lets you switch quickly to and from mitmproxy. I'm assuming you've already [configured
 your browser with mitmproxy's SSL certificate authority]({{< relref
 "concepts-certificates" >}}).
 
@@ -42,9 +41,9 @@ your browser with mitmproxy's SSL certificate authority]({{< relref
 And that's it\! You now have a serialised version of the login process
 in the file wireless-login, and you can replay it at any time like this:
 
-{{< highlight bash  >}}
-mitmdump -c wireless-login
-{{< / highlight >}}
+```bash
+mitmdump -C wireless-login
+```
 
 ## Embellishments
 
@@ -59,9 +58,9 @@ These add only a few moments to the time it takes to replay, but they're not
 really needed and I somehow feel compelled to trim them anyway. So, we fire up
 the mitmproxy console tool on our serialised conversation, like so:
 
-{{< highlight bash  >}}
+```bash
 mitmproxy -r wireless-login
-{{< / highlight >}}
+```
 
 We can now go through and manually delete (using the <span
 data-role="kbd">d</span> keyboard shortcut) everything we want to trim. When

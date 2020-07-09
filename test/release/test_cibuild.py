@@ -58,31 +58,60 @@ def test_buildenviron_pr():
     )
     assert be.is_pull_request
 
-    # Mini test for appveyor
-    be = cibuild.BuildEnviron(
-        appveyor_pull_request_number="xxxx",
+
+def test_ci_systems():
+    appveyor = cibuild.BuildEnviron(
+        appveyor_pull_request_number="1234",
+        appveyor_repo_branch="foo",
+        appveyor_repo_tag_name="qux",
     )
-    assert be.is_pull_request
-    assert not be.is_prod_release
-    assert not be.is_maintenance_branch
+    assert appveyor.is_pull_request
+    assert appveyor.branch == "foo"
+    assert appveyor.tag == "qux"
+
+    travis = cibuild.BuildEnviron(
+        travis_pull_request="1234",
+        travis_branch="foo",
+        travis_tag="foo",
+    )
+    assert travis.is_pull_request
+    assert travis.branch == "foo"
+    assert travis.tag == "foo"
+
+    github = cibuild.BuildEnviron(
+        github_event_name="pull_request",
+        github_ref="refs/heads/master"
+    )
+    assert github.is_pull_request
+    assert github.branch == "master"
+    assert github.tag == ""
+
+    github2 = cibuild.BuildEnviron(
+        github_event_name="pull_request",
+        github_ref="refs/tags/qux"
+    )
+    assert github2.is_pull_request
+    assert github2.branch == ""
+    assert github2.tag == "qux"
 
 
 def test_buildenviron_commit():
     # Simulates an ordinary commit on the master branch.
     be = cibuild.BuildEnviron(
-        travis_tag="",
-        travis_branch="master",
-        travis_pull_request="false",
+        github_ref="refs/heads/master",
+        github_event_name="push",
         should_build_wheel=True,
         should_build_pyinstaller=True,
         should_build_docker=True,
         docker_username="foo",
         docker_password="bar",
+        has_aws_creds=True,
     )
     assert be.docker_tag == "mitmproxy/mitmproxy:dev"
     assert be.should_upload_docker
     assert not be.should_upload_pypi
     assert be.should_upload_docker
+    assert be.should_upload_aws
     assert not be.is_prod_release
     assert not be.is_maintenance_branch
 
@@ -244,3 +273,20 @@ def test_buildenviron_check_version(version, tag, ok, tmpdir):
     else:
         with pytest.raises(ValueError):
             be.check_version()
+
+
+def test_bool_from_env(monkeypatch):
+    monkeypatch.setenv("FOO", "1")
+    assert cibuild.bool_from_env("FOO")
+
+    monkeypatch.setenv("FOO", "0")
+    assert not cibuild.bool_from_env("FOO")
+
+    monkeypatch.setenv("FOO", "false")
+    assert not cibuild.bool_from_env("FOO")
+
+    monkeypatch.setenv("FOO", "")
+    assert not cibuild.bool_from_env("FOO")
+
+    monkeypatch.delenv("FOO")
+    assert not cibuild.bool_from_env("FOO")

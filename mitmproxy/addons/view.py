@@ -21,7 +21,10 @@ from mitmproxy import command
 from mitmproxy import connections
 from mitmproxy import ctx
 from mitmproxy import io
-from mitmproxy import http  # noqa
+from mitmproxy import http
+from mitmproxy import tcp
+from mitmproxy.utils import human
+
 
 # The underlying sorted list implementation expects the sort key to be stable
 # for the lifetime of the object. However, if we sort by size, for instance,
@@ -38,7 +41,7 @@ class _OrderKey:
     def __init__(self, view):
         self.view = view
 
-    def generate(self, f: http.HTTPFlow) -> typing.Any:  # pragma: no cover
+    def generate(self, f: mitmproxy.flow.Flow) -> typing.Any:  # pragma: no cover
         pass
 
     def refresh(self, f):
@@ -68,32 +71,49 @@ class _OrderKey:
 
 
 class OrderRequestStart(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> int:
-        return f.request.timestamp_start or 0
+    def generate(self, f: mitmproxy.flow.Flow) -> float:
+        return f.timestamp_start
 
 
 class OrderRequestMethod(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> str:
-        return f.request.method
+    def generate(self, f: mitmproxy.flow.Flow) -> str:
+        if isinstance(f, http.HTTPFlow):
+            return f.request.method
+        elif isinstance(f, tcp.TCPFlow):
+            return "TCP"
+        else:
+            raise NotImplementedError()
 
 
 class OrderRequestURL(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> str:
-        return f.request.url
+    def generate(self, f: mitmproxy.flow.Flow) -> str:
+        if isinstance(f, http.HTTPFlow):
+            return f.request.url
+        elif isinstance(f, tcp.TCPFlow):
+            return human.format_address(f.server_conn.address)
+        else:
+            raise NotImplementedError()
 
 
 class OrderKeySize(_OrderKey):
-    def generate(self, f: http.HTTPFlow) -> int:
-        s = 0
-        if f.request.raw_content:
-            s += len(f.request.raw_content)
-        if f.response and f.response.raw_content:
-            s += len(f.response.raw_content)
-        return s
+    def generate(self, f: mitmproxy.flow.Flow) -> int:
+        if isinstance(f, http.HTTPFlow):
+            size = 0
+            if f.request.raw_content:
+                size += len(f.request.raw_content)
+            if f.response and f.response.raw_content:
+                size += len(f.response.raw_content)
+            return size
+        elif isinstance(f, tcp.TCPFlow):
+            size = 0
+            for message in f.messages:
+                size += len(message.content)
+            return size
+        else:
+            raise NotImplementedError()
 
 
-matchall = flowfilter.parse(".")
-
+matchall = flowfilter.parse("~http | ~tcp")
 
 orders = [
     ("t", "time"),
@@ -217,7 +237,7 @@ class View(collections.abc.Sequence):
 
     # Focus
     @command.command("view.focus.go")
-    def go(self, dst: int) -> None:
+    def go(self, offset: int) -> None:
         """
             Go to a specified offset. Positive offests are from the beginning of
             the view, negative from the end of the view, so that 0 is the first
@@ -225,31 +245,37 @@ class View(collections.abc.Sequence):
         """
         if len(self) == 0:
             return
-        if dst < 0:
-            dst = len(self) + dst
-        if dst < 0:
-            dst = 0
-        if dst > len(self) - 1:
-            dst = len(self) - 1
-        self.focus.flow = self[dst]
+        if offset < 0:
+            offset = len(self) + offset
+        if offset < 0:
+            offset = 0
+        if offset > len(self) - 1:
+            offset = len(self) - 1
+        self.focus.flow = self[offset]
 
     @command.command("view.focus.next")
     def focus_next(self) -> None:
         """
             Set focus to the next flow.
         """
-        idx = self.focus.index + 1
-        if self.inbounds(idx):
-            self.focus.flow = self[idx]
+        if self.focus.index is not None:
+            idx = self.focus.index + 1
+            if self.inbounds(idx):
+                self.focus.flow = self[idx]
+        else:
+            pass
 
     @command.command("view.focus.prev")
     def focus_prev(self) -> None:
         """
             Set focus to the previous flow.
         """
-        idx = self.focus.index - 1
-        if self.inbounds(idx):
-            self.focus.flow = self[idx]
+        if self.focus.index is not None:
+            idx = self.focus.index - 1
+            if self.inbounds(idx):
+                self.focus.flow = self[idx]
+        else:
+            pass
 
     # Order
     @command.command("view.order.options")
@@ -260,20 +286,20 @@ class View(collections.abc.Sequence):
         return list(sorted(self.orders.keys()))
 
     @command.command("view.order.reverse")
-    def set_reversed(self, value: bool) -> None:
-        self.order_reversed = value
+    def set_reversed(self, boolean: bool) -> None:
+        self.order_reversed = boolean
         self.sig_view_refresh.send(self)
 
     @command.command("view.order.set")
-    def set_order(self, order: str) -> None:
+    def set_order(self, order_key: str) -> None:
         """
             Sets the current view order.
         """
-        if order not in self.orders:
+        if order_key not in self.orders:
             raise exceptions.CommandError(
-                "Unknown flow order: %s" % order
+                "Unknown flow order: %s" % order_key
             )
-        order_key = self.orders[order]
+        order_key = self.orders[order_key]
         self.order_key = order_key
         newview = sortedcontainers.SortedListWithKey(key=order_key)
         newview.update(self._view)
@@ -292,16 +318,16 @@ class View(collections.abc.Sequence):
 
     # Filter
     @command.command("view.filter.set")
-    def set_filter_cmd(self, f: str) -> None:
+    def set_filter_cmd(self, filter_expr: str) -> None:
         """
             Sets the current view filter.
         """
         filt = None
-        if f:
-            filt = flowfilter.parse(f)
+        if filter_expr:
+            filt = flowfilter.parse(filter_expr)
             if not filt:
                 raise exceptions.CommandError(
-                    "Invalid interception filter: %s" % f
+                    "Invalid interception filter: %s" % filter_expr
                 )
         self.set_filter(filt)
 
@@ -334,11 +360,11 @@ class View(collections.abc.Sequence):
 
     # View Settings
     @command.command("view.settings.getval")
-    def getvalue(self, f: mitmproxy.flow.Flow, key: str, default: str) -> str:
+    def getvalue(self, flow: mitmproxy.flow.Flow, key: str, default: str) -> str:
         """
             Get a value from the settings store for the specified flow.
         """
-        return self.settings[f].get(key, default)
+        return self.settings[flow].get(key, default)
 
     @command.command("view.settings.setval.toggle")
     def setvalue_toggle(
@@ -406,26 +432,26 @@ class View(collections.abc.Sequence):
             ctx.log.alert("Removed %s flows" % len(flows))
 
     @command.command("view.flows.resolve")
-    def resolve(self, spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
+    def resolve(self, flow_spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
         """
             Resolve a flow list specification to an actual list of flows.
         """
-        if spec == "@all":
+        if flow_spec == "@all":
             return [i for i in self._store.values()]
-        if spec == "@focus":
+        if flow_spec == "@focus":
             return [self.focus.flow] if self.focus.flow else []
-        elif spec == "@shown":
+        elif flow_spec == "@shown":
             return [i for i in self]
-        elif spec == "@hidden":
+        elif flow_spec == "@hidden":
             return [i for i in self._store.values() if i not in self._view]
-        elif spec == "@marked":
+        elif flow_spec == "@marked":
             return [i for i in self._store.values() if i.marked]
-        elif spec == "@unmarked":
+        elif flow_spec == "@unmarked":
             return [i for i in self._store.values() if not i.marked]
         else:
-            filt = flowfilter.parse(spec)
+            filt = flowfilter.parse(flow_spec)
             if not filt:
-                raise exceptions.CommandError("Invalid flow filter: %s" % spec)
+                raise exceptions.CommandError("Invalid flow filter: %s" % flow_spec)
             return [i for i in self._store.values() if filt(i)]
 
     @command.command("view.flows.create")
@@ -549,6 +575,18 @@ class View(collections.abc.Sequence):
     def kill(self, f):
         self.update([f])
 
+    def tcp_start(self, f):
+        self.add([f])
+
+    def tcp_message(self, f):
+        self.update([f])
+
+    def tcp_error(self, f):
+        self.update([f])
+
+    def tcp_end(self, f):
+        self.update([f])
+
     def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
             Updates a list of flows. If flow is not in the state, it's ignored.
@@ -584,7 +622,7 @@ class Focus:
     """
     def __init__(self, v: View) -> None:
         self.view = v
-        self._flow: mitmproxy.flow.Flow = None
+        self._flow: typing.Optional[mitmproxy.flow.Flow] = None
         self.sig_change = blinker.Signal()
         if len(self.view):
             self.flow = self.view[0]

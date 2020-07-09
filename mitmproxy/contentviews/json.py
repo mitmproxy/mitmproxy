@@ -1,16 +1,39 @@
+import re
 import json
-from typing import Optional
+
+import typing
 
 from mitmproxy.contentviews import base
 
+PARSE_ERROR = object()
 
-def pretty_json(s: bytes) -> Optional[bytes]:
+
+def parse_json(s: bytes) -> typing.Any:
     try:
-        p = json.loads(s.decode('utf-8'))
+        return json.loads(s.decode('utf-8'))
     except ValueError:
-        return None
-    pretty = json.dumps(p, sort_keys=True, indent=4, ensure_ascii=False)
-    return pretty.encode("utf8", "strict")
+        return PARSE_ERROR
+
+
+def format_json(data: typing.Any) -> typing.Iterator[base.TViewLine]:
+    encoder = json.JSONEncoder(indent=4, sort_keys=True, ensure_ascii=False)
+    current_line: base.TViewLine = []
+    for chunk in encoder.iterencode(data):
+        if "\n" in chunk:
+            rest_of_last_line, chunk = chunk.split("\n", maxsplit=1)
+            # rest_of_last_line is a delimiter such as , or [
+            current_line.append(('text', rest_of_last_line))
+            yield current_line
+            current_line = []
+        if re.match(r'\s*"', chunk):
+            current_line.append(('json_string', chunk))
+        elif re.match(r'\s*\d', chunk):
+            current_line.append(('json_number', chunk))
+        elif re.match(r'\s*(true|null|false)', chunk):
+            current_line.append(('json_boolean', chunk))
+        else:
+            current_line.append(('text', chunk))
+    yield current_line
 
 
 class ViewJSON(base.View):
@@ -22,6 +45,6 @@ class ViewJSON(base.View):
     ]
 
     def __call__(self, data, **metadata):
-        pj = pretty_json(data)
-        if pj:
-            return "JSON", base.format_text(pj)
+        data = parse_json(data)
+        if data is not PARSE_ERROR:
+            return "JSON", format_json(data)

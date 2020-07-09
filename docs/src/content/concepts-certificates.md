@@ -36,20 +36,20 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 `~/.mitmproxy` after it has been generated at the first start of mitmproxy.
 
 - [IOS](http://jasdev.me/intercepting-ios-traffic)
-  On iOS 10.3 and onwards, you also need to enable full trust for the mitmproxy
+  On recent iOS versions you also need to enable full trust for the mitmproxy
   root certificate:
     1. Go to Settings > General > About > Certificate Trust Settings.
     2. Under "Enable full trust for root certificates", turn on trust for
-        the mitmproxy certificate.
-- [IOS Simulator](https://github.com/ADVTOOLS/ADVTrustStore#how-to-use-advtruststore)
+       the mitmproxy certificate.
+- [iOS Simulator](https://github.com/ADVTOOLS/ADVTrustStore#how-to-use-advtruststore)
 - [Java](https://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html)
 - [Android/Android Simulator](http://wiki.cacert.org/FAQ/ImportRootCert#Android_Phones_.26_Tablets)
 - [Windows](https://web.archive.org/web/20160612045445/http://windows.microsoft.com/en-ca/windows/import-export-certificates-private-keys#1TC=windows-7)
 - [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx)
 
-{{< highlight bash  >}}
-certutil.exe -importpfx Root mitmproxy-ca-cert.p12
-{{< / highlight >}}
+```bash
+certutil -addstore root mitmproxy-ca-cert.cer
+```
 
 - [Mac OS X](https://support.apple.com/kb/PH20129)
 - [Ubuntu/Debian]( https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861)
@@ -65,7 +65,7 @@ SSL sites that your client visits. Since your browser won't trust the mitmproxy
 CA out of the box, you will see an SSL certificate warning every time you visit
 a new SSL domain through mitmproxy. When you are testing a single site through a
 browser, just accepting the bogus SSL cert manually is not too much trouble, but
-there are a many circumstances where you will want to configure your testing
+there are many circumstances where you will want to configure your testing
 system or browser to trust the mitmproxy CA as a signing root authority. For
 security reasons, the mitmproxy CA is generated uniquely on the first start and
 is not shared between mitmproxy installations on different devices.
@@ -117,26 +117,26 @@ file roughly looks like this:
 For example, you can generate a certificate in this format using these
 instructions:
 
-{{< highlight bash  >}}
+```bash
 openssl genrsa -out cert.key 2048
 # (Specify the mitm domain as Common Name, e.g. \*.google.com)
 openssl req -new -x509 -key cert.key -out cert.crt
-cat cert.key cert.crt \> cert.pem
-{{< / highlight >}}
+cat cert.key cert.crt > cert.pem
+```
 
 Now, you can run mitmproxy with the generated certificate:
 
 **For all domain names**
 
-{{< highlight bash  >}}
+```bash
 mitmproxy --cert *=cert.pem
-{{< / highlight >}}
+```
 
 **For specific domain names**
 
-{{< highlight bash  >}}
+```bash
 mitmproxy --cert *.example.com=cert.pem
-{{< / highlight >}}
+```
 
 **Note:** `*.example.com` is for all the subdomains. You can also use
 `www.example.com` for a particular subdomain.

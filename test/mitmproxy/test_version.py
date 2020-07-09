@@ -30,5 +30,5 @@ def test_get_version():
         m.return_value = b"tag-2-cafecafe"
         assert version.get_dev_version() == "3.0.0rc2 (+2, commit cafecaf)"
 
-        m.side_effect = subprocess.CalledProcessError(-1, 'git describe --long')
+        m.side_effect = subprocess.CalledProcessError(-1, 'git describe --tags --long')
         assert version.get_dev_version() == "3.0.0rc2"

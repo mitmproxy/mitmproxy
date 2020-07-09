@@ -1,7 +1,7 @@
 mitmproxy
 ^^^^^^^^^
 
-|travis| |appveyor| |coverage| |latest_release| |python_versions|
+|ci_status| |coverage| |latest_release| |python_versions|
 
 This repository contains the **mitmproxy** and **pathod** projects.
 
@@ -57,7 +57,16 @@ please consider contributing in the following areas:
 Development Setup
 -----------------
 
-To get started hacking on mitmproxy, please follow the `advanced installation`_ steps to install mitmproxy from source, but stop right before running ``pip3 install mitmproxy``. Instead, do the following:
+To get started hacking on mitmproxy, please install a recent version of Python (we require at least 3.6).
+The following commands should work on your system:
+
+.. code-block:: bash
+
+    python3 --version
+    python3 -m pip --help
+    python3 -m venv --help
+
+If all of this run successfully, do the following:
 
 .. code-block:: bash
 
@@ -86,17 +95,13 @@ Testing
 -------
 
 If you've followed the procedure above, you already have all the development
-requirements installed, and you can run the full test suite (including tests for code style and documentation) with tox_:
+requirements installed, and you can run the basic test suite with tox_:
 
 .. code-block:: bash
 
-    tox
+    tox -e py      # runs Python tests
 
-To run complete tests with a full coverage report, you can use the following command:
-
-.. code-block:: bash
-
-    tox -- --verbose --cov-report=term
+Our CI system has additional tox environments that are run on every pull request and branch on GitHub.
 
 For speedier testing, we recommend you run `pytest`_ directly on individual test files or folders:
 
@@ -105,7 +110,7 @@ For speedier testing, we recommend you run `pytest`_ directly on individual test
     cd test/mitmproxy/addons
     pytest --cov mitmproxy.addons.anticache --cov-report term-missing --looponfail test_anticache.py
 
-As pytest does not check the code style, you probably want to run ``tox -e lint`` before committing your changes.
+Pytest does not check the code style, so you want to run ``tox -e flake8`` again before committing.
 
 Please ensure that all patches are accompanied by matching changes in the test
 suite. The project tries to maintain 100% test coverage and enforces this strictly for some parts of the codebase.
@@ -115,14 +120,12 @@ Documentation
 
 The following tools are required to build the mitmproxy docs:
 
-- Hugo_
+- Hugo_ (the extended version ``hugo_extended`` is required)
 - modd_
-- yarn_
 
 .. code-block:: bash
 
     cd docs
-    yarn
     modd
 
 
@@ -136,11 +139,12 @@ good reason not to.
 
 This is automatically enforced on every PR. If we detect a linting error, the
 PR checks will fail and block merging. You can run our lint checks yourself
-with the following command:
+with the following commands:
 
 .. code-block:: bash
 
-    tox -e lint
+    tox -e flake8
+    tox -e mypy    # checks static types
 
 
 .. |mitmproxy_site| image:: https://shields.mitmproxy.org/badge/https%3A%2F%2F-mitmproxy.org-blue.svg
@@ -163,13 +167,9 @@ with the following command:
     :target: http://slack.mitmproxy.org/
     :alt: Slack Developer Chat
 
-.. |travis| image:: https://shields.mitmproxy.org/travis/mitmproxy/mitmproxy/master.svg?label=travis%20ci
-    :target: https://travis-ci.org/mitmproxy/mitmproxy
-    :alt: Travis Build Status
-
-.. |appveyor| image:: https://shields.mitmproxy.org/appveyor/ci/mitmproxy/mitmproxy/master.svg?label=appveyor%20ci
-    :target: https://ci.appveyor.com/project/mitmproxy/mitmproxy
-    :alt: Appveyor Build Status
+.. |ci_status| image:: https://github.com/mitmproxy/mitmproxy/workflows/CI/badge.svg?branch=master
+    :target: https://github.com/mitmproxy/mitmproxy/actions?query=branch%3Amaster
+    :alt: Continuous Integration Status
 
 .. |coverage| image:: https://shields.mitmproxy.org/codecov/c/github/mitmproxy/mitmproxy/master.svg?label=codecov
     :target: https://codecov.io/gh/mitmproxy/mitmproxy
@@ -183,13 +183,11 @@ with the following command:
     :target: https://pypi.python.org/pypi/mitmproxy
     :alt: Supported Python versions
 
-.. _`advanced installation`: https://docs.mitmproxy.org/stable/overview-installation/#advanced-installation
 .. _virtualenv: https://virtualenv.pypa.io/
 .. _`pytest`: http://pytest.org/
 .. _tox: https://tox.readthedocs.io/
 .. _Hugo: https://gohugo.io/
 .. _modd: https://github.com/cortesi/modd
-.. _yarn: https://yarnpkg.com/en/
 .. _PEP8: https://www.python.org/dev/peps/pep-0008
 .. _`Google Style Guide`: https://google.github.io/styleguide/pyguide.html
 .. _StackOverflow: https://stackoverflow.com/questions/tagged/mitmproxy

@@ -75,7 +75,7 @@ def safe_to_print(lines, encoding="utf8"):
         yield clean_line
 
 
-def get_message_content_view(viewname, message):
+def get_message_content_view(viewname, message, flow):
     """
     Like get_content_view, but also handles message encoding.
     """
@@ -103,6 +103,8 @@ def get_message_content_view(viewname, message):
         metadata["query"] = message.query
     if isinstance(message, http.Message):
         metadata["headers"] = message.headers
+    metadata["message"] = message
+    metadata["flow"] = flow
 
     description, lines, error = get_content_view(
         viewmode, content, **metadata
@@ -110,6 +112,19 @@ def get_message_content_view(viewname, message):
 
     if enc:
         description = "{} {}".format(enc, description)
+
+    return description, lines, error
+
+
+def get_tcp_content_view(viewname: str, data: bytes):
+    viewmode = get(viewname)
+    if not viewmode:
+        viewmode = get("auto")
+
+    # https://github.com/mitmproxy/mitmproxy/pull/3970#issuecomment-623024447
+    assert viewmode
+
+    description, lines, error = get_content_view(viewmode, data)
 
     return description, lines, error
 
@@ -135,7 +150,9 @@ def get_content_view(viewmode: View, data: bytes, **metadata):
     # Third-party viewers can fail in unexpected ways...
     except Exception:
         desc = "Couldn't parse: falling back to Raw"
-        _, content = get("Raw")(data, **metadata)
+        raw = get("Raw")
+        assert raw
+        content = raw(data, **metadata)[1]
         error = "{} Content viewer failed: \n{}".format(
             getattr(viewmode, "name"),
             traceback.format_exc()

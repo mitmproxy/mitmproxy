@@ -5,6 +5,7 @@ import logging
 import os.path
 import re
 from io import BytesIO
+from typing import ClassVar, Optional
 
 import tornado.escape
 import tornado.web
@@ -50,6 +51,8 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         f["error"] = flow.error.get_state()
 
     if isinstance(flow, http.HTTPFlow):
+        content_length: Optional[int]
+        content_hash: Optional[str]
         if flow.request:
             if flow.request.raw_content:
                 content_length = len(flow.request.raw_content)
@@ -90,6 +93,9 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "timestamp_end": flow.response.timestamp_end,
                 "is_replay": flow.response.is_replay,
             }
+            if flow.response.data.trailers:
+                f["response"]["trailers"] = tuple(flow.response.data.trailers.items(True))
+
     f.get("server_conn", {}).pop("cert", None)
     f.get("client_conn", {}).pop("mitmcert", None)
 
@@ -193,7 +199,7 @@ class FilterHelp(RequestHandler):
 
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
     # raise an error if inherited class doesn't specify its own instance.
-    connections: set = None
+    connections: ClassVar[set]
 
     def open(self):
         self.connections.add(self)
@@ -213,7 +219,7 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
 
 class ClientConnection(WebSocketEventBroadcaster):
-    connections: set = set()
+    connections: ClassVar[set] = set()
 
 
 class Flows(RequestHandler):
@@ -393,7 +399,7 @@ class FlowContentView(RequestHandler):
         message = getattr(self.flow, message)
 
         description, lines, error = contentviews.get_message_content_view(
-            content_view.replace('_', ' '), message
+            content_view.replace('_', ' '), message, self.flow
         )
         #        if error:
         #           add event log
@@ -434,13 +440,13 @@ class Settings(RequestHandler):
 
     def put(self):
         update = self.json
-        option_whitelist = {
+        allowed_options = {
             "intercept", "showhost", "upstream_cert", "ssl_insecure",
             "rawtcp", "http2", "websocket", "anticache", "anticomp",
             "stickycookie", "stickyauth", "stream_large_bodies"
         }
         for k in update:
-            if k not in option_whitelist:
+            if k not in allowed_options:
                 raise APIError(400, "Unknown setting {}".format(k))
         self.master.options.update(**update)
 

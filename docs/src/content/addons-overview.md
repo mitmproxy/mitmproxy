@@ -34,9 +34,9 @@ command-line is to use [pydoc](https://docs.python.org/3/library/pydoc.html).
 Here, for example, is a command that shows the API documentation for the
 mitmproxy's HTTP flow classes:
 
-{{< highlight bash  >}}
+```bash
 pydoc mitmproxy.http
-{{< /highlight >}}
+```
 
 You will be referring to the mitmproxy API documentation frequently, so keep
 **pydoc** or an equivalent handy.
@@ -54,9 +54,9 @@ Take it for a spin and make sure that it does what it's supposed to, by loading
 it into your mitmproxy tool of choice. We'll use mitmpdump in these examples,
 but the flag is identical for all tools:
 
-{{< highlight bash  >}}
+```bash
 > mitmdump -s ./anatomy.py
-{{< /highlight >}}
+```
 
 Here are a few things to note about the code above:
 

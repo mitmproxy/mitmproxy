@@ -6,19 +6,16 @@ Feel free to import and use whatever new package you deem necessary.
 import os
 import sys
 import asyncio
-import argparse  # noqa
-import signal  # noqa
-import typing  # noqa
+import argparse
+import signal
+import typing
 
-from mitmproxy.tools import cmdline  # noqa
-from mitmproxy import exceptions, master  # noqa
-from mitmproxy import options  # noqa
-from mitmproxy import optmanager  # noqa
-from mitmproxy import proxy  # noqa
-from mitmproxy import log  # noqa
-from mitmproxy.utils import debug, arg_check  # noqa
-
-OPTIONS_FILE_NAME = "config.yaml"
+from mitmproxy.tools import cmdline
+from mitmproxy import exceptions, master
+from mitmproxy import options
+from mitmproxy import optmanager
+from mitmproxy import proxy
+from mitmproxy.utils import debug, arg_check
 
 
 def assert_utf8_env():
@@ -78,19 +75,20 @@ def run(
 
     # To make migration from 2.x to 3.0 bearable.
     if "-R" in sys.argv and sys.argv[sys.argv.index("-R") + 1].startswith("http"):
-        print("-R is used for specifying replacements.\n"
-              "To use mitmproxy in reverse mode please use --mode reverse:SPEC instead")
+        print("To use mitmproxy in reverse mode please use --mode reverse:SPEC instead")
 
     try:
         args = parser.parse_args(arguments)
     except SystemExit:
         arg_check.check()
         sys.exit(1)
+
     try:
         opts.set(*args.setoptions, defer=True)
         optmanager.load_paths(
             opts,
-            os.path.join(opts.confdir, OPTIONS_FILE_NAME),
+            os.path.join(opts.confdir, "config.yaml"),
+            os.path.join(opts.confdir, "config.yml"),
         )
         pconf = process_options(parser, opts, args)
         server: typing.Any = None
@@ -111,15 +109,17 @@ def run(
             master.commands.dump()
             sys.exit(0)
         if extra:
+            if(args.filter_args):
+                master.log.info(f"Only processing flows that match \"{' & '.join(args.filter_args)}\"")
             opts.update(**extra(args))
 
         loop = asyncio.get_event_loop()
-        for signame in ('SIGINT', 'SIGTERM'):
-            try:
-                loop.add_signal_handler(getattr(signal, signame), master.shutdown)
-            except NotImplementedError:
-                # Not supported on Windows
-                pass
+        try:
+            loop.add_signal_handler(signal.SIGINT, getattr(master, "prompt_for_exit", master.shutdown))
+            loop.add_signal_handler(signal.SIGTERM, master.shutdown)
+        except NotImplementedError:
+            # Not supported on Windows
+            pass
 
         # Make sure that we catch KeyboardInterrupts on Windows.
         # https://stackoverflow.com/a/36925722/934719

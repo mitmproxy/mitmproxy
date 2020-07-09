@@ -1,21 +1,17 @@
 # Release Checklist
 
-Make sure to run all these steps on the correct branch you want to create a new
-release for! The command examples assume that you have a git remote called
-`upstream` that points to the `mitmproxy/mitmproxy` repo.
+These steps assume you are on the correct branch and have a git remote called `origin` that points to the `mitmproxy/mitmproxy` repo. If necessary, create a major version branch starting off the release tag (e.g. `git checkout -b v4.x v4.0.0`) first.
 
-- Verify that `mitmproxy/version.py` is correct.
 - Update CHANGELOG.
+- Verify that the compiled mitmweb assets are up-to-date.
 - Verify that all CI tests pass.
-- If needed, create a major version branch - e.g. `v4.x`. Assuming you have a remote repo called `upstream` that points to the mitmproxy/mitmproxy repo::
-  - `git checkout -b v4.x upstream/master`
-  - `git push -u upstream v4.x`
+- Verify that `mitmproxy/version.py` is correct. Remove `.dev` suffix if it exists.
 - Tag the release and push to Github.
     - `git tag v4.0.0`
-    - `git push upstream v4.0.0`
+    - `git push origin v4.0.0`
 - Wait for tag CI to complete.
 
-## GitHub Release
+### GitHub Releases
 - Create release notice on Github
   [here](https://github.com/mitmproxy/mitmproxy/releases/new) if not already
   auto-created by the tag.
@@ -23,33 +19,36 @@ release for! The command examples assume that you have a git remote called
   following snippet to the notice:
   `You can find the latest release packages at https://mitmproxy.org/downloads/.`
 
-## PyPi
+### PyPi
 - The created wheel is uploaded to PyPi automatically.
-- Please check https://pypi.python.org/pypi/mitmproxy about the latest version.
+- Please verify that https://pypi.python.org/pypi/mitmproxy has the latest version.
 
-## Homebrew
+### Homebrew
 - The Homebrew maintainers are typically very fast and detect our new relese
   within a day.
 - If you feel the need, you can run this from a macOS machine:
-  `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>`
+  `brew bump-formula-pr --url https://github.com/mitmproxy/mitmproxy/archive/v<version number here>.tar.gz mitmproxy`
 
-## Docker
-- The docker image is built on Travis and pushed to Docker Hub automatically.
-- Please check https://hub.docker.com/r/mitmproxy/mitmproxy/tags/ about the latest version.
-- Update `latest` tag: `export VERSION=4.0.3 && docker pull mitmproxy/mitmproxy:$VERSION && docker tag mitmproxy/mitmproxy:$VERSION mitmproxy/mitmproxy:latest && docker push mitmproxy/mitmproxy:latest`.
+### Docker
+- The docker image is built by our CI workers and pushed to Docker Hub automatically.
+- Please verify that https://hub.docker.com/r/mitmproxy/mitmproxy/tags/ has the latest version.
+- Please verify that the latest tag points to the most recent image (same digest / hash).
 
-## Website
+### Docs
+  - `./build.sh`. If everything looks alright, continue with
+  - `./upload-stable.sh`,
+  - `DOCS_ARCHIVE=true ./build.sh`, and
+  - `./upload-archive.sh v4`. Doing this now already saves you from switching back to an old state on the next release.
+
+### Website
  - Update version here:
    https://github.com/mitmproxy/www/blob/master/src/config.toml
+ - Update docs menu here:
+   https://github.com/mitmproxy/www/blob/master/src/themes/mitmproxy/layouts/partials/header.html
  - Run `./build && ./upload-test`.
- - If everything looks alright at http://www-test.mitmproxy.org, run `./upload-prod`.
+ - If everything looks alright at https://www-test.mitmproxy.org, run `./upload-prod`.
 
-## Docs
-  - Make sure you've uploaded the previous version's docs to archive
-  - If everything looks alright:
-    - `./build-current`
-    - `./upload-stable`
 
-## Prepare for next release
- - Last but not least, bump the version on master in
-   [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) for major releases.
+### Prepare for next release
+ - Last but not least, bump the major version on master in
+   [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) and add a `.dev` suffix.

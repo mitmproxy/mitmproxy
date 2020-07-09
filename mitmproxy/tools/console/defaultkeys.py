@@ -1,14 +1,14 @@
 
 def map(km):
-    km.add(":", "console.command ", ["global"], "Command prompt")
+    km.add(":", "console.command ", ["commonkey", "global"], "Command prompt")
     km.add("?", "console.view.help", ["global"], "View help")
     km.add("B", "browser.start", ["global"], "Start an attached browser")
     km.add("C", "console.view.commands", ["global"], "View commands")
     km.add("K", "console.view.keybindings", ["global"], "View key bindings")
-    km.add("O", "console.view.options", ["global"], "View options")
-    km.add("E", "console.view.eventlog", ["global"], "View event log")
+    km.add("O", "console.view.options", ["commonkey", "global"], "View options")
+    km.add("E", "console.view.eventlog", ["commonkey", "global"], "View event log")
     km.add("Q", "console.exit", ["global"], "Exit immediately")
-    km.add("q", "console.view.pop", ["global"], "Exit the current view")
+    km.add("q", "console.view.pop", ["commonkey", "global"], "Exit the current view")
     km.add("-", "console.layout.cycle", ["global"], "Cycle to next layout")
     km.add("shift tab", "console.panes.next", ["global"], "Focus next layout pane")
     km.add("ctrl right", "console.panes.next", ["global"], "Focus next layout pane")
@@ -20,13 +20,13 @@ def map(km):
     km.add("j", "console.nav.down", ["global"], "Down")
     km.add("l", "console.nav.right", ["global"], "Right")
     km.add("h", "console.nav.left", ["global"], "Left")
-    km.add("tab", "console.nav.next", ["global"], "Next")
-    km.add("enter", "console.nav.select", ["global"], "Select")
+    km.add("tab", "console.nav.next", ["commonkey", "global"], "Next")
+    km.add("enter", "console.nav.select", ["commonkey", "global"], "Select")
     km.add("space", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl f", "console.nav.pagedown", ["global"], "Page down")
     km.add("ctrl b", "console.nav.pageup", ["global"], "Page up")
 
-    km.add("I", "set intercept_active=toggle", ["global"], "Toggle intercept")
+    km.add("I", "set intercept_active toggle", ["global"], "Toggle intercept")
     km.add("i", "console.command.set intercept", ["global"], "Set intercept")
     km.add("W", "console.command.set save_stream_file", ["global"], "Stream to file")
     km.add("A", "flow.resume @all", ["flowlist", "flowview"], "Resume all intercepted flows")
@@ -48,14 +48,14 @@ def map(km):
         "Export this flow to file"
     )
     km.add("f", "console.command.set view_filter", ["flowlist"], "Set view filter")
-    km.add("F", "set console_focus_follow=toggle", ["flowlist"], "Set focus follow")
+    km.add("F", "set console_focus_follow toggle", ["flowlist"], "Set focus follow")
     km.add(
         "ctrl l",
         "console.command cut.clip ",
         ["flowlist", "flowview"],
         "Send cuts to clipboard"
     )
-    km.add("L", "console.command view.load ", ["flowlist"], "Load flows from file")
+    km.add("L", "console.command view.flows.load ", ["flowlist"], "Load flows from file")
     km.add("m", "flow.mark.toggle @focus", ["flowlist"], "Toggle mark on this flow")
     km.add("M", "view.properties.marked.toggle", ["flowlist"], "Toggle viewing marked flows")
     km.add(
@@ -68,14 +68,14 @@ def map(km):
         "o",
         """
         console.choose.cmd Order view.order.options
-        set view_order={choice}
+        set view_order {choice}
         """,
         ["flowlist"],
         "Set flow list order"
     )
     km.add("r", "replay.client @focus", ["flowlist", "flowview"], "Replay this flow")
     km.add("S", "console.command replay.server ", ["flowlist"], "Start server replay")
-    km.add("v", "set view_order_reversed=toggle", ["flowlist"], "Reverse flow list order")
+    km.add("v", "set view_order_reversed toggle", ["flowlist"], "Reverse flow list order")
     km.add("U", "flow.mark @all false", ["flowlist"], "Un-set all marks")
     km.add("w", "console.command save.file @shown ", ["flowlist"], "Save listed flows to file")
     km.add("V", "flow.revert @focus", ["flowlist", "flowview"], "Revert changes to this flow")

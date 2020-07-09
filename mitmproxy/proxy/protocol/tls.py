@@ -196,17 +196,14 @@ CIPHER_ID_NAME_MAP = {
 }
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
-# https://mozilla.github.io/server-side-tls/ssl-config-generator/?server=apache-2.2.15&openssl=1.0.2&hsts=yes&profile=old
+# https://ssl-config.mozilla.org/#config=old
 DEFAULT_CLIENT_CIPHERS = (
-    "ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:"
-    "ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:"
-    "ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:"
-    "ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:"
-    "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:"
-    "DHE-RSA-AES256-SHA:ECDHE-RSA-DES-CBC3-SHA:ECDHE-ECDSA-DES-CBC3-SHA:AES128-GCM-SHA256:AES256-GCM-SHA384:"
-    "AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:AES:DES-CBC3-SHA:"
-    "HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!MD5:!PSK:!aECDH:"
-    "!EDH-DSS-DES-CBC3-SHA:!EDH-RSA-DES-CBC3-SHA:!KRB5-DES-CBC3-SHA"
+    "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:"
+    "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:"
+    "DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:"
+    "ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:"
+    "ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:"
+    "AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA"
 )
 
 
@@ -245,6 +242,8 @@ class TlsLayer(base.Layer):
                 self._client_hello = net_tls.ClientHello.from_file(self.client_conn.rfile)
             except exceptions.TlsProtocolException as e:
                 self.log("Cannot parse Client Hello: %s" % repr(e), "error")
+                # Without knowning the ClientHello we cannot proceed in this connection.
+                return
 
         # Do we need to do a server handshake now?
         # There are two reasons why we would want to establish TLS with the server now:
@@ -323,14 +322,18 @@ class TlsLayer(base.Layer):
         return self._server_tls
 
     @property
-    def server_sni(self):
+    def server_sni(self) -> Optional[str]:
         """
         The Server Name Indication we want to send with the next server TLS handshake.
         """
         if self._custom_server_sni is False:
             return None
+        elif self._custom_server_sni:
+            return self._custom_server_sni
+        elif self._client_hello and self._client_hello.sni:
+            return self._client_hello.sni.decode("idna")
         else:
-            return self._custom_server_sni or self._client_hello and self._client_hello.sni
+            return None
 
     @property
     def alpn_for_client_connection(self):
@@ -391,11 +394,12 @@ class TlsLayer(base.Layer):
             # raises ann error.
             self.client_conn.rfile.peek(1)
         except exceptions.TlsException as e:
+            sni_str = self._client_hello.sni and self._client_hello.sni.decode("idna")
             raise exceptions.ClientHandshakeException(
                 "Cannot establish TLS with client (sni: {sni}): {e}".format(
-                    sni=self._client_hello.sni, e=repr(e)
+                    sni=sni_str, e=repr(e)
                 ),
-                self._client_hello.sni or repr(self.server_conn.address)
+                sni_str or repr(self.server_conn.address)
             )
 
     def _establish_tls_with_server(self):
@@ -493,7 +497,7 @@ class TlsLayer(base.Layer):
                 organization = upstream_cert.organization
         # Also add SNI values.
         if self._client_hello.sni:
-            sans.add(self._client_hello.sni.encode("idna"))
+            sans.add(self._client_hello.sni)
         if self._custom_server_sni:
             sans.add(self._custom_server_sni.encode("idna"))
 

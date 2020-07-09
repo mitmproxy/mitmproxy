@@ -172,6 +172,13 @@ def convert_6_7(data):
     return data
 
 
+def convert_7_8(data):
+    data["version"] = 8
+    data["request"]["trailers"] = None
+    data["response"]["trailers"] = None
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -226,6 +233,7 @@ converters = {
     4: convert_4_5,
     5: convert_5_6,
     6: convert_6_7,
+    7: convert_7_8,
 }
 
 

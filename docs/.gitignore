@@ -1,4 +1,5 @@
 generated/
-src/public
-node_modules
-public
+src/public/
+node_modules/
+public/
+src/resources/_gen/

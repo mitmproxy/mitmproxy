@@ -14,12 +14,17 @@ class FlowItem(urwid.WidgetWrap):
 
     def get_text(self):
         cols, _ = self.master.ui.get_cols_rows()
+        layout = self.master.options.console_flowlist_layout
+        if layout == "list" or (layout == 'default' and cols < 100):
+            render_mode = common.RenderMode.LIST
+        else:
+            render_mode = common.RenderMode.TABLE
+
         return common.format_flow(
             self.flow,
-            self.flow is self.master.view.focus.flow,
+            render_mode=render_mode,
+            focused=self.flow is self.master.view.focus.flow,
             hostheader=self.master.options.showhost,
-            cols=cols,
-            layout=self.master.options.console_flowlist_layout
         )
 
     def selectable(self):
@@ -27,9 +32,8 @@ class FlowItem(urwid.WidgetWrap):
 
     def mouse_event(self, size, event, button, col, row, focus):
         if event == "mouse press" and button == 1:
-            if self.flow.request:
-                self.master.commands.execute("console.view.flow @focus")
-                return True
+            self.master.commands.execute("console.view.flow @focus")
+            return True
 
     def keypress(self, size, key):
         return key

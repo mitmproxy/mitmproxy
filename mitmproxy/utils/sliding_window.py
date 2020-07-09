@@ -1,5 +1,5 @@
 import itertools
-from typing import TypeVar, Iterable, Iterator, Tuple, Optional
+from typing import TypeVar, Iterable, Iterator, Tuple, Optional, List
 
 T = TypeVar('T')
 
@@ -18,7 +18,7 @@ def window(iterator: Iterable[T], behind: int = 0, ahead: int = 0) -> Iterator[T
         2 3 None
     """
     # TODO: move into utils
-    iters = list(itertools.tee(iterator, behind + 1 + ahead))
+    iters: List[Iterator[Optional[T]]] = list(itertools.tee(iterator, behind + 1 + ahead))
     for i in range(behind):
         iters[i] = itertools.chain((behind - i) * [None], iters[i])
     for i in range(ahead):

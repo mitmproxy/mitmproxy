@@ -558,7 +558,7 @@ class TCPServer:
         self.socket = None
 
         try:
-            # First try to bind an IPv6 socket, with possible IPv4 if the OS supports it.
+            # First try to bind an IPv6 socket, attempting to enable IPv4 support if the OS supports it.
             # This allows us to accept connections for ::1 and 127.0.0.1 on the same socket.
             # Only works if self.address == ""
             self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
@@ -572,8 +572,20 @@ class TCPServer:
             self.socket = None
 
         if not self.socket:
-            # Binding to an IPv6 socket failed, lets fall back to IPv4.
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                # Binding to an IPv6 + IPv4 socket failed, lets fall back to IPv4 only.
+                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+                self.socket.bind(self.address)
+            except socket.error:
+                if self.socket:
+                    self.socket.close()
+                self.socket = None
+
+        if not self.socket:
+            # Binding to an IPv4 only socket failed, lets fall back to IPv6 only.
+            self.socket = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             self.socket.bind(self.address)

@@ -6,7 +6,7 @@ import pyparsing as pp
 from . import base
 
 
-@total_ordering
+@total_ordering  # type: ignore
 class _Action(base.Token):
 
     """

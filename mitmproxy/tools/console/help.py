@@ -51,10 +51,22 @@ class HelpView(tabs.Tabs, layoutwidget.LayoutWidget):
         text = [
             urwid.Text(
                 [
+                    ("title", "Common Keybindings")
+                ]
+            )
+
+        ]
+
+        text.extend(self.format_keys(self.master.keymap.list("commonkey")))
+
+        text.append(
+            urwid.Text(
+                [
+                    "\n",
                     ("title", "Keybindings for this view")
                 ]
             )
-        ]
+        )
         if self.helpctx:
             text.extend(self.format_keys(self.master.keymap.list(self.helpctx)))
 

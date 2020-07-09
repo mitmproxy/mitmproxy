@@ -21,8 +21,11 @@ class TestRequestData:
             treq(headers="foobar")
         with pytest.raises(ValueError):
             treq(content="foobar")
+        with pytest.raises(ValueError):
+            treq(trailers="foobar")
 
         assert isinstance(treq(headers=()).headers, Headers)
+        assert isinstance(treq(trailers=()).trailers, Headers)
 
 
 class TestRequestCore:
@@ -60,20 +63,6 @@ class TestRequestCore:
 
         with pytest.raises(TypeError):
             Request.make("GET", "https://example.com/", headers=42)
-
-    def test_replace(self):
-        r = treq()
-        r.path = b"foobarfoo"
-        r.replace(b"foo", "bar")
-        assert r.path == "barbarbar"
-
-        r.path = b"foobarfoo"
-        r.replace(b"foo", "bar", count=1)
-        assert r.path == "barbarfoo"
-
-        r.path = "foobarfoo"
-        r.replace("foo", "bar", count=1)
-        assert r.path == "barbarfoo"
 
     def test_first_line_format(self):
         _test_passthrough_attr(treq(), "first_line_format")
@@ -371,6 +360,7 @@ class TestRequestUtils:
             assert list(request.multipart_form.items()) == []
 
     def test_set_multipart_form(self):
-        request = treq(content=b"foobar")
-        with pytest.raises(NotImplementedError):
-            request.multipart_form = "foobar"
+        request = treq()
+        request.multipart_form = [("file", "shell.jpg"), ("file_size", "1000")]
+        assert request.headers["Content-Type"] == 'multipart/form-data'
+        assert request.content is None

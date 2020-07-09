@@ -14,7 +14,7 @@ class TestProxyConfig:
 
     def test_invalid_certificate(self, tdata):
         opts = options.Options()
-        opts.certs = [tdata.path("mitmproxy/data/dumpfile-011")]
+        opts.certs = [tdata.path("mitmproxy/data/dumpfile-011.bin")]
         with pytest.raises(exceptions.OptionsError, match="Invalid certificate format"):
             ProxyConfig(opts)
 

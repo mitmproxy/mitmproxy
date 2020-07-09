@@ -9,8 +9,8 @@ TViewResult = typing.Tuple[str, typing.Iterator[TViewLine]]
 
 
 class View:
-    name: str = None
-    content_types: typing.List[str] = []
+    name: typing.ClassVar[str]
+    content_types: typing.ClassVar[typing.List[str]] = []
 
     def __call__(self, data: bytes, **metadata) -> TViewResult:
         """

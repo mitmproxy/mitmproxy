@@ -8,8 +8,8 @@ def test_statusbar(monkeypatch):
     o = options.Options()
     m = master.ConsoleMaster(o)
     m.options.update(
-        setheaders=[":~q:foo:bar"],
-        replacements=[":~q:foo:bar"],
+        modify_headers=[":~q:foo:bar"],
+        modify_body=[":~q:foo:bar"],
         ignore_hosts=["example.com", "example.org"],
         tcp_hosts=["example.tcp"],
         intercept="~q",

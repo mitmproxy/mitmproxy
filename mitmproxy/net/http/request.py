@@ -29,6 +29,7 @@ class RequestData(message.MessageData):
         http_version,
         headers=(),
         content=None,
+        trailers=None,
         timestamp_start=None,
         timestamp_end=None
     ):
@@ -46,6 +47,8 @@ class RequestData(message.MessageData):
             headers = nheaders.Headers(headers)
         if isinstance(content, str):
             raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
+        if trailers is not None and not isinstance(trailers, nheaders.Headers):
+            trailers = nheaders.Headers(trailers)
 
         self.first_line_format = first_line_format
         self.method = method
@@ -56,6 +59,7 @@ class RequestData(message.MessageData):
         self.http_version = http_version
         self.headers = headers
         self.content = content
+        self.trailers = trailers
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
 
@@ -127,27 +131,6 @@ class Request(message.Message):
             ))
 
         return req
-
-    def replace(self, pattern, repl, flags=0, count=0):
-        """
-            Replaces a regular expression pattern with repl in the headers, the
-            request path and the body of the request. Encoded content will be
-            decoded before replacement, and re-encoded afterwards.
-
-            Returns:
-                The number of replacements made.
-        """
-        if isinstance(pattern, str):
-            pattern = strutils.escaped_str_to_bytes(pattern)
-        if isinstance(repl, str):
-            repl = strutils.escaped_str_to_bytes(repl)
-
-        c = super().replace(pattern, repl, flags, count)
-        self.path, pc = re.subn(
-            pattern, repl, self.data.path, flags=flags, count=count
-        )
-        c += pc
-        return c
 
     @property
     def first_line_format(self):
@@ -472,7 +455,8 @@ class Request(message.Message):
         return ()
 
     def _set_multipart_form(self, value):
-        raise NotImplementedError()
+        self.content = mitmproxy.net.http.multipart.encode(self.headers, value)
+        self.headers["content-type"] = "multipart/form-data"
 
     @property
     def multipart_form(self):

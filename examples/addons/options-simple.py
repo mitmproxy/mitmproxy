@@ -1,3 +1,10 @@
+"""
+Add a new mitmproxy option.
+
+Usage:
+
+    mitmproxy -s options-simple.py --set addheader true
+"""
 from mitmproxy import ctx
 
 

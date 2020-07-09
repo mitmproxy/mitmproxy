@@ -1,6 +1,9 @@
-#!/bin/sh
-set -e
-set -x
+#!/usr/bin/env bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+set -o xtrace
 
 echo "Creating dev environment in ./venv..."
 

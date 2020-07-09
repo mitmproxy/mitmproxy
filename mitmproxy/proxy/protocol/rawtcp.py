@@ -29,13 +29,20 @@ class RawTCPLayer(base.Layer):
         server = self.server_conn.connection
         conns = [client, server]
 
+        # https://github.com/openssl/openssl/issues/6234
+        for conn in conns:
+            if isinstance(conn, SSL.Connection) and hasattr(SSL._lib, "SSL_clear_mode"):
+                SSL._lib.SSL_clear_mode(conn._ssl, SSL._lib.SSL_MODE_AUTO_RETRY)
+
         try:
             while not self.channel.should_exit.is_set():
                 r = mitmproxy.net.tcp.ssl_read_select(conns, 10)
                 for conn in r:
                     dst = server if conn == client else client
-
-                    size = conn.recv_into(buf, self.chunk_size)
+                    try:
+                        size = conn.recv_into(buf, self.chunk_size)
+                    except (SSL.WantReadError, SSL.WantWriteError):
+                        continue
                     if not size:
                         conns.remove(conn)
                         # Shutdown connection to the other peer

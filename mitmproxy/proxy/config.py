@@ -23,7 +23,7 @@ class HostMatcher:
         if self.handle in ["ignore", "tcp"]:
             return any(rex.search(host) for rex in self.regexes)
         else:  # self.handle == "allow"
-            return any(not rex.search(host) for rex in self.regexes)
+            return not any(rex.search(host) for rex in self.regexes)
 
     def __bool__(self):
         return bool(self.patterns)
@@ -34,9 +34,9 @@ class ProxyConfig:
     def __init__(self, options: moptions.Options) -> None:
         self.options = options
 
-        self.check_filter: HostMatcher = None
-        self.check_tcp: HostMatcher = None
-        self.certstore: certs.CertStore = None
+        self.certstore: certs.CertStore
+        self.check_filter: typing.Optional[HostMatcher] = None
+        self.check_tcp: typing.Optional[HostMatcher] = None
         self.upstream_server: typing.Optional[server_spec.ServerSpec] = None
         self.configure(options, set(options.keys()))
         options.changed.connect(self.configure)

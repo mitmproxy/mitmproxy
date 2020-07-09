@@ -20,8 +20,11 @@ class TestResponseData:
             tresp(reason="fööbär")
         with pytest.raises(ValueError):
             tresp(content="foobar")
+        with pytest.raises(ValueError):
+            tresp(trailers="foobar")
 
         assert isinstance(tresp(headers=()).headers, Headers)
+        assert isinstance(tresp(trailers=()).trailers, Headers)
 
 
 class TestResponseCore:
@@ -76,6 +79,12 @@ class TestResponseCore:
 
         resp.data.reason = b'cr\xe9e'
         assert resp.reason == "crée"
+
+        # HTTP2 responses do not contain a reason phrase and self.data.reason will be None.
+        # This should render to an empty reason phrase so that functions
+        # expecting a string work properly.
+        resp.data.reason = None
+        assert resp.reason == ""
 
 
 class TestResponseUtils:

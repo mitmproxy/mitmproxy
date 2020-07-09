@@ -13,7 +13,9 @@ with open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 with open(os.path.join(here, "mitmproxy", "version.py")) as f:
-    VERSION = re.search(r'VERSION = "(.+?)"', f.read()).group(1)
+    match = re.search(r'VERSION = "(.+?)"', f.read())
+    assert match
+    VERSION = match.group(1)
 
 setup(
     name="mitmproxy",
@@ -27,22 +29,21 @@ setup(
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Development Status :: 5 - Production/Stable",
-        "Environment :: Console",
         "Environment :: Console :: Curses",
-        "Operating System :: MacOS :: MacOS X",
+        "Operating System :: MacOS",
         "Operating System :: POSIX",
         "Operating System :: Microsoft :: Windows",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Security",
-        "Topic :: Internet",
         "Topic :: Internet :: WWW/HTTP",
         "Topic :: Internet :: Proxy Servers",
-        "Topic :: Software Development :: Testing"
+        "Topic :: System :: Networking :: Monitoring",
+        "Topic :: Software Development :: Testing",
+        "Typing :: Typed",
     ],
     packages=find_packages(include=[
         "mitmproxy", "mitmproxy.*",
@@ -65,25 +66,25 @@ setup(
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "click>=7.0,<8",
-        "cryptography>=2.1.4,<2.5",
+        "cryptography>=2.9,<3.0",
         "flask>=1.1.1,<1.2",
-        "h2>=3.0.1,<4",
+        "h2>=3.2.0,<4",
         "hyperframe>=5.1.0,<6",
         "kaitaistruct>=0.7,<0.9",
-        "ldap3>=2.6.1,<2.7",
+        "ldap3>=2.6.1,<2.8",
         "passlib>=1.6.5, <1.8",
-        "protobuf>=3.6.0, <3.10",
+        "protobuf>=3.6.0, <3.12",
         "pyasn1>=0.3.1,<0.5",
-        "pyOpenSSL>=19.0.0,<20",
+        "pyOpenSSL>=19.1.0,<19.2",
         "pyparsing>=2.4.2,<2.5",
-        "pyperclip>=1.6.0,<1.8",
+        "pyperclip>=1.6.0,<1.9",
         "ruamel.yaml>=0.16,<0.17",
         "sortedcontainers>=2.1.0,<2.2",
         "tornado>=4.3,<7",
-        "urwid>=2.0.1,<2.1",
-        "wsproto>=0.14.0,<0.15.0",
+        "urwid>=2.1.0,<2.2",
+        "wsproto>=0.14,<0.16",
         "publicsuffix2>=2.20190812,<3",
-        "zstandard>=0.11.0,<0.13.0",
+        "zstandard>=0.11,<0.14",
     ],
     extras_require={
         ':sys_platform == "win32"': [
@@ -91,9 +92,8 @@ setup(
         ],
         'dev': [
             "asynctest>=0.12.0",
-            "flake8>=3.7.8,<3.8",
             "Flask>=1.0,<1.2",
-            "mypy>=0.590,<0.591",
+            "hypothesis>=5.8,<5.9",
             "parver>=0.1,<2.0",
             "pytest-asyncio>=0.10.0,<0.11",
             "pytest-cov>=2.7.1,<3",
@@ -102,10 +102,6 @@ setup(
             "pytest>=5.1.3,<6",
             "requests>=2.9.1,<3",
             "tox>=3.5,<3.15",
-            "rstcheck>=2.2,<4.0",
-        ],
-        'examples': [
-            "beautifulsoup4>=4.4.1,<4.9"
         ]
     }
 )

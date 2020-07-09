@@ -15,8 +15,8 @@ import OpenSSL
 from mitmproxy.coretypes import serializable
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
-DEFAULT_EXP = 94608000  # = 24 * 60 * 60 * 365 * 3
-DEFAULT_EXP_DUMMY_CERT = 63072000  # = 2 years
+DEFAULT_EXP = 94608000  # = 60 * 60 * 24 * 365 * 3 = 3 years
+DEFAULT_EXP_DUMMY_CERT = 31536000  # = 60 * 60 * 24 * 365 = 1 year
 
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
 DEFAULT_DHPARAM = b"""
@@ -106,7 +106,10 @@ def dummy_cert(privkey, cacert, commonname, sans, organization):
     cert.gmtime_adj_notBefore(-3600 * 48)
     cert.gmtime_adj_notAfter(DEFAULT_EXP_DUMMY_CERT)
     cert.set_issuer(cacert.get_subject())
-    if commonname is not None and len(commonname) < 64:
+    is_valid_commonname = (
+        commonname is not None and len(commonname) < 64
+    )
+    if is_valid_commonname:
         cert.get_subject().CN = commonname
     if organization is not None:
         cert.get_subject().O = organization
@@ -114,7 +117,13 @@ def dummy_cert(privkey, cacert, commonname, sans, organization):
     if ss:
         cert.set_version(2)
         cert.add_extensions(
-            [OpenSSL.crypto.X509Extension(b"subjectAltName", False, ss)])
+            [OpenSSL.crypto.X509Extension(
+                b"subjectAltName",
+                # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
+                not is_valid_commonname,
+                ss
+            )]
+        )
     cert.add_extensions([
         OpenSSL.crypto.X509Extension(
             b"extendedKeyUsage",
@@ -164,9 +173,7 @@ class CertStore:
         self.expire_queue.append(entry)
         if len(self.expire_queue) > self.STORE_CAP:
             d = self.expire_queue.pop(0)
-            for k, v in list(self.certs.items()):
-                if v == d:
-                    del self.certs[k]
+            self.certs = {k: v for k, v in self.certs.items() if v != d}
 
     @staticmethod
     def load_dhparam(path):
@@ -315,7 +322,12 @@ class CertStore:
             ret.append(b"*." + b".".join(parts[i:]))
         return ret
 
-    def get_cert(self, commonname: typing.Optional[bytes], sans: typing.List[bytes], organization: typing.Optional[bytes] = None):
+    def get_cert(
+            self,
+            commonname: typing.Optional[bytes],
+            sans: typing.List[bytes],
+            organization: typing.Optional[bytes] = None
+    ) -> typing.Tuple["Cert", OpenSSL.SSL.PKey, str]:
         """
             Returns an (cert, privkey, cert_chain) tuple.
 

@@ -76,7 +76,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
             onChange={[Function]}
             type="checkbox"
           />
-          Verify server certificates
+          Don't verify server certificates
         </label>
       </div>
     </div>

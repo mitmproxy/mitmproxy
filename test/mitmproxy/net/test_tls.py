@@ -43,7 +43,7 @@ class TestMasterSecretLogger(tservers.ServerTestBase):
 
             tls.log_master_secret.close()
             with open(logfile, "rb") as f:
-                assert f.read().count(b"CLIENT_RANDOM") == 2
+                assert f.read().count(b"CLIENT_RANDOM") >= 2
 
         tls.log_master_secret = _logfun
 
@@ -116,7 +116,7 @@ class TestClientHello:
         )
         c = tls.ClientHello(data)
         assert repr(c)
-        assert c.sni == 'example.com'
+        assert c.sni == b'example.com'
         assert c.cipher_suites == [
             49195, 49199, 49196, 49200, 52393, 52392, 52244, 52243, 49161,
             49171, 49162, 49172, 156, 157, 47, 53, 10
