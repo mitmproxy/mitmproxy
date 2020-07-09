@@ -19,6 +19,7 @@ Unreleased: mitmproxy next
     * Add new MapRemote addon to rewrite URLs of requests (@mplattner)
     * Add support for HTTP Trailers to the HTTP/2 protocol (@sanlengjingvv and @Kriechi)
     * Fix certificate runtime error during expire cleanup (@gorogoroumaru)
+    * Fix DNSrebind IPv6 regex (@ylmrx)
 
     * --- TODO: add new PRs above this line ---
 
