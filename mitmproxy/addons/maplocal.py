@@ -31,14 +31,6 @@ def parse_map_local_spec(option: str) -> MapLocalSpec:
     return MapLocalSpec(filter, regex, path)
 
 
-def get_mime_type(file_path: str) -> str:
-    mimetype = (
-            mimetypes.guess_type(file_path)[0]
-            or "application/octet-stream"
-    )
-    return mimetype
-
-
 def _safe_path_join(root: Path, untrusted: str) -> Path:
     """Join a Path element with an untrusted str.
 
@@ -127,11 +119,15 @@ class MapLocal:
                             local_file = candidate
                             break
 
+                headers = {}
+                mimetype = mimetypes.guess_type(str(local_file))[0]
+                if mimetype:
+                    headers = {"Content-Type": mimetype}
                 if local_file:
                     flow.response = http.HTTPResponse.make(
                         200,
                         local_file.read_bytes(),
-                        {"Content-Type": get_mime_type(str(local_file))}
+                        headers
                     )
                     # only set flow.response once, for the first matching rule
                     return
