@@ -499,8 +499,7 @@ class Application(tornado.web.Application):
         self.add_handlers("dns-rebind-protection", [(r"/.*", DnsRebind)])
         self.add_handlers(
             # make mitmweb accessible by IP only to prevent DNS rebinding.
-            # IPv(4|6) pattern from https://riptutorial.com/regex/example/14146/match-an-ip-address, slightly adjusted to mitmproxy
-            r'^localhost$|^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$|^\[((?:[0-9a-fA-F]{1,4}\:){7}[0-9a-fA-F]{1,4}|\:\:(?:[0-9a-fA-F]{1,4}\:){0,6}[0-9a-fA-F]{1,4}|[0-9a-fA-F]{1,4}\:\:(?:[0-9a-fA-F]{1,4}\:){0,5}[0-9a-fA-F]{1,4}|[0-9a-fA-F]{1,4}\:[0-9a-fA-F]{1,4}\:\:(?:[0-9a-fA-F]{1,4}\:){0,4}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}\:){0,2}[0-9a-fA-F]{1,4}\:\:(?:[0-9a-fA-F]{1,4}\:){0,3}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}\:){0,3}[0-9a-fA-F]{1,4}\:\:(?:[0-9a-fA-F]{1,4}\:){0,2}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}\:){0,4}[0-9a-fA-F]{1,4}\:\:(?:[0-9a-fA-F]{1,4}\:)?[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}\:){0,5}[0-9a-fA-F]{1,4}\:\:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}\:){0,6}[0-9a-fA-F]{1,4}\:\:)\]$',
+            r'^(localhost|[0-9.]+|\[[0-9a-fA-F:]+\])$',
             [
                 (r"/", IndexHandler),
                 (r"/filter-help(?:\.json)?", FilterHelp),
