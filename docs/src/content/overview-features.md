@@ -51,7 +51,7 @@ define redirections of HTTP requests to local files or diretories.
 The local file is fetched instead of the original resource
 and the corresponding HTTP response is returned transparently to the client.
 The mime type of the local file is guessed to set the `Content-Type` header.
-`map_local` patterns looks like this:
+`map_local` patterns look like this:
 
 ```
 |flow-filter|url-regex|file-path
@@ -63,36 +63,61 @@ The mime type of the local file is guessed to set the `Content-Type` header.
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
 that defines which requests the `map_local` option applies to.
 
-* **url-regex** is a valid Python regular expression on the request URL that defines which requests the `map_local` option applies to.
+* **url-regex** is a valid Python regular expression on the request URL. It serves two purposes.
+First, it must match a part of the request URL to ensure that the rule is applied to the request.
+Second, it is used to split the request URL in two parts. The right part is used as a suffix
+that is appended to the **diretory-path**, as shown in the first example below.
+If **url-regex** contains a regex group, the first group is used as the suffix instead of the
+right part of the split, as shown in the second example below.
 
 * **file-path** is a path to a file that is served instead of the original resource.
 
 * **diretory-path** is a path to a directory that is used to look for the resource
-to serve instead of the original resource. mitmproxy tries to select the correct file
-within **diretory-path** automatically. It first tries `diretory-path/url-path` and
-strips the deepest directory repeatedly until it finds an existing file.
-For example, with the **diretory-path** `/local` and the request URL `http://example.org/media/img/foo.jpg`,
-mitmproxy looks for `/local/media/img/foo.jpg`, `/local/media/foo.jpg`, and `/local/foo.jpg`,
-in this order. If no file is found, the original resource is served instead.
+to serve instead of the original resource. mitmproxy tries to find the local file as
+explained for **url-regex** and shown in the examples below. If the file is not
+found, mitmproxy tries to append `index.html` to the resulting path.
+Otherwise, a 404 response without content is sent to the client.
 
 ### Examples
 
-Map all requests for `example.org/css/*` to the local directory `~/local-css`.
+Map all requests for `example.org/css*` to the local directory `~/static-css`.
 
-```
-|//example.org/css/|~/local-css
-```
+<pre>
+                  ┌── url-regex ──┬─ directory-path ─┐
+map_local option: |<span style="color:#f92672">example.com/css</span>|<span style="color:#82b719">~/static-css</span>
+                            │
+                            │    URL is split here
+                            ▼            ▼
+HTTP Request URL: https://<span style="color:#f92672">example.com/css</span><span style="color:#66d9ef">/print/main.css</span><span style="color:#bbb">?timestamp=123</span>
+                                               │                ▼
+                                               ▼              query string is ignored
+Served File:      Preferred: <span style="color:#82b719">~/static-css</span><span style="color:#66d9ef">/print/main.css</span>
+                   Fallback: <span style="color:#82b719">~/static-css</span><span style="color:#66d9ef">/print/main.css</span>/index.html
+                  Otherwise: 404 response without content
+</pre>
+
+Map all `GET` requests for `example.org/index.php?page=<page-name>` to the local directory `~/static-dir/<page-name>`.
+
+<pre>
+                    flow
+                  ┌filter┬─────────── url-regex ───────────┬─ directory-path ─┐
+map_local option: |~m GET|<span style="color:#f92672">example.com/index.php\\?page=</span><span style="color:#66d9ef">(.+)</span>|<span style="color:#82b719">~/static-dir</span>
+                            │                           │
+                            │                           │ regex group = suffix
+                            ▼                           ▼
+HTTP Request URL: https://<span style="color:#f92672">example.com/index.php?page=<span style="color:#66d9ef">aboutus</span></span>
+                                                        │
+                                                        ▼
+Served File:                 Preferred: <span style="color:#82b719">~/static-dir</span>/<span style="color:#66d9ef">aboutus</span>
+                              Fallback: <span style="color:#82b719">~/static-dir</span>/<span style="color:#66d9ef">aboutus</span>/index.html
+                             Otherwise: 404 response without content
+</pre>
+
 
 Map all requests for `example.org/js/main.js` to the local file `~/main-local.js`.
 
 ```
 |example.org/js/main.js|~/main-local.js
-```
-
-Map all requests ending with `.jpg` to the local file `~/foo.jpg`.
-
-```
-|.*\.jpg$|~/foo.jpg
 ```
 
 
@@ -104,13 +129,11 @@ The substituted URL is fetched instead of the original resource
 and the corresponding HTTP response is returned transparently to the client.
 Note that if the original destination uses HTTP2, the substituted destination
 needs to support HTTP2 as well, otherwise the substituted request may fail.
-`map_remote` patterns looks like this:
+`map_remote` patterns look like this:
 
 ```
 |flow-filter|url-regex|replacement
-|flow-filter|url-regex|@file-path
-|regex|replacement
-|regex|@file-path
+|url-regex|replacement
 ```
 
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
@@ -118,8 +141,7 @@ that defines which requests the `map_remote` option applies to.
 
 * **url-regex** is a valid Python regular expression that defines what gets replaced in the URLs of requests.
 
-* **replacement** is a string literal that is substituted in. If the replacement string
-literal starts with `@` as in `@file-path`, it is treated as a **file path** from which the replacement is read.
+* **replacement** is a string literal that is substituted in.
 
 The _separator_ is arbitrary, and is defined by the first character.
 
@@ -146,16 +168,16 @@ The `modify_body` option lets you specify an arbitrary number of patterns that
 define replacements within bodies of flows. `modify_body` patterns look like this:
 
 ```
-/flow-filter/regex/replacement
-/flow-filter/regex/@file-path
-/regex/replacement
-/regex/@file-path
+/flow-filter/body-regex/replacement
+/flow-filter/body-regex/@file-path
+/body-regex/replacement
+/body-regex/@file-path
 ```
 
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
 that defines which flows a replacement applies to.
 
-* **regex** is a valid Python regular expression that defines what gets replaced.
+* **body-regex** is a valid Python regular expression that defines what gets replaced.
 
 * **replacement** is a string literal that is substituted in. If the replacement string
 literal starts with `@` as in `@file-path`, it is treated as a **file path** from which the replacement is read.
