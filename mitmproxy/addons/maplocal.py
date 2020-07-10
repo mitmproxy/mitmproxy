@@ -42,7 +42,8 @@ def get_mime_type(file_path: str) -> str:
 def _safe_path_join(root: Path, untrusted: str) -> Path:
     """Join a Path element with an untrusted str.
 
-    This is just a convenience wrapper for werkzeug's safe_join."""
+    This is a convenience wrapper for werkzeug's safe_join,
+    raising a ValueError if the path is malformed."""
     untrusted_parts = Path(untrusted).parts
     joined = safe_join(
         root.as_posix(),
@@ -54,8 +55,10 @@ def _safe_path_join(root: Path, untrusted: str) -> Path:
 
 
 def file_candidates(url: str, spec: MapLocalSpec) -> typing.List[Path]:
-    candidates = []
-
+    """
+    Get all potential file candidates given a URL and a mapping spec ordered by preference.
+    This function already assumes that the spec regex matches the URL.
+    """
     m = re.search(spec.regex, url)
     assert m
     if m.groups():
@@ -64,18 +67,18 @@ def file_candidates(url: str, spec: MapLocalSpec) -> typing.List[Path]:
         suffix = re.split(spec.regex, url, maxsplit=1)[1]
         suffix = suffix.split("?")[0]  # remove query string
 
-    suffix = re.sub(r"[^0-9a-zA-Z-_.=(),/]", "_", suffix.strip("/"))
+    suffix = re.sub(r"[^0-9a-zA-Z\-_.=(),/]", "_", suffix.strip("/"))
 
     if suffix:
         try:
-            candidates.append(_safe_path_join(spec.local_path, suffix))
-            candidates.append(_safe_path_join(spec.local_path, f"{suffix}/index.html"))
+            return [
+                _safe_path_join(spec.local_path, suffix),
+                _safe_path_join(spec.local_path, f"{suffix}/index.html")
+            ]
         except ValueError:
             return []
     else:
-        candidates.append(spec.local_path / "index.html")
-
-    return candidates
+        return [spec.local_path / "index.html"]
 
 
 class MapLocal:
@@ -107,10 +110,12 @@ class MapLocal:
         if flow.reply and flow.reply.has_message:
             return
 
-        for spec in self.replacements:
-            url = flow.request.pretty_url
+        url = flow.request.pretty_url
 
+        any_spec_matches = False
+        for spec in self.replacements:
             if spec.matches(flow) and re.search(spec.regex, url):
+                any_spec_matches = True
 
                 local_file: typing.Optional[Path] = None
 
@@ -130,3 +135,5 @@ class MapLocal:
                     )
                     # only set flow.response once, for the first matching rule
                     return
+        if any_spec_matches:
+            flow.response = http.HTTPResponse.make(404)
