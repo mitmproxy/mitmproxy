@@ -94,7 +94,7 @@ Create a user to run the mitmproxy
 
 ```bash
 sudo useradd --create-home mitmproxyuser
-sudo -u mitmproxyuser bash -c 'cd ~ && pip install --user mitmproxy'
+sudo -u mitmproxyuser -H bash -c 'cd ~ && pip install --user mitmproxy'
 ```
 
 Then, configure the iptables rules to redirect all traffic from our local machine to mitmproxy. **Note**, as soon as you run these, you won't be able to perform successful network calls *until* you start mitmproxy. If you run into issues, `iptables -t nat -F` is a heavy handed way to flush (clear) *all* the rules from the iptables `nat` table (which includes any other rules you had configured).
@@ -108,7 +108,7 @@ ip6tables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 4
 
 This will redirect the packets from all users other than `mitmproxyuser` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `mitmproxyuser`. Hence step **4** should look like:
 ```bash
-sudo -u mitmproxyuser bash -c '$HOME/.local/bin/mitmproxy --mode transparent --showhost --set block_global=false'
+sudo -u mitmproxyuser -H bash -c '$HOME/.local/bin/mitmproxy --mode transparent --showhost --set block_global=false'
 ```
 
 
