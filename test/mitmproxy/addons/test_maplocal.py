@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 
 import pytest
@@ -18,10 +17,11 @@ from mitmproxy.test import tflow
         ("https://example.com/foo", ":example.com/foo:/tmp/", ["/tmp/index.html"]),
     ] + [
         # simple prefixes
-        ("http://example/foo/bar.jpg", ":example/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
-        ("https://example/foo/bar.jpg", ":example/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
-        ("https://example/foo/bar.jpg?query", ":example/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
-        ("https://example/foo/bar/baz.jpg", ":example/foo:/tmp", ["/tmp/bar/baz.jpg", "/tmp/bar/baz.jpg/index.html"]),
+        ("http://example.com/foo/bar.jpg", ":example.com/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
+        ("https://example.com/foo/bar.jpg", ":example.com/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
+        ("https://example.com/foo/bar.jpg?query", ":example.com/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
+        ("https://example.com/foo/bar/baz.jpg", ":example.com/foo:/tmp", ["/tmp/bar/baz.jpg", "/tmp/bar/baz.jpg/index.html"]),
+        ("https://example.com/foo/bar.jpg", ":/foo/bar.jpg:/tmp", ["/tmp/index.html"]),
     ] + [
         # index.html
         ("https://example.com/foo", ":example.com/foo:/tmp", ["/tmp/index.html"]),
@@ -61,41 +61,41 @@ class TestMapLocal:
         ml = MapLocal()
 
         with taddons.context(ml) as tctx:
-            tmpfile = tmpdir.join("test1.jpg")
+            tmpfile = tmpdir.join("foo.jpg")
             tmpfile.write("foo")
             tctx.configure(
                 ml,
                 map_local=[
-                    ":jpg:" + str(tmpdir)
+                    "://example.org/images:" + str(tmpdir)
                 ]
             )
             f = tflow.tflow()
-            f.request.url = b"https://example.org/images/test1.jpg"
+            f.request.url = b"https://example.org/images/foo.jpg"
             ml.request(f)
             assert f.response.content == b"foo"
 
-            tmpfile = tmpdir.join("images", "test2.jpg")
+            tmpfile = tmpdir.join("images", "bar.jpg")
             tmpfile.write("bar", ensure=True)
             tctx.configure(
                 ml,
                 map_local=[
-                    ":jpg:" + str(tmpdir)
+                    "://example.org:" + str(tmpdir)
                 ]
             )
             f = tflow.tflow()
-            f.request.url = b"https://example.org/images/test2.jpg"
+            f.request.url = b"https://example.org/images/bar.jpg"
             ml.request(f)
             assert f.response.content == b"bar"
 
-            tmpfile = tmpdir.join("images", "test3.jpg")
-            tmpfile.write("foobar", ensure=True)
+            tmpfile = tmpdir.join("foofoobar.jpg")
+            tmpfile.write("foofoobar", ensure=True)
             tctx.configure(
                 ml,
                 map_local=[
-                    ":jpg:" + str(tmpfile)
+                    ":example.org/foo/foo/bar.jpg:" + str(tmpfile)
                 ]
             )
             f = tflow.tflow()
-            f.request.url = b"https://example.org/foo.jpg"
+            f.request.url = b"https://example.org/foo/foo/bar.jpg"
             ml.request(f)
-            assert f.response.content == b"foobar"
+            assert f.response.content == b"foofoobar"
