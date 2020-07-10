@@ -1,35 +1,59 @@
+import re
+from pathlib import Path
+
 import pytest
 
-from mitmproxy.addons.maplocal import MapLocal, file_candidates
+from mitmproxy.addons.maplocal import MapLocal, MapLocalSpec, file_candidates
+from mitmproxy.addons.modifyheaders import parse_spec
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
-from mitmproxy.addons.modifyheaders import parse_modify_spec
-
 
 @pytest.mark.parametrize(
-    "url,spec,expected_candidates", [
+    "url,spec,expected_candidates",
+    [
+        # trailing slashes
+        ("https://example.com/foo", ":example.com/foo:/tmp", ["/tmp/index.html"]),
+        ("https://example.com/foo/", ":example.com/foo:/tmp", ["/tmp/index.html"]),
+        ("https://example.com/foo", ":example.com/foo:/tmp/", ["/tmp/index.html"]),
+    ] + [
+        # simple prefixes
+        ("http://example/foo/bar.jpg", ":example/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
+        ("https://example/foo/bar.jpg", ":example/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
+        ("https://example/foo/bar.jpg?query", ":example/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
+        ("https://example/foo/bar/baz.jpg", ":example/foo:/tmp", ["/tmp/bar/baz.jpg", "/tmp/bar/baz.jpg/index.html"]),
+    ] + [
+        # index.html
+        ("https://example.com/foo", ":example.com/foo:/tmp", ["/tmp/index.html"]),
+        ("https://example.com/foo/", ":example.com/foo:/tmp", ["/tmp/index.html"]),
+        ("https://example.com/foo/bar", ":example.com/foo:/tmp", ["/tmp/bar", "/tmp/bar/index.html"]),
+        ("https://example.com/foo/bar/", ":example.com/foo:/tmp", ["/tmp/bar", "/tmp/bar/index.html"]),
+    ] + [
+        # regex
         (
-            "https://example.org/img/topic/subtopic/test.jpg",
-            ":example.com/foo:/tmp",
-            ["/tmp/img/topic/subtopic/test.jpg", "/tmp/img/topic/test.jpg", "/tmp/img/test.jpg", "/tmp/test.jpg"]
+                "https://example/view.php?f=foo.jpg",
+                ":example/view.php\\?f=(.+):/tmp",
+                ["/tmp/foo.jpg", "/tmp/foo.jpg/index.html"]
+        ), (
+                "https://example/results?id=1&foo=2",
+                ":example/(results\\?id=.+):/tmp",
+                ["/tmp/results_id=1_foo=2", "/tmp/results_id=1_foo=2/index.html"]
         ),
-        (
-            "https://example.org/img/topic/subtopic/",
-            ":/img:/tmp",
-            ["/tmp/img/topic/subtopic/index.html", "/tmp/img/topic/index.html", "/tmp/img/index.html", "/tmp/index.html"]
-        ),
-        (
-            "https://example.org",
-            ":org:/tmp",
-            ["/tmp/index.html"]
-        ),
+    ] + [
+        # test directory traversal detection
+        ("https://example.com/../../../../../../etc/passwd", ":example.com:/tmp", []),
+        # those get already sanitized to benign versions before they reach our detection:
+        ("https://example.com/C:\\foo.txt", ":example.com:/tmp", ["/tmp/C__foo.txt", "/tmp/C__foo.txt/index.html"]),
+        ("https://example.com//etc/passwd", ":example.com:/tmp", ["/tmp/etc/passwd", "/tmp/etc/passwd/index.html"]),
     ]
 )
 def test_file_candidates(url, spec, expected_candidates):
-    spec = parse_modify_spec(spec, True, True)
-    candidates = file_candidates(url, spec.replacement)
-    assert [str(x) for x in candidates] == expected_candidates
+    # we circumvent the path existence checks here to simplify testing
+    filt, subj, repl = parse_spec(spec)
+    spec = MapLocalSpec(filt, subj, Path(repl))
+
+    candidates = file_candidates(url, spec)
+    assert [x.as_posix() for x in candidates] == expected_candidates
 
 
 class TestMapLocal:

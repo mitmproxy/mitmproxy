@@ -1,52 +1,86 @@
 import mimetypes
 import re
 import typing
-import urllib
 from pathlib import Path
+
 from werkzeug.security import safe_join
 
-from mitmproxy import ctx, exceptions, http
-from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifySpec
+from mitmproxy import ctx, exceptions, flowfilter, http
+from mitmproxy.addons.modifyheaders import parse_spec
+
+
+class MapLocalSpec(typing.NamedTuple):
+    matches: flowfilter.TFilter
+    regex: str
+    local_path: Path
+
+
+def parse_map_local_spec(option: str) -> MapLocalSpec:
+    filter, regex, replacement = parse_spec(option)
+
+    try:
+        re.compile(regex)
+    except re.error as e:
+        raise ValueError(f"Invalid regular expression {regex!r} ({e})")
+
+    try:
+        path = Path(replacement).expanduser().resolve(strict=True)
+    except FileNotFoundError as e:
+        raise ValueError(f"Invalid file path: {replacement} ({e})")
+
+    return MapLocalSpec(filter, regex, path)
 
 
 def get_mime_type(file_path: str) -> str:
     mimetype = (
-        mimetypes.guess_type(file_path)[0]
-        or "application/octet-stream"
+            mimetypes.guess_type(file_path)[0]
+            or "application/octet-stream"
     )
     return mimetype
 
 
-def file_candidates(url: str, base_path: str) -> typing.List[Path]:
+def _safe_path_join(root: Path, untrusted: str) -> Path:
+    """Join a Path element with an untrusted str.
+
+    This is just a convenience wrapper for werkzeug's safe_join."""
+    untrusted_parts = Path(untrusted).parts
+    joined = safe_join(
+        root.as_posix(),
+        *untrusted_parts
+    )
+    if joined is None:
+        raise ValueError("Untrusted paths.")
+    return Path(joined)
+
+
+def file_candidates(url: str, spec: MapLocalSpec) -> typing.List[Path]:
     candidates = []
-    parsed_url = urllib.parse.urlparse(url)
-    path_components = parsed_url.path.lstrip("/").split("/")
-    filename = path_components.pop()
 
-    # todo: we may want to consider other filenames such as index.htm)
-    if not filename:
-        filename = 'index.html'
+    m = re.search(spec.regex, url)
+    assert m
+    if m.groups():
+        suffix = m.group(1)
+    else:
+        suffix = re.split(spec.regex, url, maxsplit=1)[1]
+        suffix = suffix.split("?")[0]  # remove query string
 
-    # construct all possible paths
-    while True:
-        components_with_filename = tuple(path_components + [filename])
-        candidate_path = safe_join(base_path, *components_with_filename)
-        if candidate_path:
-            candidates.append(
-                Path(candidate_path)
-            )
+    suffix = re.sub(r"[^0-9a-zA-Z-_.=(),/]", "_", suffix.strip("/"))
 
-        if not path_components:
-            break
-
-        path_components.pop()
+    if suffix:
+        try:
+            candidates.append(_safe_path_join(spec.local_path, suffix))
+            candidates.append(_safe_path_join(spec.local_path, f"{suffix}/index.html"))
+        except ValueError:
+            return []
+    else:
+        candidates.append(spec.local_path / "index.html")
 
     return candidates
 
 
 class MapLocal:
     def __init__(self):
-        self.replacements: typing.List[ModifySpec] = []
+        self.replacements: typing.List[MapLocalSpec] = []
 
     def load(self, loader):
         loader.add_option(
@@ -63,7 +97,7 @@ class MapLocal:
             self.replacements = []
             for option in ctx.options.map_local:
                 try:
-                    spec = parse_modify_spec(option, True, True)
+                    spec = parse_map_local_spec(option)
                 except ValueError as e:
                     raise exceptions.OptionsError(f"Cannot parse map_local option {option}: {e}") from e
 
@@ -74,31 +108,25 @@ class MapLocal:
             return
 
         for spec in self.replacements:
-            req = flow.request
-            url = req.pretty_url
-            base_path = Path(spec.replacement)
+            url = flow.request.pretty_url
 
-            if spec.matches(flow) and re.search(spec.subject, url.encode("utf8", "surrogateescape")):
-                replacement_path = None
-                if base_path.is_file():
-                    replacement_path = base_path
-                elif base_path.is_dir():
-                    candidates = file_candidates(url, str(base_path))
-                    for candidate in candidates:
-                        # check that path is not outside of the user-defined base_path
-                        if candidate.is_file() and base_path in candidate.parents:
-                            replacement_path = candidate
+            if spec.matches(flow) and re.search(spec.regex, url):
+
+                local_file: typing.Optional[Path] = None
+
+                if spec.local_path.is_file():
+                    local_file = spec.local_path
+                elif spec.local_path.is_dir():
+                    for candidate in file_candidates(url, spec):
+                        if candidate.is_file():
+                            local_file = candidate
                             break
 
-                if replacement_path:
-                    try:
-                        flow.response = http.HTTPResponse.make(
-                            200,
-                            replacement_path.read_bytes(),
-                            {"Content-Type": get_mime_type(str(replacement_path))}
-                        )
-                        # only set flow.response once, for the first matching rule
-                        break
-                    except IOError:
-                        ctx.log.warn(f"Could not read replacement file {replacement_path}")
-                        return
+                if local_file:
+                    flow.response = http.HTTPResponse.make(
+                        200,
+                        local_file.read_bytes(),
+                        {"Content-Type": get_mime_type(str(local_file))}
+                    )
+                    # only set flow.response once, for the first matching rule
+                    return
