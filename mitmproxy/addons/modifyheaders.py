@@ -7,10 +7,36 @@ from mitmproxy.net.http import Headers
 from mitmproxy.utils import strutils
 
 
+def _match_all(flow) -> bool:
+    return True
+
+
+def parse_spec(option: str) -> typing.Tuple[flowfilter.TFilter, str, str]:
+    """
+    Parse strings in the following format:
+
+        [/flow-filter]/subject/replacement
+
+    """
+    sep, rem = option[0], option[1:]
+    parts = rem.split(sep, 2)
+    if len(parts) == 2:
+        subject, replacement = parts
+        return _match_all, subject, replacement
+    elif len(parts) == 3:
+        patt, subject, replacement = parts
+        flow_filter = flowfilter.parse(patt)
+        if not flow_filter:
+            raise ValueError(f"Invalid filter pattern: {patt}")
+        return flow_filter, subject, replacement
+    else:
+        raise ValueError("Invalid number of parameters (2 or 3 are expected)")
+
+
 class ModifySpec(typing.NamedTuple):
     matches: flowfilter.TFilter
     subject: bytes
-    replacement: str
+    replacement_str: str
 
     def read_replacement(self) -> bytes:
         """
@@ -20,79 +46,29 @@ class ModifySpec(typing.NamedTuple):
         Raises:
             - IOError if the file cannot be read.
         """
-        if self.replacement.startswith("@"):
-            return Path(self.replacement[1:]).expanduser().read_bytes()
+        if self.replacement_str.startswith("@"):
+            return Path(self.replacement_str[1:]).expanduser().read_bytes()
         else:
             # We could cache this at some point, but unlikely to be a problem.
-            return strutils.escaped_str_to_bytes(self.replacement)
+            return strutils.escaped_str_to_bytes(self.replacement_str)
 
 
-def _match_all(flow) -> bool:
-    return True
+def parse_modify_spec(option: str, subject_is_regex: bool) -> ModifySpec:
+    flow_filter, subject_str, replacement = parse_spec(option)
 
-
-def parse_modify_spec(option, subject_is_regex: bool, replacement_is_path: bool) -> ModifySpec:
-    """
-        The form for the modify_*, map_remote, and map_local options is as follows:
-
-            * modify_body:    [/flow-filter]/body-regex/[@]replacement
-            * modify_headers: [/flow-filter]/header-name/[@]header-value
-            * map_local:      [:flow-filter]:url-regex:path
-            * map_remote:     [:flow-filter]:url-regex:[@]replacement
-
-        The @ allows to provide a file path that is used to read the respective option.
-        The addons ModifyHeaders, ModifyBody, MapRemote, and MapLocal use ModifySpec
-        to represent a single rule.
-
-        The first character specifies the separator. Example:
-
-            :~q:foo:bar
-
-        If only two clauses are specified, the flow filter is set to
-        match universally (i.e. ".*"). Example:
-
-            /foo/bar
-
-        Clauses are parsed from left to right. Extra separators are taken to be
-        part of the final clause. For instance, the last parameter (header-value,
-        replace, or path) below is "foo/bar/":
-
-            /one/two/foo/bar/
-    """
-    sep, rem = option[0], option[1:]
-    parts = rem.split(sep, 2)
-    if len(parts) == 2:
-        flow_filter = _match_all
-        subject, replacement = parts
-    elif len(parts) == 3:
-        flow_filter_pattern, subject, replacement = parts
-        flow_filter = flowfilter.parse(flow_filter_pattern)  # type: ignore
-        if not flow_filter:
-            raise ValueError(f"Invalid filter pattern: {flow_filter_pattern}")
-    else:
-        raise ValueError("Invalid number of parameters (2 or 3 are expected)")
-
-    subject = strutils.escaped_str_to_bytes(subject)
+    subject = strutils.escaped_str_to_bytes(subject_str)
     if subject_is_regex:
         try:
             re.compile(subject)
         except re.error as e:
             raise ValueError(f"Invalid regular expression {subject!r} ({e})")
 
-    if replacement_is_path:
-        path = Path(replacement)
-        try:
-            replacement = str(path.expanduser().resolve(strict=True))
-        except FileNotFoundError as e:
-            raise ValueError(f"Invalid file path: {replacement} ({e})")
-
     spec = ModifySpec(flow_filter, subject, replacement)
 
-    if not replacement_is_path:
-        try:
-            spec.read_replacement()
-        except IOError as e:
-            raise ValueError(f"Invalid file path: {replacement[1:]} ({e})")
+    try:
+        spec.read_replacement()
+    except IOError as e:
+        raise ValueError(f"Invalid file path: {replacement[1:]} ({e})")
 
     return spec
 
@@ -116,7 +92,7 @@ class ModifyHeaders:
         if "modify_headers" in updated:
             for option in ctx.options.modify_headers:
                 try:
-                    spec = parse_modify_spec(option, False, False)
+                    spec = parse_modify_spec(option, False)
                 except ValueError as e:
                     raise exceptions.OptionsError(f"Cannot parse modify_headers option {option}: {e}") from e
                 self.replacements.append(spec)
