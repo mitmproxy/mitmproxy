@@ -42,7 +42,8 @@ def get_mime_type(file_path: str) -> str:
 def _safe_path_join(root: Path, untrusted: str) -> Path:
     """Join a Path element with an untrusted str.
 
-    This is just a convenience wrapper for werkzeug's safe_join."""
+    This is a convenience wrapper for werkzeug's safe_join,
+    raising a ValueError if the path is malformed."""
     untrusted_parts = Path(untrusted).parts
     joined = safe_join(
         root.as_posix(),
