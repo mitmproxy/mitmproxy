@@ -17,7 +17,7 @@ class WebSocketMessage(serializable.Serializable):
     """
 
     def __init__(
-        self, type: int, from_client: bool, content: bytes, timestamp: Optional[int]=None, killed: bool=False
+        self, type: int, from_client: bool, content: bytes, timestamp: Optional[float]=None, killed: bool=False
     ) -> None:
         self.type = Opcode(type)  # type: ignore
         """indicates either TEXT or BINARY (from wsproto.frame_protocol.Opcode)."""
@@ -25,7 +25,7 @@ class WebSocketMessage(serializable.Serializable):
         """True if this messages was sent by the client."""
         self.content = content
         """A byte-string representing the content of this message."""
-        self.timestamp: int = timestamp or int(time.time())
+        self.timestamp: float = timestamp or time.time()
         """Timestamp of when this message was received or created."""
         self.killed = killed
         """True if this messages was killed and should not be sent to the other endpoint."""

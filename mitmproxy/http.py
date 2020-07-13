@@ -26,6 +26,7 @@ class HTTPRequest(http.Request):
             http_version,
             headers,
             content,
+            trailers=None,
             timestamp_start=None,
             timestamp_end=None,
             is_replay=False,
@@ -41,6 +42,7 @@ class HTTPRequest(http.Request):
             http_version,
             headers,
             content,
+            trailers,
             timestamp_start,
             timestamp_end,
         )
@@ -73,6 +75,7 @@ class HTTPRequest(http.Request):
             http_version=request.data.http_version,
             headers=request.data.headers,
             content=request.data.content,
+            trailers=request.data.trailers,
             timestamp_start=request.data.timestamp_start,
             timestamp_end=request.data.timestamp_end,
         )
@@ -97,6 +100,7 @@ class HTTPResponse(http.Response):
             reason,
             headers,
             content,
+            trailers=None,
             timestamp_start=None,
             timestamp_end=None,
             is_replay=False
@@ -108,6 +112,7 @@ class HTTPResponse(http.Response):
             reason,
             headers,
             content,
+            trailers,
             timestamp_start=timestamp_start,
             timestamp_end=timestamp_end,
         )
@@ -127,6 +132,7 @@ class HTTPResponse(http.Response):
             reason=response.data.reason,
             headers=response.data.headers,
             content=response.data.content,
+            trailers=response.data.trailers,
             timestamp_start=response.data.timestamp_start,
             timestamp_end=response.data.timestamp_end,
         )
@@ -173,6 +179,10 @@ class HTTPFlow(flow.Flow):
         s += ">"
         return s.format(flow=self)
 
+    @property
+    def timestamp_start(self) -> float:
+        return self.request.timestamp_start
+
     def copy(self):
         f = super().copy()
         if self.request:
@@ -180,19 +190,6 @@ class HTTPFlow(flow.Flow):
         if self.response:
             f.response = self.response.copy()
         return f
-
-    def replace(self, pattern, repl, *args, **kwargs):
-        """
-            Replaces a regular expression pattern with repl in both request and
-            response of the flow. Encoded content will be decoded before
-            replacement, and re-encoded afterwards.
-
-            Returns the number of replacements made.
-        """
-        c = self.request.replace(pattern, repl, *args, **kwargs)
-        if self.response:
-            c += self.response.replace(pattern, repl, *args, **kwargs)
-        return c
 
 
 def make_error_response(

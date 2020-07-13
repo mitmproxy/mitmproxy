@@ -1,3 +1,5 @@
+import textwrap
+
 import h2.exceptions
 import time
 import enum
@@ -18,6 +20,9 @@ class _HttpTransmissionLayer(base.Layer):
     def read_request_body(self, request):
         raise NotImplementedError()
 
+    def read_request_trailers(self, request):
+        raise NotImplementedError()
+
     def send_request(self, request):
         raise NotImplementedError()
 
@@ -28,11 +33,15 @@ class _HttpTransmissionLayer(base.Layer):
         raise NotImplementedError()
         yield "this is a generator"  # pragma: no cover
 
+    def read_response_trailers(self, request, response):
+        raise NotImplementedError()
+
     def read_response(self, request):
         response = self.read_response_headers()
         response.data.content = b"".join(
             self.read_response_body(request, response)
         )
+        response.data.trailers = self.read_response_trailers(request, response)
         return response
 
     def send_response(self, response):
@@ -40,11 +49,15 @@ class _HttpTransmissionLayer(base.Layer):
             raise exceptions.HttpException("Cannot assemble flow with missing content")
         self.send_response_headers(response)
         self.send_response_body(response, [response.data.content])
+        self.send_response_trailers(response)
 
     def send_response_headers(self, response):
         raise NotImplementedError()
 
     def send_response_body(self, response, chunks):
+        raise NotImplementedError()
+
+    def send_response_trailers(self, response, chunks):
         raise NotImplementedError()
 
     def check_close_connection(self, f):
@@ -142,13 +155,13 @@ def validate_request_form(mode, request):
     allowed_request_forms = MODE_REQUEST_FORMS[mode]
     if request.first_line_format not in allowed_request_forms:
         if mode == HTTPMode.transparent:
-            err_message = (
+            err_message = textwrap.dedent((
                 """
                 Mitmproxy received an {} request even though it is not running
                 in regular mode. This usually indicates a misconfiguration,
                 please see the mitmproxy mode documentation for details.
                 """
-            ).format("HTTP CONNECT" if request.first_line_format == "authority" else "absolute-form")
+            )).strip().format("HTTP CONNECT" if request.first_line_format == "authority" else "absolute-form")
         else:
             err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
                 " or ".join(allowed_request_forms), request.first_line_format
@@ -253,6 +266,7 @@ class HttpLayer(base.Layer):
                 f.request.data.content = b"".join(
                     self.read_request_body(f.request)
                 )
+                f.request.data.trailers = self.read_request_trailers(f.request)
                 f.request.timestamp_end = time.time()
                 self.channel.ask("http_connect", f)
 
@@ -280,6 +294,9 @@ class HttpLayer(base.Layer):
                 f.request.data.content = None
             else:
                 f.request.data.content = b"".join(self.read_request_body(request))
+
+            f.request.data.trailers = self.read_request_trailers(f.request)
+
             request.timestamp_end = time.time()
         except exceptions.HttpException as e:
             # We optimistically guess there might be an HTTP client on the
@@ -346,6 +363,8 @@ class HttpLayer(base.Layer):
                     else:
                         self.send_request_body(f.request, [f.request.data.content])
 
+                    self.send_request_trailers(f.request)
+
                     f.response = self.read_response_headers()
 
                 try:
@@ -403,6 +422,8 @@ class HttpLayer(base.Layer):
                 # response was set by an inline script.
                 # we now need to emulate the responseheaders hook.
                 self.channel.ask("responseheaders", f)
+
+            f.response.data.trailers = self.read_response_trailers(f.request, f.response)
 
             self.log("response", "debug", [repr(f.response)])
             self.channel.ask("response", f)

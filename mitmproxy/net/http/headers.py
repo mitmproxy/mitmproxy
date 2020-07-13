@@ -1,5 +1,3 @@
-import re
-
 import collections
 from mitmproxy.coretypes import multidict
 from mitmproxy.utils import strutils
@@ -146,40 +144,6 @@ class Headers(multidict.MultiDict):
             )
         else:
             return super().items()
-
-    def replace(self, pattern, repl, flags=0, count=0):
-        """
-        Replaces a regular expression pattern with repl in each "name: value"
-        header line.
-
-        Returns:
-            The number of replacements made.
-        """
-        if isinstance(pattern, str):
-            pattern = strutils.escaped_str_to_bytes(pattern)
-        if isinstance(repl, str):
-            repl = strutils.escaped_str_to_bytes(repl)
-        pattern = re.compile(pattern, flags)
-        replacements = 0
-        flag_count = count > 0
-        fields = []
-        for name, value in self.fields:
-            line, n = pattern.subn(repl, name + b": " + value, count=count)
-            try:
-                name, value = line.split(b": ", 1)
-            except ValueError:
-                # We get a ValueError if the replacement removed the ": "
-                # There's not much we can do about this, so we just keep the header as-is.
-                pass
-            else:
-                replacements += n
-                if flag_count:
-                    count -= n
-                    if count == 0:
-                        break
-            fields.append((name, value))
-        self.fields = tuple(fields)
-        return replacements
 
 
 def parse_content_type(c):

@@ -180,3 +180,8 @@ class Flow(stateobject.StateObject):
         if self.reply.state == "taken":
             self.reply.ack()
             self.reply.commit()
+
+    @property
+    def timestamp_start(self) -> float:
+        """Start time of the flow."""
+        return self.client_conn.timestamp_start

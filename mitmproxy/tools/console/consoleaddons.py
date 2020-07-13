@@ -9,6 +9,7 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import log
+from mitmproxy import tcp
 from mitmproxy.tools.console import keymap
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
@@ -112,7 +113,7 @@ class ConsoleAddon:
             choices=sorted(console_palettes),
         )
         loader.add_option(
-            "console_palette_transparent", bool, False,
+            "console_palette_transparent", bool, True,
             "Set transparent background for palette."
         )
         loader.add_option(
@@ -291,6 +292,8 @@ class ConsoleAddon:
         Prompt the user to edit a command with a (possibly empty) starting value.
         """
         quoted = " ".join(command_lexer.quote(x) for x in command_str)
+        if quoted:
+            quoted += " "
         signals.status_prompt_command.send(partial=quoted)
 
     @command.command("console.command.set")
@@ -334,9 +337,10 @@ class ConsoleAddon:
     @command.command("console.view.flow")
     def view_flow(self, flow: flow.Flow) -> None:
         """View a flow."""
-        if hasattr(flow, "request"):
-            # FIME: Also set focus?
+        if isinstance(flow, (http.HTTPFlow, tcp.TCPFlow)):
             self.master.switch_view("flowview")
+        else:
+            ctx.log.warn(f"No detail view for {type(flow).__name__}.")
 
     @command.command("console.exit")
     def exit(self) -> None:

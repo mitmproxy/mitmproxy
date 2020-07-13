@@ -43,7 +43,7 @@ class TestMasterSecretLogger(tservers.ServerTestBase):
 
             tls.log_master_secret.close()
             with open(logfile, "rb") as f:
-                assert f.read().count(b"CLIENT_RANDOM") == 2
+                assert f.read().count(b"CLIENT_RANDOM") >= 2
 
         tls.log_master_secret = _logfun
 

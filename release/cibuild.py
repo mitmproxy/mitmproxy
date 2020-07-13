@@ -356,15 +356,17 @@ def build_docker_image(be: BuildEnviron):  # pragma: no cover
         "--file", "release/docker/Dockerfile",
         "."
     ])
-    subprocess.check_call([
+    # smoke-test the newly built docker image
+    r = subprocess.run([
         "docker",
-        "build",
-        "--tag", be.docker_tag + "-ARMv7",
-        "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
-        "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
-        "--file", "release/docker/DockerfileARMv7",
-        "."
-    ])
+        "run",
+        "--rm",
+        be.docker_tag,
+        "mitmdump",
+        "--version",
+    ], check=True, capture_output=True)
+    print(r.stdout.decode())
+    assert "Mitmproxy: " in r.stdout.decode()
 
 
 def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
@@ -454,10 +456,10 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
         return
     click.echo("Building wininstaller package...")
 
-    IB_VERSION = "19.10.0"
+    IB_VERSION = "20.3.0"
     IB_DIR = pathlib.Path(be.release_dir) / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
-    IB_CLI = fr"C:\Program Files (x86)\BitRock InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
+    IB_CLI = fr"C:\Program Files (x86)\VMware InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe"
     IB_LICENSE = IB_DIR / "license.xml"
 
     if not os.path.isfile(IB_CLI):
@@ -470,11 +472,11 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
                     click.secho(f"Downloading... {round(100 * done / total)}%")
 
             urllib.request.urlretrieve(
-                f"https://clients.bitrock.com/installbuilder/installbuilder-enterprise-{IB_VERSION}-windows-installer.exe",
+                f"https://installbuilder.com/installbuilder-enterprise-{IB_VERSION}-windows-installer.exe",
                 IB_SETUP.with_suffix(".tmp"),
                 reporthook=report
             )
-            shutil.move(IB_SETUP.with_suffix(".tmp"), IB_SETUP)
+            shutil.move(str(IB_SETUP.with_suffix(".tmp")), str(IB_SETUP))
 
         click.echo("Install InstallBuilder...")
         subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"], check=True)
@@ -569,11 +571,10 @@ def upload():  # pragma: no cover
             "-u", be.docker_username,
             "-p", be.docker_password,
         ])
-        for variant in ["", "-ARMv7"]:
-            subprocess.check_call(["docker", "push", be.docker_tag + variant])
-            if be.is_prod_release:
-                subprocess.check_call(["docker", "tag", be.docker_tag + variant, "mitmproxy/mitmproxy:latest" + variant])
-                subprocess.check_call(["docker", "push", "mitmproxy/mitmproxy:latest" + variant])
+        subprocess.check_call(["docker", "push", be.docker_tag])
+        if be.is_prod_release:
+            subprocess.check_call(["docker", "tag", be.docker_tag, "mitmproxy/mitmproxy:latest"])
+            subprocess.check_call(["docker", "push", "mitmproxy/mitmproxy:latest"])
 
 
 if __name__ == "__main__":  # pragma: no cover

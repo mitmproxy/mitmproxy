@@ -23,7 +23,7 @@ $ docker run --rm -it -p 8080:8080 mitmproxy/mitmproxy mitmdump
 For `mitmweb`, you also need to expose port 8081:
 ```sh
 # this makes :8081 accessible to the local machine only
-$ docker run --rm -it -p 8080:8080 -p 127.0.0.1:8081:8081 mitmproxy/mitmproxy mitmweb --web-iface 0.0.0.0
+$ docker run --rm -it -p 8080:8080 -p 127.0.0.1:8081:8081 mitmproxy/mitmproxy mitmweb --web-host 0.0.0.0
 ```
 
 You can also pass options directly via the CLI:
@@ -40,8 +40,7 @@ The available release tags can be seen
 
 * `master` always tracks the git-master branch and represents the unstable development tree.
 * `latest` always points to the same image as the most recent stable release, including bugfix releases (e.g., `4.0.0` and `4.0.1`).
-* `X.Y.Z` tags contain the mitmproxy release with this version number.  
-* `*-ARMv7` are images built for Raspbian / Raspberry Pi systems.
+* `X.Y.Z` tags contain the mitmproxy release with this version number.
 
 # Security Notice
 

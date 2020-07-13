@@ -55,8 +55,7 @@ can enable it with: `http2_priority=true`.
 
 [RFC7692: Compression Extensions for WebSocket](http://tools.ietf.org/html/rfc7692)
 
-WebSocket support in mitmproxy is based on [wsproto]
-(https://github.com/python-hyper/wsproto) project. It fully encapsulates
+WebSocket support in mitmproxy is based on [wsproto](https://github.com/python-hyper/wsproto) project. It fully encapsulates
 WebSocket frames/messages/connections and provides an easy-to-use event-based
 API.
 

@@ -1,5 +1,7 @@
+import typing
 import urwid
 
+import mitmproxy.flow
 from mitmproxy import http
 from mitmproxy.tools.console import common, searchable
 from mitmproxy.utils import human
@@ -13,13 +15,19 @@ def maybe_timestamp(base, attr):
         return "active"
 
 
-def flowdetails(state, flow: http.HTTPFlow):
+def flowdetails(state, flow: mitmproxy.flow.Flow):
     text = []
 
     sc = flow.server_conn
     cc = flow.client_conn
-    req = flow.request
-    resp = flow.response
+    req: typing.Optional[http.HTTPRequest]
+    resp: typing.Optional[http.HTTPResponse]
+    if isinstance(flow, http.HTTPFlow):
+        req = flow.request
+        resp = flow.response
+    else:
+        req = None
+        resp = None
     metadata = flow.metadata
 
     if metadata is not None and len(metadata) > 0:
@@ -126,6 +134,12 @@ def flowdetails(state, flow: http.HTTPFlow):
                     maybe_timestamp(cc, "timestamp_tls_setup")
                 )
             )
+        parts.append(
+            (
+                "Client conn. closed",
+                maybe_timestamp(cc, "timestamp_end")
+            )
+        )
 
     if sc is not None and sc.timestamp_start:
         parts.append(
@@ -147,6 +161,12 @@ def flowdetails(state, flow: http.HTTPFlow):
                     maybe_timestamp(sc, "timestamp_tls_setup")
                 )
             )
+        parts.append(
+            (
+                "Server conn. closed",
+                maybe_timestamp(sc, "timestamp_end")
+            )
+        )
 
     if req is not None and req.timestamp_start:
         parts.append(

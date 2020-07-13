@@ -496,6 +496,71 @@ class TestStreamResetFromServer(_Http2Test):
         assert self.master.state.flows[0].response is None
 
 
+class TestAllStreamResetsFromServer(_Http2Test):
+
+    current_error_name = None
+    current_error_code = None
+
+    @classmethod
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        elif isinstance(event, h2.events.RequestReceived):
+            h2_conn.reset_stream(event.stream_id, int(cls.current_error_code))
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        return True
+
+    def test_all_stream_reset_error_codes(self):
+        for error_name, error_code in h2.errors.ErrorCodes.__members__.items():
+            self.__class__.current_error_name = error_name
+            self.__class__.current_error_code = error_code
+            try:
+                self.run_test_for_stream_reset()
+            except:
+                print('Exception occurred during test for error code {} ({})'.format(
+                    error_name, error_code
+                ))
+                raise
+
+    def run_test_for_stream_reset(self):
+        h2_conn = self.setup_connection()
+
+        self._send_request(
+            self.client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+            ],
+        )
+
+        self.client.rfile.o.settimeout(1)
+
+        done = False
+        while not done:
+            try:
+                raw = b''.join(http2.read_raw_frame(self.client.rfile))
+                events = h2_conn.receive_data(raw)
+            except exceptions.HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            self.client.wfile.write(h2_conn.data_to_send())
+            self.client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.StreamReset):
+                    assert event.error_code == int(self.current_error_code)
+                    done = True
+
+        h2_conn.close_connection()
+        self.client.wfile.write(h2_conn.data_to_send())
+        self.client.wfile.flush()
+
+
 class TestBodySizeLimit(_Http2Test):
 
     @classmethod
@@ -966,3 +1031,147 @@ class TestResponseStreaming(_Http2Test):
             assert data
         else:
             assert data is None
+
+
+class TestRequestTrailers(_Http2Test):
+    server_trailers_received = False
+
+    @classmethod
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.RequestReceived):
+            # reset the value for a fresh test
+            cls.server_trailers_received = False
+        elif isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        elif isinstance(event, h2.events.TrailersReceived):
+            cls.server_trailers_received = True
+
+        elif isinstance(event, h2.events.StreamEnded):
+            h2_conn.send_headers(event.stream_id, [
+                (':status', '200'),
+                ('x-my-trailer-request-received', 'success' if cls.server_trailers_received else "failure"),
+            ], end_stream=True)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        return True
+
+    @pytest.mark.parametrize('announce', [True, False])
+    @pytest.mark.parametrize('body', [None, b"foobar"])
+    def test_trailers(self, announce, body):
+        h2_conn = self.setup_connection()
+        stream_id = 1
+        headers = [
+            (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
+            (':method', 'GET'),
+            (':scheme', 'https'),
+            (':path', '/'),
+        ]
+        if announce:
+            headers.append(('trailer', 'x-my-trailers'))
+        h2_conn.send_headers(
+            stream_id=stream_id,
+            headers=headers,
+        )
+        if body:
+            h2_conn.send_data(stream_id, body)
+
+        # send trailers
+        h2_conn.send_headers(stream_id, [('x-my-trailers', 'foobar')], end_stream=True)
+
+        self.client.wfile.write(h2_conn.data_to_send())
+        self.client.wfile.flush()
+
+        done = False
+        while not done:
+            try:
+                raw = b''.join(http2.read_raw_frame(self.client.rfile))
+                events = h2_conn.receive_data(raw)
+            except exceptions.HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            self.client.wfile.write(h2_conn.data_to_send())
+            self.client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.StreamEnded):
+                    done = True
+
+        h2_conn.close_connection()
+        self.client.wfile.write(h2_conn.data_to_send())
+        self.client.wfile.flush()
+
+        assert len(self.master.state.flows) == 1
+        assert self.master.state.flows[0].request.trailers['x-my-trailers'] == 'foobar'
+        assert self.master.state.flows[0].response.status_code == 200
+        assert self.master.state.flows[0].response.headers['x-my-trailer-request-received'] == 'success'
+
+
+class TestResponseTrailers(_Http2Test):
+
+    @classmethod
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        elif isinstance(event, h2.events.StreamEnded):
+            headers = [
+                (':status', '200'),
+            ]
+            if event.stream_id == 1:
+                # special stream_id to activate the Trailer announcement header
+                headers.append(('trailer', 'x-my-trailers'))
+
+            h2_conn.send_headers(event.stream_id, headers)
+            h2_conn.send_data(event.stream_id, b'response body')
+            h2_conn.send_headers(event.stream_id, [('x-my-trailers', 'foobar')], end_stream=True)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        return True
+
+    @pytest.mark.parametrize('announce', [True, False])
+    def test_trailers(self, announce):
+        response_body_buffer = b''
+        h2_conn = self.setup_connection()
+
+        self._send_request(
+            self.client.wfile,
+            h2_conn,
+            stream_id=(1 if announce else 3),
+            headers=[
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+            ])
+
+        trailers_buffer = None
+        done = False
+        while not done:
+            try:
+                raw = b''.join(http2.read_raw_frame(self.client.rfile))
+                events = h2_conn.receive_data(raw)
+            except exceptions.HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            self.client.wfile.write(h2_conn.data_to_send())
+            self.client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.DataReceived):
+                    response_body_buffer += event.data
+                elif isinstance(event, h2.events.TrailersReceived):
+                    trailers_buffer = event.headers
+                elif isinstance(event, h2.events.StreamEnded):
+                    done = True
+
+        h2_conn.close_connection()
+        self.client.wfile.write(h2_conn.data_to_send())
+        self.client.wfile.flush()
+
+        assert len(self.master.state.flows) == 1
+        assert self.master.state.flows[0].response.status_code == 200
+        assert self.master.state.flows[0].response.content == b'response body'
+        assert response_body_buffer == b'response body'
+        assert self.master.state.flows[0].response.trailers['x-my-trailers'] == 'foobar'
+        assert trailers_buffer == [(b'x-my-trailers', b'foobar')]

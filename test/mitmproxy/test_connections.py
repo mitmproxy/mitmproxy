@@ -199,6 +199,9 @@ class TestClientConnectionTLS:
             s = socket.create_connection(address)
             s = ctx.wrap_socket(s, server_hostname=sni)
             s.send(b'foobar')
+            # we need to wait for the test to finish successfully before calling .close() on Windows.
+            # The workaround here is to signal completion by sending data the other way around.
+            s.recv(3)
             s.close()
         threading.Thread(target=client_run).start()
 
@@ -216,6 +219,7 @@ class TestClientConnectionTLS:
         assert c.sni == sni
         assert c.tls_established
         assert c.rfile.read(6) == b'foobar'
+        c.wfile.send(b"foo")
         c.finish()
         sock.close()
 

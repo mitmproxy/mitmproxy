@@ -5,9 +5,11 @@ from typing import Optional, Union  # noqa
 
 import urwid
 
+import mitmproxy.flow
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import http
+from mitmproxy import tcp
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import flowdetailview
@@ -24,8 +26,8 @@ class SearchError(Exception):
 class FlowViewHeader(urwid.WidgetWrap):
 
     def __init__(
-        self,
-        master: "mitmproxy.tools.console.master.ConsoleMaster",
+            self,
+            master: "mitmproxy.tools.console.master.ConsoleMaster",
     ) -> None:
         self.master = master
         self.focus_changed()
@@ -35,11 +37,8 @@ class FlowViewHeader(urwid.WidgetWrap):
         if self.master.view.focus.flow:
             self._w = common.format_flow(
                 self.master.view.focus.flow,
-                False,
-                extended=True,
+                render_mode=common.RenderMode.DETAILVIEW,
                 hostheader=self.master.options.showhost,
-                cols=cols,
-                layout=self.master.options.console_flowlist_layout
             )
         else:
             self._w = urwid.Pile([])
@@ -52,45 +51,122 @@ class FlowDetails(tabs.Tabs):
         self.show()
         self.last_displayed_body = None
 
-    def focus_changed(self):
-        if self.master.view.focus.flow:
-            self.tabs = [
-                (self.tab_request, self.view_request),
-                (self.tab_response, self.view_response),
-                (self.tab_details, self.view_details),
-            ]
-            self.show()
-        else:
-            self.master.window.pop()
-
     @property
     def view(self):
         return self.master.view
 
     @property
-    def flow(self):
+    def flow(self) -> mitmproxy.flow.Flow:
         return self.master.view.focus.flow
 
-    def tab_request(self):
-        if self.flow.intercepted and not self.flow.response:
+    def focus_changed(self):
+        if self.flow:
+            if isinstance(self.flow, http.HTTPFlow):
+                self.tabs = [
+                    (self.tab_http_request, self.view_request),
+                    (self.tab_http_response, self.view_response),
+                    (self.tab_details, self.view_details),
+                ]
+            elif isinstance(self.flow, tcp.TCPFlow):
+                self.tabs = [
+                    (self.tab_tcp_stream, self.view_tcp_stream),
+                    (self.tab_details, self.view_details),
+                ]
+            self.show()
+        else:
+            self.master.window.pop()
+
+    def tab_http_request(self):
+        flow = self.flow
+        assert isinstance(flow, http.HTTPFlow)
+        if self.flow.intercepted and not flow.response:
             return "Request intercepted"
         else:
             return "Request"
 
-    def tab_response(self):
-        if self.flow.intercepted and self.flow.response:
+    def tab_http_response(self):
+        flow = self.flow
+        assert isinstance(flow, http.HTTPFlow)
+        if self.flow.intercepted and flow.response:
             return "Response intercepted"
         else:
             return "Response"
+
+    def tab_tcp_stream(self):
+        return "TCP Stream"
 
     def tab_details(self):
         return "Detail"
 
     def view_request(self):
-        return self.conn_text(self.flow.request)
+        flow = self.flow
+        assert isinstance(flow, http.HTTPFlow)
+        return self.conn_text(flow.request)
 
     def view_response(self):
-        return self.conn_text(self.flow.response)
+        flow = self.flow
+        assert isinstance(flow, http.HTTPFlow)
+        return self.conn_text(flow.response)
+
+    def _contentview_status_bar(self, description: str, viewmode: str):
+        cols = [
+            urwid.Text(
+                [
+                    ("heading", description),
+                ]
+            ),
+            urwid.Text(
+                [
+                    " ",
+                    ('heading', "["),
+                    ('heading_key', "m"),
+                    ('heading', (":%s]" % viewmode)),
+                ],
+                align="right"
+            )
+        ]
+        contentview_status_bar = urwid.AttrWrap(urwid.Columns(cols), "heading")
+        return contentview_status_bar
+
+    def view_tcp_stream(self) -> urwid.Widget:
+        flow = self.flow
+        assert isinstance(flow, tcp.TCPFlow)
+
+        if not flow.messages:
+            return searchable.Searchable([urwid.Text(("highlight", "No messages."))])
+
+        viewmode = self.master.commands.call("console.flowview.mode")
+
+        # Merge adjacent TCP "messages". For detailed explanation of this code block see:
+        # https://github.com/mitmproxy/mitmproxy/pull/3970/files/469bd32582f764f9a29607efa4f5b04bd87961fb#r418670880
+        from_client = None
+        messages = []
+        for message in flow.messages:
+            if message.from_client is not from_client:
+                messages.append(message.content)
+                from_client = message.from_client
+            else:
+                messages[-1] += message.content
+
+        widget_lines = []
+
+        from_client = flow.messages[0].from_client
+        for m in messages:
+            _, lines, _ = contentviews.get_tcp_content_view(viewmode, m)
+
+            for line in lines:
+                if from_client:
+                    line.insert(0, ("from_client", f"{common.SYMBOL_FROM_CLIENT} "))
+                else:
+                    line.insert(0, ("to_client", f"{common.SYMBOL_TO_CLIENT} "))
+
+                widget_lines.append(urwid.Text(line))
+
+            from_client = not from_client
+
+        widget_lines.insert(0, self._contentview_status_bar(viewmode.capitalize(), viewmode))
+
+        return searchable.Searchable(widget_lines)
 
     def view_details(self):
         return flowdetailview.flowdetails(self.view, self.flow)
@@ -126,7 +202,7 @@ class FlowDetails(tabs.Tabs):
             self.master.log.debug(error)
         # Give hint that you have to tab for the response.
         if description == "No content" and isinstance(message, http.HTTPRequest):
-            description = "No request content (press tab to view response)"
+            description = "No request content"
 
         # If the users has a wide terminal, he gets fewer lines; this should not be an issue.
         chars_per_line = 80
@@ -229,7 +305,7 @@ class FlowView(urwid.Frame, layoutwidget.LayoutWidget):
     def __init__(self, master):
         super().__init__(
             FlowDetails(master),
-            header = FlowViewHeader(master),
+            header=FlowViewHeader(master),
         )
         self.master = master
 

@@ -137,6 +137,17 @@ class TestScript:
             assert await tctx.master.await_log("error.py")
 
     @pytest.mark.asyncio
+    async def test_optionexceptions(self, tdata):
+        with taddons.context() as tctx:
+            sc = script.Script(
+                tdata.path("mitmproxy/data/addonscripts/configure.py"),
+                True,
+            )
+            tctx.master.addons.add(sc)
+            tctx.configure(sc)
+            assert await tctx.master.await_log("Options Error")
+
+    @pytest.mark.asyncio
     async def test_addon(self, tdata):
         with taddons.context() as tctx:
             sc = script.Script(

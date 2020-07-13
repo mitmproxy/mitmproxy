@@ -2,7 +2,8 @@ import ipaddress
 import re
 
 # Allow underscore in host name
-_label_valid = re.compile(br"(?!-)[A-Z\d\-_]{1,63}(?<!-)$", re.IGNORECASE)
+# Note: This could be a DNS label, a hostname, a FQDN, or an IP
+_label_valid = re.compile(br"[A-Z\d\-_]{1,63}$", re.IGNORECASE)
 
 
 def is_valid_host(host: bytes) -> bool:

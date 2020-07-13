@@ -144,6 +144,9 @@ class TestClientPlayback:
             f.request.raw_content = None
             assert "missing content" in cp.check(f)
 
+            f = tflow.ttcpflow()
+            assert "Can only replay HTTP" in cp.check(f)
+
     @pytest.mark.asyncio
     async def test_playback(self):
         cp = clientplayback.ClientPlayback()

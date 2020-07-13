@@ -125,7 +125,9 @@ class Reader(_FileLike):
                 # underlying BIO could not satisfy the needs of SSL_read() to continue the
                 # operation. In this case a call to SSL_get_error with the return value of
                 # SSL_read() will yield SSL_ERROR_WANT_READ or SSL_ERROR_WANT_WRITE.
-                if (time.time() - start) < self.o.gettimeout():
+                # 300 is OpenSSL default timeout
+                timeout = self.o.gettimeout() or 300
+                if (time.time() - start) < timeout:
                     time.sleep(0.1)
                     continue
                 else:

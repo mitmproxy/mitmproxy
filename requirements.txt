@@ -1,1 +1,1 @@
--e .[dev,examples]
+-e .[dev]

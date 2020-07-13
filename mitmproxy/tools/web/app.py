@@ -93,6 +93,9 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "timestamp_end": flow.response.timestamp_end,
                 "is_replay": flow.response.is_replay,
             }
+            if flow.response.data.trailers:
+                f["response"]["trailers"] = tuple(flow.response.data.trailers.items(True))
+
     f.get("server_conn", {}).pop("cert", None)
     f.get("client_conn", {}).pop("mitmcert", None)
 
@@ -437,13 +440,13 @@ class Settings(RequestHandler):
 
     def put(self):
         update = self.json
-        option_whitelist = {
+        allowed_options = {
             "intercept", "showhost", "upstream_cert", "ssl_insecure",
             "rawtcp", "http2", "websocket", "anticache", "anticomp",
             "stickycookie", "stickyauth", "stream_large_bodies"
         }
         for k in update:
-            if k not in option_whitelist:
+            if k not in allowed_options:
                 raise APIError(400, "Unknown setting {}".format(k))
         self.master.options.update(**update)
 
@@ -496,7 +499,7 @@ class Application(tornado.web.Application):
         self.add_handlers("dns-rebind-protection", [(r"/.*", DnsRebind)])
         self.add_handlers(
             # make mitmweb accessible by IP only to prevent DNS rebinding.
-            r'^(localhost|[0-9.:\[\]]+)$',
+            r'^(localhost|[0-9.]+|\[[0-9a-fA-F:]+\])$',
             [
                 (r"/", IndexHandler),
                 (r"/filter-help(?:\.json)?", FilterHelp),

@@ -127,15 +127,18 @@ class ClientPlayback:
         self.q = queue.Queue()
         self.thread: RequestReplayThread = None
 
-    def check(self, f: http.HTTPFlow):
+    def check(self, f: flow.Flow):
         if f.live:
             return "Can't replay live flow."
         if f.intercepted:
             return "Can't replay intercepted flow."
-        if not f.request:
-            return "Can't replay flow with missing request."
-        if f.request.raw_content is None:
-            return "Can't replay flow with missing content."
+        if isinstance(f, http.HTTPFlow):
+            if not f.request:
+                return "Can't replay flow with missing request."
+            if f.request.raw_content is None:
+                return "Can't replay flow with missing content."
+        else:
+            return "Can only replay HTTP flows."
 
     def load(self, loader):
         loader.add_option(

@@ -110,8 +110,9 @@ class HTTP2StateProtocol:
             b"HTTP/2.0",
             headers,
             body,
-            timestamp_start,
-            timestamp_end,
+            None,
+            timestamp_start=timestamp_start,
+            timestamp_end=timestamp_end,
         )
         request.stream_id = stream_id
 

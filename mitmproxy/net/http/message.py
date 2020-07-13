@@ -28,6 +28,8 @@ class MessageData(serializable.Serializable):
     def get_state(self):
         state = vars(self).copy()
         state["headers"] = state["headers"].get_state()
+        if 'trailers' in state and state["trailers"] is not None:
+            state["trailers"] = state["trailers"].get_state()
         return state
 
     @classmethod
@@ -53,6 +55,8 @@ class Message(serializable.Serializable):
     @classmethod
     def from_state(cls, state):
         state["headers"] = mheaders.Headers.from_state(state["headers"])
+        if 'trailers' in state and state["trailers"] is not None:
+            state["trailers"] = mheaders.Headers.from_state(state["trailers"])
         return cls(**state)
 
     @property
@@ -129,6 +133,20 @@ class Message(serializable.Serializable):
         self.headers["content-length"] = str(len(self.raw_content))
 
     content = property(get_content, set_content)
+
+    @property
+    def trailers(self):
+        """
+        Message trailers object
+
+        Returns:
+            mitmproxy.net.http.Headers
+        """
+        return self.data.trailers
+
+    @trailers.setter
+    def trailers(self, h):
+        self.data.trailers = h
 
     @property
     def http_version(self):
@@ -250,24 +268,3 @@ class Message(serializable.Serializable):
         self.content = self.raw_content
         if "content-encoding" not in self.headers:
             raise ValueError("Invalid content encoding {}".format(repr(e)))
-
-    def replace(self, pattern, repl, flags=0, count=0):
-        """
-        Replaces a regular expression pattern with repl in both the headers
-        and the body of the message. Encoded body will be decoded
-        before replacement, and re-encoded afterwards.
-
-        Returns:
-            The number of replacements made.
-        """
-        if isinstance(pattern, str):
-            pattern = strutils.escaped_str_to_bytes(pattern)
-        if isinstance(repl, str):
-            repl = strutils.escaped_str_to_bytes(repl)
-        replacements = 0
-        if self.content:
-            self.content, replacements = re.subn(
-                pattern, repl, self.content, flags=flags, count=count
-            )
-        replacements += self.headers.replace(pattern, repl, flags=flags, count=count)
-        return replacements

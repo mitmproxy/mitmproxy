@@ -23,8 +23,8 @@ export function FileMenu ({clearFlows, loadFlows, saveFlows}) {
      return (
         <Dropdown className="pull-left" btnClass="special" text="mitmproxy">
             <a href="#" onClick={e => FileMenu.onNewClick(e, clearFlows)}>
-                <i className="fa fa-fw fa-file"></i>
-                &nbsp;New
+                <i className="fa fa-fw fa-trash"></i>
+                &nbsp;Clear All
             </a>
             <FileChooser
                 icon="fa-folder-open"
