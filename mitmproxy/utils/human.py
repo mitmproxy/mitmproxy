@@ -70,8 +70,8 @@ def format_timestamp(s):
     return d.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def format_timestamp_with_milli(s):
-    d = datetime.datetime.fromtimestamp(s)
+def format_timestamp_with_milli(s, offset_from_utc=0):
+    d = datetime.datetime.fromtimestamp(s) + datetime.timedelta(hours=offset_from_utc)
     return d.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
 

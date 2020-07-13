@@ -181,5 +181,9 @@ class Options(optmanager.OptManager):
             TLS key size for certificates and CA.
             """
         )
+        self.add_option(
+            "offset_from_utc", int, 0,
+            "Offset from UTC timezone"
+        )
 
         self.update(**kwargs)
