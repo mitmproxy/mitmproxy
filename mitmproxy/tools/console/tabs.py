@@ -50,7 +50,7 @@ class Tabs(urwid.WidgetWrap):
         headers = []
         for i in range(len(self.tabs)):
             txt = self.tabs[i][0]()
-            if i == self.tab_offset:
+            if i == self.tab_offset % len(self.tabs):
                 headers.append(
                     Tab(
                         i,
@@ -70,7 +70,7 @@ class Tabs(urwid.WidgetWrap):
                 )
         headers = urwid.Columns(headers, dividechars=1)
         self._w = urwid.Frame(
-            body = self.tabs[self.tab_offset][1](),
+            body = self.tabs[self.tab_offset % len(self.tabs)][1](),
             header = headers
         )
         self._w.set_focus("body")
