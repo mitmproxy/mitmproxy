@@ -19,7 +19,6 @@ from mitmproxy.addons import stickycookie
 from mitmproxy.addons import streambodies
 from mitmproxy.addons import save
 from mitmproxy.addons import upstream_auth
-from mitmproxy.addons import check_ssl_pinning
 
 
 def default_addons():
@@ -45,5 +44,4 @@ def default_addons():
         streambodies.StreamBodies(),
         save.Save(),
         upstream_auth.UpstreamAuth(),
-        check_ssl_pinning.CheckSSLPinning(),
     ]
