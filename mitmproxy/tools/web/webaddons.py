@@ -44,7 +44,9 @@ def open_browser(url: str) -> bool:
         False, if no suitable browser has been found.
     """
     browsers = (
-        "windows-default", "wslview %s", "macosx",
+        "windows-default", "macosx",
+        "wslview %s",
+        "x-www-browser %s", "gnome-open %s",
         "google-chrome", "chrome", "chromium", "chromium-browser",
         "firefox", "opera", "safari",
     )
@@ -54,6 +56,6 @@ def open_browser(url: str) -> bool:
         except webbrowser.Error:
             pass
         else:
-            b.open(url)
-            return True
+            if b.open(url):
+                return True
     return False
