@@ -47,43 +47,45 @@ option, to make sure the server responds with complete data.
 ## Map Local
 
 The `map_local` option lets you specify an arbitrary number of patterns that
-define redirections of HTTP requests to local files or diretories.
+define redirections of HTTP requests to local files or directories.
 The local file is fetched instead of the original resource
-and the corresponding HTTP response is returned transparently to the client.
-The mime type of the local file is guessed to set the `Content-Type` header.
+and transparently returned to the client.
+
 `map_local` patterns look like this:
 
 ```
-|flow-filter|url-regex|file-path
-|flow-filter|url-regex|diretory-path
-|url-regex|file-path
-|url-regex|diretory-path
+|url-regex|local-path
+|flow-filter|url-regex|local-path
 ```
 
+* **local-path** is the file or directory that should be served to the client.
+
+* **url-regex** is a regular expression applied on the request URL. It must match for a redirect to take place.
+
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
-that defines which requests the `map_local` option applies to.
-
-* **url-regex** is a valid Python regular expression on the request URL. It serves two purposes.
-First, it must match a part of the request URL to ensure that the rule is applied to the request.
-Second, it is used to split the request URL in two parts. The right part is used as a suffix
-that is appended to the **diretory-path**, as shown in the first example below.
-If **url-regex** contains a regex group, the first group is used as the suffix instead of the
-right part of the split, as shown in the second example below.
-
-* **file-path** is a path to a file that is served instead of the original resource.
-
-* **diretory-path** is a path to a directory that is used to look for the resource
-to serve instead of the original resource. mitmproxy tries to find the local file as
-explained for **url-regex** and shown in the examples below. If the file is not
-found, mitmproxy tries to append `index.html` to the resulting path.
-Otherwise, a 404 response without content is sent to the client.
+that additionally constrains which requests will be redirected.
 
 ### Examples
 
-Map all requests for `example.org/css*` to the local directory `~/static-css`.
+Pattern | Description
+------- | -----------
+`\|example.com/main.js\|~/main-local.js` | Replace `example.com/main.js` with `~/main-local.js`.
+`\|example.com/static\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css`.
+`\|example.com/static/foo\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/bar.css`.
+`\|~m GET\|example.com/static\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css` (but only for GET requests).
+
+### Details
+
+If *local-path* is a file, this file will always be served. File changes will be reflected immediately, there is no caching.
+
+If *local-path* is a directory, *url-regex* is used to split the request URL in two parts and part on the right is appended to *local-path*, excluding the query string.
+However, if *url-regex* contains a regex capturing group, this behavior changes and the first capturing group is appended instead (and query strings are not stripped). 
+Special characters are mapped to `_`. If the file cannot be found, `/index.html` is appended and we try again. Directory traversal outside of the originally specified directory is not possible.
+
+To illustrate this, consider the following example which maps all requests for `example.org/css*` to the local directory `~/static-css`.
 
 <pre>
-                  ┌── url-regex ──┬─ directory-path ─┐
+                  ┌── url regex ──┬─ local path ─┐
 map_local option: |<span style="color:#f92672">example.com/css</span>|<span style="color:#82b719">~/static-css</span>
                             │
                             │    URL is split here
@@ -96,11 +98,12 @@ Served File:      Preferred: <span style="color:#82b719">~/static-css</span><spa
                   Otherwise: 404 response without content
 </pre>
 
-Map all `GET` requests for `example.org/index.php?page=<page-name>` to the local directory `~/static-dir/<page-name>`.
+If the file depends on the query string, we can use regex capturing groups. In this example, all `GET` requests for 
+`example.org/index.php?page=<page-name>` are mapped to `~/static-dir/<page-name>`:
 
 <pre>
                     flow
-                  ┌filter┬─────────── url-regex ───────────┬─ directory-path ─┐
+                  ┌filter┬─────────── url regex ───────────┬─ local path ─┐
 map_local option: |~m GET|<span style="color:#f92672">example.com/index.php\\?page=</span><span style="color:#66d9ef">(.+)</span>|<span style="color:#82b719">~/static-dir</span>
                             │                           │
                             │                           │ regex group = suffix
@@ -114,11 +117,6 @@ Served File:                 Preferred: <span style="color:#82b719">~/static-dir
 </pre>
 
 
-Map all requests for `example.org/js/main.js` to the local file `~/main-local.js`.
-
-```
-|example.org/js/main.js|~/main-local.js
-```
 
 
 ## Map Remote
