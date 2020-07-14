@@ -73,18 +73,18 @@ setup(
         "kaitaistruct>=0.7,<0.9",
         "ldap3>=2.6.1,<2.8",
         "passlib>=1.6.5, <1.8",
-        "protobuf>=3.6.0, <3.12",
+        "protobuf>=3.12,<3.13",
         "pyasn1>=0.3.1,<0.5",
         "pyOpenSSL>=19.1.0,<19.2",
         "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.9",
         "ruamel.yaml>=0.16,<0.17",
-        "sortedcontainers>=2.1.0,<2.2",
+        "sortedcontainers>=2.2,<2.3",
         "tornado>=4.3,<7",
         "urwid>=2.1.0,<2.2",
         "wsproto>=0.14,<0.16",
         "publicsuffix2>=2.20190812,<3",
-        "zstandard>=0.11,<0.14",
+        "zstandard>=0.14,<0.15",
     ],
     extras_require={
         ':sys_platform == "win32"': [
@@ -93,15 +93,15 @@ setup(
         'dev': [
             "asynctest>=0.12.0",
             "Flask>=1.0,<1.2",
-            "hypothesis>=5.8,<5.9",
+            "hypothesis>=5.19,<5.20",
             "parver>=0.1,<2.0",
-            "pytest-asyncio>=0.10.0,<0.11",
+            "pytest-asyncio>=0.14,<0.15",
             "pytest-cov>=2.7.1,<3",
             "pytest-timeout>=1.3.3,<2",
             "pytest-xdist>=1.29,<2",
             "pytest>=5.1.3,<6",
             "requests>=2.9.1,<3",
-            "tox>=3.5,<3.15",
+            "tox>=3.17,<3.18",
         ]
     }
 )
