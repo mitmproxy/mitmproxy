@@ -42,3 +42,13 @@ def test_simple():
         f = tflow.tflow(resp=True)
         tctx.cycle(r, f)
         assert f.intercepted
+
+        tctx.configure(r, intercept_active=False)
+        f = tflow.ttcpflow()
+        tctx.cycle(r, f)
+        assert not f.intercepted
+
+        tctx.configure(r, intercept_active=True)
+        f = tflow.ttcpflow()
+        tctx.cycle(r, f)
+        assert f.intercepted

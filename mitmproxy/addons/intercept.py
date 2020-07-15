@@ -49,3 +49,7 @@ class Intercept:
 
     def response(self, f):
         self.process_flow(f)
+
+    def tcp_message(self, f):
+        if self.filt and ctx.options.intercept_active:
+            f.intercept()
