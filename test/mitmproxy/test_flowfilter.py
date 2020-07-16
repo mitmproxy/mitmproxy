@@ -439,6 +439,17 @@ class TestMatchingWebSocketFlow:
         assert not self.q("~tcp", f)
         assert not self.q("~http", f)
 
+    def test_handshake(self):
+        f = self.flow().handshake_flow
+        assert self.q("~websocket", f)
+        assert not self.q("~tcp", f)
+        assert self.q("~http", f)
+
+        f = tflow.tflow()
+        assert not self.q("~websocket", f)
+        f = tflow.tflow(resp=True)
+        assert not self.q("~websocket", f)
+
     def test_ferr(self):
         e = self.err()
         assert self.q("~e", e)

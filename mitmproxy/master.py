@@ -152,10 +152,15 @@ class Master:
                 self.waiting_flows.append(f)
 
         if isinstance(f, websocket.WebSocketFlow):
-            hf = [hf for hf in self.waiting_flows if hf.id == f.metadata['websocket_handshake']][0]
-            f.handshake_flow = hf
-            self.waiting_flows.remove(hf)
-            self._change_reverse_host(f.handshake_flow)
+            hfs = [hf for hf in self.waiting_flows if hf.id == f.metadata['websocket_handshake']]
+            if hfs:
+                hf = hfs[0]
+                f.handshake_flow = hf
+                self.waiting_flows.remove(hf)
+                self._change_reverse_host(f.handshake_flow)
+            else:
+                # this will fail - but at least it will load the remaining flows
+                f.handshake_flow = http.HTTPFlow(None, None)
 
         f.reply = controller.DummyReply()
         for e, o in eventsequence.iterate(f):
