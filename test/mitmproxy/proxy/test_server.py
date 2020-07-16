@@ -801,6 +801,8 @@ class TestStreamRequest(tservers.HTTPProxyTest):
         chunks = list(http1.read_body(fconn, None))
         assert chunks == [b"this", b"isatest__reachhex"]
 
+        fconn.close()
+        connection.shutdown(socket.SHUT_RDWR)
         connection.close()
 
 
