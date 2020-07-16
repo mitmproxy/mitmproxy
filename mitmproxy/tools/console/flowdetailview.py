@@ -2,7 +2,7 @@ import typing
 import urwid
 
 import mitmproxy.flow
-from mitmproxy import http, ctx
+from mitmproxy import http
 from mitmproxy.tools.console import common, searchable
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
@@ -10,8 +10,7 @@ from mitmproxy.utils import strutils
 
 def maybe_timestamp(base, attr):
     if base is not None and getattr(base, attr):
-        offset_from_utc = ctx.options.offset_from_utc
-        return human.format_timestamp_with_milli(getattr(base, attr), offset_from_utc)
+        return human.format_timestamp_with_milli(getattr(base, attr))
     else:
         return "active"
 

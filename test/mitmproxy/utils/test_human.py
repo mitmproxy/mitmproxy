@@ -1,5 +1,4 @@
 import time
-import datetime
 import pytest
 from mitmproxy.utils import human
 
@@ -10,17 +9,6 @@ def test_format_timestamp():
 
 def test_format_timestamp_with_milli():
     assert human.format_timestamp_with_milli(time.time())
-
-    offset_from_utc = 9
-    now = time.time()
-
-    utc = human.format_timestamp_with_milli(now)
-    utc = datetime.datetime.strptime(utc, '%Y-%m-%d %H:%M:%S.%f')
-
-    jst = human.format_timestamp_with_milli(now, offset_from_utc)
-    jst = datetime.datetime.strptime(jst, '%Y-%m-%d %H:%M:%S.%f')
-
-    assert utc + datetime.timedelta(hours=offset_from_utc) == jst
 
 
 def test_parse_size():

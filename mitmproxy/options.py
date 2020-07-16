@@ -182,8 +182,8 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
-            "offset_from_utc", int, 0,
-            "Offset from UTC timezone"
+            "utc_to_local", bool, False,
+            "Change timezone from UTC to local"
         )
 
         self.update(**kwargs)

@@ -3,6 +3,7 @@ import ipaddress
 import time
 import functools
 import typing
+from mitmproxy import ctx
 
 SIZE_TABLE = [
     ("b", 1024 ** 0),
@@ -64,14 +65,25 @@ def pretty_duration(secs: typing.Optional[float]) -> str:
     return "{:.0f}ms".format(secs * 1000)
 
 
+def datetime_from_utc_to_local(s):
+    now_timestamp = time.time()
+    offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
+    utc_datetime = datetime.datetime.fromtimestamp(s)
+    return utc_datetime + offset
+
+
 def format_timestamp(s):
     s = time.localtime(s)
     d = datetime.datetime.fromtimestamp(time.mktime(s))
     return d.strftime("%Y-%m-%d %H:%M:%S")
 
 
-def format_timestamp_with_milli(s, offset_from_utc=0):
-    d = datetime.datetime.fromtimestamp(s) + datetime.timedelta(hours=offset_from_utc)
+def format_timestamp_with_milli(s):
+    utc_to_local = ctx.options.utc_to_local
+    if utc_to_local:
+        d = datetime_from_utc_to_local(s)
+    else:
+        d = datetime.datetime.fromtimestamp(s)
     return d.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
 
