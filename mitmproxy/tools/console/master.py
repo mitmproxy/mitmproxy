@@ -28,6 +28,9 @@ from mitmproxy.tools.console import palettes
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import window
 
+from mitmproxy.contrib import urwid_monkeypatch
+urwid_monkeypatch.patch()
+
 
 class ConsoleMaster(master.Master):
 
