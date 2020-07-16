@@ -10,6 +10,7 @@ import h2
 from mitmproxy import options
 
 import mitmproxy.net
+import mitmproxy.http
 from ...net import tservers as net_tservers
 from mitmproxy import exceptions
 from mitmproxy.net.http import http1, http2
@@ -124,17 +125,9 @@ class _Http2TestBase:
         self.client.connect()
 
         # send CONNECT request
-        self.client.wfile.write(http1.assemble_request(mitmproxy.net.http.Request(
-            'authority',
-            b'CONNECT',
-            b'',
-            b'localhost',
-            self.server.server.address[1],
-            b'/',
-            b'HTTP/1.1',
-            [(b'host', b'localhost:%d' % self.server.server.address[1])],
-            b'',
-        )))
+        self.client.wfile.write(http1.assemble_request(
+            mitmproxy.http.make_connect_request(("localhost", self.server.server.address[1]))
+        ))
         self.client.wfile.flush()
 
         # read CONNECT response

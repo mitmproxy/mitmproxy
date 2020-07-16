@@ -1,10 +1,10 @@
 import io
-from mitmproxy import http
+
 from mitmproxy.addons import disable_h2c
-from mitmproxy.net.http import http1
 from mitmproxy.exceptions import Kill
-from mitmproxy.test import tflow
+from mitmproxy.net.http import http1
 from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 class TestDisableH2CleartextUpgrade:
@@ -30,7 +30,7 @@ class TestDisableH2CleartextUpgrade:
 
             b = io.BytesIO(b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n")
             f = tflow.tflow()
-            f.request = http.HTTPRequest.wrap(http1.read_request(b))
+            f.request = http1.read_request(b)
             f.intercept()
 
             a.request(f)

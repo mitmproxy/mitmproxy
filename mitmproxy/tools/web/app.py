@@ -33,6 +33,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
     f = {
         "id": flow.id,
         "intercepted": flow.intercepted,
+        "is_replay": flow.is_replay,
         "client_conn": flow.client_conn.get_state(),
         "server_conn": flow.server_conn.get_state(),
         "type": flow.type,
@@ -72,7 +73,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "contentHash": content_hash,
                 "timestamp_start": flow.request.timestamp_start,
                 "timestamp_end": flow.request.timestamp_end,
-                "is_replay": flow.request.is_replay,
+                "is_replay": flow.is_replay == "request",  # TODO: remove, use flow.is_replay instead.
                 "pretty_host": flow.request.pretty_host,
             }
         if flow.response:
@@ -91,7 +92,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "contentHash": content_hash,
                 "timestamp_start": flow.response.timestamp_start,
                 "timestamp_end": flow.response.timestamp_end,
-                "is_replay": flow.response.is_replay,
+                "is_replay": flow.is_replay == "response",  # TODO: remove, use flow.is_replay instead.
             }
             if flow.response.data.trailers:
                 f["response"]["trailers"] = tuple(flow.response.data.trailers.items(True))

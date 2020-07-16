@@ -190,11 +190,14 @@ class Response(_HTTP2Message):
                 body = body.string()
 
             resp = http.Response(
-                b'HTTP/2.0',
-                int(self.status_code.string()),
-                b'',
-                headers,
-                body,
+                http_version=b'HTTP/2.0',
+                status_code=int(self.status_code.string()),
+                reason=b'',
+                headers=headers,
+                content=body,
+                trailers=None,
+                timestamp_start=0,
+                timestamp_end=0
             )
             resp.stream_id = self.stream_id
 
@@ -273,15 +276,18 @@ class Request(_HTTP2Message):
                 body = body.string()
 
             req = http.Request(
-                b'',
+                "",
+                0,
                 self.method.string(),
                 b'http',
                 b'',
-                b'',
                 path,
-                (2, 0),
+                b"HTTP/2.0",
                 headers,
                 body,
+                None,
+                0,
+                0,
             )
             req.stream_id = self.stream_id
 

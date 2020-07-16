@@ -77,6 +77,7 @@ class Flow(stateobject.StateObject):
         self._backup: typing.Optional[Flow] = None
         self.reply: typing.Optional[controller.Reply] = None
         self.marked: bool = False
+        self.is_replay: typing.Optional[str] = None
         self.metadata: typing.Dict[str, typing.Any] = dict()
 
     _stateobject_attributes = dict(
@@ -86,6 +87,7 @@ class Flow(stateobject.StateObject):
         server_conn=connections.ServerConnection,
         type=str,
         intercepted=bool,
+        is_replay=str,
         marked=bool,
         metadata=typing.Dict[str, typing.Any],
     )

@@ -179,6 +179,21 @@ def convert_7_8(data):
     return data
 
 
+def convert_8_9(data):
+    data["version"] = 9
+    data["request"].pop("first_line_format")
+    data["request"]["authority"] = b""
+    is_request_replay = data["request"].pop("is_replay", False)
+    is_response_replay = data["response"].pop("is_replay", False)
+    if is_request_replay:  # pragma: no cover
+        data["is_replay"] = "request"
+    elif is_response_replay:  # pragma: no cover
+        data["is_replay"] = "response"
+    else:
+        data["is_replay"] = None
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -234,6 +249,7 @@ converters = {
     5: convert_5_6,
     6: convert_6_7,
     7: convert_7_8,
+    8: convert_8_9,
 }
 
 
@@ -251,8 +267,8 @@ def migrate_flow(flow_data: Dict[Union[bytes, str], Any]) -> Dict[Union[bytes, s
             flow_data = converters[flow_version](flow_data)
         else:
             should_upgrade = (
-                isinstance(flow_version, int)
-                and flow_version > version.FLOW_FORMAT_VERSION
+                    isinstance(flow_version, int)
+                    and flow_version > version.FLOW_FORMAT_VERSION
             )
             raise ValueError(
                 "{} cannot read files with flow format version {}{}.".format(

@@ -7,7 +7,7 @@ from mitmproxy.net.http import Headers
 from mitmproxy.net.http.http1.read import (
     read_request, read_response, read_request_head,
     read_response_head, read_body, connection_close, expected_http_body_size, _get_first_line,
-    _read_request_line, _parse_authority_form, _read_response_line, _check_http_version,
+    _read_request_line, _read_response_line, _check_http_version,
     _read_headers, _read_chunked, get_header_tokens
 )
 from mitmproxy.test.tutils import treq, tresp
@@ -242,33 +242,24 @@ def test_read_request_line():
         return _read_request_line(BytesIO(b))
 
     assert (t(b"GET / HTTP/1.1") ==
-            ("relative", b"GET", None, None, None, b"/", b"HTTP/1.1"))
+            ("", 0, b"GET", b"", b"", b"/", b"HTTP/1.1"))
     assert (t(b"OPTIONS * HTTP/1.1") ==
-            ("relative", b"OPTIONS", None, None, None, b"*", b"HTTP/1.1"))
+            ("", 0, b"OPTIONS", b"", b"", b"*", b"HTTP/1.1"))
     assert (t(b"CONNECT foo:42 HTTP/1.1") ==
-            ("authority", b"CONNECT", None, b"foo", 42, None, b"HTTP/1.1"))
+            ("foo", 42, b"CONNECT", b"", b"foo:42", b"", b"HTTP/1.1"))
     assert (t(b"GET http://foo:42/bar HTTP/1.1") ==
-            ("absolute", b"GET", b"http", b"foo", 42, b"/bar", b"HTTP/1.1"))
+            ("foo", 42, b"GET", b"http", b"foo:42", b"/bar", b"HTTP/1.1"))
 
     with pytest.raises(exceptions.HttpSyntaxException):
         t(b"GET / WTF/1.1")
     with pytest.raises(exceptions.HttpSyntaxException):
+        t(b"CONNECT example.com HTTP/1.1")  # port missing
+    with pytest.raises(exceptions.HttpSyntaxException):
+        t(b"GET ws://example.com/ HTTP/1.1")  # port missing
+    with pytest.raises(exceptions.HttpSyntaxException):
         t(b"this is not http")
     with pytest.raises(exceptions.HttpReadDisconnect):
         t(b"")
-
-
-def test_parse_authority_form():
-    assert _parse_authority_form(b"foo:42") == (b"foo", 42)
-    assert _parse_authority_form(b"[2001:db8:42::]:443") == (b"2001:db8:42::", 443)
-    with pytest.raises(exceptions.HttpSyntaxException):
-        _parse_authority_form(b"foo")
-    with pytest.raises(exceptions.HttpSyntaxException):
-        _parse_authority_form(b"foo:bar")
-    with pytest.raises(exceptions.HttpSyntaxException):
-        _parse_authority_form(b"foo:99999999")
-    with pytest.raises(exceptions.HttpSyntaxException):
-        _parse_authority_form(b"f\x00oo:80")
 
 
 def test_read_response_line():

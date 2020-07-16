@@ -33,9 +33,9 @@ class TestResponseCore:
     """
     def test_repr(self):
         response = tresp()
-        assert repr(response) == "Response(200 OK, unknown content type, 7b)"
+        assert repr(response) == "Response(200, unknown content type, 7b)"
         response.content = None
-        assert repr(response) == "Response(200 OK, no content)"
+        assert repr(response) == "Response(200, no content)"
 
     def test_make(self):
         r = Response.make()
@@ -58,6 +58,9 @@ class TestResponseCore:
         r = Response.make(headers=({"foo": "baz"}))
         assert r.headers["foo"] == "baz"
 
+        r = Response.make(headers=Headers(foo="qux"))
+        assert r.headers["foo"] == "qux"
+
         with pytest.raises(TypeError):
             Response.make(headers=42)
 
@@ -74,17 +77,8 @@ class TestResponseCore:
         resp.reason = b"DEF"
         assert resp.data.reason == b"DEF"
 
-        resp.reason = None
-        assert resp.data.reason is None
-
         resp.data.reason = b'cr\xe9e'
         assert resp.reason == "crée"
-
-        # HTTP2 responses do not contain a reason phrase and self.data.reason will be None.
-        # This should render to an empty reason phrase so that functions
-        # expecting a string work properly.
-        resp.data.reason = None
-        assert resp.reason == ""
 
 
 class TestResponseUtils:

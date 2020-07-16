@@ -47,4 +47,4 @@ class MapRemote:
                 # this is a bit messy: setting .url also updates the host header,
                 # so we really only do that if the replacement affected the URL.
                 if url != new_url:
-                    flow.request.url = new_url
+                    flow.request.url = new_url  # type: ignore

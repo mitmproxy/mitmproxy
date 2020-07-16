@@ -32,11 +32,28 @@ class TestRequestCore:
     """
     Tests for addons and the attributes that are directly proxied from the data structure
     """
+
     def test_repr(self):
         request = treq()
         assert repr(request) == "Request(GET address:22/path)"
         request.host = None
         assert repr(request) == "Request(GET /path)"
+
+    def test_init_conv(self):
+        assert Request(
+            b"example.com",
+            80,
+            "GET",
+            "http",
+            "example.com",
+            "/",
+            "HTTP/1.1",
+            (),
+            None,
+            (),
+            0,
+            0,
+        )  # type: ignore
 
     def test_make(self):
         r = Request.make("GET", "https://example.com/")
@@ -61,56 +78,55 @@ class TestRequestCore:
         r = Request.make("GET", "https://example.com/", headers=({"foo": "baz"}))
         assert r.headers["foo"] == "baz"
 
+        r = Request.make("GET", "https://example.com/", headers=Headers(foo="qux"))
+        assert r.headers["foo"] == "qux"
+
         with pytest.raises(TypeError):
             Request.make("GET", "https://example.com/", headers=42)
 
     def test_first_line_format(self):
-        _test_passthrough_attr(treq(), "first_line_format")
+        assert treq(method=b"CONNECT").first_line_format == "authority"
+        assert treq(authority=b"example.com").first_line_format == "absolute"
+        assert treq(authority=b"").first_line_format == "relative"
 
     def test_method(self):
         _test_decoded_attr(treq(), "method")
 
     def test_scheme(self):
         _test_decoded_attr(treq(), "scheme")
-        assert treq(scheme=None).scheme is None
 
     def test_port(self):
         _test_passthrough_attr(treq(), "port")
 
     def test_path(self):
-        req = treq()
-        _test_decoded_attr(req, "path")
-        # path can also be None.
-        req.path = None
-        assert req.path is None
-        assert req.data.path is None
+        _test_decoded_attr(treq(), "path")
 
-    def test_host(self):
+    def test_authority(self):
         request = treq()
-        assert request.host == request.data.host.decode("idna")
+        assert request.authority == request.data.authority.decode("idna")
 
         # Test IDNA encoding
         # Set str, get raw bytes
-        request.host = "ídna.example"
-        assert request.data.host == b"xn--dna-qma.example"
+        request.authority = "ídna.example"
+        assert request.data.authority == b"xn--dna-qma.example"
         # Set raw bytes, get decoded
-        request.data.host = b"xn--idn-gla.example"
-        assert request.host == "idná.example"
+        request.data.authority = b"xn--idn-gla.example"
+        assert request.authority == "idná.example"
         # Set bytes, get raw bytes
-        request.host = b"xn--dn-qia9b.example"
-        assert request.data.host == b"xn--dn-qia9b.example"
+        request.authority = b"xn--dn-qia9b.example"
+        assert request.data.authority == b"xn--dn-qia9b.example"
         # IDNA encoding is not bijective
-        request.host = "fußball"
-        assert request.host == "fussball"
+        request.authority = "fußball"
+        assert request.authority == "fussball"
 
         # Don't fail on garbage
-        request.data.host = b"foo\xFF\x00bar"
-        assert request.host.startswith("foo")
-        assert request.host.endswith("bar")
+        request.data.authority = b"foo\xFF\x00bar"
+        assert request.authority.startswith("foo")
+        assert request.authority.endswith("bar")
         # foo.bar = foo.bar should not cause any side effects.
-        d = request.host
-        request.host = d
-        assert request.data.host == b"foo\xFF\x00bar"
+        d = request.authority
+        request.authority = d
+        assert request.data.authority == b"foo\xFF\x00bar"
 
     def test_host_update_also_updates_header(self):
         request = treq()
@@ -119,59 +135,61 @@ class TestRequestCore:
         assert "host" not in request.headers
 
         request.headers["Host"] = "foo"
+        request.authority = "foo"
         request.host = "example.org"
         assert request.headers["Host"] == "example.org"
+        assert request.authority == "example.org:22"
 
     def test_get_host_header(self):
         no_hdr = treq()
         assert no_hdr.host_header is None
 
-        h1 = treq(headers=(
-            (b"host", b"example.com"),
-        ))
-        assert h1.host_header == "example.com"
+        h1 = treq(
+            headers=((b"host", b"header.example.com"),),
+            authority=b"authority.example.com"
+        )
+        assert h1.host_header == "header.example.com"
 
-        h2 = treq(headers=(
-            (b":authority", b"example.org"),
-        ))
-        assert h2.host_header == "example.org"
+        h2 = h1.copy()
+        h2.http_version = "HTTP/2.0"
+        assert h2.host_header == "authority.example.com"
 
-        both_hdrs = treq(headers=(
-            (b"host", b"example.org"),
-            (b":authority", b"example.com"),
-        ))
-        assert both_hdrs.host_header == "example.com"
+        h2_host_only = h2.copy()
+        h2_host_only.authority = ""
+        assert h2_host_only.host_header == "header.example.com"
 
     def test_modify_host_header(self):
         h1 = treq()
         assert "host" not in h1.headers
-        assert ":authority" not in h1.headers
+
         h1.host_header = "example.com"
-        assert "host" in h1.headers
-        assert ":authority" not in h1.headers
+        assert h1.headers["Host"] == "example.com"
+        assert not h1.authority
+
         h1.host_header = None
         assert "host" not in h1.headers
+        assert not h1.authority
 
         h2 = treq(http_version=b"HTTP/2.0")
         h2.host_header = "example.org"
         assert "host" not in h2.headers
-        assert ":authority" in h2.headers
-        del h2.host_header
-        assert ":authority" not in h2.headers
+        assert h2.authority == "example.org"
 
-        both_hdrs = treq(headers=(
-            (b":authority", b"example.com"),
-            (b"host", b"example.org"),
-        ))
-        both_hdrs.host_header = "foo.example.com"
-        assert both_hdrs.headers["Host"] == "foo.example.com"
-        assert both_hdrs.headers[":authority"] == "foo.example.com"
+        h2.headers["Host"] = "example.org"
+        h2.host_header = "foo.example.com"
+        assert h2.headers["Host"] == "foo.example.com"
+        assert h2.authority == "foo.example.com"
+
+        h2.host_header = None
+        assert "host" not in h2.headers
+        assert not h2.authority
 
 
 class TestRequestUtils:
     """
     Tests for additional convenience methods.
     """
+
     def test_url(self):
         request = treq()
         assert request.url == "http://address:22/path"
@@ -190,7 +208,7 @@ class TestRequestUtils:
         assert request.url == "http://address:22"
 
     def test_url_authority(self):
-        request = treq(first_line_format="authority")
+        request = treq(method=b"CONNECT")
         assert request.url == "address:22"
 
     def test_pretty_host(self):
@@ -201,17 +219,9 @@ class TestRequestUtils:
         # Same port as self.port (22)
         request.headers["host"] = "other:22"
         assert request.pretty_host == "other"
-        # Different ports
-        request.headers["host"] = "other"
-        assert request.pretty_host == "address"
-        assert request.host == "address"
-        # Empty host
-        request.host = None
-        assert request.pretty_host is None
-        assert request.host is None
 
         # Invalid IDNA
-        request.headers["host"] = ".disqus.com:22"
+        request.headers["host"] = ".disqus.com"
         assert request.pretty_host == ".disqus.com"
 
     def test_pretty_url(self):
@@ -219,19 +229,19 @@ class TestRequestUtils:
         # Without host header
         assert request.url == "http://address:22/path"
         assert request.pretty_url == "http://address:22/path"
-        # Same port as self.port (22)
+
         request.headers["host"] = "other:22"
         assert request.pretty_url == "http://other:22/path"
-        # Different ports
-        request.headers["host"] = "other"
-        assert request.pretty_url == "http://address:22/path"
+
+        request = treq(method=b"CONNECT", authority=b"example:44")
+        assert request.pretty_url == "example:44"
 
     def test_pretty_url_options(self):
         request = treq(method=b"OPTIONS", path=b"*")
         assert request.pretty_url == "http://address:22"
 
     def test_pretty_url_authority(self):
-        request = treq(first_line_format="authority")
+        request = treq(method=b"CONNECT", authority="address:22")
         assert request.pretty_url == "address:22"
 
     def test_get_query(self):

@@ -37,7 +37,7 @@ class Intercept:
         if self.filt:
             should_intercept = all([
                 self.filt(f),
-                not f.request.is_replay,
+                not f.is_replay == "request",
             ])
             if should_intercept and ctx.options.intercept_active:
                 f.intercept()

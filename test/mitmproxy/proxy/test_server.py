@@ -206,7 +206,7 @@ class TestHTTP(tservers.HTTPProxyTest, CommonMixin):
         p = self.pathoc()
         with p.connect():
             ret = p.request("get:'https://localhost:%s/'" % self.server.port)
-        assert ret.status_code == 400
+        assert ret.status_code == 502
 
     def test_connection_close(self):
         # Add a body, so we have a content-length header, which combined with
@@ -806,7 +806,7 @@ class TestStreamRequest(tservers.HTTPProxyTest):
 
 class AFakeResponse:
     def request(self, f):
-        f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
+        f.response = mitmproxy.test.tutils.tresp()
 
 
 class TestFakeResponse(tservers.HTTPProxyTest):
@@ -873,7 +873,7 @@ class TestTransparentResolveError(tservers.TransparentProxyTest):
 
 class AIncomplete:
     def request(self, f):
-        resp = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
+        resp = mitmproxy.test.tutils.tresp()
         resp.content = None
         f.response = resp
 

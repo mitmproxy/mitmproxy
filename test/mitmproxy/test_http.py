@@ -24,7 +24,7 @@ class TestHTTPRequest:
         assert hash(r)
 
     def test_get_url(self):
-        r = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
+        r = mitmproxy.test.tutils.treq()
 
         assert r.url == "http://address:22/path"
 
@@ -45,7 +45,7 @@ class TestHTTPRequest:
         assert r.pretty_url == "https://foo.com:22/path"
 
     def test_constrain_encoding(self):
-        r = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
+        r = mitmproxy.test.tutils.treq()
         r.headers["accept-encoding"] = "gzip, oink"
         r.constrain_encoding()
         assert "oink" not in r.headers["accept-encoding"]
@@ -55,7 +55,7 @@ class TestHTTPRequest:
         assert "oink" not in r.headers["accept-encoding"]
 
     def test_get_content_type(self):
-        resp = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
+        resp = mitmproxy.test.tutils.tresp()
         resp.headers = Headers(content_type="text/plain")
         assert resp.headers["content-type"] == "text/plain"
 
@@ -69,7 +69,7 @@ class TestHTTPResponse:
         assert resp2.get_state() == resp.get_state()
 
     def test_get_content_type(self):
-        resp = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
+        resp = mitmproxy.test.tutils.tresp()
         resp.headers = Headers(content_type="text/plain")
         assert resp.headers["content-type"] == "text/plain"
 
@@ -118,7 +118,7 @@ class TestHTTPFlow:
 
     def test_backup(self):
         f = tflow.tflow()
-        f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
+        f.response = mitmproxy.test.tutils.tresp()
         f.request.content = b"foo"
         assert not f.modified()
         f.backup()
@@ -218,5 +218,6 @@ def test_make_connect_response():
 
 
 def test_expect_continue_response():
-    assert http.expect_continue_response.http_version == 'HTTP/1.1'
-    assert http.expect_continue_response.status_code == 100
+    resp = http.make_expect_continue_response()
+    assert resp.http_version == 'HTTP/1.1'
+    assert resp.status_code == 100

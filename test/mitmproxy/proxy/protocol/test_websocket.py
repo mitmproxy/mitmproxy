@@ -6,7 +6,7 @@ import traceback
 
 from mitmproxy import options
 from mitmproxy import exceptions
-from mitmproxy.http import HTTPFlow
+from mitmproxy.http import HTTPFlow, make_connect_request
 from mitmproxy.websocket import WebSocketFlow
 
 from mitmproxy.net import tcp
@@ -27,9 +27,9 @@ class _WebSocketServerBase(net_tservers.ServerTestBase):
                 assert websockets.check_handshake(request.headers)
 
                 response = http.Response(
-                    "HTTP/1.1",
-                    101,
-                    reason=http.status_codes.RESPONSES.get(101),
+                    http_version=b"HTTP/1.1",
+                    status_code=101,
+                    reason=http.status_codes.RESPONSES.get(101).encode(),
                     headers=http.Headers(
                         connection='upgrade',
                         upgrade='websocket',
@@ -37,6 +37,9 @@ class _WebSocketServerBase(net_tservers.ServerTestBase):
                         sec_websocket_extensions='permessage-deflate' if "permessage-deflate" in request.headers.values() else ''
                     ),
                     content=b'',
+                    trailers=None,
+                    timestamp_start=0,
+                    timestamp_end=0,
                 )
                 self.wfile.write(http.http1.assemble_response(response))
                 self.wfile.flush()
@@ -86,15 +89,7 @@ class _WebSocketTestBase:
         self.client = tcp.TCPClient(("127.0.0.1", self.proxy.port))
         self.client.connect()
 
-        request = http.Request(
-            "authority",
-            "CONNECT",
-            "",
-            "127.0.0.1",
-            self.server.server.address[1],
-            "",
-            "HTTP/1.1",
-            content=b'')
+        request = make_connect_request(("127.0.0.1", self.server.server.address[1]))
         self.client.wfile.write(http.http1.assemble_request(request))
         self.client.wfile.flush()
 
@@ -105,13 +100,13 @@ class _WebSocketTestBase:
             assert self.client.tls_established
 
         request = http.Request(
-            "relative",
-            "GET",
-            "http",
-            "127.0.0.1",
-            self.server.server.address[1],
-            "/ws",
-            "HTTP/1.1",
+            host="127.0.0.1",
+            port=self.server.server.address[1],
+            method=b"GET",
+            scheme=b"http",
+            authority=b"",
+            path=b"/ws",
+            http_version=b"HTTP/1.1",
             headers=http.Headers(
                 connection="upgrade",
                 upgrade="websocket",
@@ -119,7 +114,11 @@ class _WebSocketTestBase:
                 sec_websocket_key="1234",
                 sec_websocket_extensions="permessage-deflate" if extension else ""
             ),
-            content=b'')
+            content=b'',
+            trailers=None,
+            timestamp_start=0,
+            timestamp_end=0,
+        )
         self.client.wfile.write(http.http1.assemble_request(request))
         self.client.wfile.flush()
 

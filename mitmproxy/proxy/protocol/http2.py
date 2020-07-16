@@ -16,7 +16,7 @@ from mitmproxy.proxy.protocol import http as httpbase
 import mitmproxy.net.http
 from mitmproxy.net import tcp
 from mitmproxy.coretypes import basethread
-from mitmproxy.net.http import http2, headers
+from mitmproxy.net.http import http2, headers, url
 from mitmproxy.utils import human
 
 
@@ -506,19 +506,28 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         if self.pushed:
             flow.metadata['h2-pushed-stream'] = True
 
-        first_line_format, method, scheme, host, port, path = http2.parse_headers(self.request_message.headers)
+        # pseudo header must be present, see https://http2.github.io/http2-spec/#rfc.section.8.1.2.3
+        authority = self.request_message.headers.pop(':authority', "")
+        method = self.request_message.headers.pop(':method')
+        scheme = self.request_message.headers.pop(':scheme')
+        path = self.request_message.headers.pop(':path')
+
+        host, port = url.parse_authority(authority, check=True)
+        port = port or url.default_port(scheme) or 0
+
         return http.HTTPRequest(
-            first_line_format,
-            method,
-            scheme,
             host,
             port,
-            path,
+            method.encode(),
+            scheme.encode(),
+            authority.encode(),
+            path.encode(),
             b"HTTP/2.0",
             self.request_message.headers,
             None,
-            timestamp_start=self.timestamp_start,
-            timestamp_end=self.timestamp_end,
+            None,
+            self.timestamp_start,
+            self.timestamp_end,
         )
 
     @detect_zombie_stream
@@ -569,6 +578,8 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         self.server_to_client_stream_ids[self.server_stream_id] = self.client_stream_id
 
         headers = request.headers.copy()
+        if request.authority:
+            headers.insert(0, ":authority", request.authority)
         headers.insert(0, ":path", request.path)
         headers.insert(0, ":method", request.method)
         headers.insert(0, ":scheme", request.scheme)
@@ -640,6 +651,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             reason=b'',
             headers=headers,
             content=None,
+            trailers=None,
             timestamp_start=self.timestamp_start,
             timestamp_end=self.timestamp_end,
         )

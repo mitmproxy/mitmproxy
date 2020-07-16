@@ -11,8 +11,7 @@ import zlib
 import brotli
 import zstandard as zstd
 
-from typing import Union, Optional, AnyStr  # noqa
-
+from typing import Union, Optional, AnyStr, overload  # noqa
 
 # We have a shared single-element cache for encoding and decoding.
 # This is quite useful in practice, e.g.
@@ -24,9 +23,24 @@ CachedDecode = collections.namedtuple(
 _cache = CachedDecode(None, None, None, None)
 
 
+@overload
+def decode(encoded: None, encoding: str, errors: str = 'strict') -> None:
+    ...
+
+
+@overload
+def decode(encoded: str, encoding: str, errors: str = 'strict') -> str:
+    ...
+
+
+@overload
+def decode(encoded: bytes, encoding: str, errors: str = 'strict') -> Union[str, bytes]:
+    ...
+
+
 def decode(
-    encoded: Optional[bytes], encoding: str, errors: str='strict'
-) -> Optional[AnyStr]:
+        encoded: Union[None, str, bytes], encoding: str, errors: str = 'strict'
+) -> Union[None, str, bytes]:
     """
     Decode the given input object
 
@@ -41,10 +55,10 @@ def decode(
 
     global _cache
     cached = (
-        isinstance(encoded, bytes) and
-        _cache.encoded == encoded and
-        _cache.encoding == encoding and
-        _cache.errors == errors
+            isinstance(encoded, bytes) and
+            _cache.encoded == encoded and
+            _cache.encoding == encoding and
+            _cache.errors == errors
     )
     if cached:
         return _cache.decoded
@@ -52,7 +66,7 @@ def decode(
         try:
             decoded = custom_decode[encoding](encoded)
         except KeyError:
-            decoded = codecs.decode(encoded, encoding, errors)
+            decoded = codecs.decode(encoded, encoding, errors)  # type: ignore
         if encoding in ("gzip", "deflate", "br", "zstd"):
             _cache = CachedDecode(encoded, encoding, errors, decoded)
         return decoded
@@ -67,7 +81,22 @@ def decode(
         ))
 
 
-def encode(decoded: Optional[str], encoding: str, errors: str='strict') -> Optional[AnyStr]:
+@overload
+def encode(decoded: None, encoding: str, errors: str = 'strict') -> None:
+    ...
+
+
+@overload
+def encode(decoded: str, encoding: str, errors: str = 'strict') -> Union[str, bytes]:
+    ...
+
+
+@overload
+def encode(decoded: bytes, encoding: str, errors: str = 'strict') -> bytes:
+    ...
+
+
+def encode(decoded: Union[None, str, bytes], encoding, errors='strict') -> Union[None, str, bytes]:
     """
     Encode the given input object
 
@@ -82,10 +111,10 @@ def encode(decoded: Optional[str], encoding: str, errors: str='strict') -> Optio
 
     global _cache
     cached = (
-        isinstance(decoded, bytes) and
-        _cache.decoded == decoded and
-        _cache.encoding == encoding and
-        _cache.errors == errors
+            isinstance(decoded, bytes) and
+            _cache.decoded == decoded and
+            _cache.encoding == encoding and
+            _cache.errors == errors
     )
     if cached:
         return _cache.encoded
@@ -93,7 +122,7 @@ def encode(decoded: Optional[str], encoding: str, errors: str='strict') -> Optio
         try:
             encoded = custom_encode[encoding](decoded)
         except KeyError:
-            encoded = codecs.encode(decoded, encoding, errors)
+            encoded = codecs.encode(decoded, encoding, errors)  # type: ignore
         if encoding in ("gzip", "deflate", "br", "zstd"):
             _cache = CachedDecode(encoded, encoding, errors, decoded)
         return encoded
@@ -150,7 +179,7 @@ def decode_zstd(content: bytes) -> bytes:
     except zstd.ZstdError:
         # If the zstd stream is streamed without a size header,
         # try decoding with a 10MiB output buffer
-        return zstd_ctx.decompress(content, max_output_size=10 * 2**20)
+        return zstd_ctx.decompress(content, max_output_size=10 * 2 ** 20)
 
 
 def encode_zstd(content: bytes) -> bytes:

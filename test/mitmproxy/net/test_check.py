@@ -70,3 +70,7 @@ def test_is_valid_host():
     assert check.is_valid_host(b'api-._a.example.com')
     assert check.is_valid_host(b'api-.a_.example.com')
     assert check.is_valid_host(b'api-.ab.example.com')
+
+    # Test str
+    assert check.is_valid_host('example.tld')
+    assert not check.is_valid_host("foo..bar")  # cannot be idna-encoded.

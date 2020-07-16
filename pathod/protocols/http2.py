@@ -2,14 +2,13 @@ import itertools
 import time
 
 import hyperframe.frame
-from hpack.hpack import Encoder, Decoder
+from hpack.hpack import Decoder, Encoder
 
-from mitmproxy.net.http import http2
 import mitmproxy.net.http.headers
-import mitmproxy.net.http.response
 import mitmproxy.net.http.request
+import mitmproxy.net.http.response
 from mitmproxy.coretypes import bidi
-
+from mitmproxy.net.http import http2, url
 from .. import language
 
 
@@ -98,19 +97,26 @@ class HTTP2StateProtocol:
 
         timestamp_end = time.time()
 
-        first_line_format, method, scheme, host, port, path = http2.parse_headers(headers)
+        # pseudo header must be present, see https://http2.github.io/http2-spec/#rfc.section.8.1.2.3
+        authority = headers.pop(':authority', "")
+        method = headers.pop(':method', "")
+        scheme = headers.pop(':scheme', "")
+        path = headers.pop(':path', "")
 
-        request = mitmproxy.net.http.request.Request(
-            first_line_format,
-            method,
-            scheme,
-            host,
-            port,
-            path,
-            b"HTTP/2.0",
-            headers,
-            body,
-            None,
+        host, port = url.parse_authority(authority, check=False)
+        port = port or url.default_port(scheme) or 0
+
+        request = mitmproxy.net.http.Request(
+            host=host,
+            port=port,
+            method=method.encode(),
+            scheme=scheme.encode(),
+            authority=authority.encode(),
+            path=path.encode(),
+            http_version=b"HTTP/2.0",
+            headers=headers,
+            content=body,
+            trailers=None,
             timestamp_start=timestamp_start,
             timestamp_end=timestamp_end,
         )
@@ -150,11 +156,12 @@ class HTTP2StateProtocol:
             timestamp_end = None
 
         response = mitmproxy.net.http.response.Response(
-            b"HTTP/2.0",
-            int(headers.get(':status', 502)),
-            b'',
-            headers,
-            body,
+            http_version=b"HTTP/2.0",
+            status_code=int(headers.get(':status', 502)),
+            reason=b'',
+            headers=headers,
+            content=body,
+            trailers=None,
             timestamp_start=timestamp_start,
             timestamp_end=timestamp_end,
         )

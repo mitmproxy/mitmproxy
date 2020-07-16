@@ -1,15 +1,14 @@
 import io
 import shutil
-import pytest
 from unittest import mock
 
-from mitmproxy.test import tflow
-from mitmproxy.test import taddons
-from mitmproxy.test import tutils
+import pytest
 
-from mitmproxy.addons import dumper
 from mitmproxy import exceptions
-from mitmproxy import http
+from mitmproxy.addons import dumper
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 
 
 def test_configure():
@@ -83,7 +82,7 @@ def test_simple():
         flow.client_conn = mock.MagicMock()
         flow.client_conn.address[0] = "foo"
         flow.response = tutils.tresp(content=None)
-        flow.response.is_replay = True
+        flow.is_replay = "response"
         flow.response.status_code = 300
         d.response(flow)
         assert sio.getvalue()
@@ -104,8 +103,7 @@ def test_simple():
         ctx.configure(d, flow_detail=4)
         flow = tflow.tflow()
         flow.request.content = None
-        flow.response = http.HTTPResponse.wrap(tutils.tresp())
-        flow.response.content = None
+        flow.response = tutils.tresp(content=None)
         d.response(flow)
         assert "content missing" in sio.getvalue()
         sio.truncate(0)
@@ -135,13 +133,13 @@ def test_echo_request_line():
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=3, showhost=True)
         f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
-        f.request.is_replay = True
+        f.is_replay = "request"
         d._echo_request_line(f)
         assert "[replay]" in sio.getvalue()
         sio.truncate(0)
 
         f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
-        f.request.is_replay = False
+        f.is_replay = None
         d._echo_request_line(f)
         assert "[replay]" not in sio.getvalue()
         sio.truncate(0)

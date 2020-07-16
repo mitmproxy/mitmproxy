@@ -40,25 +40,27 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
         server_conn = tserver_conn()
     if handshake_flow is True:
         req = http.HTTPRequest(
-            "relative",
-            "GET",
-            "http",
             "example.com",
             80,
-            "/ws",
-            "HTTP/1.1",
+            b"GET",
+            b"http",
+            b"example.com",
+            b"/ws",
+            b"HTTP/1.1",
             headers=net_http.Headers(
                 connection="upgrade",
                 upgrade="websocket",
                 sec_websocket_version="13",
                 sec_websocket_key="1234",
             ),
+            content=b'',
+            trailers=None,
             timestamp_start=946681200,
             timestamp_end=946681201,
-            content=b''
+
         )
         resp = http.HTTPResponse(
-            "HTTP/1.1",
+            b"HTTP/1.1",
             101,
             reason=net_http.status_codes.RESPONSES.get(101),
             headers=net_http.Headers(
@@ -66,9 +68,10 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
                 upgrade='websocket',
                 sec_websocket_accept=b'',
             ),
+            content=b'',
+            trailers=None,
             timestamp_start=946681202,
             timestamp_end=946681203,
-            content=b'',
         )
         handshake_flow = http.HTTPFlow(client_conn, server_conn)
         handshake_flow.request = req
@@ -113,11 +116,6 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
         resp = tutils.tresp()
     if err is True:
         err = terr()
-
-    if req:
-        req = http.HTTPRequest.wrap(req)
-    if resp:
-        resp = http.HTTPResponse.wrap(resp)
 
     f = http.HTTPFlow(client_conn, server_conn)
     f.request = req

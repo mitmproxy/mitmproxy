@@ -202,10 +202,10 @@ class ServerPlayback:
             if rflow:
                 assert rflow.response
                 response = rflow.response.copy()
-                response.is_replay = True
                 if ctx.options.server_replay_refresh:
                     response.refresh()
                 f.response = response
+                f.is_replay = "response"
             elif ctx.options.server_replay_kill_extra:
                 ctx.log.warn(
                     "server_playback: killed non-replay request {}".format(
