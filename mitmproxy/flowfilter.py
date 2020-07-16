@@ -43,6 +43,7 @@ from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
+from mitmproxy.net import websockets as net_websockets
 
 
 def only(*types):
@@ -104,11 +105,15 @@ class FHTTP(_Action):
 
 class FWebSocket(_Action):
     code = "websocket"
-    help = "Match WebSocket flows"
+    help = "Match WebSocket flows (and HTTP-WebSocket handshake flows)"
 
-    @only(websocket.WebSocketFlow)
+    @only(http.HTTPFlow, websocket.WebSocketFlow)
     def __call__(self, f):
-        return True
+        m = (
+            (isinstance(f, http.HTTPFlow) and f.request and net_websockets.check_handshake(f.request.headers))
+            or isinstance(f, websocket.WebSocketFlow)
+        )
+        return m
 
 
 class FTCP(_Action):
