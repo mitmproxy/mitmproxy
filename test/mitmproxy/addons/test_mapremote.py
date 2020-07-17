@@ -11,13 +11,8 @@ class TestMapRemote:
         mr = mapremote.MapRemote()
         with taddons.context(mr) as tctx:
             tctx.configure(mr, map_remote=["one/two/three"])
-            with pytest.raises(Exception, match="Cannot parse map_remote .* Invalid number"):
-                tctx.configure(mr, map_remote=["/"])
-            with pytest.raises(Exception, match="Cannot parse map_remote .* Invalid filter"):
-                tctx.configure(mr, map_remote=["/~b/two/three"])
-            with pytest.raises(Exception, match="Cannot parse map_remote .* Invalid regular expression"):
+            with pytest.raises(Exception, match="Invalid regular expression"):
                 tctx.configure(mr, map_remote=["/foo/+/three"])
-            tctx.configure(mr, map_remote=["/a/b/c/"])
 
     def test_simple(self):
         mr = mapremote.MapRemote()

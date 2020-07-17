@@ -12,7 +12,6 @@ class TestModifyBody:
             tctx.configure(mb, modify_body=["one/two/three"])
             with pytest.raises(Exception, match="Cannot parse modify_body"):
                 tctx.configure(mb, modify_body=["/"])
-            tctx.configure(mb, modify_body=["/a/b/c/"])
 
     def test_simple(self):
         mb = modifybody.ModifyBody()

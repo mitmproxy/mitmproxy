@@ -22,15 +22,6 @@ def test_parse_modify_spec():
     assert spec.subject == b"bar"
     assert spec.read_replacement() == b"voing"
 
-    with pytest.raises(ValueError, match="Invalid number of parameters"):
-        parse_modify_spec("/", False)
-
-    with pytest.raises(ValueError, match="Invalid filter pattern"):
-        parse_modify_spec("/~b/one/two", False)
-
-    with pytest.raises(ValueError, match="Invalid filter pattern"):
-        parse_modify_spec("/~b/one/two", False)
-
     with pytest.raises(ValueError, match="Invalid regular expression"):
         parse_modify_spec("/[/two", True)
 

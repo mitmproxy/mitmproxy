@@ -133,11 +133,15 @@ class MapLocal:
                 if mimetype:
                     headers = {"Content-Type": mimetype}
                 if local_file:
-                    flow.response = http.HTTPResponse.make(
-                        200,
-                        local_file.read_bytes(),
-                        headers
-                    )
+                    try:
+                        flow.response = http.HTTPResponse.make(
+                            200,
+                            local_file.read_bytes(),
+                            headers
+                        )
+                    except IOError as e:
+                        ctx.log.warn(f"Could not read file: {e}")
+                        continue
                     # only set flow.response once, for the first matching rule
                     return
         if any_spec_matches:
