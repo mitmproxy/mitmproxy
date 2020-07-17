@@ -1,6 +1,7 @@
 import mimetypes
 import re
 import typing
+import urllib
 from pathlib import Path
 
 from werkzeug.security import safe_join
@@ -58,14 +59,19 @@ def file_candidates(url: str, spec: MapLocalSpec) -> typing.List[Path]:
     else:
         suffix = re.split(spec.regex, url, maxsplit=1)[1]
         suffix = suffix.split("?")[0]  # remove query string
-
-    suffix = re.sub(r"[^0-9a-zA-Z\-_.=(),/]", "_", suffix.strip("/"))
+        suffix = suffix.strip("/").replace("\\", "/")
 
     if suffix:
+        decoded_suffix = urllib.parse.unquote(suffix)
+        simplified_suffix = re.sub(r"[^0-9a-zA-Z\-_.=(),/]", "_", decoded_suffix)
+
+        suffix_candidates = [decoded_suffix, f"{decoded_suffix}/index.html"]
+        if decoded_suffix != simplified_suffix:
+            suffix_candidates.append(simplified_suffix)
+            suffix_candidates.append(f"{simplified_suffix}/index.html")
         try:
             return [
-                _safe_path_join(spec.local_path, suffix),
-                _safe_path_join(spec.local_path, f"{suffix}/index.html")
+                _safe_path_join(spec.local_path, suff) for suff in suffix_candidates
             ]
         except ValueError:
             return []

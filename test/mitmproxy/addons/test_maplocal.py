@@ -23,6 +23,10 @@ from mitmproxy.test import tflow
         ("https://example.com/foo/bar/baz.jpg", ":example.com/foo:/tmp", ["/tmp/bar/baz.jpg", "/tmp/bar/baz.jpg/index.html"]),
         ("https://example.com/foo/bar.jpg", ":/foo/bar.jpg:/tmp", ["/tmp/index.html"]),
     ] + [
+        # URL decode and special characters
+        ("http://example.com/foo%20bar.jpg", ":example.com:/tmp", ["/tmp/foo bar.jpg", "/tmp/foo bar.jpg/index.html", "/tmp/foo_bar.jpg", "/tmp/foo_bar.jpg/index.html"]),
+        ("http://example.com/fóobår.jpg", ":example.com:/tmp", ["/tmp/fóobår.jpg", "/tmp/fóobår.jpg/index.html", "/tmp/f_ob_r.jpg", "/tmp/f_ob_r.jpg/index.html"]),
+    ] + [
         # index.html
         ("https://example.com/foo", ":example.com/foo:/tmp", ["/tmp/index.html"]),
         ("https://example.com/foo/", ":example.com/foo:/tmp", ["/tmp/index.html"]),
@@ -37,13 +41,13 @@ from mitmproxy.test import tflow
         ), (
                 "https://example/results?id=1&foo=2",
                 ":example/(results\\?id=.+):/tmp",
-                ["/tmp/results_id=1_foo=2", "/tmp/results_id=1_foo=2/index.html"]
+                ["/tmp/results?id=1&foo=2", "/tmp/results?id=1&foo=2/index.html", "/tmp/results_id=1_foo=2", "/tmp/results_id=1_foo=2/index.html"]
         ),
     ] + [
         # test directory traversal detection
         ("https://example.com/../../../../../../etc/passwd", ":example.com:/tmp", []),
         # those get already sanitized to benign versions before they reach our detection:
-        ("https://example.com/C:\\foo.txt", ":example.com:/tmp", ["/tmp/C__foo.txt", "/tmp/C__foo.txt/index.html"]),
+        ("https://example.com/C:\\foo.txt", ":example.com:/tmp", ["/tmp/C:/foo.txt", "/tmp/C:/foo.txt/index.html", "/tmp/C_/foo.txt", "/tmp/C_/foo.txt/index.html"]),
         ("https://example.com//etc/passwd", ":example.com:/tmp", ["/tmp/etc/passwd", "/tmp/etc/passwd/index.html"]),
     ]
 )
