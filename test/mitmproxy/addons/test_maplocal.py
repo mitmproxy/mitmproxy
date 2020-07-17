@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from mitmproxy.addons.maplocal import MapLocal, MapLocalSpec, file_candidates
-from mitmproxy.addons.modifyheaders import parse_spec
+from mitmproxy.utils.spec import parse_spec
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 

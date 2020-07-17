@@ -6,7 +6,7 @@ from pathlib import Path
 from werkzeug.security import safe_join
 
 from mitmproxy import ctx, exceptions, flowfilter, http
-from mitmproxy.addons.modifyheaders import parse_spec
+from mitmproxy.utils.spec import parse_spec
 
 
 class MapLocalSpec(typing.NamedTuple):

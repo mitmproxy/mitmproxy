@@ -2,7 +2,7 @@ import re
 import typing
 
 from mitmproxy import ctx, exceptions, flowfilter, http
-from mitmproxy.addons.modifyheaders import parse_spec
+from mitmproxy.utils.spec import parse_spec
 
 
 class MapRemoteSpec(typing.NamedTuple):
