@@ -116,11 +116,14 @@ class MapLocal:
                 any_spec_matches = True
 
                 local_file: typing.Optional[Path] = None
+                tested_paths = []
 
                 if spec.local_path.is_file():
                     local_file = spec.local_path
                 elif spec.local_path.is_dir():
+                    tested_paths.append(spec.local_path)
                     for candidate in file_candidates(url, spec):
+                        tested_paths.append(candidate)
                         if candidate.is_file():
                             local_file = candidate
                             break
@@ -139,3 +142,4 @@ class MapLocal:
                     return
         if any_spec_matches:
             flow.response = http.HTTPResponse.make(404)
+            ctx.log.warn(f"None of the local file candidates exist: {*tested_paths,}")
