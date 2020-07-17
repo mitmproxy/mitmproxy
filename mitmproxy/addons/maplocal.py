@@ -5,7 +5,7 @@ from pathlib import Path
 
 from werkzeug.security import safe_join
 
-from mitmproxy import ctx, exceptions, flowfilter, http
+from mitmproxy import ctx, exceptions, flowfilter, http, version
 from mitmproxy.utils.spec import parse_spec
 
 
@@ -119,7 +119,7 @@ class MapLocal:
                             local_file = candidate
                             break
 
-                headers = {}
+                headers = {"Server": version.MITMPROXY}
                 mimetype = mimetypes.guess_type(str(local_file))[0]
                 if mimetype:
                     headers = {"Content-Type": mimetype}
