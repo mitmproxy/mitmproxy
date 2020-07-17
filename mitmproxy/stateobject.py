@@ -2,7 +2,7 @@ import json
 import typing
 
 from mitmproxy.coretypes import serializable
-from mitmproxy.utils import typecheck
+from mitmproxy.utils import typecheck, human
 
 
 class StateObject(serializable.Serializable):
@@ -27,6 +27,8 @@ class StateObject(serializable.Serializable):
         state = {}
         for attr, cls in self._stateobject_attributes.items():
             val = getattr(self, attr)
+            if "timestamp" in attr:
+                val = human.timestamp_from_utc_to_local(val)
             state[attr] = get_state(cls, val)
         return state
 
