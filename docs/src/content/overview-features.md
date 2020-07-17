@@ -87,12 +87,12 @@ To illustrate this, consider the following example which maps all requests for `
 <pre>
                   ┌── url regex ──┬─ local path ─┐
 map_local option: |<span style="color:#f92672">example.com/css</span>|<span style="color:#82b719">~/static-css</span>
-                            │
-                            │    URL is split here
-                            ▼            ▼
+                   <!--                     -->         │
+                   <!--                     -->         │    URL is split here
+                   <!--                     -->         ▼            ▼
 HTTP Request URL: https://<span style="color:#f92672">example.com/css</span><span style="color:#66d9ef">/print/main.css</span><span style="color:#bbb">?timestamp=123</span>
-                                               │                ▼
-                                               ▼              query string is ignored
+                          <!--                     -->               <!--                            -->      │        <!--                         -->        ▼
+                          <!--                     -->               <!--                            -->      ▼        <!--                         -->      query string is ignored
 Served File:      Preferred: <span style="color:#82b719">~/static-css</span><span style="color:#66d9ef">/print/main.css</span>
                    Fallback: <span style="color:#82b719">~/static-css</span><span style="color:#66d9ef">/print/main.css</span>/index.html
                   Otherwise: 404 response without content
@@ -105,12 +105,12 @@ If the file depends on the query string, we can use regex capturing groups. In t
                     flow
                   ┌filter┬─────────── url regex ───────────┬─ local path ─┐
 map_local option: |~m GET|<span style="color:#f92672">example.com/index.php\\?page=</span><span style="color:#66d9ef">(.+)</span>|<span style="color:#82b719">~/static-dir</span>
-                            │                           │
-                            │                           │ regex group = suffix
-                            ▼                           ▼
-HTTP Request URL: https://<span style="color:#f92672">example.com/index.php?page=<span style="color:#66d9ef">aboutus</span></span>
-                                                        │
-                                                        ▼
+                          <!--                     -->  │                          <!--                            --> │
+                          <!--                     -->  │                          <!--                            --> │ regex group = suffix
+                          <!--                     -->  ▼                          <!--                            --> ▼
+HTTP Request URL: https://<span style="color:#f92672">example.com/index.php?page=</span><span style="color:#66d9ef">aboutus</span></span>
+                          <!--                     -->                           <!--                            -->   │
+                          <!--                     -->                           <!--                            -->   ▼
 Served File:                 Preferred: <span style="color:#82b719">~/static-dir</span>/<span style="color:#66d9ef">aboutus</span>
                               Fallback: <span style="color:#82b719">~/static-dir</span>/<span style="color:#66d9ef">aboutus</span>/index.html
                              Otherwise: 404 response without content
