@@ -1,7 +1,7 @@
 import mimetypes
 import re
 import typing
-import urllib
+import urllib.parse
 from pathlib import Path
 
 from werkzeug.security import safe_join
@@ -59,19 +59,19 @@ def file_candidates(url: str, spec: MapLocalSpec) -> typing.List[Path]:
     else:
         suffix = re.split(spec.regex, url, maxsplit=1)[1]
         suffix = suffix.split("?")[0]  # remove query string
-        suffix = suffix.strip("/").replace("\\", "/")
+        suffix = suffix.strip("/")
 
     if suffix:
         decoded_suffix = urllib.parse.unquote(suffix)
-        simplified_suffix = re.sub(r"[^0-9a-zA-Z\-_.=(),/]", "_", decoded_suffix)
-
         suffix_candidates = [decoded_suffix, f"{decoded_suffix}/index.html"]
-        if decoded_suffix != simplified_suffix:
-            suffix_candidates.append(simplified_suffix)
-            suffix_candidates.append(f"{simplified_suffix}/index.html")
+
+        escaped_suffix = re.sub(r"[^0-9a-zA-Z\-_.=(),/]", "_", decoded_suffix)
+        if decoded_suffix != escaped_suffix:
+            suffix_candidates.extend([escaped_suffix, f"{escaped_suffix}/index.html"])
         try:
             return [
-                _safe_path_join(spec.local_path, suff) for suff in suffix_candidates
+                _safe_path_join(spec.local_path, x)
+                for x in suffix_candidates
             ]
         except ValueError:
             return []
@@ -110,40 +110,42 @@ class MapLocal:
 
         url = flow.request.pretty_url
 
-        any_spec_matches = False
+        all_candidates = []
         for spec in self.replacements:
             if spec.matches(flow) and re.search(spec.regex, url):
-                any_spec_matches = True
-
-                local_file: typing.Optional[Path] = None
-                tested_paths = []
-
                 if spec.local_path.is_file():
-                    local_file = spec.local_path
-                elif spec.local_path.is_dir():
-                    tested_paths.append(spec.local_path)
-                    for candidate in file_candidates(url, spec):
-                        tested_paths.append(candidate)
-                        if candidate.is_file():
-                            local_file = candidate
-                            break
+                    candidates = [spec.local_path]
+                else:
+                    candidates = file_candidates(url, spec)
+                all_candidates.extend(candidates)
 
-                headers = {"Server": version.MITMPROXY}
-                mimetype = mimetypes.guess_type(str(local_file))[0]
-                if mimetype:
-                    headers = {"Content-Type": mimetype}
+                local_file = None
+                for candidate in candidates:
+                    if candidate.is_file():
+                        local_file = candidate
+                        break
+
                 if local_file:
+                    headers = {
+                        "Server": version.MITMPROXY
+                    }
+                    mimetype = mimetypes.guess_type(str(local_file))[0]
+                    if mimetype:
+                        headers["Content-Type"] = mimetype
+
                     try:
-                        flow.response = http.HTTPResponse.make(
-                            200,
-                            local_file.read_bytes(),
-                            headers
-                        )
+                        contents = local_file.read_bytes()
                     except IOError as e:
                         ctx.log.warn(f"Could not read file: {e}")
                         continue
+
+                    flow.response = http.HTTPResponse.make(
+                        200,
+                        contents,
+                        headers
+                    )
                     # only set flow.response once, for the first matching rule
                     return
-        if any_spec_matches:
+        if all_candidates:
             flow.response = http.HTTPResponse.make(404)
-            ctx.log.warn(f"None of the local file candidates exist: {*tested_paths,}")
+            ctx.log.info(f"None of the local file candidates exist: {', '.join(str(x) for x in all_candidates)}")

@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import pytest
@@ -20,7 +21,8 @@ from mitmproxy.test import tflow
         ("http://example.com/foo/bar.jpg", ":example.com/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
         ("https://example.com/foo/bar.jpg", ":example.com/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
         ("https://example.com/foo/bar.jpg?query", ":example.com/foo:/tmp", ["/tmp/bar.jpg", "/tmp/bar.jpg/index.html"]),
-        ("https://example.com/foo/bar/baz.jpg", ":example.com/foo:/tmp", ["/tmp/bar/baz.jpg", "/tmp/bar/baz.jpg/index.html"]),
+        ("https://example.com/foo/bar/baz.jpg", ":example.com/foo:/tmp",
+         ["/tmp/bar/baz.jpg", "/tmp/bar/baz.jpg/index.html"]),
         ("https://example.com/foo/bar.jpg", ":/foo/bar.jpg:/tmp", ["/tmp/index.html"]),
     ] + [
         # URL decode and special characters
@@ -61,12 +63,12 @@ from mitmproxy.test import tflow
     ] + [
         # test directory traversal detection
         ("https://example.com/../../../../../../etc/passwd", ":example.com:/tmp", []),
-        # those get already sanitized to benign versions before they reach our detection:
-        ("https://example.com/C:\\foo.txt", ":example.com:/tmp", [
-            "/tmp/C:/foo.txt",
-            "/tmp/C:/foo.txt/index.html",
-            "/tmp/C_/foo.txt",
-            "/tmp/C_/foo.txt/index.html"
+        # this is slightly hacky, but werkzeug's behavior differs per system.
+        ("https://example.com/C:\\foo.txt", ":example.com:/tmp", [] if sys.platform == "win32" else [
+            "/tmp/C:\\foo.txt",
+            "/tmp/C:\\foo.txt/index.html",
+            "/tmp/C__foo.txt",
+            "/tmp/C__foo.txt/index.html"
         ]),
         ("https://example.com//etc/passwd", ":example.com:/tmp", ["/tmp/etc/passwd", "/tmp/etc/passwd/index.html"]),
     ]
