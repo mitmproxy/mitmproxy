@@ -22,6 +22,7 @@ from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
 from mitmproxy.utils import human
+from mitmproxy import ctx
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
@@ -39,6 +40,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         "type": flow.type,
         "modified": flow.modified(),
         "marked": flow.marked,
+        "utc_to_local": ctx.options.utc_to_local,
     }
     # .alpn_proto_negotiated is bytes, we need to decode that.
     for conn in "client_conn", "server_conn":
@@ -71,8 +73,8 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "headers": tuple(flow.request.headers.items(True)),
                 "contentLength": content_length,
                 "contentHash": content_hash,
-                "timestamp_start": human.timestamp_from_utc_to_local(flow.request.timestamp_start),
-                "timestamp_end": human.timestamp_from_utc_to_local(flow.request.timestamp_end),
+                "timestamp_start": flow.request.timestamp_start,
+                "timestamp_end": flow.request.timestamp_end,
                 "is_replay": flow.request.is_replay,
                 "pretty_host": flow.request.pretty_host,
             }
@@ -90,8 +92,8 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "headers": tuple(flow.response.headers.items(True)),
                 "contentLength": content_length,
                 "contentHash": content_hash,
-                "timestamp_start": human.timestamp_from_utc_to_local(flow.response.timestamp_start),
-                "timestamp_end": human.timestamp_from_utc_to_local(flow.response.timestamp_end),
+                "timestamp_start": flow.response.timestamp_start,
+                "timestamp_end": flow.response.timestamp_end,
                 "is_replay": flow.response.is_replay,
             }
             if flow.response.data.trailers:

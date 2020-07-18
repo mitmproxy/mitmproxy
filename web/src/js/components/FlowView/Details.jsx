@@ -2,12 +2,12 @@ import React from 'react'
 import _ from 'lodash'
 import { formatTimeStamp, formatTimeDelta } from '../../utils.js'
 
-export function TimeStamp({ t, deltaTo, title }) {
+export function TimeStamp({ t, deltaTo, title, utc_to_local }) {
     return t ? (
         <tr>
             <td>{title}:</td>
             <td>
-                {formatTimeStamp(t)}
+                {formatTimeStamp(t, utc_to_local)}
                 {deltaTo && (
                     <span className="text-muted">
                         ({formatTimeDelta(1000 * (t - deltaTo))})
@@ -57,44 +57,53 @@ export function CertificateInfo({ flow }) {
 }
 
 export function Timing({ flow }) {
-    const { server_conn: sc, client_conn: cc, request: req, response: res } = flow
+    const { server_conn: sc, client_conn: cc, request: req, response: res, utc_to_local: utc_to_local } = flow
 
     const timestamps = [
         {
             title: "Server conn. initiated",
             t: sc.timestamp_start,
-            deltaTo: req.timestamp_start
+            deltaTo: req.timestamp_start,
+            utc_to_local: utc_to_local
         }, {
             title: "Server conn. TCP handshake",
             t: sc.timestamp_tcp_setup,
-            deltaTo: req.timestamp_start
+            deltaTo: req.timestamp_start,
+            utc_to_local: utc_to_local
         }, {
             title: "Server conn. SSL handshake",
             t: sc.timestamp_ssl_setup,
-            deltaTo: req.timestamp_start
+            deltaTo: req.timestamp_start,
+            utc_to_local: utc_to_local
         }, {
             title: "Client conn. established",
             t: cc.timestamp_start,
-            deltaTo: req.timestamp_start
+            deltaTo: req.timestamp_start,
+            utc_to_local: utc_to_local
         }, {
             title: "Client conn. SSL handshake",
             t: cc.timestamp_ssl_setup,
-            deltaTo: req.timestamp_start
+            deltaTo: req.timestamp_start,
+            utc_to_local: utc_to_local
         }, {
             title: "First request byte",
             t: req.timestamp_start,
+            utc_to_local: utc_to_local
         }, {
             title: "Request complete",
             t: req.timestamp_end,
-            deltaTo: req.timestamp_start
+            deltaTo: req.timestamp_start,
+            utc_to_local: utc_to_local
         }, res && {
             title: "First response byte",
             t: res.timestamp_start,
-            deltaTo: req.timestamp_start
+            deltaTo: req.timestamp_start,
+            utc_to_local: utc_to_local
         }, res && {
             title: "Response complete",
             t: res.timestamp_end,
-            deltaTo: req.timestamp_start
+            deltaTo: req.timestamp_start,
+            utc_to_local: utc_to_local
         }
     ]
 

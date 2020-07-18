@@ -63,20 +63,7 @@ def pretty_duration(secs: typing.Optional[float]) -> str:
             return formatter.format(secs)
     # less than 1 sec
     return "{:.0f}ms".format(secs * 1000)
-
-
-def timestamp_from_utc_to_local(s):
-    if s is None:
-        return None
-
-    utc_to_local = ctx.options.utc_to_local
-    if utc_to_local:
-        now_timestamp = time.time()
-        offset = datetime.datetime.fromtimestamp(now_timestamp) - datetime.datetime.utcfromtimestamp(now_timestamp)
-        return s + offset.total_seconds()
-    else:
-        return s
-
+    
 
 def format_timestamp(s):
     s = time.localtime(s)
