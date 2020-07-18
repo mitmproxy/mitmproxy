@@ -1,6 +1,13 @@
 Unreleased: mitmproxy next
 
-  ** Full Changelog **
+** Full Changelog **
+
+    * --- TODO: add new PRs above this line ---
+
+    * ... and various other fixes, documentation improvements, dependency version bumps, etc.
+
+18 July 2020: mitmproxy 5.2
+
     * Add Filter message to mitmdump (@sarthak212)
     * Display TCP flows at flow list (@Jessonsotoventura, @nikitastupin, @mhils)
     * Colorize JSON Contentview (@sarthak212)
@@ -21,10 +28,13 @@ Unreleased: mitmproxy next
     * Fix certificate runtime error during expire cleanup (@gorogoroumaru)
     * Fixed the DNS Rebind Protection for secure support of IPv6 addresses (@tunnelpr0)
     * WebSockets: match the HTTP-WebSocket flow for the ~websocket filter (@Kriechi)
-
-    * --- TODO: add new PRs above this line ---
-
-    * ... and various other fixes, documentation improvements, dependency version bumps, etc.
+    * Fix deadlock caused by the "replay.client.stop" command (@gorogoroumaru)
+    * Add new MapLocal addon to serve local files instead of remote resources (@mplattner and @mhils)
+    * Add minimal TCP interception and modification (@nikitastupin)
+    * Add new CheckSSLPinning addon to check SSL-Pinning on client (@su-vikas)
+    * Add a JSON dump script: write data into a file or send to an endpoint as JSON (@emedvedev)
+    * Fix console output formatting (@sarthak212)
+    * Add example for proxy authentication using selenium (@anneborcherding and @weichweich)
 
 13 April 2020: mitmproxy 5.1.1
 
