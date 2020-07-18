@@ -2,11 +2,10 @@ import re
 import typing
 from pathlib import Path
 
-from mitmproxy import exceptions, http
-from mitmproxy import flowfilter
+from mitmproxy import ctx, exceptions, flowfilter, http
 from mitmproxy.net.http import Headers
 from mitmproxy.utils import strutils
-from mitmproxy import ctx
+from mitmproxy.utils.spec import parse_spec
 
 
 class ModifySpec(typing.NamedTuple):
@@ -29,49 +28,10 @@ class ModifySpec(typing.NamedTuple):
             return strutils.escaped_str_to_bytes(self.replacement_str)
 
 
-def _match_all(flow) -> bool:
-    return True
+def parse_modify_spec(option: str, subject_is_regex: bool) -> ModifySpec:
+    flow_filter, subject_str, replacement = parse_spec(option)
 
-
-def parse_modify_spec(option, subject_is_regex: bool) -> ModifySpec:
-    """
-        The form for the modify_* options is as follows:
-
-            * modify_headers: [/flow-filter]/header-name/[@]header-value
-            * modify_body: [/flow-filter]/search-regex/[@]replace
-
-        The @ allows to provide a file path that is used to read the respective option.
-        Both ModifyHeaders and ModifyBody use ModifySpec to represent a single rule.
-
-        The first character specifies the separator. Example:
-
-            :~q:foo:bar
-
-        If only two clauses are specified, the flow filter is set to
-        match universally (i.e. ".*"). Example:
-
-            /foo/bar
-
-        Clauses are parsed from left to right. Extra separators are taken to be
-        part of the final clause. For instance, the last parameter (header-value or
-        replace) below is "foo/bar/":
-
-            /one/two/foo/bar/
-    """
-    sep, rem = option[0], option[1:]
-    parts = rem.split(sep, 2)
-    if len(parts) == 2:
-        flow_filter = _match_all
-        subject, replacement = parts
-    elif len(parts) == 3:
-        flow_filter_pattern, subject, replacement = parts
-        flow_filter = flowfilter.parse(flow_filter_pattern)  # type: ignore
-        if not flow_filter:
-            raise ValueError(f"Invalid filter pattern: {flow_filter_pattern}")
-    else:
-        raise ValueError("Invalid number of parameters (2 or 3 are expected)")
-
-    subject = strutils.escaped_str_to_bytes(subject)
+    subject = strutils.escaped_str_to_bytes(subject_str)
     if subject_is_regex:
         try:
             re.compile(subject)

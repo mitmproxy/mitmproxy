@@ -85,6 +85,10 @@ def common_options(parser, opts):
     group = parser.add_argument_group("Map Remote")
     opts.make_parser(group, "map_remote", metavar="PATTERN", short="M")
 
+    # Map Local
+    group = parser.add_argument_group("Map Local")
+    opts.make_parser(group, "map_local", metavar="PATTERN")
+
     # Modify Body
     group = parser.add_argument_group("Modify Body")
     opts.make_parser(group, "modify_body", metavar="PATTERN", short="B")

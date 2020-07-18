@@ -14,6 +14,7 @@ from mitmproxy.addons import proxyauth
 from mitmproxy.addons import script
 from mitmproxy.addons import serverplayback
 from mitmproxy.addons import mapremote
+from mitmproxy.addons import maplocal
 from mitmproxy.addons import modifybody
 from mitmproxy.addons import modifyheaders
 from mitmproxy.addons import stickyauth
@@ -41,6 +42,7 @@ def default_addons():
         script.ScriptLoader(),
         serverplayback.ServerPlayback(),
         mapremote.MapRemote(),
+        maplocal.MapLocal(),
         modifybody.ModifyBody(),
         modifyheaders.ModifyHeaders(),
         stickyauth.StickyAuth(),

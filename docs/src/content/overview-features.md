@@ -11,6 +11,7 @@ menu:
 
 - [Anticache](#anticache)
 - [Client-side replay](#client-side-replay)
+- [Map Local](#map-local)
 - [Map Remote](#map-remote)
 - [Modify Body](#modify-body)
 - [Modify Headers](#modify-headers)
@@ -43,6 +44,81 @@ You may want to use client-side replay in conjunction with the `anticache`
 option, to make sure the server responds with complete data.
 
 
+## Map Local
+
+The `map_local` option lets you specify an arbitrary number of patterns that
+define redirections of HTTP requests to local files or directories.
+The local file is fetched instead of the original resource
+and transparently returned to the client.
+
+`map_local` patterns look like this:
+
+```
+|url-regex|local-path
+|flow-filter|url-regex|local-path
+```
+
+* **local-path** is the file or directory that should be served to the client.
+
+* **url-regex** is a regular expression applied on the request URL. It must match for a redirect to take place.
+
+* **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
+that additionally constrains which requests will be redirected.
+
+### Examples
+
+Pattern | Description
+------- | -----------
+`\|example.com/main.js\|~/main-local.js` | Replace `example.com/main.js` with `~/main-local.js`.
+`\|example.com/static\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css`.
+`\|example.com/static/foo\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/bar.css`.
+`\|~m GET\|example.com/static\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css` (but only for GET requests).
+
+### Details
+
+If *local-path* is a file, this file will always be served. File changes will be reflected immediately, there is no caching.
+
+If *local-path* is a directory, *url-regex* is used to split the request URL in two parts and part on the right is appended to *local-path*, excluding the query string.
+However, if *url-regex* contains a regex capturing group, this behavior changes and the first capturing group is appended instead (and query strings are not stripped). 
+Special characters are mapped to `_`. If the file cannot be found, `/index.html` is appended and we try again. Directory traversal outside of the originally specified directory is not possible.
+
+To illustrate this, consider the following example which maps all requests for `example.org/css*` to the local directory `~/static-css`.
+
+<pre>
+                  ┌── url regex ──┬─ local path ─┐
+map_local option: |<span style="color:#f92672">example.com/css</span>|<span style="color:#82b719">~/static-css</span>
+                   <!--                     -->         │
+                   <!--                     -->         │    URL is split here
+                   <!--                     -->         ▼            ▼
+HTTP Request URL: https://<span style="color:#f92672">example.com/css</span><span style="color:#66d9ef">/print/main.css</span><span style="color:#bbb">?timestamp=123</span>
+                          <!--                     -->               <!--                            -->      │        <!--                         -->        ▼
+                          <!--                     -->               <!--                            -->      ▼        <!--                         -->      query string is ignored
+Served File:      Preferred: <span style="color:#82b719">~/static-css</span><span style="color:#66d9ef">/print/main.css</span>
+                   Fallback: <span style="color:#82b719">~/static-css</span><span style="color:#66d9ef">/print/main.css</span>/index.html
+                  Otherwise: 404 response without content
+</pre>
+
+If the file depends on the query string, we can use regex capturing groups. In this example, all `GET` requests for 
+`example.org/index.php?page=<page-name>` are mapped to `~/static-dir/<page-name>`:
+
+<pre>
+                    flow
+                  ┌filter┬─────────── url regex ───────────┬─ local path ─┐
+map_local option: |~m GET|<span style="color:#f92672">example.com/index.php\\?page=</span><span style="color:#66d9ef">(.+)</span>|<span style="color:#82b719">~/static-dir</span>
+                          <!--                     -->  │                          <!--                            --> │
+                          <!--                     -->  │                          <!--                            --> │ regex group = suffix
+                          <!--                     -->  ▼                          <!--                            --> ▼
+HTTP Request URL: https://<span style="color:#f92672">example.com/index.php?page=</span><span style="color:#66d9ef">aboutus</span></span>
+                          <!--                     -->                           <!--                            -->   │
+                          <!--                     -->                           <!--                            -->   ▼
+Served File:                 Preferred: <span style="color:#82b719">~/static-dir</span>/<span style="color:#66d9ef">aboutus</span>
+                              Fallback: <span style="color:#82b719">~/static-dir</span>/<span style="color:#66d9ef">aboutus</span>/index.html
+                             Otherwise: 404 response without content
+</pre>
+
+
+
+
 ## Map Remote
 
 The `map_remote` option lets you specify an arbitrary number of patterns that
@@ -51,22 +127,19 @@ The substituted URL is fetched instead of the original resource
 and the corresponding HTTP response is returned transparently to the client.
 Note that if the original destination uses HTTP2, the substituted destination
 needs to support HTTP2 as well, otherwise the substituted request may fail.
-`map_remote` patterns looks like this:
+`map_remote` patterns look like this:
 
 ```
-|flow-filter|regex|replacement
-|flow-filter|regex|@file-path
-|regex|replacement
-|regex|@file-path
+|flow-filter|url-regex|replacement
+|url-regex|replacement
 ```
 
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
-that defines which requests a replacement applies to.
+that defines which requests the `map_remote` option applies to.
 
-* **regex** is a valid Python regular expression that defines what gets replaced in the URLs of requests.
+* **url-regex** is a valid Python regular expression that defines what gets replaced in the URLs of requests.
 
-* **replacement** is a string literal that is substituted in. If the replacement string
-literal starts with `@` as in `@file-path`, it is treated as a **file path** from which the replacement is read.
+* **replacement** is a string literal that is substituted in.
 
 The _separator_ is arbitrary, and is defined by the first character.
 
@@ -93,16 +166,16 @@ The `modify_body` option lets you specify an arbitrary number of patterns that
 define replacements within bodies of flows. `modify_body` patterns look like this:
 
 ```
-/flow-filter/regex/replacement
-/flow-filter/regex/@file-path
-/regex/replacement
-/regex/@file-path
+/flow-filter/body-regex/replacement
+/flow-filter/body-regex/@file-path
+/body-regex/replacement
+/body-regex/@file-path
 ```
 
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
 that defines which flows a replacement applies to.
 
-* **regex** is a valid Python regular expression that defines what gets replaced.
+* **body-regex** is a valid Python regular expression that defines what gets replaced.
 
 * **replacement** is a string literal that is substituted in. If the replacement string
 literal starts with `@` as in `@file-path`, it is treated as a **file path** from which the replacement is read.
