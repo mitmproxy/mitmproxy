@@ -2,7 +2,7 @@ import json
 import typing
 
 from mitmproxy.coretypes import serializable
-from mitmproxy.utils import typecheck, human
+from mitmproxy.utils import typecheck
 
 
 class StateObject(serializable.Serializable):
