@@ -7,6 +7,7 @@ from mitmproxy import controller, exceptions  # noqa
 from mitmproxy import stateobject
 from mitmproxy import version
 
+
 class Error(stateobject.StateObject):
 
     """

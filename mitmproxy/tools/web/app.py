@@ -21,7 +21,6 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
-from mitmproxy.utils import human
 from mitmproxy import ctx
 
 

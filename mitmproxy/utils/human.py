@@ -3,7 +3,6 @@ import ipaddress
 import time
 import functools
 import typing
-from mitmproxy import ctx
 
 SIZE_TABLE = [
     ("b", 1024 ** 0),
@@ -63,12 +62,13 @@ def pretty_duration(secs: typing.Optional[float]) -> str:
             return formatter.format(secs)
     # less than 1 sec
     return "{:.0f}ms".format(secs * 1000)
-    
+
 
 def format_timestamp(s):
     s = time.localtime(s)
     d = datetime.datetime.fromtimestamp(time.mktime(s))
     return d.strftime("%Y-%m-%d %H:%M:%S")
+
 
 def format_timestamp_with_milli(s):
     d = datetime.datetime.fromtimestamp(s)
