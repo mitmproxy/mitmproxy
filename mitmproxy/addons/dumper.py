@@ -127,7 +127,7 @@ class Dumper:
                     human.format_address(flow.client_conn.address)
                 )
             )
-        elif flow.request.is_replay:
+        elif flow.is_replay == "request":
             client = click.style("[replay]", fg="yellow", bold=True)
         else:
             client = ""
@@ -166,7 +166,7 @@ class Dumper:
         self.echo(line)
 
     def _echo_response_line(self, flow):
-        if flow.response.is_replay:
+        if flow.is_replay == "response":
             replay = click.style("[replay] ", fg="yellow", bold=True)
         else:
             replay = ""

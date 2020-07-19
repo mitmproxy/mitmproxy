@@ -106,8 +106,8 @@ def dumps(f: flow.Flow) -> bytes:
 
 def _load_http_request(o: http_pb2.HTTPRequest) -> HTTPRequest:
     d: dict = {}
-    _move_attrs(o, d, ['first_line_format', 'method', 'scheme', 'host', 'port', 'path', 'http_version', 'content',
-                       'timestamp_start', 'timestamp_end', 'is_replay'])
+    _move_attrs(o, d, ['host', 'port', 'method', 'scheme', 'authority', 'path', 'http_version', 'content',
+                       'timestamp_start', 'timestamp_end'])
     if d['content'] is None:
         d['content'] = b""
     d["headers"] = []
@@ -120,7 +120,7 @@ def _load_http_request(o: http_pb2.HTTPRequest) -> HTTPRequest:
 def _load_http_response(o: http_pb2.HTTPResponse) -> HTTPResponse:
     d: dict = {}
     _move_attrs(o, d, ['http_version', 'status_code', 'reason',
-                       'content', 'timestamp_start', 'timestamp_end', 'is_replay'])
+                       'content', 'timestamp_start', 'timestamp_end'])
     if d['content'] is None:
         d['content'] = b""
     d["headers"] = []

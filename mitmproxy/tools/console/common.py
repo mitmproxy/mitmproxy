@@ -381,6 +381,7 @@ def format_http_flow_list(
         render_mode: RenderMode,
         focused: bool,
         marked: bool,
+        is_replay: bool,
         request_method: str,
         request_scheme: str,
         request_host: str,
@@ -389,13 +390,11 @@ def format_http_flow_list(
         request_http_version: str,
         request_timestamp: float,
         request_is_push_promise: bool,
-        request_is_replay: bool,
         intercepted: bool,
         response_code: typing.Optional[int],
         response_reason: typing.Optional[str],
         response_content_length: typing.Optional[int],
         response_content_type: typing.Optional[str],
-        response_is_replay: bool,
         duration: typing.Optional[float],
         error_message: typing.Optional[str],
 ) -> urwid.Widget:
@@ -433,7 +432,7 @@ def format_http_flow_list(
     else:
         req.append(truncated_plain(request_url, url_style))
 
-    req.append(format_right_indicators(replay=request_is_replay or response_is_replay, marked=marked))
+    req.append(format_right_indicators(replay=is_replay, marked=marked))
 
     resp = [
         ("fixed", preamble_len, urwid.Text(""))
@@ -446,8 +445,6 @@ def format_http_flow_list(
 
         status_style = style or HTTP_RESPONSE_CODE_STYLE.get(response_code // 100, "code_other")
         resp.append(fcol(SYMBOL_RETURN, status_style))
-        if response_is_replay:
-            resp.append(fcol(SYMBOL_REPLAY, "replay"))
         resp.append(fcol(str(response_code), status_style))
         if response_reason and render_mode is RenderMode.DETAILVIEW:
             resp.append(fcol(response_reason, status_style))
@@ -485,6 +482,7 @@ def format_http_flow_table(
         render_mode: RenderMode,
         focused: bool,
         marked: bool,
+        is_replay: typing.Optional[str],
         request_method: str,
         request_scheme: str,
         request_host: str,
@@ -493,13 +491,11 @@ def format_http_flow_table(
         request_http_version: str,
         request_timestamp: float,
         request_is_push_promise: bool,
-        request_is_replay: bool,
         intercepted: bool,
         response_code: typing.Optional[int],
         response_reason: typing.Optional[str],
         response_content_length: typing.Optional[int],
         response_content_type: typing.Optional[str],
-        response_is_replay: bool,
         duration: typing.Optional[float],
         error_message: typing.Optional[str],
 ) -> urwid.Widget:
@@ -579,7 +575,7 @@ def format_http_flow_table(
         items.append(("fixed", 5, urwid.Text("")))
 
     items.append(format_right_indicators(
-        replay=request_is_replay or response_is_replay,
+        replay=bool(is_replay),
         marked=marked
     ))
     return urwid.Columns(items, dividechars=1, min_width=15)
@@ -689,10 +685,9 @@ def format_flow(
                 response_content_length = len(f.response.raw_content)
             else:
                 response_content_length = None
-            response_code = f.response.status_code
-            response_reason = f.response.reason
+            response_code: typing.Optional[int] = f.response.status_code
+            response_reason: typing.Optional[str] = f.response.reason
             response_content_type = f.response.headers.get("content-type")
-            response_is_replay = f.response.is_replay
             if f.response.timestamp_end:
                 duration = max([f.response.timestamp_end - f.request.timestamp_start, 0])
             else:
@@ -702,7 +697,6 @@ def format_flow(
             response_code = None
             response_reason = None
             response_content_type = None
-            response_is_replay = False
             duration = None
 
         if render_mode in (RenderMode.LIST, RenderMode.DETAILVIEW):
@@ -713,6 +707,7 @@ def format_flow(
             render_mode=render_mode,
             focused=focused,
             marked=f.marked,
+            is_replay=f.is_replay,
             request_method=f.request.method,
             request_scheme=f.request.scheme,
             request_host=f.request.pretty_host if hostheader else f.request.host,
@@ -721,13 +716,11 @@ def format_flow(
             request_http_version=f.request.http_version,
             request_timestamp=f.request.timestamp_start,
             request_is_push_promise='h2-pushed-stream' in f.metadata,
-            request_is_replay=f.request.is_replay,
             intercepted=intercepted,
             response_code=response_code,
             response_reason=response_reason,
             response_content_length=response_content_length,
             response_content_type=response_content_type,
-            response_is_replay=response_is_replay,
             duration=duration,
             error_message=error_message,
         )

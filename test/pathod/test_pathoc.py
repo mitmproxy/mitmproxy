@@ -1,21 +1,14 @@
 import io
 from unittest.mock import Mock
+
 import pytest
 
-from mitmproxy.net import http
-from mitmproxy.net.http import http1
 from mitmproxy import exceptions
-
-from pathod import pathoc, language
-from pathod.protocols.http2 import HTTP2StateProtocol
-
+from mitmproxy.net.http import http1
 from mitmproxy.test import tutils
+from pathod import language, pathoc
+from pathod.protocols.http2 import HTTP2StateProtocol
 from . import tservers
-
-
-def test_response():
-    r = http.Response(b"HTTP/1.1", 200, b"Message", {}, None, None)
-    assert repr(r)
 
 
 class PathocTestDaemon(tservers.DaemonTests):

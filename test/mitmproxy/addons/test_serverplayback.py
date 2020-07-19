@@ -331,7 +331,7 @@ def test_server_playback_full():
         tf = tflow.tflow()
         assert not tf.response
         s.request(tf)
-        assert tf.response == f.response
+        assert tf.response.data == f.response.data
 
         tf = tflow.tflow()
         tf.request.content = b"gibble"

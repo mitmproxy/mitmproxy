@@ -1,50 +1,54 @@
 import re
-from typing import Optional  # noqa
+from dataclasses import dataclass, fields
+from typing import Callable, Optional, Union, cast
 
-from mitmproxy.utils import strutils
-from mitmproxy.net.http import encoding
 from mitmproxy.coretypes import serializable
-from mitmproxy.net.http import headers as mheaders
+from mitmproxy.net.http import encoding
+from mitmproxy.net.http.headers import Headers, assemble_content_type, parse_content_type
+from mitmproxy.utils import strutils, typecheck
 
 
+@dataclass
 class MessageData(serializable.Serializable):
-    headers: mheaders.Headers
-    content: bytes
     http_version: bytes
+    headers: Headers
+    content: Optional[bytes]
+    trailers: Optional[Headers]
     timestamp_start: float
-    timestamp_end: float
+    timestamp_end: Optional[float]
 
-    def __eq__(self, other):
-        if isinstance(other, MessageData):
-            return self.__dict__ == other.__dict__
-        return False
+    # noinspection PyUnreachableCode
+    if __debug__:
+        def __post_init__(self):
+            for field in fields(self):
+                val = getattr(self, field.name)
+                typecheck.check_option_type(field.name, val, field.type)
 
     def set_state(self, state):
         for k, v in state.items():
-            if k == "headers":
-                v = mheaders.Headers.from_state(v)
+            if k in ("headers", "trailers") and v is not None:
+                v = Headers.from_state(v)
             setattr(self, k, v)
 
     def get_state(self):
         state = vars(self).copy()
         state["headers"] = state["headers"].get_state()
-        if 'trailers' in state and state["trailers"] is not None:
+        if state["trailers"] is not None:
             state["trailers"] = state["trailers"].get_state()
         return state
 
     @classmethod
     def from_state(cls, state):
-        state["headers"] = mheaders.Headers.from_state(state["headers"])
+        state["headers"] = Headers.from_state(state["headers"])
+        if state["trailers"] is not None:
+            state["trailers"] = Headers.from_state(state["trailers"])
         return cls(**state)
 
 
 class Message(serializable.Serializable):
-    data: MessageData
-
-    def __eq__(self, other):
-        if isinstance(other, Message):
-            return self.data == other.data
-        return False
+    @classmethod
+    def from_state(cls, state):
+        return cls(**state)
 
     def get_state(self):
         return self.data.get_state()
@@ -52,29 +56,48 @@ class Message(serializable.Serializable):
     def set_state(self, state):
         self.data.set_state(state)
 
-    @classmethod
-    def from_state(cls, state):
-        state["headers"] = mheaders.Headers.from_state(state["headers"])
-        if 'trailers' in state and state["trailers"] is not None:
-            state["trailers"] = mheaders.Headers.from_state(state["trailers"])
-        return cls(**state)
+    data: MessageData
+    stream: Union[Callable, bool] = False
 
     @property
-    def headers(self):
+    def http_version(self) -> str:
         """
-        Message headers object
+        Version string, e.g. "HTTP/1.1"
+        """
+        return self.data.http_version.decode("utf-8", "surrogateescape")
 
-        Returns:
-            mitmproxy.net.http.Headers
+    @http_version.setter
+    def http_version(self, http_version: Union[str, bytes]) -> None:
+        self.data.http_version = strutils.always_bytes(http_version, "utf-8", "surrogateescape")
+
+    @property
+    def is_http2(self) -> bool:
+        return self.data.http_version == b"HTTP/2.0"
+
+    @property
+    def headers(self) -> Headers:
+        """
+        The HTTP headers.
         """
         return self.data.headers
 
     @headers.setter
-    def headers(self, h):
+    def headers(self, h: Headers) -> None:
         self.data.headers = h
 
     @property
-    def raw_content(self) -> bytes:
+    def trailers(self) -> Optional[Headers]:
+        """
+        The HTTP trailers.
+        """
+        return self.data.trailers
+
+    @trailers.setter
+    def trailers(self, h: Optional[Headers]) -> None:
+        self.data.trailers = h
+
+    @property
+    def raw_content(self) -> Optional[bytes]:
         """
         The raw (potentially compressed) HTTP message body as bytes.
 
@@ -83,10 +106,10 @@ class Message(serializable.Serializable):
         return self.data.content
 
     @raw_content.setter
-    def raw_content(self, content):
+    def raw_content(self, content: Optional[bytes]) -> None:
         self.data.content = content
 
-    def get_content(self, strict: bool=True) -> Optional[bytes]:
+    def get_content(self, strict: bool = True) -> Optional[bytes]:
         """
         The uncompressed HTTP message body as bytes.
 
@@ -112,15 +135,14 @@ class Message(serializable.Serializable):
         else:
             return self.raw_content
 
-    def set_content(self, value):
+    def set_content(self, value: Optional[bytes]) -> None:
         if value is None:
             self.raw_content = None
             return
         if not isinstance(value, bytes):
             raise TypeError(
-                "Message content must be bytes, not {}. "
+                f"Message content must be bytes, not {type(value).__name__}. "
                 "Please use .text if you want to assign a str."
-                .format(type(value).__name__)
             )
         ce = self.headers.get("content-encoding")
         try:
@@ -135,59 +157,34 @@ class Message(serializable.Serializable):
     content = property(get_content, set_content)
 
     @property
-    def trailers(self):
-        """
-        Message trailers object
-
-        Returns:
-            mitmproxy.net.http.Headers
-        """
-        return self.data.trailers
-
-    @trailers.setter
-    def trailers(self, h):
-        self.data.trailers = h
-
-    @property
-    def http_version(self):
-        """
-        Version string, e.g. "HTTP/1.1"
-        """
-        return self.data.http_version.decode("utf-8", "surrogateescape")
-
-    @http_version.setter
-    def http_version(self, http_version):
-        self.data.http_version = strutils.always_bytes(http_version, "utf-8", "surrogateescape")
-
-    @property
-    def timestamp_start(self):
+    def timestamp_start(self) -> float:
         """
         First byte timestamp
         """
         return self.data.timestamp_start
 
     @timestamp_start.setter
-    def timestamp_start(self, timestamp_start):
+    def timestamp_start(self, timestamp_start: float) -> None:
         self.data.timestamp_start = timestamp_start
 
     @property
-    def timestamp_end(self):
+    def timestamp_end(self) -> Optional[float]:
         """
         Last byte timestamp
         """
         return self.data.timestamp_end
 
     @timestamp_end.setter
-    def timestamp_end(self, timestamp_end):
+    def timestamp_end(self, timestamp_end: Optional[float]):
         self.data.timestamp_end = timestamp_end
 
     def _get_content_type_charset(self) -> Optional[str]:
-        ct = mheaders.parse_content_type(self.headers.get("content-type", ""))
+        ct = parse_content_type(self.headers.get("content-type", ""))
         if ct:
             return ct[2].get("charset")
         return None
 
-    def _guess_encoding(self, content=b"") -> str:
+    def _guess_encoding(self, content: bytes = b"") -> str:
         enc = self._get_content_type_charset()
         if not enc:
             if "json" in self.headers.get("content-type", ""):
@@ -204,7 +201,7 @@ class Message(serializable.Serializable):
 
         return enc
 
-    def get_text(self, strict: bool=True) -> Optional[str]:
+    def get_text(self, strict: bool = True) -> Optional[str]:
         """
         The uncompressed and decoded HTTP message body as text.
 
@@ -218,13 +215,13 @@ class Message(serializable.Serializable):
             return None
         enc = self._guess_encoding(content)
         try:
-            return encoding.decode(content, enc)
+            return cast(str, encoding.decode(content, enc))
         except ValueError:
             if strict:
                 raise
             return content.decode("utf8", "surrogateescape")
 
-    def set_text(self, text):
+    def set_text(self, text: Optional[str]) -> None:
         if text is None:
             self.content = None
             return
@@ -234,15 +231,15 @@ class Message(serializable.Serializable):
             self.content = encoding.encode(text, enc)
         except ValueError:
             # Fall back to UTF-8 and update the content-type header.
-            ct = mheaders.parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
+            ct = parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
             ct[2]["charset"] = "utf-8"
-            self.headers["content-type"] = mheaders.assemble_content_type(*ct)
+            self.headers["content-type"] = assemble_content_type(*ct)
             enc = "utf8"
             self.content = text.encode(enc, "surrogateescape")
 
     text = property(get_text, set_text)
 
-    def decode(self, strict=True):
+    def decode(self, strict: bool = True) -> None:
         """
         Decodes body based on the current Content-Encoding header, then
         removes the header. If there is no Content-Encoding header, no
@@ -255,7 +252,7 @@ class Message(serializable.Serializable):
         self.headers.pop("content-encoding", None)
         self.content = decoded
 
-    def encode(self, e):
+    def encode(self, e: str) -> None:
         """
         Encodes body with the encoding e, where e is "gzip", "deflate", "identity", "br", or "zstd".
         Any existing content-encodings are overwritten,

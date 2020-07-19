@@ -59,6 +59,7 @@ class TestExpectHeader(tservers.HTTPProxyTest):
         client.wfile.flush()
 
         assert client.rfile.readline() == b"HTTP/1.1 100 Continue\r\n"
+        assert client.rfile.readline() == b"content-length: 0\r\n"
         assert client.rfile.readline() == b"\r\n"
 
         client.wfile.write(b"0123456789abcdef\r\n")

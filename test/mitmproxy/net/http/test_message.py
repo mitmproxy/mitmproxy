@@ -64,17 +64,17 @@ class TestMessage:
     def test_eq_ne(self):
         resp = tutils.tresp(timestamp_start=42, timestamp_end=42)
         same = tutils.tresp(timestamp_start=42, timestamp_end=42)
-        assert resp == same
+        assert resp.data == same.data
 
         other = tutils.tresp(timestamp_start=0, timestamp_end=0)
-        assert resp != other
+        assert resp.data != other.data
 
         assert resp != 0
 
     def test_serializable(self):
         resp = tutils.tresp()
         resp2 = http.Response.from_state(resp.get_state())
-        assert resp == resp2
+        assert resp.data == resp2.data
 
     def test_content_length_update(self):
         resp = tutils.tresp()

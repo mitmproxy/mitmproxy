@@ -1,67 +1,24 @@
-import re
-import urllib
 import time
-from typing import Optional, AnyStr, Dict, Iterable, Tuple, Union
+import urllib.parse
+from dataclasses import dataclass
+from typing import Dict, Iterable, Optional, Tuple, Union
 
-from mitmproxy.coretypes import multidict
-from mitmproxy.utils import strutils
-from mitmproxy.net.http import multipart
-from mitmproxy.net.http import cookies
-from mitmproxy.net.http import headers as nheaders
-from mitmproxy.net.http import message
 import mitmproxy.net.http.url
+from mitmproxy.coretypes import multidict
+from mitmproxy.net.http import cookies, multipart
+from mitmproxy.net.http import message
+from mitmproxy.net.http.headers import Headers
+from mitmproxy.utils.strutils import always_bytes, always_str
 
-# This regex extracts & splits the host header into host and port.
-# Handles the edge case of IPv6 addresses containing colons.
-# https://bugzilla.mozilla.org/show_bug.cgi?id=45891
-host_header_re = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
 
-
+@dataclass
 class RequestData(message.MessageData):
-    def __init__(
-        self,
-        first_line_format,
-        method,
-        scheme,
-        host,
-        port,
-        path,
-        http_version,
-        headers=(),
-        content=None,
-        trailers=None,
-        timestamp_start=None,
-        timestamp_end=None
-    ):
-        if isinstance(method, str):
-            method = method.encode("ascii", "strict")
-        if isinstance(scheme, str):
-            scheme = scheme.encode("ascii", "strict")
-        if isinstance(host, str):
-            host = host.encode("idna", "strict")
-        if isinstance(path, str):
-            path = path.encode("ascii", "strict")
-        if isinstance(http_version, str):
-            http_version = http_version.encode("ascii", "strict")
-        if not isinstance(headers, nheaders.Headers):
-            headers = nheaders.Headers(headers)
-        if isinstance(content, str):
-            raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
-        if trailers is not None and not isinstance(trailers, nheaders.Headers):
-            trailers = nheaders.Headers(trailers)
-
-        self.first_line_format = first_line_format
-        self.method = method
-        self.scheme = scheme
-        self.host = host
-        self.port = port
-        self.path = path
-        self.http_version = http_version
-        self.headers = headers
-        self.content = content
-        self.trailers = trailers
-        self.timestamp_start = timestamp_start
-        self.timestamp_end = timestamp_end
+    host: str
+    port: int
+    method: bytes
+    scheme: bytes
+    authority: bytes
+    path: bytes
 
 
 class Request(message.Message):
@@ -70,19 +27,64 @@ class Request(message.Message):
     """
     data: RequestData
 
-    def __init__(self, *args, **kwargs):
-        super().__init__()
-        self.data = RequestData(*args, **kwargs)
+    def __init__(
+            self,
+            host: str,
+            port: int,
+            method: bytes,
+            scheme: bytes,
+            authority: bytes,
+            path: bytes,
+            http_version: bytes,
+            headers: Union[Headers, Tuple[Tuple[bytes, bytes], ...]],
+            content: Optional[bytes],
+            trailers: Union[None, Headers, Tuple[Tuple[bytes, bytes], ...]],
+            timestamp_start: float,
+            timestamp_end: Optional[float],
+    ):
+        # auto-convert invalid types to retain compatibility with older code.
+        if isinstance(host, bytes):
+            host = host.decode("idna", "strict")
+        if isinstance(method, str):
+            method = method.encode("ascii", "strict")
+        if isinstance(scheme, str):
+            scheme = scheme.encode("ascii", "strict")
+        if isinstance(authority, str):
+            authority = authority.encode("ascii", "strict")
+        if isinstance(path, str):
+            path = path.encode("ascii", "strict")
+        if isinstance(http_version, str):
+            http_version = http_version.encode("ascii", "strict")
 
-    def __repr__(self):
+        if isinstance(content, str):
+            raise ValueError(f"Content must be bytes, not {type(content).__name__}")
+        if not isinstance(headers, Headers):
+            headers = Headers(headers)
+        if trailers is not None and not isinstance(trailers, Headers):
+            trailers = Headers(trailers)
+
+        self.data = RequestData(
+            host=host,
+            port=port,
+            method=method,
+            scheme=scheme,
+            authority=authority,
+            path=path,
+            http_version=http_version,
+            headers=headers,
+            content=content,
+            trailers=trailers,
+            timestamp_start=timestamp_start,
+            timestamp_end=timestamp_end,
+        )
+
+    def __repr__(self) -> str:
         if self.host and self.port:
-            hostport = "{}:{}".format(self.host, self.port)
+            hostport = f"{self.host}:{self.port}"
         else:
             hostport = ""
         path = self.path or ""
-        return "Request({} {}{})".format(
-            self.method, hostport, path
-        )
+        return f"Request({self.method} {hostport}{path})"
 
     @classmethod
     def make(
@@ -90,117 +92,134 @@ class Request(message.Message):
             method: str,
             url: str,
             content: Union[bytes, str] = "",
-            headers: Union[Dict[str, AnyStr], Iterable[Tuple[bytes, bytes]]] = ()
-    ):
+            headers: Union[Headers, Dict[Union[str, bytes], Union[str, bytes]], Iterable[Tuple[bytes, bytes]]] = ()
+    ) -> "Request":
         """
         Simplified API for creating request objects.
         """
-        req = cls(
-            "absolute",
-            method,
-            "",
-            "",
-            "",
-            "",
-            "HTTP/1.1",
-            (),
-            b""
-        )
-
-        req.url = url
-        req.timestamp_start = time.time()
-
         # Headers can be list or dict, we differentiate here.
-        if isinstance(headers, dict):
-            req.headers = nheaders.Headers(**headers)
+        if isinstance(headers, Headers):
+            pass
+        elif isinstance(headers, dict):
+            headers = Headers(
+                (always_bytes(k, "utf-8", "surrogateescape"),
+                 always_bytes(v, "utf-8", "surrogateescape"))
+                for k, v in headers.items()
+            )
         elif isinstance(headers, Iterable):
-            req.headers = nheaders.Headers(headers)
+            headers = Headers(headers)
         else:
             raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
                 type(headers).__name__
             ))
 
+        req = cls(
+            "",
+            0,
+            method.encode("utf-8", "surrogateescape"),
+            b"",
+            b"",
+            b"",
+            b"HTTP/1.1",
+            headers,
+            b"",
+            None,
+            time.time(),
+            time.time(),
+        )
+
+        req.url = url
         # Assign this manually to update the content-length header.
         if isinstance(content, bytes):
             req.content = content
         elif isinstance(content, str):
             req.text = content
         else:
-            raise TypeError("Expected content to be str or bytes, but is {}.".format(
-                type(content).__name__
-            ))
+            raise TypeError(f"Expected content to be str or bytes, but is {type(content).__name__}.")
 
         return req
 
     @property
-    def first_line_format(self):
+    def first_line_format(self) -> str:
         """
         HTTP request form as defined in `RFC7230 <https://tools.ietf.org/html/rfc7230#section-5.3>`_.
 
         origin-form and asterisk-form are subsumed as "relative".
         """
-        return self.data.first_line_format
-
-    @first_line_format.setter
-    def first_line_format(self, first_line_format):
-        self.data.first_line_format = first_line_format
+        if self.method == "CONNECT":
+            return "authority"
+        elif self.authority:
+            return "absolute"
+        else:
+            return "relative"
 
     @property
-    def method(self):
+    def method(self) -> str:
         """
         HTTP request method, e.g. "GET".
         """
         return self.data.method.decode("utf-8", "surrogateescape").upper()
 
     @method.setter
-    def method(self, method):
-        self.data.method = strutils.always_bytes(method, "utf-8", "surrogateescape")
+    def method(self, val: Union[str, bytes]) -> None:
+        self.data.method = always_bytes(val, "utf-8", "surrogateescape")
 
     @property
-    def scheme(self):
+    def scheme(self) -> str:
         """
         HTTP request scheme, which should be "http" or "https".
         """
-        if self.data.scheme is None:
-            return None
         return self.data.scheme.decode("utf-8", "surrogateescape")
 
     @scheme.setter
-    def scheme(self, scheme):
-        self.data.scheme = strutils.always_bytes(scheme, "utf-8", "surrogateescape")
+    def scheme(self, val: Union[str, bytes]) -> None:
+        self.data.scheme = always_bytes(val, "utf-8", "surrogateescape")
 
     @property
-    def host(self):
+    def authority(self) -> str:
+        """
+        HTTP request authority.
+
+        For HTTP/1, this is the authority portion of the request target
+        (in either absolute-form or authority-form)
+
+        For HTTP/2, this is the :authority pseudo header.
+        """
+        try:
+            return self.data.authority.decode("idna")
+        except UnicodeError:
+            return self.data.authority.decode("utf8", "surrogateescape")
+
+    @authority.setter
+    def authority(self, val: Union[str, bytes]) -> None:
+        if isinstance(val, str):
+            try:
+                val = val.encode("idna", "strict")
+            except UnicodeError:
+                val = val.encode("utf8", "surrogateescape")  # type: ignore
+        self.data.authority = val
+
+    @property
+    def host(self) -> str:
         """
         Target host. This may be parsed from the raw request
         (e.g. from a ``GET http://example.com/ HTTP/1.1`` request line)
         or inferred from the proxy mode (e.g. an IP in transparent mode).
 
-        Setting the host attribute also updates the host header, if present.
+        Setting the host attribute also updates the host header and authority information, if present.
         """
-        if not self.data.host:
-            return self.data.host
-        try:
-            return self.data.host.decode("idna")
-        except UnicodeError:
-            return self.data.host.decode("utf8", "surrogateescape")
+        return self.data.host
 
     @host.setter
-    def host(self, host):
-        if isinstance(host, str):
-            try:
-                # There's no non-strict mode for IDNA encoding.
-                # We don't want this operation to fail though, so we try
-                # utf8 as a last resort.
-                host = host.encode("idna", "strict")
-            except UnicodeError:
-                host = host.encode("utf8", "surrogateescape")
-
-        self.data.host = host
+    def host(self, val: Union[str, bytes]) -> None:
+        self.data.host = always_str(val, "idna", "strict")
 
         # Update host header
-        if self.host_header is not None:
-            self.host_header = host
+        if "Host" in self.data.headers:
+            self.data.headers["Host"] = val
+        # Update authority
+        if self.data.authority:
+            self.authority = mitmproxy.net.http.url.hostport(self.scheme, self.host, self.port)
 
     @property
     def host_header(self) -> Optional[str]:
@@ -208,111 +227,92 @@ class Request(message.Message):
         The request's host/authority header.
 
         This property maps to either ``request.headers["Host"]`` or
-        ``request.headers[":authority"]``, depending on whether it's HTTP/1.x or HTTP/2.0.
+        ``request.authority``, depending on whether it's HTTP/1.x or HTTP/2.0.
         """
-        if ":authority" in self.headers:
-            return self.headers[":authority"]
-        if "Host" in self.headers:
-            return self.headers["Host"]
-        return None
+        if self.is_http2:
+            return self.authority or self.data.headers.get("Host", None)
+        else:
+            return self.data.headers.get("Host", None)
 
     @host_header.setter
-    def host_header(self, val: Optional[str]) -> None:
+    def host_header(self, val: Union[None, str, bytes]) -> None:
         if val is None:
+            if self.is_http2:
+                self.data.authority = b""
             self.headers.pop("Host", None)
-            self.headers.pop(":authority", None)
-        elif self.host_header is not None:
-            # Update any existing headers.
-            if ":authority" in self.headers:
-                self.headers[":authority"] = val
-            if "Host" in self.headers:
-                self.headers["Host"] = val
         else:
-            # Only add the correct new header.
-            if self.http_version.upper().startswith("HTTP/2"):
-                self.headers[":authority"] = val
-            else:
+            if self.is_http2:
+                self.authority = val  # type: ignore
+            if not self.is_http2 or "Host" in self.headers:
+                # For h2, we only overwrite, but not create, as :authority is the h2 host header.
                 self.headers["Host"] = val
-
-    @host_header.deleter
-    def host_header(self):
-        self.host_header = None
 
     @property
-    def port(self):
+    def port(self) -> int:
         """
         Target port
         """
         return self.data.port
 
     @port.setter
-    def port(self, port):
+    def port(self, port: int) -> None:
         self.data.port = port
 
     @property
-    def path(self):
+    def path(self) -> str:
         """
         HTTP request path, e.g. "/index.html".
-        Guaranteed to start with a slash, except for OPTIONS requests, which may just be "*".
+        Usually starts with a slash, except for OPTIONS requests, which may just be "*".
         """
-        if self.data.path is None:
-            return None
-        else:
-            return self.data.path.decode("utf-8", "surrogateescape")
+        return self.data.path.decode("utf-8", "surrogateescape")
 
     @path.setter
-    def path(self, path):
-        self.data.path = strutils.always_bytes(path, "utf-8", "surrogateescape")
+    def path(self, val: Union[str, bytes]) -> None:
+        self.data.path = always_bytes(val, "utf-8", "surrogateescape")
 
     @property
-    def url(self):
+    def url(self) -> str:
         """
-        The URL string, constructed from the request's URL components
+        The URL string, constructed from the request's URL components.
         """
         if self.first_line_format == "authority":
-            return "%s:%d" % (self.host, self.port)
+            return f"{self.host}:{self.port}"
         return mitmproxy.net.http.url.unparse(self.scheme, self.host, self.port, self.path)
 
     @url.setter
-    def url(self, url):
-        self.scheme, self.host, self.port, self.path = mitmproxy.net.http.url.parse(url)
-
-    def _parse_host_header(self):
-        """Extract the host and port from Host header"""
-        host = self.host_header
-        if not host:
-            return None, None
-        port = None
-        m = host_header_re.match(host)
-        if m:
-            host = m.group("host").strip("[]")
-            if m.group("port"):
-                port = int(m.group("port"))
-        return host, port
+    def url(self, val: Union[str, bytes]) -> None:
+        val = always_str(val, "utf-8", "surrogateescape")
+        self.scheme, self.host, self.port, self.path = mitmproxy.net.http.url.parse(val)
 
     @property
-    def pretty_host(self):
+    def pretty_host(self) -> str:
         """
-        Similar to :py:attr:`host`, but using the Host headers as an additional preferred data source.
+        Similar to :py:attr:`host`, but using the host/:authority header as an additional (preferred) data source.
         This is useful in transparent mode where :py:attr:`host` is only an IP address,
         but may not reflect the actual destination as the Host header could be spoofed.
         """
-        host, port = self._parse_host_header()
-        if not host:
+        authority = self.host_header
+        if authority:
+            return mitmproxy.net.http.url.parse_authority(authority, check=False)[0]
+        else:
             return self.host
-        if not port:
-            port = 443 if self.scheme == 'https' else 80
-        # Prefer the original address if host header has an unexpected form
-        return host if port == self.port else self.host
 
     @property
-    def pretty_url(self):
+    def pretty_url(self) -> str:
         """
         Like :py:attr:`url`, but using :py:attr:`pretty_host` instead of :py:attr:`host`.
         """
         if self.first_line_format == "authority":
-            return "%s:%d" % (self.pretty_host, self.port)
-        return mitmproxy.net.http.url.unparse(self.scheme, self.pretty_host, self.port, self.path)
+            return self.authority
+
+        host_header = self.host_header
+        if not host_header:
+            return self.url
+
+        pretty_host, pretty_port = mitmproxy.net.http.url.parse_authority(host_header, check=False)
+        pretty_port = pretty_port or mitmproxy.net.http.url.default_port(self.scheme) or 443
+
+        return mitmproxy.net.http.url.unparse(self.scheme, pretty_host, pretty_port, self.path)
 
     def _get_query(self):
         query = urllib.parse.urlparse(self.url).query
@@ -379,7 +379,7 @@ class Request(message.Message):
         _, _, _, params, query, fragment = urllib.parse.urlparse(self.url)
         self.path = urllib.parse.urlunparse(["", "", path, params, query, fragment])
 
-    def anticache(self):
+    def anticache(self) -> None:
         """
         Modifies this request to remove headers that might produce a cached
         response. That is, we remove ETags and If-Modified-Since headers.
@@ -391,14 +391,14 @@ class Request(message.Message):
         for i in delheaders:
             self.headers.pop(i, None)
 
-    def anticomp(self):
+    def anticomp(self) -> None:
         """
         Modifies this request to remove headers that will compress the
         resource's data.
         """
         self.headers["accept-encoding"] = "identity"
 
-    def constrain_encoding(self):
+    def constrain_encoding(self) -> None:
         """
         Limits the permissible Accept-Encoding values, based on what we can
         decode appropriately.

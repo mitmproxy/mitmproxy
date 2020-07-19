@@ -1,5 +1,8 @@
 import abc
 import uuid
+from typing import Type, TypeVar
+
+T = TypeVar('T', bound='Serializable')
 
 
 class Serializable(metaclass=abc.ABCMeta):
@@ -9,7 +12,7 @@ class Serializable(metaclass=abc.ABCMeta):
 
     @classmethod
     @abc.abstractmethod
-    def from_state(cls, state):
+    def from_state(cls: Type[T], state) -> T:
         """
         Create a new object from the given state.
         """
@@ -29,7 +32,7 @@ class Serializable(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError()
 
-    def copy(self):
+    def copy(self: T) -> T:
         state = self.get_state()
         if isinstance(state, dict) and "id" in state:
             state["id"] = str(uuid.uuid4())

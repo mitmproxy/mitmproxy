@@ -17,6 +17,7 @@ class T(TBase):
 
 def test_check_option_type():
     typecheck.check_option_type("foo", 42, int)
+    typecheck.check_option_type("foo", 42, float)
     with pytest.raises(TypeError):
         typecheck.check_option_type("foo", 42, str)
     with pytest.raises(TypeError):

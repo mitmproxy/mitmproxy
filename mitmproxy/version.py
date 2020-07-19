@@ -8,7 +8,7 @@ MITMPROXY = "mitmproxy " + VERSION
 
 # Serialization format version. This is displayed nowhere, it just needs to be incremented by one
 # for each change in the file format.
-FLOW_FORMAT_VERSION = 8
+FLOW_FORMAT_VERSION = 9
 
 
 def get_dev_version() -> str:

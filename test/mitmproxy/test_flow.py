@@ -1,14 +1,14 @@
 import io
+
 import pytest
 
-from mitmproxy.test import tflow, taddons
 import mitmproxy.io
+from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import options
-from mitmproxy.io import tnetstring
 from mitmproxy.exceptions import FlowReadException
-from mitmproxy import flow
-from mitmproxy import http
+from mitmproxy.io import tnetstring
+from mitmproxy.test import taddons, tflow
 from . import tservers
 
 
@@ -29,7 +29,7 @@ class TestSerialize:
 
         f2 = l[0]
         assert f2.get_state() == f.get_state()
-        assert f2.request == f.request
+        assert f2.request.data == f.request.data
         assert f2.marked
 
     def test_filter(self):
@@ -128,11 +128,11 @@ class TestFlowMaster:
         with taddons.context(s, options=opts) as ctx:
             f = tflow.tflow(req=None)
             await ctx.master.addons.handle_lifecycle("clientconnect", f.client_conn)
-            f.request = http.HTTPRequest.wrap(mitmproxy.test.tutils.treq())
+            f.request = mitmproxy.test.tutils.treq()
             await ctx.master.addons.handle_lifecycle("request", f)
             assert len(s.flows) == 1
 
-            f.response = http.HTTPResponse.wrap(mitmproxy.test.tutils.tresp())
+            f.response = mitmproxy.test.tutils.tresp()
             await ctx.master.addons.handle_lifecycle("response", f)
             assert len(s.flows) == 1
 

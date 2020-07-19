@@ -71,6 +71,8 @@ def check_option_type(name: str, value: typing.Any, typeinfo: Type) -> None:
     elif typename.startswith("typing.Any"):
         return
     elif not isinstance(value, typeinfo):
+        if typeinfo is float and isinstance(value, int):
+            return
         raise e
 
 

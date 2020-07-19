@@ -1,7 +1,10 @@
+from typing import AnyStr
+
 import pytest
 import sys
 
 from mitmproxy.net.http import url
+from mitmproxy.net.http.url import parse_authority
 
 
 def test_parse():
@@ -50,7 +53,6 @@ def test_parse():
 
 
 def test_ascii_check():
-
     test_url = "https://xyz.tax-edu.net?flag=selectCourse&lc_id=42825&lc_name=茅莽莽猫氓猫氓".encode()
     scheme, host, port, full_path = url.parse(test_url)
     assert scheme == b'https'
@@ -115,10 +117,10 @@ def test_empty_key_trailing_equal_sign():
     post_data_empty_key_middle = [('one', 'two'), ('emptykey', ''), ('three', 'four')]
     post_data_empty_key_end = [('one', 'two'), ('three', 'four'), ('emptykey', '')]
 
-    assert url.encode(post_data_empty_key_middle, similar_to = reference_with_equal) == "one=two&emptykey=&three=four"
-    assert url.encode(post_data_empty_key_end, similar_to = reference_with_equal) == "one=two&three=four&emptykey="
-    assert url.encode(post_data_empty_key_middle, similar_to = reference_without_equal) == "one=two&emptykey&three=four"
-    assert url.encode(post_data_empty_key_end, similar_to = reference_without_equal) == "one=two&three=four&emptykey"
+    assert url.encode(post_data_empty_key_middle, similar_to=reference_with_equal) == "one=two&emptykey=&three=four"
+    assert url.encode(post_data_empty_key_end, similar_to=reference_with_equal) == "one=two&three=four&emptykey="
+    assert url.encode(post_data_empty_key_middle, similar_to=reference_without_equal) == "one=two&emptykey&three=four"
+    assert url.encode(post_data_empty_key_end, similar_to=reference_without_equal) == "one=two&three=four&emptykey"
 
 
 def test_encode():
@@ -147,3 +149,33 @@ def test_unquote():
 
 def test_hostport():
     assert url.hostport(b"https", b"foo.com", 8080) == b"foo.com:8080"
+
+
+def test_default_port():
+    assert url.default_port("http") == 80
+    assert url.default_port(b"https") == 443
+    assert url.default_port(b"qux") is None
+
+
+@pytest.mark.parametrize(
+    "authority,valid,out", [
+        ["foo:42", True, ("foo", 42)],
+        [b"foo:42", True, ("foo", 42)],
+        ["127.0.0.1:443", True, ("127.0.0.1", 443)],
+        ["[2001:db8:42::]:443", True, ("2001:db8:42::", 443)],
+        [b"xn--aaa-pla.example:80", True, ("äaaa.example", 80)],
+        ["foo", True, ("foo", None)],
+        ["foo..bar", False, ("foo..bar", None)],
+        ["foo:bar", False, ("foo:bar", None)],
+        ["foo:999999999", False, ("foo:999999999", None)],
+        [b"\xff", False, ('\udcff', None)]
+    ]
+)
+def test_parse_authority(authority: AnyStr, valid: bool, out):
+    assert parse_authority(authority, False) == out
+
+    if valid:
+        assert parse_authority(authority, True) == out
+    else:
+        with pytest.raises(ValueError):
+            parse_authority(authority, True)

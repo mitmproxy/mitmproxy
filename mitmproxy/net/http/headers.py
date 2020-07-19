@@ -1,6 +1,9 @@
 import collections
+from typing import Dict, Optional, Tuple
+
 from mitmproxy.coretypes import multidict
 from mitmproxy.utils import strutils
+
 
 # See also: http://lucumr.pocoo.org/2013/7/2/the-updated-guide-to-unicode/
 
@@ -146,7 +149,7 @@ class Headers(multidict.MultiDict):
             return super().items()
 
 
-def parse_content_type(c):
+def parse_content_type(c: str) -> Optional[Tuple[str, str, Dict[str, str]]]:
     """
         A simple parser for content-type values. Returns a (type, subtype,
         parameters) tuple, where type and subtype are strings, and parameters

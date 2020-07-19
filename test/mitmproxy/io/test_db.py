@@ -1,7 +1,10 @@
+import pytest
+
 from mitmproxy.io import db
 from mitmproxy.test import tflow
 
 
+@pytest.mark.skip
 class TestDB:
 
     def test_create(self, tdata):

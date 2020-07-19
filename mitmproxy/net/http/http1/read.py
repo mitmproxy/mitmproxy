@@ -1,15 +1,13 @@
-import time
-import sys
 import re
-
+import sys
+import time
 import typing
 
+from mitmproxy import exceptions
+from mitmproxy.net.http import headers
 from mitmproxy.net.http import request
 from mitmproxy.net.http import response
-from mitmproxy.net.http import headers
 from mitmproxy.net.http import url
-from mitmproxy.net import check
-from mitmproxy import exceptions
 
 
 def get_header_tokens(headers, key):
@@ -51,7 +49,7 @@ def read_request_head(rfile):
     if hasattr(rfile, "reset_timestamps"):
         rfile.reset_timestamps()
 
-    form, method, scheme, host, port, path, http_version = _read_request_line(rfile)
+    host, port, method, scheme, authority, path, http_version = _read_request_line(rfile)
     headers = _read_headers(rfile)
 
     if hasattr(rfile, "first_byte_timestamp"):
@@ -59,7 +57,7 @@ def read_request_head(rfile):
         timestamp_start = rfile.first_byte_timestamp
 
     return request.Request(
-        form, method, scheme, host, port, path, http_version, headers, None, None, timestamp_start
+        host, port, method, scheme, authority, path, http_version, headers, None, None, timestamp_start, None
     )
 
 
@@ -98,7 +96,7 @@ def read_response_head(rfile):
         # more accurate timestamp_start
         timestamp_start = rfile.first_byte_timestamp
 
-    return response.Response(http_version, status_code, message, headers, None, None, timestamp_start)
+    return response.Response(http_version, status_code, message, headers, None, None, timestamp_start, None)
 
 
 def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):
@@ -248,45 +246,32 @@ def _read_request_line(rfile):
         raise exceptions.HttpReadDisconnect("Client disconnected")
 
     try:
-        method, path, http_version = line.split()
+        method, target, http_version = line.split()
 
-        if path == b"*" or path.startswith(b"/"):
-            form = "relative"
-            scheme, host, port = None, None, None
+        if target == b"*" or target.startswith(b"/"):
+            scheme, authority, path = b"", b"", target
+            host, port = "", 0
         elif method == b"CONNECT":
-            form = "authority"
-            host, port = _parse_authority_form(path)
-            scheme, path = None, None
+            scheme, authority, path = b"", target, b""
+            host, port = url.parse_authority(authority, check=True)
+            if not port:
+                raise ValueError
         else:
-            form = "absolute"
-            scheme, host, port, path = url.parse(path)
+            scheme, rest = target.split(b"://", maxsplit=1)
+            authority, path_ = rest.split(b"/", maxsplit=1)
+            path = b"/" + path_
+            host, port = url.parse_authority(authority, check=True)
+            port = port or url.default_port(scheme)
+            if not port:
+                raise ValueError
+            # TODO: we can probably get rid of this check?
+            url.parse(target)
 
         _check_http_version(http_version)
     except ValueError:
-        raise exceptions.HttpSyntaxException("Bad HTTP request line: {}".format(line))
+        raise exceptions.HttpSyntaxException(f"Bad HTTP request line: {line}")
 
-    return form, method, scheme, host, port, path, http_version
-
-
-def _parse_authority_form(hostport):
-    """
-        Returns (host, port) if hostport is a valid authority-form host specification.
-        http://tools.ietf.org/html/draft-luotonen-web-proxy-tunneling-01 section 3.1
-
-        Raises:
-            ValueError, if the input is malformed
-    """
-    try:
-        host, port = hostport.rsplit(b":", 1)
-        if host.startswith(b"[") and host.endswith(b"]"):
-            host = host[1:-1]
-        port = int(port)
-        if not check.is_valid_host(host) or not check.is_valid_port(port):
-            raise ValueError()
-    except ValueError:
-        raise exceptions.HttpSyntaxException("Invalid host specification: {}".format(hostport))
-
-    return host, port
+    return host, port, method, scheme, authority, path, http_version
 
 
 def _read_response_line(rfile):

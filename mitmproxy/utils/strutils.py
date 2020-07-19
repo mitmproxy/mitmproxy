@@ -1,27 +1,47 @@
 import codecs
 import io
 import re
-from typing import Iterable, Optional, Union, cast
+from typing import Iterable, Union, overload
 
 
-def always_bytes(str_or_bytes: Union[str, bytes, None], *encode_args) -> Optional[bytes]:
-    if isinstance(str_or_bytes, bytes) or str_or_bytes is None:
-        return cast(Optional[bytes], str_or_bytes)
+# https://mypy.readthedocs.io/en/stable/more_types.html#function-overloading
+
+@overload
+def always_bytes(str_or_bytes: None, *encode_args) -> None:
+    ...
+
+
+@overload
+def always_bytes(str_or_bytes: Union[str, bytes], *encode_args) -> bytes:
+    ...
+
+
+def always_bytes(str_or_bytes: Union[None, str, bytes], *encode_args) -> Union[None, bytes]:
+    if str_or_bytes is None or isinstance(str_or_bytes, bytes):
+        return str_or_bytes
     elif isinstance(str_or_bytes, str):
         return str_or_bytes.encode(*encode_args)
     else:
         raise TypeError("Expected str or bytes, but got {}.".format(type(str_or_bytes).__name__))
 
 
-def always_str(str_or_bytes: Union[str, bytes, None], *decode_args) -> Optional[str]:
+@overload
+def always_str(str_or_bytes: None, *encode_args) -> None:
+    ...
+
+
+@overload
+def always_str(str_or_bytes: Union[str, bytes], *encode_args) -> str:
+    ...
+
+
+def always_str(str_or_bytes: Union[None, str, bytes], *decode_args) -> Union[None, str]:
     """
     Returns,
         str_or_bytes unmodified, if
     """
-    if str_or_bytes is None:
-        return None
-    if isinstance(str_or_bytes, str):
-        return cast(str, str_or_bytes)
+    if str_or_bytes is None or isinstance(str_or_bytes, str):
+        return str_or_bytes
     elif isinstance(str_or_bytes, bytes):
         return str_or_bytes.decode(*decode_args)
     else:

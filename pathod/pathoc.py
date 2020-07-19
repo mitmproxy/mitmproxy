@@ -237,15 +237,18 @@ class Pathoc(tcp.TCPClient):
 
     def http_connect(self, connect_to):
         req = net_http.Request(
-            first_line_format='authority',
-            method='CONNECT',
-            scheme=None,
-            host=connect_to[0].encode("idna"),
+            host=connect_to[0],
             port=connect_to[1],
-            path=None,
-            http_version='HTTP/1.1',
-            headers=[(b"Host", connect_to[0].encode("idna"))],
+            method=b'CONNECT',
+            scheme=b"",
+            authority=f"{connect_to[0]}:{connect_to[1]}".encode(),
+            path=b"",
+            http_version=b'HTTP/1.1',
+            headers=((b"Host", connect_to[0].encode("idna")),),
             content=b'',
+            trailers=None,
+            timestamp_start=0,
+            timestamp_end=0,
         )
         self.wfile.write(net_http.http1.assemble_request(req))
         self.wfile.flush()
@@ -437,14 +440,18 @@ class Pathoc(tcp.TCPClient):
                 # build a dummy request to read the response
                 # ideally this would be returned directly from language.serve
                 dummy_req = net_http.Request(
-                    first_line_format="relative",
+                    host="localhost",
+                    port=80,
                     method=req["method"],
                     scheme=b"http",
-                    host=b"localhost",
-                    port=80,
+                    authority=b"",
                     path=b"/",
                     http_version=b"HTTP/1.1",
+                    headers=(),
                     content=b'',
+                    trailers=None,
+                    timestamp_start=time.time(),
+                    timestamp_end=None,
                 )
 
                 resp = self.protocol.read_response(self.rfile, dummy_req)
