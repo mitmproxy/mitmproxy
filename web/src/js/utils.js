@@ -57,15 +57,12 @@ export var formatTimeDelta = function (milliseconds) {
 };
 
 
-export var formatTimeStamp = function (seconds, utc_to_local) {
+export var formatTimeStamp = function (seconds) {
     var utc = new Date(seconds * 1000);
-    if (utc_to_local) {
-        var local = utc.getTime() - utc.getTimezoneOffset() * 60 * 1000;
-        var ts = new Date(local).toISOString();
-    } else {
-        var ts = utc.toISOString();
-    }
-    return ts.replace("T", " ").replace("Z", "");
+    var local = utc.getTime() - utc.getTimezoneOffset() * 60 * 1000;
+    var ts = new Date(local).toISOString();
+    //return ts.replace("T", " ").replace("Z", "");
+    return "hoge";
 };
 
 // At some places, we need to sort strings alphabetically descending,

@@ -181,9 +181,5 @@ class Options(optmanager.OptManager):
             TLS key size for certificates and CA.
             """
         )
-        self.add_option(
-            "utc_to_local", bool, False,
-            "Change timezone from UTC to local"
-        )
 
         self.update(**kwargs)
