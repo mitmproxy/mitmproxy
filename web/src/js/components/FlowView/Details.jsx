@@ -63,38 +63,38 @@ export function Timing({ flow }) {
         {
             title: "Server conn. initiated",
             t: sc.timestamp_start,
-            deltaTo: req.timestamp_start,
+            deltaTo: req.timestamp_start
         }, {
             title: "Server conn. TCP handshake",
             t: sc.timestamp_tcp_setup,
-            deltaTo: req.timestamp_start,
+            deltaTo: req.timestamp_start
         }, {
             title: "Server conn. SSL handshake",
             t: sc.timestamp_ssl_setup,
-            deltaTo: req.timestamp_start,
+            deltaTo: req.timestamp_start
         }, {
             title: "Client conn. established",
             t: cc.timestamp_start,
-            deltaTo: req.timestamp_start,
+            deltaTo: req.timestamp_start
         }, {
             title: "Client conn. SSL handshake",
             t: cc.timestamp_ssl_setup,
-            deltaTo: req.timestamp_start,
+            deltaTo: req.timestamp_start
         }, {
             title: "First request byte",
-            t: req.timestamp_start,
+            t: req.timestamp_start
         }, {
             title: "Request complete",
             t: req.timestamp_end,
-            deltaTo: req.timestamp_start,
+            deltaTo: req.timestamp_start
         }, res && {
             title: "First response byte",
             t: res.timestamp_start,
-            deltaTo: req.timestamp_start,
+            deltaTo: req.timestamp_start
         }, res && {
             title: "Response complete",
             t: res.timestamp_end,
-            deltaTo: req.timestamp_start,
+            deltaTo: req.timestamp_start
         }
     ]
 
