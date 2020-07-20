@@ -21,7 +21,7 @@ describe('formatTimeDelta', () => {
 
 describe('formatTimeSTamp', () => {
     it('should return formatted time', () => {
-        expect(utils.formatTimeStamp(1483228800)).toEqual("2017-01-01 00:00:00.000")
+        expect(utils.formatTimeStamp(1483228800, false)).toEqual("2017-01-01 00:00:00.000")
     })
 })
 
