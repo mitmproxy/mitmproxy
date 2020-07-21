@@ -17,10 +17,25 @@ def parse_msgpack(s: bytes) -> typing.Any:
         return PARSE_ERROR
 
 
+def pretty(value, htchar="    ", lfchar="\n", indent=0):
+    nlch = lfchar + htchar * (indent + 1)
+    if type(value) is dict:
+        items = [
+            nlch + repr(key) + ": " + pretty(value[key], htchar, lfchar, indent + 1)
+            for key in value
+        ]
+        return "{%s}" % (",".join(items) + lfchar + htchar * indent)
+    elif type(value) is list:
+        items = [
+            nlch + pretty(item, htchar, lfchar, indent + 1)
+            for item in value
+        ]
+        return "[%s]" % (",".join(items) + lfchar + htchar * indent)
+    else:
+        return repr(value)
+
 def format_msgpack(data):
-    current_line: base.TViewLine = []
-    current_line.append(("text", pprint.pformat(data, indent=4)))
-    yield current_line
+    return base.format_text(pretty(data))
 
 
 class ViewMsgPack(base.View):
