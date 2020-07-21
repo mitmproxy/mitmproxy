@@ -175,7 +175,8 @@ def convert_6_7(data):
 def convert_7_8(data):
     data["version"] = 8
     data["request"]["trailers"] = None
-    data["response"]["trailers"] = None
+    if data["response"] is not None:
+        data["response"]["trailers"] = None
     return data
 
 
@@ -184,7 +185,9 @@ def convert_8_9(data):
     data["request"].pop("first_line_format")
     data["request"]["authority"] = b""
     is_request_replay = data["request"].pop("is_replay", False)
-    is_response_replay = data["response"].pop("is_replay", False)
+    is_response_replay = False
+    if data["response"] is not None:
+        is_response_replay = data["response"].pop("is_replay", False)
     if is_request_replay:  # pragma: no cover
         data["is_replay"] = "request"
     elif is_response_replay:  # pragma: no cover
