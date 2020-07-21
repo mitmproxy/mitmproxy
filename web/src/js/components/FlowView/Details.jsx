@@ -82,7 +82,7 @@ export function Timing({ flow }) {
             deltaTo: req.timestamp_start
         }, {
             title: "First request byte",
-            t: req.timestamp_start,
+            t: req.timestamp_start
         }, {
             title: "Request complete",
             t: req.timestamp_end,

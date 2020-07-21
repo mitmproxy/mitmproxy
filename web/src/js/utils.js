@@ -57,8 +57,14 @@ export var formatTimeDelta = function (milliseconds) {
 };
 
 
-export var formatTimeStamp = function (seconds) {
-    var ts = (new Date(seconds * 1000)).toISOString();
+export var formatTimeStamp = function (seconds, utc_to_local=true) {
+    var utc = new Date(seconds * 1000);
+    if (utc_to_local) {
+        var local = utc.getTime() - utc.getTimezoneOffset() * 60 * 1000;
+        var ts = new Date(local).toISOString();
+    } else {
+        var ts = utc.toISOString();
+    }
     return ts.replace("T", " ").replace("Z", "");
 };
 
