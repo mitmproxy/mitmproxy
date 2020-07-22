@@ -71,6 +71,7 @@ setup(
         "hyperframe>=5.1.0,<6",
         "kaitaistruct>=0.7,<0.9",
         "ldap3>=2.6.1,<2.8",
+        "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
         "protobuf>=3.12,<3.13",
         "pyasn1>=0.3.1,<0.5",
