@@ -1,7 +1,7 @@
 import time
 from dataclasses import dataclass
 from email.utils import formatdate, mktime_tz, parsedate_tz
-from typing import Dict
+from typing import Mapping
 from typing import Iterable
 from typing import Optional
 from typing import Tuple
@@ -77,7 +77,7 @@ class Response(message.Message):
             cls,
             status_code: int = 200,
             content: Union[bytes, str] = b"",
-            headers: Union[Headers, Dict[Union[str, bytes], Union[str, bytes]], Iterable[Tuple[bytes, bytes]]] = ()
+            headers: Union[Headers, Mapping[str, Union[str, bytes]], Iterable[Tuple[bytes, bytes]]] = ()
     ) -> "Response":
         """
         Simplified API for creating response objects.
