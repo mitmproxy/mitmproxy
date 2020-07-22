@@ -1,5 +1,3 @@
-import pprint
-import re
 import typing
 
 import msgpack
@@ -33,6 +31,7 @@ def pretty(value, htchar="    ", lfchar="\n", indent=0):
         return "[%s]" % (",".join(items) + lfchar + htchar * indent)
     else:
         return repr(value)
+
 
 def format_msgpack(data):
     return base.format_text(pretty(data))
