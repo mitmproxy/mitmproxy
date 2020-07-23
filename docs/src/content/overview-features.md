@@ -69,10 +69,10 @@ that additionally constrains which requests will be redirected.
 
 Pattern | Description
 ------- | -----------
-`\|example.com/main.js\|~/main-local.js` | Replace `example.com/main.js` with `~/main-local.js`.
-`\|example.com/static\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css`.
-`\|example.com/static/foo\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/bar.css`.
-`\|~m GET\|example.com/static\|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css` (but only for GET requests).
+`|example.com/main.js|~/main-local.js` | Replace `example.com/main.js` with `~/main-local.js`.
+`|example.com/static|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css`.
+`|example.com/static/foo|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/bar.css`.
+`|~m GET|example.com/static|~/static` | Replace `example.com/static/foo/bar.css` with `~/static/foo/bar.css` (but only for GET requests).
 
 ### Details
 
@@ -127,6 +127,7 @@ The substituted URL is fetched instead of the original resource
 and the corresponding HTTP response is returned transparently to the client.
 Note that if the original destination uses HTTP2, the substituted destination
 needs to support HTTP2 as well, otherwise the substituted request may fail.
+As a workaround you can start mitmproxy with the `--no-http2` flag to disable HTTP2.
 `map_remote` patterns look like this:
 
 ```
