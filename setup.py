@@ -93,7 +93,7 @@ setup(
         'dev': [
             "asynctest>=0.12.0",
             "Flask>=1.0,<1.2",
-            "hypothesis>=5.22,<5.23",
+            "hypothesis>=5.23,<5.24",
             "parver>=0.1,<2.0",
             "pytest-asyncio>=0.14,<0.15",
             "pytest-cov>=2.7.1,<3",
