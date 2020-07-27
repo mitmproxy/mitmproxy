@@ -42,30 +42,33 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            py: 3.8
+          - os: macos-latest
+            py: 3.8
+          - os: ubuntu-latest
+            py: 3.8
+          - os: ubuntu-latest
+            py: 3.7
+          - os: ubuntu-latest
+            py: 3.6
+          - os: ubuntu-latest
+            py: 3.5
     runs-on: ${{ matrix.os }}
     steps:
       - run: printenv
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v1
         with:
-          python-version: '3.8'
+          python-version: ${{ matrix.py }}
       - run: pip install tox
-      - run: tox -e py38
+      - run: tox -e py
       - uses: codecov/codecov-action@v1
         with:
           file: ./coverage.xml
           name: ${{ matrix.os }}
           fail_ci_if_error: false
-  test-py35:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
-        with:
-          python-version: '3.5'
-      - run: pip install tox
-      - run: tox -e py35
   build-wheel:
     runs-on: ubuntu-latest
     env:
@@ -86,7 +89,7 @@ jobs:
       fail-fast: false
       matrix:
         # Old Ubuntu version for old glibc
-        os: [macos-latest, windows-latest, ubuntu-16.04]
+        os: [macos-10.15, windows-2019, ubuntu-16.04]
     runs-on: ${{ matrix.os }}
     env:
       CI_BUILD_PYINSTALLER: 1
@@ -196,11 +199,11 @@ jobs:
           path: release/dist
       - uses: actions/download-artifact@master
         with:
-          name: binaries.windows-latest
+          name: binaries.windows-2019
           path: release/dist
       - uses: actions/download-artifact@master
         with:
-          name: binaries.macos-latest
+          name: binaries.macos-10.15
           path: release/dist
       - uses: actions/download-artifact@master
         with:
