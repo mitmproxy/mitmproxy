@@ -90,6 +90,9 @@ setup(
         ':sys_platform == "win32"': [
             "pydivert>=2.0.3,<2.2",
         ],
+        ':python_version == "3.6"': [
+            "dataclasses>=0.7",
+        ],
         'dev': [
             "asynctest>=0.12.0",
             "Flask>=1.0,<1.2",
