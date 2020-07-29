@@ -336,9 +336,7 @@ T = typing.TypeVar("T")
 
 
 # noinspection PyPep8Naming
-def Placeholder(cls: typing.Type[T] = typing.Any) -> typing.Union[
-    T, typing.Callable[[], T]
-]:
+def Placeholder(cls: typing.Type[T] = typing.Any) -> typing.Union[T, typing.Callable[[], T]]:
     return _Placeholder(cls)
 
 

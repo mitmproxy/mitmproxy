@@ -44,7 +44,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
-        yield from ()
+        yield from ()  # pragma: no cover
 
     def make_body_reader(self, expected_size: typing.Optional[int]) -> TBodyReader:
         if expected_size is None:
@@ -62,7 +62,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                 elif isinstance(event, events.ConnectionClosed):
                     h11_event = self.body_reader.read_eof()
                 else:
-                    raise ValueError(f"Unexpected event: {event}")
+                    raise AssertionError(f"Unexpected event: {event}")
             except h11.ProtocolError as e:
                 yield commands.CloseConnection(self.conn)
                 if is_request:
@@ -98,9 +98,9 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
             return
         elif isinstance(event, events.ConnectionClosed):
             return
-        else:
+        else:  # pragma: no cover
             yield from ()
-            raise ValueError(f"Unexpected event: {event}")
+            raise AssertionError(f"Unexpected event: {event}")
 
 
 class Http1Server(Http1Connection):
@@ -119,7 +119,10 @@ class Http1Server(Http1Connection):
             if self.response.is_http2:
                 # Convert to an HTTP/1 request.
                 self.response.http_version = b"HTTP/1.1"
+                # not everyone supports empty reason phrases, so we better make up one.
                 self.response.reason = status_codes.RESPONSES.get(self.response.status_code, "")
+                # Shall we set a Content-Length header here if there is none?
+                # For now, let's try to modify as little as possible.
 
             raw = http1.assemble_response_head(event.response)
             yield commands.SendData(self.conn, raw)
@@ -149,7 +152,7 @@ class Http1Server(Http1Connection):
                 yield commands.SendData(self.conn, raw)
             yield commands.CloseConnection(self.conn)
         else:
-            raise NotImplementedError(f"{event}")
+            raise AssertionError(f"Unexpected event: {event}")
 
     def mark_done(self, *, request: bool = False, response: bool = False) -> layer.CommandGenerator[None]:
         if request:
@@ -203,7 +206,7 @@ class Http1Server(Http1Connection):
                 yield commands.Log(f"Receive Buffer: {bytes(self.buf)}", level="debug")
             yield commands.CloseConnection(self.conn)
         else:
-            raise ValueError(f"Unexpected event: {event}")
+            raise AssertionError(f"Unexpected event: {event}")
 
     def read_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         for e in self.read_body(event, True):
@@ -260,7 +263,7 @@ class Http1Client(Http1Connection):
             yield commands.CloseConnection(self.conn)
             return
         else:
-            raise NotImplementedError(f"{event}")
+            raise AssertionError(f"Unexpected event: {event}")
 
     def mark_done(self, *, request: bool = False, response: bool = False) -> layer.CommandGenerator[None]:
         if request:
@@ -322,7 +325,7 @@ class Http1Client(Http1Connection):
             else:
                 return
         else:
-            raise ValueError(f"Unexpected event: {event}")
+            raise AssertionError(f"Unexpected event: {event}")
 
     @expect(events.ConnectionEvent)
     def read_response_body(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:

@@ -68,7 +68,7 @@ class TunnelLayer(layer.Layer):
                 elif self.tunnel_state is TunnelState.ESTABLISHING:
                     yield from self.on_handshake_error("connection closed without notice")
             else:
-                raise NotImplementedError(f"Unexpected event: {event}")
+                raise AssertionError(f"Unexpected event: {event}")
         else:
             yield from self.event_to_child(event)
 
@@ -91,7 +91,7 @@ class TunnelLayer(layer.Layer):
                         self.command_to_reply_to = command
                         yield from self.start_handshake()
                 else:
-                    raise NotImplementedError(f"Unexpected command: {command}")
+                    raise AssertionError(f"Unexpected command: {command}")
             else:
                 yield command
 

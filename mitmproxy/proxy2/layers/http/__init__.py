@@ -21,6 +21,7 @@ from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, Http
 from ._http1 import Http1Client, Http1Server
 from ._http2 import Http2Client, Http2Server
 
+
 def validate_request(mode, request) -> typing.Optional[str]:
     if request.scheme not in ("http", "https", ""):
         return f"Invalid request scheme: {request.scheme}"
@@ -440,7 +441,7 @@ class HttpLayer(layer.Layer):
                 handler = self.connections[event.connection]
                 yield from self.event_to_child(handler, event)
         else:
-            raise ValueError(f"Unexpected event: {event}")
+            raise AssertionError(f"Unexpected event: {event}")
 
     def event_to_child(
             self,
@@ -472,8 +473,8 @@ class HttpLayer(layer.Layer):
                 yield command
             elif isinstance(command, commands.Command):
                 yield command
-            else:  # pragma: no cover
-                raise ValueError(f"Not a command command: {command}")
+            else:
+                raise AssertionError(f"Not a command: {event}")
 
     def make_stream(self) -> layer.CommandGenerator[HttpStream]:
         ctx = self.context.fork()

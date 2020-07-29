@@ -24,7 +24,6 @@ example_request_headers = (
 
 example_response_headers = (
     (b':status', b'200'),
-    (b'content-length', b'12'),
 )
 
 
@@ -57,6 +56,48 @@ def start_h2_client(tctx: Context) -> Tuple[Playbook, FrameFactory]:
 
 def make_h2(open_connection: OpenConnection) -> None:
     open_connection.connection.alpn = b"h2"
+
+
+def test_simple(tctx):
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    initial = Placeholder(bytes)
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None, side_effect=make_h2)
+            << SendData(server, initial)
+    )
+    frames = decode_frames(initial())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.HeadersFrame,
+        hyperframe.frame.DataFrame
+    ]
+    sff = FrameFactory()
+    assert (
+            playbook
+            # a conforming h2 server would send settings first, we disregard this for now.
+            >> DataReceived(server, sff.build_headers_frame(example_response_headers).serialize())
+            << http.HttpResponseHeadersHook(flow)
+            >> reply()
+            >> DataReceived(server, sff.build_data_frame(b"Hello, World!", flags=["END_STREAM"]).serialize())
+            << http.HttpResponseHook(flow)
+            >> reply()
+            << SendData(tctx.client,
+                        cff.build_headers_frame(example_response_headers).serialize() +
+                        cff.build_data_frame(b"Hello, World!").serialize() +
+                        cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
+    )
+    assert flow().request.url == "http://example.com/"
+    assert flow().response.text == "Hello, World!"
 
 
 @pytest.mark.parametrize("stream", [True, False])
@@ -145,19 +186,7 @@ def test_no_normalization(tctx):
                         cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
     )
     assert flow().request.headers.fields == ((b"Should-Not-Be-Capitalized! ", b" :) "),)
-    assert flow().response.headers.fields == ((b"content-length", b"12",), (b"Same", b"Here"))
-
-
-def start_h2_server(playbook: Playbook) -> FrameFactory:
-    frame_factory = FrameFactory()
-    server = Placeholder(Server)
-    assert (
-            playbook
-            >> reply(None, side_effect=make_h2)
-            << SendData(server, Placeholder())
-    )
-    playbook >> DataReceived(server, frame_factory.build_settings_frame({}, ack=True))
-    return frame_factory
+    assert flow().response.headers.fields == ((b"Same", b"Here"),)
 
 
 @pytest.mark.parametrize("input,pseudo,headers", [
@@ -169,3 +198,8 @@ def test_split_pseudo_headers(input, pseudo, headers):
     actual_pseudo, actual_headers = split_pseudo_headers(input)
     assert pseudo == actual_pseudo
     assert Headers(**headers) == actual_headers
+
+
+def test_split_pseudo_headers_err():
+    with pytest.raises(ValueError, match="Duplicate HTTP/2 pseudo header"):
+        split_pseudo_headers([(b":status", b"418"), (b":status", b"418")])
