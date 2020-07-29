@@ -5,19 +5,21 @@ import hyperframe.frame
 import pytest
 
 from mitmproxy.http import HTTPFlow
+from mitmproxy.net.http import Headers
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.proxy2.context import Context, Server
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import http
+from mitmproxy.proxy2.layers.http._http2 import split_pseudo_headers
 from test.mitmproxy.proxy2.layers.http.hyper_h2_test_helpers import FrameFactory
 from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply
 
 example_request_headers = (
-    (b':authority', b'example.com'),
-    (b':path', b'/'),
-    (b':scheme', b'https'),
     (b':method', b'GET'),
+    (b':scheme', b'http'),
+    (b':path', b'/'),
+    (b':authority', b'example.com'),
 )
 
 example_response_headers = (
@@ -37,7 +39,6 @@ def decode_frames(data: bytes) -> List[hyperframe.frame.Frame]:
         frames.append(f)
         data = data[9 + length:]
     return frames
-
 
 
 def start_h2_client(tctx: Context) -> Tuple[Playbook, FrameFactory]:
@@ -96,7 +97,6 @@ def test_http2_client_aborts(tctx, stream):
     assert "peer closed connection" in flow().error.msg
 
 
-@pytest.mark.xfail
 def test_no_normalization(tctx):
     """Test that we don't normalize headers when we just pass them through."""
 
@@ -135,16 +135,17 @@ def test_no_normalization(tctx):
     sff = FrameFactory()
     assert (
             playbook
-            << SendData(server, sff.build_headers_frame(request_headers, flags=["END_STREAM"]).serialize())
             >> DataReceived(server, sff.build_headers_frame(response_headers, flags=["END_STREAM"]).serialize())
             << http.HttpResponseHeadersHook(flow)
             >> reply()
             << http.HttpResponseHook(flow)
             >> reply()
-            << SendData(tctx.client, cff.build_headers_frame(response_headers, flags=["END_STREAM"]).serialize())
+            << SendData(tctx.client,
+                        cff.build_headers_frame(response_headers).serialize() +
+                        cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
     )
-    assert flow().request.headers.fields == request_headers
-    assert flow().response.headers.fields == response_headers
+    assert flow().request.headers.fields == ((b"Should-Not-Be-Capitalized! ", b" :) "),)
+    assert flow().response.headers.fields == ((b"content-length", b"12",), (b"Same", b"Here"))
 
 
 def start_h2_server(playbook: Playbook) -> FrameFactory:
@@ -157,3 +158,14 @@ def start_h2_server(playbook: Playbook) -> FrameFactory:
     )
     playbook >> DataReceived(server, frame_factory.build_settings_frame({}, ack=True))
     return frame_factory
+
+
+@pytest.mark.parametrize("input,pseudo,headers", [
+    ([(b"foo", b"bar")], {}, {"foo": "bar"}),
+    ([(b":status", b"418")], {b":status": b"418"}, {}),
+    ([(b":status", b"418"), (b"foo", b"bar")], {b":status": b"418"}, {"foo": "bar"}),
+])
+def test_split_pseudo_headers(input, pseudo, headers):
+    actual_pseudo, actual_headers = split_pseudo_headers(input)
+    assert pseudo == actual_pseudo
+    assert Headers(**headers) == actual_headers

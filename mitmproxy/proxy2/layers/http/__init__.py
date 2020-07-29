@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from mitmproxy import flow, http
 from mitmproxy.net import server_spec
+from mitmproxy.net.http import url
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events, layer, tunnel
 from mitmproxy.proxy2.context import Connection, Context, Server
@@ -20,14 +21,8 @@ from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, Http
 from ._http1 import Http1Client, Http1Server
 from ._http2 import Http2Client, Http2Server
 
-# This regex extracts splits the host header into host and port.
-# Handles the edge case of IPv6 addresses containing colons.
-# https://bugzilla.mozilla.org/show_bug.cgi?id=45891
-parse_host_header = re.compile(r"^(?P<host>[^:]+|\[.+\])(?::(?P<port>\d+))?$")
-
-
 def validate_request(mode, request) -> typing.Optional[str]:
-    if request.scheme not in ("http", "https", None):
+    if request.scheme not in ("http", "https", ""):
         return f"Invalid request scheme: {request.scheme}"
     if mode is HTTPMode.transparent:
         if request.first_line_format == "authority":
@@ -142,40 +137,35 @@ class HttpStream(layer.Layer):
             self.client_state = self.state_errored
             return (yield from self.send_response())
 
-        if self.flow.request.first_line_format == "authority":
+        if self.flow.request.method == "CONNECT":
             return (yield from self.handle_connect())
 
-        if self.mode is HTTPMode.regular and self.flow.request.first_line_format == "absolute":
-            # set first line format to relative in regular mode,
-            # see https://github.com/mitmproxy/mitmproxy/issues/1759
-            self.flow.request.first_line_format = "relative"
-        elif self.mode in (HTTPMode.regular, HTTPMode.upstream) and self.flow.request.first_line_format == "relative":
+        if self.mode is HTTPMode.transparent:
+            # Determine .scheme, .host and .port attributes for transparent requests
+            self.flow.request.data.host = self.context.server.address[0]
+            self.flow.request.data.port = self.context.server.address[1]
+            self.flow.request.scheme = "https" if self.context.server.tls else "http"
+        elif not self.flow.request.host:
             # We need to extract destination information from the host header.
-            if m := parse_host_header.match(self.flow.request.host_header or ""):
-                host = m.group("host").strip("[]")
-                if m.group("port"):
-                    port = int(m.group("port"))
-                else:
+            try:
+                host, port = url.parse_authority(self.flow.request.host_header or "", check=True)
+                if port is None:
                     port = 443 if self.context.client.tls else 80
-                host_header = self.flow.request.host_header
-                self.flow.request.host = host
-                self.flow.request.port = port
-                self.flow.request.host_header = host_header  # set again as .host overwrites this.
+                self.flow.request.data.host = host
+                self.flow.request.data.port = port
                 self.flow.request.scheme = "https" if self.context.client.tls else "http"
-            else:
+            except ValueError:
                 self.flow.response = http.HTTPResponse.make(
                     400,
                     "HTTP request has no host header, destination unknown."
                 )
                 self.client_state = self.state_errored
                 return (yield from self.send_response())
-        elif self.mode is HTTPMode.transparent:
-            # Determine .scheme, .host and .port attributes for transparent requests
-            host_header = self.flow.request.host_header
-            self.flow.request.host = self.context.server.address[0]
-            self.flow.request.port = self.context.server.address[1]
-            self.flow.request.host_header = host_header  # set again as .host overwrites this.
-            self.flow.request.scheme = "https" if self.context.server.tls else "http"
+
+        if self.mode is HTTPMode.regular and not self.flow.request.is_http2:
+            # Set the request target to origin-form for HTTP/1, some servers don't support absolute-form requests.
+            # see https://github.com/mitmproxy/mitmproxy/issues/1759
+            self.flow.request.authority = b""
 
         # update host header in reverse proxy mode
         if self.context.options.mode.startswith("reverse:") and not self.context.options.keep_host_header:
@@ -273,7 +263,8 @@ class HttpStream(layer.Layer):
     def send_response(self):
         yield HttpResponseHook(self.flow)
         yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)
-        yield SendHttp(ResponseData(self.stream_id, self.flow.response.data.content), self.context.client)
+        if self.flow.response.raw_content:
+            yield SendHttp(ResponseData(self.stream_id, self.flow.response.raw_content), self.context.client)
         yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
     def handle_protocol_error(

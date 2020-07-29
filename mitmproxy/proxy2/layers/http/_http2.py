@@ -1,3 +1,4 @@
+import time
 from typing import ClassVar, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import h2.connection
@@ -11,6 +12,7 @@ from hyperframe.frame import SettingsFrame
 
 from mitmproxy import http
 from mitmproxy.net import http as net_http
+from mitmproxy.net.http import url
 from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
 from ._base import HttpConnection, HttpEvent, ReceiveHttp
@@ -127,8 +129,8 @@ def normalize_h1_headers(headers: List[Tuple[bytes, bytes]], is_client: bool) ->
 
 class Http2Server(Http2Connection):
     h2_conf = h2.config.H2Configuration(
+        **Http2Connection.h2_conf_defaults,
         client_side=False,
-        **Http2Connection.h2_conf_defaults
     )
 
     ReceiveProtocolError = RequestProtocolError
@@ -147,7 +149,7 @@ class Http2Server(Http2Connection):
                 (b":status", b"%d" % event.response.status_code),
                 *event.response.headers.fields
             ]
-            if event.response.http_version != b"HTTP/2":
+            if not event.response.is_http2:
                 headers = normalize_h1_headers(headers, False)
 
             self.h2_conn.send_headers(
@@ -160,17 +162,20 @@ class Http2Server(Http2Connection):
 
     def handle_h2_event(self, event: h2.events.Event) -> CommandGenerator[bool]:
         if isinstance(event, h2.events.RequestReceived):
-            method, scheme, host, port, path, headers = parse_h2_request_headers(event.headers)
+            host, port, method, scheme, authority, path, headers = parse_h2_request_headers(event.headers)
             request = http.HTTPRequest(
-                "relative",
-                method,
-                scheme,
-                host,
-                port,
-                path,
-                b"HTTP/2",
-                headers,
-                None,
+                host=host,
+                port=port,
+                method=method,
+                scheme=scheme,
+                authority=authority,
+                path=path,
+                http_version=b"HTTP/2.0",
+                headers=headers,
+                content=None,
+                trailers=None,
+                timestamp_start=time.time(),
+                timestamp_end=None,
             )
             yield ReceiveHttp(RequestHeaders(event.stream_id, request))
         else:
@@ -179,8 +184,8 @@ class Http2Server(Http2Connection):
 
 class Http2Client(Http2Connection):
     h2_conf = h2.config.H2Configuration(
-        client_side=True,
-        **Http2Connection.h2_conf_defaults
+        **Http2Connection.h2_conf_defaults,
+        client_side = True,
     )
 
     ReceiveProtocolError = ResponseProtocolError
@@ -193,34 +198,21 @@ class Http2Client(Http2Connection):
     def __init__(self, context: Context):
         super().__init__(context, context.server)
         # Disable HTTP/2 push for now to keep things simple.
-        self.h2_conn.update_settings({SettingsFrame.ENABLE_PUSH: 0})
+        # don't send here, that is done as part of initiate_connection().
+        self.h2_conn.local_settings.enable_push = False
 
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, RequestHeaders):
-            headers = [
+            pseudo_headers = [
                 (b':method', event.request.method),
                 (b':scheme', event.request.scheme),
                 (b':path', event.request.path),
-                *event.request.headers.fields
             ]
-            if event.request.http_version == b"HTTP/2":
-                """
-                From the h2 spec:
-
-                To ensure that the HTTP/1.1 request line can be reproduced accurately, this pseudo-header field MUST be 
-                omitted when translating from an HTTP/1.1 request that has a request target in origin or asterisk form 
-                (see [RFC7230], Section 5.3). Clients that generate HTTP/2 requests directly SHOULD use the :authority 
-                pseudo-header field instead of the Host header field. An intermediary that converts an HTTP/2 request to 
-                HTTP/1.1 MUST create a Host header field if one is not present in a request by copying the value of the 
-                :authority pseudo-header field.
-                """
-                if headers[3][0].lower() == b"host":
-                    headers[3] = (b":authority", headers[3][1])
-            else:
+            if event.request.authority:
+                pseudo_headers.append((b":authority", event.request.data.authority))
+            headers = pseudo_headers + list(event.request.headers.fields)
+            if not event.request.is_http2:
                 headers = normalize_h1_headers(headers, True)
-
-
-
 
             self.h2_conn.send_headers(
                 event.stream_id,
@@ -232,36 +224,44 @@ class Http2Client(Http2Connection):
 
     def handle_h2_event(self, event: h2.events.Event) -> CommandGenerator[bool]:
         if isinstance(event, h2.events.ResponseReceived):
-            headers = net_http.Headers([(k, v) for k, v in event.headers])
-            status_code = headers.pop(":status")
+            status_code, headers = parse_h2_response_headers(event.headers)
             response = http.HTTPResponse(
-                b"HTTP/2",
-                status_code,
-                b"",
-                headers,
-                None,
+                http_version=b"HTTP/2.0",
+                status_code=status_code,
+                reason=b"",
+                headers=headers,
+                content=None,
+                trailers=None,
+                timestamp_start=time.time(),
+                timestamp_end=None,
             )
             yield ReceiveHttp(ResponseHeaders(event.stream_id, response))
         else:
             return (yield from super().handle_h2_event(event))
 
 
-def parse_h2_request_headers(
-        h2_headers: Iterable[Tuple[bytes, bytes]]
-) -> Tuple[bytes, bytes, Optional[bytes], Optional[int], bytes, net_http.Headers]:
-    """Split HTTP/2 pseudo-headers from the actual headers and parse them."""
+def split_pseudo_headers(h2_headers: Iterable[Tuple[bytes, bytes]]) -> Tuple[Dict[bytes, bytes], net_http.Headers]:
     pseudo_headers: Dict[bytes, bytes] = {}
     i = 0
-    for i, (header, value) in enumerate(h2_headers):
+    for (header, value) in h2_headers:
         if header.startswith(b":"):
             if header in pseudo_headers:
                 raise ValueError(f"Duplicate HTTP/2 pseudo headers: {header}")
             pseudo_headers[header] = value
+            i += 1
         else:
             # Pseudo-headers must be at the start, we are done here.
             break
 
     headers = net_http.Headers(h2_headers[i:])
+
+    return pseudo_headers, headers
+
+def parse_h2_request_headers(
+        h2_headers: Iterable[Tuple[bytes, bytes]]
+) -> Tuple[str, int, bytes, bytes, bytes, bytes, net_http.Headers]:
+    """Split HTTP/2 pseudo-headers from the actual headers and parse them."""
+    pseudo_headers, headers = split_pseudo_headers(h2_headers)
 
     try:
         method: bytes = pseudo_headers.pop(b":method")
@@ -274,18 +274,30 @@ def parse_h2_request_headers(
     if pseudo_headers:
         raise ValueError(f"Unknown pseudo headers: {pseudo_headers}")
 
-    host = None
-    port = None
     if authority is not None:
-        headers.insert(0, b"Host", authority)
-        host, _, portstr = authority.rpartition(b":")  # partition from the right to support IPv6 addresses
-        if host == b"":
-            host = portstr
-            port = 443 if scheme == b'https' else 80
-        else:
-            port = int(portstr)
+        host, port = url.parse_authority(authority, check=True)
+        if port is None:
+            port = 80 if scheme == b'http' else 443
+    else:
+        host = ""
+        port = 0
 
-    return method, scheme, host, port, path, headers
+    return host, port, method, scheme, authority, path, headers
+
+
+def parse_h2_response_headers(h2_headers: Iterable[Tuple[bytes, bytes]]) -> Tuple[int, net_http.Headers]:
+    """Split HTTP/2 pseudo-headers from the actual headers and parse them."""
+    pseudo_headers, headers = split_pseudo_headers(h2_headers)
+
+    try:
+        status_code: int = int(pseudo_headers.pop(b":status"))
+    except KeyError as e:
+        raise ValueError(f"Required pseudo header is missing: {e}")
+
+    if pseudo_headers:
+        raise ValueError(f"Unknown pseudo headers: {pseudo_headers}")
+
+    return status_code, headers
 
 
 __all__ = [

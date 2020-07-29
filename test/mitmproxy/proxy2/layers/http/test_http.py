@@ -398,7 +398,7 @@ def test_upstream_proxy(tctx, redirect, scheme, strategy):
         playbook << OpenConnection(server)
         playbook >> reply(None)
         # FIXME: We really shouldn't have the port here.
-        playbook << SendData(server, b"GET http://example.com:80/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        playbook << SendData(server, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
     else:
         playbook >> DataReceived(tctx.client, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")
         if strategy == "eager":
@@ -444,9 +444,9 @@ def test_upstream_proxy(tctx, redirect, scheme, strategy):
 
     if scheme == "http":
         if redirect == "destination":
-            playbook << SendData(server2, b"GET http://other-server:80/two HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            playbook << SendData(server2, b"GET http://other-server/two HTTP/1.1\r\nHost: example.com\r\n\r\n")
         else:
-            playbook << SendData(server2, b"GET http://example.com:80/two HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            playbook << SendData(server2, b"GET http://example.com/two HTTP/1.1\r\nHost: example.com\r\n\r\n")
     else:
         if redirect == "destination":
             playbook << SendData(server2, b"CONNECT other-server:443 HTTP/1.1\r\n\r\n")

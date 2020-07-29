@@ -1,4 +1,5 @@
 import re
+import time
 from typing import Iterable, List, Optional, Tuple
 
 from mitmproxy.net import check
@@ -31,26 +32,34 @@ def raise_if_http_version_unknown(http_version):
         raise ValueError(f"Unknown HTTP version: {http_version}")
 
 
-def _read_request_line(line: bytes) -> \
-        Tuple[str, bytes, Optional[bytes], Optional[bytes], Optional[int], Optional[bytes], bytes]:
+def _read_request_line(line: bytes) -> Tuple[str, int, bytes, bytes, bytes, bytes, bytes]:
     try:
-        method, path, http_version = line.split()
-        if path == b"*" or path.startswith(b"/"):
-            form = "relative"
-            scheme, host, port = None, None, None
+        method, target, http_version = line.split()
+
+        if target == b"*" or target.startswith(b"/"):
+            scheme, authority, path = b"", b"", target
+            host, port = "", 0
         elif method == b"CONNECT":
-            form = "authority"
-            host, port = _parse_authority_form(path)
-            scheme, path = None, None
+            scheme, authority, path = b"", target, b""
+            host, port = url.parse_authority(authority, check=True)
+            if not port:
+                raise ValueError
         else:
-            form = "absolute"
-            scheme, host, port, path = url.parse(path)
+            scheme, rest = target.split(b"://", maxsplit=1)
+            authority, path_ = rest.split(b"/", maxsplit=1)
+            path = b"/" + path_
+            host, port = url.parse_authority(authority, check=True)
+            port = port or url.default_port(scheme)
+            if not port:
+                raise ValueError
+            # TODO: we can probably get rid of this check?
+            url.parse(target)
 
         raise_if_http_version_unknown(http_version)
     except ValueError as e:
         raise ValueError(f"Bad HTTP request line: {line}") from e
 
-    return form, method, scheme, host, port, path, http_version
+    return host, port, method, scheme, authority, path, http_version
 
 
 def _read_response_line(line: bytes) -> Tuple[bytes, int, bytes]:
@@ -59,13 +68,13 @@ def _read_response_line(line: bytes) -> Tuple[bytes, int, bytes]:
         if len(parts) == 2:  # handle missing message gracefully
             parts.append(b"")
 
-        http_version, status_code, message = parts
+        http_version, status_code, reason = parts
         status_code = int(status_code)
         raise_if_http_version_unknown(http_version)
     except ValueError as e:
         raise ValueError(f"Bad HTTP response line: {line}") from e
 
-    return http_version, status_code, message
+    return http_version, status_code, reason
 
 
 def _read_headers(lines: Iterable[bytes]):
@@ -111,11 +120,22 @@ def read_request_head(lines: List[bytes]) -> request.Request:
     Raises:
         ValueError: The input is malformed.
     """
-    form, method, scheme, host, port, path, http_version = _read_request_line(lines[0])
+    host, port, method, scheme, authority, path, http_version = _read_request_line(lines[0])
     headers = _read_headers(lines[1:])
 
     return request.Request(
-        form, method, scheme, host, port, path, http_version, headers
+        host=host,
+        port=port,
+        method=method,
+        scheme=scheme,
+        authority=authority,
+        path=path,
+        http_version=http_version,
+        headers=headers,
+        content=None,
+        trailers=None,
+        timestamp_start=time.time(),
+        timestamp_end=None
     )
 
 
@@ -132,9 +152,16 @@ def read_response_head(lines: List[bytes]) -> response.Response:
     Raises:
         ValueError: The input is malformed.
     """
-    http_version, status_code, message = _read_response_line(lines[0])
+    http_version, status_code, reason = _read_response_line(lines[0])
     headers = _read_headers(lines[1:])
 
     return response.Response(
-        http_version, status_code, message, headers
+        http_version=http_version,
+        status_code=status_code,
+        reason=reason,
+        headers=headers,
+        content=None,
+        trailers=None,
+        timestamp_start=time.time(),
+        timestamp_end=None,
     )
