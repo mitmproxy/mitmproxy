@@ -34,6 +34,24 @@ export function ConnectionInfo({ conn }) {
                         <td>{conn.sni}</td>
                     </tr>
                 )}
+                {conn.tls_version && (
+                    <tr key="tls_version">
+                        <td>TLS version:</td>
+                        <td>{conn.tls_version}</td>
+                    </tr>
+                )}
+                {conn.cipher_name && (
+                    <tr key="cipher_name">
+                        <td>cipher name:</td>
+                        <td>{conn.cipher_name}</td>
+                    </tr>
+                )}
+                {conn.alpn_proto_negotiated && (
+                    <tr key="ALPN">
+                        <td><abbr title="ALPN protocol negotiated">ALPN:</abbr></td>
+                        <td>{conn.alpn_proto_negotiated}</td>
+                    </tr>
+                )}
             </tbody>
         </table>
     )
