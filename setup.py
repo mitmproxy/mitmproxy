@@ -81,7 +81,7 @@ setup(
         "ruamel.yaml>=0.16,<0.17",
         "sortedcontainers>=2.1.0,<2.2",
         "tornado>=4.3,<7",
-        "urwid==2.0.1,!=2.1.0",
+        "urwid>=2.1.0,<2.2",
         "wsproto>=0.14,<0.16",
         "publicsuffix2>=2.20190812,<3",
         "zstandard>=0.11,<0.14",
