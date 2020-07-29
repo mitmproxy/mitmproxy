@@ -4,6 +4,7 @@ import h2.config
 import h2.connection
 import h2.events
 import h2.settings
+import h2.exceptions
 from typing import DefaultDict, Deque, NamedTuple, Optional
 
 
@@ -13,15 +14,9 @@ class H2ConnectionLogger(h2.config.DummyLogger):
         self.name = name
 
     def debug(self, fmtstr, *args):
-        """
-        No-op logging. Only level needed for now.
-        """
         print(f"(debug) h2 {self.name}: {fmtstr % args}")
 
     def trace(self, fmtstr, *args):
-        """
-        No-op logging. Only level needed for now.
-        """
         print(f"(trace) h2 {self.name}: {fmtstr % args}")
 
 

@@ -397,7 +397,6 @@ def test_upstream_proxy(tctx, redirect, scheme, strategy):
         playbook >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
         playbook << OpenConnection(server)
         playbook >> reply(None)
-        # FIXME: We really shouldn't have the port here.
         playbook << SendData(server, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
     else:
         playbook >> DataReceived(tctx.client, b"CONNECT example.com:443 HTTP/1.1\r\n\r\n")

@@ -8,7 +8,7 @@ import pytest
 
 from mitmproxy.http import HTTPFlow
 from mitmproxy.proxy.protocol.http import HTTPMode
-from mitmproxy.proxy2.commands import OpenConnection, SendData
+from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.proxy2.context import Context, Server
 from mitmproxy.proxy2.events import DataReceived
 from mitmproxy.proxy2.layers import http
@@ -123,6 +123,7 @@ def test_h1_to_h2(tctx):
             >> reply(to=-2)
             << http.HttpResponseHook(flow)
             >> reply()
-            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\ncontent-length: 12\r\n\r\nHello World!")
+            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\n\r\nHello World!")
+            << CloseConnection(tctx.client)
     )
     assert settings_ack() == b'\x00\x00\x00\x04\x01\x00\x00\x00\x00'

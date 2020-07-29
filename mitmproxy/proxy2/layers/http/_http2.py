@@ -1,5 +1,5 @@
 import time
-from typing import ClassVar, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import ClassVar, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
 import h2.connection
 import h2.config
@@ -8,11 +8,11 @@ import h2.exceptions
 import h2.settings
 import h2.errors
 import h2.utilities
-from hyperframe.frame import SettingsFrame
 
 from mitmproxy import http
 from mitmproxy.net import http as net_http
 from mitmproxy.net.http import url
+from mitmproxy.utils import human
 from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
 from ._base import HttpConnection, HttpEvent, ReceiveHttp
@@ -31,9 +31,11 @@ class Http2Connection(HttpConnection):
         validate_inbound_headers=False,
         normalize_inbound_headers=False,
         normalize_outbound_headers=False,
-        logger=H2ConnectionLogger("server")
+        # logger=H2ConnectionLogger("server")
     )
     h2_conn: BufferedH2Connection
+    active_stream_ids: Set[int]
+    """keep track of all active stream ids to send protocol errors on teardown"""
 
     ReceiveProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
     SendProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
@@ -45,6 +47,7 @@ class Http2Connection(HttpConnection):
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context, conn)
         self.h2_conn = BufferedH2Connection(self.h2_conf)
+        self.active_stream_ids = set()
 
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, Start):
@@ -59,7 +62,7 @@ class Http2Connection(HttpConnection):
             elif isinstance(event, self.SendProtocolError):
                 self.h2_conn.reset_stream(event.stream_id, h2.errors.ErrorCodes.PROTOCOL_ERROR)
             else:
-                raise NotImplementedError(f"Unknown HTTP event: {event}")
+                raise AssertionError(f"Unexpected event: {event}")
             yield SendData(self.conn, self.h2_conn.data_to_send())
 
         elif isinstance(event, DataReceived):
@@ -79,17 +82,20 @@ class Http2Connection(HttpConnection):
         elif isinstance(event, ConnectionClosed):
             yield from self._unexpected_close("peer closed connection")
         else:
-            raise NotImplementedError(f"Unexpected event: {event!r}")
+            raise AssertionError(f"Unexpected event: {event!r}")
 
     def handle_h2_event(self, event: h2.events.Event) -> CommandGenerator[bool]:
         """returns true if further processing should be stopped."""
         if isinstance(event, h2.events.DataReceived):
-            # noinspection PyArgumentList
-            yield ReceiveHttp(self.ReceiveData(event.stream_id, event.data))
+            if event.stream_id in self.active_stream_ids:
+                # noinspection PyArgumentList
+                yield ReceiveHttp(self.ReceiveData(event.stream_id, event.data))
             self.h2_conn.acknowledge_received_data(event.flow_controlled_length, event.stream_id)
         elif isinstance(event, h2.events.StreamEnded):
-            # noinspection PyArgumentList
-            yield ReceiveHttp(self.ReceiveEndOfMessage(event.stream_id))
+            if event.stream_id in self.active_stream_ids:
+                # noinspection PyArgumentList
+                yield ReceiveHttp(self.ReceiveEndOfMessage(event.stream_id))
+                self.active_stream_ids.remove(event.stream_id)
         elif isinstance(event, h2.exceptions.ProtocolError):
             yield from self._unexpected_close(f"HTTP/2 protocol error: {event}")
             return True
@@ -97,21 +103,27 @@ class Http2Connection(HttpConnection):
             yield from self._unexpected_close(f"HTTP/2 connection closed: {event!r}")
             return True
         elif isinstance(event, h2.events.StreamReset):
-            # noinspection PyArgumentList
-            yield ReceiveHttp(self.ReceiveProtocolError(event.stream_id, "Stream reset"))
+            if event.stream_id in self.active_stream_ids:
+                # noinspection PyArgumentList
+                yield ReceiveHttp(self.ReceiveProtocolError(event.stream_id, "Stream reset"))
         elif isinstance(event, h2.events.RemoteSettingsChanged):
             pass
         elif isinstance(event, h2.events.SettingsAcknowledged):
             pass
+        elif isinstance(event, h2.events.PriorityUpdated):
+            pass
+        elif isinstance(event, h2.events.UnknownFrameReceived):
+            # https://http2.github.io/http2-spec/#rfc.section.4.1
+            # Implementations MUST ignore and discard any frame that has a type that is unknown.
+            yield Log(f"Ignoring unknown HTTP/2 frame type: {event.frame.type}")
         else:
-            raise NotImplementedError(f"Unknown event: {event!r}")
+            raise AssertionError(f"Unexpected event: {event!r}")
 
     def _unexpected_close(self, err: str) -> CommandGenerator[None]:
         yield CloseConnection(self.conn)
-        for stream_id, stream in self.h2_conn.streams.items():
-            if stream.open:
-                # noinspection PyArgumentList
-                yield ReceiveHttp(self.ReceiveProtocolError(stream_id, err))
+        for stream_id in self.active_stream_ids:
+            # noinspection PyArgumentList
+            yield ReceiveHttp(self.ReceiveProtocolError(stream_id, err))
 
 
 def normalize_h1_headers(headers: List[Tuple[bytes, bytes]], is_client: bool) -> List[Tuple[bytes, bytes]]:
@@ -162,7 +174,13 @@ class Http2Server(Http2Connection):
 
     def handle_h2_event(self, event: h2.events.Event) -> CommandGenerator[bool]:
         if isinstance(event, h2.events.RequestReceived):
-            host, port, method, scheme, authority, path, headers = parse_h2_request_headers(event.headers)
+            try:
+                host, port, method, scheme, authority, path, headers = parse_h2_request_headers(event.headers)
+            except ValueError as e:
+                yield Log(f"{human.format_address(self.conn.peername)}: {e}")
+                self.h2_conn.reset_stream(event.stream_id, h2.errors.ErrorCodes.PROTOCOL_ERROR)
+                yield SendData(self.conn, self.h2_conn.data_to_send())
+                return
             request = http.HTTPRequest(
                 host=host,
                 port=port,
@@ -177,6 +195,7 @@ class Http2Server(Http2Connection):
                 timestamp_start=time.time(),
                 timestamp_end=None,
             )
+            self.active_stream_ids.add(event.stream_id)
             yield ReceiveHttp(RequestHeaders(event.stream_id, request))
         else:
             return (yield from super().handle_h2_event(event))
@@ -218,6 +237,7 @@ class Http2Client(Http2Connection):
                 event.stream_id,
                 headers,
             )
+            self.active_stream_ids.add(event.stream_id)
             yield SendData(self.conn, self.h2_conn.data_to_send())
         else:
             yield from super()._handle_event(event)
@@ -246,7 +266,7 @@ def split_pseudo_headers(h2_headers: Iterable[Tuple[bytes, bytes]]) -> Tuple[Dic
     for (header, value) in h2_headers:
         if header.startswith(b":"):
             if header in pseudo_headers:
-                raise ValueError(f"Duplicate HTTP/2 pseudo headers: {header}")
+                raise ValueError(f"Duplicate HTTP/2 pseudo header: {header}")
             pseudo_headers[header] = value
             i += 1
         else:
@@ -267,14 +287,14 @@ def parse_h2_request_headers(
         method: bytes = pseudo_headers.pop(b":method")
         scheme: bytes = pseudo_headers.pop(b":scheme")  # this raises for HTTP/2 CONNECT requests
         path: bytes = pseudo_headers.pop(b":path")
-        authority: bytes = pseudo_headers.pop(b":authority", None)
+        authority: bytes = pseudo_headers.pop(b":authority", b"")
     except KeyError as e:
         raise ValueError(f"Required pseudo header is missing: {e}")
 
     if pseudo_headers:
         raise ValueError(f"Unknown pseudo headers: {pseudo_headers}")
 
-    if authority is not None:
+    if authority:
         host, port = url.parse_authority(authority, check=True)
         if port is None:
             port = 80 if scheme == b'http' else 443
