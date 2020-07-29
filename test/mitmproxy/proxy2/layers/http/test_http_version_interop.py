@@ -84,7 +84,6 @@ def test_h2_to_h1(tctx):
     assert body.data == b"Hello World!"
 
 
-@pytest.mark.xfail
 def test_h1_to_h2(tctx):
     """Test HTTP/1 -> HTTP/2 request translation"""
     server = Placeholder(Server)
@@ -96,7 +95,7 @@ def test_h1_to_h2(tctx):
     conn = h2.connection.H2Connection(conf)
     conn.initiate_connection()
 
-    h2_preamble = Placeholder(bytes)
+    request = Placeholder(bytes)
     assert (
             playbook
             >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
@@ -106,20 +105,24 @@ def test_h1_to_h2(tctx):
             >> reply()
             << OpenConnection(server)
             >> reply(None, side_effect=make_h2)
-            << SendData(server, h2_preamble)
+            << SendData(server, request)
     )
-    events = conn.receive_data(h2_preamble())
-    y = h2_preamble()
+    events = conn.receive_data(request())
+    assert event_types(events) == [
+        h2.events.RemoteSettingsChanged, h2.events.RequestReceived, h2.events.DataReceived, h2.events.StreamEnded
+    ]
 
-    assert not events  # FIXME
-
-    request = Placeholder(bytes)
+    conn.send_headers(1, example_response_headers)
+    conn.send_data(1, b"Hello World!", end_stream=True)
+    settings_ack = Placeholder(bytes)
     assert (
             playbook
             >> DataReceived(server, conn.data_to_send())
             << http.HttpResponseHeadersHook(flow)
-            >> reply()
+            << SendData(server, settings_ack)
+            >> reply(to=-2)
             << http.HttpResponseHook(flow)
             >> reply()
-            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\r\nHello World!")
+            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\ncontent-length: 12\r\n\r\nHello World!")
     )
+    assert settings_ack() == b'\x00\x00\x00\x04\x01\x00\x00\x00\x00'

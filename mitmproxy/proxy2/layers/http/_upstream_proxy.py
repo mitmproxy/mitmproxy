@@ -41,7 +41,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         if response_head:
             response_head = [bytes(x) for x in response_head]  # TODO: Make url.parse compatible with bytearrays
             try:
-                response = http.HTTPResponse.wrap(http1_sansio.read_response_head(response_head))
+                response = http1_sansio.read_response_head(response_head)
             except ValueError as e:
                 yield commands.Log(f"{human.format_address(self.tunnel_connection.address)}: {e}")
                 return False, str(e)
