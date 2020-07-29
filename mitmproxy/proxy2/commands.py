@@ -8,7 +8,7 @@ The counterpart to commands are events.
 """
 import dataclasses
 import re
-import typing
+from typing import Any, ClassVar, Dict, List, Literal, Type
 
 from mitmproxy.proxy2.context import Connection, Server
 
@@ -18,7 +18,7 @@ class Command:
     Base class for all commands
     """
 
-    blocking: typing.ClassVar[bool] = False
+    blocking: ClassVar[bool] = False
     """
     Determines if the command blocks until it has been completed.
 
@@ -79,7 +79,7 @@ class Hook(Command):
     Callback to the master (like ".ask()")
     """
     blocking = True
-    name: typing.ClassVar[str]
+    name: ClassVar[str]
 
     def __new__(cls, *args, **kwargs):
         if cls is Hook:
@@ -101,7 +101,7 @@ class Hook(Command):
     def __repr__(self):
         return f"Hook({self.name})"
 
-    def as_tuple(self) -> typing.List[typing.Any]:
+    def as_tuple(self) -> List[Any]:
         args = []
         # noinspection PyDataclass
         for field in dataclasses.fields(self):
@@ -109,7 +109,7 @@ class Hook(Command):
         return args
 
 
-all_hooks: typing.Dict[str, typing.Type[Hook]] = {}
+all_hooks: Dict[str, Type[Hook]] = {}
 
 
 # TODO: Move descriptions from addons/events.py into hooks and have hook documentation generated from all_hooks.
@@ -127,7 +127,7 @@ class Log(Command):
     message: str
     level: str
 
-    def __init__(self, message: str, level: str = "info"):
+    def __init__(self, message: str, level: Literal["error", "warn", "info", "alert", "debug"] = "info"):
         self.message = message
         self.level = level
 
