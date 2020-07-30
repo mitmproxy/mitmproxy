@@ -1,4 +1,5 @@
 import time
+from enum import Enum
 from typing import ClassVar, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
 import h2.connection
@@ -23,6 +24,11 @@ from ...events import ConnectionClosed, DataReceived, Event, Start
 from ...layer import CommandGenerator
 
 
+class StreamState(Enum):
+    EXPECTING_HEADERS = 1
+    HEADERS_RECEIVED = 2
+
+
 class Http2Connection(HttpConnection):
     h2_conf: ClassVar[h2.config.H2Configuration]
     h2_conf_defaults = dict(
@@ -34,7 +40,7 @@ class Http2Connection(HttpConnection):
         # logger=H2ConnectionLogger("server")
     )
     h2_conn: BufferedH2Connection
-    active_stream_ids: Set[int]
+    streams: Dict[int, StreamState]
     """keep track of all active stream ids to send protocol errors on teardown"""
 
     ReceiveProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
@@ -47,7 +53,7 @@ class Http2Connection(HttpConnection):
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context, conn)
         self.h2_conn = BufferedH2Connection(self.h2_conf)
-        self.active_stream_ids = set()
+        self.streams = {}
 
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, Start):
@@ -67,7 +73,13 @@ class Http2Connection(HttpConnection):
 
         elif isinstance(event, DataReceived):
             try:
-                events = self.h2_conn.receive_data(event.data)
+                try:
+                    events = self.h2_conn.receive_data(event.data)
+                except ValueError as e:  # pragma: no cover
+                    # this should never raise a ValueError, but we triggered one while fuzzing:
+                    # https://github.com/python-hyper/hyper-h2/issues/1231
+                    # this stays here as defense-in-depth.
+                    raise h2.exceptions.ProtocolError(f"uncaught hyper-h2 error: {e}") from e
             except h2.exceptions.ProtocolError as e:
                 events = [e]
 
@@ -80,38 +92,47 @@ class Http2Connection(HttpConnection):
                 yield SendData(self.conn, data_to_send)
 
         elif isinstance(event, ConnectionClosed):
-            yield from self._unexpected_close("peer closed connection")
+            yield from self.close_connection("peer closed connection")
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
+    # noinspection PyArgumentList
     def handle_h2_event(self, event: h2.events.Event) -> CommandGenerator[bool]:
         """returns true if further processing should be stopped."""
         if isinstance(event, h2.events.DataReceived):
-            if event.stream_id in self.active_stream_ids:
-                # noinspection PyArgumentList
+            state = self.streams.get(event.stream_id, None)
+            if state is StreamState.HEADERS_RECEIVED:
                 yield ReceiveHttp(self.ReceiveData(event.stream_id, event.data))
+            elif state is StreamState.EXPECTING_HEADERS:
+                yield from self.protocol_error(f"Received HTTP/2 data frame, expected headers.")
+                return True
             self.h2_conn.acknowledge_received_data(event.flow_controlled_length, event.stream_id)
         elif isinstance(event, h2.events.StreamEnded):
-            if event.stream_id in self.active_stream_ids:
-                # noinspection PyArgumentList
+            state = self.streams.get(event.stream_id, None)
+            if state is StreamState.HEADERS_RECEIVED:
                 yield ReceiveHttp(self.ReceiveEndOfMessage(event.stream_id))
-                self.active_stream_ids.remove(event.stream_id)
+            elif state is StreamState.EXPECTING_HEADERS:
+                raise AssertionError("unreachable")
+            self.streams.pop(event.stream_id, None)
+        elif isinstance(event, h2.events.StreamReset):
+            if event.stream_id in self.streams:
+                yield ReceiveHttp(self.ReceiveProtocolError(event.stream_id, "Stream reset"))
         elif isinstance(event, h2.exceptions.ProtocolError):
-            yield from self._unexpected_close(f"HTTP/2 protocol error: {event}")
+            yield from self.protocol_error(f"HTTP/2 protocol error: {event}")
             return True
         elif isinstance(event, h2.events.ConnectionTerminated):
-            yield from self._unexpected_close(f"HTTP/2 connection closed: {event!r}")
+            yield from self.close_connection(f"HTTP/2 connection closed: {event!r}")
             return True
-        elif isinstance(event, h2.events.StreamReset):
-            if event.stream_id in self.active_stream_ids:
-                # noinspection PyArgumentList
-                yield ReceiveHttp(self.ReceiveProtocolError(event.stream_id, "Stream reset"))
         elif isinstance(event, h2.events.RemoteSettingsChanged):
             pass
         elif isinstance(event, h2.events.SettingsAcknowledged):
             pass
         elif isinstance(event, h2.events.PriorityUpdated):
             pass
+        elif isinstance(event, h2.events.TrailersReceived):
+            yield Log("Received HTTP/2 trailers, which are currently unimplemented and silently discarded", "error")
+        elif isinstance(event, h2.events.PushedStreamReceived):
+            yield Log("Received HTTP/2 push promise, even though we signalled no support.", "error")
         elif isinstance(event, h2.events.UnknownFrameReceived):
             # https://http2.github.io/http2-spec/#rfc.section.4.1
             # Implementations MUST ignore and discard any frame that has a type that is unknown.
@@ -119,11 +140,21 @@ class Http2Connection(HttpConnection):
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
-    def _unexpected_close(self, err: str) -> CommandGenerator[None]:
+    def protocol_error(
+            self,
+            message: str,
+            error_code: int = h2.errors.ErrorCodes.PROTOCOL_ERROR,
+    ) -> CommandGenerator[None]:
+        yield Log(f"{human.format_address(self.conn.peername)}: {message}")
+        self.h2_conn.close_connection(error_code, message.encode())
+        yield SendData(self.conn, self.h2_conn.data_to_send())
+        yield from self.close_connection(message)
+
+    def close_connection(self, msg: str) -> CommandGenerator[None]:
         yield CloseConnection(self.conn)
-        for stream_id in self.active_stream_ids:
+        for stream_id in self.streams:
             # noinspection PyArgumentList
-            yield ReceiveHttp(self.ReceiveProtocolError(stream_id, err))
+            yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
 
 
 def normalize_h1_headers(headers: List[Tuple[bytes, bytes]], is_client: bool) -> List[Tuple[bytes, bytes]]:
@@ -177,10 +208,8 @@ class Http2Server(Http2Connection):
             try:
                 host, port, method, scheme, authority, path, headers = parse_h2_request_headers(event.headers)
             except ValueError as e:
-                yield Log(f"{human.format_address(self.conn.peername)}: {e}")
-                self.h2_conn.reset_stream(event.stream_id, h2.errors.ErrorCodes.PROTOCOL_ERROR)
-                yield SendData(self.conn, self.h2_conn.data_to_send())
-                return
+                yield from self.protocol_error(f"Invalid HTTP/2 request headers: {e}")
+                return True
             request = http.HTTPRequest(
                 host=host,
                 port=port,
@@ -195,7 +224,7 @@ class Http2Server(Http2Connection):
                 timestamp_start=time.time(),
                 timestamp_end=None,
             )
-            self.active_stream_ids.add(event.stream_id)
+            self.streams[event.stream_id] = StreamState.HEADERS_RECEIVED
             yield ReceiveHttp(RequestHeaders(event.stream_id, request))
         else:
             return (yield from super().handle_h2_event(event))
@@ -204,7 +233,7 @@ class Http2Server(Http2Connection):
 class Http2Client(Http2Connection):
     h2_conf = h2.config.H2Configuration(
         **Http2Connection.h2_conf_defaults,
-        client_side = True,
+        client_side=True,
     )
 
     ReceiveProtocolError = ResponseProtocolError
@@ -237,14 +266,23 @@ class Http2Client(Http2Connection):
                 event.stream_id,
                 headers,
             )
-            self.active_stream_ids.add(event.stream_id)
+            self.streams[event.stream_id] = StreamState.EXPECTING_HEADERS
             yield SendData(self.conn, self.h2_conn.data_to_send())
         else:
             yield from super()._handle_event(event)
 
     def handle_h2_event(self, event: h2.events.Event) -> CommandGenerator[bool]:
         if isinstance(event, h2.events.ResponseReceived):
-            status_code, headers = parse_h2_response_headers(event.headers)
+            if self.streams.get(event.stream_id, None) is not StreamState.EXPECTING_HEADERS:
+                yield from self.protocol_error(f"Received unexpected HTTP/2 response.")
+                return True
+
+            try:
+                status_code, headers = parse_h2_response_headers(event.headers)
+            except ValueError as e:
+                yield from self.protocol_error(f"Invalid HTTP/2 response headers: {e}")
+                return True
+
             response = http.HTTPResponse(
                 http_version=b"HTTP/2.0",
                 status_code=status_code,
@@ -255,7 +293,11 @@ class Http2Client(Http2Connection):
                 timestamp_start=time.time(),
                 timestamp_end=None,
             )
+            self.streams[event.stream_id] = StreamState.HEADERS_RECEIVED
             yield ReceiveHttp(ResponseHeaders(event.stream_id, response))
+        elif isinstance(event, h2.events.RequestReceived):
+            yield from self.protocol_error(f"HTTP/2 protocol error: received request from server")
+            return True
         else:
             return (yield from super().handle_h2_event(event))
 
@@ -276,6 +318,7 @@ def split_pseudo_headers(h2_headers: Iterable[Tuple[bytes, bytes]]) -> Tuple[Dic
     headers = net_http.Headers(h2_headers[i:])
 
     return pseudo_headers, headers
+
 
 def parse_h2_request_headers(
         h2_headers: Iterable[Tuple[bytes, bytes]]
