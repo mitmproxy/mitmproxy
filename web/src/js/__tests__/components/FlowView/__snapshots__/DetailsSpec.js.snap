@@ -27,6 +27,34 @@ exports[`ConnectionInfo Component should render correctly 1`] = `
         address
       </td>
     </tr>
+    <tr>
+      <td>
+        TLS version:
+      </td>
+      <td>
+        TLSv1.2
+      </td>
+    </tr>
+    <tr>
+      <td>
+        cipher name:
+      </td>
+      <td>
+        cipher
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <abbr
+          title="ALPN protocol negotiated"
+        >
+          ALPN:
+        </abbr>
+      </td>
+      <td>
+        http/1.1
+      </td>
+    </tr>
   </tbody>
 </table>
 `;
@@ -62,6 +90,34 @@ exports[`Details Component should render correctly 1`] = `
           address
         </td>
       </tr>
+      <tr>
+        <td>
+          TLS version:
+        </td>
+        <td>
+          TLSv1.2
+        </td>
+      </tr>
+      <tr>
+        <td>
+          cipher name:
+        </td>
+        <td>
+          cipher
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <abbr
+            title="ALPN protocol negotiated"
+          >
+            ALPN:
+          </abbr>
+        </td>
+        <td>
+          http/1.1
+        </td>
+      </tr>
     </tbody>
   </table>
   <h4>
@@ -89,6 +145,14 @@ exports[`Details Component should render correctly 1`] = `
         </td>
         <td>
           address
+        </td>
+      </tr>
+      <tr>
+        <td>
+          TLS version:
+        </td>
+        <td>
+          TLSv1.2
         </td>
       </tr>
     </tbody>
