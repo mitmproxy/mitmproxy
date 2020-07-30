@@ -6,6 +6,8 @@ import sys
 import types
 import typing
 import traceback
+from glob import glob
+from itertools import chain
 
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
@@ -68,6 +70,7 @@ class Script:
     """
 
     def __init__(self, path: str, reload: bool) -> None:
+        ctx.log.info("loading "+path)
         self.name = "scriptmanager:" + path
         self.path = path
         self.fullpath = os.path.expanduser(
@@ -121,7 +124,7 @@ class Script:
                 mtime = os.stat(self.fullpath).st_mtime
             except FileNotFoundError:
                 ctx.log.info("Removing script %s" % self.path)
-                scripts = list(ctx.options.scripts)
+                scripts = list(chain.from_iterable([glob(re) for re in ctx.options.scripts]))
                 scripts.remove(self.path)
                 ctx.options.update(scripts=scripts)
                 return
@@ -142,7 +145,10 @@ class ScriptLoader:
     def load(self, loader):
         loader.add_option(
             "scripts", typing.Sequence[str], [],
-            "Execute a script."
+            """
+            Execute a script. The script name may include wild card. If you include wild card,
+            don't forget to enclose the script name in single or double quotes.
+            """
         )
 
     def running(self):
@@ -173,12 +179,13 @@ class ScriptLoader:
 
     def configure(self, updated):
         if "scripts" in updated:
-            for s in ctx.options.scripts:
-                if ctx.options.scripts.count(s) > 1:
+            scripts = list(chain.from_iterable([glob(re) for re in ctx.options.scripts]))
+            for s in scripts:
+                if scripts.count(s) > 1:
                     raise exceptions.OptionsError("Duplicate script")
 
             for a in self.addons[:]:
-                if a.path not in ctx.options.scripts:
+                if a.path not in scripts:
                     ctx.log.info("Un-loading script: %s" % a.path)
                     ctx.master.addons.remove(a)
                     self.addons.remove(a)
@@ -195,7 +202,9 @@ class ScriptLoader:
 
             ordered = []
             newscripts = []
-            for s in ctx.options.scripts:
+            for s in scripts:
+                if s[-2:] != "py":
+                    continue
                 if s in current:
                     ordered.append(current[s])
                 else:

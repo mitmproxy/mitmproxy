@@ -1,5 +1,7 @@
 import os.path
 from typing import Optional
+from itertools import chain
+from glob import glob
 
 import urwid
 
@@ -281,7 +283,8 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.options.mode != "regular":
             r.append("[%s]" % self.master.options.mode)
         if self.master.options.scripts:
-            r.append("[scripts:%s]" % len(self.master.options.scripts))
+            scripts = list(chain.from_iterable([glob(re) for re in self.master.options.scripts]))
+            r.append("[scripts:%s]" % len(scripts))
 
         if self.master.options.save_stream_file:
             r.append("[W:%s]" % self.master.options.save_stream_file)
