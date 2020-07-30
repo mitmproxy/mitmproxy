@@ -4,6 +4,7 @@ coverage:
     project:
       default: false  # disable the default status that measures entire project
       python:
+        threshold: 0.1%
         paths:
           - "!web/"
       web:
