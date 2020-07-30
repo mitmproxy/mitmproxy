@@ -244,7 +244,7 @@ exports[`TimeStamp Component should render correctly 1`] = `
     :
   </td>
   <td>
-    2017-01-01 09:00:00.000
+    2017-01-01 00:00:00.000
     <span
       className="text-muted"
     >
@@ -275,7 +275,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          1970-01-01 09:00:01.000
+          1970-01-01 00:00:01.000
         </td>
       </tr>
       <tr>
@@ -284,7 +284,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          1970-01-01 09:00:01.000
+          1970-01-01 00:00:01.000
         </td>
       </tr>
       <tr>
@@ -293,7 +293,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          1970-01-01 09:00:02.000
+          1970-01-01 00:00:02.000
         </td>
       </tr>
       <tr>
@@ -302,7 +302,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          1970-01-01 09:00:02.000
+          1970-01-01 00:00:02.000
         </td>
       </tr>
       <tr>
@@ -311,7 +311,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          1970-01-01 09:00:03.000
+          1970-01-01 00:00:03.000
         </td>
       </tr>
       <tr>
@@ -320,7 +320,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          2017-05-21 21:38:32.481
+          2017-05-21 12:38:32.481
         </td>
       </tr>
       <tr>
@@ -329,7 +329,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          2017-05-21 21:38:32.481
+          2017-05-21 12:38:32.481
         </td>
       </tr>
     </tbody>
