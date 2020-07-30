@@ -66,7 +66,6 @@ jobs:
         with:
           file: ./coverage.xml
           name: ${{ matrix.os }}
-          fail_ci_if_error: false
   test-unsupported-python-version:
     runs-on: ubuntu-latest
     steps:
@@ -142,7 +141,6 @@ jobs:
         with:
           file: ./web/coverage/coverage-final.json
           name: web
-          fail_ci_if_error: false
 
   docs:
     env:

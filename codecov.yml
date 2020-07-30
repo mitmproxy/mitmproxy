@@ -1,1 +1,15 @@
 comment: off
+coverage:
+  status:
+    project:
+      default: false  # disable the default status that measures entire project
+      python:
+        threshold: 0.1%
+        paths:
+          - "!web/"
+      web:
+        paths:
+          - "web/"
+codecov:
+  notify:
+    after_n_builds: 6
