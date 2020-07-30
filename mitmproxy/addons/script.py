@@ -70,7 +70,6 @@ class Script:
     """
 
     def __init__(self, path: str, reload: bool) -> None:
-        ctx.log.info("loading "+path)
         self.name = "scriptmanager:" + path
         self.path = path
         self.fullpath = os.path.expanduser(
