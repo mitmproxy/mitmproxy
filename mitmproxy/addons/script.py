@@ -122,10 +122,10 @@ class Script:
             try:
                 mtime = os.stat(self.fullpath).st_mtime
             except FileNotFoundError:
-                ctx.log.info("Removing script %s" % self.path)
                 scripts = list(chain.from_iterable([glob(re) for re in ctx.options.scripts]))
                 scripts.remove(self.path)
                 ctx.options.update(scripts=scripts)
+                ctx.log.info("Removed script %s" % self.path)
                 return
             if mtime > last_mtime:
                 self.loadscript()

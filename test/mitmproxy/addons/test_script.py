@@ -224,6 +224,8 @@ class TestScriptLoader:
 
     def test_dupes(self):
         sc = script.ScriptLoader()
+        if not os.path.exists('one'):
+            os.open("one", O_CREAT)
         with taddons.context(sc) as tctx:
             with pytest.raises(exceptions.OptionsError):
                 tctx.configure(
@@ -245,7 +247,7 @@ class TestScriptLoader:
 
             os.remove(tdata.path("mitmproxy/data/addonscripts/dummy.py"))
 
-            await tctx.master.await_log("Removing")
+            await tctx.master.await_log("Removed")
             assert not tctx.options.scripts
             assert not sl.addons
 
