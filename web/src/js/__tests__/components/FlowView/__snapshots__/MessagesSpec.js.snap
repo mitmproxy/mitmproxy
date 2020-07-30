@@ -521,7 +521,7 @@ exports[`Response Component should render correctly 1`] = `
             >
               text
             </a>
-
+             
           </li>
         </ul>
       </div>
