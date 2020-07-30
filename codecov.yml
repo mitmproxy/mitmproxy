@@ -4,11 +4,11 @@ coverage:
     project:
       default: false  # disable the default status that measures entire project
       python:
-        flags:
-          - python
+        paths:
+          - "!web/"
       web:
-        flags:
-          - web
+        paths:
+          - "web/"
 codecov:
   notify:
     after_n_builds: 6
