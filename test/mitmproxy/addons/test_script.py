@@ -225,7 +225,7 @@ class TestScriptLoader:
     def test_dupes(self):
         sc = script.ScriptLoader()
         if not os.path.exists('one'):
-            os.open("one", O_CREAT)
+            os.open("one", os.O_CREAT)
         with taddons.context(sc) as tctx:
             with pytest.raises(exceptions.OptionsError):
                 tctx.configure(
