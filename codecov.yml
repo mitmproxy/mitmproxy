@@ -1,1 +1,14 @@
 comment: off
+coverage:
+  status:
+    project:
+      default: false  # disable the default status that measures entire project
+      python:
+        flags:
+          - python
+      web:
+        flags:
+          - web
+codecov:
+  notify:
+    after_n_builds: 6
