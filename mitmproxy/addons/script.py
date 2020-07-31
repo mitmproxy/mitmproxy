@@ -150,8 +150,7 @@ class ScriptLoader:
             "scripts", typing.Sequence[str], [],
             """
                 Execute a script. The script name may include wild card. If you include wild card,
-                don't forget to enclose the script name in single or double quotes. 
-                Example: mitmproxy -s "some/folder/*.py"
+                don't forget to enclose the script name in single or double quotes. Example: mitmproxy -s "some/folder/*.py".
             """
         )
 
