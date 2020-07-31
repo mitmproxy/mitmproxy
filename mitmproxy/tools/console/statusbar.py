@@ -10,6 +10,7 @@ from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.commander import commander
+from mitmproxy.addons import script
 
 
 class PromptPath:
@@ -283,7 +284,7 @@ class StatusBar(urwid.WidgetWrap):
         if self.master.options.mode != "regular":
             r.append("[%s]" % self.master.options.mode)
         if self.master.options.scripts:
-            scripts = list(chain.from_iterable([glob(re) for re in self.master.options.scripts]))
+            scripts = script.get_scripts()
             r.append("[scripts:%s]" % len(scripts))
 
         if self.master.options.save_stream_file:
