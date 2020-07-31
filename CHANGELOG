@@ -10,6 +10,7 @@ Unreleased: mitmproxy next
 
 18 July 2020: mitmproxy 5.2
 
+    * Add wild card support for --scripts option
     * Add Filter message to mitmdump (@sarthak212)
     * Display TCP flows at flow list (@Jessonsotoventura, @nikitastupin, @mhils)
     * Colorize JSON Contentview (@sarthak212)
