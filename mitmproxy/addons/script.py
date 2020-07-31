@@ -17,6 +17,9 @@ from mitmproxy import eventsequence
 from mitmproxy import ctx
 import mitmproxy.types as mtypes
 
+def get_scripts():
+    scripts = list(chain.from_iterable([glob(re) for re in ctx.options.scripts]))
+    return scripts
 
 def load_script(path: str) -> typing.Optional[types.ModuleType]:
     fullname = "__mitmproxy_script__.{}".format(
@@ -122,10 +125,9 @@ class Script:
             try:
                 mtime = os.stat(self.fullpath).st_mtime
             except FileNotFoundError:
-                scripts = list(chain.from_iterable([glob(re) for re in ctx.options.scripts]))
-                scripts.remove(self.path)
+                ctx.log.info("Removing script %s" % self.path)
+                scripts = get_scripts()
                 ctx.options.update(scripts=scripts)
-                ctx.log.info("Removed script %s" % self.path)
                 return
             if mtime > last_mtime:
                 self.loadscript()
@@ -146,7 +148,8 @@ class ScriptLoader:
             "scripts", typing.Sequence[str], [],
             """
             Execute a script. The script name may include wild card. If you include wild card,
-            don't forget to enclose the script name in single or double quotes.
+            don't forget to enclose the script name in single or double quotes. 
+            Example: mitmproxy -s "some/folder/*.py"
             """
         )
 
@@ -178,7 +181,7 @@ class ScriptLoader:
 
     def configure(self, updated):
         if "scripts" in updated:
-            scripts = list(chain.from_iterable([glob(re) for re in ctx.options.scripts]))
+            scripts = get_scripts()
             for s in scripts:
                 if scripts.count(s) > 1:
                     raise exceptions.OptionsError("Duplicate script")
@@ -202,8 +205,6 @@ class ScriptLoader:
             ordered = []
             newscripts = []
             for s in scripts:
-                if s[-2:] != "py":
-                    continue
                 if s in current:
                     ordered.append(current[s])
                 else:
