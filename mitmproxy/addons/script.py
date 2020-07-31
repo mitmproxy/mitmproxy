@@ -17,9 +17,11 @@ from mitmproxy import eventsequence
 from mitmproxy import ctx
 import mitmproxy.types as mtypes
 
+
 def get_scripts():
     scripts = list(chain.from_iterable([glob(re) for re in ctx.options.scripts]))
     return scripts
+
 
 def load_script(path: str) -> typing.Optional[types.ModuleType]:
     fullname = "__mitmproxy_script__.{}".format(
@@ -147,9 +149,9 @@ class ScriptLoader:
         loader.add_option(
             "scripts", typing.Sequence[str], [],
             """
-            Execute a script. The script name may include wild card. If you include wild card,
-            don't forget to enclose the script name in single or double quotes. 
-            Example: mitmproxy -s "some/folder/*.py"
+                Execute a script. The script name may include wild card. If you include wild card,
+                don't forget to enclose the script name in single or double quotes. 
+                Example: mitmproxy -s "some/folder/*.py"
             """
         )
 

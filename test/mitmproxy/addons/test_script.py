@@ -226,7 +226,7 @@ class TestScriptLoader:
         sc = script.ScriptLoader()
         with open("one", 'w') as f:
             f.write("foo")
-            
+
         with taddons.context(sc) as tctx:
             with pytest.raises(exceptions.OptionsError):
                 tctx.configure(
