@@ -19,8 +19,10 @@ import mitmproxy.types as mtypes
 
 
 def get_scripts():
-    scripts = list(chain.from_iterable([glob(re) for re in ctx.options.scripts]))
-    return scripts
+    if getattr(ctx.options, "scripts", None):
+        scripts = [script for re in ctx.options.scripts for script in glob(re)]
+        return scripts
+    return []
 
 
 def load_script(path: str) -> typing.Optional[types.ModuleType]:
@@ -144,13 +146,16 @@ class ScriptLoader:
     def __init__(self):
         self.is_running = False
         self.addons = []
+        self.scripts = get_scripts()
 
     def load(self, loader):
         loader.add_option(
             "scripts", typing.Sequence[str], [],
             """
-                Execute a script. The script name may include wild card. If you include wild card,
-                don't forget to enclose the script name in single or double quotes. Example: mitmproxy -s "some/folder/*.py".
+                Execute a script. 
+                Experimental: If the script name includes a wild card, all matching scripts are executed.
+                Addons created after startup are not picked up.
+                Example: mitmproxy -s "some/folder/*.py".
             """
         )
 
@@ -180,8 +185,16 @@ class ScriptLoader:
                     for evt, arg in eventsequence.iterate(f):
                         ctx.master.addons.invoke_addon(mod, evt, arg)
 
+    @command.command("script.length")
+    def script_length(self):
+        """
+            Return the number of scripts
+        """
+        return len(self.scripts)
+
     def configure(self, updated):
         if "scripts" in updated:
+            # The order of this operation is O(n^2)
             scripts = get_scripts()
             for s in scripts:
                 if scripts.count(s) > 1:

@@ -208,6 +208,7 @@ class StatusBar(urwid.WidgetWrap):
 
         sreplay = self.master.commands.call("replay.server.count")
         creplay = self.master.commands.call("replay.client.count")
+        script_length = self.master.commands.call("script.length")
 
         if len(self.master.options.modify_headers):
             r.append("[")
@@ -283,9 +284,8 @@ class StatusBar(urwid.WidgetWrap):
 
         if self.master.options.mode != "regular":
             r.append("[%s]" % self.master.options.mode)
-        if self.master.options.scripts:
-            scripts = script.get_scripts()
-            r.append("[scripts:%s]" % len(scripts))
+        if script_length:
+            r.append("[scripts:%s]" % script_length)
 
         if self.master.options.save_stream_file:
             r.append("[W:%s]" % self.master.options.save_stream_file)
