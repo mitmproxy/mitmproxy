@@ -21,6 +21,7 @@ from mitmproxy.addons import stickyauth
 from mitmproxy.addons import stickycookie
 from mitmproxy.addons import streambodies
 from mitmproxy.addons import save
+from mitmproxy.addons import tutorial
 from mitmproxy.addons import upstream_auth
 
 
@@ -49,5 +50,6 @@ def default_addons():
         stickycookie.StickyCookie(),
         streambodies.StreamBodies(),
         save.Save(),
+        tutorial.Tutorial(),
         upstream_auth.UpstreamAuth(),
     ]

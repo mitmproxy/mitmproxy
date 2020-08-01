@@ -1,0 +1,124 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+    <nav class="col-md-2 bg-light sidebar sidebar-toc">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active" href="#">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-house-door-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.5 10.995V14.5a.5.5 0 0 1-.5.5H2a.5.5 0 0 1-.5-.5v-7a.5.5 0 0 1 .146-.354l6-6a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 .146.354v7a.5.5 0 0 1-.5.5h-4a.5.5 0 0 1-.5-.5V11c0-.25-.25-.5-.5-.5H7c-.25 0-.5.25-.5.495z"/>
+                        <path fill-rule="evenodd" d="M13 2.5V6l-2-2V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5z"/>
+                      </svg>
+                    Overview <span class="sr-only">(current)</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-list" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M2.5 11.5A.5.5 0 0 1 3 11h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 7h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4A.5.5 0 0 1 3 3h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                    View Flows
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-repeat" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M2.854 7.146a.5.5 0 0 0-.708 0l-2 2a.5.5 0 1 0 .708.708L2.5 8.207l1.646 1.647a.5.5 0 0 0 .708-.708l-2-2zm13-1a.5.5 0 0 0-.708 0L13.5 7.793l-1.646-1.647a.5.5 0 0 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0 0-.708z"/>
+                        <path fill-rule="evenodd" d="M8 3a4.995 4.995 0 0 0-4.192 2.273.5.5 0 0 1-.837-.546A6 6 0 0 1 14 8a.5.5 0 0 1-1.001 0 5 5 0 0 0-5-5zM2.5 7.5A.5.5 0 0 1 3 8a5 5 0 0 0 9.192 2.727.5.5 0 1 1 .837.546A6 6 0 0 1 2 8a.5.5 0 0 1 .501-.5z"/>
+                    </svg>
+                    Replay Requests
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <main role="main" class="col-md-6 ml-sm-auto px-md-4">
+        <h1 class="pt-3 pb-3 mb-3 border-bottom">mitmproxy Tutorial</h1>
+
+        
+        <div class="alert alert-secondary" role="alert">
+            This tutorial is served by your local mitmproxy instance.
+        </div>
+
+        <h2 class="pt-3 pb-3 mb-3 border-bottom">Step 1</h2>
+
+        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum
+            tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas
+            semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien
+            ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean
+            fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui. Donec
+            non enim in turpis pulvinar facilisis. Ut felis. Praesent dapibus, neque id cursus faucibus, tortor neque
+            egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan
+            porttitor, facilisis luctus, metus</p>
+
+        <h2 class="pt-3 pb-3 mb-3 border-bottom">Step 2</h2>
+        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum
+            tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas
+            semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien
+            ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean
+            fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui. Donec
+            non enim in turpis pulvinar facilisis. Ut felis. Praesent dapibus, neque id cursus faucibus, tortor neque
+            egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan
+            porttitor, facilisis luctus, metus</p>
+
+        <h2 class="pt-3 pb-3 mb-3 border-bottom">Step 3</h2>
+        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum
+            tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas
+            semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien
+            ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean
+            fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui. Donec
+            non enim in turpis pulvinar facilisis. Ut felis. Praesent dapibus, neque id cursus faucibus, tortor neque
+            egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan
+            porttitor, facilisis luctus, metus</p>
+
+        <h2 class="pt-3 pb-3 mb-3 border-bottom">Step 4</h2>
+        <p>Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum
+            tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas
+            semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo. Quisque sit amet est et sapien
+            ullamcorper pharetra. Vestibulum erat wisi, condimentum sed, commodo vitae, ornare sit amet, wisi. Aenean
+            fermentum, elit eget tincidunt condimentum, eros ipsum rutrum orci, sagittis tempus lacus enim ac dui. Donec
+            non enim in turpis pulvinar facilisis. Ut felis. Praesent dapibus, neque id cursus faucibus, tortor neque
+            egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan
+            porttitor, facilisis luctus, metus</p>
+    </main>
+
+    <div class="col-md-4 bg-light sidebar sidebar-app">
+        <h2 class="pb-3 mb-3 border-bottom">Voting App</h2>
+
+        <p>
+            Welcome to the finals of our shocked animal competition.
+            Below you can vote for the two remaining candidates Lucy and Pete.
+        </p>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <img src="/static/images/cat.jpg" class="figure-img img-fluid rounded" alt="Lucy the cat">
+                    <div class="card-body">
+                        <h5 class="card-title">Lucy the cat</h5>
+                        <a href="/vote/cat" class="btn btn-primary btn-sm ajax-btn">Vote for Lucy 😻</a>
+                        <hr>
+                        Votes: <span id="votes-cat" class="badge badge-primary">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <img src="/static/images/dog.jpg" class="figure-img img-fluid rounded" alt="Pete the dog">
+                    <div class="card-body">
+                        <h5 class="card-title">Pete the dog</h5>
+                        <a href="/vote/dog" class="btn btn-primary btn-sm ajax-btn">Vote for Pete 🐺</a>
+                        <hr>
+                        Votes: <span id="votes-dog" class="badge badge-primary">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <a id="btn-reload-votes" class="btn btn-outline-secondary btn-sm ajax-btn" href="/votes" role="button">Refresh votes</a>
+        <a id="btn-reload-votes" class="btn btn-outline-secondary btn-sm ajax-btn" href="/reset_votes" role="button">Reset votes</a>
+    </div>
+</div>
+{% endblock %}
