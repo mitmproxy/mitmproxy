@@ -7,7 +7,6 @@ import types
 import typing
 import traceback
 from glob import glob
-from itertools import chain
 
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
@@ -152,7 +151,7 @@ class ScriptLoader:
         loader.add_option(
             "scripts", typing.Sequence[str], [],
             """
-                Execute a script. 
+                Execute a script.
                 Experimental: If the script name includes a wild card, all matching scripts are executed.
                 Addons created after startup are not picked up.
                 Example: mitmproxy -s "some/folder/*.py".

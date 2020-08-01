@@ -1,7 +1,5 @@
 import os.path
 from typing import Optional
-from itertools import chain
-from glob import glob
 
 import urwid
 
@@ -10,7 +8,6 @@ from mitmproxy.tools.console import commandexecutor
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.commander import commander
-from mitmproxy.addons import script
 
 
 class PromptPath:
