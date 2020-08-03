@@ -25,7 +25,7 @@ function OptionMenu({ openOptions }) {
                 <div className="menu-group">
                     <div className="menu-content">
                         <SettingsToggle setting="anticache">
-                            Strip cache headers <DocsLink resource="features/anticache.html"/>
+                            Strip cache headers <DocsLink resource="overview-features/#anticache"/>
                         </SettingsToggle>
                         <SettingsToggle setting="showhost">
                             Use host header for display
