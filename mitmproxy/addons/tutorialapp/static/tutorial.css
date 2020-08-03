@@ -2,7 +2,7 @@
  * Sidebar
  */
 
-.sidebar {
+ .sidebar {
   position: -webkit-sticky;
   position: sticky;
   top: 3rem;
@@ -54,4 +54,123 @@ nav.navbar {
   font-size: 1rem;
   background-color: rgba(0, 0, 0, .25);
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+}
+
+.image-wrapper {
+  position: relative;
+}
+
+.image-annotation {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+}
+
+.introjs-hint-dot {
+  box-sizing: content-box;
+  border: 10px solid rgba(255,255,255,.5);
+  background: 0 0;
+  -webkit-border-radius: 60px;
+  -moz-border-radius: 60px;
+  border-radius: 60px;
+  height: 30px;
+  width: 30px;
+  -webkit-animation: introjspulse 2s ease-out;
+  -moz-animation: introjspulse 2s ease-out;
+  animation: introjspulse 2s ease-out;
+  -webkit-animation-iteration-count: infinite;
+  -moz-animation-iteration-count: infinite;
+  animation-iteration-count: infinite;
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  z-index: 1;
+  opacity: 0;
+}
+
+.introjs-hint-pulse {
+  box-sizing: content-box;
+  width: 10px;
+  height: 10px;
+  border: 5px solid rgba(60,60,60,.6);
+  -webkit-border-radius: 30px;
+  -moz-border-radius: 30px;
+  border-radius: 30px;
+  background-color: rgba(255,255,255,.8);
+  z-index: 10;
+  position: absolute;
+  -webkit-transition: all .2s ease-out;
+  -moz-transition: all .2s ease-out;
+  -ms-transition: all .2s ease-out;
+  -o-transition: all .2s ease-out;
+  transition: all .2s ease-out;
+}
+
+@-webkit-keyframes introjspulse {
+  0% {
+      -webkit-transform: scale(0);
+      opacity: 0.0;
+  }
+  25% {
+      -webkit-transform: scale(0);
+      opacity: 0.1;
+  }
+  50% {
+      -webkit-transform: scale(0.1);
+      opacity: 0.3;
+  }
+  75% {
+      -webkit-transform: scale(0.5);
+      opacity: 0.5;
+  }
+  100% {
+      -webkit-transform: scale(1);
+      opacity: 0.0;
+  }
+}
+
+@-moz-keyframes introjspulse {
+  0% {
+      -moz-transform: scale(0);
+      opacity: 0.0;
+  }
+  25% {
+      -moz-transform: scale(0);
+      opacity: 0.1;
+  }
+  50% {
+      -moz-transform: scale(0.1);
+      opacity: 0.3;
+  }
+  75% {
+      -moz-transform: scale(0.5);
+      opacity: 0.5;
+  }
+  100% {
+      -moz-transform: scale(1);
+      opacity: 0.0;
+  }
+}
+
+@keyframes introjspulse {
+  0% {
+      transform: scale(0);
+      opacity: 0.0;
+  }
+  25% {
+      transform: scale(0);
+      opacity: 0.1;
+  }
+  50% {
+      transform: scale(0.1);
+      opacity: 0.3;
+  }
+  75% {
+      transform: scale(0.5);
+      opacity: 0.5;
+  }
+  100% {
+      transform: scale(1);
+      opacity: 0.0;
+  }
 }

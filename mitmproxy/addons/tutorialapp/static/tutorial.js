@@ -16,4 +16,5 @@ for(let i = 0; i < ajaxButtons.length; i++) {
 
 document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("btn-reload-votes").click();
+    $('[data-toggle="tooltip"]').tooltip();
 });
