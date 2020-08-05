@@ -1,3 +1,16 @@
+
+h3, .h3 {
+  font-size: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.btn-group-xs > .btn, .btn-xs {
+	padding: .25rem .5rem;
+	font-size: .75rem;
+	line-height: 1.25;
+	border-radius: .2rem;
+}
+
 /*
  * Sidebar
  */
@@ -46,6 +59,8 @@ nav.navbar {
   position: -webkit-sticky;
   position: sticky;
   top: 0;
+  left: 0;
+  z-index: 1030;
 }
 
 .navbar-brand {

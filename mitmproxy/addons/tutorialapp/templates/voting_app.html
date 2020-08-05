@@ -1,0 +1,36 @@
+<h2 class="pb-3 mb-3 border-bottom">Voting App</h2>
+
+<p>
+    Welcome to the finals of our shocked animal competition.
+    Below you can vote for the two remaining candidates Lucy and Pete.
+</p>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <img src="/static/images/cat.jpg" class="figure-img img-fluid rounded" alt="Lucy the cat">
+            <div class="card-body">
+                <h5 class="card-title">Lucy the cat</h5>
+                <a href="/vote/cat" class="btn btn-primary btn-sm ajax-btn">Vote for Lucy 😻</a>
+                <hr>
+                Votes: <span id="votes-cat" class="badge badge-primary">0</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <img src="/static/images/dog.jpg" class="figure-img img-fluid rounded" alt="Pete the dog">
+            <div class="card-body">
+                <h5 class="card-title">Pete the dog</h5>
+                <a href="/vote/dog" class="btn btn-primary btn-sm ajax-btn">Vote for Pete 🐺</a>
+                <hr>
+                Votes: <span id="votes-dog" class="badge badge-primary">0</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr>
+
+<a id="btn-reload-votes" class="btn btn-outline-secondary btn-sm ajax-btn" href="/votes" role="button">Refresh votes</a>
+<a id="btn-reload-votes" class="btn btn-outline-secondary btn-sm ajax-btn" href="/reset_votes" role="button">Reset votes</a>

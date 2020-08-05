@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect
 
 from mitmproxy.options import CONF_BASENAME, CONF_DIR
 
@@ -16,8 +16,17 @@ votes = {
 
 @app.route('/')
 def index():
-    return render_template("index.html", votes=votes)
+    return redirect("/mitmproxy")
 
+
+@app.route('/mitmproxy')
+def mitmproxy():
+    return render_template("mitmproxy/index.html", votes=votes)
+
+
+@app.route('/mitmweb')
+def mitmweb():
+    return render_template("mitmweb/index.html", votes=votes)
 
 @app.route('/votes')
 def get_votes():

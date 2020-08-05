@@ -1,0 +1,210 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row">
+    <nav class="col-md-2 bg-light sidebar sidebar-toc">
+        {% include 'mitmproxy/toc.html' %}
+    </nav>
+
+    <main role="main" class="col-md-6 ml-sm-auto px-md-4">
+        <h1 class="pt-3 pb-3 mb-3 border-bottom">mitmproxy Tutorial</h1>
+
+        <h2 id="overview" class="pt-3 pb-3 mb-3 border-bottom">Overview</h2>
+
+        <p>
+            This tutorial interactively introduces you to mitmproxy.
+            It will get you up to speed by teaching you the most common use-cases.
+            It will take approximately 10 minutes to complete, assuming you are comfortable on the command-line and familiar with HTTP.
+            <!-- You will learn how to perform common use-cases -->
+            <!-- Its purpose is to familiarize you with the most common use-cases. -->
+            <!-- It should get you up to speed with mitmproxy and provides sufficient  -->
+            <!-- Its meant as a quick-start guide, before diving deeper  -->
+            By the end of this tutorial, you will know how to:
+        </p>
+
+        <ul>
+            <li>Navigate mitmproxy's UI using your keyboard.</li>
+            <li>View HTTP flows and their details, such as HTTP headers.</li>
+            <li>Intercept and modify requests, before passing them to the server.</li>
+            <li>Replay previous requests, i.e., send them to the server again.</li>
+        </ul>
+
+        <p>
+            The tutorial is served by your local mitmproxy instance.
+            This implies that you have already set up your browser to use mitmproxy as a proxy server.
+            Thus, you have already completed the first step 🎉.
+        </p>
+
+        <h3 class="pb-3 border-bottom">Demo App: Shocked Animal Challenge</h3>
+
+        <p>
+            We want to provide you with a realistic and practical learning environment.
+            Let's assume the following scenario: We have a cat called Lucy.
+            We registered Lucy for the famous global <em>Shocked Animal Challenge</em>.
+            The organizers use a custom web application that allows people to vote for the participants.
+            This voting application is embedded in the right sidebar of this page.
+            Let's see if we can use mitmproxy to get Lucy some extra votes.
+            <!-- Obviously we want Lucy to win. -->
+
+            <!-- One of our clients is the host of the global <em>Shocked Animal challenge</em>.
+            We are the organizers of the global Shocked Animal challenge.
+            Thus, we have created a fictitious web application -->
+        </p>
+
+        <p>
+            <a class="btn btn-sm btn-outline-secondary" data-toggle="collapse" href="#collapse-how-tutorial-app-implemented" role="button" aria-expanded="false" aria-controls="collapse-how-tutorial-app-implemented">
+              Optional: How is this tutorial implemented?
+            </a>
+        </p>
+
+        <div class="collapse mb-4" id="collapse-how-tutorial-app-implemented">
+            <div class="card card-body">
+                <p class="mb-0">
+                    This tutorial is implemented as a mitmproxy <a href="https://docs.mitmproxy.org/stable/addons-overview/">addon</a>.
+                    Addons allow to easily extend the functionality of mitmproxy using its API.
+                    The tutorial addon intercepts all HTTP requests.
+                    If the request's HTTP <code>Host</code> header is <code>tutorial.mitm.it</code>, the request is redirected to the tutorial's web application.
+                    The web application itself is implemented using <a href="https://palletsprojects.com/p/flask/">Flask</a>.
+                    All other intercepted requests are forwarded to their original destination without modification.
+                    The core of the tutorial addon has less than 100 lines of code.
+                    The details go beyond the scope of this tutorial, but it should give you a glance of the advanced features you can implement with mitmproxy.
+                </p>
+            </div>
+        </div>
+
+        <!-- <p>
+            Let's see if mitmproxy can help us make sure that Lucy wins.
+            We first need to understand how the application works.
+            So let's start with investigating what happens when we submit a vote.
+        </p> -->
+
+        <h2 id="view-flows" class="pt-3 pb-3 mb-3 border-bottom">mitmproxy's User Interface</h2>
+
+        <!-- <p>We suggest that you position the windows next to ...</p> -->
+
+        <p>
+            First of all,we needs to get familiar with mitmproxy's user interface.
+            Open the terminal window in which you started mitmproxy.
+            You should see the <span class="badge badge-info">Default View</span> of mitmproxy, which shows a table-like list of flows.
+            Every line represents a request and (optionally) its response using the following columns:
+        </p>
+        <table class="table table-sm">
+            <thead>
+              <tr>
+                <th scope="col">Time</th>
+                <th scope="col">Protocol</th>
+                <th scope="col">Method</th>
+                <th scope="col">Host</th>
+                <th scope="col">Path</th>
+                <th scope="col">Response code</th>
+                <th scope="col">Response size</th>
+                <th scope="col">Response time</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>&gt;&gt;</code> 18:37:23</td>
+                <td>HTTP</td>
+                <td>GET</td>
+                <td>tutorial.mitm.it</td>
+                <td>/</td>
+                <td>200</td>
+                <td>3k</td>
+                <td>179ms</td>
+              </tr>
+            </tbody>
+          </table>
+        <p>
+            <!-- The columns show the date, protocol, method, URL of the flow, among other details on the right. -->
+            In your started instance of mitmproxy you see your browser's HTTP requests to load this tutorial.
+            The <code>&gt;&gt;</code> next to the first flow on the right denotes the currently focussed flow - more on that below.
+            mitmproxy adds rows to the view as new requests come in. Let's try that out:
+        </p>
+
+        <ol>
+            <li>Use the voting app on the right to generate a vote for Lucy.</li>
+            <li>Watch how mitmproxy creates a new line for every vote you submit.</li>
+        </ol>
+
+        <figure class="figure">
+            <img src="/static/images/mitmproxy_flow_list.png" alt="..." class="figure-img img-fluid rounded">
+            <figcaption class="figure-caption text-center">mitmproxy's <span class="badge badge-info">Default View</span></figcaption>
+        </figure>
+
+        <p>
+            mitmproxy is controlled using keyboard shortcuts.
+            Every shortcut is internally bound to a command.
+            Advanced users can easily re-map shortcuts using the configuration file.
+            For now, let's focus on some basic shortcuts:
+        </p>
+
+        <ol>
+            <li>Use your arrow keys <span class="badge badge-secondary">🠗</span> and <span class="badge badge-secondary">🠕</span> to move the focus (<code>&gt;&gt;</code>) to the flow requesting <code>/votes</code>.</li>
+            <li>Press <span class="badge badge-secondary">ENTER</span> to view the details of the flow. You should see the <span class="badge badge-info">Flow Details View</span>.</li>
+        </ol>
+
+        <figure class="figure">
+            <img src="/static/images/mitmproxy_flow_detail.png" alt="..." class="figure-img img-fluid rounded">
+            <figcaption class="figure-caption text-center">mitmproxy's <span class="badge badge-info">Flow Details View</span></figcaption>
+        </figure>
+
+        <p>
+            The <span class="badge badge-info">Flow Details View</span> has 3 panes: request, response, and detail.
+            The request and response panes show you the HTTP headers and the content of the message below.
+            The detail pane gives you timing information, certificate details, among other infos.
+        </p>
+
+        <ol>
+            <li>Use your arrow keys <span class="badge badge-secondary">🠔</span> and <span class="badge badge-secondary">🠖</span> to switch between panes.</li>
+            <li>
+                Try to figure out what the <code>/votes</code> endpoint of the voting application returns.
+                <a class="btn btn-xs btn-outline-secondary" data-toggle="collapse" href="#collapse-hint-votes-endpoint" role="button" aria-expanded="false" aria-controls="collapse-hint-votes-endpoint">
+                    Show hint
+                </a>
+            </li>
+            <li>Press <span class="badge badge-secondary">q</span> to go back to the <span class="badge badge-info">Default View</span>. This shortcut works globally and exits the current view.</li>
+        </ol>
+
+        
+        <div class="collapse mb-4" id="collapse-hint-votes-endpoint">
+            <div class="card card-body">
+                <p class="mb-0">
+                    The <code>/votes</code> endpoint returns the current vote count for the cat and the dog as a JSON object, e.g. <code>{"cat": 2, "dog": 5}</code>.
+                </p>
+            </div>
+        </div>
+
+        <!-- <p>Even before submitting the first vote, you should already see a couple of requests in mitmproxy.</p> -->
+
+        <p>
+            You should now have an idea of how to control mitmproxy.
+            You will learn more keyboard shortcuts as we go along.
+        </p>
+
+        <div class="alert alert-primary" role="alert">
+            Spoiler: Pressing <span class="badge badge-secondary">?</span> gives you a list of all available keyboard shortcuts in the current view.
+        </div>
+
+
+        <h2 id="view-flows2" class="pt-3 pb-3 mb-3 border-bottom">Intercept Requests</h2>
+        <p>Yet to be written.</p>
+        
+        
+        <h2 id="view-flows2" class="pt-3 pb-3 mb-3 border-bottom">Modify Requests</h2>
+        <p>Yet to be written.</p>
+        
+        
+        
+        <h2 id="replay-requests" class="pt-3 pb-3 mb-3 border-bottom">Replay Requests</h2>
+        <p>Yet to be written.</p>
+
+
+        <h2 id="going-forward" class="pt-3 pb-3 mb-3 border-bottom">What's next?</h2>
+        <p>The tutorial is not meant as a replacement for our extensive <a href="#">documentation</a> - mitmproxy has far more (advanced) features than what we show you.</p>
+
+    </main>
+
+    <div class="col-md-4 bg-light sidebar sidebar-app">
+        {% include 'voting_app.html' %}
+    </div>
+</div>
+{% endblock %}
