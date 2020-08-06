@@ -3,6 +3,7 @@ Unreleased: mitmproxy next
 ** Full Changelog **
 
     * Add MsgPack content viewer (@tasn)
+    * Use `@charset` to decode CSS files if available (@prinzhorn)
 
     * --- TODO: add new PRs above this line ---
 
