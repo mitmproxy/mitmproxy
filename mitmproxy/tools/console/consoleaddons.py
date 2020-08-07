@@ -127,7 +127,7 @@ class ConsoleAddon:
             choices=sorted(console_flowlist_layout)
         )
         loader.add_option(
-            "console_strip_trailing_newlines", bool, True,
+            "console_strip_trailing_newlines", bool, False,
             "Strip trailing newlines from edited request/response bodies."
         )
 
