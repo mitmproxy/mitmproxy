@@ -8,7 +8,7 @@ from mitmproxy.net import server_spec
 from mitmproxy.net.http import url
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events, layer, tunnel
-from mitmproxy.proxy2.context import Connection, Context, Killed, Server
+from mitmproxy.proxy2.context import Connection, Context, Server
 from mitmproxy.proxy2.layers import tls
 from mitmproxy.proxy2.layers.http import _upstream_proxy
 from mitmproxy.proxy2.utils import expect
@@ -270,7 +270,7 @@ class HttpStream(layer.Layer):
             self.server_state = self.state_done
 
     def check_killed(self) -> layer.CommandGenerator[bool]:
-        if isinstance(self.flow.error, Killed):
+        if self.flow.error and self.flow.error.msg == flow.Error.KILLED_MESSAGE:
             yield commands.CloseConnection(self.context.client)
             self._handle_event = self.state_errored
             return True
