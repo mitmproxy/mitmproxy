@@ -10,7 +10,48 @@
 <h2 id="view-flows" class="pt-3 pb-3 mb-3 border-bottom">Step 2: Intercept Requests</h2>
 
 <p>
-    Yet to be written.
+    A powerful feature of mitmproxy is the interception of requests.
+    An intercepted request is paused so that the user can edit (or discard) the request before sending it to the server.
+    mitmproxy's <code>set intercept</code> command configures interceptions.
+    The command is bound to shortcut <kbd>i</kbd> by default.
+</p>
+
+<ol>
+    <li>Press <kbd>i</kbd> to prepopulate mitmproxy's command prompt with <code>set intercept ''</code>.</li>
+</ol>
+
+<p>
+    Intercepting <em>all</em> requests is usually not desired as it constantly interrupts your browsing.
+    Thus, mitmproxy expects a <a href="https://docs.mitmproxy.org/stable/concepts-filters/">flow filter expression</a> as the first argument to <code>set intercept</code> to selectively intercept requests.
+    We want to intercept all requests to the <code>/vote/[cat|dog]</code> endpoint of the voting application.
+    We use the flow filter <code>~u &lt;regex&gt;</code> that filters flows by matching the regular expressing on the URL of the request.
+</p>
+
+<ol>
+    <li>Enter <kbd>~u /vote/</kbd> between the quotes of the <code>set intercept</code> command and press <kbd>ENTER</kbd>.</li>
+    <li>Make sure you are in the default view of mitmproxy that shows all previous flows.</li>
+    <li>Submit a vote in the voting app on the right.</li>
+</ol>
+
+<figure class="figure">
+    <img src="/static/images/mitmproxy_intercept_requests.gif" alt="..." class="figure-img img-fluid rounded">
+    <figcaption class="figure-caption text-center">Configure interceptions using the <code>set intercept</code> command. <span class="text-danger">[NEEDS REVISION!]</span></figcaption>
+</figure>
+
+<p>
+    You will see a new line in in the list of flows.
+    It is colored in <span class="text-danger">red</span> to indicate that it is an intercepted flow:
+</p>
+
+<ol>
+    <li>Put the focus (<code>&gt;&gt;</code>) on the intercepted flow.</li>
+    <li>Press <kbd>a</kbd> to resume this flow without making any changes.</li>
+    <li>Submit another vote to generate a new flow and focus it.</li>
+    <li>Press <kbd>X</kbd> to kill, i.e., discard this flow without forwarding it to the server.</li>
+</ol>
+
+<p>
+    In the next step, you will learn to modify intercepted flows before sending them to the server.
 </p>
 
 <hr>
