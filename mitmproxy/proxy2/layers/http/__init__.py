@@ -8,7 +8,7 @@ from mitmproxy.net import server_spec
 from mitmproxy.net.http import url
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events, layer, tunnel
-from mitmproxy.proxy2.context import Connection, Context, Server
+from mitmproxy.proxy2.context import Connection, Context, Killed, Server
 from mitmproxy.proxy2.layers import tls
 from mitmproxy.proxy2.layers.http import _upstream_proxy
 from mitmproxy.proxy2.utils import expect
@@ -173,6 +173,8 @@ class HttpStream(layer.Layer):
             self.flow.request.host_header = self.context.server.address[0]
 
         yield HttpRequestHeadersHook(self.flow)
+        if (yield from self.check_killed()):
+            return
 
         if self.flow.request.headers.get("expect", "").lower() == "100-continue":
             continue_response = http.HTTPResponse.make(100)
@@ -212,10 +214,14 @@ class HttpStream(layer.Layer):
             self.flow.request.data.content = self.request_body_buf
             self.request_body_buf = b""
             yield HttpRequestHook(self.flow)
-            if self.flow.response:
+            if (yield from self.check_killed()):
+                return
+            elif self.flow.response:
                 # response was set by an inline script.
                 # we now need to emulate the responseheaders hook.
                 yield HttpResponseHeadersHook(self.flow)
+                if (yield from self.check_killed()):
+                    return
                 yield from self.send_response()
             else:
                 ok = yield from self.make_server_connection()
@@ -233,7 +239,9 @@ class HttpStream(layer.Layer):
     def state_wait_for_response_headers(self, event: ResponseHeaders) -> layer.CommandGenerator[None]:
         self.flow.response = event.response
         yield HttpResponseHeadersHook(self.flow)
-        if self.flow.response.stream:
+        if (yield from self.check_killed()):
+            return
+        elif self.flow.response.stream:
             yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)
             self.server_state = self.state_stream_response_body
         else:
@@ -261,8 +269,17 @@ class HttpStream(layer.Layer):
             yield from self.send_response()
             self.server_state = self.state_done
 
+    def check_killed(self) -> layer.CommandGenerator[bool]:
+        if isinstance(self.flow.error, Killed):
+            yield commands.CloseConnection(self.context.client)
+            self._handle_event = self.state_errored
+            return True
+        return False
+
     def send_response(self):
         yield HttpResponseHook(self.flow)
+        if (yield from self.check_killed()):
+            return
         yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)
         if self.flow.response.raw_content:
             yield SendHttp(ResponseData(self.stream_id, self.flow.response.raw_content), self.context.client)
@@ -274,8 +291,9 @@ class HttpStream(layer.Layer):
     ) -> layer.CommandGenerator[None]:
         self.flow.error = flow.Error(event.message)
         yield HttpErrorHook(self.flow)
-
-        if isinstance(event, ResponseProtocolError):
+        if (yield from self.check_killed()):
+            return
+        elif isinstance(event, ResponseProtocolError):
             yield SendHttp(event, self.context.client)
 
     def make_server_connection(self) -> layer.CommandGenerator[bool]:
@@ -293,6 +311,8 @@ class HttpStream(layer.Layer):
 
     def handle_connect(self) -> layer.CommandGenerator[None]:
         yield HttpConnectHook(self.flow)
+        if (yield from self.check_killed()):
+            return
 
         self.context.server.address = (self.flow.request.host, self.flow.request.port)
 

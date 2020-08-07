@@ -3,6 +3,7 @@ from enum import Flag, auto
 from typing import List, Literal, Optional, Sequence, Union
 
 from mitmproxy import certs
+from mitmproxy.flow import Error
 from mitmproxy.net import server_spec
 from mitmproxy.options import Options
 
@@ -101,3 +102,9 @@ class Context:
         ret.server = self.server
         ret.layers = self.layers.copy()
         return ret
+
+
+# FIXME: Move to mitmproxy.flow, adjust Flow.kill()
+class Killed(Error):
+    def __init__(self) -> None:
+        super().__init__("Connection killed.")
