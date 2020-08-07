@@ -110,7 +110,7 @@ class RequestReplayThread(basethread.BaseThread):
             f.error = flow.Error(str(e))
             self.channel.ask("error", f)
         except exceptions.Kill:
-            self.channel.tell("log", log.LogEntry("Connection killed", "info"))
+            self.channel.tell("log", log.LogEntry(flow.Error.KILLED_MESSAGE, "info"))
         except Exception as e:
             self.channel.tell("log", log.LogEntry(repr(e), "error"))
         finally:
