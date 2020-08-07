@@ -2,11 +2,12 @@ from typing import Callable
 
 import pytest
 
+from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow, HTTPResponse
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import layer
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
-from mitmproxy.proxy2.context import Killed, Server
+from mitmproxy.proxy2.context import Server
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import TCPLayer, http, tls
 from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, reply_next_layer
@@ -736,7 +737,7 @@ def test_kill_flow(tctx, when):
     flow = Placeholder(HTTPFlow)
 
     def kill(flow: HTTPFlow):
-        flow.error = Killed()
+        flow.error = Error(Error.KILLED_MESSAGE)
 
     def assert_kill():
         assert (playbook

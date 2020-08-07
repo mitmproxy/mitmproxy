@@ -102,9 +102,3 @@ class Context:
         ret.server = self.server
         ret.layers = self.layers.copy()
         return ret
-
-
-# FIXME: Move to mitmproxy.flow, adjust Flow.kill()
-class Killed(Error):
-    def __init__(self) -> None:
-        super().__init__("Connection killed.")
