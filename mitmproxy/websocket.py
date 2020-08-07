@@ -1,6 +1,6 @@
 import time
 import queue
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from wsproto.frame_protocol import CloseReason
 from wsproto.frame_protocol import Opcode
@@ -17,7 +17,7 @@ class WebSocketMessage(serializable.Serializable):
     """
 
     def __init__(
-        self, type: int, from_client: bool, content: bytes, timestamp: Optional[float]=None, killed: bool=False
+        self, type: int, from_client: bool, content: Union[bytes, str], timestamp: Optional[float]=None, killed: bool=False
     ) -> None:
         self.type = Opcode(type)  # type: ignore
         """indicates either TEXT or BINARY (from wsproto.frame_protocol.Opcode)."""
