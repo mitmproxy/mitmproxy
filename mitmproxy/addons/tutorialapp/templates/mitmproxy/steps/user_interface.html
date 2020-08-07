@@ -1,0 +1,125 @@
+{% extends "mitmproxy/frame.html" %}
+{% block content %}
+
+<div class="progress mt-4">
+    <div class="progress-bar" role="progressbar" style="width: 33.33%" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+</div>
+
+<hr>
+
+<h2 id="view-flows" class="pt-3 pb-3 mb-3 border-bottom">Step 2: User Interface</h2>
+
+<!-- <p>We suggest that you position the windows next to ...</p> -->
+
+<p>
+    First of all,we needs to get familiar with mitmproxy's user interface.
+    Open the terminal window in which you started mitmproxy.
+    You should see the <span class="badge badge-info">Default View</span> of mitmproxy, which shows a table-like list of flows.
+    Every line represents a request and (optionally) its response using the following columns:
+</p>
+
+<table class="table table-sm">
+    <thead>
+      <tr>
+        <th scope="col">Time</th>
+        <th scope="col">Protocol</th>
+        <th scope="col">Method</th>
+        <th scope="col">Host</th>
+        <th scope="col">Path</th>
+        <th scope="col">Response code</th>
+        <th scope="col">Response size</th>
+        <th scope="col">Response time</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>&gt;&gt;</code> 18:37:23</td>
+        <td>HTTP</td>
+        <td>GET</td>
+        <td>tutorial.mitm.it</td>
+        <td>/</td>
+        <td>200</td>
+        <td>3k</td>
+        <td>179ms</td>
+      </tr>
+    </tbody>
+  </table>
+<p>
+    <!-- The columns show the date, protocol, method, URL of the flow, among other details on the right. -->
+    In your started instance of mitmproxy you see your browser's HTTP requests to load this tutorial.
+    The <code>&gt;&gt;</code> next to the first flow on the right denotes the currently focussed flow - more on that below.
+    mitmproxy adds rows to the view as new requests come in. Let's try that out:
+</p>
+
+<ol>
+    <li>Use the voting app on the right to generate a vote for Lucy.</li>
+    <li>Watch how mitmproxy creates a new line for every vote you submit.</li>
+</ol>
+
+<figure class="figure">
+    <img src="/static/images/mitmproxy_flow_list.png" alt="..." class="figure-img img-fluid rounded">
+    <figcaption class="figure-caption text-center">mitmproxy's <span class="badge badge-info">Default View</span></figcaption>
+</figure>
+
+<p>
+    mitmproxy is controlled using keyboard shortcuts.
+    Every shortcut is internally bound to a command.
+    Advanced users can easily re-map shortcuts using the configuration file.
+    For now, let's focus on some basic shortcuts:
+</p>
+
+<ol>
+    <li>Use your arrow keys <span class="badge badge-secondary">🠗</span> and <span class="badge badge-secondary">🠕</span> to move the focus (<code>&gt;&gt;</code>) to the flow requesting <code>/votes</code>.</li>
+    <li>Press <span class="badge badge-secondary">ENTER</span> to view the details of the flow. You should see the <span class="badge badge-info">Flow Details View</span>.</li>
+</ol>
+
+<figure class="figure">
+    <img src="/static/images/mitmproxy_flow_detail.png" alt="..." class="figure-img img-fluid rounded">
+    <figcaption class="figure-caption text-center">mitmproxy's <span class="badge badge-info">Flow Details View</span></figcaption>
+</figure>
+
+<p>
+    The <span class="badge badge-info">Flow Details View</span> has 3 panes: request, response, and detail.
+    The request and response panes show you the HTTP headers and the content of the message below.
+    The detail pane gives you timing information, certificate details, among other infos.
+</p>
+
+<ol>
+    <li>Use your arrow keys <span class="badge badge-secondary">🠔</span> and <span class="badge badge-secondary">🠖</span> to switch between panes.</li>
+    <li>
+        Try to figure out what the <code>/votes</code> endpoint of the voting application returns.
+        <a class="btn btn-xs btn-outline-secondary" data-toggle="collapse" href="#collapse-hint-votes-endpoint" role="button" aria-expanded="false" aria-controls="collapse-hint-votes-endpoint">
+            Show hint
+        </a>
+    </li>
+    <li>Press <span class="badge badge-secondary">q</span> to go back to the <span class="badge badge-info">Default View</span>. This shortcut works globally and exits the current view.</li>
+</ol>
+
+
+<div class="collapse mb-4" id="collapse-hint-votes-endpoint">
+    <div class="card card-body">
+        <p class="mb-0">
+            The <code>/votes</code> endpoint returns the current vote count for the cat and the dog as a JSON object, e.g. <code>{"cat": 2, "dog": 5}</code>.
+        </p>
+    </div>
+</div>
+
+<!-- <p>Even before submitting the first vote, you should already see a couple of requests in mitmproxy.</p> -->
+
+<p>
+    You should now have an idea of how to control mitmproxy.
+    You will learn more keyboard shortcuts as we go along.
+</p>
+
+<div class="alert alert-primary" role="alert">
+    Spoiler: Pressing <span class="badge badge-secondary">?</span> gives you a list of all available keyboard shortcuts in the current view.
+</div>
+
+<hr>
+
+<p class="d-flex">
+    <a class="btn btn-outline-primary mr-sm-auto" href="/mitmproxy/overview" role="button">Previous Step: Overview</a>
+    <a class="btn btn-primary" href="/mitmproxy/intercept_requests" role="button">Next Step: Intercept Requests</a>
+</p>
+
+{% endblock %}

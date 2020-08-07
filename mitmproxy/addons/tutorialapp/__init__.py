@@ -14,14 +14,29 @@ votes = {
     "dog": 0
 }
 
+steps = [
+    "overview",
+    "user_interface",
+    "intercept_requests",
+    "modify_requests",
+    "replay_requests",
+    "whats_next"
+]
+
 @app.route('/')
 def index():
     return redirect("/mitmproxy")
 
 
-@app.route('/mitmproxy')
-def mitmproxy():
-    return render_template("mitmproxy/index.html", votes=votes)
+@app.route('/mitmproxy/<step>')
+def mitmproxy(step):
+    if not step or step not in steps:
+        step = steps[0]
+
+    return render_template(
+        "mitmproxy/steps/" + step + ".html",
+        votes=votes
+    )
 
 
 @app.route('/mitmweb')

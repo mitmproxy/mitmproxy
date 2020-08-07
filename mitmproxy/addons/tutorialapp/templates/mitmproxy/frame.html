@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block frame %}
+<div class="row">
+    <nav class="col-md-2 bg-light sidebar sidebar-toc">
+        {% include 'mitmproxy/toc.html' %}
+    </nav>
+
+    <main role="main" class="col-md-6 ml-sm-auto px-md-4">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <div class="col-md-4 bg-light sidebar sidebar-app">
+        {% include 'voting_app.html' %}
+    </div>
+</div>
+{% endblock %}
