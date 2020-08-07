@@ -1,7 +1,7 @@
 import sys
 import traceback
 
-from mitmproxy import exceptions
+from mitmproxy import exceptions, flow
 from mitmproxy import connections
 from mitmproxy import controller  # noqa
 from mitmproxy import http
@@ -120,7 +120,7 @@ class ConnectionHandler:
             root_layer = self.channel.ask("clientconnect", root_layer)
             root_layer()
         except exceptions.Kill:
-            self.log("Connection killed", "info")
+            self.log(flow.Error.KILLED_MESSAGE, "info")
         except exceptions.ProtocolException as e:
             if isinstance(e, exceptions.ClientHandshakeException):
                 self.log(

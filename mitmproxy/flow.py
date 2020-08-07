@@ -9,7 +9,6 @@ from mitmproxy import version
 
 
 class Error(stateobject.StateObject):
-
     """
         An Error.
 
@@ -23,6 +22,8 @@ class Error(stateobject.StateObject):
             msg: Message describing the error
             timestamp: Seconds since the epoch
     """
+
+    KILLED_MESSAGE = "Connection killed."
 
     def __init__(self, msg: str, timestamp=None) -> None:
         """
@@ -156,7 +157,7 @@ class Flow(stateobject.StateObject):
         """
             Kill this request.
         """
-        self.error = Error("Connection killed")
+        self.error = Error(Error.KILLED_MESSAGE)
         self.intercepted = False
         self.reply.kill(force=True)
         self.live = False
