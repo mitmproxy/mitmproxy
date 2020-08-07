@@ -93,7 +93,8 @@
         </a>
     </li>
     <li>Press <kbd>q</kbd> to go back to the <em>default view</em>. This shortcut works globally and exits the current view.</li>
-    <li>Press <kbd>?</kbd> to view a list of all available keyboard shortcuts in the current view. Press <kbd>q</kbd> to go back.</li>
+    <li>Press <kbd>?</kbd> to view a list of all available keyboard shortcuts in the current view. If you only remember one shortcut, it should be this one.</li>
+    <li>Press <kbd>q</kbd> to go back to the <em>default view</em>.</li>
 </ol>
 
 
@@ -114,6 +115,28 @@
     You will learn more keyboard shortcuts as we go along.
 </p>
 
+<p>
+    <a class="btn btn-sm btn-outline-secondary" data-toggle="collapse" href="#collapse-commands" role="button" aria-expanded="false" aria-controls="collapse-commands">
+      Show bonus lesson: control mitmproxy using commands
+    </a>
+</p>
+
+<div class="collapse mb-4" id="collapse-commands">
+    <div class="card card-body">
+        <p class="mb-0">
+            Every shortcut in mitmproxy is internally bound to a command.
+            You can also execute commands directly (without using the shortcut):
+        </p>
+        <ul>
+            <li>Press <kbd>:</kbd> to open the command prompt at the bottom of the window.</li>
+            <li>Enter <kbd>console.view.flow @focus</kbd> and press <kbd>ENTER</kbd> to open the flow details view for the focussed flow.</li>
+        </ul>
+        <p>
+            This is the equal to pressing <kbd>ENTER</kbd> in the <em>default view</em> to open the <em>flow details view</em>.
+            Controlling mitmproxy using commands is a powerful feature for advanced users.
+        </p>
+    </div>
+</div>
 
 <hr>
 
