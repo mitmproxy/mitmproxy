@@ -107,9 +107,14 @@ class ServerConnectionMixin:
         """
         address = self.server_conn.address
         if address:
+            forbidden_hosts = ["localhost", "127.0.0.1", "::1"]
+
+            if self.config.options.listen_host:
+                forbidden_hosts.append(self.config.options.listen_host)
+
             self_connect = (
                 address[1] == self.config.options.listen_port and
-                address[0] in ("localhost", "127.0.0.1", "::1")
+                address[0] in forbidden_hosts
             )
             if self_connect:
                 raise exceptions.ProtocolException(
