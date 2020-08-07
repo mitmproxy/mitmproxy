@@ -126,7 +126,6 @@ def interact(playbook: tutils.Playbook, conn: context.Connection, tssl: SSLTest)
     )
     tssl.inc.write(data())
 
-
 def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tutils.reply:
     """
     Helper function to simplify the syntax for tls_start hooks.
@@ -151,11 +150,13 @@ def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tut
             else:
                 ssl_context.set_alpn_protos([alpn])
 
-        tls_start.ssl_conn = SSL.Connection(ssl_context)
-
         if tls_start.conn == tls_start.context.client:
+            tls_start.ssl_conn = SSL.Connection(ssl_context)
             tls_start.ssl_conn.set_accept_state()
         else:
+            ssl_context.set_verify(SSL.VERIFY_PEER)
+
+            tls_start.ssl_conn = SSL.Connection(ssl_context)
             tls_start.ssl_conn.set_connect_state()
             # Set SNI
             tls_start.ssl_conn.set_tlsext_host_name(tls_start.conn.sni)
@@ -174,7 +175,6 @@ def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tut
             SSL._openssl_assert(
                 SSL._lib.X509_VERIFY_PARAM_set1_host(param, tls_start.conn.sni, 0) == 1
             )
-            SSL._lib.SSL_set_verify(tls_start.ssl_conn._ssl, SSL.VERIFY_PEER, SSL._ffi.NULL)
 
     return tutils.reply(*args, side_effect=make_conn, **kwargs)
 
