@@ -3,6 +3,7 @@ Unreleased: mitmproxy next
 ** Full Changelog **
 
     * Add MsgPack content viewer (@tasn)
+    * Use `@charset` to decode CSS files if available (@prinzhorn)
     * Fix links to anticache docs in mitmweb and use HTTPS for links to documentation (@rugk)
     * Updated typing for WebsocketMessage.content (@prinzhorn)
 
