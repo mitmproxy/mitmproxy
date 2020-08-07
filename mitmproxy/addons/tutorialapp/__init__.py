@@ -35,7 +35,8 @@ def mitmproxy(step):
 
     return render_template(
         "mitmproxy/steps/" + step + ".html",
-        votes=votes
+        votes=votes,
+        step=step
     )
 
 

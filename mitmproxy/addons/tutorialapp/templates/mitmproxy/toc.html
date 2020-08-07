@@ -1,6 +1,10 @@
+<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+    mitmproxy Tutorial
+</h6>
+
 <ul class="nav flex-column">
     <li class="nav-item">
-        <a class="nav-link" href="/mitmproxy/overview">
+        <a class="nav-link{% if step == "overview" %} active{% endif %}" href="/mitmproxy/overview">
             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-bullseye" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M8 15A7 7 0 1 0 8 1a7 7 0 0 0 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
                 <path fill-rule="evenodd" d="M8 13A5 5 0 1 0 8 3a5 5 0 0 0 0 10zm0 1A6 6 0 1 0 8 2a6 6 0 0 0 0 12z"/>
@@ -11,7 +15,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/mitmproxy/user_interface">
+        <a class="nav-link{% if step == "user_interface" %} active{% endif %}" href="/mitmproxy/user_interface">
             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-window" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M14 2H2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1zM2 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H2z"/>
                 <path fill-rule="evenodd" d="M15 6H1V5h14v1z"/>
@@ -21,7 +25,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/mitmproxy/intercept_requests">
+        <a class="nav-link{% if step == "intercept_requests" %} active{% endif %}" href="/mitmproxy/intercept_requests">
             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-lightning" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09zM4.157 8.5H7a.5.5 0 0 1 .478.647L6.11 13.59l5.732-6.09H9a.5.5 0 0 1-.478-.647L9.89 2.41 4.157 8.5z"/>
             </svg>
@@ -29,7 +33,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/mitmproxy/modify_requests">
+        <a class="nav-link{% if step == "modify_requests" %} active{% endif %}" href="/mitmproxy/modify_requests">
             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-pencil" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M11.293 1.293a1 1 0 0 1 1.414 0l2 2a1 1 0 0 1 0 1.414l-9 9a1 1 0 0 1-.39.242l-3 1a1 1 0 0 1-1.266-1.265l1-3a1 1 0 0 1 .242-.391l9-9zM12 2l2 2-9 9-3 1 1-3 9-9z"/>
                 <path fill-rule="evenodd" d="M12.146 6.354l-2.5-2.5.708-.708 2.5 2.5-.707.708zM3 10v.5a.5.5 0 0 0 .5.5H4v.5a.5.5 0 0 0 .5.5H5v.5a.5.5 0 0 0 .5.5H6v-1.5a.5.5 0 0 0-.5-.5H5v-.5a.5.5 0 0 0-.5-.5H3z"/>
@@ -38,7 +42,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/mitmproxy/replay_requests">
+        <a class="nav-link{% if step == "replay_requests" %} active{% endif %}" href="/mitmproxy/replay_requests">
             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-clockwise" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path fill-rule="evenodd" d="M3.17 6.706a5 5 0 0 1 7.103-3.16.5.5 0 1 0 .454-.892A6 6 0 1 0 13.455 5.5a.5.5 0 0 0-.91.417 5 5 0 1 1-9.375.789z"/>
                 <path fill-rule="evenodd" d="M8.147.146a.5.5 0 0 1 .707 0l2.5 2.5a.5.5 0 0 1 0 .708l-2.5 2.5a.5.5 0 1 1-.707-.708L10.293 3 8.147.854a.5.5 0 0 1 0-.708z"/>
@@ -47,7 +51,7 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="/mitmproxy/whats_next">
+        <a class="nav-link{% if step == "whats_next" %} active{% endif %}" href="/mitmproxy/whats_next">
             <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-signpost" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                 <path d="M7 1.414V4h2V1.414a1 1 0 0 0-2 0z"/>
                 <path fill-rule="evenodd" d="M12.532 5H2v4h10.532l1.666-2-1.666-2zM2 4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h10.532a1 1 0 0 0 .768-.36l1.933-2.32a.5.5 0 0 0 0-.64L13.3 4.36a1 1 0 0 0-.768-.36H2z"/>

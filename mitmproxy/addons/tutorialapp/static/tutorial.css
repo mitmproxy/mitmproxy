@@ -32,6 +32,11 @@ h3, .h3 {
   border-left: 1px solid rgba(0, 0, 0, .1);
 }
 
+.sidebar-heading {
+  font-size: .75rem;
+  text-transform: uppercase;
+}
+
 .sidebar .nav-link {
   font-weight: 500;
   color: #333;
