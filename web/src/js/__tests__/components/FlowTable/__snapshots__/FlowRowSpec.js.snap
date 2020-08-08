@@ -39,6 +39,11 @@ exports[`FlowRow Component should render correctly 1`] = `
     200
   </td>
   <td
+    className="col-start"
+  >
+    ...
+  </td>
+  <td
     className="col-size"
   >
     14b

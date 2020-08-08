@@ -103,6 +103,8 @@ const sortKeyFuns = {
 
     StatusColumn: flow => flow.response && flow.response.status_code,
 
+    StartColumn: flow => flow.request && flow.request.timestamp_start,
+
     TimeColumn: flow => flow.response && flow.response.timestamp_end - flow.request.timestamp_start,
 
     SizeColumn: flow => {

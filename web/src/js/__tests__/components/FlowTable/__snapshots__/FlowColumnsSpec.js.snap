@@ -106,6 +106,14 @@ exports[`FlowColumns Components should render SizeColumn 1`] = `
 </td>
 `;
 
+exports[`FlowColumns Components should render StartColumn 1`] = `
+<td
+  className="col-start"
+>
+  ...
+</td>
+`;
+
 exports[`FlowColumns Components should render StatusColumn 1`] = `
 <td
   className="col-status"

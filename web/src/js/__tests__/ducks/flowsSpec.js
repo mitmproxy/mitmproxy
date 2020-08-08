@@ -217,6 +217,13 @@ describe('makeSort', () => {
         expect(sort(b, a)).toEqual(1)
     })
 
+    it('should be possible to sort by StartColumn', () => {
+        let sort = flowActions.makeSort({ column: 'StartColumn', desc: false }),
+            a    = { request: { timestamp_start: 8 } },
+            b    = { request: { timestamp_start: 9 } }
+        expect(sort(b, a)).toEqual(1)
+    })
+
     it('should be possible to sort by SizeColumn', () => {
         let sort = flowActions.makeSort({ column: 'SizeColumn', desc: true }),
             a    = { request: { contentLength: 1 }, response: { contentLength: 1 } },
