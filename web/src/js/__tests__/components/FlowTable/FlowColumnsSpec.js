@@ -106,9 +106,9 @@ describe('FlowColumns Components', () => {
         expect(tree).toMatchSnapshot()
     })
 
-    it('should render StartColumn', () => {
-        let startColumn = renderer.create(<Columns.StartColumn flow={tflow}/>),
-            tree = startColumn.toJSON()
+    it('should render TimeStampColumn', () => {
+        let TimeStampColumn = renderer.create(<Columns.TimeStampColumn flow={tflow}/>),
+            tree = TimeStampColumn.toJSON()
         expect(tree).toMatchSnapshot()
     })
 })

@@ -33,10 +33,10 @@ exports[`FlowTableHead Component should connect to state 1`] = `
     Status
   </th>
   <th
-    className="col-start"
+    className="col-timestamp"
     onClick={[Function]}
   >
-    Start
+    TimeStamp
   </th>
   <th
     className="col-size"
@@ -86,10 +86,10 @@ exports[`FlowTableHead Component should render correctly 1`] = `
     Status
   </th>
   <th
-    className="col-start"
+    className="col-timestamp"
     onClick={[Function]}
   >
-    Start
+    TimeStamp
   </th>
   <th
     className="col-size"

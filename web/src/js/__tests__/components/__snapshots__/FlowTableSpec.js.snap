@@ -45,10 +45,10 @@ exports[`FlowTable Component should render correctly 1`] = `
           Status
         </th>
         <th
-          className="col-start"
+          className="col-timestamp"
           onClick={[Function]}
         >
-          Start
+          TimeStamp
         </th>
         <th
           className="col-size"

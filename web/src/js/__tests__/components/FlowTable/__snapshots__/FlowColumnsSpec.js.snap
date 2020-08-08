@@ -106,14 +106,6 @@ exports[`FlowColumns Components should render SizeColumn 1`] = `
 </td>
 `;
 
-exports[`FlowColumns Components should render StartColumn 1`] = `
-<td
-  className="col-start"
->
-  ...
-</td>
-`;
-
 exports[`FlowColumns Components should render StatusColumn 1`] = `
 <td
   className="col-status"
@@ -142,6 +134,14 @@ exports[`FlowColumns Components should render TimeColumn 1`] = `
 exports[`FlowColumns Components should render TimeColumn 2`] = `
 <td
   className="col-time"
+>
+  ...
+</td>
+`;
+
+exports[`FlowColumns Components should render TimeStampColumn 1`] = `
+<td
+  className="col-start"
 >
   ...
 </td>

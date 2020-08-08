@@ -148,7 +148,7 @@ export function TimeColumn({ flow }) {
 TimeColumn.headerClass = 'col-time'
 TimeColumn.headerName = 'Time'
 
-export function StartColumn({ flow }) {
+export function TimeStampColumn({ flow }) {
     return (
         <td className="col-start">
             {flow.request.timestamp_start ? (
@@ -160,8 +160,8 @@ export function StartColumn({ flow }) {
     )
 }
 
-StartColumn.headerClass = 'col-start'
-StartColumn.headerName = 'Start'
+TimeStampColumn.headerClass = 'col-timestamp'
+TimeStampColumn.headerName = 'TimeStamp'
 
 export default [
     TLSColumn,
@@ -169,7 +169,7 @@ export default [
     PathColumn,
     MethodColumn,
     StatusColumn,
-    StartColumn,
+    TimeStampColumn,
     SizeColumn,
     TimeColumn,
 ]
