@@ -6,13 +6,8 @@ import * as modalActions from "./modal"
 
 export function onKeyDown(e) {
     //console.debug("onKeyDown", e)
-    if (e.ctrlKey || e.metaKey) {
-        return () => {
-        }
-    }
     let key      = e.keyCode,
         shiftKey = e.shiftKey
-    e.preventDefault()
     return (dispatch, getState) => {
 
         const flows = getState().flows,
@@ -124,9 +119,12 @@ export function onKeyDown(e) {
                 break
             }
 
-
+            // ignore all other keys
             default:
                 return
         }
+        
+        // prevent key press if it was handled
+        e.preventDefault()
     }
 }
