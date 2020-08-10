@@ -5,10 +5,10 @@ h3, .h3 {
 }
 
 .btn-group-xs > .btn, .btn-xs {
-	padding: .25rem .5rem;
-	font-size: .75rem;
-	line-height: 1.25;
-	border-radius: .2rem;
+  padding: .25rem .5rem;
+  font-size: .75rem;
+  line-height: 1.25;
+  border-radius: .2rem;
 }
 
 /*
@@ -193,4 +193,24 @@ nav.navbar {
       transform: scale(1);
       opacity: 0.0;
   }
+}
+
+/*
+ * asciinema annotations
+ */
+
+
+ .asciinema-wrapper, asciinema-player, .asciinema-player-wrapper {
+  display: inline-block;
+}
+.asciinema-wrapper {
+  position: relative;
+}
+
+.asciinema-wrapper .annotation {
+  position: absolute;
+  display: none;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.2);
+  padding: 8px;
 }
