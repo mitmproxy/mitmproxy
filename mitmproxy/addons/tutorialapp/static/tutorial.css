@@ -195,6 +195,27 @@ nav.navbar {
   }
 }
 
+
+.instructions-wrapper {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.instructions-wrapper ul, .instructions-wrapper ol {
+  list-style-position: inside;
+  padding-left: 0;
+}
+
+.instructions-wrapper li {
+  margin: 2px 0;
+  padding: 2px 0;
+}
+
+.instructions-wrapper li.active {
+  background-color: #ddd;
+}
+
 /*
  * asciinema annotations
  */
@@ -212,5 +233,6 @@ nav.navbar {
   display: none;
   color: #fff;
   border: 1px solid rgba(255,255,255,.2);
-  padding: 8px;
+  background-color: rgba(255,255,255,0.15);
+  padding: 8px 20px;
 }

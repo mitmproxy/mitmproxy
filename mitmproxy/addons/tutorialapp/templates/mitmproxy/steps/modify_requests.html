@@ -13,6 +13,44 @@
     Yet to be written.
 </p>
 
+<div class="instructions-wrapper">
+    <h3 class="mt-0 pb-2 border-bottom">
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-person-lines-fill" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7 1.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm-2-3a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5zm2 9a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/>
+          </svg>
+      Instructions
+    </h3>
+    
+    <ol>
+        <li data-from="1" data-to="5" >Start mitmproxy.</li>
+        <li data-from="6" data-to="14" >Generate some flows.</li>
+        <li data-from="15" data-to="19" >Press <kbd>i</kbd> to prepopulate mitmproxy's command prompt with <code>set intercept ''</code>.</li>
+        <li data-from="19" data-to="26">Enter <kbd>~u /vote/</kbd> between the quotes of the <code>set intercept</code> command and press <kbd>ENTER</kbd>.</li>
+        <li data-from="28" data-to="45" >Submit a vote in the voting app on the right.</li>
+    </ol>
+    <hr>
+    <div class="asciinema-wrapper">
+        <asciinema-player id="player" src="/static/intercept_config.cast" cols="128" rows="33" font-size="13px" poster="npt:0:14" preload>
+            <strong>hi there</strong>
+        </asciinema-player>
+        <div class="annotation" data-from="1" data-to="5" style="left: 5%; top: 85%;">
+            1. Start mitmproxy.
+        </div>
+        <div class="annotation" data-from="6" data-to="14" style="left: 5%; top: 85%;">
+            2. Generate some flows.
+        </div>
+        <div class="annotation" data-from="15" data-to="19" style="left: 5%; top: 85%;">
+            3. Press <kbd>i</kbd> to prepopulate mitmproxy's command prompt with <code>set intercept ''</code>.
+        </div>
+        <div class="annotation" data-from="19" data-to="26" style="left: 5%; top: 85%;">
+            4. Enter <kbd>~u /vote/</kbd> between the quotes of the <code>set intercept</code> command and press <kbd>ENTER</kbd>.
+        </div>
+        <div class="annotation" data-from="28" data-to="45" style="left: 5%; top: 85%;">
+            5. Submit a vote in the voting app on the right.
+        </div>
+    </div>
+</div>
+
 <hr>
 
 <p class="d-flex">

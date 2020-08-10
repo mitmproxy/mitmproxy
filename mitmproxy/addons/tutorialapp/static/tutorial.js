@@ -22,10 +22,15 @@ function playEvent(e) {
     var playStartPosition = this.currentTime;
     var playStartDate = new Date();
     var annotations = this.annotations;
+    var instructions = this.instructions;
 
     timer = setInterval(function(){
         var now = new Date();
-        updateAnnotations(playStartPosition + (now - playStartDate) / 1000, annotations);
+        updateAnnotations(
+            playStartPosition + (now - playStartDate) / 1000,
+            annotations,
+            instructions
+        );
     }, 250);
 }
 
@@ -36,13 +41,21 @@ function pauseEvent(e) {
     }
 }
 
-function updateAnnotations(playedTimeSecs, annotations){
+function updateAnnotations(playedTimeSecs, annotations, instructions){
     for(let i = 0; i < annotations.length; i++) {
         if (annotations[i].getAttribute("data-from") < playedTimeSecs && annotations[i].getAttribute("data-to") > playedTimeSecs) {
             annotations[i].style.display = "block";
         }
         else {
             annotations[i].style.display = "none";
+        }
+    }
+    for(let i = 0; i < instructions.length; i++) {
+        if (instructions[i].getAttribute("data-from") < playedTimeSecs && instructions[i].getAttribute("data-to") > playedTimeSecs) {
+            instructions[i].classList.add("active");
+        }
+        else {
+            instructions[i].classList.remove("active");
         }
     }
 }
@@ -56,6 +69,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     for(let i = 0; i < asciiPlayers.length; i++) {
         asciiPlayers[i].annotations = asciiPlayers[i].parentElement.getElementsByClassName("annotation");
+        asciiPlayers[i].instructions = asciiPlayers[i].parentElement.parentElement.getElementsByTagName("li");
         asciiPlayers[i].addEventListener("play", playEvent);
         asciiPlayers[i].addEventListener('pause', pauseEvent);
     }
