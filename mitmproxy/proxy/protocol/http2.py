@@ -8,7 +8,7 @@ from h2 import connection
 from h2 import events
 import queue
 
-from mitmproxy import connections  # noqa
+from mitmproxy import connections, flow  # noqa
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy.proxy.protocol import base
@@ -725,6 +725,6 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         except exceptions.SetServerNotAllowedException as e:  # pragma: no cover
             self.log("Changing the Host server for HTTP/2 connections not allowed: {}".format(e), "info")
         except exceptions.Kill:  # pragma: no cover
-            self.log("Connection killed", "info")
+            self.log(flow.Error.KILLED_MESSAGE, "info")
 
         self.kill()
