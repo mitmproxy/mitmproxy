@@ -72,6 +72,7 @@ setup(
         "kaitaistruct>=0.7,<0.9",
         "ldap3>=2.6.1,<2.8",
         "msgpack>=1.0.0, <1.1.0",
+        "native-web-app>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
         "protobuf>=3.6.0, <3.12",
         "pyasn1>=0.3.1,<0.5",

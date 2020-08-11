@@ -1,5 +1,4 @@
-import webbrowser
-
+import native_web_app
 from mitmproxy import ctx
 
 
@@ -25,37 +24,9 @@ class WebAddon:
     def running(self):
         if hasattr(ctx.options, "web_open_browser") and ctx.options.web_open_browser:
             web_url = "http://{}:{}/".format(ctx.options.web_host, ctx.options.web_port)
-            success = open_browser(web_url)
-            if not success:
+            try:
+                native_web_app.open(web_url)
+            except Exception:
                 ctx.log.info(
                     "No web browser found. Please open a browser and point it to {}".format(web_url),
                 )
-
-
-def open_browser(url: str) -> bool:
-    """
-    Open a URL in a browser window.
-    In contrast to webbrowser.open, we limit the list of suitable browsers.
-    This gracefully degrades to a no-op on headless servers, where webbrowser.open
-    would otherwise open lynx.
-
-    Returns:
-        True, if a browser has been opened
-        False, if no suitable browser has been found.
-    """
-    browsers = (
-        "windows-default", "macosx",
-        "wslview %s",
-        "x-www-browser %s", "gnome-open %s",
-        "google-chrome", "chrome", "chromium", "chromium-browser",
-        "firefox", "opera", "safari",
-    )
-    for browser in browsers:
-        try:
-            b = webbrowser.get(browser)
-        except webbrowser.Error:
-            pass
-        else:
-            if b.open(url):
-                return True
-    return False
