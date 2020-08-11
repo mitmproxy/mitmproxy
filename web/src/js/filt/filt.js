@@ -1929,25 +1929,25 @@ module.exports = (function() {
     function body(regex){
         regex = new RegExp(regex, "i");
         function bodyFilter(flow){
-            return true;
+            return (flow.request && regex.test(flow.request.body)) || (flow.response && regex.test(flow.response.body));
         }
-        bodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+        bodyFilter.desc = "body matches " + regex;
         return bodyFilter;
     }
     function requestBody(regex){
         regex = new RegExp(regex, "i");
         function requestBodyFilter(flow){
-            return true;
+            return flow.request && regex.test(flow.request.body);
         }
-        requestBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+        requestBodyFilter.desc = "request body matches " + regex;
         return requestBodyFilter;
     }
     function responseBody(regex){
         regex = new RegExp(regex, "i");
         function responseBodyFilter(flow){
-            return true;
+            return flow.response && regex.test(flow.response.body);
         }
-        responseBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+        responseBodyFilter.desc = "response body matches " + regex;
         return responseBodyFilter;
     }
     function domain(regex){

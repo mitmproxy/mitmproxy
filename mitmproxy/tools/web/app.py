@@ -54,13 +54,16 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
     if isinstance(flow, http.HTTPFlow):
         content_length: Optional[int]
         content_hash: Optional[str]
+        body: Optional[str]
         if flow.request:
             if flow.request.raw_content:
                 content_length = len(flow.request.raw_content)
                 content_hash = hashlib.sha256(flow.request.raw_content).hexdigest()
+                body = flow.request.text
             else:
                 content_length = None
                 content_hash = None
+                body = None
             f["request"] = {
                 "method": flow.request.method,
                 "scheme": flow.request.scheme,
@@ -75,14 +78,17 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "timestamp_end": flow.request.timestamp_end,
                 "is_replay": flow.is_replay == "request",  # TODO: remove, use flow.is_replay instead.
                 "pretty_host": flow.request.pretty_host,
+                "body": body,
             }
         if flow.response:
             if flow.response.raw_content:
                 content_length = len(flow.response.raw_content)
                 content_hash = hashlib.sha256(flow.response.raw_content).hexdigest()
+                body = flow.response.text
             else:
                 content_length = None
                 content_hash = None
+                body = None
             f["response"] = {
                 "http_version": flow.response.http_version,
                 "status_code": flow.response.status_code,
@@ -93,6 +99,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "timestamp_start": flow.response.timestamp_start,
                 "timestamp_end": flow.response.timestamp_end,
                 "is_replay": flow.is_replay == "response",  # TODO: remove, use flow.is_replay instead.
+                "body": body,
             }
             if flow.response.data.trailers:
                 f["response"]["trailers"] = tuple(flow.response.data.trailers.items(True))

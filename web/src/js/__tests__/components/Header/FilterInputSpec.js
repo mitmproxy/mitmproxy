@@ -33,6 +33,15 @@ describe('FilterInput Component', () => {
         filterInput.state.value = '~u foo'
         expect(filterInput.getDesc()).toEqual('url matches /foo/i')
 
+        filterInput.state.value = '~b foo'
+        expect(filterInput.getDesc()).toEqual('body matches /foo/i')
+
+        filterInput.state.value = '~bq foo'
+        expect(filterInput.getDesc()).toEqual('request body matches /foo/i')
+
+        filterInput.state.value = '~bs foo'
+        expect(filterInput.getDesc()).toEqual('response body matches /foo/i')
+
         filterInput.state.value = '~foo bar'
         expect(filterInput.getDesc()).toEqual('SyntaxError: Expected filter expression but \"~\" found.')
     })
