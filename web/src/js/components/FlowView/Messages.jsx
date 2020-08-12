@@ -12,7 +12,6 @@ import ValueEditor from '../ValueEditor/ValueEditor'
 import HideInStatic from '../common/HideInStatic'
 
 import Headers from './Headers'
-import Trailers from './Trailers'
 import { startEdit, updateEdit } from '../../ducks/ui/flow'
 import * as FlowActions from '../../ducks/flows'
 import ToggleEdit from './ToggleEdit'
@@ -108,10 +107,11 @@ export class Request extends Component {
                         message={flow.request}/>
                     
                     <hr/>
-                    <Trailers
+                    <Headers
                         message={flow.request}
                         readonly={!isEdit}
                         onChange={trailers => updateFlow({ request: { trailers } })}
+                        type='trailers'
                     />
                 </article>
                 <HideInStatic>
@@ -159,10 +159,11 @@ export class Response extends Component {
                         message={flow.response}
                     />
                     <hr/>
-                    <Trailers
+                    <Headers
                         message={flow.response}
                         readonly={!isEdit}
                         onChange={trailers => updateFlow({ response: { trailers } })}
+                        type='trailers'
                     />
                 </article>
                 <HideInStatic>
