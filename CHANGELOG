@@ -8,6 +8,7 @@ Unreleased: mitmproxy next
     * Updated typing for WebsocketMessage.content (@prinzhorn)
     * Prevent transparent mode from connecting to itself in the basic cases (@prinzhorn)
     * Display HTTP trailers in mitmweb (@sanlengjingvv)
+    * Revamp onboarding app (@mhils)
 
     * --- TODO: add new PRs above this line ---
 

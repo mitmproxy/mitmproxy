@@ -1,35 +1,29 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
     <title>mitmproxy</title>
     <link href="/static/bootstrap.min.css" rel="stylesheet">
     <link href="/static/mitmproxy.css" rel="stylesheet">
-    <link href="/static/fontawesome/css/font-awesome.min.css" rel="stylesheet">
     <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon"/>
-  </head>
+</head>
 
-  <body>
-<div class="navbar navbar-default" role="navigation">
+<body>
+<nav class="navbar navbar-dark bg-dark mb-3">
     <div class="container">
         <div class="navbar-header">
-          <a class="navbar-brand" href="#">
-                       <img height="20px" src="static/images/mitmproxy-long.png"/>
-          </a>
+            <div class="navbar-brand">
+                <img src="static/images/mitmproxy-long.png" height="30" alt="mitmproxy logo" class="align-top"/>
+            </div>
         </div>
     </div>
-</div>
-
+</nav>
 <div class="container">
     {% block content %}
     {% endblock %}
 </div>
 
-  </body>
+</body>
 </html>
