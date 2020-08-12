@@ -305,6 +305,10 @@ class FlowHandler(RequestHandler):
                             request.headers.clear()
                             for header in v:
                                 request.headers.add(*header)
+                        elif k == "trailers":
+                            request.trailers.clear()
+                            for trailer in v:
+                                request.trailers.add(*trailer)
                         elif k == "content":
                             request.text = v
                         else:
@@ -321,6 +325,10 @@ class FlowHandler(RequestHandler):
                             response.headers.clear()
                             for header in v:
                                 response.headers.add(*header)
+                        elif k == "trailers":
+                            response.trailers.clear()
+                            for trailer in v:
+                                response.trailers.add(*trailer)
                         elif k == "content":
                             response.text = v
                         else:

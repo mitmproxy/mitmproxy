@@ -46,10 +46,15 @@ export default class Headers extends Component {
     static propTypes = {
         onChange: PropTypes.func.isRequired,
         message: PropTypes.object.isRequired,
+        type: PropTypes.string.isRequired,
+    }
+
+    static defaultProps = {
+        type: 'headers',
     }
 
     onChange(row, col, val) {
-        const nextHeaders = _.cloneDeep(this.props.message.headers)
+        const nextHeaders = _.cloneDeep(this.props.message[this.props.type])
 
         nextHeaders[row][col] = val
 
@@ -75,7 +80,7 @@ export default class Headers extends Component {
     }
 
     onTab(row, col, e) {
-        const headers = this.props.message.headers
+        const headers = this.props.message[this.props.type]
 
         if (col === 0) {
             this._nextSel = `${row}-value`
@@ -88,7 +93,7 @@ export default class Headers extends Component {
 
         e.preventDefault()
 
-        const nextHeaders = _.cloneDeep(this.props.message.headers)
+        const nextHeaders = _.cloneDeep(this.props.message[this.props.type])
         nextHeaders.push(['Name', 'Value'])
         this.props.onChange(nextHeaders)
         this._nextSel = `${row + 1}-key`
@@ -113,37 +118,45 @@ export default class Headers extends Component {
 
     render() {
         const { message, readonly } = this.props
-
-        return (
-            <table className="header-table">
-                <tbody>
-                {message.headers.map((header, i) => (
-                    <tr key={i}>
-                        <td className="header-name">
-                            <HeaderEditor
-                                ref={`${i}-key`}
-                                content={header[0]}
-                                readonly={readonly}
-                                onDone={val => this.onChange(i, 0, val)}
-                                onRemove={event => this.onRemove(i, 0, event)}
-                                onTab={event => this.onTab(i, 0, event)}
-                            />
-                            <span className="header-colon">:</span>
-                        </td>
-                        <td className="header-value">
-                            <HeaderEditor
-                                ref={`${i}-value`}
-                                content={header[1]}
-                                readonly={readonly}
-                                onDone={val => this.onChange(i, 1, val)}
-                                onRemove={event => this.onRemove(i, 1, event)}
-                                onTab={event => this.onTab(i, 1, event)}
-                            />
-                        </td>
-                    </tr>
-                ))}
-                </tbody>
-            </table>
-        )
+        if (message[this.props.type]) {
+            return (
+                <table className="header-table">
+                    <tbody>
+                    {message[this.props.type].map((header, i) => (
+                        <tr key={i}>
+                            <td className="header-name">
+                                <HeaderEditor
+                                    ref={`${i}-key`}
+                                    content={header[0]}
+                                    readonly={readonly}
+                                    onDone={val => this.onChange(i, 0, val)}
+                                    onRemove={event => this.onRemove(i, 0, event)}
+                                    onTab={event => this.onTab(i, 0, event)}
+                                />
+                                <span className="header-colon">:</span>
+                            </td>
+                            <td className="header-value">
+                                <HeaderEditor
+                                    ref={`${i}-value`}
+                                    content={header[1]}
+                                    readonly={readonly}
+                                    onDone={val => this.onChange(i, 1, val)}
+                                    onRemove={event => this.onRemove(i, 1, event)}
+                                    onTab={event => this.onTab(i, 1, event)}
+                                />
+                            </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+            )
+        } else {
+            return (
+                <table className="header-table">
+                    <tbody>
+                    </tbody>
+                </table>
+            )  
+        }
     }
 }
