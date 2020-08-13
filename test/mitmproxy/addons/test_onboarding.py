@@ -16,7 +16,7 @@ class TestApp(tservers.HTTPProxyTest):
             tctx.configure(ob)
             assert self.app("/").status_code == 200
 
-    @pytest.mark.parametrize("ext", ["pem", "p12"])
+    @pytest.mark.parametrize("ext", ["pem", "p12", "cer"])
     @pytest.mark.asyncio
     async def test_cert(self, ext):
         ob = onboarding.Onboarding()
@@ -26,7 +26,7 @@ class TestApp(tservers.HTTPProxyTest):
             assert resp.status_code == 200
             assert resp.content
 
-    @pytest.mark.parametrize("ext", ["pem", "p12"])
+    @pytest.mark.parametrize("ext", ["pem", "p12", "cer"])
     @pytest.mark.asyncio
     async def test_head(self, ext):
         ob = onboarding.Onboarding()

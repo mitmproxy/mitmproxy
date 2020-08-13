@@ -24,6 +24,11 @@ def p12():
     return read_cert("p12", "application/x-pkcs12")
 
 
+@app.route('/cert/cer')
+def cer():
+    return read_cert("cer", "application/x-x509-ca-cert")
+
+
 def read_cert(ext, content_type):
     filename = CONF_BASENAME + f"-ca-cert.{ext}"
     p = os.path.join(app.config["CONFDIR"], filename)
