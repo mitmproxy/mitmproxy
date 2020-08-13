@@ -28,7 +28,7 @@ class ASGIApp:
         assert flow.reply
         if (flow.request.pretty_host, flow.request.port) == (self.host, self.port) and not flow.reply.has_message:
             flow.reply.take()  # pause hook completion
-            asyncio.create_task(serve(self.asgi_app, flow))
+            asyncio.ensure_future(serve(self.asgi_app, flow))
 
 
 class WSGIApp(ASGIApp):
