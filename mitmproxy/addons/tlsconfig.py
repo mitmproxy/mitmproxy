@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Tuple
+from typing import Optional, Tuple, cast
 
 from OpenSSL import SSL, crypto
 
@@ -17,12 +17,11 @@ def alpn_select_callback(conn: SSL.Connection, options):
     if server_alpn and server_alpn in options:
         return server_alpn
     http_alpns = tls.HTTP_ALPNS if http2 else tls.HTTP1_ALPNS
-    for alpn in http_alpns:
-        if alpn in options:
+    for alpn in options:  # client sends in order of preference, so we are nice and respect that.
+        if alpn in http_alpns:
             return alpn
     else:
-        # FIXME: pyOpenSSL requires that an ALPN is negotiated, we can't return SSL_TLSEXT_ERR_NOACK.
-        return options[0]
+        return SSL.NO_OVERLAPPING_PROTOCOLS
 
 
 class TlsConfig:
@@ -34,7 +33,7 @@ class TlsConfig:
     def get_cert(self, context: context.Context) -> Tuple[certs.Cert, SSL.PKey, str]:
         # FIXME
         return self.certstore.get_cert(
-            context.client.sni, [context.client.sni]
+            context.client.sni or b"localhost", [context.client.sni or b"localhost"]
         )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
@@ -85,19 +84,18 @@ class TlsConfig:
 
     def create_proxy_server_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
         client = tls_start.context.client
-        server: context.Server = tls_start.conn
+        server = cast(context.Server, tls_start.conn)
 
         if server.sni is True:
             server.sni = client.sni or server.address[0].encode()
 
         if not server.alpn_offers:
-            if client.alpn:
-                server.alpn_offers = [client.alpn]
-            elif client.alpn_offers:
-                server.alpn_offers = client.alpn_offers
-
-        # FIXME hardcode
-        server.alpn_offers = tls.HTTP1_ALPNS
+            if client.alpn_offers:
+                server.alpn_offers = tuple(client.alpn_offers)
+            elif ctx.options.http2:
+                server.alpn_offers = tls.HTTP_ALPNS
+            else:
+                server.alpn_offers = tls.HTTP1_ALPNS
 
         # We pass through the list of ciphers send by the client, because some HTTP/2 servers
         # will select a non-HTTP/2 compatible cipher from our default list and then hang up

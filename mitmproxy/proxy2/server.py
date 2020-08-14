@@ -211,7 +211,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.log(f"mitmproxy has crashed!\n{traceback.format_exc()}", level="error")
 
     def close_our_end(self, connection):
-        assert connection.state & ConnectionState.CAN_WRITE
+        if connection.state is ConnectionState.CLOSED:
+            return
         self.log(f"shutting down {connection}", "debug")
         try:
             self.transports[connection].writer.write_eof()
@@ -247,27 +248,36 @@ class SimpleConnectionHandler(ConnectionHandler):
 
     def log(self, message: str, level: str = "info"):
         if "Hook" not in message:
-            print(message, file=sys.stderr if level in ("error", "warn") else sys.stdout)
+            pass # print(message, file=sys.stderr if level in ("error", "warn") else sys.stdout)
 
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
     opts = moptions.Options()
+    # options duplicated here to simplify testing setup
     opts.add_option(
         "connection_strategy", str, "lazy",
         "Determine when server connections should be established.",
         choices=("eager", "lazy")
     )
-    opts.mode = "regular"
+    opts.add_option(
+        "keep_host_header", bool, False,
+        """
+        Reverse Proxy: Keep the original host header instead of rewriting it
+        to the reverse proxy target.
+        """
+    )
+    opts.mode = "reverse:http://localhost:3000/"
 
 
     async def handle(reader, writer):
         layer_stack = [
-            lambda ctx: layers.ServerTLSLayer(ctx),
-            lambda ctx: layers.HttpLayer(ctx, HTTPMode.regular),
-            lambda ctx: setattr(ctx.server, "tls", True) or layers.ServerTLSLayer(ctx),
-            lambda ctx: layers.ClientTLSLayer(ctx),
+            #lambda ctx: layers.ServerTLSLayer(ctx),
+            #lambda ctx: layers.HttpLayer(ctx, HTTPMode.regular),
+            #lambda ctx: setattr(ctx.server, "tls", True) or layers.ServerTLSLayer(ctx),
+            #lambda ctx: layers.ClientTLSLayer(ctx),
+            lambda ctx: layers.modes.ReverseProxy(ctx),
             lambda ctx: layers.HttpLayer(ctx, HTTPMode.transparent)
         ]
 
