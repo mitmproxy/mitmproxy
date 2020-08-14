@@ -105,6 +105,14 @@ export class Request extends Component {
                         flow={flow}
                         onContentChange={content => updateFlow({ request: {content}})}
                         message={flow.request}/>
+                    
+                    <hr/>
+                    <Headers
+                        message={flow.request}
+                        readonly={!isEdit}
+                        onChange={trailers => updateFlow({ request: { trailers } })}
+                        type='trailers'
+                    />
                 </article>
                 <HideInStatic>
                 {!noContent &&
@@ -149,6 +157,13 @@ export class Response extends Component {
                         flow={flow}
                         onContentChange={content => updateFlow({ response: {content}})}
                         message={flow.response}
+                    />
+                    <hr/>
+                    <Headers
+                        message={flow.response}
+                        readonly={!isEdit}
+                        onChange={trailers => updateFlow({ response: { trailers } })}
+                        type='trailers'
                     />
                 </article>
                 <HideInStatic>

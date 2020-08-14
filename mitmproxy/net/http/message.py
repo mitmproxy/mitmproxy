@@ -194,6 +194,12 @@ class Message(serializable.Serializable):
             if meta_charset:
                 enc = meta_charset.group(1).decode("ascii", "ignore")
         if not enc:
+            if "text/css" in self.headers.get("content-type", ""):
+                # @charset rule must be the very first thing.
+                css_charset = re.match(rb"""@charset "([^"]+)";""", content)
+                if css_charset:
+                    enc = css_charset.group(1).decode("ascii", "ignore")
+        if not enc:
             enc = "latin-1"
         # Use GB 18030 as the superset of GB2312 and GBK to fix common encoding problems on Chinese websites.
         if enc.lower() in ("gb2312", "gbk"):

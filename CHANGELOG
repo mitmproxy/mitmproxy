@@ -3,9 +3,14 @@ Unreleased: mitmproxy next
 ** Full Changelog **
 
     * Add MsgPack content viewer (@tasn)
+    * Use `@charset` to decode CSS files if available (@prinzhorn)
     * Fix links to anticache docs in mitmweb and use HTTPS for links to documentation (@rugk)
     * Updated typing for WebsocketMessage.content (@prinzhorn)
     * Add option `console_strip_trailing_newlines`, and no longer strip trailing newlines by default (@capt8bit)
+    * Prevent transparent mode from connecting to itself in the basic cases (@prinzhorn)
+    * Display HTTP trailers in mitmweb (@sanlengjingvv)
+    * Revamp onboarding app (@mhils)
+    * Add ASGI support for embedded apps (@mhils)
 
     * --- TODO: add new PRs above this line ---
 

@@ -199,6 +199,111 @@ exports[`Request Component should render correctly 1`] = `
       </tbody>
     </table>
     <hr />
+    <hr />
+    <table
+      className="header-table"
+    >
+      <tbody>
+        <tr>
+          <td
+            className="header-name"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "trailer",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+            <span
+              className="header-colon"
+            >
+              :
+            </span>
+          </td>
+          <td
+            className="header-value"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "qvalue",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+          </td>
+        </tr>
+        <tr>
+          <td
+            className="header-name"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "content-length",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+            <span
+              className="header-colon"
+            >
+              :
+            </span>
+          </td>
+          <td
+            className="header-value"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "7",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </article>
   <footer>
     <div
@@ -462,6 +567,111 @@ exports[`Response Component should render correctly 1`] = `
       </tbody>
     </table>
     <hr />
+    <hr />
+    <table
+      className="header-table"
+    >
+      <tbody>
+        <tr>
+          <td
+            className="header-name"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "trailer",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+            <span
+              className="header-colon"
+            >
+              :
+            </span>
+          </td>
+          <td
+            className="header-value"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "qvalue",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+          </td>
+        </tr>
+        <tr>
+          <td
+            className="header-name"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "content-length",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+            <span
+              className="header-colon"
+            >
+              :
+            </span>
+          </td>
+          <td
+            className="header-value"
+          >
+            <div
+              className="inline-input readonly"
+              contentEditable={undefined}
+              dangerouslySetInnerHTML={
+                Object {
+                  "__html": "7",
+                }
+              }
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onInput={[Function]}
+              onKeyDown={[Function]}
+              onMouseDown={[Function]}
+              onPaste={[Function]}
+              tabIndex={undefined}
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </article>
   <footer>
     <div

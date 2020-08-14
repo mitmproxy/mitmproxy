@@ -58,7 +58,7 @@ describe('Request Component', () => {
     })
 
     it('should handle change on flow request header', () => {
-        let headers = TestUtils.findRenderedComponentWithType(provider, Headers)
+        let headers = TestUtils.scryRenderedComponentsWithType(provider, Headers).filter(headers => headers.props.type === 'headers')[0]
         headers.props.onChange('foo')
         expect(store.getActions()).toEqual([updateEdit({ request: { headers: 'foo' }})])
     })
@@ -115,7 +115,7 @@ describe('Response Component', () => {
     })
 
     it('should handle change on flow response headers', () => {
-        let headers = TestUtils.findRenderedComponentWithType(provider, Headers)
+        let headers = TestUtils.scryRenderedComponentsWithType(provider, Headers).filter(headers => headers.props.type === 'headers')[0]
         headers.props.onChange('foo')
         expect(store.getActions()).toEqual([updateEdit( { response: { headers: 'foo' }})])
     })
