@@ -102,7 +102,7 @@ setup(
             "pytest-asyncio>=0.14,<0.15",
             "pytest-cov>=2.7.1,<3",
             "pytest-timeout>=1.3.3,<2",
-            "pytest-xdist>=1.29,<2",
+            "pytest-xdist>=2.0,<2.1",
             "pytest>=6.0,<6.1",
             "requests>=2.9.1,<3",
             "tox>=3.19,<3.20",
