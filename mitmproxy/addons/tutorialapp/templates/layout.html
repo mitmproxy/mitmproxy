@@ -10,25 +10,32 @@
     <link href="/static/bootstrap.min.css" rel="stylesheet">
     <link href="/static/asciinema-player.css" rel="stylesheet">
     <link href="/static/tutorial.css" rel="stylesheet">
-    
+
     <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon"/>
   </head>
 
   <body>
     <nav class="navbar navbar-dark bg-dark navbar-expand-md  flex-md-nowrap p-0 shadow">
       <a class="navbar-brand col-md-2 mr-0" href="http://tutorial.mitm.it/"><img height="20px" src="/static/images/mitmproxy-long.png"> </a>
-      
-      <ul class="navbar-nav px-3 mr-sm-auto">
-        <li class="nav-item text-nowrap">
-          <a class="nav-link" href="/mitmproxy/overview">mitmproxy Tutorial</a>
-        </li>
-        <li class="nav-item text-nowrap">
-          <a class="nav-link" href="/mitmweb/overview">mitmweb Tutorial</a>
+
+      <ul class="navbar-nav mr-auto px-3">
+        <li class="nav-item text-nowrap mr-1">
+          <div class="dropdown">
+            <a class="btn btn-outline-primary btn-sm dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Select your Tool
+            </a>
+
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+              <a class="dropdown-item" href="/mitmproxy/">mitmproxy</a>
+              <a class="dropdown-item" href="/mitmweb/">mitmweb</a>
+            </div>
+          </div>
         </li>
       </ul>
+
       <ul class="navbar-nav px-3">
         <li class="nav-item text-nowrap">
-          <a class="nav-link" href="https://docs.mitmproxy.org/stable/" target="_blank">Open documentation</a>
+          <a class="btn btn-outline-primary btn-sm" href="https://docs.mitmproxy.org/stable/" target="_blank">Open documentation</a>
         </li>
       </ul>
     </nav>

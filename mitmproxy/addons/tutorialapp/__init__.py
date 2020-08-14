@@ -27,22 +27,18 @@ steps = [
 def index():
     return redirect("/mitmproxy")
 
-
-@app.route('/mitmproxy/<step>')
-def mitmproxy(step):
+@app.route('/<tool>/', defaults={"step": None})
+@app.route('/<tool>/<step>')
+def mitmproxy(tool, step):
     if not step or step not in steps:
         step = steps[0]
 
     return render_template(
-        "mitmproxy/steps/" + step + ".html",
+        tool + "/steps/" + step + ".html",
+        tool=tool,
         votes=votes,
         step=step
     )
-
-
-@app.route('/mitmweb')
-def mitmweb():
-    return render_template("mitmweb/index.html", votes=votes)
 
 @app.route('/votes')
 def get_votes():
