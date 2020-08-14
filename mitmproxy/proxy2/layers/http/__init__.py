@@ -25,17 +25,11 @@ from ._http2 import Http2Client, Http2Server
 def validate_request(mode, request) -> typing.Optional[str]:
     if request.scheme not in ("http", "https", ""):
         return f"Invalid request scheme: {request.scheme}"
-    if mode is HTTPMode.transparent:
-        if request.first_line_format == "authority":
-            return (
-                f"mitmproxy received an HTTP CONNECT request even though it is not running in regular/upstream mode. "
-                f"This usually indicates a misconfiguration, please see the mitmproxy mode documentation for details."
-            )
-        if request.first_line_format == "absolute":
-            return (
-                f"mitmproxy received an absolute-form HTTP request even though it is not running in regular/upstream mode. "
-                f"This usually indicates a misconfiguration, please see the mitmproxy mode documentation for details."
-            )
+    if mode is HTTPMode.transparent and request.method == "CONNECT":
+        return (
+            f"mitmproxy received an HTTP CONNECT request even though it is not running in regular/upstream mode. "
+            f"This usually indicates a misconfiguration, please see the mitmproxy mode documentation for details."
+        )
     return None
 
 
@@ -150,11 +144,6 @@ class HttpStream(layer.Layer):
             # We need to extract destination information from the host header.
             try:
                 host, port = url.parse_authority(self.flow.request.host_header or "", check=True)
-                if port is None:
-                    port = 443 if self.context.client.tls else 80
-                self.flow.request.data.host = host
-                self.flow.request.data.port = port
-                self.flow.request.scheme = "https" if self.context.client.tls else "http"
             except ValueError:
                 self.flow.response = http.HTTPResponse.make(
                     400,
@@ -162,6 +151,12 @@ class HttpStream(layer.Layer):
                 )
                 self.client_state = self.state_errored
                 return (yield from self.send_response())
+            else:
+                if port is None:
+                    port = 443 if self.context.client.tls else 80
+                self.flow.request.data.host = host
+                self.flow.request.data.port = port
+                self.flow.request.scheme = "https" if self.context.client.tls else "http"
 
         if self.mode is HTTPMode.regular and not self.flow.request.is_http2:
             # Set the request target to origin-form for HTTP/1, some servers don't support absolute-form requests.

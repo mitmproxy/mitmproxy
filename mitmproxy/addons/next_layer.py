@@ -108,7 +108,8 @@ class NextLayer:
         # 2. Check for TLS
         if client_tls:
             # client tls requires a server tls layer as parent layer
-            if isinstance(top_layer, layers.ServerTLSLayer):
+            # reverse proxy mode manages this itself.
+            if isinstance(top_layer, layers.ServerTLSLayer) or ctx.options.mode.startswith("reverse:"):
                 return layers.ClientTLSLayer(context)
             else:
                 return layers.ServerTLSLayer(context)
