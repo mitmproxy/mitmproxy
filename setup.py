@@ -74,7 +74,7 @@ setup(
         "ldap3>=2.8,<2.9",
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
-        "protobuf>=3.12,<3.13",
+        "protobuf>=3.13,<3.14",
         "pyasn1>=0.3.1,<0.5",
         "pyOpenSSL>=19.1.0,<19.2",
         "pyparsing>=2.4.2,<2.5",
