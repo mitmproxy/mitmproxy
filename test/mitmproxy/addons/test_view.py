@@ -498,6 +498,71 @@ def test_focus_follow():
         assert v.focus.flow.request.timestamp_start == 6
 
 
+def test_focus_follow_steal():
+    v = view.View()
+    with taddons.context(v) as tctx:
+        console_addon = consoleaddons.ConsoleAddon(tctx.master)
+        tctx.configure(console_addon)
+        tctx.configure(v, console_focus_follow=True, console_focus_follow_steal=False, view_filter="~m get")
+
+        v.add([tft(start=5)])
+        assert v.focus.index == 0
+
+        v.add([tft(start=7)])
+        assert v.focus.index == 1
+        assert v.focus.flow.request.timestamp_start == 7
+
+        # Move focus to the first view
+        v.focus.index = 0
+
+        mod = tft(method="put", start=8)
+        v.add([mod])
+        # Focus should not change
+        assert v.focus.index == 0
+        assert v.focus.flow.request.timestamp_start == 5
+
+        # Move focus to the last flow
+        v.focus.index = 1
+
+        mod.request.method = "GET"
+        v.update([mod])
+        assert v.focus.index == 2
+        assert v.focus.flow.request.timestamp_start == 8
+
+
+def test_focus_follow_steal_reversed():
+    v = view.View()
+    with taddons.context(v) as tctx:
+        console_addon = consoleaddons.ConsoleAddon(tctx.master)
+        tctx.configure(console_addon)
+        tctx.configure(v, console_focus_follow=True, console_focus_follow_steal=False,
+                       view_order_reversed=True, view_filter="~m get")
+
+        v.add([tft(start=5)])
+        assert v.focus.index == 0
+
+        v.add([tft(start=7)])
+        assert v.focus.index == 0
+        assert v.focus.flow.request.timestamp_start == 7
+
+        # Move focus to the last view
+        v.focus.index = 1
+
+        mod = tft(method="put", start=8)
+        v.add([mod])
+        # Focus should not change
+        assert v.focus.index == 1
+        assert v.focus.flow.request.timestamp_start == 5
+
+        # Move focus to the first flow
+        v.focus.index = 0
+
+        mod.request.method = "GET"
+        v.update([mod])
+        assert v.focus.index == 0
+        assert v.focus.flow.request.timestamp_start == 8
+
+
 def test_focus():
     # Special case - initialising with a view that already contains data
     v = view.View()

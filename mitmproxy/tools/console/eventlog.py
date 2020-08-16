@@ -31,6 +31,10 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
             "console_focus_follow", bool, False,
             "Focus follows new flows."
         )
+        loader.add_option(
+            "console_focus_follow_steal", bool, True,
+            "Steal focus when a new flow arrives."
+        )
 
     def set_focus(self, index):
         if 0 <= index < len(self.walker):
@@ -53,7 +57,8 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
             e = urwid.Text(txt)
         self.walker.append(e)
         if self.master.options.console_focus_follow:
-            self.walker.set_focus(len(self.walker) - 1)
+            if self.master.options.console_focus_follow_steal or self.walker.focus == len(self.walker) - 2:
+                self.walker.set_focus(len(self.walker) - 1)
 
     def refresh_events(self, *_):
         self.walker.clear()

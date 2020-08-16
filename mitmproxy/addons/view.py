@@ -139,6 +139,7 @@ class View(collections.abc.Sequence):
         self.order_key = self.default_order
         self.order_reversed = False
         self.focus_follow = False
+        self.focus_follow_steal = True
 
         self._view = sortedcontainers.SortedListWithKey(
             key = self.order_key
@@ -181,6 +182,10 @@ class View(collections.abc.Sequence):
         loader.add_option(
             "console_focus_follow", bool, False,
             "Focus follows new flows."
+        )
+        loader.add_option(
+            "console_focus_follow_steal", bool, True,
+            "Steal focus when a new flow arrives."
         )
 
     def store_count(self):
@@ -232,6 +237,18 @@ class View(collections.abc.Sequence):
             if self.filter(i):
                 self._base_add(i)
         self.sig_view_refresh.send(self)
+
+    def _add_flow(self, f):
+        move_focus = False
+        if self.focus_follow:
+            if self.focus_follow_steal:
+                move_focus = True
+            elif self.focus.flow:
+                move_focus = (0 if self.order_reversed else len(self) - 1) == self.focus.index
+        self._base_add(f)
+        if move_focus:
+            self.focus.flow = f
+        self.sig_view_add.send(self, flow=f)
 
     """ View API """
 
@@ -493,10 +510,7 @@ class View(collections.abc.Sequence):
             if f.id not in self._store:
                 self._store[f.id] = f
                 if self.filter(f):
-                    self._base_add(f)
-                    if self.focus_follow:
-                        self.focus.flow = f
-                    self.sig_view_add.send(self, flow=f)
+                    self._add_flow(f)
 
     def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
         """
@@ -556,6 +570,8 @@ class View(collections.abc.Sequence):
             self.set_reversed(ctx.options.view_order_reversed)
         if "console_focus_follow" in updated:
             self.focus_follow = ctx.options.console_focus_follow
+        if "console_focus_follow_steal" in updated:
+            self.focus_follow_steal = ctx.options.console_focus_follow_steal
 
     def request(self, f):
         self.add([f])
@@ -595,10 +611,7 @@ class View(collections.abc.Sequence):
             if f.id in self._store:
                 if self.filter(f):
                     if f not in self._view:
-                        self._base_add(f)
-                        if self.focus_follow:
-                            self.focus.flow = f
-                        self.sig_view_add.send(self, flow=f)
+                        self._add_flow(f)
                     else:
                         # This is a tad complicated. The sortedcontainers
                         # implementation assumes that the order key is stable. If
