@@ -1,6 +1,7 @@
 import webbrowser
 
 from mitmproxy import ctx
+from typing import Sequence
 
 
 class WebAddon:
@@ -20,6 +21,10 @@ class WebAddon:
         loader.add_option(
             "web_host", str, "127.0.0.1",
             "Web UI host."
+        )
+        loader.add_option(
+            "columns", Sequence[str], ["", "Path", "Method", "Status", "Size", "Time"],
+            "Display specified columns"
         )
 
     def running(self):

@@ -6,7 +6,11 @@ export const RECEIVE = 'OPTIONS_RECEIVE'
 export const UPDATE = 'OPTIONS_UPDATE'
 export const REQUEST_UPDATE = 'REQUEST_UPDATE'
 
-const defaultState = {}
+const defaultState = {
+    columns: {
+        value: ["", "Path", "Method", "Status", "Size", "Time"]
+    }
+}
 
 export default function reducer(state = defaultState, action) {
     switch (action.type) {

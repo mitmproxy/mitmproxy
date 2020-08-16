@@ -3,6 +3,8 @@ import PropTypes from 'prop-types'
 import classnames from 'classnames'
 import columns from './FlowColumns'
 import { pure } from '../../utils'
+import {getDisplayColumns} from './FlowTableHead'
+import { connect } from 'react-redux'
 
 FlowRow.propTypes = {
     onSelect: PropTypes.func.isRequired,
@@ -11,7 +13,7 @@ FlowRow.propTypes = {
     selected: PropTypes.bool,
 }
 
-function FlowRow({ flow, selected, highlighted, onSelect }) {
+function FlowRow({ flow, selected, highlighted, onSelect, displayColumnNames }) {
     const className = classnames({
         'selected': selected,
         'highlighted': highlighted,
@@ -20,13 +22,20 @@ function FlowRow({ flow, selected, highlighted, onSelect }) {
         'has-response': flow.response,
     })
 
+    console.log(displayColumnNames)
+    const displayColumns = getDisplayColumns(displayColumnNames)
+
     return (
         <tr className={className} onClick={() => onSelect(flow.id)}>
-            {columns.map(Column => (
+            {displayColumns.map(Column => (
                 <Column key={Column.name} flow={flow}/>
             ))}
         </tr>
     )
 }
 
-export default pure(FlowRow)
+export default connect(
+    state => ({
+        displayColumnNames: state.options["columns"].value
+    })
+)(pure(FlowRow))
