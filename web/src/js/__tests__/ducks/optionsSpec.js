@@ -7,7 +7,8 @@ const mockStore = configureStore([ thunk ])
 
 describe('option reducer', () => {
     it('should return initial state', () => {
-        expect(reduceOptions(undefined, {})).toEqual({})
+        let initialstate = { columns: { value: ["", "Path", "Method", "Status", "Size", "Time"]}}
+        expect(reduceOptions(undefined, {})).toEqual(initialstate)
     })
 
     it('should handle receive action', () => {
@@ -16,8 +17,9 @@ describe('option reducer', () => {
     })
 
     it('should handle update action', () => {
-        let action = {type: OptionsActions.UPDATE, data: {id: 1} }
-        expect(reduceOptions(undefined, action)).toEqual({id: 1})
+        let action = {type: OptionsActions.UPDATE, data: {"id": 1} }
+        let expected = {"columns": {"value": ["", "Path", "Method", "Status", "Size", "Time"]}, "id": 1}
+        expect(reduceOptions(undefined, action)).toEqual(expected)
     })
 })
 

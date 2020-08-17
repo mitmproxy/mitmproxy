@@ -22,7 +22,6 @@ function FlowRow({ flow, selected, highlighted, onSelect, displayColumnNames }) 
         'has-response': flow.response,
     })
 
-    console.log(displayColumnNames)
     const displayColumns = getDisplayColumns(displayColumnNames)
 
     return (

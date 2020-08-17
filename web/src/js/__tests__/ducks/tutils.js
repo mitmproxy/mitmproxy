@@ -77,6 +77,13 @@ export function TStore(){
                 type: "str",
                 value: "b"
             },
+            columns: {
+                choices: null,
+                default: ["Path"],
+                help: "Display specified columns",
+                type: "sequence of str",
+                value: ["", "Path", "Method", "Status", "Size", "Time"]
+            }
         },
         flows: {
             selected: ["d91165be-ca1f-4612-88a9-c0f8696f3e29"],

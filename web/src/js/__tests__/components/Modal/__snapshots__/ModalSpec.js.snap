@@ -156,6 +156,56 @@ exports[`Modal Component should render correctly 2`] = `
                   className="col-xs-6"
                 >
                   <label
+                    htmlFor="columns"
+                  >
+                    columns
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    Display specified columns
+                  </div>
+                </div>
+                <div
+                  className="col-xs-6"
+                >
+                  <div
+                    className=""
+                  >
+                    <textarea
+                      className="form-control"
+                      name="columns"
+                      onChange={[Function]}
+                      onKeyDown={[Function]}
+                      rows={6}
+                      value="
+Path
+Method
+Status
+Size
+Time"
+                    />
+                  </div>
+                  <div
+                    className="small"
+                  >
+                    Default: 
+                    <strong>
+                       
+                      [ ]
+                       
+                    </strong>
+                     
+                  </div>
+                </div>
+              </div>
+              <div
+                className="form-group"
+              >
+                <div
+                  className="col-xs-6"
+                >
+                  <label
                     htmlFor="intOption"
                   >
                     intOption

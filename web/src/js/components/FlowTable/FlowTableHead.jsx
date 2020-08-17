@@ -15,6 +15,9 @@ FlowTableHead.propTypes = {
 
 export function getDisplayColumns(displayColumnNames) {
     let displayColumns = []
+    if (typeof displayColumnNames == "undefined") {
+        return columns
+    }
     for (const column of columns) {
         if (displayColumnNames.includes(column.headerName)) {
             displayColumns.push(column)
@@ -23,7 +26,7 @@ export function getDisplayColumns(displayColumnNames) {
     return displayColumns
 }
 
-export function FlowTableHead({ sortColumn, sortDesc, setSort, displayColumnNames }) {
+export function FlowTableHead({ sortColumn, sortDesc, setSort, displayColumnNames}) {
     const sortType = sortDesc ? 'sort-desc' : 'sort-asc'
 
     const displayColumns = getDisplayColumns(displayColumnNames)
@@ -45,7 +48,7 @@ export default connect(
     state => ({
         sortDesc: state.flows.sort.desc,
         sortColumn: state.flows.sort.column,
-        displayColumnNames: state.options["columns"].value
+        displayColumnNames: state.options["columns"].value,
     }),
     {
         setSort

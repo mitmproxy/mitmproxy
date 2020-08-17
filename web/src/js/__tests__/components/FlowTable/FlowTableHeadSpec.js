@@ -7,7 +7,11 @@ import { TStore } from '../../ducks/tutils'
 
 describe('FlowTableHead Component', () => {
     let sortFn = jest.fn(),
-        flowTableHead = renderer.create(<FlowTableHead setSort={sortFn} sortDesc={true}/>),
+        store = TStore(),
+        flowTableHead = renderer.create(
+            <Provider store={store}>
+                <FlowTableHead setSort={sortFn} sortDesc={true}/>
+            </Provider>),
         tree =flowTableHead.toJSON()
 
     it('should render correctly', () => {
