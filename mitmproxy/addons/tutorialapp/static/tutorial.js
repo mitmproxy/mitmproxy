@@ -8,7 +8,6 @@ for(let i = 0; i < ajaxButtons.length; i++) {
                 document.getElementById("votes-cat").innerHTML = data["cat"];
                 document.getElementById("votes-dog").innerHTML = data["dog"];
             });
-
         e.preventDefault();
         return false;
     })
@@ -18,19 +17,9 @@ for(let i = 0; i < ajaxButtons.length; i++) {
 var timer;
 
 function playEvent(e) {
-    console.log("playing at " + this.currentTime);
-    var playStartPosition = this.currentTime;
-    var playStartDate = new Date();
-    var annotations = this.annotations;
-    var instructions = this.instructions;
-
+    var player = this;
     timer = setInterval(function(){
-        var now = new Date();
-        updateAnnotations(
-            playStartPosition + (now - playStartDate) / 1000,
-            annotations,
-            instructions
-        );
+        updateInstructions(player);
     }, 250);
 }
 
@@ -41,17 +30,12 @@ function pauseEvent(e) {
     }
 }
 
-function updateAnnotations(playedTimeSecs, annotations, instructions){
-    for(let i = 0; i < annotations.length; i++) {
-        if (annotations[i].getAttribute("data-from") < playedTimeSecs && annotations[i].getAttribute("data-to") > playedTimeSecs) {
-            annotations[i].style.display = "block";
-        }
-        else {
-            annotations[i].style.display = "none";
-        }
-    }
+function updateInstructions(player) {
+   var instructions = player.instructions;
+   var currTime = player.currentTime;
     for(let i = 0; i < instructions.length; i++) {
-        if (instructions[i].getAttribute("data-from") < playedTimeSecs && instructions[i].getAttribute("data-to") > playedTimeSecs) {
+        if (instructions[i].getAttribute("data-from") < currTime
+            && instructions[i].getAttribute("data-to") > currTime) {
             instructions[i].classList.add("active");
         }
         else {
@@ -63,14 +47,19 @@ function updateAnnotations(playedTimeSecs, annotations, instructions){
 
 document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("btn-reload-votes").click();
-    $('[data-toggle="tooltip"]').tooltip();
 
-    var asciiPlayers = document.getElementsByTagName('asciinema-player');
+    var asciinemaPlayer = document.getElementById('asciinema-player');
+    asciinemaPlayer.instructions = asciinemaPlayer.parentElement.parentElement.getElementsByClassName("list-group-item-action");
+    asciinemaPlayer.addEventListener("play", playEvent);
+    asciinemaPlayer.addEventListener('pause', pauseEvent);
 
-    for(let i = 0; i < asciiPlayers.length; i++) {
-        asciiPlayers[i].annotations = asciiPlayers[i].parentElement.getElementsByClassName("annotation");
-        asciiPlayers[i].instructions = asciiPlayers[i].parentElement.parentElement.getElementsByTagName("li");
-        asciiPlayers[i].addEventListener("play", playEvent);
-        asciiPlayers[i].addEventListener('pause', pauseEvent);
+    for(let i = 0; i < asciinemaPlayer.instructions.length; i++) {
+        var instruction = asciinemaPlayer.instructions[i];
+        instruction.addEventListener("click", function(e){
+            asciinemaPlayer.currentTime = this.getAttribute("data-from");
+            asciinemaPlayer.play();
+            e.preventDefault();
+            return false;
+        });
     }
 });
