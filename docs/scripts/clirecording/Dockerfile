@@ -38,6 +38,6 @@ RUN git clone https://github.com/tmux/tmux.git \
 WORKDIR /root/clidirector
 
 COPY ./docker/tmux.conf ../.tmux.conf
-COPY clidirector.py screenplays.py ./
+COPY clidirector.py screenplays.py record.py ./
 
-ENTRYPOINT [ "./screenplays.py" ]
+ENTRYPOINT [ "./record.py" ]

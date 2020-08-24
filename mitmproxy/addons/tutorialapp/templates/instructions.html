@@ -1,0 +1,13 @@
+<div class="list-group">
+    {% for instr in instructions %}
+    <a href="#" class="list-group-item list-group-item-action" data-from="{{ instr.time_from }}" data-to="{{ instr.time_to }}">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{loop.index}}. {{ instr.title }}</h5>
+            <small>{{ instr.time_from_str }}</small>
+        </div>
+        <p class="mb-1">
+            {{ instr.instruction }}
+        </p>
+    </a>
+    {% endfor %}
+</div>

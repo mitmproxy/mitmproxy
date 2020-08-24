@@ -1,3 +1,4 @@
+import json
 import os
 
 from flask import Flask, render_template, redirect
@@ -29,15 +30,22 @@ def index():
 
 @app.route('/<tool>/', defaults={"step": None})
 @app.route('/<tool>/<step>')
-def mitmproxy(tool, step):
+def tutorial(tool, step):
     if not step or step not in steps:
         step = steps[0]
+
+    instructions = []
+    instructions_file_path = app.static_folder + "/recordings/" + tool + "_" + step + "_instructions.json"
+    if os.path.isfile(instructions_file_path):
+        with open(instructions_file_path) as json_file:
+            instructions = json.load(json_file)
 
     return render_template(
         tool + "/steps/" + step + ".html",
         tool=tool,
         votes=votes,
-        step=step
+        step=step,
+        instructions=instructions
     )
 
 @app.route('/votes')
