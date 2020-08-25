@@ -37,6 +37,7 @@ function updateInstructions(player) {
         if (instructions[i].getAttribute("data-from") < currTime
             && instructions[i].getAttribute("data-to") > currTime) {
             instructions[i].classList.add("active");
+            instructions[i].parentNode.scrollTop = instructions[i].offsetTop - instructions[i].parentNode.offsetTop
         }
         else {
             instructions[i].classList.remove("active");

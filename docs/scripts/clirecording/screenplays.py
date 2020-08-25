@@ -8,7 +8,7 @@ from clidirector import MitmCliDirector
 
 
 def record_user_interface(d: MitmCliDirector):
-    tmux = d.start_session(width=120, height=24)
+    tmux = d.start_session(width=100, height=26)
     window = tmux.attached_window
 
     window.set_window_option("window-status-current-format", "mitmproxy Tutorial: User Interface")
@@ -75,7 +75,7 @@ def record_user_interface(d: MitmCliDirector):
 
 
 def record_user_interface2(d: MitmCliDirector):
-    tmux = d.start_session(width=120, height=24)
+    tmux = d.start_session(width=100, height=26)
     window = tmux.attached_window
 
     window.set_window_option("window-status-current-format", "mitmproxy Tutorial: User Interface")
