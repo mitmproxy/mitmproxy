@@ -1,4 +1,4 @@
-from mitmproxy.addons import wsgiapp
+from mitmproxy.addons import asgiapp
 from mitmproxy.addons.tutorialapp import app
 from mitmproxy import ctx
 
@@ -6,11 +6,11 @@ APP_HOST = "tutorial.mitm.it"
 APP_PORT = 80
 
 
-class Tutorial(wsgiapp.WSGIApp):
+class Tutorial(asgiapp.WSGIApp):
     name = "tutorial"
 
     def __init__(self):
-        super().__init__(app, None, None)
+        super().__init__(app, APP_HOST, APP_PORT)
 
     def load(self, loader):
         loader.add_option(
