@@ -1,0 +1,12 @@
+<div class="instructions">
+   <h3>Instructions <small class="text-muted">with Timecodes</small></h3>
+
+    <div class="list-group">
+        {% for instr in instructions %}
+        <a href="#" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action" data-from="{{ instr.time_from }}" data-to="{{ instr.time_to }}">
+            {{ instr.instruction }}
+            <span class="badge badge-primary badge-pill">{{ instr.time_from_str }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>

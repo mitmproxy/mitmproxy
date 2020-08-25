@@ -73,12 +73,16 @@ class CliDirector:
     def run_external(self, command: str) -> None:
         subprocess.run(command, shell=True)
 
-    def message(self, msg: str, duration: typing.Optional[int] = None) -> None:
+    def message(self, msg: str, duration: typing.Optional[int] = None, add_instruction: bool = False) -> None:
         if duration is None:
             duration = len(msg) * 0.075 # seconds
         self.tmux_session.set_option("display-time", int(duration * 1000)) # milliseconds
         self.tmux_pane.display_message(msg)
-        self.pause(duration + 0.1)
+
+        # todo: this is a hack and needs refactoring (instruction() is only defined in MitmCliDirector)
+        if add_instruction:
+            self.instruction(title="", instruction=msg, duration=duration)
+        self.pause(duration)
 
     def popup(self, content: str, duration: int = 4) -> None:
         # todo: check if installed tmux version supports display-popup
@@ -114,7 +118,7 @@ class MitmCliDirector(CliDirector):
         super().__init__()
         self.instructions: typing.List[InstructionSpec] = []
 
-    def instruction(self, title: str, instruction: str, duration: float = 3, time_from: typing.Optional[float] = None, correction: float = -0.5) -> None:
+    def instruction(self, title: str, instruction: str, duration: float = 3, time_from: typing.Optional[float] = None, correction: float = 0) -> None:
         if time_from is None:
             time_from = self.current_time
         time_from_str = str(datetime.timedelta(seconds = int(time_from + correction)))[2:]
