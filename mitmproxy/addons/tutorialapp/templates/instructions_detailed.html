@@ -1,8 +1,5 @@
 <div class="instructions-wrapper">
-    <h3 class="mt-0 ml-3">Instructions</h3>
-
      <div class="instructions list-group">
-
         {% for instr in instructions %}
         <a href="#" class="list-group-item list-group-item-action" data-from="{{ instr.time_from }}" data-to="{{ instr.time_to }}">
             <div class="d-flex w-100 justify-content-between">
@@ -15,4 +12,5 @@
         </a>
         {% endfor %}
     </div>
+    <p class="text-center text-muted mt-1 mb-0"><small>Clicking on an instruction takes you to the corresponding part in the video.</small></p>
 </div>

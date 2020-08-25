@@ -1,37 +1,170 @@
 [
     {
-        "title": "mitmproxy's views: Default view",
-        "instruction": "You should see the default view of mitmproxy, which shows a table-like list of flows. Every line represents a request and (optionally) its response using columns.",
-        "time_from": 0.5,
+        "title": "1. ",
+        "instruction": "1. This is the default view of mitmproxy.",
+        "time_from": 0.01,
         "time_from_str": "00:00",
-        "time_to": 4.5
+        "time_to": 2.86
     },
     {
-        "title": "Controlling mitmproxy",
-        "instruction": "mitmproxy is controlled using keyboard shortcuts. 1.Use your arrow keys 🠗 and 🠕 to change the focused flow (>>). 2. Put the focus on the flow requesting /votes. 3. Press ENTER to view the details of the flow.",
-        "time_from": 4.0,
-        "time_from_str": "00:04",
-        "time_to": 10.0
+        "title": "2. ",
+        "instruction": "2. Every line represents a request and its response.",
+        "time_from": 2.87,
+        "time_from_str": "00:02",
+        "time_to": 6.545
     },
     {
-        "title": "mitmproxy's views: Flow details view",
-        "instruction": "You are now in the flow details view of the flow that requested /votes. The flow details view has 3 panes: request, response, and detail. Use your arrow keys 🠔 and 🠖 to switch between panes.",
-        "time_from": 12.07,
-        "time_from_str": "00:12",
-        "time_to": 18.07
+        "title": "3. ",
+        "instruction": "3. mitmproxy adds rows to the view as new requests come in.",
+        "time_from": 6.56,
+        "time_from_str": "00:06",
+        "time_to": 10.76
     },
     {
-        "title": "mitmproxy's views: Exit a view",
-        "instruction": "Press 'q' to exit the current view.",
-        "time_from": 18.43,
-        "time_from_str": "00:18",
-        "time_to": 21.43
+        "title": "4. ",
+        "instruction": "4. Generate some requests by voting for your favorite pet on the right.",
+        "time_from": 10.78,
+        "time_from_str": "00:10",
+        "time_to": 15.879999999999999
     },
     {
-        "title": "Keyboard Shortcuts",
-        "instruction": "Press '?' to view a list of all available keyboard shortcuts in the current view. If you only remember one shortcut, it should be this one.",
-        "time_from": 21.68,
-        "time_from_str": "00:21",
-        "time_to": 24.68
+        "title": "5. ",
+        "instruction": "5. You see the voting requests in the list of flows.",
+        "time_from": 22.91,
+        "time_from_str": "00:22",
+        "time_to": 26.585
+    },
+    {
+        "title": "6. ",
+        "instruction": "6. mitmproxy is controlled using keyboard shortcuts.",
+        "time_from": 26.61,
+        "time_from_str": "00:26",
+        "time_to": 30.285
+    },
+    {
+        "title": "7. ",
+        "instruction": "7. Use <kbd>🠕</kbd> and <kbd>🠗</kbd> to change the focused flow (<code>&gt;&gt;</code>).",
+        "time_from": 30.29,
+        "time_from_str": "00:30",
+        "time_to": 35.089999999999996
+    },
+    {
+        "title": "8. ",
+        "instruction": "8. The focused flow is used as a target for various commands.",
+        "time_from": 44.23,
+        "time_from_str": "00:44",
+        "time_to": 48.58
+    },
+    {
+        "title": "9. ",
+        "instruction": "9. One such command views the flow details, it is bound to <kbd>↵</kbd>.",
+        "time_from": 48.59,
+        "time_from_str": "00:48",
+        "time_to": 53.24
+    },
+    {
+        "title": "10. ",
+        "instruction": "10. Press <kbd>↵</kbd> to view the details of the focused flow.",
+        "time_from": 53.26,
+        "time_from_str": "00:53",
+        "time_to": 57.16
+    },
+    {
+        "title": "11. ",
+        "instruction": "11. The flow details view has 3 panes: request, response, and detail.",
+        "time_from": 57.34,
+        "time_from_str": "00:57",
+        "time_to": 62.215
+    },
+    {
+        "title": "12. ",
+        "instruction": "12. Use <kbd>🠔</kbd> and <kbd>🠖</kbd> to switch panes.",
+        "time_from": 62.23,
+        "time_from_str": "01:02",
+        "time_to": 66.655
+    },
+    {
+        "title": "13. ",
+        "instruction": "13. Press <kbd>q</kbd> to exit the current view.",
+        "time_from": 74.2,
+        "time_from_str": "01:14",
+        "time_to": 76.825
+    },
+    {
+        "title": "14. ",
+        "instruction": "14. Press <kbd>?</kbd> to get a list of all keyboard shortcuts.",
+        "time_from": 77.09,
+        "time_from_str": "01:17",
+        "time_to": 81.59
+    },
+    {
+        "title": "15. ",
+        "instruction": "15. Press <kbd>q</kbd> to exit the current view.",
+        "time_from": 91.16,
+        "time_from_str": "01:31",
+        "time_to": 93.785
+    },
+    {
+        "title": "16. ",
+        "instruction": "16. Each shortcut is internally bound to a command.",
+        "time_from": 93.99,
+        "time_from_str": "01:33",
+        "time_to": 97.515
+    },
+    {
+        "title": "17. ",
+        "instruction": "17. You can also execute commands directly (without using shortcuts).",
+        "time_from": 97.53,
+        "time_from_str": "01:37",
+        "time_to": 102.405
+    },
+    {
+        "title": "18. ",
+        "instruction": "18. Press <kbd>:</kbd> to open the command prompt.",
+        "time_from": 102.42,
+        "time_from_str": "01:42",
+        "time_to": 105.19500000000001
+    },
+    {
+        "title": "19. ",
+        "instruction": "19. Enter <kbd>console.view.flow @focus</kbd>.",
+        "time_from": 105.49,
+        "time_from_str": "01:45",
+        "time_to": 107.96499999999999
+    },
+    {
+        "title": "20. ",
+        "instruction": "20. The command <code>console.view.flow</code> opens the details view for a flow.",
+        "time_from": 113.97,
+        "time_from_str": "01:53",
+        "time_to": 118.92
+    },
+    {
+        "title": "21. ",
+        "instruction": "21. The argument <code>@focus'</code> defines the target flow.",
+        "time_from": 118.94,
+        "time_from_str": "01:58",
+        "time_to": 122.39
+    },
+    {
+        "title": "22. ",
+        "instruction": "22. Press <kbd>↵</kbd> to execute the command.",
+        "time_from": 122.4,
+        "time_from_str": "02:02",
+        "time_to": 125.025
+    },
+    {
+        "title": "23. ",
+        "instruction": "23. Commands unleash the full power of mitmproxy.",
+        "time_from": 125.35,
+        "time_from_str": "02:05",
+        "time_to": 128.725
+    },
+    {
+        "title": "24. ",
+        "instruction": "24. You now know basics of mitmproxy's UI and how to control it.",
+        "time_from": 128.74,
+        "time_from_str": "02:08",
+        "time_to": 133.24
     }
 ]

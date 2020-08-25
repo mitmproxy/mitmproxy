@@ -1,0 +1,93 @@
+[
+    {
+        "title": "1. ",
+        "instruction": "1. We assume that the interception rule from the previous step is still configured.",
+        "time_from": 0.01,
+        "time_from_str": "00:00",
+        "time_to": 6.01
+    },
+    {
+        "title": "2. ",
+        "instruction": "2. Submit a vote in the voting app on the right.",
+        "time_from": 6.02,
+        "time_from_str": "00:06",
+        "time_to": 9.395
+    },
+    {
+        "title": "3. ",
+        "instruction": "3. We now want to modify the intercepted request.",
+        "time_from": 9.41,
+        "time_from_str": "00:09",
+        "time_to": 12.86
+    },
+    {
+        "title": "4. ",
+        "instruction": "4. Put the focus (<code>&gt;&gt;</code>) on the intercepted flow.",
+        "time_from": 12.88,
+        "time_from_str": "00:12",
+        "time_to": 16.105
+    },
+    {
+        "title": "5. ",
+        "instruction": "5. Press <kbd>↵</kbd> to open the details view for the intercepted flow.",
+        "time_from": 20.17,
+        "time_from_str": "00:20",
+        "time_to": 24.82
+    },
+    {
+        "title": "6. ",
+        "instruction": "6. Press <kbd>e</kbd> to edit the intercepted flow.",
+        "time_from": 25.0,
+        "time_from_str": "00:25",
+        "time_to": 27.925
+    },
+    {
+        "title": "7. ",
+        "instruction": "7. mitmproxy asks which part to modify.",
+        "time_from": 28.2,
+        "time_from_str": "00:28",
+        "time_to": 30.9
+    },
+    {
+        "title": "8. ",
+        "instruction": "8. Select 'path' by using your arrow keys and press <kbd>↵</kbd>.",
+        "time_from": 30.91,
+        "time_from_str": "00:30",
+        "time_to": 35.035
+    },
+    {
+        "title": "9. ",
+        "instruction": "9. Use your arrow keys to select the animal and press <kbd>↵</kbd>.",
+        "time_from": 36.31,
+        "time_from_str": "00:36",
+        "time_to": 40.585
+    },
+    {
+        "title": "10. ",
+        "instruction": "10. Replace <kbd>dog</kbd> with <kbd>cat</kbd>, or vice versa.",
+        "time_from": 41.31,
+        "time_from_str": "00:41",
+        "time_to": 44.31
+    },
+    {
+        "title": "11. ",
+        "instruction": "11. Press <kbd>ESC</kbd> to confirm your change.",
+        "time_from": 47.71,
+        "time_from_str": "00:47",
+        "time_to": 50.185
+    },
+    {
+        "title": "12. ",
+        "instruction": "12. Press <kbd>q</kbd> to go back to the flow details view.",
+        "time_from": 50.39,
+        "time_from_str": "00:50",
+        "time_to": 53.84
+    },
+    {
+        "title": "13. ",
+        "instruction": "13. Press <kbd>a</kbd> to resume this flow.",
+        "time_from": 54.1,
+        "time_from_str": "00:54",
+        "time_to": 56.35
+    }
+]

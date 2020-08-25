@@ -57,9 +57,11 @@ class CliDirector:
             self.tmux_pane.send_keys(cmd=keys, enter=False, suppress_history=False)
             self.pause(pause + random.uniform(0, self.pause_between_keys_rand))
 
-    def type(self, keys: str) -> None:
+    def type(self, keys: str, pause: typing.Optional[float] = None) -> None:
+        if pause is None:
+            pause = self.pause_between_keys
         for key in keys:
-            self.press_key(key)
+            self.press_key(key, pause=pause)
 
     def exec(self, keys: str) -> None:
         self.type(keys)
@@ -73,7 +75,7 @@ class CliDirector:
     def run_external(self, command: str) -> None:
         subprocess.run(command, shell=True)
 
-    def message(self, msg: str, duration: typing.Optional[int] = None, add_instruction: bool = False, instruction_html: str = "") -> None:
+    def message(self, msg: str, duration: typing.Optional[int] = None, add_instruction: bool = True, instruction_html: str = "") -> None:
         if duration is None:
             duration = len(msg) * 0.075 # seconds
         self.tmux_session.set_option("display-time", int(duration * 1000)) # milliseconds
@@ -126,8 +128,8 @@ class MitmCliDirector(CliDirector):
         time_from_str = str(datetime.timedelta(seconds = int(time_from + correction)))[2:]
 
         self.instructions.append(InstructionSpec(
-            title,
-            instruction,
+            str(len(self.instructions)+1) + ". " + title,
+            str(len(self.instructions)+1) + ". " + instruction,
             time_from=time_from + correction,
             time_from_str=time_from_str,
             time_to=time_from - correction + duration
@@ -140,7 +142,7 @@ class MitmCliDirector(CliDirector):
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(instr_as_dicts, f, ensure_ascii=False, indent=4)
 
-    def request(self, url: str, threaded: bool = True) -> None:
+    def request(self, url: str, threaded: bool = False) -> None:
         if threaded:
             threading.Thread(target=lambda: requests.get(url, verify=False)).start()
         else:

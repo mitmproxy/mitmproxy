@@ -14,122 +14,255 @@ def record_user_interface(d: MitmCliDirector):
     window.set_window_option("window-status-current-format", "mitmproxy Tutorial: User Interface")
 
     d.exec("mitmproxy")
-    d.pause(4)
+    d.pause(5)
     d.init_flow_list(step="user_interface")
     d.pause(2)
 
     d.start_recording("recordings/mitmproxy_user_interface.cast")
-    d.instruction(
-        title="mitmproxy's views: Default view",
-        instruction="You should see the default view of mitmproxy, which shows a table-like list of flows. Every line represents a request and (optionally) its response using columns.",
-        duration=4,
-        time_from=0.5
-    )
-    d.pause(4)
+    d.message("This is the default view of mitmproxy.")
+    d.message("Every line represents a request and its response.")
+    d.message("mitmproxy adds rows to the view as new requests come in.")
+    d.message("Generate some requests by voting for your favorite pet on the right.")
+    d.request("http://tutorial.mitm.it/vote/dog", threaded=True)
+    d.pause(3)
+    d.request("http://tutorial.mitm.it/vote/dog", threaded=True)
+    d.pause(3)
+    d.request("http://tutorial.mitm.it/vote/dog", threaded=True)
+    d.pause(1)
+    d.message("You see the voting requests in the list of flows.")
 
-    d.instruction(
-        title="Controlling mitmproxy",
-        instruction="mitmproxy is controlled using keyboard shortcuts. 1.Use your arrow keys 🠗 and 🠕 to change the focused flow (>>). 2. Put the focus on the flow requesting /votes. 3. Press ENTER to view the details of the flow.",
-        duration=6
+    d.message("mitmproxy is controlled using keyboard shortcuts.")
+    d.message(
+        msg="Use your arrow keys UP and DOWN to change the focused flow (>>).",
+        instruction_html="Use <kbd>🠕</kbd> and <kbd>🠗</kbd> to change the focused flow (<code>&gt;&gt;</code>)."
     )
     d.press_key("Down", count=4, pause=0.5)
     d.press_key("Up", count=2, pause=0.5)
-    d.press_key("Down", count=2, pause=0.5)
-    d.press_key("Up", count=2, pause=0.5)
-    d.pause(1)
+    d.press_key("Down", count=9, pause=0.5)
+
+    d.message("The focused flow is used as a target for various commands.")
+
+    d.message(
+        msg="One such command views the flow details, it is bound to ENTER.",
+        instruction_html="One such command views the flow details, it is bound to <kbd>↵</kbd>."
+    )
+
+    d.message(
+        msg="Press ENTER to view the details of the focused flow.",
+        instruction_html="Press <kbd>↵</kbd> to view the details of the focused flow."
+    )
     d.press_key("Enter")
-    d.pause(1)
 
-    d.instruction(
-        "mitmproxy's views: Flow details view",
-        "You are now in the flow details view of the flow that requested /votes. The flow details view has 3 panes: request, response, and detail. Use your arrow keys 🠔 and 🠖 to switch between panes.",
-        6
-    )
-    d.pause(1)
-    d.press_key("Right", count=2, pause=2)
-    d.press_key("Left", count=2, pause=0.5)
+    d.message("The flow details view has 3 panes: request, response, and detail.")
+    d.message(
+        msg="Use your LEFT and RIGHT arrow keys to switch between panes.",
+        instruction_html="Use <kbd>🠔</kbd> and <kbd>🠖</kbd> to switch panes.")
+    d.press_key("Right", count=2, pause=2.5)
+    d.press_key("Left", count=2, pause=1)
 
-    d.instruction(
-        "mitmproxy's views: Exit a view",
-        "Press 'q' to exit the current view.",
-        3
+    d.message(
+        msg="Press 'q' to exit the current view.",
+        instruction_html="Press <kbd>q</kbd> to exit the current view."
     )
-    d.pause(3)
     d.type("q")
 
-    d.instruction(
-        "Keyboard Shortcuts",
-        "Press '?' to view a list of all available keyboard shortcuts in the current view. If you only remember one shortcut, it should be this one.",
-        3
+    d.message(
+        msg="Press '?' to get a list of all available keyboard shortcuts.",
+        instruction_html="Press <kbd>?</kbd> to get a list of all keyboard shortcuts."
     )
-    d.pause(3)
-    d.press_key("?", count=2, pause=1)
-    d.pause(3)
-    d.press_key("Down", count=15, pause=0.25)
-    d.pause(3)
+    d.type("?")
+    d.pause(2)
+    d.press_key("Down", count=20, pause=0.25)
 
-    d.type("qy")
-    d.pause(0.5)
+    d.message(
+        msg="Press 'q' to exit the current view.",
+        instruction_html="Press <kbd>q</kbd> to exit the current view."
+    )
+    d.type("q")
+
+    d.message("Each shortcut is internally bound to a command.")
+    d.message("You can also execute commands directly (without using shortcuts).")
+    d.message(
+        msg="Press ':' to open the command prompt.",
+        instruction_html="Press <kbd>:</kbd> to open the command prompt.",
+    )
+    d.type(":")
+
+    d.message(
+        msg="Enter 'console.view.flow @focus'.",
+        instruction_html="Enter <kbd>console.view.flow @focus</kbd>.",
+    )
+    d.type("console.view.flow @focus")
+
+    d.message(
+        msg="The command 'console.view.flow' opens the details view for a flow.",
+        instruction_html="The command <code>console.view.flow</code> opens the details view for a flow.",
+    )
+
+    d.message(
+        msg="The argument '@focus' defines the target flow.",
+        instruction_html="The argument <code>@focus'</code> defines the target flow.",
+    )
+
+    d.message(
+        msg="Press ENTER to execute the command.",
+        instruction_html="Press <kbd>↵</kbd> to execute the command.",
+    )
+    d.press_key("Enter")
+
+    d.message("Commands unleash the full power of mitmproxy.")
+
+    d.message("You now know basics of mitmproxy's UI and how to control it.")
+    d.pause(1)
     d.save_instructions("recordings/mitmproxy_user_interface_instructions.json")
     d.end()
 
 
-def record_user_interface2(d: MitmCliDirector):
+#todo: interception does not work with asgiapp
+def record_intercept_requests(d: MitmCliDirector):
     tmux = d.start_session(width=100, height=26)
     window = tmux.attached_window
 
-    window.set_window_option("window-status-current-format", "mitmproxy Tutorial: User Interface")
+    window.set_window_option("window-status-current-format", "mitmproxy Tutorial: Intercept Requests")
 
+    # prepare view
     d.exec("mitmproxy")
-    d.pause(4)
-    d.init_flow_list(step="whats_next")
+    d.pause(5)
+    d.init_flow_list(step="intercept_requests")
     d.pause(2)
 
-    d.start_recording("recordings/mitmproxy_whats_next.cast")
-    d.message(msg="1. This is the default view of mitmproxy.", add_instruction=True
-    )
-    d.message("2. Every line represents a request and its response.", add_instruction=True)
-    d.message("3. mitmproxy is controlled using keyboard shortcuts.", add_instruction=True)
-    d.message(
-        msg="4. Use your arrow keys UP and DOWN to change the focused flow (>>).",
-        instruction_html="4. Use your arrow keys <kbd>🠕</kbd> and <kbd>🠗</kbd> to change the focused flow (<code>&gt;&gt;</code>)."
-    )
-    d.press_key("Down", count=4, pause=0.75)
-    d.press_key("Up", count=2, pause=0.75)
-    d.press_key("Down", count=2, pause=0.75)
+    d.start_recording("recordings/mitmproxy_intercept_requests.cast")
 
     d.message(
-        "5. Press ENTER to view the details of the focused flow.",
-        instruction_html="5. Press <kbd>↵</kbd> to view the details of the focused flow."
+        msg="""Press 'i' to prepopulate mitmproxy's command prompt with "set intercept ''".""",
+        instruction_html="Press <kbd>i</kbd> to prepopulate mitmproxy's command prompt with <code>set intercept ''</code>."
+    )
+    d.type("i")
+    d.pause(2)
+
+    d.message(
+        msg="Enter '~u /vote/' between the quotes of the 'set intercept' command and press ENTER.",
+        instruction_html="Enter <kbd>~u /vote/</kbd> between the quotes of the <code>set intercept</code> command and press <kbd>↵</kbd>."
+    )
+    d.exec("~u /vote/")
+
+    d.message("Submit a vote in the voting app on the right.")
+    d.request("http://tutorial.mitm.it/vote/cat", threaded=True)
+    d.pause(2)
+
+    d.message("You will see a new line in in the list of flows.")
+    d.message(
+        msg="The new flow is colored in red to indicate that it has been intercepted.",
+        instruction_html="""The new flow is colored in <span class="text-danger">red</span> to indicate that it has been intercepted."""
+    )
+
+    d.message(
+        msg="Put the focus (>>) on the intercepted flow.",
+        instruction_html="Put the focus (<code>&gt;&gt;</code>) on the intercepted flow."
+    )
+    d.press_key("Down", count=11, pause=0.25)
+
+    d.message(
+        msg="Press 'a' to resume this flow without making any changes.",
+        instruction_html="Press <kbd>a</kbd> to resume this flow without making any changes."
+    )
+    d.type("a")
+
+    d.message("Submit another vote and focus its flow.")
+    d.request("http://tutorial.mitm.it/vote/dog", threaded=True)
+    d.pause(2)
+    d.press_key("Down")
+
+    d.message(
+        msg="Press 'X' to kill this flow, i.e., discard it without forwarding it to the server.",
+        instruction_html="Press <kbd>X</kbd> to kill this flow, i.e., discard it without forwarding it to the server."
+    )
+    d.type("X")
+    d.pause(3)
+    d.save_instructions("recordings/mitmproxy_intercept_requests_instructions.json")
+    d.end()
+
+
+def record_modify_requests(d: MitmCliDirector):
+    tmux = d.start_session(width=100, height=26)
+    window = tmux.attached_window
+
+    window.set_window_option("window-status-current-format", "mitmproxy Tutorial: Modify Requests")
+
+    # prepare view
+    d.exec("mitmproxy")
+    d.pause(5)
+    d.init_flow_list(step="modify_requests")
+    d.pause(2)
+    d.type("i")
+    d.exec("~u /vote/")
+
+    d.start_recording("recordings/mitmproxy_modify_requests.cast")
+
+    d.message("We assume that the interception rule from the previous step is still configured.")
+    d.message("Submit a vote in the voting app on the right.")
+    d.request("http://tutorial.mitm.it/vote/cat", threaded=True)
+
+    d.message("We now want to modify the intercepted request.")
+    d.message(
+        msg="Put the focus (>>) on the intercepted flow.",
+        instruction_html="Put the focus (<code>&gt;&gt;</code>) on the intercepted flow."
+    )
+    d.press_key("Down", count=11, pause=0.25)
+
+    d.message(
+        "Press ENTER to open the details view for the intercepted flow.",
+        instruction_html="Press <kbd>↵</kbd> to open the details view for the intercepted flow."
     )
     d.press_key("Enter")
 
-    d.message("6. The flow details view has 3 panes: request, response, and detail.", add_instruction=True)
     d.message(
-        msg="7. Use your LEFT and RIGHT arrow keys to switch between panes.",
-        instruction_html="7. Use your <kbd>🠔</kbd> and <kbd>🠖</kbd> arrow keys to switch between panes.")
-    d.press_key("Right", count=2, pause=2.5)
-    d.press_key("Left", count=2, pause=0.5)
+        "Press 'e' to edit the intercepted flow.",
+        instruction_html="Press <kbd>e</kbd> to edit the intercepted flow."
+    )
+    d.type("e")
+
+    d.message("mitmproxy asks which part to modify.")
 
     d.message(
-        msg="8. Press 'q' to exit the current view.",
-        instruction_html="8. Press <kbd>q</kbd> to exit the current view."
+        msg="Select 'path' by using your arrow keys and press ENTER.",
+        instruction_html="Select 'path' by using your arrow keys and press <kbd>↵</kbd>.",
+    )
+    d.press_key("Down", count=3, pause=0.5)
+    d.pause(1)
+    d.press_key("Enter")
+
+    d.message(
+        msg="Use your arrow keys to select the pet and press ENTER.",
+        instruction_html="Use your arrow keys to select the pet and press <kbd>↵</kbd>."
+    )
+    d.press_key("Down", pause=2)
+    d.press_key("Enter")
+
+    d.message(
+        msg="Replace 'dog' with 'cat', or vice versa.",
+        instruction_html="Replace <kbd>dog</kbd> with <kbd>cat</kbd>, or vice versa."
+    )
+    d.press_key("BSpace", count=3, pause=0.5)
+    d.type("dog", pause=0.5)
+
+    d.message(
+        msg="Press ESC to confirm your change.",
+        instruction_html="Press <kbd>ESC</kbd> to confirm your change."
+    )
+    d.press_key("Escape")
+
+    d.message(
+        msg="Press 'q' to go back to the flow details view.",
+        instruction_html="Press <kbd>q</kbd> to go back to the flow details view."
     )
     d.type("q")
 
     d.message(
-        msg="9. Press '?' to view a list of all available keyboard shortcuts.",
-        instruction_html="9. Press <kbd>?</kbd> to view a list of all available keyboard shortcuts."
+        msg="Press 'a' to resume this flow.",
+        instruction_html="Press <kbd>a</kbd> to resume this flow."
     )
-    d.type("?")
-    d.pause(3)
-    d.press_key("Down", count=15, pause=0.25)
+    d.type("a")
 
-    d.message(
-        msg="10. The '?' shortcut works in every view - you should remember it.",
-        instruction_html="10. The <kbd>?</kbd> shortcut works in every view - you should remember it."
-    )
-    d.message("11. You now know the basics of mitmproxy's UI.", add_instruction=True)
-    d.pause(1)
-    d.save_instructions("recordings/mitmproxy_whats_next_instructions.json")
+    d.save_instructions("recordings/mitmproxy_modify_requests_instructions.json")
     d.end()

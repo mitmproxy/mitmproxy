@@ -23,24 +23,12 @@
     We use the flow filter <code>~u &lt;regex&gt;</code> that filters flows by matching the regular expressing on the URL of the request.
 </p>
 
-<ol>
-    <li>Press <kbd>i</kbd> to prepopulate mitmproxy's command prompt with <code>set intercept ''</code>.</li>
-    <li>Enter <kbd>~u /vote/</kbd> between the quotes of the <code>set intercept</code> command and press <kbd>ENTER</kbd>.</li>
-    <!-- <li>Make sure you are in the default view of mitmproxy that shows all previous flows.</li> -->
-    <li>Submit a vote in the voting app on the right.</li>
-</ol>
-
-<p>
-    You will see a new line in in the list of flows.
-    It is colored in <span class="text-danger">red</span> to indicate that it is an intercepted flow:
-</p>
-
-<ol>
-    <li>Put the focus (<code>&gt;&gt;</code>) on the intercepted flow.</li>
-    <li>Press <kbd>a</kbd> to resume this flow without making any changes.</li>
-    <li>Submit another vote to generate a new flow and focus it.</li>
-    <li>Press <kbd>X</kbd> to kill, i.e., discard this flow without forwarding it to the server.</li>
-</ol>
+<div class="interactions-wrapper">
+    <asciinema-player id="asciinema-player" src="/static/recordings/mitmproxy_intercept_requests.cast" font-size="13px" poster="npt:0:1" preload></asciinema-player>
+    {% if instructions %}
+        {% include 'instructions.html' %}
+    {% endif %}
+</div>
 
 <p>
     In the next step, you will learn to modify intercepted flows before sending them to the server.

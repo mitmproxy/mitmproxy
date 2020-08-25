@@ -1,0 +1,65 @@
+[
+    {
+        "title": "1. ",
+        "instruction": "1. Press <kbd>i</kbd> to prepopulate mitmproxy's command prompt with <code>set intercept ''</code>.",
+        "time_from": 0.01,
+        "time_from_str": "00:00",
+        "time_to": 5.71
+    },
+    {
+        "title": "2. ",
+        "instruction": "2. Enter <kbd>~u /vote/</kbd> between the quotes of the <code>set intercept</code> command and press <kbd>↵</kbd>.",
+        "time_from": 8.08,
+        "time_from_str": "00:08",
+        "time_to": 14.379999999999999
+    },
+    {
+        "title": "3. ",
+        "instruction": "3. Submit a vote in the voting app on the right.",
+        "time_from": 18.74,
+        "time_from_str": "00:18",
+        "time_to": 22.115
+    },
+    {
+        "title": "4. ",
+        "instruction": "4. You will see a new line in in the list of flows.",
+        "time_from": 24.13,
+        "time_from_str": "00:24",
+        "time_to": 27.729999999999997
+    },
+    {
+        "title": "5. ",
+        "instruction": "5. The new flow is colored in <span class=\"text-danger\">red</span> to indicate that it has been intercepted.",
+        "time_from": 27.74,
+        "time_from_str": "00:27",
+        "time_to": 33.14
+    },
+    {
+        "title": "6. ",
+        "instruction": "6. Put the focus (<code>&gt;&gt;</code>) on the intercepted flow.",
+        "time_from": 33.16,
+        "time_from_str": "00:33",
+        "time_to": 36.385
+    },
+    {
+        "title": "7. ",
+        "instruction": "7. Press <kbd>a</kbd> to resume this flow without making any changes.",
+        "time_from": 40.73,
+        "time_from_str": "00:40",
+        "time_to": 45.004999999999995
+    },
+    {
+        "title": "8. ",
+        "instruction": "8. Submit another vote and focus its flow.",
+        "time_from": 45.34,
+        "time_from_str": "00:45",
+        "time_to": 48.265
+    },
+    {
+        "title": "9. ",
+        "instruction": "9. Press <kbd>X</kbd> to kill this flow, i.e., discard it without forwarding it to the server.",
+        "time_from": 50.59,
+        "time_from_str": "00:50",
+        "time_to": 56.74
+    }
+]
