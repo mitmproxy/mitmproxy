@@ -61,6 +61,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements/#install-requires
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
+        "asgiref>=3.2.10, <3.3",
         "blinker>=1.4, <1.5",
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
@@ -83,7 +84,7 @@ setup(
         "ruamel.yaml>=0.16,<0.17",
         "sortedcontainers>=2.1.0,<2.2",
         "tornado>=4.3,<7",
-        "urwid==2.0.1,!=2.1.0",
+        "urwid>=2.1.1,<2.2",
         "wsproto>=0.14,<0.16",
         "publicsuffix2>=2.20190812,<3",
         "zstandard>=0.11,<0.14",
@@ -91,6 +92,9 @@ setup(
     extras_require={
         ':sys_platform == "win32"': [
             "pydivert>=2.0.3,<2.2",
+        ],
+        ':python_version == "3.6"': [
+            "dataclasses>=0.7",
         ],
         'dev': [
             "asynctest>=0.12.0",

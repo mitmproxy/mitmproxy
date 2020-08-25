@@ -1,169 +1,127 @@
-{% extends "frame.html" %}
-{% block body %}
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-md-center">
+    <div class="col-md-9">
+<!--suppress HtmlUnknownTag -->
+<h3 class="my-4">Install mitmproxy's Certificate Authority</h3>
 
-<script>
-function changeTo(device) {
-    if (device == "apple") {
-        var text = `<div class = "container">
-                      <div>
-                        <div class="col-md-4">
-                          <h3 class="text-center">How to install on macOS</h3>
-                            <ul class="left">
-                              <li>Double-click the PEM file</li>
-                              <li>The "Keychain Access" applications opens</li>
-                              <li>Find the new certificate "mitmproxy" in the list</li>
-                              <li>Double-click the "mitmproxy" entry</li>
-                              <li>A dialog window openes up</li>
-                              <li>Change "Secure Socket Layer (SSL)" to "Always Trust"</li>
-                              <li>Close the dialog window (and enter your password if prompted)</li>
-                              <li>Done!</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-4">
-                          <h3 class="text-center">How to install on iOS 13+</h3>
-                          <ul>
-                            <li>Install and active the new Profile</li>
-                            <li>Goto Settings -> General -> About -> Certificate Trust Settings</li>
-                            <li>Toggle mitmproxy to ON</li>
-                            <li>Done!</li>
-                        </div>
-                        <div class="col-md-4">
-                          <h3 class="text-center">How to install on browsers</h3>
-                          <ul>
-                            <li>Safari on macOS uses the macOS keychain. So installing our CA in the system is enough.</li>
-                            <li>Chrome on macOS uses the macOS keychain. So installing our CA in the system is enough.</li>
-                            <li>Firefox on macOS has its own CA store and needs to be installed with Firefox-specific instructions that can be found  <a href="https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox">HERE</a> .</li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>`;
-    }
-    else if (device == "windows") {
-        var text = `<div class = "container">
-                      <div class="row">
-                        <div class="col-md-4">
-                          <h3 class="text-center">How to install on Windows</h3>
-                          <ul>
-                            <li>Double-click the P12 file</li>
-                            <li>Select Store Location for Current User and click Next</li>
-                            <li>Click Next</li>
-                            <li>Leave the Password column blank and click Next</li>
-                            <li>Select Place all certificates in the following store</li>
-                            <li>Click Browse and select Trusted Root Certification Authorities</li>
-                            <li>Click Next and then click Finish</li>
-                            <li>Click Yes if prompted for confirmation</li>
-                            <li>Done!</li>
-                          </ul>
-                        </div>
-                        <div class="col-md-4">
-                          <h3 class="text-center">How to install on browsers</h3>
-                          <ul>
-                            <li>Edge and IE use the Windows CA store. So installing our CA in the system is enough.</li>
-                            <li>Chrome on Windows uses the Windows CA store. So installing our CA in the system is enough.</li>
-                            <li>Firefox on Windows has its own CA store and needs to be installed with Firefox-specific instructions that can be found  <a href="https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox">HERE</a> .</li>
-                          </ul>
-                        </div>
-                        <div class="col-md-4">
-                          <h3 class="text-center">How to install on Windows (Automated)</h3>
-                          <ul>
-                            <li> >>> certutil.exe -importpfx Root mitmproxy-ca-cert.p12 </li>
-                            <li> To know more click <a href="https://technet.microsoft.com/en-us/library/cc732443.aspx">HERE</a> </li>
-                          </ul>
-                        </div>
-                      </div>
-                    </div>`;
-    }
-    else if (device == "android") {
-        var text = `<div class = "container">
-                      <div class="row">
-                        <div class="col-md-4">
-                      <h3 class="text-center">How to install on Android</h3>
-                        <ul>
-                          <li>Open your device's Settings app</li>
-                          <li>Under "Credential storage," tap Install from storage</li>
-                          <li>Under "Open from," tap where you saved the certificate</li>
-                          <li>Tap the file</li>
-                          <li>If prompted, enter the key store password and tap OK</li>
-                          <li>Type a name for the certificate</li>
-                          <li>Pick VPN and apps</li>
-                          <li>Tap OK</li>
-                          <li>Done!</li>
-                        </ul>
-                        </div>
-                      </div>
-                    </div>`;
-    }
-    else if (device == "asterisk") {
-      var text = `<div class = "container">
-                    <div class="row">
-                      <div class="col-md-4">
-                        <h3 class="text-center">How to install on Chrome on Debian/Ubuntu</h3>
-                        <ul>
-                          <li>Using Chrome, hit a page on your server via HTTPS and continue past the red warning page (assuming you haven't done this already)</li>
-                          <li>Open up Chrome Settings > Show advanced settings > HTTPS/SSL > Manage Certificates</li>
-                          <li>Click the Authorities tab and scroll down to find your certificate under the Organization Name that you gave to the certificate</li>
-                          <li>Select it, click Edit (NOTE: in recent versions of Chrome, the button is now "Advanced" instead of "Edit"), check all the boxes and click OK. You may have to restart Chrome</li>
-                        </ul>
-                      </div>
-                      <div class="col-md-4">
-                        <h3 class="text-center">How to install on Chrome on Linux</h3>
-                        <ul>
-                          <li>Open Developer Tools > Security, and select View certificate</li>
-                          <li>Click the Details tab > Export. Choose PKCS #7, single certificate as the file format</li>
-                          <li>Then follow my original instructions to get to the Manage Certificates page. Click the Authorities tab > Import and choose the file to which you exported the certificate, and make sure to choose PKCS  #7, single certificate as the file type</li>
-                          <li>If prompted certification store, choose Trusted Root Certificate Authorities</li>
-                          <li>Check all boxes and click OK. Restart Chrome</li>
-                        </ul>
-                      </div>
-                      <div class="col-md-4">
-                        <h3 class="text-center">How to install on Ubuntu (Manually)</h3>
-                        <ul>
-                          <li>Create a directory for extra CA certificates in /usr/share/ca-certificates: <div class="text-muted">$ sudo mkdir /usr/share/ca-certificates/extra<div></li>
-                          <li>Copy the CA mitmproxy.crt file to this directory: <div class="text-muted">$ sudo cp mitmproxy.crt /usr/share/ca-certificates/extra/mitmproxy.crt<div></li>
-                          <li>Let Ubuntu add the mitmproxy.crt file's path relative to /usr/share/ca-certificates to /etc/ca-certificates.conf: <div class="text-muted">$ sudo dpkg-reconfigure ca-certificates</div></li>
-                          <li>In case of a .pem file on Ubuntu, it must first be converted to a .crt file: <div class="text-muted">$ openssl x509 -in foo.pem -inform PEM -out foo.crt</div></li>
-                        </ul>
-                      </div>
-                </div>
-                </div>`;
-    }
-    document.getElementById("dynamic").innerHTML = text;
-}
-</script>
+{% macro entry(title, icon, filetype="pem") -%}
+<li class="media">
+    {% include 'icons/' + icon + '-brands.svg' %}
+    <div class="media-body">
+        <h5 class="mt-0">{{ title | safe }}</h5>
+        <a class="btn btn-sm btn-success" href="/cert/{{ filetype }}" target="_blank">🔏 Get mitmproxy-ca-cert.{{
+            filetype }}</a>
+        <a class="btn btn-sm btn-info show-instructions" href="#{{ title.split(' ')[0] }}" id="{{ title.split(' ')[0] }}">📖
+            Show Instructions</a>
+        <a class="btn btn-sm btn-info hide-instructions" href="#/">📖 Hide Instructions</a>
+        <div class="instructions">{{ caller() }}</div>
+    </div>
+</li>
+{%- endmacro %}
 
-<h2 class="text-center"> Click to install your mitmproxy certificate </h2>
-<div id="certbank" class="row">
-    <div class="col-md-3">
-        <a target="_blank" onclick="changeTo('apple')" href="/cert/pem"><i class="fa fa-apple fa-5x"></i>
-        <p>Apple</p></a>
+<ul class="list-unstyled">
+    {% call entry('Windows', 'windows', 'p12') %}
+    <h5>Manual Installation</h5>
+    <ol>
+        <li>Double-click the P12 file to start the import wizard.</li>
+        <li>Select a certificate store location. This determines who will trust the certificate &ndash; only the current
+            Windows user or everyone on the machine. Click <samp>Next</samp>.
+        </li>
+        <li>Click <samp>Next</samp> again.</li>
+        <li>Leave <samp>Password</samp> blank and click <samp>Next</samp>.</li>
+        <li><span class="text-danger">Select <samp>Place all certificates in the following store</samp></span>,
+            then click <samp>Browse</samp>, and select <samp>Trusted Root Certification Authorities</samp>.<br>
+            Click <samp>OK</samp> and <samp>Next</samp>.
+        </li>
+        <li>Click <samp>Finish</samp>.</li>
+        <li>Click <samp>Yes</samp> to confirm the warning dialog.</li>
+    </ol>
+    <h5>Automated Installation</h5>
+    <ol>
+        <li>Run <code>certutil.exe -importpfx Root mitmproxy-ca-cert.p12</code>
+            (<a href="https://technet.microsoft.com/en-us/library/cc732443.aspx">details</a>).
+        </li>
+    </ol>
+    {% endcall %}
+    {% call entry('Linux', 'linux') %}
+    <h5>Ubuntu/Debian</h5>
+    <ol>
+        <li><code>mv mitmproxy-ca-cert.pem /usr/local/share/ca-certificates/mitmproxy.crt</code></li>
+        <li><code>sudo update-ca-certificates</code></li>
+    </ol>
+    {% endcall %}
+    {% call entry('macOS', 'apple') %}
+    <ol>
+        <li>Double-click the PEM file to open the <samp>Keychain Access</samp> application.</li>
+        <li>Locate the new certificate "mitmproxy" in the list and double-click it.</li>
+        <li>Change <samp>Secure Socket Layer (SSL)</samp> to <samp>Always Trust</samp>.</li>
+        <li>Close the dialog window and enter your password if prompted.</li>
+    </ol>
+    {% endcall %}
+    {% call entry('iOS <small>– please read the instructions!</small>', 'apple') %}
+    <h5>iOS 13+</h5>
+    <ol>
+        <li>Install the new Profile and activate it (<samp>Settings -> General</samp> ->
+            <samp>Profile</samp>).
+        </li>
+        <li><span class="text-danger"><strong>Important: </strong> Goto
+            <samp>Settings -> General -> About -> Certificate Trust Settings</samp>.
+            Toggle <samp>mitmproxy</samp> to <samp>ON</samp>.</span></li>
+    </ol>
+    {% endcall %}
+    {% call entry('Android', 'android', 'cer') %}
+    <h5>Android 10+</h5>
+    <ol class="mb-2">
+        <li>Open the downloaded CER file.</li>
+        <li>Enter <samp>mitmproxy</samp> (or anything else) as the certificate name.</li>
+        <li>For credential use, select <samp>VPN and apps</samp>.</li>
+        <li>Click OK.</li>
+    </ol>
+
+    <p>Some Android distributions require you to install the certificate via <samp>Settings -> Security -> Advanced ->
+        Encryption and credentials -> Install from storage</samp> instead.</p>
+
+    <div class="alert alert-warning" role="alert">
+        <p><strong>Warning: </strong>Apps that target Android API Level 24 (introduced in 2016) and above only accept
+            certificates from the system trust store
+            (<a href="https://github.com/mitmproxy/mitmproxy/issues/2054">#2054</a>).
+            User-added CAs are not accepted unless the application manually opts in. Except for browsers, you need to
+            patch most apps manually.
+        </p>
     </div>
-    <div class="col-md-3">
-        <a target="_blank" onclick="changeTo('windows')" href="/cert/p12"><i class="fa fa-windows fa-5x"></i>
-        <p>Windows</p></a>
+    {% endcall %}
+    {% call entry('Firefox <small>(does not use the OS root certificates)</small>', 'firefox-browser') %}
+    <h5>Firefox</h5>
+    <ol>
+        <li>Open <samp>Options -> Privacy &amp; Security</samp> and click <samp>View Certificates...</samp>
+            at the bottom of the page.</li>
+        <li>Click <samp>Import...</samp> and select the downloaded certificate.</li>
+        <li>Enable <samp>Trust this CA to identify websites</samp> and click <samp>OK</samp>.</li>
+    </ol>
+    {% endcall %}
+    <li class="media">
+    {% include 'icons/certificate-solid.svg' %}
+    <div class="media-body">
+        <h5 class="mt-0">Other Platforms</h5>
+        <a class="btn btn-sm btn-success" href="/cert/pem" target="_blank">🔏 Get mitmproxy-ca-cert.pem</a>
+        <a class="btn btn-sm btn-success" href="/cert/p12" target="_blank">🔏 Get mitmproxy-ca-cert.p12</a>
     </div>
-    <div class="col-md-3">
-        <a target="_blank" onclick="changeTo('android')" href="/cert/pem"><i class="fa fa-android fa-5x"></i>
-        <p>Android</p></a>
+    </li>
+</ul>
     </div>
-    <div class="col-md-3">
-        <a target="_blank" onclick="changeTo('asterisk')" href="/cert/pem"><i class="fa fa-asterisk fa-5x"></i>
-        <p>Other</p></a>
-    </div>
+
 </div>
-
 <hr/>
 
-<div class="text-left" id="dynamic">
-</div>
-
-<hr/>
-
-<div class="text-center">
+<p>
     Other mitmproxy users cannot intercept your connection.
-</div>
-<div class="text-center text-muted">
-    This page is served by your local mitmproxy instance. The certificate you are about to install has been uniquely generated on mitmproxy's first run and is not shared
+    <span class="text-muted">
+    This page is served by your local mitmproxy instance. The certificate you are about to install has been uniquely
+    generated on mitmproxy's first run and is not shared
     between mitmproxy installations.
-</div>
+    </span>
+</p>
+
 
 {% endblock %}

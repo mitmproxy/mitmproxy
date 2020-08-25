@@ -1,4 +1,4 @@
-from mitmproxy.addons import wsgiapp
+from mitmproxy.addons import asgiapp
 from mitmproxy.addons.onboardingapp import app
 from mitmproxy import ctx
 
@@ -6,11 +6,11 @@ APP_HOST = "mitm.it"
 APP_PORT = 80
 
 
-class Onboarding(wsgiapp.WSGIApp):
+class Onboarding(asgiapp.WSGIApp):
     name = "onboarding"
 
     def __init__(self):
-        super().__init__(app, None, None)
+        super().__init__(app, APP_HOST, APP_PORT)
 
     def load(self, loader):
         loader.add_option(

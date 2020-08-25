@@ -225,6 +225,27 @@ class TestMessageText:
         # "鏄庝集" is decoded form of \xe6\x98\x8e\xe4\xbc\xaf in gb18030
         assert u"鏄庝集" in r.text
 
+    def test_guess_css_charset(self):
+        # @charset but not text/css
+        r = tutils.tresp(content=b'@charset "gb2312";'
+                                 b'#foo::before {content: "\xe6\x98\x8e\xe4\xbc\xaf"}')
+        # "鏄庝集" is decoded form of \xe6\x98\x8e\xe4\xbc\xaf in gb18030
+        assert u"鏄庝集" not in r.text
+
+        # @charset not at the beginning
+        r = tutils.tresp(content=b'foo@charset "gb2312";'
+                                 b'#foo::before {content: "\xe6\x98\x8e\xe4\xbc\xaf"}')
+        r.headers["content-type"] = "text/css"
+        # "鏄庝集" is decoded form of \xe6\x98\x8e\xe4\xbc\xaf in gb18030
+        assert u"鏄庝集" not in r.text
+
+        # @charset and text/css
+        r = tutils.tresp(content=b'@charset "gb2312";'
+                                 b'#foo::before {content: "\xe6\x98\x8e\xe4\xbc\xaf"}')
+        r.headers["content-type"] = "text/css"
+        # "鏄庝集" is decoded form of \xe6\x98\x8e\xe4\xbc\xaf in gb18030
+        assert u"鏄庝集" in r.text
+
     def test_guess_latin_1(self):
         r = tutils.tresp(content=b"\xF0\xE2")
         assert r.text == u"ðâ"

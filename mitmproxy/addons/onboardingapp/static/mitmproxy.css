@@ -1,45 +1,44 @@
-#certbank div {
-    text-align: center;
-    padding-top: 20px;
+.media {
+    min-height: 110px;
+}
+.media svg {
+    width: 64px;
+    margin-right: 1rem !important;
 }
 
-.fronttable {
+.instructions {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
-.bigtitle {
-    font-weight: bold;
-    font-size: 50px;
-    line-height: 55px;
-    text-align: center;
-    display: table;
-    height: 300px;
+/* CSS-only collapsible */
+.show-instructions:target, .hide-instructions, .instructions {
+    display: none;
+}
+.show-instructions:target ~ .hide-instructions {
+    display: inline-block;
+}
+.show-instructions:target ~ .instructions {
+    display: inherit;
 }
 
-.bigtitle > div {
-    display: table-cell;
-    vertical-align: middle;
+.fa-apple {
+    color: #666;
 }
 
-section {
-    margin-top: 50px;
+.fa-windows {
+    color: #0078D7;
 }
 
-.example {
+.fa-firefox-browser {
+    color: #E25821;
+}
+
+.fa-android {
     margin-top: 10px;
-    margin-bottom: 10px;
+    color: #3DDC84;
 }
 
-.innerlink {
-    text-decoration: none;
-    border-bottom: 1px dotted;
-    margin-bottom: 15px;
-}
-
-.masthead {
-    padding: 50px 0 60px;
-    text-align: center;
-}
-
-.header {
-    font-size: 1.5em;
+.fa-certificate {
+    color: #FFBB00;
 }

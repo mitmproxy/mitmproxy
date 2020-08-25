@@ -57,7 +57,7 @@ export function PathColumn({ flow }) {
 
     let err;
     if(flow.error){
-        if (flow.error.msg === "Connection killed"){
+        if (flow.error.msg === "Connection killed."){
             err = <i className="fa fa-fw fa-times pull-right"></i>
         } else {
             err = <i className="fa fa-fw fa-exclamation pull-right"></i>

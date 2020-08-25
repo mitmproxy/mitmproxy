@@ -69,7 +69,7 @@ describe('FlowColumns Components', () => {
             tree = pathColumn.toJSON()
         expect(tree).toMatchSnapshot()
 
-        tflow.error.msg = 'Connection killed'
+        tflow.error.msg = 'Connection killed.'
         tflow.intercepted = true
         pathColumn = renderer.create(<Columns.PathColumn flow={tflow}/>)
         tree = pathColumn.toJSON()

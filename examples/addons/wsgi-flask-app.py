@@ -6,7 +6,7 @@ instance, we're using the Flask framework (http://flask.pocoo.org/) to expose
 a single simplest-possible page.
 """
 from flask import Flask
-from mitmproxy.addons import wsgiapp
+from mitmproxy.addons import asgiapp
 
 app = Flask("proxapp")
 
@@ -19,7 +19,7 @@ def hello_world() -> str:
 addons = [
     # Host app at the magic domain "example.com" on port 80. Requests to this
     # domain and port combination will now be routed to the WSGI app instance.
-    wsgiapp.WSGIApp(app, "example.com", 80)
+    asgiapp.WSGIApp(app, "example.com", 80)
     # SSL works too, but the magic domain needs to be resolvable from the mitmproxy machine due to mitmproxy's design.
     # mitmproxy will connect to said domain and use serve its certificate (unless --no-upstream-cert is set)
     # but won't send any data.

@@ -46,7 +46,17 @@ export default function(){
         "pretty_host": "address",
         "scheme": "http",
         "timestamp_end": null,
-        "timestamp_start": null
+        "timestamp_start": null,
+        "trailers": [
+            [
+                "trailer",
+                "qvalue"
+            ],
+            [
+                "content-length",
+                "7"
+            ]
+        ]
     },
     "response": {
         "contentHash": "ab530a13e45914982b79f9b7e3fba994cfd1f3fb22f71cea1afbf02b460c6d1d",
@@ -66,7 +76,17 @@ export default function(){
         "reason": "OK",
         "status_code": 200,
         "timestamp_end": 1495370312.4814625,
-        "timestamp_start": 1495370312.481462
+        "timestamp_start": 1495370312.481462,
+        "trailers": [
+            [
+                "trailer",
+                "qvalue"
+            ],
+            [
+                "content-length",
+                "7"
+            ]
+        ]
     },
     "server_conn": {
         "address": [

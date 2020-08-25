@@ -120,12 +120,15 @@ class ConsoleAddon:
             "console_mouse", bool, True,
             "Console mouse interaction."
         )
-
         loader.add_option(
             "console_flowlist_layout",
             str, "default",
             "Set the flowlist layout",
             choices=sorted(console_flowlist_layout)
+        )
+        loader.add_option(
+            "console_strip_trailing_newlines", bool, False,
+            "Strip trailing newlines from edited request/response bodies."
         )
 
     @command.command("console.layout.options")
@@ -449,13 +452,14 @@ class ConsoleAddon:
             else:
                 message = flow.response
             c = self.master.spawn_editor(message.get_content(strict=False) or b"")
-            # Fix an issue caused by some editors when editing a
-            # request/response body. Many editors make it hard to save a
-            # file without a terminating newline on the last line. When
-            # editing message bodies, this can cause problems. For now, I
-            # just strip the newlines off the end of the body when we return
-            # from an editor.
-            message.content = c.rstrip(b"\n")
+            # Many editors make it hard to save a file without a terminating
+            # newline on the last line. When editing message bodies, this can
+            # cause problems. We strip trailing newlines by default, but this
+            # behavior is configurable.
+            if self.master.options.console_strip_trailing_newlines:
+                message.content = c.rstrip(b"\n")
+            else:
+                message.content = c
         elif flow_part == "set-cookies":
             self.master.switch_view("edit_focus_setcookies")
         elif flow_part == "url":
