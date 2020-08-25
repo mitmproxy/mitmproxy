@@ -73,15 +73,17 @@ class CliDirector:
     def run_external(self, command: str) -> None:
         subprocess.run(command, shell=True)
 
-    def message(self, msg: str, duration: typing.Optional[int] = None, add_instruction: bool = False) -> None:
+    def message(self, msg: str, duration: typing.Optional[int] = None, add_instruction: bool = False, instruction_html: str = "") -> None:
         if duration is None:
             duration = len(msg) * 0.075 # seconds
         self.tmux_session.set_option("display-time", int(duration * 1000)) # milliseconds
         self.tmux_pane.display_message(msg)
 
         # todo: this is a hack and needs refactoring (instruction() is only defined in MitmCliDirector)
-        if add_instruction:
-            self.instruction(title="", instruction=msg, duration=duration)
+        if add_instruction or instruction_html:
+            if not instruction_html:
+                instruction_html = msg
+            self.instruction(title="", instruction=instruction_html, duration=duration)
         self.pause(duration)
 
     def popup(self, content: str, duration: int = 4) -> None:

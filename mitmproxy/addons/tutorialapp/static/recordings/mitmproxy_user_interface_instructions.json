@@ -16,22 +16,22 @@
     {
         "title": "mitmproxy's views: Flow details view",
         "instruction": "You are now in the flow details view of the flow that requested /votes. The flow details view has 3 panes: request, response, and detail. Use your arrow keys 🠔 and 🠖 to switch between panes.",
-        "time_from": 12.56,
+        "time_from": 12.07,
         "time_from_str": "00:12",
-        "time_to": 18.560000000000002
+        "time_to": 18.07
     },
     {
         "title": "mitmproxy's views: Exit a view",
         "instruction": "Press 'q' to exit the current view.",
-        "time_from": 18.93,
+        "time_from": 18.43,
         "time_from_str": "00:18",
-        "time_to": 21.93
+        "time_to": 21.43
     },
     {
         "title": "Keyboard Shortcuts",
         "instruction": "Press '?' to view a list of all available keyboard shortcuts in the current view. If you only remember one shortcut, it should be this one.",
-        "time_from": 22.11,
-        "time_from_str": "00:22",
-        "time_to": 25.11
+        "time_from": 21.68,
+        "time_from_str": "00:21",
+        "time_to": 24.68
     }
 ]

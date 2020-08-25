@@ -16,64 +16,64 @@
     {
         "title": "",
         "instruction": "3. mitmproxy is controlled using keyboard shortcuts.",
-        "time_from": 7.01,
+        "time_from": 7.02,
         "time_from_str": "00:07",
-        "time_to": 10.91
+        "time_to": 10.92
     },
     {
         "title": "",
-        "instruction": "4. Use your arrow keys UP and DOWN to change the focused flow (>>).",
-        "time_from": 10.92,
+        "instruction": "4. Use your arrow keys <kbd>🠕</kbd> and <kbd>🠗</kbd> to change the focused flow (<code>&gt;&gt;</code>).",
+        "time_from": 10.93,
         "time_from_str": "00:10",
-        "time_to": 15.945
+        "time_to": 15.954999999999998
     },
     {
         "title": "",
-        "instruction": "5. Press ENTER to view the details of the focused flow.",
-        "time_from": 22.74,
+        "instruction": "5. Press <kbd>↵</kbd> to view the details of the focused flow.",
+        "time_from": 22.72,
         "time_from_str": "00:22",
-        "time_to": 26.865
+        "time_to": 26.845
     },
     {
         "title": "",
         "instruction": "6. The flow details view has 3 panes: request, response, and detail.",
-        "time_from": 27.13,
+        "time_from": 27.14,
         "time_from_str": "00:27",
-        "time_to": 32.23
+        "time_to": 32.24
     },
     {
         "title": "",
-        "instruction": "7. Use your LEFT and RIGHT arrow keys to switch between panes.",
-        "time_from": 32.24,
+        "instruction": "7. Use your <kbd>🠔</kbd> and <kbd>🠖</kbd> arrow keys to switch between panes.",
+        "time_from": 32.25,
         "time_from_str": "00:32",
-        "time_to": 36.89
+        "time_to": 36.9
     },
     {
         "title": "",
-        "instruction": "8. Press 'q' to exit the current view.",
-        "time_from": 43.31,
+        "instruction": "8. Press <kbd>q</kbd> to exit the current view.",
+        "time_from": 43.14,
         "time_from_str": "00:43",
-        "time_to": 46.160000000000004
+        "time_to": 45.99
     },
     {
         "title": "",
-        "instruction": "9. Press '?' to view a list of all available keyboard shortcuts.",
-        "time_from": 46.4,
+        "instruction": "9. Press <kbd>?</kbd> to view a list of all available keyboard shortcuts.",
+        "time_from": 46.25,
         "time_from_str": "00:46",
-        "time_to": 51.199999999999996
+        "time_to": 51.05
     },
     {
         "title": "",
-        "instruction": "10. The '?' shortcut works in every view - remember it!",
-        "time_from": 60.21,
-        "time_from_str": "01:00",
-        "time_to": 64.33500000000001
+        "instruction": "10. The <kbd>?</kbd> shortcut works in every view - you should remember it.",
+        "time_from": 59.46,
+        "time_from_str": "00:59",
+        "time_to": 64.41
     },
     {
         "title": "",
         "instruction": "11. You now know the basics of mitmproxy's UI.",
-        "time_from": 64.34,
+        "time_from": 64.42,
         "time_from_str": "01:04",
-        "time_to": 67.79
+        "time_to": 67.87
     }
 ]
