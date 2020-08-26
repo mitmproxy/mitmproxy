@@ -3,16 +3,25 @@ import logging
 from unittest import mock
 import os
 import asyncio
+import sys
 
 import pytest
-import tornado.testing
-from tornado import httpclient
-from tornado import websocket
 
-from mitmproxy import options
-from mitmproxy.test import tflow
-from mitmproxy.tools.web import app
-from mitmproxy.tools.web import master as webmaster
+if sys.platform == 'win32':
+    # workaround for
+    # https://github.com/tornadoweb/tornado/issues/2751
+    # https://www.tornadoweb.org/en/stable/index.html#installation
+    # (copied multiple times in the codebase, please remove all occurrences)
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+import tornado.testing  # noqa
+from tornado import httpclient  # noqa
+from tornado import websocket  # noqa
+
+from mitmproxy import options  # noqa
+from mitmproxy.test import tflow  # noqa
+from mitmproxy.tools.web import app  # noqa
+from mitmproxy.tools.web import master as webmaster  # noqa
 
 
 @pytest.fixture(scope="module")

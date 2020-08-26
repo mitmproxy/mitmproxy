@@ -26,7 +26,7 @@ class _Option:
     def __init__(
         self,
         name: str,
-        typespec: type,
+        typespec: typing.Union[type, object],  # object for Optional[x], which is not a type.
         default: typing.Any,
         help: str,
         choices: typing.Optional[typing.Sequence[str]]
@@ -101,7 +101,7 @@ class OptManager:
     def add_option(
         self,
         name: str,
-        typespec: type,
+        typespec: typing.Union[type, object],
         default: typing.Any,
         help: str,
         choices: typing.Optional[typing.Sequence[str]] = None
