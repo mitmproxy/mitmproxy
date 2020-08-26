@@ -109,6 +109,7 @@ class CliDirector:
         return round((now - self.record_start).total_seconds(), 2)
 
 
+# todo: title is not used at the moment
 class InstructionSpec(typing.NamedTuple):
     title: str
     instruction: str
@@ -160,6 +161,7 @@ class MitmCliDirector(CliDirector):
         self.request("http://tutorial.mitm.it/static/images/dog.jpg")
         self.request("http://tutorial.mitm.it/static/images/favicon.ico")
         self.request("http://tutorial.mitm.it/votes")
+        self.pause(0.5)
 
     def end_recording(self) -> None:
         self.instructions = []

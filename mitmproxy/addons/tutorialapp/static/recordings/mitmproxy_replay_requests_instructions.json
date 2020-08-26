@@ -1,0 +1,72 @@
+[
+    {
+        "title": "1. ",
+        "instruction": "1. We use client-side replays to get our pet some more votes.",
+        "time_from": 0.02,
+        "time_from_str": "00:00",
+        "time_to": 4.369999999999999
+    },
+    {
+        "title": "2. ",
+        "instruction": "2. First, generate a vote for your favorite pet.",
+        "time_from": 4.38,
+        "time_from_str": "00:04",
+        "time_to": 7.755
+    },
+    {
+        "title": "3. ",
+        "instruction": "3. Put the focus (<code>&gt;&gt;</code>) on the vote request.",
+        "time_from": 9.79,
+        "time_from_str": "00:09",
+        "time_to": 12.715
+    },
+    {
+        "title": "4. ",
+        "instruction": "4. Press <kbd>r</kbd> to resume this flow.",
+        "time_from": 16.59,
+        "time_from_str": "00:16",
+        "time_to": 18.84
+    },
+    {
+        "title": "5. ",
+        "instruction": "5. Note: No new rows are added for replayed flows, but the existing row is updated.",
+        "time_from": 19.15,
+        "time_from_str": "00:19",
+        "time_to": 25.15
+    },
+    {
+        "title": "6. ",
+        "instruction": "6. Press <kbd>r</kbd> again multiple times to make sure your pet wins.",
+        "time_from": 25.16,
+        "time_from_str": "00:25",
+        "time_to": 29.509999999999998
+    },
+    {
+        "title": "7. ",
+        "instruction": "7. Click on 'Refresh Votes' on the right.",
+        "time_from": 35.11,
+        "time_from_str": "00:35",
+        "time_to": 37.96
+    },
+    {
+        "title": "8. ",
+        "instruction": "8. The vote count increased due to the replays.",
+        "time_from": 40.01,
+        "time_from_str": "00:40",
+        "time_to": 43.309999999999995
+    },
+    {
+        "title": "9. ",
+        "instruction": "9. You can also modify a flow before replaying it.",
+        "time_from": 43.33,
+        "time_from_str": "00:43",
+        "time_to": 46.855
+    },
+    {
+        "title": "10. ",
+        "instruction": "10. It works as shown in the previous step.",
+        "time_from": 46.87,
+        "time_from_str": "00:46",
+        "time_to": 49.794999999999995
+    }
+]

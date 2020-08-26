@@ -10,7 +10,29 @@
 <h2 id="view-flows" class="pt-3 pb-3 mb-3 border-bottom">Step 4: Replay Requests</h2>
 
 <p>
-    Yet to be written.
+    Another powerful feature of mitmproxy is replaying previous flows.
+    Two types of replays are supported:
+</p>
+
+<ul>
+    <li><strong>Client-side Replay:</strong> mitmproxy replays previous client requests, i.e., sends them to the server again, and the server replies with the reponse.</li>
+    <li><strong>Server-side Replay:</strong> mitmproxy replays server responses for requests that match an earlier recorded request.
+</ul>
+
+<p>
+    In this tutorial we focus on the more common use case of client-side replays.
+    See the docs for more info on <a href="https://docs.mitmproxy.org/stable/overview-features/#server-side-replay">server-side replay</a>.
+</p>
+
+<div class="interactions-wrapper">
+    <asciinema-player id="asciinema-player" src="/static/recordings/mitmproxy_replay_requests.cast" font-size="13px" poster="npt:0:1" preload></asciinema-player>
+    {% if instructions %}
+        {% include 'instructions.html' %}
+    {% endif %}
+</div>
+
+<p>
+    You are almost done with this tutorial. In the next step you find more mitmproxy-related resources to discover.
 </p>
 
 <hr>

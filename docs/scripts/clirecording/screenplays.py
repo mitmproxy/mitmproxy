@@ -16,18 +16,17 @@ def record_user_interface(d: MitmCliDirector):
     d.exec("mitmproxy")
     d.pause(5)
     d.init_flow_list(step="user_interface")
-    d.pause(2)
 
     d.start_recording("recordings/mitmproxy_user_interface.cast")
     d.message("This is the default view of mitmproxy.")
     d.message("Every line represents a request and its response.")
     d.message("mitmproxy adds rows to the view as new requests come in.")
     d.message("Generate some requests by voting for your favorite pet on the right.")
-    d.request("http://tutorial.mitm.it/vote/dog", threaded=True)
+    d.request("http://tutorial.mitm.it/vote/dog")
     d.pause(3)
-    d.request("http://tutorial.mitm.it/vote/dog", threaded=True)
+    d.request("http://tutorial.mitm.it/vote/dog")
     d.pause(3)
-    d.request("http://tutorial.mitm.it/vote/dog", threaded=True)
+    d.request("http://tutorial.mitm.it/vote/dog")
     d.pause(1)
     d.message("You see the voting requests in the list of flows.")
 
@@ -129,7 +128,6 @@ def record_intercept_requests(d: MitmCliDirector):
     d.exec("mitmproxy")
     d.pause(5)
     d.init_flow_list(step="intercept_requests")
-    d.pause(2)
 
     d.start_recording("recordings/mitmproxy_intercept_requests.cast")
 
@@ -193,7 +191,6 @@ def record_modify_requests(d: MitmCliDirector):
     d.exec("mitmproxy")
     d.pause(5)
     d.init_flow_list(step="modify_requests")
-    d.pause(2)
     d.type("i")
     d.exec("~u /vote/")
 
@@ -265,4 +262,52 @@ def record_modify_requests(d: MitmCliDirector):
     d.type("a")
 
     d.save_instructions("recordings/mitmproxy_modify_requests_instructions.json")
+    d.end()
+
+
+def record_replay_requests(d: MitmCliDirector):
+    tmux = d.start_session(width=100, height=26)
+    window = tmux.attached_window
+
+    window.set_window_option("window-status-current-format", "mitmproxy Tutorial: Replay Requests")
+
+    # prepare view
+    d.exec("mitmproxy")
+    d.pause(5)
+    d.init_flow_list(step="replay_requests")
+
+    d.start_recording("recordings/mitmproxy_replay_requests.cast")
+
+    d.message("We use client-side replays to get our pet some more votes.")
+    d.message("First, generate a vote for your favorite pet.")
+    d.request("http://tutorial.mitm.it/vote/cat")
+    d.pause(2)
+    d.message(
+        msg="Put the focus (>>) on the vote request.",
+        instruction_html="Put the focus (<code>&gt;&gt;</code>) on the vote request."
+    )
+    d.press_key("Down", count=11, pause=0.25)
+
+    d.message(
+        msg="Press 'r' to replay this flow.",
+        instruction_html="Press <kbd>r</kbd> to resume this flow."
+    )
+    d.type("r")
+    d.message("Note: No new rows are added for replayed flows, but the existing row is updated.")
+
+    d.message(
+        msg="Press 'r' again multiple times to make sure your pet wins.",
+        instruction_html="Press <kbd>r</kbd> again multiple times to make sure your pet wins."
+    )
+    d.press_key("r", count=5, pause=1)
+
+    d.message("Click on 'Refresh Votes' on the right.")
+    d.request("http://tutorial.mitm.it/votes")
+    d.pause(2)
+    d.message("The vote count increased due to the replays.")
+
+    d.message("You can also modify a flow before replaying it.")
+    d.message("It works as shown in the previous step.")
+
+    d.save_instructions("recordings/mitmproxy_replay_requests_instructions.json")
     d.end()
