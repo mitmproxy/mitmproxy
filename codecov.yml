@@ -15,4 +15,4 @@ coverage:
           - "web/"
 codecov:
   notify:
-    after_n_builds: 6
+    after_n_builds: 7
