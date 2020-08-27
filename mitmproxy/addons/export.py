@@ -18,7 +18,11 @@ def cleanup_request(f: flow.Flow) -> http.HTTPRequest:
     assert isinstance(f, http.HTTPFlow)
     request = f.request.copy()
     request.decode(strict=False)
-    # a bit of clean-up - these headers should be automatically set by curl/httpie
+    return request
+
+
+def pop_headers(request: http.HTTPRequest) -> http.HTTPRequest:
+    # Remove some headers that are redundant for curl/httpie export
     request.headers.pop('content-length')
     if request.headers.get("host", "") == request.host:
         request.headers.pop("host")
@@ -53,6 +57,7 @@ def request_content_for_console(request: http.HTTPRequest) -> str:
 
 def curl_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
+    request = pop_headers(request)
     args = ["curl"]
     for k, v in request.headers.items(multi=True):
         if k.lower() == "accept-encoding":
@@ -70,6 +75,7 @@ def curl_command(f: flow.Flow) -> str:
 
 def httpie_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
+    request = pop_headers(request)
     args = ["http", request.method, request.url]
     for k, v in request.headers.items(multi=True):
         args.append(f"{k}: {v}")
