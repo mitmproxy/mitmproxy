@@ -99,7 +99,7 @@ setup(
             "Flask>=1.0,<1.2",
             "hypothesis>=5.8,<5.30",
             "parver>=0.1,<2.0",
-            "pytest-asyncio>=0.10.0,<0.14",
+            "pytest-asyncio>=0.14,<0.15",
             "pytest-cov>=2.7.1,<3",
             "pytest-timeout>=1.3.3,<2",
             "pytest-xdist>=1.29,<2.2",
