@@ -43,12 +43,31 @@ def test_simple():
         tctx.cycle(r, f)
         assert f.intercepted
 
+
+def test_tcp():
+    r = intercept.Intercept()
+    with taddons.context(r) as tctx:
+        tctx.configure(r, intercept="~tcp")
+        f = tflow.ttcpflow()
+        tctx.cycle(r, f)
+        assert f.intercepted
+
         tctx.configure(r, intercept_active=False)
         f = tflow.ttcpflow()
         tctx.cycle(r, f)
         assert not f.intercepted
 
-        tctx.configure(r, intercept_active=True)
-        f = tflow.ttcpflow()
-        tctx.cycle(r, f)
+
+def test_already_taken():
+    r = intercept.Intercept()
+    with taddons.context(r) as tctx:
+        tctx.configure(r, intercept="~q")
+
+        f = tflow.tflow()
+        tctx.invoke(r, "request", f)
         assert f.intercepted
+
+        f = tflow.tflow()
+        f.reply.take()
+        tctx.invoke(r, "request", f)
+        assert not f.intercepted

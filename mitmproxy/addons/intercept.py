@@ -30,7 +30,7 @@ class Intercept:
                 ctx.options.intercept_active = False
 
     def should_intercept(self, f: flow.Flow) -> bool:
-        return (
+        return bool(
                 ctx.options.intercept_active
                 and self.filt
                 and self.filt(f)
@@ -39,6 +39,7 @@ class Intercept:
 
     def process_flow(self, f: flow.Flow) -> None:
         if self.should_intercept(f):
+            assert f.reply
             if f.reply.state != "start":
                 return ctx.log.debug("Cannot intercept request that is already taken by another addon.")
             f.intercept()
