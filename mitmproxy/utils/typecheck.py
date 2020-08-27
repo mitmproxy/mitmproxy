@@ -39,7 +39,7 @@ def check_option_type(name: str, value: typing.Any, typeinfo: Type) -> None:
 
     typename = str(typeinfo)
 
-    if typename.startswith("typing.Union"):
+    if typename.startswith("typing.Union") or typename.startswith("typing.Optional"):
         for T in union_types(typeinfo):
             try:
                 check_option_type(name, value, T)
