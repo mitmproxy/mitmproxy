@@ -67,6 +67,7 @@ def common_options(parser, opts):
     # Proxy SSL options
     group = parser.add_argument_group("SSL")
     opts.make_parser(group, "certs", metavar="SPEC")
+    opts.make_parser(group, "cert_passphrase", metavar="PASS")
     opts.make_parser(group, "ssl_insecure", short="k")
     opts.make_parser(group, "key_size", metavar="KEY_SIZE")
 

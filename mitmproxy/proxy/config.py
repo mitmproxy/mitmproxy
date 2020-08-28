@@ -65,7 +65,8 @@ class ProxyConfig:
         self.certstore = certs.CertStore.from_store(
             certstore_path,
             moptions.CONF_BASENAME,
-            key_size
+            key_size,
+            options.cert_passphrase
         )
 
         for c in options.certs:
@@ -79,7 +80,7 @@ class ProxyConfig:
                     "Certificate file does not exist: %s" % cert
                 )
             try:
-                self.certstore.add_cert_file(parts[0], cert)
+                self.certstore.add_cert_file(parts[0], cert, options.cert_passphrase)
             except crypto.Error:
                 raise exceptions.OptionsError(
                     "Invalid certificate format: %s" % cert
