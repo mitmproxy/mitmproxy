@@ -11,6 +11,7 @@ Unreleased: mitmproxy next
     * Display HTTP trailers in mitmweb (@sanlengjingvv)
     * Revamp onboarding app (@mhils)
     * Add ASGI support for embedded apps (@mhils)
+    * Add --cert-passphrase command line argument (@mirosyn)
 
     * --- TODO: add new PRs above this line ---
 
