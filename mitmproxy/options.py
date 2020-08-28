@@ -168,8 +168,8 @@ class Options(optmanager.OptManager):
             "tcp_hosts", Sequence[str], [],
             """
             Generic TCP SSL proxy mode for all hosts that match the pattern.
-            Similar to --ignore, but SSL connections are intercepted. The
-            communication contents are printed to the log in verbose mode.
+            Similar to --ignore-hosts, but SSL connections are intercepted.
+            The communication contents are printed to the log in verbose mode.
             """
         )
         self.add_option(
