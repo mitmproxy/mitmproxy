@@ -4,7 +4,6 @@ from mitmproxy import ctx
 from typing import Sequence
 
 
-
 class WebAddon:
     def load(self, loader):
         loader.add_option(
