@@ -13,6 +13,7 @@ Unreleased: mitmproxy next
     * Add ASGI support for embedded apps (@mhils)
     * Updated raw exports to not remove headers (@wchasekelley)
     * Fix file unlinking before external viewer finishes loading (@wchasekelley)
+    * Make columns configurable and customizable (@gorogoroumaru)
 
     * --- TODO: add new PRs above this line ---
 
