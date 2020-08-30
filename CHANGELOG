@@ -11,6 +11,8 @@ Unreleased: mitmproxy next
     * Display HTTP trailers in mitmweb (@sanlengjingvv)
     * Revamp onboarding app (@mhils)
     * Add ASGI support for embedded apps (@mhils)
+    * Updated raw exports to not remove headers (@wchasekelley)
+    * Fix file unlinking before external viewer finishes loading (@wchasekelley)
 
     * --- TODO: add new PRs above this line ---
 

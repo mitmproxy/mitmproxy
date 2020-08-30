@@ -11,6 +11,7 @@ import sys
 import tempfile
 import typing  # noqa
 import contextlib
+import threading
 
 import urwid
 
@@ -171,7 +172,9 @@ class ConsoleMaster(master.Master):
                 signals.status_message.send(
                     message="Can't start external viewer: %s" % " ".join(c)
                 )
-        os.unlink(name)
+        # add a small delay before deletion so that the file is not removed before being loaded by the viewer
+        t = threading.Timer(1.0, os.unlink, args=[name])
+        t.start()
 
     def set_palette(self, opts, updated):
         self.ui.register_palette(

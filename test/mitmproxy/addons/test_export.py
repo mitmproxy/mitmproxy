@@ -144,6 +144,7 @@ class TestRaw:
 
     def test_get_request_present(self, get_request):
         assert b"header: qvalue" in export.raw(get_request)
+        assert b"content-length: 0" in export.raw_request(get_request)
 
     def test_get_response_present(self, get_response):
         delattr(get_response, 'request')
@@ -163,6 +164,7 @@ class TestRaw:
 class TestRawRequest:
     def test_get(self, get_request):
         assert b"header: qvalue" in export.raw_request(get_request)
+        assert b"content-length: 0" in export.raw_request(get_request)
 
     def test_no_request(self, get_response):
         delattr(get_response, 'request')
