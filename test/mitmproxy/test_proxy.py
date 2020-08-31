@@ -46,8 +46,6 @@ class TestProcessProxyOptions:
             self.assert_noerr(
                 "--cert",
                 tdata.path("mitmproxy/data/testkey.pem"))
-            with pytest.raises(Exception, match="does not exist"):
-                self.p("--cert", "nonexistent")
 
 
 class TestProxyServer:
