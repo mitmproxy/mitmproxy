@@ -1,0 +1,158 @@
+[
+    {
+        "instruction": "1. Welcome to the mitmproxy tutorial. In this lesson we cover the user interface.",
+        "time_from": 0.01,
+        "time_from_str": "00:00",
+        "time_to": 7.8100000000000005
+    },
+    {
+        "instruction": "2. This is the default view of mitmproxy.",
+        "time_from": 16.47,
+        "time_from_str": "00:16",
+        "time_to": 20.27
+    },
+    {
+        "instruction": "3. mitmproxy adds rows to the view as new requests come in.",
+        "time_from": 20.78,
+        "time_from_str": "00:20",
+        "time_to": 26.380000000000003
+    },
+    {
+        "instruction": "4. Let’s generate some requests using `curl` in a separate terminal.",
+        "time_from": 26.9,
+        "time_from_str": "00:26",
+        "time_to": 33.4
+    },
+    {
+        "instruction": "5. Use curl’s `-x` option to specify a proxy, e.g., `curl -x http://127.0.0.1:8080` to use mitmproxy.",
+        "time_from": 36.84,
+        "time_from_str": "00:36",
+        "time_to": 46.64
+    },
+    {
+        "instruction": "6. We use the text-based weather service `wttr.in`.",
+        "time_from": 52.22,
+        "time_from_str": "00:52",
+        "time_to": 57.019999999999996
+    },
+    {
+        "instruction": "7. You see the requests to `wttr.in` in the list of flows.",
+        "time_from": 91.41,
+        "time_from_str": "01:31",
+        "time_to": 96.91
+    },
+    {
+        "instruction": "8. mitmproxy is controlled using keyboard shortcuts.",
+        "time_from": 97.43,
+        "time_from_str": "01:37",
+        "time_to": 102.33000000000001
+    },
+    {
+        "instruction": "9. Use your arrow keys `↑` and `↓` to change the focused flow (`>>`).",
+        "time_from": 102.84,
+        "time_from_str": "01:42",
+        "time_to": 109.44
+    },
+    {
+        "instruction": "10. The focused flow (`>>`) is used as a target for various commands.",
+        "time_from": 114.18,
+        "time_from_str": "01:54",
+        "time_to": 120.68
+    },
+    {
+        "instruction": "11. One such command shows the flow details, it is bound to `↵`.",
+        "time_from": 121.2,
+        "time_from_str": "02:01",
+        "time_to": 127.2
+    },
+    {
+        "instruction": "12. Press `↵` to view the details of the focused flow.",
+        "time_from": 127.72,
+        "time_from_str": "02:07",
+        "time_to": 132.72
+    },
+    {
+        "instruction": "13. The flow details view has 3 panes: request, response, and detail.",
+        "time_from": 133.52,
+        "time_from_str": "02:13",
+        "time_to": 140.02
+    },
+    {
+        "instruction": "14. Use your arrow keys `←` and `→` to switch between panes.",
+        "time_from": 140.54,
+        "time_from_str": "02:20",
+        "time_to": 146.14
+    },
+    {
+        "instruction": "15. Press `q` to exit the current view.",
+        "time_from": 154.1,
+        "time_from_str": "02:34",
+        "time_to": 157.6
+    },
+    {
+        "instruction": "16. Press `?` to get a list of all available keyboard shortcuts.",
+        "time_from": 158.28,
+        "time_from_str": "02:38",
+        "time_to": 164.28
+    },
+    {
+        "instruction": "17. Press `q` to exit the current view.",
+        "time_from": 174.55,
+        "time_from_str": "02:54",
+        "time_to": 178.05
+    },
+    {
+        "instruction": "18. Each shortcut is internally bound to a command.",
+        "time_from": 178.86,
+        "time_from_str": "02:58",
+        "time_to": 183.56
+    },
+    {
+        "instruction": "19. You can also execute commands directly (without using shortcuts).",
+        "time_from": 184.07,
+        "time_from_str": "03:04",
+        "time_to": 190.57
+    },
+    {
+        "instruction": "20. Press `:` to open the command prompt at the bottom.",
+        "time_from": 191.09,
+        "time_from_str": "03:11",
+        "time_to": 196.19
+    },
+    {
+        "instruction": "21. Enter `console.view.flow @focus`.",
+        "time_from": 196.97,
+        "time_from_str": "03:16",
+        "time_to": 200.27
+    },
+    {
+        "instruction": "22. The command `console.view.flow` opens the details view for a flow.",
+        "time_from": 206.68,
+        "time_from_str": "03:26",
+        "time_to": 213.28
+    },
+    {
+        "instruction": "23. The argument `@focus` defines the target flow.",
+        "time_from": 213.79,
+        "time_from_str": "03:33",
+        "time_to": 218.39
+    },
+    {
+        "instruction": "24. Press `↵` to execute the command.",
+        "time_from": 218.9,
+        "time_from_str": "03:38",
+        "time_to": 222.20000000000002
+    },
+    {
+        "instruction": "25. Commands unleash the full power of mitmproxy, i.e., to configure interceptions.",
+        "time_from": 222.89,
+        "time_from_str": "03:42",
+        "time_to": 230.79
+    },
+    {
+        "instruction": "26. You now know basics of mitmproxy’s UI and how to control it.",
+        "time_from": 231.31,
+        "time_from_str": "03:51",
+        "time_to": 237.31
+    }
+]

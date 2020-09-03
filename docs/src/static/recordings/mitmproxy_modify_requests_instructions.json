@@ -1,0 +1,104 @@
+[
+    {
+        "instruction": "1. Welcome to the mitmproxy tutorial. In this lesson we cover the modification of intercepted requests.",
+        "time_from": 0.01,
+        "time_from_str": "00:00",
+        "time_to": 10.01
+    },
+    {
+        "instruction": "2. We configure and use the same interception rule as in the last tutorial.",
+        "time_from": 19.0,
+        "time_from_str": "00:19",
+        "time_to": 26.2
+    },
+    {
+        "instruction": "3. Press `i` to prepopulate mitmproxy’s command prompt, enter the flow filter `~u /Paris & ~q`, and press `↵`.",
+        "time_from": 26.72,
+        "time_from_str": "00:26",
+        "time_to": 37.42
+    },
+    {
+        "instruction": "4. Let’s generate a request using `curl` in a separate terminal.",
+        "time_from": 45.75,
+        "time_from_str": "00:45",
+        "time_to": 51.85
+    },
+    {
+        "instruction": "5. We now want to modify the intercepted request.",
+        "time_from": 71.34,
+        "time_from_str": "01:11",
+        "time_to": 75.94
+    },
+    {
+        "instruction": "6. Put the focus (`>>`) on the intercepted flow. This is already the case in our example.",
+        "time_from": 76.46,
+        "time_from_str": "01:16",
+        "time_to": 85.05999999999999
+    },
+    {
+        "instruction": "7. Press `↵` to open the details view for the intercepted flow.",
+        "time_from": 85.58,
+        "time_from_str": "01:25",
+        "time_to": 91.58
+    },
+    {
+        "instruction": "8. Press `e` to edit the intercepted flow.",
+        "time_from": 92.21,
+        "time_from_str": "01:32",
+        "time_to": 96.11
+    },
+    {
+        "instruction": "9. mitmproxy asks which part to modify.",
+        "time_from": 96.76,
+        "time_from_str": "01:36",
+        "time_to": 100.36
+    },
+    {
+        "instruction": "10. Select `path` by using your arrow keys and press `↵`.",
+        "time_from": 100.88,
+        "time_from_str": "01:40",
+        "time_to": 106.17999999999999
+    },
+    {
+        "instruction": "11. mitmproxy shows all path components line by line, in our example its just one element: `Paris`.",
+        "time_from": 109.92,
+        "time_from_str": "01:49",
+        "time_to": 119.42
+    },
+    {
+        "instruction": "12. Press `↵` to modify the selected path component.",
+        "time_from": 119.94,
+        "time_from_str": "01:59",
+        "time_to": 124.74
+    },
+    {
+        "instruction": "13. Replace `Paris` with `Tokio`.",
+        "time_from": 127.47,
+        "time_from_str": "02:07",
+        "time_to": 130.37
+    },
+    {
+        "instruction": "14. Press `ESC` to confirm your change.",
+        "time_from": 136.69,
+        "time_from_str": "02:16",
+        "time_to": 140.19
+    },
+    {
+        "instruction": "15. Press `q` to go back to the flow details view.",
+        "time_from": 141.05,
+        "time_from_str": "02:21",
+        "time_to": 145.65
+    },
+    {
+        "instruction": "16. Press `a` to resume the intercepted flow.",
+        "time_from": 146.36,
+        "time_from_str": "02:26",
+        "time_to": 150.46
+    },
+    {
+        "instruction": "17. You see that the request URL was modified and `wttr.in` replied with the weather report for `Tokio`.",
+        "time_from": 153.26,
+        "time_from_str": "02:33",
+        "time_to": 163.26
+    }
+]
