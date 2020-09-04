@@ -122,7 +122,7 @@ class CliDirector:
         # todo: check if installed tmux version supports display-popup
 
         # tmux's display-popup is blocking, so we close it in a separate thread
-        t=threading.Thread(target=self.close_popup, args=[duration])
+        t = threading.Thread(target=self.close_popup, args=[duration])
         t.start()
 
         lines = content.splitlines()
