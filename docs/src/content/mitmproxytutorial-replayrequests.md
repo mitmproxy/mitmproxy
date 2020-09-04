@@ -18,3 +18,5 @@ In this tutorial we focus on the more common use case of client-side replays.
 See the docs for more info on [server-side replay]({{< relref "concepts-advancedfeatures#server-side-replay" >}}).
 
 {{% asciicast file="mitmproxy_replay_requests" poster="0:3" instructions=true %}}
+
+You are almost done with this tutorial. In the last step you find more mitmproxy-related resources to discover.

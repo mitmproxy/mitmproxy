@@ -94,6 +94,8 @@ def record_user_interface(d: CliDirector):
 
     d.message("You now know basics of mitmproxy’s UI and how to control it.")
     d.pause(1)
+
+    d.message("In the next lesson you will learn to intercept flows.")
     d.save_instructions("recordings/mitmproxy_user_interface_instructions.json")
     d.end()
 
@@ -152,10 +154,13 @@ def record_intercept_requests(d: CliDirector):
 
     d.focus_pane(pane_top)
     d.press_key("Down")
+    d.pause(1)
 
     d.message("Press `X` to kill this flow, i.e., discard it without forwarding it to its final destination `wttr.in`.")
     d.type("X")
     d.pause(3)
+
+    d.message("In the next lesson you will learn to modify intercepted flows.")
     d.save_instructions("recordings/mitmproxy_intercept_requests_instructions.json")
     d.end()
 
@@ -227,6 +232,7 @@ def record_modify_requests(d: CliDirector):
 
     d.message("You see that the request URL was modified and `wttr.in` replied with the weather report for `Innsbruck`.")
 
+    d.message("In the next lesson you will learn to replay flows.")
     d.save_instructions("recordings/mitmproxy_modify_requests_instructions.json")
     d.end()
 
@@ -255,17 +261,18 @@ def record_replay_requests(d: CliDirector):
 
     d.focus_pane(pane_top)
 
-    d.message("We now want to replay the intercepted request.")
-    d.message("Put the focus (`>>`) on the intercepted flow. This is already the case in our example.")
-    d.message("Press `r` to replay this flow.")
+    d.message("We now want to replay the this request.")
+    d.message("Put the focus (`>>`) on the request that should be replayed. This is already the case in our example.")
+    d.message("Press `r` to replay the request.")
     d.type("r")
 
     d.message("Note that no new rows are added for replayed flows, but the existing row is updated.")
     d.message("Every time you press `r`, mitmproxy sends this request to the server again and updates the flow.")
-    d.press_key("r", count=6, pause=0.75)
+    d.press_key("r", count=4, pause=1)
 
     d.message("You can also modify a flow before replaying it.")
-    d.message("It works as shown in the previous tutorial by pressing `e`.")
+    d.message("It works as shown in the previous lesson, by pressing `e`.")
 
+    d.message("Congratulations! You have completed all lessons of the mitmproxy tutorial.")
     d.save_instructions("recordings/mitmproxy_replay_requests_instructions.json")
     d.end()

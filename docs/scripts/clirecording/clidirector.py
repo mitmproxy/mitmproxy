@@ -67,12 +67,14 @@ class CliDirector:
             target.send_keys(cmd=keys, enter=False, suppress_history=False)
 
             # inspired by https://github.com/dmotz/TuringType
-            real_pause = random.uniform(0, pause) + 0.3 * pause
-            if keys == "Space" or keys == "," or keys == ".":
-                real_pause += random.uniform(0, pause)
-            if random.random() > 0.7:
+            real_pause = random.uniform(0, pause) + 0.4 * pause
+            if keys == "Space":
+                real_pause += 1.5 * pause
+            elif keys == ".":
                 real_pause += pause
-            if random.random() > 0.95:
+            elif random.random() > 0.75:
+                real_pause += pause
+            elif random.random() > 0.95:
                 real_pause += 2 * pause
             self.pause(real_pause)
 
@@ -106,7 +108,7 @@ class CliDirector:
 
     def message(self, msg: str, duration: typing.Optional[int] = None, add_instruction: bool = True, instruction_html: str = "") -> None:
         if duration is None:
-            duration = len(msg) * 0.1  # seconds
+            duration = len(msg) * 0.08  # seconds
         self.tmux_session.set_option("display-time", int(duration * 1000))  # milliseconds
         self.tmux_pane.display_message(" " + msg)
 
