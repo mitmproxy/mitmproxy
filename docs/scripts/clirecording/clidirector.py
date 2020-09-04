@@ -1,18 +1,23 @@
-import datetime
 import json
 import libtmux
 import random
-import requests
 import subprocess
 import threading
 import time
 import typing
 
 
+class InstructionSpec(typing.NamedTuple):
+    instruction: str
+    time_from: float
+    time_to: float
+
+
 class CliDirector:
     def __init__(self):
         self.record_start = None
         self.pause_between_keys = 0.2
+        self.instructions: typing.List[InstructionSpec] = []
 
     def start(self, filename: str, width: int = 0, height: int = 0) -> libtmux.Session:
         self.start_session(width, height)
@@ -46,6 +51,7 @@ class CliDirector:
         self.asciinema_proc.terminate()
         self.asciinema_proc.wait(timeout=5)
         self.record_start = None
+        self.instructions = []
 
     def end_session(self) -> None:
         self.tmux_session.kill_session()
@@ -104,7 +110,6 @@ class CliDirector:
         self.tmux_session.set_option("display-time", int(duration * 1000))  # milliseconds
         self.tmux_pane.display_message(" " + msg)
 
-        # todo: this is a hack and needs refactoring (instruction() is only defined in MitmCliDirector)
         if add_instruction or instruction_html:
             if not instruction_html:
                 instruction_html = msg
@@ -126,28 +131,6 @@ class CliDirector:
         self.pause(duration)
         self.tmux_pane.cmd("display-popup", "-C")
 
-    @property
-    def current_time(self) -> float:
-        now = time.time()
-        return round(now - self.record_start, 1)
-
-    @property
-    def current_pane(self) -> libtmux.Pane:
-        return self.tmux_pane
-
-
-class InstructionSpec(typing.NamedTuple):
-    instruction: str
-    time_from: float
-    time_to: float
-
-
-# todo: merge with CliDirector
-class MitmCliDirector(CliDirector):
-    def __init__(self):
-        super().__init__()
-        self.instructions: typing.List[InstructionSpec] = []
-
     def instruction(self, instruction: str, duration: float = 3, time_from: typing.Optional[float] = None) -> None:
         if time_from is None:
             time_from = self.current_time
@@ -165,12 +148,11 @@ class MitmCliDirector(CliDirector):
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(instr_as_dicts, f, ensure_ascii=False, indent=4)
 
-    def request(self, url: str, threaded: bool = False) -> None:
-        if threaded:
-            threading.Thread(target=lambda: requests.get(url, verify=False)).start()
-        else:
-            requests.get(url, verify=False)
+    @property
+    def current_time(self) -> float:
+        now = time.time()
+        return round(now - self.record_start, 1)
 
-    def end_recording(self) -> None:
-        self.instructions = []
-        super().end_recording()
+    @property
+    def current_pane(self) -> libtmux.Pane:
+        return self.tmux_pane

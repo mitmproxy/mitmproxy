@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-from clidirector import MitmCliDirector
+from clidirector import CliDirector
 
 
-def record_user_interface(d: MitmCliDirector):
+def record_user_interface(d: CliDirector):
     tmux = d.start_session(width=120, height=36)
     window = tmux.attached_window
 
@@ -98,7 +98,7 @@ def record_user_interface(d: MitmCliDirector):
     d.end()
 
 
-def record_intercept_requests(d: MitmCliDirector):
+def record_intercept_requests(d: CliDirector):
     tmux = d.start_session(width=120, height=36)
     window = tmux.attached_window
 
@@ -160,7 +160,7 @@ def record_intercept_requests(d: MitmCliDirector):
     d.end()
 
 
-def record_modify_requests(d: MitmCliDirector):
+def record_modify_requests(d: CliDirector):
     tmux = d.start_session(width=120, height=36)
     window = tmux.attached_window
 
@@ -231,7 +231,7 @@ def record_modify_requests(d: MitmCliDirector):
     d.end()
 
 
-def record_replay_requests(d: MitmCliDirector):
+def record_replay_requests(d: CliDirector):
     tmux = d.start_session(width=120, height=36)
     window = tmux.attached_window
 
