@@ -17,6 +17,6 @@ Intercepting *all* requests is usually not desired as it constantly interrupts y
 Thus, mitmproxy expects a [flow filter expression](https://docs.mitmproxy.org/stable/concepts-filters/) as the first argument to `set intercept` to selectively intercept requests.
 In the tutorial below we use the flow filter `~u <regex>` that filters flows by matching the regular expressing on the URL of the request.
 
-{{% asciicast file="mitmproxy_intercept_requests" poster="0:1" instructions=true %}}
+{{% asciicast file="mitmproxy_intercept_requests" poster="0:3" instructions=true %}}
 
-In the next step, you will learn to modify intercepted flows before sending them to the server.
+In the next lesson, you will learn to modify intercepted flows before sending them to the server.

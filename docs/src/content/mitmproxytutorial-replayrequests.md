@@ -17,6 +17,4 @@ Two types of replays are supported:
 In this tutorial we focus on the more common use case of client-side replays.
 See the docs for more info on [server-side replay](https://docs.mitmproxy.org/stable/gettingstarted-features/#server-side-replay).
 
-{{% asciicast file="mitmproxy_replay_requests" poster="0:1" instructions=true %}}
-
-You are almost done with this tutorial. In the next step you find more mitmproxy-related resources to discover.
+{{% asciicast file="mitmproxy_replay_requests" poster="0:3" instructions=true %}}

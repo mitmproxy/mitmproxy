@@ -14,4 +14,4 @@ You are in the default view of mitmproxy, which shows a list of flows.
 You should see your browser's HTTP requests to load this tutorial.
 mitmproxy adds rows to the view as new requests come in.
 
-{{% asciicast file="mitmproxy_user_interface" poster="0:1" instructions=true %}}
+{{% asciicast file="mitmproxy_user_interface" poster="0:3" instructions=true %}}
