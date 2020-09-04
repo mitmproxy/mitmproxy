@@ -1,104 +1,82 @@
 [
     {
         "instruction": "1. Welcome to the mitmproxy tutorial. In this lesson we cover the interception of requests.",
-        "time_from": 0.01,
-        "time_from_str": "00:00",
-        "time_to": 8.81
+        "time_from": 0.0,
+        "time_to": 7.0
     },
     {
         "instruction": "2. We first need to configure mitmproxy to intercept requests.",
-        "time_from": 17.7,
-        "time_from_str": "00:17",
-        "time_to": 23.6
+        "time_from": 16.1,
+        "time_to": 20.8
     },
     {
         "instruction": "3. Press `i` to prepopulate mitmproxy’s command prompt with `set intercept ''`.",
-        "time_from": 24.11,
-        "time_from_str": "00:24",
-        "time_to": 31.71
+        "time_from": 21.4,
+        "time_to": 27.5
     },
     {
         "instruction": "4. We use the flow filter expression `~u <regex>` to only intercept specific URLs.",
-        "time_from": 34.37,
-        "time_from_str": "00:34",
-        "time_to": 42.269999999999996
+        "time_from": 30.2,
+        "time_to": 36.5
     },
     {
         "instruction": "5. Additionally, we use the filter `~q` to only intercept requests, but not responses.",
-        "time_from": 42.78,
-        "time_from_str": "00:42",
-        "time_to": 51.08
+        "time_from": 37.1,
+        "time_to": 43.7
     },
     {
         "instruction": "6. We combine both flow filters using `&`.",
-        "time_from": 51.6,
-        "time_from_str": "00:51",
-        "time_to": 55.5
+        "time_from": 44.2,
+        "time_to": 47.3
     },
     {
-        "instruction": "7. Enter `~u /Paris & ~q` between the quotes of the `set intercept` command and press `↵`.",
-        "time_from": 56.02,
-        "time_from_str": "00:56",
-        "time_to": 64.72
+        "instruction": "7. Enter `~u /Dunedin & ~q` between the quotes of the `set intercept` command and press `ENTER`.",
+        "time_from": 47.8,
+        "time_to": 55.2
     },
     {
         "instruction": "8. The bottom bar shows that the interception has been configured.",
-        "time_from": 70.29,
-        "time_from_str": "01:10",
-        "time_to": 76.59
+        "time_from": 62.8,
+        "time_to": 67.8
     },
     {
         "instruction": "9. Let’s generate a request using `curl` in a separate terminal.",
-        "time_from": 77.1,
-        "time_from_str": "01:17",
-        "time_to": 83.19999999999999
+        "time_from": 68.4,
+        "time_to": 73.3
     },
     {
-        "instruction": "10. Use curl’s `-x` option to specify a proxy, e.g., `curl -x http://127.0.0.1:8080` to use mitmproxy.",
-        "time_from": 86.66,
-        "time_from_str": "01:26",
-        "time_to": 96.46
+        "instruction": "10. You see a new line in in the list of flows.",
+        "time_from": 96.1,
+        "time_to": 99.5
     },
     {
-        "instruction": "11. We use the text-based weather service `wttr.in`.",
-        "time_from": 102.38,
-        "time_from_str": "01:42",
-        "time_to": 107.17999999999999
+        "instruction": "11. The new flow is displayed in red to indicate that it has been intercepted.",
+        "time_from": 100.0,
+        "time_to": 105.9
     },
     {
-        "instruction": "12. You will see a new line in in the list of flows.",
-        "time_from": 117.59,
-        "time_from_str": "01:57",
-        "time_to": 122.39
+        "instruction": "12. Put the focus (`>>`) on the intercepted flow. This is already the case in our example.",
+        "time_from": 106.5,
+        "time_to": 113.4
     },
     {
-        "instruction": "13. The new flow is displayed in red to indicate that it has been intercepted.",
-        "time_from": 122.9,
-        "time_from_str": "02:02",
-        "time_to": 130.3
+        "instruction": "13. Press `a` to resume this flow without making any changes.",
+        "time_from": 113.9,
+        "time_to": 118.5
     },
     {
-        "instruction": "14. Put the focus (`>>`) on the intercepted flow. This is already the case in our example.",
-        "time_from": 130.82,
-        "time_from_str": "02:10",
-        "time_to": 139.42
+        "instruction": "14. Submit another request and focus its flow.",
+        "time_from": 121.1,
+        "time_to": 124.5
     },
     {
-        "instruction": "15. Press `a` to resume this flow without making any changes.",
-        "time_from": 139.94,
-        "time_from_str": "02:19",
-        "time_to": 145.64
+        "instruction": "15. Press `X` to kill this flow, i.e., discard it without forwarding it to its final destination `wttr.in`.",
+        "time_from": 128.8,
+        "time_to": 137.0
     },
     {
-        "instruction": "16. Submit another request and focus its flow.",
-        "time_from": 146.38,
-        "time_from_str": "02:26",
-        "time_to": 150.57999999999998
-    },
-    {
-        "instruction": "17. Press `X` to kill this flow, i.e., discard it without forwarding it to its final destination `wttr.in`.",
-        "time_from": 153.92,
-        "time_from_str": "02:33",
-        "time_to": 164.22
+        "instruction": "16. In the next lesson you will learn to modify intercepted flows.",
+        "time_from": 141.0,
+        "time_to": 146.0
     }
 ]
