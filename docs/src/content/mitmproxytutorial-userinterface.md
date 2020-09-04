@@ -15,3 +15,5 @@ You should see your browser's HTTP requests to load this tutorial.
 mitmproxy adds rows to the view as new requests come in.
 
 {{% asciicast file="mitmproxy_user_interface" poster="0:3" instructions=true %}}
+
+In the next lesson, you will learn to intercept requests before sending them to the server.

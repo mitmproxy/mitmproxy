@@ -46,16 +46,16 @@ After installation, you'll find shortcuts for mitmweb and mitmdump in the start
 menu. Both executables are added to your PATH and can be invoked from the
 command line.
 
-# Advanced Installation
+## Advanced Installation
 
-## Development Setup
+### Development Setup
 
 If you would like to install mitmproxy directly from source code or the
 GitHub master branch, please see the our
 [README](https://github.com/mitmproxy/mitmproxy#installation)
 on GitHub.
 
-## Installation from the Python Package Index (PyPI)
+### Installation from the Python Package Index (PyPI)
 
 If your mitmproxy addons require the installation of additional Python packages,
 you can install mitmproxy from [PyPI](https://pypi.org/project/mitmproxy/).
@@ -72,12 +72,12 @@ While there are plenty of options around[^1], we recommend the installation usin
 
 To install additional Python packages, run `pipx inject mitmproxy <your-package-name>`.
 
-## Docker Images
+### Docker Images
 
 You can use the official mitmproxy images from
 [DockerHub](https://hub.docker.com/r/mitmproxy/mitmproxy/).
 
-## Security Considerations for Binary Packages
+### Security Considerations for Binary Packages
 
 Our pre-compiled binary packages and Docker images include a self-contained
 Python 3 environment,  a recent version of OpenSSL that support ALPN and HTTP/2,

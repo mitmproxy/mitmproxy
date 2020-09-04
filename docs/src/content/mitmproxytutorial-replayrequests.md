@@ -15,6 +15,6 @@ Two types of replays are supported:
 * **Server-side Replay:** mitmproxy replays server responses for requests that match an earlier recorded request.
 
 In this tutorial we focus on the more common use case of client-side replays.
-See the docs for more info on [server-side replay](https://docs.mitmproxy.org/stable/gettingstarted-features/#server-side-replay).
+See the docs for more info on [server-side replay]({{< relref "concepts-advancedfeatures#server-side-replay" >}}).
 
 {{% asciicast file="mitmproxy_replay_requests" poster="0:3" instructions=true %}}

@@ -1,12 +1,11 @@
 ---
-title: "Features"
-menu: "overview"
+title: "Advanced features"
 menu:
-    overview:
+    concepts:
         weight: 4
 ---
 
-# Mitmproxy Core Features
+# Mitmproxy Advanced Features
 
 
 - [Anticache](#anticache)
@@ -79,7 +78,7 @@ Pattern | Description
 If *local-path* is a file, this file will always be served. File changes will be reflected immediately, there is no caching.
 
 If *local-path* is a directory, *url-regex* is used to split the request URL in two parts and part on the right is appended to *local-path*, excluding the query string.
-However, if *url-regex* contains a regex capturing group, this behavior changes and the first capturing group is appended instead (and query strings are not stripped). 
+However, if *url-regex* contains a regex capturing group, this behavior changes and the first capturing group is appended instead (and query strings are not stripped).
 Special characters are mapped to `_`. If the file cannot be found, `/index.html` is appended and we try again. Directory traversal outside of the originally specified directory is not possible.
 
 To illustrate this, consider the following example which maps all requests for `example.org/css*` to the local directory `~/static-css`.
@@ -98,7 +97,7 @@ Served File:      Preferred: <span style="color:#82b719">~/static-css</span><spa
                   Otherwise: 404 response without content
 </pre>
 
-If the file depends on the query string, we can use regex capturing groups. In this example, all `GET` requests for 
+If the file depends on the query string, we can use regex capturing groups. In this example, all `GET` requests for
 `example.org/index.php?page=<page-name>` are mapped to `~/static-dir/<page-name>`:
 
 <pre>

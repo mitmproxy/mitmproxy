@@ -17,7 +17,7 @@ exports[`OptionMenu Component should render correctly 1`] = `
         <i
           className="fa fa-fw fa-cogs text-primary"
         />
-        Edit Options 
+        Edit Options
         <sup>
           alpha
         </sup>
@@ -44,9 +44,9 @@ exports[`OptionMenu Component should render correctly 1`] = `
             onChange={[Function]}
             type="checkbox"
           />
-          Strip cache headers 
+          Strip cache headers
           <a
-            href="https://docs.mitmproxy.org/stable/overview-features/#anticache"
+            href="https://docs.mitmproxy.org/stable/concepts-advancedfeatures/#anticache"
             target="_blank"
           >
             <i
