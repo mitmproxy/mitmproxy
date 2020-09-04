@@ -12,8 +12,7 @@ import typing
 class CliDirector:
     def __init__(self):
         self.record_start = None
-        self.pause_between_keys = 0.1
-        self.pause_between_keys_rand = 0.25
+        self.pause_between_keys = 0.2
 
     def start(self, filename: str, width: int = 0, height: int = 0) -> libtmux.Session:
         self.start_session(width, height)
@@ -34,7 +33,7 @@ class CliDirector:
         self.asciinema_proc = subprocess.Popen([
             "asciinema", "rec", "-y", "--overwrite", "-c", "tmux attach -t asciinema_recorder", filename])
         self.pause(1.5)
-        self.record_start = datetime.datetime.now()
+        self.record_start = time.time()
 
     def resize_window(self, width: int, height: int) -> None:
         subprocess.Popen(["resize", "-s", str(height), str(width)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -46,6 +45,7 @@ class CliDirector:
     def end_recording(self) -> None:
         self.asciinema_proc.terminate()
         self.asciinema_proc.wait(timeout=5)
+        self.record_start = None
 
     def end_session(self) -> None:
         self.tmux_session.kill_session()
@@ -59,7 +59,16 @@ class CliDirector:
             if keys == " ":
                 keys = "Space"
             target.send_keys(cmd=keys, enter=False, suppress_history=False)
-            self.pause(pause + random.uniform(0, self.pause_between_keys_rand))
+
+            # inspired by https://github.com/dmotz/TuringType
+            real_pause = random.uniform(0, pause) + 0.3 * pause
+            if keys == "Space" or keys == "," or keys == ".":
+                real_pause += random.uniform(0, pause)
+            if random.random() > 0.7:
+                real_pause += pause
+            if random.random() > 0.95:
+                real_pause += 2 * pause
+            self.pause(real_pause)
 
     def type(self, keys: str, pause: typing.Optional[float] = None, target = None) -> None:
         if pause is None:
@@ -91,8 +100,8 @@ class CliDirector:
 
     def message(self, msg: str, duration: typing.Optional[int] = None, add_instruction: bool = True, instruction_html: str = "") -> None:
         if duration is None:
-            duration = len(msg) * 0.1 # seconds
-        self.tmux_session.set_option("display-time", int(duration * 1000)) # milliseconds
+            duration = len(msg) * 0.1  # seconds
+        self.tmux_session.set_option("display-time", int(duration * 1000))  # milliseconds
         self.tmux_pane.display_message(" " + msg)
 
         # todo: this is a hack and needs refactoring (instruction() is only defined in MitmCliDirector)
@@ -119,8 +128,8 @@ class CliDirector:
 
     @property
     def current_time(self) -> float:
-        now = datetime.datetime.now()
-        return round((now - self.record_start).total_seconds(), 2)
+        now = time.time()
+        return round(now - self.record_start, 1)
 
     @property
     def current_pane(self) -> libtmux.Pane:
@@ -130,7 +139,6 @@ class CliDirector:
 class InstructionSpec(typing.NamedTuple):
     instruction: str
     time_from: float
-    time_from_str: str
     time_to: float
 
 
@@ -140,16 +148,14 @@ class MitmCliDirector(CliDirector):
         super().__init__()
         self.instructions: typing.List[InstructionSpec] = []
 
-    def instruction(self, instruction: str, duration: float = 3, time_from: typing.Optional[float] = None, correction: float = 0) -> None:
+    def instruction(self, instruction: str, duration: float = 3, time_from: typing.Optional[float] = None) -> None:
         if time_from is None:
             time_from = self.current_time
-        time_from_str = str(datetime.timedelta(seconds = int(time_from + correction)))[2:]
 
         self.instructions.append(InstructionSpec(
-            str(len(self.instructions)+1) + ". " + instruction,
-            time_from=time_from + correction,
-            time_from_str=time_from_str,
-            time_to=time_from - correction + duration
+            instruction = str(len(self.instructions) + 1) + ". " + instruction,
+            time_from = round(time_from, 1),
+            time_to = round(time_from + duration, 1)
         ))
 
     def save_instructions(self, output_path: str) -> None:

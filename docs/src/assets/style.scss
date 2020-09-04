@@ -96,7 +96,6 @@ figure.has-border img {
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
 }
 
-// reset bulma pre styles
 .asciicast-wrapper {
     margin: 2rem 0;
 
@@ -105,6 +104,7 @@ figure.has-border img {
         margin-bottom: 1rem;
     }
 
+    // reset bulma pre styles
     pre.asciinema-terminal {
         padding: 0;
         overflow-x: hidden;
@@ -115,10 +115,8 @@ figure.has-border img {
         justify-content: space-between;
     }
 
-    .panel-block.is-active {
-        .tag {
-            background-color: $link;
-            color: $white;
-        }
+    .panel-block.is-active .tag {
+        background-color: $link;
+        color: $white;
     }
 }

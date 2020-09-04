@@ -25,30 +25,17 @@ def record_user_interface(d: MitmCliDirector):
     d.pause(2)
 
     d.type("curl")
-    d.message("Use curl’s `-x` option to specify a proxy, e.g., `curl -x http://127.0.0.1:8080` to use mitmproxy.")
-
-    d.type(" -x http://127.0.0.1:8080")
+    d.message("Use curl’s `--proxy` option to configure mitmproxy as a proxy.")
+    d.type(" --proxy http://127.0.0.1:8080")
 
     d.message("We use the text-based weather service `wttr.in`.")
-    d.exec(" \"http://wttr.in/Paris?0\"")
+    d.exec(" \"http://wttr.in/Dunedin?0\"")
 
     d.pause(2)
     d.press_key("Up")
     d.press_key("Left", count=3)
-    d.press_key("BSpace", count=5)
-    d.exec("Miami")
-
-    d.pause(2)
-    d.press_key("Up")
-    d.press_key("Left", count=3)
-    d.press_key("BSpace", count=5)
-    d.exec("Tokio")
-
-    d.pause(2)
-    d.press_key("Up")
-    d.press_key("Left", count=3)
-    d.press_key("BSpace", count=5)
-    d.exec("London")
+    d.press_key("BSpace", count=7)
+    d.exec("Innsbruck")
 
     d.pause(2)
     d.exec("exit", target=pane_bottom)
@@ -59,15 +46,16 @@ def record_user_interface(d: MitmCliDirector):
 
     d.message("mitmproxy is controlled using keyboard shortcuts.")
     d.message("Use your arrow keys `↑` and `↓` to change the focused flow (`>>`).")
-    d.press_key("Down", count=3, pause=0.5)
-    d.press_key("Up", count=2, pause=0.5)
-    d.press_key("Down", count=2, pause=0.5)
+    d.press_key("Down", pause=0.5)
+    d.press_key("Up", pause=0.5)
+    d.press_key("Down", pause=0.5)
+    d.press_key("Up", pause=0.5)
 
     d.message("The focused flow (`>>`) is used as a target for various commands.")
 
-    d.message("One such command shows the flow details, it is bound to `↵`.")
+    d.message("One such command shows the flow details, it is bound to `ENTER`.")
 
-    d.message("Press `↵` to view the details of the focused flow.")
+    d.message("Press `ENTER` to view the details of the focused flow.")
     d.press_key("Enter")
 
     d.message("The flow details view has 3 panes: request, response, and detail.")
@@ -83,6 +71,7 @@ def record_user_interface(d: MitmCliDirector):
     d.pause(2)
     d.press_key("Down", count=20, pause=0.25)
 
+    d.message("Tip: Remember the `?` shortcut. It works in every view.")
     d.message("Press `q` to exit the current view.")
     d.type("q")
 
@@ -98,7 +87,7 @@ def record_user_interface(d: MitmCliDirector):
 
     d.message("The argument `@focus` defines the target flow.")
 
-    d.message("Press `↵` to execute the command.")
+    d.message("Press `ENTER` to execute the command.")
     d.press_key("Enter")
 
     d.message("Commands unleash the full power of mitmproxy, i.e., to configure interceptions.")
@@ -129,8 +118,8 @@ def record_intercept_requests(d: MitmCliDirector):
     d.message("Additionally, we use the filter `~q` to only intercept requests, but not responses.")
     d.message("We combine both flow filters using `&`.")
 
-    d.message("Enter `~u /Paris & ~q` between the quotes of the `set intercept` command and press `↵`.")
-    d.exec("~u /Paris & ~q")
+    d.message("Enter `~u /Dunedin & ~q` between the quotes of the `set intercept` command and press `ENTER`.")
+    d.exec("~u /Dunedin & ~q")
     d.message("The bottom bar shows that the interception has been configured.")
 
     d.message("Let’s generate a request using `curl` in a separate terminal.")
@@ -142,22 +131,17 @@ def record_intercept_requests(d: MitmCliDirector):
     d.focus_pane(pane_bottom)
     d.pause(2)
 
-    d.type("curl")
-    d.message("Use curl’s `-x` option to specify a proxy, e.g., `curl -x http://127.0.0.1:8080` to use mitmproxy.")
-
-    d.type(" -x http://127.0.0.1:8080")
-
-    d.message("We use the text-based weather service `wttr.in`.")
-    d.exec(" \"http://wttr.in/Paris?0\"")
+    d.exec("curl --proxy http://127.0.0.1:8080 \"http://wttr.in/Dunedin?0\"")
     d.pause(2)
 
     d.focus_pane(pane_top)
 
-    d.message("You will see a new line in in the list of flows.")
+    d.message("You see a new line in in the list of flows.")
     d.message("The new flow is displayed in red to indicate that it has been intercepted.")
     d.message("Put the focus (`>>`) on the intercepted flow. This is already the case in our example.")
     d.message("Press `a` to resume this flow without making any changes.")
     d.type("a")
+    d.pause(2)
 
     d.focus_pane(pane_bottom)
 
@@ -187,10 +171,10 @@ def record_modify_requests(d: MitmCliDirector):
     d.pause(3)
 
     d.message("We configure and use the same interception rule as in the last tutorial.")
-    d.message("Press `i` to prepopulate mitmproxy’s command prompt, enter the flow filter `~u /Paris & ~q`, and press `↵`.")
+    d.message("Press `i` to prepopulate mitmproxy’s command prompt, enter the flow filter `~u /Dunedin & ~q`, and press `ENTER`.")
     d.type("i")
     d.pause(2)
-    d.exec("~u /Paris & ~q")
+    d.exec("~u /Dunedin & ~q")
 
     d.message("Let’s generate a request using `curl` in a separate terminal.")
 
@@ -201,8 +185,7 @@ def record_modify_requests(d: MitmCliDirector):
     d.focus_pane(pane_bottom)
     d.pause(2)
 
-    d.type("curl -x http://127.0.0.1:8080")
-    d.exec(" \"http://wttr.in/Paris?0\"")
+    d.exec("curl --proxy http://127.0.0.1:8080 \"http://wttr.in/Dunedin?0\"")
     d.pause(2)
 
     d.focus_pane(pane_top)
@@ -210,7 +193,7 @@ def record_modify_requests(d: MitmCliDirector):
     d.message("We now want to modify the intercepted request.")
     d.message("Put the focus (`>>`) on the intercepted flow. This is already the case in our example.")
 
-    d.message("Press `↵` to open the details view for the intercepted flow.")
+    d.message("Press `ENTER` to open the details view for the intercepted flow.")
     d.press_key("Enter")
 
     d.message("Press `e` to edit the intercepted flow.")
@@ -218,19 +201,19 @@ def record_modify_requests(d: MitmCliDirector):
 
     d.message("mitmproxy asks which part to modify.")
 
-    d.message("Select `path` by using your arrow keys and press `↵`.")
+    d.message("Select `path` by using your arrow keys and press `ENTER`.")
     d.press_key("Down", count=3, pause=0.5)
     d.pause(1)
     d.press_key("Enter")
 
-    d.message("mitmproxy shows all path components line by line, in our example its just one element: `Paris`.")
-    d.message("Press `↵` to modify the selected path component.")
+    d.message("mitmproxy shows all path components line by line, in our example its just `Dunedin`.")
+    d.message("Press `ENTER` to modify the selected path component.")
     d.press_key("Down", pause=2)
     d.press_key("Enter")
 
-    d.message("Replace `Paris` with `Tokio`.")
-    d.press_key("BSpace", count=5, pause=0.5)
-    d.type("Tokio", pause=0.5)
+    d.message("Replace `Dunedin` with `Innsbruck`.")
+    d.press_key("BSpace", count=7, pause=0.5)
+    d.type("Innsbruck", pause=0.5)
 
     d.message("Press `ESC` to confirm your change.")
     d.press_key("Escape")
@@ -242,7 +225,7 @@ def record_modify_requests(d: MitmCliDirector):
     d.type("a")
     d.pause(2)
 
-    d.message("You see that the request URL was modified and `wttr.in` replied with the weather report for `Tokio`.")
+    d.message("You see that the request URL was modified and `wttr.in` replied with the weather report for `Innsbruck`.")
 
     d.save_instructions("recordings/mitmproxy_modify_requests_instructions.json")
     d.end()
@@ -267,7 +250,7 @@ def record_replay_requests(d: MitmCliDirector):
     d.focus_pane(pane_bottom)
     d.pause(2)
 
-    d.exec("curl -x http://127.0.0.1:8080 \"http://wttr.in/Paris?0\"")
+    d.exec("curl --proxy http://127.0.0.1:8080 \"http://wttr.in/Dunedin?0\"")
     d.pause(2)
 
     d.focus_pane(pane_top)
