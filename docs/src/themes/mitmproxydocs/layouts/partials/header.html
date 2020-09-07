@@ -17,6 +17,17 @@
     {{ $style := resources.Get "style.scss" | toCSS | minify }}
     <link rel="stylesheet" href="{{ $style.Permalink }}">
 
+    {{ if .Params.has_asciinema }}
+        {{- $styles := resources.Get "asciinema-player.css" | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ $styles.Permalink }}" integrity="{{ $styles.Data.Integrity }}" media="screen">
+
+        {{- $styles := resources.Get "asciinema-player.js" | minify | fingerprint }}
+        <script src="{{ $styles.Permalink }}" integrity="{{ $styles.Data.Integrity }}"></script>
+
+        {{- $styles := resources.Get "asciinema-tutorial.js" | minify | fingerprint }}
+        <script src="{{ $styles.Permalink }}" integrity="{{ $styles.Data.Integrity }}"></script>
+    {{ end }}
+
     {{ range .AlternativeOutputFormats -}}
         {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
     {{ end -}}

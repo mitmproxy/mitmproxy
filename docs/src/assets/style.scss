@@ -5,6 +5,9 @@ $primary: #C93312;
 $warning-invert: #FFFFFF;
 $family-sans-serif: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif, 'Font Awesome 5 Free', 'Font Awesome 5 Brands' !default;
 
+$panel-heading-size: 1em;
+$panel-heading-weight: 600;
+
 /*!*
 bulma.io v0.8.0 | MIT License | github.com/jgthms/bulma */
 @import "./bulma/utilities/_all";
@@ -91,4 +94,29 @@ h1, h2, h3, h4, h5, h6 {
 
 figure.has-border img {
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
+}
+
+.asciicast-wrapper {
+    margin: 2rem 0;
+
+    asciinema-player {
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    // reset bulma pre styles
+    pre.asciinema-terminal {
+        padding: 0;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: auto;
+    }
+
+    .panel-block {
+        justify-content: space-between;
+    }
+
+    .panel-block.is-active .tag {
+        background-color: $link;
+        color: $white;
+    }
 }

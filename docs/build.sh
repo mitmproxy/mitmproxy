@@ -8,7 +8,7 @@ set -o nounset
 SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 pushd ${SCRIPTPATH}
 
-for script in scripts/* ; do
+for script in scripts/*.py ; do
   output="${script##*/}"
   output="src/generated/${output%.*}.html"
   echo "Generating output for ${script} into ${output} ..."

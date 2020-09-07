@@ -1,0 +1,19 @@
+{{ $file := .Get "file" }}
+<div class="asciicast-wrapper">
+    <asciinema-player id="asciinema-player" src="/recordings/{{ $file }}.cast" font-size="13px" poster="npt:{{ .Get "poster" }}" preload></asciinema-player>
+    {{- if .Get "instructions" -}}
+        {{- $instructions_file := print "static/recordings/" $file "_instructions.json" -}}
+        {{ $data := getJSON $instructions_file }}
+        <article class="panel">
+            <p class="panel-heading">
+                Video Content
+            </p>
+            {{- range $instr := $data -}}
+                <a href="#" class="panel-block" data-from="{{ $instr.time_from }}" data-to="{{ $instr.time_to }}">
+                    <span class="instruction-text">{{ $instr.instruction | markdownify }}</span>
+                    <span class="tag is-light">{{ int $instr.time_from | dateFormat "04:05" }}</span>
+                </a>
+            {{- end -}}
+        </article>
+    {{- end -}}
+</div>
