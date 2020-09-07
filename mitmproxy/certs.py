@@ -196,7 +196,7 @@ class CertStore:
             return dh
 
     @classmethod
-    def from_store(cls, path, basename, key_size):
+    def from_store(cls, path, basename, key_size, passphrase: typing.Optional[bytes] = None):
         ca_path = os.path.join(path, basename + "-ca.pem")
         if not os.path.exists(ca_path):
             key, ca = cls.create_store(path, basename, key_size)
@@ -208,7 +208,8 @@ class CertStore:
                 raw)
             key = OpenSSL.crypto.load_privatekey(
                 OpenSSL.crypto.FILETYPE_PEM,
-                raw)
+                raw,
+                passphrase)
         dh_path = os.path.join(path, basename + "-dhparam.pem")
         dh = cls.load_dhparam(dh_path)
         return cls(key, ca, ca_path, dh)
@@ -280,7 +281,7 @@ class CertStore:
 
         return key, ca
 
-    def add_cert_file(self, spec: str, path: str) -> None:
+    def add_cert_file(self, spec: str, path: str, passphrase: typing.Optional[bytes] = None) -> None:
         with open(path, "rb") as f:
             raw = f.read()
         cert = Cert(
@@ -290,7 +291,8 @@ class CertStore:
         try:
             privatekey = OpenSSL.crypto.load_privatekey(
                 OpenSSL.crypto.FILETYPE_PEM,
-                raw)
+                raw,
+                passphrase)
         except Exception:
             privatekey = self.default_privatekey
         self.add_cert(
