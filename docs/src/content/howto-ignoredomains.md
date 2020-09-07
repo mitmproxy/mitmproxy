@@ -21,7 +21,7 @@ mitmproxy's interception mechanism:
 
 If you want to peek into (SSL-protected) non-HTTP connections, check out the
 **tcp_proxy** feature. If you want to ignore traffic from mitmproxy's processing
-because of large response bodies, take a look at the [streaming]({{< relref "concepts-advancedfeatures#streaming" >}}) feature.
+because of large response bodies, take a look at the [streaming]({{< relref "overview-features#streaming" >}}) feature.
 
 
 ## ignore_hosts

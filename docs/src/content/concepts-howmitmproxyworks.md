@@ -100,7 +100,7 @@ information to initiate the pipe, even though it doesn't reveal the
 remote hostname.
 
 Mitmproxy has a cunning mechanism that smooths this over - [upstream certificate
-sniffing]({{< relref "concepts-advancedfeatures#upstream-certificates" >}}). As soon as
+sniffing]({{< relref "overview-features#upstream-certificates" >}}). As soon as
 we see the CONNECT request, we pause the client part of the conversation, and
 initiate a simultaneous connection to the server. We complete the TLS handshake
 with the server, and inspect the certificates it used. Now, we use the Common

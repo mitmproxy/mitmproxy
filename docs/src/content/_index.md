@@ -21,7 +21,7 @@ mitmproxy is a set of tools that provide an interactive, SSL/TLS-capable interce
 - Transparent proxy mode on macOS and Linux
 - Make scripted changes to HTTP traffic using Python
 - SSL/TLS certificates for interception are generated on the fly
-- And [much, much more...]({{< relref "concepts-advancedfeatures">}})
+- And [much, much more...]({{< relref "overview-features">}})
 
 
 ## 3 Powerful Core Tools
@@ -111,7 +111,7 @@ to another:
 mitmdump -nC srcfile -w dstfile
 ```
 
-See the [client-side replay]({{< relref "concepts-advancedfeatures#client-side-replay"
+See the [client-side replay]({{< relref "overview-features#client-side-replay"
 >}}) section for more information.
 
 #### Running a script

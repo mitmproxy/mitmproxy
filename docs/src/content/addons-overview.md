@@ -20,8 +20,8 @@ Addons are an exceptionally powerful part of mitmproxy. In fact, much of
 mitmproxy's own functionality is defined in [a suite of built-in
 addons](https://github.com/mitmproxy/mitmproxy/tree/master/mitmproxy/addons),
 implementing everything from functionality like [anticaching]({{< relref
-"concepts-advancedfeatures#anticache" >}}) and [sticky cookies]({{< relref
-"concepts-advancedfeatures#sticky-cookies" >}}) to our onboarding webapp. The built-in
+"overview-features#anticache" >}}) and [sticky cookies]({{< relref
+"overview-features#sticky-cookies" >}}) to our onboarding webapp. The built-in
 addons make for instructive reading, and you will quickly see that quite complex
 functionality can often boil down to a very small, completely self-contained
 modules. Mitmproxy provides the exact same set of facilities it uses for its own

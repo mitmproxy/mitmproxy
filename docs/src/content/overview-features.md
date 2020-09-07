@@ -1,11 +1,11 @@
 ---
-title: "Advanced features"
+title: "Features"
 menu:
     concepts:
         weight: 4
 ---
 
-# Mitmproxy Advanced Features
+# Features
 
 
 - [Anticache](#anticache)
