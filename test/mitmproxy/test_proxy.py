@@ -42,11 +42,10 @@ class TestProcessProxyOptions:
         assert self.p()
 
     def test_certs(self, tdata):
-        self.assert_noerr(
-            "--cert",
-            tdata.path("mitmproxy/data/testkey.pem"))
-        with pytest.raises(Exception, match="does not exist"):
-            self.p("--cert", "nonexistent")
+        with pytest.raises(Exception, match="ambiguous option"):
+            self.assert_noerr(
+                "--cert",
+                tdata.path("mitmproxy/data/testkey.pem"))
 
 
 class TestProxyServer:

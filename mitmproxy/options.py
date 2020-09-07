@@ -48,6 +48,10 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
+            "cert_passphrase", Optional[str], None,
+            "Passphrase for decrypting the private key provided in the --cert option."
+        )
+        self.add_option(
             "ciphers_client", Optional[str], None,
             "Set supported ciphers for client connections using OpenSSL syntax."
         )
