@@ -24,9 +24,6 @@ something like this:
 Click on the relevant icon, follow the setup instructions for the platform
 you're on and you are good to go.
 
-Note: If you are using an iOS device, you should be using the Safari browser
-so that it opens the proper prompts for installing the certificate.
-
 ## Installing the mitmproxy CA certificate manually
 
 Sometimes using the quick install app is not an option - Java or the iOS
