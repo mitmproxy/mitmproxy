@@ -91,7 +91,7 @@ class OptManager:
         mutation doesn't change the option state inadvertently.
     """
     def __init__(self):
-        self.deferred: typing.Dict[str, str] = {}
+        self.deferred: typing.Dict[str, [str]] = {}
         self.changed = blinker.Signal()
         self.errored = blinker.Signal()
         # Options must be the last attribute here - after that, we raise an
@@ -303,9 +303,12 @@ class OptManager:
             else:
                 optname, optval = parts[0], parts[1]
             if optname in self._options:
-                vals[optname] = self.parse_setval(self._options[optname], optval)
+                vals[optname] = self.parse_setval(self._options[optname], optval, vals.get(optname))
             else:
-                unknown[optname] = optval
+                try:
+                    unknown[optname].append(optval)
+                except KeyError:
+                    unknown[optname] = [optval]
         if defer:
             self.deferred.update(unknown)
         elif unknown:
@@ -318,15 +321,16 @@ class OptManager:
             have since been added.
         """
         update = {}
-        for optname, optval in self.deferred.items():
+        for optname, optvals in self.deferred.items():
             if optname in self._options:
-                optval = self.parse_setval(self._options[optname], optval)
-                update[optname] = optval
+                for optval in optvals:
+                    optval = self.parse_setval(self._options[optname], optval, update.get(optname))
+                    update[optname] = optval
         self.update(**update)
         for k in update.keys():
             del self.deferred[k]
 
-    def parse_setval(self, o: _Option, optstr: typing.Optional[str]) -> typing.Any:
+    def parse_setval(self, o: _Option, optstr: typing.Optional[str], currentvalue: typing.Any) -> typing.Any:
         """
             Convert a string to a value appropriate for the option type.
         """
@@ -357,7 +361,10 @@ class OptManager:
             if not optstr:
                 return []
             else:
-                return getattr(self, o.name) + [optstr]
+                if currentvalue:
+                    return getattr(self, o.name) + currentvalue + [optstr]
+                else:
+                    return getattr(self, o.name) + [optstr]
         raise NotImplementedError("Unsupported option type: %s", o.typespec)
 
     def make_parser(self, parser, optname, metavar=None, short=None):
