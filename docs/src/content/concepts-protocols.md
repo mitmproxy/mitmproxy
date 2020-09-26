@@ -29,9 +29,6 @@ internal state of HTTP/2 connections and provides an easy-to-use event-based
 API. mitmproxy supports the majority of HTTP/2 feature and tries to
 transparently pass-through as much information as possible.
 
-mitmproxy currently does not support HTTP/2 trailers - but if you want to send
-us a PR, we promise to take look!
-
 mitmproxy currently does not support HTTP/2 Cleartext (h2c) since none of the
 major browser vendors have implemented it.
 
