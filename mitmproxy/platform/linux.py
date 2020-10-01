@@ -1,6 +1,7 @@
 import socket
 import struct
 import typing
+import os
 
 # Python's socket module does not have these constants
 SO_ORIGINAL_DST = 80
@@ -22,11 +23,9 @@ def original_addr(csock: socket.socket) -> typing.Tuple[str, int]:
     # As such, we use a heuristic to check which syscall to do.
     is_ipv4 = "." in csock.getsockname()[0]  # either 127.0.0.1 or ::ffff:127.0.0.1
     if is_ipv4:
-        # the struct returned here should only have 8 bytes, but invoking sock.getsockopt
-        # with buflen=8 doesn't work.
-        dst = csock.getsockopt(socket.SOL_IP, SO_ORIGINAL_DST, 16)
-        port, raw_ip = struct.unpack_from("!2xH4s", dst)
-        ip = socket.inet_ntop(socket.AF_INET, raw_ip)
+        ip = os.environ["MITMPROXY_ORIGINAL_ADDR_IP"]
+        port = int(os.environ["MITMPROXY_ORIGINAL_ADDR_PORT"])
+        return ip, port
     else:
         dst = csock.getsockopt(SOL_IPV6, SO_ORIGINAL_DST, 28)
         port, raw_ip = struct.unpack_from("!2xH4x16s", dst)
