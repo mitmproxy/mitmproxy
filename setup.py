@@ -69,8 +69,8 @@ setup(
         "click>=7.0,<8",
         "cryptography>=3.0,<3.1.1",
         "flask>=1.1.1,<1.2",
-        "h2>=3.2.0,<4",
-        "hyperframe>=5.1.0,<6",
+        "h2>=4.0,<5",
+        "hyperframe>=6.0,<7",
         "kaitaistruct>=0.7,<0.9",
         "ldap3>=2.8,<2.9",
         "msgpack>=1.0.0, <1.1.0",
@@ -98,15 +98,15 @@ setup(
         'dev': [
             "asynctest>=0.12.0",
             "Flask>=1.0,<1.2",
-            "hypothesis>=5.8,<5.30",
+            "hypothesis>=5.8,<6",
             "parver>=0.1,<2.0",
             "pytest-asyncio>=0.10.0,<0.14,!=0.14",
             "pytest-cov>=2.7.1,<3",
             "pytest-timeout>=1.3.3,<2",
-            "pytest-xdist>=1.29,<2.2",
-            "pytest>=5.1.3,<7",
+            "pytest-xdist>=2.1.0,<3",
+            "pytest>=6.1.0,<7",
             "requests>=2.9.1,<3",
-            "tox>=3.5,<3.20",
+            "tox>=3.5,<4",
         ]
     }
 )
