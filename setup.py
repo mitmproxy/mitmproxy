@@ -36,6 +36,7 @@ setup(
         "Programming Language :: Python :: 3 :: Only",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Security",
         "Topic :: Internet :: WWW/HTTP",
@@ -66,10 +67,10 @@ setup(
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "click>=7.0,<8",
-        "cryptography>=3.0,<3.2",
+        "cryptography>=3.1,<3.2",
         "flask>=1.1.1,<1.2",
-        "h2>=4.0,<4.1",
-        "hyperframe>=6.0,<6.1",
+        "h2>=4.0,<5; python_version>='3.6.0'",  # python_version only needed to make "py36+ required" message work
+        "hyperframe>=6.0,<7; python_version>='3.6.0'",  # python_version only needed to make "py36+ required" message work
         "kaitaistruct>=0.7,<0.9",
         "ldap3>=2.8,<2.9",
         "msgpack>=1.0.0, <1.1.0",
@@ -97,15 +98,15 @@ setup(
         'dev': [
             "asynctest>=0.12.0",
             "Flask>=1.0,<1.2",
-            "hypothesis>=5.37,<5.38",
+            "hypothesis>=5.8,<6",
             "parver>=0.1,<2.0",
             "pytest-asyncio>=0.10.0,<0.14,!=0.14",
             "pytest-cov>=2.7.1,<3",
             "pytest-timeout>=1.3.3,<2",
-            "pytest-xdist>=1.29,<2.2",
-            "pytest>=5.1.3,<7",
+            "pytest-xdist>=2.1.0,<3",
+            "pytest>=6.1.0,<7",
             "requests>=2.9.1,<3",
-            "tox>=3.20,<3.21",
+            "tox>=3.5,<4",
         ]
     }
 )
