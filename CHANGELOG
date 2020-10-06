@@ -2,6 +2,7 @@ Unreleased: mitmproxy next
 
 ** Full Changelog **
 
+    * Support for Python 3.9 (@mhils)
     * Add MsgPack content viewer (@tasn)
     * Use `@charset` to decode CSS files if available (@prinzhorn)
     * Fix links to anticache docs in mitmweb and use HTTPS for links to documentation (@rugk)
