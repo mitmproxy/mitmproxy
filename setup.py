@@ -67,7 +67,7 @@ setup(
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "click>=7.0,<8",
-        "cryptography>=3.0,<3.2",
+        "cryptography>=3.0,<3.1.1",
         "flask>=1.1.1,<1.2",
         "h2>=3.2.0,<4",
         "hyperframe>=5.1.0,<6",
