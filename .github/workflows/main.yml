@@ -14,28 +14,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
       - run: pip install tox
       - run: tox -e flake8
   filename-matching:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
       - run: pip install tox
       - run: tox -e filename_matching
   mypy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
       - run: pip install tox
       - run: tox -e mypy
   individual-coverage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
       - run: pip install tox
       - run: tox -e individual_coverage
   test:
@@ -44,9 +44,11 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            py: 3.8
+            py: 3.9
           - os: macos-latest
-            py: 3.8
+            py: 3.9
+          - os: ubuntu-latest
+            py: 3.9
           - os: ubuntu-latest
             py: 3.8
           - os: ubuntu-latest
@@ -57,7 +59,7 @@ jobs:
     steps:
       - run: printenv
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.py }}
       - run: pip install tox
@@ -70,7 +72,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: '3.5'
       - run: pip install tox
@@ -81,7 +83,7 @@ jobs:
       CI_BUILD_WHEEL: 1
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: '3.8'
       - run: pip install tox
@@ -103,7 +105,7 @@ jobs:
       CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: '3.7'
       - if: matrix.os == 'windows-latest'
@@ -149,7 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: '3.8'
       - run: pip install tox
@@ -169,7 +171,7 @@ jobs:
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: '3.7'
       - run: pip install tox
@@ -194,7 +196,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: '3.8'
       - uses: actions/download-artifact@v2
