@@ -40,6 +40,11 @@ documentation for some common platforms. The mitmproxy CA cert is located in
        the mitmproxy certificate.
 - [iOS Simulator](https://github.com/ADVTOOLS/ADVTrustStore#how-to-use-advtruststore)
 - [Java](https://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html)
+
+```bash
+sudo keytool -importcert -alias mitmproxy -storepass changeit -keystore $JAVA_HOME/lib/security/cacerts -trustcacerts -file ~/.mitmproxy/mitmproxy-ca-cert.pem
+```
+
 - [Android/Android Simulator](http://wiki.cacert.org/FAQ/ImportRootCert#Android_Phones_.26_Tablets)
 - [Windows](https://web.archive.org/web/20160612045445/http://windows.microsoft.com/en-ca/windows/import-export-certificates-private-keys#1TC=windows-7)
 - [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx)
