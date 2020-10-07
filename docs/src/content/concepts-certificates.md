@@ -32,31 +32,27 @@ reason. Below is a list of pointers to manual certificate installation
 documentation for some common platforms. The mitmproxy CA cert is located in
 `~/.mitmproxy` after it has been generated at the first start of mitmproxy.
 
-- [IOS](http://jasdev.me/intercepting-ios-traffic)
+- curl on the command line:  
+  `curl --proxy 127.0.0.1:8080 --cacert ~/.mitmproxy/mitmproxy-ca-cert.pem https://example.com/`
+- wget on the command line:  
+  `wget -e https_proxy=127.0.0.1:8080 --ca-certificate ~/.mitmproxy/mitmproxy-ca-cert.pem https://example.com/`
+- [macOS](https://support.apple.com/guide/keychain-access/add-certificates-to-a-keychain-kyca2431/mac)
+- [Ubuntu/Debian]( https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861)
+- [Mozilla Firefox](https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox)
+- [Chrome on Linux](https://stackoverflow.com/a/15076602/198996)
+- [iOS](http://jasdev.me/intercepting-ios-traffic)  
   On recent iOS versions you also need to enable full trust for the mitmproxy
   root certificate:
     1. Go to Settings > General > About > Certificate Trust Settings.
     2. Under "Enable full trust for root certificates", turn on trust for
        the mitmproxy certificate.
 - [iOS Simulator](https://github.com/ADVTOOLS/ADVTrustStore#how-to-use-advtruststore)
-- [Java](https://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html)
-
-```bash
-sudo keytool -importcert -alias mitmproxy -storepass changeit -keystore $JAVA_HOME/lib/security/cacerts -trustcacerts -file ~/.mitmproxy/mitmproxy-ca-cert.pem
-```
-
+- [Java](https://docs.oracle.com/cd/E19906-01/820-4916/geygn/index.html):  
+  `sudo keytool -importcert -alias mitmproxy -storepass changeit -keystore $JAVA_HOME/lib/security/cacerts -trustcacerts -file ~/.mitmproxy/mitmproxy-ca-cert.pem`
 - [Android/Android Simulator](http://wiki.cacert.org/FAQ/ImportRootCert#Android_Phones_.26_Tablets)
 - [Windows](https://web.archive.org/web/20160612045445/http://windows.microsoft.com/en-ca/windows/import-export-certificates-private-keys#1TC=windows-7)
-- [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx)
-
-```bash
-certutil -addstore root mitmproxy-ca-cert.cer
-```
-
-- [Mac OS X](https://support.apple.com/kb/PH20129)
-- [Ubuntu/Debian]( https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861)
-- [Mozilla Firefox](https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox)
-- [Chrome on Linux](https://stackoverflow.com/a/15076602/198996)
+- [Windows (automated)](https://technet.microsoft.com/en-us/library/cc732443.aspx):  
+  `certutil -addstore root mitmproxy-ca-cert.cer`
 
 ## The mitmproxy certificate authority
 
