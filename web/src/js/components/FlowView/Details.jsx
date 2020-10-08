@@ -21,6 +21,9 @@ export function TimeStamp({ t, deltaTo, title }) {
 }
 
 export function ConnectionInfo({ conn }) {
+    if(conn.address == null && conn.hasOwnProperty('source_address')){
+        conn.address = ["",0]        
+    }  
     return (
         <table className="connection-table">
             <tbody>
