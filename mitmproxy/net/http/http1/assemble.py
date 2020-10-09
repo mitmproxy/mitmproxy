@@ -5,7 +5,7 @@ def assemble_request(request):
     if request.data.content is None:
         raise exceptions.HttpException("Cannot assemble flow with missing content")
     head = assemble_request_head(request)
-    body = b"".join(assemble_body(request.data.headers, [request.data.content]))
+    body = b"".join(assemble_body(request.data.headers, [request.data.content], request.data.trailers))
     return head + body
 
 
@@ -19,7 +19,7 @@ def assemble_response(response):
     if response.data.content is None:
         raise exceptions.HttpException("Cannot assemble flow with missing content")
     head = assemble_response_head(response)
-    body = b"".join(assemble_body(response.data.headers, [response.data.content]))
+    body = b"".join(assemble_body(response.data.headers, [response.data.content], response.data.trailers))
     return head + body
 
 
@@ -29,13 +29,18 @@ def assemble_response_head(response):
     return b"%s\r\n%s\r\n" % (first_line, headers)
 
 
-def assemble_body(headers, body_chunks):
+def assemble_body(headers, body_chunks, trailers):
     if "chunked" in headers.get("transfer-encoding", "").lower():
         for chunk in body_chunks:
             if chunk:
                 yield b"%x\r\n%s\r\n" % (len(chunk), chunk)
-        yield b"0\r\n\r\n"
+        if trailers:
+            yield b"0\r\n%s\r\n" % (trailers,)
+        else:
+            yield b"0\r\n\r\n"
     else:
+        if trailers:
+            raise exceptions.HttpException("Sending HTTP/1 trailer headers requires transfer-encoding: chunked")
         for chunk in body_chunks:
             yield chunk
 

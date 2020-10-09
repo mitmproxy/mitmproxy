@@ -16,7 +16,7 @@ menu:
 HTTP/1.0 and HTTP/1.1 support in mitmproxy is based on our custom HTTP stack,
 which takes care of all semantics and on-the-wire parsing/serialization tasks.
 
-mitmproxy currently does not support HTTP trailers - but if you want to send
+mitmproxy currently does not parsing HTTP trailers - but if you want to send
 us a PR, we promise to take look!
 
 ## HTTP/2

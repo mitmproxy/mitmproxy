@@ -52,14 +52,17 @@ def test_assemble_response_head():
 
 
 def test_assemble_body():
-    c = list(assemble_body(Headers(), [b"body"]))
+    c = list(assemble_body(Headers(), [b"body"], Headers()))
     assert c == [b"body"]
 
-    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a", b""]))
+    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a", b""], Headers()))
     assert c == [b"a\r\n123456789a\r\n", b"0\r\n\r\n"]
 
-    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"]))
+    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"], Headers()))
     assert c == [b"a\r\n123456789a\r\n", b"0\r\n\r\n"]
+
+    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"], Headers(trailer="trailer")))
+    assert c == [b"a\r\n123456789a\r\n", b"0\r\ntrailer: trailer\r\n\r\n"]
 
 
 def test_assemble_request_line():
