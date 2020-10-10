@@ -70,7 +70,7 @@ def test_defaults():
 def test_required_int():
     o = TO()
     with pytest.raises(exceptions.OptionsError):
-        o.parse_setval(o._options["required_int"], None)
+        o.parse_setval(o._options["required_int"], None, None)
 
 
 def test_deepcopy():
@@ -429,6 +429,9 @@ def test_set():
     opts.set("seqstr")
     assert opts.seqstr == []
 
+    opts.set(*('seqstr=foo', 'seqstr=bar'))
+    assert opts.seqstr == ["foo", "bar"]
+
     with pytest.raises(exceptions.OptionsError):
         opts.set("deferredoption=wobble")
 
@@ -440,3 +443,12 @@ def test_set():
     opts.process_deferred()
     assert "deferredoption" not in opts.deferred
     assert opts.deferredoption == "wobble"
+
+    opts.set(*('deferredsequenceoption=a', 'deferredsequenceoption=b'), defer=True)
+    assert "deferredsequenceoption" in opts.deferred
+    opts.process_deferred()
+    assert "deferredsequenceoption" in opts.deferred
+    opts.add_option("deferredsequenceoption", typing.Sequence[str], [], "help")
+    opts.process_deferred()
+    assert "deferredsequenceoption" not in opts.deferred
+    assert opts.deferredsequenceoption == ["a", "b"]
