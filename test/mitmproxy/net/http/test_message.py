@@ -99,6 +99,9 @@ class TestMessage:
 
     def test_http_version(self):
         _test_decoded_attr(tutils.tresp(), "http_version")
+        assert tutils.tresp(http_version=b"HTTP/1.0").is_http10
+        assert tutils.tresp(http_version=b"HTTP/1.1").is_http11
+        assert tutils.tresp(http_version=b"HTTP/2.0").is_http2
 
 
 class TestMessageContentEncoding:

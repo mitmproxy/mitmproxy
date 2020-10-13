@@ -16,7 +16,7 @@ Unreleased: mitmproxy next
     * Fix file unlinking before external viewer finishes loading (@wchasekelley)
     * Add --cert-passphrase command line argument (@mirosyn)
     * Add interactive tutorials to the documentation (@mplattner)
-    * Add support for sending (but not parsing) HTTP Trailers to the HTTP/1 protocol (@bburky)
+    * Add support for sending (but not parsing) HTTP Trailers to the HTTP/1.1 protocol (@bburky)
 
     * --- TODO: add new PRs above this line ---
 

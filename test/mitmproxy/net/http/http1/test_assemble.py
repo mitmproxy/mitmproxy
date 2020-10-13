@@ -64,6 +64,9 @@ def test_assemble_body():
     c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"], Headers(trailer="trailer")))
     assert c == [b"a\r\n123456789a\r\n", b"0\r\ntrailer: trailer\r\n\r\n"]
 
+    with pytest.raises(exceptions.HttpException):
+        list(assemble_body(Headers(), [b"body"], Headers(trailer="trailer")))
+
 
 def test_assemble_request_line():
     assert _assemble_request_line(treq().data) == b"GET /path HTTP/1.1"
