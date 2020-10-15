@@ -46,7 +46,7 @@ def tresp(**kwargs) -> http.Response:
         reason=b"OK",
         headers=http.Headers(((b"header-response", b"svalue"), (b"content-length", b"7"))),
         content=b"message",
-        trailers=None,
+        trailers=http.Headers(((b"trailer-response", b"svalue"), (b"trailer", b"this trailer-1"))),
         timestamp_start=946681202,
         timestamp_end=946681203,
     )

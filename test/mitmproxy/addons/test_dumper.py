@@ -124,6 +124,19 @@ def test_echo_body():
         d._echo_message(f.response, f)
         t = sio.getvalue()
         assert "cut off" in t
+        sio.truncate(0)
+
+        f = tflow.tflow(client_conn=True, server_conn=True, resp=True)
+        f.response.headers["content-type"] = "text/html"
+        f.response.content = b"foo bar voing\n" * 100
+        f.response.trailers["trailer-2"] = "this is trailer 2"
+        d._echo_headers(f.response.headers)
+        d._echo_message(f.response, f)
+        d._echo_headers(f.response.trailers)
+        t = sio.getvalue()
+        assert "content-type" in t
+        assert "cut off" in t
+        assert "trailer-2" in t
 
 
 def test_echo_request_line():

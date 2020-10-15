@@ -9,9 +9,10 @@ protobuf messages sent as WebSocket frames.
 
 Thus, the View API is very minimalistic. The only arguments are `data` and
 `**metadata`, where `data` is the actual content (as bytes). The contents on
-metadata depend on the protocol in use. For HTTP, the message headers are
-passed as the ``headers`` keyword argument. For HTTP requests, the query
-parameters are passed as the ``query`` keyword argument.
+metadata depend on the protocol in use. For HTTP, the message headers and
+message trailers are passed as the ``headers`` and ``trailers`` keyword
+argument. For HTTP requests, the query parameters are passed as the ``query``
+keyword argument.
 """
 import traceback
 from typing import Dict, Optional  # noqa
@@ -103,6 +104,7 @@ def get_message_content_view(viewname, message, flow):
         metadata["query"] = message.query
     if isinstance(message, http.Message):
         metadata["headers"] = message.headers
+        metadata["trailers"] = message.trailers
     metadata["message"] = message
     metadata["flow"] = flow
 

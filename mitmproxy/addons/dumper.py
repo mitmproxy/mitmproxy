@@ -12,6 +12,7 @@ from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
+from mitmproxy.net import http
 
 
 def indent(n: int, text: str) -> str:
@@ -225,6 +226,8 @@ class Dumper:
             self._echo_response_line(f)
             if ctx.options.flow_detail >= 2:
                 self._echo_headers(f.response.headers)
+                if f.response.trailers is not None and isinstance(f.response.trailers, http.Headers):
+                    self._echo_headers(f.response.trailers)
             if ctx.options.flow_detail >= 3:
                 self._echo_message(f.response, f)
 
