@@ -72,7 +72,7 @@ setup(
         "flask>=1.1.1,<1.2",
         "h2>=4.0,<5; python_version>='3.6.0'",  # python_version only needed to make "py36+ required" message work
         "hyperframe>=6.0,<7; python_version>='3.6.0'",  # python_version only needed to make "py36+ required" message work
-        "kaitaistruct>=0.7,<0.9",
+        "kaitaistruct>=0.9,<0.10",
         "ldap3>=2.8,<2.9",
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
