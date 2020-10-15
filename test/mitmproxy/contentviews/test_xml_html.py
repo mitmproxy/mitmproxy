@@ -34,3 +34,9 @@ def test_format_xml(filename, tdata):
         expected = f.read()
     tokens = xml_html.tokenize(input)
     assert xml_html.format_xml(tokens) == expected
+
+def test_should_render():
+    v = xml_html.ViewXmlHtml()
+    assert v.should_render("text/xml")
+    assert v.should_render("text/html")
+    assert not v.should_render("text/plain")

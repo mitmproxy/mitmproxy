@@ -10,7 +10,6 @@ TViewResult = typing.Tuple[str, typing.Iterator[TViewLine]]
 
 class View:
     name: typing.ClassVar[str]
-    content_types: typing.ClassVar[typing.List[str]] = []
 
     def __call__(self, data: bytes, **metadata) -> TViewResult:
         """
@@ -33,6 +32,18 @@ class View:
             because urwid cannot process that. You have to yield a *list* of tuples per line.
         """
         raise NotImplementedError()  # pragma: no cover
+        
+    def should_render(self, content_type) -> bool:
+        """
+        Check if a ``View`` implementation should be used to render the data of provided content type.
+
+        Args:
+            content_type: content type string without parameters.
+
+        Returns:
+            A bool value. ``True`` indicates that the View can be used to render the data.
+        """
+        return False
 
 
 def format_pairs(

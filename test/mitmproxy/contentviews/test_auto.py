@@ -37,6 +37,12 @@ def test_view_auto():
     assert f[0].startswith("XML")
 
     f = v(
+        b"{}",
+        headers=http.Headers(content_type="application/acme+json")
+    )
+    assert f[0].startswith("JSON")
+
+    f = v(
         b"verybinary",
         headers=http.Headers(content_type="image/new-magic-image-format")
     )

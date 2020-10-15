@@ -38,13 +38,13 @@ def format_json(data: typing.Any) -> typing.Iterator[base.TViewLine]:
 
 class ViewJSON(base.View):
     name = "JSON"
-    content_types = [
-        "application/json",
-        "application/json-rpc",
-        "application/vnd.api+json"
-    ]
 
     def __call__(self, data, **metadata):
         data = parse_json(data)
         if data is not PARSE_ERROR:
             return "JSON", format_json(data)
+
+    def should_render(self, content_type):
+        return content_type == "application/json" \
+            or content_type == "application/json-rpc" \
+            or ( content_type.startswith("application/") and content_type.endswith("+json") )

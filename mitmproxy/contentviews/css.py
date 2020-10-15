@@ -50,15 +50,14 @@ def beautify(data: str, indent: str = "    "):
 
 class ViewCSS(base.View):
     name = "CSS"
-    content_types = [
-        "text/css"
-    ]
 
     def __call__(self, data, **metadata):
         data = data.decode("utf8", "surrogateescape")
         beautified = beautify(data)
         return "CSS", base.format_text(beautified)
 
+    def should_render(self, content_type):
+        return content_type == "text/css"
 
 if __name__ == "__main__":  # pragma: no cover
     with open("../tools/web/static/vendor.css") as f:

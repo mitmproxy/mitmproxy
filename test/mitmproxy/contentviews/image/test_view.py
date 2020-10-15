@@ -15,3 +15,13 @@ def test_view_image(tdata):
             assert img.split(".")[-1].upper() in viewname
 
     assert v(b"flibble") == ('Unknown Image', [[('header', 'Image Format: '), ('text', 'unknown')]])
+
+def test_should_render():
+    v = image.ViewImage()
+    assert v.should_render("image/png")
+    assert v.should_render("image/jpeg")
+    assert v.should_render("image/gif")
+    assert v.should_render("image/vnd.microsoft.icon")
+    assert v.should_render("image/x-icon")
+    assert v.should_render("image/webp")
+    assert not v.should_render("image/svg+xml")

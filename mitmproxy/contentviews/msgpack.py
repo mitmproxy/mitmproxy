@@ -39,7 +39,7 @@ def format_msgpack(data):
 
 class ViewMsgPack(base.View):
     name = "MsgPack"
-    content_types = [
+    __content_types = [
         "application/msgpack",
         "application/x-msgpack",
     ]
@@ -48,3 +48,6 @@ class ViewMsgPack(base.View):
         data = parse_msgpack(data)
         if data is not PARSE_ERROR:
             return "MsgPack", format_msgpack(data)
+
+    def should_render(self, content_type):
+        return content_type in self.__content_types

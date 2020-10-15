@@ -13,12 +13,11 @@ class ViewAuto(base.View):
         if data and ctype:
             ct = http.parse_content_type(ctype) if ctype else None
             ct = "%s/%s" % (ct[0], ct[1])
-            if ct in contentviews.content_types_map:
-                return contentviews.content_types_map[ct][0](data, **metadata)
+            preferred_view = next((v for v in contentviews.views if v.should_render(ct)), None)
+            if preferred_view:
+                return preferred_view(data, **metadata)
             elif strutils.is_xml(data):
                 return contentviews.get("XML/HTML")(data, **metadata)
-            elif ct.startswith("image/"):
-                return contentviews.get("Image")(data, **metadata)
         if metadata.get("query"):
             return contentviews.get("Query")(data, **metadata)
         if data and strutils.is_mostly_bin(data):

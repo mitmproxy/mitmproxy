@@ -4,7 +4,7 @@ from . import base
 
 class ViewWBXML(base.View):
     name = "WBXML"
-    content_types = [
+    __content_types = [
         "application/vnd.wap.wbxml",
         "application/vnd.ms-sync.wbxml"
     ]
@@ -17,3 +17,6 @@ class ViewWBXML(base.View):
                 return "WBXML", base.format_text(parsedContent)
         except:
             return None
+
+    def should_render(self, content_type):
+        return content_type in self.__content_types

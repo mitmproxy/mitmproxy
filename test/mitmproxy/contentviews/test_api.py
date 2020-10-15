@@ -10,7 +10,8 @@ from mitmproxy.test import tflow
 
 class TestContentView(contentviews.View):
     name = "test"
-    content_types = ["test/123"]
+    def should_render(self, content_type):
+        return content_type == "test/123"
 
 
 def test_add_remove():

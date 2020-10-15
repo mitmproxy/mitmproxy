@@ -46,7 +46,7 @@ def beautify(data):
 
 class ViewJavaScript(base.View):
     name = "JavaScript"
-    content_types = [
+    __content_types = [
         "application/x-javascript",
         "application/javascript",
         "text/javascript"
@@ -56,3 +56,6 @@ class ViewJavaScript(base.View):
         data = data.decode("utf-8", "replace")
         res = beautify(data)
         return "JavaScript", base.format_text(res)
+
+    def should_render(self, content_type):
+        return content_type in self.__content_types

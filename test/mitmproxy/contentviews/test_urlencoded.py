@@ -13,3 +13,8 @@ def test_view_urlencoded():
     assert v(d)
 
     assert not v(b"\xFF\x00")
+
+def test_should_render():
+    v = urlencoded.ViewURLEncoded()
+    assert v.should_render("application/x-www-form-urlencoded")
+    assert not v.should_render("text/plain")

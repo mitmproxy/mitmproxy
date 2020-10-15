@@ -66,7 +66,7 @@ class ViewProtobuf(base.View):
     """
 
     name = "Protocol Buffer"
-    content_types = [
+    __content_types = [
         "application/x-protobuf",
         "application/x-protobuffer",
     ]
@@ -77,3 +77,6 @@ class ViewProtobuf(base.View):
             raise ValueError("Failed to parse input.")
 
         return "Protobuf", base.format_text(decoded)
+
+    def should_render(self, content_type):
+        return content_type in self.__content_types

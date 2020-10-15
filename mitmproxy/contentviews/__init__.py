@@ -27,7 +27,6 @@ from . import (
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 
 views: List[View] = []
-content_types_map: Dict[str, List[View]] = {}
 
 
 def get(name: str) -> Optional[View]:
@@ -45,19 +44,8 @@ def add(view: View) -> None:
 
     views.append(view)
 
-    for ct in view.content_types:
-        l = content_types_map.setdefault(ct, [])
-        l.append(view)
-
 
 def remove(view: View) -> None:
-    for ct in view.content_types:
-        l = content_types_map.setdefault(ct, [])
-        l.remove(view)
-
-        if not len(l):
-            del content_types_map[ct]
-
     views.remove(view)
 
 

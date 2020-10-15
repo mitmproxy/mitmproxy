@@ -5,7 +5,6 @@ from . import base
 
 class ViewMultipart(base.View):
     name = "Multipart Form"
-    content_types = ["multipart/form-data"]
 
     @staticmethod
     def _format(v):
@@ -18,3 +17,6 @@ class ViewMultipart(base.View):
         v = http.multipart.decode(headers, data)
         if v:
             return "Multipart form", self._format(v)
+
+    def should_render(self, content_type):
+        return content_type == "multipart/form-data"

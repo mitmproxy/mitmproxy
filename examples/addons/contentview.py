@@ -10,10 +10,12 @@ from mitmproxy import contentviews
 
 class ViewSwapCase(contentviews.View):
     name = "swapcase"
-    content_types = ["text/plain"]
 
     def __call__(self, data, **metadata) -> contentviews.TViewResult:
         return "case-swapped text", contentviews.format_text(data.swapcase())
+        
+    def should_render(self, content_type):
+        return content_type == "text/plain"
 
 
 view = ViewSwapCase()

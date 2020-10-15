@@ -16,16 +16,6 @@ imghdr.tests.append(test_ico)
 class ViewImage(base.View):
     name = "Image"
 
-    # there is also a fallback in the auto view for image/*.
-    content_types = [
-        "image/png",
-        "image/jpeg",
-        "image/gif",
-        "image/vnd.microsoft.icon",
-        "image/x-icon",
-        "image/webp",
-    ]
-
     def __call__(self, data, **metadata):
         image_type = imghdr.what('', h=data)
         if image_type == 'png':
@@ -45,3 +35,6 @@ class ViewImage(base.View):
         else:
             view_name = "Unknown Image"
         return view_name, base.format_dict(multidict.MultiDict(image_metadata))
+
+    def should_render(self, content_type):
+        return content_type.startswith("image/") and content_type != "image/svg+xml"
