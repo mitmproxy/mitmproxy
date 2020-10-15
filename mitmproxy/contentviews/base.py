@@ -32,7 +32,7 @@ class View:
             because urwid cannot process that. You have to yield a *list* of tuples per line.
         """
         raise NotImplementedError()  # pragma: no cover
-        
+
     def should_render(self, content_type) -> bool:
         """
         Check if a ``View`` implementation should be used to render the data of provided content type.

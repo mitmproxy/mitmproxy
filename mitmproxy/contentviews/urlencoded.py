@@ -1,5 +1,4 @@
 from mitmproxy.net.http import url
-from mitmproxy.net import http
 from . import base
 
 

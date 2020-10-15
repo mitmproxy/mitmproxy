@@ -42,6 +42,7 @@ def test_view_json_doesnt_crash(data):
     v = full_eval(json.ViewJSON())
     v(data)
 
+
 def test_should_render():
     v = json.ViewJSON()
     assert v.should_render("application/json")

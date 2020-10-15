@@ -38,6 +38,7 @@ def test_simple():
         'CSS', [[('text', "console.log('not really css')")]]
     )
 
+
 def test_should_render():
     v = css.ViewCSS()
     assert v.should_render("text/css")

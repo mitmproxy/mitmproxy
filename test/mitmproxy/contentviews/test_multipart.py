@@ -24,6 +24,7 @@ Larry
     h = http.Headers(content_type="unparseable")
     assert not view(v, headers=h)
 
+
 def test_should_render():
     v = multipart.ViewMultipart()
     assert v.should_render("multipart/form-data")

@@ -59,6 +59,7 @@ class ViewCSS(base.View):
     def should_render(self, content_type):
         return content_type == "text/css"
 
+
 if __name__ == "__main__":  # pragma: no cover
     with open("../tools/web/static/vendor.css") as f:
         data = f.read()

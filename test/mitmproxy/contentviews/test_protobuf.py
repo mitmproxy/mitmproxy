@@ -29,6 +29,7 @@ def test_format_pbuf(filename, tdata):
 
     assert protobuf.format_pbuf(input) == expected
 
+
 def test_should_render():
     v = protobuf.ViewProtobuf()
     assert v.should_render("application/x-protobuf")

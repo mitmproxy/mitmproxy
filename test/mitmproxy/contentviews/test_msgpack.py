@@ -45,6 +45,7 @@ def test_view_msgpack_doesnt_crash(data):
     v = full_eval(msgpack.ViewMsgPack())
     v(data)
 
+
 def test_should_render():
     v = msgpack.ViewMsgPack()
     assert v.should_render("application/msgpack")

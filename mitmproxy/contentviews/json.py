@@ -47,4 +47,4 @@ class ViewJSON(base.View):
     def should_render(self, content_type):
         return content_type == "application/json" \
             or content_type == "application/json-rpc" \
-            or ( content_type.startswith("application/") and content_type.endswith("+json") )
+            or (content_type.startswith("application/") and content_type.endswith("+json"))

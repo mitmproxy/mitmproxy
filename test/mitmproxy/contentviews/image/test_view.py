@@ -16,6 +16,7 @@ def test_view_image(tdata):
 
     assert v(b"flibble") == ('Unknown Image', [[('header', 'Image Format: '), ('text', 'unknown')]])
 
+
 def test_should_render():
     v = image.ViewImage()
     assert v.should_render("image/png")

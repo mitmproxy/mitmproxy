@@ -19,6 +19,7 @@ def test_wbxml(tdata):
     p = wbxml.ASCommandResponse.ASCommandResponse(input)
     assert p.xmlString == expected
 
+
 def test_should_render():
     v = wbxml.ViewWBXML()
     assert v.should_render("application/vnd.wap.wbxml")
