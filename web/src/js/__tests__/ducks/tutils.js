@@ -4,6 +4,7 @@ import thunk from 'redux-thunk'
 import configureStore from 'redux-mock-store'
 import { ConnectionState } from '../../ducks/connection'
 import TFlow from './_tflow'
+import TFlowServerAddressNull from './_tflowServerAddressNull'
 
 const mockStore = configureStore([thunk])
 
@@ -15,7 +16,7 @@ export function createStore(parts) {
 }
 
 export { TFlow }
-
+export { TFlowServerAddressNull }
 export function TStore(){
     let tflow = new TFlow()
     return mockStore({
