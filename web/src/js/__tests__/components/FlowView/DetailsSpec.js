@@ -1,10 +1,11 @@
 import React from 'react'
+import { render } from 'react-dom'
 import renderer from 'react-test-renderer'
 import Details, { TimeStamp, ConnectionInfo, CertificateInfo, Timing } from '../../../components/FlowView/Details'
-import { TFlow } from '../../ducks/tutils'
+import { TFlow, TFlowServerAddressNull } from '../../ducks/tutils'
 
 let tflow = TFlow()
-
+let tflowServerAddressNull = TFlowServerAddressNull()
 describe('TimeStamp Component', () => {
     it('should render correctly', () => {
         let timestamp = renderer.create(<TimeStamp t={1483228800} deltaTo={1483228700} title="foo"/>),
@@ -44,6 +45,9 @@ describe('Timing Component', () => {
 describe('Details Component', () => {
     it('should render correctly', () => {
         let details = renderer.create(<Details flow={tflow}/>),
+            tree = details.toJSON()
+        expect(tree).toMatchSnapshot()
+        details = renderer.create(<Details flow={tflowServerAddressNull}/>),
             tree = details.toJSON()
         expect(tree).toMatchSnapshot()
     })
