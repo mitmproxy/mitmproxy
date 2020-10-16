@@ -2,6 +2,7 @@ Unreleased: mitmproxy next
 
 ** Full Changelog **
 
+    * UI appears blank in mitmweb for mitm.it flow(@samhita-sopho)
     * Support for Python 3.9 (@mhils)
     * Add MsgPack content viewer (@tasn)
     * Use `@charset` to decode CSS files if available (@prinzhorn)
