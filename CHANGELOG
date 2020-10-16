@@ -17,7 +17,8 @@ Unreleased: mitmproxy next
     * Fix file unlinking before external viewer finishes loading (@wchasekelley)
     * Add --cert-passphrase command line argument (@mirosyn)
     * Add interactive tutorials to the documentation (@mplattner)
-    * Fix for blank page when opening the details tab for mitm.it flow(@samhita-sopho)
+    * Support `deflateRaw` `Content-Encoding`s (@kjoconnor)
+    * Fix for blank detail page for mitm.it flow in mitmweb (@samhita-sopho)
     * --- TODO: add new PRs above this line ---
 
     * ... and various other fixes, documentation improvements, dependency version bumps, etc.

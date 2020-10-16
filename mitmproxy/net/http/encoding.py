@@ -216,6 +216,7 @@ custom_decode = {
     "identity": identity,
     "gzip": decode_gzip,
     "deflate": decode_deflate,
+    "deflateRaw": decode_deflate,
     "br": decode_brotli,
     "zstd": decode_zstd,
 }
@@ -224,6 +225,7 @@ custom_encode = {
     "identity": identity,
     "gzip": encode_gzip,
     "deflate": encode_deflate,
+    "deflateRaw": encode_deflate,
     "br": encode_brotli,
     "zstd": encode_zstd,
 }
