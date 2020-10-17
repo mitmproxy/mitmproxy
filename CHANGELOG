@@ -17,6 +17,7 @@ Unreleased: mitmproxy next
     * Add --cert-passphrase command line argument (@mirosyn)
     * Add interactive tutorials to the documentation (@mplattner)
     * Support `deflateRaw` `Content-Encoding`s (@kjoconnor)
+    * Fix broken requests without body on HTTP/2 (@Kriechi)
 
     * --- TODO: add new PRs above this line ---
 

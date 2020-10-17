@@ -357,6 +357,7 @@ class HttpLayer(base.Layer):
 
                 def get_response():
                     self.send_request_headers(f.request)
+
                     if f.request.stream:
                         chunks = self.read_request_body(f.request)
                         if callable(f.request.stream):
