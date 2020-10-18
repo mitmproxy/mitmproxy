@@ -2,7 +2,6 @@ Unreleased: mitmproxy next
 
 ** Full Changelog **
 
-    * Fix for blank page when details tab is opened for mitm.it flow in mitmweb (@samhita-sopho)
     * Support for Python 3.9 (@mhils)
     * Add MsgPack content viewer (@tasn)
     * Use `@charset` to decode CSS files if available (@prinzhorn)
