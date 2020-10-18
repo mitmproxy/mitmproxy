@@ -11,10 +11,10 @@ export default function(){
         "id": "4a18d1a0-50a1-48dd-9aa6-d45d74282939",
         "sni": null,
         "ssl_established": false,
-        "timestamp_end": null,
-        "timestamp_ssl_setup": null,
+        "timestamp_end": 3.0,
+        "timestamp_ssl_setup": 2.0,
         "timestamp_start": 1.0,
-        "tls_version": null
+        "tls_version":null
     },
     "error": {
         "msg": "error",

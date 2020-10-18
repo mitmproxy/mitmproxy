@@ -47,6 +47,7 @@ describe('Details Component', () => {
         let details = renderer.create(<Details flow={tflow}/>),
             tree = details.toJSON()
         expect(tree).toMatchSnapshot()
+        //when server address is null for mitm.it 
         details = renderer.create(<Details flow={tflowServerAddressNull}/>),
             tree = details.toJSON()
         expect(tree).toMatchSnapshot()

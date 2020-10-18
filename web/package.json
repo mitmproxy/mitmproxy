@@ -23,6 +23,7 @@
     ]
   },
   "dependencies": {
+    "babel": "^6.23.0",
     "bootstrap": "^3.3.7",
     "classnames": "^2.2.5",
     "lodash": "^4.17.4",

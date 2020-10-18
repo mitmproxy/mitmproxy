@@ -120,8 +120,131 @@ exports[`Details Component should render correctly 1`] = `
       </tr>
     </tbody>
   </table>
+  <div>
+    <h4>
+      Server Connection
+    </h4>
+    <table
+      className="connection-table"
+    >
+      <tbody>
+        <tr>
+          <td>
+            Address:
+          </td>
+          <td>
+            address:22
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <abbr
+              title="TLS Server Name Indication"
+            >
+              TLS SNI:
+            </abbr>
+          </td>
+          <td>
+            address
+          </td>
+        </tr>
+        <tr>
+          <td>
+            TLS version:
+          </td>
+          <td>
+            TLSv1.2
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div />
+  <div>
+    <h4>
+      Timing
+    </h4>
+    <table
+      className="timing-table"
+    >
+      <tbody>
+        <tr />
+        <tr />
+        <tr>
+          <td>
+            Server conn. initiated
+            :
+          </td>
+          <td>
+            1969-12-31 18:00:01.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Client conn. established
+            :
+          </td>
+          <td>
+            1969-12-31 18:00:01.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Server conn. TCP handshake
+            :
+          </td>
+          <td>
+            1969-12-31 18:00:02.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Client conn. SSL handshake
+            :
+          </td>
+          <td>
+            1969-12-31 18:00:02.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Server conn. SSL handshake
+            :
+          </td>
+          <td>
+            1969-12-31 18:00:03.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            First response byte
+            :
+          </td>
+          <td>
+            2017-05-21 07:38:32.481
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Response complete
+            :
+          </td>
+          <td>
+            2017-05-21 07:38:32.481
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+`;
+
+exports[`Details Component should render correctly 2`] = `
+<section
+  className="detail"
+>
   <h4>
-    Server Connection
+    Client Connection
   </h4>
   <table
     className="connection-table"
@@ -132,27 +255,7 @@ exports[`Details Component should render correctly 1`] = `
           Address:
         </td>
         <td>
-          address:22
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <abbr
-            title="TLS Server Name Indication"
-          >
-            TLS SNI:
-          </abbr>
-        </td>
-        <td>
-          address
-        </td>
-      </tr>
-      <tr>
-        <td>
-          TLS version:
-        </td>
-        <td>
-          TLSv1.2
+          127.0.0.1:22
         </td>
       </tr>
     </tbody>
@@ -174,7 +277,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            1970-01-01 00:00:01.000
+            1969-12-31 18:00:01.000
           </td>
         </tr>
         <tr>
@@ -183,7 +286,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            1970-01-01 00:00:01.000
+            1969-12-31 18:00:01.000
           </td>
         </tr>
         <tr>
@@ -192,7 +295,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            1970-01-01 00:00:02.000
+            1969-12-31 18:00:02.000
           </td>
         </tr>
         <tr>
@@ -201,7 +304,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            1970-01-01 00:00:02.000
+            1969-12-31 18:00:02.000
           </td>
         </tr>
         <tr>
@@ -210,7 +313,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            1970-01-01 00:00:03.000
+            1969-12-31 18:00:03.000
           </td>
         </tr>
         <tr>
@@ -219,7 +322,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            2017-05-21 12:38:32.481
+            2017-05-21 07:38:32.481
           </td>
         </tr>
         <tr>
@@ -228,7 +331,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            2017-05-21 12:38:32.481
+            2017-05-21 07:38:32.481
           </td>
         </tr>
       </tbody>
@@ -244,7 +347,7 @@ exports[`TimeStamp Component should render correctly 1`] = `
     :
   </td>
   <td>
-    2017-01-01 00:00:00.000
+    2016-12-31 18:00:00.000
     <span
       className="text-muted"
     >
@@ -275,7 +378,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          1970-01-01 00:00:01.000
+          1969-12-31 18:00:01.000
         </td>
       </tr>
       <tr>
@@ -284,7 +387,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          1970-01-01 00:00:01.000
+          1969-12-31 18:00:01.000
         </td>
       </tr>
       <tr>
@@ -293,7 +396,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          1970-01-01 00:00:02.000
+          1969-12-31 18:00:02.000
         </td>
       </tr>
       <tr>
@@ -302,7 +405,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          1970-01-01 00:00:02.000
+          1969-12-31 18:00:02.000
         </td>
       </tr>
       <tr>
@@ -311,7 +414,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          1970-01-01 00:00:03.000
+          1969-12-31 18:00:03.000
         </td>
       </tr>
       <tr>
@@ -320,7 +423,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          2017-05-21 12:38:32.481
+          2017-05-21 07:38:32.481
         </td>
       </tr>
       <tr>
@@ -329,7 +432,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          2017-05-21 12:38:32.481
+          2017-05-21 07:38:32.481
         </td>
       </tr>
     </tbody>
