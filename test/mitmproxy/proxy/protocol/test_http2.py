@@ -192,7 +192,7 @@ class _Http2Test(_Http2TestBase, _Http2ServerBase):
         _Http2ServerBase.teardown_class()
 
 
-class TestSimple(_Http2Test):
+class TestSimpleRequestWithBody(_Http2Test):
     request_body_buffer = b''
 
     @classmethod
@@ -226,7 +226,7 @@ class TestSimple(_Http2Test):
             cls.request_body_buffer += event.data
         return True
 
-    def test_simple(self):
+    def test_simple_request_with_body(self):
         response_body_buffer = b''
         h2_conn = self.setup_connection()
 
@@ -271,6 +271,77 @@ class TestSimple(_Http2Test):
         assert self.master.state.flows[0].response.headers['föo'] == 'bär'
         assert self.master.state.flows[0].response.content == b'response body'
         assert self.request_body_buffer == b'request body'
+        assert response_body_buffer == b'response body'
+
+
+class TestSimpleRequestWithoutBody(_Http2Test):
+    @classmethod
+    def handle_server_event(cls, event, h2_conn, rfile, wfile):
+        if isinstance(event, h2.events.ConnectionTerminated):
+            return False
+        elif isinstance(event, h2.events.RequestReceived):
+            assert (b'self.client-foo', b'self.client-bar-1') in event.headers
+        elif isinstance(event, h2.events.StreamEnded):
+            import warnings
+            with warnings.catch_warnings():
+                # Ignore UnicodeWarning:
+                # h2/utilities.py:64: UnicodeWarning: Unicode equal comparison
+                # failed to convert both arguments to Unicode - interpreting
+                # them as being unequal.
+                #     elif header[0] in (b'cookie', u'cookie') and len(header[1]) < 20:
+
+                warnings.simplefilter("ignore")
+                h2_conn.send_headers(event.stream_id, [
+                    (':status', '200'),
+                ])
+            h2_conn.send_data(event.stream_id, b'response body')
+            h2_conn.end_stream(event.stream_id)
+            wfile.write(h2_conn.data_to_send())
+            wfile.flush()
+        elif isinstance(event, h2.events.DataReceived):
+            return False
+        return True
+
+    def test_simple(self):
+        response_body_buffer = b''
+        h2_conn = self.setup_connection()
+
+        self._send_request(
+            self.client.wfile,
+            h2_conn,
+            headers=[
+                (':authority', "127.0.0.1:{}".format(self.server.server.address[1])),
+                (':method', 'GET'),
+                (':scheme', 'https'),
+                (':path', '/'),
+                ('self.client-FoO', 'self.client-bar-1'),
+            ])
+
+        done = False
+        while not done:
+            try:
+                raw = b''.join(http2.read_raw_frame(self.client.rfile))
+                events = h2_conn.receive_data(raw)
+            except exceptions.HttpException:
+                print(traceback.format_exc())
+                assert False
+
+            self.client.wfile.write(h2_conn.data_to_send())
+            self.client.wfile.flush()
+
+            for event in events:
+                if isinstance(event, h2.events.DataReceived):
+                    response_body_buffer += event.data
+                elif isinstance(event, h2.events.StreamEnded):
+                    done = True
+
+        h2_conn.close_connection()
+        self.client.wfile.write(h2_conn.data_to_send())
+        self.client.wfile.flush()
+
+        assert len(self.master.state.flows) == 1
+        assert self.master.state.flows[0].response.status_code == 200
+        assert self.master.state.flows[0].response.content == b'response body'
         assert response_body_buffer == b'response body'
 
 
@@ -920,6 +991,7 @@ class TestRequestStreaming(_Http2Test):
         elif isinstance(event, h2.events.DataReceived):
             data = event.data
             assert data
+            print(event)
             h2_conn.close_connection(error_code=5, last_stream_id=42, additional_data=data)
             wfile.write(h2_conn.data_to_send())
             wfile.flush()
@@ -961,6 +1033,7 @@ class TestRequestStreaming(_Http2Test):
                         connection_terminated_event = event
                         done = True
             except:
+                print(traceback.format_exc())
                 break
 
         if streaming:

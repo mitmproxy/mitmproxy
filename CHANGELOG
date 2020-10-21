@@ -16,6 +16,8 @@ Unreleased: mitmproxy next
     * Fix file unlinking before external viewer finishes loading (@wchasekelley)
     * Add --cert-passphrase command line argument (@mirosyn)
     * Add interactive tutorials to the documentation (@mplattner)
+    * Support `deflateRaw` `Content-Encoding`s (@kjoconnor)
+    * Fix broken requests without body on HTTP/2 (@Kriechi)
     * Add support for sending (but not parsing) HTTP Trailers to the HTTP/1.1 protocol (@bburky)
 
     * --- TODO: add new PRs above this line ---

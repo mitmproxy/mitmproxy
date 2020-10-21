@@ -1,6 +1,7 @@
 import threading
 import time
 import functools
+import types
 from typing import Dict, Callable, Any, List, Optional  # noqa
 
 import h2.exceptions
@@ -602,6 +603,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
                 self.raise_zombie,
                 self.server_stream_id,
                 headers,
+                end_stream=(False if request.content or request.trailers or request.stream else True),
                 priority_exclusive=priority_exclusive,
                 priority_depends_on=priority_depends_on,
                 priority_weight=priority_weight,
@@ -618,12 +620,13 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             # nothing to do here
             return
 
-        self.connections[self.server_conn].safe_send_body(
-            self.raise_zombie,
-            self.server_stream_id,
-            chunks,
-            end_stream=(request.trailers is None),
-        )
+        if isinstance(chunks, types.GeneratorType) or (chunks and chunks[0]):
+            self.connections[self.server_conn].safe_send_body(
+                self.raise_zombie,
+                self.server_stream_id,
+                chunks,
+                end_stream=(request.trailers is None),
+            )
 
     @detect_zombie_stream
     def send_request_trailers(self, request):
