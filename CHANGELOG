@@ -4,11 +4,11 @@ Unreleased: mitmproxy next
 
     * Support for Python 3.9 (@mhils)
     * Add MsgPack content viewer (@tasn)
-    * Use `@charset` to decode CSS files if available (@prinzhorn)
+    * Use `@charset` to decode CSS files if available (@Prinzhorn)
     * Fix links to anticache docs in mitmweb and use HTTPS for links to documentation (@rugk)
-    * Updated typing for WebsocketMessage.content (@prinzhorn)
+    * Updated typing for WebsocketMessage.content (@Prinzhorn)
     * Add option `console_strip_trailing_newlines`, and no longer strip trailing newlines by default (@capt8bit)
-    * Prevent transparent mode from connecting to itself in the basic cases (@prinzhorn)
+    * Prevent transparent mode from connecting to itself in the basic cases (@Prinzhorn)
     * Display HTTP trailers in mitmweb (@sanlengjingvv)
     * Revamp onboarding app (@mhils)
     * Add ASGI support for embedded apps (@mhils)
@@ -18,6 +18,7 @@ Unreleased: mitmproxy next
     * Add interactive tutorials to the documentation (@mplattner)
     * Support `deflateRaw` `Content-Encoding`s (@kjoconnor)
     * Fix broken requests without body on HTTP/2 (@Kriechi)
+    * Fix Modify Headers addon when modifying a header that is part of the filter (@Prinzhorn)
 
     * --- TODO: add new PRs above this line ---
 
