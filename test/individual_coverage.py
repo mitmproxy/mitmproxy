@@ -26,9 +26,12 @@ def run_tests(src, test, fail):
                 test
             ])
 
-    if e == 0 and fail:
+    if e == 0:
+        if fail:
             print("FAIL DUE TO UNEXPECTED SUCCESS:", src, "Please remove this file from setup.cfg tool:individual_coverage/exclude.")
             e = 42
+        else:
+            print(".")
     else:
         if fail:
             print("Ignoring allowed fail:", src)
