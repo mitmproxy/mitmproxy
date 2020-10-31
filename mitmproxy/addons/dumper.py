@@ -12,6 +12,7 @@ from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
+from mitmproxy.net import http
 
 
 def indent(n: int, text: str) -> str:
@@ -85,6 +86,12 @@ class Dumper:
                 click.style(v)
             )
             self.echo(out, ident=4)
+
+    def _echo_trailers(self, trailers):
+        if not trailers or not isinstance(trailers, http.Headers):
+            return
+        self.echo(click.style("--- HTTP Trailers", fg="magenta"), ident=4)
+        self._echo_headers(trailers)
 
     def _echo_message(self, message, flow):
         _, lines, error = contentviews.get_message_content_view(
@@ -227,6 +234,8 @@ class Dumper:
                 self._echo_headers(f.response.headers)
             if ctx.options.flow_detail >= 3:
                 self._echo_message(f.response, f)
+            if ctx.options.flow_detail >= 2:
+                self._echo_trailers(f.response.trailers)
 
         if f.error:
             msg = strutils.escape_control_characters(f.error.msg)
