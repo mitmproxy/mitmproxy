@@ -125,8 +125,14 @@ def test_echo_body():
         d._echo_message(f.response, f)
         t = sio.getvalue()
         assert "cut off" in t
-        sio.truncate(0)
 
+
+def test_echo_trailer():
+    sio = io.StringIO()
+    sio_err = io.StringIO()
+    d = dumper.Dumper(sio, sio_err)
+    with taddons.context(d) as ctx:
+        ctx.configure(d, flow_detail=3)
         f = tflow.tflow(client_conn=True, server_conn=True, resp=True)
         f.response.headers["content-type"] = "text/html"
         f.response.headers["transfer-encoding"] = "chunked"
