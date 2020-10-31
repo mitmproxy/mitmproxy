@@ -23,7 +23,7 @@ class Http1Layer(httpbase._HttpTransmissionLayer):
     def read_request_trailers(self, request):
         if "Trailer" in request.headers:
             # TODO: not implemented yet
-            self.log("HTTP/1 request trailer headers are not implemented yet!", "warn")
+            self.log("HTTP/1.1 request trailer headers are not implemented yet!", "warn")
         return None
 
     def send_request_headers(self, request):
@@ -32,17 +32,15 @@ class Http1Layer(httpbase._HttpTransmissionLayer):
         self.server_conn.wfile.flush()
 
     def send_request_body(self, request, chunks):
-        for chunk in http1.assemble_body(request.headers, chunks):
+        for chunk in http1.assemble_body(request.headers, chunks, request.trailers):
             self.server_conn.wfile.write(chunk)
             self.server_conn.wfile.flush()
 
     def send_request_trailers(self, request):
-        if "Trailer" in request.headers:
-            # TODO: not implemented yet
-            self.log("HTTP/1 request trailer headers are not implemented yet!", "warn")
+        # HTTP/1.1 request trailer headers are sent in the body
+        pass
 
     def send_request(self, request):
-        # TODO: this does not yet support request trailers
         self.server_conn.wfile.write(http1.assemble_request(request))
         self.server_conn.wfile.flush()
 
@@ -58,9 +56,10 @@ class Http1Layer(httpbase._HttpTransmissionLayer):
         )
 
     def read_response_trailers(self, request, response):
+        # Trailers should actually be parsed unconditionally, the "Trailer" header is optional
         if "Trailer" in response.headers:
             # TODO: not implemented yet
-            self.log("HTTP/1 trailer headers are not implemented yet!", "warn")
+            self.log("HTTP/1.1 trailer headers are not implemented yet!", "warn")
         return None
 
     def send_response_headers(self, response):
@@ -69,15 +68,13 @@ class Http1Layer(httpbase._HttpTransmissionLayer):
         self.client_conn.wfile.flush()
 
     def send_response_body(self, response, chunks):
-        for chunk in http1.assemble_body(response.headers, chunks):
+        for chunk in http1.assemble_body(response.headers, chunks, response.trailers):
             self.client_conn.wfile.write(chunk)
             self.client_conn.wfile.flush()
 
     def send_response_trailers(self, response):
-        if "Trailer" in response.headers:
-            # TODO: not implemented yet
-            self.log("HTTP/1 trailer headers are not implemented yet!", "warn")
-        return
+        # HTTP/1.1 response trailer headers are sent in the body
+        pass
 
     def check_close_connection(self, flow):
         request_close = http1.connection_close(

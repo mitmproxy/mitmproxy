@@ -71,6 +71,14 @@ class Message(serializable.Serializable):
         self.data.http_version = strutils.always_bytes(http_version, "utf-8", "surrogateescape")
 
     @property
+    def is_http10(self) -> bool:
+        return self.data.http_version == b"HTTP/1.0"
+
+    @property
+    def is_http11(self) -> bool:
+        return self.data.http_version == b"HTTP/1.1"
+
+    @property
     def is_http2(self) -> bool:
         return self.data.http_version == b"HTTP/2.0"
 
