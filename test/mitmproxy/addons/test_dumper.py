@@ -6,6 +6,7 @@ import pytest
 
 from mitmproxy import exceptions
 from mitmproxy.addons import dumper
+from mitmproxy.net.http import Headers
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
@@ -128,15 +129,17 @@ def test_echo_body():
 
         f = tflow.tflow(client_conn=True, server_conn=True, resp=True)
         f.response.headers["content-type"] = "text/html"
+        f.response.headers["transfer-encoding"] = "chunked"
+        f.response.headers["trailer"] = "my-little-trailer"
         f.response.content = b"foo bar voing\n" * 100
-        f.response.trailers["trailer-2"] = "this is trailer 2"
+        f.response.trailers = Headers([(b"my-little-trailer", b"foobar-trailer")])
         d._echo_headers(f.response.headers)
         d._echo_message(f.response, f)
         d._echo_headers(f.response.trailers)
         t = sio.getvalue()
         assert "content-type" in t
         assert "cut off" in t
-        assert "trailer-2" in t
+        assert "foobar-trailer" in t
 
 
 def test_echo_request_line():

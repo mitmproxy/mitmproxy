@@ -40,6 +40,22 @@ def test_assemble_response():
         b"message"
     )
 
+    resp = tresp()
+    resp.headers["transfer-encoding"] = "chunked"
+    resp.headers["trailer"] = "my-little-trailer"
+    resp.trailers = Headers([(b"my-little-trailer", b"foobar")])
+    assert assemble_response(resp) == (
+        b"HTTP/1.1 200 OK\r\n"
+        b"header-response: svalue\r\n"
+        b"content-length: 7\r\n"
+        b"transfer-encoding: chunked\r\n"
+        b"trailer: my-little-trailer\r\n"
+        b"\r\n7\r\n"
+        b"message"
+        b"\r\n0\r\n"
+        b"my-little-trailer: foobar\r\n\r\n"
+    )
+
     with pytest.raises(exceptions.HttpException):
         assemble_response(tresp(content=None))
 
