@@ -87,6 +87,12 @@ class Dumper:
             )
             self.echo(out, ident=4)
 
+    def _echo_trailers(self, trailers):
+        if not trailers or not isinstance(trailers, http.Headers):
+            return
+        self.echo(click.style("--- HTTP Trailers", fg="magenta"), ident=4)
+        self._echo_headers(trailers)
+
     def _echo_message(self, message, flow):
         _, lines, error = contentviews.get_message_content_view(
             ctx.options.dumper_default_contentview,
@@ -226,10 +232,10 @@ class Dumper:
             self._echo_response_line(f)
             if ctx.options.flow_detail >= 2:
                 self._echo_headers(f.response.headers)
-                if f.response.trailers is not None and isinstance(f.response.trailers, http.Headers):
-                    self._echo_headers(f.response.trailers)
             if ctx.options.flow_detail >= 3:
                 self._echo_message(f.response, f)
+            if ctx.options.flow_detail >= 2:
+                self._echo_trailers(f.response.trailers)
 
         if f.error:
             msg = strutils.escape_control_characters(f.error.msg)
