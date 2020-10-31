@@ -227,6 +227,8 @@ class Dumper:
                 self._echo_headers(f.request.headers)
             if ctx.options.flow_detail >= 3:
                 self._echo_message(f.request, f)
+            if ctx.options.flow_detail >= 2:
+                self._echo_trailers(f.request.trailers)
 
         if f.response:
             self._echo_response_line(f)

@@ -134,18 +134,26 @@ def test_echo_trailer():
     with taddons.context(d) as ctx:
         ctx.configure(d, flow_detail=3)
         f = tflow.tflow(client_conn=True, server_conn=True, resp=True)
-        f.response.headers["content-type"] = "text/html"
+
+        f.request.headers["content-type"] = "text/html"
+        f.request.headers["transfer-encoding"] = "chunked"
+        f.request.headers["trailer"] = "my-little-request-trailer"
+        f.request.content = b"some request content\n" * 100
+        f.request.trailers = Headers([(b"my-little-request-trailer", b"foobar-request-trailer")])
+
         f.response.headers["transfer-encoding"] = "chunked"
-        f.response.headers["trailer"] = "my-little-trailer"
-        f.response.content = b"foo bar voing\n" * 100
-        f.response.trailers = Headers([(b"my-little-trailer", b"foobar-trailer")])
-        d._echo_headers(f.response.headers)
-        d._echo_message(f.response, f)
-        d._echo_headers(f.response.trailers)
+        f.response.headers["trailer"] = "my-little-response-trailer"
+        f.response.content = b"some response content\n" * 100
+        f.response.trailers = Headers([(b"my-little-response-trailer", b"foobar-response-trailer")])
+
+        d.echo_flow(f)
         t = sio.getvalue()
         assert "content-type" in t
         assert "cut off" in t
-        assert "foobar-trailer" in t
+        assert "some request content" in t
+        assert "foobar-request-trailer" in t
+        assert "some response content" in t
+        assert "foobar-response-trailer" in t
 
 
 def test_echo_request_line():
