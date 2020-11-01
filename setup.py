@@ -68,7 +68,7 @@ setup(
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
         "click>=7.0,<8",
-        "cryptography>=3.0,<3.1.1",
+        "cryptography>=3.2,<3.3",
         "flask>=1.1.1,<1.2",
         "h2>=4.0,<5; python_version>='3.6.0'",  # python_version only needed to make "py36+ required" message work
         "hyperframe>=6.0,<7; python_version>='3.6.0'",  # python_version only needed to make "py36+ required" message work
