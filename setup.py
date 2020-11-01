@@ -46,6 +46,11 @@ setup(
         "Topic :: Software Development :: Testing",
         "Typing :: Typed",
     ],
+    project_urls={
+        'Documentation': 'https://docs.mitmproxy.org/stable/',
+        'Source': 'https://github.com/mitmproxy/mitmproxy/',
+        'Tracker': 'https://github.com/mitmproxy/mitmproxy/issues',
+    },
     packages=find_packages(include=[
         "mitmproxy", "mitmproxy.*",
         "pathod", "pathod.*",
@@ -63,7 +68,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements/#install-requires
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
-        "asgiref>=3.3,<3.4",
+        "asgiref>=3.2.10,<3.4",
         "blinker>=1.4, <1.5",
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
@@ -72,7 +77,7 @@ setup(
         "flask>=1.1.1,<1.2",
         "h2>=4.0,<5; python_version>='3.6.0'",  # python_version only needed to make "py36+ required" message work
         "hyperframe>=6.0,<7; python_version>='3.6.0'",  # python_version only needed to make "py36+ required" message work
-        "kaitaistruct>=0.9,<0.10",
+        "kaitaistruct>=0.7,<0.10",
         "ldap3>=2.8,<2.9",
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
