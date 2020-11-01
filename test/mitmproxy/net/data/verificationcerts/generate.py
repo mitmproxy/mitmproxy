@@ -28,7 +28,7 @@ def sign(cert: str, subject: str):
         authorityKeyIdentifier=keyid,issuer
         basicConstraints=CA:FALSE
         keyUsage = digitalSignature, keyEncipherment
-        subjectAltName = {subject}
+        subjectAltName = DNS:{subject}
         """))
     do(f"openssl x509 -req -in {cert}.csr "
        f"-CA {ROOT_CA}.crt "
@@ -46,7 +46,8 @@ def mkcert(cert, subject):
     genrsa(cert)
     do(f"openssl req -new -nodes -batch "
        f"-key {cert}.key "
-       f"-addext \"subjectAltName = {subject}\" "
+       f"-subj /CN={subject} "
+       f"-addext \"subjectAltName = DNS:{subject}\" "
        f"-out {cert}.csr"
        )
     sign(cert, subject)
@@ -64,7 +65,7 @@ h = do("openssl x509 -hash -noout -in trusted-root.crt").decode("ascii").strip()
 shutil.copyfile("trusted-root.crt", "{}.0".format(h))
 
 # create trusted leaf cert.
-mkcert("trusted-leaf", f'DNS:{SUBJECT}')
+mkcert("trusted-leaf", SUBJECT)
 
 # create self-signed cert
 genrsa("self-signed")
