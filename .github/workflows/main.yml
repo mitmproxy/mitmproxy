@@ -101,7 +101,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       CI_BUILD_PYINSTALLER: 1
-      CI_BUILD_WININSTALLER: ${{ matrix.os == 'windows-latest' }}
+      CI_BUILD_WININSTALLER: ${{ matrix.os == 'windows-2019' }}
       CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
     steps:
       - uses: actions/checkout@v1
