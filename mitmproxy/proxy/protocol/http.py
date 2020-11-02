@@ -10,7 +10,7 @@ from mitmproxy import http
 from mitmproxy import flow
 from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol.websocket import WebSocketLayer
-from mitmproxy.net import websocket_utils
+from mitmproxy.net import websocket
 
 
 class _HttpTransmissionLayer(base.Layer):
@@ -343,8 +343,8 @@ class HttpLayer(base.Layer):
 
         try:
             valid = (
-                websocket_utils.check_handshake(request.headers) and
-                websocket_utils.check_client_version(request.headers)
+                websocket.check_handshake(request.headers) and
+                websocket.check_client_version(request.headers)
             )
             if valid:
                 f.metadata['websocket'] = True
@@ -462,8 +462,8 @@ class HttpLayer(base.Layer):
                 # received after e.g. a WebSocket upgrade request.
                 # Check for WebSocket handshake
                 is_websocket = (
-                    websocket_utils.check_handshake(f.request.headers) and
-                    websocket_utils.check_handshake(f.response.headers)
+                    websocket.check_handshake(f.request.headers) and
+                    websocket.check_handshake(f.response.headers)
                 )
                 if is_websocket and not self.config.options.websocket:
                     self.log(

@@ -106,12 +106,12 @@ class TestPerformServerConnectionPreface(net_tservers.ServerTestBase):
             self.wfile.flush()
 
             # check empty settings frame
-            raw = http2.read_raw_frame(self.rfile)
-            assert raw == bytes.fromhex("00000c040000000000000200000000000300000001")
+            _, consumed_bytes = http2.read_frame(self.rfile, False)
+            assert consumed_bytes == bytes.fromhex("00000c040000000000000200000000000300000001")
 
             # check settings acknowledgement
-            raw = http2.read_raw_frame(self.rfile)
-            assert raw == bytes.fromhex("000000040100000000")
+            _, consumed_bytes = http2.read_frame(self.rfile, False)
+            assert consumed_bytes == bytes.fromhex("000000040100000000")
 
             # send settings acknowledgement
             self.wfile.write(bytes.fromhex("000000040100000000"))
@@ -126,7 +126,7 @@ class TestPerformServerConnectionPreface(net_tservers.ServerTestBase):
             protocol.perform_server_connection_preface()
             assert protocol.connection_preface_performed
 
-            with pytest.raises(exceptions.TcpDisconnect):
+            with pytest.raises(exceptions.TcpReadIncomplete):
                 protocol.perform_server_connection_preface(force=True)
 
 
