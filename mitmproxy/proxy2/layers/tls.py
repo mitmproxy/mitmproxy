@@ -190,7 +190,7 @@ class _TLSLayer(tunnel.TunnelLayer):
             self.conn.tls_established = True
             self.conn.sni = self.tls.get_servername()
             self.conn.alpn = self.tls.get_alpn_proto_negotiated()
-            self.conn.certificate_chain = [certs.Cert(x) for x in all_certs]
+            self.conn.certificate_list = [certs.Cert(x) for x in all_certs]
             self.conn.cipher_list = self.tls.get_cipher_list()
             self.conn.tls_version = self.tls.get_protocol_version_name()
             self.conn.timestamp_tls_setup = time.time()

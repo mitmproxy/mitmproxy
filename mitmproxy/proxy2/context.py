@@ -25,7 +25,22 @@ class Connection:
 
     tls: bool = False
     tls_established: bool = False
-    certificate_chain: Optional[Sequence[certs.Cert]] = None
+    certificate_list: Optional[Sequence[certs.Cert]] = None
+    """
+    The TLS certificate list as sent by the peer. 
+    The first certificate is the end-entity certificate.
+    
+    [RFC 8446] Prior to TLS 1.3, "certificate_list" ordering required each
+    certificate to certify the one immediately preceding it; however,
+    some implementations allowed some flexibility.  Servers sometimes
+    send both a current and deprecated intermediate for transitional
+    purposes, and others are simply configured incorrectly, but these
+    cases can nonetheless be validated properly.  For maximum
+    compatibility, all implementations SHOULD be prepared to handle
+    potentially extraneous certificates and arbitrary orderings from any
+    TLS version, with the exception of the end-entity certificate which
+    MUST be first.
+    """
     alpn: Optional[bytes] = None
     alpn_offers: Sequence[bytes] = ()
     cipher_list: Sequence[bytes] = ()
