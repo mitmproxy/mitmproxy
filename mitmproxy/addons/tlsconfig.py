@@ -47,8 +47,11 @@ class TlsConfig:
     #  - ciphers_server
     #  - key_size
     #  - certs
+    #  - cert_passphrase
+    #  - ssl_verify_upstream_trusted_ca
+    #  - ssl_verify_upstream_trusted_confdir
 
-    def get_cert(self, context: context.Context) -> Tuple[certs.Cert, SSL.PKey, str]:
+    def get_cert(self, conn_context: context.Context) -> Tuple[certs.Cert, SSL.PKey, str]:
         """
         This function determines the Common Name (CN), Subject Alternative Names (SANs) and Organization Name
         our certificate should have and then fetches a matching cert from the certstore.
@@ -57,8 +60,8 @@ class TlsConfig:
         organization: Optional[str] = None
 
         # Use upstream certificate if available.
-        if context.server.certificate_list:
-            upstream_cert = context.server.certificate_list[0]
+        if conn_context.server.certificate_list:
+            upstream_cert = conn_context.server.certificate_list[0]
             if upstream_cert.cn:
                 altnames.append(upstream_cert.cn)
             altnames.extend(upstream_cert.altnames)
@@ -66,10 +69,10 @@ class TlsConfig:
                 organization = upstream_cert.organization
 
         # Add SNI. If not available, try the server address as well.
-        if context.client.sni:
-            altnames.append(context.client.sni)
-        elif context.server.address:
-            altnames.append(context.server.address[0])
+        if conn_context.client.sni:
+            altnames.append(conn_context.client.sni)
+        elif conn_context.server.address:
+            altnames.append(conn_context.server.address[0].encode("idna"))
 
         # As a last resort, add *something* so that we have a certificate to serve.
         if not altnames:
@@ -83,17 +86,17 @@ class TlsConfig:
         return self.certstore.get_cert(altnames[0], altnames, organization)
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
-        context = tls_clienthello.context
+        conn_context = tls_clienthello.context
         only_non_http_alpns = (
-                context.client.alpn_offers and
-                all(x not in tls.HTTP_ALPNS for x in context.client.alpn_offers)
+                conn_context.client.alpn_offers and
+                all(x not in tls.HTTP_ALPNS for x in conn_context.client.alpn_offers)
         )
-        tls_clienthello.establish_server_tls_first = context.server.tls and (
-                context.options.connection_strategy == "eager" or
-                context.options.add_upstream_certs_to_client_chain or
-                context.options.upstream_cert and (
+        tls_clienthello.establish_server_tls_first = conn_context.server.tls and (
+                ctx.options.connection_strategy == "eager" or
+                ctx.options.add_upstream_certs_to_client_chain or
+                ctx.options.upstream_cert and (
                         only_non_http_alpns or
-                        not context.client.sni
+                        not conn_context.client.sni
                 )
         )
 
@@ -106,10 +109,6 @@ class TlsConfig:
     def create_client_proxy_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
         tls_method, tls_options = net_tls.VERSION_CHOICES[ctx.options.ssl_version_client]
         cert, key, chain_file = self.get_cert(tls_start.context)
-        if ctx.options.add_upstream_certs_to_client_chain:
-            extra_chain_certs = tls_start.context.server.certificate_list
-        else:
-            extra_chain_certs = ()
         ssl_ctx = net_tls.create_server_context(
             cert=cert,
             key=key,
@@ -119,7 +118,7 @@ class TlsConfig:
             dhparams=self.certstore.dhparams,
             chain_file=chain_file,
             alpn_select_callback=alpn_select_callback,
-            extra_chain_certs=extra_chain_certs,
+            extra_chain_certs=tls_start.context.server.certificate_list,
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
         tls_start.ssl_conn.set_app_data(AppData(
@@ -169,10 +168,10 @@ class TlsConfig:
                 if os.path.exists(path):
                     client_cert = path
 
-        args["cipher_list"] = b':'.join(server.cipher_list) if server.cipher_list else None
+        args["cipher_list"] = ':'.join(server.cipher_list) if server.cipher_list else None
         ssl_ctx = net_tls.create_client_context(
             cert=client_cert,
-            sni=server.sni.decode("idna"),  # FIXME: Should pass-through here.
+            sni=server.sni.decode("idna"),  # TODO: Should pass-through here.
             alpn_protos=server.alpn_offers,
             **args
         )
@@ -185,14 +184,11 @@ class TlsConfig:
             return
 
         certstore_path = os.path.expanduser(ctx.options.confdir)
-        if not os.path.exists(os.path.dirname(certstore_path)):
-            raise exceptions.OptionsError(
-                f"Certificate Authority parent directory does not exist: {os.path.dirname(certstore_path)}"
-            )
         self.certstore = certs.CertStore.from_store(
             path=certstore_path,
             basename=CONF_BASENAME,
-            key_size=ctx.options.key_size
+            key_size=ctx.options.key_size,
+            passphrase=ctx.options.cert_passphrase.encode("utf8") if ctx.options.cert_passphrase else None,
         )
         for certspec in ctx.options.certs:
             parts = certspec.split("=", 1)
@@ -203,6 +199,10 @@ class TlsConfig:
             if not os.path.exists(cert):
                 raise exceptions.OptionsError(f"Certificate file does not exist: {cert}")
             try:
-                self.certstore.add_cert_file(parts[0], cert)
+                self.certstore.add_cert_file(
+                    parts[0],
+                    cert,
+                    passphrase=ctx.options.cert_passphrase.encode("utf8") if ctx.options.cert_passphrase else None,
+                )
             except crypto.Error as e:
                 raise exceptions.OptionsError(f"Invalid certificate format: {cert}") from e

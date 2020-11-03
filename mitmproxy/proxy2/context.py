@@ -1,9 +1,8 @@
 import warnings
 from enum import Flag, auto
-from typing import List, Literal, Optional, Sequence, Union
+from typing import List, Literal, Optional, Sequence, Tuple, Union
 
 from mitmproxy import certs
-from mitmproxy.flow import Error
 from mitmproxy.net import server_spec
 from mitmproxy.options import Options
 
@@ -15,13 +14,19 @@ class ConnectionState(Flag):
     OPEN = CAN_READ | CAN_WRITE
 
 
+# practically speaking we may have IPv6 addresses with flowinfo and scope_id,
+# but type checking isn't good enough to properly handle tuple unions.
+# this version at least provides useful type checking messages.
+Address = Tuple[str, int]
+
+
 class Connection:
     """
     Connections exposed to the layers only contain metadata, no socket objects.
     """
     state: ConnectionState
-    peername: Optional[tuple]
-    sockname: Optional[tuple]
+    peername: Optional[Address]
+    sockname: Optional[Address]
 
     tls: bool = False
     tls_established: bool = False
@@ -43,7 +48,7 @@ class Connection:
     """
     alpn: Optional[bytes] = None
     alpn_offers: Sequence[bytes] = ()
-    cipher_list: Sequence[bytes] = ()
+    cipher_list: Sequence[str] = ()
     tls_version: Optional[str] = None
     sni: Union[bytes, Literal[True], None]
 
@@ -61,10 +66,12 @@ class Connection:
         return f"{type(self).__name__}({attrs})"
 
 
+
+
 class Client(Connection):
     state = ConnectionState.OPEN
-    peername: tuple
-    sockname: tuple
+    peername: Address
+    sockname: Address
 
     sni: Union[bytes, None] = None
 
@@ -82,7 +89,7 @@ class Server(Connection):
     state = ConnectionState.CLOSED
     peername = None
     sockname = None
-    address: Optional[tuple]
+    address: Optional[Address]
 
     sni = True
     """True: client SNI, False: no SNI, bytes: custom value"""
