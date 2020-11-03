@@ -46,7 +46,7 @@ def mkcert(cert, subject):
     genrsa(cert)
     do(f"openssl req -new -nodes -batch "
        f"-key {cert}.key "
-       f"-subj /CN={subject} "
+       f"-subj /CN={subject}/O=mitmproxy "
        f"-addext \"subjectAltName = DNS:{subject}\" "
        f"-out {cert}.csr"
        )
@@ -80,3 +80,5 @@ for x in ["self-signed", "trusted-leaf", "trusted-root"]:
     with open(f"{x}.crt") as crt, open(f"{x}.key") as key, open(f"{x}.pem", "w") as pem:
         pem.write(crt.read())
         pem.write(key.read())
+
+shutil.copyfile("trusted-leaf.pem", "example.mitmproxy.org.pem")
