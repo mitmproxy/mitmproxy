@@ -321,7 +321,7 @@ def create_server_context(
         request_client_cert: bool = False,
         chain_file=None,
         dhparams=None,
-        extra_chain_certs: typing.Iterable[certs.Cert] = None,
+        extra_chain_certs: typing.Optional[typing.Iterable[certs.Cert]] = None,
         **sslctx_kwargs
 ) -> SSL.Context:
     """
