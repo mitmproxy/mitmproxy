@@ -5,7 +5,7 @@ import sys
 import threading
 from mitmproxy.net import tcp, tls
 from mitmproxy import certs as mcerts
-from mitmproxy.net import websockets
+from mitmproxy.net import websocket_utils
 from mitmproxy import version
 import urllib
 from mitmproxy import exceptions
@@ -177,8 +177,8 @@ class PathodHandler(tcp.BaseHandler):
 
             m = utils.MemBool()
 
-            valid_websocket_handshake = websockets.check_handshake(headers)
-            self.settings.websocket_key = websockets.get_client_key(headers)
+            valid_websocket_handshake = websocket_utils.check_handshake(headers)
+            self.settings.websocket_key = websocket_utils.get_client_key(headers)
 
             # If this is a websocket initiation, we respond with a proper
             # server response, unless over-ridden.

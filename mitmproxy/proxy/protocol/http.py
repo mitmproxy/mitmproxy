@@ -10,7 +10,7 @@ from mitmproxy import http
 from mitmproxy import flow
 from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol.websocket import WebSocketLayer
-from mitmproxy.net import websockets
+from mitmproxy.net import websocket_utils
 
 
 class _HttpTransmissionLayer(base.Layer):
@@ -342,7 +342,11 @@ class HttpLayer(base.Layer):
         self.channel.ask("request", f)
 
         try:
-            if websockets.check_handshake(request.headers) and websockets.check_client_version(request.headers):
+            valid = (
+                websocket_utils.check_handshake(request.headers) and
+                websocket_utils.check_client_version(request.headers)
+            )
+            if valid:
                 f.metadata['websocket'] = True
                 # We only support RFC6455 with WebSocket version 13
                 # allow inline scripts to manipulate the client handshake
@@ -458,8 +462,8 @@ class HttpLayer(base.Layer):
                 # received after e.g. a WebSocket upgrade request.
                 # Check for WebSocket handshake
                 is_websocket = (
-                    websockets.check_handshake(f.request.headers) and
-                    websockets.check_handshake(f.response.headers)
+                    websocket_utils.check_handshake(f.request.headers) and
+                    websocket_utils.check_handshake(f.response.headers)
                 )
                 if is_websocket and not self.config.options.websocket:
                     self.log(

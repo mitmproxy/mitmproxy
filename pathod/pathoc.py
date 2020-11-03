@@ -11,17 +11,13 @@ import time
 import OpenSSL.crypto
 import logging
 
-from mitmproxy import certs
-from mitmproxy import exceptions
-from mitmproxy.net import tcp, tls
-from mitmproxy.net import websockets
-from mitmproxy.net import socks
+from mitmproxy import certs, exceptions
+from mitmproxy.net import tcp, tls, socks
 from mitmproxy.net import http as net_http
 from mitmproxy.coretypes import basethread
 from mitmproxy.utils import strutils
 
-from pathod import log
-from pathod import language
+from pathod import language, log
 from pathod.protocols import http2
 
 
@@ -139,7 +135,7 @@ class WebsocketFrameReader(basethread.BaseThread):
                 for rfile in r:
                     with self.logger.ctx() as log:
                         try:
-                            frm = websockets.Frame.from_file(self.rfile)
+                            frm = language.websockets_frame.Frame.from_file(self.rfile)
                         except exceptions.TcpDisconnect:
                             return
                         self.frames_queue.put(frm)

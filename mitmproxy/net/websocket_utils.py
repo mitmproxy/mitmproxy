@@ -8,11 +8,11 @@ import base64
 import hashlib
 import os
 
+from wsproto.utilities import ACCEPT_GUID
+from wsproto.handshake import WEBSOCKET_VERSION
+
 from mitmproxy.net import http
 from mitmproxy.utils import strutils
-
-MAGIC = b'258EAFA5-E914-47DA-95CA-C5AB0DC85B11'
-VERSION = "13"
 
 
 def client_handshake_headers(version=None, key=None, protocol=None, extensions=None):
@@ -24,7 +24,7 @@ def client_handshake_headers(version=None, key=None, protocol=None, extensions=N
         Returns an instance of http.Headers
     """
     if version is None:
-        version = VERSION
+        version = WEBSOCKET_VERSION
     if key is None:
         key = base64.b64encode(os.urandom(16)).decode('ascii')
     h = http.Headers(
@@ -67,11 +67,11 @@ def check_handshake(headers):
 
 
 def create_server_nonce(client_nonce):
-    return base64.b64encode(hashlib.sha1(strutils.always_bytes(client_nonce) + MAGIC).digest())
+    return base64.b64encode(hashlib.sha1(strutils.always_bytes(client_nonce) + ACCEPT_GUID).digest())
 
 
 def check_client_version(headers):
-    return headers.get("sec-websocket-version", "") == VERSION
+    return headers.get("sec-websocket-version", "") == WEBSOCKET_VERSION
 
 
 def get_extensions(headers):
