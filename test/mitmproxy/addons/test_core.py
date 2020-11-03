@@ -161,17 +161,11 @@ def test_validation_simple():
             tctx.configure(sa, body_size_limit = "invalid")
         tctx.configure(sa, body_size_limit = "1m")
 
-        with pytest.raises(exceptions.OptionsError, match="mutually exclusive"):
+        with pytest.raises(exceptions.OptionsError, match="requires the upstream_cert option to be enabled"):
             tctx.configure(
                 sa,
                 add_upstream_certs_to_client_chain = True,
                 upstream_cert = False
-            )
-        with pytest.raises(exceptions.OptionsError, match="requires certificate verification to be disabled"):
-            tctx.configure(
-                sa,
-                add_upstream_certs_to_client_chain = True,
-                ssl_insecure = False
             )
         with pytest.raises(exceptions.OptionsError, match="Invalid mode"):
             tctx.configure(
