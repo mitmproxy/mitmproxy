@@ -39,16 +39,7 @@ class Core:
         opts = ctx.options
         if opts.add_upstream_certs_to_client_chain and not opts.upstream_cert:
             raise exceptions.OptionsError(
-                "The no-upstream-cert and add-upstream-certs-to-client-chain "
-                "options are mutually exclusive. If no-upstream-cert is enabled "
-                "then the upstream certificate is not retrieved before generating "
-                "the client certificate chain."
-            )
-        if opts.add_upstream_certs_to_client_chain and not opts.ssl_insecure:
-            raise exceptions.OptionsError(
-                "The verify-upstream-cert requires certificate verification to be disabled. "
-                "If upstream certificates are verified then extra upstream certificates are "
-                "not available for inclusion to the client chain."
+                "add_upstream_certs_to_client_chain requires the upstream_cert option to be enabled."
             )
         if "body_size_limit" in updated:
             try:

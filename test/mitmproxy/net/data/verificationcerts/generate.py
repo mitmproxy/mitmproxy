@@ -1,10 +1,10 @@
 """
 Generate SSL test certificates.
 """
-import subprocess
-import shlex
 import os
+import shlex
 import shutil
+import subprocess
 import textwrap
 
 ROOT_CA = "trusted-root"
@@ -75,3 +75,8 @@ do("openssl req -x509 -new -nodes -batch "
    "-days 7300 "
    "-out self-signed.crt"
    )
+
+for x in ["self-signed", "trusted-leaf", "trusted-root"]:
+    with open(f"{x}.crt") as crt, open(f"{x}.key") as key, open(f"{x}.pem", "w") as pem:
+        pem.write(crt.read())
+        pem.write(key.read())
