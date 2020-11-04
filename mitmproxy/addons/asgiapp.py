@@ -55,7 +55,7 @@ def make_scope(flow: http.HTTPFlow) -> dict:
     # (byte string) – URL portion after the ?, percent-encoded.
     query_string: bytes
     if len(quoted_path) > 1:
-        query_string = quoted_path[1].encode()
+        query_string = urllib.parse.unquote(quoted_path[1]).encode()
     else:
         query_string = b""
 
