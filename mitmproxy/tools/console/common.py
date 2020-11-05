@@ -191,7 +191,7 @@ class TruncatedText(urwid.Widget):
             text = text[::-1]
             attr = attr[::-1]
 
-        text_len = len(text)  # TODO: unicode?
+        text_len = urwid.util.calc_width(text, 0, len(text))
         if size is not None and len(size) > 0:
             width = size[0]
         else:
@@ -206,8 +206,10 @@ class TruncatedText(urwid.Widget):
                 c_text = text
                 c_attr = attr
         else:
-            visible_len = width - len(SYMBOL_ELLIPSIS)
-            visible_text = text[0:visible_len]
+            trim = urwid.util.calc_trim_text(text, 0, width - 1, 0, width - 1)
+            visible_text = text[0:trim[1]]
+            if trim[3] == 1:
+                visible_text += ' '
             c_text = visible_text + SYMBOL_ELLIPSIS
             c_attr = (urwid.util.rle_subseg(attr, 0, len(visible_text.encode())) +
                       [('focus', len(SYMBOL_ELLIPSIS.encode()))])
