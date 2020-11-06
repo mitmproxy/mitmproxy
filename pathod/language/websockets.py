@@ -4,9 +4,11 @@ import typing  # noqa
 
 import pyparsing as pp
 
-import mitmproxy.net.websockets
+from wsproto.frame_protocol import Opcode
+
 from mitmproxy.utils import strutils
-from . import base, generators, actions, message
+from . import base, generators, actions, message, websockets_frame
+
 
 NESTED_LEADER = b"pathod!"
 
@@ -17,12 +19,12 @@ class WF(base.CaselessLiteral):
 
 class OpCode(base.IntField):
     names: typing.Dict[str, int] = {
-        "continue": mitmproxy.net.websockets.OPCODE.CONTINUE,
-        "text": mitmproxy.net.websockets.OPCODE.TEXT,
-        "binary": mitmproxy.net.websockets.OPCODE.BINARY,
-        "close": mitmproxy.net.websockets.OPCODE.CLOSE,
-        "ping": mitmproxy.net.websockets.OPCODE.PING,
-        "pong": mitmproxy.net.websockets.OPCODE.PONG,
+        "continue": Opcode.CONTINUATION,
+        "text": Opcode.TEXT,
+        "binary": Opcode.BINARY,
+        "close": Opcode.CLOSE,
+        "ping": Opcode.PING,
+        "pong": Opcode.PONG,
     }
     max = 15
     preamble = "c"
@@ -217,11 +219,19 @@ class WebsocketFrame(message.Message):
             v = getattr(self, i, None)
             if v is not None:
                 frameparts[i] = v.value
-        frame = mitmproxy.net.websockets.FrameHeader(**frameparts)
+
+        # import wsproto.frame_protocol
+        # wsproto.frame_protocol.Frame(
+        #     opcode=frameparts["opcode"],
+        #     payload=None,
+        #     frame_finished=frameparts["fin"]
+        # )
+
+        frame = websockets_frame.FrameHeader(**frameparts)
         vals = [bytes(frame)]
         if bodygen:
             if frame.masking_key and not self.rawbody:
-                masker = mitmproxy.net.websockets.Masker(frame.masking_key)
+                masker = websockets_frame.Masker(frame.masking_key)
                 vals.append(
                     generators.TransformGenerator(
                         bodygen,

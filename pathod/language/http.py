@@ -2,9 +2,8 @@ import abc
 
 import pyparsing as pp
 
-from mitmproxy.net.http import url
-import mitmproxy.net.websockets
-from mitmproxy.net.http import status_codes, user_agents
+from mitmproxy.net import websocket_utils
+from mitmproxy.net.http import status_codes, url, user_agents
 from . import base, exceptions, actions, message
 
 # TODO: use mitmproxy.net.semantics.protocol assemble method,
@@ -200,7 +199,7 @@ class Response(_HTTPMessage):
                     1,
                     StatusCode(101)
                 )
-            headers = mitmproxy.net.websockets.server_handshake_headers(
+            headers = websocket_utils.server_handshake_headers(
                 settings.websocket_key
             )
             for i in headers.fields:
@@ -312,7 +311,7 @@ class Request(_HTTPMessage):
                     1,
                     Method("get")
                 )
-            for i in mitmproxy.net.websockets.client_handshake_headers().fields:
+            for i in websocket_utils.client_handshake_headers().fields:
                 if not get_header(i[0], self.headers):
                     tokens.append(
                         Header(

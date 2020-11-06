@@ -2,7 +2,6 @@ import queue
 import socket
 from OpenSSL import SSL
 
-
 import wsproto
 from wsproto import events, WSConnection
 from wsproto.connection import ConnectionType
@@ -13,9 +12,10 @@ from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy.proxy.protocol import base
 from mitmproxy.net import tcp
-from mitmproxy.net import websockets
 from mitmproxy.websocket import WebSocketFlow, WebSocketMessage
 from mitmproxy.utils import strutils
+
+from pathod.language import websockets_frame
 
 
 class WebSocketLayer(base.Layer):
@@ -199,7 +199,8 @@ class WebSocketLayer(base.Layer):
                     other_conn = self.server_conn if conn == self.client_conn.connection else self.client_conn
                     is_server = (source_conn == self.server_conn)
 
-                    frame = websockets.Frame.from_file(source_conn.rfile)
+                    # TODO: replace this method from pathod with a stack-agnostic version
+                    frame = websockets_frame.Frame.from_file(source_conn.rfile)
                     data = self.connections[source_conn].receive_data(bytes(frame))
                     source_conn.send(data)
 

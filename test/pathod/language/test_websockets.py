@@ -1,8 +1,8 @@
 import pytest
 
 from pathod import language
-from pathod.language import websockets
-import mitmproxy.net.websockets
+
+from wsproto.frame_protocol import Opcode
 
 from .. import tservers
 
@@ -41,7 +41,7 @@ class TestWebsocketFrame:
             "wf:k@4",
             "wf:x10",
         ]
-        self._test_messages(specs, websockets.WebsocketFrame)
+        self._test_messages(specs, language.websockets.WebsocketFrame)
 
     def test_parse_websocket_frames(self):
         wf = language.parse_websocket_frame("wf:x10")
@@ -53,7 +53,7 @@ class TestWebsocketFrame:
         specs = [
             "wf:f'wf'",
         ]
-        self._test_messages(specs, websockets.WebsocketClientFrame)
+        self._test_messages(specs, language.websockets.WebsocketClientFrame)
 
     def test_nested_frame(self):
         wf = parse_request("wf:f'wf'")
@@ -61,7 +61,7 @@ class TestWebsocketFrame:
 
     def test_flags(self):
         wf = parse_request("wf:fin:mask:rsv1:rsv2:rsv3")
-        frm = mitmproxy.net.websockets.Frame.from_bytes(tservers.render(wf))
+        frm = language.websockets_frame.Frame.from_bytes(tservers.render(wf))
         assert frm.header.fin
         assert frm.header.mask
         assert frm.header.rsv1
@@ -69,7 +69,7 @@ class TestWebsocketFrame:
         assert frm.header.rsv3
 
         wf = parse_request("wf:-fin:-mask:-rsv1:-rsv2:-rsv3")
-        frm = mitmproxy.net.websockets.Frame.from_bytes(tservers.render(wf))
+        frm = language.websockets_frame.Frame.from_bytes(tservers.render(wf))
         assert not frm.header.fin
         assert not frm.header.mask
         assert not frm.header.rsv1
@@ -79,15 +79,13 @@ class TestWebsocketFrame:
     def fr(self, spec, **kwargs):
         settings = language.base.Settings(**kwargs)
         wf = parse_request(spec)
-        return mitmproxy.net.websockets.Frame.from_bytes(tservers.render(wf, settings))
+        return language.websockets_frame.Frame.from_bytes(tservers.render(wf, settings))
 
     def test_construction(self):
         assert self.fr("wf:c1").header.opcode == 1
         assert self.fr("wf:c0").header.opcode == 0
-        assert self.fr("wf:cbinary").header.opcode ==\
-            mitmproxy.net.websockets.OPCODE.BINARY
-        assert self.fr("wf:ctext").header.opcode ==\
-            mitmproxy.net.websockets.OPCODE.TEXT
+        assert self.fr("wf:cbinary").header.opcode == Opcode.BINARY
+        assert self.fr("wf:ctext").header.opcode == Opcode.TEXT
 
     def test_rawbody(self):
         frm = self.fr("wf:mask:r'foo'")

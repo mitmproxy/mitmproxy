@@ -1,13 +1,12 @@
+import sys
 import os
 import struct
 import io
 
+from wsproto.frame_protocol import Opcode
+
 from mitmproxy.net import tcp
-from mitmproxy.utils import strutils
-from mitmproxy.utils import bits
-from mitmproxy.utils import human
-from mitmproxy.coretypes import bidi
-from .masker import Masker
+from mitmproxy.utils import bits, human, strutils
 
 
 MAX_16_BIT_INT = (1 << 16)
@@ -15,39 +14,40 @@ MAX_64_BIT_INT = (1 << 64)
 
 DEFAULT = object()
 
-# RFC 6455, Section 5.2 - Base Framing Protocol
-OPCODE = bidi.BiDi(
-    CONTINUE=0x00,
-    TEXT=0x01,
-    BINARY=0x02,
-    CLOSE=0x08,
-    PING=0x09,
-    PONG=0x0a
-)
 
-# RFC 6455, Section 7.4.1 - Defined Status Codes
-CLOSE_REASON = bidi.BiDi(
-    NORMAL_CLOSURE=1000,
-    GOING_AWAY=1001,
-    PROTOCOL_ERROR=1002,
-    UNSUPPORTED_DATA=1003,
-    RESERVED=1004,
-    RESERVED_NO_STATUS=1005,
-    RESERVED_ABNORMAL_CLOSURE=1006,
-    INVALID_PAYLOAD_DATA=1007,
-    POLICY_VIOLATION=1008,
-    MESSAGE_TOO_BIG=1009,
-    MANDATORY_EXTENSION=1010,
-    INTERNAL_ERROR=1011,
-    RESERVED_TLS_HANDHSAKE_FAILED=1015,
-)
+class Masker:
+    """
+    Data sent from the server must be masked to prevent malicious clients
+    from sending data over the wire in predictable patterns.
+
+    Servers do not have to mask data they send to the client.
+    https://tools.ietf.org/html/rfc6455#section-5.3
+    """
+
+    def __init__(self, key):
+        self.key = key
+        self.offset = 0
+
+    def mask(self, offset, data):
+        datalen = len(data)
+        offset_mod = offset % 4
+        data = int.from_bytes(data, sys.byteorder)
+        num_keys = (datalen + offset_mod + 3) // 4
+        mask = int.from_bytes((self.key * num_keys)[offset_mod:datalen +
+                                                    offset_mod], sys.byteorder)
+        return (data ^ mask).to_bytes(datalen, sys.byteorder)
+
+    def __call__(self, data):
+        ret = self.mask(self.offset, data)
+        self.offset += len(ret)
+        return ret
 
 
 class FrameHeader:
 
     def __init__(
         self,
-        opcode=OPCODE.TEXT,
+        opcode=Opcode.TEXT,
         payload_length=0,
         fin=False,
         rsv1=False,
@@ -104,7 +104,7 @@ class FrameHeader:
     def __repr__(self):
         vals = [
             "ws frame:",
-            OPCODE.get_name(self.opcode, hex(self.opcode)).lower()
+            Opcode(self.opcode).name.lower()
         ]
         flags = []
         for i in ["fin", "rsv1", "rsv2", "rsv3", "mask"]:

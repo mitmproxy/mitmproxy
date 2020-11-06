@@ -2,8 +2,29 @@ import os
 import codecs
 import pytest
 
-from mitmproxy.net import websockets
+from wsproto.frame_protocol import Opcode
+
+from pathod.language import websockets_frame
 from mitmproxy.test import tutils
+
+
+class TestMasker:
+
+    @pytest.mark.parametrize("input,expected", [
+        ([b"a"], '00'),
+        ([b"four"], '070d1616'),
+        ([b"fourf"], '070d161607'),
+        ([b"fourfive"], '070d1616070b1501'),
+        ([b"a", b"aasdfasdfa", b"asdf"], '000302170504021705040205120605'),
+        ([b"a" * 50, b"aasdfasdfa", b"asdf"], '00030205000302050003020500030205000302050003020500030205000302050003020500030205000302050003020500030205120605051206050500110702'),  # noqa
+    ])
+    def test_masker(self, input, expected):
+        m = websockets_frame.Masker(b"abcd")
+        data = b"".join([m(t) for t in input])
+        assert data == codecs.decode(expected, 'hex')
+
+        data = websockets_frame.Masker(b"abcd")(data)
+        assert data == b"".join(input)
 
 
 class TestFrameHeader:
@@ -21,14 +42,14 @@ class TestFrameHeader:
         (2 ** 64 - 1, '017FFFFFFFFFFFFFFFFF'),
     ])
     def test_serialization_length(self, input, expected):
-        h = websockets.FrameHeader(
-            opcode=websockets.OPCODE.TEXT,
+        h = websockets_frame.FrameHeader(
+            opcode=Opcode.TEXT,
             payload_length=input,
         )
         assert bytes(h) == codecs.decode(expected, 'hex')
 
     def test_serialization_too_large(self):
-        h = websockets.FrameHeader(
+        h = websockets_frame.FrameHeader(
             payload_length=2 ** 64 + 1,
         )
         with pytest.raises(ValueError):
@@ -47,7 +68,7 @@ class TestFrameHeader:
         ('017FFFFFFFFFFFFFFFFF', 2 ** 64 - 1),
     ])
     def test_deserialization_length(self, input, expected):
-        h = websockets.FrameHeader.from_file(tutils.treader(codecs.decode(input, 'hex')))
+        h = websockets_frame.FrameHeader.from_file(tutils.treader(codecs.decode(input, 'hex')))
         assert h.payload_length == expected
 
     @pytest.mark.parametrize("input,expected", [
@@ -56,26 +77,26 @@ class TestFrameHeader:
         ('018012345678', (True, '12345678')),
     ])
     def test_deserialization_masking(self, input, expected):
-        h = websockets.FrameHeader.from_file(tutils.treader(codecs.decode(input, 'hex')))
+        h = websockets_frame.FrameHeader.from_file(tutils.treader(codecs.decode(input, 'hex')))
         assert h.mask == expected[0]
         if h.mask:
             assert h.masking_key == codecs.decode(expected[1], 'hex')
 
     def test_equality(self):
-        h = websockets.FrameHeader(mask=True, masking_key=b'1234')
-        h2 = websockets.FrameHeader(mask=True, masking_key=b'1234')
+        h = websockets_frame.FrameHeader(mask=True, masking_key=b'1234')
+        h2 = websockets_frame.FrameHeader(mask=True, masking_key=b'1234')
         assert h == h2
 
-        h = websockets.FrameHeader(fin=True)
-        h2 = websockets.FrameHeader(fin=False)
+        h = websockets_frame.FrameHeader(fin=True)
+        h2 = websockets_frame.FrameHeader(fin=False)
         assert h != h2
 
         assert h != 'foobar'
 
     def test_roundtrip(self):
         def round(*args, **kwargs):
-            h = websockets.FrameHeader(*args, **kwargs)
-            h2 = websockets.FrameHeader.from_file(tutils.treader(bytes(h)))
+            h = websockets_frame.FrameHeader(*args, **kwargs)
+            h2 = websockets_frame.FrameHeader.from_file(tutils.treader(bytes(h)))
             assert h == h2
 
         round()
@@ -87,80 +108,80 @@ class TestFrameHeader:
         round(payload_length=100)
         round(payload_length=1000)
         round(payload_length=10000)
-        round(opcode=websockets.OPCODE.PING)
+        round(opcode=Opcode.PING)
         round(masking_key=b"test")
 
     def test_human_readable(self):
-        f = websockets.FrameHeader(
+        f = websockets_frame.FrameHeader(
             masking_key=b"test",
             fin=True,
             payload_length=10
         )
         assert repr(f)
 
-        f = websockets.FrameHeader()
+        f = websockets_frame.FrameHeader()
         assert repr(f)
 
     def test_funky(self):
-        f = websockets.FrameHeader(masking_key=b"test", mask=False)
+        f = websockets_frame.FrameHeader(masking_key=b"test", mask=False)
         raw = bytes(f)
-        f2 = websockets.FrameHeader.from_file(tutils.treader(raw))
+        f2 = websockets_frame.FrameHeader.from_file(tutils.treader(raw))
         assert not f2.mask
 
     def test_violations(self):
         with pytest.raises(Exception, match="opcode"):
-            websockets.FrameHeader(opcode=17)
+            websockets_frame.FrameHeader(opcode=17)
         with pytest.raises(Exception, match="Masking key"):
-            websockets.FrameHeader(masking_key=b"x")
+            websockets_frame.FrameHeader(masking_key=b"x")
 
     def test_automask(self):
-        f = websockets.FrameHeader(mask=True)
+        f = websockets_frame.FrameHeader(mask=True)
         assert f.masking_key
 
-        f = websockets.FrameHeader(masking_key=b"foob")
+        f = websockets_frame.FrameHeader(masking_key=b"foob")
         assert f.mask
 
-        f = websockets.FrameHeader(masking_key=b"foob", mask=0)
+        f = websockets_frame.FrameHeader(masking_key=b"foob", mask=0)
         assert not f.mask
         assert not f.masking_key
 
 
 class TestFrame:
     def test_equality(self):
-        f = websockets.Frame(payload=b'1234')
-        f2 = websockets.Frame(payload=b'1234')
+        f = websockets_frame.Frame(payload=b'1234')
+        f2 = websockets_frame.Frame(payload=b'1234')
         assert f == f2
 
         assert f != b'1234'
 
     def test_roundtrip(self):
         def round(*args, **kwargs):
-            f = websockets.Frame(*args, **kwargs)
+            f = websockets_frame.Frame(*args, **kwargs)
             raw = bytes(f)
-            f2 = websockets.Frame.from_file(tutils.treader(raw))
+            f2 = websockets_frame.Frame.from_file(tutils.treader(raw))
             assert f == f2
         round(b"test")
         round(b"test", fin=1)
         round(b"test", rsv1=1)
-        round(b"test", opcode=websockets.OPCODE.PING)
+        round(b"test", opcode=Opcode.PING)
         round(b"test", masking_key=b"test")
 
     def test_human_readable(self):
-        f = websockets.Frame()
+        f = websockets_frame.Frame()
         assert repr(f)
 
-        f = websockets.Frame(b"foobar")
+        f = websockets_frame.Frame(b"foobar")
         assert "foobar" in repr(f)
 
     @pytest.mark.parametrize("masked", [True, False])
     @pytest.mark.parametrize("length", [100, 50000, 150000])
     def test_serialization_bijection(self, masked, length):
-        frame = websockets.Frame(
+        frame = websockets_frame.Frame(
             os.urandom(length),
             fin=True,
-            opcode=websockets.OPCODE.TEXT,
+            opcode=Opcode.TEXT,
             mask=int(masked),
             masking_key=(os.urandom(4) if masked else None)
         )
         serialized = bytes(frame)
-        assert frame == websockets.Frame.from_bytes(serialized)
+        assert frame == websockets_frame.Frame.from_bytes(serialized)
