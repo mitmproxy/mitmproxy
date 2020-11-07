@@ -146,12 +146,12 @@ class TestSimple(_WebSocketTest):
         wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=Opcode.TEXT, payload=b'server-foobar')))
         wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(rfile)
-        wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=frame.header.opcode, payload=frame.payload)))
+        header, frame, _ = websocket_utils.read_raw_frame(rfile)
+        wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=header.opcode, payload=frame.payload)))
         wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(rfile)
-        wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=frame.header.opcode, payload=frame.payload)))
+        header, frame, _ = websocket_utils.read_raw_frame(rfile)
+        wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=header.opcode, payload=frame.payload)))
         wfile.flush()
 
     @pytest.mark.parametrize('streaming', [True, False])
@@ -163,19 +163,19 @@ class TestSimple(_WebSocketTest):
         self.proxy.set_addons(Stream())
         self.setup_connection()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
+        _, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
         assert frame.payload == b'server-foobar'
 
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.TEXT, payload=b'self.client-foobar')))
         self.client.wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
+        _, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
         assert frame.payload == b'self.client-foobar'
 
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.BINARY, payload=b'\xde\xad\xbe\xef')))
         self.client.wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
+        _, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
         assert frame.payload == b'\xde\xad\xbe\xef'
 
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.CLOSE)))
@@ -204,19 +204,19 @@ class TestSimple(_WebSocketTest):
         self.proxy.set_addons(Addon())
         self.setup_connection()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
+        _, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
         assert frame.payload == b'foo'
 
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.TEXT, payload=b'self.client-foobar')))
         self.client.wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
+        _, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
         assert frame.payload == b'foo'
 
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.BINARY, payload=b'\xde\xad\xbe\xef')))
         self.client.wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
+        _, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
         assert frame.payload == b'foo'
 
 
@@ -236,7 +236,7 @@ class TestKillFlow(_WebSocketTest):
         self.setup_connection()
 
         with pytest.raises(exceptions.TcpDisconnect):
-            websockets_frame.Frame.from_file(self.client.rfile)
+            _, _, _ = websocket_utils.read_raw_frame(self.client.rfile)
 
 
 class TestSimpleTLS(_WebSocketTest):
@@ -247,20 +247,20 @@ class TestSimpleTLS(_WebSocketTest):
         wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=Opcode.TEXT, payload=b'server-foobar')))
         wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(rfile)
-        wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=frame.header.opcode, payload=frame.payload)))
+        header, frame, _ = websocket_utils.read_raw_frame(rfile)
+        wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=header.opcode, payload=frame.payload)))
         wfile.flush()
 
     def test_simple_tls(self):
         self.setup_connection()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
+        _, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
         assert frame.payload == b'server-foobar'
 
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.TEXT, payload=b'self.client-foobar')))
         self.client.wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
+        _, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
         assert frame.payload == b'self.client-foobar'
 
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.CLOSE)))
@@ -274,8 +274,8 @@ class TestPing(_WebSocketTest):
         wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=Opcode.PING, payload=b'foobar')))
         wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(rfile)
-        assert frame.header.opcode == Opcode.PONG
+        header, frame, _ = websocket_utils.read_raw_frame(rfile)
+        assert header.opcode == Opcode.PONG
         assert frame.payload == b'foobar'
 
         wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=Opcode.PONG, payload=b'done')))
@@ -283,17 +283,17 @@ class TestPing(_WebSocketTest):
 
         wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=Opcode.CLOSE)))
         wfile.flush()
-        websockets_frame.Frame.from_file(rfile)
+        _, _, _ = websocket_utils.read_raw_frame(rfile)
 
     @pytest.mark.asyncio
     async def test_ping(self):
         self.setup_connection()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
-        websockets_frame.Frame.from_file(self.client.rfile)
+        header, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
+        _ = websocket_utils.read_raw_frame(self.client.rfile)
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.CLOSE)))
         self.client.wfile.flush()
-        assert frame.header.opcode == Opcode.PING
+        assert header.opcode == Opcode.PING
         assert frame.payload == b''  # We don't send payload to other end
 
         assert await self.master.await_log("Pong Received from server", "info")
@@ -303,8 +303,8 @@ class TestPong(_WebSocketTest):
 
     @classmethod
     def handle_websockets(cls, rfile, wfile):
-        frame = websockets_frame.Frame.from_file(rfile)
-        assert frame.header.opcode == Opcode.PING
+        header, frame, _ = websocket_utils.read_raw_frame(rfile)
+        assert header.opcode == Opcode.PING
         assert frame.payload == b''
 
         wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=Opcode.PONG, payload=frame.payload)))
@@ -312,7 +312,7 @@ class TestPong(_WebSocketTest):
 
         wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=Opcode.CLOSE)))
         wfile.flush()
-        websockets_frame.Frame.from_file(rfile)
+        _ = websocket_utils.read_raw_frame(rfile)
 
     @pytest.mark.asyncio
     async def test_pong(self):
@@ -321,12 +321,12 @@ class TestPong(_WebSocketTest):
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.PING, payload=b'foobar')))
         self.client.wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
-        websockets_frame.Frame.from_file(self.client.rfile)
+        header, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
+        _ = websocket_utils.read_raw_frame(self.client.rfile)
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.CLOSE)))
         self.client.wfile.flush()
 
-        assert frame.header.opcode == Opcode.PONG
+        assert header.opcode == Opcode.PONG
         assert frame.payload == b'foobar'
         assert await self.master.await_log("pong received")
 
@@ -335,13 +335,13 @@ class TestClose(_WebSocketTest):
 
     @classmethod
     def handle_websockets(cls, rfile, wfile):
-        frame = websockets_frame.Frame.from_file(rfile)
-        wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=frame.header.opcode, payload=frame.payload)))
+        header, frame, _ = websocket_utils.read_raw_frame(rfile)
+        wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=header.opcode, payload=frame.payload)))
         wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=Opcode.CLOSE)))
         wfile.flush()
 
         with pytest.raises(exceptions.TcpDisconnect):
-            websockets_frame.Frame.from_file(rfile)
+            _, _, _ = websocket_utils.read_raw_frame(rfile)
 
     def test_close(self):
         self.setup_connection()
@@ -349,9 +349,9 @@ class TestClose(_WebSocketTest):
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.CLOSE)))
         self.client.wfile.flush()
 
-        websockets_frame.Frame.from_file(self.client.rfile)
+        _ = websocket_utils.read_raw_frame(self.client.rfile)
         with pytest.raises(exceptions.TcpDisconnect):
-            websockets_frame.Frame.from_file(self.client.rfile)
+            _ = websocket_utils.read_raw_frame(self.client.rfile)
 
     def test_close_payload_1(self):
         self.setup_connection()
@@ -359,9 +359,9 @@ class TestClose(_WebSocketTest):
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.CLOSE, payload=b'\00\42')))
         self.client.wfile.flush()
 
-        websockets_frame.Frame.from_file(self.client.rfile)
+        _ = websocket_utils.read_raw_frame(self.client.rfile)
         with pytest.raises(exceptions.TcpDisconnect):
-            websockets_frame.Frame.from_file(self.client.rfile)
+            _ = websocket_utils.read_raw_frame(self.client.rfile)
 
     def test_close_payload_2(self):
         self.setup_connection()
@@ -369,9 +369,9 @@ class TestClose(_WebSocketTest):
         self.client.wfile.write(bytes(websockets_frame.Frame(fin=1, mask=1, opcode=Opcode.CLOSE, payload=b'\00\42foobar')))
         self.client.wfile.flush()
 
-        websockets_frame.Frame.from_file(self.client.rfile)
+        _ = websocket_utils.read_raw_frame(self.client.rfile)
         with pytest.raises(exceptions.TcpDisconnect):
-            websockets_frame.Frame.from_file(self.client.rfile)
+            _ = websocket_utils.read_raw_frame(self.client.rfile)
 
 
 class TestInvalidFrame(_WebSocketTest):
@@ -384,8 +384,7 @@ class TestInvalidFrame(_WebSocketTest):
     def test_invalid_frame(self):
         self.setup_connection()
 
-        # with pytest.raises(exceptions.TcpDisconnect):
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
+        _, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
         code, = struct.unpack('!H', frame.payload[:2])
         assert code == 1002
         assert frame.payload[2:].startswith(b'Invalid opcode')
@@ -410,11 +409,11 @@ class TestStreaming(_WebSocketTest):
         frame = None
         if not streaming:
             with pytest.raises(exceptions.TcpDisconnect):  # Reader.safe_read get nothing as result
-                frame = websockets_frame.Frame.from_file(self.client.rfile)
+                _, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
             assert frame is None
 
         else:
-            frame = websockets_frame.Frame.from_file(self.client.rfile)
+            _, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
 
             assert frame
             assert self.master.state.flows[1].messages == []  # Message not appended as the final frame isn't received
@@ -427,33 +426,33 @@ class TestExtension(_WebSocketTest):
         wfile.write(b'\xc1\x0f*N-*K-\xd2M\xcb\xcfOJ,\x02\x00')
         wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(rfile)
-        assert frame.header.rsv1
+        header, _, _ = websocket_utils.read_raw_frame(rfile)
+        assert header.rsv.rsv1
         wfile.write(b'\xc1\nJ\xce\xc9L\xcd+\x81r\x00\x00')
         wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(rfile)
-        assert frame.header.rsv1
+        header, _, _ = websocket_utils.read_raw_frame(rfile)
+        assert header.rsv.rsv1
         wfile.write(b'\xc2\x07\xba\xb7v\xdf{\x00\x00')
         wfile.flush()
 
     def test_extension(self):
         self.setup_connection(True)
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
-        assert frame.header.rsv1
+        header, _, _ = websocket_utils.read_raw_frame(self.client.rfile)
+        assert header.rsv.rsv1
 
         self.client.wfile.write(b'\xc1\x8fQ\xb7vX\x1by\xbf\x14\x9c\x9c\xa7\x15\x9ax9\x12}\xb5v')
         self.client.wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
-        assert frame.header.rsv1
+        header, _, _ = websocket_utils.read_raw_frame(self.client.rfile)
+        assert header.rsv.rsv1
 
         self.client.wfile.write(b'\xc2\x87\xeb\xbb\x0csQ\x0cz\xac\x90\xbb\x0c')
         self.client.wfile.flush()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
-        assert frame.header.rsv1
+        header, _, _ = websocket_utils.read_raw_frame(self.client.rfile)
+        assert header.rsv.rsv1
 
         assert len(self.master.state.flows[1].messages) == 5
         assert self.master.state.flows[1].messages[0].content == 'server-foobar'
@@ -482,8 +481,8 @@ class TestInjectMessageClient(_WebSocketTest):
         self.proxy.set_addons(Inject())
         self.setup_connection()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
-        assert frame.header.opcode == Opcode.TEXT
+        header, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
+        assert header.opcode == Opcode.TEXT
         assert frame.payload == b'This is an injected message!'
 
 
@@ -491,8 +490,8 @@ class TestInjectMessageServer(_WebSocketTest):
 
     @classmethod
     def handle_websockets(cls, rfile, wfile):
-        frame = websockets_frame.Frame.from_file(rfile)
-        assert frame.header.opcode == Opcode.TEXT
+        header, frame, _ = websocket_utils.read_raw_frame(rfile)
+        assert header.opcode == Opcode.TEXT
         success = frame.payload == b'This is an injected message!'
 
         wfile.write(bytes(websockets_frame.Frame(fin=1, opcode=Opcode.TEXT, payload=str(success).encode())))
@@ -506,6 +505,6 @@ class TestInjectMessageServer(_WebSocketTest):
         self.proxy.set_addons(Inject())
         self.setup_connection()
 
-        frame = websockets_frame.Frame.from_file(self.client.rfile)
-        assert frame.header.opcode == Opcode.TEXT
+        header, frame, _ = websocket_utils.read_raw_frame(self.client.rfile)
+        assert header.opcode == Opcode.TEXT
         assert frame.payload == b'True'
