@@ -7,12 +7,70 @@ Spec: https://tools.ietf.org/html/rfc6455
 import base64
 import hashlib
 import os
+import struct
 
 from wsproto.utilities import ACCEPT_GUID
 from wsproto.handshake import WEBSOCKET_VERSION
+from wsproto.frame_protocol import RsvBits, Header, Frame, XorMaskerSimple, XorMaskerNull
 
 from mitmproxy.net import http
-from mitmproxy.utils import strutils
+from mitmproxy.utils import bits, strutils
+
+
+def read_raw_frame(rfile):
+    consumed_bytes = b''
+
+    def consume(len):
+        nonlocal consumed_bytes
+        d = rfile.safe_read(len)
+        consumed_bytes += d
+        return d
+
+    first_byte, second_byte = consume(2)
+    fin = bits.getbit(first_byte, 7)
+    rsv1 = bits.getbit(first_byte, 6)
+    rsv2 = bits.getbit(first_byte, 5)
+    rsv3 = bits.getbit(first_byte, 4)
+    opcode = first_byte & 0xF
+    mask_bit = bits.getbit(second_byte, 7)
+    length_code = second_byte & 0x7F
+
+    # payload_len > 125 indicates you need to read more bytes
+    # to get the actual payload length
+    if length_code <= 125:
+        payload_len = length_code
+    elif length_code == 126:
+        payload_len, = struct.unpack("!H", consume(2))
+    else:  # length_code == 127:
+        payload_len, = struct.unpack("!Q", consume(8))
+
+    # masking key only present if mask bit set
+    if mask_bit == 1:
+        masking_key = consume(4)
+        masker = XorMaskerSimple(masking_key)
+    else:
+        masking_key = None
+        masker = XorMaskerNull()
+
+    header = Header(
+        fin=fin,
+        rsv=RsvBits(rsv1, rsv2, rsv3),
+        opcode=opcode,
+        payload_len=payload_len,
+        masking_key=masking_key,
+    )
+
+    masked_payload = consume(payload_len)
+    payload = masker.process(masked_payload)
+
+    frame = Frame(
+        opcode=opcode,
+        payload=payload,
+        frame_finished=fin,
+        message_finished=fin
+    )
+
+    return header, frame, consumed_bytes
 
 
 def client_handshake_headers(version=None, key=None, protocol=None, extensions=None):
