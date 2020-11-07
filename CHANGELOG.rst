@@ -4,6 +4,7 @@ Release History
 Unreleased: mitmproxy next
 ==========================
 
+* Fix query parameters in asgiapp addon (@jpstotz) 
 * --- TODO: add new PRs above this line ---
 
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
