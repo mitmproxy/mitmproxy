@@ -2,7 +2,6 @@
 
 set -o errexit
 set -o pipefail
-set -o nounset
 # set -o xtrace
 
 # This script gets run from CI to render and upload docs for the master branch.
