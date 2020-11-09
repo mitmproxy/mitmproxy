@@ -3,17 +3,13 @@ import logging
 import os
 import sys
 import threading
-from mitmproxy.net import tcp, tls
-from mitmproxy import certs as mcerts
-from mitmproxy.net import websocket_utils
-from mitmproxy import version
 import urllib
-from mitmproxy import exceptions
-from pathod import language
-from pathod import utils
-from pathod import log
-from pathod import protocols
 import typing  # noqa
+
+from mitmproxy import certs as mcerts, exceptions, version
+from mitmproxy.net import tcp, tls, websocket
+
+from pathod import language, utils, log, protocols
 
 
 DEFAULT_CERT_DOMAIN = b"pathod.net"
@@ -177,8 +173,8 @@ class PathodHandler(tcp.BaseHandler):
 
             m = utils.MemBool()
 
-            valid_websocket_handshake = websocket_utils.check_handshake(headers)
-            self.settings.websocket_key = websocket_utils.get_client_key(headers)
+            valid_websocket_handshake = websocket.check_handshake(headers)
+            self.settings.websocket_key = websocket.get_client_key(headers)
 
             # If this is a websocket initiation, we respond with a proper
             # server response, unless over-ridden.

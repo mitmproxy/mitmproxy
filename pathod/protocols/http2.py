@@ -260,7 +260,8 @@ class HTTP2StateProtocol:
 
     def read_frame(self, hide=False):
         while True:
-            frm = http2.parse_frame(*http2.read_raw_frame(self.tcp_handler.rfile))
+            frm, _ = http2.read_frame(self.tcp_handler.rfile)
+
             if not hide and self.dump_frames:  # pragma: no cover
                 print("<< " + repr(frm))
 

@@ -15,7 +15,7 @@ mitmproxy connection may look as follows (outermost layer first):
       - Http1Layer
       - HttpLayer
       - TLSLayer
-      - WebsocketLayer (or TCPLayer)
+      - WebSocketLayer (or TCPLayer)
 
 Every layer acts as a read-only context for its inner layers (see
 :py:class:`Layer`). To communicate with an outer layer, a layer can use

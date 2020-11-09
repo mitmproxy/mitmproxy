@@ -10,7 +10,7 @@ from wsproto.extensions import PerMessageDeflate
 
 from mitmproxy import exceptions, flow
 from mitmproxy.proxy.protocol import base
-from mitmproxy.net import tcp, websocket_utils
+from mitmproxy.net import tcp, websocket
 from mitmproxy.websocket import WebSocketFlow, WebSocketMessage
 from mitmproxy.utils import strutils
 
@@ -200,7 +200,7 @@ class WebSocketLayer(base.Layer):
                     other_conn = self.server_conn if conn == self.client_conn.connection else self.client_conn
                     is_server = (source_conn == self.server_conn)
 
-                    header, frame, consumed_bytes = websocket_utils.read_raw_frame(source_conn.rfile)
+                    header, frame, consumed_bytes = websocket.read_frame(source_conn.rfile)
                     self.log(
                         "WebSocket Frame from {}: {}, {}".format(
                             "server" if is_server else "client",

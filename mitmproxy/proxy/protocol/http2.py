@@ -360,7 +360,7 @@ class Http2Layer(base.Layer):
 
                     with self.connections[source_conn].lock:
                         try:
-                            raw_frame = b''.join(http2.read_raw_frame(source_conn.rfile))
+                            _, consumed_bytes = http2.read_frame(source_conn.rfile)
                         except:
                             # read frame failed: connection closed
                             self._kill_all_streams()
@@ -370,7 +370,7 @@ class Http2Layer(base.Layer):
                             self.log("HTTP/2 connection entered closed state already", "debug")
                             return
 
-                        incoming_events = self.connections[source_conn].receive_data(raw_frame)
+                        incoming_events = self.connections[source_conn].receive_data(consumed_bytes)
                         source_conn.send(self.connections[source_conn].data_to_send())
 
                         for event in incoming_events:

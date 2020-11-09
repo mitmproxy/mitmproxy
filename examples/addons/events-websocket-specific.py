@@ -4,7 +4,7 @@ import mitmproxy.websocket
 
 
 class Events:
-    # Websocket lifecycle
+    # WebSocket lifecycle
     def websocket_handshake(self, flow: mitmproxy.http.HTTPFlow):
         """
             Called when a client wants to establish a WebSocket connection. The
@@ -15,7 +15,7 @@ class Events:
 
     def websocket_start(self, flow: mitmproxy.websocket.WebSocketFlow):
         """
-            A websocket connection has commenced.
+            A WebSocket connection has commenced.
         """
 
     def websocket_message(self, flow: mitmproxy.websocket.WebSocketFlow):
@@ -28,10 +28,10 @@ class Events:
 
     def websocket_error(self, flow: mitmproxy.websocket.WebSocketFlow):
         """
-            A websocket connection has had an error.
+            A WebSocket connection has had an error.
         """
 
     def websocket_end(self, flow: mitmproxy.websocket.WebSocketFlow):
         """
-            A websocket connection has ended.
+            A WebSocket connection has ended.
         """

@@ -6,7 +6,7 @@ from wsproto.frame_protocol import CloseReason
 from wsproto.frame_protocol import Opcode
 
 from mitmproxy import flow
-from mitmproxy.net import websocket_utils
+from mitmproxy.net import websocket
 from mitmproxy.coretypes import serializable
 from mitmproxy.utils import strutils, human
 
@@ -58,7 +58,7 @@ class WebSocketMessage(serializable.Serializable):
 
 class WebSocketFlow(flow.Flow):
     """
-    A WebSocketFlow is a simplified representation of a Websocket connection.
+    A WebSocketFlow is a simplified representation of a WebSocket connection.
     """
 
     def __init__(self, client_conn, server_conn, handshake_flow, live=None):
@@ -85,12 +85,12 @@ class WebSocketFlow(flow.Flow):
         self._inject_messages_server = queue.Queue(maxsize=1)
 
         if handshake_flow:
-            self.client_key = websocket_utils.get_client_key(handshake_flow.request.headers)
-            self.client_protocol = websocket_utils.get_protocol(handshake_flow.request.headers)
-            self.client_extensions = websocket_utils.get_extensions(handshake_flow.request.headers)
-            self.server_accept = websocket_utils.get_server_accept(handshake_flow.response.headers)
-            self.server_protocol = websocket_utils.get_protocol(handshake_flow.response.headers)
-            self.server_extensions = websocket_utils.get_extensions(handshake_flow.response.headers)
+            self.client_key = websocket.get_client_key(handshake_flow.request.headers)
+            self.client_protocol = websocket.get_protocol(handshake_flow.request.headers)
+            self.client_extensions = websocket.get_extensions(handshake_flow.request.headers)
+            self.server_accept = websocket.get_server_accept(handshake_flow.response.headers)
+            self.server_protocol = websocket.get_protocol(handshake_flow.response.headers)
+            self.server_extensions = websocket.get_extensions(handshake_flow.response.headers)
         else:
             self.client_key = ''
             self.client_protocol = ''

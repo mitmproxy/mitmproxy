@@ -17,7 +17,13 @@ from mitmproxy.net import http
 from mitmproxy.utils import bits, strutils
 
 
-def read_raw_frame(rfile):
+def read_frame(rfile, parse=True):
+    """
+    Reads a full WebSocket frame from a file-like object.
+
+    Returns a parsed frame header, parsed frame, and the consumed bytes.
+    """
+
     consumed_bytes = b''
 
     def consume(len):
@@ -52,34 +58,36 @@ def read_raw_frame(rfile):
         masking_key = None
         masker = XorMaskerNull()
 
-    header = Header(
-        fin=fin,
-        rsv=RsvBits(rsv1, rsv2, rsv3),
-        opcode=opcode,
-        payload_len=payload_len,
-        masking_key=masking_key,
-    )
-
     masked_payload = consume(payload_len)
-    payload = masker.process(masked_payload)
 
-    frame = Frame(
-        opcode=opcode,
-        payload=payload,
-        frame_finished=fin,
-        message_finished=fin
-    )
+    if parse:
+        header = Header(
+            fin=fin,
+            rsv=RsvBits(rsv1, rsv2, rsv3),
+            opcode=opcode,
+            payload_len=payload_len,
+            masking_key=masking_key,
+        )
+        frame = Frame(
+            opcode=opcode,
+            payload=masker.process(masked_payload),
+            frame_finished=fin,
+            message_finished=fin
+        )
+    else:
+        header = None
+        frame = None
 
     return header, frame, consumed_bytes
 
 
 def client_handshake_headers(version=None, key=None, protocol=None, extensions=None):
     """
-        Create the headers for a valid HTTP upgrade request. If Key is not
-        specified, it is generated, and can be found in sec-websocket-key in
-        the returned header set.
+    Create the headers for a valid HTTP upgrade request. If Key is not
+    specified, it is generated, and can be found in sec-websocket-key in
+    the returned header set.
 
-        Returns an instance of http.Headers
+    Returns an instance of http.Headers
     """
     if version is None:
         version = WEBSOCKET_VERSION
@@ -100,9 +108,9 @@ def client_handshake_headers(version=None, key=None, protocol=None, extensions=N
 
 def server_handshake_headers(client_key, protocol=None, extensions=None):
     """
-      The server response is a valid HTTP 101 response.
+    The server response is a valid HTTP 101 response.
 
-      Returns an instance of http.Headers
+    Returns an instance of http.Headers
     """
     h = http.Headers(
         connection="upgrade",
