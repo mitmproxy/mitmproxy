@@ -2,7 +2,7 @@ import asyncio
 import io
 
 import pytest
-import asynctest
+from unittest import mock
 
 import mitmproxy.io
 from mitmproxy import exceptions
@@ -54,17 +54,17 @@ class TestReadFile:
 
             tf = tmpdir.join("tfile")
 
-            with asynctest.patch('mitmproxy.master.Master.load_flow') as mck:
+            with mock.patch('mitmproxy.master.Master.load_flow') as mck:
                 tf.write(data.getvalue())
                 tctx.configure(
                     rf,
                     rfile = str(tf),
                     readfile_filter = ".*"
                 )
-                assert not mck.awaited
+                mck.assert_not_awaited()
                 rf.running()
                 await asyncio.sleep(0)
-                assert mck.awaited
+                mck.assert_awaited()
 
             tf.write(corrupt_data.getvalue())
             tctx.configure(rf, rfile=str(tf))
@@ -93,16 +93,16 @@ class TestReadFile:
 
 
 class TestReadFileStdin:
-    @asynctest.patch('sys.stdin')
+    @mock.patch('sys.stdin')
     @pytest.mark.asyncio
     async def test_stdin(self, stdin, data, corrupt_data):
         rf = readfile.ReadFileStdin()
         with taddons.context(rf):
-            with asynctest.patch('mitmproxy.master.Master.load_flow') as mck:
+            with mock.patch('mitmproxy.master.Master.load_flow') as mck:
                 stdin.buffer = data
-                assert not mck.awaited
+                mck.assert_not_awaited()
                 await rf.load_flows(stdin.buffer)
-                assert mck.awaited
+                mck.assert_awaited()
 
                 stdin.buffer = corrupt_data
                 with pytest.raises(exceptions.FlowReadException):
@@ -113,10 +113,10 @@ class TestReadFileStdin:
         rf = readfile.ReadFileStdin()
         with taddons.context(rf) as tctx:
             tf = tmpdir.join("tfile")
-            with asynctest.patch('mitmproxy.master.Master.load_flow') as mck:
+            with mock.patch('mitmproxy.master.Master.load_flow') as mck:
                 tf.write(data.getvalue())
                 tctx.configure(rf, rfile=str(tf))
-                assert not mck.awaited
+                mck.assert_not_awaited()
                 rf.running()
                 await asyncio.sleep(0)
-                assert mck.awaited
+                mck.assert_awaited()

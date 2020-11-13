@@ -102,7 +102,6 @@ setup(
             "dataclasses>=0.7",
         ],
         'dev': [
-            "asynctest>=0.12.0",
             "Flask>=1.0,<1.2",
             "hypothesis>=5.8,<6",
             "parver>=0.1,<2.0",
