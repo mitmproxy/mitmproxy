@@ -1,3 +1,7 @@
+"""
+Note: This module is currently unmaintained as we don't use it internally.
+We're happy to accept PRs that fix bugs, but we won't provide any continuous maintenance.
+"""
 import typing
 
 from mitmproxy import flow
