@@ -163,7 +163,7 @@ with the following commands:
     :target: https://stackoverflow.com/questions/tagged/mitmproxy
     :alt: StackOverflow: mitmproxy
 
-.. |slack| image:: http://slack.mitmproxy.org/badge.svg
+.. |slack| image:: https://shields.mitmproxy.org/badge/slack-mitmproxy-E01563.svg
     :target: http://slack.mitmproxy.org/
     :alt: Slack Developer Chat
 
