@@ -27,6 +27,7 @@ class Connection:
     state: ConnectionState
     peername: Optional[Address]
     sockname: Optional[Address]
+    error: Optional[str] = None
 
     tls: bool = False
     tls_established: bool = False

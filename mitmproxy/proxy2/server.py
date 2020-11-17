@@ -10,7 +10,6 @@ import abc
 import asyncio
 import logging
 import socket
-import sys
 import time
 import traceback
 import typing
@@ -18,10 +17,9 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 
 from OpenSSL import SSL
-
 from mitmproxy import http, options as moptions
 from mitmproxy.proxy.protocol.http import HTTPMode
-from mitmproxy.proxy2 import commands, events, layer, layers
+from mitmproxy.proxy2 import commands, events, layer, layers, server_hooks
 from mitmproxy.proxy2.context import Client, Connection, ConnectionState, Context
 from mitmproxy.proxy2.layers import tls
 from mitmproxy.utils import human
@@ -102,44 +100,70 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         asyncio.get_event_loop().set_debug(True)
         watch = asyncio.ensure_future(self.timeout_watchdog.watch())
 
-        self.log("[sans-io] clientconnect")
+        self.log("client connect")
+        await self.handle_hook(server_hooks.ClientConnectedHook(self.client))
+        if self.client.error:
+            self.log("client kill connection")
+            self.transports.pop(self.client).writer.close()
+        else:
+            handler = asyncio.create_task(
+                self.handle_connection(self.client)
+            )
+            self.transports[self.client].handler = handler
+            self.server_event(events.Start())
+            await handler
 
-        handler = asyncio.create_task(
-            self.handle_connection(self.client)
-        )
-        self.transports[self.client].handler = handler
-        self.server_event(events.Start())
-        await handler
-
-        self.log("[sans-io] clientdisconnected")
+        self.log("client disconnect")
+        await self.handle_hook(server_hooks.ClientClosedHook(self.client))
         watch.cancel()
 
         if self.transports:
-            self.log("[sans-io] closing transports...")
+            self.log("closing transports...", "debug")
             for x in self.transports.values():
                 x.handler.cancel()
             await asyncio.wait([x.handler for x in self.transports.values()])
-            self.log("[sans-io] transports closed!")
+            self.log("transports closed!", "debug")
 
     async def open_connection(self, command: commands.OpenConnection) -> None:
         if not command.connection.address:
             raise ValueError("Cannot open connection, no hostname given.")
+
+        hook_data = server_hooks.ServerConnectionHookData(
+            client=self.client,
+            server=command.connection
+        )
+        await self.handle_hook(server_hooks.ServerConnectHook(hook_data))
+        if command.connection.error:
+            self.log(f"server connection to {human.format_address(command.connection.address)} killed before connect.")
+            self.server_event(events.OpenConnectionReply(command, "Connection killed."))
+            return
+
         try:
             reader, writer = await asyncio.open_connection(*command.connection.address)
         except (IOError, asyncio.CancelledError) as e:
+            self.log(f"error establishing server connection: {e}")
             self.server_event(events.OpenConnectionReply(command, str(e)))
         else:
-            self.log(f"serverconnect {command.connection.address}")
             self.transports[command.connection].reader = reader
             self.transports[command.connection].writer = writer
             command.connection.state = ConnectionState.OPEN
             command.connection.peername = writer.get_extra_info('peername')
             command.connection.sockname = writer.get_extra_info('sockname')
+
+            if command.connection.address[0] != command.connection.peername[0]:
+                addr = f"{command.connection.address[0]} ({human.format_address(command.connection.peername)})"
+            else:
+                addr = human.format_address(command.connection.address)
+            self.log(f"server connect {addr}")
+            connected_hook = asyncio.create_task(self.handle_hook(server_hooks.ServerConnectedHook(hook_data)))
+
             self.server_event(events.OpenConnectionReply(command, None))
             try:
                 await self.handle_connection(command.connection)
             finally:
-                self.log("serverdisconnected")
+                self.log(f"server disconnect {addr}")
+                await connected_hook  # wait here for this so that closed always comes after connected.
+                await self.handle_hook(server_hooks.ServerClosedHook(hook_data))
 
     async def handle_connection(self, connection: Connection) -> None:
         reader = self.transports[connection].reader
@@ -171,6 +195,11 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self.log(f"Closing connection due to inactivity: {self.client}")
         self.transports[self.client].handler.cancel()
 
+    async def hook_task(self, hook: commands.Hook) -> None:
+        await self.handle_hook(hook)
+        if hook.blocking:
+            self.server_event(events.HookReply(hook))
+
     @abc.abstractmethod
     async def handle_hook(self, hook: commands.Hook) -> None:
         pass
@@ -200,9 +229,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     socket = self.transports[command.connection].writer.get_extra_info("socket")
                     self.server_event(events.GetSocketReply(command, socket))
                 elif isinstance(command, commands.Hook):
-                    asyncio.create_task(
-                        self.handle_hook(command)
-                    )
+                    asyncio.create_task(self.hook_task(command))
                 elif isinstance(command, commands.Log):
                     self.log(command.message, command.level)
                 else:
@@ -243,12 +270,10 @@ class SimpleConnectionHandler(ConnectionHandler):
     ) -> None:
         if hook.name in self.hook_handlers:
             self.hook_handlers[hook.name](*hook.as_tuple())
-        if hook.blocking:
-            self.server_event(events.HookReply(hook))
 
     def log(self, message: str, level: str = "info"):
         if "Hook" not in message:
-            pass # print(message, file=sys.stderr if level in ("error", "warn") else sys.stdout)
+            pass  # print(message, file=sys.stderr if level in ("error", "warn") else sys.stdout)
 
 
 if __name__ == "__main__":
@@ -273,10 +298,10 @@ if __name__ == "__main__":
 
     async def handle(reader, writer):
         layer_stack = [
-            #lambda ctx: layers.ServerTLSLayer(ctx),
-            #lambda ctx: layers.HttpLayer(ctx, HTTPMode.regular),
-            #lambda ctx: setattr(ctx.server, "tls", True) or layers.ServerTLSLayer(ctx),
-            #lambda ctx: layers.ClientTLSLayer(ctx),
+            # lambda ctx: layers.ServerTLSLayer(ctx),
+            # lambda ctx: layers.HttpLayer(ctx, HTTPMode.regular),
+            # lambda ctx: setattr(ctx.server, "tls", True) or layers.ServerTLSLayer(ctx),
+            # lambda ctx: layers.ClientTLSLayer(ctx),
             lambda ctx: layers.modes.ReverseProxy(ctx),
             lambda ctx: layers.HttpLayer(ctx, HTTPMode.transparent)
         ]

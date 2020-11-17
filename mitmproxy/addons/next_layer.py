@@ -3,6 +3,7 @@ import typing
 
 from mitmproxy import ctx, exceptions
 from mitmproxy.net.tls import is_tls_record_magic
+from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import context, layer, layers
 from mitmproxy.proxy2.layers import modes
@@ -85,6 +86,8 @@ class NextLayer:
             )
 
     def next_layer(self, nextlayer: layer.NextLayer):
+        if isinstance(nextlayer, base.Layer):
+            return  # skip the old proxy core's next_layer event.
         nextlayer.layer = self._next_layer(nextlayer.context, nextlayer.data_client())
 
     def _next_layer(self, context: context.Context, data_client: bytes) -> typing.Optional[layer.Layer]:

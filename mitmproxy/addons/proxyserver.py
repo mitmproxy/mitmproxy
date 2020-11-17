@@ -1,9 +1,12 @@
 import asyncio
+import warnings
+from typing import Optional
 
-from mitmproxy import ctx, controller, log, options, master, eventsequence
+from mitmproxy import controller, ctx, eventsequence, log, master, options
+from mitmproxy.flow import Error
 from mitmproxy.proxy2 import commands
-from mitmproxy.proxy2 import events
 from mitmproxy.proxy2 import server
+from mitmproxy.utils import human
 
 
 class AsyncReply(controller.Reply):
@@ -21,6 +24,10 @@ class AsyncReply(controller.Reply):
         super().commit()
         self.loop.call_soon_threadsafe(lambda: self.done.set())
 
+    def kill(self, force=False):
+        warnings.warn("reply.kill() is deprecated, set the error attribute instead.", PendingDeprecationWarning)
+        self.obj.error = Error.KILLED_MESSAGE
+
 
 class ProxyConnectionHandler(server.ConnectionHandler):
     master: master.Master
@@ -28,6 +35,7 @@ class ProxyConnectionHandler(server.ConnectionHandler):
     def __init__(self, master, r, w, options):
         self.master = master
         super().__init__(r, w, options)
+        self.log_prefix = f"{human.format_address(self.client.address)}: "
 
     async def handle_hook(self, hook: commands.Hook) -> None:
         with self.timeout_watchdog.disarm():
@@ -36,11 +44,9 @@ class ProxyConnectionHandler(server.ConnectionHandler):
             data.reply = AsyncReply(data)
             await self.master.addons.handle_lifecycle(hook.name, data)
             await data.reply.done.wait()
-            if hook.blocking:
-                self.server_event(events.HookReply(hook))
 
     def log(self, message: str, level: str = "info") -> None:
-        x = log.LogEntry(message, level)
+        x = log.LogEntry(self.log_prefix + message, level)
         x.reply = controller.DummyReply()
         asyncio.ensure_future(
             self.master.addons.handle_lifecycle("log", x)
@@ -51,7 +57,7 @@ class Proxyserver:
     """
     This addon runs the actual proxy server.
     """
-    server: asyncio.AbstractServer
+    server: Optional[asyncio.AbstractServer]
     listen_port: int
     master: master.Master
     options: options.Options
@@ -82,8 +88,7 @@ class Proxyserver:
     def configure(self, updated):
         if not self.is_running:
             return
-        if "listen_port" in updated:
-            self.listen_port = ctx.options.listen_port + 1
+        if any(x in updated for x in ["listen_host", "listen_port"]):
             asyncio.ensure_future(self.start_server())
 
     async def start_server(self):
@@ -93,8 +98,8 @@ class Proxyserver:
             print("Starting server...")
             self.server = await asyncio.start_server(
                 self.handle_connection,
-                '127.0.0.1',
-                self.listen_port,
+                self.options.listen_host,
+                self.options.listen_port + 1,
             )
 
     async def shutdown_server(self):
