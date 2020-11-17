@@ -1,4 +1,4 @@
-new_proxy_core = False
+new_proxy_core = True
 """If true, use mitmproxy's new sans-io proxy core."""
 
 if new_proxy_core:  # pragma: no cover

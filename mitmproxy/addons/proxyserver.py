@@ -99,7 +99,7 @@ class Proxyserver:
             self.server = await asyncio.start_server(
                 self.handle_connection,
                 self.options.listen_host,
-                self.options.listen_port + 1,
+                self.options.listen_port,
             )
 
     async def shutdown_server(self):
