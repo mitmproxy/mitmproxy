@@ -80,7 +80,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, options: moptions.Options) -> None:
         self.client = Client(
             writer.get_extra_info('peername'),
-            writer.get_extra_info('sockname')
+            writer.get_extra_info('sockname'),
+            time.time(),
         )
         self.context = Context(self.client, options)
         self.transports = {
@@ -114,6 +115,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             await handler
 
         self.log("client disconnect")
+        self.client.timestamp_end = time.time()
         await self.handle_hook(server_hooks.ClientClosedHook(self.client))
         watch.cancel()
 
@@ -139,16 +141,19 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             return
 
         try:
+            command.connection.timestamp_start = time.time()
             reader, writer = await asyncio.open_connection(*command.connection.address)
         except (IOError, asyncio.CancelledError) as e:
             self.log(f"error establishing server connection: {e}")
+            command.connection.error = str(e)
             self.server_event(events.OpenConnectionReply(command, str(e)))
         else:
-            self.transports[command.connection].reader = reader
-            self.transports[command.connection].writer = writer
+            command.connection.timestamp_tcp_setup = time.time()
             command.connection.state = ConnectionState.OPEN
             command.connection.peername = writer.get_extra_info('peername')
             command.connection.sockname = writer.get_extra_info('sockname')
+            self.transports[command.connection].reader = reader
+            self.transports[command.connection].writer = writer
 
             if command.connection.address[0] != command.connection.peername[0]:
                 addr = f"{command.connection.address[0]} ({human.format_address(command.connection.peername)})"
@@ -162,6 +167,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 await self.handle_connection(command.connection)
             finally:
                 self.log(f"server disconnect {addr}")
+                command.connection.timestamp_end = time.time()
                 await connected_hook  # wait here for this so that closed always comes after connected.
                 await self.handle_hook(server_hooks.ServerClosedHook(hook_data))
 
@@ -183,9 +189,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 else:
                     connection.state &= ~ConnectionState.CAN_READ
                     self.server_event(events.ConnectionClosed(connection))
+                    # we may still use this connection to *send* stuff,
+                    # even though the remote has closed their side of the connection.
+                    # to make this work we keep this task running and wait for cancellation.
                     if connection.state is ConnectionState.CLOSED:
                         self.transports[connection].handler.cancel()
-                    await asyncio.Event().wait()  # wait for cancellation
+                    await asyncio.Event().wait()
         except asyncio.CancelledError:
             connection.state = ConnectionState.CLOSED
             io = self.transports.pop(connection)
@@ -277,6 +286,7 @@ class SimpleConnectionHandler(ConnectionHandler):
 
 
 if __name__ == "__main__":
+    # simple standalone implementation for testing.
     loop = asyncio.get_event_loop()
 
     opts = moptions.Options()

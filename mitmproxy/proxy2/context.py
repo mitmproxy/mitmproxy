@@ -30,7 +30,6 @@ class Connection:
     error: Optional[str] = None
 
     tls: bool = False
-    tls_established: bool = False
     certificate_list: Optional[Sequence[certs.Cert]] = None
     """
     The TLS certificate list as sent by the peer. 
@@ -49,15 +48,27 @@ class Connection:
     """
     alpn: Optional[bytes] = None
     alpn_offers: Sequence[bytes] = ()
+
+    # we may want to add SSL_CIPHER_description here, but that's currently not exposed by cryptography
+    cipher: Optional[str] = None
+    """The active cipher name as returned by OpenSSL's SSL_CIPHER_get_name"""
     cipher_list: Sequence[str] = ()
+    """Ciphers accepted by the proxy server."""
     tls_version: Optional[str] = None
     sni: Union[bytes, Literal[True], None]
 
+    timestamp_end: Optional[float] = None
+    """Connection end timestamp"""
     timestamp_tls_setup: Optional[float] = None
+    """TLS session established."""
 
     @property
     def connected(self):
         return self.state is ConnectionState.OPEN
+
+    @property
+    def tls_established(self) -> bool:
+        return self.timestamp_tls_setup is not None
 
     def __repr__(self):
         attrs = repr({
@@ -66,7 +77,10 @@ class Connection:
         })
         return f"{type(self).__name__}({attrs})"
 
-
+    @property
+    def alpn_proto_negotiated(self) -> bytes:
+        warnings.warn("Server.alpn_proto_negotiated is deprecated, use Server.alpn instead.", PendingDeprecationWarning)
+        return self.alpn
 
 
 class Client(Connection):
@@ -74,16 +88,25 @@ class Client(Connection):
     peername: Address
     sockname: Address
 
+    timestamp_start: float
+    """TCP SYN received"""
+
     sni: Union[bytes, None] = None
 
-    def __init__(self, peername, sockname):
+    def __init__(self, peername, sockname, timestamp_start):
         self.peername = peername
         self.sockname = sockname
+        self.timestamp_start = timestamp_start
 
     @property
     def address(self):
         warnings.warn("Client.address is deprecated, use Client.peername instead.", PendingDeprecationWarning)
         return self.peername
+
+    @property
+    def cipher_name(self) -> Optional[str]:
+        warnings.warn("Client.cipher_name is deprecated, use Client.cipher instead.", PendingDeprecationWarning)
+        return self.cipher
 
 
 class Server(Connection):
@@ -92,12 +115,30 @@ class Server(Connection):
     sockname = None
     address: Optional[Address]
 
+    timestamp_start: Optional[float] = None
+    """TCP SYN sent"""
+    timestamp_tcp_setup: Optional[float] = None
+    """TCP ACK received"""
+
     sni = True
     """True: client SNI, False: no SNI, bytes: custom value"""
     via: Optional[server_spec.ServerSpec] = None
 
     def __init__(self, address: Optional[tuple]):
         self.address = address
+
+    @property
+    def ip_address(self) -> Address:
+        warnings.warn("Server.ip_address is deprecated, use Server.peername instead.", PendingDeprecationWarning)
+        return self.peername
+
+    @property
+    def cert(self) -> Optional[certs.Cert]:
+        warnings.warn("Server.alpn_proto_negotiated is deprecated, use Server.alpn instead.", PendingDeprecationWarning)
+        if self.certificate_list:
+            return self.certificate_list[0]
+        else:
+            return None
 
 
 class Context:
