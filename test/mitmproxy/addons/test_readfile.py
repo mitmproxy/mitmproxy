@@ -1,5 +1,6 @@
 import asyncio
 import io
+import sys
 
 import pytest
 from unittest import mock
@@ -46,6 +47,7 @@ class TestReadFile:
             with pytest.raises(Exception, match="Invalid readfile filter"):
                 tctx.configure(rf, readfile_filter="~~")
 
+    @pytest.mark.skipif(sys.version_info < (3, 8), reason='requires Python 3.8 or higher')
     @pytest.mark.asyncio
     async def test_read(self, tmpdir, data, corrupt_data):
         rf = readfile.ReadFile()
@@ -93,6 +95,7 @@ class TestReadFile:
 
 
 class TestReadFileStdin:
+    @pytest.mark.skipif(sys.version_info < (3, 8), reason='requires Python 3.8 or higher')
     @mock.patch('sys.stdin')
     @pytest.mark.asyncio
     async def test_stdin(self, stdin, data, corrupt_data):
@@ -108,6 +111,7 @@ class TestReadFileStdin:
                 with pytest.raises(exceptions.FlowReadException):
                     await rf.load_flows(stdin.buffer)
 
+    @pytest.mark.skipif(sys.version_info < (3, 8), reason='requires Python 3.8 or higher')
     @pytest.mark.asyncio
     async def test_normal(self, tmpdir, data):
         rf = readfile.ReadFileStdin()
