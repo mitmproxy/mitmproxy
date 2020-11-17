@@ -1,10 +1,10 @@
 import html
 import time
 from typing import Optional, Tuple
-from mitmproxy import connections
 from mitmproxy import flow
 from mitmproxy import version
 from mitmproxy.net import http
+from mitmproxy.utils import compat
 
 HTTPRequest = http.Request
 HTTPResponse = http.Response
@@ -15,16 +15,16 @@ class HTTPFlow(flow.Flow):
     An HTTPFlow is a collection of objects representing a single HTTP
     transaction.
     """
-    request: HTTPRequest
-    response: Optional[HTTPResponse] = None
+    request: http.Request
+    response: Optional[http.Response] = None
     error: Optional[flow.Error] = None
     """
     Note that it's possible for a Flow to have both a response and an error
     object. This might happen, for instance, when a response was received
     from the server, but there was an error sending it back to the client.
     """
-    server_conn: connections.ServerConnection
-    client_conn: connections.ClientConnection
+    server_conn: compat.Server
+    client_conn: compat.Client
     intercepted: bool = False
     """ Is this flow currently being intercepted? """
     mode: str
@@ -37,8 +37,8 @@ class HTTPFlow(flow.Flow):
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     # mypy doesn't support update with kwargs
     _stateobject_attributes.update(dict(
-        request=HTTPRequest,
-        response=HTTPResponse,
+        request=http.Request,
+        response=http.Response,
         mode=str
     ))
 
@@ -67,7 +67,7 @@ def make_error_response(
         status_code: int,
         message: str = "",
         headers: Optional[http.Headers] = None,
-) -> HTTPResponse:
+) -> http.Response:
     body: bytes = """
         <html>
             <head>
@@ -92,11 +92,11 @@ def make_error_response(
             Content_Type="text/html"
         )
 
-    return HTTPResponse.make(status_code, body, headers)
+    return http.Response.make(status_code, body, headers)
 
 
-def make_connect_request(address: Tuple[str, int]) -> HTTPRequest:
-    return HTTPRequest(
+def make_connect_request(address: Tuple[str, int]) -> http.Request:
+    return http.Request(
         host=address[0],
         port=address[1],
         method=b"CONNECT",
@@ -115,7 +115,7 @@ def make_connect_request(address: Tuple[str, int]) -> HTTPRequest:
 def make_connect_response(http_version):
     # Do not send any response headers as it breaks proxying non-80 ports on
     # Android emulators using the -http-proxy option.
-    return HTTPResponse(
+    return http.Response(
         http_version,
         200,
         b"Connection established",
@@ -128,4 +128,4 @@ def make_connect_response(http_version):
 
 
 def make_expect_continue_response():
-    return HTTPResponse.make(100)
+    return http.Response.make(100)

@@ -10,6 +10,7 @@ async def test_configure():
     ts = termstatus.TermStatus()
     with taddons.context() as ctx:
         ctx.master.server = proxy.DummyServer()
+        ctx.master.server.bound = True
         ctx.configure(ts, server=False)
         ts.running()
         ctx.configure(ts, server=True)

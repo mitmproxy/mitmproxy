@@ -9,7 +9,7 @@ from mitmproxy.utils import human
 
 class TermStatus:
     def running(self):
-        if ctx.options.server:
+        if ctx.master.server.bound:
             ctx.log.info(
                 "Proxy server listening at http://{}".format(
                     human.format_address(ctx.master.server.address)

@@ -236,3 +236,14 @@ def test_websocket():
         f = tflow.twebsocketflow(client_conn=True, err=True)
         d.websocket_error(f)
         assert "Error in WebSocket" in sio_err.getvalue()
+
+
+def test_http2():
+    sio = io.StringIO()
+    sio_err = io.StringIO()
+    d = dumper.Dumper(sio, sio_err)
+    with taddons.context(d):
+        f = tflow.tflow(resp=True)
+        f.response.http_version = b"HTTP/2.0"
+        d.response(f)
+        assert "HTTP/2.0 200 OK" in sio.getvalue()

@@ -2,10 +2,11 @@ import time
 import typing  # noqa
 import uuid
 
-from mitmproxy import connections
-from mitmproxy import controller, exceptions  # noqa
+from mitmproxy import controller
+from mitmproxy import exceptions
 from mitmproxy import stateobject
 from mitmproxy import version
+from mitmproxy.utils import compat
 
 
 class Error(stateobject.StateObject):
@@ -63,8 +64,8 @@ class Flow(stateobject.StateObject):
     def __init__(
             self,
             type: str,
-            client_conn: connections.ClientConnection,
-            server_conn: connections.ServerConnection,
+            client_conn: compat.Client,
+            server_conn: compat.Server,
             live: bool=None
     ) -> None:
         self.type = type
@@ -84,8 +85,8 @@ class Flow(stateobject.StateObject):
     _stateobject_attributes = dict(
         id=str,
         error=Error,
-        client_conn=connections.ClientConnection,
-        server_conn=connections.ServerConnection,
+        client_conn=compat.Client,
+        server_conn=compat.Server,
         type=str,
         intercepted=bool,
         is_replay=str,
