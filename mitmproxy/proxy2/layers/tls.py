@@ -194,7 +194,7 @@ class _TLSLayer(tunnel.TunnelLayer):
             self.conn.cipher = self.tls.get_cipher_name()
             self.conn.cipher_list = self.tls.get_cipher_list()
             self.conn.tls_version = self.tls.get_protocol_version_name()
-            yield commands.Log(f"TLS established: {self.conn}")
+            yield commands.Log(f"TLS established: {self.conn}", "debug")
             yield from self.receive_data(b"")
             return True, None
 

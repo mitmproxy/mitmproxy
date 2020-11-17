@@ -113,7 +113,7 @@ class Client(Connection):
             'address': self.peername,
             'alpn_proto_negotiated': self.alpn,
             'cipher_name': self.cipher,
-            'clientcert': self.certificate_list[0] if self.certificate_list else None,
+            'clientcert': self.certificate_list[0].get_state() if self.certificate_list else None,
             'id': self.id,
             'mitmcert': None,
             'sni': self.sni,
@@ -181,7 +181,7 @@ class Server(Connection):
         return {
             'address': self.address,
             'alpn_proto_negotiated': self.alpn,
-            'cert': self.certificate_list[0] if self.certificate_list else None,
+            'cert': self.certificate_list[0].get_state() if self.certificate_list else None,
             'id': self.id,
             'ip_address': self.peername,
             'sni': self.sni,

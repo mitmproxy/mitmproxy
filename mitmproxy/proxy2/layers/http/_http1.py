@@ -114,17 +114,18 @@ class Http1Server(Http1Connection):
     def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
         assert event.stream_id == self.stream_id
         if isinstance(event, ResponseHeaders):
-            self.response = event.response
+            self.response = response = event.response
 
-            if self.response.is_http2:
-                # Convert to an HTTP/1 request.
-                self.response.http_version = b"HTTP/1.1"
+            if response.is_http2:
+                response = response.copy()
+                # Convert to an HTTP/1 response.
+                response.http_version = b"HTTP/1.1"
                 # not everyone supports empty reason phrases, so we better make up one.
-                self.response.reason = status_codes.RESPONSES.get(self.response.status_code, "")
+                response.reason = status_codes.RESPONSES.get(response.status_code, "")
                 # Shall we set a Content-Length header here if there is none?
                 # For now, let's try to modify as little as possible.
 
-            raw = http1.assemble_response_head(event.response)
+            raw = http1.assemble_response_head(response)
             yield commands.SendData(self.conn, raw)
             if self.request.first_line_format == "authority":
                 assert self.state == self.wait
@@ -237,13 +238,15 @@ class Http1Client(Http1Connection):
             return
 
         if isinstance(event, RequestHeaders):
-            if event.request.is_http2:
+            request = event.request
+            if request.is_http2:
                 # Convert to an HTTP/1 request.
-                event.request.http_version = b"HTTP/1.1"
-                if "Host" not in event.request.headers and event.request.authority:
-                    event.request.headers.insert(0, "Host", event.request.authority)
-                event.request.authority = b""
-            raw = http1.assemble_request_head(event.request)
+                request = request.copy()  # (we could probably be a bit more efficient here.)
+                request.http_version = b"HTTP/1.1"
+                if "Host" not in request.headers and request.authority:
+                    request.headers.insert(0, "Host", request.authority)
+                request.authority = b""
+            raw = http1.assemble_request_head(request)
             yield commands.SendData(self.conn, raw)
         elif isinstance(event, RequestData):
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():

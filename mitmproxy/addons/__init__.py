@@ -25,6 +25,10 @@ from mitmproxy.addons import streambodies
 from mitmproxy.addons import save
 from mitmproxy.addons import tlsconfig
 from mitmproxy.addons import upstream_auth
+from mitmproxy.utils import compat
+
+if compat.new_proxy_core:  # pragma: no cover
+    from mitmproxy.addons import clientplayback_sansio as clientplayback  # noqa
 
 
 def default_addons():

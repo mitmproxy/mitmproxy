@@ -29,17 +29,17 @@ class AsyncReply(controller.Reply):
         self.obj.error = Error.KILLED_MESSAGE
 
 
-class ProxyConnectionHandler(server.ConnectionHandler):
+class ProxyConnectionHandler(server.StreamConnectionHandler):
     master: master.Master
 
     def __init__(self, master, r, w, options):
         self.master = master
         super().__init__(r, w, options)
-        self.log_prefix = f"{human.format_address(self.client.address)}: "
+        self.log_prefix = f"{human.format_address(self.client.peername)}: "
 
     async def handle_hook(self, hook: commands.Hook) -> None:
         with self.timeout_watchdog.disarm():
-            # TODO: We currently only support single-argument hooks.
+            # We currently only support single-argument hooks.
             data, = hook.as_tuple()
             data.reply = AsyncReply(data)
             await self.master.addons.handle_lifecycle(hook.name, data)
@@ -88,19 +88,22 @@ class Proxyserver:
     def configure(self, updated):
         if not self.is_running:
             return
-        if any(x in updated for x in ["listen_host", "listen_port"]):
-            asyncio.ensure_future(self.start_server())
+        if any(x in updated for x in ["server", "listen_host", "listen_port"]):
+            asyncio.ensure_future(self.refresh_server())
 
-    async def start_server(self):
+    async def refresh_server(self):
         async with self._lock:
             if self.server:
                 await self.shutdown_server()
-            print("Starting server...")
-            self.server = await asyncio.start_server(
-                self.handle_connection,
-                self.options.listen_host,
-                self.options.listen_port,
-            )
+                self.server = None
+            if ctx.options.server:
+                self.server = await asyncio.start_server(
+                    self.handle_connection,
+                    self.options.listen_host,
+                    self.options.listen_port,
+                )
+                addrs = {f"http://{human.format_address(s.getsockname())}" for s in self.server.sockets}
+                ctx.log.info(f"Proxy server listening at {' and '.join(addrs)}")
 
     async def shutdown_server(self):
         print("Stopping server...")
