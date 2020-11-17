@@ -1,5 +1,5 @@
 import collections
-import re
+import time
 import typing
 from dataclasses import dataclass
 
@@ -198,6 +198,7 @@ class HttpStream(layer.Layer):
                 data = event.data
             yield SendHttp(RequestData(self.stream_id, data), self.context.server)
         elif isinstance(event, RequestEndOfMessage):
+            self.flow.request.timestamp_end = time.time()
             yield SendHttp(RequestEndOfMessage(self.stream_id), self.context.server)
             self.client_state = self.state_done
 
@@ -206,6 +207,7 @@ class HttpStream(layer.Layer):
         if isinstance(event, RequestData):
             self.request_body_buf += event.data
         elif isinstance(event, RequestEndOfMessage):
+            self.flow.request.timestamp_end = time.time()
             self.flow.request.data.content = self.request_body_buf
             self.request_body_buf = b""
             yield HttpRequestHook(self.flow)
@@ -251,6 +253,7 @@ class HttpStream(layer.Layer):
                 data = event.data
             yield SendHttp(ResponseData(self.stream_id, data), self.context.client)
         elif isinstance(event, ResponseEndOfMessage):
+            self.flow.response.timestamp_end = time.time()
             yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
             self.server_state = self.state_done
 
@@ -259,6 +262,7 @@ class HttpStream(layer.Layer):
         if isinstance(event, ResponseData):
             self.response_body_buf += event.data
         elif isinstance(event, ResponseEndOfMessage):
+            self.flow.response.timestamp_end = time.time()
             self.flow.response.data.content = self.response_body_buf
             self.response_body_buf = b""
             yield from self.send_response()
