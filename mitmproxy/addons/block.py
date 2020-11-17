@@ -36,6 +36,7 @@ class Block:
         if ctx.options.block_global and address.is_global:
             ctx.log.warn(f"Client connection from {client.address[0]} killed by block_global option.")
             client.error = "Connection killed by block_global."
+
     # FIXME: Remove old proxy core hook below and remove no cover statements.
 
     def clientconnect(self, layer):  # pragma: no cover
