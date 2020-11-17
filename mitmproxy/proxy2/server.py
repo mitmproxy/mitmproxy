@@ -13,6 +13,7 @@ import socket
 import time
 import traceback
 import typing
+from abc import ABC
 from contextlib import contextmanager
 from dataclasses import dataclass
 
@@ -76,23 +77,16 @@ class ConnectionIO:
 class ConnectionHandler(metaclass=abc.ABCMeta):
     transports: typing.MutableMapping[Connection, ConnectionIO]
     timeout_watchdog: TimeoutWatchdog
+    client: Client
 
-    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, options: moptions.Options) -> None:
-        self.client = Client(
-            writer.get_extra_info('peername'),
-            writer.get_extra_info('sockname'),
-            time.time(),
-        )
-        self.context = Context(self.client, options)
-        self.transports = {
-            self.client: ConnectionIO(handler=None, reader=reader, writer=writer)
-        }
+    def __init__(self, context: Context) -> None:
+        self.client = context.client
+        self.transports = {}
 
         # Ask for the first layer right away.
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
         # on protocols that start with a server greeting.
-        self.layer = layer.NextLayer(self.context, ask_on_start=True)
-
+        self.layer = layer.NextLayer(context, ask_on_start=True)
         self.timeout_watchdog = TimeoutWatchdog(self.on_timeout)
 
     async def handle_client(self) -> None:
@@ -264,7 +258,19 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.transports[connection].handler.cancel()
 
 
-class SimpleConnectionHandler(ConnectionHandler):
+class StreamConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
+    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, options: moptions.Options) -> None:
+        client = Client(
+            writer.get_extra_info('peername'),
+            writer.get_extra_info('sockname'),
+            time.time(),
+        )
+        context = Context(client, options)
+        super().__init__(context)
+        self.transports[client] = ConnectionIO(handler=None, reader=reader, writer=writer)
+
+
+class SimpleConnectionHandler(StreamConnectionHandler):
     """Simple handler that does not really process any hooks."""
 
     hook_handlers: typing.Dict[str, typing.Callable]
