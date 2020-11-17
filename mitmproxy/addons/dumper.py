@@ -181,19 +181,20 @@ class Dumper:
             replay_str = ""
             replay = ""
 
-        code = flow.response.status_code
+        assert flow.response
+        code_int = flow.response.status_code
         code_color = None
-        if 200 <= code < 300:
+        if 200 <= code_int < 300:
             code_color = "green"
-        elif 300 <= code < 400:
+        elif 300 <= code_int < 400:
             code_color = "magenta"
-        elif 400 <= code < 600:
+        elif 400 <= code_int < 600:
             code_color = "red"
         code = click.style(
-            str(code),
+            str(code_int),
             fg=code_color,
             bold=True,
-            blink=(code == 418)
+            blink=(code_int == 418),
         )
 
         if not flow.response.is_http2:
