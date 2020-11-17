@@ -1,8 +1,10 @@
+import uuid
 import warnings
 from enum import Flag, auto
 from typing import List, Literal, Optional, Sequence, Tuple, Union
 
 from mitmproxy import certs
+from mitmproxy.coretypes import serializable
 from mitmproxy.net import server_spec
 from mitmproxy.options import Options
 
@@ -20,10 +22,14 @@ class ConnectionState(Flag):
 Address = Tuple[str, int]
 
 
-class Connection:
+class Connection(serializable.Serializable):
     """
     Connections exposed to the layers only contain metadata, no socket objects.
     """
+    # all connections have a unique id. While
+    # f.client_conn == f2.client_conn already holds true for live flows (where we have object identity),
+    # we also want these semantics for recorded flows.
+    id: str
     state: ConnectionState
     peername: Optional[Address]
     sockname: Optional[Address]
@@ -94,9 +100,52 @@ class Client(Connection):
     sni: Union[bytes, None] = None
 
     def __init__(self, peername, sockname, timestamp_start):
+        self.id = str(uuid.uuid4())
         self.peername = peername
         self.sockname = sockname
         self.timestamp_start = timestamp_start
+
+    def get_state(self):
+        # Important: Retain full compatibility with old proxy core for now!
+        # This means we truncate some fields (in either direction),
+        # which needs to be undone once we drop the old implementation.
+        return {
+            'address': self.peername,
+            'alpn_proto_negotiated': self.alpn,
+            'cipher_name': self.cipher,
+            'clientcert': self.certificate_list[0] if self.certificate_list else None,
+            'id': self.id,
+            'mitmcert': None,
+            'sni': self.sni,
+            'timestamp_end': self.timestamp_end,
+            'timestamp_start': self.timestamp_start,
+            'timestamp_tls_setup': self.timestamp_tls_setup,
+            'tls_established': self.tls_established,
+            'tls_extensions': [],
+            'tls_version': self.tls_version,
+        }
+
+    @classmethod
+    def from_state(cls, state) -> "Client":
+        client = Client(
+            state["address"],
+            ("mitmproxy", 8080),
+            state["timestamp_start"]
+        )
+        client.set_state(state)
+        return client
+
+    def set_state(self, state):
+        self.peername = state["address"]
+        self.alpn = state["alpn_proto_negotiated"]
+        self.cipher = state["cipher_name"]
+        self.certificate_list = [certs.Cert.from_state(state["clientcert"])] if state["clientcert"] else None
+        self.id = state["id"]
+        self.sni = state["sni"]
+        self.timestamp_end = state["timestamp_end"]
+        self.timestamp_start = state["timestamp_start"]
+        self.timestamp_tls_setup = state["timestamp_tls_setup"]
+        self.tls_version = state["tls_version"]
 
     @property
     def address(self):
@@ -125,7 +174,46 @@ class Server(Connection):
     via: Optional[server_spec.ServerSpec] = None
 
     def __init__(self, address: Optional[tuple]):
+        self.id = str(uuid.uuid4())
         self.address = address
+
+    def get_state(self):
+        return {
+            'address': self.address,
+            'alpn_proto_negotiated': self.alpn,
+            'cert': self.certificate_list[0] if self.certificate_list else None,
+            'id': self.id,
+            'ip_address': self.peername,
+            'sni': self.sni,
+            'source_address': self.sockname,
+            'timestamp_end': self.timestamp_end,
+            'timestamp_start': self.timestamp_start,
+            'timestamp_tcp_setup': self.timestamp_tcp_setup,
+            'timestamp_tls_setup': self.timestamp_tls_setup,
+            'tls_established': self.tls_established,
+            'tls_version': self.tls_version,
+            'via': None
+        }
+
+    @classmethod
+    def from_state(cls, state) -> "Server":
+        server = Server(None)
+        server.set_state(state)
+        return server
+
+    def set_state(self, state):
+        self.address = state["address"]
+        self.alpn = state["alpn_proto_negotiated"]
+        self.certificate_list = [certs.Cert.from_state(state["cert"])] if state["cert"] else None
+        self.id = state["id"]
+        self.peername = state["ip_address"]
+        self.sni = state["sni"]
+        self.sockname = state["source_address"]
+        self.timestamp_end = state["timestamp_end"]
+        self.timestamp_start = state["timestamp_start"]
+        self.timestamp_tcp_setup = state["timestamp_tcp_setup"]
+        self.timestamp_tls_setup = state["timestamp_tls_setup"]
+        self.tls_version = state["tls_version"]
 
     @property
     def ip_address(self) -> Address:
