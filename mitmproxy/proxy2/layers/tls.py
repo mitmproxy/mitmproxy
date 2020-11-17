@@ -187,13 +187,13 @@ class _TLSLayer(tunnel.TunnelLayer):
                 if cert:
                     all_certs.insert(0, cert)
 
-            self.conn.tls_established = True
+            self.conn.timestamp_tls_setup = time.time()
             self.conn.sni = self.tls.get_servername()
             self.conn.alpn = self.tls.get_alpn_proto_negotiated()
             self.conn.certificate_list = [certs.Cert(x) for x in all_certs]
+            self.conn.cipher = self.tls.get_cipher_name()
             self.conn.cipher_list = self.tls.get_cipher_list()
             self.conn.tls_version = self.tls.get_protocol_version_name()
-            self.conn.timestamp_tls_setup = time.time()
             yield commands.Log(f"TLS established: {self.conn}")
             yield from self.receive_data(b"")
             return True, None
