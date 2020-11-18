@@ -8,12 +8,10 @@ The very high level overview is as follows:
 """
 import abc
 import asyncio
-import logging
 import socket
 import time
 import traceback
 import typing
-from abc import ABC
 from contextlib import contextmanager
 from dataclasses import dataclass
 
@@ -90,9 +88,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self.timeout_watchdog = TimeoutWatchdog(self.on_timeout)
 
     async def handle_client(self) -> None:
-        # Hack: Work around log suppression in core.
-        logging.getLogger('asyncio').setLevel(logging.DEBUG)
-        asyncio.get_event_loop().set_debug(True)
         watch = asyncio.ensure_future(self.timeout_watchdog.watch())
 
         self.log("client connect")
@@ -309,7 +304,7 @@ if __name__ == "__main__":
         to the reverse proxy target.
         """
     )
-    opts.mode = "reverse:http://localhost:3000/"
+    opts.mode = "reverse:http://127.0.0.1:3000/"
 
 
     async def handle(reader, writer):
