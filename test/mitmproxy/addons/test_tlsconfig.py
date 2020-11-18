@@ -53,7 +53,7 @@ class TestTlsConfig:
         with taddons.context(ta) as tctx:
             ta.configure(["confdir"])
 
-            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), tctx.options)
+            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
 
             # Edge case first: We don't have _any_ idea about the server, so we just return "mitmproxy" as subject.
             cert, pkey, chainfile = ta.get_cert(ctx)
@@ -76,7 +76,7 @@ class TestTlsConfig:
         # only really testing for coverage here, there's no point in mirroring the individual conditions
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), tctx.options)
+            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
             ch = tls.ClientHelloData(ctx)
             ta.tls_clienthello(ch)
             assert not ch.establish_server_tls_first
@@ -108,7 +108,7 @@ class TestTlsConfig:
         with taddons.context(ta) as tctx:
             ta.configure(["confdir"])
             tctx.configure(ta, certs=[tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.pem")])
-            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), tctx.options)
+            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
             tctx.options.add_upstream_certs_to_client_chain = True
 
             tls_start = tls.TlsStartData(ctx.client, context=ctx)
@@ -121,7 +121,7 @@ class TestTlsConfig:
     def test_create_proxy_server_ssl_conn_verify_failed(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), tctx.options)
+            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
             ctx.client.alpn_offers = [b"h2"]
             ctx.client.cipher_list = ["TLS_AES_256_GCM_SHA384", "ECDHE-RSA-AES128-SHA"]
             ctx.server.address = ("example.mitmproxy.org", 443)
@@ -136,7 +136,7 @@ class TestTlsConfig:
     def test_create_proxy_server_ssl_conn_verify_ok(self, tdata):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), tctx.options)
+            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
             ctx.server.address = ("example.mitmproxy.org", 443)
             tctx.configure(ta, ssl_verify_upstream_trusted_ca=tdata.path(
                 "mitmproxy/net/data/verificationcerts/trusted-root.crt"))
@@ -150,7 +150,7 @@ class TestTlsConfig:
     def test_create_proxy_server_ssl_conn_insecure(self):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), tctx.options)
+            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
             ctx.server.address = ("example.mitmproxy.org", 443)
 
             tctx.configure(
@@ -176,7 +176,7 @@ class TestTlsConfig:
     def test_client_cert_file(self, tdata, client_certs):
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
-            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), tctx.options)
+            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
             ctx.server.address = ("example.mitmproxy.org", 443)
             tctx.configure(
                 ta,

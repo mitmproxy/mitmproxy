@@ -101,7 +101,7 @@ def h2_responses(draw):
 
 @given(chunks(mutations(h1_requests())))
 def test_fuzz_h1_request(data):
-    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), opts)
+    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
 
     layer = http.HttpLayer(tctx, HTTPMode.regular)
     for _ in layer.handle_event(Start()):
@@ -114,7 +114,7 @@ def test_fuzz_h1_request(data):
 @given(chunks(mutations(h2_responses())))
 @example([b'0 OK\r\n\r\n', b'\r\n', b'5\r\n12345\r\n0\r\n\r\n'])
 def test_fuzz_h1_response(data):
-    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), opts)
+    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
     server = Placeholder(context.Server)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     assert (
@@ -208,7 +208,7 @@ def h2_frames(draw):
 
 
 def h2_layer(opts):
-    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), opts)
+    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
     tctx.client.alpn = b"h2"
 
     layer = http.HttpLayer(tctx, HTTPMode.regular)
@@ -246,7 +246,7 @@ def test_fuzz_h2_request_mutations(chunks):
 
 
 def _h2_response(chunks):
-    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080)), opts)
+    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     server = Placeholder(context.Server)
     assert (
