@@ -6,7 +6,7 @@ import os.path
 from mitmproxy.net import tls
 from mitmproxy import version
 from mitmproxy.net.http import user_agents
-from . import pathoc, language
+from . import print_tool_deprecation_message, pathoc, language
 
 
 def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
@@ -223,5 +223,6 @@ def args_pathoc(argv, stdout=sys.stdout, stderr=sys.stderr):
 
 
 def go_pathoc():  # pragma: no cover
+    print_tool_deprecation_message()
     args = args_pathoc(sys.argv)
     pathoc.main(args)

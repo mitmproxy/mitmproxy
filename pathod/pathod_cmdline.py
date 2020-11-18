@@ -7,7 +7,7 @@ import re
 from mitmproxy.net import tls
 from mitmproxy.utils import human
 from mitmproxy import version
-from . import pathod
+from . import print_tool_deprecation_message, pathod
 
 
 def parse_anchor_spec(s):
@@ -231,5 +231,6 @@ def args_pathod(argv, stdout_=sys.stdout, stderr_=sys.stderr):
 
 
 def go_pathod():  # pragma: no cover
+    print_tool_deprecation_message()
     args = args_pathod(sys.argv)
     pathod.main(args)
