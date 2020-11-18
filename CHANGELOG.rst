@@ -6,6 +6,8 @@ Unreleased: mitmproxy next
 
 * Fix query parameters in asgiapp addon (@jpstotz)
 * Fix command history failing on file IO errors (@Kriechi)
+* Deprecation of pathod and pathoc tools and modules. Future releases might not contain them! (@Kriechi)
+
 * --- TODO: add new PRs above this line ---
 
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
