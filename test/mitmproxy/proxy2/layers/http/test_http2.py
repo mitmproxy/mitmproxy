@@ -1,8 +1,9 @@
-from typing import Callable, List, Tuple
+from typing import List, Tuple
 
 import hpack
 import hyperframe.frame
 import pytest
+from h2.errors import ErrorCodes
 
 from mitmproxy.http import HTTPFlow
 from mitmproxy.net.http import Headers
@@ -203,3 +204,33 @@ def test_split_pseudo_headers(input, pseudo, headers):
 def test_split_pseudo_headers_err():
     with pytest.raises(ValueError, match="Duplicate HTTP/2 pseudo header"):
         split_pseudo_headers([(b":status", b"418"), (b":status", b"418")])
+
+
+def test_rst_then_close(tctx):
+    """
+    Test that we properly handle the case of a client that first causes protocol errors and then disconnects.
+
+    Adapted from h2spec http2/5.1/5.
+    """
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    open_conn = OpenConnection(server)
+
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << open_conn
+            >> DataReceived(tctx.client, cff.build_data_frame(b"unexpected data frame").serialize())
+            << SendData(tctx.client, cff.build_rst_stream_frame(1, ErrorCodes.STREAM_CLOSED).serialize())
+            >> ConnectionClosed(tctx.client)
+            << CloseConnection(tctx.client)
+            >> reply("connection cancelled", to=open_conn)
+            << http.HttpErrorHook(flow)
+            >> reply()
+    )

@@ -60,14 +60,24 @@ class BufferedH2Connection(h2.connection.H2Connection):
             data = data[self.max_outbound_frame_size:]
             frame_size -= len(chunk_data)
 
-        available_window = self.local_flow_control_window(stream_id)
-        if frame_size <= available_window:
-            super().send_data(stream_id, data, end_stream)
-        else:
-            # We can't send right now, so we buffer.
+        if self.stream_buffers.get(stream_id, None):
+            # We already have some data buffered, let's append.
             self.stream_buffers[stream_id].append(
                 SendH2Data(data, end_stream)
             )
+        else:
+            available_window = self.local_flow_control_window(stream_id)
+            if frame_size <= available_window:
+                super().send_data(stream_id, data, end_stream)
+            else:
+                if available_window:
+                    can_send_now = data[:available_window]
+                    super().send_data(stream_id, can_send_now, end_stream=False)
+                    data = data[available_window:]
+                # We can't send right now, so we buffer.
+                self.stream_buffers[stream_id].append(
+                    SendH2Data(data, end_stream)
+                )
 
     def receive_data(self, data: bytes):
         events = super().receive_data(data)

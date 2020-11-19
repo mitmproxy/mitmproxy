@@ -133,9 +133,13 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             command.connection.timestamp_start = time.time()
             reader, writer = await asyncio.open_connection(*command.connection.address)
         except (IOError, asyncio.CancelledError) as e:
-            self.log(f"error establishing server connection: {e}")
-            command.connection.error = str(e)
-            self.server_event(events.OpenConnectionReply(command, str(e)))
+            if isinstance(e, IOError):
+                err = str(e)
+            else:
+                err = "connection cancelled"  # curiously, str(CancelledError()) returns empty string.
+            self.log(f"error establishing server connection: {err}")
+            command.connection.error = err
+            self.server_event(events.OpenConnectionReply(command, err))
         else:
             command.connection.timestamp_tcp_setup = time.time()
             command.connection.state = ConnectionState.OPEN
