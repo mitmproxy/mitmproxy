@@ -17,7 +17,7 @@ from mitmproxy.utils import human
 from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
 from ._base import HttpConnection, HttpEvent, ReceiveHttp
-from ._http_h2 import BufferedH2Connection
+from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
 from ...commands import CloseConnection, Log, SendData
 from ...context import Connection, Context
 from ...events import ConnectionClosed, DataReceived, Event, Start
@@ -35,10 +35,9 @@ class Http2Connection(HttpConnection):
     h2_conf_defaults = dict(
         header_encoding=False,
         validate_outbound_headers=False,
-        validate_inbound_headers=False,
-        normalize_inbound_headers=False,
+        validate_inbound_headers=False,  # changing these two to True is required to pass h2spec
+        normalize_inbound_headers=False,  # changing these two to True is required to pass h2spec
         normalize_outbound_headers=False,
-        # logger=H2ConnectionLogger("server")
     )
     h2_conn: BufferedH2Connection
     streams: Dict[int, StreamState]
@@ -53,6 +52,8 @@ class Http2Connection(HttpConnection):
 
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context, conn)
+        if self.debug:
+            self.h2_conf.logger = H2ConnectionLogger(self.__class__.__name__)
         self.h2_conn = BufferedH2Connection(self.h2_conf)
         self.streams = {}
 
