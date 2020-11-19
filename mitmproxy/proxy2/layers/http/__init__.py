@@ -192,6 +192,7 @@ class HttpStream(layer.Layer):
         if self.flow.request.stream:
             if self.flow.response:
                 raise NotImplementedError("Can't set a response and enable streaming at the same time.")
+            yield HttpRequestHook(self.flow)
             ok = yield from self.make_server_connection()
             if not ok:
                 return
@@ -266,6 +267,7 @@ class HttpStream(layer.Layer):
             yield SendHttp(ResponseData(self.stream_id, data), self.context.client)
         elif isinstance(event, ResponseEndOfMessage):
             self.flow.response.timestamp_end = time.time()
+            yield HttpResponseHook(self.flow)
             yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
             self.server_state = self.state_done
 

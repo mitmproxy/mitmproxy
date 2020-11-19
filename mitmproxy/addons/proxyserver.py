@@ -2,7 +2,7 @@ import asyncio
 import warnings
 from typing import Optional
 
-from mitmproxy import controller, ctx, eventsequence, log, master, options
+from mitmproxy import controller, ctx, eventsequence, flow, log, master, options
 from mitmproxy.flow import Error
 from mitmproxy.proxy2 import commands
 from mitmproxy.proxy2 import server
@@ -26,7 +26,7 @@ class AsyncReply(controller.Reply):
 
     def kill(self, force=False):
         warnings.warn("reply.kill() is deprecated, set the error attribute instead.", PendingDeprecationWarning)
-        self.obj.error = Error.KILLED_MESSAGE
+        self.obj.error = flow.Error(Error.KILLED_MESSAGE)
 
 
 class ProxyConnectionHandler(server.StreamConnectionHandler):

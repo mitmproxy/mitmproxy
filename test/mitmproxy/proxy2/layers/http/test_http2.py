@@ -102,24 +102,31 @@ def test_simple(tctx):
 
 
 @pytest.mark.parametrize("stream", [True, False])
-def test_http2_client_aborts(tctx, stream):
+@pytest.mark.parametrize("when", ["request", "response"])
+def test_http2_client_aborts(tctx, stream, when):
     """Test handling of the case where a client aborts during request transmission."""
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
     playbook, cff = start_h2_client(tctx)
+    resp = Placeholder(bytes)
 
-    def enable_streaming(flow: HTTPFlow):
+    def enable_request_streaming(flow: HTTPFlow):
         flow.request.stream = True
+
+    def enable_response_streaming(flow: HTTPFlow):
+        flow.response.stream = True
 
     assert (
             playbook
             >> DataReceived(tctx.client, cff.build_headers_frame(example_request_headers).serialize())
             << http.HttpRequestHeadersHook(flow)
     )
-    if stream:
+    if stream and when == "request":
         assert (
                 playbook
-                >> reply(side_effect=enable_streaming)
+                >> reply(side_effect=enable_request_streaming)
+                << http.HttpRequestHook(flow)
+                >> reply()
                 << OpenConnection(server)
                 >> reply(None)
                 << SendData(server, b"GET / HTTP/1.1\r\n"
@@ -127,16 +134,47 @@ def test_http2_client_aborts(tctx, stream):
         )
     else:
         assert playbook >> reply()
+
+    if when == "request":
+        assert (
+                playbook
+                >> ConnectionClosed(tctx.client)
+                << CloseConnection(tctx.client)
+                << http.HttpErrorHook(flow)
+                >> reply()
+
+        )
+        assert "peer closed connection" in flow().error.msg
+        return
+
     assert (
             playbook
-            >> ConnectionClosed(tctx.client)
-            << CloseConnection(tctx.client)
-            << http.HttpErrorHook(flow)
+            >> DataReceived(tctx.client, cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
+            << http.HttpRequestHook(flow)
             >> reply()
-
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"GET / HTTP/1.1\r\n"
+                                b"Host: example.com\r\n\r\n")
+            >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123")
+            << http.HttpResponseHeadersHook(flow)
     )
-
-    assert "peer closed connection" in flow().error.msg
+    if stream:
+        assert (
+                playbook
+                >> reply(side_effect=enable_response_streaming)
+                << SendData(tctx.client, resp)
+        )
+    else:
+        assert playbook >> reply()
+    assert (
+        playbook
+        >> ConnectionClosed(tctx.client)
+        << CloseConnection(tctx.client)
+        >> DataReceived(server, b"456")
+        << http.HttpResponseHook(flow)
+        >> reply()
+    )
 
 
 def test_no_normalization(tctx):

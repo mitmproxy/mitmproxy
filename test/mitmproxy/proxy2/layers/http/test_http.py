@@ -233,8 +233,12 @@ def test_response_streaming(tctx):
         flow.response.stream = lambda x: x.upper()
 
     assert (
-            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular))
             >> DataReceived(tctx.client, b"GET http://example.com/largefile HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
             << OpenConnection(server)
             >> reply(None)
             << SendData(server, b"GET /largefile HTTP/1.1\r\nHost: example.com\r\n\r\n")
@@ -244,6 +248,8 @@ def test_response_streaming(tctx):
             << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nABC")
             >> DataReceived(server, b"def")
             << SendData(tctx.client, b"DEF")
+            << http.HttpResponseHook(flow)
+            >> reply()
     )
 
 
@@ -256,7 +262,7 @@ def test_request_streaming(tctx, response):
     """
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
-    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
 
     def enable_streaming(flow: HTTPFlow):
         flow.request.stream = lambda x: x.upper()
@@ -269,6 +275,8 @@ def test_request_streaming(tctx, response):
                                          b"abc")
             << http.HttpRequestHeadersHook(flow)
             >> reply(side_effect=enable_streaming)
+            << http.HttpRequestHook(flow)
+            >> reply()
             << OpenConnection(server)
             >> reply(None)
             << SendData(server, b"POST / HTTP/1.1\r\n"
@@ -282,6 +290,10 @@ def test_request_streaming(tctx, response):
                 >> DataReceived(tctx.client, b"def")
                 << SendData(server, b"DEF")
                 >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+                << http.HttpResponseHeadersHook(flow)
+                >> reply()
+                << http.HttpResponseHook(flow)
+                >> reply()
                 << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
         )
     elif response == "early response":
@@ -291,17 +303,28 @@ def test_request_streaming(tctx, response):
         assert (
                 playbook
                 >> DataReceived(server, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
+                << http.HttpResponseHeadersHook(flow)
+                >> reply()
+                << http.HttpResponseHook(flow)
+                >> reply()
                 << SendData(tctx.client, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
                 >> DataReceived(tctx.client, b"def")
                 << SendData(server, b"DEF")
+                # Important: no request hook here!
         )
     elif response == "early close":
         assert (
                 playbook
                 >> DataReceived(server, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
+                << http.HttpResponseHeadersHook(flow)
+                >> reply()
+                << http.HttpResponseHook(flow)
+                >> reply()
                 << SendData(tctx.client, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
                 >> ConnectionClosed(server)
                 << CloseConnection(server)
+                << http.HttpErrorHook(flow)
+                >> reply()
                 << CloseConnection(tctx.client)
         )
     elif response == "early kill":
@@ -310,6 +333,8 @@ def test_request_streaming(tctx, response):
                 playbook
                 >> ConnectionClosed(server)
                 << CloseConnection(server)
+                << http.HttpErrorHook(flow)
+                >> reply()
                 << SendData(tctx.client, err)
                 << CloseConnection(tctx.client)
         )
@@ -640,6 +665,8 @@ def test_http_client_aborts(tctx, stream):
         assert (
                 playbook
                 >> reply(side_effect=enable_streaming)
+                << http.HttpRequestHook(flow)
+                >> reply()
                 << OpenConnection(server)
                 >> reply(None)
                 << SendData(server, b"POST / HTTP/1.1\r\n"
