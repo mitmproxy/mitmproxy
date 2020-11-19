@@ -13,7 +13,7 @@ class ReverseProxy(layer.Layer):
         self.context.server = Server(spec.address)
         if spec.scheme not in ("http", "tcp"):
             if not self.context.options.keep_host_header:
-                self.context.server.sni = spec.address[0]
+                self.context.server.sni = spec.address[0].encode()
             child_layer = tls.ServerTLSLayer(self.context)
         else:
             child_layer = layer.NextLayer(self.context)

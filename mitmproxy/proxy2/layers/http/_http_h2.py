@@ -105,7 +105,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
         """
         available_window = self.local_flow_control_window(stream_id)
         sent_any_data = False
-        while available_window and stream_id in self.stream_buffers:
+        while available_window > 0 and stream_id in self.stream_buffers:
             chunk: SendH2Data = self.stream_buffers[stream_id].popleft()
             if len(chunk.data) > available_window:
                 # We can't send the entire chunk, so we have to put some bytes back into the buffer.
@@ -120,7 +120,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
                     end_stream=False,
                 )
 
-            self.send_data(stream_id, data=chunk.data, end_stream=chunk.end_stream)
+            super().send_data(stream_id, data=chunk.data, end_stream=chunk.end_stream)
 
             available_window -= len(chunk.data)
             if not self.stream_buffers[stream_id]:
