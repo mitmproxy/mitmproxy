@@ -38,6 +38,7 @@ class ProxyConfig:
         self.check_filter: typing.Optional[HostMatcher] = None
         self.check_tcp: typing.Optional[HostMatcher] = None
         self.upstream_server: typing.Optional[server_spec.ServerSpec] = None
+        self.suppress_bad_gw_error: bool = False
         self.configure(options, set(options.keys()))
         options.changed.connect(self.configure)
 
@@ -54,6 +55,9 @@ class ProxyConfig:
             self.check_filter = HostMatcher(False)
         if "tcp_hosts" in updated:
             self.check_tcp = HostMatcher("tcp", options.tcp_hosts)
+
+        if options.suppress_bad_gw_error:
+            self.suppress_bad_gw_error = options.suppress_bad_gw_error
 
         certstore_path = os.path.expanduser(options.confdir)
         if not os.path.exists(os.path.dirname(certstore_path)):

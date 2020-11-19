@@ -224,9 +224,12 @@ class HttpLayer(base.Layer):
         ) as e:
             # HTTPS tasting means that ordinary errors like resolution
             # and connection errors can happen here.
-            self.send_error_response(502, repr(e))
-            f.error = flow.Error(str(e))
-            self.channel.ask("error", f)
+            # self.send_error_response(502, repr(e))
+            # f.error = flow.Error(str(e))
+            # self.channel.ask("error", f)
+            raise exceptions.ProtocolException(
+                "Error in HTTP connection: %s" % repr(e)
+            )
             return False
 
         return False
@@ -479,15 +482,15 @@ class HttpLayer(base.Layer):
                 return False  # should never be reached
 
         except (exceptions.ProtocolException, exceptions.NetlibException) as e:
-            if not f.response:
-                self.send_error_response(502, repr(e))
-                f.error = flow.Error(str(e))
-                self.channel.ask("error", f)
-                return False
-            else:
-                raise exceptions.ProtocolException(
-                    "Error in HTTP connection: %s" % repr(e)
-                )
+            # if not f.response:
+            #     self.send_error_response(502, repr(e))
+            #     f.error = flow.Error(str(e))
+            #     self.channel.ask("error", f)
+            #     return False
+            # else:
+            raise exceptions.ProtocolException(
+                "Error in HTTP connection: %s" % repr(e)
+            )
         finally:
             if f:
                 f.live = False
