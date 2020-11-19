@@ -66,9 +66,9 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
             except h11.ProtocolError as e:
                 yield commands.CloseConnection(self.conn)
                 if is_request:
-                    yield ReceiveHttp(RequestProtocolError(self.stream_id, str(e)))
+                    yield ReceiveHttp(RequestProtocolError(self.stream_id, f"HTTP/1 protocol error: {e}"))
                 else:
-                    yield ReceiveHttp(ResponseProtocolError(self.stream_id, str(e)))
+                    yield ReceiveHttp(ResponseProtocolError(self.stream_id, f"HTTP/1 protocol error: {e}"))
                 return
 
             if h11_event is None:

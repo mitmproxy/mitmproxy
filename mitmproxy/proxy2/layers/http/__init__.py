@@ -33,7 +33,7 @@ def validate_request(mode, request) -> typing.Optional[str]:
     return None
 
 
-@dataclass(unsafe_hash=True)
+@dataclass
 class GetHttpConnection(HttpCommand):
     """
     Open an HTTP Connection. This may not actually open a connection, but return an existing HTTP connection instead.
@@ -42,6 +42,9 @@ class GetHttpConnection(HttpCommand):
     address: typing.Tuple[str, int]
     tls: bool
     via: typing.Optional[server_spec.ServerSpec]
+
+    def __hash__(self):
+        return id(self)
 
     def connection_spec_matches(self, connection: Connection) -> bool:
         return (
@@ -105,6 +108,15 @@ class HttpStream(layer.Layer):
         self.response_body_buf = b""
         self.client_state = self.state_uninitialized
         self.server_state = self.state_uninitialized
+
+    def __repr__(self):
+        return (
+            f"HttpStream("
+            f"id={self.stream_id}, "
+            f"client_state={self.client_state.__name__}, "
+            f"server_state={self.server_state.__name__}"
+            f")"
+        )
 
     @expect(events.Start, HttpEvent)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -506,10 +518,14 @@ class HttpLayer(layer.Layer):
         if reuse:
             for connection in self.connections:
                 # see "tricky multiplexing edge case" in make_http_connection for an explanation
-                not_h2_to_h1 = connection.alpn == b"h2" or self.context.client.alpn != b"h2"
+                conn_is_pending_or_h2 = (
+                    connection.alpn == b"h2"
+                    or connection in self.waiting_for_establishment
+                )
+                h2_to_h1 = self.context.client.alpn == b"h2" and not conn_is_pending_or_h2
                 connection_suitable = (
-                        event.connection_spec_matches(connection) and
-                        not_h2_to_h1
+                        event.connection_spec_matches(connection)
+                        and not h2_to_h1
                 )
                 if connection_suitable:
                     if connection in self.waiting_for_establishment:

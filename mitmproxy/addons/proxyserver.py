@@ -44,6 +44,7 @@ class ProxyConnectionHandler(server.StreamConnectionHandler):
             data.reply = AsyncReply(data)
             await self.master.addons.handle_lifecycle(hook.name, data)
             await data.reply.done.wait()
+            data.reply = None
 
     def log(self, message: str, level: str = "info") -> None:
         x = log.LogEntry(self.log_prefix + message, level)

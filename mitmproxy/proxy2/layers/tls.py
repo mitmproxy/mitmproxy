@@ -220,7 +220,8 @@ class _TLSLayer(tunnel.TunnelLayer):
             )
         if close:
             self.conn.state &= ~context.ConnectionState.CAN_READ
-            yield commands.Log(f"TLS close_notify {self.conn}", level="debug")
+            if self.debug:
+                yield commands.Log(f"{self.debug}[tls] close_notify {self.conn}", level="debug")
             yield from self.event_to_child(
                 events.ConnectionClosed(self.conn)
             )

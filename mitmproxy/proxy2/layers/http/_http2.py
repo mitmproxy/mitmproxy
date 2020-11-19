@@ -1,13 +1,13 @@
 import time
 from enum import Enum
-from typing import ClassVar, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
+from typing import ClassVar, Dict, Iterable, List, Tuple, Type, Union
 
-import h2.connection
 import h2.config
+import h2.connection
+import h2.errors
 import h2.events
 import h2.exceptions
 import h2.settings
-import h2.errors
 import h2.utilities
 
 from mitmproxy import http
@@ -17,11 +17,12 @@ from mitmproxy.utils import human
 from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
 from ._base import HttpConnection, HttpEvent, ReceiveHttp
-from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
+from ._http_h2 import BufferedH2Connection
 from ...commands import CloseConnection, Log, SendData
 from ...context import Connection, Context
 from ...events import ConnectionClosed, DataReceived, Event, Start
 from ...layer import CommandGenerator
+from ...utils import expect
 
 
 class StreamState(Enum):
@@ -84,7 +85,11 @@ class Http2Connection(HttpConnection):
                 events = [e]
 
             for h2_event in events:
+                if self.debug:
+                    yield Log(f"{self.debug}[h2] {h2_event}", "debug")
                 if (yield from self.handle_h2_event(h2_event)):
+                    if self.debug:
+                        yield Log(f"{self.debug}[h2] done", "debug")
                     return
 
             data_to_send = self.h2_conn.data_to_send()
@@ -123,11 +128,21 @@ class Http2Connection(HttpConnection):
         elif isinstance(event, h2.events.ConnectionTerminated):
             yield from self.close_connection(f"HTTP/2 connection closed: {event!r}")
             return True
+            # The implementation above isn't really ideal, we should probably only terminate streams > last_stream_id?
+            # We currently lack a mechanism to signal that connections are still active but cannot be reused.
+            # for stream_id in self.streams:
+            #    if stream_id > event.last_stream_id:
+            #        yield ReceiveHttp(self.ReceiveProtocolError(stream_id, f"HTTP/2 connection closed: {event!r}"))
+            #        self.streams.pop(stream_id)
         elif isinstance(event, h2.events.RemoteSettingsChanged):
             pass
         elif isinstance(event, h2.events.SettingsAcknowledged):
             pass
         elif isinstance(event, h2.events.PriorityUpdated):
+            pass
+        elif isinstance(event, h2.events.PingReceived):
+            pass
+        elif isinstance(event, h2.events.PingAckReceived):
             pass
         elif isinstance(event, h2.events.TrailersReceived):
             yield Log("Received HTTP/2 trailers, which are currently unimplemented and silently discarded", "error")
@@ -155,6 +170,12 @@ class Http2Connection(HttpConnection):
         for stream_id in self.streams:
             # noinspection PyArgumentList
             yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
+        self.streams.clear()
+        self._handle_event = self.done
+
+    @expect(DataReceived, HttpEvent, ConnectionClosed)
+    def done(self, _) -> CommandGenerator[None]:
+        yield from ()
 
 
 def normalize_h1_headers(headers: List[Tuple[bytes, bytes]], is_client: bool) -> List[Tuple[bytes, bytes]]:
@@ -247,7 +268,9 @@ class Http2Client(Http2Connection):
         super().__init__(context, context.server)
         # Disable HTTP/2 push for now to keep things simple.
         # don't send here, that is done as part of initiate_connection().
-        self.h2_conn.local_settings.enable_push = False
+        self.h2_conn.local_settings.enable_push = 0
+        # hyper-h2 pitfall: we need to acknowledge here, otherwise its sends out the old settings.
+        self.h2_conn.local_settings.acknowledge()
 
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, RequestHeaders):
