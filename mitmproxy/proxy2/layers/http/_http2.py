@@ -67,8 +67,12 @@ class Http2Connection(HttpConnection):
                 self.h2_conn.send_data(event.stream_id, event.data)
             elif isinstance(event, self.SendEndOfMessage):
                 self.h2_conn.send_data(event.stream_id, b"", end_stream=True)
+                if self.h2_conn.streams.get(event.stream_id).closed:
+                    self.streams.pop(event.stream_id, None)
             elif isinstance(event, self.SendProtocolError):
                 self.h2_conn.reset_stream(event.stream_id, h2.errors.ErrorCodes.PROTOCOL_ERROR)
+                if self.h2_conn.streams.get(event.stream_id).closed:
+                    self.streams.pop(event.stream_id, None)
             else:
                 raise AssertionError(f"Unexpected event: {event}")
             yield SendData(self.conn, self.h2_conn.data_to_send())
@@ -119,10 +123,14 @@ class Http2Connection(HttpConnection):
                 yield ReceiveHttp(self.ReceiveEndOfMessage(event.stream_id))
             elif state is StreamState.EXPECTING_HEADERS:
                 raise AssertionError("unreachable")
-            self.streams.pop(event.stream_id, None)
+            if self.h2_conn.streams.get(event.stream_id).closed:
+                self.streams.pop(event.stream_id, None)
         elif isinstance(event, h2.events.StreamReset):
             if event.stream_id in self.streams:
-                yield ReceiveHttp(self.ReceiveProtocolError(event.stream_id, "Stream reset"))
+                yield ReceiveHttp(self.ReceiveProtocolError(event.stream_id, f"Stream reset, error code {event.error_code}"))
+                self.streams.pop(event.stream_id)
+            else:
+                pass  # We don't track priority frames which could be followed by a stream reset here.
         elif isinstance(event, h2.exceptions.ProtocolError):
             yield from self.protocol_error(f"HTTP/2 protocol error: {event}")
             return True
@@ -282,6 +290,11 @@ class Http2Client(Http2Connection):
             ]
             if event.request.authority:
                 pseudo_headers.append((b":authority", event.request.data.authority))
+            elif not event.request.is_http2:
+                host_header = event.request.headers.pop("host", None)
+                if host_header:
+                    pseudo_headers.append((b":authority", host_header))
+
             headers = pseudo_headers + list(event.request.headers.fields)
             if not event.request.is_http2:
                 headers = normalize_h1_headers(headers, True)

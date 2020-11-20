@@ -22,7 +22,10 @@ class AsyncReply(controller.Reply):
 
     def commit(self):
         super().commit()
-        self.loop.call_soon_threadsafe(lambda: self.done.set())
+        try:
+            self.loop.call_soon_threadsafe(lambda: self.done.set())
+        except RuntimeError:
+            pass  # event loop may already be closed.
 
     def kill(self, force=False):
         warnings.warn("reply.kill() is deprecated, set the error attribute instead.", PendingDeprecationWarning)
@@ -49,9 +52,11 @@ class ProxyConnectionHandler(server.StreamConnectionHandler):
     def log(self, message: str, level: str = "info") -> None:
         x = log.LogEntry(self.log_prefix + message, level)
         x.reply = controller.DummyReply()
-        asyncio.ensure_future(
-            self.master.addons.handle_lifecycle("log", x)
-        )
+        coro = self.master.addons.handle_lifecycle("log", x)
+        try:
+            asyncio.ensure_future(coro)
+        except RuntimeError:
+            coro.close()  # event loop may already be closed, but we don't want a "has never been awaited error"
 
 
 class Proxyserver:
@@ -113,6 +118,7 @@ class Proxyserver:
         self.server = None
 
     async def handle_connection(self, r, w):
+        asyncio.current_task().set_name(f"proxy connection handler {w.get_extra_info('peername')}")
         handler = ProxyConnectionHandler(
             self.master,
             r,

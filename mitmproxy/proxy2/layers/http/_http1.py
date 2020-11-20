@@ -142,6 +142,7 @@ class Http1Server(Http1Connection):
         elif isinstance(event, ResponseEndOfMessage):
             if "chunked" in self.response.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
+                yield from self.mark_done(response=True)
             elif http1.expected_http_body_size(self.request, self.response) == -1:
                 yield commands.CloseConnection(self.conn)
             elif self.request.first_line_format != "authority":

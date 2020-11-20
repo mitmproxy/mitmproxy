@@ -62,8 +62,12 @@ class Layer:
         return f"{type(self).__name__}({state})"
 
     def __debug(self, message):
+        if len(message) > 512:
+            message = message[:512] + "…"
         if Layer.__last_debug_message == message:
             message = message.split("\n", 1)[0].strip()
+            if len(message) > 256:
+                message = message[:256] + "…"
         else:
             Layer.__last_debug_message = message
         return commands.Log(
