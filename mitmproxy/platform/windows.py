@@ -288,7 +288,7 @@ class Redirect(threading.Thread):
         while True:
             try:
                 packet = self.windivert.recv()
-            except OSError as e:
+            except WindowsError as e:
                 if e.winerror == 995:
                     return
                 else:
@@ -306,7 +306,7 @@ class Redirect(threading.Thread):
         """
         try:
             return self.windivert.recv()
-        except OSError as e:
+        except WindowsError as e:
             if e.winerror == 995:
                 return None
             else:

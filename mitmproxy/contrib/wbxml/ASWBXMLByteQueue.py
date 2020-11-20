@@ -52,7 +52,7 @@ class ASWBXMLByteQueue(Queue):
     def dequeueAndLog(self):
         singleByte = self.get()
         self.bytesDequeued += 1
-        logging.debug(f"Dequeued byte 0x{singleByte:X} ({self.bytesDequeued} total)")
+        logging.debug("Dequeued byte 0x{0:X} ({1} total)".format(singleByte, self.bytesDequeued))
         return singleByte
 
     """

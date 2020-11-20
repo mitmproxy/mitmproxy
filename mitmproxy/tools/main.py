@@ -3,6 +3,7 @@ This file must be kept in a python2.7 and python3.5 compatible syntax!
 DO NOT use type annotations or other python3.6-only features that makes this file unparsable by older interpreters!
 """
 
+from __future__ import print_function  # this is here for the version check to work on Python 2.
 
 import sys
 

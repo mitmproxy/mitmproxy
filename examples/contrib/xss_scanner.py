@@ -54,6 +54,7 @@ BACK_WALL = b"3847asd"
 PAYLOAD = b"""s'd"ao<ac>so[sb]po(pc)se;sl/bsl\\eq="""
 FULL_PAYLOAD = FRONT_WALL + PAYLOAD + BACK_WALL
 
+
 # A XSSData is a named tuple with the following fields:
 #   - url -> str
 #   - injection_point -> str
@@ -64,6 +65,7 @@ class XSSData(NamedTuple):
     injection_point: str
     exploit: str
     line: str
+
 
 # A SQLiData is named tuple with the following fields:
 #   - url -> str

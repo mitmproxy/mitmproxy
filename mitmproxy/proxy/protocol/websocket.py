@@ -1,5 +1,4 @@
 import queue
-import socket
 from OpenSSL import SSL
 
 import wsproto

@@ -94,7 +94,7 @@ class GoogleProtobuf(KaitaiStruct):
             if hasattr(self, '_m_wire_type'):
                 return self._m_wire_type if hasattr(self, '_m_wire_type') else None
 
-            self._m_wire_type = self._root.Pair.WireTypes(self.key.value & 7)
+            self._m_wire_type = self._root.Pair.WireTypes((self.key.value & 7))
             return self._m_wire_type if hasattr(self, '_m_wire_type') else None
 
         @property
