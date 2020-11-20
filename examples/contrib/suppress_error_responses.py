@@ -8,7 +8,7 @@ from mitmproxy import http
 from mitmproxy.exceptions import HttpSyntaxException
 
 
-def error(self, flow: http.flow):
+def error(self, flow: http.HTTPFlow):
     """Kills the flow if it has an error different to HTTPSyntaxException.
             Sometimes, web scanners generate malformed HTTP syntax on purpose and we do not want to kill these requests.
     """
