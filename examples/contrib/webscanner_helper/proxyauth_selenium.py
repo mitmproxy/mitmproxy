@@ -30,6 +30,7 @@ def randomString(string_length=10):
 
 class AuthorizationOracle(abc.ABC):
     """Abstract class for an authorization oracle which decides if a given request or response is authenticated."""
+
     @abc.abstractmethod
     def is_unauthorized_request(self, flow: mitmproxy.http.HTTPFlow) -> bool:
         pass
@@ -48,6 +49,7 @@ class SeleniumAddon:
     created. This class needs to include the concrete selenium actions necessary to authenticate against the web
     application. In addition, an authentication oracle which inherits from AuthorizationOracle should be created.
     """
+
     def __init__(self, fltr: str, domain: str,
                  auth_oracle: AuthorizationOracle):
         self.filter = flowfilter.parse(fltr)

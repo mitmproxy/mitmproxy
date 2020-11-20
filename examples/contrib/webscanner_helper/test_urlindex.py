@@ -8,7 +8,8 @@ from unittest.mock import patch
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
-from examples.complex.webscanner_helper.urlindex import UrlIndexWriter, SetEncoder, JSONUrlIndexWriter, TextUrlIndexWriter, WRITER, \
+from examples.contrib.webscanner_helper.urlindex import UrlIndexWriter, SetEncoder, JSONUrlIndexWriter, \
+    TextUrlIndexWriter, WRITER, \
     filter_404, \
     UrlIndexAddon
 

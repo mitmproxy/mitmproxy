@@ -14,6 +14,7 @@ def f_id(x):
 
 class URLDict(MutableMapping):
     """Data structure to store information using filters as keys."""
+
     def __init__(self):
         self.store: Dict[flowfilter.TFilter, Any] = {}
 

@@ -7,6 +7,8 @@ Unreleased: mitmproxy next
 * Fix query parameters in asgiapp addon (@jpstotz)
 * Fix command history failing on file IO errors (@Kriechi)
 * Deprecation of pathod and pathoc tools and modules. Future releases might not contain them! (@Kriechi)
+* Addon to suppress unwanted error messages sent by mitmproxy. (@anneborcherding)
+* Updated imports and styles for web scanner helper addons. (@anneborcherding)
 
 * --- TODO: add new PRs above this line ---
 
