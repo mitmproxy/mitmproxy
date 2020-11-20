@@ -60,7 +60,7 @@ class _MultiDict(MutableMapping, metaclass=ABCMeta):
                 yield key
 
     def __len__(self):
-        return len(set(self._kconv(key) for key, _ in self.fields))
+        return len({self._kconv(key) for key, _ in self.fields})
 
     def __eq__(self, other):
         if isinstance(other, MultiDict):

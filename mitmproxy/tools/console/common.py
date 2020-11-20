@@ -98,23 +98,23 @@ def fcol(s: str, attr: str) -> typing.Tuple[str, int, urwid.Text]:
 
 
 if urwid.util.detected_encoding:
-    SYMBOL_REPLAY = u"\u21ba"
-    SYMBOL_RETURN = u"\u2190"
-    SYMBOL_MARK = u"\u25cf"
-    SYMBOL_UP = u"\u21E7"
-    SYMBOL_DOWN = u"\u21E9"
-    SYMBOL_ELLIPSIS = u"\u2026"
-    SYMBOL_FROM_CLIENT = u"\u21d2"
-    SYMBOL_TO_CLIENT = u"\u21d0"
+    SYMBOL_REPLAY = "\u21ba"
+    SYMBOL_RETURN = "\u2190"
+    SYMBOL_MARK = "\u25cf"
+    SYMBOL_UP = "\u21E7"
+    SYMBOL_DOWN = "\u21E9"
+    SYMBOL_ELLIPSIS = "\u2026"
+    SYMBOL_FROM_CLIENT = "\u21d2"
+    SYMBOL_TO_CLIENT = "\u21d0"
 else:
-    SYMBOL_REPLAY = u"[r]"
-    SYMBOL_RETURN = u"<-"
+    SYMBOL_REPLAY = "[r]"
+    SYMBOL_RETURN = "<-"
     SYMBOL_MARK = "#"
     SYMBOL_UP = "^"
     SYMBOL_DOWN = " "
     SYMBOL_ELLIPSIS = "~"
-    SYMBOL_FROM_CLIENT = u"->"
-    SYMBOL_TO_CLIENT = u"<-"
+    SYMBOL_FROM_CLIENT = "->"
+    SYMBOL_TO_CLIENT = "<-"
 
 SCHEME_STYLES = {
     'http': 'scheme_http',
@@ -164,7 +164,7 @@ class TruncatedText(urwid.Widget):
         self.text = text
         self.attr = attr
         self.align = align
-        super(TruncatedText, self).__init__()
+        super().__init__()
 
     def pack(self, size, focus=False):
         return (len(self.text), 1)

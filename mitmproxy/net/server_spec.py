@@ -39,19 +39,19 @@ def parse(server_spec: str) -> ServerSpec:
     """
     m = server_spec_re.match(server_spec)
     if not m:
-        raise ValueError("Invalid server specification: {}".format(server_spec))
+        raise ValueError(f"Invalid server specification: {server_spec}")
 
     # defaulting to https/port 443 may annoy some folks, but it's secure-by-default.
     scheme = m.group("scheme") or "https"
     if scheme not in ("http", "https"):
-        raise ValueError("Invalid server scheme: {}".format(scheme))
+        raise ValueError(f"Invalid server scheme: {scheme}")
 
     host = m.group("host")
     # IPv6 brackets
     if host.startswith("[") and host.endswith("]"):
         host = host[1:-1]
     if not check.is_valid_host(host.encode("idna")):
-        raise ValueError("Invalid hostname: {}".format(host))
+        raise ValueError(f"Invalid hostname: {host}")
 
     if m.group("port"):
         port = int(m.group("port"))
@@ -61,7 +61,7 @@ def parse(server_spec: str) -> ServerSpec:
             "https": 443
         }[scheme]
     if not check.is_valid_port(port):
-        raise ValueError("Invalid port: {}".format(port))
+        raise ValueError(f"Invalid port: {port}")
 
     return ServerSpec(scheme, (host, port))
 

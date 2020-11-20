@@ -17,7 +17,7 @@ from mitmproxy.exceptions import SessionLoadException, CommandError
 from mitmproxy.utils.data import pkg_data
 
 
-class KeyifyList(object):
+class KeyifyList:
     def __init__(self, inner, key):
         self.inner = inner
         self.key = key
@@ -87,7 +87,7 @@ class SessionDB:
 
     def _create_session(self):
         script_path = pkg_data.path("io/sql/session_create.sql")
-        with open(script_path, 'r') as qry:
+        with open(script_path) as qry:
             self.con.executescript(qry.read())
         self.con.commit()
 

@@ -68,7 +68,7 @@ class Resolver:
                 if addr is None:
                     raise RuntimeError("Cannot resolve original destination.")
                 return tuple(addr)
-            except (EOFError, socket.error):
+            except (EOFError, OSError):
                 self._connect()
                 return self.original_addr(csock)
 
@@ -91,7 +91,7 @@ class APIRequestHandler(socketserver.StreamRequestHandler):
                     except KeyError:
                         server = None
                     write(server, self.wfile)
-        except (EOFError, socket.error):
+        except (EOFError, OSError):
             pass
 
 
@@ -288,7 +288,7 @@ class Redirect(threading.Thread):
         while True:
             try:
                 packet = self.windivert.recv()
-            except WindowsError as e:
+            except OSError as e:
                 if e.winerror == 995:
                     return
                 else:
@@ -306,7 +306,7 @@ class Redirect(threading.Thread):
         """
         try:
             return self.windivert.recv()
-        except WindowsError as e:
+        except OSError as e:
             if e.winerror == 995:
                 return None
             else:

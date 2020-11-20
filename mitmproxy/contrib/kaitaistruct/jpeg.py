@@ -79,23 +79,23 @@ class Jpeg(KaitaiStruct):
             if  ((self.marker != self._root.Segment.MarkerEnum.soi) and (self.marker != self._root.Segment.MarkerEnum.eoi)) :
                 _on = self.marker
                 if _on == self._root.Segment.MarkerEnum.sos:
-                    self._raw_data = self._io.read_bytes((self.length - 2))
+                    self._raw_data = self._io.read_bytes(self.length - 2)
                     io = KaitaiStream(BytesIO(self._raw_data))
                     self.data = self._root.SegmentSos(io, self, self._root)
                 elif _on == self._root.Segment.MarkerEnum.app1:
-                    self._raw_data = self._io.read_bytes((self.length - 2))
+                    self._raw_data = self._io.read_bytes(self.length - 2)
                     io = KaitaiStream(BytesIO(self._raw_data))
                     self.data = self._root.SegmentApp1(io, self, self._root)
                 elif _on == self._root.Segment.MarkerEnum.sof0:
-                    self._raw_data = self._io.read_bytes((self.length - 2))
+                    self._raw_data = self._io.read_bytes(self.length - 2)
                     io = KaitaiStream(BytesIO(self._raw_data))
                     self.data = self._root.SegmentSof0(io, self, self._root)
                 elif _on == self._root.Segment.MarkerEnum.app0:
-                    self._raw_data = self._io.read_bytes((self.length - 2))
+                    self._raw_data = self._io.read_bytes(self.length - 2)
                     io = KaitaiStream(BytesIO(self._raw_data))
                     self.data = self._root.SegmentApp0(io, self, self._root)
                 else:
-                    self.data = self._io.read_bytes((self.length - 2))
+                    self.data = self._io.read_bytes(self.length - 2)
 
             if self.marker == self._root.Segment.MarkerEnum.sos:
                 self.image_data = self._io.read_bytes_full()
@@ -131,9 +131,9 @@ class Jpeg(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
-            self.magic = (self._io.read_bytes_term(0, False, True, True)).decode(u"ASCII")
+            self.magic = (self._io.read_bytes_term(0, False, True, True)).decode("ASCII")
             _on = self.magic
-            if _on == u"Exif":
+            if _on == "Exif":
                 self.body = self._root.ExifInJpeg(self._io, self, self._root)
 
 
@@ -199,7 +199,7 @@ class Jpeg(KaitaiStruct):
             self._io = _io
             self._parent = _parent
             self._root = _root if _root else self
-            self.magic = (self._io.read_bytes(5)).decode(u"ASCII")
+            self.magic = (self._io.read_bytes(5)).decode("ASCII")
             self.version_major = self._io.read_u1()
             self.version_minor = self._io.read_u1()
             self.density_units = self._root.SegmentApp0.DensityUnit(self._io.read_u1())
@@ -207,4 +207,4 @@ class Jpeg(KaitaiStruct):
             self.density_y = self._io.read_u2be()
             self.thumbnail_x = self._io.read_u1()
             self.thumbnail_y = self._io.read_u1()
-            self.thumbnail = self._io.read_bytes(((self.thumbnail_x * self.thumbnail_y) * 3))
+            self.thumbnail = self._io.read_bytes((self.thumbnail_x * self.thumbnail_y) * 3)

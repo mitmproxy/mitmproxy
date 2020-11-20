@@ -12,7 +12,7 @@ class LogEntry:
         return False
 
     def __repr__(self):
-        return "LogEntry({}, {})".format(self.msg, self.level)
+        return f"LogEntry({self.msg}, {self.level})"
 
 
 class Log:

@@ -23,7 +23,7 @@ class TestCommandHistory:
             ch.add_command("cmd4")
             ch.done()
 
-        with open(history_file, "r") as f:
+        with open(history_file) as f:
             assert f.read() == "cmd3\ncmd4\n"
 
     @pytest.mark.asyncio
@@ -276,7 +276,7 @@ class TestCommandHistory:
         instances.pop(0).done()
 
         _path = os.path.join(tctx.options.confdir, 'command_history')
-        lines = open(_path, 'r').readlines()
+        lines = open(_path).readlines()
         saved_commands = [cmd.strip() for cmd in lines]
         assert saved_commands == ['cmd1', 'cmd2', 'cmd3', 'cmd4', 'cmd_before_close', 'new_cmd']
 
@@ -304,6 +304,6 @@ class TestCommandHistory:
         instances.pop().done()
 
         _path = os.path.join(tctx.options.confdir, 'command_history')
-        lines = open(_path, 'r').readlines()
+        lines = open(_path).readlines()
         saved_commands = [cmd.strip() for cmd in lines]
         assert saved_commands == ['cmd1', 'cmd2', 'cmd3', 'cmd4', 'cmd5']

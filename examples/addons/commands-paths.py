@@ -20,7 +20,7 @@ class MyAddon:
 
         with open(path, "w+") as fp:
             for cnt, dom in sorted([(v, k) for (k, v) in totals.items()]):
-                fp.write("%s: %s\n" % (cnt, dom))
+                fp.write(f"{cnt}: {dom}\n")
 
         ctx.log.alert("done")
 

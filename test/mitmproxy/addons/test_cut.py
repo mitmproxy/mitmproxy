@@ -1,4 +1,3 @@
-
 from mitmproxy.addons import cut
 from mitmproxy.addons import view
 from mitmproxy import exceptions

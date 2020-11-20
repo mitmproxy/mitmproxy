@@ -46,7 +46,7 @@ class EventLog(urwid.ListBox, layoutwidget.LayoutWidget):
     def add_event(self, event_store, entry: log.LogEntry):
         if log.log_tier(self.master.options.console_eventlog_verbosity) < log.log_tier(entry.level):
             return
-        txt = "%s: %s" % (entry.level, str(entry.msg))
+        txt = "{}: {}".format(entry.level, str(entry.msg))
         if entry.level in ("error", "warn", "alert"):
             e = urwid.Text((entry.level, txt))
         else:

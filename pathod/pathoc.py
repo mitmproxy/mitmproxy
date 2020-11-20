@@ -47,20 +47,20 @@ class SSLInfo:
             parts.append("  Certificate [%s]" % n)
             parts.append("\tSubject: ")
             for cn in i.get_subject().get_components():
-                parts.append("\t\t%s=%s" % (
+                parts.append("\t\t{}={}".format(
                     strutils.always_str(cn[0], "utf8"),
                     strutils.always_str(cn[1], "utf8"))
                 )
             parts.append("\tIssuer: ")
             for cn in i.get_issuer().get_components():
-                parts.append("\t\t%s=%s" % (
+                parts.append("\t\t{}={}".format(
                     strutils.always_str(cn[0], "utf8"),
                     strutils.always_str(cn[1], "utf8"))
                 )
             parts.extend(
                 [
                     "\tVersion: %s" % i.get_version(),
-                    "\tValidity: %s - %s" % (
+                    "\tValidity: {} - {}".format(
                         strutils.always_str(i.get_notBefore(), "utf8"),
                         strutils.always_str(i.get_notAfter(), "utf8")
                     ),
@@ -74,7 +74,7 @@ class SSLInfo:
                 OpenSSL.crypto.TYPE_DSA: "DSA"
             }
             t = types.get(pk.type(), "Uknown")
-            parts.append("\tPubkey: %s bit %s" % (pk.bits(), t))
+            parts.append(f"\tPubkey: {pk.bits()} bit {t}")
             s = certs.Cert(i)
             if s.altnames:
                 parts.append("\tSANs: %s" % " ".join(strutils.always_str(n, "utf8") for n in s.altnames))
@@ -463,7 +463,7 @@ class Pathoc(tcp.TCPClient):
                 raise
             finally:
                 if resp:
-                    lg("<< %s %s: %s bytes" % (
+                    lg("<< {} {}: {} bytes".format(
                         resp.status_code, strutils.escape_control_characters(resp.reason) if resp.reason else "", len(resp.content)
                     ))
                     if resp.status_code in self.ignorecodes:

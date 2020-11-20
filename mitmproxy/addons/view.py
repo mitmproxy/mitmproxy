@@ -479,7 +479,7 @@ class View(collections.abc.Sequence):
                     # get new flows each time. It would be more efficient to just have a
                     # .newid() method or something.
                     self.add([i.copy()])
-        except IOError as e:
+        except OSError as e:
             ctx.log.error(e.strerror)
         except exceptions.FlowReadException as e:
             ctx.log.error(str(e))

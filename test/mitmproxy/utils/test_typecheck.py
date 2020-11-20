@@ -12,7 +12,7 @@ class TBase:
 
 class T(TBase):
     def __init__(self, foo: str):
-        super(T, self).__init__(42)
+        super().__init__(42)
 
 
 def test_check_option_type():

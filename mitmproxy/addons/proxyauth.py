@@ -85,12 +85,12 @@ class ProxyAuth:
         if self.is_proxy_auth():
             return http.make_error_response(
                 status_codes.PROXY_AUTH_REQUIRED,
-                headers=mitmproxy.net.http.Headers(Proxy_Authenticate='Basic realm="{}"'.format(REALM)),
+                headers=mitmproxy.net.http.Headers(Proxy_Authenticate=f'Basic realm="{REALM}"'),
             )
         else:
             return http.make_error_response(
                 status_codes.UNAUTHORIZED,
-                headers=mitmproxy.net.http.Headers(WWW_Authenticate='Basic realm="{}"'.format(REALM)),
+                headers=mitmproxy.net.http.Headers(WWW_Authenticate=f'Basic realm="{REALM}"'),
             )
 
     def check(self, f: http.HTTPFlow) -> Optional[Tuple[str, str]]:

@@ -861,7 +861,7 @@ class ASWBXML:
 				if (newCodePage >= 0 and newCodePage < 25):
 					self.currentCodePage = newCodePage
 				else:
-					raise InvalidDataException("Unknown code page ID 0x{0:X} encountered in WBXML".format(currentByte))
+					raise InvalidDataException(f"Unknown code page ID 0x{currentByte:X} encountered in WBXML")
 			elif  ( currentByte == GlobalTokens.END ):
 				if (currentNode != None and currentNode.parentNode != None):
 					currentNode = currentNode.parentNode
@@ -878,14 +878,14 @@ class ASWBXML:
 				currentNode.appendChild(newTextNode)
 
 			elif ( currentByte in unusedArray):
-				raise InvalidDataException("Encountered unknown global token 0x{0:X}.".format(currentByte))
+				raise InvalidDataException(f"Encountered unknown global token 0x{currentByte:X}.")
 			else:
 				hasAttributes = (currentByte & 0x80) > 0
 				hasContent = (currentByte & 0x40) > 0
 
 				token = currentByte & 0x3F
 				if (hasAttributes):
-					raise InvalidDataException("Token 0x{0:X} has attributes.".format(token))
+					raise InvalidDataException(f"Token 0x{token:X} has attributes.")
 
 				strTag = self.codePages[self.currentCodePage].getTag(token)
 				if (strTag == None):

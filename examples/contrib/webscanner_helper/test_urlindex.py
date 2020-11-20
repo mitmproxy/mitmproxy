@@ -89,7 +89,7 @@ class TestJSONUrlIndexWriter:
         writer.add_url(f)
         writer.save()
 
-        with open(tmpfile, "r") as results:
+        with open(tmpfile) as results:
             try:
                 content = json.load(results)
             except JSONDecodeError:
@@ -130,7 +130,7 @@ class TestTestUrlIndexWriter:
         code = f.response.status_code
         writer.add_url(f)
 
-        with open(tmpfile, "r") as results:
+        with open(tmpfile) as results:
             content = results.read()
         assert url in content
         assert method in content
@@ -146,7 +146,7 @@ class TestTestUrlIndexWriter:
         writer.add_url(f)
         writer.save()
 
-        with open(tmpfile, "r") as results:
+        with open(tmpfile) as results:
             content = results.read()
         assert url in content
         assert method in content

@@ -16,7 +16,7 @@ class Daemon:
         self.thread = _PaThread(self.IFACE, self.q, ssl, daemonargs)
         self.thread.start()
         self.port = self.q.get(True, 5)
-        self.urlbase = "%s://%s:%s" % (
+        self.urlbase = "{}://{}:{}".format(
             "https" if ssl else "http",
             self.IFACE,
             self.port
@@ -34,7 +34,7 @@ class Daemon:
         """
             Return a URL that will render the response in spec.
         """
-        return "%s/p/%s" % (self.urlbase, spec)
+        return f"{self.urlbase}/p/{spec}"
 
     def text_log(self) -> str:
         return self.logfp.getvalue()
@@ -96,7 +96,7 @@ class _PaThread(basethread.BaseThread):
             ssl=self.ssl,
             **self.daemonargs
         )
-        self.name = "PathodThread (%s:%s)" % (
+        self.name = "PathodThread ({}:{})".format(
             self.server.address[0],
             self.server.address[1],
         )

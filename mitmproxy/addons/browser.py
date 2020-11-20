@@ -53,7 +53,7 @@ class Browser:
             [
                 cmd,
                 "--user-data-dir=%s" % str(self.tdir.name),
-                "--proxy-server=%s:%s" % (
+                "--proxy-server={}:{}".format(
                     ctx.options.listen_host or "127.0.0.1",
                     ctx.options.listen_port
                 ),

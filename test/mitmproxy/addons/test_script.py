@@ -74,7 +74,7 @@ class TestScript:
         path = tdata.path("mitmproxy/data/addonscripts/recorder/recorder.py")
 
         s = script.Script(
-            '"{}"'.format(path),
+            f'"{path}"',
             False
         )
         assert '"' not in s.fullpath

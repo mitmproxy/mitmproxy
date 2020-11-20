@@ -33,7 +33,7 @@ class Benchmark:
         stdout, _ = await traf.communicate()
         with open(ctx.options.benchmark_save_path + ".bench", mode="wb") as f:
             f.write(stdout)
-        ctx.log.error("Proxy saw %s requests, %s responses" % (self.reqs, self.resps))
+        ctx.log.error(f"Proxy saw {self.reqs} requests, {self.resps} responses")
         ctx.log.error(stdout.decode("ascii"))
         backend.kill()
         ctx.master.shutdown()

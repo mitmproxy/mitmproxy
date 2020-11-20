@@ -181,7 +181,7 @@ class BuildEnviron:
             t = "dev"
         else:
             t = self.version
-        return "mitmproxy/mitmproxy:{}".format(t)
+        return f"mitmproxy/mitmproxy:{t}"
 
     def dump_info(self, fp=sys.stdout) -> None:
         lst = [
@@ -339,7 +339,7 @@ def build_wheel(be: BuildEnviron):  # pragma: no cover
         "--dist-dir", be.dist_dir,
     ])
     whl, = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))
-    click.echo("Found wheel package: {}".format(whl))
+    click.echo(f"Found wheel package: {whl}")
     subprocess.check_call(["tox", "-e", "wheeltest", "--", whl])
     return whl
 
@@ -351,7 +351,7 @@ def build_docker_image(be: BuildEnviron):  # pragma: no cover
         "docker",
         "build",
         "--tag", be.docker_tag,
-        "--build-arg", "WHEEL_MITMPROXY={}".format(whl),
+        "--build-arg", f"WHEEL_MITMPROXY={whl}",
         "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
         "--file", "release/docker/Dockerfile",
         "."
@@ -428,7 +428,7 @@ def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
                         + [tool]
                     )
                     # Delete the spec file - we're good without.
-                    os.remove("{}.spec".format(tool))
+                    os.remove(f"{tool}.spec")
 
                 # Test if it works at all O:-)
                 executable = os.path.join(PYINSTALLER_DIST, tool)
@@ -554,17 +554,17 @@ def upload():  # pragma: no cover
             "aws", "s3", "cp",
             "--acl", "public-read",
             be.dist_dir + "/",
-            "s3://snapshots.mitmproxy.org/{}/".format(be.upload_dir),
+            f"s3://snapshots.mitmproxy.org/{be.upload_dir}/",
             "--recursive",
         ])
 
     if be.should_upload_pypi:
         whl = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))[0]
-        click.echo("Uploading {} to PyPi...".format(whl))
+        click.echo(f"Uploading {whl} to PyPi...")
         subprocess.check_call(["twine", "upload", whl])
 
     if be.should_upload_docker:
-        click.echo("Uploading Docker image to tag={}...".format(be.docker_tag))
+        click.echo(f"Uploading Docker image to tag={be.docker_tag}...")
         subprocess.check_call([
             "docker",
             "login",

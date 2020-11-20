@@ -24,7 +24,7 @@ def pretty_size(size):
             if x == int(x):
                 x = int(x)
             return str(x) + suf
-    return "%s%s" % (size, SIZE_TABLE[0][0])
+    return "{}{}".format(size, SIZE_TABLE[0][0])
 
 
 @functools.lru_cache()

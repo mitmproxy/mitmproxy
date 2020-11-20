@@ -228,7 +228,7 @@ class HTTPProxyTest(ProxyTestBase):
         if self.ssl:
             q = "get:'/p/%s'" % spec
         else:
-            q = "get:'%s/p/%s'" % (self.server.urlbase, spec)
+            q = f"get:'{self.server.urlbase}/p/{spec}'"
         with p.connect():
             return p.request(q)
 
@@ -242,7 +242,7 @@ class HTTPProxyTest(ProxyTestBase):
         else:
             p = self.pathoc()
             with p.connect():
-                return p.request("get:'http://%s%s'" % (self.master.options.onboarding_host, page))
+                return p.request(f"get:'http://{self.master.options.onboarding_host}{page}'")
 
 
 class TransparentProxyTest(ProxyTestBase):

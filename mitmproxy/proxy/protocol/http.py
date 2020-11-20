@@ -101,8 +101,8 @@ class UpstreamConnectLayer(base.Layer):
 
     def _send_connect_request(self):
         self.log("Sending CONNECT request", "debug", [
-            "Proxy Server: {}".format(self.ctx.server_conn.address),
-            "Connect to: {}:{}".format(self.connect_request.host, self.connect_request.port)
+            f"Proxy Server: {self.ctx.server_conn.address}",
+            f"Connect to: {self.connect_request.host}:{self.connect_request.port}"
         ])
         self.send_request(self.connect_request)
         resp = self.read_response(self.connect_request)
@@ -157,15 +157,15 @@ def validate_request_form(mode, request):
         if request.is_http2 and mode is HTTPMode.transparent and request.first_line_format == "absolute":
             return  # dirty hack: h2 may have authority info. will be fixed properly with sans-io.
         if mode == HTTPMode.transparent:
-            err_message = textwrap.dedent((
+            err_message = textwrap.dedent(
                 """
                 Mitmproxy received an {} request even though it is not running
                 in regular mode. This usually indicates a misconfiguration,
                 please see the mitmproxy mode documentation for details.
                 """
-            )).strip().format("HTTP CONNECT" if request.first_line_format == "authority" else "absolute-form")
+            ).strip().format("HTTP CONNECT" if request.first_line_format == "authority" else "absolute-form")
         else:
-            err_message = "Invalid HTTP request form (expected: %s, got: %s)" % (
+            err_message = "Invalid HTTP request form (expected: {}, got: {})".format(
                 " or ".join(allowed_request_forms), request.first_line_format
             )
         raise exceptions.HttpException(err_message)
@@ -313,7 +313,7 @@ class HttpLayer(base.Layer):
             self.log(
                 "request",
                 "warn",
-                ["HTTP protocol error in client request: {}".format(e)]
+                [f"HTTP protocol error in client request: {e}"]
             )
             return False
 
@@ -499,7 +499,7 @@ class HttpLayer(base.Layer):
             response = http.make_error_response(code, message, headers)
             self.send_response(response)
         except (exceptions.NetlibException, h2.exceptions.H2Error, exceptions.Http2ProtocolException):
-            self.log("Failed to send error response to client: {}".format(message), "debug")
+            self.log(f"Failed to send error response to client: {message}", "debug")
 
     def change_upstream_proxy_server(self, address):
         # Make set_upstream_proxy_server always available,

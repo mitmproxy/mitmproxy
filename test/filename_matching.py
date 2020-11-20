@@ -44,14 +44,14 @@ def main():
     if missing_test_files:
         exitcode += 1
         for f, p in sorted(missing_test_files):
-            print("{} MUST have a matching test file: {}".format(f, p))
+            print(f"{f} MUST have a matching test file: {p}")
 
     unknown_test_files = check_test_files_have_src()
     if unknown_test_files:
         # TODO: enable this in the future
         # exitcode += 1
         for f, p in sorted(unknown_test_files):
-            print("{} DOES NOT MATCH a source file! Expected to find: {}".format(f, p))
+            print(f"{f} DOES NOT MATCH a source file! Expected to find: {p}")
 
     sys.exit(exitcode)
 

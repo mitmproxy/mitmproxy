@@ -46,7 +46,7 @@ class HTTPFlow(flow.Flow):
         s = "<HTTPFlow"
         for a in ("request", "response", "error", "client_conn", "server_conn"):
             if getattr(self, a, False):
-                s += "\r\n  %s = {flow.%s}" % (a, a)
+                s += f"\r\n  {a} = {{flow.{a}}}"
         s += ">"
         return s.format(flow=self)
 

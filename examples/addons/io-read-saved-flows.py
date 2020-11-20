@@ -17,4 +17,4 @@ with open(sys.argv[1], "rb") as logfile:
             pp.pprint(f.get_state())
             print("")
     except FlowReadException as e:
-        print("Flow file corrupted: {}".format(e))
+        print(f"Flow file corrupted: {e}")

@@ -89,7 +89,7 @@ class Reply:
         """
         if self.state != "start":
             raise exceptions.ControlException(
-                "Reply is {}, but expected it to be start.".format(self.state)
+                f"Reply is {self.state}, but expected it to be start."
             )
         self._state = "taken"
 
@@ -101,7 +101,7 @@ class Reply:
         """
         if self.state != "taken":
             raise exceptions.ControlException(
-                "Reply is {}, but expected it to be taken.".format(self.state)
+                f"Reply is {self.state}, but expected it to be taken."
             )
         if not self.has_message:
             raise exceptions.ControlException("There is no reply message.")
@@ -119,7 +119,7 @@ class Reply:
     def send(self, msg, force=False):
         if self.state not in {"start", "taken"}:
             raise exceptions.ControlException(
-                "Reply is {}, but expected it to be start or taken.".format(self.state)
+                f"Reply is {self.state}, but expected it to be start or taken."
             )
         if self.has_message and not force:
             raise exceptions.ControlException("There is already a reply message.")

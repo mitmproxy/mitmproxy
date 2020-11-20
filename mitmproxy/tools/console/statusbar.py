@@ -20,7 +20,7 @@ class PromptPath:
         pth = os.path.expanduser(pth)
         try:
             return self.callback(pth, *self.args)
-        except IOError as v:
+        except OSError as v:
             signals.status_message.send(message=v.strerror)
 
 
@@ -128,7 +128,7 @@ class ActionBar(urwid.WidgetWrap):
                 mkup.append(",")
         prompt.extend(mkup)
         prompt.append(")? ")
-        self.onekey = set(i[1] for i in keys)
+        self.onekey = {i[1] for i in keys}
         self._w = urwid.Edit(prompt, "")
         self.prompting = PromptStub(callback, args)
 
@@ -305,14 +305,14 @@ class StatusBar(urwid.WidgetWrap):
             marked = "M"
 
         t = [
-            ('heading', ("%s %s [%s/%s]" % (arrow, marked, offset, fc)).ljust(11)),
+            ('heading', (f"{arrow} {marked} [{offset}/{fc}]").ljust(11)),
         ]
 
         if self.master.options.server:
             host = self.master.options.listen_host
             if host == "0.0.0.0" or host == "":
                 host = "*"
-            boundaddr = "[%s:%s]" % (host, self.master.options.listen_port)
+            boundaddr = f"[{host}:{self.master.options.listen_port}]"
         else:
             boundaddr = ""
         t.extend(self.get_status())

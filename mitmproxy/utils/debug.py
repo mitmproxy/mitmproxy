@@ -15,10 +15,10 @@ def dump_system_info():
     mitmproxy_version = version.get_dev_version()
 
     data = [
-        "Mitmproxy: {}".format(mitmproxy_version),
-        "Python:    {}".format(platform.python_version()),
+        f"Mitmproxy: {mitmproxy_version}",
+        f"Python:    {platform.python_version()}",
         "OpenSSL:   {}".format(SSL.SSLeay_version(SSL.SSLEAY_VERSION).decode()),
-        "Platform:  {}".format(platform.platform()),
+        f"Platform:  {platform.platform()}",
     ]
     return "\n".join(data)
 
@@ -84,7 +84,7 @@ def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragm
 
 
 def dump_stacks(signal=None, frame=None, file=sys.stdout, testing=False):
-    id2name = dict([(th.ident, th.name) for th in threading.enumerate()])
+    id2name = {th.ident: th.name for th in threading.enumerate()}
     code = []
     for threadId, stack in sys._current_frames().items():
         code.append(

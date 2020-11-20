@@ -464,7 +464,7 @@ class TlsLayer(base.Layer):
             )
 
         proto = self.alpn_for_client_connection.decode() if self.alpn_for_client_connection else '-'
-        self.log("ALPN selected by server: {}".format(proto), "debug")
+        self.log(f"ALPN selected by server: {proto}", "debug")
 
     def _find_cert(self):
         """

@@ -70,7 +70,7 @@ class PauseAt(_Action):
         return e.setParseAction(lambda x: cls(*x))
 
     def spec(self):
-        return "p%s,%s" % (self.offset, self.seconds)
+        return f"p{self.offset},{self.seconds}"
 
     def intermediate(self, settings):
         return (self.offset, "pause", self.seconds)
@@ -116,7 +116,7 @@ class InjectAt(_Action):
         return e.setParseAction(lambda x: cls(*x))
 
     def spec(self):
-        return "i%s,%s" % (self.offset, self.value.spec())
+        return f"i{self.offset},{self.value.spec()}"
 
     def intermediate(self, settings):
         return (

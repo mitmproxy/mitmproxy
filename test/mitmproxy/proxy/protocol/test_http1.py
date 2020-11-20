@@ -21,7 +21,7 @@ class TestInvalidRequests(tservers.HTTPProxyTest):
     def test_double_connect(self):
         p = self.pathoc()
         with p.connect():
-            r = p.request("connect:'%s:%s'" % ("127.0.0.1", self.server2.port))
+            r = p.request("connect:'{}:{}'".format("127.0.0.1", self.server2.port))
         assert r.status_code == 400
         assert b"Unexpected CONNECT" in r.content
 

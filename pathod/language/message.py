@@ -14,7 +14,7 @@ class Message:
     logattrs: typing.List[str] = []
 
     def __init__(self, tokens):
-        track = set([])
+        track = set()
         for i in tokens:
             if i.unique_name:
                 if i.unique_name in track:
@@ -133,7 +133,7 @@ class NestedMessage(base.Token):
         ]
 
     def spec(self):
-        return "%s%s" % (self.preamble, self.value.spec())
+        return f"{self.preamble}{self.value.spec()}"
 
     def freeze(self, settings):
         f = self.parsed.freeze(settings).spec()

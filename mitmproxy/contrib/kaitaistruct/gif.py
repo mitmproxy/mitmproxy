@@ -30,7 +30,7 @@ class Gif(KaitaiStruct):
         self.hdr = self._root.Header(self._io, self, self._root)
         self.logical_screen_descriptor = self._root.LogicalScreenDescriptorStruct(self._io, self, self._root)
         if self.logical_screen_descriptor.has_color_table:
-            self._raw_global_color_table = self._io.read_bytes((self.logical_screen_descriptor.color_table_size * 3))
+            self._raw_global_color_table = self._io.read_bytes(self.logical_screen_descriptor.color_table_size * 3)
             io = KaitaiStream(BytesIO(self._raw_global_color_table))
             self.global_color_table = self._root.ColorTable(io, self, self._root)
 
@@ -99,7 +99,7 @@ class Gif(KaitaiStruct):
             self.height = self._io.read_u2le()
             self.flags = self._io.read_u1()
             if self.has_color_table:
-                self._raw_local_color_table = self._io.read_bytes((self.color_table_size * 3))
+                self._raw_local_color_table = self._io.read_bytes(self.color_table_size * 3)
                 io = KaitaiStream(BytesIO(self._raw_local_color_table))
                 self.local_color_table = self._root.ColorTable(io, self, self._root)
 
@@ -168,7 +168,7 @@ class Gif(KaitaiStruct):
             self._parent = _parent
             self._root = _root if _root else self
             self.magic = self._io.ensure_fixed_contents(struct.pack('3b', 71, 73, 70))
-            self.version = (self._io.read_bytes(3)).decode(u"ASCII")
+            self.version = (self._io.read_bytes(3)).decode("ASCII")
 
 
     class ExtGraphicControl(KaitaiStruct):

@@ -206,7 +206,7 @@ class Http2Layer(base.Layer):
                 event.stream_id,
                 h2.errors.ErrorCodes.REFUSED_STREAM
             )
-            self.log("HTTP body too large. Limit is {}.".format(bsl), "info")
+            self.log(f"HTTP body too large. Limit is {bsl}.", "info")
         else:
             self.streams[eid].data_queue.put(event.data)
             self.streams[eid].queued_data_length += len(event.data)
@@ -240,7 +240,7 @@ class Http2Layer(base.Layer):
         return True
 
     def _handle_remote_settings_changed(self, event, other_conn):
-        new_settings = dict([(key, cs.new_value) for (key, cs) in event.changed_settings.items()])
+        new_settings = {key: cs.new_value for (key, cs) in event.changed_settings.items()}
         self.connections[other_conn].safe_update_settings(new_settings)
         return True
 
@@ -410,7 +410,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
 
     def __init__(self, ctx, h2_connection, stream_id: int, request_headers: mitmproxy.net.http.Headers) -> None:
         super().__init__(
-            ctx, name="Http2SingleStreamLayer-{}".format(stream_id)
+            ctx, name=f"Http2SingleStreamLayer-{stream_id}"
         )
         self.h2_connection = h2_connection
         self.zombie: Optional[float] = None
@@ -497,7 +497,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         if self.zombie is not None or connection_closed:
             if pre_command is not None:
                 pre_command()
-            raise exceptions.Http2ZombieException("Connection or stream already dead: {}, {}".format(self.zombie, connection_closed))
+            raise exceptions.Http2ZombieException(f"Connection or stream already dead: {self.zombie}, {connection_closed}")
 
     @detect_zombie_stream
     def read_request_headers(self, flow):
@@ -713,7 +713,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
             )
 
     def __call__(self):  # pragma: no cover
-        raise EnvironmentError('Http2SingleStreamLayer must be run as thread')
+        raise OSError('Http2SingleStreamLayer must be run as thread')
 
     def run(self):
         layer = httpbase.HttpLayer(self, self.mode)
@@ -726,7 +726,7 @@ class Http2SingleStreamLayer(httpbase._HttpTransmissionLayer, basethread.BaseThr
         except exceptions.ProtocolException as e:  # pragma: no cover
             self.log(repr(e), "info")
         except exceptions.SetServerNotAllowedException as e:  # pragma: no cover
-            self.log("Changing the Host server for HTTP/2 connections not allowed: {}".format(e), "info")
+            self.log(f"Changing the Host server for HTTP/2 connections not allowed: {e}", "info")
         except exceptions.Kill:  # pragma: no cover
             self.log(flow.Error.KILLED_MESSAGE, "info")
 

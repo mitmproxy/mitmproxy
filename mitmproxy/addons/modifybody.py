@@ -43,7 +43,7 @@ class ModifyBody:
             if spec.matches(flow):
                 try:
                     replacement = spec.read_replacement()
-                except IOError as e:
+                except OSError as e:
                     ctx.log.warn(f"Could not read replacement file: {e}")
                     continue
                 if flow.response:

@@ -533,7 +533,7 @@ class ConsoleAddon:
                         [strutils.always_str(x) or "" for x in row]  # type: ignore
                     )
             ctx.log.alert("Saved %s rows as CSV." % (len(rows)))
-        except IOError as e:
+        except OSError as e:
             ctx.log.error(str(e))
 
     @command.command("console.grideditor.editor")
@@ -560,7 +560,7 @@ class ConsoleAddon:
         try:
             self.master.commands.call_strings(
                 "view.settings.setval",
-                ["@focus", "flowview_mode_%s" % (idx,), mode]
+                ["@focus", f"flowview_mode_{idx}", mode]
             )
         except exceptions.CommandError as e:
             ctx.log.error(str(e))
@@ -584,7 +584,7 @@ class ConsoleAddon:
 
         return self.master.commands.call_strings(
             "view.settings.getval",
-            ["@focus", "flowview_mode_%s" % (idx,), self.master.options.console_default_contentview]
+            ["@focus", f"flowview_mode_{idx}", self.master.options.console_default_contentview]
         )
 
     @command.command("console.key.contexts")

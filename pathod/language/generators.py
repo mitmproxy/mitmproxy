@@ -70,7 +70,7 @@ class RandomGenerator:
         return rand_byte(chars)
 
     def __repr__(self):
-        return "%s random from %s" % (self.length, self.dtype)
+        return f"{self.length} random from {self.dtype}"
 
 
 class FileGenerator:

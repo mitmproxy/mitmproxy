@@ -92,7 +92,7 @@ def bytes_to_escaped_str(data, keep_spacing=False, escape_single_quotes=False):
     """
 
     if not isinstance(data, bytes):
-        raise ValueError("data must be bytes, but is {}".format(data.__class__.__name__))
+        raise ValueError(f"data must be bytes, but is {data.__class__.__name__}")
     # We always insert a double-quote here so that we get a single-quoted string back
     # https://stackoverflow.com/questions/29019340/why-does-python-use-different-quotes-for-representing-strings-depending-on-their
     ret = repr(b'"' + data).lstrip("b")[2:-1]
@@ -115,7 +115,7 @@ def escaped_str_to_bytes(data):
         ValueError, if the escape sequence is invalid.
     """
     if not isinstance(data, str):
-        raise ValueError("data must be str, but is {}".format(data.__class__.__name__))
+        raise ValueError(f"data must be str, but is {data.__class__.__name__}")
 
     # This one is difficult - we use an undocumented Python API here
     # as per http://stackoverflow.com/a/23151714/934719
@@ -154,12 +154,12 @@ def hexdump(s):
             A generator of (offset, hex, str) tuples
     """
     for i in range(0, len(s), 16):
-        offset = "{:0=10x}".format(i)
+        offset = f"{i:0=10x}"
         part = s[i:i + 16]
-        x = " ".join("{:0=2x}".format(i) for i in part)
+        x = " ".join(f"{i:0=2x}" for i in part)
         x = x.ljust(47)  # 16*2 + 15
         part_repr = always_str(escape_control_characters(
-            part.decode("ascii", "replace").replace(u"\ufffd", u"."),
+            part.decode("ascii", "replace").replace("\ufffd", "."),
             False
         ))
         yield (offset, x, part_repr)
@@ -230,7 +230,7 @@ def escape_special_areas(
     """
     buf = io.StringIO()
     parts = split_special_areas(data, area_delimiter)
-    rex = re.compile(r"[{}]".format(control_characters))
+    rex = re.compile(fr"[{control_characters}]")
     for i, x in enumerate(parts):
         if i % 2:
             x = rex.sub(_move_to_private_code_plane, x)

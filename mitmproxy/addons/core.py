@@ -70,7 +70,7 @@ class Core:
                 client_certs = os.path.expanduser(opts.client_certs)
                 if not os.path.exists(client_certs):
                     raise exceptions.OptionsError(
-                        "Client certificate path does not exist: {}".format(opts.client_certs)
+                        f"Client certificate path does not exist: {opts.client_certs}"
                     )
 
     @command.command("set")
@@ -194,7 +194,7 @@ class Core:
                         req.url = val
                     except ValueError as e:
                         raise exceptions.CommandError(
-                            "URL %s is invalid: %s" % (repr(val), e)
+                            "URL {} is invalid: {}".format(repr(val), e)
                         ) from e
                 else:
                     self.rupdate = False
@@ -215,7 +215,7 @@ class Core:
                 updated.append(f)
 
         ctx.master.addons.trigger("update", updated)
-        ctx.log.alert("Set %s on  %s flows." % (attr, len(updated)))
+        ctx.log.alert("Set {} on  {} flows.".format(attr, len(updated)))
 
     @command.command("flow.decode")
     def decode(self, flows: typing.Sequence[flow.Flow], part: str) -> None:

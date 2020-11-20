@@ -10,8 +10,7 @@ class ViewMultipart(base.View):
     @staticmethod
     def _format(v):
         yield [("highlight", "Form data:\n")]
-        for message in base.format_dict(multidict.MultiDict(v)):
-            yield message
+        yield from base.format_dict(multidict.MultiDict(v))
 
     def __call__(self, data, **metadata):
         headers = metadata.get("headers", {})

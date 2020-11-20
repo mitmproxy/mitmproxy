@@ -24,8 +24,8 @@ def str_fun(obj):
 def request(ctx, flow):
     global step, ssl
     print("==========")
-    print("GC: {}".format(gc.collect()))
-    print("Threads: {}".format(threading.active_count()))
+    print(f"GC: {gc.collect()}")
+    print(f"Threads: {threading.active_count()}")
 
     step += 1
     if step == 1:

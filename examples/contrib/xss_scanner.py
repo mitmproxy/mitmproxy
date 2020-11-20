@@ -59,20 +59,22 @@ FULL_PAYLOAD = FRONT_WALL + PAYLOAD + BACK_WALL
 #   - injection_point -> str
 #   - exploit -> str
 #   - line -> str
-XSSData = NamedTuple('XSSData', [('url', str),
-                                 ('injection_point', str),
-                                 ('exploit', str),
-                                 ('line', str)])
+class XSSData(NamedTuple):
+    url: str
+    injection_point: str
+    exploit: str
+    line: str
 
 # A SQLiData is named tuple with the following fields:
 #   - url -> str
 #   - injection_point -> str
 #   - regex -> str
 #   - dbms -> str
-SQLiData = NamedTuple('SQLiData', [('url', str),
-                                   ('injection_point', str),
-                                   ('regex', str),
-                                   ('dbms', str)])
+class SQLiData(NamedTuple):
+    url: str
+    injection_point: str
+    regex: str
+    dbms: str
 
 
 VulnData = Tuple[Optional[XSSData], Optional[SQLiData]]
