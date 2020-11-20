@@ -218,7 +218,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 if isinstance(command, commands.OpenConnection):
                     assert command.connection not in self.transports
                     handler = asyncio.create_task(
-                        self.open_connection(command)
+                        self.open_connection(command),
+                        name=f"open_connection {command.connection.address}"
                     )
                     self.transports[command.connection] = ConnectionIO(handler=handler)
                 elif isinstance(command, commands.ConnectionCommand) and command.connection not in self.transports:
@@ -231,7 +232,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     socket = self.transports[command.connection].writer.get_extra_info("socket")
                     self.server_event(events.GetSocketReply(command, socket))
                 elif isinstance(command, commands.Hook):
-                    asyncio.create_task(self.hook_task(command))
+                    asyncio.create_task(self.hook_task(command), name=f"hook {command.name}")
                 elif isinstance(command, commands.Log):
                     self.log(command.message, command.level)
                 else:

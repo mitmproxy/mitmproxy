@@ -40,7 +40,10 @@ class TunnelLayer(layer.Layer):
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.Start):
-            if self.tunnel_connection.connected:
+            if self.tunnel_connection.state is not context.ConnectionState.CLOSED:
+                # we might be in the interesting state here where the connection is already half-closed,
+                # for example because next_layer buffered events and the client disconnected in the meantime.
+                # we still expect a close event to arrive, so we carry on here as normal for now.
                 self.tunnel_state = TunnelState.ESTABLISHING
                 yield from self.start_handshake()
             yield from self.event_to_child(event)
@@ -62,7 +65,7 @@ class TunnelLayer(layer.Layer):
                     yield from self.receive_data(event.data)
             elif isinstance(event, events.ConnectionClosed):
                 if self.conn != self.tunnel_connection:
-                    self.conn.state &= ~context.ConnectionState.CAN_READ
+                    self.conn.state = context.ConnectionState.CLOSED
                 if self.tunnel_state is TunnelState.OPEN:
                     yield from self.receive_close()
                 elif self.tunnel_state is TunnelState.ESTABLISHING:
@@ -79,7 +82,8 @@ class TunnelLayer(layer.Layer):
                     yield from self.send_data(command.data)
                 elif isinstance(command, commands.CloseConnection):
                     if self.conn != self.tunnel_connection:
-                        self.conn.state &= ~context.ConnectionState.CAN_WRITE
+                        # we don't have a use case for distinguishing between read/write here
+                        self.conn.state = context.ConnectionState.CLOSED
                     yield from self.send_close()
                 elif isinstance(command, commands.OpenConnection):
                     # create our own OpenConnection command object that blocks here.

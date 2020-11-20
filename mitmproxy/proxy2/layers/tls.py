@@ -174,7 +174,7 @@ class _TLSLayer(tunnel.TunnelLayer):
             elif last_err == ('SSL routines', 'ssl3_get_record', 'wrong version number') and data[:4].isascii():
                 err = f"The remote server does not speak TLS."
             else:
-                err = repr(e)
+                err = f"OpenSSL {e!r}"
             return False, err
         else:
             # Get all peer certificates.
@@ -194,7 +194,8 @@ class _TLSLayer(tunnel.TunnelLayer):
             self.conn.cipher = self.tls.get_cipher_name()
             self.conn.cipher_list = self.tls.get_cipher_list()
             self.conn.tls_version = self.tls.get_protocol_version_name()
-            yield commands.Log(f"TLS established: {self.conn}", "debug")
+            if self.debug:
+                yield commands.Log(f"{self.debug}[tls] tls established: {self.conn}", "debug")
             yield from self.receive_data(b"")
             return True, None
 
