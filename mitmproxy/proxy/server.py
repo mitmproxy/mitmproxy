@@ -140,9 +140,8 @@ class ConnectionHandler:
             # we send an HTTP error response, which is both
             # understandable by HTTP clients and humans.
             try:
-                if not self.config.suppress_bad_gw_error:
-                    error_response = http.make_error_response(502, repr(e))
-                    self.client_conn.send(http1.assemble_response(error_response))
+                error_response = http.make_error_response(502, repr(e))
+                self.client_conn.send(http1.assemble_response(error_response))
             except exceptions.TcpException:
                 pass
         except Exception:

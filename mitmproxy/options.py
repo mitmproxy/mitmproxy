@@ -192,11 +192,4 @@ class Options(optmanager.OptManager):
             """
         )
 
-        self.add_option(
-            "suppress_bad_gw_error", bool, False,
-            """
-            Suppress the 502 Bad Gateway responses sent by mitmproxy.
-            """
-        )
-
         self.update(**kwargs)
