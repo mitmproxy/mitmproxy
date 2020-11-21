@@ -79,8 +79,10 @@ class TCPLayer(layer.Layer):
                     (self.context.server.state & ConnectionState.CAN_READ)
             )
             if all_done:
-                yield commands.CloseConnection(self.context.server)
-                yield commands.CloseConnection(self.context.client)
+                if self.context.server.state is not ConnectionState.CLOSED:
+                    yield commands.CloseConnection(self.context.server)
+                if self.context.client.state is not ConnectionState.CLOSED:
+                    yield commands.CloseConnection(self.context.client)
                 self._handle_event = self.done
                 if self.flow:
                     yield TcpEndHook(self.flow)

@@ -237,9 +237,9 @@ class _TLSLayer(tunnel.TunnelLayer):
         self.tls.sendall(data)
         yield from self.tls_interact()
 
-    def send_close(self) -> layer.CommandGenerator[None]:
+    def send_close(self, half_close: bool) -> layer.CommandGenerator[None]:
         # We should probably shutdown the TLS connection properly here.
-        yield from super().send_close()
+        yield from super().send_close(half_close)
 
 
 class ServerTLSLayer(_TLSLayer):

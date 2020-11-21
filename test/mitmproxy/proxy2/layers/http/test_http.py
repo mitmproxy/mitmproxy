@@ -248,7 +248,8 @@ def test_disconnect_while_intercept(tctx):
             >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
             << http.HttpRequestHook(flow)
             >> ConnectionClosed(server1)
-            >> reply(to=-2)
+            << CloseConnection(server1)
+            >> reply(to=-3)
             << OpenConnection(server2)
             >> reply(None)
             << SendData(server2, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
@@ -532,10 +533,10 @@ def test_upstream_proxy(tctx, redirect, scheme, strategy):
 
 @pytest.mark.parametrize("mode", ["regular", "upstream"])
 @pytest.mark.parametrize("strategy", ["eager", "lazy"])
-def test_http_proxy_tcp(tctx, mode, strategy):
+@pytest.mark.parametrize("close_first", ["client", "server"])
+def test_http_proxy_tcp(tctx, mode, strategy, close_first):
     """Test TCP over HTTP CONNECT."""
     server = Placeholder(Server)
-    flow = Placeholder(HTTPFlow)
 
     if mode == "upstream":
         tctx.options.mode = "upstream:http://proxy:8080"
@@ -578,12 +579,16 @@ def test_http_proxy_tcp(tctx, mode, strategy):
     else:
         assert server().address == ("proxy", 8080)
 
+    if close_first == "client":
+        a, b = tctx.client, server
+    else:
+        a, b = server, tctx.client
     assert (
             playbook
-            >> ConnectionClosed(tctx.client)
-            << CloseConnection(server)
-            >> ConnectionClosed(server)
-            << CloseConnection(tctx.client)
+            >> ConnectionClosed(a)
+            << CloseConnection(b)
+            >> ConnectionClosed(b)
+            << CloseConnection(a)
     )
 
 

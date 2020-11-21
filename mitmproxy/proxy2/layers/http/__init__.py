@@ -408,6 +408,13 @@ class HttpStream(layer.Layer):
                 yield SendHttp(ResponseData(self.stream_id, command.data), self.context.client)
             elif isinstance(command, commands.CloseConnection) and command.connection == self.context.client:
                 yield SendHttp(ResponseProtocolError(self.stream_id, "EOF"), self.context.client)
+            elif isinstance(command, commands.CloseConnection):
+                # If we are running TCP over HTTP we want to be consistent with half-closes.
+                # The easiest approach for this is to just always full close for now.
+                # Alternatively, we could signal that we want a half close only through ResponseProtocolError,
+                # but that is more complex to implement.
+                command.half_close = False
+                yield command
             else:
                 yield command
 
@@ -468,13 +475,9 @@ class HttpLayer(layer.Layer):
             stream = self.command_sources.pop(event.command)
             yield from self.event_to_child(stream, event)
         elif isinstance(event, events.ConnectionEvent):
-            if isinstance(event, events.ConnectionClosed):
-                # for practical purposes, we assume that a peer which sent at least a FIN
-                # is not interested in any more data from us, see
-                # see https://github.com/httpwg/http-core/issues/22
-                yield commands.CloseConnection(event.connection)
             if event.connection == self.context.server and self.context.server not in self.connections:
-                pass
+                # We didn't do anything with this connection yet, now the peer has closed it - let's close it too!
+                yield commands.CloseConnection(event.connection)
             else:
                 handler = self.connections[event.connection]
                 yield from self.event_to_child(handler, event)
