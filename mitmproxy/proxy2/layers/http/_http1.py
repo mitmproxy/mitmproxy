@@ -97,7 +97,10 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
         if isinstance(event, events.DataReceived):
             return
         elif isinstance(event, events.ConnectionClosed):
-            return
+            # for practical purposes, we assume that a peer which sent at least a FIN
+            # is not interested in any more data from us, see
+            # see https://github.com/httpwg/http-core/issues/22
+            yield commands.CloseConnection(event.connection)
         else:  # pragma: no cover
             yield from ()
             raise AssertionError(f"Unexpected event: {event}")
@@ -203,9 +206,9 @@ class Http1Server(Http1Connection):
             else:
                 pass  # FIXME: protect against header size DoS
         elif isinstance(event, events.ConnectionClosed):
-            if bytes(self.buf).strip():
-                yield commands.Log(f"Client closed connection before sending request headers: {bytes(self.buf)}")
-                yield commands.Log(f"Receive Buffer: {bytes(self.buf)}", level="debug")
+            buf = bytes(self.buf)
+            if buf.strip():
+                yield commands.Log(f"Client closed connection before completing request headers: {buf}")
             yield commands.CloseConnection(self.conn)
         else:
             raise AssertionError(f"Unexpected event: {event}")
@@ -259,7 +262,7 @@ class Http1Client(Http1Connection):
         elif isinstance(event, RequestEndOfMessage):
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
-            elif http1.expected_http_body_size(self.request) == -1:
+            elif http1.expected_http_body_size(self.request, self.response) == -1:
                 assert not self.send_queue
                 yield commands.CloseConnection(self.conn, half_close=True)
             yield from self.mark_done(request=True)

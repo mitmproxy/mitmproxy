@@ -64,8 +64,7 @@ class TunnelLayer(layer.Layer):
                 else:
                     yield from self.receive_data(event.data)
             elif isinstance(event, events.ConnectionClosed):
-                if self.conn != self.tunnel_connection:
-                    self.conn.state = context.ConnectionState.CLOSED
+                self.conn.state &= ~context.ConnectionState.CAN_READ
                 if self.tunnel_state is TunnelState.OPEN:
                     yield from self.receive_close()
                 elif self.tunnel_state is TunnelState.ESTABLISHING:
@@ -82,9 +81,11 @@ class TunnelLayer(layer.Layer):
                     yield from self.send_data(command.data)
                 elif isinstance(command, commands.CloseConnection):
                     if self.conn != self.tunnel_connection:
-                        # we don't have a use case for distinguishing between read/write here
-                        self.conn.state = context.ConnectionState.CLOSED
-                    yield from self.send_close()
+                        if command.half_close:
+                            self.conn.state &= ~context.ConnectionState.CAN_WRITE
+                        else:
+                            self.conn.state = context.ConnectionState.CLOSED
+                    yield from self.send_close(command.half_close)
                 elif isinstance(command, commands.OpenConnection):
                     # create our own OpenConnection command object that blocks here.
                     self.tunnel_state = TunnelState.ESTABLISHING
@@ -123,8 +124,8 @@ class TunnelLayer(layer.Layer):
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
         yield commands.SendData(self.tunnel_connection, data)
 
-    def send_close(self) -> layer.CommandGenerator[None]:
-        yield commands.CloseConnection(self.tunnel_connection)
+    def send_close(self, half_close: bool) -> layer.CommandGenerator[None]:
+        yield commands.CloseConnection(self.tunnel_connection, half_close=half_close)
 
 
 class LayerStack:
