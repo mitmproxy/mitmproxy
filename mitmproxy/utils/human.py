@@ -75,6 +75,7 @@ def format_timestamp_with_milli(s):
     return d.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
 
+@functools.lru_cache()
 def format_address(address: typing.Optional[tuple]) -> str:
     """
     This function accepts IPv4/IPv6 tuples and

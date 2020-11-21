@@ -1,14 +1,17 @@
+import asyncio
 import gc
+import linecache
 import os
 import platform
 import signal
 import sys
 import threading
 import traceback
+from contextlib import redirect_stdout
 
 from OpenSSL import SSL
-
 from mitmproxy import version
+from mitmproxy.utils import asyncio_utils
 
 
 def dump_system_info():
@@ -24,60 +27,79 @@ def dump_system_info():
 
 
 def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragma: no cover
-    print("****************************************************", file=file)
-    print("Summary", file=file)
-    print("=======", file=file)
+    with redirect_stdout(file):
+        print("****************************************************")
+        print("Summary")
+        print("=======")
 
-    try:
-        import psutil
-    except:
-        print("(psutil not installed, skipping some debug info)", file=file)
-    else:
-        p = psutil.Process()
-        print("num threads: ", p.num_threads(), file=file)
-        if hasattr(p, "num_fds"):
-            print("num fds: ", p.num_fds(), file=file)
-        print("memory: ", p.memory_info(), file=file)
-
-        print(file=file)
-        print("Files", file=file)
-        print("=====", file=file)
-        for i in p.open_files():
-            print(i, file=file)
-
-        print(file=file)
-        print("Connections", file=file)
-        print("===========", file=file)
-        for i in p.connections():
-            print(i, file=file)
-
-    print(file=file)
-    print("Threads", file=file)
-    print("=======", file=file)
-    bthreads = []
-    for i in threading.enumerate():
-        if hasattr(i, "_threadinfo"):
-            bthreads.append(i)
+        try:
+            import psutil
+        except:
+            print("(psutil not installed, skipping some debug info)")
         else:
-            print(i.name, file=file)
-    bthreads.sort(key=lambda x: x._thread_started)
-    for i in bthreads:
-        print(i._threadinfo(), file=file)
+            p = psutil.Process()
+            print("num threads: ", p.num_threads())
+            if hasattr(p, "num_fds"):
+                print("num fds: ", p.num_fds())
+            print("memory: ", p.memory_info())
 
-    print(file=file)
-    print("Memory", file=file)
-    print("=======", file=file)
-    gc.collect()
-    d = {}
-    for i in gc.get_objects():
-        t = str(type(i))
-        if "mitmproxy" in t:
-            d[t] = d.setdefault(t, 0) + 1
-    itms = list(d.items())
-    itms.sort(key=lambda x: x[1])
-    for i in itms[-20:]:
-        print(i[1], i[0], file=file)
-    print("****************************************************", file=file)
+            print()
+            print("Files")
+            print("=====")
+            for i in p.open_files():
+                print(i)
+
+            print()
+            print("Connections")
+            print("===========")
+            for i in p.connections():
+                print(i)
+
+        print()
+        print("Threads")
+        print("=======")
+        bthreads = []
+        for i in threading.enumerate():
+            if hasattr(i, "_threadinfo"):
+                bthreads.append(i)
+            else:
+                print(i.name)
+        bthreads.sort(key=lambda x: x._thread_started)
+        for i in bthreads:
+            print(i._threadinfo())
+
+        print()
+        print("Memory")
+        print("=======")
+        gc.collect()
+        d = {}
+        for i in gc.get_objects():
+            t = str(type(i))
+            if "mitmproxy" in t:
+                d[t] = d.setdefault(t, 0) + 1
+        itms = list(d.items())
+        itms.sort(key=lambda x: x[1])
+        for i in itms[-20:]:
+            print(i[1], i[0])
+
+        try:
+            if sys.version_info < (3, 8):
+                raise RuntimeError
+            asyncio.get_running_loop()
+        except RuntimeError:
+            pass
+        else:
+            print()
+            print("Tasks")
+            print("=======")
+            for task in asyncio.all_tasks():
+                f = task.get_stack(limit=1)[0]
+                line = linecache.getline(f.f_code.co_filename, f.f_lineno, f.f_globals).strip()
+                line = f"{line}  # at {os.path.basename(f.f_code.co_filename)}:{f.f_lineno}"
+                print(f"{asyncio_utils.task_repr(task)}\n"
+                      f"    {line}")
+
+        print("****************************************************")
 
     if not testing:
         sys.exit(1)
