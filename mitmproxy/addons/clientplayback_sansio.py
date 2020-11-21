@@ -16,6 +16,7 @@ from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events, layers, server
 from mitmproxy.proxy2.context import Context, Server
 from mitmproxy.proxy2.layer import CommandGenerator
+from mitmproxy.utils import asyncio_utils
 
 
 class MockServer(layers.http.HttpConnection):
@@ -99,7 +100,10 @@ class ClientPlayback:
         self.task = None
 
     def running(self):
-        self.playback_task = asyncio.create_task(self.playback())
+        self.playback_task = asyncio_utils.create_task(
+            self.playback(),
+            name="client playback"
+        )
         self.options = ctx.options
 
     def done(self):
