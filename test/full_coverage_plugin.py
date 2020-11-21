@@ -68,7 +68,7 @@ def pytest_runtestloop(session):
 
     yield
 
-    coverage_values = dict([(name, 0) for name in session.config.option.full_cov])
+    coverage_values = {name: 0 for name in session.config.option.full_cov}
 
     prefix = os.getcwd()
 
@@ -113,7 +113,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                 markup = {'red': True, 'bold': True}
                 for s, v in sorted(coverage_values[name][1]):
                     if v < 100:
-                        msg += '  {}: {:.2f}%\n'.format(s, v)
+                        msg += f'  {s}: {v:.2f}%\n'
             else:
                 markup = {'green': True}
             terminalreporter.write(msg, **markup)
@@ -124,5 +124,5 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
     msg = '\nExcluded files:\n'
     for s in sorted(no_full_cov):
-        msg += "  {}\n".format(s)
+        msg += f"  {s}\n"
     terminalreporter.write(msg)

@@ -68,7 +68,7 @@ class Resolver:
                 if addr is None:
                     raise RuntimeError("Cannot resolve original destination.")
                 return tuple(addr)
-            except (EOFError, socket.error):
+            except (EOFError, OSError):
                 self._connect()
                 return self.original_addr(csock)
 
@@ -91,7 +91,7 @@ class APIRequestHandler(socketserver.StreamRequestHandler):
                     except KeyError:
                         server = None
                     write(server, self.wfile)
-        except (EOFError, socket.error):
+        except (EOFError, OSError):
             pass
 
 

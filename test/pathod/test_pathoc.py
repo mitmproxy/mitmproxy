@@ -236,7 +236,7 @@ class TestDaemonHTTP2(PathocTestDaemon):
         c.convert_to_tls.side_effect = tmp_convert_to_tls
         with c.connect():
             _, kwargs = c.convert_to_tls.call_args
-            assert set(kwargs['alpn_protos']) == set([b'http/1.1', b'h2'])
+            assert set(kwargs['alpn_protos']) == {b'http/1.1', b'h2'}
 
     def test_request(self):
         c = pathoc.Pathoc(

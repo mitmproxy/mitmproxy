@@ -34,7 +34,7 @@ class TestApp(tservers.HTTPProxyTest):
             tctx.configure(ob)
             p = self.pathoc()
             with p.connect():
-                resp = p.request("head:'http://%s/cert/%s'" % (tctx.options.onboarding_host, ext))
+                resp = p.request(f"head:'http://{tctx.options.onboarding_host}/cert/{ext}'")
                 assert resp.status_code == 200
                 assert "Content-Length" in resp.headers
                 assert not resp.content

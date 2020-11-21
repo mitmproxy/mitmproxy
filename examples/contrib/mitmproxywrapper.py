@@ -31,14 +31,14 @@ class Wrapper:
         return dict([re.findall(r'([^:]+): (.*)', line)[0] for line in state])
 
     def enable_proxy_for_service(self, service):
-        print('Enabling proxy on {}...'.format(service))
+        print(f'Enabling proxy on {service}...')
         for subcommand in ['-setwebproxy', '-setsecurewebproxy']:
             self.run_networksetup_command(
                 subcommand, service, '127.0.0.1', str(
                     self.port))
 
     def disable_proxy_for_service(self, service):
-        print('Disabling proxy on {}...'.format(service))
+        print(f'Disabling proxy on {service}...')
         for subcommand in ['-setwebproxystate', '-setsecurewebproxystate']:
             self.run_networksetup_command(subcommand, service, 'Off')
 
@@ -48,7 +48,7 @@ class Wrapper:
             r'\(\d+\)\s(.*)$\n\(.*Device: (.+)\)$',
             order,
             re.MULTILINE)
-        return dict([(b, a) for (a, b) in mapping])
+        return {b: a for (a, b) in mapping}
 
     def run_command_with_input(self, command, input):
         popen = subprocess.Popen(

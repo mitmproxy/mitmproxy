@@ -112,7 +112,7 @@ class Cut:
                             [strutils.always_str(x) or "" for x in vals]  # type: ignore
                         )
                 ctx.log.alert("Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows)))
-        except IOError as e:
+        except OSError as e:
             ctx.log.error(str(e))
 
     @command.command("cut.clip")

@@ -244,7 +244,7 @@ class AddonManager:
                     pass
                 else:
                     raise exceptions.AddonManagerError(
-                        "Addon handler {} ({}) not callable".format(name, a)
+                        f"Addon handler {name} ({a}) not callable"
                     )
 
     def trigger(self, name, *args, **kwargs):

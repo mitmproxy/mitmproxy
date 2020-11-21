@@ -62,7 +62,7 @@ do("openssl req -x509 -new -nodes -batch "
    "-out trusted-root.crt"
    )
 h = do("openssl x509 -hash -noout -in trusted-root.crt").decode("ascii").strip()
-shutil.copyfile("trusted-root.crt", "{}.0".format(h))
+shutil.copyfile("trusted-root.crt", f"{h}.0")
 
 # create trusted leaf cert.
 mkcert("trusted-leaf", SUBJECT)

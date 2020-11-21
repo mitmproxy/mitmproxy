@@ -83,7 +83,7 @@ class ProbabilisticStrategy(_TlsStrategy):
 
     def __init__(self, p):
         self.p = p
-        super(ProbabilisticStrategy, self).__init__()
+        super().__init__()
 
     def should_intercept(self, server_address):
         return random.uniform(0, 1) < self.p
@@ -99,7 +99,7 @@ class TlsFeedback(TlsLayer):
         server_address = self.server_conn.address
 
         try:
-            super(TlsFeedback, self)._establish_tls_with_client()
+            super()._establish_tls_with_client()
         except TlsProtocolException as e:
             tls_strategy.record_failure(server_address)
             raise e

@@ -141,7 +141,7 @@ class Export():
                     fp.write(v)
                 else:
                     fp.write(v.encode("utf-8"))
-        except IOError as e:
+        except OSError as e:
             ctx.log.error(str(e))
 
     @command.command("export.clip")

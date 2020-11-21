@@ -1,6 +1,3 @@
-# coding=utf-8
-
-
 import os
 import tempfile
 import traceback
@@ -689,7 +686,7 @@ class TestPushPromise(_Http2Test):
             wfile.flush()
 
             h2_conn.push_stream(1, 2, [
-                (':authority', "127.0.0.1:{}".format(cls.port)),
+                (':authority', f"127.0.0.1:{cls.port}"),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/pushed_stream_foo'),
@@ -699,7 +696,7 @@ class TestPushPromise(_Http2Test):
             wfile.flush()
 
             h2_conn.push_stream(1, 4, [
-                (':authority', "127.0.0.1:{}".format(cls.port)),
+                (':authority', f"127.0.0.1:{cls.port}"),
                 (':method', 'GET'),
                 (':scheme', 'https'),
                 (':path', '/pushed_stream_bar'),
@@ -898,7 +895,7 @@ class TestMaxConcurrentStreams(_Http2Test):
                 (':status', '200'),
                 ('X-Stream-ID', str(event.stream_id)),
             ])
-            h2_conn.send_data(event.stream_id, 'Stream-ID {}'.format(event.stream_id).encode())
+            h2_conn.send_data(event.stream_id, f'Stream-ID {event.stream_id}'.encode())
             h2_conn.end_stream(event.stream_id)
             wfile.write(h2_conn.data_to_send())
             wfile.flush()

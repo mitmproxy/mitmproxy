@@ -135,7 +135,7 @@ class MapLocal:
 
                     try:
                         contents = local_file.read_bytes()
-                    except IOError as e:
+                    except OSError as e:
                         ctx.log.warn(f"Could not read file: {e}")
                         continue
 

@@ -124,8 +124,7 @@ def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):
         max_chunk_size = limit
 
     if expected_size is None:
-        for x in _read_chunked(rfile, limit):
-            yield x
+        yield from _read_chunked(rfile, limit)
     elif expected_size >= 0:
         if limit is not None and expected_size > limit:
             raise exceptions.HttpException(
@@ -151,7 +150,7 @@ def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):
             bytes_left -= chunk_size
         not_done = rfile.read(1)
         if not_done:
-            raise exceptions.HttpException("HTTP body too large. Limit is {}.".format(limit))
+            raise exceptions.HttpException(f"HTTP body too large. Limit is {limit}.")
 
 
 def connection_close(http_version, headers):
@@ -291,14 +290,14 @@ def _read_response_line(rfile):
         _check_http_version(http_version)
 
     except ValueError:
-        raise exceptions.HttpSyntaxException("Bad HTTP response line: {}".format(line))
+        raise exceptions.HttpSyntaxException(f"Bad HTTP response line: {line}")
 
     return http_version, status_code, message
 
 
 def _check_http_version(http_version):
     if not re.match(br"^HTTP/\d\.\d$", http_version):
-        raise exceptions.HttpSyntaxException("Unknown HTTP version: {}".format(http_version))
+        raise exceptions.HttpSyntaxException(f"Unknown HTTP version: {http_version}")
 
 
 def _read_headers(rfile):
@@ -354,7 +353,7 @@ def _read_chunked(rfile, limit=sys.maxsize):
             try:
                 length = int(line, 16)
             except ValueError:
-                raise exceptions.HttpSyntaxException("Invalid chunked encoding length: {}".format(line))
+                raise exceptions.HttpSyntaxException(f"Invalid chunked encoding length: {line}")
             total += length
             if total > limit:
                 raise exceptions.HttpException(

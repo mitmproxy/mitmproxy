@@ -9,9 +9,9 @@ def websocket_message(flow):
 
     # was the message sent from the client or server?
     if message.from_client:
-        ctx.log.info("Client sent a message: {}".format(message.content))
+        ctx.log.info(f"Client sent a message: {message.content}")
     else:
-        ctx.log.info("Server sent a message: {}".format(message.content))
+        ctx.log.info(f"Server sent a message: {message.content}")
 
     # manipulate the message content
     message.content = re.sub(r'^Hello', 'HAPPY', message.content)

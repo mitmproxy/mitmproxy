@@ -61,7 +61,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
 
     def __repr__(self):
         if self.tls_established:
-            tls = "[{}] ".format(self.tls_version)
+            tls = f"[{self.tls_version}] "
         else:
             tls = ""
 

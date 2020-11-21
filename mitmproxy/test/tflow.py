@@ -86,8 +86,8 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
     if messages is True:
         messages = [
             websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary"),
-            websocket.WebSocketMessage(Opcode.TEXT, True, "hello text".encode()),
-            websocket.WebSocketMessage(Opcode.TEXT, False, "it's me".encode()),
+            websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text"),
+            websocket.WebSocketMessage(Opcode.TEXT, False, b"it's me"),
         ]
     if err is True:
         err = terr()

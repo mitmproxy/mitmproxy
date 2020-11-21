@@ -117,7 +117,7 @@ def check():
 
     for option in ("-e", "--eventlog", "--norefresh"):
         if option in args:
-            print("{} has been removed.".format(option))
+            print(f"{option} has been removed.")
 
     for option in ("--nonanonymous", "--singleuser", "--htpasswd"):
         if option in args:

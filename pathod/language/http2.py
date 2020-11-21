@@ -158,7 +158,7 @@ class Response(_HTTP2Message):
     )
 
     def __init__(self, tokens):
-        super(Response, self).__init__(tokens)
+        super().__init__(tokens)
         self.rendered_values = None
         self.stream_id = 2
 
@@ -226,7 +226,7 @@ class Request(_HTTP2Message):
     logattrs = ["method", "path"]
 
     def __init__(self, tokens):
-        super(Request, self).__init__(tokens)
+        super().__init__(tokens)
         self.rendered_values = None
         self.stream_id = 1
 

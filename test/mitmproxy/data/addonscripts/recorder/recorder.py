@@ -16,7 +16,7 @@ class Recorder:
                 if attr != "log":
                     ctx.log.info(str(lg))
                     self.call_log.append(lg)
-                    ctx.log.debug("%s %s" % (self.name, attr))
+                    ctx.log.debug(f"{self.name} {attr}")
             return prox
         raise AttributeError
 

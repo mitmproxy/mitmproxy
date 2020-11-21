@@ -295,7 +295,7 @@ class KeyValue(_Component):
         return e.setParseAction(lambda x: cls(*x))
 
     def spec(self):
-        return "%s%s=%s" % (self.preamble, self.key.spec(), self.value.spec())
+        return f"{self.preamble}{self.key.spec()}={self.value.spec()}"
 
     def freeze(self, settings):
         return self.__class__(
@@ -369,7 +369,7 @@ class OptionsOrValue(_Component):
         s = self.value.spec()
         if s[1:-1].lower() in self.options:
             s = s[1:-1].lower()
-        return "%s%s" % (self.preamble, s)
+        return f"{self.preamble}{s}"
 
     def freeze(self, settings):
         return self.__class__(self.value.freeze(settings))
@@ -403,7 +403,7 @@ class Integer(_Component):
         return [self.value]
 
     def spec(self):
-        return "%s%s" % (self.preamble, self.value.decode())
+        return f"{self.preamble}{self.value.decode()}"
 
     def freeze(self, settings_):
         return self
@@ -430,7 +430,7 @@ class Value(_Component):
         return [self.value.get_generator(settings)]
 
     def spec(self):
-        return "%s%s" % (self.preamble, self.value.spec())
+        return f"{self.preamble}{self.value.spec()}"
 
     def freeze(self, settings):
         return self.__class__(self.value.freeze(settings))
@@ -454,7 +454,7 @@ class FixedLengthValue(Value):
         # This check will fail if we know the length upfront
         if lenguess is not None and lenguess != self.length:
             raise exceptions.RenderError(
-                "Invalid value length: '%s' is %s bytes, should be %s." % (
+                "Invalid value length: '{}' is {} bytes, should be {}.".format(
                     self.spec(),
                     lenguess,
                     self.length
@@ -468,7 +468,7 @@ class FixedLengthValue(Value):
         # file inputs
         if l != self.length:
             raise exceptions.RenderError(
-                "Invalid value length: '%s' is %s bytes, should be %s." % (
+                "Invalid value length: '{}' is {} bytes, should be {}.".format(
                     self.spec(),
                     l,
                     self.length
@@ -503,7 +503,7 @@ class Boolean(_Component):
         return e.setParseAction(parse)
 
     def spec(self):
-        return "%s%s" % ("-" if not self.value else "", self.name)
+        return "{}{}".format("-" if not self.value else "", self.name)
 
 
 class IntField(_Component):
@@ -537,4 +537,4 @@ class IntField(_Component):
         return [str(self.value)]
 
     def spec(self):
-        return "%s%s" % (self.preamble, self.origvalue)
+        return f"{self.preamble}{self.origvalue}"

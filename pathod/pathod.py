@@ -487,7 +487,7 @@ def main(args):  # pragma: no cover
         utils.daemonize()
 
     try:
-        print("%s listening on %s" % (
+        print("{} listening on {}".format(
             version.PATHOD,
             repr(pd.address)
         ))

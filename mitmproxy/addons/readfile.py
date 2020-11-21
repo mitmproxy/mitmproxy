@@ -48,7 +48,7 @@ class ReadFile:
                     continue
                 await ctx.master.load_flow(flow)
                 cnt += 1
-        except (IOError, exceptions.FlowReadException) as e:
+        except (OSError, exceptions.FlowReadException) as e:
             if cnt:
                 ctx.log.warn("Flow file corrupted - loaded %i flows." % cnt)
             else:
@@ -62,8 +62,8 @@ class ReadFile:
         try:
             with open(path, "rb") as f:
                 return await self.load_flows(f)
-        except IOError as e:
-            ctx.log.error("Cannot load flows: {}".format(e))
+        except OSError as e:
+            ctx.log.error(f"Cannot load flows: {e}")
             raise exceptions.FlowReadException(str(e)) from e
 
     async def doread(self, rfile):

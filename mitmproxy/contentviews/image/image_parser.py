@@ -15,7 +15,7 @@ def parse_png(data: bytes) -> Metadata:
     img = png.Png(KaitaiStream(io.BytesIO(data)))
     parts = [
         ('Format', 'Portable network graphics'),
-        ('Size', "{0} x {1} px".format(img.ihdr.width, img.ihdr.height))
+        ('Size', f"{img.ihdr.width} x {img.ihdr.height} px")
     ]
     for chunk in img.chunks:
         if chunk.type == 'gAMA':
@@ -23,7 +23,7 @@ def parse_png(data: bytes) -> Metadata:
         elif chunk.type == 'pHYs':
             aspectx = chunk.body.pixels_per_unit_x
             aspecty = chunk.body.pixels_per_unit_y
-            parts.append(('aspect', "{0} x {1}".format(aspectx, aspecty)))
+            parts.append(('aspect', f"{aspectx} x {aspecty}"))
         elif chunk.type == 'tEXt':
             parts.append((chunk.body.keyword, chunk.body.text))
         elif chunk.type == 'iTXt':
@@ -38,8 +38,8 @@ def parse_gif(data: bytes) -> Metadata:
     descriptor = img.logical_screen_descriptor
     parts = [
         ('Format', 'Compuserve GIF'),
-        ('Version', "GIF{}".format(img.hdr.version)),
-        ('Size', "{} x {} px".format(descriptor.screen_width, descriptor.screen_height)),
+        ('Version', f"GIF{img.hdr.version}"),
+        ('Size', f"{descriptor.screen_width} x {descriptor.screen_height} px"),
         ('background', str(descriptor.bg_color_index))
     ]
     ext_blocks = []
@@ -66,10 +66,10 @@ def parse_jpeg(data: bytes) -> Metadata:
     ]
     for segment in img.segments:
         if segment.marker._name_ == 'sof0':
-            parts.append(('Size', "{0} x {1} px".format(segment.data.image_width, segment.data.image_height)))
+            parts.append(('Size', f"{segment.data.image_width} x {segment.data.image_height} px"))
         if segment.marker._name_ == 'app0':
-            parts.append(('jfif_version', "({0}, {1})".format(segment.data.version_major, segment.data.version_minor)))
-            parts.append(('jfif_density', "({0}, {1})".format(segment.data.density_x, segment.data.density_y)))
+            parts.append(('jfif_version', f"({segment.data.version_major}, {segment.data.version_minor})"))
+            parts.append(('jfif_density', f"({segment.data.density_x}, {segment.data.density_y})"))
             parts.append(('jfif_unit', str(segment.data.density_units._value_)))
         if segment.marker._name_ == 'com':
             parts.append(('comment', str(segment.data)))

@@ -12,7 +12,7 @@ class ViewAuto(base.View):
         ctype = headers.get("content-type")
         if data and ctype:
             ct = http.parse_content_type(ctype) if ctype else None
-            ct = "%s/%s" % (ct[0], ct[1])
+            ct = "{}/{}".format(ct[0], ct[1])
             if ct in contentviews.content_types_map:
                 return contentviews.content_types_map[ct][0](data, **metadata)
             elif strutils.is_xml(data):

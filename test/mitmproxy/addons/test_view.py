@@ -212,7 +212,7 @@ async def test_load(tmpdir):
         assert len(v) == 4
         try:
             v.load_file("nonexistent_file_path")
-        except IOError:
+        except OSError:
             assert False
         with open(path, "wb") as f:
             f.write(b"invalidflows")

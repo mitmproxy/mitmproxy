@@ -65,7 +65,7 @@ class LogCtx:
                 strutils.escape_control_characters(
                     data
                         .decode("ascii", "replace")
-                        .replace(u"\ufffd", u".")
+                        .replace("\ufffd", ".")
                 )
             )
             for i in data.split("\n"):

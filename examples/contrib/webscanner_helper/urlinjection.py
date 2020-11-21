@@ -157,7 +157,7 @@ class UrlInjectionAddon:
         self.name = f"{self.__class__.__name__}-{injection_gen.__class__.__name__}-{self.__hash__()}"
         self.flt = flowfilter.parse(flt)
         self.injection_gen = injection_gen
-        with open(url_index_file, "r") as f:
+        with open(url_index_file) as f:
             self.url_store = json.load(f)
 
     def response(self, flow: HTTPFlow):

@@ -72,7 +72,7 @@ class DaemonTests:
     def _getpath(self, path, params=None):
         scheme = "https" if self.ssl else "http"
         resp = requests.get(
-            "%s://localhost:%s/%s" % (
+            "{}://localhost:{}/{}".format(
                 scheme,
                 self.d.port,
                 path

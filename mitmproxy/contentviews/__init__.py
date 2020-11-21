@@ -113,7 +113,7 @@ def get_message_content_view(viewname, message, flow):
     )
 
     if enc:
-        description = "{} {}".format(enc, description)
+        description = f"{enc} {description}"
 
     return description, lines, error
 

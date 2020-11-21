@@ -41,7 +41,7 @@ class ViewImage(base.View):
                 ("Image Format", image_type or "unknown")
             ]
         if image_type:
-            view_name = "{} Image".format(image_type.upper())
+            view_name = f"{image_type.upper()} Image"
         else:
             view_name = "Unknown Image"
         return view_name, base.format_dict(multidict.MultiDict(image_metadata))

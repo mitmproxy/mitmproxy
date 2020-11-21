@@ -42,7 +42,7 @@ def parse_modify_spec(option: str, subject_is_regex: bool) -> ModifySpec:
 
     try:
         spec.read_replacement()
-    except IOError as e:
+    except OSError as e:
         raise ValueError(f"Invalid file path: {replacement[1:]} ({e})")
 
     return spec
@@ -91,7 +91,7 @@ class ModifyHeaders:
             if spec.matches(flow):
                 try:
                     replacement = spec.read_replacement()
-                except IOError as e:
+                except OSError as e:
                     ctx.log.warn(f"Could not read replacement file: {e}")
                     continue
                 else:

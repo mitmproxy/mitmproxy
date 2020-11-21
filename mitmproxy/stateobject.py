@@ -46,7 +46,7 @@ class StateObject(serializable.Serializable):
                 else:
                     setattr(self, attr, make_object(cls, val))
         if state:
-            raise RuntimeWarning("Unexpected State in __setstate__: {}".format(state))
+            raise RuntimeWarning(f"Unexpected State in __setstate__: {state}")
 
 
 def _process(typeinfo: typecheck.Type, val: typing.Any, make: bool) -> typing.Any:
@@ -65,7 +65,7 @@ def _process(typeinfo: typecheck.Type, val: typing.Any, make: bool) -> typing.An
     elif typename.startswith("typing.Tuple"):
         Ts = typecheck.tuple_types(typeinfo)
         if len(Ts) != len(val):
-            raise ValueError("Invalid data. Expected {}, got {}.".format(Ts, val))
+            raise ValueError(f"Invalid data. Expected {Ts}, got {val}.")
         return tuple(
             _process(T, x, make) for T, x in zip(Ts, val)
         )

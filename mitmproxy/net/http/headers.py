@@ -178,9 +178,9 @@ def parse_content_type(c: str) -> Optional[Tuple[str, str, Dict[str, str]]]:
 
 def assemble_content_type(type, subtype, parameters):
     if not parameters:
-        return "{}/{}".format(type, subtype)
+        return f"{type}/{subtype}"
     params = "; ".join(
-        "{}={}".format(k, v)
+        f"{k}={v}"
         for k, v in parameters.items()
     )
     return "{}/{}; {}".format(

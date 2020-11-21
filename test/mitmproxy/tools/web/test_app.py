@@ -290,7 +290,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     @tornado.testing.gen_test
     def test_websocket(self):
-        ws_url = "ws://localhost:{}/updates".format(self.get_http_port())
+        ws_url = f"ws://localhost:{self.get_http_port()}/updates"
 
         ws_client = yield websocket.websocket_connect(ws_url)
         self.master.options.anticomp = True
@@ -339,6 +339,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         here = os.path.abspath(os.path.dirname(__file__))
         web_root = os.path.join(here, os.pardir, os.pardir, os.pardir, os.pardir, 'web')
         tflow_path = os.path.join(web_root, 'src/js/__tests__/ducks/_tflow.js')
-        content = """export default function(){{\n    return {tflow_json}\n}}""".format(tflow_json=tflow_json)
+        content = f"""export default function(){{\n    return {tflow_json}\n}}"""
         with open(tflow_path, 'w', newline="\n") as f:
             f.write(content)

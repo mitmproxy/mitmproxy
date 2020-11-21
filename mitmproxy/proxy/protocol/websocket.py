@@ -1,5 +1,4 @@
 import queue
-import socket
 from OpenSSL import SSL
 
 import wsproto
@@ -220,7 +219,7 @@ class WebSocketLayer(base.Layer):
                         if not self._handle_event(event, source_conn, other_conn, is_server):
                             if not close_received:
                                 close_received = True
-        except (socket.error, exceptions.TcpException, SSL.Error) as e:
+        except (OSError, exceptions.TcpException, SSL.Error) as e:
             s = 'server' if is_server else 'client'
             self.flow.error = flow.Error("WebSocket connection closed unexpectedly by {}: {}".format(s, repr(e)))
             self.channel.tell("websocket_error", self.flow)

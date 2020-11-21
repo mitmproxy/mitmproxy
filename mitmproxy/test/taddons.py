@@ -28,7 +28,7 @@ class RecordingMaster(mitmproxy.master.Master):
 
     def dump_log(self, outf=sys.stdout):
         for i in self.logs:
-            print("%s: %s" % (i.level, i.msg), file=outf)
+            print(f"{i.level}: {i.msg}", file=outf)
 
     def has_log(self, txt, level=None):
         for i in self.logs:

@@ -16,7 +16,7 @@ def read_file(filename: str, escaped: bool) -> typing.AnyStr:
     try:
         with open(filename, "r" if escaped else "rb") as f:
             d = f.read()
-    except IOError as v:
+    except OSError as v:
         raise exceptions.CommandError(v)
     if escaped:
         try:
@@ -155,7 +155,7 @@ class GridWalker(urwid.ListWalker):
 
     def set_value(self, val, focus, focus_col, errors=None):
         if not errors:
-            errors = set([])
+            errors = set()
         row = list(self.lst[focus][0])
         row[focus_col] = val
         self.lst[focus] = [tuple(row), errors]
@@ -171,7 +171,7 @@ class GridWalker(urwid.ListWalker):
         self.focus = pos
         self.lst.insert(
             self.focus,
-            ([c.blank() for c in self.editor.columns], set([]))
+            ([c.blank() for c in self.editor.columns], set())
         )
         self.focus_col = 0
         self.start_edit()

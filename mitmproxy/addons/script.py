@@ -51,7 +51,7 @@ def script_error_handler(path, exc, msg="", tb=False):
     lineno = ""
     if hasattr(exc, "lineno"):
         lineno = str(exc.lineno)
-    log_msg = "in script {}:{} {}".format(path, lineno, exception)
+    log_msg = f"in script {path}:{lineno} {exception}"
     if tb:
         etype, value, tback = sys.exc_info()
         tback = addonmanager.cut_traceback(tback, "invoke_addon")

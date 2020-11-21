@@ -23,7 +23,7 @@ def indent(n: int, text: str) -> str:
 
 
 def colorful(line, styles):
-    yield u"    "  # we can already indent here
+    yield "    "  # we can already indent here
     for (style, text) in line:
         yield click.style(text, **styles.get(style, {}))
 
@@ -115,8 +115,8 @@ class Dumper:
             text=dict(fg="green")
         )
 
-        content = u"\r\n".join(
-            u"".join(colorful(line, styles)) for line in lines_to_echo
+        content = "\r\n".join(
+            "".join(colorful(line, styles)) for line in lines_to_echo
         )
         if content:
             self.echo("")
@@ -252,7 +252,7 @@ class Dumper:
 
         if f.error:
             msg = strutils.escape_control_characters(f.error.msg)
-            self.echo(" << {}".format(msg), bold=True, fg="red")
+            self.echo(f" << {msg}", bold=True, fg="red")
 
     def match(self, f):
         if ctx.options.flow_detail == 0:

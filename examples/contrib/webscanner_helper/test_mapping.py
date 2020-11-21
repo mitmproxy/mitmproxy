@@ -125,7 +125,7 @@ class TestMappingAddon:
         open_mock = mock.mock_open(read_data="{}")
         with mock.patch("builtins.open", open_mock):
             mapping.done()
-        with open(tmpfile, "r") as tfile:
+        with open(tmpfile) as tfile:
             results = tfile.read()
         assert len(open_mock.mock_calls) != 0
         assert results == mapping_content
@@ -143,7 +143,7 @@ class TestMappingAddon:
 
         mapping.response(f)
         mapping.done()
-        with open(tmpfile, "r") as tfile:
+        with open(tmpfile) as tfile:
             results = tfile.read()
         assert mapping_content in results
 

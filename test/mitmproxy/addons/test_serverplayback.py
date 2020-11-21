@@ -299,7 +299,7 @@ def test_ignore_payload_params():
     boundary = 'somefancyboundary'
 
     def multipart_setter(r, **kwargs):
-        b = "--{0}\n".format(boundary)
+        b = f"--{boundary}\n"
         parts = []
         for k, v in kwargs.items():
             parts.append(

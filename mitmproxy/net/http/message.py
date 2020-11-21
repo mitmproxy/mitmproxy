@@ -134,7 +134,7 @@ class Message(serializable.Serializable):
                 content = encoding.decode(self.raw_content, ce)
                 # A client may illegally specify a byte -> str encoding here (e.g. utf8)
                 if isinstance(content, str):
-                    raise ValueError("Invalid Content-Encoding: {}".format(ce))
+                    raise ValueError(f"Invalid Content-Encoding: {ce}")
                 return content
             except ValueError:
                 if strict:

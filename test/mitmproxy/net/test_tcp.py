@@ -52,7 +52,7 @@ class HangHandler(tcp.BaseHandler):
                 # Client connection is dead...
                 if ret == "" or ret == b"":
                     return
-            except socket.error:
+            except OSError:
                 pass
             except SSL.WantReadError:
                 pass
