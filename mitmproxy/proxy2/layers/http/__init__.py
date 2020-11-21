@@ -468,6 +468,11 @@ class HttpLayer(layer.Layer):
             stream = self.command_sources.pop(event.command)
             yield from self.event_to_child(stream, event)
         elif isinstance(event, events.ConnectionEvent):
+            if isinstance(event, events.ConnectionClosed):
+                # for practical purposes, we assume that a peer which sent at least a FIN
+                # is not interested in any more data from us, see
+                # see https://github.com/httpwg/http-core/issues/22
+                yield commands.CloseConnection(event.connection)
             if event.connection == self.context.server and self.context.server not in self.connections:
                 pass
             else:

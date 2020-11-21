@@ -191,6 +191,12 @@ class Playbook:
                     self.actual.append(_TracebackInPlaybook(traceback.format_exc()))
                     break
                 self.actual.extend(cmds)
+                for cmd in cmds:
+                    if isinstance(cmd, commands.CloseConnection):
+                        if cmd.half_close:
+                            cmd.connection.state &= ~ConnectionState.CAN_WRITE
+                        else:
+                            cmd.connection.state = ConnectionState.CLOSED
                 if not self.logs:
                     for offset, cmd in enumerate(cmds):
                         pos = i + 1 + offset

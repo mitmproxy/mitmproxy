@@ -8,7 +8,7 @@ The very high level overview is as follows:
 """
 import abc
 import asyncio
-import socket
+import sys
 import time
 import traceback
 import typing
@@ -23,6 +23,14 @@ from mitmproxy.proxy2.context import Client, Connection, ConnectionState, Contex
 from mitmproxy.proxy2.layers import tls
 from mitmproxy.utils import human
 from mitmproxy.utils.data import pkg_data
+
+
+def cancel_task(task: asyncio.Task, message: str) -> None:
+    """Cancel messages are only available in Python 3.9+"""
+    if sys.version_info >= (3, 9):
+        task.cancel(message)
+    else:
+        task.cancel()
 
 
 class TimeoutWatchdog:
@@ -88,7 +96,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         self.timeout_watchdog = TimeoutWatchdog(self.on_timeout)
 
     async def handle_client(self) -> None:
-        watch = asyncio.ensure_future(self.timeout_watchdog.watch())
+        watch = asyncio.create_task(self.timeout_watchdog.watch(), name="timeout watchdog")
 
         self.log("client connect")
         await self.handle_hook(server_hooks.ClientConnectedHook(self.client))
@@ -97,21 +105,23 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.transports.pop(self.client).writer.close()
         else:
             handler = asyncio.create_task(
-                self.handle_connection(self.client)
+                self.handle_connection(self.client),
+                name=f"handle_connection {self.client.peername}"
             )
             self.transports[self.client].handler = handler
             self.server_event(events.Start())
-            await handler
+            await asyncio.wait([handler])
+
+        watch.cancel()
 
         self.log("client disconnect")
         self.client.timestamp_end = time.time()
         await self.handle_hook(server_hooks.ClientClosedHook(self.client))
-        watch.cancel()
 
         if self.transports:
             self.log("closing transports...", "debug")
-            for x in self.transports.values():
-                x.handler.cancel()
+            for io in self.transports.values():
+                cancel_task(io.handler, "client disconnected")
             await asyncio.wait([x.handler for x in self.transports.values()])
             self.log("transports closed!", "debug")
 
@@ -133,13 +143,17 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             command.connection.timestamp_start = time.time()
             reader, writer = await asyncio.open_connection(*command.connection.address)
         except (IOError, asyncio.CancelledError) as e:
-            if isinstance(e, IOError):
-                err = str(e)
-            else:
-                err = "connection cancelled"  # curiously, str(CancelledError()) returns empty string.
+            err = str(e)
+            if not err:  # str(CancelledError()) returns empty string.
+                err = "connection cancelled"
             self.log(f"error establishing server connection: {err}")
             command.connection.error = err
             self.server_event(events.OpenConnectionReply(command, err))
+            if isinstance(e, asyncio.CancelledError):
+                # From https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError:
+                # > In almost all situations the exception must be re-raised.
+                # It is not really defined what almost means here, but we play safe.
+                raise
         else:
             command.connection.timestamp_tcp_setup = time.time()
             command.connection.state = ConnectionState.OPEN
@@ -153,49 +167,74 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             else:
                 addr = human.format_address(command.connection.address)
             self.log(f"server connect {addr}")
-            connected_hook = asyncio.create_task(self.handle_hook(server_hooks.ServerConnectedHook(hook_data)))
+            connected_hook = asyncio.create_task(
+                self.handle_hook(server_hooks.ServerConnectedHook(hook_data)),
+                name=f"serverconnected {addr}"
+            )
 
             self.server_event(events.OpenConnectionReply(command, None))
-            try:
-                await self.handle_connection(command.connection)
-            finally:
-                self.log(f"server disconnect {addr}")
-                command.connection.timestamp_end = time.time()
-                await connected_hook  # wait here for this so that closed always comes after connected.
-                await self.handle_hook(server_hooks.ServerClosedHook(hook_data))
+
+            # during connection opening, this function is the designated handler that can be cancelled.
+            # once we have a connection, we do want the teardown here to happen in any case, so we
+            # reassign the handler to .handle_connection and then clean up here once that is done.
+            new_handler = asyncio.create_task(self.handle_connection(command.connection),
+                                              name=f"handle_connection {command.connection.peername}")
+            self.transports[command.connection].handler = new_handler
+            await asyncio.wait([new_handler])
+
+            self.log(f"server disconnect {addr}")
+            command.connection.timestamp_end = time.time()
+            await connected_hook  # wait here for this so that closed always comes after connected.
+            await self.handle_hook(server_hooks.ServerClosedHook(hook_data))
 
     async def handle_connection(self, connection: Connection) -> None:
+        """
+        Handle a connection for its entire lifetime.
+        This means we read until EOF,
+        but then possibly also keep on waiting for our side of the connection to be closed.
+        """
+        cancelled = None
         reader = self.transports[connection].reader
         assert reader
-        try:
-            while True:
-                try:
-                    data = await reader.read(65535)
-                except socket.error:
-                    data = b""
-                except asyncio.CancelledError:
-                    if connection.state & ConnectionState.CAN_WRITE:
-                        self.close_our_end(connection)
-                    data = b""
-                if data:
-                    self.server_event(events.DataReceived(connection, data))
-                else:
-                    connection.state &= ~ConnectionState.CAN_READ
-                    self.server_event(events.ConnectionClosed(connection))
-                    # we may still use this connection to *send* stuff,
-                    # even though the remote has closed their side of the connection.
-                    # to make this work we keep this task running and wait for cancellation.
-                    if connection.state is ConnectionState.CLOSED:
-                        self.transports[connection].handler.cancel()
-                    await asyncio.Event().wait()
-        except asyncio.CancelledError:
+        while True:
+            try:
+                data = await reader.read(65535)
+                if not data:
+                    raise OSError("Connection closed by peer.")
+            except OSError:
+                break
+            except asyncio.CancelledError as e:
+                cancelled = e
+                break
+            else:
+                self.server_event(events.DataReceived(connection, data))
+
+        if cancelled is None:
+            connection.state &= ~ConnectionState.CAN_READ
+        else:
             connection.state = ConnectionState.CLOSED
-            io = self.transports.pop(connection)
-            io.writer.close()
+
+        self.server_event(events.ConnectionClosed(connection))
+
+        if cancelled is None and connection.state is ConnectionState.CAN_WRITE:
+            # we may still use this connection to *send* stuff,
+            # even though the remote has closed their side of the connection.
+            # to make this work we keep this task running and wait for cancellation.
+            await asyncio.Event().wait()
+
+        try:
+            self.transports[connection].writer.close()
+        except OSError:
+            pass
+        self.transports.pop(connection)
+
+        if cancelled:
+            raise cancelled
 
     async def on_timeout(self) -> None:
         self.log(f"Closing connection due to inactivity: {self.client}")
-        self.transports[self.client].handler.cancel()
+        self.client.state = ConnectionState.CLOSED
+        cancel_task(self.transports[self.client].handler, "timeout")
 
     async def hook_task(self, hook: commands.Hook) -> None:
         await self.handle_hook(hook)
@@ -227,7 +266,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 elif isinstance(command, commands.SendData):
                     self.transports[command.connection].writer.write(command.data)
                 elif isinstance(command, commands.CloseConnection):
-                    self.close_our_end(command.connection)
+                    self.close_connection(command.connection, command.half_close)
                 elif isinstance(command, commands.GetSocket):
                     socket = self.transports[command.connection].writer.get_extra_info("socket")
                     self.server_event(events.GetSocketReply(command, socket))
@@ -240,22 +279,23 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         except Exception:
             self.log(f"mitmproxy has crashed!\n{traceback.format_exc()}", level="error")
 
-    def close_our_end(self, connection):
-        if connection.state is ConnectionState.CLOSED:
-            return
-        self.log(f"shutting down {connection}", "debug")
-        try:
-            self.transports[connection].writer.write_eof()
-        except socket.error:
+    def close_connection(self, connection: Connection, half_close: bool = False) -> None:
+        if half_close:
+            if not connection.state & ConnectionState.CAN_WRITE:
+                return
+            self.log(f"half-closing {connection}", "debug")
+            try:
+                self.transports[connection].writer.write_eof()
+            except OSError:
+                # if we can't write to the socket anymore we presume it completely dead.
+                connection.state = ConnectionState.CLOSED
+            else:
+                connection.state &= ~ConnectionState.CAN_WRITE
+        else:
             connection.state = ConnectionState.CLOSED
-        connection.state &= ~ConnectionState.CAN_WRITE
 
-        # if we are closing the client connection, we should destroy everything.
-        if connection == self.client:
-            self.transports[connection].handler.cancel()
-        # If we have already received a close, let's finish everything.
-        elif connection.state is ConnectionState.CLOSED:
-            self.transports[connection].handler.cancel()
+        if connection.state is ConnectionState.CLOSED:
+            cancel_task(self.transports[connection].handler, "closed by proxy")
 
 
 class StreamConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
