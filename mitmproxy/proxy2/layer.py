@@ -179,6 +179,10 @@ class NextLayer(Layer):
         # We receive new data. Let's find out if we can determine the next layer now?
         if self._ask_on_start and isinstance(event, events.Start):
             yield from self._ask()
+        elif isinstance(event, mevents.ConnectionClosed) and event.connection == self.context.client:
+            # If we have not determined the next protocol yet and the client already closes the connection,
+            # we abort everything.
+            yield commands.CloseConnection(self.context.client)
         elif isinstance(event, mevents.DataReceived):
             # For now, we only ask if we have received new data to reduce hook noise.
             yield from self._ask()

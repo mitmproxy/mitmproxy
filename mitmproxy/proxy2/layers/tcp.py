@@ -73,16 +73,19 @@ class TCPLayer(layer.Layer):
                 yield commands.SendData(send_to, event.data)
 
         elif isinstance(event, events.ConnectionClosed):
-            yield commands.CloseConnection(send_to)
             all_done = not (
                     (self.context.client.state & ConnectionState.CAN_READ)
                     or
                     (self.context.server.state & ConnectionState.CAN_READ)
             )
             if all_done:
+                yield commands.CloseConnection(self.context.server)
+                yield commands.CloseConnection(self.context.client)
                 self._handle_event = self.done
                 if self.flow:
                     yield TcpEndHook(self.flow)
+            else:
+                yield commands.CloseConnection(send_to, half_close=True)
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def done(self, _) -> layer.CommandGenerator[None]:

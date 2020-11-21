@@ -101,10 +101,16 @@ def test_simple(tctx):
     assert flow().response.text == "Hello, World!"
 
 
-@pytest.mark.parametrize("stream", [True, False])
+@pytest.mark.parametrize("stream", ["stream", "block"])
 @pytest.mark.parametrize("when", ["request", "response"])
-def test_http2_client_aborts(tctx, stream, when):
-    """Test handling of the case where a client aborts during request transmission."""
+@pytest.mark.parametrize("how", ["RST", "disconnect", "RST+disconnect"])
+def test_http2_client_aborts(tctx, stream, when, how):
+    """
+    Test handling of the case where a client aborts during request or response transmission.
+
+    If the client aborts the request transmission, we must trigger an error hook,
+    if the client disconnects during response transmission, no error hook is triggered.
+    """
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
     playbook, cff = start_h2_client(tctx)
@@ -121,7 +127,7 @@ def test_http2_client_aborts(tctx, stream, when):
             >> DataReceived(tctx.client, cff.build_headers_frame(example_request_headers).serialize())
             << http.HttpRequestHeadersHook(flow)
     )
-    if stream and when == "request":
+    if stream == "stream" and when == "request":
         assert (
                 playbook
                 >> reply(side_effect=enable_request_streaming)
@@ -136,15 +142,18 @@ def test_http2_client_aborts(tctx, stream, when):
         assert playbook >> reply()
 
     if when == "request":
-        assert (
-                playbook
-                >> ConnectionClosed(tctx.client)
-                << CloseConnection(tctx.client)
-                << http.HttpErrorHook(flow)
-                >> reply()
-
-        )
-        assert "peer closed connection" in flow().error.msg
+        if "RST" in how:
+            playbook >> DataReceived(tctx.client, cff.build_rst_stream_frame(1, ErrorCodes.CANCEL).serialize())
+            playbook << http.HttpErrorHook(flow)
+            playbook >> reply()
+        if "disconnect" in how:
+            playbook >> ConnectionClosed(tctx.client)
+            playbook << CloseConnection(tctx.client)
+            if "RST" not in how:
+                playbook << http.HttpErrorHook(flow)
+                playbook >> reply()
+        assert playbook
+        assert any(x in flow().error.msg for x in ["Stream reset", "peer closed connection"])
         return
 
     assert (
@@ -159,7 +168,7 @@ def test_http2_client_aborts(tctx, stream, when):
             >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\n123")
             << http.HttpResponseHeadersHook(flow)
     )
-    if stream:
+    if stream == "stream":
         assert (
                 playbook
                 >> reply(side_effect=enable_response_streaming)
@@ -167,14 +176,20 @@ def test_http2_client_aborts(tctx, stream, when):
         )
     else:
         assert playbook >> reply()
+
+    if "RST" in how:
+        playbook >> DataReceived(tctx.client, cff.build_rst_stream_frame(1, ErrorCodes.CANCEL).serialize())
+    if "disconnect" in how:
+        playbook >> ConnectionClosed(tctx.client)
+        playbook << CloseConnection(tctx.client)
     assert (
-        playbook
-        >> ConnectionClosed(tctx.client)
-        << CloseConnection(tctx.client)
-        >> DataReceived(server, b"456")
-        << http.HttpResponseHook(flow)
-        >> reply()
+            playbook
+            >> DataReceived(server, b"456")
+            << http.HttpResponseHook(flow)
+            >> reply()
     )
+    if stream != "stream":
+        assert flow().response.content == b"123456"
 
 
 def test_no_normalization(tctx):

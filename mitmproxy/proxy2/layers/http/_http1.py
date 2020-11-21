@@ -261,7 +261,7 @@ class Http1Client(Http1Connection):
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
             elif http1.expected_http_body_size(self.request) == -1:
                 assert not self.send_queue
-                yield commands.CloseConnection(self.conn)
+                yield commands.CloseConnection(self.conn, half_close=True)
             yield from self.mark_done(request=True)
         elif isinstance(event, RequestProtocolError):
             yield commands.CloseConnection(self.conn)

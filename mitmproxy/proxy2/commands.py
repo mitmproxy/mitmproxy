@@ -72,6 +72,16 @@ class CloseConnection(ConnectionCommand):
     Close a connection. If the client connection is closed,
     all other connections will ultimately be closed during cleanup.
     """
+    half_close: bool
+    """
+    If True, only close our half of the connection by sending a FIN packet.
+    This is required from some protocols which close their end to signal completion and then continue reading,
+    for example HTTP/1.0 without Content-Length header.
+    """
+
+    def __init__(self, connection: Connection, half_close: bool = False):
+        super().__init__(connection)
+        self.half_close = half_close
 
 
 class Hook(Command):

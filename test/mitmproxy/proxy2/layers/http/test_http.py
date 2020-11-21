@@ -1,5 +1,3 @@
-from typing import Callable
-
 import pytest
 
 from mitmproxy.flow import Error
@@ -7,7 +5,7 @@ from mitmproxy.http import HTTPFlow, HTTPResponse
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import layer
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
-from mitmproxy.proxy2.context import Server
+from mitmproxy.proxy2.context import ConnectionState, Server
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import TCPLayer, http, tls
 from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, reply_next_layer
@@ -161,6 +159,43 @@ def test_multiple_server_connections(tctx):
     assert server2().address == ("two.redirect", 80)
 
 
+@pytest.mark.parametrize("transfer_encoding", ["identity", "chunked"])
+def test_pipelining(tctx, transfer_encoding):
+    """Test that multiple requests can be processed over the same connection"""
+
+    tctx.server.address = ("example.com", 80)
+    tctx.server.state = ConnectionState.OPEN
+
+    req = b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n"
+    if transfer_encoding == "identity":
+        resp = (b"HTTP/1.1 200 OK\r\n"
+                b"Content-Length: 12\r\n"
+                b"\r\n"
+                b"Hello World!")
+    else:
+        resp = (b"HTTP/1.1 200 OK\r\n"
+                b"Transfer-Encoding: chunked\r\n"
+                b"\r\n"
+                b"c\r\n"
+                b"Hello World!\r\n"
+                b"0\r\n"
+                b"\r\n")
+
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.transparent), hooks=False)
+            # Roundtrip 1
+            >> DataReceived(tctx.client, req)
+            << SendData(tctx.server, req)
+            >> DataReceived(tctx.server, resp)
+            << SendData(tctx.client, resp)
+            # Roundtrip 2
+            >> DataReceived(tctx.client, req)
+            << SendData(tctx.server, req)
+            >> DataReceived(tctx.server, resp)
+            << SendData(tctx.client, resp)
+    )
+
+
 def test_http_reply_from_proxy(tctx):
     """Test a response served by mitmproxy itself."""
 
@@ -310,7 +345,7 @@ def test_request_streaming(tctx, response):
                 << SendData(tctx.client, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
                 >> DataReceived(tctx.client, b"def")
                 << SendData(server, b"DEF")
-                # Important: no request hook here!
+            # Important: no request hook here!
         )
     elif response == "early close":
         assert (
@@ -712,9 +747,9 @@ def test_http_server_aborts(tctx, stream):
             << SendData(server, b"GET / HTTP/1.1\r\n"
                                 b"Host: example.com\r\n\r\n")
             >> DataReceived(server, b"HTTP/1.1 200 OK\r\n"
-                                         b"Content-Length: 6\r\n"
-                                         b"\r\n"
-                                         b"abc")
+                                    b"Content-Length: 6\r\n"
+                                    b"\r\n"
+                                    b"abc")
             << http.HttpResponseHeadersHook(flow)
     )
     if stream:
@@ -736,9 +771,9 @@ def test_http_server_aborts(tctx, stream):
     )
     if stream:
         assert (
-            playbook
-            >> reply()
-            << CloseConnection(tctx.client)
+                playbook
+                >> reply()
+                << CloseConnection(tctx.client)
         )
     else:
         error_html = Placeholder(bytes)
