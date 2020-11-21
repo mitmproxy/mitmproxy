@@ -6,7 +6,7 @@ from mitmproxy import controller, ctx, eventsequence, flow, log, master, options
 from mitmproxy.flow import Error
 from mitmproxy.proxy2 import commands
 from mitmproxy.proxy2 import server
-from mitmproxy.utils import human
+from mitmproxy.utils import asyncio_utils, human
 
 
 class AsyncReply(controller.Reply):
@@ -52,11 +52,10 @@ class ProxyConnectionHandler(server.StreamConnectionHandler):
     def log(self, message: str, level: str = "info") -> None:
         x = log.LogEntry(self.log_prefix + message, level)
         x.reply = controller.DummyReply()
-        coro = self.master.addons.handle_lifecycle("log", x)
-        try:
-            asyncio.ensure_future(coro)
-        except RuntimeError:
-            coro.close()  # event loop may already be closed, but we don't want a "has never been awaited error"
+        asyncio_utils.create_task(
+            self.master.addons.handle_lifecycle("log", x),
+            name="ProxyConnectionHandler.log"
+        )
 
 
 class Proxyserver:
@@ -95,7 +94,7 @@ class Proxyserver:
         if not self.is_running:
             return
         if any(x in updated for x in ["server", "listen_host", "listen_port"]):
-            asyncio.ensure_future(self.refresh_server())
+            asyncio.create_task(self.refresh_server())
 
     async def refresh_server(self):
         async with self._lock:
@@ -118,7 +117,11 @@ class Proxyserver:
         self.server = None
 
     async def handle_connection(self, r, w):
-        asyncio.current_task().set_name(f"proxy connection handler {w.get_extra_info('peername')}")
+        asyncio_utils.set_task_debug_info(
+            asyncio.current_task(),
+            name=f"Proxyserver.handle_connection",
+            client=w.get_extra_info('peername'),
+        )
         handler = ProxyConnectionHandler(
             self.master,
             r,
