@@ -106,17 +106,14 @@ class ClientPlayback:
         self.playback_task.cancel()
 
     async def playback(self):
-        try:
-            while True:
-                self.inflight = await self.queue.get()
-                try:
-                    h = ReplayHandler(self.inflight, self.options)
-                    await h.replay()
-                except Exception:
-                    ctx.log(f"Client replay has crashed!\n{traceback.format_exc()}", "error")
-                self.inflight = None
-        except asyncio.CancelledError:
-            return
+        while True:
+            self.inflight = await self.queue.get()
+            try:
+                h = ReplayHandler(self.inflight, self.options)
+                await h.replay()
+            except Exception:
+                ctx.log(f"Client replay has crashed!\n{traceback.format_exc()}", "error")
+            self.inflight = None
 
     def check(self, f: flow.Flow) -> typing.Optional[str]:
         if f.live:
