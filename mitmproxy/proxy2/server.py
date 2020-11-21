@@ -233,7 +233,6 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
     async def on_timeout(self) -> None:
         self.log(f"Closing connection due to inactivity: {self.client}")
-        self.client.state = ConnectionState.CLOSED
         cancel_task(self.transports[self.client].handler, "timeout")
 
     async def hook_task(self, hook: commands.Hook) -> None:
@@ -295,7 +294,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             connection.state = ConnectionState.CLOSED
 
         if connection.state is ConnectionState.CLOSED:
-            cancel_task(self.transports[connection].handler, "closed by proxy")
+            cancel_task(self.transports[connection].handler, "closed by command")
 
 
 class StreamConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):

@@ -356,6 +356,19 @@ class EchoLayer(Layer):
             yield commands.CloseConnection(event.connection)
 
 
+class RecordLayer(Layer):
+    """Layer that records all events but does nothing."""
+    event_log: typing.List[events.Event]
+
+    def __init__(self, context: context.Context) -> None:
+        super().__init__(context)
+        self.event_log = []
+
+    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        self.event_log.append(event)
+        yield from ()
+
+
 def reply_next_layer(
         child_layer: typing.Union[typing.Type[Layer], typing.Callable[[context.Context], Layer]],
         *args,

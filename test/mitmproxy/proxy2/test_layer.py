@@ -1,4 +1,6 @@
-from mitmproxy.proxy2 import layer, events, commands
+import pytest
+
+from mitmproxy.proxy2 import commands, events, layer
 from test.mitmproxy.proxy2 import tutils
 
 
@@ -49,6 +51,31 @@ class TestNextLayer:
             << commands.SendData(tctx.client, b"foo")
             << commands.SendData(tctx.client, b"bar")
         )
+
+    @pytest.mark.parametrize("layer_found", [True, False])
+    def test_receive_close(self, tctx, layer_found):
+        """Test that we abort a client connection which has disconnected without any layer being found."""
+        nl = layer.NextLayer(tctx)
+        playbook = tutils.Playbook(nl)
+        assert (
+            playbook
+            >> events.DataReceived(tctx.client, b"foo")
+            << layer.NextLayerHook(nl)
+            >> events.ConnectionClosed(tctx.client)
+        )
+        if layer_found:
+            nl.layer = tutils.RecordLayer(tctx)
+            assert (
+                playbook
+                >> tutils.reply(to=-2)
+            )
+            assert isinstance(nl.layer.event_log[-1], events.ConnectionClosed)
+        else:
+            assert (
+                playbook
+                >> tutils.reply(to=-2)
+                << commands.CloseConnection(tctx.client)
+            )
 
     def test_func_references(self, tctx):
         nl = layer.NextLayer(tctx)
