@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from mitmproxy.proxy2 import events, commands, layer
+from mitmproxy.proxy2 import commands, events, layer
 from . import tutils
 
 
@@ -102,63 +102,6 @@ def test_placeholder_type_mismatch(tplaybook):
         )
 
 
-def test_fork(tplaybook):
-    """Playbooks can be forked to test multiple execution streams."""
-    assert (
-            tplaybook
-            >> TEvent()
-            << TCommand()
-    )
-    p2 = tplaybook.fork()
-    p3 = tplaybook.fork()
-    assert (
-            tplaybook
-            >> TEvent()
-            << TCommand()
-    )
-    assert (
-            p2
-            >> TEvent()
-            << TCommand()
-    )
-    assert len(tplaybook.actual) == len(tplaybook.expected) == 4
-    assert len(p2.actual) == len(p2.expected) == 4
-    assert len(p3.actual) == len(p3.expected) == 2
-
-
-def test_fork_placeholder(tplaybook):
-    """Forks require new placeholders."""
-    f = tutils.Placeholder()
-    flow = object()
-    assert (
-            tplaybook
-            >> TEvent([flow])
-            << TCommand(f)
-    )
-    assert f() == flow
-    p2 = tplaybook.fork()
-
-    p2_flow = p2.expected[0].commands[0]
-    assert p2_flow != flow
-
-    # As we have forked, we need a new placeholder.
-    f2 = tutils.Placeholder()
-    assert (
-            p2
-            >> TEvent([p2_flow])
-            << TCommand(f2)
-    )
-    assert f2() == p2_flow
-
-    # re-using the old placeholder does not work.
-    with pytest.raises(AssertionError, match="Playbook mismatch"):
-        assert (
-                p2
-                >> TEvent([p2_flow])
-                << TCommand(f)
-        )
-
-
 def test_unfinished(tplaybook):
     """We show a warning when playbooks aren't asserted."""
     tplaybook >> TEvent()
@@ -209,3 +152,28 @@ def test_eq_placeholder():
 
     b.foo._obj = 44
     assert not tutils._eq(a, b)
+
+
+@pytest.mark.parametrize("swap", [False, True])
+def test_command_multiple_replies(tplaybook, swap):
+    a = tutils.Placeholder(int)
+    b = tutils.Placeholder(int)
+
+    command1 = TCommand(a)
+    command2 = TCommand(b)
+
+    (tplaybook
+     >> TEvent([1])
+     << command1
+     >> TEvent([2])
+     << command2
+     )
+    if swap:
+        tplaybook >> tutils.reply(to=command1)
+        tplaybook >> tutils.reply(to=command2)
+    else:
+        tplaybook >> tutils.reply(to=command2)
+        tplaybook >> tutils.reply(to=command1)
+    assert tplaybook
+    assert a() == 1
+    assert b() == 2

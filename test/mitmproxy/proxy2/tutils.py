@@ -1,5 +1,4 @@
 import collections.abc
-import copy
 import difflib
 import itertools
 import re
@@ -158,7 +157,18 @@ class Playbook:
         if c is None:
             return self
         assert isinstance(c, commands.Command)
-        self.expected.append(c)
+
+        prev = self.expected[-1]
+        two_subsequent_sends_to_the_same_remote = (
+                isinstance(c, commands.SendData)
+                and isinstance(prev, commands.SendData)
+                and prev.connection is c.connection
+        )
+        if two_subsequent_sends_to_the_same_remote:
+            prev.data += c.data
+        else:
+            self.expected.append(c)
+
         return self
 
     def __bool__(self):
@@ -191,17 +201,18 @@ class Playbook:
                     self.actual.append(_TracebackInPlaybook(traceback.format_exc()))
                     break
                 self.actual.extend(cmds)
+                pos = i
                 for cmd in cmds:
+                    pos += 1
+                    assert self.actual[pos] == cmd
                     if isinstance(cmd, commands.CloseConnection):
                         if cmd.half_close:
                             cmd.connection.state &= ~ConnectionState.CAN_WRITE
                         else:
                             cmd.connection.state = ConnectionState.CLOSED
-                if not self.logs:
-                    for offset, cmd in enumerate(cmds):
-                        pos = i + 1 + offset
+                    elif isinstance(cmd, commands.Log):
                         need_to_emulate_log = (
-                                isinstance(cmd, commands.Log) and
+                                not self.logs and
                                 cmd.level in ("debug", "info") and
                                 (
                                         pos >= len(self.expected)
@@ -210,24 +221,33 @@ class Playbook:
                         )
                         if need_to_emulate_log:
                             self.expected.insert(pos, cmd)
-                if not self.hooks:
-                    last_cmd = self.actual[-1]
-                    pos = i + len(cmds)
-                    need_to_emulate_hook = (
-                            isinstance(last_cmd, commands.Hook) and
-                            (
-                                    pos >= len(self.expected) or
-                                    (not (isinstance(self.expected[pos], commands.Hook)
-                                          and self.expected[pos].name == last_cmd.name))
-                            )
-                    )
-                    if need_to_emulate_hook:
-                        self.expected.insert(pos, last_cmd)
-                        self.expected.insert(pos + 1, events.HookReply(last_cmd))
+                    elif isinstance(cmd, commands.Hook) and not self.hooks:
+                        need_to_emulate_hook = (
+                                not self.hooks
+                                and (
+                                        pos >= len(self.expected) or
+                                        (not (
+                                                isinstance(self.expected[pos], commands.Hook)
+                                                and self.expected[pos].name == cmd.name
+                                        ))
+                                )
+                        )
+                        if need_to_emulate_hook:
+                            self.expected.insert(pos, cmd)
+                            if cmd.blocking:
+                                self.expected.insert(pos + 1, events.HookReply(cmd))
+                    elif isinstance(cmd, commands.SendData):
+                        prev = self.actual[pos - 1]
+                        two_subsequent_sends_to_the_same_remote = (
+                                isinstance(prev, commands.SendData) and
+                                cmd.connection is prev.connection
+                        )
+                        if two_subsequent_sends_to_the_same_remote:
+                            prev.data += cmd.data
+                            self.actual.pop(pos)
+                            pos -= 1
+                eq(self.expected[i:], self.actual[i:])  # compare now already to set placeholders
             i += 1
-
-        self.actual = _merge_sends(self.actual)
-        self.expected = _merge_sends(self.expected)
 
         if not eq(self.expected, self.actual):
             self._errored = True
@@ -246,13 +266,6 @@ class Playbook:
         is_final_destruct = not hasattr(self, "_errored")
         if is_final_destruct or (not self._errored and len(self.actual) < len(self.expected)):
             raise RuntimeError("Unfinished playbook!")
-
-    def fork(self):
-        """
-        Fork the current playbook to assert a second execution stream from here on.
-        Returns a new playbook instance.
-        """
-        return copy.deepcopy(self)
 
 
 class reply(events.Event):
