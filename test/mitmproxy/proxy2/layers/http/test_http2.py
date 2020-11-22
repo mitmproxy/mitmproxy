@@ -303,3 +303,50 @@ def test_rst_then_close(tctx):
             >> reply()
     )
     assert flow().error.msg == "connection cancelled"
+
+
+def test_stream_concurrency(tctx):
+    """Test that we can send an intercepted request with a lower stream id than one that has already been sent."""
+    playbook, cff = start_h2_client(tctx)
+    flow1 = Placeholder(HTTPFlow)
+    flow2 = Placeholder(HTTPFlow)
+
+    reqheadershook1 = http.HttpRequestHeadersHook(flow1)
+    reqheadershook2 = http.HttpRequestHeadersHook(flow2)
+    reqhook1 = http.HttpRequestHook(flow1)
+    reqhook2 = http.HttpRequestHook(flow2)
+
+    server = Placeholder(Server)
+    data_req1 = Placeholder(bytes)
+    data_req2 = Placeholder(bytes)
+
+    assert (playbook
+            >> DataReceived(
+                tctx.client,
+                cff.build_headers_frame(example_request_headers, flags=["END_STREAM"], stream_id=1).serialize() +
+                cff.build_headers_frame(example_request_headers, flags=["END_STREAM"], stream_id=3).serialize())
+            << reqheadershook1
+            << reqheadershook2
+            >> reply(to=reqheadershook1)
+            << reqhook1
+            >> reply(to=reqheadershook2)
+            << reqhook2
+            # req 2 overtakes 1 and we already have a reply:
+            >> reply(to=reqhook2)
+            << OpenConnection(server)
+            >> reply(None, side_effect=make_h2)
+            << SendData(server, data_req2)
+            >> reply(to=reqhook1)
+            << SendData(server, data_req1)
+            )
+    frames = decode_frames(data_req2())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.HeadersFrame,
+        hyperframe.frame.DataFrame
+    ]
+    frames = decode_frames(data_req1())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.HeadersFrame,
+        hyperframe.frame.DataFrame
+    ]
