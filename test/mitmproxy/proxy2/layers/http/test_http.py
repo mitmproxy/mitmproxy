@@ -359,8 +359,6 @@ def test_request_streaming(tctx, response):
                 << SendData(tctx.client, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
                 >> ConnectionClosed(server)
                 << CloseConnection(server)
-                << http.HttpErrorHook(flow)
-                >> reply()
                 << CloseConnection(tctx.client)
         )
     elif response == "early kill":
@@ -717,13 +715,18 @@ def test_http_client_aborts(tctx, stream):
         )
     else:
         assert playbook >> reply()
-    assert (
+    (
             playbook
             >> ConnectionClosed(tctx.client)
             << CloseConnection(tctx.client)
+    )
+    if stream:
+        playbook << CloseConnection(server)
+    assert (
+            playbook
             << http.HttpErrorHook(flow)
             >> reply()
-
+            << None
     )
 
     assert "peer closed connection" in flow().error.msg
@@ -861,3 +864,16 @@ def test_kill_flow(tctx, when):
         return assert_kill()
     else:
         raise AssertionError
+
+
+def test_close_during_connect_hook(tctx):
+    flow = Placeholder(HTTPFlow)
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+            >> DataReceived(tctx.client,
+                            b'CONNECT hi.ls:443 HTTP/1.1\r\nProxy-Connection: keep-alive\r\nConnection: keep-alive\r\nHost: hi.ls:443\r\n\r\n')
+            << http.HttpConnectHook(flow)
+            >> ConnectionClosed(tctx.client)
+            << CloseConnection(tctx.client)
+            >> reply(to=-3)
+    )

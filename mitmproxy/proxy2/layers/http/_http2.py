@@ -127,7 +127,11 @@ class Http2Connection(HttpConnection):
                 self.streams.pop(event.stream_id, None)
         elif isinstance(event, h2.events.StreamReset):
             if event.stream_id in self.streams:
-                yield ReceiveHttp(self.ReceiveProtocolError(event.stream_id, f"Stream reset, error code {event.error_code}"))
+                try:
+                    err_str = h2.errors.ErrorCodes(event.error_code).name
+                except ValueError:
+                    err_str = str(event.error_code)
+                yield ReceiveHttp(self.ReceiveProtocolError(event.stream_id, f"stream reset by client ({err_str})"))
                 self.streams.pop(event.stream_id)
             else:
                 pass  # We don't track priority frames which could be followed by a stream reset here.
