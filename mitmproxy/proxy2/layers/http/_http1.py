@@ -9,7 +9,7 @@ from mitmproxy import exceptions, http
 from mitmproxy.net.http import http1, status_codes
 from mitmproxy.net.http.http1 import read_sansio as http1_sansio
 from mitmproxy.proxy2 import commands, events, layer
-from mitmproxy.proxy2.context import Client, Connection, Context, Server
+from mitmproxy.proxy2.context import Connection, ConnectionState, Context
 from mitmproxy.proxy2.layers.http._base import ReceiveHttp, StreamId
 from mitmproxy.proxy2.utils import expect
 from mitmproxy.utils import human
@@ -100,7 +100,8 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
             # for practical purposes, we assume that a peer which sent at least a FIN
             # is not interested in any more data from us, see
             # see https://github.com/httpwg/http-core/issues/22
-            yield commands.CloseConnection(event.connection)
+            if event.connection.state is not ConnectionState.CLOSED:
+                yield commands.CloseConnection(event.connection)
         else:  # pragma: no cover
             yield from ()
             raise AssertionError(f"Unexpected event: {event}")
@@ -145,10 +146,7 @@ class Http1Server(Http1Connection):
         elif isinstance(event, ResponseEndOfMessage):
             if "chunked" in self.response.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
-                yield from self.mark_done(response=True)
-            elif http1.expected_http_body_size(self.request, self.response) == -1:
-                yield commands.CloseConnection(self.conn)
-            elif self.request.first_line_format != "authority":
+            if self.request.first_line_format != "authority":
                 yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):
             if not self.response:
@@ -165,6 +163,15 @@ class Http1Server(Http1Connection):
         if response:
             self.response_done = True
         if self.request_done and self.response_done:
+            connection_done = (
+                    http1.expected_http_body_size(self.request, self.response) == -1 or
+                    http1.connection_close(self.request.http_version, self.request.headers) or
+                    http1.connection_close(self.response.http_version, self.response.headers)
+            )
+            if connection_done:
+                yield commands.CloseConnection(self.conn)
+                self.state = self.wait
+                return
             self.request_done = self.response_done = False
             self.request = self.response = None
             self.stream_id += 2
@@ -278,6 +285,20 @@ class Http1Client(Http1Connection):
         if response:
             self.response_done = True
         if self.request_done and self.response_done:
+            # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
+            # This simplifies our connection management quite a bit as we can rely on
+            # the proxyserver's max-connection-per-server throttling.
+            connection_done = (
+                    http1.expected_http_body_size(self.request, self.response) == -1 or
+                    http1.connection_close(self.request.http_version, self.request.headers) or
+                    http1.connection_close(self.response.http_version, self.response.headers) or
+                    self.request.is_http2
+            )
+            if connection_done:
+                assert not self.send_queue
+                yield commands.CloseConnection(self.conn)
+                self.state = self.wait
+                return
             self.request_done = self.response_done = False
             self.request = self.response = None
             self.stream_id = None

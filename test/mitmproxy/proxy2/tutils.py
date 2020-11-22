@@ -201,7 +201,7 @@ class Playbook:
                     self.actual.append(_TracebackInPlaybook(traceback.format_exc()))
                     break
                 self.actual.extend(cmds)
-                pos = i
+                pos = len(self.actual) - len(cmds) - 1
                 for cmd in cmds:
                     pos += 1
                     assert self.actual[pos] == cmd
@@ -235,7 +235,9 @@ class Playbook:
                         if need_to_emulate_hook:
                             self.expected.insert(pos, cmd)
                             if cmd.blocking:
-                                self.expected.insert(pos + 1, events.HookReply(cmd))
+                                # the current event may still have yielded more events, so we need to insert
+                                # the reply *after* those additional events.
+                                self.expected.insert(pos + len(cmds) - cmds.index(cmd), events.HookReply(cmd))
                     elif isinstance(cmd, commands.SendData):
                         prev = self.actual[pos - 1]
                         two_subsequent_sends_to_the_same_remote = (

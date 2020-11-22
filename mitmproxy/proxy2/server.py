@@ -8,6 +8,7 @@ The very high level overview is as follows:
 """
 import abc
 import asyncio
+import collections
 import time
 import traceback
 import typing
@@ -18,7 +19,7 @@ from OpenSSL import SSL
 from mitmproxy import http, options as moptions
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events, layer, layers, server_hooks
-from mitmproxy.proxy2.context import Client, Connection, ConnectionState, Context
+from mitmproxy.proxy2.context import Address, Client, Connection, ConnectionState, Context
 from mitmproxy.proxy2.layers import tls
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
@@ -73,10 +74,12 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     transports: typing.MutableMapping[Connection, ConnectionIO]
     timeout_watchdog: TimeoutWatchdog
     client: Client
+    max_conns: typing.DefaultDict[Address, asyncio.Semaphore]
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
         self.transports = {}
+        self.max_conns = collections.defaultdict(lambda: asyncio.Semaphore(5))
 
         # Ask for the first layer right away.
         # In a reverse proxy scenario, this is necessary as we would otherwise hang
@@ -133,57 +136,58 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             self.server_event(events.OpenConnectionReply(command, "Connection killed."))
             return
 
-        try:
-            command.connection.timestamp_start = time.time()
-            reader, writer = await asyncio.open_connection(*command.connection.address)
-        except (IOError, asyncio.CancelledError) as e:
-            err = str(e)
-            if not err:  # str(CancelledError()) returns empty string.
-                err = "connection cancelled"
-            self.log(f"error establishing server connection: {err}")
-            command.connection.error = err
-            self.server_event(events.OpenConnectionReply(command, err))
-            if isinstance(e, asyncio.CancelledError):
-                # From https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError:
-                # > In almost all situations the exception must be re-raised.
-                # It is not really defined what almost means here, but we play safe.
-                raise
-        else:
-            command.connection.timestamp_tcp_setup = time.time()
-            command.connection.state = ConnectionState.OPEN
-            command.connection.peername = writer.get_extra_info('peername')
-            command.connection.sockname = writer.get_extra_info('sockname')
-            self.transports[command.connection].reader = reader
-            self.transports[command.connection].writer = writer
-
-            if command.connection.address[0] != command.connection.peername[0]:
-                addr = f"{command.connection.address[0]} ({human.format_address(command.connection.peername)})"
+        async with self.max_conns[command.connection.address]:
+            try:
+                command.connection.timestamp_start = time.time()
+                reader, writer = await asyncio.open_connection(*command.connection.address)
+            except (IOError, asyncio.CancelledError) as e:
+                err = str(e)
+                if not err:  # str(CancelledError()) returns empty string.
+                    err = "connection cancelled"
+                self.log(f"error establishing server connection: {err}")
+                command.connection.error = err
+                self.server_event(events.OpenConnectionReply(command, err))
+                if isinstance(e, asyncio.CancelledError):
+                    # From https://docs.python.org/3/library/asyncio-exceptions.html#asyncio.CancelledError:
+                    # > In almost all situations the exception must be re-raised.
+                    # It is not really defined what almost means here, but we play safe.
+                    raise
             else:
-                addr = human.format_address(command.connection.address)
-            self.log(f"server connect {addr}")
-            connected_hook = asyncio_utils.create_task(
-                self.handle_hook(server_hooks.ServerConnectedHook(hook_data)),
-                name=f"handle_hook(server_connected) {addr}",
-                client=self.client.peername,
-            )
+                command.connection.timestamp_tcp_setup = time.time()
+                command.connection.state = ConnectionState.OPEN
+                command.connection.peername = writer.get_extra_info('peername')
+                command.connection.sockname = writer.get_extra_info('sockname')
+                self.transports[command.connection].reader = reader
+                self.transports[command.connection].writer = writer
 
-            self.server_event(events.OpenConnectionReply(command, None))
+                if command.connection.address[0] != command.connection.peername[0]:
+                    addr = f"{command.connection.address[0]} ({human.format_address(command.connection.peername)})"
+                else:
+                    addr = human.format_address(command.connection.address)
+                self.log(f"server connect {addr}")
+                connected_hook = asyncio_utils.create_task(
+                    self.handle_hook(server_hooks.ServerConnectedHook(hook_data)),
+                    name=f"handle_hook(server_connected) {addr}",
+                    client=self.client.peername,
+                )
 
-            # during connection opening, this function is the designated handler that can be cancelled.
-            # once we have a connection, we do want the teardown here to happen in any case, so we
-            # reassign the handler to .handle_connection and then clean up here once that is done.
-            new_handler = asyncio_utils.create_task(
-                self.handle_connection(command.connection),
-                name=f"server connection handler for {addr}",
-                client=self.client.peername,
-            )
-            self.transports[command.connection].handler = new_handler
-            await asyncio.wait([new_handler])
+                self.server_event(events.OpenConnectionReply(command, None))
 
-            self.log(f"server disconnect {addr}")
-            command.connection.timestamp_end = time.time()
-            await connected_hook  # wait here for this so that closed always comes after connected.
-            await self.handle_hook(server_hooks.ServerClosedHook(hook_data))
+                # during connection opening, this function is the designated handler that can be cancelled.
+                # once we have a connection, we do want the teardown here to happen in any case, so we
+                # reassign the handler to .handle_connection and then clean up here once that is done.
+                new_handler = asyncio_utils.create_task(
+                    self.handle_connection(command.connection),
+                    name=f"server connection handler for {addr}",
+                    client=self.client.peername,
+                )
+                self.transports[command.connection].handler = new_handler
+                await asyncio.wait([new_handler])
+
+                self.log(f"server disconnect {addr}")
+                command.connection.timestamp_end = time.time()
+                await connected_hook  # wait here for this so that closed always comes after connected.
+                await self.handle_hook(server_hooks.ServerClosedHook(hook_data))
 
     async def handle_connection(self, connection: Connection) -> None:
         """

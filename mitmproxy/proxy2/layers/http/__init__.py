@@ -611,11 +611,14 @@ class HttpLayer(layer.Layer):
             stream = self.command_sources.pop(cmd)
             yield from self.event_to_child(stream, GetHttpConnectionReply(cmd, reply))
 
-            # Tricky multiplexing edge case: Assume a h2 client that sends two requests (or receives two responses)
+            # Somewhat ugly edge case: If we do HTTP/2 -> HTTP/1 proxying we don't want
+            # to handle everything over a single connection.
+            # Tricky multiplexing edge case: Assume we are doing HTTP/2 -> HTTP/1 proxying,
+            #
+            # that receives two responses
             # that neither have a content-length specified nor a chunked transfer encoding.
             # We can't process these two flows to the same h1 connection as they would both have
-            # "read until eof" semantics. We could force chunked transfer encoding for requests, but can't enforce that
-            # for responses. The only workaround left is to open a separate connection for each flow.
+            # "read until eof" semantics. The only workaround left is to open a separate connection for each flow.
             if not command.err and self.context.client.alpn == b"h2" and command.connection.alpn != b"h2":
                 for cmd in waiting[1:]:
                     yield from self.get_connection(cmd, reuse=False)
