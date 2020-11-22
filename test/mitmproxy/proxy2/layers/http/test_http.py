@@ -222,6 +222,7 @@ def test_response_until_eof(tctx):
             << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
             >> DataReceived(server, b"HTTP/1.1 200 OK\r\n\r\nfoo")
             >> ConnectionClosed(server)
+            << CloseConnection(server)
             << SendData(tctx.client, b"HTTP/1.1 200 OK\r\n\r\nfoo")
             << CloseConnection(tctx.client)
     )
@@ -876,4 +877,32 @@ def test_close_during_connect_hook(tctx):
             >> ConnectionClosed(tctx.client)
             << CloseConnection(tctx.client)
             >> reply(to=-3)
+    )
+
+
+@pytest.mark.parametrize("client_close", [b"", b"Connection: close\r\n"])
+@pytest.mark.parametrize("server_close", [b"", b"Connection: close\r\n"])
+def test_connection_close_header(tctx, client_close, server_close):
+    """Test that we correctly close connections if we have a `Connection: close` header."""
+    if not client_close and not server_close:
+        return
+    server = Placeholder(Server)
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+            >> DataReceived(tctx.client, b"GET http://example/ HTTP/1.1\r\n"
+                                         b"Host: example\r\n" + client_close +
+                                         b"\r\n")
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"GET / HTTP/1.1\r\n"
+                                b"Host: example\r\n" + client_close +
+                                b"\r\n")
+            >> DataReceived(server, b"HTTP/1.1 200 OK\r\n"
+                                    b"Content-Length: 0\r\n" + server_close +
+                                    b"\r\n")
+            << CloseConnection(server)
+            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\n"
+                                     b"Content-Length: 0\r\n" + server_close +
+                                     b"\r\n")
+            << CloseConnection(tctx.client)
     )

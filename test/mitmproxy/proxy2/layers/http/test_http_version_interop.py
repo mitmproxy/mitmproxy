@@ -1,10 +1,8 @@
-from typing import List, Tuple
+from typing import Tuple
 
+import h2.config
 import h2.connection
 import h2.events
-import h2.config
-import hyperframe.frame
-import pytest
 
 from mitmproxy.http import HTTPFlow
 from mitmproxy.proxy.protocol.http import HTTPMode
@@ -67,11 +65,13 @@ def test_h2_to_h1(tctx):
             << OpenConnection(server)
             >> reply(None)
             << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
-            >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\r\nHello World!")
+            >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 12\r\n\r\n")
             << http.HttpResponseHeadersHook(flow)
             >> reply()
+            >> DataReceived(server, b"Hello World!")
             << http.HttpResponseHook(flow)
-            >> reply()
+            << CloseConnection(server)
+            >> reply(to=-2)
             << SendData(tctx.client, response)
     )
     events = conn.receive_data(response())
