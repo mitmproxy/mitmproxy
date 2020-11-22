@@ -277,6 +277,9 @@ class Http2Client(Http2Connection):
     ReceiveEndOfMessage = ResponseEndOfMessage
     SendEndOfMessage = RequestEndOfMessage
 
+    our_stream_id = Dict[int, int]
+    their_stream_id = Dict[int, int]
+
     def __init__(self, context: Context):
         super().__init__(context, context.server)
         # Disable HTTP/2 push for now to keep things simple.
@@ -284,8 +287,27 @@ class Http2Client(Http2Connection):
         self.h2_conn.local_settings.enable_push = 0
         # hyper-h2 pitfall: we need to acknowledge here, otherwise its sends out the old settings.
         self.h2_conn.local_settings.acknowledge()
+        self.our_stream_id = {}
+        self.their_stream_id = {}
 
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
+        # We can't reuse stream ids from the client because they may arrived reordered here
+        # and HTTP/2 forbids opening a stream on a lower id than what was previously sent (see test_stream_concurrency).
+        # To mitigate this, we transparently map the outside's stream id to our stream id.
+        if isinstance(event, HttpEvent):
+            ours = self.our_stream_id.get(event.stream_id, None)
+            if ours is None:
+                ours = self.h2_conn.get_next_available_stream_id()
+                self.our_stream_id[event.stream_id] = ours
+                self.their_stream_id[ours] = event.stream_id
+            event.stream_id = ours
+
+        for cmd in self._handle_event2(event):
+            if isinstance(cmd, ReceiveHttp):
+                cmd.event.stream_id = self.their_stream_id[cmd.event.stream_id]
+            yield cmd
+
+    def _handle_event2(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, RequestHeaders):
             pseudo_headers = [
                 (b':method', event.request.method),
