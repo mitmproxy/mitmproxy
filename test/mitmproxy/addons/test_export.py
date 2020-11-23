@@ -104,7 +104,8 @@ class TestExportCurlCommand:
     def test_correct_host_used(self, get_request):
         get_request.request.headers["host"] = "domain:22"
 
-        result = """curl --resolve 'domain:22:[address]' -H 'header: qvalue' -H 'host: domain:22' 'http://domain:22/path?a=foo&a=bar&b=baz'"""
+        result = """curl --resolve 'domain:22:[address]' -H 'header: qvalue' -H 'host: domain:22' """ \
+                 """'http://domain:22/path?a=foo&a=bar&b=baz'"""
         assert export.curl_command(get_request) == result
 
 
@@ -154,7 +155,8 @@ class TestExportHttpieCommand:
     def test_correct_host_used(self, get_request):
         get_request.request.headers["host"] = "domain:22"
 
-        result = """http GET 'http://domain:22/path?a=foo&a=bar&b=baz' 'header: qvalue' 'host: domain:22'"""
+        result = """http GET 'http://domain:22/path?a=foo&a=bar&b=baz' """ \
+                 """'header: qvalue' 'host: domain:22'"""
         assert export.httpie_command(get_request) == result
 
 
