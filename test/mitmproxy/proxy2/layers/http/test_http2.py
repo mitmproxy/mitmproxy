@@ -81,7 +81,6 @@ def test_simple(tctx):
     assert [type(x) for x in frames] == [
         hyperframe.frame.SettingsFrame,
         hyperframe.frame.HeadersFrame,
-        hyperframe.frame.DataFrame
     ]
     sff = FrameFactory()
     assert (
@@ -240,7 +239,6 @@ def test_no_normalization(tctx):
     assert [type(x) for x in frames] == [
         hyperframe.frame.SettingsFrame,
         hyperframe.frame.HeadersFrame,
-        hyperframe.frame.DataFrame
     ]
     assert hpack.hpack.Decoder().decode(frames[1].data, True) == list(request_headers)
 
@@ -344,12 +342,10 @@ def test_stream_concurrency(tctx):
     assert [type(x) for x in frames] == [
         hyperframe.frame.SettingsFrame,
         hyperframe.frame.HeadersFrame,
-        hyperframe.frame.DataFrame
     ]
     frames = decode_frames(data_req1())
     assert [type(x) for x in frames] == [
         hyperframe.frame.HeadersFrame,
-        hyperframe.frame.DataFrame
     ]
 
 
@@ -379,6 +375,9 @@ def test_max_concurrency(tctx):
                                                     flags=["END_STREAM"],
                                                     stream_id=3).serialize())
             # Can't send it upstream yet, all streams in use!
+    )
+    assert (
+            playbook
             >> DataReceived(server, sff.build_headers_frame(example_response_headers,
                                                             flags=["END_STREAM"],
                                                             stream_id=1).serialize())

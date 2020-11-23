@@ -9,6 +9,7 @@ import h2.errors
 import h2.events
 import h2.exceptions
 import h2.settings
+import h2.stream
 import h2.utilities
 
 from mitmproxy import http
@@ -75,7 +76,10 @@ class Http2Connection(HttpConnection):
             if isinstance(event, self.SendData):
                 self.h2_conn.send_data(event.stream_id, event.data)
             elif isinstance(event, self.SendEndOfMessage):
-                self.h2_conn.send_data(event.stream_id, b"", end_stream=True)
+                stream = self.h2_conn.streams.get(event.stream_id)
+                if stream.state_machine.state not in (h2.stream.StreamState.HALF_CLOSED_LOCAL,
+                                                      h2.stream.StreamState.CLOSED):
+                    self.h2_conn.end_stream(event.stream_id)
                 if self.is_closed(event.stream_id):
                     self.streams.pop(event.stream_id, None)
             elif isinstance(event, self.SendProtocolError):
@@ -84,7 +88,9 @@ class Http2Connection(HttpConnection):
                     self.streams.pop(event.stream_id, None)
             else:
                 raise AssertionError(f"Unexpected event: {event}")
-            yield SendData(self.conn, self.h2_conn.data_to_send())
+            data_to_send = self.h2_conn.data_to_send()
+            if data_to_send:
+                yield SendData(self.conn, data_to_send)
 
         elif isinstance(event, DataReceived):
             try:
@@ -268,7 +274,7 @@ class Http2Server(Http2Connection):
                 timestamp_end=None,
             )
             self.streams[event.stream_id] = StreamState.HEADERS_RECEIVED
-            yield ReceiveHttp(RequestHeaders(event.stream_id, request))
+            yield ReceiveHttp(RequestHeaders(event.stream_id, request, end_stream=bool(event.stream_ended)))
         else:
             return (yield from super().handle_h2_event(event))
 
@@ -361,6 +367,7 @@ class Http2Client(Http2Connection):
             self.h2_conn.send_headers(
                 event.stream_id,
                 headers,
+                end_stream=event.end_stream,
             )
             self.streams[event.stream_id] = StreamState.EXPECTING_HEADERS
             yield SendData(self.conn, self.h2_conn.data_to_send())
@@ -390,7 +397,7 @@ class Http2Client(Http2Connection):
                 timestamp_end=None,
             )
             self.streams[event.stream_id] = StreamState.HEADERS_RECEIVED
-            yield ReceiveHttp(ResponseHeaders(event.stream_id, response))
+            yield ReceiveHttp(ResponseHeaders(event.stream_id, response, bool(event.stream_ended)))
         elif isinstance(event, h2.events.RequestReceived):
             yield from self.protocol_error(f"HTTP/2 protocol error: received request from server")
             return True

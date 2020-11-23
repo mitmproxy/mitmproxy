@@ -32,8 +32,9 @@ class MockServer(layers.http.HttpConnection):
 
     def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
         if isinstance(event, events.Start):
-            yield layers.http.ReceiveHttp(layers.http.RequestHeaders(1, self.flow.request))
-            if self.flow.request.raw_content:
+            has_content = bool(self.flow.request.raw_content)
+            yield layers.http.ReceiveHttp(layers.http.RequestHeaders(1, self.flow.request, not has_content))
+            if has_content:
                 yield layers.http.ReceiveHttp(layers.http.RequestData(1, self.flow.request.raw_content))
             yield layers.http.ReceiveHttp(layers.http.RequestEndOfMessage(1))
         elif isinstance(event, (

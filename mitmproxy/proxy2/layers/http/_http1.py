@@ -198,7 +198,7 @@ class Http1Server(Http1Connection):
                     yield commands.CloseConnection(self.conn)
                     self.state = self.wait
                     return
-                yield ReceiveHttp(RequestHeaders(self.stream_id, self.request))
+                yield ReceiveHttp(RequestHeaders(self.stream_id, self.request, expected_body_size == 0))
 
                 if self.request.first_line_format == "authority":
                     # The previous proxy server implementation tried to read the request body here:
@@ -332,7 +332,7 @@ class Http1Client(Http1Connection):
                     yield commands.CloseConnection(self.conn)
                     yield ReceiveHttp(ResponseProtocolError(self.stream_id, f"Cannot parse HTTP response: {e}"))
                     return
-                yield ReceiveHttp(ResponseHeaders(self.stream_id, self.response))
+                yield ReceiveHttp(ResponseHeaders(self.stream_id, self.response, expected_size == 0))
                 self.body_reader = self.make_body_reader(expected_size)
 
                 self.state = self.read_response_body

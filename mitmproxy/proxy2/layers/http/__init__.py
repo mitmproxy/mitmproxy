@@ -196,7 +196,7 @@ class HttpStream(layer.Layer):
             ok = yield from self.make_server_connection()
             if not ok:
                 return
-            yield SendHttp(RequestHeaders(self.stream_id, self.flow.request), self.context.server)
+            yield SendHttp(event, self.context.server)
             self.client_state = self.state_stream_request_body
         else:
             self.client_state = self.state_consume_request_body
@@ -238,8 +238,9 @@ class HttpStream(layer.Layer):
                 if not ok:
                     return
 
-                yield SendHttp(RequestHeaders(self.stream_id, self.flow.request), self.context.server)
-                if self.flow.request.raw_content:
+                has_content = bool(self.flow.request.raw_content)
+                yield SendHttp(RequestHeaders(self.stream_id, self.flow.request, not has_content), self.context.server)
+                if has_content:
                     yield SendHttp(RequestData(self.stream_id, self.flow.request.raw_content), self.context.server)
                 yield SendHttp(RequestEndOfMessage(self.stream_id), self.context.server)
 
@@ -252,7 +253,7 @@ class HttpStream(layer.Layer):
         if (yield from self.check_killed()):
             return
         elif self.flow.response.stream:
-            yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)
+            yield SendHttp(event, self.context.client)
             self.server_state = self.state_stream_response_body
         else:
             self.server_state = self.state_consume_response_body
@@ -300,8 +301,9 @@ class HttpStream(layer.Layer):
         yield HttpResponseHook(self.flow)
         if (yield from self.check_killed()):
             return
-        yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)
-        if self.flow.response.raw_content:
+        has_content = bool(self.flow.response.raw_content)
+        yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response, not has_content), self.context.client)
+        if has_content:
             yield SendHttp(ResponseData(self.stream_id, self.flow.response.raw_content), self.context.client)
         yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
