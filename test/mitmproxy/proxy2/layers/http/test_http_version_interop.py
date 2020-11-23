@@ -109,7 +109,7 @@ def test_h1_to_h2(tctx):
     )
     events = conn.receive_data(request())
     assert event_types(events) == [
-        h2.events.RemoteSettingsChanged, h2.events.RequestReceived, h2.events.DataReceived, h2.events.StreamEnded
+        h2.events.RemoteSettingsChanged, h2.events.RequestReceived, h2.events.StreamEnded
     ]
 
     conn.send_headers(1, example_response_headers)
