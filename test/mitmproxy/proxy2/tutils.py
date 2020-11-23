@@ -124,8 +124,6 @@ class Playbook:
     """If False, the playbook specification doesn't contain log commands."""
     hooks: bool
     """If False, the playbook specification doesn't include hooks or hook replies. They are automatically replied to."""
-    merge_sends: bool
-    """If True, subsequent SendData commands to the same remote will be merged in both expected and actual playbook."""
 
     def __init__(
             self,
@@ -196,10 +194,13 @@ class Playbook:
 
                 self.actual.append(x)
                 try:
-                    cmds = list(self.layer.handle_event(x))
+                    cmds: typing.List[commands.Command] = list(self.layer.handle_event(x))
                 except Exception:
                     self.actual.append(_TracebackInPlaybook(traceback.format_exc()))
                     break
+
+                cmds = _merge_sends(cmds)
+
                 self.actual.extend(cmds)
                 pos = len(self.actual) - len(cmds) - 1
                 for cmd in cmds:
@@ -238,16 +239,6 @@ class Playbook:
                                 # the current event may still have yielded more events, so we need to insert
                                 # the reply *after* those additional events.
                                 self.expected.insert(pos + len(cmds) - cmds.index(cmd), events.HookReply(cmd))
-                    elif isinstance(cmd, commands.SendData):
-                        prev = self.actual[pos - 1]
-                        two_subsequent_sends_to_the_same_remote = (
-                                isinstance(prev, commands.SendData) and
-                                cmd.connection is prev.connection
-                        )
-                        if two_subsequent_sends_to_the_same_remote:
-                            prev.data += cmd.data
-                            self.actual.pop(pos)
-                            pos -= 1
                 eq(self.expected[i:], self.actual[i:])  # compare now already to set placeholders
             i += 1
 
