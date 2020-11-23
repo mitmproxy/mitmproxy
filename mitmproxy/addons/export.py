@@ -59,6 +59,13 @@ def curl_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
     request = pop_headers(request)
     args = ["curl"]
+
+    server_addr = f.server_conn.address[0]
+    if request.pretty_host != server_addr:
+        resolve = "{}:{}:[{}]".format(request.pretty_host, request.port, server_addr)
+        args.append("--resolve")
+        args.append(resolve)
+
     for k, v in request.headers.items(multi=True):
         if k.lower() == "accept-encoding":
             args.append("--compressed")
@@ -67,7 +74,9 @@ def curl_command(f: flow.Flow) -> str:
 
     if request.method != "GET":
         args += ["-X", request.method]
-    args.append(request.url)
+
+    args.append(request.pretty_url)
+
     if request.content:
         args += ["-d", request_content_for_console(request)]
     return ' '.join(shlex.quote(arg) for arg in args)
@@ -76,7 +85,13 @@ def curl_command(f: flow.Flow) -> str:
 def httpie_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
     request = pop_headers(request)
-    args = ["http", request.method, request.url]
+
+    # TODO: Once https://github.com/httpie/httpie/issues/414 is implemented, we
+    # should ensure we always connect to the IP address specified in the flow,
+    # similar to how it's done in curl_command.
+    url = request.pretty_url
+
+    args = ["http", request.method, url]
     for k, v in request.headers.items(multi=True):
         args.append(f"{k}: {v}")
     cmd = ' '.join(shlex.quote(arg) for arg in args)

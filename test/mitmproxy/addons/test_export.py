@@ -98,6 +98,15 @@ class TestExportCurlCommand:
         result = """curl --compressed 'http://address:22/path?a=foo&a=bar&b=baz'"""
         assert export.curl_command(get_request) == result
 
+    # This tests that we always specify the original host in the URL, which is
+    # important for SNI. To maintain reproducibility, we ensure that we still
+    # connect to the same IP by using the `--resolve` option.
+    def test_correct_host_used(self, get_request):
+        get_request.request.headers["host"] = "domain:22"
+
+        result = """curl --resolve 'domain:22:[address]' -H 'header: qvalue' -H 'host: domain:22' 'http://domain:22/path?a=foo&a=bar&b=baz'"""
+        assert export.curl_command(get_request) == result
+
 
 class TestExportHttpieCommand:
     def test_get(self, get_request):
@@ -135,6 +144,18 @@ class TestExportHttpieCommand:
         command = export.httpie_command(request)
         assert shlex.split(command)[-2] == '<<<'
         assert shlex.split(command)[-1] == "'&#"
+
+    # See comment in `TestExportCurlCommand.test_correct_host_used`. httpie
+    # currently doesn't have a way of forcing connection to a particular IP, so
+    # the command-line may not always reproduce the original request, in case
+    # the host is resolved to a different IP address.
+    #
+    # httpie tracking issue: https://github.com/httpie/httpie/issues/414
+    def test_correct_host_used(self, get_request):
+        get_request.request.headers["host"] = "domain:22"
+
+        result = """http GET 'http://domain:22/path?a=foo&a=bar&b=baz' 'header: qvalue' 'host: domain:22'"""
+        assert export.httpie_command(get_request) == result
 
 
 class TestRaw:

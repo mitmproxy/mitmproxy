@@ -2,6 +2,8 @@
 
 ## Unreleased: mitmproxy next
 
+* Fix SNI-related reproducibility issues when exporting to curl/httpie commands. (@dkasak)
+
 ### New Proxy Core (@mhils)
 
 Mitmproxy has a completely new proxy core, fixing many longstanding issues:
