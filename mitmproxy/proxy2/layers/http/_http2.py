@@ -1,6 +1,7 @@
+import collections
 import time
 from enum import Enum
-from typing import ClassVar, Dict, Iterable, List, Tuple, Type, Union
+from typing import ClassVar, DefaultDict, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import h2.config
 import h2.connection
@@ -287,6 +288,10 @@ class Http2Client(Http2Connection):
 
     our_stream_id = Dict[int, int]
     their_stream_id = Dict[int, int]
+    stream_queue = DefaultDict[int, List[Event]]
+    """Queue of streams that we haven't sent yet because we have reached MAX_CONCURRENT_STREAMS"""
+    provisional_max_concurrency: Optional[int] = 10
+    """A provisional currency limit before we get the server's first settings frame."""
 
     def __init__(self, context: Context):
         super().__init__(context, context.server)
@@ -297,6 +302,7 @@ class Http2Client(Http2Connection):
         self.h2_conn.local_settings.acknowledge()
         self.our_stream_id = {}
         self.their_stream_id = {}
+        self.stream_queue = collections.defaultdict(list)
 
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         # We can't reuse stream ids from the client because they may arrived reordered here
@@ -305,6 +311,13 @@ class Http2Client(Http2Connection):
         if isinstance(event, HttpEvent):
             ours = self.our_stream_id.get(event.stream_id, None)
             if ours is None:
+                no_free_streams = (
+                        self.h2_conn.open_outbound_streams >=
+                        (self.provisional_max_concurrency or self.h2_conn.remote_settings.max_concurrent_streams)
+                )
+                if no_free_streams:
+                    self.stream_queue[event.stream_id].append(event)
+                    return
                 ours = self.h2_conn.get_next_available_stream_id()
                 self.our_stream_id[event.stream_id] = ours
                 self.their_stream_id[ours] = event.stream_id
@@ -314,6 +327,18 @@ class Http2Client(Http2Connection):
             if isinstance(cmd, ReceiveHttp):
                 cmd.event.stream_id = self.their_stream_id[cmd.event.stream_id]
             yield cmd
+
+        can_resume_queue = (
+                self.stream_queue and
+                self.h2_conn.open_outbound_streams < (
+                        self.provisional_max_concurrency or self.h2_conn.remote_settings.max_concurrent_streams
+                )
+        )
+        if can_resume_queue:
+            # popitem would be LIFO, but we want FIFO.
+            events = self.stream_queue.pop(next(iter(self.stream_queue)))
+            for event in events:
+                yield from self._handle_event(event)
 
     def _handle_event2(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, RequestHeaders):
@@ -369,6 +394,11 @@ class Http2Client(Http2Connection):
         elif isinstance(event, h2.events.RequestReceived):
             yield from self.protocol_error(f"HTTP/2 protocol error: received request from server")
             return True
+        elif isinstance(event, h2.events.RemoteSettingsChanged):
+            # We have received at least one settings from now,
+            # which means we can rely on the max concurrency in remote_settings
+            self.provisional_max_concurrency = None
+            return (yield from super().handle_h2_event(event))
         else:
             return (yield from super().handle_h2_event(event))
 

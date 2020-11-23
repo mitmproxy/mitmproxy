@@ -1,5 +1,6 @@
 from typing import List, Tuple
 
+import h2.settings
 import hpack
 import hyperframe.frame
 import pytest
@@ -350,3 +351,52 @@ def test_stream_concurrency(tctx):
         hyperframe.frame.HeadersFrame,
         hyperframe.frame.DataFrame
     ]
+
+
+def test_max_concurrency(tctx):
+    playbook, cff = start_h2_client(tctx)
+    server = Placeholder(Server)
+    req1_bytes = Placeholder(bytes)
+    settings_ack_bytes = Placeholder(bytes)
+    req2_bytes = Placeholder(bytes)
+    playbook.hooks = False
+    sff = FrameFactory()
+
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers, flags=["END_STREAM"],
+                                                    stream_id=1).serialize())
+            << OpenConnection(server)
+            >> reply(None, side_effect=make_h2)
+            << SendData(server, req1_bytes)
+            >> DataReceived(server,
+                            sff.build_settings_frame(
+                                {h2.settings.SettingCodes.MAX_CONCURRENT_STREAMS: 1}).serialize())
+            << SendData(server, settings_ack_bytes)
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers,
+                                                    flags=["END_STREAM"],
+                                                    stream_id=3).serialize())
+            # Can't send it upstream yet, all streams in use!
+            >> DataReceived(server, sff.build_headers_frame(example_response_headers,
+                                                            flags=["END_STREAM"],
+                                                            stream_id=1).serialize())
+            # But now we can!
+            << SendData(server, req2_bytes)
+            << SendData(tctx.client, Placeholder(bytes))
+            >> DataReceived(server, sff.build_headers_frame(example_response_headers,
+                                                            flags=["END_STREAM"],
+                                                            stream_id=3).serialize())
+            << SendData(tctx.client, Placeholder(bytes))
+    )
+    settings, req1 = decode_frames(req1_bytes())
+    settings_ack, = decode_frames(settings_ack_bytes())
+    req2, = decode_frames(req2_bytes())
+
+    assert type(settings) == hyperframe.frame.SettingsFrame
+    assert type(req1) == hyperframe.frame.HeadersFrame
+    assert type(settings_ack) == hyperframe.frame.SettingsFrame
+    assert type(req2) == hyperframe.frame.HeadersFrame
+    assert req1.stream_id == 1
+    assert req2.stream_id == 3
