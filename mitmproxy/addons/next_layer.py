@@ -63,7 +63,7 @@ class NextLayer:
         if not ctx.options.ignore_hosts and not ctx.options.allow_hosts:
             return False
 
-        addresses: typing.List[str] = [context.server.address]
+        addresses: typing.List[str] = [context.server.address[0]]
         if is_tls_record_magic(data_client):
             try:
                 sni = parse_client_hello(data_client).sni
@@ -129,22 +129,22 @@ class NextLayer:
 
         # 4. Check for --tcp
         if any(
-                address and re.search(rex, address, re.IGNORECASE)
-                for address in (context.server.address, context.client.sni)
-                for rex in ctx.options.allow_hosts
+                address and rex.search(address)
+                for address in (context.server.address[0], context.client.sni.decode("idna"))
+                for rex in self.tcp_hosts
         ):
             return layers.TCPLayer(context)
 
         # 5. Check for raw tcp mode.
-        sni_indicates_non_http = (
-                context.client.sni and context.client.sni not in HTTP_ALPNS
+        alpn_indicates_non_http = (
+                context.client.alpn and context.client.alpn not in HTTP_ALPNS
         )
         # Very simple heuristic here - the first three bytes should be
         # the HTTP verb, so A-Za-z is expected.
         probably_no_http = (
             not data_client[:3].isalpha()
         )
-        if ctx.options.rawtcp and (sni_indicates_non_http or probably_no_http):
+        if ctx.options.rawtcp and (alpn_indicates_non_http or probably_no_http):
             return layers.TCPLayer(context)
 
         # 6. Assume HTTP by default.
