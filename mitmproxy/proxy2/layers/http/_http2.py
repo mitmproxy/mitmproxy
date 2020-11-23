@@ -57,6 +57,14 @@ class Http2Connection(HttpConnection):
         self.h2_conn = BufferedH2Connection(self.h2_conf)
         self.streams = {}
 
+    def is_closed(self, stream_id: int) -> bool:
+        """Check if a non-idle stream is closed"""
+        stream = self.h2_conn.streams.get(stream_id, None)
+        if stream is not None:
+            return stream.closed
+        else:
+            return True
+
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, Start):
             self.h2_conn.initiate_connection()
@@ -67,11 +75,11 @@ class Http2Connection(HttpConnection):
                 self.h2_conn.send_data(event.stream_id, event.data)
             elif isinstance(event, self.SendEndOfMessage):
                 self.h2_conn.send_data(event.stream_id, b"", end_stream=True)
-                if self.h2_conn.streams.get(event.stream_id).closed:
+                if self.is_closed(event.stream_id):
                     self.streams.pop(event.stream_id, None)
             elif isinstance(event, self.SendProtocolError):
                 self.h2_conn.reset_stream(event.stream_id, h2.errors.ErrorCodes.PROTOCOL_ERROR)
-                if self.h2_conn.streams.get(event.stream_id).closed:
+                if self.is_closed(event.stream_id):
                     self.streams.pop(event.stream_id, None)
             else:
                 raise AssertionError(f"Unexpected event: {event}")
@@ -123,7 +131,7 @@ class Http2Connection(HttpConnection):
                 yield ReceiveHttp(self.ReceiveEndOfMessage(event.stream_id))
             elif state is StreamState.EXPECTING_HEADERS:
                 raise AssertionError("unreachable")
-            if self.h2_conn.streams.get(event.stream_id).closed:
+            if self.is_closed(event.stream_id):
                 self.streams.pop(event.stream_id, None)
         elif isinstance(event, h2.events.StreamReset):
             if event.stream_id in self.streams:
