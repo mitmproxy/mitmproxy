@@ -9,6 +9,7 @@ Unreleased: mitmproxy next
 * Deprecation of pathod and pathoc tools and modules. Future releases might not contain them! (@Kriechi)
 * Addon to suppress unwanted error messages sent by mitmproxy. (@anneborcherding)
 * Updated imports and styles for web scanner helper addons. (@anneborcherding)
+* Inform when underscore-formatted options are used in client arg. (@jrblixt)
 
 * --- TODO: add new PRs above this line ---
 
