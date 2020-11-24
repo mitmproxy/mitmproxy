@@ -167,7 +167,10 @@ def connection_close(http_version, headers):
         elif "keep-alive" in tokens:
             return False
 
-    return http_version != "HTTP/1.1" and http_version != b"HTTP/1.1"
+    return http_version not in (
+        "HTTP/1.1", b"HTTP/1.1",
+        "HTTP/2.0", b"HTTP/2.0",
+    )
 
 
 def expected_http_body_size(
