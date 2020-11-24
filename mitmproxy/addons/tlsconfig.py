@@ -136,9 +136,15 @@ class TlsConfig:
 
         if not server.alpn_offers:
             if client.alpn_offers:
-                server.alpn_offers = tuple(client.alpn_offers)
-                if not ctx.options.http2:
-                    server.alpn_offers = tuple(x for x in server.alpn_offers if x != b"h2")
+                if ctx.options.http2:
+                    server.alpn_offers = tuple(client.alpn_offers)
+                else:
+                    server.alpn_offers = tuple(x for x in client.alpn_offers if x != b"h2")
+            elif client.tls_established:
+                # We would perfectly support HTTP/1 -> HTTP/2, but we want to keep things on the same protocol version.
+                # There are some edge cases where we want to mirror the regular server's behavior accurately,
+                # for example header capitalization.
+                server.alpn_offers = []
             elif ctx.options.http2:
                 server.alpn_offers = tls.HTTP_ALPNS
             else:
