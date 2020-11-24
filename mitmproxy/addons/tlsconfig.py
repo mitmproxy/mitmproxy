@@ -137,6 +137,8 @@ class TlsConfig:
         if not server.alpn_offers:
             if client.alpn_offers:
                 server.alpn_offers = tuple(client.alpn_offers)
+                if not ctx.options.http2:
+                    server.alpn_offers = tuple(x for x in server.alpn_offers if x != b"h2")
             elif ctx.options.http2:
                 server.alpn_offers = tls.HTTP_ALPNS
             else:

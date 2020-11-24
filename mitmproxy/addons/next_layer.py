@@ -60,6 +60,12 @@ class NextLayer:
             ]
 
     def ignore_connection(self, context: context.Context, data_client: bytes) -> typing.Optional[bool]:
+        """
+        Returns:
+            True, if the connection should be ignored.
+            False, if it should not be ignored.
+            None, if we need to wait for more input data.
+        """
         if not ctx.options.ignore_hosts and not ctx.options.allow_hosts:
             return False
 
@@ -112,7 +118,8 @@ class NextLayer:
         if client_tls:
             # client tls requires a server tls layer as parent layer
             # reverse proxy mode manages this itself.
-            if isinstance(top_layer, layers.ServerTLSLayer) or ctx.options.mode.startswith("reverse:"):
+            # a secure web proxy doesn't have a server part.
+            if isinstance(top_layer, layers.ServerTLSLayer) or s(modes.ReverseProxy) or s(modes.HttpProxy):
                 return layers.ClientTLSLayer(context)
             else:
                 return layers.ServerTLSLayer(context)
@@ -120,17 +127,18 @@ class NextLayer:
         # 3. Setup the HTTP layer for a regular HTTP proxy or an upstream proxy.
         if any([
             s(modes.HttpProxy),
+            # or a "Secure Web Proxy", see https://www.chromium.org/developers/design-documents/secure-web-proxy
             s(modes.HttpProxy, layers.ClientTLSLayer),
         ]):
-            return layers.HttpLayer(context, HTTPMode.regular)
-        if ctx.options.mode.startswith("upstream:") and len(context.layers) <= 3 and isinstance(top_layer,
-                                                                                                layers.ServerTLSLayer):
-            raise NotImplementedError()
+            if ctx.options.mode == "regular":
+                return layers.HttpLayer(context, HTTPMode.regular)
+            else:
+                return layers.HttpLayer(context, HTTPMode.upstream)
 
         # 4. Check for --tcp
         if any(
-                address and rex.search(address)
-                for address in (context.server.address[0], context.client.sni.decode("idna"))
+                rex.search(context.server.address[0]) or
+                (context.client.sni and rex.search(context.client.sni))
                 for rex in self.tcp_hosts
         ):
             return layers.TCPLayer(context)

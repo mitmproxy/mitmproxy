@@ -196,6 +196,8 @@ class NextLayer(Layer):
 
         # Has an addon decided on the next layer yet?
         if self.layer:
+            if self.debug:
+                yield commands.Log(f"{self.debug}[nextlayer] {self.layer!r}", "debug")
             for e in self.events:
                 yield from self.layer.handle_event(e)
             self.events.clear()

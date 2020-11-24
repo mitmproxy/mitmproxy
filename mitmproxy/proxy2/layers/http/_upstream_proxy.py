@@ -16,17 +16,31 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
     conn: context.Server
     tunnel_connection: context.Server
 
-    def __init__(self, ctx: context.Context, address: tuple, send_connect: bool):
+    def __init__(
+            self,
+            ctx: context.Context,
+            tunnel_conn: context.Server,
+            send_connect: bool
+    ):
         super().__init__(
             ctx,
-            tunnel_connection=context.Server(address),
+            tunnel_connection=tunnel_conn,
             conn=ctx.server
         )
-        self.conn.via = server_spec.ServerSpec("http", self.tunnel_connection.address)
+
+        self.conn.via = server_spec.ServerSpec(
+            "https" if self.tunnel_connection.tls else "http",
+            self.tunnel_connection.address
+        )
         self.buf = ReceiveBuffer()
         self.send_connect = send_connect
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
+        if self.tunnel_connection.tls:
+            # "Secure Web Proxy": We may have negotiated an ALPN when connecting to the upstream proxy.
+            # The semantics are not really clear here, but we make sure that if we negotiated h2,
+            # we act as an h2 client.
+            self.conn.alpn = self.tunnel_connection.alpn
         if not self.send_connect:
             return (yield from super().start_handshake())
         req = http.make_connect_request(self.conn.address)

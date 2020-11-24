@@ -1,7 +1,8 @@
 from enum import Enum, auto
-from typing import Optional, Tuple
+from typing import Callable, List, Optional, Tuple, Type
 
 from mitmproxy.proxy2 import commands, context, events, layer
+from mitmproxy.proxy2.layer import Layer
 
 
 class TunnelState(Enum):
