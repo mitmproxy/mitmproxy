@@ -124,7 +124,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
     async def open_connection(self, command: commands.OpenConnection) -> None:
         if not command.connection.address:
-            raise ValueError("Cannot open connection, no hostname given.")
+            self.log(f"Cannot open connection, no hostname given.")
+            self.server_event(events.OpenConnectionReply(command, f"Cannot open connection, no hostname given."))
+            return
 
         hook_data = server_hooks.ServerConnectionHookData(
             client=self.client,

@@ -69,25 +69,30 @@ class NextLayer:
         if not ctx.options.ignore_hosts and not ctx.options.allow_hosts:
             return False
 
-        addresses: typing.List[str] = [context.server.address[0]]
+        hostnames: typing.List[str] = []
+        if context.server.address:
+            hostnames.append(context.server.address[0])
         if is_tls_record_magic(data_client):
             try:
                 sni = parse_client_hello(data_client).sni
             except ValueError:
                 return None  # defer decision, wait for more input data
             else:
-                addresses.append(sni.decode("idna"))
+                hostnames.append(sni.decode("idna"))
+
+        if not hostnames:
+            return False
 
         if ctx.options.ignore_hosts:
             return any(
-                re.search(rex, address, re.IGNORECASE)
-                for address in addresses
+                re.search(rex, host, re.IGNORECASE)
+                for host in hostnames
                 for rex in ctx.options.ignore_hosts
             )
         elif ctx.options.allow_hosts:
             return not any(
-                re.search(rex, address, re.IGNORECASE)
-                for address in addresses
+                re.search(rex, host, re.IGNORECASE)
+                for host in hostnames
                 for rex in ctx.options.allow_hosts
             )
 
@@ -137,7 +142,7 @@ class NextLayer:
 
         # 4. Check for --tcp
         if any(
-                rex.search(context.server.address[0]) or
+                (context.server.address and rex.search(context.server.address[0])) or
                 (context.client.sni and rex.search(context.client.sni))
                 for rex in self.tcp_hosts
         ):
