@@ -130,13 +130,13 @@ class TunnelLayer(layer.Layer):
 
 
 class LayerStack:
-    def __init__(self):
-        self._stack = []
+    def __init__(self) -> None:
+        self._stack: List[Layer] = []
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: int) -> Layer:
         return self._stack.__getitem__(item)
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: Layer) -> "LayerStack":
         if self._stack:
             self._stack[-1].child_layer = other
         self._stack.append(other)

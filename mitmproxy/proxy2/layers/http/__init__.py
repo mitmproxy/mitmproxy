@@ -375,11 +375,11 @@ class HttpStream(layer.Layer):
 
         http_proxy = Server(self.context.server.via.address)
 
-        stack = tunnel.LayerStack(self.context)
+        stack = tunnel.LayerStack()
         if self.context.server.via.scheme == "https":
             http_proxy.sni = self.context.server.via.address[0].encode()
-            stack /= lambda ctx: tls.ServerTLSLayer(ctx, http_proxy)
-        stack /= lambda ctx: _upstream_proxy.HttpUpstreamProxy(ctx, http_proxy, True)
+            stack /= tls.ServerTLSLayer(self.context, http_proxy)
+        stack /= _upstream_proxy.HttpUpstreamProxy(self.context, http_proxy, True)
 
         self.child_layer = stack[0]
         yield from self.handle_connect_finish()
@@ -555,7 +555,7 @@ class HttpLayer(layer.Layer):
         )
         context = self.context.fork()
 
-        stack = tunnel.LayerStack(context)
+        stack = tunnel.LayerStack()
 
         if not can_use_context_connection:
 
@@ -567,14 +567,14 @@ class HttpLayer(layer.Layer):
 
                 if event.via.scheme == "https":
                     http_proxy.sni = event.via.address[0].encode()
-                    stack /= lambda ctx: tls.ServerTLSLayer(ctx, http_proxy)
+                    stack /= tls.ServerTLSLayer(context, http_proxy)
 
                 send_connect = not (self.mode == HTTPMode.upstream and not event.tls)
-                stack /= lambda ctx: _upstream_proxy.HttpUpstreamProxy(ctx, http_proxy, send_connect)
+                stack /= _upstream_proxy.HttpUpstreamProxy(context, http_proxy, send_connect)
             if event.tls:
-                stack /= lambda ctx: tls.ServerTLSLayer(ctx)
+                stack /= tls.ServerTLSLayer(context)
 
-        stack /= HttpClient
+        stack /= HttpClient(context)
 
         self.connections[context.server] = stack[0]
         self.waiting_for_establishment[context.server].append(event)
