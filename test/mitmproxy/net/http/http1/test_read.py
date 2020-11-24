@@ -146,6 +146,7 @@ def test_connection_close():
     headers = Headers()
     assert connection_close(b"HTTP/1.0", headers)
     assert not connection_close(b"HTTP/1.1", headers)
+    assert not connection_close(b"HTTP/2.0", headers)
 
     headers["connection"] = "keep-alive"
     assert not connection_close(b"HTTP/1.1", headers)
