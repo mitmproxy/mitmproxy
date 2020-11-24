@@ -68,20 +68,24 @@ def _fmt_entry(x: PlaybookEntry):
     return f"{arrow} {x}"
 
 
-def _merge_sends(lst: PlaybookEntryList) -> PlaybookEntryList:
-    merged = lst[:1]
-    for x in lst[1:]:
-        prev = merged[-1]
-        two_subsequent_sends_to_the_same_remote = (
-                isinstance(x, commands.SendData) and
-                isinstance(prev, commands.SendData) and
-                x.connection is prev.connection
-        )
-        if two_subsequent_sends_to_the_same_remote:
-            prev.data += x.data
+def _merge_sends(lst: typing.List[commands.Command], ignore_hooks: bool, ignore_logs: bool) -> PlaybookEntryList:
+    current_send = None
+    for x in lst:
+        if isinstance(x, commands.SendData):
+            if current_send is None:
+                current_send = x
+                yield x
+            else:
+                current_send.data += x.data
         else:
-            merged.append(x)
-    return merged
+            ignore = (
+                         (ignore_hooks and isinstance(x, commands.Hook))
+                or
+                         (ignore_logs and isinstance(x, commands.Log))
+            )
+            if not ignore:
+                current_send = None
+            yield x
 
 
 class _TracebackInPlaybook(commands.Command):
@@ -199,10 +203,11 @@ class Playbook:
                     self.actual.append(_TracebackInPlaybook(traceback.format_exc()))
                     break
 
-                cmds = _merge_sends(cmds)
+                cmds = list(_merge_sends(cmds, ignore_hooks=not self.hooks, ignore_logs=not self.logs))
 
                 self.actual.extend(cmds)
                 pos = len(self.actual) - len(cmds) - 1
+                hook_replies = []
                 for cmd in cmds:
                     pos += 1
                     assert self.actual[pos] == cmd
@@ -238,16 +243,21 @@ class Playbook:
                             if cmd.blocking:
                                 # the current event may still have yielded more events, so we need to insert
                                 # the reply *after* those additional events.
-                                self.expected.insert(pos + len(cmds) - cmds.index(cmd), events.HookReply(cmd))
+                                hook_replies.append(events.HookReply(cmd))
+                self.expected = self.expected[:pos+1] + hook_replies + self.expected[pos+1:]
+
                 eq(self.expected[i:], self.actual[i:])  # compare now already to set placeholders
             i += 1
 
         if not eq(self.expected, self.actual):
             self._errored = True
-            diff = "\n".join(difflib.ndiff(
+            diffs = list(difflib.ndiff(
                 [_fmt_entry(x) for x in self.expected],
                 [_fmt_entry(x) for x in self.actual]
             ))
+            if already_asserted:
+                diffs.insert(already_asserted, "==== asserted until here ====")
+            diff = "\n".join(diffs)
             raise AssertionError(f"Playbook mismatch!\n{diff}")
         else:
             return True
@@ -381,8 +391,8 @@ def reply_next_layer(
         **kwargs
 ) -> reply:
     """Helper function to simplify the syntax for next_layer events to this:
-        << commands.Hook("next_layer", next_layer)
-        >> tutils.next_layer(next_layer, tutils.EchoLayer)
+        << NextLayerHook(nl)
+        >> reply_next_layer(tutils.EchoLayer)
     """
 
     def set_layer(next_layer: layer.NextLayer) -> None:

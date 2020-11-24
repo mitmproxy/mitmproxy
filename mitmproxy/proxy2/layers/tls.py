@@ -127,7 +127,6 @@ class _TLSLayer(tunnel.TunnelLayer):
             conn=conn,
         )
 
-        assert not conn.tls
         conn.tls = True
 
     def __repr__(self):
@@ -248,8 +247,8 @@ class ServerTLSLayer(_TLSLayer):
     """
     command_to_reply_to: Optional[commands.OpenConnection] = None
 
-    def __init__(self, context: context.Context):
-        super().__init__(context, context.server)
+    def __init__(self, context: context.Context, conn: Optional[context.Server] = None):
+        super().__init__(context, conn or context.server)
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from self.start_tls()

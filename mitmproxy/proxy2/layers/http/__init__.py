@@ -371,41 +371,18 @@ class HttpStream(layer.Layer):
         yield from self.handle_connect_finish()
 
     def handle_connect_upstream(self):
-        assert self.context.server.via.scheme == "http"
-        http_proxy = _upstream_proxy.HttpUpstreamProxy(self.context, self.context.server.via.address, True)
+        assert self.context.server.via.scheme in ("http", "https")
 
-        if not self.flow.response and self.context.options.connection_strategy == "eager":
-            # We're bending over backwards here to 1) open a connection and 2) do an HTTP CONNECT cycle.
-            # If this turns out to be too error-prone, we may just want to default to "lazy" for upstream proxy mode.
+        http_proxy = Server(self.context.server.via.address)
 
-            stub = tunnel.OpenConnectionStub(self.context)
-            http_proxy.child_layer = stub
+        stack = tunnel.LayerStack(self.context)
+        if self.context.server.via.scheme == "https":
+            http_proxy.sni = self.context.server.via.address[0].encode()
+            stack /= lambda ctx: tls.ServerTLSLayer(ctx, http_proxy)
+        stack /= lambda ctx: _upstream_proxy.HttpUpstreamProxy(ctx, http_proxy, True)
 
-            yield from http_proxy.handle_event(events.Start())
-
-            def _wait_for_reply(event: events.Event):
-                yield from http_proxy.handle_event(event)
-                if stub.err:
-                    self.flow.response = http.HTTPResponse.make(
-                        502, f"HTTP CONNECT failed "
-                             f"for {human.format_address(self.context.server.address)} "
-                             f"at {human.format_address(http_proxy.tunnel_connection.address)}: {stub.err}"
-                    )
-                    yield from self.send_response()
-                elif stub.done:
-                    self.flow.response = http.make_connect_response(self.flow.request.data.http_version)
-                    yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)
-
-                    self.child_layer = http_proxy
-                    http_proxy.child_layer = layer.NextLayer(self.context)
-                    yield from http_proxy.child_layer.handle_event(events.Start())
-                    self._handle_event = self.passthrough
-
-            self._handle_event = _wait_for_reply
-        else:
-            self.child_layer = http_proxy
-            http_proxy.child_layer = layer.NextLayer(self.context)
-            yield from self.handle_connect_finish()
+        self.child_layer = stack[0]
+        yield from self.handle_connect_finish()
 
     def handle_connect_finish(self):
         if not self.flow.response:
@@ -490,7 +467,7 @@ class HttpLayer(layer.Layer):
         }
 
     def __repr__(self):
-        return f"HttpLayer(conns: {len(self.connections)})"
+        return f"HttpLayer({self.mode.name}, conns: {len(self.connections)})"
 
     def _handle_event(self, event: events.Event):
         if isinstance(event, events.Start):
@@ -578,23 +555,26 @@ class HttpLayer(layer.Layer):
         )
         context = self.context.fork()
 
-        stack = tunnel.LayerStack()
+        stack = tunnel.LayerStack(context)
 
         if not can_use_context_connection:
-            context.server = Server(event.address)
-            if context.options.http2:
-                context.server.alpn_offers = tls.HTTP_ALPNS
-            else:
-                context.server.alpn_offers = tls.HTTP1_ALPNS
-            if event.via:
-                assert event.via.scheme == "http"
-                context.server.via = event.via
-                send_connect = not (self.mode == HTTPMode.upstream and not event.tls)
-                stack /= _upstream_proxy.HttpUpstreamProxy(context, event.via.address, send_connect)
-            if event.tls:
-                stack /= tls.ServerTLSLayer(context)
 
-        stack /= HttpClient(context)
+            context.server = Server(event.address)
+
+            if event.via:
+                assert event.via.scheme in ("http", "https")
+                http_proxy = Server(event.via.address)
+
+                if event.via.scheme == "https":
+                    http_proxy.sni = event.via.address[0].encode()
+                    stack /= lambda ctx: tls.ServerTLSLayer(ctx, http_proxy)
+
+                send_connect = not (self.mode == HTTPMode.upstream and not event.tls)
+                stack /= lambda ctx: _upstream_proxy.HttpUpstreamProxy(ctx, http_proxy, send_connect)
+            if event.tls:
+                stack /= lambda ctx: tls.ServerTLSLayer(ctx)
+
+        stack /= HttpClient
 
         self.connections[context.server] = stack[0]
         self.waiting_for_establishment[context.server].append(event)
