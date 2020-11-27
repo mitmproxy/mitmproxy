@@ -79,7 +79,7 @@ def client_arguments_from_options(options: "mitmproxy.options.Options") -> dict:
 
 class MasterSecretLogger:
     def __init__(self, filename):
-        self.filename = filename
+        self.filename = os.path.expanduser(filename)
         self.f = None
         self.lock = threading.Lock()
 
