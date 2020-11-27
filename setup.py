@@ -83,7 +83,7 @@ setup(
         "passlib>=1.6.5, <1.8",
         "protobuf>=3.14,<3.15",
         "pyasn1>=0.3.1,<0.5",
-        "pyOpenSSL>=19.1.0,<19.2",
+        "pyOpenSSL>=20.0,<20.1",
         "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.9",
         "ruamel.yaml>=0.16,<0.17",
