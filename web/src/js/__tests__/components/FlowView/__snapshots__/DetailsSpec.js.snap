@@ -331,8 +331,6 @@ exports[`Details Component should render correctly when server address is missin
           </td>
         </tr>
         <tr>
-        </tr>
-        <tr>
           <td>
             First response byte
             :
