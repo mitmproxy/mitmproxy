@@ -60,7 +60,7 @@ def curl_command(f: flow.Flow) -> str:
     request = pop_headers(request)
     args = ["curl"]
 
-    server_addr = f.server_conn.address[0]
+    server_addr = f.server_conn.ip_address[0]
     if request.pretty_host != server_addr:
         resolve = "{}:{}:[{}]".format(request.pretty_host, request.port, server_addr)
         args.append("--resolve")
