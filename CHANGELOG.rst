@@ -10,7 +10,7 @@ Unreleased: mitmproxy next
 * Addon to suppress unwanted error messages sent by mitmproxy. (@anneborcherding)
 * Updated imports and styles for web scanner helper addons. (@anneborcherding)
 * Inform when underscore-formatted options are used in client arg. (@jrblixt)
-
+* Fixed the web UI showing blank page on clicking details tab when server address is missing (@samhita-sopho)
 * --- TODO: add new PRs above this line ---
 
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
