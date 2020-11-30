@@ -3,6 +3,7 @@
 ## Unreleased: mitmproxy next
 
 * Fix SNI-related reproducibility issues when exporting to curl/httpie commands. (@dkasak)
+* Add option `export_preserve_original_ip` to force exported command to connect to IP from original request. Only supports curl at the moment. (@dkasak)
 
 ### New Proxy Core (@mhils)
 
