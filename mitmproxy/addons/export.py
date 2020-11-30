@@ -55,13 +55,13 @@ def request_content_for_console(request: http.Request) -> str:
     )
 
 
-def curl_command(f: flow.Flow) -> str:
+def curl_command(f: flow.Flow, preserve_ip: bool = False) -> str:
     request = cleanup_request(f)
     request = pop_headers(request)
     args = ["curl"]
 
     server_addr = f.server_conn.ip_address[0]
-    if request.pretty_host != server_addr:
+    if preserve_ip and request.pretty_host != server_addr:
         resolve = "{}:{}:[{}]".format(request.pretty_host, request.port, server_addr)
         args.append("--resolve")
         args.append(resolve)
@@ -134,6 +134,18 @@ formats = dict(
 
 
 class Export():
+    def load(self, loader):
+        loader.add_option(
+            "export_preserve_original_ip", bool, False,
+            """
+            When exporting a request as an external command, make an effort to
+            connect to the same IP as in the original request. This helps with
+            reproducibility in cases where the behaviour depends on the
+            particular host we are connecting to. Currently this only affects
+            curl exports.
+            """
+        )
+
     @command.command("export.formats")
     def formats(self) -> typing.Sequence[str]:
         """
@@ -149,7 +161,10 @@ class Export():
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
         func: typing.Any = formats[format]
-        v = func(flow)
+        if format == "curl":
+            v = func(flow, preserve_ip=ctx.options.export_preserve_original_ip)
+        else:
+            v = func(flow)
         try:
             with open(path, "wb") as fp:
                 if isinstance(v, bytes):
@@ -167,7 +182,10 @@ class Export():
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
         func: typing.Any = formats[format]
-        v = strutils.always_str(func(flow))
+        if format == "curl":
+            v = strutils.always_str(func(flow, preserve_ip=ctx.options.export_preserve_original_ip))
+        else:
+            v = strutils.always_str(func(flow))
         try:
             pyperclip.copy(v)
         except pyperclip.PyperclipException as e:
