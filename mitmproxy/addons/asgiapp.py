@@ -33,6 +33,7 @@ class ASGIApp:
         )
 
     def request(self, flow: http.HTTPFlow) -> None:
+        assert flow.reply
         if self.should_serve(flow):
             flow.reply.take()  # pause hook completion
             asyncio.ensure_future(serve(self.asgi_app, flow))
