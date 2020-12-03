@@ -1,10 +1,13 @@
+import asyncio
 import json
+from unittest import mock
 
 import flask
 from flask import request
 
 from .. import tservers
 from mitmproxy.addons import asgiapp
+from mitmproxy.test import tflow
 
 tapp = flask.Flask(__name__)
 
@@ -68,3 +71,11 @@ class TestApp(tservers.HTTPProxyTest):
             ret = p.request("get:'http://noresponseapp/'")
         assert ret.status_code == 500
         assert b"ASGI Error" in ret.content
+
+    def test_app_not_serve_loading_flows(self):
+        with mock.patch('mitmproxy.addons.asgiapp.serve') as mck:
+            flow = tflow.tflow()
+            flow.request.host = "testapp"
+            flow.request.port = 80
+            asyncio.run_coroutine_threadsafe(self.master.load_flow(flow), self.master.channel.loop).result()
+            mck.assert_not_awaited()
