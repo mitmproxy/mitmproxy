@@ -1,8 +1,10 @@
 import asyncio
 import json
+import sys
 from unittest import mock
 
 import flask
+import pytest
 from flask import request
 
 from .. import tservers
@@ -72,6 +74,7 @@ class TestApp(tservers.HTTPProxyTest):
         assert ret.status_code == 500
         assert b"ASGI Error" in ret.content
 
+    @pytest.mark.skipif(sys.version_info < (3, 8), reason='requires Python 3.8 or higher')
     def test_app_not_serve_loading_flows(self):
         with mock.patch('mitmproxy.addons.asgiapp.serve') as mck:
             flow = tflow.tflow()
