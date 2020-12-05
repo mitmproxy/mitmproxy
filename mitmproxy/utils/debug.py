@@ -83,8 +83,6 @@ def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragm
             print(i[1], i[0])
 
         try:
-            if sys.version_info < (3, 8):
-                raise RuntimeError
             asyncio.get_running_loop()
         except RuntimeError:
             pass

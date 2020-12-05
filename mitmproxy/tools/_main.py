@@ -1,6 +1,5 @@
 """
-This file contains python3.6+ syntax!
-Feel free to import and use whatever new package you deem necessary.
+This file now contains python3.8+ syntax!
 """
 
 import os

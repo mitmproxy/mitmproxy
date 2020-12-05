@@ -34,8 +34,6 @@ setup(
         "Operating System :: POSIX",
         "Operating System :: Microsoft :: Windows",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: Implementation :: CPython",
@@ -65,6 +63,7 @@ setup(
             "pathoc = pathod.pathoc_cmdline:go_pathoc"
         ]
     },
+    python_requires='>=3.8',
     # https://packaging.python.org/en/latest/requirements/#install-requires
     # It is not considered best practice to use install_requires to pin dependencies to specific versions.
     install_requires=[
@@ -75,8 +74,8 @@ setup(
         "click>=7.0,<8",
         "cryptography>=3.2,<3.3",
         "flask>=1.1.1,<1.2",
-        "h2>=4.0,<5; python_version>='3.6.0'",  # python_version only needed to make "py36+ required" message work
-        "hyperframe>=6.0,<7; python_version>='3.6.0'",  # python_version only needed to make "py36+ required" message work
+        "h2>=4.0,<5",
+        "hyperframe>=6.0,<7",
         "kaitaistruct>=0.7,<0.10",
         "ldap3>=2.8,<2.9",
         "msgpack>=1.0.0, <1.1.0",
@@ -97,9 +96,6 @@ setup(
     extras_require={
         ':sys_platform == "win32"': [
             "pydivert>=2.0.3,<2.2",
-        ],
-        ':python_version == "3.6"': [
-            "dataclasses>=0.7",
         ],
         'dev': [
             "hypothesis>=5.8,<6",
