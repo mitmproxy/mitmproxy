@@ -1,6 +1,6 @@
 import uuid
 import warnings
-from enum import Flag, auto
+from enum import Flag
 from typing import List, Literal, Optional, Sequence, Tuple, Union
 
 from mitmproxy import certs
@@ -11,8 +11,8 @@ from mitmproxy.options import Options
 
 class ConnectionState(Flag):
     CLOSED = 0
-    CAN_READ = auto()
-    CAN_WRITE = auto()
+    CAN_READ = 1
+    CAN_WRITE = 2
     OPEN = CAN_READ | CAN_WRITE
 
 
@@ -107,8 +107,7 @@ class Client(Connection):
 
     def get_state(self):
         # Important: Retain full compatibility with old proxy core for now!
-        # This means we truncate some fields (in either direction),
-        # which needs to be undone once we drop the old implementation.
+        # This means we need to add all new fields to the old implementation.
         return {
             'address': self.peername,
             'alpn_proto_negotiated': self.alpn,
@@ -123,6 +122,14 @@ class Client(Connection):
             'tls_established': self.tls_established,
             'tls_extensions': [],
             'tls_version': self.tls_version,
+            # only used in sans-io
+            'state': self.state.value,
+            'sockname': self.sockname,
+            'error': self.error,
+            'tls': self.tls,
+            'certificate_list': [x.get_state() for x in self.certificate_list] if self.certificate_list else None,
+            'alpn_offers': self.alpn_offers,
+            'cipher_list': self.cipher_list,
         }
 
     @classmethod
@@ -136,7 +143,7 @@ class Client(Connection):
         return client
 
     def set_state(self, state):
-        self.peername = state["address"]
+        self.peername = tuple(state["address"])
         self.alpn = state["alpn_proto_negotiated"]
         self.cipher = state["cipher_name"]
         self.certificate_list = [certs.Cert.from_state(state["clientcert"])] if state["clientcert"] else None
@@ -146,6 +153,15 @@ class Client(Connection):
         self.timestamp_start = state["timestamp_start"]
         self.timestamp_tls_setup = state["timestamp_tls_setup"]
         self.tls_version = state["tls_version"]
+        # only used in sans-io
+        self.state = ConnectionState(state["state"])
+        self.sockname = tuple(state["sockname"])
+        self.error = state["error"]
+        self.tls = state["tls"]
+        self.certificate_list = [certs.Cert.from_state(x) for x in state["certificate_list"]] if state[
+            "certificate_list"] else None
+        self.alpn_offers = state["alpn_offers"]
+        self.cipher_list = state["cipher_list"]
 
     @property
     def address(self):
@@ -192,7 +208,15 @@ class Server(Connection):
             'timestamp_tls_setup': self.timestamp_tls_setup,
             'tls_established': self.tls_established,
             'tls_version': self.tls_version,
-            'via': None
+            'via': None,
+            # only used in sans-io
+            'state': self.state.value,
+            'error': self.error,
+            'tls': self.tls,
+            'certificate_list': [x.get_state() for x in self.certificate_list] if self.certificate_list else None,
+            'alpn_offers': self.alpn_offers,
+            'cipher_list': self.cipher_list,
+            'via2': self.via,
         }
 
     @classmethod
@@ -202,18 +226,26 @@ class Server(Connection):
         return server
 
     def set_state(self, state):
-        self.address = state["address"]
+        self.address = tuple(state["address"])
         self.alpn = state["alpn_proto_negotiated"]
         self.certificate_list = [certs.Cert.from_state(state["cert"])] if state["cert"] else None
         self.id = state["id"]
-        self.peername = state["ip_address"]
+        self.peername = tuple(state["ip_address"])
         self.sni = state["sni"]
-        self.sockname = state["source_address"]
+        self.sockname = tuple(state["source_address"])
         self.timestamp_end = state["timestamp_end"]
         self.timestamp_start = state["timestamp_start"]
         self.timestamp_tcp_setup = state["timestamp_tcp_setup"]
         self.timestamp_tls_setup = state["timestamp_tls_setup"]
         self.tls_version = state["tls_version"]
+        self.state = ConnectionState(state["state"])
+        self.error = state["error"]
+        self.tls = state["tls"]
+        self.certificate_list = [certs.Cert.from_state(x) for x in state["certificate_list"]] if state[
+            "certificate_list"] else None
+        self.alpn_offers = state["alpn_offers"]
+        self.cipher_list = state["cipher_list"]
+        self.via = state["via2"]
 
     @property
     def ip_address(self) -> Address:

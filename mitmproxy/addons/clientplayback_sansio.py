@@ -1,4 +1,5 @@
 import asyncio
+import time
 import traceback
 import typing
 
@@ -14,7 +15,7 @@ from mitmproxy.net import server_spec
 from mitmproxy.options import Options
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import commands, events, layers, server
-from mitmproxy.proxy2.context import Context, Server
+from mitmproxy.proxy2.context import ConnectionState, Context, Server
 from mitmproxy.proxy2.layer import CommandGenerator
 from mitmproxy.utils import asyncio_utils
 
@@ -33,7 +34,13 @@ class MockServer(layers.http.HttpConnection):
     def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
         if isinstance(event, events.Start):
             has_content = bool(self.flow.request.raw_content)
-            yield layers.http.ReceiveHttp(layers.http.RequestHeaders(1, self.flow.request, not has_content))
+            self.flow.request.timestamp_start = self.flow.request.timestamp_end = time.time()
+            yield layers.http.ReceiveHttp(layers.http.RequestHeaders(
+                1,
+                self.flow.request,
+                end_stream=not has_content,
+                replay_flow=self.flow,
+            ))
             if has_content:
                 yield layers.http.ReceiveHttp(layers.http.RequestData(1, self.flow.request.raw_content))
             yield layers.http.ReceiveHttp(layers.http.RequestEndOfMessage(1))
@@ -51,6 +58,7 @@ class MockServer(layers.http.HttpConnection):
 class ReplayHandler(server.ConnectionHandler):
     def __init__(self, flow: http.HTTPFlow, options: Options) -> None:
         client = flow.client_conn.copy()
+        client.state = ConnectionState.OPEN
 
         context = Context(client, options)
         context.server = Server(
@@ -121,7 +129,7 @@ class ClientPlayback:
             self.inflight = None
 
     def check(self, f: flow.Flow) -> typing.Optional[str]:
-        if f.live:
+        if f.live or f == self.inflight:
             return "Can't replay live flow."
         if f.intercepted:
             return "Can't replay intercepted flow."

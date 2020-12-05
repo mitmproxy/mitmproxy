@@ -355,18 +355,19 @@ class Http2Client(Http2Connection):
             ]
             if event.request.authority:
                 pseudo_headers.append((b":authority", event.request.data.authority))
-            elif not event.request.is_http2:
-                host_header = event.request.headers.pop("host", None)
-                if host_header:
-                    pseudo_headers.append((b":authority", host_header))
 
-            headers = pseudo_headers + list(event.request.headers.fields)
-            if not event.request.is_http2:
-                headers = normalize_h1_headers(headers, True)
+            if event.request.is_http2:
+                hdrs = list(event.request.headers.fields)
+            else:
+                headers = event.request.headers
+                if not event.request.authority and "host" in headers:
+                    headers = headers.copy()
+                    pseudo_headers.append((b":authority", headers.pop(b"host")))
+                hdrs = normalize_h1_headers(list(headers.fields), True)
 
             self.h2_conn.send_headers(
                 event.stream_id,
-                headers,
+                pseudo_headers + hdrs,
                 end_stream=event.end_stream,
             )
             self.streams[event.stream_id] = StreamState.EXPECTING_HEADERS

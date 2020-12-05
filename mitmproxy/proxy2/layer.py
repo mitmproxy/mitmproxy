@@ -5,7 +5,6 @@ import collections
 import textwrap
 import typing
 from abc import abstractmethod
-from dataclasses import dataclass
 
 from mitmproxy import log
 from mitmproxy.proxy2 import commands, events
@@ -45,8 +44,13 @@ class Layer:
         self._paused_event_queue = collections.deque()
 
         show_debug_output = (
-                "termlog_verbosity" in context.options and
-                log.log_tier(context.options.termlog_verbosity) >= log.log_tier("debug")
+                (
+                        "termlog_verbosity" in context.options and
+                        log.log_tier(context.options.termlog_verbosity) >= log.log_tier("debug")
+                ) or (
+                        "console_eventlog_verbosity" in context.options and
+                        log.log_tier(context.options.console_eventlog_verbosity) >= log.log_tier("debug")
+                )
         )
         if show_debug_output:
             self.debug = "  " * len(context.layers)
