@@ -1,6 +1,8 @@
 from dataclasses import dataclass
+from typing import Optional
 
 from mitmproxy import http
+from mitmproxy.http import HTTPFlow
 from ._base import HttpEvent
 
 
@@ -13,6 +15,8 @@ class RequestHeaders(HttpEvent):
     us to set END_STREAM on headers already (and some servers - Akamai - implicitly expect that).
     In either case, this event will nonetheless be followed by RequestEndOfMessage.
     """
+    replay_flow: Optional[HTTPFlow] = None
+    """If set, the current request headers belong to a replayed flow, which should be reused."""
 
 
 @dataclass

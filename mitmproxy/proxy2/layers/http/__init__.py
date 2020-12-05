@@ -132,11 +132,14 @@ class HttpStream(layer.Layer):
     @expect(RequestHeaders)
     def state_wait_for_request_headers(self, event: RequestHeaders) -> layer.CommandGenerator[None]:
         self.stream_id = event.stream_id
-        # noinspection PyTypeChecker
-        self.flow = http.HTTPFlow(
-            self.context.client,
-            self.context.server
-        )
+        if not event.replay_flow:
+            self.flow = http.HTTPFlow(
+                self.context.client,
+                self.context.server
+            )
+
+        else:
+            self.flow = event.replay_flow
         self.flow.request = event.request
 
         if err := validate_request(self.mode, self.flow.request):
