@@ -215,6 +215,7 @@ class Server(Connection):
             'tls': self.tls,
             'certificate_list': [x.get_state() for x in self.certificate_list] if self.certificate_list else None,
             'alpn_offers': self.alpn_offers,
+            'cipher_name': self.cipher,
             'cipher_list': self.cipher_list,
             'via2': self.via,
         }
@@ -244,6 +245,7 @@ class Server(Connection):
         self.certificate_list = [certs.Cert.from_state(x) for x in state["certificate_list"]] if state[
             "certificate_list"] else None
         self.alpn_offers = state["alpn_offers"]
+        self.cipher = state["cipher_name"]
         self.cipher_list = state["cipher_list"]
         self.via = state["via2"]
 
