@@ -12,7 +12,12 @@ def maybe_timestamp(base, attr):
     if base is not None and getattr(base, attr):
         return human.format_timestamp_with_milli(getattr(base, attr))
     else:
-        return "active"
+        # in mitmdump we serialize before a connection is closed.
+        # loading those flows at a later point shouldn't display "active".
+        # We also use a ndash (and not a regular dash) so that it is sorted
+        # after other timestamps. We may need to revisit that in the future if it turns out
+        # to render ugly in consoles.
+        return "–"
 
 
 def flowdetails(state, flow: mitmproxy.flow.Flow):
