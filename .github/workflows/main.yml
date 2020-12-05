@@ -85,7 +85,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - run: pip install tox
       - run: tox -e cibuild -- build
       - uses: actions/upload-artifact@v2
@@ -107,7 +107,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
+          python-version: '3.9'
       - if: matrix.os == 'windows-latest'
         uses: actions/cache@v1
         with:
@@ -153,7 +153,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - run: pip install tox
       - run: |
           wget https://github.com/gohugoio/hugo/releases/download/v0.70.0/hugo_extended_0.70.0_Linux-64bit.deb
@@ -173,7 +173,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
+          python-version: '3.9'
       - run: pip install tox
       - uses: actions/download-artifact@v2
         with:
@@ -198,7 +198,7 @@ jobs:
       - uses: actions/checkout@v1
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.9'
       - uses: actions/download-artifact@v2
         with:
           path: release/dist
