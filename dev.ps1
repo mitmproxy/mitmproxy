@@ -1,10 +1,5 @@
 $ErrorActionPreference = "Stop"
 
-$pyver = python --version
-if($pyver -notmatch "3\.(8|9|\d{2,})") {
-    Write-Warning "Unexpected Python version, expected Python 3.8 or above: $pyver"
-}
-
 python -m venv .\venv --copies
 & .\venv\Scripts\activate.ps1
 
