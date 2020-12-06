@@ -165,6 +165,13 @@ def tclient_conn():
         alpn_proto_negotiated=b"http/1.1",
         tls_version="TLSv1.2",
         tls_extensions=[(0x00, bytes.fromhex("000e00000b6578616d"))],
+        state=0,
+        sockname=("", 0),
+        error=None,
+        tls=False,
+        certificate_list=[],
+        alpn_offers=[],
+        cipher_list=[],
     ))
     c.reply = controller.DummyReply()
     c.rfile = io.BytesIO()
@@ -191,6 +198,14 @@ def tserver_conn():
         alpn_proto_negotiated=None,
         tls_version="TLSv1.2",
         via=None,
+        state=0,
+        error=None,
+        tls=False,
+        certificate_list=[],
+        alpn_offers=[],
+        cipher_name=None,
+        cipher_list=[],
+        via2=None,
     ))
     c.reply = controller.DummyReply()
     c.rfile = io.BytesIO()

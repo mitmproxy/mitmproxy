@@ -237,6 +237,123 @@ exports[`Details Component should render correctly 1`] = `
 </section>
 `;
 
+exports[`Details Component should render correctly when server address is missing 1`] = `
+<section
+  className="detail"
+>
+  <h4>
+    Client Connection
+  </h4>
+  <table
+    className="connection-table"
+  >
+    <tbody>
+      <tr>
+        <td>
+          Address:
+        </td>
+        <td>
+          127.0.0.1:22
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <abbr
+            title="TLS Server Name Indication"
+          >
+            TLS SNI:
+          </abbr>
+        </td>
+        <td>
+          address
+        </td>
+      </tr>
+      <tr>
+        <td>
+          TLS version:
+        </td>
+        <td>
+          TLSv1.2
+        </td>
+      </tr>
+      <tr>
+        <td>
+          cipher name:
+        </td>
+        <td>
+          cipher
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <abbr
+            title="ALPN protocol negotiated"
+          >
+            ALPN:
+          </abbr>
+        </td>
+        <td>
+          http/1.1
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div />
+  <div>
+    <h4>
+      Timing
+    </h4>
+    <table
+      className="timing-table"
+    >
+      <tbody>
+        <tr />
+        <tr />
+        <tr />
+        <tr />
+        <tr />
+        <tr>
+          <td>
+            Client conn. established
+            :
+          </td>
+          <td>
+            1970-01-01 00:00:01.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Client conn. SSL handshake
+            :
+          </td>
+          <td>
+            1970-01-01 00:00:02.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            First response byte
+            :
+          </td>
+          <td>
+            2017-05-21 12:38:32.481
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Response complete
+            :
+          </td>
+          <td>
+            2017-05-21 12:38:32.481
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+`;
+
 exports[`TimeStamp Component should render correctly 1`] = `
 <tr>
   <td>

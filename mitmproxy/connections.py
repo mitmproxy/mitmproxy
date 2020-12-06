@@ -86,6 +86,15 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
     def __hash__(self):
         return hash(self.id)
 
+    # Sans-io attributes.
+    state = 0
+    sockname = ("", 0)
+    error = None
+    tls = None
+    certificate_list = None
+    alpn_offers = None
+    cipher_list = None
+
     _stateobject_attributes = dict(
         id=str,
         address=tuple,
@@ -100,6 +109,14 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         alpn_proto_negotiated=bytes,
         tls_version=str,
         tls_extensions=typing.List[typing.Tuple[int, bytes]],
+        # sans-io exclusives
+        state=int,
+        sockname=tuple,
+        error=str,
+        tls=bool,
+        certificate_list=typing.List[certs.Cert],
+        alpn_offers=typing.List[bytes],
+        cipher_list=typing.List[str],
     )
 
     def send(self, message):
@@ -130,6 +147,13 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             alpn_proto_negotiated=None,
             tls_version=None,
             tls_extensions=None,
+            state=0,
+            sockname=("", 0),
+            error=None,
+            tls=False,
+            certificate_list=[],
+            alpn_offers=[],
+            cipher_list=[],
         ))
 
     def convert_to_tls(self, cert, *args, **kwargs):
@@ -221,6 +245,16 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     def __hash__(self):
         return hash(self.id)
 
+    # Sans-io attributes.
+    state = 0
+    error = None
+    tls = None
+    certificate_list = None
+    alpn_offers = None
+    cipher_name = None
+    cipher_list = None
+    via2 = None
+
     _stateobject_attributes = dict(
         id=str,
         address=tuple,
@@ -235,6 +269,15 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         timestamp_tcp_setup=float,
         timestamp_tls_setup=float,
         timestamp_end=float,
+        # sans-io exclusives
+        state=int,
+        error=str,
+        tls=bool,
+        certificate_list=typing.List[certs.Cert],
+        alpn_offers=typing.List[bytes],
+        cipher_name=str,
+        cipher_list=typing.List[str],
+        via2=None,
     )
 
     @classmethod
@@ -259,7 +302,15 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             timestamp_tcp_setup=None,
             timestamp_tls_setup=None,
             timestamp_end=None,
-            via=None
+            via=None,
+            state=0,
+            error=None,
+            tls=False,
+            certificate_list=[],
+            alpn_offers=[],
+            cipher_name=None,
+            cipher_list=[],
+            via2=None,
         ))
 
     def connect(self):

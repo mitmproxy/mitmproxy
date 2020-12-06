@@ -12,6 +12,7 @@ Unreleased: mitmproxy next
 * Updated imports and styles for web scanner helper addons. (@anneborcherding)
 * Inform when underscore-formatted options are used in client arg. (@jrblixt)
 * Binaries are now built with Python 3.9 (@mhils)
+* Fixed the web UI showing blank page on clicking details tab when server address is missing (@samhita-sopho)
 
 * --- TODO: add new PRs above this line ---
 
