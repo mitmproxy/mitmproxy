@@ -90,7 +90,7 @@ class Master:
             if not self.should_exit.is_set():  # pragma: no cover
                 self.shutdown()
             loop = asyncio.get_event_loop()
-            tasks = asyncio.all_tasks(loop) if sys.version_info >= (3, 7) else asyncio.Task.all_tasks(loop)
+            tasks = asyncio.all_tasks(loop)
             for p in tasks:
                 p.cancel()
             loop.close()

@@ -1,5 +1,4 @@
 import asyncio
-import sys
 
 import pytest
 
@@ -15,7 +14,6 @@ async def ttask():
 
 
 @pytest.mark.asyncio
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires Python 3.8")
 async def test_simple():
     task = asyncio_utils.create_task(
         ttask(),
@@ -30,7 +28,6 @@ async def test_simple():
     assert task.cancelled()
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires Python 3.8")
 def test_closed_loop():
     # Crude test for line coverage.
     # This should eventually go, see the description in asyncio_utils.create_task for details.
@@ -38,9 +35,11 @@ def test_closed_loop():
         ttask(),
         name="ttask",
     )
+    t = ttask()
     with pytest.raises(RuntimeError):
         asyncio_utils.create_task(
-            ttask(),
+            t,
             name="ttask",
             ignore_closed_loop=False,
         )
+    t.close()  # suppress "not awaited" warning
