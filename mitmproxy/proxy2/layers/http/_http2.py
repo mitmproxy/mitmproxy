@@ -1,7 +1,7 @@
 import collections
 import time
 from enum import Enum
-from typing import ClassVar, DefaultDict, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import ClassVar, DefaultDict, Dict, Iterable, List, Optional, Tuple, Type, Union, Callable
 
 import h2.config
 import h2.connection
@@ -45,12 +45,13 @@ class Http2Connection(HttpConnection):
     streams: Dict[int, StreamState]
     """keep track of all active stream ids to send protocol errors on teardown"""
 
-    ReceiveProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
     SendProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
-    ReceiveData: Type[Union[RequestData, ResponseData]]
     SendData: Type[Union[RequestData, ResponseData]]
-    ReceiveEndOfMessage: Type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
     SendEndOfMessage: Type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
+
+    ReceiveProtocolError: Callable[[int, str], Union[RequestProtocolError, ResponseProtocolError]]
+    ReceiveData: Callable[[int, bytes], Union[RequestData, ResponseData]]
+    ReceiveEndOfMessage: Callable[[int], Union[RequestEndOfMessage, ResponseEndOfMessage]]
 
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context, conn)
@@ -121,7 +122,6 @@ class Http2Connection(HttpConnection):
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
 
-    # noinspection PyArgumentList
     def handle_h2_event(self, event: h2.events.Event) -> CommandGenerator[bool]:
         """returns true if further processing should be stopped."""
         if isinstance(event, h2.events.DataReceived):
@@ -196,7 +196,6 @@ class Http2Connection(HttpConnection):
     def close_connection(self, msg: str) -> CommandGenerator[None]:
         yield CloseConnection(self.conn)
         for stream_id in self.streams:
-            # noinspection PyArgumentList
             yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
         self.streams.clear()
         self._handle_event = self.done
@@ -225,12 +224,13 @@ class Http2Server(Http2Connection):
         client_side=False,
     )
 
-    ReceiveProtocolError = RequestProtocolError
     SendProtocolError = ResponseProtocolError
-    ReceiveData = RequestData
     SendData = ResponseData
-    ReceiveEndOfMessage = RequestEndOfMessage
     SendEndOfMessage = ResponseEndOfMessage
+
+    ReceiveProtocolError = RequestProtocolError
+    ReceiveData = RequestData
+    ReceiveEndOfMessage = RequestEndOfMessage
 
     def __init__(self, context: Context):
         super().__init__(context, context.client)
@@ -285,12 +285,13 @@ class Http2Client(Http2Connection):
         client_side=True,
     )
 
-    ReceiveProtocolError = ResponseProtocolError
     SendProtocolError = RequestProtocolError
-    ReceiveData = ResponseData
     SendData = RequestData
-    ReceiveEndOfMessage = ResponseEndOfMessage
     SendEndOfMessage = RequestEndOfMessage
+
+    ReceiveProtocolError = ResponseProtocolError
+    ReceiveData = ResponseData
+    ReceiveEndOfMessage = ResponseEndOfMessage
 
     our_stream_id = Dict[int, int]
     their_stream_id = Dict[int, int]
