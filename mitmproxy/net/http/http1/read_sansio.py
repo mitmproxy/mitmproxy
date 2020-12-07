@@ -4,6 +4,7 @@ from typing import Iterable, List, Optional, Tuple
 
 from mitmproxy.net import check
 from mitmproxy.net.http import headers, request, response, url
+from mitmproxy.net.http.http1 import read
 
 
 def _parse_authority_form(hostport: bytes) -> Tuple[bytes, int]:
@@ -165,3 +166,16 @@ def read_response_head(lines: List[bytes]) -> response.Response:
         timestamp_start=time.time(),
         timestamp_end=None,
     )
+
+
+def expected_http_body_size(
+        request: request.Request,
+        response: Optional[response.Response] = None,
+        expect_continue_as_0: bool = True,
+):
+    """
+    Like the non-sans-io version, but also treating CONNECT as content-length: 0
+    """
+    if request.data.method.upper() == b"CONNECT":
+        return 0
+    return read.expected_http_body_size(request, response, expect_continue_as_0)
