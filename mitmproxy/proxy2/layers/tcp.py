@@ -8,18 +8,34 @@ from mitmproxy.proxy2.utils import expect
 
 
 class TcpStartHook(Hook):
+    """
+    A TCP connection has started.
+    """
+
     flow: tcp.TCPFlow
 
 
 class TcpMessageHook(Hook):
+    """
+    A TCP connection has received a message. The most recent message
+    will be flow.messages[-1]. The message is user-modifiable.
+    """
     flow: tcp.TCPFlow
 
 
 class TcpEndHook(Hook):
+    """
+    A TCP connection has ended.
+    """
     flow: tcp.TCPFlow
 
 
 class TcpErrorHook(Hook):
+    """
+    A TCP error has occurred.
+
+    Every TCP flow will receive either a tcp_error or a tcp_end event, but not both.
+    """
     flow: tcp.TCPFlow
 
 
@@ -27,7 +43,6 @@ class TCPLayer(layer.Layer):
     """
     Simple TCP layer that just relays messages right now.
     """
-    context: Context
     flow: Optional[tcp.TCPFlow]
 
     def __init__(self, context: Context, ignore: bool = False):
