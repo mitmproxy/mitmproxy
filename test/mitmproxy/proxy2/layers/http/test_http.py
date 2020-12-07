@@ -806,19 +806,23 @@ def test_kill_flow(tctx, when):
     flow = Placeholder(HTTPFlow)
 
     def kill(flow: HTTPFlow):
+        # Can't use flow.kill() here because that currently still depends on a reply object.
         flow.error = Error(Error.KILLED_MESSAGE)
 
-    def assert_kill():
-        assert (playbook
-                >> reply(side_effect=kill)
-                << CloseConnection(tctx.client))
+    def assert_kill(err_hook: bool = True):
+        playbook >> reply(side_effect=kill)
+        if err_hook:
+            playbook << http.HttpErrorHook(flow)
+            playbook >> reply()
+        playbook << CloseConnection(tctx.client)
+        assert playbook
 
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
     assert (playbook
             >> DataReceived(tctx.client, b"CONNECT example.com:80 HTTP/1.1\r\n\r\n")
             << http.HttpConnectHook(connect_flow))
     if when == "http_connect":
-        return assert_kill()
+        return assert_kill(False)
     assert (playbook
             >> reply()
             << SendData(tctx.client, b'HTTP/1.1 200 Connection established\r\n\r\n')
@@ -853,14 +857,14 @@ def test_kill_flow(tctx, when):
                 >> reply()
                 >> DataReceived(server, b"!")
                 << http.HttpResponseHook(flow))
-        return assert_kill()
+        return assert_kill(False)
     elif when == "error":
         assert (playbook
                 >> reply()
                 >> ConnectionClosed(server)
                 << CloseConnection(server)
                 << http.HttpErrorHook(flow))
-        return assert_kill()
+        return assert_kill(False)
     else:
         raise AssertionError
 

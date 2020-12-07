@@ -183,7 +183,7 @@ class HttpStream(layer.Layer):
             self.flow.request.host_header = self.context.server.address[0]
 
         yield HttpRequestHeadersHook(self.flow)
-        if (yield from self.check_killed()):
+        if (yield from self.check_killed(True)):
             return
 
         if self.flow.request.headers.get("expect", "").lower() == "100-continue":
@@ -227,13 +227,13 @@ class HttpStream(layer.Layer):
             self.flow.request.data.content = self.request_body_buf
             self.request_body_buf = b""
             yield HttpRequestHook(self.flow)
-            if (yield from self.check_killed()):
+            if (yield from self.check_killed(True)):
                 return
             elif self.flow.response:
                 # response was set by an inline script.
                 # we now need to emulate the responseheaders hook.
                 yield HttpResponseHeadersHook(self.flow)
-                if (yield from self.check_killed()):
+                if (yield from self.check_killed(True)):
                     return
                 yield from self.send_response()
             else:
@@ -253,7 +253,7 @@ class HttpStream(layer.Layer):
     def state_wait_for_response_headers(self, event: ResponseHeaders) -> layer.CommandGenerator[None]:
         self.flow.response = event.response
         yield HttpResponseHeadersHook(self.flow)
-        if (yield from self.check_killed()):
+        if (yield from self.check_killed(True)):
             return
         elif self.flow.response.stream:
             yield SendHttp(event, self.context.client)
@@ -286,29 +286,34 @@ class HttpStream(layer.Layer):
             yield from self.send_response()
             self.server_state = self.state_done
 
-    def check_killed(self) -> layer.CommandGenerator[bool]:
-        killed_by_us = (
-                self.flow.error and self.flow.error.msg == flow.Error.KILLED_MESSAGE
-        )
-        killed_by_remote = (
-            self.context.client.state is not ConnectionState.OPEN
-        )
-        if killed_by_us or killed_by_remote:
-            if self.context.client.state & ConnectionState.CAN_WRITE:
-                yield commands.CloseConnection(self.context.client)
-            self._handle_event = self.state_errored
-            return True
-        return False
-
     def send_response(self):
         yield HttpResponseHook(self.flow)
-        if (yield from self.check_killed()):
+        if (yield from self.check_killed(False)):
             return
         has_content = bool(self.flow.response.raw_content)
         yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response, not has_content), self.context.client)
         if has_content:
             yield SendHttp(ResponseData(self.stream_id, self.flow.response.raw_content), self.context.client)
         yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
+
+    def check_killed(self, emit_error_hook: bool) -> layer.CommandGenerator[bool]:
+        killed_by_us = (
+                self.flow.error and self.flow.error.msg == flow.Error.KILLED_MESSAGE
+        )
+        killed_by_remote = (
+            self.context.client.state is not ConnectionState.OPEN
+        )
+        if killed_by_remote:
+            if not self.flow.error:
+                self.flow.error = flow.Error("Client disconnected.")
+        if killed_by_us or killed_by_remote:
+            if emit_error_hook:
+                yield HttpErrorHook(self.flow)
+            if self.context.client.state & ConnectionState.CAN_WRITE:
+                yield commands.CloseConnection(self.context.client)
+            self._handle_event = self.state_errored
+            return True
+        return False
 
     def handle_protocol_error(
             self,
@@ -331,7 +336,7 @@ class HttpStream(layer.Layer):
             self.flow.error = flow.Error(event.message)
             yield HttpErrorHook(self.flow)
 
-        if (yield from self.check_killed()):
+        if (yield from self.check_killed(False)):
             return
 
         if isinstance(event, ResponseProtocolError):
@@ -353,7 +358,7 @@ class HttpStream(layer.Layer):
 
     def handle_connect(self) -> layer.CommandGenerator[None]:
         yield HttpConnectHook(self.flow)
-        if (yield from self.check_killed()):
+        if (yield from self.check_killed(False)):
             return
 
         self.context.server.address = (self.flow.request.host, self.flow.request.port)

@@ -44,6 +44,8 @@ class HttpErrorHook(commands.Hook):
     An HTTP error has occurred, e.g. invalid server responses, or
     interrupted connections. This is distinct from a valid server HTTP
     error response, which is simply a response with an HTTP error code.
+
+    Every flow will receive either an error or an response event, but not both.
     """
     name = "error"
     flow: http.HTTPFlow
