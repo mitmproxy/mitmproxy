@@ -1,7 +1,3 @@
-"""
-This file now contains python3.8+ syntax!
-"""
-
 import os
 import sys
 import asyncio
