@@ -317,7 +317,8 @@ class Http1Client(Http1Connection):
             else:
                 pass  # FIXME: protect against header size DoS
         elif isinstance(event, events.ConnectionClosed):
-            yield commands.CloseConnection(self.conn)
+            if self.conn.state & ConnectionState.CAN_WRITE:
+                yield commands.CloseConnection(self.conn)
             if self.stream_id:
                 if self.buf:
                     yield ReceiveHttp(ResponseProtocolError(self.stream_id,
