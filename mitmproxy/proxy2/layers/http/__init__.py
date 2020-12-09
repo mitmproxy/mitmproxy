@@ -93,7 +93,7 @@ class HttpStream(layer.Layer):
     request_body_buf: bytes
     response_body_buf: bytes
     flow: http.HTTPFlow
-    stream_id: StreamId
+    stream_id: StreamId = None
     child_layer: typing.Optional[layer.Layer] = None
 
     @property
@@ -341,13 +341,16 @@ class HttpStream(layer.Layer):
                 isinstance(event, RequestProtocolError) and
                 self.client_state in (self.state_stream_request_body, self.state_done)
         )
+        response_hook_already_triggered = (
+                self.client_state == self.state_errored
+                or
+                self.server_state in (self.state_done, self.state_errored)
+        )
+
         if is_client_error_but_we_already_talk_upstream:
             yield SendHttp(event, self.context.server)
             self.client_state = self.state_errored
 
-        response_hook_already_triggered = (
-                self.server_state in (self.state_done, self.state_errored)
-        )
         if not response_hook_already_triggered:
             # We don't want to trigger both a response hook and an error hook,
             # so we need to check if the response is done yet or not.
@@ -357,7 +360,7 @@ class HttpStream(layer.Layer):
         if (yield from self.check_killed(False)):
             return
 
-        if isinstance(event, ResponseProtocolError):
+        if isinstance(event, ResponseProtocolError) and self.client_state != self.state_errored:
             yield SendHttp(event, self.context.client)
             self.server_state = self.state_errored
 

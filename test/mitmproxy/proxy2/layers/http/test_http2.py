@@ -304,6 +304,38 @@ def test_rst_then_close(tctx):
     assert flow().error.msg == "connection cancelled"
 
 
+def test_cancel_then_server_disconnect(tctx):
+    """
+    Test that we properly handle the case of the following event sequence:
+        - client cancels a stream
+        - we start an error hook
+        - server disconnects
+        - error hook completes.
+    """
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b'GET / HTTP/1.1\r\nHost: example.com\r\n\r\n')
+            >> DataReceived(tctx.client, cff.build_rst_stream_frame(1, ErrorCodes.CANCEL).serialize())
+            << CloseConnection(server)
+            << http.HttpErrorHook(flow)
+            >> reply()
+            >> ConnectionClosed(server)
+            << None
+    )
+
+
 def test_stream_concurrency(tctx):
     """Test that we can send an intercepted request with a lower stream id than one that has already been sent."""
     playbook, cff = start_h2_client(tctx)
@@ -375,9 +407,6 @@ def test_max_concurrency(tctx):
                                                     flags=["END_STREAM"],
                                                     stream_id=3).serialize())
             # Can't send it upstream yet, all streams in use!
-    )
-    assert (
-            playbook
             >> DataReceived(server, sff.build_headers_frame(example_response_headers,
                                                             flags=["END_STREAM"],
                                                             stream_id=1).serialize())
