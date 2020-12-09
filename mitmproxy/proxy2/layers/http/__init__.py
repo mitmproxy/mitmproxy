@@ -297,7 +297,12 @@ class HttpStream(layer.Layer):
         yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
         if self.flow.response.status_code == 101:
-            if self.flow.response.headers.get("upgrade", "").strip().lower() == "websocket":
+            is_websocket = (
+                    self.flow.response.headers.get("upgrade", "").lower() == "websocket"
+                    and
+                    self.flow.request.headers.get("Sec-WebSocket-Version", "") == "13"
+            )
+            if is_websocket:
                 self.child_layer = websocket.WebsocketLayer(self.context, self.flow)
             else:
                 self.child_layer = tcp.TCPLayer(self.context)
