@@ -69,6 +69,9 @@ class WebsocketConnection(wsproto.Connection):
         data = super().send(event)
         return commands.SendData(self.conn, data)
 
+    def __repr__(self):
+        return f"WebsocketConnection<{self.state.name}, {self.conn}>"
+
 
 class WebsocketLayer(layer.Layer):
     """
@@ -92,7 +95,7 @@ class WebsocketLayer(layer.Layer):
         # Parse extension headers. We only support deflate at the moment and ignore everything else.
         ext_header = self.flow.handshake_flow.response.headers.get("Sec-WebSocket-Extensions", "")
         if ext_header:
-            for ext in wsproto.utilities.split_comma_header(ext_header):
+            for ext in wsproto.utilities.split_comma_header(ext_header.encode("ascii", "replace")):
                 ext_name = ext.split(";", 1)[0].strip()
                 if ext_name == wsproto.extensions.PerMessageDeflate.name:
                     client_deflate = wsproto.extensions.PerMessageDeflate()
@@ -109,7 +112,7 @@ class WebsocketLayer(layer.Layer):
 
         yield WebsocketStartHook(self.flow)
 
-        if self.flow.stream:
+        if self.flow.stream:  # pragma: no cover
             raise NotImplementedError("WebSocket streaming is not supported at the moment.")
 
         self._handle_event = self.relay_messages
@@ -130,10 +133,8 @@ class WebsocketLayer(layer.Layer):
         if isinstance(event, events.DataReceived):
             src_ws.receive_data(event.data)
         elif isinstance(event, events.ConnectionClosed):
-            if src_ws.state not in {ConnectionState.OPEN, ConnectionState.LOCAL_CLOSING}:
-                return
             src_ws.receive_data(None)
-        else:
+        else:  # pragma: no cover
             raise AssertionError(f"Unexpected event: {event}")
 
         for ws_event in src_ws.events():
@@ -143,14 +144,10 @@ class WebsocketLayer(layer.Layer):
                 if ws_event.message_finished:
                     if isinstance(ws_event, wsproto.events.TextMessage):
                         frame_type = Opcode.TEXT
-                        content = ""
+                        content = "".join(src_ws.frame_buf)
                     else:
                         frame_type = Opcode.BINARY
-                        content = b""
-                    try:
-                        content = content.join(src_ws.frame_buf)
-                    except TypeError:
-                        return self.handle_protocol_error(src_ws, "mixed text and binary fragments")
+                        content = b"".join(src_ws.frame_buf)
 
                     fragmentizer = Fragmentizer(src_ws.frame_buf)
                     src_ws.frame_buf.clear()
@@ -166,8 +163,8 @@ class WebsocketLayer(layer.Layer):
 
             elif isinstance(ws_event, (wsproto.events.Ping, wsproto.events.Pong)):
                 yield commands.Log(
-                    f"Received WebSocket {event.__class__.__name__.lower()} from {from_str} "
-                    f"(payload: {ws_event.payload!r})"
+                    f"Received WebSocket {ws_event.__class__.__name__.lower()} from {from_str} "
+                    f"(payload: {bytes(ws_event.payload)!r})"
                 )
                 yield dst_ws.send(ws_event)
             elif isinstance(ws_event, wsproto.events.CloseConnection):
@@ -175,27 +172,19 @@ class WebsocketLayer(layer.Layer):
                 self.flow.close_code = ws_event.code
                 self.flow.close_reason = ws_event.reason
 
-                for ws in [self.client_ws, self.server_ws]:
+                for ws in [self.server_ws, self.client_ws]:
                     if ws.state in {ConnectionState.OPEN, ConnectionState.REMOTE_CLOSING}:
                         # response == original event, so no need to differentiate here.
                         yield ws.send(ws_event)
-                        yield commands.CloseConnection(ws.conn)
+                    yield commands.CloseConnection(ws.conn)
                 if ws_event.code in {1000, 1001, 1005}:
                     yield WebsocketEndHook(self.flow)
                 else:
                     self.flow.error = flow.Error(f"WebSocket Error: {format_close_event(ws_event)}")
                     yield WebsocketErrorHook(self.flow)
-                yield commands.CloseConnection(self.context.client)
-            else:
+                self._handle_event = self.done
+            else:  # pragma: no cover
                 raise AssertionError(f"Unexpected WebSocket event: {ws_event}")
-
-    def handle_protocol_error(self, ws: WebsocketConnection, message=None):
-        self.flow.error = flow.Error(f"WebSocket Error: {human.format_address(ws.conn.peername)} {message}")
-        yield WebsocketErrorHook(self.flow)
-        if ws.state in {ConnectionState.OPEN, ConnectionState.REMOTE_CLOSING}:
-            yield ws.send(wsproto.events.CloseConnection(CloseReason.PROTOCOL_ERROR, message))
-        yield commands.CloseConnection(self.context.client)
-        self._handle_event = self.done
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def done(self, _) -> layer.CommandGenerator[None]:
@@ -219,7 +208,7 @@ class Fragmentizer:
        meaning.  An intermediary might coalesce and/or split frames, [...]
 
     Practice:
-        Some WebSocket servers reject large payload sizes. ¯\_(ツ)_/¯
+        Some WebSocket servers reject large payload sizes.
 
     As a workaround, we either retain the original chunking or, if the payload has been modified, use ~4kB chunks.
     """

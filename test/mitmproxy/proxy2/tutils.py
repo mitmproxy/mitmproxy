@@ -72,7 +72,7 @@ def _merge_sends(lst: typing.List[commands.Command], ignore_hooks: bool, ignore_
     current_send = None
     for x in lst:
         if isinstance(x, commands.SendData):
-            if current_send is None:
+            if current_send is None or current_send.connection != x.connection:
                 current_send = x
                 yield x
             else:
