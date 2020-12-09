@@ -346,6 +346,7 @@ def build_wheel(be: BuildEnviron):  # pragma: no cover
 
 def build_docker_image(be: BuildEnviron):  # pragma: no cover
     whl, = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))
+    whl = str(pathlib.Path(whl).relative_to(pathlib.Path(".").absolute()))
     click.echo("Building Docker images...")
     subprocess.check_call([
         "docker",
