@@ -1,5 +1,6 @@
 import time
 import queue
+import warnings
 from typing import List, Optional, Union
 
 from wsproto.frame_protocol import CloseReason
@@ -8,7 +9,7 @@ from wsproto.frame_protocol import Opcode
 from mitmproxy import flow
 from mitmproxy.net import websocket
 from mitmproxy.coretypes import serializable
-from mitmproxy.utils import strutils, human
+from mitmproxy.utils import strutils, human, compat
 
 
 class WebSocketMessage(serializable.Serializable):
@@ -53,7 +54,13 @@ class WebSocketMessage(serializable.Serializable):
 
         It will not be sent to the other endpoint. This has no effect in streaming mode.
         """
-        self.killed = True
+        if compat.new_proxy_core:  # pragma: no cover
+            warnings.warn("WebSocketMessage.kill is deprecated, set an empty content instead.",
+                          PendingDeprecationWarning)
+            # empty str or empty bytes.
+            self.content = type(self.content)()
+        else:
+            self.killed = True
 
 
 class WebSocketFlow(flow.Flow):
