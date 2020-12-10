@@ -63,8 +63,8 @@ class ModifyHeaders:
         )
 
     def configure(self, updated):
-        self.replacements = []
         if "modify_headers" in updated:
+            self.replacements = []
             for option in ctx.options.modify_headers:
                 try:
                     spec = parse_modify_spec(option, False)
