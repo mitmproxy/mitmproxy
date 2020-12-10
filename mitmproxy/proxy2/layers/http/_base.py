@@ -11,11 +11,6 @@ class HttpEvent(events.Event):
     # we need stream ids on every event to avoid race conditions
     stream_id: StreamId
 
-    def __repr__(self) -> str:
-        x = self.__dict__.copy()
-        x.pop("stream_id")
-        return f"{type(self).__name__}({repr(x) if x else ''})"
-
 
 class HttpConnection(layer.Layer):
     conn: Connection
