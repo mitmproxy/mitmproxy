@@ -213,14 +213,22 @@ class HttpStream(layer.Layer):
     def state_stream_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             if callable(self.flow.request.stream):
-                data = self.flow.request.stream(event.data)
-            else:
-                data = event.data
-            yield SendHttp(RequestData(self.stream_id, data), self.context.server)
+                event.data = self.flow.request.stream(event.data)
         elif isinstance(event, RequestEndOfMessage):
             self.flow.request.timestamp_end = time.time()
-            yield SendHttp(RequestEndOfMessage(self.stream_id), self.context.server)
             self.client_state = self.state_done
+
+        # edge case found while fuzzing:
+        # we may arrive here after a hook unpaused the stream,
+        # but the server may have sent us a RST_STREAM in the meantime.
+        # We need to 1) check the server state and 2) peek into the event queue to
+        # see if this is the case.
+        if self.server_state == self.state_errored:
+            return
+        for evt in self._paused_event_queue:
+            if isinstance(evt, ResponseProtocolError):
+                return
+        yield SendHttp(event, self.context.server)
 
     @expect(RequestData, RequestEndOfMessage)
     def state_consume_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -289,6 +297,7 @@ class HttpStream(layer.Layer):
         """We have either consumed the entire response from the server or the response was set by an addon."""
         self.flow.response.timestamp_end = time.time()
         yield HttpResponseHook(self.flow)
+        self.server_state = self.state_done
         if (yield from self.check_killed(False)):
             return
 
@@ -315,8 +324,6 @@ class HttpStream(layer.Layer):
             yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
             return
-
-        self.server_state = self.state_done
 
     def check_killed(self, emit_error_hook: bool) -> layer.CommandGenerator[bool]:
         killed_by_us = (
@@ -352,11 +359,11 @@ class HttpStream(layer.Layer):
             event: typing.Union[RequestProtocolError, ResponseProtocolError]
     ) -> layer.CommandGenerator[None]:
         is_client_error_but_we_already_talk_upstream = (
-                isinstance(event, RequestProtocolError) and
-                self.client_state in (self.state_stream_request_body, self.state_done)
+                isinstance(event, RequestProtocolError)
+                and self.client_state in (self.state_stream_request_body, self.state_done)
         )
-        response_hook_already_triggered = (
-                self.client_state == self.state_errored
+        need_error_hook = not (
+                self.client_state in (self.state_wait_for_request_headers, self.state_errored)
                 or
                 self.server_state in (self.state_done, self.state_errored)
         )
@@ -365,7 +372,7 @@ class HttpStream(layer.Layer):
             yield SendHttp(event, self.context.server)
             self.client_state = self.state_errored
 
-        if not response_hook_already_triggered:
+        if need_error_hook:
             # We don't want to trigger both a response hook and an error hook,
             # so we need to check if the response is done yet or not.
             self.flow.error = flow.Error(event.message)
@@ -374,8 +381,9 @@ class HttpStream(layer.Layer):
         if (yield from self.check_killed(False)):
             return
 
-        if isinstance(event, ResponseProtocolError) and self.client_state != self.state_errored:
-            yield SendHttp(event, self.context.client)
+        if isinstance(event, ResponseProtocolError):
+            if self.client_state != self.state_errored:
+                yield SendHttp(event, self.context.client)
             self.server_state = self.state_errored
 
     def make_server_connection(self) -> layer.CommandGenerator[bool]:
