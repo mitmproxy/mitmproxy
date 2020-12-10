@@ -1,13 +1,13 @@
 import abc
-from typing import Union, Optional, Callable
+from typing import Union, Optional, Callable, Type
 
 import h11
 from h11._readers import ChunkedReader, ContentLengthReader, Http10Reader
 from h11._receivebuffer import ReceiveBuffer
 
 from mitmproxy import exceptions, http
-from mitmproxy.net.http import http1, status_codes
 from mitmproxy.net import http as net_http
+from mitmproxy.net.http import http1, status_codes
 from mitmproxy.net.http.http1 import read_sansio as http1_sansio
 from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2.context import Connection, ConnectionState, Context
@@ -31,9 +31,9 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     body_reader: TBodyReader
     buf: ReceiveBuffer
 
-    ReceiveProtocolError: Callable[[int, str], Union[RequestProtocolError, ResponseProtocolError]]
-    ReceiveData: Callable[[int, bytes], Union[RequestData, ResponseData]]
-    ReceiveEndOfMessage: Callable[[int], Union[RequestEndOfMessage, ResponseEndOfMessage]]
+    ReceiveProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
+    ReceiveData: Type[Union[RequestData, ResponseData]]
+    ReceiveEndOfMessage: Type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
 
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context, conn)

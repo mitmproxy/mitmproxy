@@ -1,7 +1,7 @@
 import collections
 import time
 from enum import Enum
-from typing import ClassVar, DefaultDict, Dict, Iterable, List, Optional, Tuple, Type, Union, Callable
+from typing import ClassVar, DefaultDict, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 import h2.config
 import h2.connection
@@ -49,9 +49,9 @@ class Http2Connection(HttpConnection):
     SendData: Type[Union[RequestData, ResponseData]]
     SendEndOfMessage: Type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
 
-    ReceiveProtocolError: Callable[[int, str], Union[RequestProtocolError, ResponseProtocolError]]
-    ReceiveData: Callable[[int, bytes], Union[RequestData, ResponseData]]
-    ReceiveEndOfMessage: Callable[[int], Union[RequestEndOfMessage, ResponseEndOfMessage]]
+    ReceiveProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
+    ReceiveData: Type[Union[RequestData, ResponseData]]
+    ReceiveEndOfMessage: Type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
 
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context, conn)
