@@ -6,6 +6,7 @@ import hyperframe.frame
 import pytest
 from h2.errors import ErrorCodes
 
+from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow
 from mitmproxy.net.http import Headers
 from mitmproxy.proxy.protocol.http import HTTPMode
@@ -336,6 +337,41 @@ def test_cancel_then_server_disconnect(tctx):
     )
 
 
+def test_cancel_during_response_hook(tctx):
+    """
+    Test that we properly handle the case of the following event sequence:
+        - we receive a server response
+        - we trigger the response hook
+        - the client cancels the stream
+        - the response hook completes
+
+    Given that we have already triggered the response hook, we don't want to trigger the error hook.
+    """
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b'GET / HTTP/1.1\r\nHost: example.com\r\n\r\n')
+            >> DataReceived(server, b"HTTP/1.1 204 No Content\r\n\r\n")
+            << http.HttpResponseHeadersHook(flow)
+            << CloseConnection(server)
+            >> reply(to=-2)
+            << http.HttpResponseHook(flow)
+            >> DataReceived(tctx.client, cff.build_rst_stream_frame(1, ErrorCodes.CANCEL).serialize())
+            >> reply(to=-2)
+    )
+
+
 def test_stream_concurrency(tctx):
     """Test that we can send an intercepted request with a lower stream id than one that has already been sent."""
     playbook, cff = start_h2_client(tctx)
@@ -428,3 +464,43 @@ def test_max_concurrency(tctx):
     assert type(req2) == hyperframe.frame.HeadersFrame
     assert req1.stream_id == 1
     assert req2.stream_id == 3
+
+
+def test_kill_stream(tctx):
+    """Test that we can kill individual streams."""
+    playbook, cff = start_h2_client(tctx)
+    flow1 = Placeholder(HTTPFlow)
+    flow2 = Placeholder(HTTPFlow)
+
+    req_headers_hook_1 = http.HttpRequestHeadersHook(flow1)
+
+    def kill(flow: HTTPFlow):
+        # Can't use flow.kill() here because that currently still depends on a reply object.
+        flow.error = Error(Error.KILLED_MESSAGE)
+
+    server = Placeholder(Server)
+    data_req1 = Placeholder(bytes)
+
+    assert (playbook
+            >> DataReceived(
+                tctx.client,
+                cff.build_headers_frame(example_request_headers, flags=["END_STREAM"], stream_id=1).serialize() +
+                cff.build_headers_frame(example_request_headers, flags=["END_STREAM"], stream_id=3).serialize())
+            << req_headers_hook_1
+            << http.HttpRequestHeadersHook(flow2)
+            >> reply(side_effect=kill)
+            << http.HttpErrorHook(flow2)
+            >> reply()
+            << SendData(tctx.client, cff.build_rst_stream_frame(3, error_code=ErrorCodes.INTERNAL_ERROR).serialize())
+            >> reply(to=req_headers_hook_1)
+            << http.HttpRequestHook(flow1)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None, side_effect=make_h2)
+            << SendData(server, data_req1)
+            )
+    frames = decode_frames(data_req1())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.HeadersFrame,
+    ]

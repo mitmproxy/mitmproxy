@@ -14,10 +14,10 @@ class H2ConnectionLogger(h2.config.DummyLogger):
         self.name = name
 
     def debug(self, fmtstr, *args):
-        print(f"(debug) h2 {self.name}: {fmtstr % args}")
+        print(f"{self.name} h2 (debug): {fmtstr % args}")
 
     def trace(self, fmtstr, *args):
-        print(f"(trace) h2 {self.name}: {fmtstr % args}")
+        print(f"{self.name} h2 (trace): {fmtstr % args}")
 
 
 class SendH2Data(NamedTuple):

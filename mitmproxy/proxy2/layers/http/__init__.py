@@ -322,17 +322,27 @@ class HttpStream(layer.Layer):
         killed_by_us = (
                 self.flow.error and self.flow.error.msg == flow.Error.KILLED_MESSAGE
         )
-        killed_by_remote = (
-                self.context.client.state is not ConnectionState.OPEN
-        )
+        # The client may have closed the connection while we were waiting for the hook to complete.
+        # We peek into the event queue to see if that is the case.
+        killed_by_remote = False
+        for evt in self._paused_event_queue:
+            if isinstance(evt, RequestProtocolError):
+                killed_by_remote = evt.message
+                break
+
         if killed_by_remote:
             if not self.flow.error:
-                self.flow.error = flow.Error("Client disconnected.")
+                self.flow.error = flow.Error(killed_by_remote)
         if killed_by_us or killed_by_remote:
             if emit_error_hook:
                 yield HttpErrorHook(self.flow)
-            if self.context.client.state & ConnectionState.CAN_WRITE:
-                yield commands.CloseConnection(self.context.client)
+            # For HTTP/2 we only want to kill the specific stream, for HTTP/1 we want to kill the connection
+            # *without* sending an HTTP response (that could be achieved by the user by setting flow.response).
+            if self.context.client.alpn == b"h2":
+                yield SendHttp(ResponseProtocolError(self.stream_id, "killed"), self.context.client)
+            else:
+                if self.context.client.state & ConnectionState.CAN_WRITE:
+                    yield commands.CloseConnection(self.context.client)
             self._handle_event = self.state_errored
             return True
         return False

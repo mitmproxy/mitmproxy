@@ -107,6 +107,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
             # see https://github.com/httpwg/http-core/issues/22
             if event.connection.state is not ConnectionState.CLOSED:
                 yield commands.CloseConnection(event.connection)
+            yield ReceiveHttp(self.ReceiveProtocolError(self.stream_id, f"Client disconnected."))
         else:  # pragma: no cover
             raise AssertionError(f"Unexpected event: {event}")
 

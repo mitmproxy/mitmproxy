@@ -56,7 +56,8 @@ class Http2Connection(HttpConnection):
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context, conn)
         if self.debug:
-            self.h2_conf.logger = H2ConnectionLogger(self.__class__.__name__)
+            self.h2_conf.logger = H2ConnectionLogger(f"{human.format_address(self.context.client.peername)}: "
+                                                     f"{self.__class__.__name__}")
         self.h2_conn = BufferedH2Connection(self.h2_conf)
         self.streams = {}
 
@@ -84,7 +85,10 @@ class Http2Connection(HttpConnection):
                 if self.is_closed(event.stream_id):
                     self.streams.pop(event.stream_id, None)
             elif isinstance(event, self.SendProtocolError):
-                self.h2_conn.reset_stream(event.stream_id, h2.errors.ErrorCodes.PROTOCOL_ERROR)
+                stream = self.h2_conn.streams.get(event.stream_id)
+                if stream.state_machine.state not in (h2.stream.StreamState.HALF_CLOSED_LOCAL,
+                                                      h2.stream.StreamState.CLOSED):
+                    self.h2_conn.reset_stream(event.stream_id, h2.errors.ErrorCodes.INTERNAL_ERROR)
                 if self.is_closed(event.stream_id):
                     self.streams.pop(event.stream_id, None)
             else:
