@@ -25,22 +25,36 @@ class ResponseHeaders(HttpEvent):
     end_stream: bool = False
 
 
+# explicit constructors below to facilitate type checking in _http1/_http2
+
 @dataclass
 class RequestData(HttpEvent):
     data: bytes
+
+    def __init__(self, stream_id: int, data: bytes):
+        self.stream_id = stream_id
+        self.data = data
 
 
 @dataclass
 class ResponseData(HttpEvent):
     data: bytes
 
+    def __init__(self, stream_id: int, data: bytes):
+        self.stream_id = stream_id
+        self.data = data
 
+
+@dataclass
 class RequestEndOfMessage(HttpEvent):
-    pass
+    def __init__(self, stream_id: int):
+        self.stream_id = stream_id
 
 
+@dataclass
 class ResponseEndOfMessage(HttpEvent):
-    pass
+    def __init__(self, stream_id: int):
+        self.stream_id = stream_id
 
 
 @dataclass
@@ -48,11 +62,21 @@ class RequestProtocolError(HttpEvent):
     message: str
     code: int = 400
 
+    def __init__(self, stream_id: int, message: str, code: int = 400):
+        self.stream_id = stream_id
+        self.message = message
+        self.code = code
+
 
 @dataclass
 class ResponseProtocolError(HttpEvent):
     message: str
     code: int = 502
+
+    def __init__(self, stream_id: int, message: str, code: int = 502):
+        self.stream_id = stream_id
+        self.message = message
+        self.code = code
 
 
 __all__ = [
