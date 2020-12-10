@@ -452,7 +452,7 @@ class TestReverse(tservers.ReverseProxyTest, CommonMixin, TcpMixin):
         assert resp.status_code == 200
 
         req = self.master.state.flows[0].request
-        assert req.host_header == "127.0.0.1"
+        assert req.host_header.startswith("127.0.0.1:")
 
     @pytest.mark.asyncio
     async def test_selfconnection(self):
