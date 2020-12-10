@@ -8,13 +8,13 @@ from h2.errors import ErrorCodes
 
 from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow
-from mitmproxy.net.http import Headers
+from mitmproxy.net.http import Headers, Request, status_codes
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.proxy2.context import Context, Server
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import http
-from mitmproxy.proxy2.layers.http._http2 import split_pseudo_headers
+from mitmproxy.proxy2.layers.http._http2 import split_pseudo_headers, Http2Client
 from test.mitmproxy.proxy2.layers.http.hyper_h2_test_helpers import FrameFactory
 from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply
 
@@ -504,3 +504,27 @@ def test_kill_stream(tctx):
         hyperframe.frame.SettingsFrame,
         hyperframe.frame.HeadersFrame,
     ]
+
+
+class TestClient:
+    def test_no_data_on_closed_stream(self, tctx):
+        frame_factory = FrameFactory()
+        req = Request.make("GET", "http://example.com/")
+        resp = {
+            ":status" : 200
+        }
+        assert (
+                Playbook(Http2Client(tctx))
+                << SendData(tctx.server, Placeholder(bytes))  # preamble + initial settings frame
+                >> DataReceived(tctx.server, frame_factory.build_settings_frame({}, ack=True).serialize())
+                >> http.RequestHeaders(1, req, end_stream=True)
+                << SendData(tctx.server, b"\x00\x00\x06\x01\x05\x00\x00\x00\x01\x82\x86\x84\\\x81\x07")
+                >> http.RequestEndOfMessage(1)
+                >> DataReceived(tctx.server, frame_factory.build_headers_frame(resp).serialize())
+                << http.ReceiveHttp(Placeholder(http.ResponseHeaders))
+                >> http.RequestProtocolError(1, "cancelled", code=status_codes.CLIENT_CLOSED_REQUEST)
+                << SendData(tctx.server, frame_factory.build_rst_stream_frame(1, ErrorCodes.CANCEL).serialize())
+                >> DataReceived(tctx.server, frame_factory.build_data_frame(b"foo").serialize())
+                << SendData(tctx.server, frame_factory.build_rst_stream_frame(1, ErrorCodes.STREAM_CLOSED).serialize())
+                # important: no ResponseData event here!
+        )

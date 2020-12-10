@@ -14,7 +14,7 @@ import h2.utilities
 
 from mitmproxy import http
 from mitmproxy.net import http as net_http
-from mitmproxy.net.http import url
+from mitmproxy.net.http import url, status_codes
 from mitmproxy.utils import human
 from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
@@ -86,9 +86,11 @@ class Http2Connection(HttpConnection):
                     self.streams.pop(event.stream_id, None)
             elif isinstance(event, self.SendProtocolError):
                 stream = self.h2_conn.streams.get(event.stream_id)
-                if stream.state_machine.state not in (h2.stream.StreamState.HALF_CLOSED_LOCAL,
-                                                      h2.stream.StreamState.CLOSED):
-                    self.h2_conn.reset_stream(event.stream_id, h2.errors.ErrorCodes.INTERNAL_ERROR)
+                if stream.state_machine.state is not h2.stream.StreamState.CLOSED:
+                    code = {
+                        status_codes.CLIENT_CLOSED_REQUEST: h2.errors.ErrorCodes.CANCEL,
+                    }.get(event.code, h2.errors.ErrorCodes.INTERNAL_ERROR)
+                    self.h2_conn.reset_stream(event.stream_id, code)
                 if self.is_closed(event.stream_id):
                     self.streams.pop(event.stream_id, None)
             else:
@@ -150,7 +152,11 @@ class Http2Connection(HttpConnection):
                     err_str = h2.errors.ErrorCodes(event.error_code).name
                 except ValueError:
                     err_str = str(event.error_code)
-                yield ReceiveHttp(self.ReceiveProtocolError(event.stream_id, f"stream reset by client ({err_str})"))
+                err_code = {
+                    h2.errors.ErrorCodes.CANCEL: status_codes.CLIENT_CLOSED_REQUEST,
+                }.get(event.error_code, self.ReceiveProtocolError.code)
+                yield ReceiveHttp(self.ReceiveProtocolError(event.stream_id, f"stream reset by client ({err_str})",
+                                                            code=err_code))
                 self.streams.pop(event.stream_id)
             else:
                 pass  # We don't track priority frames which could be followed by a stream reset here.
