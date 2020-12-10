@@ -1,5 +1,7 @@
 import copy
 
+import pytest
+
 from mitmproxy.http import HTTPFlow
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
@@ -102,3 +104,30 @@ def test_upstream_https(tctx):
             << SendData(upstream, h2_server_settings_ack)
             << SendData(tctx1.client, b"HTTP/1.1 200 OK\r\ncontent-length: 0\r\n\r\n")
     )
+
+
+@pytest.mark.parametrize("keep_host_header", [True, False])
+def test_reverse_proxy(tctx, keep_host_header):
+    """Test mitmproxy in reverse proxy mode.
+
+     - make sure that we connect to the right host
+     - make sure that we respect keep_host_header
+     - make sure that we include non-standard ports in the host header (#4280)
+    """
+    server = Placeholder(Server)
+    tctx.options.mode = "reverse:http://localhost:8000"
+    tctx.options.keep_host_header = keep_host_header
+    assert (
+            Playbook(modes.ReverseProxy(tctx), hooks=False)
+            >> DataReceived(tctx.client, b"GET /foo HTTP/1.1\r\n"
+                                         b"Host: example.com\r\n\r\n")
+            << NextLayerHook(Placeholder(NextLayer))
+            >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.transparent))
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"GET /foo HTTP/1.1\r\n"
+                                b"Host: " + (b"example.com" if keep_host_header else b"localhost:8000") + b"\r\n\r\n")
+            >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+    )
+    assert server().address == ("localhost", 8000)
