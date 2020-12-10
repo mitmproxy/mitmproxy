@@ -180,7 +180,11 @@ class HttpStream(layer.Layer):
 
         # update host header in reverse proxy mode
         if self.context.options.mode.startswith("reverse:") and not self.context.options.keep_host_header:
-            self.flow.request.host_header = self.context.server.address[0]
+            self.flow.request.host_header = url.hostport(
+                "https" if self.context.server.tls else "http",
+                self.context.server.address[0],
+                self.context.server.address[1],
+            )
 
         yield HttpRequestHeadersHook(self.flow)
         if (yield from self.check_killed(True)):
