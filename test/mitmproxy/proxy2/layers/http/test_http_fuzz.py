@@ -1,21 +1,25 @@
 import os
-from typing import Iterable
+from typing import Tuple, Dict, Any
 
-from hypothesis import example, given, settings
-from hypothesis.strategies import binary, booleans, composite, dictionaries, integers, lists, permutations, \
-    sampled_from, sets, text
-
+import pytest
 from h2.settings import SettingCodes
+from hypothesis import example, given, settings
+from hypothesis.strategies import binary, booleans, composite, dictionaries, integers, lists, sampled_from, sets, text, \
+    data
+
 from mitmproxy import options
 from mitmproxy.addons.proxyserver import Proxyserver
+from mitmproxy.http import HTTPFlow
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2 import context, events
 from mitmproxy.proxy2.commands import OpenConnection, SendData
-from mitmproxy.proxy2.events import DataReceived, Start
+from mitmproxy.proxy2.context import Server
+from mitmproxy.proxy2.events import DataReceived, Start, ConnectionClosed
 from mitmproxy.proxy2.layers import http
 from test.mitmproxy.proxy2.layers.http.hyper_h2_test_helpers import FrameFactory
-from test.mitmproxy.proxy2.layers.http.test_http2 import make_h2
-from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply
+from test.mitmproxy.proxy2.layers.http.test_http2 import make_h2, example_response_headers, example_request_headers, \
+    start_h2_client
+from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, _TracebackInPlaybook, _eq
 
 settings.register_profile("fast", max_examples=10)
 settings.register_profile("deep", max_examples=100_000, deadline=None)
@@ -275,3 +279,126 @@ def test_fuzz_h2_response_chunks(chunks):
 @given(chunks(mutations(h2_frames())))
 def test_fuzz_h2_response_mutations(chunks):
     _h2_response(chunks)
+
+
+@pytest.mark.parametrize("example", [(
+        True, False,
+        ["data_req", "reply_hook_req_headers", "reply_hook_req", "reply_openconn", "data_resp", "data_reqbody",
+         "data_respbody", "err_server_rst", "reply_hook_resp_headers"]),
+    (True, False, ["data_req", "reply_hook_req_headers", "reply_hook_req", "reply_openconn", "err_server_rst",
+                   "data_reqbody", "reply_hook_error"]),
+])
+def test_cancel_examples(example):
+    """
+    We can't specify examples in test_fuzz_cancel (because we use data, see
+    https://hypothesis.readthedocs.io/en/latest/data.html#interactive-draw),
+    so we have this here for explicit examples.
+    """
+    stream_req, stream_resp, draws = example
+
+    def draw(lst):
+        if draws:
+            this_draw = draws.pop(0)
+            for name, evt in lst:
+                if name == this_draw:
+                    return name, evt
+            raise AssertionError(f"{this_draw} not in list: {[name for name, _ in lst]}")
+        else:
+            return lst[0]
+
+    _test_cancel(stream_req, stream_resp, draw)
+
+
+@given(stream_request=booleans(), stream_response=booleans(), data=data())
+def test_fuzz_cancel(stream_request, stream_response, data):
+    _test_cancel(stream_request, stream_response, lambda lst: data.draw(sampled_from(lst)))
+
+
+def _test_cancel(stream_req, stream_resp, draw):
+    """
+    Test that we don't raise an exception if someone disconnects.
+    """
+    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+
+    def maybe_stream(flow: HTTPFlow):
+        if stream_req:
+            flow.request.stream = True
+        if stream_resp and flow.response:
+            flow.response.stream = True
+
+    hook_req_headers = http.HttpRequestHeadersHook(flow)
+    hook_req = http.HttpRequestHook(flow)
+    hook_resp_headers = http.HttpResponseHeadersHook(flow)
+    hook_resp = http.HttpResponseHook(flow)
+    hook_error = http.HttpErrorHook(flow)
+    openconn = OpenConnection(server)
+    send_upstream = SendData(server, Placeholder(bytes))
+
+    data_req = DataReceived(tctx.client, cff.build_headers_frame(example_request_headers).serialize())
+    data_reqbody = DataReceived(tctx.client, cff.build_data_frame(b"foo", flags=["END_STREAM"]).serialize())
+    data_resp = DataReceived(server, cff.build_headers_frame(example_response_headers).serialize())
+    data_respbody = DataReceived(server, cff.build_data_frame(b"bar", flags=["END_STREAM"]).serialize())
+
+    client_disc = ConnectionClosed(tctx.client)
+    client_rst = DataReceived(tctx.client, cff.build_rst_stream_frame(1).serialize())
+    server_disc = ConnectionClosed(server)
+    server_rst = DataReceived(server, cff.build_rst_stream_frame(1).serialize())
+
+    evts: Dict[str, Tuple[Any, Any, Any]] = {}
+    # precondition, but-not-after-this
+    evts["data_req"] = data_req, None, client_disc
+    evts["data_reqbody"] = data_reqbody, data_req, client_disc
+    evts["reply_hook_req_headers"] = reply(to=hook_req_headers, side_effect=maybe_stream), hook_req_headers, None
+    evts["reply_hook_req"] = reply(to=hook_req), hook_req, None
+    evts["reply_openconn"] = reply(None, to=openconn, side_effect=make_h2), openconn, None
+    evts["data_resp"] = data_resp, send_upstream, server_disc
+    evts["data_respbody"] = data_respbody, data_resp, server_disc
+    evts["reply_hook_resp_headers"] = reply(to=hook_resp_headers, side_effect=maybe_stream), hook_resp_headers, None
+    evts["reply_hook_resp"] = reply(to=hook_resp), hook_resp, None
+    evts["reply_hook_error"] = reply(to=hook_error), hook_error, None
+
+    evts["err_client_disc"] = client_disc, None, None
+    evts["err_client_rst"] = client_rst, None, client_disc
+    evts["err_server_disc"] = server_disc, send_upstream, None
+    evts["err_server_rst"] = server_rst, send_upstream, server_disc
+
+    def eq_maybe(a, b):
+        # _eq helpfully raises a TypeError when placeholder types don't match
+        # that is useful in (test) development, but may happen legitimately when fuzzing here.
+        try:
+            return _eq(a, b)
+        except TypeError:
+            return False
+
+    while evts:
+        candidates = []
+        for name, (evt, precon, negprecon) in evts.items():
+            precondition_ok = (
+                    precon is None or any(eq_maybe(x, precon) for x in playbook.actual)
+            )
+            neg_precondition_ok = (
+                    negprecon is None or not any(eq_maybe(x, negprecon) for x in playbook.actual)
+            )
+            if precondition_ok and neg_precondition_ok:
+                # crude hack to increase fuzzing efficiency: make it more likely that we progress.
+                for i in range(1 if name.startswith("err_") else 3):
+                    candidates.append((name, evt))
+        if not candidates:
+            break
+
+        name, evt = draw(candidates)
+        del evts[name]
+        try:
+            assert playbook >> evt
+        except AssertionError:
+            if any(
+                    isinstance(x, _TracebackInPlaybook)
+                    for x in playbook.actual
+            ):
+                raise
+            else:
+                # add commands that the server issued.
+                playbook.expected.extend(playbook.actual[len(playbook.expected):])

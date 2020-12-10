@@ -283,6 +283,7 @@ class reply(events.Event):
             side_effect: typing.Callable[[typing.Any], None] = lambda x: None
     ):
         """Utility method to reply to the latest hook in playbooks."""
+        assert not args or not isinstance(args[0], commands.Command)
         self.args = args
         self.to = to
         self.side_effect = side_effect
