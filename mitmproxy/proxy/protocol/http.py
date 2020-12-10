@@ -8,6 +8,7 @@ from mitmproxy import connections  # noqa
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy import flow
+from mitmproxy.net.http import url
 from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol.websocket import WebSocketLayer
 from mitmproxy.net import websockets
@@ -324,7 +325,10 @@ class HttpLayer(base.Layer):
 
         # update host header in reverse proxy mode
         if self.config.options.mode.startswith("reverse:") and not self.config.options.keep_host_header:
-            f.request.host_header = self.config.upstream_server.address[0]
+            f.request.host_header = url.hostport(
+                self.config.upstream_server.scheme,
+                *self.config.upstream_server.address
+            )
 
         # Determine .scheme, .host and .port attributes for inline scripts. For
         # absolute-form requests, they are directly given in the request. For
