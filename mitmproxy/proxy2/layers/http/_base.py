@@ -17,7 +17,6 @@ class HttpConnection(layer.Layer):
 
     def __init__(self, context: Context, conn: Connection):
         super().__init__(context)
-        assert isinstance(conn, Connection)
         self.conn = conn
 
 
