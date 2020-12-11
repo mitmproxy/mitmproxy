@@ -39,7 +39,7 @@ class Connection(serializable.Serializable):
     error: Optional[str] = None
 
     tls: bool = False
-    certificate_list: Optional[Sequence[certs.Cert]] = None
+    certificate_list: Sequence[certs.Cert] = ()
     """
     The TLS certificate list as sent by the peer.
     The first certificate is the end-entity certificate.
@@ -115,7 +115,6 @@ class Client(Connection):
             'address': self.peername,
             'alpn_proto_negotiated': self.alpn,
             'cipher_name': self.cipher,
-            'clientcert': self.certificate_list[0].get_state() if self.certificate_list else None,
             'id': self.id,
             'mitmcert': None,
             'sni': self.sni,
@@ -130,7 +129,7 @@ class Client(Connection):
             'sockname': self.sockname,
             'error': self.error,
             'tls': self.tls,
-            'certificate_list': [x.get_state() for x in self.certificate_list] if self.certificate_list else None,
+            'certificate_list': [x.get_state() for x in self.certificate_list],
             'alpn_offers': self.alpn_offers,
             'cipher_list': self.cipher_list,
         }
@@ -146,10 +145,9 @@ class Client(Connection):
         return client
 
     def set_state(self, state):
-        self.peername = tuple(state["address"])
+        self.peername = tuple(state["address"]) if state["address"] else None
         self.alpn = state["alpn_proto_negotiated"]
         self.cipher = state["cipher_name"]
-        self.certificate_list = [certs.Cert.from_state(state["clientcert"])] if state["clientcert"] else None
         self.id = state["id"]
         self.sni = state["sni"]
         self.timestamp_end = state["timestamp_end"]
@@ -158,11 +156,10 @@ class Client(Connection):
         self.tls_version = state["tls_version"]
         # only used in sans-io
         self.state = ConnectionState(state["state"])
-        self.sockname = tuple(state["sockname"])
+        self.sockname = tuple(state["sockname"]) if state["sockname"] else None
         self.error = state["error"]
         self.tls = state["tls"]
-        self.certificate_list = [certs.Cert.from_state(x) for x in state["certificate_list"]] if state[
-            "certificate_list"] else None
+        self.certificate_list = [certs.Cert.from_state(x) for x in state["certificate_list"]]
         self.alpn_offers = state["alpn_offers"]
         self.cipher_list = state["cipher_list"]
 
@@ -171,10 +168,31 @@ class Client(Connection):
         warnings.warn("Client.address is deprecated, use Client.peername instead.", PendingDeprecationWarning)
         return self.peername
 
+    @address.setter
+    def address(self, x):
+        warnings.warn("Client.address is deprecated, use Client.peername instead.", PendingDeprecationWarning)
+        self.peername = x
+
     @property
     def cipher_name(self) -> Optional[str]:
         warnings.warn("Client.cipher_name is deprecated, use Client.cipher instead.", PendingDeprecationWarning)
         return self.cipher
+
+    @property
+    def clientcert(self) -> Optional[certs.Cert]:
+        warnings.warn("Client.clientcert is deprecated, use Client.certificate_list instead.", PendingDeprecationWarning)
+        if self.certificate_list:
+            return self.certificate_list[0]
+        else:
+            return None
+
+    @clientcert.setter
+    def clientcert(self, val):
+        warnings.warn("Client.clientcert is deprecated, use Client.certificate_list instead.", PendingDeprecationWarning)
+        if val:
+            self.certificate_list = [val]
+        else:
+            self.certificate_list = []
 
 
 class Server(Connection):
@@ -200,7 +218,6 @@ class Server(Connection):
         return {
             'address': self.address,
             'alpn_proto_negotiated': self.alpn,
-            'cert': self.certificate_list[0].get_state() if self.certificate_list else None,
             'id': self.id,
             'ip_address': self.peername,
             'sni': self.sni,
@@ -216,7 +233,7 @@ class Server(Connection):
             'state': self.state.value,
             'error': self.error,
             'tls': self.tls,
-            'certificate_list': [x.get_state() for x in self.certificate_list] if self.certificate_list else None,
+            'certificate_list': [x.get_state() for x in self.certificate_list],
             'alpn_offers': self.alpn_offers,
             'cipher_name': self.cipher,
             'cipher_list': self.cipher_list,
@@ -230,13 +247,12 @@ class Server(Connection):
         return server
 
     def set_state(self, state):
-        self.address = tuple(state["address"])
+        self.address = tuple(state["address"]) if state["address"] else None
         self.alpn = state["alpn_proto_negotiated"]
-        self.certificate_list = [certs.Cert.from_state(state["cert"])] if state["cert"] else None
         self.id = state["id"]
-        self.peername = tuple(state["ip_address"])
+        self.peername = tuple(state["ip_address"]) if state["ip_address"] else None
         self.sni = state["sni"]
-        self.sockname = tuple(state["source_address"])
+        self.sockname = tuple(state["source_address"]) if state["source_address"] else None
         self.timestamp_end = state["timestamp_end"]
         self.timestamp_start = state["timestamp_start"]
         self.timestamp_tcp_setup = state["timestamp_tcp_setup"]
@@ -245,8 +261,7 @@ class Server(Connection):
         self.state = ConnectionState(state["state"])
         self.error = state["error"]
         self.tls = state["tls"]
-        self.certificate_list = [certs.Cert.from_state(x) for x in state["certificate_list"]] if state[
-            "certificate_list"] else None
+        self.certificate_list = [certs.Cert.from_state(x) for x in state["certificate_list"]]
         self.alpn_offers = state["alpn_offers"]
         self.cipher = state["cipher_name"]
         self.cipher_list = state["cipher_list"]
@@ -259,11 +274,19 @@ class Server(Connection):
 
     @property
     def cert(self) -> Optional[certs.Cert]:
-        warnings.warn("Server.alpn_proto_negotiated is deprecated, use Server.alpn instead.", PendingDeprecationWarning)
+        warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", PendingDeprecationWarning)
         if self.certificate_list:
             return self.certificate_list[0]
         else:
             return None
+
+    @cert.setter
+    def cert(self, val):
+        warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", PendingDeprecationWarning)
+        if val:
+            self.certificate_list = [val]
+        else:
+            self.certificate_list = []
 
 
 class Context:
