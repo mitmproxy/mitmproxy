@@ -39,14 +39,14 @@ def test_extract(tdata):
         ["client_conn.address.host", "127.0.0.1"],
         ["client_conn.tls_version", "TLSv1.2"],
         ["client_conn.sni", "address"],
-        ["client_conn.tls_established", "false"],
+        ["client_conn.tls_established", "true"],
 
         ["server_conn.address.port", "22"],
         ["server_conn.address.host", "address"],
         ["server_conn.ip_address.host", "192.168.0.1"],
         ["server_conn.tls_version", "TLSv1.2"],
         ["server_conn.sni", "address"],
-        ["server_conn.tls_established", "false"],
+        ["server_conn.tls_established", "true"],
     ]
     for spec, expected in tests:
         ret = cut.extract(spec, tf)

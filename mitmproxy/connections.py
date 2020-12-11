@@ -2,6 +2,7 @@ import os
 import time
 import typing
 import uuid
+import warnings
 
 from mitmproxy import certs
 from mitmproxy import exceptions
@@ -19,7 +20,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
     Attributes:
         address: Remote address
         tls_established: True if TLS is established, False otherwise
-        clientcert: The TLS client certificate
         mitmcert: The MITM'ed TLS server certificate presented to the client
         timestamp_start: Connection start timestamp
         timestamp_tls_setup: TLS established timestamp
@@ -42,7 +42,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
             self.wfile = None
             self.rfile = None
             self.address = None
-            self.clientcert = None
             self.tls_established = None
 
         self.id = str(uuid.uuid4())
@@ -91,7 +90,7 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
     sockname = ("", 0)
     error = None
     tls = None
-    certificate_list = None
+    certificate_list = ()
     alpn_offers = None
     cipher_list = None
 
@@ -99,7 +98,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         id=str,
         address=tuple,
         tls_established=bool,
-        clientcert=certs.Cert,
         mitmcert=certs.Cert,
         timestamp_start=float,
         timestamp_tls_setup=float,
@@ -119,6 +117,22 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         cipher_list=typing.List[str],
     )
 
+    @property
+    def clientcert(self) -> typing.Optional[certs.Cert]:  # pragma: no cover
+        warnings.warn(".clientcert is deprecated, use .certificate_list instead.", PendingDeprecationWarning)
+        if self.certificate_list:
+            return self.certificate_list[0]
+        else:
+            return None
+
+    @clientcert.setter
+    def clientcert(self, val):  # pragma: no cover
+        warnings.warn(".clientcert is deprecated, use .certificate_list instead.", PendingDeprecationWarning)
+        if val:
+            self.certificate_list = [val]
+        else:
+            self.certificate_list = []
+
     def send(self, message):
         if isinstance(message, list):
             message = b''.join(message)
@@ -136,7 +150,6 @@ class ClientConnection(tcp.BaseHandler, stateobject.StateObject):
         return cls.from_state(dict(
             id=str(uuid.uuid4()),
             address=address,
-            clientcert=None,
             mitmcert=None,
             tls_established=False,
             timestamp_start=None,
@@ -192,7 +205,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         ip_address: Resolved remote IP address.
         source_address: Local IP address or client's source IP address.
         tls_established: True if TLS is established, False otherwise
-        cert: The certificate presented by the remote during the TLS handshake
         sni: Server Name Indication sent by the proxy during the TLS handshake
         alpn_proto_negotiated: The negotiated application protocol
         tls_version: TLS version
@@ -249,7 +261,7 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
     state = 0
     error = None
     tls = None
-    certificate_list = None
+    certificate_list = ()
     alpn_offers = None
     cipher_name = None
     cipher_list = None
@@ -261,7 +273,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         ip_address=tuple,
         source_address=tuple,
         tls_established=bool,
-        cert=certs.Cert,
         sni=str,
         alpn_proto_negotiated=bytes,
         tls_version=str,
@@ -280,6 +291,22 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
         via2=None,
     )
 
+    @property
+    def cert(self) -> typing.Optional[certs.Cert]:  # pragma: no cover
+        warnings.warn(".cert is deprecated, use .certificate_list instead.", PendingDeprecationWarning)
+        if self.certificate_list:
+            return self.certificate_list[0]
+        else:
+            return None
+
+    @cert.setter
+    def cert(self, val):  # pragma: no cover
+        warnings.warn(".cert is deprecated, use .certificate_list instead.", PendingDeprecationWarning)
+        if val:
+            self.certificate_list = [val]
+        else:
+            self.certificate_list = []
+
     @classmethod
     def from_state(cls, state):
         f = cls(tuple())
@@ -292,7 +319,6 @@ class ServerConnection(tcp.TCPClient, stateobject.StateObject):
             id=str(uuid.uuid4()),
             address=address,
             ip_address=address,
-            cert=None,
             sni=address[0],
             alpn_proto_negotiated=None,
             tls_version=None,

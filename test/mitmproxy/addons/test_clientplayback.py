@@ -10,6 +10,7 @@ from mitmproxy.addons import clientplayback
 from mitmproxy.test import taddons
 
 from .. import tservers
+from ...conftest import skip_new_proxy_core
 
 
 def tdump(path, flows):
@@ -48,6 +49,7 @@ class TBase(tservers.HTTPProxyTest):
     def addons(self):
         return [clientplayback.ClientPlayback()]
 
+    @skip_new_proxy_core
     def test_replay(self):
         cr = self.master.addons.get("clientplayback")
 
@@ -164,6 +166,7 @@ class TestClientPlayback:
             assert cp.count() == 0
             await ctx.master.await_log("live")
 
+    @skip_new_proxy_core
     def test_http2(self):
         cp = clientplayback.ClientPlayback()
         with taddons.context(cp):
