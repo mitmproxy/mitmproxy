@@ -347,8 +347,7 @@ def test_request_streaming(tctx, response):
                 >> reply()
                 << SendData(tctx.client, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
                 >> DataReceived(tctx.client, b"def")
-                << SendData(server, b"DEF")
-            # Important: no request hook here!
+                << SendData(server, b"DEF")  # Important: no request hook here!
         )
     elif response == "early close":
         assert (
@@ -875,7 +874,10 @@ def test_close_during_connect_hook(tctx):
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.regular))
             >> DataReceived(tctx.client,
-                            b'CONNECT hi.ls:443 HTTP/1.1\r\nProxy-Connection: keep-alive\r\nConnection: keep-alive\r\nHost: hi.ls:443\r\n\r\n')
+                            b'CONNECT hi.ls:443 HTTP/1.1\r\n'
+                            b'Proxy-Connection: keep-alive\r\n'
+                            b'Connection: keep-alive\r\n'
+                            b'Host: hi.ls:443\r\n\r\n')
             << http.HttpConnectHook(flow)
             >> ConnectionClosed(tctx.client)
             << CloseConnection(tctx.client)

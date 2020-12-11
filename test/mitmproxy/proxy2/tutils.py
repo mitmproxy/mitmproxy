@@ -79,9 +79,9 @@ def _merge_sends(lst: typing.List[commands.Command], ignore_hooks: bool, ignore_
                 current_send.data += x.data
         else:
             ignore = (
-                         (ignore_hooks and isinstance(x, commands.Hook))
-                or
-                         (ignore_logs and isinstance(x, commands.Log))
+                    (ignore_hooks and isinstance(x, commands.Hook))
+                    or
+                    (ignore_logs and isinstance(x, commands.Log))
             )
             if not ignore:
                 current_send = None
@@ -244,7 +244,7 @@ class Playbook:
                                 # the current event may still have yielded more events, so we need to insert
                                 # the reply *after* those additional events.
                                 hook_replies.append(events.HookReply(cmd))
-                self.expected = self.expected[:pos+1] + hook_replies + self.expected[pos+1:]
+                self.expected = self.expected[:pos + 1] + hook_replies + self.expected[pos + 1:]
 
                 eq(self.expected[i:], self.actual[i:])  # compare now already to set placeholders
             i += 1

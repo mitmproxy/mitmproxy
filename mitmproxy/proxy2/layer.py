@@ -3,22 +3,22 @@ Base class for protocol layers.
 """
 import collections
 import textwrap
-import typing
 from abc import abstractmethod
+from typing import Optional, List, ClassVar, Deque, NamedTuple, Generator, Any, TypeVar
 
 from mitmproxy import log
 from mitmproxy.proxy2 import commands, events
 from mitmproxy.proxy2.commands import Command, Hook
 from mitmproxy.proxy2.context import Connection, Context
 
-T = typing.TypeVar('T')
-CommandGenerator = typing.Generator[Command, typing.Optional[events.CommandReply], T]
+T = TypeVar('T')
+CommandGenerator = Generator[Command, Any, T]
 """
 A function annotated with CommandGenerator[bool] may yield commands and ultimately return a boolean value.
 """
 
 
-class Paused(typing.NamedTuple):
+class Paused(NamedTuple):
     """
     State of a layer that's paused because it is waiting for a command reply.
     """
@@ -27,11 +27,11 @@ class Paused(typing.NamedTuple):
 
 
 class Layer:
-    __last_debug_message: typing.ClassVar[str] = ""
+    __last_debug_message: ClassVar[str] = ""
     context: Context
-    _paused: typing.Optional[Paused]
-    _paused_event_queue: typing.Deque[events.Event]
-    debug: typing.Optional[str] = None
+    _paused: Optional[Paused]
+    _paused_event_queue: Deque[events.Event]
+    debug: Optional[str] = None
     """
     Enable debug logging by assigning a prefix string for log messages.
     Different amounts of whitespace for different layers work well.
@@ -94,6 +94,7 @@ class Layer:
             if self.debug is not None:
                 yield self.__debug(f"{'>>' if pause_finished else '>!'} {event}")
             if pause_finished:
+                assert isinstance(event, events.CommandReply)
                 yield from self.__continue(event)
             else:
                 self._paused_event_queue.append(event)
@@ -114,7 +115,7 @@ class Layer:
         except StopIteration:
             return
 
-        while command:
+        while True:
             if self.debug is not None:
                 if not isinstance(command, commands.Log):
                     yield self.__debug(f"<< {command}")
@@ -128,19 +129,23 @@ class Layer:
                 return
             else:
                 yield command
-                command = next(command_generator, None)
+                try:
+                    command = next(command_generator)
+                except StopIteration:
+                    return
 
     def __continue(self, event: events.CommandReply):
         """continue processing events after being paused"""
+        assert self._paused is not None
         command_generator = self._paused.generator
         self._paused = None
         yield from self.__process(command_generator, event.reply)
 
         while not self._paused and self._paused_event_queue:
-            event = self._paused_event_queue.popleft()
+            ev = self._paused_event_queue.popleft()
             if self.debug is not None:
-                yield self.__debug(f"!> {event}")
-            command_generator = self._handle_event(event)
+                yield self.__debug(f"!> {ev}")
+            command_generator = self._handle_event(ev)
             yield from self.__process(command_generator)
 
 
@@ -152,10 +157,10 @@ class NextLayerHook(Hook):
 
 
 class NextLayer(Layer):
-    layer: typing.Optional[Layer]
+    layer: Optional[Layer]
     """The next layer. To be set by an addon."""
 
-    events: typing.List[mevents.Event]
+    events: List[mevents.Event]
     """All events that happened before a decision was made."""
 
     _ask_on_start: bool

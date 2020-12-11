@@ -2,11 +2,10 @@ import struct
 from unittest import mock
 
 import pytest
+from mitmproxy.proxy2.layers.old import websocket
 
 from mitmproxy.net.websockets import Frame, OPCODE
 from mitmproxy.proxy2 import commands, events
-from mitmproxy.proxy2.layers.old import websocket
-
 from mitmproxy.proxy2.context import ConnectionState
 from mitmproxy.test import tflow
 from .. import tutils
@@ -39,24 +38,24 @@ def test_simple(tctx, ws_playbook):
     ]
 
     assert (
-        ws_playbook
-        << commands.Hook("websocket_start", f)
-        >> events.HookReply(-1)
-        >> events.DataReceived(tctx.client, frames[0])
-        << commands.Hook("websocket_message", f)
-        >> events.HookReply(-1)
-        << commands.SendData(tctx.server, frames[0])
-        >> events.DataReceived(tctx.server, frames[1])
-        << commands.Hook("websocket_message", f)
-        >> events.HookReply(-1)
-        << commands.SendData(tctx.client, frames[1])
-        >> events.DataReceived(tctx.client, frames[2])
-        << commands.SendData(tctx.server, frames[2])
-        << commands.SendData(tctx.client, frames[3])
-        << commands.Hook("websocket_end", f)
-        >> events.HookReply(-1)
-        >> events.DataReceived(tctx.server, frames[4])
-        << None
+            ws_playbook
+            << commands.Hook("websocket_start", f)
+            >> events.HookReply(-1)
+            >> events.DataReceived(tctx.client, frames[0])
+            << commands.Hook("websocket_message", f)
+            >> events.HookReply(-1)
+            << commands.SendData(tctx.server, frames[0])
+            >> events.DataReceived(tctx.server, frames[1])
+            << commands.Hook("websocket_message", f)
+            >> events.HookReply(-1)
+            << commands.SendData(tctx.client, frames[1])
+            >> events.DataReceived(tctx.client, frames[2])
+            << commands.SendData(tctx.server, frames[2])
+            << commands.SendData(tctx.client, frames[3])
+            << commands.Hook("websocket_end", f)
+            >> events.HookReply(-1)
+            >> events.DataReceived(tctx.server, frames[4])
+            << None
     )
 
     assert len(f().messages) == 2
@@ -71,31 +70,31 @@ def test_server_close(tctx, ws_playbook):
     ]
 
     assert (
-        ws_playbook
-        << commands.Hook("websocket_start", f)
-        >> events.HookReply(-1)
-        >> events.DataReceived(tctx.server, frames[0])
-        << commands.SendData(tctx.client, frames[0])
-        << commands.SendData(tctx.server, frames[1])
-        << commands.Hook("websocket_end", f)
-        >> events.HookReply(-1)
-        << commands.CloseConnection(tctx.client)
+            ws_playbook
+            << commands.Hook("websocket_start", f)
+            >> events.HookReply(-1)
+            >> events.DataReceived(tctx.server, frames[0])
+            << commands.SendData(tctx.client, frames[0])
+            << commands.SendData(tctx.server, frames[1])
+            << commands.Hook("websocket_end", f)
+            >> events.HookReply(-1)
+            << commands.CloseConnection(tctx.client)
     )
 
 
 def test_connection_closed(tctx, ws_playbook):
     f = tutils.Placeholder()
     assert (
-        ws_playbook
-        << commands.Hook("websocket_start", f)
-        >> events.HookReply(-1)
-        >> events.ConnectionClosed(tctx.server)
-        << commands.Log("error", "Connection closed abnormally")
-        << commands.CloseConnection(tctx.client)
-        << commands.Hook("websocket_error", f)
-        >> events.HookReply(-1)
-        << commands.Hook("websocket_end", f)
-        >> events.HookReply(-1)
+            ws_playbook
+            << commands.Hook("websocket_start", f)
+            >> events.HookReply(-1)
+            >> events.ConnectionClosed(tctx.server)
+            << commands.Log("error", "Connection closed abnormally")
+            << commands.CloseConnection(tctx.client)
+            << commands.Hook("websocket_error", f)
+            >> events.HookReply(-1)
+            << commands.Hook("websocket_end", f)
+            >> events.HookReply(-1)
     )
 
     assert f().error
@@ -111,16 +110,16 @@ def test_connection_failed(tctx, ws_playbook):
     ]
 
     assert (
-        ws_playbook
-        << commands.Hook("websocket_start", f)
-        >> events.HookReply(-1)
-        >> events.DataReceived(tctx.client, frames[0])
-        << commands.SendData(tctx.server, frames[1])
-        << commands.SendData(tctx.client, frames[2])
-        << commands.Hook("websocket_error", f)
-        >> events.HookReply(-1)
-        << commands.Hook("websocket_end", f)
-        >> events.HookReply(-1)
+            ws_playbook
+            << commands.Hook("websocket_start", f)
+            >> events.HookReply(-1)
+            >> events.DataReceived(tctx.client, frames[0])
+            << commands.SendData(tctx.server, frames[1])
+            << commands.SendData(tctx.client, frames[2])
+            << commands.Hook("websocket_error", f)
+            >> events.HookReply(-1)
+            << commands.Hook("websocket_end", f)
+            >> events.HookReply(-1)
     )
 
 
@@ -133,15 +132,15 @@ def test_ping_pong(tctx, ws_playbook):
     ]
 
     assert (
-        ws_playbook
-        << commands.Hook("websocket_start", f)
-        >> events.HookReply(-1)
-        >> events.DataReceived(tctx.client, frames[0])
-        << commands.Log("info", "WebSocket PING received from client: <no payload>")
-        << commands.SendData(tctx.server, frames[0])
-        << commands.SendData(tctx.client, frames[1])
-        >> events.DataReceived(tctx.server, frames[1])
-        << commands.Log("info", "WebSocket PONG received from server: <no payload>")
+            ws_playbook
+            << commands.Hook("websocket_start", f)
+            >> events.HookReply(-1)
+            >> events.DataReceived(tctx.client, frames[0])
+            << commands.Log("info", "WebSocket PING received from client: <no payload>")
+            << commands.SendData(tctx.server, frames[0])
+            << commands.SendData(tctx.client, frames[1])
+            >> events.DataReceived(tctx.server, frames[1])
+            << commands.Log("info", "WebSocket PONG received from server: <no payload>")
     )
 
 
@@ -156,15 +155,15 @@ def test_ping_pong_hidden_payload(tctx, ws_playbook):
     ]
 
     assert (
-        ws_playbook
-        << commands.Hook("websocket_start", f)
-        >> events.HookReply(-1)
-        >> events.DataReceived(tctx.server, frames[0])
-        << commands.Log("info", "WebSocket PING received from server: foobar")
-        << commands.SendData(tctx.client, frames[1])
-        << commands.SendData(tctx.server, frames[2])
-        >> events.DataReceived(tctx.client, frames[3])
-        << commands.Log("info", "WebSocket PONG received from client: <no payload>")
+            ws_playbook
+            << commands.Hook("websocket_start", f)
+            >> events.HookReply(-1)
+            >> events.DataReceived(tctx.server, frames[0])
+            << commands.Log("info", "WebSocket PING received from server: foobar")
+            << commands.SendData(tctx.client, frames[1])
+            << commands.SendData(tctx.server, frames[2])
+            >> events.DataReceived(tctx.client, frames[3])
+            << commands.Log("info", "WebSocket PONG received from client: <no payload>")
     )
 
 
@@ -181,17 +180,17 @@ def test_extension(tctx, ws_playbook):
     ]
 
     assert (
-        ws_playbook
-        << commands.Hook("websocket_start", f)
-        >> events.HookReply(-1)
-        >> events.DataReceived(tctx.client, frames[0])
-        << commands.Hook("websocket_message", f)
-        >> events.HookReply(-1)
-        << commands.SendData(tctx.server, frames[0])
-        >> events.DataReceived(tctx.server, frames[1])
-        << commands.Hook("websocket_message", f)
-        >> events.HookReply(-1)
-        << commands.SendData(tctx.client, frames[2])
+            ws_playbook
+            << commands.Hook("websocket_start", f)
+            >> events.HookReply(-1)
+            >> events.DataReceived(tctx.client, frames[0])
+            << commands.Hook("websocket_message", f)
+            >> events.HookReply(-1)
+            << commands.SendData(tctx.server, frames[0])
+            >> events.DataReceived(tctx.server, frames[1])
+            << commands.Hook("websocket_message", f)
+            >> events.HookReply(-1)
+            << commands.SendData(tctx.client, frames[2])
     )
     assert len(f().messages) == 2
     assert f().messages[0].content == "Hello"

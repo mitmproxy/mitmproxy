@@ -51,7 +51,7 @@ class ProxyConnectionHandler(server.StreamConnectionHandler):
 
     def log(self, message: str, level: str = "info") -> None:
         x = log.LogEntry(self.log_prefix + message, level)
-        x.reply = controller.DummyReply()
+        x.reply = controller.DummyReply()  # type: ignore
         asyncio_utils.create_task(
             self.master.addons.handle_lifecycle("log", x),
             name="ProxyConnectionHandler.log"

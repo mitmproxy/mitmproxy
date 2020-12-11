@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import Callable, List, Optional, Tuple, Type
+from typing import List, Optional, Tuple
 
 from mitmproxy.proxy2 import commands, context, events, layer
 from mitmproxy.proxy2.layer import Layer
@@ -138,7 +138,7 @@ class LayerStack:
 
     def __truediv__(self, other: Layer) -> "LayerStack":
         if self._stack:
-            self._stack[-1].child_layer = other
+            self._stack[-1].child_layer = other  # type: ignore
         self._stack.append(other)
         return self
 

@@ -28,6 +28,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             conn=ctx.server
         )
 
+        assert self.tunnel_connection.address
         self.conn.via = server_spec.ServerSpec(
             "https" if self.tunnel_connection.tls else "http",
             self.tunnel_connection.address
@@ -43,6 +44,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
             self.conn.alpn = self.tunnel_connection.alpn
         if not self.send_connect:
             return (yield from super().start_handshake())
+        assert self.conn.address
         req = http.make_connect_request(self.conn.address)
         raw = http1.assemble_request(req)
         yield commands.SendData(self.tunnel_connection, raw)
@@ -66,7 +68,8 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
                 return True, None
             else:
                 raw_resp = b"\n".join(response_head)
-                yield commands.Log(f"{human.format_address(self.tunnel_connection.address)}: {raw_resp}", level="debug")
+                yield commands.Log(f"{human.format_address(self.tunnel_connection.address)}: {raw_resp!r}",
+                                   level="debug")
                 return False, f"{response.status_code} {response.reason}"
         else:
             return False, None

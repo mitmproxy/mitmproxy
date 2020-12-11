@@ -33,16 +33,16 @@ class MockServer(layers.http.HttpConnection):
 
     def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
         if isinstance(event, events.Start):
-            has_content = bool(self.flow.request.raw_content)
+            content = self.flow.request.raw_content
             self.flow.request.timestamp_start = self.flow.request.timestamp_end = time.time()
             yield layers.http.ReceiveHttp(layers.http.RequestHeaders(
                 1,
                 self.flow.request,
-                end_stream=not has_content,
+                end_stream=not content,
                 replay_flow=self.flow,
             ))
-            if has_content:
-                yield layers.http.ReceiveHttp(layers.http.RequestData(1, self.flow.request.raw_content))
+            if content:
+                yield layers.http.ReceiveHttp(layers.http.RequestData(1, content))
             yield layers.http.ReceiveHttp(layers.http.RequestEndOfMessage(1))
         elif isinstance(event, (
                 layers.http.ResponseHeaders,
@@ -56,6 +56,8 @@ class MockServer(layers.http.HttpConnection):
 
 
 class ReplayHandler(server.ConnectionHandler):
+    layer: layers.HttpLayer
+
     def __init__(self, flow: http.HTTPFlow, options: Options) -> None:
         client = flow.client_conn.copy()
         client.state = ConnectionState.OPEN
@@ -91,8 +93,9 @@ class ReplayHandler(server.ConnectionHandler):
             if self.transports:
                 # close server connections
                 for x in self.transports.values():
-                    x.handler.cancel()
-                await asyncio.wait([x.handler for x in self.transports.values()])
+                    if x.handler:
+                        x.handler.cancel()
+                await asyncio.wait([x.handler for x in self.transports.values() if x.handler])
             # signal completion
             self.done.set()
 
@@ -140,6 +143,7 @@ class ClientPlayback:
                 return "Can't replay flow with missing content."
         else:
             return "Can only replay HTTP flows."
+        return None
 
     def load(self, loader):
         loader.add_option(

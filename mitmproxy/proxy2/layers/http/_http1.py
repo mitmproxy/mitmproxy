@@ -27,7 +27,8 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     response: Optional[http.HTTPResponse] = None
     request_done: bool = False
     response_done: bool = False
-    state: Callable[[events.ConnectionEvent], layer.CommandGenerator[None]]
+    # this is a bit of a hack to make both mypy and PyCharm happy.
+    state: Union[Callable[[events.ConnectionEvent], layer.CommandGenerator[None]], Callable]
     body_reader: TBodyReader
     buf: ReceiveBuffer
 
@@ -50,10 +51,12 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, HttpEvent):
             yield from self.send(event)
-        else:
+        elif isinstance(event, events.ConnectionEvent):
             if isinstance(event, events.DataReceived) and self.state != self.passthrough:
                 self.buf += event.data
             yield from self.state(event)
+        else:
+            raise AssertionError(f"Unexpected event: {event}")
 
     @expect(events.Start)
     def start(self, _) -> layer.CommandGenerator[None]:
@@ -63,6 +66,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     state = start
 
     def read_body(self, event: events.Event) -> layer.CommandGenerator[None]:
+        assert self.stream_id
         while True:
             try:
                 if isinstance(event, events.DataReceived):
@@ -83,6 +87,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                 if data:
                     yield ReceiveHttp(self.ReceiveData(self.stream_id, data))
             elif isinstance(h11_event, h11.EndOfMessage):
+                assert self.request
                 if h11_event.headers:
                     raise NotImplementedError(f"HTTP trailers are not implemented yet.")
                 if self.request.data.method.upper() != b"CONNECT":
@@ -99,6 +104,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
         We wait for the current flow to be finished before parsing the next message,
         as we may want to upgrade to WebSocket or plain TCP before that.
         """
+        assert self.stream_id
         if isinstance(event, events.DataReceived):
             return
         elif isinstance(event, events.ConnectionClosed):
@@ -123,6 +129,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
             self.buf.compress()
 
     def passthrough(self, event: events.Event) -> layer.CommandGenerator[None]:
+        assert self.stream_id
         if isinstance(event, events.DataReceived):
             yield ReceiveHttp(self.ReceiveData(self.stream_id, event.data))
         elif isinstance(event, events.ConnectionClosed):
@@ -137,19 +144,19 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
         if response:
             self.response_done = True
         if self.request_done and self.response_done:
+            assert self.request
+            assert self.response
             if should_make_pipe(self.request, self.response):
                 yield from self.make_pipe()
                 return
             connection_done = (
-                    http1_sansio.expected_http_body_size(self.request, self.response) == -1 or
-                    http1.connection_close(self.request.http_version, self.request.headers) or
-                    http1.connection_close(self.response.http_version, self.response.headers) or
-                    (
-                        # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
-                        # This simplifies our connection management quite a bit as we can rely on
-                        # the proxyserver's max-connection-per-server throttling.
-                            self.request.is_http2 and isinstance(self, Http1Client)
-                    )
+                    http1_sansio.expected_http_body_size(self.request, self.response) == -1
+                    or http1.connection_close(self.request.http_version, self.request.headers)
+                    or http1.connection_close(self.response.http_version, self.response.headers)
+                    # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
+                    # This simplifies our connection management quite a bit as we can rely on
+                    # the proxyserver's max-connection-per-server throttling.
+                    or (self.request.is_http2 and isinstance(self, Http1Client))
             )
             if connection_done:
                 yield commands.CloseConnection(self.conn)
@@ -172,6 +179,7 @@ class Http1Server(Http1Connection):
     ReceiveProtocolError = RequestProtocolError
     ReceiveData = RequestData
     ReceiveEndOfMessage = RequestEndOfMessage
+    stream_id: int
 
     def __init__(self, context: Context):
         super().__init__(context, context.client)
@@ -185,7 +193,7 @@ class Http1Server(Http1Connection):
             if response.is_http2:
                 response = response.copy()
                 # Convert to an HTTP/1 response.
-                response.http_version = b"HTTP/1.1"
+                response.http_version = "HTTP/1.1"
                 # not everyone supports empty reason phrases, so we better make up one.
                 response.reason = status_codes.RESPONSES.get(response.status_code, "")
                 # Shall we set a Content-Length header here if there is none?
@@ -194,6 +202,7 @@ class Http1Server(Http1Connection):
             raw = http1.assemble_response_head(response)
             yield commands.SendData(self.conn, raw)
         elif isinstance(event, ResponseData):
+            assert self.response
             if "chunked" in self.response.headers.get("transfer-encoding", "").lower():
                 raw = b"%x\r\n%s\r\n" % (len(event.data), event.data)
             else:
@@ -201,6 +210,7 @@ class Http1Server(Http1Connection):
             if raw:
                 yield commands.SendData(self.conn, raw)
         elif isinstance(event, ResponseEndOfMessage):
+            assert self.response
             if "chunked" in self.response.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
             yield from self.mark_done(response=True)
@@ -235,7 +245,7 @@ class Http1Server(Http1Connection):
         elif isinstance(event, events.ConnectionClosed):
             buf = bytes(self.buf)
             if buf.strip():
-                yield commands.Log(f"Client closed connection before completing request headers: {buf}")
+                yield commands.Log(f"Client closed connection before completing request headers: {buf!r}")
             yield commands.CloseConnection(self.conn)
         else:
             raise AssertionError(f"Unexpected event: {event}")
@@ -268,13 +278,14 @@ class Http1Client(Http1Connection):
             if request.is_http2:
                 # Convert to an HTTP/1 request.
                 request = request.copy()  # (we could probably be a bit more efficient here.)
-                request.http_version = b"HTTP/1.1"
+                request.http_version = "HTTP/1.1"
                 if "Host" not in request.headers and request.authority:
                     request.headers.insert(0, "Host", request.authority)
-                request.authority = b""
+                request.authority = ""
             raw = http1.assemble_request_head(request)
             yield commands.SendData(self.conn, raw)
         elif isinstance(event, RequestData):
+            assert self.request
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
                 raw = b"%x\r\n%s\r\n" % (len(event.data), event.data)
             else:
@@ -282,6 +293,7 @@ class Http1Client(Http1Connection):
             if raw:
                 yield commands.SendData(self.conn, raw)
         elif isinstance(event, RequestEndOfMessage):
+            assert self.request
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
             elif http1_sansio.expected_http_body_size(self.request, self.response) == -1:
@@ -300,6 +312,7 @@ class Http1Client(Http1Connection):
                 yield commands.Log(f"Unexpected data from server: {bytes(self.buf)!r}")
                 yield commands.CloseConnection(self.conn)
                 return
+            assert self.stream_id
 
             response_head = self.buf.maybe_extract_lines()
             if response_head:

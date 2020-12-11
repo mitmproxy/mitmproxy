@@ -42,7 +42,7 @@ def handshake_record_contents(data: bytes) -> Iterator[bytes]:
             return
         record_header = data[offset:offset + 5]
         if not is_tls_handshake_record(record_header):
-            raise ValueError(f"Expected TLS record, got {record_header} instead.")
+            raise ValueError(f"Expected TLS record, got {record_header!r} instead.")
         record_size = struct.unpack("!H", record_header[3:])[0]
         if record_size == 0:
             raise ValueError("Record must not be empty.")
@@ -132,7 +132,7 @@ class _TLSLayer(tunnel.TunnelLayer):
     def __repr__(self):
         return super().__repr__().replace(")", f" {self.conn.sni} {self.conn.alpn})")
 
-    def start_tls(self) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def start_tls(self) -> layer.CommandGenerator[None]:
         assert not self.tls
 
         tls_start = TlsStartData(self.conn, self.context)
@@ -169,6 +169,7 @@ class _TLSLayer(tunnel.TunnelLayer):
                 ('SSL routines', 'ssl3_read_bytes', 'tlsv1 alert unknown ca'),
                 ('SSL routines', 'ssl3_read_bytes', 'sslv3 alert bad certificate')
             ]:
+                assert isinstance(last_err, list)
                 err = last_err[2]
             elif last_err == ('SSL routines', 'ssl3_get_record', 'wrong version number') and data[:4].isascii():
                 err = f"The remote server does not speak TLS."
@@ -278,6 +279,7 @@ class ClientTLSLayer(_TLSLayer):
     """
     recv_buffer: bytearray
     server_tls_available: bool
+    client_hello_parsed: bool = False
 
     def __init__(self, context: context.Context):
         super().__init__(context, context.client)
@@ -288,13 +290,17 @@ class ClientTLSLayer(_TLSLayer):
         yield from ()
 
     def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+        if self.client_hello_parsed:
+            return (yield from super().receive_handshake_data(data))
         self.recv_buffer.extend(data)
         try:
             client_hello = parse_client_hello(self.recv_buffer)
         except ValueError:
             return False, f"Cannot parse ClientHello: {self.recv_buffer.hex()}"
 
-        if not client_hello:
+        if client_hello:
+            self.client_hello_parsed = True
+        else:
             return False, None
 
         self.conn.sni = client_hello.sni
@@ -310,8 +316,7 @@ class ClientTLSLayer(_TLSLayer):
 
         yield from self.start_tls()
 
-        self.receive_handshake_data = super().receive_handshake_data
-        ret = yield from self.receive_handshake_data(bytes(self.recv_buffer))
+        ret = yield from super().receive_handshake_data(bytes(self.recv_buffer))
         self.recv_buffer.clear()
         return ret
 
@@ -327,6 +332,7 @@ class ClientTLSLayer(_TLSLayer):
 
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
         if self.conn.sni:
+            assert isinstance(self.conn.sni, bytes)
             dest = self.conn.sni.decode("idna")
         else:
             dest = human.format_address(self.context.server.address)

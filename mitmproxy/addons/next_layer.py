@@ -14,7 +14,7 @@ LayerCls = typing.Type[layer.Layer]
 
 def stack_match(
         context: context.Context,
-        layers: typing.List[typing.Union[LayerCls, typing.Tuple[LayerCls, ...]]]
+        layers: typing.Sequence[typing.Union[LayerCls, typing.Tuple[LayerCls, ...]]]
 ) -> bool:
     if len(context.layers) != len(layers):
         return False
@@ -74,11 +74,15 @@ class NextLayer:
             hostnames.append(context.server.address[0])
         if is_tls_record_magic(data_client):
             try:
-                sni = parse_client_hello(data_client).sni
+                ch = parse_client_hello(data_client)
+                if ch is None:
+                    return None
+                sni = ch.sni
             except ValueError:
                 return None  # defer decision, wait for more input data
             else:
-                hostnames.append(sni.decode("idna"))
+                if sni:
+                    hostnames.append(sni.decode("idna"))
 
         if not hostnames:
             return False
@@ -95,6 +99,8 @@ class NextLayer:
                 for host in hostnames
                 for rex in ctx.options.allow_hosts
             )
+        else:  # pragma: no cover
+            raise AssertionError()
 
     def next_layer(self, nextlayer: layer.NextLayer):
         if isinstance(nextlayer, base.Layer):
@@ -106,10 +112,13 @@ class NextLayer:
             return self.make_top_layer(context)
 
         if len(data_client) < 3:
-            return
+            return None
 
         client_tls = is_tls_record_magic(data_client)
-        s = lambda *layers: stack_match(context, layers)
+
+        def s(*layers):
+            return stack_match(context, layers)
+
         top_layer = context.layers[-1]
 
         # 1. check for --ignore/--allow
@@ -117,7 +126,7 @@ class NextLayer:
         if ignore is True:
             return layers.TCPLayer(context, ignore=True)
         if ignore is None:
-            return
+            return None
 
         # 2. Check for TLS
         if client_tls:

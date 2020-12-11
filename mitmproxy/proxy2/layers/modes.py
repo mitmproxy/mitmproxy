@@ -11,6 +11,7 @@ class ReverseProxy(layer.Layer):
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         spec = server_spec.parse_with_mode(self.context.options.mode)[1]
         self.context.server = Server(spec.address)
+        child_layer: layer.Layer
         if spec.scheme not in ("http", "tcp"):
             if not self.context.options.keep_host_header:
                 self.context.server.sni = spec.address[0].encode()
@@ -32,6 +33,7 @@ class HttpProxy(layer.Layer):
 class TransparentProxy(layer.Layer):
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
+        assert platform.original_addr is not None
         socket = yield commands.GetSocket(self.context.client)
         try:
             self.context.server.address = platform.original_addr(socket)
