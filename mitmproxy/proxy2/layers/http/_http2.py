@@ -1,7 +1,7 @@
 import collections
 import time
 from enum import Enum
-from typing import ClassVar, DefaultDict, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import ClassVar, DefaultDict, Dict, List, Optional, Tuple, Type, Union, Sequence
 
 import h2.config
 import h2.connection
@@ -76,6 +76,7 @@ class Http2Connection(HttpConnection):
 
         elif isinstance(event, HttpEvent):
             if isinstance(event, self.SendData):
+                assert isinstance(event, (RequestData, ResponseData))
                 self.h2_conn.send_data(event.stream_id, event.data)
             elif isinstance(event, self.SendEndOfMessage):
                 stream = self.h2_conn.streams.get(event.stream_id)
@@ -85,6 +86,7 @@ class Http2Connection(HttpConnection):
                 if self.is_closed(event.stream_id):
                     self.streams.pop(event.stream_id, None)
             elif isinstance(event, self.SendProtocolError):
+                assert isinstance(event, (RequestProtocolError, ResponseProtocolError))
                 stream = self.h2_conn.streams.get(event.stream_id)
                 if stream.state_machine.state is not h2.stream.StreamState.CLOSED:
                     code = {
@@ -192,6 +194,7 @@ class Http2Connection(HttpConnection):
             yield Log(f"Ignoring unknown HTTP/2 frame type: {event.frame.type}")
         else:
             raise AssertionError(f"Unexpected event: {event!r}")
+        return False
 
     def protocol_error(
             self,
@@ -208,7 +211,7 @@ class Http2Connection(HttpConnection):
         for stream_id in self.streams:
             yield ReceiveHttp(self.ReceiveProtocolError(stream_id, msg))
         self.streams.clear()
-        self._handle_event = self.done
+        self._handle_event = self.done  # type: ignore
 
     @expect(DataReceived, HttpEvent, ConnectionClosed)
     def done(self, _) -> CommandGenerator[None]:
@@ -285,6 +288,7 @@ class Http2Server(Http2Connection):
             )
             self.streams[event.stream_id] = StreamState.HEADERS_RECEIVED
             yield ReceiveHttp(RequestHeaders(event.stream_id, request, end_stream=bool(event.stream_ended)))
+            return False
         else:
             return (yield from super().handle_h2_event(event))
 
@@ -303,9 +307,9 @@ class Http2Client(Http2Connection):
     ReceiveData = ResponseData
     ReceiveEndOfMessage = ResponseEndOfMessage
 
-    our_stream_id = Dict[int, int]
-    their_stream_id = Dict[int, int]
-    stream_queue = DefaultDict[int, List[Event]]
+    our_stream_id: Dict[int, int]
+    their_stream_id: Dict[int, int]
+    stream_queue: DefaultDict[int, List[Event]]
     """Queue of streams that we haven't sent yet because we have reached MAX_CONCURRENT_STREAMS"""
     provisional_max_concurrency: Optional[int] = 10
     """A provisional currency limit before we get the server's first settings frame."""
@@ -360,9 +364,9 @@ class Http2Client(Http2Connection):
     def _handle_event2(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, RequestHeaders):
             pseudo_headers = [
-                (b':method', event.request.method),
-                (b':scheme', event.request.scheme),
-                (b':path', event.request.path),
+                (b':method', event.request.data.method),
+                (b':scheme', event.request.data.scheme),
+                (b':path', event.request.data.path),
             ]
             if event.request.authority:
                 pseudo_headers.append((b":authority", event.request.data.authority))
@@ -410,6 +414,7 @@ class Http2Client(Http2Connection):
             )
             self.streams[event.stream_id] = StreamState.HEADERS_RECEIVED
             yield ReceiveHttp(ResponseHeaders(event.stream_id, response, bool(event.stream_ended)))
+            return False
         elif isinstance(event, h2.events.RequestReceived):
             yield from self.protocol_error(f"HTTP/2 protocol error: received request from server")
             return True
@@ -422,13 +427,13 @@ class Http2Client(Http2Connection):
             return (yield from super().handle_h2_event(event))
 
 
-def split_pseudo_headers(h2_headers: Iterable[Tuple[bytes, bytes]]) -> Tuple[Dict[bytes, bytes], net_http.Headers]:
+def split_pseudo_headers(h2_headers: Sequence[Tuple[bytes, bytes]]) -> Tuple[Dict[bytes, bytes], net_http.Headers]:
     pseudo_headers: Dict[bytes, bytes] = {}
     i = 0
     for (header, value) in h2_headers:
         if header.startswith(b":"):
             if header in pseudo_headers:
-                raise ValueError(f"Duplicate HTTP/2 pseudo header: {header}")
+                raise ValueError(f"Duplicate HTTP/2 pseudo header: {header!r}")
             pseudo_headers[header] = value
             i += 1
         else:
@@ -441,7 +446,7 @@ def split_pseudo_headers(h2_headers: Iterable[Tuple[bytes, bytes]]) -> Tuple[Dic
 
 
 def parse_h2_request_headers(
-        h2_headers: Iterable[Tuple[bytes, bytes]]
+        h2_headers: Sequence[Tuple[bytes, bytes]]
 ) -> Tuple[str, int, bytes, bytes, bytes, bytes, net_http.Headers]:
     """Split HTTP/2 pseudo-headers from the actual headers and parse them."""
     pseudo_headers, headers = split_pseudo_headers(h2_headers)
@@ -468,7 +473,7 @@ def parse_h2_request_headers(
     return host, port, method, scheme, authority, path, headers
 
 
-def parse_h2_response_headers(h2_headers: Iterable[Tuple[bytes, bytes]]) -> Tuple[int, net_http.Headers]:
+def parse_h2_response_headers(h2_headers: Sequence[Tuple[bytes, bytes]]) -> Tuple[int, net_http.Headers]:
     """Split HTTP/2 pseudo-headers from the actual headers and parse them."""
     pseudo_headers, headers = split_pseudo_headers(h2_headers)
 

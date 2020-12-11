@@ -16,26 +16,27 @@ def _parse_authority_form(hostport: bytes) -> Tuple[bytes, int]:
             ValueError, if the input is malformed
     """
     try:
-        host, port = hostport.rsplit(b":", 1)
+        host, port_str = hostport.rsplit(b":", 1)
         if host.startswith(b"[") and host.endswith(b"]"):
             host = host[1:-1]
-        port = int(port)
+        port = int(port_str)
         if not check.is_valid_host(host) or not check.is_valid_port(port):
             raise ValueError
     except ValueError:
-        raise ValueError(f"Invalid host specification: {hostport}")
+        raise ValueError(f"Invalid host specification: {hostport!r}")
 
     return host, port
 
 
-def raise_if_http_version_unknown(http_version):
+def raise_if_http_version_unknown(http_version: bytes) -> None:
     if not re.match(br"^HTTP/\d\.\d$", http_version):
-        raise ValueError(f"Unknown HTTP version: {http_version}")
+        raise ValueError(f"Unknown HTTP version: {http_version!r}")
 
 
 def _read_request_line(line: bytes) -> Tuple[str, int, bytes, bytes, bytes, bytes, bytes]:
     try:
         method, target, http_version = line.split()
+        port: Optional[int]
 
         if target == b"*" or target.startswith(b"/"):
             scheme, authority, path = b"", b"", target
@@ -58,7 +59,7 @@ def _read_request_line(line: bytes) -> Tuple[str, int, bytes, bytes, bytes, byte
 
         raise_if_http_version_unknown(http_version)
     except ValueError as e:
-        raise ValueError(f"Bad HTTP request line: {line}") from e
+        raise ValueError(f"Bad HTTP request line: {line!r}") from e
 
     return host, port, method, scheme, authority, path, http_version
 
@@ -69,16 +70,16 @@ def _read_response_line(line: bytes) -> Tuple[bytes, int, bytes]:
         if len(parts) == 2:  # handle missing message gracefully
             parts.append(b"")
 
-        http_version, status_code, reason = parts
-        status_code = int(status_code)
+        http_version, status_code_str, reason = parts
+        status_code = int(status_code_str)
         raise_if_http_version_unknown(http_version)
     except ValueError as e:
-        raise ValueError(f"Bad HTTP response line: {line}") from e
+        raise ValueError(f"Bad HTTP response line: {line!r}") from e
 
     return http_version, status_code, reason
 
 
-def _read_headers(lines: Iterable[bytes]):
+def _read_headers(lines: Iterable[bytes]) -> headers.Headers:
     """
         Read a set of headers.
         Stop once a blank line is reached.
@@ -89,7 +90,7 @@ def _read_headers(lines: Iterable[bytes]):
         Raises:
             exceptions.HttpSyntaxException
     """
-    ret = []
+    ret: List[Tuple[bytes, bytes]] = []
     for line in lines:
         if line[0] in b" \t":
             if not ret:
@@ -104,7 +105,7 @@ def _read_headers(lines: Iterable[bytes]):
                     raise ValueError()
                 ret.append((name, value))
             except ValueError:
-                raise ValueError(f"Invalid header line: {line}")
+                raise ValueError(f"Invalid header line: {line!r}")
     return headers.Headers(ret)
 
 

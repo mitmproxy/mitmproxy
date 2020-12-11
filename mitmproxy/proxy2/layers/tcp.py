@@ -3,7 +3,7 @@ from typing import Optional
 from mitmproxy import flow, tcp
 from mitmproxy.proxy2 import commands, events, layer
 from mitmproxy.proxy2.commands import Hook
-from mitmproxy.proxy2.context import ConnectionState, Context
+from mitmproxy.proxy2.context import ConnectionState, Context, Connection
 from mitmproxy.proxy2.utils import expect
 
 
@@ -73,6 +73,7 @@ class TCPLayer(layer.Layer):
     @expect(events.DataReceived, events.ConnectionClosed)
     def relay_messages(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
         from_client = event.connection == self.context.client
+        send_to: Connection
         if from_client:
             send_to = self.context.server
         else:

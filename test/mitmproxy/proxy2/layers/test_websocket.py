@@ -9,7 +9,7 @@ from mitmproxy.http import HTTPFlow
 from mitmproxy.net.http import Request, Response
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2.commands import SendData, CloseConnection, Log
-from mitmproxy.proxy2.context import Server, ConnectionState
+from mitmproxy.proxy2.context import ConnectionState
 from mitmproxy.proxy2.events import DataReceived, ConnectionClosed
 from mitmproxy.proxy2.layers import http, websocket
 from mitmproxy.websocket import WebSocketFlow

@@ -1,12 +1,15 @@
 import uuid
 import warnings
 from enum import Flag
-from typing import List, Literal, Optional, Sequence, Tuple, Union
+from typing import List, Literal, Optional, Sequence, Tuple, Union, TYPE_CHECKING
 
 from mitmproxy import certs
 from mitmproxy.coretypes import serializable
 from mitmproxy.net import server_spec
 from mitmproxy.options import Options
+
+if TYPE_CHECKING:
+    import mitmproxy.proxy2.layer
 
 
 class ConnectionState(Flag):
@@ -38,9 +41,9 @@ class Connection(serializable.Serializable):
     tls: bool = False
     certificate_list: Optional[Sequence[certs.Cert]] = None
     """
-    The TLS certificate list as sent by the peer. 
+    The TLS certificate list as sent by the peer.
     The first certificate is the end-entity certificate.
-    
+
     [RFC 8446] Prior to TLS 1.3, "certificate_list" ordering required each
     certificate to certify the one immediately preceding it; however,
     some implementations allowed some flexibility.  Servers sometimes
@@ -84,7 +87,7 @@ class Connection(serializable.Serializable):
         return f"{type(self).__name__}({attrs})"
 
     @property
-    def alpn_proto_negotiated(self) -> bytes:
+    def alpn_proto_negotiated(self) -> Optional[bytes]:
         warnings.warn("Server.alpn_proto_negotiated is deprecated, use Server.alpn instead.", PendingDeprecationWarning)
         return self.alpn
 
@@ -185,11 +188,11 @@ class Server(Connection):
     timestamp_tcp_setup: Optional[float] = None
     """TCP ACK received"""
 
-    sni = True
+    sni: Union[bytes, Literal[True], None] = True
     """True: client SNI, False: no SNI, bytes: custom value"""
     via: Optional[server_spec.ServerSpec] = None
 
-    def __init__(self, address: Optional[tuple]):
+    def __init__(self, address: Optional[Address]):
         self.id = str(uuid.uuid4())
         self.address = address
 
@@ -250,7 +253,7 @@ class Server(Connection):
         self.via = state["via2"]
 
     @property
-    def ip_address(self) -> Address:
+    def ip_address(self) -> Optional[Address]:
         warnings.warn("Server.ip_address is deprecated, use Server.peername instead.", PendingDeprecationWarning)
         return self.peername
 

@@ -8,9 +8,12 @@ The counterpart to commands are events.
 """
 import dataclasses
 import re
-from typing import Any, ClassVar, Dict, List, Literal, Type
+from typing import Any, ClassVar, Dict, List, Literal, Type, Union, TYPE_CHECKING
 
 from mitmproxy.proxy2.context import Connection, Server
+
+if TYPE_CHECKING:
+    import mitmproxy.proxy2.layer
 
 
 class Command:
@@ -18,7 +21,7 @@ class Command:
     Base class for all commands
     """
 
-    blocking: ClassVar[bool] = False
+    blocking: Union[bool, "mitmproxy.proxy2.layer.Layer"] = False
     """
     Determines if the command blocks until it has been completed.
 

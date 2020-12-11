@@ -2,7 +2,6 @@ import copy
 
 import pytest
 
-from mitmproxy.http import HTTPFlow
 from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.proxy2.context import Client, Context, Server

@@ -33,7 +33,7 @@ class TlsConfig:
     """
     This addon supplies the proxy core with the desired OpenSSL connection objects to negotiate TLS.
     """
-    certstore: certs.CertStore = None
+    certstore: certs.CertStore
 
     # TODO: We should support configuring TLS 1.3 cipher suites (https://github.com/mitmproxy/mitmproxy/issues/4260)
     # TODO: We should re-use SSL.Context options here, if only for TLS session resumption.
@@ -57,7 +57,7 @@ class TlsConfig:
         our certificate should have and then fetches a matching cert from the certstore.
         """
         altnames: List[bytes] = []
-        organization: Optional[str] = None
+        organization: Optional[bytes] = None
 
         # Use upstream certificate if available.
         if conn_context.server.certificate_list:
@@ -130,6 +130,7 @@ class TlsConfig:
     def create_proxy_server_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
         client = tls_start.context.client
         server = cast(context.Server, tls_start.conn)
+        assert server.address
 
         if server.sni is True:
             server.sni = client.sni or server.address[0].encode()
@@ -179,7 +180,7 @@ class TlsConfig:
         args["cipher_list"] = ':'.join(server.cipher_list) if server.cipher_list else None
         ssl_ctx = net_tls.create_client_context(
             cert=client_cert,
-            sni=server.sni.decode("idna"),  # TODO: Should pass-through here.
+            sni=server.sni.decode("idna") if server.sni else None,  # TODO: Should pass-through here.
             alpn_protos=server.alpn_offers,
             **args
         )

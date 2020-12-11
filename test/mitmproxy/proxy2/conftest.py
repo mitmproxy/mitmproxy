@@ -1,6 +1,6 @@
 import pytest
 
-from mitmproxy import log, options
+from mitmproxy import options
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons.termlog import TermLog
 from mitmproxy.proxy2 import context

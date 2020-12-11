@@ -75,6 +75,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
     timeout_watchdog: TimeoutWatchdog
     client: Client
     max_conns: typing.DefaultDict[Address, asyncio.Semaphore]
+    layer: layer.Layer
 
     def __init__(self, context: Context) -> None:
         self.client = context.client
@@ -93,18 +94,24 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             name="timeout watchdog",
             client=self.client.peername,
         )
+        if not watch:
+            return  # this should not be needed, see asyncio_utils.create_task
 
         self.log("client connect")
         await self.handle_hook(server_hooks.ClientConnectedHook(self.client))
         if self.client.error:
             self.log("client kill connection")
-            self.transports.pop(self.client).writer.close()
+            writer = self.transports.pop(self.client).writer
+            assert writer
+            writer.close()
         else:
             handler = asyncio_utils.create_task(
                 self.handle_connection(self.client),
                 name=f"client connection handler",
                 client=self.client.peername,
             )
+            if not handler:
+                return   # this should not be needed, see asyncio_utils.create_task
             self.transports[self.client].handler = handler
             self.server_event(events.Start())
             await asyncio.wait([handler])
@@ -118,8 +125,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         if self.transports:
             self.log("closing transports...", "debug")
             for io in self.transports.values():
-                asyncio_utils.cancel_task(io.handler, "client disconnected")
-            await asyncio.wait([x.handler for x in self.transports.values()])
+                if io.handler:
+                    asyncio_utils.cancel_task(io.handler, "client disconnected")
+            await asyncio.wait([x.handler for x in self.transports.values() if x.handler])
             self.log("transports closed!", "debug")
 
     async def open_connection(self, command: commands.OpenConnection) -> None:
@@ -162,6 +170,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 self.transports[command.connection].reader = reader
                 self.transports[command.connection].writer = writer
 
+                assert command.connection.peername
                 if command.connection.address[0] != command.connection.peername[0]:
                     addr = f"{command.connection.address[0]} ({human.format_address(command.connection.peername)})"
                 else:
@@ -172,6 +181,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     name=f"handle_hook(server_connected) {addr}",
                     client=self.client.peername,
                 )
+                if not connected_hook:
+                    return  # this should not be needed, see asyncio_utils.create_task
 
                 self.server_event(events.OpenConnectionReply(command, None))
 
@@ -183,6 +194,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     name=f"server connection handler for {addr}",
                     client=self.client.peername,
                 )
+                if not new_handler:
+                    return  # this should not be needed, see asyncio_utils.create_task
                 self.transports[command.connection].handler = new_handler
                 await asyncio.wait([new_handler])
 
@@ -227,7 +240,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             await asyncio.Event().wait()
 
         try:
-            self.transports[connection].writer.close()
+            writer = self.transports[connection].writer
+            assert writer
+            writer.close()
         except OSError:
             pass
         self.transports.pop(connection)
@@ -237,7 +252,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
     async def on_timeout(self) -> None:
         self.log(f"Closing connection due to inactivity: {self.client}")
-        asyncio_utils.cancel_task(self.transports[self.client].handler, "timeout")
+        handler = self.transports[self.client].handler
+        assert handler
+        asyncio_utils.cancel_task(handler, "timeout")
 
     async def hook_task(self, hook: commands.Hook) -> None:
         await self.handle_hook(hook)
@@ -268,11 +285,15 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 elif isinstance(command, commands.ConnectionCommand) and command.connection not in self.transports:
                     return  # The connection has already been closed.
                 elif isinstance(command, commands.SendData):
-                    self.transports[command.connection].writer.write(command.data)
+                    writer = self.transports[command.connection].writer
+                    assert writer
+                    writer.write(command.data)
                 elif isinstance(command, commands.CloseConnection):
                     self.close_connection(command.connection, command.half_close)
                 elif isinstance(command, commands.GetSocket):
-                    socket = self.transports[command.connection].writer.get_extra_info("socket")
+                    writer = self.transports[command.connection].writer
+                    assert writer
+                    socket = writer.get_extra_info("socket")
                     self.server_event(events.GetSocketReply(command, socket))
                 elif isinstance(command, commands.Hook):
                     asyncio_utils.create_task(
@@ -293,7 +314,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 return
             self.log(f"half-closing {connection}", "debug")
             try:
-                self.transports[connection].writer.write_eof()
+                writer = self.transports[connection].writer
+                assert writer
+                writer.write_eof()
             except OSError:
                 # if we can't write to the socket anymore we presume it completely dead.
                 connection.state = ConnectionState.CLOSED
@@ -303,7 +326,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             connection.state = ConnectionState.CLOSED
 
         if connection.state is ConnectionState.CLOSED:
-            asyncio_utils.cancel_task(self.transports[connection].handler, "closed by command")
+            handler = self.transports[connection].handler
+            assert handler
+            asyncio_utils.cancel_task(handler, "closed by command")
 
 
 class StreamConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
@@ -359,7 +384,6 @@ if __name__ == "__main__":
     )
     opts.mode = "reverse:http://127.0.0.1:3000/"
 
-
     async def handle(reader, writer):
         layer_stack = [
             # lambda ctx: layers.ServerTLSLayer(ctx),
@@ -371,8 +395,9 @@ if __name__ == "__main__":
         ]
 
         def next_layer(nl: layer.NextLayer):
-            nl.layer = layer_stack.pop(0)(nl.context)
-            nl.layer.debug = "  " * len(nl.context.layers)
+            l = layer_stack.pop(0)(nl.context)
+            l.debug = "  " * len(nl.context.layers)
+            nl.layer = l
 
         def request(flow: http.HTTPFlow):
             if "cached" in flow.request.path:
@@ -410,11 +435,11 @@ if __name__ == "__main__":
             "tls_start": tls_start,
         }).handle_client()
 
-
     coro = asyncio.start_server(handle, '127.0.0.1', 8080, loop=loop)
     server = loop.run_until_complete(coro)
 
     # Serve requests until Ctrl+C is pressed
+    assert server.sockets
     print(f"Serving on {human.format_address(server.sockets[0].getsockname())}")
     try:
         loop.run_forever()

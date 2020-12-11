@@ -1,11 +1,11 @@
 import collections
+from typing import DefaultDict, Deque, NamedTuple
 
 import h2.config
 import h2.connection
 import h2.events
-import h2.settings
 import h2.exceptions
-from typing import DefaultDict, Deque, NamedTuple, Optional
+import h2.settings
 
 
 class H2ConnectionLogger(h2.config.DummyLogger):

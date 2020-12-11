@@ -8,13 +8,12 @@ helpers
 
 This module contains helpers for the h2 tests.
 """
+from hpack.hpack import Encoder
 from hyperframe.frame import (
     HeadersFrame, DataFrame, SettingsFrame, WindowUpdateFrame, PingFrame,
     GoAwayFrame, RstStreamFrame, PushPromiseFrame, PriorityFrame,
     ContinuationFrame, AltSvcFrame
 )
-from hpack.hpack import Encoder
-
 
 SAMPLE_SETTINGS = {
     SettingsFrame.HEADER_TABLE_SIZE: 4096,
@@ -29,6 +28,7 @@ class FrameFactory(object):
     allows test cases to easily build correct HTTP/2 frames to feed to
     hyper-h2.
     """
+
     def __init__(self):
         self.encoder = Encoder()
 

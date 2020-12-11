@@ -1,18 +1,16 @@
-from typing import Optional, Union, List
+from typing import Union, List, Iterator
 
 import wsproto
-import wsproto.utilities
-import wsproto.frame_protocol
 import wsproto.extensions
-from wsproto.frame_protocol import CloseReason, Opcode
-from wsproto import ConnectionState
-
-from mitmproxy import flow, tcp, websocket, http
+import wsproto.frame_protocol
+import wsproto.utilities
+from mitmproxy import flow, websocket, http
 from mitmproxy.proxy2 import commands, events, layer, context
 from mitmproxy.proxy2.commands import Hook
 from mitmproxy.proxy2.context import Context
 from mitmproxy.proxy2.utils import expect
-from mitmproxy.utils import human
+from wsproto import ConnectionState
+from wsproto.frame_protocol import CloseReason, Opcode
 
 
 class WebsocketStartHook(Hook):
@@ -65,8 +63,8 @@ class WebsocketConnection(wsproto.Connection):
         self.conn = conn
         self.frame_buf = []
 
-    def send(self, event: wsproto.events.Event) -> commands.SendData:
-        data = super().send(event)
+    def send2(self, event: wsproto.events.Event) -> commands.SendData:
+        data = self.send(event)
         return commands.SendData(self.conn, data)
 
     def __repr__(self):
@@ -77,7 +75,7 @@ class WebsocketLayer(layer.Layer):
     """
     WebSocket layer that intercepts and relays messages.
     """
-    flow: Optional[websocket.WebSocketFlow]
+    flow: websocket.WebSocketFlow
     client_ws: WebsocketConnection
     server_ws: WebsocketConnection
 
@@ -144,10 +142,10 @@ class WebsocketLayer(layer.Layer):
                 if ws_event.message_finished:
                     if isinstance(ws_event, wsproto.events.TextMessage):
                         frame_type = Opcode.TEXT
-                        content = "".join(src_ws.frame_buf)
+                        content = "".join(src_ws.frame_buf)  # type: ignore
                     else:
                         frame_type = Opcode.BINARY
-                        content = b"".join(src_ws.frame_buf)
+                        content = b"".join(src_ws.frame_buf)  # type: ignore
 
                     fragmentizer = Fragmentizer(src_ws.frame_buf)
                     src_ws.frame_buf.clear()
@@ -158,15 +156,15 @@ class WebsocketLayer(layer.Layer):
 
                     assert not message.killed  # this is deprecated, instead we should have .content set to emptystr.
 
-                    for message in fragmentizer(message.content):
-                        yield dst_ws.send(message)
+                    for msg in fragmentizer(message.content):
+                        yield dst_ws.send2(msg)
 
             elif isinstance(ws_event, (wsproto.events.Ping, wsproto.events.Pong)):
                 yield commands.Log(
                     f"Received WebSocket {ws_event.__class__.__name__.lower()} from {from_str} "
                     f"(payload: {bytes(ws_event.payload)!r})"
                 )
-                yield dst_ws.send(ws_event)
+                yield dst_ws.send2(ws_event)
             elif isinstance(ws_event, wsproto.events.CloseConnection):
                 self.flow.close_sender = from_str
                 self.flow.close_code = ws_event.code
@@ -175,7 +173,7 @@ class WebsocketLayer(layer.Layer):
                 for ws in [self.server_ws, self.client_ws]:
                     if ws.state in {ConnectionState.OPEN, ConnectionState.REMOTE_CLOSING}:
                         # response == original event, so no need to differentiate here.
-                        yield ws.send(ws_event)
+                        yield ws.send2(ws_event)
                     yield commands.CloseConnection(ws.conn)
                 if ws_event.code in {1000, 1001, 1005}:
                     yield WebsocketEndHook(self.flow)
@@ -219,7 +217,7 @@ class Fragmentizer:
         assert fragments
         self.fragment_lengths = [len(x) for x in fragments]
 
-    def __call__(self, content: Union[str, bytes]):
+    def __call__(self, content: Union[str, bytes]) -> Iterator[wsproto.events.Message]:
         if not content:
             return
         if len(content) == sum(self.fragment_lengths):

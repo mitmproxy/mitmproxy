@@ -1,5 +1,4 @@
-import random
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple
 
 import h2.settings
 import hpack
@@ -17,7 +16,7 @@ from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy2.layers import http
 from mitmproxy.proxy2.layers.http._http2 import split_pseudo_headers, Http2Client
 from test.mitmproxy.proxy2.layers.http.hyper_h2_test_helpers import FrameFactory
-from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, _TracebackInPlaybook, _fmt_entry, _eq
+from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply
 
 example_request_headers = (
     (b':method', b'GET'),
@@ -527,5 +526,4 @@ class TestClient:
                 << SendData(tctx.server, frame_factory.build_rst_stream_frame(1, ErrorCodes.CANCEL).serialize())
                 >> DataReceived(tctx.server, frame_factory.build_data_frame(b"foo").serialize())
                 << SendData(tctx.server, frame_factory.build_rst_stream_frame(1, ErrorCodes.STREAM_CLOSED).serialize())
-            # important: no ResponseData event here!
-        )
+        )  # important: no ResponseData event here!

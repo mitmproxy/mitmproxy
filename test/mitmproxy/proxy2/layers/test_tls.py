@@ -2,8 +2,8 @@ import ssl
 import typing
 
 import pytest
-from OpenSSL import SSL
 
+from OpenSSL import SSL
 from mitmproxy.proxy2 import commands, context, events, layer
 from mitmproxy.proxy2.context import ConnectionState
 from mitmproxy.proxy2.layers import tls
@@ -98,7 +98,7 @@ class SSLTest:
     def bio_write(self, buf: bytes) -> int:
         return self.inc.write(buf)
 
-    def bio_read(self, bufsize: int = 2**16) -> bytes:
+    def bio_read(self, bufsize: int = 2 ** 16) -> bytes:
         return self.out.read(bufsize)
 
     def do_handshake(self) -> None:
@@ -137,6 +137,7 @@ def interact(playbook: tutils.Playbook, conn: context.Connection, tssl: SSLTest)
             << commands.SendData(conn, data)
     )
     tssl.bio_write(data())
+
 
 def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tutils.reply:
     """
