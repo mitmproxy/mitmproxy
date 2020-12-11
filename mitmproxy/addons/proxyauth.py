@@ -1,18 +1,18 @@
 import binascii
 import weakref
-import ldap3
+from typing import MutableMapping
 from typing import Optional
-from typing import MutableMapping  # noqa
 from typing import Tuple
 
+import ldap3
 import passlib.apache
 
 import mitmproxy.net.http
-from mitmproxy import connections  # noqa
+from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import http
-from mitmproxy import ctx
 from mitmproxy.net.http import status_codes
+from mitmproxy.utils import compat
 
 REALM = "mitmproxy"
 
@@ -49,7 +49,7 @@ class ProxyAuth:
         self.singleuser = None
         self.ldapconn = None
         self.ldapserver = None
-        self.authenticated: MutableMapping[connections.ClientConnection, Tuple[str, str]] = weakref.WeakKeyDictionary()
+        self.authenticated: MutableMapping[compat.Client, Tuple[str, str]] = weakref.WeakKeyDictionary()
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def load(self, loader):

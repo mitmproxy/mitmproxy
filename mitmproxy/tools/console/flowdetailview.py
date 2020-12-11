@@ -50,7 +50,7 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
         if resp:
             parts.append(("HTTP Version", resp.http_version))
         if sc.alpn_proto_negotiated:
-            parts.append(("ALPN", sc.alpn_proto_negotiated))
+            parts.append(("ALPN", strutils.bytes_to_escaped_str(sc.alpn_proto_negotiated)))
 
         text.extend(
             common.format_keyvals(parts, indent=4)
@@ -113,11 +113,12 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
         if cc.tls_version:
             parts.append(("TLS Version", cc.tls_version))
         if cc.sni:
-            parts.append(("Server Name Indication", cc.sni))
+            parts.append(("Server Name Indication",
+                          strutils.bytes_to_escaped_str(strutils.always_bytes(cc.sni, "idna"))))
         if cc.cipher_name:
             parts.append(("Cipher Name", cc.cipher_name))
         if cc.alpn_proto_negotiated:
-            parts.append(("ALPN", cc.alpn_proto_negotiated))
+            parts.append(("ALPN", strutils.bytes_to_escaped_str(cc.alpn_proto_negotiated)))
 
         text.extend(
             common.format_keyvals(parts, indent=4)
