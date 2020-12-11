@@ -101,7 +101,7 @@ class ReplayHandler(server.ConnectionHandler):
 
 
 class ClientPlayback:
-    playback_task: typing.Optional[asyncio.Task]
+    playback_task: typing.Optional[asyncio.Task] = None
     inflight: typing.Optional[http.HTTPFlow]
     queue: asyncio.Queue
     options: Options
@@ -119,7 +119,8 @@ class ClientPlayback:
         self.options = ctx.options
 
     def done(self):
-        self.playback_task.cancel()
+        if self.playback_task:
+            self.playback_task.cancel()
 
     async def playback(self):
         while True:

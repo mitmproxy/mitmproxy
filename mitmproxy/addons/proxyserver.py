@@ -79,14 +79,6 @@ class Proxyserver:
             "Determine when server connections should be established.",
             choices=("eager", "lazy")
         )
-        # FIXME: repeated option
-        loader.add_option(
-            "keep_host_header", bool, False,
-            """
-            Reverse Proxy: Keep the original host header instead of rewriting it
-            to the reverse proxy target.
-            """
-        )
         # FIXME: Update allowed events to include new ones.
         eventsequence.Events = frozenset(
             eventsequence.Events | set(commands.all_hooks.keys())

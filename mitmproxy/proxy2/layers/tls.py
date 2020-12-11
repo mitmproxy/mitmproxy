@@ -169,7 +169,7 @@ class _TLSLayer(tunnel.TunnelLayer):
                 ('SSL routines', 'ssl3_read_bytes', 'tlsv1 alert unknown ca'),
                 ('SSL routines', 'ssl3_read_bytes', 'sslv3 alert bad certificate')
             ]:
-                assert isinstance(last_err, list)
+                assert isinstance(last_err, tuple)
                 err = last_err[2]
             elif last_err == ('SSL routines', 'ssl3_get_record', 'wrong version number') and data[:4].isascii():
                 err = f"The remote server does not speak TLS."

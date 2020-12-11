@@ -28,7 +28,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     request_done: bool = False
     response_done: bool = False
     # this is a bit of a hack to make both mypy and PyCharm happy.
-    state: Union[Callable[[events.ConnectionEvent], layer.CommandGenerator[None]], Callable]
+    state: Union[Callable[[events.Event], layer.CommandGenerator[None]], Callable]
     body_reader: TBodyReader
     buf: ReceiveBuffer
 
@@ -51,12 +51,10 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, HttpEvent):
             yield from self.send(event)
-        elif isinstance(event, events.ConnectionEvent):
+        else:
             if isinstance(event, events.DataReceived) and self.state != self.passthrough:
                 self.buf += event.data
             yield from self.state(event)
-        else:
-            raise AssertionError(f"Unexpected event: {event}")
 
     @expect(events.Start)
     def start(self, _) -> layer.CommandGenerator[None]:

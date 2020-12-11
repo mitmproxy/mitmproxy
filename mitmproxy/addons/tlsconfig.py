@@ -33,7 +33,7 @@ class TlsConfig:
     """
     This addon supplies the proxy core with the desired OpenSSL connection objects to negotiate TLS.
     """
-    certstore: certs.CertStore
+    certstore: certs.CertStore = None  # type: ignore
 
     # TODO: We should support configuring TLS 1.3 cipher suites (https://github.com/mitmproxy/mitmproxy/issues/4260)
     # TODO: We should re-use SSL.Context options here, if only for TLS session resumption.
