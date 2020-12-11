@@ -85,7 +85,10 @@ def parse_client_hello(data: bytes) -> Optional[net_tls.ClientHello]:
     # Check if ClientHello is complete
     client_hello = get_client_hello(data)
     if client_hello:
-        return net_tls.ClientHello(client_hello[4:])
+        try:
+            return net_tls.ClientHello(client_hello[4:])
+        except EOFError as e:
+            raise ValueError("Invalid ClientHello") from e
     return None
 
 

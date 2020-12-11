@@ -1,4 +1,7 @@
+import os
+
 import pytest
+from hypothesis import settings
 
 from mitmproxy import options
 from mitmproxy.addons.core import Core
@@ -21,3 +24,8 @@ def tctx() -> context.Context:
         ),
         opts
     )
+
+
+settings.register_profile("fast", max_examples=10)
+settings.register_profile("deep", max_examples=100_000, deadline=None)
+settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "fast"))

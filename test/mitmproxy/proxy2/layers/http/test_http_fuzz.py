@@ -1,9 +1,8 @@
-import os
 from typing import Tuple, Dict, Any
 
 import pytest
 from h2.settings import SettingCodes
-from hypothesis import example, given, settings
+from hypothesis import example, given
 from hypothesis.strategies import binary, booleans, composite, dictionaries, integers, lists, sampled_from, sets, text, \
     data
 
@@ -20,10 +19,6 @@ from test.mitmproxy.proxy2.layers.http.hyper_h2_test_helpers import FrameFactory
 from test.mitmproxy.proxy2.layers.http.test_http2 import make_h2, example_response_headers, example_request_headers, \
     start_h2_client
 from test.mitmproxy.proxy2.tutils import Placeholder, Playbook, reply, _TracebackInPlaybook, _eq
-
-settings.register_profile("fast", max_examples=10)
-settings.register_profile("deep", max_examples=100_000, deadline=None)
-settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "fast"))
 
 opts = options.Options()
 Proxyserver().load(opts)
