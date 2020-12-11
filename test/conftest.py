@@ -1,7 +1,7 @@
 import os
 import socket
 
-from mitmproxy.utils import data
+from mitmproxy.utils import data, compat
 
 import pytest
 
@@ -20,6 +20,11 @@ skip_not_windows = pytest.mark.skipif(
 skip_appveyor = pytest.mark.skipif(
     "APPVEYOR" in os.environ,
     reason='Skipping due to Appveyor'
+)
+
+skip_new_proxy_core = pytest.mark.skipif(
+    compat.new_proxy_core,
+    reason='Skipping legacy test for old proxy core'
 )
 
 try:

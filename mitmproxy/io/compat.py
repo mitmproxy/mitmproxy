@@ -211,13 +211,13 @@ def convert_9_10(data):
 
     def conv_cconn(conn):
         conn["sockname"] = ("", 0)
-        cc = conn["clientcert"]
-        conn["certificate_list"] = [cc] if cc else None
+        cc = conn.pop("clientcert", None)
+        conn["certificate_list"] = [cc] if cc else []
         conv_conn(conn)
 
     def conv_sconn(conn):
-        crt = conn["cert"]
-        conn["certificate_list"] = [crt] if crt else None
+        crt = conn.pop("cert", None)
+        conn["certificate_list"] = [crt] if crt else []
         conn["cipher_name"] = None
         conn["via2"] = None
         conv_conn(conn)

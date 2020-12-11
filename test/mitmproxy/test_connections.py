@@ -12,10 +12,12 @@ from mitmproxy.net.http import http1
 from mitmproxy.test import tflow
 from .net import tservers
 from pathod import test
+from ..conftest import skip_new_proxy_core
 
 
 class TestClientConnection:
 
+    @skip_new_proxy_core
     def test_send(self):
         c = tflow.tclient_conn()
         c.send(b'foobar')
@@ -26,20 +28,22 @@ class TestClientConnection:
             c.send(['string', 'not'])
         assert c.wfile.getvalue() == b'foobarfoobar'
 
+    @skip_new_proxy_core
     def test_repr(self):
         c = tflow.tclient_conn()
         assert '127.0.0.1:22' in repr(c)
         assert 'ALPN' in repr(c)
-        assert 'TLS' not in repr(c)
+        assert 'TLS' in repr(c)
 
         c.alpn_proto_negotiated = None
-        c.tls_established = True
+        c.tls_established = False
         assert 'ALPN' not in repr(c)
-        assert 'TLS' in repr(c)
+        assert 'TLS' not in repr(c)
 
         c.address = None
         assert repr(c)
 
+    @skip_new_proxy_core
     def test_tls_established_property(self):
         c = tflow.tclient_conn()
         c.tls_established = True
@@ -82,6 +86,7 @@ class TestClientConnection:
 
 class TestServerConnection:
 
+    @skip_new_proxy_core
     def test_send(self):
         c = tflow.tserver_conn()
         c.send(b'foobar')
@@ -92,6 +97,7 @@ class TestServerConnection:
             c.send(['string', 'not'])
         assert c.wfile.getvalue() == b'foobarfoobar'
 
+    @skip_new_proxy_core
     def test_repr(self):
         c = tflow.tserver_conn()
 
@@ -115,6 +121,7 @@ class TestServerConnection:
         c.address = None
         assert repr(c)
 
+    @skip_new_proxy_core
     def test_tls_established_property(self):
         c = tflow.tserver_conn()
         c.tls_established = True
