@@ -28,7 +28,8 @@ from mitmproxy.addons import upstream_auth
 from mitmproxy.utils import compat
 
 if compat.new_proxy_core:  # pragma: no cover
-    from mitmproxy.addons import clientplayback_sansio as clientplayback  # noqa
+    if True:  # noqa
+        from mitmproxy.addons import clientplayback_sansio as clientplayback  # type: ignore  # noqa
 
 
 def default_addons():
