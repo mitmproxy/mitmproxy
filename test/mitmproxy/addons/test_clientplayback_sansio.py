@@ -59,8 +59,8 @@ async def test_playback(mode):
                 flow.request.host, flow.request.port = addr
             cp.start_replay([flow])
             assert cp.count() == 1
-            await cp.queue.join()
-            await handler_ok.wait()
+            await asyncio.wait_for(cp.queue.join(), 5)
+            await asyncio.wait_for(handler_ok.wait(), 5)
             cp.done()
             if mode != "err":
                 assert flow.response.status_code == 204

@@ -167,4 +167,3 @@ class LayerStack:
             self._stack[-1].child_layer = other  # type: ignore
         self._stack.append(other)
         return self
-

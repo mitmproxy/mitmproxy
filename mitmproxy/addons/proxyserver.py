@@ -79,6 +79,10 @@ class Proxyserver:
             "Determine when server connections should be established.",
             choices=("eager", "lazy")
         )
+        loader.add_option(
+            "proxy_debug", bool, False,
+            "Enable debug logs in the proxy core.",
+        )
         # FIXME: Update allowed events to include new ones.
         eventsequence.Events = frozenset(
             eventsequence.Events | set(commands.all_hooks.keys())

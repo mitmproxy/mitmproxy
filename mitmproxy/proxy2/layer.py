@@ -6,7 +6,6 @@ import textwrap
 from abc import abstractmethod
 from typing import Optional, List, ClassVar, Deque, NamedTuple, Generator, Any, TypeVar
 
-from mitmproxy import log
 from mitmproxy.proxy2 import commands, events
 from mitmproxy.proxy2.commands import Command, Hook
 from mitmproxy.proxy2.context import Connection, Context
@@ -59,15 +58,7 @@ class Layer:
         self._paused = None
         self._paused_event_queue = collections.deque()
 
-        show_debug_output = (
-                (
-                        "termlog_verbosity" in context.options and
-                        log.log_tier(context.options.termlog_verbosity) >= log.log_tier("debug")
-                ) or (
-                        "console_eventlog_verbosity" in context.options and
-                        log.log_tier(context.options.console_eventlog_verbosity) >= log.log_tier("debug")
-                )
-        )
+        show_debug_output = getattr(context.options, "proxy_debug", False)
         if show_debug_output:  # pragma: no cover
             self.debug = "  " * len(context.layers)
 
