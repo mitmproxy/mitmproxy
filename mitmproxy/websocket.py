@@ -59,7 +59,7 @@ class WebSocketMessage(serializable.Serializable):
                           PendingDeprecationWarning)
             # empty str or empty bytes.
             self.content = type(self.content)()
-        else:
+        else:  # pragma: no cover
             self.killed = True
 
 
