@@ -306,7 +306,7 @@ class reply(events.Event):
 
         assert isinstance(self.to, commands.Command)
         if isinstance(self.to, commands.Hook):
-            self.side_effect(*self.to.as_tuple())
+            self.side_effect(*self.to.args())
             reply_cls = events.HookReply
         else:
             self.side_effect(self.to)

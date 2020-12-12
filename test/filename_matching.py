@@ -9,7 +9,7 @@ import sys
 def check_src_files_have_test():
     missing_test_files = []
 
-    excluded = ['mitmproxy/contrib/', 'mitmproxy/io/proto/',
+    excluded = ['mitmproxy/contrib/', 'mitmproxy/io/proto/', 'mitmproxy/proxy2/layers/http',
                 'mitmproxy/test/', 'mitmproxy/tools/', 'mitmproxy/platform/']
     src_files = glob.glob('mitmproxy/**/*.py', recursive=True) + glob.glob('pathod/**/*.py', recursive=True)
     src_files = [f for f in src_files if os.path.basename(f) != '__init__.py']

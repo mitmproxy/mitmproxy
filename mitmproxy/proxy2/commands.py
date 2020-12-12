@@ -114,7 +114,7 @@ class Hook(Command):
     def __repr__(self):
         return f"Hook({self.name})"
 
-    def as_tuple(self) -> List[Any]:
+    def args(self) -> List[Any]:
         args = []
         # noinspection PyDataclass
         for field in dataclasses.fields(self):

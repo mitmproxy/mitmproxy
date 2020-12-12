@@ -43,7 +43,7 @@ class ProxyConnectionHandler(server.StreamConnectionHandler):
     async def handle_hook(self, hook: commands.Hook) -> None:
         with self.timeout_watchdog.disarm():
             # We currently only support single-argument hooks.
-            data, = hook.as_tuple()
+            data, = hook.args()
             data.reply = AsyncReply(data)
             await self.master.addons.handle_lifecycle(hook.name, data)
             await data.reply.done.wait()

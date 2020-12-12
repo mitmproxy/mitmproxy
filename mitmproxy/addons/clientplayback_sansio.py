@@ -85,7 +85,7 @@ class ReplayHandler(server.ConnectionHandler):
         ctx.log(f"[replay] {message}", level)
 
     async def handle_hook(self, hook: commands.Hook) -> None:
-        data, = hook.as_tuple()
+        data, = hook.args()
         data.reply = AsyncReply(data)
         await ctx.master.addons.handle_lifecycle(hook.name, data)
         await data.reply.done.wait()
