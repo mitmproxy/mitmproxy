@@ -170,8 +170,9 @@ def tclient_conn() -> compat.Client:
         cipher_list=[],
     ))
     c.reply = controller.DummyReply()
-    c.rfile = io.BytesIO()
-    c.wfile = io.BytesIO()
+    if not compat.new_proxy_core:
+        c.rfile = io.BytesIO()
+        c.wfile = io.BytesIO()
     return c
 
 

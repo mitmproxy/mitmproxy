@@ -36,13 +36,6 @@ class ConnectionEvent(Event):
     connection: Connection
 
 
-class ConnectionClosed(ConnectionEvent):
-    """
-    Remote has closed a connection.
-    """
-    pass
-
-
 @dataclass
 class DataReceived(ConnectionEvent):
     """
@@ -55,6 +48,13 @@ class DataReceived(ConnectionEvent):
         return f"DataReceived({target}, {self.data})"
 
 
+class ConnectionClosed(ConnectionEvent):
+    """
+    Remote has closed a connection.
+    """
+    pass
+
+
 class CommandReply(Event):
     """
     Emitted when a command has been finished, e.g.
@@ -64,41 +64,47 @@ class CommandReply(Event):
     reply: typing.Any
 
     def __new__(cls, *args, **kwargs):
-        assert is_dataclass(cls)
         if cls is CommandReply:
             raise TypeError("CommandReply may not be instantiated directly.")
+        assert is_dataclass(cls)
         return super().__new__(cls)
 
     def __init_subclass__(cls, **kwargs):
         command_cls = cls.__annotations__["command"]
-        if not issubclass(command_cls, commands.Command) and command_cls is not commands.Command:
+        valid_command_subclass = (
+                issubclass(command_cls, commands.Command) and command_cls is not commands.Command
+        )
+        if not valid_command_subclass:
             raise RuntimeError(f"{command_cls} needs a properly annotated command attribute.")
         if command_cls in command_reply_subclasses:
             other = command_reply_subclasses[command_cls]
             raise RuntimeError(f"Two conflicting subclasses for {command_cls}: {cls} and {other}")
         command_reply_subclasses[command_cls] = cls
 
+    def __repr__(self):
+        return f"Reply({repr(self.command)})"
+
 
 command_reply_subclasses: typing.Dict[commands.Command, typing.Type[CommandReply]] = {}
 
 
-@dataclass
+@dataclass(repr=False)
 class OpenConnectionReply(CommandReply):
     command: commands.OpenConnection
     reply: typing.Optional[str]
     """error message"""
 
+    def __repr__(self):
+        return super().__repr__()
 
-@dataclass
+
+@dataclass(repr=False)
 class HookReply(CommandReply):
     command: commands.Hook
     reply: None = None
 
-    def __repr__(self):
-        return f"HookReply({repr(self.command)[5:-1]})"
 
-
-@dataclass
+@dataclass(repr=False)
 class GetSocketReply(CommandReply):
     command: commands.GetSocket
     reply: socket.socket

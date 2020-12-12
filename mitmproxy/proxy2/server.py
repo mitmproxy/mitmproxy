@@ -357,7 +357,7 @@ class SimpleConnectionHandler(StreamConnectionHandler):
             hook: commands.Hook
     ) -> None:
         if hook.name in self.hook_handlers:
-            self.hook_handlers[hook.name](*hook.as_tuple())
+            self.hook_handlers[hook.name](*hook.args())
 
     def log(self, message: str, level: str = "info"):
         if "Hook" not in message:

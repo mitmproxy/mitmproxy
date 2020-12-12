@@ -1,4 +1,5 @@
 import ssl
+import time
 from pathlib import Path
 from typing import Union
 
@@ -165,6 +166,29 @@ class TestTlsConfig:
             tssl_client = tls_start.ssl_conn
             tssl_server = test_tls.SSLTest(server_side=True)
             assert self.do_handshake(tssl_client, tssl_server)
+
+    def test_alpn_selection(self):
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
+            ctx.server.address = ("example.mitmproxy.org", 443)
+            tls_start = tls.TlsStartData(ctx.server, context=ctx)
+
+            def assert_alpn(http2, client_offers, expected):
+                tctx.configure(ta, http2=http2)
+                ctx.client.alpn_offers = client_offers
+                ctx.server.alpn_offers = None
+                ta.tls_start(tls_start)
+                assert ctx.server.alpn_offers == expected
+
+            assert_alpn(True, tls.HTTP_ALPNS + (b"foo",), tls.HTTP_ALPNS + (b"foo",))
+            assert_alpn(False, tls.HTTP_ALPNS + (b"foo",), tls.HTTP1_ALPNS + (b"foo",))
+            assert_alpn(True, [], tls.HTTP_ALPNS)
+            assert_alpn(False, [], tls.HTTP1_ALPNS)
+            ctx.client.timestamp_tls_setup = time.time()
+            # make sure that we don't upgrade h1 to h2,
+            # see comment in tlsconfig.py
+            assert_alpn(True, [], [])
 
     @pytest.mark.parametrize(
         "client_certs",

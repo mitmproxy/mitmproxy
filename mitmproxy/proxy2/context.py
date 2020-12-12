@@ -80,6 +80,14 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     def tls_established(self) -> bool:
         return self.timestamp_tls_setup is not None
 
+    def __eq__(self, other):
+        if isinstance(other, Connection):
+            return self.id == other.id
+        return False
+
+    def __hash__(self):
+        return hash(self.id)
+
     def __repr__(self):
         attrs = repr({
             k: {"cipher_list": lambda: f"<{len(v)} ciphers>"}.get(k, lambda: v)()
