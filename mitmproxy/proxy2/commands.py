@@ -145,4 +145,4 @@ class Log(Command):
         self.level = level
 
     def __repr__(self):
-        return f"Log({self.message}, {self.level})"
+        return f"Log({self.message!r}, {self.level!r})"

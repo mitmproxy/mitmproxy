@@ -17,7 +17,7 @@ def expect(*event_types):
             @functools.wraps(f)
             def _check_event_type(self, event: events.Event):
                 if isinstance(event, event_types):
-                    yield from f(self, event)
+                    return f(self, event)
                 else:
                     event_types_str = '|'.join(e.__name__ for e in event_types) or "no events"
                     raise AssertionError(
@@ -26,7 +26,7 @@ def expect(*event_types):
                     )
 
             return _check_event_type
-        else:
+        else:  # pragma: no cover
             return f
 
     return decorator

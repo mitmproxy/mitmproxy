@@ -2,7 +2,7 @@ import asyncio
 import warnings
 from typing import Optional
 
-from mitmproxy import controller, ctx, eventsequence, flow, log, master, options
+from mitmproxy import controller, ctx, eventsequence, flow, log, master, options, platform
 from mitmproxy.flow import Error
 from mitmproxy.proxy2 import commands
 from mitmproxy.proxy2 import server
@@ -93,6 +93,8 @@ class Proxyserver:
     def configure(self, updated):
         if not self.is_running:
             return
+        if "mode" in updated and ctx.options.mode == "transparent":  # pragma: no cover
+            platform.init_transparent_mode()
         if any(x in updated for x in ["server", "listen_host", "listen_port"]):
             asyncio.create_task(self.refresh_server())
 

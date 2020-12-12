@@ -102,7 +102,7 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
 
 
 class Client(Connection):
-    state = ConnectionState.OPEN
+    state: ConnectionState = ConnectionState.OPEN
     peername: Address
     sockname: Address
 
@@ -205,9 +205,9 @@ class Client(Connection):
 
 
 class Server(Connection):
-    state = ConnectionState.CLOSED
-    peername = None
-    sockname = None
+    state: ConnectionState = ConnectionState.CLOSED
+    peername: Optional[Address] = None
+    sockname: Optional[Address] = None
     address: Optional[Address]
 
     timestamp_start: Optional[float] = None

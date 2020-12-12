@@ -343,7 +343,7 @@ class StreamConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
         self.transports[client] = ConnectionIO(handler=None, reader=reader, writer=writer)
 
 
-class SimpleConnectionHandler(StreamConnectionHandler):
+class SimpleConnectionHandler(StreamConnectionHandler):  # pragma: no cover
     """Simple handler that does not really process any hooks."""
 
     hook_handlers: typing.Dict[str, typing.Callable]
@@ -364,7 +364,7 @@ class SimpleConnectionHandler(StreamConnectionHandler):
             pass  # print(message, file=sys.stderr if level in ("error", "warn") else sys.stdout)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # simple standalone implementation for testing.
     loop = asyncio.get_event_loop()
 

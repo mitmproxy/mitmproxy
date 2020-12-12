@@ -94,9 +94,6 @@ class OpenConnectionReply(CommandReply):
     reply: typing.Optional[str]
     """error message"""
 
-    def __repr__(self):
-        return super().__repr__()
-
 
 @dataclass(repr=False)
 class HookReply(CommandReply):
