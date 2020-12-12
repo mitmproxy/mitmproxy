@@ -24,8 +24,7 @@ def test_dump_info():
 async def test_dump_info_async():
     cs = io.StringIO()
     debug.dump_info(None, None, file=cs, testing=True)
-    if sys.version_info >= (3, 8):
-        assert "Tasks" in cs.getvalue()
+    assert "Tasks" in cs.getvalue()
 
 
 def test_dump_stacks():

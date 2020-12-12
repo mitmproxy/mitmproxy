@@ -6,9 +6,9 @@ from mitmproxy import tcp
 from mitmproxy import websocket
 from mitmproxy import controller
 from mitmproxy import http
-from mitmproxy import connections
 from mitmproxy import flow
 from mitmproxy.net import http as net_http
+from mitmproxy.utils import compat
 
 from wsproto.frame_protocol import Opcode
 
@@ -147,16 +147,12 @@ def tdummyflow(client_conn=True, server_conn=True, err=None):
     return f
 
 
-def tclient_conn():
-    """
-    @return: mitmproxy.proxy.connection.ClientConnection
-    """
-    c = connections.ClientConnection.from_state(dict(
+def tclient_conn() -> compat.Client:
+    c = compat.Client.from_state(dict(
         id=str(uuid.uuid4()),
         address=("127.0.0.1", 22),
-        clientcert=None,
         mitmcert=None,
-        tls_established=False,
+        tls_established=True,
         timestamp_start=946681200,
         timestamp_tls_setup=946681201,
         timestamp_end=946681206,
@@ -165,6 +161,13 @@ def tclient_conn():
         alpn_proto_negotiated=b"http/1.1",
         tls_version="TLSv1.2",
         tls_extensions=[(0x00, bytes.fromhex("000e00000b6578616d"))],
+        state=0,
+        sockname=("", 0),
+        error=None,
+        tls=False,
+        certificate_list=[],
+        alpn_offers=[],
+        cipher_list=[],
     ))
     c.reply = controller.DummyReply()
     c.rfile = io.BytesIO()
@@ -172,25 +175,29 @@ def tclient_conn():
     return c
 
 
-def tserver_conn():
-    """
-    @return: mitmproxy.proxy.connection.ServerConnection
-    """
-    c = connections.ServerConnection.from_state(dict(
+def tserver_conn() -> compat.Server:
+    c = compat.Server.from_state(dict(
         id=str(uuid.uuid4()),
         address=("address", 22),
         source_address=("address", 22),
         ip_address=("192.168.0.1", 22),
-        cert=None,
         timestamp_start=946681202,
         timestamp_tcp_setup=946681203,
         timestamp_tls_setup=946681204,
         timestamp_end=946681205,
-        tls_established=False,
+        tls_established=True,
         sni="address",
         alpn_proto_negotiated=None,
         tls_version="TLSv1.2",
         via=None,
+        state=0,
+        error=None,
+        tls=False,
+        certificate_list=[],
+        alpn_offers=[],
+        cipher_name=None,
+        cipher_list=[],
+        via2=None,
     ))
     c.reply = controller.DummyReply()
     c.rfile = io.BytesIO()

@@ -4,6 +4,7 @@ Release History
 Unreleased: mitmproxy next
 ==========================
 
+* Mitmproxy now requires Python 3.8 or above.
 * Fix query parameters in asgiapp addon (@jpstotz)
 * Fix command history failing on file IO errors (@Kriechi)
 * Deprecation of pathod and pathoc tools and modules. Future releases might not contain them! (@Kriechi)
@@ -11,6 +12,8 @@ Unreleased: mitmproxy next
 * Updated imports and styles for web scanner helper addons. (@anneborcherding)
 * Inform when underscore-formatted options are used in client arg. (@jrblixt)
 * ASGIApp should ignore the HTTP flows loaded from somewhere. (@linw1995)
+* Binaries are now built with Python 3.9 (@mhils)
+* Fixed the web UI showing blank page on clicking details tab when server address is missing (@samhita-sopho)
 
 * --- TODO: add new PRs above this line ---
 

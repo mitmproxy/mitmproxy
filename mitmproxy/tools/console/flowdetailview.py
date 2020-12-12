@@ -12,7 +12,12 @@ def maybe_timestamp(base, attr):
     if base is not None and getattr(base, attr):
         return human.format_timestamp_with_milli(getattr(base, attr))
     else:
-        return "active"
+        # in mitmdump we serialize before a connection is closed.
+        # loading those flows at a later point shouldn't display "active".
+        # We also use a ndash (and not a regular dash) so that it is sorted
+        # after other timestamps. We may need to revisit that in the future if it turns out
+        # to render ugly in consoles.
+        return "–"
 
 
 def flowdetails(state, flow: mitmproxy.flow.Flow):
@@ -45,7 +50,7 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
         if resp:
             parts.append(("HTTP Version", resp.http_version))
         if sc.alpn_proto_negotiated:
-            parts.append(("ALPN", sc.alpn_proto_negotiated))
+            parts.append(("ALPN", strutils.bytes_to_escaped_str(sc.alpn_proto_negotiated)))
 
         text.extend(
             common.format_keyvals(parts, indent=4)
@@ -108,11 +113,12 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
         if cc.tls_version:
             parts.append(("TLS Version", cc.tls_version))
         if cc.sni:
-            parts.append(("Server Name Indication", cc.sni))
+            parts.append(("Server Name Indication",
+                          strutils.bytes_to_escaped_str(strutils.always_bytes(cc.sni, "idna"))))
         if cc.cipher_name:
             parts.append(("Cipher Name", cc.cipher_name))
         if cc.alpn_proto_negotiated:
-            parts.append(("ALPN", cc.alpn_proto_negotiated))
+            parts.append(("ALPN", strutils.bytes_to_escaped_str(cc.alpn_proto_negotiated)))
 
         text.extend(
             common.format_keyvals(parts, indent=4)

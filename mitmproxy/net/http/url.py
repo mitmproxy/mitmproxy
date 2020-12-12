@@ -56,7 +56,7 @@ def parse(url):
         if isinstance(parsed, urllib.parse.ParseResult):
             parsed = parsed.encode("ascii")
 
-    port = parsed.port  # Returns None if port number invalid in Py3.5. Will throw ValueError in Py3.6
+    port = parsed.port
     if not port:
         port = 443 if parsed.scheme == b"https" else 80
 

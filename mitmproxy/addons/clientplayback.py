@@ -205,7 +205,8 @@ class ClientPlayback:
             # https://github.com/mitmproxy/mitmproxy/issues/2197
             if hf.request.http_version == "HTTP/2.0":
                 hf.request.http_version = "HTTP/1.1"
-                host = hf.request.headers.pop(":authority", None)
+                hf.request.headers.pop(":authority", None)
+                host = hf.request.host
                 if host is not None:
                     hf.request.headers.insert(0, "host", host)
             self.q.put(hf)

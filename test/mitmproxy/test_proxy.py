@@ -10,7 +10,7 @@ from mitmproxy.proxy import config
 from mitmproxy.proxy.server import ConnectionHandler, DummyServer, ProxyServer
 from mitmproxy.tools import cmdline
 from mitmproxy.tools import main
-from ..conftest import skip_windows
+from ..conftest import skip_windows, skip_new_proxy_core
 
 
 class MockParser(argparse.ArgumentParser):
@@ -74,6 +74,7 @@ class TestDummyServer:
 
 class TestConnectionHandler:
 
+    @skip_new_proxy_core
     def test_fatal_error(self, capsys):
         opts = options.Options()
         pconf = config.ProxyConfig(opts)
