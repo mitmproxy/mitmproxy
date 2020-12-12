@@ -3,8 +3,8 @@ import urllib.parse
 
 import asgiref.compatibility
 import asgiref.wsgi
-
 from mitmproxy import ctx, http
+from mitmproxy.controller import DummyReply
 
 
 class ASGIApp:
@@ -24,9 +24,17 @@ class ASGIApp:
     def name(self) -> str:
         return f"asgiapp:{self.host}:{self.port}"
 
+    def should_serve(self, flow: http.HTTPFlow) -> bool:
+        assert flow.reply
+        return bool(
+            (flow.request.pretty_host, flow.request.port) == (self.host, self.port)
+            and not flow.reply.has_message
+            and not isinstance(flow.reply, DummyReply)  # ignore the HTTP flows of this app loaded from somewhere
+        )
+
     def request(self, flow: http.HTTPFlow) -> None:
         assert flow.reply
-        if (flow.request.pretty_host, flow.request.port) == (self.host, self.port) and not flow.reply.has_message:
+        if self.should_serve(flow):
             flow.reply.take()  # pause hook completion
             asyncio.ensure_future(serve(self.asgi_app, flow))
 
