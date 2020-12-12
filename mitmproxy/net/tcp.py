@@ -392,13 +392,26 @@ class TCPClient(_Connection):
             self.sni = sni
             self.connection.set_tlsext_host_name(sni.encode("idna"))
         self.connection.set_connect_state()
-        try:
-            self.connection.do_handshake()
-        except SSL.Error as v:
-            if self.ssl_verification_error:
-                raise self.ssl_verification_error
-            else:
-                raise exceptions.TlsException("SSL handshake error: %s" % repr(v))
+        
+        count = 0
+        while True:
+            try:
+                self.connection.do_handshake()
+            except SSL.WantReadError:
+                rd, _, _ = select.select([self.connection._socket], [], [], self.connection._socket.gettimeout())
+                if not rd:
+                    raise ssl.SSLError("select timed out of {} seconds".format(self.connection._socket.gettimeout()))
+                if count == 10: # Just to be sure we don't get into an inf loop
+                    raise ssl.SSLError("WantReadError bug related with https://github.com/mitmproxy/mitmproxy/issues/4336")
+
+                count += 1
+                continue
+            except SSL.Error as v:
+                if self.ssl_verification_error:
+                    raise self.ssl_verification_error
+                else:
+                    raise exceptions.TlsException("SSL handshake error: %s" % repr(v))
+            break
 
         self.cert = certs.Cert(self.connection.get_peer_certificate())
 
@@ -503,10 +516,27 @@ class BaseHandler(_Connection):
             **sslctx_kwargs)
         self.connection = SSL.Connection(context, self.connection)
         self.connection.set_accept_state()
-        try:
-            self.connection.do_handshake()
-        except SSL.Error as v:
-            raise exceptions.TlsException("SSL handshake error: %s" % repr(v))
+        
+        count = 0
+        while True:
+            try:
+                self.connection.do_handshake()
+            except SSL.WantReadError:
+                rd, _, _ = select.select([self.connection._socket], [], [], self.connection._socket.gettimeout())
+                if not rd:
+                    raise ssl.SSLError("select timed out of {} seconds".format(self.connection._socket.gettimeout()))
+                if count == 10: # Just to be sure we don't get into an inf loop
+                    raise ssl.SSLError("WantReadError bug related with https://github.com/mitmproxy/mitmproxy/issues/4336")
+
+                count += 1
+                continue
+            except SSL.Error as v:
+                if self.ssl_verification_error:
+                    raise self.ssl_verification_error
+                else:
+                    raise exceptions.TlsException("SSL handshake error: %s" % repr(v))
+            break
+        
         self.tls_established = True
         cert = self.connection.get_peer_certificate()
         if cert:
