@@ -24,6 +24,11 @@ class TunnelLayer(layer.Layer):
     """The 'inner' connection which provides data I/O"""
     tunnel_state: TunnelState = TunnelState.INACTIVE
     command_to_reply_to: Optional[commands.OpenConnection] = None
+    _event_queue: List[events.Event]
+    """
+    If the connection already exists when we receive the start event,
+    we buffer commands until we have established the tunnel.
+    """
 
     def __init__(
             self,
@@ -35,6 +40,7 @@ class TunnelLayer(layer.Layer):
         self.tunnel_connection = tunnel_connection
         self.conn = conn
         self.child_layer = layer.NextLayer(self.context)
+        self._event_queue = []
 
     def __repr__(self):
         return f"{type(self).__name__}({self.tunnel_state.name.lower()})"
@@ -55,13 +61,12 @@ class TunnelLayer(layer.Layer):
                     if done:
                         if self.conn != self.tunnel_connection:
                             self.conn.state = context.ConnectionState.OPEN
-                        self.tunnel_state = TunnelState.OPEN
                     if err:
-                        self.tunnel_state = TunnelState.CLOSED
+                        if self.conn != self.tunnel_connection:
+                            self.conn.state = context.ConnectionState.CLOSED
                         yield from self.on_handshake_error(err)
-                    if (done or err) and self.command_to_reply_to:
-                        yield from self.event_to_child(events.OpenConnectionReply(self.command_to_reply_to, err))
-                        self.command_to_reply_to = None
+                    if done or err:
+                        yield from self._handshake_finished(err)
                 else:
                     yield from self.receive_data(event.data)
             elif isinstance(event, events.ConnectionClosed):
@@ -69,13 +74,32 @@ class TunnelLayer(layer.Layer):
                 if self.tunnel_state is TunnelState.OPEN:
                     yield from self.receive_close()
                 elif self.tunnel_state is TunnelState.ESTABLISHING:
-                    yield from self.on_handshake_error("connection closed without notice")
-            else:
+                    err = "connection closed without notice"
+                    yield from self.on_handshake_error(err)
+                    yield from self._handshake_finished(err)
+                self.tunnel_state = TunnelState.CLOSED
+            else:  # pragma: no cover
                 raise AssertionError(f"Unexpected event: {event}")
         else:
             yield from self.event_to_child(event)
 
+    def _handshake_finished(self, err: Optional[str]):
+        if err:
+            self.tunnel_state = TunnelState.CLOSED
+        else:
+            self.tunnel_state = TunnelState.OPEN
+        if self.command_to_reply_to:
+            yield from self.event_to_child(events.OpenConnectionReply(self.command_to_reply_to, err))
+            self.command_to_reply_to = None
+        else:
+            for evt in self._event_queue:
+                yield from self.event_to_child(evt)
+            self._event_queue.clear()
+
     def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if self.tunnel_state is TunnelState.ESTABLISHING and not self.command_to_reply_to:
+            self._event_queue.append(event)
+            return
         for command in self.child_layer.handle_event(event):
             if isinstance(command, commands.ConnectionCommand) and command.connection == self.conn:
                 if isinstance(command, commands.SendData):
@@ -89,14 +113,15 @@ class TunnelLayer(layer.Layer):
                     yield from self.send_close(command.half_close)
                 elif isinstance(command, commands.OpenConnection):
                     # create our own OpenConnection command object that blocks here.
+                    self.command_to_reply_to = command
                     self.tunnel_state = TunnelState.ESTABLISHING
                     err = yield commands.OpenConnection(self.tunnel_connection)
                     if err:
                         yield from self.event_to_child(events.OpenConnectionReply(command, err))
+                        self.tunnel_state = TunnelState.CLOSED
                     else:
-                        self.command_to_reply_to = command
                         yield from self.start_handshake()
-                else:
+                else:  # pragma: no cover
                     raise AssertionError(f"Unexpected command: {command}")
             else:
                 yield command
@@ -105,6 +130,7 @@ class TunnelLayer(layer.Layer):
         yield from self._handle_event(events.DataReceived(self.tunnel_connection, b""))
 
     def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+        """returns a (done, err) tuple"""
         yield from ()
         return True, None
 
@@ -142,14 +168,3 @@ class LayerStack:
         self._stack.append(other)
         return self
 
-
-class OpenConnectionStub(layer.Layer):
-    done = False
-    err = None
-
-    def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if isinstance(event, events.Start):
-            self.err = yield commands.OpenConnection(self.context.server)
-            self.done = not self.err
-        else:
-            self.err = event
