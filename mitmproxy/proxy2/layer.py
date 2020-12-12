@@ -27,6 +27,22 @@ class Paused(NamedTuple):
 
 
 class Layer:
+    """
+    The base class for all protocol layers.
+
+    Layers interface with their child layer(s) by calling .handle_event(event),
+    which returns a list (more precisely: a generator) of commands.
+    Most layers only implement ._handle_event, which is called by the default implementation of .handle_event.
+    The default implementation allows layers to emulate blocking code:
+    When ._handle_event yields a command that has its blocking attribute set to True, .handle_event pauses
+    the execution of ._handle_event and waits until it is called with the corresponding CommandReply. All events
+    encountered in the meantime are buffered and replayed after execution is resumed.
+
+    The result is code that looks like blocking code, but is not blocking:
+
+        def _handle_event(self, event):
+            err = yield OpenConnection(server)  # execution continues here after a connection has been established.
+    """
     __last_debug_message: ClassVar[str] = ""
     context: Context
     _paused: Optional[Paused]

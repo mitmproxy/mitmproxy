@@ -130,33 +130,38 @@ def test_tunnel_handshake_command(tctx: Context, success):
 
 
 def test_tunnel_default_impls(tctx: Context):
-    tctx.server.state = ConnectionState.OPEN
-    tl = tunnel.TunnelLayer(tctx, tctx.server, Server(None))
+    """
+    Some tunnels don't need certain features, so the default behaviour
+    should be to be transparent.
+    """
+    server = Server(None)
+    server.state = ConnectionState.OPEN
+    tl = tunnel.TunnelLayer(tctx, server, tctx.server)
     tl.child_layer = TChildLayer(tctx)
     playbook = Playbook(tl, logs=True)
     assert (
             playbook
             << Log("Got start. Server state: OPEN")
-            >> DataReceived(tctx.server, b"server-hello")
-            << SendData(tctx.server, b"server-hello-reply")
+            >> DataReceived(server, b"server-hello")
+            << SendData(server, b"server-hello-reply")
     )
     assert tl.tunnel_state is tunnel.TunnelState.OPEN
     assert (
             playbook
-            >> ConnectionClosed(tctx.server)
+            >> ConnectionClosed(server)
             << Log("Got server close.")
-            << CloseConnection(tctx.server)
+            << CloseConnection(server)
     )
     assert tl.tunnel_state is tunnel.TunnelState.CLOSED
 
     assert (
             playbook
             >> DataReceived(tctx.client, b"open")
-            << OpenConnection(tctx.server)
+            << OpenConnection(server)
             >> reply(None)
             << Log("Opened: err=None. Server state: OPEN")
-            >> DataReceived(tctx.server, b"half-close")
-            << CloseConnection(tctx.server, half_close=True)
+            >> DataReceived(server, b"half-close")
+            << CloseConnection(server, half_close=True)
     )
 
 
