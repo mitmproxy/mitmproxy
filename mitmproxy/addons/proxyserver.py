@@ -24,10 +24,10 @@ class AsyncReply(controller.Reply):
         super().commit()
         try:
             self.loop.call_soon_threadsafe(lambda: self.done.set())
-        except RuntimeError:
+        except RuntimeError:  # pragma: no cover
             pass  # event loop may already be closed.
 
-    def kill(self, force=False):
+    def kill(self, force=False):  # pragma: no cover
         warnings.warn("reply.kill() is deprecated, set the error attribute instead.", PendingDeprecationWarning)
         self.obj.error = flow.Error(Error.KILLED_MESSAGE)
 
@@ -111,7 +111,7 @@ class Proxyserver:
                 ctx.log.info(f"Proxy server listening at {' and '.join(addrs)}")
 
     async def shutdown_server(self):
-        print("Stopping server...")
+        ctx.log.info("Stopping server...")
         self.server.close()
         await self.server.wait_closed()
         self.server = None
