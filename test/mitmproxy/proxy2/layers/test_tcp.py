@@ -1,3 +1,5 @@
+import pytest
+
 from mitmproxy.proxy2.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.proxy2.context import ConnectionState
 from mitmproxy.proxy2.events import ConnectionClosed, DataReceived
@@ -89,10 +91,34 @@ def test_receive_data_after_half_close(tctx):
             Playbook(tcp.TCPLayer(tctx), hooks=False)
             << OpenConnection(tctx.server)
             >> reply(None)
-            >> ConnectionClosed(tctx.server)
-            << CloseConnection(tctx.client, half_close=True)
-            >> DataReceived(tctx.client, b"i'm late")
-            << SendData(tctx.server, b"i'm late")
+            >> DataReceived(tctx.client, b"eof-delimited-request")
+            << SendData(tctx.server, b"eof-delimited-request")
             >> ConnectionClosed(tctx.client)
-            << CloseConnection(tctx.server)
+            << CloseConnection(tctx.server, half_close=True)
+            >> DataReceived(tctx.server, b"i'm late")
+            << SendData(tctx.client, b"i'm late")
+            >> ConnectionClosed(tctx.server)
+            << CloseConnection(tctx.client)
     )
+
+
+@pytest.mark.parametrize("ignore", [True, False])
+def test_ignore(tctx, ignore):
+    """
+    no flow hooks when we set ignore.
+    """
+
+    def no_flow_hooks():
+        assert (
+                Playbook(tcp.TCPLayer(tctx, ignore=ignore), hooks=True)
+                << OpenConnection(tctx.server)
+                >> reply(None)
+                >> DataReceived(tctx.client, b"hello!")
+                << SendData(tctx.server, b"hello!")
+        )
+
+    if ignore:
+        no_flow_hooks()
+    else:
+        with pytest.raises(AssertionError):
+            no_flow_hooks()

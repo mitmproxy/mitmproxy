@@ -176,7 +176,8 @@ class _TLSLayer(tunnel.TunnelLayer):
                 err = last_err[2]
             elif last_err == ('SSL routines', 'ssl3_get_record', 'wrong version number') and data[:4].isascii():
                 err = f"The remote server does not speak TLS."
-            else:
+            else:  # pragma: no cover
+                # TODO: Add test case one we find one.
                 err = f"OpenSSL {e!r}"
             return False, err
         else:
