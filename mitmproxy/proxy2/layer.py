@@ -52,7 +52,7 @@ class Layer:
                         log.log_tier(context.options.console_eventlog_verbosity) >= log.log_tier("debug")
                 )
         )
-        if show_debug_output:
+        if show_debug_output:  # pragma: no cover
             self.debug = "  " * len(context.layers)
 
     def __repr__(self):
