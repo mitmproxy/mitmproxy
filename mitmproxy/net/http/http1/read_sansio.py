@@ -2,30 +2,8 @@ import re
 import time
 from typing import Iterable, List, Optional, Tuple
 
-from mitmproxy.net import check
 from mitmproxy.net.http import headers, request, response, url
 from mitmproxy.net.http.http1 import read
-
-
-def _parse_authority_form(hostport: bytes) -> Tuple[bytes, int]:
-    """
-        Returns (host, port) if hostport is a valid authority-form host specification.
-        http://tools.ietf.org/html/draft-luotonen-web-proxy-tunneling-01 section 3.1
-
-        Raises:
-            ValueError, if the input is malformed
-    """
-    try:
-        host, port_str = hostport.rsplit(b":", 1)
-        if host.startswith(b"[") and host.endswith(b"]"):
-            host = host[1:-1]
-        port = int(port_str)
-        if not check.is_valid_host(host) or not check.is_valid_port(port):
-            raise ValueError
-    except ValueError:
-        raise ValueError(f"Invalid host specification: {hostport!r}")
-
-    return host, port
 
 
 def raise_if_http_version_unknown(http_version: bytes) -> None:

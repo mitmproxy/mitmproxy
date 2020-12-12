@@ -1,5 +1,6 @@
 import uuid
 import warnings
+from abc import ABCMeta
 from enum import Flag
 from typing import List, Literal, Optional, Sequence, Tuple, Union, TYPE_CHECKING
 
@@ -25,7 +26,7 @@ class ConnectionState(Flag):
 Address = Tuple[str, int]
 
 
-class Connection(serializable.Serializable):
+class Connection(serializable.Serializable, metaclass=ABCMeta):
     """
     Connections exposed to the layers only contain metadata, no socket objects.
     """
@@ -87,7 +88,7 @@ class Connection(serializable.Serializable):
         return f"{type(self).__name__}({attrs})"
 
     @property
-    def alpn_proto_negotiated(self) -> Optional[bytes]:
+    def alpn_proto_negotiated(self) -> Optional[bytes]:  # pragma: no cover
         warnings.warn("Server.alpn_proto_negotiated is deprecated, use Server.alpn instead.", PendingDeprecationWarning)
         return self.alpn
 
@@ -164,22 +165,22 @@ class Client(Connection):
         self.cipher_list = state["cipher_list"]
 
     @property
-    def address(self):
+    def address(self):  # pragma: no cover
         warnings.warn("Client.address is deprecated, use Client.peername instead.", PendingDeprecationWarning)
         return self.peername
 
     @address.setter
-    def address(self, x):
+    def address(self, x):  # pragma: no cover
         warnings.warn("Client.address is deprecated, use Client.peername instead.", PendingDeprecationWarning)
         self.peername = x
 
     @property
-    def cipher_name(self) -> Optional[str]:
+    def cipher_name(self) -> Optional[str]:  # pragma: no cover
         warnings.warn("Client.cipher_name is deprecated, use Client.cipher instead.", PendingDeprecationWarning)
         return self.cipher
 
     @property
-    def clientcert(self) -> Optional[certs.Cert]:
+    def clientcert(self) -> Optional[certs.Cert]:  # pragma: no cover
         warnings.warn("Client.clientcert is deprecated, use Client.certificate_list instead.", PendingDeprecationWarning)
         if self.certificate_list:
             return self.certificate_list[0]
@@ -187,7 +188,7 @@ class Client(Connection):
             return None
 
     @clientcert.setter
-    def clientcert(self, val):
+    def clientcert(self, val):  # pragma: no cover
         warnings.warn("Client.clientcert is deprecated, use Client.certificate_list instead.", PendingDeprecationWarning)
         if val:
             self.certificate_list = [val]
@@ -268,12 +269,12 @@ class Server(Connection):
         self.via = state["via2"]
 
     @property
-    def ip_address(self) -> Optional[Address]:
+    def ip_address(self) -> Optional[Address]:  # pragma: no cover
         warnings.warn("Server.ip_address is deprecated, use Server.peername instead.", PendingDeprecationWarning)
         return self.peername
 
     @property
-    def cert(self) -> Optional[certs.Cert]:
+    def cert(self) -> Optional[certs.Cert]:  # pragma: no cover
         warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", PendingDeprecationWarning)
         if self.certificate_list:
             return self.certificate_list[0]
@@ -281,7 +282,7 @@ class Server(Connection):
             return None
 
     @cert.setter
-    def cert(self, val):
+    def cert(self, val):  # pragma: no cover
         warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", PendingDeprecationWarning)
         if val:
             self.certificate_list = [val]
