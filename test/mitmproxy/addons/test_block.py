@@ -3,6 +3,7 @@ import pytest
 
 from mitmproxy.addons import block
 from mitmproxy.test import taddons
+from mitmproxy.utils import compat
 
 
 @pytest.mark.parametrize("block_global, block_private, should_be_killed, address", [
@@ -55,6 +56,15 @@ from mitmproxy.test import taddons
 async def test_block_global(block_global, block_private, should_be_killed, address):
     ar = block.Block()
     with taddons.context(ar) as tctx:
+        if compat.new_proxy_core:
+            from mitmproxy.proxy2 import context
+
+            tctx.configure(ar, block_global=block_global, block_private=block_private)
+            client = context.Client(address, ("127.0.0.1", 8080), 1607699500)
+            ar.client_connected(client)
+            assert bool(client.error) == should_be_killed
+            return
+
         tctx.options.block_global = block_global
         tctx.options.block_private = block_private
         with mock.patch('mitmproxy.proxy.protocol.base.Layer') as layer:
