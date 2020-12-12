@@ -51,7 +51,7 @@ class MockServer(layers.http.HttpConnection):
                 layers.http.ResponseProtocolError,
         )):
             pass
-        else:
+        else:  # pragma: no cover
             ctx.log(f"Unexpected event during replay: {events}")
 
 
@@ -130,6 +130,7 @@ class ClientPlayback:
                 await h.replay()
             except Exception:
                 ctx.log(f"Client replay has crashed!\n{traceback.format_exc()}", "error")
+            self.queue.task_done()
             self.inflight = None
 
     def check(self, f: flow.Flow) -> typing.Optional[str]:
@@ -179,6 +180,7 @@ class ClientPlayback:
             except asyncio.QueueEmpty:
                 break
             else:
+                self.queue.task_done()
                 f.revert()
                 updated.append(f)
 
