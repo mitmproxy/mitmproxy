@@ -1,6 +1,12 @@
 Release History
 ###############
 
+
+13 December 2020: mitmproxy 6.0.1
+=================================
+
+* Fix flow serialization in mitmweb.
+
 13 December 2020: mitmproxy 6.0
 ===============================
 
