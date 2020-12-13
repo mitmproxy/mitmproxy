@@ -120,10 +120,9 @@ class Options(optmanager.OptManager):
             "WebSocket support is enabled by default.",
         )
         self.add_option(
-            "rawtcp", bool, False,
-            "Enable/disable experimental raw TCP support. TCP connections starting with non-ascii "
-            "bytes are treated as if they would match tcp_hosts. The heuristic is very rough, use "
-            "with caution. Disabled by default. "
+            "rawtcp", bool, True,
+            "Enable/disable raw TCP connections. "
+            "TCP connections are enabled by default. "
         )
 
         self.add_option(

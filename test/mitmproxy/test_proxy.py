@@ -84,7 +84,7 @@ class TestConnectionHandler:
         def ask(_, x):
             raise RuntimeError
 
-        channel.ask = ask
+        channel._ask = ask
         c = ConnectionHandler(
             mock.MagicMock(),
             ("127.0.0.1", 8080),
