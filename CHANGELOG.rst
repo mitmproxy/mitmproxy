@@ -1,6 +1,12 @@
 Release History
 ###############
 
+Unreleased: mitmproxy next
+==========================
+
+* --- TODO: add new PRs above this line ---
+* ... and various other fixes, documentation improvements, dependency version bumps, etc.
+
 13 December 2020: mitmproxy 6.0
 ===============================
 
