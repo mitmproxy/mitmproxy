@@ -626,6 +626,8 @@ class HttpLayer(layer.Layer):
         if not can_use_context_connection:
 
             context.server = Server(event.address)
+            if event.tls:
+                context.server.sni = event.address[0].encode()
 
             if event.via:
                 assert event.via.scheme in ("http", "https")

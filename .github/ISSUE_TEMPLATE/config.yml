@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+contact_links:
+    - name: Support
+      url: https://stackoverflow.com/questions/tagged/mitmproxy
+      about: Please do not use GitHub for support requests.
+             If you have questions on how to use mitmproxy, please ask them on StackOverflow!

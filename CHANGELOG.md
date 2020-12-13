@@ -1,14 +1,46 @@
-Release History
-###############
+# Release History
 
-Unreleased: mitmproxy next
-==========================
+## Unreleased: mitmproxy next
+
+### New Proxy Core (@mhils)
+
+Mitmproxy has a completely new proxy core, fixing many longstanding issues:
+
+* **Secure Web Proxy:** Mitmproxy now supports TLS-over-TLS to already encrypt the connection to the proxy.
+* **Server-Side Greetings:** Mitmproxy now supports proxying raw TCP connections, including ones that start
+  with a server-side greeting (e.g. SMTP).
+* **HTTP/1 – HTTP/2 Interoperability:** mitmproxy can now accept an HTTP/2 connection from the client,
+  and forward it to an HTTP/1 server.
+* **HTTP/2 Redirects:** The request destination can now be changed on HTTP/2 flows.
+* **Connection Strategy:** Users can now specify if they want mitmproxy to eagerly connect upstream
+  or wait as long as possible. Eager connections are required to detect protocols with server-side
+  greetings, lazy connections enable the replay of responses without connecting to an upstream server.
+* **Timeout Handling:** Mitmproxy will now clean up idle connections and also abort requests if the client disconnects
+  in the meantime.
+* **Host Header-based Proxying:** If the request destination is unknown, mitmproxy now falls back to proxying
+  based on the Host header. This means that requests can often be redirected to mitmproxy using
+  DNS spoofing only.
+* **Internals:** All protocol logic is now separated from I/O (["sans-io"](https://sans-io.readthedocs.io/)).
+  This greatly improves testing capabilities, prevents a wide array of race conditions, and increases
+  proper isolation between layers.
+
+We wanted to bring these improvements out, so we have a few temporary regressions:
+
+* HTTP trailers were added in mitmproxy 5.2, but have not made it into the new core yet.
+* Support for HTTP/2 Push Promises has been dropped.
+* Message Injection for WebSocket and TCP connections is not implemented yet.
+* SOCKS/5 Proxy Mode is not implemented yet.
+
+If you depend on these features, please raise your voice in
+[#4348](https://github.com/mitmproxy/mitmproxy/issues/4348)!
+
+
+### Full Changelog
 
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
-13 December 2020: mitmproxy 6.0
-===============================
+## 13 December 2020: mitmproxy 6.0
 
 * Mitmproxy now requires Python 3.8 or above.
 * Deprecation of pathod and pathoc tools and modules. Future releases will not contain them! (@Kriechi)
@@ -26,11 +58,9 @@ Unreleased: mitmproxy next
 * Host headers with non-standard ports are now properly updated in reverse proxy mode. (@mhils)
 * Fix missing host header when replaying HTTP/2 flows (@Granitosaurus)
 
-01 November 2020: mitmproxy 5.3
-===============================
+## 01 November 2020: mitmproxy 5.3
 
-Full Changelog
---------------
+### Full Changelog
 
 * Support for Python 3.9 (@mhils)
 * Add MsgPack content viewer (@tasn)
@@ -53,8 +83,7 @@ Full Changelog
 * Fix OpenSSL requiring different CN for root and leaf certificates (@mhils)
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
-18 July 2020: mitmproxy 5.2
-===========================
+## 18 July 2020: mitmproxy 5.2
 
 * Add Filter message to mitmdump (@sarthak212)
 * Display TCP flows at flow list (@Jessonsotoventura, @nikitastupin, @mhils)
@@ -84,21 +113,17 @@ Full Changelog
 * Fix console output formatting (@sarthak212)
 * Add example for proxy authentication using selenium (@anneborcherding and @weichweich)
 
-13 April 2020: mitmproxy 5.1.1
-==============================
+## 13 April 2020: mitmproxy 5.1.1
 
 * Fixed Docker images not starting due to missing shell
 
-13 April 2020: mitmproxy 5.1
-============================
+## 13 April 2020: mitmproxy 5.1
 
-Major Changes
--------------
+### Major Changes
 
 * Initial Support for TLS 1.3
 
-Full Changelog
---------------
+### Full Changelog
 
 * Reduce leaf certificate validity to one year due to upcoming browser changes (@mhils)
 * Rename mitmweb's `web_iface` option to `web_host` for consistency (@oxr463)
@@ -114,29 +139,24 @@ Full Changelog
 * Fix wrong behavior of --allow-hosts options (@BlownSnail)
 * Additional and updated documentation for examples, WebSockets, Getting Started (@Kriechi)
 
-27 December 2019: mitmproxy 5.0.1
-=================================
+## 27 December 2019: mitmproxy 5.0.1
 
 * Fixed precompiled Linux binaries to not crash in table mode
 * Display webp images in mitmweb (@cixtor)
 
-16 December 2019: mitmproxy 5.0
-===============================
+## 16 December 2019: mitmproxy 5.0
 
-Major Changes
--------------
+### Major Changes
 
 * Added new Table UI (@Jessonsotoventura)
 * Added EKU extension to certificates. This fixes support for macOS Catalina (@vin01)
 
-Security Fixes
---------------
+### Security Fixes
 
 * Fixed command injection vulnerabilities when exporting flows as curl/httpie commands (@cript0nauta)
 * Do not echo unsanitized user input in HTTP error responses (@fimad)
 
-Full Changelog
---------------
+### Full Changelog
 
 * Moved to Github CI for Continuous Integration, dropping support for old Linux and macOS releases. (#3728)
 * Vastly improved command parsing, in particular for setting flow filters (@typoon)
@@ -170,8 +190,7 @@ Full Changelog
 * Fixed issue with replay timestamps (@rjt-gupta)
 * Fixed copying in mitmweb on macOS (@XZzYassin)
 
-31 July 2018: mitmproxy 4.0.4
-=============================
+## 31 July 2018: mitmproxy 4.0.4
 
 * Security: Protect mitmweb against DNS rebinding. (CVE-2018-14505, @atx)
 * Reduce certificate lifetime to two years to be conformant with
@@ -179,8 +198,7 @@ Full Changelog
   (https://cabforum.org/2017/03/17/ballot-193-825-day-certificate-lifetimes/)
 * Update cryptography to version 2.3.
 
-15 June 2018: mitmproxy 4.0.3
-=============================
+## 15 June 2018: mitmproxy 4.0.3
 
 * Add support for IPv6 transparent mode on Windows (#3174)
 * Add Docker images for ARMv7 - Raspberry Pi (#3190)
@@ -191,25 +209,20 @@ Full Changelog
 * Fix options update when added (#3157)
 * Fix "Edit Flow" button in mitmweb (#3136)
 
-15 June 2018: mitmproxy 4.0.2
-=============================
+## 15 June 2018: mitmproxy 4.0.2
 
 * Skipped!
 
-17 May 2018: mitmproxy 4.0.1
-============================
+## 17 May 2018: mitmproxy 4.0.1
 
-Bugfixes
------------
+### Bugfixes
 
 * The previous release had a packaging issue, so we bumped it to v4.0.1 and re-released it.
 * This contains no actual bugfixes or new features.
 
-17 May 2018: mitmproxy 4.0
-==========================
+## 17 May 2018: mitmproxy 4.0
 
-Features
---------
+### Features
 
 * mitmproxy now requires Python 3.6!
 * Moved the core to asyncio - which gives us a very significant performance boost!
@@ -217,8 +230,7 @@ Features
 * Export request as httpie command (#3031)
 * Configure mitmproxy console keybindings with the keys.yaml file. See docs for more.
 
-Breaking Changes
-----------------
+### Breaking Changes
 
 * The --conf command-line flag is now --confdir, and specifies the mitmproxy configuration
     directory, instead of the options yaml file (which is at `config.yaml` under the configuration directory).
@@ -228,8 +240,7 @@ Breaking Changes
 * We no longer magically capture print statements in addons and translate
     them to logs. Please use `ctx.log.info` explicitly.
 
-Bugfixes
---------
+### Bugfixes
 
 * Correctly block connections from remote clients with IPv4-mapped IPv6 client addresses (#3099)
 * Expand `~` in paths during the `cut` command (#3078)
@@ -242,29 +253,24 @@ Bugfixes
 * Fix traceback when killing intercepted flow (#2879)
 * And lots of typos, docs improvements, revamped examples, and general fixes!
 
-05 April 2018: mitmproxy 3.0.4
-==============================
+## 05 April 2018: mitmproxy 3.0.4
 
 * Fix an issue that caused mitmproxy to not retry HTTP requests on timeout.
 * Various other fixes (@kira0204, @fenilgandhi, @tran-tien-dat, @smonami,
   @luzpaz, @fristonio, @kajojify, @Oliver-Fish, @hcbarry, @jplochocki, @MikeShi42,
   @ghillu, @emilstahl)
 
-25 February 2018: mitmproxy 3.0.3
-=================================
+## 25 February 2018: mitmproxy 3.0.3
 
 * Fix an issue that caused mitmproxy to lose keyboard control after spawning an external editor.
 
-23 February 2018: mitmproxy 3.0.1
-=================================
+## 23 February 2018: mitmproxy 3.0.1
 
 * Fix a quote-related issue affecting the mitmproxy console command prompt.
 
-22 February 2018: mitmproxy 3.0
-===============================
+## 22 February 2018: mitmproxy 3.0
 
-Major Changes
--------------
+### Major Changes
 
 * Commands: A consistent, typed mechanism that allows addons to expose actions
   to users.
@@ -279,8 +285,7 @@ Major Changes
   Verma, Google Summer of Code 2017)
 * Faster JavaScript and CSS beautifiers. (Ujjwal Verma)
 
-Minor Changes
--------------
+### Minor Changes
 
 * Vastly improved JavaScript test coverage (Matthew Shao)
 * Options editor for mitmweb (Matthew Shao)
@@ -363,21 +368,18 @@ Minor Changes
 * Remove Python and Locust export (#2465)
 * Remove emojis from tox.ini because flake8 cannot parse that. :(
 
-28 April 2017: mitmproxy 2.0.2
-==============================
+## 28 April 2017: mitmproxy 2.0.2
 
 * Fix mitmweb's Content-Security-Policy to work with Chrome 58+
 * HTTP/2: actually use header normalization from hyper-h2
 
-15 March 2017: mitmproxy 2.0.1
-==============================
+## 15 March 2017: mitmproxy 2.0.1
 
 * bump cryptography dependency
 * bump pyparsing dependency
 * HTTP/2: use header normalization from hyper-h2
 
-21 February 2017: mitmproxy 2.0
-===============================
+## 21 February 2017: mitmproxy 2.0
 
 * HTTP/2 is now enabled by default.
 * Image ContentView: Parse images with Kaitai Struct (kaitai.io) instead of Pillow.
@@ -391,8 +393,7 @@ Minor Changes
 * A myriad of other small improvements throughout the project.
 * Numerous bugfixes.
 
-26 December 2016: mitmproxy 1.0
-===============================
+## 26 December 2016: mitmproxy 1.0
 
 * All mitmproxy tools are now Python 3 only! We plan to support Python 3.5 and higher.
 * Web-Based User Interface: Mitmproxy now officially has a web-based user interface
@@ -414,8 +415,7 @@ Minor Changes
   message interception and manipulation are available.
 * A myriad of other small improvements throughout the project.
 
-16 October 2016: mitmproxy 0.18
-===============================
+## 16 October 2016: mitmproxy 0.18
 
 * Python 3 Compatibility for mitmproxy and pathod (Shadab Zafar, GSoC 2016)
 * Major improvements to mitmweb (Clemens Brunner & Jason Hao, GSoC 2016)
@@ -442,8 +442,7 @@ Minor Changes
 * Add dumpfile converters for mitmproxy versions 0.11 and 0.12
 * Numerous bugfixes
 
-9 April 2016: mitmproxy 0.17
-============================
+## 9 April 2016: mitmproxy 0.17
 
 * Simplify repository and release structure. mitmproxy now comes as a single package, including netlib and pathod.
 * Rename the Python package from libmproxy to mitmproxy.
@@ -458,8 +457,7 @@ Minor Changes
 * Numerous bugfixes and minor improvements
 
 
-15 February 2016: mitmproxy 0.16
-================================
+## 15 February 2016: mitmproxy 0.16
 
 * Completely revised HTTP2 implementation based on hyper-h2 (Thomas Kriechbaumer)
 * Export flows as cURL command, Python code or raw HTTP (Shadab Zafar)
@@ -472,8 +470,7 @@ Minor Changes
 * Provide Python Wheels for faster installation
 * Numerous bugfixes and minor improvements
 
-4 December 2015: mitmproxy 0.15
-===============================
+## 4 December 2015: mitmproxy 0.15
 
 * Support for loading and converting older dumpfile formats (0.13 and up)
 * Content views for inline script (@chrisczub)
@@ -481,8 +478,7 @@ Minor Changes
 * Fix a gnarly memory leak in mitmdump
 * A number of bugfixes and small improvements
 
-6 November 2015: mitmproxy 0.14
-===============================
+## 6 November 2015: mitmproxy 0.14
 
 * Statistics: 399 commits, 13 contributors, 79 closed issues, 37 closed
   PRs, 103 days
@@ -514,8 +510,7 @@ Minor Changes
 * netlib: Initial Python 3.5 support (this is the first prerequisite for
   3.x support in mitmproxy)
 
-24 July 2015: mitmproxy 0.13
-============================
+## 24 July 2015: mitmproxy 0.13
 
 * Upstream certificate validation. See the --verify-upstream-cert,
   --upstream-trusted-confdir and --upstream-trusted-ca parameters. Thanks to
@@ -536,8 +531,7 @@ Minor Changes
   #gotofail, which is no longer a common vulnerability. Permitting this
   hugely increased the complexity of packaging and distributing mitmproxy.
 
-3 June 2015: mitmproxy 0.12.1
-=============================
+## 3 June 2015: mitmproxy 0.12.1
 
 * mitmproxy console: mouse interaction - scroll in the flow list, click on
   flow to view, click to switch between tabs.
@@ -545,8 +539,7 @@ Minor Changes
 * BUGFIX: crash under some circumstances when copying to clipboard.
 * BUGFIX: occasional crash when deleting flows.
 
-18 May 2015: mitmproxy 0.12
-===========================
+## 18 May 2015: mitmproxy 0.12
 
 * mitmproxy console: Significant revamp of the UI. The major changes are
   listed below, and in addition almost every aspect of the UI has
@@ -574,21 +567,18 @@ Minor Changes
   (http://github.com/mike-pt).
 * Many other small bugfixes and improvemenets throughout the project.
 
-29 Dec 2014: mitmproxy 0.11.2
-=============================
+## 29 Dec 2014: mitmproxy 0.11.2
 
 * Configuration files - mitmproxy.conf, mitmdump.conf, common.conf in the
   .mitmproxy directory.
 * Better handling of servers that reject connections that are not SNI.
 * Many other small bugfixes and improvements.
 
-15 November 2014: mitmproxy 0.11.1
-==================================
+## 15 November 2014: mitmproxy 0.11.1
 
 * Bug fixes: connection leaks some crashes
 
-7 November 2014: mitmproxy 0.11
-===============================
+## 7 November 2014: mitmproxy 0.11
 
 * Performance improvements for mitmproxy console
 * SOCKS5 proxy mode allows mitmproxy to act as a SOCKS5 proxy server
@@ -616,8 +606,7 @@ Minor Changes
 * pathod: Hugely improved SSL support, including dynamic generation of certificates
   using the mitproxy cacert
 
-7 November 2014: pathod 0.11
-============================
+## 7 November 2014: pathod 0.11
 
 * Hugely improved SSL support, including dynamic generation of certificates
   using the mitproxy cacert
@@ -626,8 +615,7 @@ Minor Changes
 * Reflected patterns, allowing you to embed a pathod server response specification in a pathoc request, resolving both on client side. This makes fuzzing proxies and other intermediate systems much better.
 
 
-28 January 2014: mitmproxy 0.10
-===============================
+## 28 January 2014: mitmproxy 0.10
 
 * Support for multiple scripts and multiple script arguments
 * Easy certificate install through the in-proxy web app, which is now
@@ -638,8 +626,7 @@ Minor Changes
 * A view that beatifies CSS files if cssutils is available
 * Bug fix, documentation improvements, and more.
 
-25 August 2013: mitmproxy 0.9.2
-===============================
+## 25 August 2013: mitmproxy 0.9.2
 
 * Improvements to the mitmproxywrapper.py helper script for OSX.
 * Don't take minor version into account when checking for serialized file
@@ -654,13 +641,11 @@ Minor Changes
 * Display transfer rates for responses in the flow list.
 * Many other small bugfixes and improvements.
 
-25 August 2013: pathod 0.9.2
-============================
+## 25 August 2013: pathod 0.9.2
 
 * Adapt to interface changes in netlib
 
-16 June 2013: mitmproxy 0.9.1
-=============================
+## 16 June 2013: mitmproxy 0.9.1
 
 * Use "correct" case for Content-Type headers added by mitmproxy.
 * Make UTF environment detection more robust.
@@ -668,8 +653,7 @@ Minor Changes
 * Always read files in binary mode (Windows compatibility fix).
 * Some developer documentation.
 
-15 May 2013: mitmproxy 0.9
-==========================
+## 15 May 2013: mitmproxy 0.9
 
 * Upstream certs mode is now the default.
 * Add a WSGI container that lets you host in-proxy web applications.
@@ -703,8 +687,7 @@ Minor Changes
 * pathoc: client certificate support.
 * pathod: API improvements, bugfixes.
 
-15 May 2013: pathod 0.9 (version synced with mitmproxy)
-=======================================================
+## 15 May 2013: pathod 0.9 (version synced with mitmproxy)
 
 * Pathod proxy mode. You can now configure clients to use pathod as an
   HTTP/S proxy.
@@ -714,8 +697,7 @@ Minor Changes
 * API improvements, bugfixes.
 
 
-16 November 2012: pathod 0.3
-============================
+## 16 November 2012: pathod 0.3
 
 A release focusing on shoring up our fuzzing capabilities, especially with
 pathoc.
@@ -739,8 +721,7 @@ pathoc.
 * Major internal refactoring and cleanup.
 * Many bugfixes.
 
-22 August 2012: pathod 0.2
-==========================
+## 22 August 2012: pathod 0.2
 
 * Add pathoc, a pathological HTTP client.
 * Add libpathod.test, a truss for using pathod in unit tests.
@@ -753,8 +734,7 @@ pathoc.
 * Move the web application to Flask.
 * Massively expand the documentation.
 
-5 April 2012: mitmproxy 0.8
-===========================
+## 5 April 2012: mitmproxy 0.8
 
 * Detailed tutorial for Android interception. Some features that land in
   this release have finally made reliable Android interception possible.
@@ -774,8 +754,7 @@ pathoc.
 * Many other improvements, including bugfixes, and expanded scripting API,
   and more sophisticated certificate handling.
 
-20 February 2012: mitmproxy 0.7
-===============================
+## 20 February 2012: mitmproxy 0.7
 
 * New built-in key/value editor. This lets you interactively edit URL query
   strings, headers and URL-encoded form data.
@@ -794,8 +773,7 @@ pathoc.
 * Significant improvements in speed and responsiveness of UI.
 * Many minor bugfixes and improvements.
 
-7 August 2011: mitmproxy 0.6
-============================
+## 7 August 2011: mitmproxy 0.6
 
 * New scripting API that allows much more flexible and fine-grained
   rewriting of traffic. See the docs for more info.
@@ -817,8 +795,7 @@ pathoc.
 * Expanded documentation and examples.
 * Countless other small improvements and bugfixes.
 
-27 June 2011: mitmproxy 0.5
-===========================
+## 27 June 2011: mitmproxy 0.5
 
 * An -n option to start the tools without binding to a proxy port.
 * Allow scripts, hooks, sticky cookies etc. to run on flows loaded from
@@ -837,8 +814,7 @@ pathoc.
 * BUGFIX: Repair a problem that sometimes caused SSL connections to consume
   100% of CPU.
 
-30 March 2011: mitmproxy 0.4
-============================
+## 30 March 2011: mitmproxy 0.4
 
 * Full serialization of HTTP conversations
 * Client and server replay
@@ -847,8 +823,7 @@ pathoc.
 * Dozens of improvements to the mitmproxy console interface
 * Python scripting hooks for programmatic modification of traffic
 
-01 March 2010: mitmproxy 0.2
-============================
+## 01 March 2010: mitmproxy 0.2
 
 * Big speed and responsiveness improvements, thanks to Thomas Roth
 * Support urwid 0.9.9

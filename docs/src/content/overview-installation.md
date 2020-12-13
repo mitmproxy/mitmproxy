@@ -52,7 +52,7 @@ command line.
 
 If you would like to install mitmproxy directly from source code or the
 GitHub master branch, please see the our
-[README](https://github.com/mitmproxy/mitmproxy#installation)
+[CONTRIBUTING.md](https://github.com/mitmproxy/mitmproxy/blob/master/CONTRIBUTING.md)
 on GitHub.
 
 ### Installation from the Python Package Index (PyPI)
