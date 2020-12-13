@@ -11,6 +11,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
+long_description_content_type = "text/markdown"
 
 with open(os.path.join(here, "mitmproxy", "version.py")) as f:
     match = re.search(r'VERSION = "(.+?)"', f.read())
@@ -22,6 +23,7 @@ setup(
     version=VERSION,
     description="An interactive, SSL/TLS-capable intercepting proxy for HTTP/1, HTTP/2, and WebSockets.",
     long_description=long_description,
+    long_description_content_type=long_description_content_type,
     url="http://mitmproxy.org",
     author="Aldo Cortesi",
     author_email="aldo@corte.si",
