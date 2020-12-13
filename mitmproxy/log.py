@@ -65,10 +65,11 @@ LogTierOrder = [
     "error",
     "warn",
     "info",
+    "verbose",
     "alert",
     "debug",
 ]
 
 
 def log_tier(level):
-    return dict(error=0, warn=1, info=2, alert=2, debug=3).get(level)
+    return dict(error=0, warn=1, info=2, verbose=3, alert=4, debug=5).get(level)

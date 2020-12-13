@@ -97,10 +97,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         if not watch:
             return  # this should not be needed, see asyncio_utils.create_task
 
-        self.log("client connect")
+        self.log("client connect", level="verbose")
         await self.handle_hook(server_hooks.ClientConnectedHook(self.client))
         if self.client.error:
-            self.log("client kill connection")
+            self.log("client kill connection", level="verbose")
             writer = self.transports.pop(self.client).writer
             assert writer
             writer.close()
@@ -118,7 +118,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
         watch.cancel()
 
-        self.log("client disconnect")
+        self.log("client disconnect", level="verbose")
         self.client.timestamp_end = time.time()
         await self.handle_hook(server_hooks.ClientClosedHook(self.client))
 
@@ -175,7 +175,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     addr = f"{command.connection.address[0]} ({human.format_address(command.connection.peername)})"
                 else:
                     addr = human.format_address(command.connection.address)
-                self.log(f"server connect {addr}")
+                self.log(f"server connect {addr}", level="verbose")
                 connected_hook = asyncio_utils.create_task(
                     self.handle_hook(server_hooks.ServerConnectedHook(hook_data)),
                     name=f"handle_hook(server_connected) {addr}",
@@ -199,7 +199,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 self.transports[command.connection].handler = new_handler
                 await asyncio.wait([new_handler])
 
-                self.log(f"server disconnect {addr}")
+                self.log(f"server disconnect {addr}", level="verbose")
                 command.connection.timestamp_end = time.time()
                 await connected_hook  # wait here for this so that closed always comes after connected.
                 await self.handle_hook(server_hooks.ServerClosedHook(hook_data))
