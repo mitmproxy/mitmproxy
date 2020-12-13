@@ -40,6 +40,10 @@ If you depend on these features, please raise your voice in
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
+## 13 December 2020: mitmproxy 6.0.1
+
+* Fix flow serialization in mitmweb.
+
 ## 13 December 2020: mitmproxy 6.0
 
 * Mitmproxy now requires Python 3.8 or above.
