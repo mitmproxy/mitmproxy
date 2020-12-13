@@ -11,7 +11,6 @@ from mitmproxy.net import tcp
 from mitmproxy.net.http import http1
 from mitmproxy.test import tflow
 from .net import tservers
-from pathod import test
 from ..conftest import skip_new_proxy_core
 
 
@@ -134,35 +133,6 @@ class TestServerConnection:
     def test_make_dummy(self):
         c = connections.ServerConnection.make_dummy(('foobar', 1234))
         assert c.address == ('foobar', 1234)
-
-    def test_simple(self):
-        d = test.Daemon()
-        c = connections.ServerConnection((d.IFACE, d.port))
-        c.connect()
-        f = tflow.tflow()
-        f.server_conn = c
-        f.request.path = "/p/200:da"
-
-        # use this protocol just to assemble - not for actual sending
-        c.wfile.write(http1.assemble_request(f.request))
-        c.wfile.flush()
-
-        assert http1.read_response(c.rfile, f.request, 1000)
-        assert d.last_log()
-
-        c.finish()
-        c.close()
-        d.shutdown()
-
-    def test_terminate_error(self):
-        d = test.Daemon()
-        c = connections.ServerConnection((d.IFACE, d.port))
-        c.connect()
-        c.close()
-        c.connection = mock.Mock()
-        c.connection.recv = mock.Mock(return_value=False)
-        c.connection.flush = mock.Mock(side_effect=exceptions.TcpDisconnect)
-        d.shutdown()
 
     def test_sni(self):
         c = connections.ServerConnection(('', 1234))

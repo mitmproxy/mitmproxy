@@ -149,7 +149,6 @@ class BuildEnviron:
     def bdists(self):
         ret = {
             "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
-            "pathod": ["pathoc", "pathod"]
         }
         if self.system == "Windows":
             ret["mitmproxy"].remove("mitmproxy")

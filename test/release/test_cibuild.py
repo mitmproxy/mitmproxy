@@ -222,7 +222,6 @@ def test_buildenviron_osx(tmpdir):
     assert be.platform_tag == "osx"
     assert be.bdists == {
         "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
-        "pathod": ["pathoc", "pathod"],
     }
     assert be.archive_name("mitmproxy") == "mitmproxy-0.0.1-osx.tar.gz"
 
@@ -241,7 +240,6 @@ def test_buildenviron_windows(tmpdir):
     assert be.platform_tag == "windows"
     assert be.bdists == {
         "mitmproxy": ["mitmdump", "mitmweb"],
-        "pathod": ["pathoc", "pathod"],
     }
     assert be.archive_name("mitmproxy") == "mitmproxy-0.0.1-windows.zip"
 

@@ -53,7 +53,6 @@ setup(
     },
     packages=find_packages(include=[
         "mitmproxy", "mitmproxy.*",
-        "pathod", "pathod.*",
     ]),
     include_package_data=True,
     entry_points={
@@ -61,8 +60,6 @@ setup(
             "mitmproxy = mitmproxy.tools.main:mitmproxy",
             "mitmdump = mitmproxy.tools.main:mitmdump",
             "mitmweb = mitmproxy.tools.main:mitmweb",
-            "pathod = pathod.pathod_cmdline:go_pathod",
-            "pathoc = pathod.pathoc_cmdline:go_pathoc"
         ]
     },
     python_requires='>=3.8',
