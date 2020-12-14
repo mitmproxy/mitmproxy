@@ -9,7 +9,23 @@ from mitmproxy import options
 from mitmproxy.exceptions import FlowReadException
 from mitmproxy.io import tnetstring
 from mitmproxy.test import taddons, tflow
-from . import tservers
+
+
+class State:
+    def __init__(self):
+        self.flows = []
+
+    def request(self, f):
+        if f not in self.flows:
+            self.flows.append(f)
+
+    def response(self, f):
+        if f not in self.flows:
+            self.flows.append(f)
+
+    def websocket_start(self, f):
+        if f not in self.flows:
+            self.flows.append(f)
 
 
 class TestSerialize:
@@ -99,7 +115,7 @@ class TestFlowMaster:
         opts = options.Options(
             mode="reverse:https://use-this-domain"
         )
-        s = tservers.TestState()
+        s = State()
         with taddons.context(s, options=opts) as ctx:
             f = tflow.tflow(resp=True)
             await ctx.master.load_flow(f)
@@ -110,7 +126,7 @@ class TestFlowMaster:
         opts = options.Options(
             mode="reverse:https://use-this-domain"
         )
-        s = tservers.TestState()
+        s = State()
         with taddons.context(s, options=opts) as ctx:
             f = tflow.twebsocketflow()
             await ctx.master.load_flow(f.handshake_flow)
@@ -124,7 +140,7 @@ class TestFlowMaster:
         opts = options.Options(
             mode="reverse:https://use-this-domain"
         )
-        s = tservers.TestState()
+        s = State()
         with taddons.context(s, options=opts) as ctx:
             f = tflow.tflow(req=None)
             await ctx.master.addons.handle_lifecycle("clientconnect", f.client_conn)

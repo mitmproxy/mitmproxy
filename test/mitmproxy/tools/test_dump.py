@@ -6,10 +6,8 @@ from mitmproxy import controller
 from mitmproxy import options
 from mitmproxy.tools import dump
 
-from .. import tservers
 
-
-class TestDumpMaster(tservers.MasterTest):
+class TestDumpMaster:
     def mkmaster(self, **opts):
         o = options.Options(**opts)
         m = dump.DumpMaster(o, with_termlog=False, with_dumper=False)

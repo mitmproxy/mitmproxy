@@ -1,9 +1,6 @@
 import mitmproxy.tools.console.palettes as palettes
 
-from ....conftest import skip_appveyor
 
-
-@skip_appveyor
 class TestPalette:
 
     def test_helptext(self):

@@ -1,10 +1,11 @@
 import urwid
 
+import pytest
+
 from mitmproxy import options
 from mitmproxy.tools import console
-from ... import tservers
 
-import pytest
+from ... import tservers
 
 
 @pytest.mark.asyncio

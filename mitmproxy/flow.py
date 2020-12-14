@@ -6,7 +6,7 @@ from mitmproxy import controller
 from mitmproxy import exceptions
 from mitmproxy import stateobject
 from mitmproxy import version
-from mitmproxy.utils import compat
+from mitmproxy.proxy import context
 
 
 class Error(stateobject.StateObject):
@@ -64,8 +64,8 @@ class Flow(stateobject.StateObject):
     def __init__(
             self,
             type: str,
-            client_conn: compat.Client,
-            server_conn: compat.Server,
+            client_conn: context.Client,
+            server_conn: context.Server,
             live: bool=None
     ) -> None:
         self.type = type
@@ -85,8 +85,8 @@ class Flow(stateobject.StateObject):
     _stateobject_attributes = dict(
         id=str,
         error=Error,
-        client_conn=compat.Client,
-        server_conn=compat.Server,
+        client_conn=context.Client,
+        server_conn=context.Server,
         type=str,
         intercepted=bool,
         is_replay=str,

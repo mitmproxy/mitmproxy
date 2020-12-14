@@ -3,11 +3,10 @@ from typing import Type, Sequence, Union, Tuple, Any, Iterable, Optional, List
 
 from mitmproxy import ctx, exceptions
 from mitmproxy.net.tls import is_tls_record_magic
-from mitmproxy.proxy.protocol import base
 from mitmproxy.proxy.protocol.http import HTTPMode
-from mitmproxy.proxy2 import context, layer, layers
-from mitmproxy.proxy2.layers import modes
-from mitmproxy.proxy2.layers.tls import HTTP_ALPNS, parse_client_hello
+from mitmproxy.proxy import context, layer, layers
+from mitmproxy.proxy.layers import modes
+from mitmproxy.proxy.layers.tls import HTTP_ALPNS, parse_client_hello
 
 LayerCls = Type[layer.Layer]
 
@@ -88,8 +87,6 @@ class NextLayer:
             raise AssertionError()
 
     def next_layer(self, nextlayer: layer.NextLayer):
-        if isinstance(nextlayer, base.Layer):  # pragma: no cover
-            return  # skip the old proxy core's next_layer event.
         nextlayer.layer = self._next_layer(
             nextlayer.context,
             nextlayer.data_client(),

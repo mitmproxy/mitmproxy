@@ -5,8 +5,8 @@ import pytest
 
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.proxy.protocol.http import HTTPMode
-from mitmproxy.proxy2 import layers
-from mitmproxy.proxy2.context import Address
+from mitmproxy.proxy import layers
+from mitmproxy.proxy.context import Address
 from mitmproxy.test import taddons
 
 
@@ -57,7 +57,6 @@ async def test_start_stop():
             proxy_addr = ps.server.sockets[0].getsockname()[:2]
             reader, writer = await asyncio.open_connection(*proxy_addr)
             req = f"GET http://{addr[0]}:{addr[1]}/hello HTTP/1.1\r\n\r\n"
-            print(f"{req=}")
             writer.write(req.encode())
             assert await reader.readuntil(b"\r\n\r\n") == b"HTTP/1.1 204 No Content\r\n\r\n"
 

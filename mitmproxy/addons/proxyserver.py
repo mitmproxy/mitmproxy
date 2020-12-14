@@ -4,8 +4,8 @@ from typing import Optional
 
 from mitmproxy import controller, ctx, eventsequence, flow, log, master, options, platform
 from mitmproxy.flow import Error
-from mitmproxy.proxy2 import commands
-from mitmproxy.proxy2 import server
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import server
 from mitmproxy.utils import asyncio_utils, human
 
 

@@ -5,9 +5,19 @@ from OpenSSL import SSL, crypto
 from mitmproxy import certs, ctx, exceptions
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
-from mitmproxy.proxy.protocol.tls import DEFAULT_CLIENT_CIPHERS
-from mitmproxy.proxy2 import context
-from mitmproxy.proxy2.layers import tls
+from mitmproxy.proxy import context
+from mitmproxy.proxy.layers import tls
+
+# We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
+# https://ssl-config.mozilla.org/#config=old
+DEFAULT_CLIENT_CIPHERS = (
+    "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:"
+    "ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:"
+    "DHE-RSA-AES256-GCM-SHA384:DHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:"
+    "ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:"
+    "ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:AES128-GCM-SHA256:"
+    "AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:AES256-SHA:DES-CBC3-SHA"
+)
 
 
 class AppData(TypedDict):

@@ -9,8 +9,14 @@ import sys
 def check_src_files_have_test():
     missing_test_files = []
 
-    excluded = ['mitmproxy/contrib/', 'mitmproxy/io/proto/', 'mitmproxy/proxy2/layers/http',
-                'mitmproxy/test/', 'mitmproxy/tools/', 'mitmproxy/platform/']
+    excluded = [
+        'mitmproxy/contrib/',
+        'mitmproxy/io/proto/',
+        'mitmproxy/proxy/layers/http',
+        'mitmproxy/test/',
+        'mitmproxy/tools/',
+        'mitmproxy/platform/',
+    ]
     src_files = glob.glob('mitmproxy/**/*.py', recursive=True)
     src_files = [f for f in src_files if os.path.basename(f) != '__init__.py']
     src_files = [f for f in src_files if not any(os.path.normpath(p) in f for p in excluded)]
@@ -25,7 +31,12 @@ def check_src_files_have_test():
 def check_test_files_have_src():
     unknown_test_files = []
 
-    excluded = ['test/mitmproxy/data/', 'test/mitmproxy/net/data/', '/tservers.py', '/conftest.py']
+    excluded = [
+        'test/mitmproxy/data/',
+        'test/mitmproxy/net/data/',
+        '/tservers.py',
+        '/conftest.py',
+    ]
     test_files = glob.glob('test/mitmproxy/**/*.py', recursive=True)
     test_files = [f for f in test_files if os.path.basename(f) != '__init__.py']
     test_files = [f for f in test_files if not any(os.path.normpath(p) in f for p in excluded)]
