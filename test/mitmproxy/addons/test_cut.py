@@ -55,8 +55,8 @@ def test_extract(tdata):
     with open(tdata.path("mitmproxy/net/data/text_cert"), "rb") as f:
         d = f.read()
     c1 = certs.Cert.from_pem(d)
-    tf.server_conn.cert = c1
-    assert "CERTIFICATE" in cut.extract("server_conn.cert", tf)
+    tf.server_conn.certificate_list = [c1]
+    assert "CERTIFICATE" in cut.extract("server_conn.certificate_list", tf)
 
 
 def test_headername():
