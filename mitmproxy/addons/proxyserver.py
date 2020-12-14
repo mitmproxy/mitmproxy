@@ -28,7 +28,7 @@ class AsyncReply(controller.Reply):
             pass  # event loop may already be closed.
 
     def kill(self, force=False):  # pragma: no cover
-        warnings.warn("reply.kill() is deprecated, set the error attribute instead.", PendingDeprecationWarning)
+        warnings.warn("reply.kill() is deprecated, set the error attribute instead.", PendingDeprecationWarning, stacklevel=2)
         self.obj.error = flow.Error(Error.KILLED_MESSAGE)
 
 

@@ -174,22 +174,22 @@ class Client(Connection):
 
     @property
     def address(self):  # pragma: no cover
-        warnings.warn("Client.address is deprecated, use Client.peername instead.", PendingDeprecationWarning)
+        warnings.warn("Client.address is deprecated, use Client.peername instead.", PendingDeprecationWarning, stacklevel=2)
         return self.peername
 
     @address.setter
     def address(self, x):  # pragma: no cover
-        warnings.warn("Client.address is deprecated, use Client.peername instead.", PendingDeprecationWarning)
+        warnings.warn("Client.address is deprecated, use Client.peername instead.", PendingDeprecationWarning, stacklevel=2)
         self.peername = x
 
     @property
     def cipher_name(self) -> Optional[str]:  # pragma: no cover
-        warnings.warn("Client.cipher_name is deprecated, use Client.cipher instead.", PendingDeprecationWarning)
+        warnings.warn("Client.cipher_name is deprecated, use Client.cipher instead.", PendingDeprecationWarning, stacklevel=2)
         return self.cipher
 
     @property
     def clientcert(self) -> Optional[certs.Cert]:  # pragma: no cover
-        warnings.warn("Client.clientcert is deprecated, use Client.certificate_list instead.", PendingDeprecationWarning)
+        warnings.warn("Client.clientcert is deprecated, use Client.certificate_list instead.", PendingDeprecationWarning, stacklevel=2)
         if self.certificate_list:
             return self.certificate_list[0]
         else:
@@ -278,12 +278,12 @@ class Server(Connection):
 
     @property
     def ip_address(self) -> Optional[Address]:  # pragma: no cover
-        warnings.warn("Server.ip_address is deprecated, use Server.peername instead.", PendingDeprecationWarning)
+        warnings.warn("Server.ip_address is deprecated, use Server.peername instead.", PendingDeprecationWarning, stacklevel=2)
         return self.peername
 
     @property
     def cert(self) -> Optional[certs.Cert]:  # pragma: no cover
-        warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", PendingDeprecationWarning)
+        warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", PendingDeprecationWarning, stacklevel=2)
         if self.certificate_list:
             return self.certificate_list[0]
         else:
@@ -291,7 +291,7 @@ class Server(Connection):
 
     @cert.setter
     def cert(self, val):  # pragma: no cover
-        warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", PendingDeprecationWarning)
+        warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", PendingDeprecationWarning, stacklevel=2)
         if val:
             self.certificate_list = [val]
         else:

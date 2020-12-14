@@ -56,7 +56,8 @@ class WebSocketMessage(serializable.Serializable):
         """
         warnings.warn(
             "WebSocketMessage.kill is deprecated, set an empty content instead.",
-            PendingDeprecationWarning
+            PendingDeprecationWarning,
+            stacklevel=2,
         )
         # empty str or empty bytes.
         self.content = type(self.content)()
