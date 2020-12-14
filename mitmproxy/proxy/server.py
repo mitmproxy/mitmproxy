@@ -17,7 +17,7 @@ from dataclasses import dataclass
 
 from OpenSSL import SSL
 from mitmproxy import http, options as moptions
-from mitmproxy.proxy.protocol.http import HTTPMode
+from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import commands, events, layer, layers, server_hooks
 from mitmproxy.proxy.context import Address, Client, Connection, ConnectionState, Context
 from mitmproxy.proxy.layers import tls

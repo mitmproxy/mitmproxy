@@ -9,7 +9,7 @@ from hypothesis.strategies import binary, booleans, composite, dictionaries, int
 from mitmproxy import options
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.http import HTTPFlow
-from mitmproxy.proxy.protocol.http import HTTPMode
+from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import context, events
 from mitmproxy.proxy.commands import OpenConnection, SendData
 from mitmproxy.proxy.context import Server

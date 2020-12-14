@@ -9,7 +9,7 @@ from h2.errors import ErrorCodes
 from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow
 from mitmproxy.net.http import Headers, Request, status_codes
-from mitmproxy.proxy.protocol.http import HTTPMode
+from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.proxy.context import Context, Server
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived

@@ -3,7 +3,7 @@ from typing import Type, Sequence, Union, Tuple, Any, Iterable, Optional, List
 
 from mitmproxy import ctx, exceptions
 from mitmproxy.net.tls import is_tls_record_magic
-from mitmproxy.proxy.protocol.http import HTTPMode
+from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import context, layer, layers
 from mitmproxy.proxy.layers import modes
 from mitmproxy.proxy.layers.tls import HTTP_ALPNS, parse_client_hello

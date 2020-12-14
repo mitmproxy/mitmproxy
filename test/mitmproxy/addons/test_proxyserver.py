@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 import pytest
 
 from mitmproxy.addons.proxyserver import Proxyserver
-from mitmproxy.proxy.protocol.http import HTTPMode
+from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import layers
 from mitmproxy.proxy.context import Address
 from mitmproxy.test import taddons

@@ -1,4 +1,4 @@
-import mitmproxy.tools.console.palettes as palettes
+from mitmproxy.tools.console import palettes
 
 
 class TestPalette:

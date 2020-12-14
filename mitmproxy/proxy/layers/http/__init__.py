@@ -1,4 +1,5 @@
 import collections
+import enum
 import time
 from dataclasses import dataclass
 from typing import Optional, Tuple, Union, Dict, DefaultDict, List
@@ -6,13 +7,13 @@ from typing import Optional, Tuple, Union, Dict, DefaultDict, List
 from mitmproxy import flow, http
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import url
-from mitmproxy.proxy.protocol.http import HTTPMode
 from mitmproxy.proxy import commands, events, layer, tunnel
 from mitmproxy.proxy.context import Connection, ConnectionState, Context, Server
 from mitmproxy.proxy.layers import tls, websocket, tcp
 from mitmproxy.proxy.layers.http import _upstream_proxy
 from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
+
 from ._base import HttpCommand, ReceiveHttp, StreamId, HttpConnection
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
@@ -20,6 +21,12 @@ from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, Http
     HttpResponseHook
 from ._http1 import Http1Client, Http1Server
 from ._http2 import Http2Client, Http2Server
+
+
+class HTTPMode(enum.Enum):
+    regular = 1
+    transparent = 2
+    upstream = 3
 
 
 def validate_request(mode, request) -> Optional[str]:
