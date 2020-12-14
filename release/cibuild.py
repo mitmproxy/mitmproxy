@@ -51,12 +51,6 @@ class BuildEnviron:
             *,
             system="",
             root_dir="",
-            travis_tag="",
-            travis_branch="",
-            travis_pull_request="",
-            appveyor_repo_tag_name="",
-            appveyor_repo_branch="",
-            appveyor_pull_request_number="",
             github_ref="",
             github_event_name="",
             should_build_wheel=False,
@@ -72,24 +66,10 @@ class BuildEnviron:
         self.system = system
         self.root_dir = root_dir
 
-        self.travis_tag = travis_tag
-        self.travis_branch = travis_branch
-
-        if travis_tag and travis_tag != travis_branch:
-            raise ValueError(
-                f"Something is wrong - TRAVIS_TAG={travis_tag}, but TRAVIS_BRANCH={travis_branch}"
-            )
-
-        self.travis_pull_request = travis_pull_request
-
         self.should_build_wheel = should_build_wheel
         self.should_build_docker = should_build_docker
         self.should_build_pyinstaller = should_build_pyinstaller
         self.should_build_wininstaller = should_build_wininstaller
-
-        self.appveyor_repo_tag_name = appveyor_repo_tag_name
-        self.appveyor_repo_branch = appveyor_repo_branch
-        self.appveyor_pull_request_number = appveyor_pull_request_number
 
         self.github_ref = github_ref
         self.github_event_name = github_event_name
@@ -105,12 +85,6 @@ class BuildEnviron:
         return cls(
             system=platform.system(),
             root_dir=os.path.normpath(os.path.join(os.path.dirname(__file__), "..")),
-            travis_tag=os.environ.get("TRAVIS_TAG", ""),
-            travis_branch=os.environ.get("TRAVIS_BRANCH", ""),
-            travis_pull_request=os.environ.get("TRAVIS_PULL_REQUEST"),
-            appveyor_repo_tag_name=os.environ.get("APPVEYOR_REPO_TAG_NAME", ""),
-            appveyor_repo_branch=os.environ.get("APPVEYOR_REPO_BRANCH", ""),
-            appveyor_pull_request_number=os.environ.get("APPVEYOR_PULL_REQUEST_NUMBER", ""),
             github_ref=os.environ.get("GITHUB_REF", ""),
             github_event_name=os.environ.get("GITHUB_EVENT_NAME", ""),
             should_build_wheel=bool_from_env("CI_BUILD_WHEEL"),
@@ -156,10 +130,6 @@ class BuildEnviron:
 
     @property
     def branch(self) -> str:
-        if self.travis_branch:
-            return self.travis_branch
-        if self.appveyor_repo_branch:
-            return self.appveyor_repo_branch
         if self.github_ref and self.github_ref.startswith("refs/heads/"):
             return self.github_ref.replace("refs/heads/", "")
         if self.github_ref and self.github_ref.startswith("refs/pull/"):
@@ -256,10 +226,6 @@ class BuildEnviron:
     def is_pull_request(self) -> bool:
         if self.github_event_name == "pull_request":
             return True
-        if self.appveyor_pull_request_number:
-            return True
-        if self.travis_pull_request and self.travis_pull_request != "false":
-            return True
         return False
 
     @property
@@ -297,10 +263,6 @@ class BuildEnviron:
 
     @property
     def tag(self) -> str:
-        if self.travis_tag:
-            return self.travis_tag
-        if self.appveyor_repo_tag_name:
-            return self.appveyor_repo_tag_name
         if self.github_ref and self.github_ref.startswith("refs/tags/"):
             return self.github_ref.replace("refs/tags/", "")
         return ""
