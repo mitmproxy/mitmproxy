@@ -48,7 +48,7 @@ class WebSocketMessage(serializable.Serializable):
         else:
             return "binary message: {}".format(strutils.bytes_to_escaped_str(self.content))
 
-    def kill(self):
+    def kill(self):  # pragma: no cover
         """
         Kill this message.
 
@@ -56,7 +56,7 @@ class WebSocketMessage(serializable.Serializable):
         """
         warnings.warn(
             "WebSocketMessage.kill is deprecated, set an empty content instead.",
-            PendingDeprecationWarning,
+            DeprecationWarning,
             stacklevel=2,
         )
         # empty str or empty bytes.
