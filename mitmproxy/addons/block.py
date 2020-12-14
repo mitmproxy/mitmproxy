@@ -21,7 +21,7 @@ class Block:
         )
 
     def client_connected(self, client):  # pragma: no cover
-        parts = client.address[0].rsplit("%", 1)
+        parts = client.peername[0].rsplit("%", 1)
         address = ipaddress.ip_address(parts[0])
         if isinstance(address, ipaddress.IPv6Address):
             address = address.ipv4_mapped or address
@@ -30,17 +30,17 @@ class Block:
             return
 
         if ctx.options.block_private and address.is_private:
-            ctx.log.warn(f"Client connection from {client.address[0]} killed by block_private option.")
+            ctx.log.warn(f"Client connection from {client.peername[0]} killed by block_private option.")
             client.error = "Connection killed by block_private."
 
         if ctx.options.block_global and address.is_global:
-            ctx.log.warn(f"Client connection from {client.address[0]} killed by block_global option.")
+            ctx.log.warn(f"Client connection from {client.peername[0]} killed by block_global option.")
             client.error = "Connection killed by block_global."
 
     # FIXME: Remove old proxy core hook below and remove no cover statements.
 
     def clientconnect(self, layer):  # pragma: no cover
-        astr = layer.client_conn.address[0]
+        astr = layer.client_conn.peername[0]
 
         parts = astr.rsplit("%", 1)
         address = ipaddress.ip_address(parts[0])

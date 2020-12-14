@@ -142,7 +142,7 @@ class WebSocketFlow(flow.Flow):
     def message_info(self, message: WebSocketMessage) -> str:
         return "{client} {direction} WebSocket {type} message {direction} {server}{endpoint}".format(
             type=message.type,
-            client=human.format_address(self.client_conn.address),
+            client=human.format_address(self.client_conn.peername),
             server=human.format_address(self.server_conn.address),
             direction="->" if message.from_client else "<-",
             endpoint=self.handshake_flow.request.path,

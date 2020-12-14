@@ -64,8 +64,8 @@ class UnsupportedLog:
         message = f.messages[-1]
         direction = "->" if message.from_client else "<-"
         ctx.log.info("{client_host}:{client_port} {direction} tcp {direction} {server_host}:{server_port}".format(
-            client_host=f.client_conn.address[0],
-            client_port=f.client_conn.address[1],
+            client_host=f.client_conn.peername[0],
+            client_port=f.client_conn.peername[1],
             server_host=f.server_conn.address[0],
             server_port=f.server_conn.address[1],
             direction=direction,

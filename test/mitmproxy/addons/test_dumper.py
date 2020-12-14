@@ -81,7 +81,7 @@ def test_simple():
         flow = tflow.tflow()
         flow.request = tutils.treq()
         flow.client_conn = mock.MagicMock()
-        flow.client_conn.address[0] = "foo"
+        flow.client_conn.peername[0] = "foo"
         flow.response = tutils.tresp(content=None)
         flow.is_replay = "response"
         flow.response.status_code = 300

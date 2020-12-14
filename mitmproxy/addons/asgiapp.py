@@ -80,7 +80,7 @@ def make_scope(flow: http.HTTPFlow) -> dict:
         "raw_path": flow.request.path,
         "query_string": query_string,
         "headers": list(list(x) for x in flow.request.headers.fields),
-        "client": flow.client_conn.address,
+        "client": flow.client_conn.peername,
         "extensions": {
             "mitmproxy.master": ctx.master,
         }

@@ -59,6 +59,6 @@ class StreamBodies:
         if ctx.options.stream_websockets:
             f.stream = True
             ctx.log.info("Streaming WebSocket messages between {client} and {server}".format(
-                client=human.format_address(f.client_conn.address),
+                client=human.format_address(f.client_conn.peername),
                 server=human.format_address(f.server_conn.address))
             )
