@@ -1,6 +1,10 @@
 Release History
 ###############
 
+15 December 2020: mitmproxy 6.0.2
+=================================
+
+* Fix reading of saved flows in mitmweb.
 
 13 December 2020: mitmproxy 6.0.1
 =================================
