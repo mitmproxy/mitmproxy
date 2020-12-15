@@ -21,6 +21,7 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
+from mitmproxy.utils.strutils import always_str
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
@@ -34,20 +35,45 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         "id": flow.id,
         "intercepted": flow.intercepted,
         "is_replay": flow.is_replay,
-        "client_conn": flow.client_conn.get_state(),
-        "server_conn": flow.server_conn.get_state(),
         "type": flow.type,
         "modified": flow.modified(),
         "marked": flow.marked,
     }
-    # .alpn_proto_negotiated is bytes, we need to decode that.
-    for conn in "client_conn", "server_conn":
-        if f[conn]["alpn_proto_negotiated"] is None:
-            continue
-        f[conn]["alpn_proto_negotiated"] = \
-            f[conn]["alpn_proto_negotiated"].decode(errors="backslashreplace")
-    # There are some bytes in here as well, let's skip it until we have them in the UI.
-    f["client_conn"].pop("tls_extensions", None)
+
+    if flow.client_conn:
+        f["client_conn"] = {
+            "id": flow.client_conn.id,
+            "address": flow.client_conn.peername,
+            "tls_established": flow.client_conn.tls_established,
+            "timestamp_start": flow.client_conn.timestamp_start,
+            "timestamp_tls_setup": flow.client_conn.timestamp_tls_setup,
+            "timestamp_end": flow.client_conn.timestamp_end,
+            # ideally idna, but we don't want errors
+            "sni": always_str(flow.client_conn.sni, "ascii", "backslashreplace"),
+            "cipher_name": flow.client_conn.cipher_name,
+            "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
+            "tls_version": flow.client_conn.tls_version,
+        }
+
+    if flow.server_conn:
+        f["server_conn"] = {
+            "id": flow.server_conn.id,
+            "address": flow.server_conn.address,
+            "ip_address": flow.server_conn.peername,
+            "source_address": flow.server_conn.sockname,
+            "tls_established": flow.server_conn.tls_established,
+            "alpn_proto_negotiated": always_str(flow.server_conn.alpn, "ascii", "backslashreplace"),
+            "tls_version": flow.server_conn.tls_version,
+            "timestamp_start": flow.server_conn.timestamp_start,
+            "timestamp_tcp_setup": flow.server_conn.timestamp_tcp_setup,
+            "timestamp_tls_setup": flow.server_conn.timestamp_tls_setup,
+            "timestamp_end": flow.server_conn.timestamp_end,
+        }
+        if flow.server_conn.sni is True:
+            f["server_conn"] = None
+        else:
+            # ideally idna, but we don't want errors
+            f["server_conn"] = always_str(flow.server_conn.sni, "ascii", "backslashreplace")
     if flow.error:
         f["error"] = flow.error.get_state()
 
@@ -96,10 +122,6 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             }
             if flow.response.data.trailers:
                 f["response"]["trailers"] = tuple(flow.response.data.trailers.items(True))
-
-    f.get("server_conn", {}).pop("certificate_list", None)
-    f.get("client_conn", {}).pop("certificate_list", None)
-    f.get("client_conn", {}).pop("mitmcert", None)
 
     return f
 
