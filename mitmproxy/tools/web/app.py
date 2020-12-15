@@ -100,6 +100,8 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
     f.get("server_conn", {}).pop("certificate_list", None)
     f.get("client_conn", {}).pop("certificate_list", None)
     f.get("client_conn", {}).pop("mitmcert", None)
+    f.get("server_conn", {}).pop("alpn_offers", None)
+    f.get("client_conn", {}).pop("alpn_offers", None)
 
     return f
 
