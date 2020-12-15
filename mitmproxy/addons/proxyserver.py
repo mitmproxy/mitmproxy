@@ -108,6 +108,8 @@ class Proxyserver:
                 await self.shutdown_server()
                 self.server = None
             if ctx.options.server:
+                if not ctx.master.addons.get("nextlayer"):
+                    ctx.log.warn("Warning: Running proxyserver without nextlayer addon!")
                 self.server = await asyncio.start_server(
                     self.handle_connection,
                     self.options.listen_host,
