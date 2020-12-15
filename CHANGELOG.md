@@ -40,6 +40,10 @@ If you depend on these features, please raise your voice in
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
+## 15 December 2020: mitmproxy 6.0.2
+
+* Fix reading of saved flows in mitmweb.
+
 ## 13 December 2020: mitmproxy 6.0.1
 
 * Fix flow serialization in mitmweb.
