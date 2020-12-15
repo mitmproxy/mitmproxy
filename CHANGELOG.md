@@ -37,6 +37,8 @@ If you depend on these features, please raise your voice in
 
 ### Full Changelog
 
+* New Proxy Core based on sans-io pattern (@mhils)
+* Remove the legacy protocol stack (@Kriechi)
 * Remove all deprecated pathod and pathoc tools and modules (@Kriechi)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
