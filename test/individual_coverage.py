@@ -63,7 +63,7 @@ def main():
     no_individual_cov = [f.strip() for f in fs]
 
     excluded = ['mitmproxy/contrib/', 'mitmproxy/test/', 'mitmproxy/tools/', 'mitmproxy/platform/']
-    src_files = glob.glob('mitmproxy/**/*.py', recursive=True) + glob.glob('pathod/**/*.py', recursive=True)
+    src_files = glob.glob('mitmproxy/**/*.py', recursive=True)
     src_files = [f for f in src_files if os.path.basename(f) != '__init__.py']
     src_files = [f for f in src_files if not any(os.path.normpath(p) in f for p in excluded)]
 

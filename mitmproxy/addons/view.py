@@ -18,12 +18,12 @@ import mitmproxy.flow
 from mitmproxy import flowfilter
 from mitmproxy import exceptions
 from mitmproxy import command
-from mitmproxy import connections
 from mitmproxy import ctx
 from mitmproxy import io
 from mitmproxy import http
 from mitmproxy import tcp
-from mitmproxy.utils import compat, human
+from mitmproxy.proxy import context
+from mitmproxy.utils import human
 
 
 # The underlying sorted list implementation expects the sort key to be stable
@@ -460,12 +460,10 @@ class View(collections.abc.Sequence):
             req = http.HTTPRequest.make(method.upper(), url)
         except ValueError as e:
             raise exceptions.CommandError("Invalid URL: %s" % e)
-        if compat.new_proxy_core:  # pragma: no cover
-            c = compat.Client(("", 0), ("", 0), req.timestamp_start - 0.0001)
-            s = compat.Server((req.host, req.port))
-        else:  # pragma: no cover
-            c = connections.ClientConnection.make_dummy(("", 0))
-            s = connections.ServerConnection.make_dummy((req.host, req.port))
+
+        c = context.Client(("", 0), ("", 0), req.timestamp_start - 0.0001)
+        s = context.Server((req.host, req.port))
+
         f = http.HTTPFlow(c, s)
         f.request = req
         f.request.headers["Host"] = req.host

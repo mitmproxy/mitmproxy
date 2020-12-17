@@ -4,8 +4,8 @@ from typing import Optional
 
 from mitmproxy import controller, ctx, eventsequence, flow, log, master, options, platform
 from mitmproxy.flow import Error
-from mitmproxy.proxy2 import commands
-from mitmproxy.proxy2 import server
+from mitmproxy.proxy import commands
+from mitmproxy.proxy import server
 from mitmproxy.utils import asyncio_utils, human
 
 
@@ -28,7 +28,7 @@ class AsyncReply(controller.Reply):
             pass  # event loop may already be closed.
 
     def kill(self, force=False):  # pragma: no cover
-        warnings.warn("reply.kill() is deprecated, set the error attribute instead.", PendingDeprecationWarning)
+        warnings.warn("reply.kill() is deprecated, set the error attribute instead.", DeprecationWarning, stacklevel=2)
         self.obj.error = flow.Error(Error.KILLED_MESSAGE)
 
 

@@ -10,7 +10,7 @@ from mitmproxy import exceptions, master
 from mitmproxy import options
 from mitmproxy import optmanager
 from mitmproxy import proxy
-from mitmproxy.utils import compat, debug, arg_check
+from mitmproxy.utils import debug, arg_check
 
 
 def assert_utf8_env():
@@ -86,17 +86,10 @@ def run(
             os.path.join(opts.confdir, "config.yml"),
         )
         pconf = process_options(parser, opts, args)
-        server: typing.Any = None
-        if pconf.options.server and not compat.new_proxy_core:  # new core initializes itself as an addon
-            try:
-                server = proxy.server.ProxyServer(pconf)
-            except exceptions.ServerException as v:
-                print(str(v), file=sys.stderr)
-                sys.exit(1)
-        else:
-            server = proxy.server.DummyServer(pconf)
 
-        master.server = server
+        # new core initializes itself as an addon
+        master.server = proxy.DummyServer(pconf)
+
         if args.options:
             print(optmanager.dump_defaults(opts))
             sys.exit(0)

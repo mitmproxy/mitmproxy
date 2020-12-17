@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 from mitmproxy import flow
 from mitmproxy import version
 from mitmproxy.net import http
-from mitmproxy.utils import compat
+from mitmproxy.proxy import context
 
 HTTPRequest = http.Request
 HTTPResponse = http.Response
@@ -23,8 +23,8 @@ class HTTPFlow(flow.Flow):
     object. This might happen, for instance, when a response was received
     from the server, but there was an error sending it back to the client.
     """
-    server_conn: compat.Server
-    client_conn: compat.Client
+    server_conn: context.Server
+    client_conn: context.Client
     intercepted: bool = False
     """ Is this flow currently being intercepted? """
     mode: str

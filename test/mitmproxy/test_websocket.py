@@ -6,7 +6,6 @@ from mitmproxy import flowfilter
 from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy.io import tnetstring
 from mitmproxy.test import tflow
-from ..conftest import skip_new_proxy_core
 
 
 class TestWebSocketFlow:
@@ -88,13 +87,6 @@ class TestWebSocketFlow:
         d = tflow.twebsocketflow().handshake_flow.get_state()
         tnetstring.dump(d, b)
         assert b.getvalue()
-
-    @skip_new_proxy_core
-    def test_message_kill(self):
-        f = tflow.twebsocketflow()
-        assert not f.messages[-1].killed
-        f.messages[-1].kill()
-        assert f.messages[-1].killed
 
     def test_inject_message(self):
         f = tflow.twebsocketflow()

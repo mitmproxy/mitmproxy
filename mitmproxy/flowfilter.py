@@ -362,10 +362,10 @@ class FSrc(_Rex):
     is_binary = False
 
     def __call__(self, f):
-        if not f.client_conn or not f.client_conn.address:
+        if not f.client_conn or not f.client_conn.peername:
             return False
-        r = "{}:{}".format(f.client_conn.address[0], f.client_conn.address[1])
-        return f.client_conn.address and self.re.search(r)
+        r = "{}:{}".format(f.client_conn.peername[0], f.client_conn.peername[1])
+        return f.client_conn.peername and self.re.search(r)
 
 
 class FDst(_Rex):

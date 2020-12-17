@@ -8,10 +8,10 @@ import pytest
 from OpenSSL import SSL
 from mitmproxy import certs
 from mitmproxy.addons import tlsconfig
-from mitmproxy.proxy2 import context
-from mitmproxy.proxy2.layers import tls
+from mitmproxy.proxy import context
+from mitmproxy.proxy.layers import tls
 from mitmproxy.test import taddons
-from test.mitmproxy.proxy2.layers import test_tls
+from test.mitmproxy.proxy.layers import test_tls
 
 
 def test_alpn_select_callback():

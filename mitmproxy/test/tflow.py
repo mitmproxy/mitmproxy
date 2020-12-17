@@ -8,7 +8,7 @@ from mitmproxy import controller
 from mitmproxy import http
 from mitmproxy import flow
 from mitmproxy.net import http as net_http
-from mitmproxy.utils import compat
+from mitmproxy.proxy import context
 
 from wsproto.frame_protocol import Opcode
 
@@ -147,8 +147,8 @@ def tdummyflow(client_conn=True, server_conn=True, err=None):
     return f
 
 
-def tclient_conn() -> compat.Client:
-    c = compat.Client.from_state(dict(
+def tclient_conn() -> context.Client:
+    c = context.Client.from_state(dict(
         id=str(uuid.uuid4()),
         address=("127.0.0.1", 22),
         mitmcert=None,
@@ -170,14 +170,11 @@ def tclient_conn() -> compat.Client:
         cipher_list=[],
     ))
     c.reply = controller.DummyReply()
-    if not compat.new_proxy_core:
-        c.rfile = io.BytesIO()
-        c.wfile = io.BytesIO()
     return c
 
 
-def tserver_conn() -> compat.Server:
-    c = compat.Server.from_state(dict(
+def tserver_conn() -> context.Server:
+    c = context.Server.from_state(dict(
         id=str(uuid.uuid4()),
         address=("address", 22),
         source_address=("address", 22),

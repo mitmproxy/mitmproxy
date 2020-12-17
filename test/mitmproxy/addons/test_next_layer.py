@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 import pytest
 
 from mitmproxy.addons.next_layer import NextLayer
-from mitmproxy.proxy.protocol.http import HTTPMode
-from mitmproxy.proxy2 import context, layers
+from mitmproxy.proxy.layers.http import HTTPMode
+from mitmproxy.proxy import context, layers
 from mitmproxy.test import taddons
 
 

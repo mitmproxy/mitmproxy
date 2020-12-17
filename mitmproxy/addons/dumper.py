@@ -132,7 +132,7 @@ class Dumper:
         if flow.client_conn:
             client = click.style(
                 strutils.escape_control_characters(
-                    human.format_address(flow.client_conn.address)
+                    human.format_address(flow.client_conn.peername)
                 )
             )
         elif flow.is_replay == "request":
@@ -226,7 +226,7 @@ class Dumper:
             # This aligns the HTTP response code with the HTTP request method:
             # 127.0.0.1:59519: GET http://example.com/
             #               << 304 Not Modified 0b
-            pad = max(0, len(human.format_address(flow.client_conn.address)) - (2 + len(http_version) + len(replay_str)))
+            pad = max(0, len(human.format_address(flow.client_conn.peername)) - (2 + len(http_version) + len(replay_str)))
             arrows = " " * pad + arrows
 
         self.echo(f"{replay}{arrows} {http_version}{code} {reason} {size}")
@@ -310,7 +310,7 @@ class Dumper:
             message = f.messages[-1]
             direction = "->" if message.from_client else "<-"
             self.echo("{client} {direction} tcp {direction} {server}".format(
-                client=human.format_address(f.client_conn.address),
+                client=human.format_address(f.client_conn.peername),
                 server=human.format_address(f.server_conn.address),
                 direction=direction,
             ))

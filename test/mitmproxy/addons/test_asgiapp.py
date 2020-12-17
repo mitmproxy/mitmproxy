@@ -1,21 +1,22 @@
 import asyncio
 import json
-import sys
-from unittest import mock
+
+import pytest
 
 import flask
-import pytest
 from flask import request
 
-from .. import tservers
 from mitmproxy.addons import asgiapp
-from mitmproxy.test import tflow
+from mitmproxy.addons.proxyserver import Proxyserver
+from mitmproxy.addons import next_layer
+from mitmproxy.test import taddons
 
 tapp = flask.Flask(__name__)
 
 
 @tapp.route("/")
 def hello():
+    print("CALLED")
     return "testapp"
 
 
@@ -40,45 +41,49 @@ async def noresponseapp(scope, receive, send):
     return
 
 
-class TestApp(tservers.HTTPProxyTest):
-    def addons(self):
-        return [
-            asgiapp.WSGIApp(tapp, "testapp", 80),
-            asgiapp.ASGIApp(errapp, "errapp", 80),
-            asgiapp.ASGIApp(noresponseapp, "noresponseapp", 80),
-        ]
+@pytest.mark.asyncio
+async def test_asgi_full():
+    ps = Proxyserver()
+    addons = [
+        asgiapp.WSGIApp(tapp, "testapp", 80),
+        asgiapp.ASGIApp(errapp, "errapp", 80),
+        asgiapp.ASGIApp(noresponseapp, "noresponseapp", 80),
+    ]
+    with taddons.context(ps, *addons) as tctx:
+        tctx.master.addons.add(next_layer.NextLayer())
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        ps.running()
+        assert await tctx.master.await_log("Proxy server listening", level="info")
+        proxy_addr = ps.server.sockets[0].getsockname()[:2]
 
-    def test_simple(self):
-        p = self.pathoc()
-        with p.connect():
-            ret = p.request("get:'http://testapp/'")
-        assert b"testapp" in ret.content
+        reader, writer = await asyncio.open_connection(*proxy_addr)
+        req = f"GET http://testapp:80/ HTTP/1.1\r\n\r\n"
+        writer.write(req.encode())
+        header = await reader.readuntil(b"\r\n\r\n")
+        assert header.startswith(b"HTTP/1.1 200 OK")
+        body = await reader.readuntil(b"testapp")
+        assert body == b"testapp"
 
-    def test_parameters(self):
-        p = self.pathoc()
-        with p.connect():
-            ret = p.request("get:'http://testapp/parameters?param1=1&param2=2'")
-        assert b'{"param1": "1", "param2": "2"}' == ret.data.content
+        reader, writer = await asyncio.open_connection(*proxy_addr)
+        req = f"GET http://testapp:80/parameters?param1=1&param2=2 HTTP/1.1\r\n\r\n"
+        writer.write(req.encode())
+        header = await reader.readuntil(b"\r\n\r\n")
+        assert header.startswith(b"HTTP/1.1 200 OK")
+        body = await reader.readuntil(b"}")
+        assert body == b'{"param1": "1", "param2": "2"}'
 
-    def test_app_err(self):
-        p = self.pathoc()
-        with p.connect():
-            ret = p.request("get:'http://errapp/?foo=bar'")
-        assert ret.status_code == 500
-        assert b"ASGI Error" in ret.content
+        reader, writer = await asyncio.open_connection(*proxy_addr)
+        req = f"GET http://errapp:80/?foo=bar HTTP/1.1\r\n\r\n"
+        writer.write(req.encode())
+        header = await reader.readuntil(b"\r\n\r\n")
+        assert header.startswith(b"HTTP/1.1 500")
+        body = await reader.readuntil(b"ASGI Error")
+        assert body == b"ASGI Error"
 
-    def test_app_no_response(self):
-        p = self.pathoc()
-        with p.connect():
-            ret = p.request("get:'http://noresponseapp/'")
-        assert ret.status_code == 500
-        assert b"ASGI Error" in ret.content
-
-    @pytest.mark.skipif(sys.version_info < (3, 8), reason='requires Python 3.8 or higher')
-    def test_app_not_serve_loading_flows(self):
-        with mock.patch('mitmproxy.addons.asgiapp.serve') as mck:
-            flow = tflow.tflow()
-            flow.request.host = "testapp"
-            flow.request.port = 80
-            asyncio.run_coroutine_threadsafe(self.master.load_flow(flow), self.master.channel.loop).result()
-            mck.assert_not_awaited()
+        reader, writer = await asyncio.open_connection(*proxy_addr)
+        req = f"GET http://noresponseapp:80/ HTTP/1.1\r\n\r\n"
+        writer.write(req.encode())
+        header = await reader.readuntil(b"\r\n\r\n")
+        assert header.startswith(b"HTTP/1.1 500")
+        body = await reader.readuntil(b"ASGI Error")
+        assert body == b"ASGI Error"

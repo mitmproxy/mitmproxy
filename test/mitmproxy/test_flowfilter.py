@@ -254,7 +254,7 @@ class TestMatchingHTTPFlow:
         assert not self.q("~src :99", q)
         assert self.q("~src 127.0.0.1:22", q)
 
-        q.client_conn.address = None
+        q.client_conn.peername = None
         assert not self.q('~src address:22', q)
         q.client_conn = None
         assert not self.q('~src address:22', q)

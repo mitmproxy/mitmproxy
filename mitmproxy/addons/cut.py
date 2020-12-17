@@ -45,8 +45,11 @@ def extract(cut: str, f: flow.Flow) -> typing.Union[str, bytes]:
                 return part
             elif isinstance(part, bool):
                 return "true" if part else "false"
-            elif isinstance(part, certs.Cert):
+            elif isinstance(part, certs.Cert):  # pragma: no cover
                 return part.to_pem().decode("ascii")
+            elif isinstance(part, list) and len(part) > 0 and isinstance(part[0], certs.Cert):
+                # TODO: currently this extracts only the very first cert as PEM-encoded string.
+                return part[0].to_pem().decode("ascii")
         current = part
     return str(current or "")
 

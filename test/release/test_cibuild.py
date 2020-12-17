@@ -15,7 +15,7 @@ def test_buildenviron_common():
     be = cibuild.BuildEnviron(
         system="Linux",
         root_dir="/foo",
-        travis_branch="master",
+        github_ref="refs/heads/master",
     )
     assert be.release_dir == os.path.join(be.root_dir, "release")
     assert be.dist_dir == os.path.join(be.root_dir, "release", "dist")
@@ -36,22 +36,12 @@ def test_buildenviron_common():
     with pytest.raises(cibuild.BuildError):
         be.platform_tag
 
-    with pytest.raises(ValueError, match="TRAVIS_TAG"):
-        be = cibuild.BuildEnviron(
-            system="Linux",
-            root_dir="/foo",
-            travis_tag="one",
-            travis_branch="two",
-        )
-
 
 def test_buildenviron_pr():
     # Simulates a PR. We build everything, but don't have access to secret
     # credential env variables.
     be = cibuild.BuildEnviron(
-        travis_tag="",
-        travis_branch="master",
-        travis_pull_request="true",
+        github_event_name="pull_request",
         should_build_wheel=True,
         should_build_pyinstaller=True,
         should_build_docker=True,
@@ -60,24 +50,6 @@ def test_buildenviron_pr():
 
 
 def test_ci_systems():
-    appveyor = cibuild.BuildEnviron(
-        appveyor_pull_request_number="1234",
-        appveyor_repo_branch="foo",
-        appveyor_repo_tag_name="qux",
-    )
-    assert appveyor.is_pull_request
-    assert appveyor.branch == "foo"
-    assert appveyor.tag == "qux"
-
-    travis = cibuild.BuildEnviron(
-        travis_pull_request="1234",
-        travis_branch="foo",
-        travis_tag="foo",
-    )
-    assert travis.is_pull_request
-    assert travis.branch == "foo"
-    assert travis.tag == "foo"
-
     github = cibuild.BuildEnviron(
         github_event_name="pull_request",
         github_ref="refs/heads/master"
@@ -121,8 +93,7 @@ def test_buildenviron_releasetag():
     be = cibuild.BuildEnviron(
         system="Linux",
         root_dir="/foo",
-        travis_tag="v0.0.1",
-        travis_branch="v0.0.1",
+        github_ref="refs/tags/v0.0.1",
         should_build_wheel=True,
         should_build_docker=True,
         should_build_pyinstaller=True,
@@ -131,7 +102,7 @@ def test_buildenviron_releasetag():
         docker_password="bar",
     )
     assert be.tag == "v0.0.1"
-    assert be.branch == "v0.0.1"
+    assert be.branch == ""
     assert be.version == "0.0.1"
     assert be.upload_dir == "0.0.1"
     assert be.docker_tag == "mitmproxy/mitmproxy:0.0.1"
@@ -146,8 +117,7 @@ def test_buildenviron_namedtag():
     be = cibuild.BuildEnviron(
         system="Linux",
         root_dir="/foo",
-        travis_tag="anyname",
-        travis_branch="anyname",
+        github_ref="refs/tags/anyname",
         should_build_wheel=True,
         should_build_docker=True,
         should_build_pyinstaller=True,
@@ -156,7 +126,7 @@ def test_buildenviron_namedtag():
         docker_password="bar",
     )
     assert be.tag == "anyname"
-    assert be.branch == "anyname"
+    assert be.branch == ""
     assert be.version == "anyname"
     assert be.upload_dir == "anyname"
     assert be.docker_tag == "mitmproxy/mitmproxy:anyname"
@@ -171,8 +141,7 @@ def test_buildenviron_dev_branch():
     be = cibuild.BuildEnviron(
         system="Linux",
         root_dir="/foo",
-        travis_tag="",
-        travis_branch="mybranch",
+        github_ref="refs/heads/mybranch",
         should_build_wheel=True,
         should_build_docker=True,
         should_build_pyinstaller=True,
@@ -194,8 +163,7 @@ def test_buildenviron_maintenance_branch():
     be = cibuild.BuildEnviron(
         system="Linux",
         root_dir="/foo",
-        travis_tag="",
-        travis_branch="v0.x",
+        github_ref="refs/heads/v0.x",
         should_build_wheel=True,
         should_build_docker=True,
         should_build_pyinstaller=True,
@@ -216,13 +184,11 @@ def test_buildenviron_osx(tmpdir):
     be = cibuild.BuildEnviron(
         system="Darwin",
         root_dir="/foo",
-        travis_tag="0.0.1",
-        travis_branch="0.0.1",
+        github_ref="refs/tags/v0.0.1",
     )
     assert be.platform_tag == "osx"
     assert be.bdists == {
         "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
-        "pathod": ["pathoc", "pathod"],
     }
     assert be.archive_name("mitmproxy") == "mitmproxy-0.0.1-osx.tar.gz"
 
@@ -235,13 +201,11 @@ def test_buildenviron_windows(tmpdir):
     be = cibuild.BuildEnviron(
         system="Windows",
         root_dir="/foo",
-        travis_tag="v0.0.1",
-        travis_branch="v0.0.1",
+        github_ref="refs/tags/v0.0.1",
     )
     assert be.platform_tag == "windows"
     assert be.bdists == {
         "mitmproxy": ["mitmdump", "mitmweb"],
-        "pathod": ["pathoc", "pathod"],
     }
     assert be.archive_name("mitmproxy") == "mitmproxy-0.0.1-windows.zip"
 
@@ -265,8 +229,7 @@ def test_buildenviron_check_version(version, tag, ok, tmpdir):
 
     be = cibuild.BuildEnviron(
         root_dir=tmpdir,
-        travis_tag=tag,
-        travis_branch=tag or "branch",
+        github_ref=f"refs/tags/{tag}",
     )
     if ok:
         be.check_version()

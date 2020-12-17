@@ -669,7 +669,7 @@ def format_flow(
             focused=focused,
             timestamp_start=f.timestamp_start,
             marked=f.marked,
-            client_address=f.client_conn.address,
+            client_address=f.client_conn.peername,
             server_address=f.server_conn.address,
             total_size=total_size,
             duration=duration,
