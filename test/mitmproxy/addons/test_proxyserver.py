@@ -66,3 +66,17 @@ async def test_start_stop():
             assert state.flows
             assert state.flows[0].request.path == "/hello"
             assert state.flows[0].response.status_code == 204
+
+
+@pytest.mark.asyncio
+async def test_warn_no_nextlayer():
+    """
+    Test that we log an error if the proxy server is started without NextLayer addon.
+    That is a mean trap to fall into when writing end-to-end tests.
+    """
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        ps.running()
+        assert await tctx.master.await_log("Warning: Running proxyserver without nextlayer addon!", level="warn")
+        await ps.shutdown_server()
