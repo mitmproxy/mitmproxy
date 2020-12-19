@@ -1,15 +1,4 @@
-from io import BytesIO
-
-from mitmproxy.net import tcp
 from mitmproxy.net import http
-
-
-def treader(bytes):
-    """
-        Construct a tcp.Read object from bytes.
-    """
-    fp = BytesIO(bytes)
-    return tcp.Reader(fp)
 
 
 def treq(**kwargs) -> http.Request:

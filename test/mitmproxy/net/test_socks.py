@@ -1,9 +1,19 @@
 import ipaddress
 from io import BytesIO
+
 import pytest
 
 from mitmproxy.net import socks
 from mitmproxy.test import tutils
+
+
+# this is a temporary placeholder here, we remove the file-based API when we transition socks proxying to sans-io.
+class tutils:  # noqa
+    @staticmethod
+    def treader(data: bytes):
+        io = BytesIO(data)
+        io.safe_read = io.read
+        return io
 
 
 def test_client_greeting():
