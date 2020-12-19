@@ -39,11 +39,14 @@ class RecordingMaster(mitmproxy.master.Master):
         return False
 
     async def await_log(self, txt, level=None):
+        # start with a sleep(0), which lets all other coroutines advance.
+        # often this is enough to not sleept at all.
+        await asyncio.sleep(0)
         for i in range(20):
             if self.has_log(txt, level):
                 return True
             else:
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.001)
         return False
 
     def clear(self):
