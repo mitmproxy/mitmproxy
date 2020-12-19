@@ -641,6 +641,7 @@ class HttpLayer(layer.Layer):
                 http_proxy = Server(event.via.address)
 
                 if event.via.scheme == "https":
+                    http_proxy.alpn_offers = tls.HTTP_ALPNS
                     http_proxy.sni = event.via.address[0].encode()
                     stack /= tls.ServerTLSLayer(context, http_proxy)
 
