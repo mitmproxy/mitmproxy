@@ -41,6 +41,7 @@ These steps assume you are on the correct branch and have a git remote called `o
   - `./upload-archive.sh v4`. Doing this now already saves you from switching back to an old state on the next release.
 
 ### Website
+ - The website does not need to be updated for patch releases. New versions are automatically picked up once they are on the download server.
  - Update version here:
    https://github.com/mitmproxy/www/blob/master/src/config.toml
  - Update docs menu here:
