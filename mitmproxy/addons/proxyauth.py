@@ -181,13 +181,15 @@ class ProxyAuth:
                         auto_bind=True)
                     self.ldapconn = conn
                     self.ldapserver = server
-                else:
+                elif ":" in ctx.options.proxyauth:
                     parts = ctx.options.proxyauth.split(':')
                     if len(parts) != 2:
                         raise exceptions.OptionsError(
                             "Invalid single-user auth specification."
                         )
                     self.singleuser = parts
+                else:
+                    raise exceptions.OptionsError("Invalid proxyauth specification.")
         if self.enabled():
             if ctx.options.mode == "transparent":
                 raise exceptions.OptionsError(
