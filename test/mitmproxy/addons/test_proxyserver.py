@@ -78,5 +78,6 @@ async def test_warn_no_nextlayer():
     with taddons.context(ps) as tctx:
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
         ps.running()
-        assert await tctx.master.await_log("Warning: Running proxyserver without nextlayer addon!", level="warn")
+        assert await tctx.master.await_log("Proxy server listening at", level="info")
+        assert tctx.master.has_log("Warning: Running proxyserver without nextlayer addon!", level="warn")
         await ps.shutdown_server()
