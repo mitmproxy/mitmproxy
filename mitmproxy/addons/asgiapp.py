@@ -29,7 +29,9 @@ class ASGIApp:
         return bool(
             (flow.request.pretty_host, flow.request.port) == (self.host, self.port)
             and not flow.reply.has_message
-            and not isinstance(flow.reply, DummyReply)  # ignore the HTTP flows of this app loaded from somewhere
+            and not isinstance(
+                flow.reply, DummyReply
+            )  # ignore the HTTP flows of this app loaded from somewhere
         )
 
     def request(self, flow: http.HTTPFlow) -> None:
@@ -54,7 +56,9 @@ HTTP_VERSION_MAP = {
 
 def make_scope(flow: http.HTTPFlow) -> dict:
     # %3F is a quoted question mark
-    quoted_path = urllib.parse.quote_from_bytes(flow.request.data.path).split("%3F", maxsplit=1)
+    quoted_path = urllib.parse.quote_from_bytes(flow.request.data.path).split(
+        "%3F", maxsplit=1
+    )
 
     # (Unicode string) – HTTP request target excluding any query string, with percent-encoded
     # sequences and UTF-8 byte sequences decoded into characters.
@@ -83,7 +87,7 @@ def make_scope(flow: http.HTTPFlow) -> dict:
         "client": flow.client_conn.peername,
         "extensions": {
             "mitmproxy.master": ctx.master,
-        }
+        },
     }
 
 
@@ -109,13 +113,13 @@ async def serve(app, flow: http.HTTPFlow):
             # We really don't expect this to be called a second time, but what to do?
             # We just wait until the request is done before we continue here with sending a disconnect.
             await done.wait()
-            return {
-                "type": "http.disconnect"
-            }
+            return {"type": "http.disconnect"}
 
     async def send(event):
         if event["type"] == "http.response.start":
-            flow.response = http.HTTPResponse.make(event["status"], b"", event.get("headers", []))
+            flow.response = http.HTTPResponse.make(
+                event["status"], b"", event.get("headers", [])
+            )
             flow.response.decode()
         elif event["type"] == "http.response.body":
             flow.response.content += event.get("body", b"")

@@ -11,7 +11,13 @@ import struct
 
 from wsproto.utilities import ACCEPT_GUID
 from wsproto.handshake import WEBSOCKET_VERSION
-from wsproto.frame_protocol import RsvBits, Header, Frame, XorMaskerSimple, XorMaskerNull
+from wsproto.frame_protocol import (
+    RsvBits,
+    Header,
+    Frame,
+    XorMaskerSimple,
+    XorMaskerNull,
+)
 
 from mitmproxy.net import http
 from mitmproxy.utils import bits, strutils
@@ -24,7 +30,7 @@ def read_frame(rfile, parse=True):
     Returns a parsed frame header, parsed frame, and the consumed bytes.
     """
 
-    consumed_bytes = b''
+    consumed_bytes = b""
 
     def consume(len):
         nonlocal consumed_bytes
@@ -46,9 +52,9 @@ def read_frame(rfile, parse=True):
     if length_code <= 125:
         payload_len = length_code
     elif length_code == 126:
-        payload_len, = struct.unpack("!H", consume(2))
+        (payload_len,) = struct.unpack("!H", consume(2))
     else:  # length_code == 127:
-        payload_len, = struct.unpack("!Q", consume(8))
+        (payload_len,) = struct.unpack("!Q", consume(8))
 
     # masking key only present if mask bit set
     if mask_bit == 1:
@@ -72,7 +78,7 @@ def read_frame(rfile, parse=True):
             opcode=opcode,
             payload=masker.process(masked_payload),
             frame_finished=fin,
-            message_finished=fin
+            message_finished=fin,
         )
     else:
         header = None
@@ -92,7 +98,7 @@ def client_handshake_headers(version=None, key=None, protocol=None, extensions=N
     if version is None:
         version = WEBSOCKET_VERSION
     if key is None:
-        key = base64.b64encode(os.urandom(16)).decode('ascii')
+        key = base64.b64encode(os.urandom(16)).decode("ascii")
     h = http.Headers(
         connection="upgrade",
         upgrade="websocket",
@@ -100,9 +106,9 @@ def client_handshake_headers(version=None, key=None, protocol=None, extensions=N
         sec_websocket_key=key,
     )
     if protocol is not None:
-        h['sec-websocket-protocol'] = protocol
+        h["sec-websocket-protocol"] = protocol
     if extensions is not None:
-        h['sec-websocket-extensions'] = extensions
+        h["sec-websocket-extensions"] = extensions
     return h
 
 
@@ -118,22 +124,27 @@ def server_handshake_headers(client_key, protocol=None, extensions=None):
         sec_websocket_accept=create_server_nonce(client_key),
     )
     if protocol is not None:
-        h['sec-websocket-protocol'] = protocol
+        h["sec-websocket-protocol"] = protocol
     if extensions is not None:
-        h['sec-websocket-extensions'] = extensions
+        h["sec-websocket-extensions"] = extensions
     return h
 
 
 def check_handshake(headers):
     return (
-        "upgrade" in headers.get("connection", "").lower() and
-        headers.get("upgrade", "").lower() == "websocket" and
-        (headers.get("sec-websocket-key") is not None or headers.get("sec-websocket-accept") is not None)
+        "upgrade" in headers.get("connection", "").lower()
+        and headers.get("upgrade", "").lower() == "websocket"
+        and (
+            headers.get("sec-websocket-key") is not None
+            or headers.get("sec-websocket-accept") is not None
+        )
     )
 
 
 def create_server_nonce(client_nonce):
-    return base64.b64encode(hashlib.sha1(strutils.always_bytes(client_nonce) + ACCEPT_GUID).digest())
+    return base64.b64encode(
+        hashlib.sha1(strutils.always_bytes(client_nonce) + ACCEPT_GUID).digest()
+    )
 
 
 def check_client_version(headers):

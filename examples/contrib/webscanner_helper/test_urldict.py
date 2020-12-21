@@ -11,11 +11,10 @@ input_file_content_error = f'{{"{url_error}": {content}}}'
 
 
 class TestUrlDict:
-
     def test_urldict_empty(self):
         urldict = URLDict()
         dump = urldict.dumps()
-        assert dump == '{}'
+        assert dump == "{}"
 
     def test_urldict_loads(self):
         urldict = URLDict.loads(input_file_content)

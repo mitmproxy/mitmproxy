@@ -4,7 +4,11 @@ from typing import Callable, Optional, Union, cast
 
 from mitmproxy.coretypes import serializable
 from mitmproxy.net.http import encoding
-from mitmproxy.net.http.headers import Headers, assemble_content_type, parse_content_type
+from mitmproxy.net.http.headers import (
+    Headers,
+    assemble_content_type,
+    parse_content_type,
+)
 from mitmproxy.utils import strutils, typecheck
 
 
@@ -19,6 +23,7 @@ class MessageData(serializable.Serializable):
 
     # noinspection PyUnreachableCode
     if __debug__:
+
         def __post_init__(self):
             for field in fields(self):
                 val = getattr(self, field.name)
@@ -68,7 +73,9 @@ class Message(serializable.Serializable):
 
     @http_version.setter
     def http_version(self, http_version: Union[str, bytes]) -> None:
-        self.data.http_version = strutils.always_bytes(http_version, "utf-8", "surrogateescape")
+        self.data.http_version = strutils.always_bytes(
+            http_version, "utf-8", "surrogateescape"
+        )
 
     @property
     def is_http10(self) -> bool:
@@ -245,7 +252,11 @@ class Message(serializable.Serializable):
             self.content = encoding.encode(text, enc)
         except ValueError:
             # Fall back to UTF-8 and update the content-type header.
-            ct = parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
+            ct = parse_content_type(self.headers.get("content-type", "")) or (
+                "text",
+                "plain",
+                {},
+            )
             ct[2]["charset"] = "utf-8"
             self.headers["content-type"] = assemble_content_type(*ct)
             enc = "utf8"

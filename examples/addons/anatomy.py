@@ -15,6 +15,4 @@ class Counter:
         ctx.log.info("We've seen %d flows" % self.num)
 
 
-addons = [
-    Counter()
-]
+addons = [Counter()]

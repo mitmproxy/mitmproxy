@@ -2,11 +2,10 @@ import urwid
 
 from mitmproxy.tools.console import common
 from mitmproxy.tools.console import layoutwidget
-import mitmproxy.tools.console.master # noqa
+import mitmproxy.tools.console.master  # noqa
 
 
 class FlowItem(urwid.WidgetWrap):
-
     def __init__(self, master, flow):
         self.master, self.flow = master, flow
         w = self.get_text()
@@ -15,7 +14,7 @@ class FlowItem(urwid.WidgetWrap):
     def get_text(self):
         cols, _ = self.master.ui.get_cols_rows()
         layout = self.master.options.console_flowlist_layout
-        if layout == "list" or (layout == 'default' and cols < 100):
+        if layout == "list" or (layout == "default" and cols < 100):
             render_mode = common.RenderMode.LIST
         else:
             render_mode = common.RenderMode.TABLE
@@ -40,7 +39,6 @@ class FlowItem(urwid.WidgetWrap):
 
 
 class FlowListWalker(urwid.ListWalker):
-
     def __init__(self, master):
         self.master = master
 
@@ -84,14 +82,11 @@ class FlowListBox(urwid.ListBox, layoutwidget.LayoutWidget):
     title = "Flows"
     keyctx = "flowlist"
 
-    def __init__(
-        self, master: "mitmproxy.tools.console.master.ConsoleMaster"
-    ) -> None:
+    def __init__(self, master: "mitmproxy.tools.console.master.ConsoleMaster") -> None:
         self.master: "mitmproxy.tools.console.master.ConsoleMaster" = master
         super().__init__(FlowListWalker(master))
         self.master.options.subscribe(
-            self.set_flowlist_layout,
-            ["console_flowlist_layout"]
+            self.set_flowlist_layout, ["console_flowlist_layout"]
         )
 
     def keypress(self, size, key):

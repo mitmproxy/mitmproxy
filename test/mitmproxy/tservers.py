@@ -8,7 +8,6 @@ from mitmproxy.test import tutils
 
 
 class MasterTest:
-
     async def cycle(self, master, content):
         f = tflow.tflow(req=tutils.treq(content=content))
         layer = mock.Mock("mitmproxy.proxy.protocol.base.Layer")

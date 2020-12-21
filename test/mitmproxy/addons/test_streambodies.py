@@ -9,8 +9,8 @@ def test_simple():
     sa = streambodies.StreamBodies()
     with taddons.context(sa) as tctx:
         with pytest.raises(exceptions.OptionsError):
-            tctx.configure(sa, stream_large_bodies = "invalid")
-        tctx.configure(sa, stream_large_bodies = "10")
+            tctx.configure(sa, stream_large_bodies="invalid")
+        tctx.configure(sa, stream_large_bodies="10")
 
         f = tflow.tflow()
         f.request.content = b""
@@ -30,7 +30,7 @@ def test_simple():
         f.response.headers["content-length"] = "invalid"
         tctx.cycle(sa, f)
 
-        tctx.configure(sa, stream_websockets = True)
+        tctx.configure(sa, stream_websockets=True)
         f = tflow.twebsocketflow()
         assert not f.stream
         sa.websocket_start(f)

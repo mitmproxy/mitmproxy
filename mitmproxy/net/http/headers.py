@@ -120,10 +120,7 @@ class Headers(multidict.MultiDict):
         See also: https://tools.ietf.org/html/rfc7230#section-3.2.2
         """
         name = _always_bytes(name)
-        return [
-            _native(x) for x in
-            super().get_all(name)
-        ]
+        return [_native(x) for x in super().get_all(name)]
 
     def set_all(self, name, values):
         """
@@ -141,27 +138,24 @@ class Headers(multidict.MultiDict):
 
     def items(self, multi=False):
         if multi:
-            return (
-                (_native(k), _native(v))
-                for k, v in self.fields
-            )
+            return ((_native(k), _native(v)) for k, v in self.fields)
         else:
             return super().items()
 
 
 def parse_content_type(c: str) -> Optional[Tuple[str, str, Dict[str, str]]]:
     """
-        A simple parser for content-type values. Returns a (type, subtype,
-        parameters) tuple, where type and subtype are strings, and parameters
-        is a dict. If the string could not be parsed, return None.
+    A simple parser for content-type values. Returns a (type, subtype,
+    parameters) tuple, where type and subtype are strings, and parameters
+    is a dict. If the string could not be parsed, return None.
 
-        E.g. the following string:
+    E.g. the following string:
 
-            text/html; charset=UTF-8
+        text/html; charset=UTF-8
 
-        Returns:
+    Returns:
 
-            ("text", "html", {"charset": "UTF-8"})
+        ("text", "html", {"charset": "UTF-8"})
     """
     parts = c.split(";", 1)
     ts = parts[0].split("/", 1)
@@ -179,10 +173,5 @@ def parse_content_type(c: str) -> Optional[Tuple[str, str, Dict[str, str]]]:
 def assemble_content_type(type, subtype, parameters):
     if not parameters:
         return f"{type}/{subtype}"
-    params = "; ".join(
-        f"{k}={v}"
-        for k, v in parameters.items()
-    )
-    return "{}/{}; {}".format(
-        type, subtype, params
-    )
+    params = "; ".join(f"{k}={v}" for k, v in parameters.items())
+    return "{}/{}; {}".format(type, subtype, params)

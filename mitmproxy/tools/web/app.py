@@ -51,7 +51,9 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             # ideally idna, but we don't want errors
             "sni": always_str(flow.client_conn.sni, "ascii", "backslashreplace"),
             "cipher_name": flow.client_conn.cipher_name,
-            "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
+            "alpn_proto_negotiated": always_str(
+                flow.client_conn.alpn, "ascii", "backslashreplace"
+            ),
             "tls_version": flow.client_conn.tls_version,
         }
 
@@ -62,7 +64,9 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             "ip_address": flow.server_conn.peername,
             "source_address": flow.server_conn.sockname,
             "tls_established": flow.server_conn.tls_established,
-            "alpn_proto_negotiated": always_str(flow.server_conn.alpn, "ascii", "backslashreplace"),
+            "alpn_proto_negotiated": always_str(
+                flow.server_conn.alpn, "ascii", "backslashreplace"
+            ),
             "tls_version": flow.server_conn.tls_version,
             "timestamp_start": flow.server_conn.timestamp_start,
             "timestamp_tcp_setup": flow.server_conn.timestamp_tcp_setup,
@@ -73,7 +77,9 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             f["server_conn"] = None
         else:
             # ideally idna, but we don't want errors
-            f["server_conn"] = always_str(flow.server_conn.sni, "ascii", "backslashreplace")
+            f["server_conn"] = always_str(
+                flow.server_conn.sni, "ascii", "backslashreplace"
+            )
     if flow.error:
         f["error"] = flow.error.get_state()
 
@@ -99,7 +105,8 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "contentHash": content_hash,
                 "timestamp_start": flow.request.timestamp_start,
                 "timestamp_end": flow.request.timestamp_end,
-                "is_replay": flow.is_replay == "request",  # TODO: remove, use flow.is_replay instead.
+                "is_replay": flow.is_replay
+                == "request",  # TODO: remove, use flow.is_replay instead.
                 "pretty_host": flow.request.pretty_host,
             }
         if flow.response:
@@ -118,10 +125,13 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
                 "contentHash": content_hash,
                 "timestamp_start": flow.response.timestamp_start,
                 "timestamp_end": flow.response.timestamp_end,
-                "is_replay": flow.is_replay == "response",  # TODO: remove, use flow.is_replay instead.
+                "is_replay": flow.is_replay
+                == "response",  # TODO: remove, use flow.is_replay instead.
             }
             if flow.response.data.trailers:
-                f["response"]["trailers"] = tuple(flow.response.data.trailers.items(True))
+                f["response"]["trailers"] = tuple(
+                    flow.response.data.trailers.items(True)
+                )
 
     return f
 
@@ -130,7 +140,7 @@ def logentry_to_json(e: log.LogEntry) -> dict:
     return {
         "id": id(e),  # we just need some kind of id.
         "message": e.msg,
-        "level": e.level
+        "level": e.level,
     }
 
 
@@ -159,12 +169,14 @@ class RequestHandler(tornado.web.RequestHandler):
             "Content-Security-Policy",
             "default-src 'self'; "
             "connect-src 'self' ws:; "
-            "style-src   'self' 'unsafe-inline'"
+            "style-src   'self' 'unsafe-inline'",
         )
 
     @property
     def json(self):
-        if not self.request.headers.get("Content-Type", "").startswith("application/json"):
+        if not self.request.headers.get("Content-Type", "").startswith(
+            "application/json"
+        ):
             raise APIError(400, "Invalid Content-Type, expected application/json.")
         try:
             return json.loads(self.request.body.decode())
@@ -216,9 +228,7 @@ class IndexHandler(RequestHandler):
 
 class FilterHelp(RequestHandler):
     def get(self):
-        self.write(dict(
-            commands=flowfilter.help
-        ))
+        self.write(dict(commands=flowfilter.help))
 
 
 class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
@@ -233,7 +243,9 @@ class WebSocketEventBroadcaster(tornado.websocket.WebSocketHandler):
 
     @classmethod
     def broadcast(cls, **kwargs):
-        message = json.dumps(kwargs, ensure_ascii=False).encode("utf8", "surrogateescape")
+        message = json.dumps(kwargs, ensure_ascii=False).encode(
+            "utf8", "surrogateescape"
+        )
 
         for conn in cls.connections:
             try:
@@ -431,15 +443,12 @@ class FlowContentView(RequestHandler):
         message = getattr(self.flow, message)
 
         description, lines, error = contentviews.get_message_content_view(
-            content_view.replace('_', ' '), message, self.flow
+            content_view.replace("_", " "), message, self.flow
         )
         #        if error:
         #           add event log
 
-        self.write(dict(
-            lines=list(lines),
-            description=description
-        ))
+        self.write(dict(lines=list(lines), description=description))
 
 
 class Events(RequestHandler):
@@ -449,33 +458,44 @@ class Events(RequestHandler):
 
 class Settings(RequestHandler):
     def get(self):
-        self.write(dict(
-            version=version.VERSION,
-            mode=str(self.master.options.mode),
-            intercept_active=self.master.options.intercept_active,
-            intercept=self.master.options.intercept,
-            showhost=self.master.options.showhost,
-            upstream_cert=self.master.options.upstream_cert,
-            rawtcp=self.master.options.rawtcp,
-            http2=self.master.options.http2,
-            websocket=self.master.options.websocket,
-            anticache=self.master.options.anticache,
-            anticomp=self.master.options.anticomp,
-            stickyauth=self.master.options.stickyauth,
-            stickycookie=self.master.options.stickycookie,
-            stream=self.master.options.stream_large_bodies,
-            contentViews=[v.name.replace(' ', '_') for v in contentviews.views],
-            listen_host=self.master.options.listen_host,
-            listen_port=self.master.options.listen_port,
-            server=self.master.options.server,
-        ))
+        self.write(
+            dict(
+                version=version.VERSION,
+                mode=str(self.master.options.mode),
+                intercept_active=self.master.options.intercept_active,
+                intercept=self.master.options.intercept,
+                showhost=self.master.options.showhost,
+                upstream_cert=self.master.options.upstream_cert,
+                rawtcp=self.master.options.rawtcp,
+                http2=self.master.options.http2,
+                websocket=self.master.options.websocket,
+                anticache=self.master.options.anticache,
+                anticomp=self.master.options.anticomp,
+                stickyauth=self.master.options.stickyauth,
+                stickycookie=self.master.options.stickycookie,
+                stream=self.master.options.stream_large_bodies,
+                contentViews=[v.name.replace(" ", "_") for v in contentviews.views],
+                listen_host=self.master.options.listen_host,
+                listen_port=self.master.options.listen_port,
+                server=self.master.options.server,
+            )
+        )
 
     def put(self):
         update = self.json
         allowed_options = {
-            "intercept", "showhost", "upstream_cert", "ssl_insecure",
-            "rawtcp", "http2", "websocket", "anticache", "anticomp",
-            "stickycookie", "stickyauth", "stream_large_bodies"
+            "intercept",
+            "showhost",
+            "upstream_cert",
+            "ssl_insecure",
+            "rawtcp",
+            "http2",
+            "websocket",
+            "anticache",
+            "anticomp",
+            "stickycookie",
+            "stickyauth",
+            "stream_large_bodies",
         }
         for k in update:
             if k not in allowed_options:
@@ -509,14 +529,16 @@ class DnsRebind(RequestHandler):
         raise tornado.web.HTTPError(
             403,
             reason="To protect against DNS rebinding, mitmweb can only be accessed by IP at the moment. "
-                   "(https://github.com/mitmproxy/mitmproxy/issues/3234)"
+            "(https://github.com/mitmproxy/mitmproxy/issues/3234)",
         )
 
 
 class Application(tornado.web.Application):
     master: "mitmproxy.tools.web.master.WebMaster"
 
-    def __init__(self, master: "mitmproxy.tools.web.master.WebMaster", debug: bool) -> None:
+    def __init__(
+        self, master: "mitmproxy.tools.web.master.WebMaster", debug: bool
+    ) -> None:
         self.master = master
         super().__init__(
             default_host="dns-rebind-protection",
@@ -531,7 +553,7 @@ class Application(tornado.web.Application):
         self.add_handlers("dns-rebind-protection", [(r"/.*", DnsRebind)])
         self.add_handlers(
             # make mitmweb accessible by IP only to prevent DNS rebinding.
-            r'^(localhost|[0-9.]+|\[[0-9a-fA-F:]+\])$',
+            r"^(localhost|[0-9.]+|\[[0-9a-fA-F:]+\])$",
             [
                 (r"/", IndexHandler),
                 (r"/filter-help(?:\.json)?", FilterHelp),
@@ -547,13 +569,17 @@ class Application(tornado.web.Application):
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data", FlowContent),
+                (
+                    r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data",
+                    FlowContent,
+                ),
                 (
                     r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",
-                    FlowContentView),
+                    FlowContentView,
+                ),
                 (r"/settings(?:\.json)?", Settings),
                 (r"/clear", ClearAll),
                 (r"/options(?:\.json)?", Options),
-                (r"/options/save", SaveOptions)
-            ]
+                (r"/options/save", SaveOptions),
+            ],
         )

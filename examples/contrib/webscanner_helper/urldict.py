@@ -77,7 +77,7 @@ class URLDict(MutableMapping):
     def _dump(self, value_dumper: Callable = f_id) -> Dict:
         dumped: Dict[typing.Union[flowfilter.TFilter, str], Any] = {}
         for fltr, value in self.store.items():
-            if hasattr(fltr, 'pattern'):
+            if hasattr(fltr, "pattern"):
                 # cast necessary for mypy
                 dumped[typing.cast(Any, fltr).pattern] = value_dumper(value)
             else:

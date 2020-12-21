@@ -18,14 +18,14 @@ cookie_key_name = {
     "expires": "Expires",
     "domain": "Domain",
     "is_http_only": "HttpOnly",
-    "is_secure": "Secure"
+    "is_secure": "Secure",
 }
 
 
 def randomString(string_length=10):
     """Generate a random string of fixed length """
     letters = string.ascii_lowercase
-    return ''.join(random.choice(letters) for i in range(string_length))
+    return "".join(random.choice(letters) for i in range(string_length))
 
 
 class AuthorizationOracle(abc.ABC):
@@ -41,7 +41,7 @@ class AuthorizationOracle(abc.ABC):
 
 
 class SeleniumAddon:
-    """ This Addon can be used in combination with web application scanners in order to help them to authenticate
+    """This Addon can be used in combination with web application scanners in order to help them to authenticate
     against a web application.
 
     Since the authentication is highly dependant on the web application, this add-on includes the abstract method
@@ -50,8 +50,7 @@ class SeleniumAddon:
     application. In addition, an authentication oracle which inherits from AuthorizationOracle should be created.
     """
 
-    def __init__(self, fltr: str, domain: str,
-                 auth_oracle: AuthorizationOracle):
+    def __init__(self, fltr: str, domain: str, auth_oracle: AuthorizationOracle):
         self.filter = flowfilter.parse(fltr)
         self.auth_oracle = auth_oracle
         self.domain = domain
@@ -62,9 +61,8 @@ class SeleniumAddon:
         options.headless = True
 
         profile = webdriver.FirefoxProfile()
-        profile.set_preference('network.proxy.type', 0)
-        self.browser = webdriver.Firefox(firefox_profile=profile,
-                                         options=options)
+        profile.set_preference("network.proxy.type", 0)
+        self.browser = webdriver.Firefox(firefox_profile=profile, options=options)
         self.cookies: List[Dict[str, str]] = []
 
     def _login(self, flow):
@@ -76,7 +74,9 @@ class SeleniumAddon:
     def request(self, flow: mitmproxy.http.HTTPFlow):
         if flow.request.is_replay:
             logger.warning("Caught replayed request: " + str(flow))
-        if (not self.filter or self.filter(flow)) and self.auth_oracle.is_unauthorized_request(flow):
+        if (
+            not self.filter or self.filter(flow)
+        ) and self.auth_oracle.is_unauthorized_request(flow):
             logger.debug("unauthorized request detected, perform login")
             self._login(flow)
 
@@ -88,7 +88,7 @@ class SeleniumAddon:
             if self.auth_oracle.is_unauthorized_response(flow):
                 self._login(flow)
                 new_flow = flow.copy()
-                if master and hasattr(master, 'commands'):
+                if master and hasattr(master, "commands"):
                     # cast necessary for mypy
                     cast(Any, master).commands.call("replay.client", [new_flow])
                     count = 0
@@ -99,7 +99,9 @@ class SeleniumAddon:
                     if new_flow.response:
                         flow.response = new_flow.response
                 else:
-                    logger.warning("Could not call 'replay.client' command since master was not initialized yet.")
+                    logger.warning(
+                        "Could not call 'replay.client' command since master was not initialized yet."
+                    )
 
             if self.set_cookies and flow.response:
                 logger.debug("set set-cookie header for response")
@@ -124,7 +126,8 @@ class SeleniumAddon:
     def _set_request_cookies(self, flow: mitmproxy.http.HTTPFlow):
         if self.cookies:
             cookies = "; ".join(
-                map(lambda c: f"{c['name']}={c['value']}", self.cookies))
+                map(lambda c: f"{c['name']}={c['value']}", self.cookies)
+            )
             flow.request.headers["cookie"] = cookies
 
     @abc.abstractmethod

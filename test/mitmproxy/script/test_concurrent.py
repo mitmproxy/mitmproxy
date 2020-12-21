@@ -18,9 +18,7 @@ class TestConcurrent:
     def test_concurrent(self, tdata):
         with taddons.context() as tctx:
             sc = tctx.script(
-                tdata.path(
-                    "mitmproxy/data/addonscripts/concurrent_decorator.py"
-                )
+                tdata.path("mitmproxy/data/addonscripts/concurrent_decorator.py")
             )
             f1, f2 = tflow.tflow(), tflow.tflow()
             tctx.cycle(sc, f1)
@@ -35,18 +33,14 @@ class TestConcurrent:
     async def test_concurrent_err(self, tdata):
         with taddons.context() as tctx:
             tctx.script(
-                tdata.path(
-                    "mitmproxy/data/addonscripts/concurrent_decorator_err.py"
-                )
+                tdata.path("mitmproxy/data/addonscripts/concurrent_decorator_err.py")
             )
             assert await tctx.master.await_log("decorator not supported")
 
     def test_concurrent_class(self, tdata):
         with taddons.context() as tctx:
             sc = tctx.script(
-                tdata.path(
-                    "mitmproxy/data/addonscripts/concurrent_decorator_class.py"
-                )
+                tdata.path("mitmproxy/data/addonscripts/concurrent_decorator_class.py")
             )
             f1, f2 = tflow.tflow(), tflow.tflow()
             tctx.cycle(sc, f1)

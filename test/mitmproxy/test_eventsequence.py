@@ -4,12 +4,15 @@ from mitmproxy import eventsequence
 from mitmproxy.test import tflow
 
 
-@pytest.mark.parametrize("resp, err", [
-    (False, False),
-    (True, False),
-    (False, True),
-    (True, True),
-])
+@pytest.mark.parametrize(
+    "resp, err",
+    [
+        (False, False),
+        (True, False),
+        (False, True),
+        (True, True),
+    ],
+)
 def test_http_flow(resp, err):
     f = tflow.tflow(resp=resp, err=err)
     i = eventsequence.iterate(f)

@@ -12,9 +12,9 @@ from mitmproxy.net.http import url
 
 def get_header_tokens(headers, key):
     """
-        Retrieve all tokens for a header key. A number of different headers
-        follow a pattern where each header line can containe comma-separated
-        tokens, and headers can be set multiple times.
+    Retrieve all tokens for a header key. A number of different headers
+    follow a pattern where each header line can containe comma-separated
+    tokens, and headers can be set multiple times.
     """
     if key not in headers:
         return []
@@ -25,7 +25,9 @@ def get_header_tokens(headers, key):
 def read_request(rfile, body_size_limit=None):
     request = read_request_head(rfile)
     expected_body_size = expected_http_body_size(request)
-    request.data.content = b"".join(read_body(rfile, expected_body_size, limit=body_size_limit))
+    request.data.content = b"".join(
+        read_body(rfile, expected_body_size, limit=body_size_limit)
+    )
     request.timestamp_end = time.time()
     return request
 
@@ -49,7 +51,9 @@ def read_request_head(rfile):
     if hasattr(rfile, "reset_timestamps"):
         rfile.reset_timestamps()
 
-    host, port, method, scheme, authority, path, http_version = _read_request_line(rfile)
+    host, port, method, scheme, authority, path, http_version = _read_request_line(
+        rfile
+    )
     headers = _read_headers(rfile)
 
     if hasattr(rfile, "first_byte_timestamp"):
@@ -57,14 +61,27 @@ def read_request_head(rfile):
         timestamp_start = rfile.first_byte_timestamp
 
     return request.Request(
-        host, port, method, scheme, authority, path, http_version, headers, None, None, timestamp_start, None
+        host,
+        port,
+        method,
+        scheme,
+        authority,
+        path,
+        http_version,
+        headers,
+        None,
+        None,
+        timestamp_start,
+        None,
     )
 
 
 def read_response(rfile, request, body_size_limit=None):
     response = read_response_head(rfile)
     expected_body_size = expected_http_body_size(request, response)
-    response.data.content = b"".join(read_body(rfile, expected_body_size, body_size_limit))
+    response.data.content = b"".join(
+        read_body(rfile, expected_body_size, body_size_limit)
+    )
     response.timestamp_end = time.time()
     return response
 
@@ -96,27 +113,29 @@ def read_response_head(rfile):
         # more accurate timestamp_start
         timestamp_start = rfile.first_byte_timestamp
 
-    return response.Response(http_version, status_code, message, headers, None, None, timestamp_start, None)
+    return response.Response(
+        http_version, status_code, message, headers, None, None, timestamp_start, None
+    )
 
 
 def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):
     """
-        Read an HTTP message body
+    Read an HTTP message body
 
-        Args:
-            rfile: The input stream
-            expected_size: The expected body size (see :py:meth:`expected_body_size`)
-            limit: Maximum body size
-            max_chunk_size: Maximium chunk size that gets yielded
+    Args:
+        rfile: The input stream
+        expected_size: The expected body size (see :py:meth:`expected_body_size`)
+        limit: Maximum body size
+        max_chunk_size: Maximium chunk size that gets yielded
 
-        Returns:
-            A generator that yields byte chunks of the content.
+    Returns:
+        A generator that yields byte chunks of the content.
 
-        Raises:
-            exceptions.HttpException, if an error occurs
+    Raises:
+        exceptions.HttpException, if an error occurs
 
-        Caveats:
-            max_chunk_size is not considered if the transfer encoding is chunked.
+    Caveats:
+        max_chunk_size is not considered if the transfer encoding is chunked.
     """
     if not limit or limit < 0:
         limit = sys.maxsize
@@ -129,7 +148,9 @@ def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):
         if limit is not None and expected_size > limit:
             raise exceptions.HttpException(
                 "HTTP Body too large. "
-                "Limit is {}, content length was advertised as {}".format(limit, expected_size)
+                "Limit is {}, content length was advertised as {}".format(
+                    limit, expected_size
+                )
             )
         bytes_left = expected_size
         while bytes_left:
@@ -155,10 +176,10 @@ def read_body(rfile, expected_size, limit=None, max_chunk_size=4096):
 
 def connection_close(http_version, headers):
     """
-        Checks the message to see if the client connection should be closed
-        according to RFC 2616 Section 8.1.
-        If we don't have a Connection header, HTTP 1.1 connections are assumed
-        to be persistent.
+    Checks the message to see if the client connection should be closed
+    according to RFC 2616 Section 8.1.
+    If we don't have a Connection header, HTTP 1.1 connections are assumed
+    to be persistent.
     """
     if "connection" in headers:
         tokens = get_header_tokens(headers, "connection")
@@ -168,28 +189,30 @@ def connection_close(http_version, headers):
             return False
 
     return http_version not in (
-        "HTTP/1.1", b"HTTP/1.1",
-        "HTTP/2.0", b"HTTP/2.0",
+        "HTTP/1.1",
+        b"HTTP/1.1",
+        "HTTP/2.0",
+        b"HTTP/2.0",
     )
 
 
 def expected_http_body_size(
-        request: request.Request,
-        response: typing.Optional[response.Response] = None,
-        expect_continue_as_0: bool = True
+    request: request.Request,
+    response: typing.Optional[response.Response] = None,
+    expect_continue_as_0: bool = True,
 ):
     """
-        Args:
-            - expect_continue_as_0: If true, incorrectly predict a body size of 0 for requests which are waiting
-              for a 100 Continue response.
-        Returns:
-            The expected body length:
-            - a positive integer, if the size is known in advance
-            - None, if the size in unknown in advance (chunked encoding)
-            - -1, if all data should be read until end of stream.
+    Args:
+        - expect_continue_as_0: If true, incorrectly predict a body size of 0 for requests which are waiting
+          for a 100 Continue response.
+    Returns:
+        The expected body length:
+        - a positive integer, if the size is known in advance
+        - None, if the size in unknown in advance (chunked encoding)
+        - -1, if all data should be read until end of stream.
 
-        Raises:
-            exceptions.HttpSyntaxException, if the content length header is invalid
+    Raises:
+        exceptions.HttpSyntaxException, if the content length header is invalid
     """
     # Determine response size according to
     # http://tools.ietf.org/html/rfc7230#section-3.3
@@ -215,7 +238,9 @@ def expected_http_body_size(
             sizes = headers.get_all("content-length")
             different_content_length_headers = any(x != sizes[0] for x in sizes)
             if different_content_length_headers:
-                raise exceptions.HttpSyntaxException("Conflicting Content Length Headers")
+                raise exceptions.HttpSyntaxException(
+                    "Conflicting Content Length Headers"
+                )
             size = int(sizes[0])
             if size < 0:
                 raise ValueError()
@@ -305,14 +330,14 @@ def _check_http_version(http_version):
 
 def _read_headers(rfile):
     """
-        Read a set of headers.
-        Stop once a blank line is reached.
+    Read a set of headers.
+    Stop once a blank line is reached.
 
-        Returns:
-            A headers object
+    Returns:
+        A headers object
 
-        Raises:
-            exceptions.HttpSyntaxException
+    Raises:
+        exceptions.HttpSyntaxException
     """
     ret = []
     while True:
@@ -324,7 +349,7 @@ def _read_headers(rfile):
             if not ret:
                 raise exceptions.HttpSyntaxException("Invalid headers")
             # continued header
-            ret[-1] = (ret[-1][0], ret[-1][1] + b'\r\n ' + line.strip())
+            ret[-1] = (ret[-1][0], ret[-1][1] + b"\r\n " + line.strip())
         else:
             try:
                 name, value = line.split(b":", 1)
@@ -356,7 +381,9 @@ def _read_chunked(rfile, limit=sys.maxsize):
             try:
                 length = int(line, 16)
             except ValueError:
-                raise exceptions.HttpSyntaxException(f"Invalid chunked encoding length: {line}")
+                raise exceptions.HttpSyntaxException(
+                    f"Invalid chunked encoding length: {line}"
+                )
             total += length
             if total > limit:
                 raise exceptions.HttpException(

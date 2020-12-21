@@ -26,18 +26,19 @@ class Response(message.Message):
     """
     An HTTP response.
     """
+
     data: ResponseData
 
     def __init__(
-            self,
-            http_version: bytes,
-            status_code: int,
-            reason: bytes,
-            headers: Union[Headers, Tuple[Tuple[bytes, bytes], ...]],
-            content: Optional[bytes],
-            trailers: Union[None, Headers, Tuple[Tuple[bytes, bytes], ...]],
-            timestamp_start: float,
-            timestamp_end: Optional[float],
+        self,
+        http_version: bytes,
+        status_code: int,
+        reason: bytes,
+        headers: Union[Headers, Tuple[Tuple[bytes, bytes], ...]],
+        content: Optional[bytes],
+        trailers: Union[None, Headers, Tuple[Tuple[bytes, bytes], ...]],
+        timestamp_start: float,
+        timestamp_end: Optional[float],
     ):
         # auto-convert invalid types to retain compatibility with older code.
         if isinstance(http_version, str):
@@ -46,7 +47,9 @@ class Response(message.Message):
             reason = reason.encode("ascii", "strict")
 
         if isinstance(content, str):
-            raise ValueError("Content must be bytes, not {}".format(type(content).__name__))
+            raise ValueError(
+                "Content must be bytes, not {}".format(type(content).__name__)
+            )
         if not isinstance(headers, Headers):
             headers = Headers(headers)
         if trailers is not None and not isinstance(trailers, Headers):
@@ -74,10 +77,12 @@ class Response(message.Message):
 
     @classmethod
     def make(
-            cls,
-            status_code: int = 200,
-            content: Union[bytes, str] = b"",
-            headers: Union[Headers, Mapping[str, Union[str, bytes]], Iterable[Tuple[bytes, bytes]]] = ()
+        cls,
+        status_code: int = 200,
+        content: Union[bytes, str] = b"",
+        headers: Union[
+            Headers, Mapping[str, Union[str, bytes]], Iterable[Tuple[bytes, bytes]]
+        ] = (),
     ) -> "Response":
         """
         Simplified API for creating response objects.
@@ -86,16 +91,20 @@ class Response(message.Message):
             headers = headers
         elif isinstance(headers, dict):
             headers = Headers(
-                (always_bytes(k, "utf-8", "surrogateescape"),
-                 always_bytes(v, "utf-8", "surrogateescape"))
+                (
+                    always_bytes(k, "utf-8", "surrogateescape"),
+                    always_bytes(v, "utf-8", "surrogateescape"),
+                )
                 for k, v in headers.items()
             )
         elif isinstance(headers, Iterable):
             headers = Headers(headers)
         else:
-            raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
-                type(headers).__name__
-            ))
+            raise TypeError(
+                "Expected headers to be an iterable or dict, but is {}.".format(
+                    type(headers).__name__
+                )
+            )
 
         resp = cls(
             b"HTTP/1.1",
@@ -114,7 +123,9 @@ class Response(message.Message):
         elif isinstance(content, str):
             resp.text = content
         else:
-            raise TypeError(f"Expected content to be str or bytes, but is {type(content).__name__}.")
+            raise TypeError(
+                f"Expected content to be str or bytes, but is {type(content).__name__}."
+            )
 
         return resp
 
@@ -145,10 +156,7 @@ class Response(message.Message):
     def _get_cookies(self):
         h = self.headers.get_all("set-cookie")
         all_cookies = cookies.parse_set_cookie_headers(h)
-        return tuple(
-            (name, (value, attrs))
-            for name, value, attrs in all_cookies
-        )
+        return tuple((name, (value, attrs)) for name, value, attrs in all_cookies)
 
     def _set_cookies(self, value):
         cookie_headers = []
@@ -169,10 +177,7 @@ class Response(message.Message):
         Caveats:
             Updating the attr
         """
-        return multidict.MultiDictView(
-            self._get_cookies,
-            self._set_cookies
-        )
+        return multidict.MultiDictView(self._get_cookies, self._set_cookies)
 
     @cookies.setter
     def cookies(self, value):

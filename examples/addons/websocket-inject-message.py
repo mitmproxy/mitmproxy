@@ -14,7 +14,7 @@ class InjectWebSocketMessage:
         i = 0
         while not flow.ended and not flow.error:
             await asyncio.sleep(5)
-            flow.inject_message(flow.client_conn, f'This is the #{i} injected message!')
+            flow.inject_message(flow.client_conn, f"This is the #{i} injected message!")
             i += 1
 
     def websocket_start(self, flow):

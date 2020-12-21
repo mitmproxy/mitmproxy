@@ -32,7 +32,11 @@ def alpn_select_callback(conn: SSL.Connection, options: List[bytes]):
     if server_alpn and server_alpn in options:
         return server_alpn
     http_alpns = tls.HTTP_ALPNS if http2 else tls.HTTP1_ALPNS
-    for alpn in options:  # client sends in order of preference, so we are nice and respect that.
+    for (
+        alpn
+    ) in (
+        options
+    ):  # client sends in order of preference, so we are nice and respect that.
         if alpn in http_alpns:
             return alpn
     else:
@@ -43,6 +47,7 @@ class TlsConfig:
     """
     This addon supplies the proxy core with the desired OpenSSL connection objects to negotiate TLS.
     """
+
     certstore: certs.CertStore = None  # type: ignore
 
     # TODO: We should support configuring TLS 1.3 cipher suites (https://github.com/mitmproxy/mitmproxy/issues/4260)
@@ -61,7 +66,9 @@ class TlsConfig:
     #  - ssl_verify_upstream_trusted_ca
     #  - ssl_verify_upstream_trusted_confdir
 
-    def get_cert(self, conn_context: context.Context) -> Tuple[certs.Cert, SSL.PKey, str]:
+    def get_cert(
+        self, conn_context: context.Context
+    ) -> Tuple[certs.Cert, SSL.PKey, str]:
         """
         This function determines the Common Name (CN), Subject Alternative Names (SANs) and Organization Name
         our certificate should have and then fetches a matching cert from the certstore.
@@ -97,17 +104,14 @@ class TlsConfig:
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
-        only_non_http_alpns = (
-                conn_context.client.alpn_offers and
-                all(x not in tls.HTTP_ALPNS for x in conn_context.client.alpn_offers)
+        only_non_http_alpns = conn_context.client.alpn_offers and all(
+            x not in tls.HTTP_ALPNS for x in conn_context.client.alpn_offers
         )
         tls_clienthello.establish_server_tls_first = conn_context.server.tls and (
-                ctx.options.connection_strategy == "eager" or
-                ctx.options.add_upstream_certs_to_client_chain or
-                ctx.options.upstream_cert and (
-                        only_non_http_alpns or
-                        not conn_context.client.sni
-                )
+            ctx.options.connection_strategy == "eager"
+            or ctx.options.add_upstream_certs_to_client_chain
+            or ctx.options.upstream_cert
+            and (only_non_http_alpns or not conn_context.client.sni)
         )
 
     def tls_start(self, tls_start: tls.TlsStartData):
@@ -117,7 +121,9 @@ class TlsConfig:
             self.create_proxy_server_ssl_conn(tls_start)
 
     def create_client_proxy_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
-        tls_method, tls_options = net_tls.VERSION_CHOICES[ctx.options.ssl_version_client]
+        tls_method, tls_options = net_tls.VERSION_CHOICES[
+            ctx.options.ssl_version_client
+        ]
         cert, key, chain_file = self.get_cert(tls_start.context)
         ssl_ctx = net_tls.create_server_context(
             cert=cert,
@@ -131,10 +137,12 @@ class TlsConfig:
             extra_chain_certs=tls_start.context.server.certificate_list,
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
-        tls_start.ssl_conn.set_app_data(AppData(
-            server_alpn=tls_start.context.server.alpn,
-            http2=ctx.options.http2,
-        ))
+        tls_start.ssl_conn.set_app_data(
+            AppData(
+                server_alpn=tls_start.context.server.alpn,
+                http2=ctx.options.http2,
+            )
+        )
         tls_start.ssl_conn.set_accept_state()
 
     def create_proxy_server_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
@@ -150,7 +158,9 @@ class TlsConfig:
                 if ctx.options.http2:
                     server.alpn_offers = tuple(client.alpn_offers)
                 else:
-                    server.alpn_offers = tuple(x for x in client.alpn_offers if x != b"h2")
+                    server.alpn_offers = tuple(
+                        x for x in client.alpn_offers if x != b"h2"
+                    )
             elif client.tls_established:
                 # We would perfectly support HTTP/1 -> HTTP/2, but we want to keep things on the same protocol version.
                 # There are some edge cases where we want to mirror the regular server's behavior accurately,
@@ -182,17 +192,23 @@ class TlsConfig:
             if os.path.isfile(client_certs):
                 client_cert = client_certs
             else:
-                server_name: str = (server.sni or server.address[0].encode("idna")).decode()
+                server_name: str = (
+                    server.sni or server.address[0].encode("idna")
+                ).decode()
                 path = os.path.join(client_certs, f"{server_name}.pem")
                 if os.path.exists(path):
                     client_cert = path
 
-        args["cipher_list"] = ':'.join(server.cipher_list) if server.cipher_list else None
+        args["cipher_list"] = (
+            ":".join(server.cipher_list) if server.cipher_list else None
+        )
         ssl_ctx = net_tls.create_client_context(
             cert=client_cert,
-            sni=server.sni.decode("idna") if server.sni else None,  # TODO: Should pass-through here.
+            sni=server.sni.decode("idna")
+            if server.sni
+            else None,  # TODO: Should pass-through here.
             alpn_protos=server.alpn_offers,
-            **args
+            **args,
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
         tls_start.ssl_conn.set_tlsext_host_name(server.sni)
@@ -207,7 +223,9 @@ class TlsConfig:
             path=certstore_path,
             basename=CONF_BASENAME,
             key_size=ctx.options.key_size,
-            passphrase=ctx.options.cert_passphrase.encode("utf8") if ctx.options.cert_passphrase else None,
+            passphrase=ctx.options.cert_passphrase.encode("utf8")
+            if ctx.options.cert_passphrase
+            else None,
         )
         for certspec in ctx.options.certs:
             parts = certspec.split("=", 1)
@@ -216,12 +234,18 @@ class TlsConfig:
 
             cert = os.path.expanduser(parts[1])
             if not os.path.exists(cert):
-                raise exceptions.OptionsError(f"Certificate file does not exist: {cert}")
+                raise exceptions.OptionsError(
+                    f"Certificate file does not exist: {cert}"
+                )
             try:
                 self.certstore.add_cert_file(
                     parts[0],
                     cert,
-                    passphrase=ctx.options.cert_passphrase.encode("utf8") if ctx.options.cert_passphrase else None,
+                    passphrase=ctx.options.cert_passphrase.encode("utf8")
+                    if ctx.options.cert_passphrase
+                    else None,
                 )
             except crypto.Error as e:
-                raise exceptions.OptionsError(f"Invalid certificate format: {cert}") from e
+                raise exceptions.OptionsError(
+                    f"Invalid certificate format: {cert}"
+                ) from e

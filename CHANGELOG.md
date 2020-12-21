@@ -40,6 +40,7 @@ If you depend on these features, please raise your voice in
 * New Proxy Core based on sans-io pattern (@mhils)
 * Remove the legacy protocol stack (@Kriechi)
 * Remove all deprecated pathod and pathoc tools and modules (@Kriechi)
+* Change code formatting from flake8 to black (@Kriechi)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 

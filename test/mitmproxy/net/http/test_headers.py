@@ -1,17 +1,16 @@
 import collections
 import pytest
 
-from mitmproxy.net.http.headers import Headers, parse_content_type, assemble_content_type
+from mitmproxy.net.http.headers import (
+    Headers,
+    parse_content_type,
+    assemble_content_type,
+)
 
 
 class TestHeaders:
     def _2host(self):
-        return Headers(
-            (
-                (b"Host", b"example.com"),
-                (b"host", b"example.org")
-            )
-        )
+        return Headers(((b"Host", b"example.com"), (b"host", b"example.org")))
 
     def test_init(self):
         headers = Headers()
@@ -25,16 +24,12 @@ class TestHeaders:
         assert len(headers) == 1
         assert headers["Host"] == "example.com"
 
-        headers = Headers(
-            [[b"Host", b"invalid"]],
-            Host="example.com"
-        )
+        headers = Headers([[b"Host", b"invalid"]], Host="example.com")
         assert len(headers) == 1
         assert headers["Host"] == "example.com"
 
         headers = Headers(
-            [[b"Host", b"invalid"], [b"Accept", b"text/plain"]],
-            Host="example.com"
+            [[b"Host", b"invalid"], [b"Accept", b"text/plain"]], Host="example.com"
         )
         assert len(headers) == 2
         assert headers["Host"] == "example.com"
@@ -56,10 +51,7 @@ class TestHeaders:
         headers = Headers(Host="example.com")
         assert bytes(headers) == b"Host: example.com\r\n"
 
-        headers = Headers([
-            [b"Host", b"example.com"],
-            [b"Accept", b"text/plain"]
-        ])
+        headers = Headers([[b"Host", b"example.com"], [b"Accept", b"text/plain"]])
         assert bytes(headers) == b"Host: example.com\r\nAccept: text/plain\r\n"
 
         headers = Headers()
@@ -72,11 +64,18 @@ def test_parse_content_type():
     assert p("text") is None
 
     v = p("text/html; charset=UTF-8")
-    assert v == ('text', 'html', {'charset': 'UTF-8'})
+    assert v == ("text", "html", {"charset": "UTF-8"})
 
 
 def test_assemble_content_type():
     p = assemble_content_type
     assert p("text", "html", {}) == "text/html"
     assert p("text", "html", {"charset": "utf8"}) == "text/html; charset=utf8"
-    assert p("text", "html", collections.OrderedDict([("charset", "utf8"), ("foo", "bar")])) == "text/html; charset=utf8; foo=bar"
+    assert (
+        p(
+            "text",
+            "html",
+            collections.OrderedDict([("charset", "utf8"), ("foo", "bar")]),
+        )
+        == "text/html; charset=utf8; foo=bar"
+    )

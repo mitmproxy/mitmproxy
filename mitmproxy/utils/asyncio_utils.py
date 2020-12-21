@@ -16,10 +16,11 @@ def cancel_task(task: asyncio.Task, message: str) -> None:
 
 
 def create_task(
-        coro: Coroutine, *,
-        name: str,
-        client: Optional[tuple] = None,
-        ignore_closed_loop: bool = True,
+    coro: Coroutine,
+    *,
+    name: str,
+    client: Optional[tuple] = None,
+    ignore_closed_loop: bool = True,
 ) -> Optional[asyncio.Task]:
     """
     Like asyncio.create_task, but also store some debug info on the task object.
@@ -41,10 +42,10 @@ def create_task(
 
 
 def set_task_debug_info(
-        task: asyncio.Task,
-        *,
-        name: str,
-        client: Optional[tuple] = None,
+    task: asyncio.Task,
+    *,
+    name: str,
+    client: Optional[tuple] = None,
 ) -> None:
     """Set debug info for an externally-spawned task."""
     task.created = time.time()  # type: ignore

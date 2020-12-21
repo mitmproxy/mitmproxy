@@ -7,12 +7,18 @@ from mitmproxy.contrib.kaitaistruct import google_protobuf
 
 def write_buf(out, field_tag, body, indent_level):
     if body is not None:
-        out.write("{: <{level}}{}: {}\n".format('', field_tag, body if isinstance(body, int) else str(body, 'utf-8'),
-                                                level=indent_level))
+        out.write(
+            "{: <{level}}{}: {}\n".format(
+                "",
+                field_tag,
+                body if isinstance(body, int) else str(body, "utf-8"),
+                level=indent_level,
+            )
+        )
     elif field_tag is not None:
-        out.write(' ' * indent_level + str(field_tag) + " {\n")
+        out.write(" " * indent_level + str(field_tag) + " {\n")
     else:
-        out.write(' ' * indent_level + "}\n")
+        out.write(" " * indent_level + "}\n")
 
 
 def format_pbuf(raw):

@@ -3,41 +3,44 @@ import argparse
 
 def common_options(parser, opts):
     parser.add_argument(
-        '--version',
-        action='store_true',
+        "--version",
+        action="store_true",
         help="show version number and exit",
-        dest='version',
+        dest="version",
     )
     parser.add_argument(
-        '--options',
-        action='store_true',
+        "--options",
+        action="store_true",
         help="Show all options and their default values",
     )
     parser.add_argument(
-        '--commands',
-        action='store_true',
+        "--commands",
+        action="store_true",
         help="Show all commands and their signatures",
     )
     parser.add_argument(
         "--set",
-        type=str, dest="setoptions", default=[],
+        type=str,
+        dest="setoptions",
+        default=[],
         action="append",
         metavar="option[=value]",
         help="""
             Set an option. When the value is omitted, booleans are set to true,
             strings and integers are set to None (if permitted), and sequences
             are emptied. Boolean values can be true, false or toggle.
-        """
+        """,
     )
     parser.add_argument(
-        "-q", "--quiet",
-        action="store_true", dest="quiet",
-        help="Quiet."
+        "-q", "--quiet", action="store_true", dest="quiet", help="Quiet."
     )
     parser.add_argument(
-        "-v", "--verbose",
-        action="store_const", dest="verbose", const='debug',
-        help="Increase log verbosity."
+        "-v",
+        "--verbose",
+        action="store_const",
+        dest="verbose",
+        const="debug",
+        help="Increase log verbosity.",
     )
 
     # Basic options
@@ -106,8 +109,7 @@ def mitmproxy(opts):
     opts.make_parser(parser, "console_layout")
     opts.make_parser(parser, "console_layout_headers")
     group = parser.add_argument_group(
-        "Filters",
-        "See help in mitmproxy for filter expression syntax."
+        "Filters", "See help in mitmproxy for filter expression syntax."
     )
     opts.make_parser(group, "intercept", metavar="FILTER")
     opts.make_parser(group, "view_filter", metavar="FILTER")
@@ -118,14 +120,14 @@ def mitmdump(opts):
     parser = argparse.ArgumentParser(usage="%(prog)s [options] [filter]")
 
     common_options(parser, opts)
-    opts.make_parser(parser, "flow_detail", metavar = "LEVEL")
+    opts.make_parser(parser, "flow_detail", metavar="LEVEL")
     parser.add_argument(
-        'filter_args',
+        "filter_args",
         nargs="...",
         help="""
             Filter expression, equivalent to setting both the view_filter
             and save_stream_filter options.
-        """
+        """,
     )
     return parser
 
@@ -140,8 +142,7 @@ def mitmweb(opts):
 
     common_options(parser, opts)
     group = parser.add_argument_group(
-        "Filters",
-        "See help in mitmproxy for filter expression syntax."
+        "Filters", "See help in mitmproxy for filter expression syntax."
     )
     opts.make_parser(group, "intercept", metavar="FILTER")
     return parser

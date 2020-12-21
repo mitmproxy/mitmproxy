@@ -12,10 +12,10 @@ example_dir = tutils.test_data.push("../examples")
 
 class TestJSONDump:
     def echo_response(self, request, context):
-        self.request = {'json': request.json(), 'headers': request.headers}
-        return ''
+        self.request = {"json": request.json(), "headers": request.headers}
+        return ""
 
-    def flow(self, resp_content=b'message'):
+    def flow(self, resp_content=b"message"):
         times = dict(
             timestamp_start=746203272,
             timestamp_end=746203272,
@@ -23,8 +23,8 @@ class TestJSONDump:
 
         # Create a dummy flow for testing
         return tflow.tflow(
-            req=tutils.treq(method=b'GET', **times),
-            resp=tutils.tresp(content=resp_content, **times)
+            req=tutils.treq(method=b"GET", **times),
+            resp=tutils.tresp(content=resp_content, **times),
         )
 
     def test_simple(self, tmpdir):
@@ -36,7 +36,7 @@ class TestJSONDump:
             tctx.invoke(a, "done")
             with open(path) as inp:
                 entry = json.loads(inp.readline())
-            assert entry['response']['content'] == 'message'
+            assert entry["response"]["content"] == "message"
 
     def test_contentencode(self, tmpdir):
         with taddons.context() as tctx:
@@ -45,24 +45,28 @@ class TestJSONDump:
             content = b"foo" + b"\xFF" * 10
             tctx.configure(a, dump_destination=path, dump_encodecontent=True)
 
-            tctx.invoke(
-                a, "response", self.flow(resp_content=content)
-            )
+            tctx.invoke(a, "response", self.flow(resp_content=content))
             tctx.invoke(a, "done")
             with open(path) as inp:
                 entry = json.loads(inp.readline())
-            assert entry['response']['content'] == base64.b64encode(content).decode('utf-8')
+            assert entry["response"]["content"] == base64.b64encode(content).decode(
+                "utf-8"
+            )
 
     def test_http(self, tmpdir):
         with requests_mock.Mocker() as mock:
-            mock.post('http://my-server', text=self.echo_response)
+            mock.post("http://my-server", text=self.echo_response)
             with taddons.context() as tctx:
                 a = tctx.script(example_dir.path("complex/jsondump.py"))
-                tctx.configure(a, dump_destination='http://my-server',
-                               dump_username='user', dump_password='pass')
+                tctx.configure(
+                    a,
+                    dump_destination="http://my-server",
+                    dump_username="user",
+                    dump_password="pass",
+                )
 
                 tctx.invoke(a, "response", self.flow())
                 tctx.invoke(a, "done")
 
-                assert self.request['json']['response']['content'] == 'message'
-                assert self.request['headers']['Authorization'] == 'Basic dXNlcjpwYXNz'
+                assert self.request["json"]["response"]["content"] == "message"
+                assert self.request["headers"]["Authorization"] == "Basic dXNlcjpwYXNz"

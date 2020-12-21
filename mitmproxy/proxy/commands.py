@@ -41,6 +41,7 @@ class ConnectionCommand(Command):
     """
     Commands involving a specific connection
     """
+
     connection: Connection
 
     def __init__(self, connection: Connection):
@@ -51,6 +52,7 @@ class SendData(ConnectionCommand):
     """
     Send data to a remote peer
     """
+
     data: bytes
 
     def __init__(self, connection: Connection, data: bytes):
@@ -66,6 +68,7 @@ class OpenConnection(ConnectionCommand):
     """
     Open a new connection
     """
+
     connection: Server
     blocking = True
 
@@ -75,6 +78,7 @@ class CloseConnection(ConnectionCommand):
     Close a connection. If the client connection is closed,
     all other connections will ultimately be closed during cleanup.
     """
+
     half_close: bool
     """
     If True, only close our half of the connection by sending a FIN packet.
@@ -91,6 +95,7 @@ class Hook(Command):
     """
     Callback to the master (like ".ask()")
     """
+
     blocking = True
     name: ClassVar[str]
 
@@ -102,10 +107,14 @@ class Hook(Command):
     def __init_subclass__(cls, **kwargs):
         # initialize .name attribute. HttpRequestHook -> http_request
         if not getattr(cls, "name", None):
-            cls.name = re.sub('(?!^)([A-Z]+)', r'_\1', cls.__name__.replace("Hook", "")).lower()
+            cls.name = re.sub(
+                "(?!^)([A-Z]+)", r"_\1", cls.__name__.replace("Hook", "")
+            ).lower()
         if cls.name in all_hooks:
             other = all_hooks[cls.name]
-            raise RuntimeError(f"Two conflicting hooks for {cls.name}: {cls} and {other}")
+            raise RuntimeError(
+                f"Two conflicting hooks for {cls.name}: {cls} and {other}"
+            )
         all_hooks[cls.name] = cls
 
         # a bit hacky: add a default constructor.
@@ -133,6 +142,7 @@ class GetSocket(ConnectionCommand):
     Get the underlying socket.
     This should really never be used, but is required to implement transparent mode.
     """
+
     blocking = True
 
 
@@ -140,7 +150,11 @@ class Log(Command):
     message: str
     level: str
 
-    def __init__(self, message: str, level: Literal["error", "warn", "info", "alert", "debug"] = "info"):
+    def __init__(
+        self,
+        message: str,
+        level: Literal["error", "warn", "info", "alert", "debug"] = "info",
+    ):
         self.message = message
         self.level = level
 

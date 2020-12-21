@@ -17,12 +17,7 @@ def tctx() -> context.Context:
     TermLog().load(opts)
     Core().load(opts)
     return context.Context(
-        context.Client(
-            ("client", 1234),
-            ("127.0.0.1", 8080),
-            1605699329
-        ),
-        opts
+        context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts
     )
 
 

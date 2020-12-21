@@ -24,10 +24,7 @@ def pretty(value, htchar="    ", lfchar="\n", indent=0):
         ]
         return "{%s}" % (",".join(items) + lfchar + htchar * indent)
     elif type(value) is list:
-        items = [
-            nlch + pretty(item, htchar, lfchar, indent + 1)
-            for item in value
-        ]
+        items = [nlch + pretty(item, htchar, lfchar, indent + 1) for item in value]
         return "[%s]" % (",".join(items) + lfchar + htchar * indent)
     else:
         return repr(value)

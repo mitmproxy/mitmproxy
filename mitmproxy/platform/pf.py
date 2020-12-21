@@ -4,10 +4,10 @@ import sys
 
 def lookup(address, port, s):
     """
-        Parse the pfctl state output s, to look up the destination host
-        matching the client (address, port).
+    Parse the pfctl state output s, to look up the destination host
+    matching the client (address, port).
 
-        Returns an (address, port) tuple, or None.
+    Returns an (address, port) tuple, or None.
     """
     # We may get an ipv4-mapped ipv6 address here, e.g. ::ffff:127.0.0.1.
     # Those still appear as "127.0.0.1" in the table, so we need to strip the prefix.

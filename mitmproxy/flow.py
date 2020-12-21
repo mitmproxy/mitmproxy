@@ -11,17 +11,17 @@ from mitmproxy.proxy import context
 
 class Error(stateobject.StateObject):
     """
-        An Error.
+    An Error.
 
-        This is distinct from an protocol error response (say, a HTTP code 500),
-        which is represented by a normal HTTPResponse object. This class is
-        responsible for indicating errors that fall outside of normal protocol
-        communications, like interrupted connections, timeouts, protocol errors.
+    This is distinct from an protocol error response (say, a HTTP code 500),
+    which is represented by a normal HTTPResponse object. This class is
+    responsible for indicating errors that fall outside of normal protocol
+    communications, like interrupted connections, timeouts, protocol errors.
 
-        Exposes the following attributes:
+    Exposes the following attributes:
 
-            msg: Message describing the error
-            timestamp: Seconds since the epoch
+        msg: Message describing the error
+        timestamp: Seconds since the epoch
     """
 
     KILLED_MESSAGE = "Connection killed."
@@ -34,10 +34,7 @@ class Error(stateobject.StateObject):
         self.msg = msg
         self.timestamp = timestamp or time.time()
 
-    _stateobject_attributes = dict(
-        msg=str,
-        timestamp=float
-    )
+    _stateobject_attributes = dict(msg=str, timestamp=float)
 
     def __str__(self):
         return self.msg
@@ -62,11 +59,11 @@ class Flow(stateobject.StateObject):
     """
 
     def __init__(
-            self,
-            type: str,
-            client_conn: context.Client,
-            server_conn: context.Server,
-            live: bool=None
+        self,
+        type: str,
+        client_conn: context.Client,
+        server_conn: context.Server,
+        live: bool = None,
     ) -> None:
         self.type = type
         self.id = str(uuid.uuid4())
@@ -123,7 +120,7 @@ class Flow(stateobject.StateObject):
 
     def modified(self):
         """
-            Has this Flow been modified?
+        Has this Flow been modified?
         """
         if self._backup:
             return self._backup != self.get_state()
@@ -132,15 +129,15 @@ class Flow(stateobject.StateObject):
 
     def backup(self, force=False):
         """
-            Save a backup of this Flow, which can be reverted to using a
-            call to .revert().
+        Save a backup of this Flow, which can be reverted to using a
+        call to .revert().
         """
         if not self._backup:
             self._backup = self.get_state()
 
     def revert(self):
         """
-            Revert to the last backed up state.
+        Revert to the last backed up state.
         """
         if self._backup:
             self.set_state(self._backup)
@@ -149,14 +146,14 @@ class Flow(stateobject.StateObject):
     @property
     def killable(self):
         return (
-            self.reply and
-            self.reply.state in {"start", "taken"} and
-            self.reply.value != exceptions.Kill
+            self.reply
+            and self.reply.state in {"start", "taken"}
+            and self.reply.value != exceptions.Kill
         )
 
     def kill(self):
         """
-            Kill this request.
+        Kill this request.
         """
         self.error = Error(Error.KILLED_MESSAGE)
         self.intercepted = False
@@ -165,8 +162,8 @@ class Flow(stateobject.StateObject):
 
     def intercept(self):
         """
-            Intercept this Flow. Processing will stop until resume is
-            called.
+        Intercept this Flow. Processing will stop until resume is
+        called.
         """
         if self.intercepted:
             return
@@ -175,7 +172,7 @@ class Flow(stateobject.StateObject):
 
     def resume(self):
         """
-            Continue with the flow - called after an intercept().
+        Continue with the flow - called after an intercept().
         """
         if not self.intercepted:
             return

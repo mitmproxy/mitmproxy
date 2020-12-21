@@ -27,6 +27,7 @@ class ResponseHeaders(HttpEvent):
 
 # explicit constructors below to facilitate type checking in _http1/_http2
 
+
 @dataclass
 class RequestData(HttpEvent):
     data: bytes

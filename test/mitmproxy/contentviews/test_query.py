@@ -8,6 +8,9 @@ def test_view_query():
     v = full_eval(query.ViewQuery())
     f = v(d, query=multidict.MultiDict([("foo", "bar"), ("foo", "baz")]))
     assert f[0] == "Query"
-    assert f[1] == [[("header", "foo: "), ("text", "bar")], [("header", "foo: "), ("text", "baz")]]
+    assert f[1] == [
+        [("header", "foo: "), ("text", "bar")],
+        [("header", "foo: "), ("text", "baz")],
+    ]
 
     assert v(d) == ("Query", [])

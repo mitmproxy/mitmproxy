@@ -7,7 +7,6 @@ from mitmproxy.coretypes import serializable
 
 
 class TCPMessage(serializable.Serializable):
-
     def __init__(self, from_client, content, timestamp=None):
         self.from_client = from_client
         self.content = content
@@ -25,8 +24,7 @@ class TCPMessage(serializable.Serializable):
 
     def __repr__(self):
         return "{direction} {content}".format(
-            direction="->" if self.from_client else "<-",
-            content=repr(self.content)
+            direction="->" if self.from_client else "<-", content=repr(self.content)
         )
 
 

@@ -13,7 +13,9 @@ from mitmproxy import exceptions, command_lexer
 from mitmproxy.command_lexer import unquote
 
 
-def verify_arg_signature(f: typing.Callable, args: typing.Iterable[typing.Any], kwargs: dict) -> None:
+def verify_arg_signature(
+    f: typing.Callable, args: typing.Iterable[typing.Any], kwargs: dict
+) -> None:
     sig = inspect.signature(f)
     try:
         sig.bind(*args, **kwargs)
@@ -23,13 +25,15 @@ def verify_arg_signature(f: typing.Callable, args: typing.Iterable[typing.Any], 
 
 def typename(t: type) -> str:
     """
-        Translates a type to an explanatory string.
+    Translates a type to an explanatory string.
     """
     if t == inspect._empty:  # type: ignore
         raise exceptions.CommandError("missing type annotation")
     to = mitmproxy.types.CommandTypes.get(t, None)
     if not to:
-        raise exceptions.CommandError("unsupported type: %s" % getattr(t, "__name__", t))
+        raise exceptions.CommandError(
+            "unsupported type: %s" % getattr(t, "__name__", t)
+        )
     return to.display
 
 
@@ -57,7 +61,9 @@ class Command:
     signature: inspect.Signature
     help: typing.Optional[str]
 
-    def __init__(self, manager: "CommandManager", name: str, func: typing.Callable) -> None:
+    def __init__(
+        self, manager: "CommandManager", name: str, func: typing.Callable
+    ) -> None:
         self.name = name
         self.manager = manager
         self.func = func
@@ -73,9 +79,15 @@ class Command:
         for name, parameter in self.signature.parameters.items():
             t = parameter.annotation
             if not mitmproxy.types.CommandTypes.get(parameter.annotation, None):
-                raise exceptions.CommandError(f"Argument {name} has an unknown type ({_empty_as_none(t)}) in {func}.")
-        if self.return_type and not mitmproxy.types.CommandTypes.get(self.return_type, None):
-            raise exceptions.CommandError(f"Return type has an unknown type ({self.return_type}) in {func}.")
+                raise exceptions.CommandError(
+                    f"Argument {name} has an unknown type ({_empty_as_none(t)}) in {func}."
+                )
+        if self.return_type and not mitmproxy.types.CommandTypes.get(
+            self.return_type, None
+        ):
+            raise exceptions.CommandError(
+                f"Return type has an unknown type ({self.return_type}) in {func}."
+            )
 
     @property
     def return_type(self) -> typing.Optional[typing.Type]:
@@ -101,9 +113,11 @@ class Command:
         try:
             bound_arguments = self.signature.bind(*args)
         except TypeError:
-            expected = f'Expected: {str(self.signature.parameters)}'
-            received = f'Received: {str(args)}'
-            raise exceptions.CommandError(f"Command argument mismatch: \n    {expected}\n    {received}")
+            expected = f"Expected: {str(self.signature.parameters)}"
+            received = f"Received: {str(args)}"
+            raise exceptions.CommandError(
+                f"Command argument mismatch: \n    {expected}\n    {received}"
+            )
 
         for name, value in bound_arguments.arguments.items():
             convert_to = self.signature.parameters[name].annotation
@@ -167,8 +181,7 @@ class CommandManager:
 
     @functools.lru_cache(maxsize=128)
     def parse_partial(
-            self,
-            cmdstr: str
+        self, cmdstr: str
     ) -> typing.Tuple[typing.Sequence[ParseResult], typing.Sequence[CommandParameter]]:
         """
         Parse a possibly partial command. Return a sequence of ParseResults and a sequence of remainder type help items.
@@ -201,13 +214,13 @@ class CommandManager:
                 expected = CommandParameter("", mitmproxy.types.Unknown)
 
             arg_is_known_command = (
-                    expected.type == mitmproxy.types.Cmd and part in self.commands
+                expected.type == mitmproxy.types.Cmd and part in self.commands
             )
             arg_is_unknown_command = (
-                    expected.type == mitmproxy.types.Cmd and part not in self.commands
+                expected.type == mitmproxy.types.Cmd and part not in self.commands
             )
             command_args_following = (
-                    next_params and next_params[0].type == mitmproxy.types.CmdArgs
+                next_params and next_params[0].type == mitmproxy.types.CmdArgs
             )
             if arg_is_known_command and command_args_following:
                 next_params = self.commands[part].parameters + next_params[1:]
@@ -259,9 +272,7 @@ class CommandManager:
         if not parts:
             raise exceptions.CommandError(f"Invalid command: {cmdstr!r}")
         command_name, *args = [
-            unquote(part.value)
-            for part in parts
-            if part.type != mitmproxy.types.Space
+            unquote(part.value) for part in parts if part.type != mitmproxy.types.Space
         ]
         return self.call_strings(command_name, args)
 
@@ -277,7 +288,7 @@ class CommandManager:
 
 def parsearg(manager: CommandManager, spec: str, argtype: type) -> typing.Any:
     """
-        Convert a string to a argument to the appropriate type.
+    Convert a string to a argument to the appropriate type.
     """
     t = mitmproxy.types.CommandTypes.get(argtype, None)
     if not t:
@@ -303,9 +314,9 @@ def command(name: typing.Optional[str] = None):
 
 def argument(name, type):
     """
-        Set the type of a command argument at runtime. This is useful for more
-        specific types such as mitmproxy.types.Choice, which we cannot annotate
-        directly as mypy does not like that.
+    Set the type of a command argument at runtime. This is useful for more
+    specific types such as mitmproxy.types.Choice, which we cannot annotate
+    directly as mypy does not like that.
     """
 
     def decorator(f: types.FunctionType) -> types.FunctionType:

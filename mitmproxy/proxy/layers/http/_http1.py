@@ -15,8 +15,17 @@ from mitmproxy.proxy.layers.http._base import ReceiveHttp, StreamId
 from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
 from ._base import HttpConnection
-from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
-    ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
+from ._events import (
+    HttpEvent,
+    RequestData,
+    RequestEndOfMessage,
+    RequestHeaders,
+    RequestProtocolError,
+    ResponseData,
+    ResponseEndOfMessage,
+    ResponseHeaders,
+    ResponseProtocolError,
+)
 
 TBodyReader = Union[ChunkedReader, Http10Reader, ContentLengthReader]
 
@@ -45,14 +54,19 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
         yield from ()  # pragma: no cover
 
     @abc.abstractmethod
-    def read_headers(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
+    def read_headers(
+        self, event: events.ConnectionEvent
+    ) -> layer.CommandGenerator[None]:
         yield from ()  # pragma: no cover
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, HttpEvent):
             yield from self.send(event)
         else:
-            if isinstance(event, events.DataReceived) and self.state != self.passthrough:
+            if (
+                isinstance(event, events.DataReceived)
+                and self.state != self.passthrough
+            ):
                 self.buf += event.data
             yield from self.state(event)
 
@@ -75,7 +89,11 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                     raise AssertionError(f"Unexpected event: {event}")
             except h11.ProtocolError as e:
                 yield commands.CloseConnection(self.conn)
-                yield ReceiveHttp(self.ReceiveProtocolError(self.stream_id, f"HTTP/1 protocol error: {e}"))
+                yield ReceiveHttp(
+                    self.ReceiveProtocolError(
+                        self.stream_id, f"HTTP/1 protocol error: {e}"
+                    )
+                )
                 return
 
             if h11_event is None:
@@ -91,10 +109,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                 if self.request.data.method.upper() != b"CONNECT":
                     yield ReceiveHttp(self.ReceiveEndOfMessage(self.stream_id))
                 is_request = isinstance(self, Http1Server)
-                yield from self.mark_done(
-                    request=is_request,
-                    response=not is_request
-                )
+                yield from self.mark_done(request=is_request, response=not is_request)
                 return
 
     def wait(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -111,8 +126,13 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
             # see https://github.com/httpwg/http-core/issues/22
             if event.connection.state is not ConnectionState.CLOSED:
                 yield commands.CloseConnection(event.connection)
-            yield ReceiveHttp(self.ReceiveProtocolError(self.stream_id, f"Client disconnected.",
-                                                        code=status_codes.CLIENT_CLOSED_REQUEST))
+            yield ReceiveHttp(
+                self.ReceiveProtocolError(
+                    self.stream_id,
+                    f"Client disconnected.",
+                    code=status_codes.CLIENT_CLOSED_REQUEST,
+                )
+            )
         else:  # pragma: no cover
             raise AssertionError(f"Unexpected event: {event}")
 
@@ -136,7 +156,9 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
             else:
                 yield ReceiveHttp(ResponseEndOfMessage(self.stream_id))
 
-    def mark_done(self, *, request: bool = False, response: bool = False) -> layer.CommandGenerator[None]:
+    def mark_done(
+        self, *, request: bool = False, response: bool = False
+    ) -> layer.CommandGenerator[None]:
         if request:
             self.request_done = True
         if response:
@@ -148,13 +170,17 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                 yield from self.make_pipe()
                 return
             connection_done = (
-                    http1_sansio.expected_http_body_size(self.request, self.response) == -1
-                    or http1.connection_close(self.request.http_version, self.request.headers)
-                    or http1.connection_close(self.response.http_version, self.response.headers)
-                    # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
-                    # This simplifies our connection management quite a bit as we can rely on
-                    # the proxyserver's max-connection-per-server throttling.
-                    or (self.request.is_http2 and isinstance(self, Http1Client))
+                http1_sansio.expected_http_body_size(self.request, self.response) == -1
+                or http1.connection_close(
+                    self.request.http_version, self.request.headers
+                )
+                or http1.connection_close(
+                    self.response.http_version, self.response.headers
+                )
+                # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
+                # This simplifies our connection management quite a bit as we can rely on
+                # the proxyserver's max-connection-per-server throttling.
+                or (self.request.is_http2 and isinstance(self, Http1Client))
             )
             if connection_done:
                 yield commands.CloseConnection(self.conn)
@@ -221,20 +247,32 @@ class Http1Server(Http1Connection):
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
-    def read_headers(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
+    def read_headers(
+        self, event: events.ConnectionEvent
+    ) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived):
             request_head = self.buf.maybe_extract_lines()
             if request_head:
-                request_head = [bytes(x) for x in request_head]  # TODO: Make url.parse compatible with bytearrays
+                request_head = [
+                    bytes(x) for x in request_head
+                ]  # TODO: Make url.parse compatible with bytearrays
                 try:
                     self.request = http1_sansio.read_request_head(request_head)
-                    expected_body_size = http1_sansio.expected_http_body_size(self.request, expect_continue_as_0=False)
+                    expected_body_size = http1_sansio.expected_http_body_size(
+                        self.request, expect_continue_as_0=False
+                    )
                 except (ValueError, exceptions.HttpSyntaxException) as e:
-                    yield commands.Log(f"{human.format_address(self.conn.peername)}: {e}")
+                    yield commands.Log(
+                        f"{human.format_address(self.conn.peername)}: {e}"
+                    )
                     yield commands.CloseConnection(self.conn)
                     self.state = self.done
                     return
-                yield ReceiveHttp(RequestHeaders(self.stream_id, self.request, expected_body_size == 0))
+                yield ReceiveHttp(
+                    RequestHeaders(
+                        self.stream_id, self.request, expected_body_size == 0
+                    )
+                )
                 self.body_reader = make_body_reader(expected_body_size)
                 self.state = self.read_body
                 yield from self.state(event)
@@ -243,12 +281,16 @@ class Http1Server(Http1Connection):
         elif isinstance(event, events.ConnectionClosed):
             buf = bytes(self.buf)
             if buf.strip():
-                yield commands.Log(f"Client closed connection before completing request headers: {buf!r}")
+                yield commands.Log(
+                    f"Client closed connection before completing request headers: {buf!r}"
+                )
             yield commands.CloseConnection(self.conn)
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
-    def mark_done(self, *, request: bool = False, response: bool = False) -> layer.CommandGenerator[None]:
+    def mark_done(
+        self, *, request: bool = False, response: bool = False
+    ) -> layer.CommandGenerator[None]:
         yield from super().mark_done(request=request, response=response)
         if self.request_done and not self.response_done:
             self.state = self.wait
@@ -275,7 +317,9 @@ class Http1Client(Http1Connection):
             request = event.request
             if request.is_http2:
                 # Convert to an HTTP/1 request.
-                request = request.copy()  # (we could probably be a bit more efficient here.)
+                request = (
+                    request.copy()
+                )  # (we could probably be a bit more efficient here.)
                 request.http_version = "HTTP/1.1"
                 if "Host" not in request.headers and request.authority:
                     request.headers.insert(0, "Host", request.authority)
@@ -294,7 +338,9 @@ class Http1Client(Http1Connection):
             assert self.request
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
-            elif http1_sansio.expected_http_body_size(self.request, self.response) == -1:
+            elif (
+                http1_sansio.expected_http_body_size(self.request, self.response) == -1
+            ):
                 yield commands.CloseConnection(self.conn, half_close=True)
             yield from self.mark_done(request=True)
         elif isinstance(event, RequestProtocolError):
@@ -303,7 +349,9 @@ class Http1Client(Http1Connection):
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
-    def read_headers(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
+    def read_headers(
+        self, event: events.ConnectionEvent
+    ) -> layer.CommandGenerator[None]:
         if isinstance(event, events.DataReceived):
             if not self.request:
                 # we just received some data for an unknown request.
@@ -314,15 +362,25 @@ class Http1Client(Http1Connection):
 
             response_head = self.buf.maybe_extract_lines()
             if response_head:
-                response_head = [bytes(x) for x in response_head]  # TODO: Make url.parse compatible with bytearrays
+                response_head = [
+                    bytes(x) for x in response_head
+                ]  # TODO: Make url.parse compatible with bytearrays
                 try:
                     self.response = http1_sansio.read_response_head(response_head)
-                    expected_size = http1_sansio.expected_http_body_size(self.request, self.response)
+                    expected_size = http1_sansio.expected_http_body_size(
+                        self.request, self.response
+                    )
                 except (ValueError, exceptions.HttpSyntaxException) as e:
                     yield commands.CloseConnection(self.conn)
-                    yield ReceiveHttp(ResponseProtocolError(self.stream_id, f"Cannot parse HTTP response: {e}"))
+                    yield ReceiveHttp(
+                        ResponseProtocolError(
+                            self.stream_id, f"Cannot parse HTTP response: {e}"
+                        )
+                    )
                     return
-                yield ReceiveHttp(ResponseHeaders(self.stream_id, self.response, expected_size == 0))
+                yield ReceiveHttp(
+                    ResponseHeaders(self.stream_id, self.response, expected_size == 0)
+                )
                 self.body_reader = make_body_reader(expected_size)
 
                 self.state = self.read_body
@@ -334,13 +392,21 @@ class Http1Client(Http1Connection):
                 yield commands.CloseConnection(self.conn)
             if self.stream_id:
                 if self.buf:
-                    yield ReceiveHttp(ResponseProtocolError(self.stream_id,
-                                                            f"unexpected server response: {bytes(self.buf)!r}"))
+                    yield ReceiveHttp(
+                        ResponseProtocolError(
+                            self.stream_id,
+                            f"unexpected server response: {bytes(self.buf)!r}",
+                        )
+                    )
                 else:
                     # The server has closed the connection to prevent us from continuing.
                     # We need to signal that to the stream.
                     # https://tools.ietf.org/html/rfc7231#section-6.5.11
-                    yield ReceiveHttp(ResponseProtocolError(self.stream_id, "server closed connection"))
+                    yield ReceiveHttp(
+                        ResponseProtocolError(
+                            self.stream_id, "server closed connection"
+                        )
+                    )
             else:
                 return
         else:

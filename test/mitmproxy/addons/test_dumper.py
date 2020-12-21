@@ -139,12 +139,16 @@ def test_echo_trailer():
         f.request.headers["transfer-encoding"] = "chunked"
         f.request.headers["trailer"] = "my-little-request-trailer"
         f.request.content = b"some request content\n" * 100
-        f.request.trailers = Headers([(b"my-little-request-trailer", b"foobar-request-trailer")])
+        f.request.trailers = Headers(
+            [(b"my-little-request-trailer", b"foobar-request-trailer")]
+        )
 
         f.response.headers["transfer-encoding"] = "chunked"
         f.response.headers["trailer"] = "my-little-response-trailer"
         f.response.content = b"some response content\n" * 100
-        f.response.trailers = Headers([(b"my-little-response-trailer", b"foobar-response-trailer")])
+        f.response.trailers = Headers(
+            [(b"my-little-response-trailer", b"foobar-response-trailer")]
+        )
 
         d.echo_flow(f)
         t = sio.getvalue()
@@ -183,7 +187,9 @@ def test_echo_request_line():
         ctx.configure(d, flow_detail=0, showhost=True)
         f = tflow.tflow(client_conn=None, server_conn=True, resp=True)
         terminalWidth = max(shutil.get_terminal_size()[0] - 25, 50)
-        f.request.url = "http://address:22/" + ("x" * terminalWidth) + "textToBeTruncated"
+        f.request.url = (
+            "http://address:22/" + ("x" * terminalWidth) + "textToBeTruncated"
+        )
         d._echo_request_line(f)
         assert "textToBeTruncated" not in sio.getvalue()
         sio.truncate(0)

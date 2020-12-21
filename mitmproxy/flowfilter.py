@@ -57,13 +57,15 @@ def only(*types):
 
 
 class _Token:
-
     def dump(self, indent=0, fp=sys.stdout):
-        print("{spacing}{name}{expr}".format(
-            spacing="\t" * indent,
-            name=self.__class__.__name__,
-            expr=getattr(self, "expr", "")
-        ), file=fp)
+        print(
+            "{spacing}{name}{expr}".format(
+                spacing="\t" * indent,
+                name=self.__class__.__name__,
+                expr=getattr(self, "expr", ""),
+            ),
+            file=fp,
+        )
 
 
 class _Action(_Token):
@@ -107,9 +109,10 @@ class FWebSocket(_Action):
     @only(http.HTTPFlow, websocket.WebSocketFlow)
     def __call__(self, f):
         m = (
-            (isinstance(f, http.HTTPFlow) and f.request and check_handshake(f.request.headers))
-            or isinstance(f, websocket.WebSocketFlow)
-        )
+            isinstance(f, http.HTTPFlow)
+            and f.request
+            and check_handshake(f.request.headers)
+        ) or isinstance(f, websocket.WebSocketFlow)
         return m
 
 
@@ -157,8 +160,7 @@ class _Rex(_Action):
 
 def _check_content_type(rex, message):
     return any(
-        name.lower() == b"content-type" and
-        rex.search(value)
+        name.lower() == b"content-type" and rex.search(value)
         for name, value in message.headers.fields
     )
 
@@ -166,14 +168,17 @@ def _check_content_type(rex, message):
 class FAsset(_Action):
     code = "a"
     help = "Match asset in response: CSS, Javascript, Flash, images."
-    ASSET_TYPES = [re.compile(x) for x in [
-        b"text/javascript",
-        b"application/x-javascript",
-        b"application/javascript",
-        b"text/css",
-        b"image/.*",
-        b"application/x-shockwave-flash"
-    ]]
+    ASSET_TYPES = [
+        re.compile(x)
+        for x in [
+            b"text/javascript",
+            b"application/x-javascript",
+            b"application/javascript",
+            b"text/css",
+            b"image/.*",
+            b"application/x-shockwave-flash",
+        ]
+    ]
 
     @only(http.HTTPFlow)
     def __call__(self, f):
@@ -329,8 +334,7 @@ class FDomain(_Rex):
         if isinstance(f, websocket.WebSocketFlow):
             f = f.handshake_flow
         return bool(
-            self.re.search(f.request.host) or
-            self.re.search(f.request.pretty_host)
+            self.re.search(f.request.host) or self.re.search(f.request.pretty_host)
         )
 
 
@@ -381,7 +385,6 @@ class FDst(_Rex):
 
 
 class _Int(_Action):
-
     def __init__(self, num):
         self.num = int(num)
 
@@ -397,7 +400,6 @@ class FCode(_Int):
 
 
 class FAnd(_Token):
-
     def __init__(self, lst):
         self.lst = lst
 
@@ -411,7 +413,6 @@ class FAnd(_Token):
 
 
 class FOr(_Token):
-
     def __init__(self, lst):
         self.lst = lst
 
@@ -425,7 +426,6 @@ class FOr(_Token):
 
 
 class FNot(_Token):
-
     def __init__(self, itm):
         self.itm = itm[0]
 
@@ -463,9 +463,7 @@ filter_rex: Sequence[Type[_Rex]] = [
     FSrc,
     FUrl,
 ]
-filter_int = [
-    FCode
-]
+filter_int = [FCode]
 
 
 def _make():
@@ -482,9 +480,9 @@ def _make():
     unicode_words = pp.CharsNotIn("()~'\"" + pp.ParserElement.DEFAULT_WHITE_CHARS)
     unicode_words.skipWhitespace = True
     regex = (
-            unicode_words
-            | pp.QuotedString('"', escChar='\\')
-            | pp.QuotedString("'", escChar='\\')
+        unicode_words
+        | pp.QuotedString('"', escChar="\\")
+        | pp.QuotedString("'", escChar="\\")
     )
     for cls in filter_rex:
         f = pp.Literal(f"~{cls.code}") + pp.WordEnd() + regex.copy()
@@ -504,19 +502,12 @@ def _make():
     atom = pp.MatchFirst(parts)
     expr = pp.infixNotation(
         atom,
-        [(pp.Literal("!").suppress(),
-          1,
-          pp.opAssoc.RIGHT,
-          lambda x: FNot(*x)),
-         (pp.Literal("&").suppress(),
-          2,
-          pp.opAssoc.LEFT,
-          lambda x: FAnd(*x)),
-         (pp.Literal("|").suppress(),
-          2,
-          pp.opAssoc.LEFT,
-          lambda x: FOr(*x)),
-         ])
+        [
+            (pp.Literal("!").suppress(), 1, pp.opAssoc.RIGHT, lambda x: FNot(*x)),
+            (pp.Literal("&").suppress(), 2, pp.opAssoc.LEFT, lambda x: FAnd(*x)),
+            (pp.Literal("|").suppress(), 2, pp.opAssoc.LEFT, lambda x: FOr(*x)),
+        ],
+    )
     expr = pp.OneOrMore(expr)
     return expr.setParseAction(lambda x: FAnd(x) if len(x) != 1 else x)
 
@@ -538,11 +529,11 @@ def parse(s: str) -> Optional[TFilter]:
 
 def match(flt, flow):
     """
-        Matches a flow against a compiled filter expression.
-        Returns True if matched, False if not.
+    Matches a flow against a compiled filter expression.
+    Returns True if matched, False if not.
 
-        If flt is a string, it will be compiled as a filter expression.
-        If the expression is invalid, ValueError is raised.
+    If flt is a string, it will be compiled as a filter expression.
+    If the expression is invalid, ValueError is raised.
     """
     if isinstance(flt, str):
         flt = parse(flt)
@@ -555,17 +546,11 @@ def match(flt, flow):
 
 help = []
 for a in filter_unary:
-    help.append(
-        (f"~{a.code}", a.help)
-    )
+    help.append((f"~{a.code}", a.help))
 for b in filter_rex:
-    help.append(
-        (f"~{b.code} regex", b.help)
-    )
+    help.append((f"~{b.code} regex", b.help))
 for c in filter_int:
-    help.append(
-        (f"~{c.code} int", c.help)
-    )
+    help.append((f"~{c.code} int", c.help))
 help.sort()
 help.extend(
     [

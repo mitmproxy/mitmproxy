@@ -31,7 +31,6 @@ from mitmproxy.tools.console import window
 
 
 class ConsoleMaster(master.Master):
-
     def __init__(self, opts):
         super().__init__(opts)
 
@@ -72,37 +71,37 @@ class ConsoleMaster(master.Master):
         signals.update_settings.send(self)
 
     def options_error(self, opts, exc):
-        signals.status_message.send(
-            message=str(exc),
-            expire=1
-        )
+        signals.status_message.send(message=str(exc), expire=1)
 
     def prompt_for_exit(self):
         signals.status_prompt_onekey.send(
             self,
-            prompt = "Quit",
-            keys = (
+            prompt="Quit",
+            keys=(
                 ("yes", "y"),
                 ("no", "n"),
             ),
-            callback = self.quit,
+            callback=self.quit,
         )
 
     def sig_add_log(self, event_store, entry: log.LogEntry):
-        if log.log_tier(self.options.console_eventlog_verbosity) < log.log_tier(entry.level):
+        if log.log_tier(self.options.console_eventlog_verbosity) < log.log_tier(
+            entry.level
+        ):
             return
         if entry.level in ("error", "warn", "alert"):
             signals.status_message.send(
-                message = (
+                message=(
                     entry.level,
-                    "{}: {}".format(entry.level.title(), str(entry.msg).lstrip())
+                    "{}: {}".format(entry.level.title(), str(entry.msg).lstrip()),
                 ),
-                expire=5
+                expire=5,
             )
 
     def sig_call_in(self, sender, seconds, callback, args=()):
         def cb(*_):
             return callback(*args)
+
         self.loop.set_alarm_in(seconds, cb)
 
     @contextlib.contextmanager
@@ -117,7 +116,7 @@ class ConsoleMaster(master.Master):
 
     def spawn_editor(self, data):
         text = not isinstance(data, bytes)
-        fd, name = tempfile.mkstemp('', "mproxy", text=text)
+        fd, name = tempfile.mkstemp("", "mproxy", text=text)
         with open(fd, "w" if text else "wb") as f:
             f.write(data)
         # if no EDITOR is set, assume 'vi'
@@ -128,9 +127,7 @@ class ConsoleMaster(master.Master):
             try:
                 subprocess.call(cmd)
             except:
-                signals.status_message.send(
-                    message="Can't start editor: %s" % c
-                )
+                signals.status_message.send(message="Can't start editor: %s" % c)
             else:
                 with open(name, "r" if text else "rb") as f:
                     data = f.read()
@@ -160,7 +157,11 @@ class ConsoleMaster(master.Master):
                 shell = True
         if not cmd:
             # hm which one should get priority?
-            c = os.environ.get("MITMPROXY_EDITOR") or os.environ.get("PAGER") or os.environ.get("EDITOR")
+            c = (
+                os.environ.get("MITMPROXY_EDITOR")
+                or os.environ.get("PAGER")
+                or os.environ.get("EDITOR")
+            )
             if not c:
                 c = "less"
             cmd = shlex.split(c)
@@ -189,31 +190,35 @@ class ConsoleMaster(master.Master):
 
     def run(self):
         if not sys.stdout.isatty():
-            print("Error: mitmproxy's console interface requires a tty. "
-                  "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
+            print(
+                "Error: mitmproxy's console interface requires a tty. "
+                "Please run mitmproxy in an interactive shell environment.",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
         self.ui = window.Screen()
         self.ui.set_terminal_properties(256)
         self.set_palette(self.options, None)
         self.options.subscribe(
-            self.set_palette,
-            ["console_palette", "console_palette_transparent"]
+            self.set_palette, ["console_palette", "console_palette_transparent"]
         )
         self.loop = urwid.MainLoop(
             urwid.SolidFill("x"),
             event_loop=urwid.AsyncioEventLoop(loop=asyncio.get_event_loop()),
-            screen = self.ui,
-            handle_mouse = self.options.console_mouse,
+            screen=self.ui,
+            handle_mouse=self.options.console_mouse,
         )
         self.window = window.Window(self)
         self.loop.widget = self.window
         self.window.refresh()
 
         if self.start_err:
+
             def display_err(*_):
                 self.sig_add_log(None, self.start_err)
                 self.start_err = None
+
             self.loop.set_alarm_in(0.01, display_err)
 
         super().run_loop(self.loop.run)

@@ -16,7 +16,7 @@ class MappingAddonConfig:
 
 
 class MappingAddon:
-    """ The mapping add-on can be used in combination with web application scanners to reduce their false positives.
+    """The mapping add-on can be used in combination with web application scanners to reduce their false positives.
 
     Many web application scanners produce false positives caused by dynamically changing content of web applications
     such as the current time or current measurements. When testing for injection vulnerabilities, web application
@@ -47,7 +47,7 @@ class MappingAddon:
     """Whether to store all new content in the configuration file."""
 
     def __init__(self, filename: str, persistent: bool = False) -> None:
-        """ Initializes the mapping add-on
+        """Initializes the mapping add-on
 
         Args:
             filename: str that provides the name of the file in which the urls and css selectors to mapped content is
@@ -73,12 +73,16 @@ class MappingAddon:
 
     def load(self, loader):
         loader.add_option(
-            self.OPT_MAPPING_FILE, str, "",
-            "File where replacement configuration is stored."
+            self.OPT_MAPPING_FILE,
+            str,
+            "",
+            "File where replacement configuration is stored.",
         )
         loader.add_option(
-            self.OPT_MAP_PERSISTENT, bool, False,
-            "Whether to store all new content in the configuration file."
+            self.OPT_MAP_PERSISTENT,
+            bool,
+            False,
+            "Whether to store all new content in the configuration file.",
         )
 
     def configure(self, updated):
@@ -90,20 +94,30 @@ class MappingAddon:
         if self.OPT_MAP_PERSISTENT in updated:
             self.persistent = updated[self.OPT_MAP_PERSISTENT]
 
-    def replace(self, soup: BeautifulSoup, css_sel: str, replace: BeautifulSoup) -> None:
+    def replace(
+        self, soup: BeautifulSoup, css_sel: str, replace: BeautifulSoup
+    ) -> None:
         """Replaces the content of soup that matches the css selector with the given replace content."""
         for content in soup.select(css_sel):
-            self.logger.debug(f"replace \"{content}\" with \"{replace}\"")
+            self.logger.debug(f'replace "{content}" with "{replace}"')
             content.replace_with(copy.copy(replace))
 
-    def apply_template(self, soup: BeautifulSoup, template: Dict[str, typing.Union[BeautifulSoup]]) -> None:
+    def apply_template(
+        self, soup: BeautifulSoup, template: Dict[str, typing.Union[BeautifulSoup]]
+    ) -> None:
         """Applies the given mapping template to the given soup."""
         for css_sel, replace in template.items():
             mapped = soup.select(css_sel)
             if not mapped:
-                self.logger.warning(f"Could not find \"{css_sel}\", can not freeze anything.")
+                self.logger.warning(
+                    f'Could not find "{css_sel}", can not freeze anything.'
+                )
             else:
-                self.replace(soup, css_sel, BeautifulSoup(replace, features=MappingAddonConfig.HTML_PARSER))
+                self.replace(
+                    soup,
+                    css_sel,
+                    BeautifulSoup(replace, features=MappingAddonConfig.HTML_PARSER),
+                )
 
     def response(self, flow: HTTPFlow) -> None:
         """If a response is received, check if we should replace some content. """
@@ -120,7 +134,9 @@ class MappingAddon:
                         self.apply_template(content, template)
                     res.content = content.encode(encoding)
                 else:
-                    self.logger.warning(f"Unsupported content type '{content_type}' or content encoding '{encoding}'")
+                    self.logger.warning(
+                        f"Unsupported content type '{content_type}' or content encoding '{encoding}'"
+                    )
         except KeyError:
             pass
 

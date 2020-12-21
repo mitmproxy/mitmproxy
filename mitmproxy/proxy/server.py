@@ -19,7 +19,13 @@ from OpenSSL import SSL
 from mitmproxy import http, options as moptions
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import commands, events, layer, layers, server_hooks
-from mitmproxy.proxy.context import Address, Client, Connection, ConnectionState, Context
+from mitmproxy.proxy.context import (
+    Address,
+    Client,
+    Connection,
+    ConnectionState,
+    Context,
+)
 from mitmproxy.proxy.layers import tls
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
@@ -45,7 +51,9 @@ class TimeoutWatchdog:
     async def watch(self):
         while True:
             await self.can_timeout.wait()
-            await asyncio.sleep(self.CONNECTION_TIMEOUT - (time.time() - self.last_activity))
+            await asyncio.sleep(
+                self.CONNECTION_TIMEOUT - (time.time() - self.last_activity)
+            )
             if self.last_activity + self.CONNECTION_TIMEOUT < time.time():
                 await self.callback()
                 return
@@ -111,7 +119,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 client=self.client.peername,
             )
             if not handler:
-                return   # this should not be needed, see asyncio_utils.create_task
+                return  # this should not be needed, see asyncio_utils.create_task
             self.transports[self.client].handler = handler
             self.server_event(events.Start())
             await asyncio.wait([handler])
@@ -127,29 +135,38 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             for io in self.transports.values():
                 if io.handler:
                     asyncio_utils.cancel_task(io.handler, "client disconnected")
-            await asyncio.wait([x.handler for x in self.transports.values() if x.handler])
+            await asyncio.wait(
+                [x.handler for x in self.transports.values() if x.handler]
+            )
             self.log("transports closed!", "debug")
 
     async def open_connection(self, command: commands.OpenConnection) -> None:
         if not command.connection.address:
             self.log(f"Cannot open connection, no hostname given.")
-            self.server_event(events.OpenConnectionReply(command, f"Cannot open connection, no hostname given."))
+            self.server_event(
+                events.OpenConnectionReply(
+                    command, f"Cannot open connection, no hostname given."
+                )
+            )
             return
 
         hook_data = server_hooks.ServerConnectionHookData(
-            client=self.client,
-            server=command.connection
+            client=self.client, server=command.connection
         )
         await self.handle_hook(server_hooks.ServerConnectHook(hook_data))
         if command.connection.error:
-            self.log(f"server connection to {human.format_address(command.connection.address)} killed before connect.")
+            self.log(
+                f"server connection to {human.format_address(command.connection.address)} killed before connect."
+            )
             self.server_event(events.OpenConnectionReply(command, "Connection killed."))
             return
 
         async with self.max_conns[command.connection.address]:
             try:
                 command.connection.timestamp_start = time.time()
-                reader, writer = await asyncio.open_connection(*command.connection.address)
+                reader, writer = await asyncio.open_connection(
+                    *command.connection.address
+                )
             except (IOError, asyncio.CancelledError) as e:
                 err = str(e)
                 if not err:  # str(CancelledError()) returns empty string.
@@ -165,8 +182,8 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             else:
                 command.connection.timestamp_tcp_setup = time.time()
                 command.connection.state = ConnectionState.OPEN
-                command.connection.peername = writer.get_extra_info('peername')
-                command.connection.sockname = writer.get_extra_info('sockname')
+                command.connection.peername = writer.get_extra_info("peername")
+                command.connection.sockname = writer.get_extra_info("sockname")
                 self.transports[command.connection].reader = reader
                 self.transports[command.connection].writer = writer
 
@@ -282,7 +299,10 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                         client=self.client.peername,
                     )
                     self.transports[command.connection] = ConnectionIO(handler=handler)
-                elif isinstance(command, commands.ConnectionCommand) and command.connection not in self.transports:
+                elif (
+                    isinstance(command, commands.ConnectionCommand)
+                    and command.connection not in self.transports
+                ):
                     return  # The connection has already been closed.
                 elif isinstance(command, commands.SendData):
                     writer = self.transports[command.connection].writer
@@ -308,7 +328,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
         except Exception:
             self.log(f"mitmproxy has crashed!\n{traceback.format_exc()}", level="error")
 
-    def close_connection(self, connection: Connection, half_close: bool = False) -> None:
+    def close_connection(
+        self, connection: Connection, half_close: bool = False
+    ) -> None:
         if half_close:
             if not connection.state & ConnectionState.CAN_WRITE:
                 return
@@ -332,15 +354,22 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
 
 class StreamConnectionHandler(ConnectionHandler, metaclass=abc.ABCMeta):
-    def __init__(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter, options: moptions.Options) -> None:
+    def __init__(
+        self,
+        reader: asyncio.StreamReader,
+        writer: asyncio.StreamWriter,
+        options: moptions.Options,
+    ) -> None:
         client = Client(
-            writer.get_extra_info('peername'),
-            writer.get_extra_info('sockname'),
+            writer.get_extra_info("peername"),
+            writer.get_extra_info("sockname"),
             time.time(),
         )
         context = Context(client, options)
         super().__init__(context)
-        self.transports[client] = ConnectionIO(handler=None, reader=reader, writer=writer)
+        self.transports[client] = ConnectionIO(
+            handler=None, reader=reader, writer=writer
+        )
 
 
 class SimpleConnectionHandler(StreamConnectionHandler):  # pragma: no cover
@@ -352,10 +381,7 @@ class SimpleConnectionHandler(StreamConnectionHandler):  # pragma: no cover
         super().__init__(reader, writer, options)
         self.hook_handlers = hooks
 
-    async def handle_hook(
-            self,
-            hook: commands.Hook
-    ) -> None:
+    async def handle_hook(self, hook: commands.Hook) -> None:
         if hook.name in self.hook_handlers:
             self.hook_handlers[hook.name](*hook.args())
 
@@ -371,16 +397,20 @@ if __name__ == "__main__":  # pragma: no cover
     opts = moptions.Options()
     # options duplicated here to simplify testing setup
     opts.add_option(
-        "connection_strategy", str, "lazy",
+        "connection_strategy",
+        str,
+        "lazy",
         "Determine when server connections should be established.",
-        choices=("eager", "lazy")
+        choices=("eager", "lazy"),
     )
     opts.add_option(
-        "keep_host_header", bool, False,
+        "keep_host_header",
+        bool,
+        False,
         """
         Reverse Proxy: Keep the original host header instead of rewriting it
         to the reverse proxy target.
-        """
+        """,
     )
     opts.mode = "reverse:http://127.0.0.1:3000/"
 
@@ -391,7 +421,7 @@ if __name__ == "__main__":  # pragma: no cover
             # lambda ctx: setattr(ctx.server, "tls", True) or layers.ServerTLSLayer(ctx),
             # lambda ctx: layers.ClientTLSLayer(ctx),
             lambda ctx: layers.modes.ReverseProxy(ctx),
-            lambda ctx: layers.HttpLayer(ctx, HTTPMode.transparent)
+            lambda ctx: layers.HttpLayer(ctx, HTTPMode.transparent),
         ]
 
         def next_layer(nl: layer.NextLayer):
@@ -401,7 +431,9 @@ if __name__ == "__main__":  # pragma: no cover
 
         def request(flow: http.HTTPFlow):
             if "cached" in flow.request.path:
-                flow.response = http.HTTPResponse.make(418, f"(cached) {flow.request.text}")
+                flow.response = http.HTTPResponse.make(
+                    418, f"(cached) {flow.request.text}"
+                )
             if "toggle-tls" in flow.request.path:
                 if flow.request.url.startswith("https://"):
                     flow.request.url = flow.request.url.replace("https://", "http://")
@@ -415,10 +447,14 @@ if __name__ == "__main__":  # pragma: no cover
             ssl_context = SSL.Context(SSL.SSLv23_METHOD)
             if tls_start.conn == tls_start.context.client:
                 ssl_context.use_privatekey_file(
-                    pkg_data.path("../test/mitmproxy/data/verificationcerts/trusted-leaf.key")
+                    pkg_data.path(
+                        "../test/mitmproxy/data/verificationcerts/trusted-leaf.key"
+                    )
                 )
                 ssl_context.use_certificate_chain_file(
-                    pkg_data.path("../test/mitmproxy/data/verificationcerts/trusted-leaf.crt")
+                    pkg_data.path(
+                        "../test/mitmproxy/data/verificationcerts/trusted-leaf.crt"
+                    )
                 )
 
             tls_start.ssl_conn = SSL.Connection(ssl_context)
@@ -429,13 +465,18 @@ if __name__ == "__main__":  # pragma: no cover
                 tls_start.ssl_conn.set_connect_state()
                 tls_start.ssl_conn.set_tlsext_host_name(tls_start.context.client.sni)
 
-        await SimpleConnectionHandler(reader, writer, opts, {
-            "next_layer": next_layer,
-            "request": request,
-            "tls_start": tls_start,
-        }).handle_client()
+        await SimpleConnectionHandler(
+            reader,
+            writer,
+            opts,
+            {
+                "next_layer": next_layer,
+                "request": request,
+                "tls_start": tls_start,
+            },
+        ).handle_client()
 
-    coro = asyncio.start_server(handle, '127.0.0.1', 8080, loop=loop)
+    coro = asyncio.start_server(handle, "127.0.0.1", 8080, loop=loop)
     server = loop.run_until_complete(coro)
 
     # Serve requests until Ctrl+C is pressed

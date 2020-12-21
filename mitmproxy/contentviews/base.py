@@ -3,7 +3,9 @@ import typing
 
 KEY_MAX = 30
 
-TTextType = typing.Union[str, bytes]  # FIXME: This should be either bytes or str ultimately.
+TTextType = typing.Union[
+    str, bytes
+]  # FIXME: This should be either bytes or str ultimately.
 TViewLine = typing.List[typing.Tuple[str, TTextType]]
 TViewResult = typing.Tuple[str, typing.Iterator[TViewLine]]
 
@@ -36,7 +38,7 @@ class View:
 
 
 def format_pairs(
-        items: typing.Iterable[typing.Tuple[TTextType, TTextType]]
+    items: typing.Iterable[typing.Tuple[TTextType, TTextType]]
 ) -> typing.Iterator[TViewLine]:
 
     """
@@ -60,15 +62,10 @@ def format_pairs(
 
         key = key.ljust(max_key_len + 2)
 
-        yield [
-            ("header", key),
-            ("text", value)
-        ]
+        yield [("header", key), ("text", value)]
 
 
-def format_dict(
-        d: typing.Mapping[TTextType, TTextType]
-) -> typing.Iterator[TViewLine]:
+def format_dict(d: typing.Mapping[TTextType, TTextType]) -> typing.Iterator[TViewLine]:
     """
     Helper function that transforms the given dictionary into a list of
     [

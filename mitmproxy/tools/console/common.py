@@ -19,7 +19,7 @@ IS_WSL = "Microsoft" in platform.platform()
 
 def is_keypress(k):
     """
-        Is this input event a keypress?
+    Is this input event a keypress?
     """
     if isinstance(k, str):
         return True
@@ -40,10 +40,10 @@ KEY_MAX = 30
 
 
 def format_keyvals(
-        entries: typing.Iterable[typing.Tuple[str, typing.Union[None, str, urwid.Widget]]],
-        key_format: str = "key",
-        value_format: str = "text",
-        indent: int = 0
+    entries: typing.Iterable[typing.Tuple[str, typing.Union[None, str, urwid.Widget]]],
+    key_format: str = "key",
+    value_format: str = "text",
+    indent: int = 0,
 ) -> typing.List[urwid.Columns]:
     """
     Format a list of (key, value) tuples.
@@ -71,14 +71,10 @@ def format_keyvals(
             urwid.Columns(
                 [
                     ("fixed", indent, urwid.Text("")),
-                    (
-                        "fixed",
-                        max_key_len,
-                        urwid.Text([(key_format, k)])
-                    ),
-                    v
+                    ("fixed", max_key_len, urwid.Text([(key_format, k)])),
+                    v,
                 ],
-                dividechars=2
+                dividechars=2,
             )
         )
     return ret
@@ -86,15 +82,7 @@ def format_keyvals(
 
 def fcol(s: str, attr: str) -> typing.Tuple[str, int, urwid.Text]:
     s = str(s)
-    return (
-        "fixed",
-        len(s),
-        urwid.Text(
-            [
-                (attr, s)
-            ]
-        )
-    )
+    return ("fixed", len(s), urwid.Text([(attr, s)]))
 
 
 if urwid.util.detected_encoding:
@@ -117,16 +105,16 @@ else:
     SYMBOL_TO_CLIENT = "<-"
 
 SCHEME_STYLES = {
-    'http': 'scheme_http',
-    'https': 'scheme_https',
-    'tcp': 'scheme_tcp',
+    "http": "scheme_http",
+    "https": "scheme_https",
+    "tcp": "scheme_tcp",
 }
 HTTP_REQUEST_METHOD_STYLES = {
-    'GET': 'method_get',
-    'POST': 'method_post',
-    'DELETE': 'method_delete',
-    'HEAD': 'method_head',
-    'PUT': 'method_put'
+    "GET": "method_get",
+    "POST": "method_post",
+    "DELETE": "method_delete",
+    "HEAD": "method_head",
+    "PUT": "method_put",
 }
 HTTP_RESPONSE_CODE_STYLE = {
     2: "code_200",
@@ -149,18 +137,18 @@ def fixlen(s: str, maxlen: int) -> str:
     if len(s) <= maxlen:
         return s.ljust(maxlen)
     else:
-        return s[0:maxlen - len(SYMBOL_ELLIPSIS)] + SYMBOL_ELLIPSIS
+        return s[0 : maxlen - len(SYMBOL_ELLIPSIS)] + SYMBOL_ELLIPSIS
 
 
 def fixlen_r(s: str, maxlen: int) -> str:
     if len(s) <= maxlen:
         return s.rjust(maxlen)
     else:
-        return SYMBOL_ELLIPSIS + s[len(s) - maxlen + len(SYMBOL_ELLIPSIS):]
+        return SYMBOL_ELLIPSIS + s[len(s) - maxlen + len(SYMBOL_ELLIPSIS) :]
 
 
 class TruncatedText(urwid.Widget):
-    def __init__(self, text, attr, align='left'):
+    def __init__(self, text, attr, align="left"):
         self.text = text
         self.attr = attr
         self.align = align
@@ -175,7 +163,7 @@ class TruncatedText(urwid.Widget):
     def render(self, size, focus=False):
         text = self.text
         attr = self.attr
-        if self.align == 'right':
+        if self.align == "right":
             text = text[::-1]
             attr = attr[::-1]
 
@@ -188,8 +176,8 @@ class TruncatedText(urwid.Widget):
         if width >= text_len:
             remaining = width - text_len
             if remaining > 0:
-                c_text = text + ' ' * remaining
-                c_attr = attr + [('text', remaining)]
+                c_text = text + " " * remaining
+                c_attr = attr + [("text", remaining)]
             else:
                 c_text = text
                 c_attr = attr
@@ -197,17 +185,18 @@ class TruncatedText(urwid.Widget):
             visible_len = width - len(SYMBOL_ELLIPSIS)
             visible_text = text[0:visible_len]
             c_text = visible_text + SYMBOL_ELLIPSIS
-            c_attr = (urwid.util.rle_subseg(attr, 0, len(visible_text.encode())) +
-                      [('focus', len(SYMBOL_ELLIPSIS.encode()))])
+            c_attr = urwid.util.rle_subseg(attr, 0, len(visible_text.encode())) + [
+                ("focus", len(SYMBOL_ELLIPSIS.encode()))
+            ]
 
-        if self.align == 'right':
+        if self.align == "right":
             c_text = c_text[::-1]
             c_attr = c_attr[::-1]
 
         return urwid.TextCanvas([c_text.encode()], [c_attr], maxcol=width)
 
 
-def truncated_plain(text, attr, align='left'):
+def truncated_plain(text, attr, align="left"):
     return TruncatedText(text, [(attr, len(text.encode()))], align)
 
 
@@ -242,109 +231,114 @@ def colorize_host(host):
     for letter in reversed(range(len(host))):
         character = host[letter]
         if tld_size > 0:
-            style = 'url_domain'
+            style = "url_domain"
             tld_size -= 1
         elif tld_size == 0:
-            style = 'text'
+            style = "text"
             tld_size -= 1
         elif sld_size > 0:
             sld_size -= 1
-            style = 'url_extension'
+            style = "url_extension"
         else:
-            style = 'text'
+            style = "text"
         rle_append_beginning_modify(attr, (style, len(character.encode())))
     return attr
 
 
 def colorize_req(s):
-    path = s.split('?', 2)[0]
+    path = s.split("?", 2)[0]
     i_query = len(path)
-    i_last_slash = path.rfind('/')
-    i_ext = path[i_last_slash + 1:].rfind('.')
+    i_last_slash = path.rfind("/")
+    i_ext = path[i_last_slash + 1 :].rfind(".")
     i_ext = i_last_slash + i_ext if i_ext >= 0 else len(s)
     in_val = False
     attr = []
     for i in range(len(s)):
         c = s[i]
-        if ((i < i_query and c == '/') or
-                (i < i_query and i > i_last_slash and c == '.') or
-                (i == i_query)):
-            a = 'url_punctuation'
+        if (
+            (i < i_query and c == "/")
+            or (i < i_query and i > i_last_slash and c == ".")
+            or (i == i_query)
+        ):
+            a = "url_punctuation"
         elif i > i_query:
             if in_val:
-                if c == '&':
+                if c == "&":
                     in_val = False
-                    a = 'url_punctuation'
+                    a = "url_punctuation"
                 else:
-                    a = 'url_query_value'
+                    a = "url_query_value"
             else:
-                if c == '=':
+                if c == "=":
                     in_val = True
-                    a = 'url_punctuation'
+                    a = "url_punctuation"
                 else:
-                    a = 'url_query_key'
+                    a = "url_query_key"
         elif i > i_ext:
-            a = 'url_extension'
+            a = "url_extension"
         elif i > i_last_slash:
-            a = 'url_filename'
+            a = "url_filename"
         else:
-            a = 'text'
+            a = "text"
         urwid.util.rle_append_modify(attr, (a, len(c.encode())))
     return attr
 
 
 def colorize_url(url):
-    parts = url.split('/', 3)
-    if len(parts) < 4 or len(parts[1]) > 0 or parts[0][-1:] != ':':
-        return [('error', len(url))]  # bad URL
+    parts = url.split("/", 3)
+    if len(parts) < 4 or len(parts[1]) > 0 or parts[0][-1:] != ":":
+        return [("error", len(url))]  # bad URL
     schemes = {
-        'http:': 'scheme_http',
-        'https:': 'scheme_https',
+        "http:": "scheme_http",
+        "https:": "scheme_https",
     }
-    return [
-               (schemes.get(parts[0], "scheme_other"), len(parts[0]) - 1),
-               ('url_punctuation', 3),  # ://
-           ] + colorize_host(parts[2]) + colorize_req('/' + parts[3])
+    return (
+        [
+            (schemes.get(parts[0], "scheme_other"), len(parts[0]) - 1),
+            ("url_punctuation", 3),  # ://
+        ]
+        + colorize_host(parts[2])
+        + colorize_req("/" + parts[3])
+    )
 
 
 def format_http_content_type(content_type: str) -> typing.Tuple[str, str]:
     content_type = content_type.split(";")[0]
-    if content_type.endswith('/javascript'):
-        style = 'content_script'
-    elif content_type.startswith('text/'):
-        style = 'content_text'
-    elif (content_type.startswith('image/') or
-          content_type.startswith('video/') or
-          content_type.startswith('font/') or
-          "/x-font-" in content_type):
-        style = 'content_media'
-    elif content_type.endswith('/json') or content_type.endswith('/xml'):
-        style = 'content_data'
-    elif content_type.startswith('application/'):
-        style = 'content_raw'
+    if content_type.endswith("/javascript"):
+        style = "content_script"
+    elif content_type.startswith("text/"):
+        style = "content_text"
+    elif (
+        content_type.startswith("image/")
+        or content_type.startswith("video/")
+        or content_type.startswith("font/")
+        or "/x-font-" in content_type
+    ):
+        style = "content_media"
+    elif content_type.endswith("/json") or content_type.endswith("/xml"):
+        style = "content_data"
+    elif content_type.startswith("application/"):
+        style = "content_raw"
     else:
-        style = 'content_other'
+        style = "content_other"
     return content_type, style
 
 
 def format_duration(duration: float) -> typing.Tuple[str, str]:
     pretty_duration = human.pretty_duration(duration)
-    style = 'gradient_%02d' % int(99 - 100 * min(math.log2(1 + 1000 * duration) / 12, 0.99))
+    style = "gradient_%02d" % int(
+        99 - 100 * min(math.log2(1 + 1000 * duration) / 12, 0.99)
+    )
     return pretty_duration, style
 
 
 def format_size(num_bytes: int) -> typing.Tuple[str, str]:
     pretty_size = human.pretty_size(num_bytes)
-    style = 'gradient_%02d' % int(99 - 100 * min(math.log2(1 + num_bytes) / 20, 0.99))
+    style = "gradient_%02d" % int(99 - 100 * min(math.log2(1 + num_bytes) / 20, 0.99))
     return pretty_size, style
 
 
-def format_left_indicators(
-        *,
-        focused: bool,
-        intercepted: bool,
-        timestamp: float
-):
+def format_left_indicators(*, focused: bool, intercepted: bool, timestamp: float):
     indicators: typing.List[typing.Union[str, typing.Tuple[str, str]]] = []
     if focused:
         indicators.append(("focus", ">>"))
@@ -358,11 +352,7 @@ def format_left_indicators(
     return "fixed", 10, urwid.Text(indicators)
 
 
-def format_right_indicators(
-        *,
-        replay: bool,
-        marked: bool
-):
+def format_right_indicators(*, replay: bool, marked: bool):
     indicators: typing.List[typing.Union[str, typing.Tuple[str, str]]] = []
     if replay:
         indicators.append(("replay", SYMBOL_REPLAY))
@@ -377,26 +367,26 @@ def format_right_indicators(
 
 @lru_cache(maxsize=800)
 def format_http_flow_list(
-        *,
-        render_mode: RenderMode,
-        focused: bool,
-        marked: bool,
-        is_replay: bool,
-        request_method: str,
-        request_scheme: str,
-        request_host: str,
-        request_path: str,
-        request_url: str,
-        request_http_version: str,
-        request_timestamp: float,
-        request_is_push_promise: bool,
-        intercepted: bool,
-        response_code: typing.Optional[int],
-        response_reason: typing.Optional[str],
-        response_content_length: typing.Optional[int],
-        response_content_type: typing.Optional[str],
-        duration: typing.Optional[float],
-        error_message: typing.Optional[str],
+    *,
+    render_mode: RenderMode,
+    focused: bool,
+    marked: bool,
+    is_replay: bool,
+    request_method: str,
+    request_scheme: str,
+    request_host: str,
+    request_path: str,
+    request_url: str,
+    request_http_version: str,
+    request_timestamp: float,
+    request_is_push_promise: bool,
+    intercepted: bool,
+    response_code: typing.Optional[int],
+    response_reason: typing.Optional[str],
+    response_content_length: typing.Optional[int],
+    response_content_type: typing.Optional[str],
+    duration: typing.Optional[float],
+    error_message: typing.Optional[str],
 ) -> urwid.Widget:
     req = []
 
@@ -412,7 +402,7 @@ def format_http_flow_list(
     req.append(fcol(request_method, method_style))
 
     if request_is_push_promise:
-        req.append(fcol('PUSH_PROMISE', 'method_http2_push'))
+        req.append(fcol("PUSH_PROMISE", "method_http2_push"))
 
     preamble_len = sum(x[1] for x in req) + len(req) - 1
 
@@ -426,24 +416,22 @@ def format_http_flow_list(
         url_style = "title"
 
     if render_mode is RenderMode.DETAILVIEW:
-        req.append(
-            urwid.Text([(url_style, request_url)])
-        )
+        req.append(urwid.Text([(url_style, request_url)]))
     else:
         req.append(truncated_plain(request_url, url_style))
 
     req.append(format_right_indicators(replay=is_replay, marked=marked))
 
-    resp = [
-        ("fixed", preamble_len, urwid.Text(""))
-    ]
+    resp = [("fixed", preamble_len, urwid.Text(""))]
     if response_code:
         if intercepted:
             style = "intercept"
         else:
             style = ""
 
-        status_style = style or HTTP_RESPONSE_CODE_STYLE.get(response_code // 100, "code_other")
+        status_style = style or HTTP_RESPONSE_CODE_STYLE.get(
+            response_code // 100, "code_other"
+        )
         resp.append(fcol(SYMBOL_RETURN, status_style))
         resp.append(fcol(str(response_code), status_style))
         if response_reason and render_mode is RenderMode.DETAILVIEW:
@@ -470,40 +458,37 @@ def format_http_flow_list(
         resp.append(fcol(SYMBOL_RETURN, "error"))
         resp.append(urwid.Text([("error", error_message)]))
 
-    return urwid.Pile([
-        urwid.Columns(req, dividechars=1),
-        urwid.Columns(resp, dividechars=1)
-    ])
+    return urwid.Pile(
+        [urwid.Columns(req, dividechars=1), urwid.Columns(resp, dividechars=1)]
+    )
 
 
 @lru_cache(maxsize=800)
 def format_http_flow_table(
-        *,
-        render_mode: RenderMode,
-        focused: bool,
-        marked: bool,
-        is_replay: typing.Optional[str],
-        request_method: str,
-        request_scheme: str,
-        request_host: str,
-        request_path: str,
-        request_url: str,
-        request_http_version: str,
-        request_timestamp: float,
-        request_is_push_promise: bool,
-        intercepted: bool,
-        response_code: typing.Optional[int],
-        response_reason: typing.Optional[str],
-        response_content_length: typing.Optional[int],
-        response_content_type: typing.Optional[str],
-        duration: typing.Optional[float],
-        error_message: typing.Optional[str],
+    *,
+    render_mode: RenderMode,
+    focused: bool,
+    marked: bool,
+    is_replay: typing.Optional[str],
+    request_method: str,
+    request_scheme: str,
+    request_host: str,
+    request_path: str,
+    request_url: str,
+    request_http_version: str,
+    request_timestamp: float,
+    request_is_push_promise: bool,
+    intercepted: bool,
+    response_code: typing.Optional[int],
+    response_reason: typing.Optional[str],
+    response_content_length: typing.Optional[int],
+    response_content_type: typing.Optional[str],
+    duration: typing.Optional[float],
+    error_message: typing.Optional[str],
 ) -> urwid.Widget:
     items = [
         format_left_indicators(
-            focused=focused,
-            intercepted=intercepted,
-            timestamp=request_timestamp
+            focused=focused, intercepted=intercepted, timestamp=request_timestamp
         )
     ]
 
@@ -516,13 +501,23 @@ def format_http_flow_table(
     items.append(fcol(fixlen(request_scheme.upper(), 5), scheme_style))
 
     if request_is_push_promise:
-        method_style = 'method_http2_push'
+        method_style = "method_http2_push"
     else:
-        method_style = request_style or HTTP_REQUEST_METHOD_STYLES.get(request_method, "method_other")
+        method_style = request_style or HTTP_REQUEST_METHOD_STYLES.get(
+            request_method, "method_other"
+        )
     items.append(fcol(fixlen(request_method, 4), method_style))
 
-    items.append(('weight', 0.25, TruncatedText(request_host, colorize_host(request_host), 'right')))
-    items.append(('weight', 1.0, TruncatedText(request_path, colorize_req(request_path), 'left')))
+    items.append(
+        (
+            "weight",
+            0.25,
+            TruncatedText(request_host, colorize_host(request_host), "right"),
+        )
+    )
+    items.append(
+        ("weight", 1.0, TruncatedText(request_path, colorize_req(request_path), "left"))
+    )
 
     if intercepted and response_code:
         response_style = "intercept"
@@ -532,35 +527,37 @@ def format_http_flow_table(
     if response_code:
 
         status = str(response_code)
-        status_style = response_style or HTTP_RESPONSE_CODE_STYLE.get(response_code // 100, "code_other")
+        status_style = response_style or HTTP_RESPONSE_CODE_STYLE.get(
+            response_code // 100, "code_other"
+        )
 
         if response_content_length and response_content_type:
             content, content_style = format_http_content_type(response_content_type)
             content_style = response_style or content_style
         elif response_content_length:
-            content = ''
-            content_style = 'content_none'
+            content = ""
+            content_style = "content_none"
         elif response_content_length == 0:
             content = "[no content]"
-            content_style = 'content_none'
+            content_style = "content_none"
         else:
             content = "[content missing]"
-            content_style = 'content_none'
+            content_style = "content_none"
 
     elif error_message:
-        status = 'err'
-        status_style = 'error'
+        status = "err"
+        status_style = "error"
         content = error_message
-        content_style = 'error'
+        content_style = "error"
 
     else:
-        status = ''
-        status_style = 'text'
-        content = ''
-        content_style = ''
+        status = ""
+        status_style = "text"
+        content = ""
+        content_style = ""
 
     items.append(fcol(fixlen(status, 3), status_style))
-    items.append(('weight', 0.15, truncated_plain(content, content_style, 'right')))
+    items.append(("weight", 0.15, truncated_plain(content, content_style, "right")))
 
     if response_content_length:
         size, size_style = format_size(response_content_length)
@@ -570,29 +567,28 @@ def format_http_flow_table(
 
     if duration:
         duration_pretty, duration_style = format_duration(duration)
-        items.append(fcol(fixlen_r(duration_pretty, 5), response_style or duration_style))
+        items.append(
+            fcol(fixlen_r(duration_pretty, 5), response_style or duration_style)
+        )
     else:
         items.append(("fixed", 5, urwid.Text("")))
 
-    items.append(format_right_indicators(
-        replay=bool(is_replay),
-        marked=marked
-    ))
+    items.append(format_right_indicators(replay=bool(is_replay), marked=marked))
     return urwid.Columns(items, dividechars=1, min_width=15)
 
 
 @lru_cache(maxsize=800)
 def format_tcp_flow(
-        *,
-        render_mode: RenderMode,
-        focused: bool,
-        timestamp_start: float,
-        marked: bool,
-        client_address,
-        server_address,
-        total_size: int,
-        duration: typing.Optional[float],
-        error_message: typing.Optional[str],
+    *,
+    render_mode: RenderMode,
+    focused: bool,
+    timestamp_start: float,
+    marked: bool,
+    client_address,
+    server_address,
+    total_size: int,
+    duration: typing.Optional[float],
+    error_message: typing.Optional[str],
 ):
     conn = f"{human.format_address(client_address)} <-> {human.format_address(server_address)}"
 
@@ -600,7 +596,9 @@ def format_tcp_flow(
 
     if render_mode in (RenderMode.TABLE, RenderMode.DETAILVIEW):
         items.append(
-            format_left_indicators(focused=focused, intercepted=False, timestamp=timestamp_start)
+            format_left_indicators(
+                focused=focused, intercepted=False, timestamp=timestamp_start
+            )
         )
     else:
         if focused:
@@ -613,9 +611,9 @@ def format_tcp_flow(
     else:
         items.append(fcol("TCP", SCHEME_STYLES["tcp"]))
 
-    items.append(('weight', 1.0, truncated_plain(conn, "text", 'left')))
+    items.append(("weight", 1.0, truncated_plain(conn, "text", "left")))
     if error_message:
-        items.append(('weight', 1.0, truncated_plain(error_message, "error", 'left')))
+        items.append(("weight", 1.0, truncated_plain(error_message, "error", "left")))
 
     if total_size:
         size, size_style = format_size(total_size)
@@ -631,17 +629,15 @@ def format_tcp_flow(
 
     items.append(format_right_indicators(replay=False, marked=marked))
 
-    return urwid.Pile([
-        urwid.Columns(items, dividechars=1, min_width=15)
-    ])
+    return urwid.Pile([urwid.Columns(items, dividechars=1, min_width=15)])
 
 
 def format_flow(
-        f: flow.Flow,
-        *,
-        render_mode: RenderMode,
-        hostheader: bool = False,  # pass options directly if we need more stuff from them
-        focused: bool = True,
+    f: flow.Flow,
+    *,
+    render_mode: RenderMode,
+    hostheader: bool = False,  # pass options directly if we need more stuff from them
+    focused: bool = True,
 ) -> urwid.Widget:
     """
     This functions calls the proper renderer depending on the flow type.
@@ -676,9 +672,7 @@ def format_flow(
             error_message=error_message,
         )
     elif isinstance(f, HTTPFlow):
-        intercepted = (
-                f.intercepted and not (f.reply and f.reply.state == "committed")
-        )
+        intercepted = f.intercepted and not (f.reply and f.reply.state == "committed")
         response_content_length: typing.Optional[int]
         if f.response:
             if f.response.raw_content is not None:
@@ -689,7 +683,9 @@ def format_flow(
             response_reason: typing.Optional[str] = f.response.reason
             response_content_type = f.response.headers.get("content-type")
             if f.response.timestamp_end:
-                duration = max([f.response.timestamp_end - f.request.timestamp_start, 0])
+                duration = max(
+                    [f.response.timestamp_end - f.request.timestamp_start, 0]
+                )
             else:
                 duration = None
         else:
@@ -715,7 +711,7 @@ def format_flow(
             request_url=f.request.pretty_url if hostheader else f.request.url,
             request_http_version=f.request.http_version,
             request_timestamp=f.request.timestamp_start,
-            request_is_push_promise='h2-pushed-stream' in f.metadata,
+            request_is_push_promise="h2-pushed-stream" in f.metadata,
             intercepted=intercepted,
             response_code=response_code,
             response_reason=response_reason,

@@ -17,18 +17,12 @@ from mitmproxy import certs, exceptions
 from mitmproxy.contrib.kaitaistruct import tls_client_hello
 from mitmproxy.net import check
 
-BASIC_OPTIONS = (
-    SSL.OP_CIPHER_SERVER_PREFERENCE
-)
+BASIC_OPTIONS = SSL.OP_CIPHER_SERVER_PREFERENCE
 if hasattr(SSL, "OP_NO_COMPRESSION"):
     BASIC_OPTIONS |= SSL.OP_NO_COMPRESSION
 
 DEFAULT_METHOD = SSL.SSLv23_METHOD
-DEFAULT_OPTIONS = (
-    SSL.OP_NO_SSLv2 |
-    SSL.OP_NO_SSLv3 |
-    BASIC_OPTIONS
-)
+DEFAULT_OPTIONS = SSL.OP_NO_SSLv2 | SSL.OP_NO_SSLv3 | BASIC_OPTIONS
 
 """
 Map a reasonable SSL version specification into the format OpenSSL expects.
@@ -116,18 +110,18 @@ log_master_secret = MasterSecretLogger.create_logfun(
 
 
 def _create_ssl_context(
-        method: int = DEFAULT_METHOD,
-        options: int = DEFAULT_OPTIONS,
-        ca_path: str = None,
-        ca_pemfile: str = None,
-        cipher_list: str = None,
-        alpn_protos: typing.Iterable[bytes] = None,
-        alpn_select=None,
-        alpn_select_callback: typing.Callable[[typing.Any, typing.Any], bytes] = None,
-        verify: int = SSL.VERIFY_PEER,
-        verify_callback: typing.Optional[
-            typing.Callable[[SSL.Connection, SSL.X509, int, int, bool], bool]
-        ] = None,
+    method: int = DEFAULT_METHOD,
+    options: int = DEFAULT_OPTIONS,
+    ca_path: str = None,
+    ca_pemfile: str = None,
+    cipher_list: str = None,
+    alpn_protos: typing.Iterable[bytes] = None,
+    alpn_select=None,
+    alpn_select_callback: typing.Callable[[typing.Any, typing.Any], bytes] = None,
+    verify: int = SSL.VERIFY_PEER,
+    verify_callback: typing.Optional[
+        typing.Callable[[SSL.Connection, SSL.X509, int, int, bool], bool]
+    ] = None,
 ) -> SSL.Context:
     """
     Creates an SSL Context.
@@ -145,7 +139,7 @@ def _create_ssl_context(
     except ValueError:
         method_name = METHOD_NAMES.get(method, "unknown")
         raise exceptions.TlsException(
-            "SSL method \"%s\" is most likely not supported "
+            'SSL method "%s" is most likely not supported '
             "or disabled (for security reasons) in your libssl. "
             "Please refer to https://github.com/mitmproxy/mitmproxy/issues/1101 "
             "for more details." % method_name
@@ -164,9 +158,7 @@ def _create_ssl_context(
             context.load_verify_locations(ca_pemfile, ca_path)
         except SSL.Error:
             raise exceptions.TlsException(
-                "Cannot load trusted certificates ({}, {}).".format(
-                    ca_pemfile, ca_path
-                )
+                "Cannot load trusted certificates ({}, {}).".format(ca_pemfile, ca_path)
             )
 
     # Workaround for
@@ -200,21 +192,24 @@ def _create_ssl_context(
         context.set_alpn_select_callback(alpn_select_callback)
     elif alpn_select_callback is not None and alpn_select is None:
         if not callable(alpn_select_callback):
-            raise exceptions.TlsException("ALPN error: alpn_select_callback must be a function.")
+            raise exceptions.TlsException(
+                "ALPN error: alpn_select_callback must be a function."
+            )
         context.set_alpn_select_callback(alpn_select_callback)
     elif alpn_select_callback is not None and alpn_select is not None:
         raise exceptions.TlsException(
-            "ALPN error: only define alpn_select (string) OR alpn_select_callback (function).")
+            "ALPN error: only define alpn_select (string) OR alpn_select_callback (function)."
+        )
 
     return context
 
 
 def create_client_context(
-        cert: str = None,
-        sni: str = None,
-        address: str = None,
-        verify: int = SSL.VERIFY_NONE,
-        **sslctx_kwargs
+    cert: str = None,
+    sni: str = None,
+    address: str = None,
+    verify: int = SSL.VERIFY_NONE,
+    **sslctx_kwargs,
 ) -> SSL.Context:
     """
     Args:
@@ -225,14 +220,16 @@ def create_client_context(
     """
 
     if sni is None and verify != SSL.VERIFY_NONE:
-        raise exceptions.TlsException("Cannot validate certificate hostname without SNI")
+        raise exceptions.TlsException(
+            "Cannot validate certificate hostname without SNI"
+        )
 
     def verify_callback(
-            conn: SSL.Connection,
-            x509: SSL.X509,
-            errno: int,
-            depth: int,
-            is_cert_verified: bool
+        conn: SSL.Connection,
+        x509: SSL.X509,
+        errno: int,
+        depth: int,
+        is_cert_verified: bool,
     ) -> bool:
         if is_cert_verified and depth == 0 and not sni:
             conn.cert_error = exceptions.InvalidCertificateException(
@@ -245,9 +242,11 @@ def create_client_context(
             conn.cert_error = exceptions.InvalidCertificateException(
                 "Certificate verification error for {}: {} (errno: {}, depth: {})".format(
                     sni,
-                    SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(errno)).decode(),
+                    SSL._ffi.string(
+                        SSL._lib.X509_verify_cert_error_string(errno)
+                    ).decode(),
                     errno,
-                    depth
+                    depth,
                 )
             )
 
@@ -268,7 +267,8 @@ def create_client_context(
         # https://www.chromestatus.com/feature/4981025180483584
         SSL._lib.X509_VERIFY_PARAM_set_hostflags(
             param,
-            SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT
+            SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS
+            | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT,
         )
         SSL._openssl_assert(
             SSL._lib.X509_VERIFY_PARAM_set1_host(param, sni.encode("idna"), 0) == 1
@@ -285,43 +285,43 @@ def create_client_context(
 
 
 def accept_all(
-        conn_: SSL.Connection,
-        x509: SSL.X509,
-        errno: int,
-        err_depth: int,
-        is_cert_verified: bool,
+    conn_: SSL.Connection,
+    x509: SSL.X509,
+    errno: int,
+    err_depth: int,
+    is_cert_verified: bool,
 ) -> bool:
     # Return true to prevent cert verification error
     return True
 
 
 def create_server_context(
-        cert: typing.Union[certs.Cert, str],
-        key: SSL.PKey,
-        handle_sni: typing.Optional[typing.Callable[[SSL.Connection], None]] = None,
-        request_client_cert: bool = False,
-        chain_file=None,
-        dhparams=None,
-        extra_chain_certs: typing.Optional[typing.Iterable[certs.Cert]] = None,
-        **sslctx_kwargs
+    cert: typing.Union[certs.Cert, str],
+    key: SSL.PKey,
+    handle_sni: typing.Optional[typing.Callable[[SSL.Connection], None]] = None,
+    request_client_cert: bool = False,
+    chain_file=None,
+    dhparams=None,
+    extra_chain_certs: typing.Optional[typing.Iterable[certs.Cert]] = None,
+    **sslctx_kwargs,
 ) -> SSL.Context:
     """
-        cert: A certs.Cert object or the path to a certificate
-        chain file.
+    cert: A certs.Cert object or the path to a certificate
+    chain file.
 
-        handle_sni: SNI handler, should take a connection object. Server
-        name can be retrieved like this:
+    handle_sni: SNI handler, should take a connection object. Server
+    name can be retrieved like this:
 
-                connection.get_servername()
+            connection.get_servername()
 
-        The request_client_cert argument requires some explanation. We're
-        supposed to be able to do this with no negative effects - if the
-        client has no cert to present, we're notified and proceed as usual.
-        Unfortunately, Android seems to have a bug (tested on 4.2.2) - when
-        an Android client is asked to present a certificate it does not
-        have, it hangs up, which is frankly bogus. Some time down the track
-        we may be able to make the proper behaviour the default again, but
-        until then we're conservative.
+    The request_client_cert argument requires some explanation. We're
+    supposed to be able to do this with no negative effects - if the
+    client has no cert to present, we're notified and proceed as usual.
+    Unfortunately, Android seems to have a bug (tested on 4.2.2) - when
+    an Android client is asked to present a certificate it does not
+    have, it hangs up, which is frankly bogus. Some time down the track
+    we may be able to make the proper behaviour the default again, but
+    until then we're conservative.
     """
 
     if request_client_cert:
@@ -366,12 +366,7 @@ def is_tls_record_magic(d):
 
     # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
     # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
-    return (
-        len(d) == 3 and
-        d[0] == 0x16 and
-        d[1] == 0x03 and
-        0x0 <= d[2] <= 0x03
-    )
+    return len(d) == 3 and d[0] == 0x16 and d[1] == 0x03 and 0x0 <= d[2] <= 0x03
 
 
 def get_client_hello(rfile):
@@ -391,20 +386,21 @@ def get_client_hello(rfile):
         record_header = rfile.peek(offset + 5)[offset:]
         if not is_tls_record_magic(record_header) or len(record_header) < 5:
             raise exceptions.TlsProtocolException(
-                'Expected TLS record, got "%s" instead.' % record_header)
+                'Expected TLS record, got "%s" instead.' % record_header
+            )
         record_size = struct.unpack_from("!H", record_header, 3)[0] + 5
-        record_body = rfile.peek(offset + record_size)[offset + 5:]
+        record_body = rfile.peek(offset + record_size)[offset + 5 :]
         if len(record_body) != record_size - 5:
             raise exceptions.TlsProtocolException(
-                "Unexpected EOF in TLS handshake: %s" % record_body)
+                "Unexpected EOF in TLS handshake: %s" % record_body
+            )
         client_hello += record_body
         offset += record_size
-        client_hello_size = struct.unpack("!I", b'\x00' + client_hello[1:4])[0] + 4
+        client_hello_size = struct.unpack("!I", b"\x00" + client_hello[1:4])[0] + 4
     return client_hello
 
 
 class ClientHello:
-
     def __init__(self, raw_client_hello):
         self._client_hello = tls_client_hello.TlsClientHello(
             KaitaiStream(io.BytesIO(raw_client_hello))
@@ -419,10 +415,10 @@ class ClientHello:
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 is_valid_sni_extension = (
-                    extension.type == 0x00 and
-                    len(extension.body.server_names) == 1 and
-                    extension.body.server_names[0].name_type == 0 and
-                    check.is_valid_host(extension.body.server_names[0].host_name)
+                    extension.type == 0x00
+                    and len(extension.body.server_names) == 1
+                    and extension.body.server_names[0].name_type == 0
+                    and check.is_valid_host(extension.body.server_names[0].host_name)
                 )
                 if is_valid_sni_extension:
                     return extension.body.server_names[0].host_name
@@ -455,9 +451,13 @@ class ClientHello:
             :py:class:`client hello <mitmproxy.net.tls.ClientHello>`.
         """
         try:
-            raw_client_hello = get_client_hello(client_conn)[4:]  # exclude handshake header.
+            raw_client_hello = get_client_hello(client_conn)[
+                4:
+            ]  # exclude handshake header.
         except exceptions.ProtocolException as e:
-            raise exceptions.TlsProtocolException('Cannot read raw Client Hello: %s' % repr(e))
+            raise exceptions.TlsProtocolException(
+                "Cannot read raw Client Hello: %s" % repr(e)
+            )
 
         try:
             return cls(raw_client_hello)

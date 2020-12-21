@@ -3,10 +3,15 @@ import pytest
 from mitmproxy import exceptions
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http.http1.assemble import (
-    assemble_request, assemble_request_head, assemble_response,
-    assemble_response_head, _assemble_request_line, _assemble_request_headers,
+    assemble_request,
+    assemble_request_head,
+    assemble_response,
+    assemble_response_head,
+    _assemble_request_line,
+    _assemble_request_headers,
     _assemble_response_headers,
-    assemble_body)
+    assemble_body,
+)
 from mitmproxy.test.tutils import treq, tresp
 
 
@@ -71,13 +76,25 @@ def test_assemble_body():
     c = list(assemble_body(Headers(), [b"body"], Headers()))
     assert c == [b"body"]
 
-    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a", b""], Headers()))
+    c = list(
+        assemble_body(
+            Headers(transfer_encoding="chunked"), [b"123456789a", b""], Headers()
+        )
+    )
     assert c == [b"a\r\n123456789a\r\n", b"0\r\n\r\n"]
 
-    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"], Headers()))
+    c = list(
+        assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"], Headers())
+    )
     assert c == [b"a\r\n123456789a\r\n", b"0\r\n\r\n"]
 
-    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"], Headers(trailer="trailer")))
+    c = list(
+        assemble_body(
+            Headers(transfer_encoding="chunked"),
+            [b"123456789a"],
+            Headers(trailer="trailer"),
+        )
+    )
     assert c == [b"a\r\n123456789a\r\n", b"0\r\ntrailer: trailer\r\n\r\n"]
 
     with pytest.raises(exceptions.HttpException):
@@ -91,7 +108,10 @@ def test_assemble_request_line():
     assert _assemble_request_line(authority_request) == b"CONNECT address:22 HTTP/1.1"
 
     absolute_request = treq(scheme=b"http", authority=b"address:22").data
-    assert _assemble_request_line(absolute_request) == b"GET http://address:22/path HTTP/1.1"
+    assert (
+        _assemble_request_line(absolute_request)
+        == b"GET http://address:22/path HTTP/1.1"
+    )
 
 
 def test_assemble_request_headers():

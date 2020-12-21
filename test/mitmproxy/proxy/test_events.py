@@ -25,6 +25,7 @@ def test_commandreply():
         pass
 
     with pytest.raises(RuntimeError, match="properly annotated"):
+
         class FooReply(events.CommandReply):
             pass
 
@@ -32,5 +33,6 @@ def test_commandreply():
         command: FooCommand
 
     with pytest.raises(RuntimeError, match="conflicting subclasses"):
+
         class FooReply2(events.CommandReply):
             command: FooCommand

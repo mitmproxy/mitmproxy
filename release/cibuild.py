@@ -47,21 +47,21 @@ class BuildEnviron:
     }
 
     def __init__(
-            self,
-            *,
-            system="",
-            root_dir="",
-            github_ref="",
-            github_event_name="",
-            should_build_wheel=False,
-            should_build_docker=False,
-            should_build_pyinstaller=False,
-            should_build_wininstaller=False,
-            has_aws_creds=False,
-            has_twine_creds=False,
-            docker_username="",
-            docker_password="",
-            build_key="",
+        self,
+        *,
+        system="",
+        root_dir="",
+        github_ref="",
+        github_event_name="",
+        should_build_wheel=False,
+        should_build_docker=False,
+        should_build_pyinstaller=False,
+        should_build_wininstaller=False,
+        has_aws_creds=False,
+        has_twine_creds=False,
+        docker_username="",
+        docker_password="",
+        build_key="",
     ):
         self.system = system
         self.root_dir = root_dir
@@ -92,7 +92,8 @@ class BuildEnviron:
             should_build_wininstaller=bool_from_env("CI_BUILD_WININSTALLER"),
             should_build_docker=bool_from_env("CI_BUILD_DOCKER"),
             has_aws_creds=bool_from_env("AWS_ACCESS_KEY_ID"),
-            has_twine_creds=bool_from_env("TWINE_USERNAME") and bool_from_env("TWINE_PASSWORD"),
+            has_twine_creds=bool_from_env("TWINE_USERNAME")
+            and bool_from_env("TWINE_PASSWORD"),
             docker_username=os.environ.get("DOCKER_USERNAME", ""),
             docker_password=os.environ.get("DOCKER_PASSWORD", ""),
             build_key=os.environ.get("CI_BUILD_KEY", ""),
@@ -113,10 +114,7 @@ class BuildEnviron:
         else:
             ext = "tar.gz"
         return "{project}-{version}-{platform}.{ext}".format(
-            project=bdist,
-            version=self.version,
-            platform=self.platform_tag,
-            ext=ext
+            project=bdist, version=self.version, platform=self.platform_tag, ext=ext
         )
 
     @property
@@ -189,7 +187,9 @@ class BuildEnviron:
         if self.is_prod_release:
             # For production releases, we require strict version equality
             if self.version != version:
-                raise ValueError(f"Tag is {self.tag}, but mitmproxy/version.py is {version}.")
+                raise ValueError(
+                    f"Tag is {self.tag}, but mitmproxy/version.py is {version}."
+                )
         elif not self.is_maintenance_branch:
             # Commits on maintenance branches don't need the dev suffix. This
             # allows us to incorporate and test commits between tagged releases.
@@ -197,12 +197,14 @@ class BuildEnviron:
             # dev release.
             version_info = parver.Version.parse(version)
             if not version_info.is_devrelease:
-                raise ValueError(f"Non-production releases must have dev suffix: {version}")
+                raise ValueError(
+                    f"Non-production releases must have dev suffix: {version}"
+                )
 
     @property
     def is_maintenance_branch(self) -> bool:
         """
-            Is this an untagged commit on a maintenance branch?
+        Is this an untagged commit on a maintenance branch?
         """
         if not self.tag and self.branch and re.match(r"v\d+\.x", self.branch):
             return True
@@ -240,26 +242,36 @@ class BuildEnviron:
 
     @property
     def should_upload_docker(self) -> bool:
-        return all([
-            (self.is_prod_release or self.branch == "master"),
-            self.should_build_docker,
-            self.has_docker_creds,
-        ])
+        return all(
+            [
+                (self.is_prod_release or self.branch == "master"),
+                self.should_build_docker,
+                self.has_docker_creds,
+            ]
+        )
 
     @property
     def should_upload_aws(self) -> bool:
-        return all([
-            self.has_aws_creds,
-            (self.should_build_wheel or self.should_build_pyinstaller or self.should_build_wininstaller),
-        ])
+        return all(
+            [
+                self.has_aws_creds,
+                (
+                    self.should_build_wheel
+                    or self.should_build_pyinstaller
+                    or self.should_build_wininstaller
+                ),
+            ]
+        )
 
     @property
     def should_upload_pypi(self) -> bool:
-        return all([
-            self.is_prod_release,
-            self.should_build_wheel,
-            self.has_twine_creds,
-        ])
+        return all(
+            [
+                self.is_prod_release,
+                self.should_build_wheel,
+                self.has_twine_creds,
+            ]
+        )
 
     @property
     def tag(self) -> str:
@@ -287,46 +299,61 @@ class BuildEnviron:
         elif self.branch:
             return self.branch
         else:
-            raise BuildError("We're on neither a tag nor a branch - could not establish version")
+            raise BuildError(
+                "We're on neither a tag nor a branch - could not establish version"
+            )
 
 
 def build_wheel(be: BuildEnviron):  # pragma: no cover
     click.echo("Building wheel...")
-    subprocess.check_call([
-        "python",
-        "setup.py",
-        "-q",
-        "bdist_wheel",
-        "--dist-dir", be.dist_dir,
-    ])
-    whl, = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))
+    subprocess.check_call(
+        [
+            "python",
+            "setup.py",
+            "-q",
+            "bdist_wheel",
+            "--dist-dir",
+            be.dist_dir,
+        ]
+    )
+    (whl,) = glob.glob(os.path.join(be.dist_dir, "mitmproxy-*-py3-none-any.whl"))
     click.echo(f"Found wheel package: {whl}")
     subprocess.check_call(["tox", "-e", "wheeltest", "--", whl])
     return whl
 
 
 def build_docker_image(be: BuildEnviron):  # pragma: no cover
-    whl, = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))
+    (whl,) = glob.glob(os.path.join(be.dist_dir, "mitmproxy-*-py3-none-any.whl"))
     whl = str(pathlib.Path(whl).relative_to(pathlib.Path(".").absolute()))
     click.echo("Building Docker images...")
-    subprocess.check_call([
-        "docker",
-        "build",
-        "--tag", be.docker_tag,
-        "--build-arg", f"WHEEL_MITMPROXY={whl}",
-        "--build-arg", "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
-        "--file", "release/docker/Dockerfile",
-        "."
-    ])
+    subprocess.check_call(
+        [
+            "docker",
+            "build",
+            "--tag",
+            be.docker_tag,
+            "--build-arg",
+            f"WHEEL_MITMPROXY={whl}",
+            "--build-arg",
+            "WHEEL_BASENAME_MITMPROXY={}".format(os.path.basename(whl)),
+            "--file",
+            "release/docker/Dockerfile",
+            ".",
+        ]
+    )
     # smoke-test the newly built docker image
-    r = subprocess.run([
-        "docker",
-        "run",
-        "--rm",
-        be.docker_tag,
-        "mitmdump",
-        "--version",
-    ], check=True, capture_output=True)
+    r = subprocess.run(
+        [
+            "docker",
+            "run",
+            "--rm",
+            be.docker_tag,
+            "mitmdump",
+            "--version",
+        ],
+        check=True,
+        capture_output=True,
+    )
     print(r.stdout.decode())
     assert "Mitmproxy: " in r.stdout.decode()
 
@@ -338,14 +365,17 @@ def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
     # PyInstaller 3.2 does not bundle pydivert's Windivert binaries
     PYINSTALLER_HOOKS = os.path.abspath(os.path.join(be.release_dir, "hooks"))
     PYINSTALLER_TEMP = os.path.abspath(os.path.join(be.build_dir, "pyinstaller"))
-    PYINSTALLER_DIST = os.path.abspath(os.path.join(be.build_dir, "binaries", be.platform_tag))
+    PYINSTALLER_DIST = os.path.abspath(
+        os.path.join(be.build_dir, "binaries", be.platform_tag)
+    )
 
     # https://virtualenv.pypa.io/en/latest/userguide.html#windows-notes
     # scripts and executables on Windows go in ENV\Scripts\ instead of ENV/bin/
     if platform.system() == "Windows":
         PYINSTALLER_ARGS = [
             # PyInstaller < 3.2 does not handle Python 3.5's ucrt correctly.
-            "-p", r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86",
+            "-p",
+            r"C:\Program Files (x86)\Windows Kits\10\Redist\ucrt\DLLs\x86",
         ]
     else:
         PYINSTALLER_ARGS = []
@@ -375,12 +405,16 @@ def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
                         [
                             "pyinstaller",
                             "--clean",
-                            "--workpath", PYINSTALLER_TEMP,
-                            "--distpath", PYINSTALLER_DIST,
-                            "--additional-hooks-dir", PYINSTALLER_HOOKS,
+                            "--workpath",
+                            PYINSTALLER_TEMP,
+                            "--distpath",
+                            PYINSTALLER_DIST,
+                            "--additional-hooks-dir",
+                            PYINSTALLER_HOOKS,
                             "--onefile",
                             "--console",
-                            "--icon", "icon.ico",
+                            "--icon",
+                            "icon.ico",
                             # This is PyInstaller, so setting a
                             # different log level obviously breaks it :-)
                             # "--log-level", "WARN",
@@ -399,10 +433,7 @@ def build_pyinstaller(be: BuildEnviron):  # pragma: no cover
 
                 # Remove _main suffix from mitmproxy executable
                 if "_main" in executable:
-                    shutil.move(
-                        executable,
-                        executable.replace("_main", "")
-                    )
+                    shutil.move(executable, executable.replace("_main", ""))
                     executable = executable.replace("_main", "")
 
                 click.echo("> %s --version" % executable)
@@ -436,32 +467,42 @@ def build_wininstaller(be: BuildEnviron):  # pragma: no cover
             urllib.request.urlretrieve(
                 f"https://clients.bitrock.com/installbuilder/installbuilder-enterprise-{IB_VERSION}-windows-installer.exe",
                 IB_SETUP.with_suffix(".tmp"),
-                reporthook=report
+                reporthook=report,
             )
             shutil.move(str(IB_SETUP.with_suffix(".tmp")), str(IB_SETUP))
 
         click.echo("Install InstallBuilder...")
-        subprocess.run([str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"], check=True)
+        subprocess.run(
+            [str(IB_SETUP), "--mode", "unattended", "--unattendedmodeui", "none"],
+            check=True,
+        )
         assert os.path.isfile(IB_CLI)
 
     click.echo("Decrypt InstallBuilder license...")
     f = cryptography.fernet.Fernet(be.build_key.encode())
-    with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, \
-            open(IB_LICENSE, "wb") as outfile:
+    with open(IB_LICENSE.with_suffix(".xml.enc"), "rb") as infile, open(
+        IB_LICENSE, "wb"
+    ) as outfile:
         outfile.write(f.decrypt(infile.read()))
 
     click.echo("Run InstallBuilder...")
-    subprocess.run([
-        IB_CLI,
-        "build",
-        str(IB_DIR / "mitmproxy.xml"),
-        "windows",
-        "--license", str(IB_LICENSE),
-        "--setvars", f"project.version={be.version}",
-        "--verbose"
-    ], check=True)
+    subprocess.run(
+        [
+            IB_CLI,
+            "build",
+            str(IB_DIR / "mitmproxy.xml"),
+            "windows",
+            "--license",
+            str(IB_LICENSE),
+            "--setvars",
+            f"project.version={be.version}",
+            "--verbose",
+        ],
+        check=True,
+    )
     assert os.path.isfile(
-        os.path.join(be.dist_dir, f"mitmproxy-{be.version}-windows-installer.exe"))
+        os.path.join(be.dist_dir, f"mitmproxy-{be.version}-windows-installer.exe")
+    )
 
 
 @click.group(chain=True)
@@ -475,7 +516,7 @@ def cli():  # pragma: no cover
 @cli.command("build")
 def build():  # pragma: no cover
     """
-        Build a binary distribution
+    Build a binary distribution
     """
     be = BuildEnviron.from_env()
     be.dump_info()
@@ -496,11 +537,11 @@ def build():  # pragma: no cover
 @cli.command("upload")
 def upload():  # pragma: no cover
     """
-        Upload build artifacts
+    Upload build artifacts
 
-        Uploads the wheels package to PyPi.
-        Uploads the Pyinstaller and wheels packages to the snapshot server.
-        Pushes the Docker image to Docker Hub.
+    Uploads the wheels package to PyPi.
+    Uploads the Pyinstaller and wheels packages to the snapshot server.
+    Pushes the Docker image to Docker Hub.
     """
     be = BuildEnviron.from_env()
     be.dump_info()
@@ -510,32 +551,45 @@ def upload():  # pragma: no cover
         return
 
     if be.should_upload_aws:
-        num_files = len([name for name in os.listdir(be.dist_dir) if os.path.isfile(name)])
+        num_files = len(
+            [name for name in os.listdir(be.dist_dir) if os.path.isfile(name)]
+        )
         click.echo(f"Uploading {num_files} files to AWS dir {be.upload_dir}...")
-        subprocess.check_call([
-            "aws", "s3", "cp",
-            "--acl", "public-read",
-            be.dist_dir + "/",
-            f"s3://snapshots.mitmproxy.org/{be.upload_dir}/",
-            "--recursive",
-        ])
+        subprocess.check_call(
+            [
+                "aws",
+                "s3",
+                "cp",
+                "--acl",
+                "public-read",
+                be.dist_dir + "/",
+                f"s3://snapshots.mitmproxy.org/{be.upload_dir}/",
+                "--recursive",
+            ]
+        )
 
     if be.should_upload_pypi:
-        whl = glob.glob(os.path.join(be.dist_dir, 'mitmproxy-*-py3-none-any.whl'))[0]
+        whl = glob.glob(os.path.join(be.dist_dir, "mitmproxy-*-py3-none-any.whl"))[0]
         click.echo(f"Uploading {whl} to PyPi...")
         subprocess.check_call(["twine", "upload", whl])
 
     if be.should_upload_docker:
         click.echo(f"Uploading Docker image to tag={be.docker_tag}...")
-        subprocess.check_call([
-            "docker",
-            "login",
-            "-u", be.docker_username,
-            "-p", be.docker_password,
-        ])
+        subprocess.check_call(
+            [
+                "docker",
+                "login",
+                "-u",
+                be.docker_username,
+                "-p",
+                be.docker_password,
+            ]
+        )
         subprocess.check_call(["docker", "push", be.docker_tag])
         if be.is_prod_release:
-            subprocess.check_call(["docker", "tag", be.docker_tag, "mitmproxy/mitmproxy:latest"])
+            subprocess.check_call(
+                ["docker", "tag", be.docker_tag, "mitmproxy/mitmproxy:latest"]
+            )
             subprocess.check_call(["docker", "push", "mitmproxy/mitmproxy:latest"])
 
 

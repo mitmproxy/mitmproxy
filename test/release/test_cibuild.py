@@ -51,16 +51,14 @@ def test_buildenviron_pr():
 
 def test_ci_systems():
     github = cibuild.BuildEnviron(
-        github_event_name="pull_request",
-        github_ref="refs/heads/master"
+        github_event_name="pull_request", github_ref="refs/heads/master"
     )
     assert github.is_pull_request
     assert github.branch == "master"
     assert github.tag == ""
 
     github2 = cibuild.BuildEnviron(
-        github_event_name="pull_request",
-        github_ref="refs/tags/qux"
+        github_event_name="pull_request", github_ref="refs/tags/qux"
     )
     assert github2.is_pull_request
     assert github2.branch == ""
@@ -214,16 +212,19 @@ def test_buildenviron_windows(tmpdir):
     a.close()
 
 
-@pytest.mark.parametrize("version, tag, ok", [
-    ("3.0.0.dev", "", True),  # regular snapshot
-    ("3.0.0.dev", "v3.0.0", False),  # forgot to remove ".dev" on bump
-    ("3.0.0", "", False),  # forgot to re-add ".dev"
-    ("3.0.0", "v4.0.0", False),  # version mismatch
-    ("3.0.0", "v3.0.0", True),  # regular release
-    ("3.0.0.rc1", "v3.0.0.rc1", False),  # non-canonical.
-    ("3.0.0.dev", "anyname", True),  # tagged test/dev release
-    ("3.0.0", "3.0.0", False),  # tagged, but without v prefix
-])
+@pytest.mark.parametrize(
+    "version, tag, ok",
+    [
+        ("3.0.0.dev", "", True),  # regular snapshot
+        ("3.0.0.dev", "v3.0.0", False),  # forgot to remove ".dev" on bump
+        ("3.0.0", "", False),  # forgot to re-add ".dev"
+        ("3.0.0", "v4.0.0", False),  # version mismatch
+        ("3.0.0", "v3.0.0", True),  # regular release
+        ("3.0.0.rc1", "v3.0.0.rc1", False),  # non-canonical.
+        ("3.0.0.dev", "anyname", True),  # tagged test/dev release
+        ("3.0.0", "3.0.0", False),  # tagged, but without v prefix
+    ],
+)
 def test_buildenviron_check_version(version, tag, ok, tmpdir):
     tmpdir.mkdir("mitmproxy").join("version.py").write(f'VERSION = "{version}"')
 

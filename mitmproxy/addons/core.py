@@ -21,18 +21,22 @@ LISTEN_PORT = 8080
 class Core:
     def load(self, loader):
         loader.add_option(
-            "body_size_limit", typing.Optional[str], None,
+            "body_size_limit",
+            typing.Optional[str],
+            None,
             """
             Byte size limit of HTTP request and response bodies. Understands
             k/m/g suffixes, i.e. 3m for 3 megabytes.
-            """
+            """,
         )
         loader.add_option(
-            "keep_host_header", bool, False,
+            "keep_host_header",
+            bool,
+            False,
             """
             Reverse Proxy: Keep the original host header instead of rewriting it
             to the reverse proxy target.
-            """
+            """,
         )
 
     def configure(self, updated):
@@ -46,8 +50,7 @@ class Core:
                 human.parse_size(opts.body_size_limit)
             except ValueError:
                 raise exceptions.OptionsError(
-                    "Invalid body size limit specification: %s" %
-                    opts.body_size_limit
+                    "Invalid body size limit specification: %s" % opts.body_size_limit
                 )
         if "mode" in updated:
             mode = opts.mode
@@ -62,9 +65,7 @@ class Core:
                         "Transparent mode not supported on this platform."
                     )
             elif mode not in ["regular", "socks5"]:
-                raise exceptions.OptionsError(
-                    "Invalid mode specification: %s" % mode
-                )
+                raise exceptions.OptionsError("Invalid mode specification: %s" % mode)
         if "client_certs" in updated:
             if opts.client_certs:
                 client_certs = os.path.expanduser(opts.client_certs)
@@ -76,10 +77,10 @@ class Core:
     @command.command("set")
     def set(self, option: str, value: str = "") -> None:
         """
-            Set an option. When the value is omitted, booleans are set to true,
-            strings and integers are set to None (if permitted), and sequences
-            are emptied. Boolean values can be true, false or toggle.
-            Multiple values are concatenated with a single space.
+        Set an option. When the value is omitted, booleans are set to true,
+        strings and integers are set to None (if permitted), and sequences
+        are emptied. Boolean values can be true, false or toggle.
+        Multiple values are concatenated with a single space.
         """
         strspec = f"{option}={value}"
         try:
@@ -90,7 +91,7 @@ class Core:
     @command.command("flow.resume")
     def resume(self, flows: typing.Sequence[flow.Flow]) -> None:
         """
-            Resume flows if they are intercepted.
+        Resume flows if they are intercepted.
         """
         intercepted = [i for i in flows if i.intercepted]
         for f in intercepted:
@@ -101,7 +102,7 @@ class Core:
     @command.command("flow.mark")
     def mark(self, flows: typing.Sequence[flow.Flow], boolean: bool) -> None:
         """
-            Mark flows.
+        Mark flows.
         """
         updated = []
         for i in flows:
@@ -114,7 +115,7 @@ class Core:
     @command.command("flow.mark.toggle")
     def mark_toggle(self, flows: typing.Sequence[flow.Flow]) -> None:
         """
-            Toggle mark for flows.
+        Toggle mark for flows.
         """
         for i in flows:
             i.marked = not i.marked
@@ -123,7 +124,7 @@ class Core:
     @command.command("flow.kill")
     def kill(self, flows: typing.Sequence[flow.Flow]) -> None:
         """
-            Kill running flows.
+        Kill running flows.
         """
         updated = []
         for f in flows:
@@ -137,7 +138,7 @@ class Core:
     @command.command("flow.revert")
     def revert(self, flows: typing.Sequence[flow.Flow]) -> None:
         """
-            Revert flow changes.
+        Revert flow changes.
         """
         updated = []
         for f in flows:
@@ -161,13 +162,10 @@ class Core:
     @command.command("flow.set")
     @command.argument("attr", type=mitmproxy.types.Choice("flow.set.options"))
     def flow_set(
-        self,
-        flows: typing.Sequence[flow.Flow],
-        attr: str,
-        value: str
+        self, flows: typing.Sequence[flow.Flow], attr: str, value: str
     ) -> None:
         """
-            Quickly set a number of common values on flows.
+        Quickly set a number of common values on flows.
         """
         val: typing.Union[int, str] = value
         if attr == "status_code":
@@ -220,7 +218,7 @@ class Core:
     @command.command("flow.decode")
     def decode(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
         """
-            Decode flows.
+        Decode flows.
         """
         updated = []
         for f in flows:
@@ -235,7 +233,7 @@ class Core:
     @command.command("flow.encode.toggle")
     def encode_toggle(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
         """
-            Toggle flow encoding on and off, using deflate for encoding.
+        Toggle flow encoding on and off, using deflate for encoding.
         """
         updated = []
         for f in flows:
@@ -260,7 +258,7 @@ class Core:
         encoding: str,
     ) -> None:
         """
-            Encode flows with a specified encoding.
+        Encode flows with a specified encoding.
         """
         updated = []
         for f in flows:
@@ -277,45 +275,41 @@ class Core:
     @command.command("flow.encode.options")
     def encode_options(self) -> typing.Sequence[str]:
         """
-            The possible values for an encoding specification.
+        The possible values for an encoding specification.
         """
         return ["gzip", "deflate", "br", "zstd"]
 
     @command.command("options.load")
     def options_load(self, path: mitmproxy.types.Path) -> None:
         """
-            Load options from a file.
+        Load options from a file.
         """
         try:
             optmanager.load_paths(ctx.options, path)
         except (OSError, exceptions.OptionsError) as e:
-            raise exceptions.CommandError(
-                "Could not load options - %s" % e
-            ) from e
+            raise exceptions.CommandError("Could not load options - %s" % e) from e
 
     @command.command("options.save")
     def options_save(self, path: mitmproxy.types.Path) -> None:
         """
-            Save options to a file.
+        Save options to a file.
         """
         try:
             optmanager.save(ctx.options, path)
         except OSError as e:
-            raise exceptions.CommandError(
-                "Could not save options - %s" % e
-            ) from e
+            raise exceptions.CommandError("Could not save options - %s" % e) from e
 
     @command.command("options.reset")
     def options_reset(self) -> None:
         """
-            Reset all options to defaults.
+        Reset all options to defaults.
         """
         ctx.options.reset()
 
     @command.command("options.reset.one")
     def options_reset_one(self, name: str) -> None:
         """
-            Reset one option to its default value.
+        Reset one option to its default value.
         """
         if name not in ctx.options:
             raise exceptions.CommandError("No such option: %s" % name)

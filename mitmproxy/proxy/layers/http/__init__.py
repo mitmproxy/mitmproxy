@@ -15,10 +15,25 @@ from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
 
 from ._base import HttpCommand, ReceiveHttp, StreamId, HttpConnection
-from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
-    ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
-from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, HttpRequestHook, HttpResponseHeadersHook, \
-    HttpResponseHook
+from ._events import (
+    HttpEvent,
+    RequestData,
+    RequestEndOfMessage,
+    RequestHeaders,
+    RequestProtocolError,
+    ResponseData,
+    ResponseEndOfMessage,
+    ResponseHeaders,
+    ResponseProtocolError,
+)
+from ._hooks import (
+    HttpConnectHook,
+    HttpErrorHook,
+    HttpRequestHeadersHook,
+    HttpRequestHook,
+    HttpResponseHeadersHook,
+    HttpResponseHook,
+)
 from ._http1 import Http1Client, Http1Server
 from ._http2 import Http2Client, Http2Server
 
@@ -45,6 +60,7 @@ class GetHttpConnection(HttpCommand):
     """
     Open an HTTP Connection. This may not actually open a connection, but return an existing HTTP connection instead.
     """
+
     blocking = True
     address: Tuple[str, int]
     tls: bool
@@ -55,13 +71,10 @@ class GetHttpConnection(HttpCommand):
 
     def connection_spec_matches(self, connection: Connection) -> bool:
         return (
-                isinstance(connection, Server)
-                and
-                self.address == connection.address
-                and
-                self.tls == connection.tls
-                and
-                self.via == connection.via
+            isinstance(connection, Server)
+            and self.address == connection.address
+            and self.tls == connection.tls
+            and self.via == connection.via
         )
 
 
@@ -77,6 +90,7 @@ class RegisterHttpConnection(HttpCommand):
     """
     Register that a HTTP connection attempt has been completed.
     """
+
     connection: Connection
     err: Optional[str]
 
@@ -132,12 +146,11 @@ class HttpStream(layer.Layer):
             yield from self.server_state(event)
 
     @expect(RequestHeaders)
-    def state_wait_for_request_headers(self, event: RequestHeaders) -> layer.CommandGenerator[None]:
+    def state_wait_for_request_headers(
+        self, event: RequestHeaders
+    ) -> layer.CommandGenerator[None]:
         if not event.replay_flow:
-            self.flow = http.HTTPFlow(
-                self.context.client,
-                self.context.server
-            )
+            self.flow = http.HTTPFlow(self.context.client, self.context.server)
 
         else:
             self.flow = event.replay_flow
@@ -160,11 +173,12 @@ class HttpStream(layer.Layer):
         elif not self.flow.request.host:
             # We need to extract destination information from the host header.
             try:
-                host, port = url.parse_authority(self.flow.request.host_header or "", check=True)
+                host, port = url.parse_authority(
+                    self.flow.request.host_header or "", check=True
+                )
             except ValueError:
                 self.flow.response = http.HTTPResponse.make(
-                    400,
-                    "HTTP request has no host header, destination unknown."
+                    400, "HTTP request has no host header, destination unknown."
                 )
                 self.client_state = self.state_errored
                 return (yield from self.send_response())
@@ -173,7 +187,9 @@ class HttpStream(layer.Layer):
                     port = 443 if self.context.client.tls else 80
                 self.flow.request.data.host = host
                 self.flow.request.data.port = port
-                self.flow.request.scheme = "https" if self.context.client.tls else "http"
+                self.flow.request.scheme = (
+                    "https" if self.context.client.tls else "http"
+                )
 
         if self.mode is HTTPMode.regular and not self.flow.request.is_http2:
             # Set the request target to origin-form for HTTP/1, some servers don't support absolute-form requests.
@@ -181,7 +197,10 @@ class HttpStream(layer.Layer):
             self.flow.request.authority = ""
 
         # update host header in reverse proxy mode
-        if self.context.options.mode.startswith("reverse:") and not self.context.options.keep_host_header:
+        if (
+            self.context.options.mode.startswith("reverse:")
+            and not self.context.options.keep_host_header
+        ):
             assert self.context.server.address
             self.flow.request.host_header = url.hostport(
                 "https" if self.context.server.tls else "http",
@@ -196,12 +215,16 @@ class HttpStream(layer.Layer):
         if self.flow.request.headers.get("expect", "").lower() == "100-continue":
             continue_response = http.HTTPResponse.make(100)
             continue_response.headers.clear()
-            yield SendHttp(ResponseHeaders(self.stream_id, continue_response), self.context.client)
+            yield SendHttp(
+                ResponseHeaders(self.stream_id, continue_response), self.context.client
+            )
             self.flow.request.headers.pop("expect")
 
         if self.flow.request.stream:
             if self.flow.response:
-                raise NotImplementedError("Can't set a response and enable streaming at the same time.")
+                raise NotImplementedError(
+                    "Can't set a response and enable streaming at the same time."
+                )
             yield HttpRequestHook(self.flow)
             ok = yield from self.make_server_connection()
             if not ok:
@@ -213,7 +236,9 @@ class HttpStream(layer.Layer):
         self.server_state = self.state_wait_for_response_headers
 
     @expect(RequestData, RequestEndOfMessage)
-    def state_stream_request_body(self, event: Union[RequestData, RequestEndOfMessage]) -> layer.CommandGenerator[None]:
+    def state_stream_request_body(
+        self, event: Union[RequestData, RequestEndOfMessage]
+    ) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             if callable(self.flow.request.stream):
                 event.data = self.flow.request.stream(event.data)
@@ -234,7 +259,9 @@ class HttpStream(layer.Layer):
         yield SendHttp(event, self.context.server)
 
     @expect(RequestData, RequestEndOfMessage)
-    def state_consume_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
+    def state_consume_request_body(
+        self, event: events.Event
+    ) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             self.request_body_buf += event.data
         elif isinstance(event, RequestEndOfMessage):
@@ -259,13 +286,20 @@ class HttpStream(layer.Layer):
                     return
 
                 content = self.flow.request.raw_content
-                yield SendHttp(RequestHeaders(self.stream_id, self.flow.request, not content), self.context.server)
+                yield SendHttp(
+                    RequestHeaders(self.stream_id, self.flow.request, not content),
+                    self.context.server,
+                )
                 if content:
-                    yield SendHttp(RequestData(self.stream_id, content), self.context.server)
+                    yield SendHttp(
+                        RequestData(self.stream_id, content), self.context.server
+                    )
                 yield SendHttp(RequestEndOfMessage(self.stream_id), self.context.server)
 
     @expect(ResponseHeaders)
-    def state_wait_for_response_headers(self, event: ResponseHeaders) -> layer.CommandGenerator[None]:
+    def state_wait_for_response_headers(
+        self, event: ResponseHeaders
+    ) -> layer.CommandGenerator[None]:
         self.flow.response = event.response
         yield HttpResponseHeadersHook(self.flow)
         if (yield from self.check_killed(True)):
@@ -277,7 +311,9 @@ class HttpStream(layer.Layer):
             self.server_state = self.state_consume_response_body
 
     @expect(ResponseData, ResponseEndOfMessage)
-    def state_stream_response_body(self, event: events.Event) -> layer.CommandGenerator[None]:
+    def state_stream_response_body(
+        self, event: events.Event
+    ) -> layer.CommandGenerator[None]:
         assert self.flow.response
         if isinstance(event, ResponseData):
             if callable(self.flow.response.stream):
@@ -289,7 +325,9 @@ class HttpStream(layer.Layer):
             yield from self.send_response(already_streamed=True)
 
     @expect(ResponseData, ResponseEndOfMessage)
-    def state_consume_response_body(self, event: events.Event) -> layer.CommandGenerator[None]:
+    def state_consume_response_body(
+        self, event: events.Event
+    ) -> layer.CommandGenerator[None]:
         if isinstance(event, ResponseData):
             self.response_body_buf += event.data
         elif isinstance(event, ResponseEndOfMessage):
@@ -309,31 +347,37 @@ class HttpStream(layer.Layer):
 
         if not already_streamed:
             content = self.flow.response.raw_content
-            yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response, not content), self.context.client)
+            yield SendHttp(
+                ResponseHeaders(self.stream_id, self.flow.response, not content),
+                self.context.client,
+            )
             if content:
-                yield SendHttp(ResponseData(self.stream_id, content), self.context.client)
+                yield SendHttp(
+                    ResponseData(self.stream_id, content), self.context.client
+                )
 
         yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
         if self.flow.response.status_code == 101:
             is_websocket = (
-                    self.flow.response.headers.get("upgrade", "").lower() == "websocket"
-                    and
-                    self.flow.request.headers.get("Sec-WebSocket-Version", "") == "13"
+                self.flow.response.headers.get("upgrade", "").lower() == "websocket"
+                and self.flow.request.headers.get("Sec-WebSocket-Version", "") == "13"
             )
             if is_websocket:
                 self.child_layer = websocket.WebsocketLayer(self.context, self.flow)
             else:
                 self.child_layer = tcp.TCPLayer(self.context)
             if self.debug:
-                yield commands.Log(f"{self.debug}[http] upgrading to {self.child_layer}", "debug")
+                yield commands.Log(
+                    f"{self.debug}[http] upgrading to {self.child_layer}", "debug"
+                )
             yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
             return
 
     def check_killed(self, emit_error_hook: bool) -> layer.CommandGenerator[bool]:
         killed_by_us = (
-                self.flow.error and self.flow.error.msg == flow.Error.KILLED_MESSAGE
+            self.flow.error and self.flow.error.msg == flow.Error.KILLED_MESSAGE
         )
         # The client may have closed the connection while we were waiting for the hook to complete.
         # We peek into the event queue to see if that is the case.
@@ -352,7 +396,9 @@ class HttpStream(layer.Layer):
             # For HTTP/2 we only want to kill the specific stream, for HTTP/1 we want to kill the connection
             # *without* sending an HTTP response (that could be achieved by the user by setting flow.response).
             if self.context.client.alpn == b"h2":
-                yield SendHttp(ResponseProtocolError(self.stream_id, "killed"), self.context.client)
+                yield SendHttp(
+                    ResponseProtocolError(self.stream_id, "killed"), self.context.client
+                )
             else:
                 if self.context.client.state & ConnectionState.CAN_WRITE:
                     yield commands.CloseConnection(self.context.client)
@@ -361,17 +407,15 @@ class HttpStream(layer.Layer):
         return False
 
     def handle_protocol_error(
-            self,
-            event: Union[RequestProtocolError, ResponseProtocolError]
+        self, event: Union[RequestProtocolError, ResponseProtocolError]
     ) -> layer.CommandGenerator[None]:
-        is_client_error_but_we_already_talk_upstream = (
-                isinstance(event, RequestProtocolError)
-                and self.client_state in (self.state_stream_request_body, self.state_done)
-        )
+        is_client_error_but_we_already_talk_upstream = isinstance(
+            event, RequestProtocolError
+        ) and self.client_state in (self.state_stream_request_body, self.state_done)
         need_error_hook = not (
-                self.client_state in (self.state_wait_for_request_headers, self.state_errored)
-                or
-                self.server_state in (self.state_done, self.state_errored)
+            self.client_state
+            in (self.state_wait_for_request_headers, self.state_errored)
+            or self.server_state in (self.state_done, self.state_errored)
         )
 
         if is_client_error_but_we_already_talk_upstream:
@@ -399,7 +443,9 @@ class HttpStream(layer.Layer):
             self.context.server.via,
         )
         if err:
-            yield from self.handle_protocol_error(ResponseProtocolError(self.stream_id, err))
+            yield from self.handle_protocol_error(
+                ResponseProtocolError(self.stream_id, err)
+            )
             return False
         else:
             self.context.server = self.flow.server_conn = connection
@@ -418,11 +464,15 @@ class HttpStream(layer.Layer):
             yield from self.handle_connect_upstream()
 
     def handle_connect_regular(self):
-        if not self.flow.response and self.context.options.connection_strategy == "eager":
+        if (
+            not self.flow.response
+            and self.context.options.connection_strategy == "eager"
+        ):
             err = yield commands.OpenConnection(self.context.server)
             if err:
                 self.flow.response = http.HTTPResponse.make(
-                    502, f"Cannot connect to {human.format_address(self.context.server.address)}: {err}"
+                    502,
+                    f"Cannot connect to {human.format_address(self.context.server.address)}: {err}",
                 )
         self.child_layer = layer.NextLayer(self.context)
         yield from self.handle_connect_finish()
@@ -443,10 +493,14 @@ class HttpStream(layer.Layer):
 
     def handle_connect_finish(self):
         if not self.flow.response:
-            self.flow.response = http.make_connect_response(self.flow.request.data.http_version)
+            self.flow.response = http.make_connect_response(
+                self.flow.request.data.http_version
+            )
 
         if 200 <= self.flow.response.status_code < 300:
-            yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)
+            yield SendHttp(
+                ResponseHeaders(self.stream_id, self.flow.response), self.context.client
+            )
             yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
             self.child_layer = self.child_layer or layer.NextLayer(self.context)
             yield from self.child_layer.handle_event(events.Start())
@@ -472,18 +526,33 @@ class HttpStream(layer.Layer):
             # normal connection events -> HTTP events
             if isinstance(command, commands.SendData):
                 if command.connection == self.context.client:
-                    yield SendHttp(ResponseData(self.stream_id, command.data), self.context.client)
-                elif command.connection == self.context.server and self.flow.response.status_code == 101:
+                    yield SendHttp(
+                        ResponseData(self.stream_id, command.data), self.context.client
+                    )
+                elif (
+                    command.connection == self.context.server
+                    and self.flow.response.status_code == 101
+                ):
                     # there only is a HTTP server connection if we have switched protocols,
                     # not if a connection is established via CONNECT.
-                    yield SendHttp(RequestData(self.stream_id, command.data), self.context.server)
+                    yield SendHttp(
+                        RequestData(self.stream_id, command.data), self.context.server
+                    )
                 else:
                     yield command
             elif isinstance(command, commands.CloseConnection):
                 if command.connection == self.context.client:
-                    yield SendHttp(ResponseProtocolError(self.stream_id, "EOF"), self.context.client)
-                elif command.connection == self.context.server and self.flow.response.status_code == 101:
-                    yield SendHttp(RequestProtocolError(self.stream_id, "EOF"), self.context.server)
+                    yield SendHttp(
+                        ResponseProtocolError(self.stream_id, "EOF"),
+                        self.context.client,
+                    )
+                elif (
+                    command.connection == self.context.server
+                    and self.flow.response.status_code == 101
+                ):
+                    yield SendHttp(
+                        RequestProtocolError(self.stream_id, "EOF"), self.context.server
+                    )
                 else:
                     # If we are running TCP over HTTP we want to be consistent with half-closes.
                     # The easiest approach for this is to just always full close for now.
@@ -516,6 +585,7 @@ class HttpLayer(layer.Layer):
 
     ConnectionEvent -> HttpEvent -> HttpCommand -> ConnectionCommand
     """
+
     mode: HTTPMode
     command_sources: Dict[commands.Command, layer.Layer]
     streams: Dict[int, HttpStream]
@@ -536,9 +606,7 @@ class HttpLayer(layer.Layer):
         else:
             http_conn = Http1Server(context.fork())
 
-        self.connections = {
-            context.client: http_conn
-        }
+        self.connections = {context.client: http_conn}
 
     def __repr__(self):
         return f"HttpLayer({self.mode.name}, conns: {len(self.connections)})"
@@ -547,12 +615,17 @@ class HttpLayer(layer.Layer):
         if isinstance(event, events.Start):
             yield from self.event_to_child(self.connections[self.context.client], event)
             if self.mode is HTTPMode.upstream:
-                self.context.server.via = server_spec.parse_with_mode(self.context.options.mode)[1]
+                self.context.server.via = server_spec.parse_with_mode(
+                    self.context.options.mode
+                )[1]
         elif isinstance(event, events.CommandReply):
             stream = self.command_sources.pop(event.command)
             yield from self.event_to_child(stream, event)
         elif isinstance(event, events.ConnectionEvent):
-            if event.connection == self.context.server and self.context.server not in self.connections:
+            if (
+                event.connection == self.context.server
+                and self.context.server not in self.connections
+            ):
                 # We didn't do anything with this connection yet, now the peer has closed it - let's close it too!
                 yield commands.CloseConnection(event.connection)
             else:
@@ -562,9 +635,9 @@ class HttpLayer(layer.Layer):
             raise AssertionError(f"Unexpected event: {event}")
 
     def event_to_child(
-            self,
-            child: Union[layer.Layer, HttpStream],
-            event: events.Event,
+        self,
+        child: Union[layer.Layer, HttpStream],
+        event: events.Event,
     ) -> layer.CommandGenerator[None]:
         for command in child.handle_event(event):
             assert isinstance(command, commands.Command)
@@ -599,32 +672,37 @@ class HttpLayer(layer.Layer):
         self.streams[stream_id] = HttpStream(ctx, stream_id)
         yield from self.event_to_child(self.streams[stream_id], events.Start())
 
-    def get_connection(self, event: GetHttpConnection, *, reuse: bool = True) -> layer.CommandGenerator[None]:
+    def get_connection(
+        self, event: GetHttpConnection, *, reuse: bool = True
+    ) -> layer.CommandGenerator[None]:
         # Do we already have a connection we can re-use?
         if reuse:
             for connection in self.connections:
                 # see "tricky multiplexing edge case" in make_http_connection for an explanation
                 conn_is_pending_or_h2 = (
-                        connection.alpn == b"h2"
-                        or connection in self.waiting_for_establishment
+                    connection.alpn == b"h2"
+                    or connection in self.waiting_for_establishment
                 )
-                h2_to_h1 = self.context.client.alpn == b"h2" and not conn_is_pending_or_h2
+                h2_to_h1 = (
+                    self.context.client.alpn == b"h2" and not conn_is_pending_or_h2
+                )
                 connection_suitable = (
-                        event.connection_spec_matches(connection)
-                        and not h2_to_h1
+                    event.connection_spec_matches(connection) and not h2_to_h1
                 )
                 if connection_suitable:
                     if connection in self.waiting_for_establishment:
                         self.waiting_for_establishment[connection].append(event)
                     else:
                         stream = self.command_sources.pop(event)
-                        yield from self.event_to_child(stream, GetHttpConnectionReply(event, (connection, None)))
+                        yield from self.event_to_child(
+                            stream, GetHttpConnectionReply(event, (connection, None))
+                        )
                     return
 
         can_use_context_connection = (
-                self.context.server not in self.connections and
-                self.context.server.connected and
-                event.connection_spec_matches(self.context.server)
+            self.context.server not in self.connections
+            and self.context.server.connected
+            and event.connection_spec_matches(self.context.server)
         )
         context = self.context.fork()
 
@@ -645,7 +723,9 @@ class HttpLayer(layer.Layer):
                     stack /= tls.ServerTLSLayer(context, http_proxy)
 
                 send_connect = not (self.mode == HTTPMode.upstream and not event.tls)
-                stack /= _upstream_proxy.HttpUpstreamProxy(context, http_proxy, send_connect)
+                stack /= _upstream_proxy.HttpUpstreamProxy(
+                    context, http_proxy, send_connect
+                )
             if event.tls:
                 stack /= tls.ServerTLSLayer(context)
 
@@ -656,7 +736,9 @@ class HttpLayer(layer.Layer):
 
         yield from self.event_to_child(stack[0], events.Start())
 
-    def register_connection(self, command: RegisterHttpConnection) -> layer.CommandGenerator[None]:
+    def register_connection(
+        self, command: RegisterHttpConnection
+    ) -> layer.CommandGenerator[None]:
         waiting = self.waiting_for_establishment.pop(command.connection)
 
         reply: Union[Tuple[None, str], Tuple[Connection, None]]
@@ -677,7 +759,11 @@ class HttpLayer(layer.Layer):
             # that neither have a content-length specified nor a chunked transfer encoding.
             # We can't process these two flows to the same h1 connection as they would both have
             # "read until eof" semantics. The only workaround left is to open a separate connection for each flow.
-            if not command.err and self.context.client.alpn == b"h2" and command.connection.alpn != b"h2":
+            if (
+                not command.err
+                and self.context.client.alpn == b"h2"
+                and command.connection.alpn != b"h2"
+            ):
                 for cmd in waiting[1:]:
                     yield from self.get_connection(cmd, reuse=False)
                 break

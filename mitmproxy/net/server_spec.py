@@ -22,7 +22,7 @@ server_spec_re = re.compile(
         /?  #  we allow a trailing backslash, but no path
         $
         """,
-    re.VERBOSE
+    re.VERBOSE,
 )
 
 
@@ -56,10 +56,7 @@ def parse(server_spec: str) -> ServerSpec:
     if m.group("port"):
         port = int(m.group("port"))
     else:
-        port = {
-            "http": 80,
-            "https": 443
-        }[scheme]
+        port = {"http": 80, "https": 443}[scheme]
     if not check.is_valid_port(port):
         raise ValueError(f"Invalid port: {port}")
 

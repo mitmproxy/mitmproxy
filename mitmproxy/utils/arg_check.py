@@ -103,7 +103,7 @@ REPLACEMENTS = {
     "-i": "--intercept",
     "-f": "--view-filter",
     "--filter": "--view-filter",
-    "--socks": "--mode socks5"
+    "--socks": "--mode socks5",
 }
 
 
@@ -123,12 +123,13 @@ def check():
     for option in ("--nonanonymous", "--singleuser", "--htpasswd"):
         if option in args:
             print(
-                '{} is deprecated.\n'
-                'Please use `--proxyauth SPEC` instead.\n'
+                "{} is deprecated.\n"
+                "Please use `--proxyauth SPEC` instead.\n"
                 'SPEC Format: "username:pass", "any" to accept any user/pass combination,\n'
                 '"@path" to use an Apache htpasswd file, or\n'
                 '"ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" '
-                'for LDAP authentication.'.format(option))
+                "for LDAP authentication.".format(option)
+            )
 
     for option in REPLACED.splitlines():
         if option in args:
@@ -138,10 +139,7 @@ def check():
                 new_options = [REPLACEMENTS.get(option)]
             print(
                 "{} is deprecated.\n"
-                "Please use `{}` instead.".format(
-                    option,
-                    "` or `".join(new_options)
-                )
+                "Please use `{}` instead.".format(option, "` or `".join(new_options))
             )
 
     for option in DEPRECATED.splitlines():
@@ -151,15 +149,17 @@ def check():
                 "Please use `--set {}=value` instead.\n"
                 "To show all options and their default values use --options".format(
                     option,
-                    REPLACEMENTS.get(option, None) or option.lstrip("-").replace("-", "_")
+                    REPLACEMENTS.get(option, None)
+                    or option.lstrip("-").replace("-", "_"),
                 )
             )
 
     # Check for underscores in the options. Options always follow '--'.
     for argument in args:
-        underscoreParam = re.search('[-]{2}((.*?_)(.*?(\s|$)))+', argument)
+        underscoreParam = re.search("[-]{2}((.*?_)(.*?(\s|$)))+", argument)
         if underscoreParam is not None:
-            print("{} uses underscores, please use hyphens {}".format(
-                argument,
-                argument.replace('_', '-'))
+            print(
+                "{} uses underscores, please use hyphens {}".format(
+                    argument, argument.replace("_", "-")
+                )
             )

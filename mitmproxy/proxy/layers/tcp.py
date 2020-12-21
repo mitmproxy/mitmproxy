@@ -20,6 +20,7 @@ class TcpMessageHook(Hook):
     A TCP connection has received a message. The most recent message
     will be flow.messages[-1]. The message is user-modifiable.
     """
+
     flow: tcp.TCPFlow
 
 
@@ -27,6 +28,7 @@ class TcpEndHook(Hook):
     """
     A TCP connection has ended.
     """
+
     flow: tcp.TCPFlow
 
 
@@ -36,6 +38,7 @@ class TcpErrorHook(Hook):
 
     Every TCP flow will receive either a tcp_error or a tcp_end event, but not both.
     """
+
     flow: tcp.TCPFlow
 
 
@@ -43,6 +46,7 @@ class TCPLayer(layer.Layer):
     """
     Simple TCP layer that just relays messages right now.
     """
+
     flow: Optional[tcp.TCPFlow]
 
     def __init__(self, context: Context, ignore: bool = False):
@@ -71,7 +75,9 @@ class TCPLayer(layer.Layer):
     _handle_event = start
 
     @expect(events.DataReceived, events.ConnectionClosed)
-    def relay_messages(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
+    def relay_messages(
+        self, event: events.ConnectionEvent
+    ) -> layer.CommandGenerator[None]:
         from_client = event.connection == self.context.client
         send_to: Connection
         if from_client:
@@ -90,9 +96,8 @@ class TCPLayer(layer.Layer):
 
         elif isinstance(event, events.ConnectionClosed):
             all_done = not (
-                    (self.context.client.state & ConnectionState.CAN_READ)
-                    or
-                    (self.context.server.state & ConnectionState.CAN_READ)
+                (self.context.client.state & ConnectionState.CAN_READ)
+                or (self.context.server.state & ConnectionState.CAN_READ)
             )
             if all_done:
                 if self.context.server.state is not ConnectionState.CLOSED:

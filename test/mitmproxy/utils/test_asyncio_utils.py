@@ -15,11 +15,7 @@ async def ttask():
 
 @pytest.mark.asyncio
 async def test_simple():
-    task = asyncio_utils.create_task(
-        ttask(),
-        name="ttask",
-        client=("127.0.0.1", 42313)
-    )
+    task = asyncio_utils.create_task(ttask(), name="ttask", client=("127.0.0.1", 42313))
     assert asyncio_utils.task_repr(task) == "127.0.0.1:42313: ttask (age: 0s)"
     await asyncio.sleep(0)
     assert "newname" in asyncio_utils.task_repr(task)

@@ -11,7 +11,9 @@ def raise_if_http_version_unknown(http_version: bytes) -> None:
         raise ValueError(f"Unknown HTTP version: {http_version!r}")
 
 
-def _read_request_line(line: bytes) -> Tuple[str, int, bytes, bytes, bytes, bytes, bytes]:
+def _read_request_line(
+    line: bytes,
+) -> Tuple[str, int, bytes, bytes, bytes, bytes, bytes]:
     try:
         method, target, http_version = line.split()
         port: Optional[int]
@@ -59,14 +61,14 @@ def _read_response_line(line: bytes) -> Tuple[bytes, int, bytes]:
 
 def _read_headers(lines: Iterable[bytes]) -> headers.Headers:
     """
-        Read a set of headers.
-        Stop once a blank line is reached.
+    Read a set of headers.
+    Stop once a blank line is reached.
 
-        Returns:
-            A headers object
+    Returns:
+        A headers object
 
-        Raises:
-            exceptions.HttpSyntaxException
+    Raises:
+        exceptions.HttpSyntaxException
     """
     ret: List[Tuple[bytes, bytes]] = []
     for line in lines:
@@ -74,7 +76,7 @@ def _read_headers(lines: Iterable[bytes]) -> headers.Headers:
             if not ret:
                 raise ValueError("Invalid headers")
             # continued header
-            ret[-1] = (ret[-1][0], ret[-1][1] + b'\r\n ' + line.strip())
+            ret[-1] = (ret[-1][0], ret[-1][1] + b"\r\n " + line.strip())
         else:
             try:
                 name, value = line.split(b":", 1)
@@ -100,7 +102,9 @@ def read_request_head(lines: List[bytes]) -> request.Request:
     Raises:
         ValueError: The input is malformed.
     """
-    host, port, method, scheme, authority, path, http_version = _read_request_line(lines[0])
+    host, port, method, scheme, authority, path, http_version = _read_request_line(
+        lines[0]
+    )
     headers = _read_headers(lines[1:])
 
     return request.Request(
@@ -115,7 +119,7 @@ def read_request_head(lines: List[bytes]) -> request.Request:
         content=None,
         trailers=None,
         timestamp_start=time.time(),
-        timestamp_end=None
+        timestamp_end=None,
     )
 
 
@@ -148,9 +152,9 @@ def read_response_head(lines: List[bytes]) -> response.Response:
 
 
 def expected_http_body_size(
-        request: request.Request,
-        response: Optional[response.Response] = None,
-        expect_continue_as_0: bool = True,
+    request: request.Request,
+    response: Optional[response.Response] = None,
+    expect_continue_as_0: bool = True,
 ):
     """
     Like the non-sans-io version, but also treating CONNECT as content-length: 0

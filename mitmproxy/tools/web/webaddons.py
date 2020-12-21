@@ -5,22 +5,10 @@ from mitmproxy import ctx
 
 class WebAddon:
     def load(self, loader):
-        loader.add_option(
-            "web_open_browser", bool, True,
-            "Start a browser."
-        )
-        loader.add_option(
-            "web_debug", bool, False,
-            "Enable mitmweb debugging."
-        )
-        loader.add_option(
-            "web_port", int, 8081,
-            "Web UI port."
-        )
-        loader.add_option(
-            "web_host", str, "127.0.0.1",
-            "Web UI host."
-        )
+        loader.add_option("web_open_browser", bool, True, "Start a browser.")
+        loader.add_option("web_debug", bool, False, "Enable mitmweb debugging.")
+        loader.add_option("web_port", int, 8081, "Web UI port.")
+        loader.add_option("web_host", str, "127.0.0.1", "Web UI host.")
 
     def running(self):
         if hasattr(ctx.options, "web_open_browser") and ctx.options.web_open_browser:
@@ -44,11 +32,18 @@ def open_browser(url: str) -> bool:
         False, if no suitable browser has been found.
     """
     browsers = (
-        "windows-default", "macosx",
+        "windows-default",
+        "macosx",
         "wslview %s",
-        "x-www-browser %s", "gnome-open %s",
-        "google-chrome", "chrome", "chromium", "chromium-browser",
-        "firefox", "opera", "safari",
+        "x-www-browser %s",
+        "gnome-open %s",
+        "google-chrome",
+        "chrome",
+        "chromium",
+        "chromium-browser",
+        "firefox",
+        "opera",
+        "safari",
     )
     for browser in browsers:
         try:

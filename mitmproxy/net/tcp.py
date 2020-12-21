@@ -40,15 +40,15 @@ class _FileLike:
 
     def start_log(self):
         """
-            Starts or resets the log.
+        Starts or resets the log.
 
-            This will store all bytes read or written.
+        This will store all bytes read or written.
         """
         self._log = []
 
     def stop_log(self):
         """
-            Stops the log.
+        Stops the log.
         """
         self._log = None
 
@@ -57,7 +57,7 @@ class _FileLike:
 
     def get_log(self):
         """
-            Returns the log as a string.
+        Returns the log as a string.
         """
         if not self.is_logging():
             raise ValueError("Not logging!")
@@ -72,10 +72,9 @@ class _FileLike:
 
 
 class Writer(_FileLike):
-
     def flush(self):
         """
-            May raise exceptions.TcpDisconnect
+        May raise exceptions.TcpDisconnect
         """
         if hasattr(self.o, "flush"):
             try:
@@ -85,7 +84,7 @@ class Writer(_FileLike):
 
     def write(self, v):
         """
-            May raise exceptions.TcpDisconnect
+        May raise exceptions.TcpDisconnect
         """
         if v:
             self.first_byte_timestamp = self.first_byte_timestamp or time.time()
@@ -102,12 +101,11 @@ class Writer(_FileLike):
 
 
 class Reader(_FileLike):
-
     def read(self, length):
         """
-            If length is -1, we read until connection closes.
+        If length is -1, we read until connection closes.
         """
-        result = b''
+        result = b""
         start = time.time()
         while length == -1 or length > 0:
             if length == -1 or length > self.BLOCKSIZE:
@@ -137,7 +135,7 @@ class Reader(_FileLike):
             except OSError as e:
                 raise exceptions.TcpDisconnect(str(e))
             except SSL.SysCallError as e:
-                if e.args == (-1, 'Unexpected EOF'):
+                if e.args == (-1, "Unexpected EOF"):
                     break
                 raise exceptions.TlsException(str(e))
             except SSL.Error as e:
@@ -152,7 +150,7 @@ class Reader(_FileLike):
         return result
 
     def readline(self, size=None):
-        result = b''
+        result = b""
         bytes_read = 0
         while True:
             if size is not None and bytes_read >= size:
@@ -163,14 +161,14 @@ class Reader(_FileLike):
                 break
             else:
                 result += ch
-                if ch == b'\n':
+                if ch == b"\n":
                     break
         return result
 
     def safe_read(self, length):
         """
-            Like .read, but is guaranteed to either return length bytes, or
-            raise an exception.
+        Like .read, but is guaranteed to either return length bytes, or
+        raise an exception.
         """
         result = self.read(length)
         if length != -1 and len(result) != length:
@@ -224,7 +222,8 @@ def ssl_read_select(rlist, timeout):
         subset of rlist which is ready for reading.
     """
     return [
-        conn for conn in rlist
+        conn
+        for conn in rlist
         if isinstance(conn, SSL.Connection) and conn.pending() > 0
     ] or select.select(rlist, (), (), timeout)[0]
 
@@ -343,7 +342,7 @@ class ConnectionCloser:
 
     def pop(self):
         """
-            Cancel the current closer, and return a fresh one.
+        Cancel the current closer, and return a fresh one.
         """
         self._canceled = True
         return ConnectionCloser(self.conn)
@@ -357,7 +356,6 @@ class ConnectionCloser:
 
 
 class TCPClient(_Connection):
-
     def __init__(self, address, source_address=None, spoof_source_address=None):
         super().__init__(None)
         self.address = address
@@ -368,7 +366,9 @@ class TCPClient(_Connection):
         self.spoof_source_address = spoof_source_address
 
     @property
-    def ssl_verification_error(self) -> Optional[exceptions.InvalidCertificateException]:
+    def ssl_verification_error(
+        self,
+    ) -> Optional[exceptions.InvalidCertificateException]:
         return getattr(self.connection, "cert_error", None)
 
     def close(self):
@@ -383,9 +383,7 @@ class TCPClient(_Connection):
 
     def convert_to_tls(self, sni=None, alpn_protos=None, **sslctx_kwargs):
         context = tls.create_client_context(
-            alpn_protos=alpn_protos,
-            sni=sni,
-            **sslctx_kwargs
+            alpn_protos=alpn_protos, sni=sni, **sslctx_kwargs
         )
         self.connection = SSL.Connection(context, self.connection)
         if sni:
@@ -419,7 +417,9 @@ class TCPClient(_Connection):
         # https://github.com/python/cpython/blob/3cc5817cfaf5663645f4ee447eaed603d2ad290a/Lib/socket.py
 
         err = None
-        for res in socket.getaddrinfo(self.address[0], self.address[1], 0, socket.SOCK_STREAM):
+        for res in socket.getaddrinfo(
+            self.address[0], self.address[1], 0, socket.SOCK_STREAM
+        ):
             af, socktype, proto, canonname, sa = res
             sock = None
             try:
@@ -431,7 +431,9 @@ class TCPClient(_Connection):
                 if self.spoof_source_address:
                     try:
                         if not sock.getsockopt(socket.SOL_IP, socket.IP_TRANSPARENT):
-                            sock.setsockopt(socket.SOL_IP, socket.IP_TRANSPARENT, 1)  # pragma: windows no cover  pragma: osx no cover
+                            sock.setsockopt(
+                                socket.SOL_IP, socket.IP_TRANSPARENT, 1
+                            )  # pragma: windows no cover  pragma: osx no cover
                     except Exception as e:
                         # socket.IP_TRANSPARENT might not be available on every OS and Python version
                         if sock is not None:
@@ -457,8 +459,7 @@ class TCPClient(_Connection):
             connection = self.create_connection()
         except OSError as err:
             raise exceptions.TcpException(
-                'Error connecting to "%s": %s' %
-                (self.address[0], err)
+                'Error connecting to "%s": %s' % (self.address[0], err)
             )
         self.connection = connection
         self.source_address = connection.getsockname()
@@ -482,7 +483,7 @@ class TCPClient(_Connection):
 class BaseHandler(_Connection):
 
     """
-        The instantiator is expected to call the handle() and finish() methods.
+    The instantiator is expected to call the handle() and finish() methods.
     """
 
     def __init__(self, connection, address, server):
@@ -497,10 +498,7 @@ class BaseHandler(_Connection):
         For a list of parameters, see tls.create_server_context(...)
         """
 
-        context = tls.create_server_context(
-            cert=cert,
-            key=key,
-            **sslctx_kwargs)
+        context = tls.create_server_context(cert=cert, key=key, **sslctx_kwargs)
         self.connection = SSL.Connection(context, self.connection)
         self.connection.set_accept_state()
         try:
@@ -547,15 +545,16 @@ class Counter:
 
 
 class TCPServer:
-
     def __init__(self, address):
         self.address = address
         self.__is_shut_down = threading.Event()
         self.__is_shut_down.set()
         self.__shutdown_request = False
 
-        if self.address[0] == 'localhost':
-            raise OSError("Binding to 'localhost' is prohibited. Please use '::1' or '127.0.0.1' directly.")
+        if self.address[0] == "localhost":
+            raise OSError(
+                "Binding to 'localhost' is prohibited. Please use '::1' or '127.0.0.1' directly."
+            )
 
         self.socket = None
 
@@ -648,27 +647,28 @@ class TCPServer:
 
     def handle_error(self, connection_, client_address, fp=sys.stderr):
         """
-            Called when handle_client_connection raises an exception.
+        Called when handle_client_connection raises an exception.
         """
         # If a thread has persisted after interpreter exit, the module might be
         # none.
         if traceback:
             exc = str(traceback.format_exc())
-            print('-' * 40, file=fp)
+            print("-" * 40, file=fp)
             print(
-                "Error in processing of request from %s" % repr(client_address), file=fp)
+                "Error in processing of request from %s" % repr(client_address), file=fp
+            )
             print(exc, file=fp)
-            print('-' * 40, file=fp)
+            print("-" * 40, file=fp)
 
     def handle_client_connection(self, conn, client_address):  # pragma: no cover
         """
-            Called after client connection.
+        Called after client connection.
         """
         raise NotImplementedError
 
     def handle_shutdown(self):
         """
-            Called after server shutdown.
+        Called after server shutdown.
         """
 
     def wait_for_silence(self, timeout=5):
@@ -676,8 +676,7 @@ class TCPServer:
         while 1:
             if time.time() - start >= timeout:
                 raise exceptions.Timeout(
-                    "%s service threads still alive" %
-                    self.handler_counter.count
+                    "%s service threads still alive" % self.handler_counter.count
                 )
             if self.handler_counter.count == 0:
                 return

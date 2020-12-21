@@ -22,12 +22,7 @@ def is_tls_handshake_record(d: bytes) -> bool:
     # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2.
     # TLS 1.3 mandates legacy_record_version to be 0x0301.
     # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
-    return (
-            len(d) >= 3 and
-            d[0] == 0x16 and
-            d[1] == 0x03 and
-            0x0 <= d[2] <= 0x03
-    )
+    return len(d) >= 3 and d[0] == 0x16 and d[1] == 0x03 and 0x0 <= d[2] <= 0x03
 
 
 def handshake_record_contents(data: bytes) -> Iterator[bytes]:
@@ -40,7 +35,7 @@ def handshake_record_contents(data: bytes) -> Iterator[bytes]:
     while True:
         if len(data) < offset + 5:
             return
-        record_header = data[offset:offset + 5]
+        record_header = data[offset : offset + 5]
         if not is_tls_handshake_record(record_header):
             raise ValueError(f"Expected TLS record, got {record_header!r} instead.")
         record_size = struct.unpack("!H", record_header[3:])[0]
@@ -50,7 +45,7 @@ def handshake_record_contents(data: bytes) -> Iterator[bytes]:
 
         if len(data) < offset + record_size:
             return
-        record_body = data[offset:offset + record_size]
+        record_body = data[offset : offset + record_size]
         yield record_body
         offset += record_size
 
@@ -64,7 +59,7 @@ def get_client_hello(data: bytes) -> Optional[bytes]:
     for d in handshake_record_contents(data):
         client_hello += d
         if len(client_hello) >= 4:
-            client_hello_size = struct.unpack("!I", b'\x00' + client_hello[1:4])[0] + 4
+            client_hello_size = struct.unpack("!I", b"\x00" + client_hello[1:4])[0] + 4
             if len(client_hello) >= client_hello_size:
                 return client_hello[:client_hello_size]
     return None
@@ -97,6 +92,7 @@ HTTP_ALPNS = (b"h2",) + HTTP1_ALPNS
 
 
 # We need these classes as hooks can only have one argument at the moment.
+
 
 @dataclass
 class TlsStartData:
@@ -152,7 +148,9 @@ class _TLSLayer(tunnel.TunnelLayer):
             else:
                 yield commands.SendData(self.conn, data)
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def receive_handshake_data(
+        self, data: bytes
+    ) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
         # bio_write errors for b"", so we need to check first if we actually received something.
         if data:
             self.tls.bio_write(data)
@@ -163,18 +161,29 @@ class _TLSLayer(tunnel.TunnelLayer):
             return False, None
         except SSL.Error as e:
             # provide more detailed information for some errors.
-            last_err = e.args and isinstance(e.args[0], list) and e.args[0] and e.args[0][-1]
-            if last_err == ('SSL routines', 'tls_process_server_certificate', 'certificate verify failed'):
+            last_err = (
+                e.args and isinstance(e.args[0], list) and e.args[0] and e.args[0][-1]
+            )
+            if last_err == (
+                "SSL routines",
+                "tls_process_server_certificate",
+                "certificate verify failed",
+            ):
                 verify_result = SSL._lib.SSL_get_verify_result(self.tls._ssl)
-                error = SSL._ffi.string(SSL._lib.X509_verify_cert_error_string(verify_result)).decode()
+                error = SSL._ffi.string(
+                    SSL._lib.X509_verify_cert_error_string(verify_result)
+                ).decode()
                 err = f"Certificate verify failed: {error}"
             elif last_err in [
-                ('SSL routines', 'ssl3_read_bytes', 'tlsv1 alert unknown ca'),
-                ('SSL routines', 'ssl3_read_bytes', 'sslv3 alert bad certificate')
+                ("SSL routines", "ssl3_read_bytes", "tlsv1 alert unknown ca"),
+                ("SSL routines", "ssl3_read_bytes", "sslv3 alert bad certificate"),
             ]:
                 assert isinstance(last_err, tuple)
                 err = last_err[2]
-            elif last_err == ('SSL routines', 'ssl3_get_record', 'wrong version number') and data[:4].isascii():
+            elif (
+                last_err == ("SSL routines", "ssl3_get_record", "wrong version number")
+                and data[:4].isascii()
+            ):
                 err = f"The remote server does not speak TLS."
             else:  # pragma: no cover
                 # TODO: Add test case one we find one.
@@ -199,7 +208,9 @@ class _TLSLayer(tunnel.TunnelLayer):
             self.conn.cipher_list = self.tls.get_cipher_list()
             self.conn.tls_version = self.tls.get_protocol_version_name()
             if self.debug:
-                yield commands.Log(f"{self.debug}[tls] tls established: {self.conn}", "debug")
+                yield commands.Log(
+                    f"{self.debug}[tls] tls established: {self.conn}", "debug"
+                )
             yield from self.receive_data(b"")
             return True, None
 
@@ -226,10 +237,10 @@ class _TLSLayer(tunnel.TunnelLayer):
         if close:
             self.conn.state &= ~context.ConnectionState.CAN_READ
             if self.debug:
-                yield commands.Log(f"{self.debug}[tls] close_notify {self.conn}", level="debug")
-            yield from self.event_to_child(
-                events.ConnectionClosed(self.conn)
-            )
+                yield commands.Log(
+                    f"{self.debug}[tls] close_notify {self.conn}", level="debug"
+                )
+            yield from self.event_to_child(events.ConnectionClosed(self.conn))
 
     def receive_close(self) -> layer.CommandGenerator[None]:
         if self.tls.get_shutdown() & SSL.RECEIVED_SHUTDOWN:
@@ -250,6 +261,7 @@ class ServerTLSLayer(_TLSLayer):
     """
     This layer establishes TLS for a single server connection.
     """
+
     command_to_reply_to: Optional[commands.OpenConnection] = None
 
     def __init__(self, context: context.Context, conn: Optional[context.Server] = None):
@@ -281,6 +293,7 @@ class ClientTLSLayer(_TLSLayer):
     └────────────────┘
 
     """
+
     recv_buffer: bytearray
     server_tls_available: bool
     client_hello_parsed: bool = False
@@ -293,7 +306,9 @@ class ClientTLSLayer(_TLSLayer):
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from ()
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def receive_handshake_data(
+        self, data: bytes
+    ) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
         if self.client_hello_parsed:
             return (yield from super().receive_handshake_data(data))
         self.recv_buffer.extend(data)
@@ -312,11 +327,16 @@ class ClientTLSLayer(_TLSLayer):
         tls_clienthello = ClientHelloData(self.context)
         yield TlsClienthelloHook(tls_clienthello)
 
-        if tls_clienthello.establish_server_tls_first and not self.context.server.tls_established:
+        if (
+            tls_clienthello.establish_server_tls_first
+            and not self.context.server.tls_established
+        ):
             err = yield from self.start_server_tls()
             if err:
-                yield commands.Log(f"Unable to establish TLS connection with server ({err}). "
-                                   f"Trying to establish TLS with client anyway.")
+                yield commands.Log(
+                    f"Unable to establish TLS connection with server ({err}). "
+                    f"Trying to establish TLS with client anyway."
+                )
 
         yield from self.start_tls()
 
@@ -343,7 +363,9 @@ class ClientTLSLayer(_TLSLayer):
         if err.startswith("Cannot parse ClientHello"):
             pass
         elif "unknown ca" in err or "bad certificate" in err:
-            err = f"The client does not trust the proxy's certificate for {dest} ({err})"
+            err = (
+                f"The client does not trust the proxy's certificate for {dest} ({err})"
+            )
         else:
             err = f"The client may not trust the proxy's certificate for {dest} ({err})"
         yield commands.Log(f"Client TLS handshake failed. {err}", level="warn")

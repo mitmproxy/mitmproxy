@@ -11,7 +11,7 @@ from mitmproxy.test import taddons, tflow
 
 @asynccontextmanager
 async def tcp_server(handle_conn) -> Address:
-    server = await asyncio.start_server(handle_conn, '127.0.0.1', 0)
+    server = await asyncio.start_server(handle_conn, "127.0.0.1", 0)
     await server.start_serving()
     try:
         yield server.sockets[0].getsockname()
@@ -31,15 +31,15 @@ async def test_playback(mode):
             return
         if mode == "upstream":
             conn_req = await reader.readuntil(b"\r\n\r\n")
-            assert conn_req == b'CONNECT address:22 HTTP/1.1\r\n\r\n'
+            assert conn_req == b"CONNECT address:22 HTTP/1.1\r\n\r\n"
             writer.write(b"HTTP/1.1 200 Connection Established\r\n\r\n")
         req = await reader.readuntil(b"data")
         assert req == (
-            b'GET /path HTTP/1.1\r\n'
-            b'header: qvalue\r\n'
-            b'content-length: 4\r\n'
-            b'\r\n'
-            b'data'
+            b"GET /path HTTP/1.1\r\n"
+            b"header: qvalue\r\n"
+            b"content-length: 4\r\n"
+            b"\r\n"
+            b"data"
         )
         writer.write(b"HTTP/1.1 204 No Content\r\n\r\n")
         await writer.drain()
@@ -132,7 +132,9 @@ def test_configure(tdata):
     cp = ClientPlayback()
     with taddons.context(cp) as tctx:
         assert cp.count() == 0
-        tctx.configure(cp, client_replay=[tdata.path("mitmproxy/data/dumpfile-018.bin")])
+        tctx.configure(
+            cp, client_replay=[tdata.path("mitmproxy/data/dumpfile-018.bin")]
+        )
         assert cp.count() == 1
         tctx.configure(cp, client_replay=[])
         with pytest.raises(OptionsError):

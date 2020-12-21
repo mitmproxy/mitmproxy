@@ -17,21 +17,14 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
     tunnel_connection: context.Server
 
     def __init__(
-            self,
-            ctx: context.Context,
-            tunnel_conn: context.Server,
-            send_connect: bool
+        self, ctx: context.Context, tunnel_conn: context.Server, send_connect: bool
     ):
-        super().__init__(
-            ctx,
-            tunnel_connection=tunnel_conn,
-            conn=ctx.server
-        )
+        super().__init__(ctx, tunnel_connection=tunnel_conn, conn=ctx.server)
 
         assert self.tunnel_connection.address
         self.conn.via = server_spec.ServerSpec(
             "https" if self.tunnel_connection.tls else "http",
-            self.tunnel_connection.address
+            self.tunnel_connection.address,
         )
         self.buf = ReceiveBuffer()
         self.send_connect = send_connect
@@ -49,17 +42,23 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         raw = http1.assemble_request(req)
         yield commands.SendData(self.tunnel_connection, raw)
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def receive_handshake_data(
+        self, data: bytes
+    ) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
         if not self.send_connect:
             return (yield from super().receive_handshake_data(data))
         self.buf += data
         response_head = self.buf.maybe_extract_lines()
         if response_head:
-            response_head = [bytes(x) for x in response_head]  # TODO: Make url.parse compatible with bytearrays
+            response_head = [
+                bytes(x) for x in response_head
+            ]  # TODO: Make url.parse compatible with bytearrays
             try:
                 response = http1_sansio.read_response_head(response_head)
             except ValueError as e:
-                yield commands.Log(f"{human.format_address(self.tunnel_connection.address)}: {e}")
+                yield commands.Log(
+                    f"{human.format_address(self.tunnel_connection.address)}: {e}"
+                )
                 return False, str(e)
             if 200 <= response.status_code < 300:
                 if self.buf:
@@ -68,8 +67,10 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
                 return True, None
             else:
                 raw_resp = b"\n".join(response_head)
-                yield commands.Log(f"{human.format_address(self.tunnel_connection.address)}: {raw_resp!r}",
-                                   level="debug")
+                yield commands.Log(
+                    f"{human.format_address(self.tunnel_connection.address)}: {raw_resp!r}",
+                    level="debug",
+                )
                 return False, f"{response.status_code} {response.reason}"
         else:
             return False, None

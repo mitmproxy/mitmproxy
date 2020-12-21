@@ -8,10 +8,10 @@ datadir = "mitmproxy/contentviews/test_xml_html_data/"
 
 def test_simple(tdata):
     v = full_eval(xml_html.ViewXmlHtml())
-    assert v(b"foo") == ('XML', [[('text', 'foo')]])
-    assert v(b"<html></html>") == ('HTML', [[('text', '<html></html>')]])
-    assert v(b"<>") == ('XML', [[('text', '<>')]])
-    assert v(b"<p") == ('XML', [[('text', '<p')]])
+    assert v(b"foo") == ("XML", [[("text", "foo")]])
+    assert v(b"<html></html>") == ("HTML", [[("text", "<html></html>")]])
+    assert v(b"<>") == ("XML", [[("text", "<>")]])
+    assert v(b"<p") == ("XML", [[("text", "<p")]])
 
     with open(tdata.path(datadir + "simple.html")) as f:
         input = f.read()
@@ -19,13 +19,9 @@ def test_simple(tdata):
     assert str(next(tokens)) == "Tag(<!DOCTYPE html>)"
 
 
-@pytest.mark.parametrize("filename", [
-    "simple.html",
-    "cdata.xml",
-    "comment.xml",
-    "inline.html",
-    "test.html"
-])
+@pytest.mark.parametrize(
+    "filename", ["simple.html", "cdata.xml", "comment.xml", "inline.html", "test.html"]
+)
 def test_format_xml(filename, tdata):
     path = tdata.path(datadir + filename)
     with open(path) as f:

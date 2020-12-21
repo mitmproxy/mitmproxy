@@ -15,6 +15,7 @@ class HTTPFlow(flow.Flow):
     An HTTPFlow is a collection of objects representing a single HTTP
     transaction.
     """
+
     request: http.Request
     response: Optional[http.Response] = None
     error: Optional[flow.Error] = None
@@ -36,11 +37,9 @@ class HTTPFlow(flow.Flow):
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     # mypy doesn't support update with kwargs
-    _stateobject_attributes.update(dict(
-        request=http.Request,
-        response=http.Response,
-        mode=str
-    ))
+    _stateobject_attributes.update(
+        dict(request=http.Request, response=http.Response, mode=str)
+    )
 
     def __repr__(self):
         s = "<HTTPFlow"
@@ -64,11 +63,12 @@ class HTTPFlow(flow.Flow):
 
 
 def make_error_response(
-        status_code: int,
-        message: str = "",
-        headers: Optional[http.Headers] = None,
+    status_code: int,
+    message: str = "",
+    headers: Optional[http.Headers] = None,
 ) -> http.Response:
-    body: bytes = """
+    body: bytes = (
+        """
         <html>
             <head>
                 <title>{status_code} {reason}</title>
@@ -78,18 +78,21 @@ def make_error_response(
             <p>{message}</p>
             </body>
         </html>
-    """.strip().format(
-        status_code=status_code,
-        reason=http.status_codes.RESPONSES.get(status_code, "Unknown"),
-        message=html.escape(message),
-    ).encode("utf8", "replace")
+    """.strip()
+        .format(
+            status_code=status_code,
+            reason=http.status_codes.RESPONSES.get(status_code, "Unknown"),
+            message=html.escape(message),
+        )
+        .encode("utf8", "replace")
+    )
 
     if not headers:
         headers = http.Headers(
             Server=version.MITMPROXY,
             Connection="close",
             Content_Length=str(len(body)),
-            Content_Type="text/html"
+            Content_Type="text/html",
         )
 
     return http.Response.make(status_code, body, headers)

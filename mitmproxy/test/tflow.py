@@ -33,7 +33,9 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
     return f
 
 
-def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, handshake_flow=True):
+def twebsocketflow(
+    client_conn=True, server_conn=True, messages=True, err=None, handshake_flow=True
+):
 
     if client_conn is True:
         client_conn = tclient_conn()
@@ -54,22 +56,21 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
                 sec_websocket_version="13",
                 sec_websocket_key="1234",
             ),
-            content=b'',
+            content=b"",
             trailers=None,
             timestamp_start=946681200,
             timestamp_end=946681201,
-
         )
         resp = http.HTTPResponse(
             b"HTTP/1.1",
             101,
             reason=net_http.status_codes.RESPONSES.get(101),
             headers=net_http.Headers(
-                connection='upgrade',
-                upgrade='websocket',
-                sec_websocket_accept=b'',
+                connection="upgrade",
+                upgrade="websocket",
+                sec_websocket_accept=b"",
             ),
-            content=b'',
+            content=b"",
             trailers=None,
             timestamp_start=946681202,
             timestamp_end=946681203,
@@ -79,9 +80,9 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
         handshake_flow.response = resp
 
     f = websocket.WebSocketFlow(client_conn, server_conn, handshake_flow)
-    f.metadata['websocket_handshake'] = handshake_flow.id
-    handshake_flow.metadata['websocket_flow'] = f.id
-    handshake_flow.metadata['websocket'] = True
+    f.metadata["websocket_handshake"] = handshake_flow.id
+    handshake_flow.metadata["websocket_flow"] = f.id
+    handshake_flow.metadata["websocket"] = True
 
     if messages is True:
         messages = [
@@ -148,55 +149,59 @@ def tdummyflow(client_conn=True, server_conn=True, err=None):
 
 
 def tclient_conn() -> context.Client:
-    c = context.Client.from_state(dict(
-        id=str(uuid.uuid4()),
-        address=("127.0.0.1", 22),
-        mitmcert=None,
-        tls_established=True,
-        timestamp_start=946681200,
-        timestamp_tls_setup=946681201,
-        timestamp_end=946681206,
-        sni="address",
-        cipher_name="cipher",
-        alpn_proto_negotiated=b"http/1.1",
-        tls_version="TLSv1.2",
-        tls_extensions=[(0x00, bytes.fromhex("000e00000b6578616d"))],
-        state=0,
-        sockname=("", 0),
-        error=None,
-        tls=False,
-        certificate_list=[],
-        alpn_offers=[],
-        cipher_list=[],
-    ))
+    c = context.Client.from_state(
+        dict(
+            id=str(uuid.uuid4()),
+            address=("127.0.0.1", 22),
+            mitmcert=None,
+            tls_established=True,
+            timestamp_start=946681200,
+            timestamp_tls_setup=946681201,
+            timestamp_end=946681206,
+            sni="address",
+            cipher_name="cipher",
+            alpn_proto_negotiated=b"http/1.1",
+            tls_version="TLSv1.2",
+            tls_extensions=[(0x00, bytes.fromhex("000e00000b6578616d"))],
+            state=0,
+            sockname=("", 0),
+            error=None,
+            tls=False,
+            certificate_list=[],
+            alpn_offers=[],
+            cipher_list=[],
+        )
+    )
     c.reply = controller.DummyReply()
     return c
 
 
 def tserver_conn() -> context.Server:
-    c = context.Server.from_state(dict(
-        id=str(uuid.uuid4()),
-        address=("address", 22),
-        source_address=("address", 22),
-        ip_address=("192.168.0.1", 22),
-        timestamp_start=946681202,
-        timestamp_tcp_setup=946681203,
-        timestamp_tls_setup=946681204,
-        timestamp_end=946681205,
-        tls_established=True,
-        sni="address",
-        alpn_proto_negotiated=None,
-        tls_version="TLSv1.2",
-        via=None,
-        state=0,
-        error=None,
-        tls=False,
-        certificate_list=[],
-        alpn_offers=[],
-        cipher_name=None,
-        cipher_list=[],
-        via2=None,
-    ))
+    c = context.Server.from_state(
+        dict(
+            id=str(uuid.uuid4()),
+            address=("address", 22),
+            source_address=("address", 22),
+            ip_address=("192.168.0.1", 22),
+            timestamp_start=946681202,
+            timestamp_tcp_setup=946681203,
+            timestamp_tls_setup=946681204,
+            timestamp_end=946681205,
+            tls_established=True,
+            sni="address",
+            alpn_proto_negotiated=None,
+            tls_version="TLSv1.2",
+            via=None,
+            state=0,
+            error=None,
+            tls=False,
+            certificate_list=[],
+            alpn_offers=[],
+            cipher_name=None,
+            cipher_list=[],
+            via2=None,
+        )
+    )
     c.reply = controller.DummyReply()
     c.rfile = io.BytesIO()
     c.wfile = io.BytesIO()

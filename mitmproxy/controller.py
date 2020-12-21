@@ -5,9 +5,10 @@ from mitmproxy import exceptions
 
 class Channel:
     """
-        The only way for the proxy server to communicate with the master
-        is to use the channel it has been given.
+    The only way for the proxy server to communicate with the master
+    is to use the channel it has been given.
     """
+
     def __init__(self, master, loop, should_exit):
         self.master = master
         self.loop = loop
@@ -53,6 +54,7 @@ class Reply:
     Messages sent through a channel are decorated with a "reply" attribute. This
     object is used to respond to the message through the return channel.
     """
+
     def __init__(self, obj):
         self.obj = obj
         # Spawn an event loop in the current thread
@@ -138,6 +140,7 @@ class DummyReply(Reply):
     handler so that they can be used multiple times. Useful when we need an
     object to seem like it has a channel, and during testing.
     """
+
     def __init__(self):
         super().__init__(None)
         self._should_reset = False

@@ -17,6 +17,7 @@ class TunnelLayer(layer.Layer):
     A specialized layer that simplifies the implementation of tunneling protocols such as SOCKS, upstream HTTP proxies,
     or TLS.
     """
+
     child_layer: layer.Layer
     tunnel_connection: context.Connection
     """The 'outer' connection which provides the tunnel protocol I/O"""
@@ -31,10 +32,10 @@ class TunnelLayer(layer.Layer):
     """
 
     def __init__(
-            self,
-            context: context.Context,
-            tunnel_connection: context.Connection,
-            conn: context.Connection,
+        self,
+        context: context.Context,
+        tunnel_connection: context.Connection,
+        conn: context.Connection,
     ):
         super().__init__(context)
         self.tunnel_connection = tunnel_connection
@@ -54,7 +55,10 @@ class TunnelLayer(layer.Layer):
                 self.tunnel_state = TunnelState.ESTABLISHING
                 yield from self.start_handshake()
             yield from self.event_to_child(event)
-        elif isinstance(event, events.ConnectionEvent) and event.connection == self.tunnel_connection:
+        elif (
+            isinstance(event, events.ConnectionEvent)
+            and event.connection == self.tunnel_connection
+        ):
             if isinstance(event, events.DataReceived):
                 if self.tunnel_state is TunnelState.ESTABLISHING:
                     done, err = yield from self.receive_handshake_data(event.data)
@@ -89,7 +93,9 @@ class TunnelLayer(layer.Layer):
         else:
             self.tunnel_state = TunnelState.OPEN
         if self.command_to_reply_to:
-            yield from self.event_to_child(events.OpenConnectionReply(self.command_to_reply_to, err))
+            yield from self.event_to_child(
+                events.OpenConnectionReply(self.command_to_reply_to, err)
+            )
             self.command_to_reply_to = None
         else:
             for evt in self._event_queue:
@@ -97,11 +103,17 @@ class TunnelLayer(layer.Layer):
             self._event_queue.clear()
 
     def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
-        if self.tunnel_state is TunnelState.ESTABLISHING and not self.command_to_reply_to:
+        if (
+            self.tunnel_state is TunnelState.ESTABLISHING
+            and not self.command_to_reply_to
+        ):
             self._event_queue.append(event)
             return
         for command in self.child_layer.handle_event(event):
-            if isinstance(command, commands.ConnectionCommand) and command.connection == self.conn:
+            if (
+                isinstance(command, commands.ConnectionCommand)
+                and command.connection == self.conn
+            ):
                 if isinstance(command, commands.SendData):
                     yield from self.send_data(command.data)
                 elif isinstance(command, commands.CloseConnection):
@@ -117,7 +129,9 @@ class TunnelLayer(layer.Layer):
                     self.tunnel_state = TunnelState.ESTABLISHING
                     err = yield commands.OpenConnection(self.tunnel_connection)
                     if err:
-                        yield from self.event_to_child(events.OpenConnectionReply(command, err))
+                        yield from self.event_to_child(
+                            events.OpenConnectionReply(command, err)
+                        )
                         self.tunnel_state = TunnelState.CLOSED
                     else:
                         yield from self.start_handshake()
@@ -129,7 +143,9 @@ class TunnelLayer(layer.Layer):
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield from self._handle_event(events.DataReceived(self.tunnel_connection, b""))
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def receive_handshake_data(
+        self, data: bytes
+    ) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
         """returns a (done, err) tuple"""
         yield from ()
         return True, None
@@ -139,14 +155,10 @@ class TunnelLayer(layer.Layer):
         yield commands.CloseConnection(self.tunnel_connection)
 
     def receive_data(self, data: bytes) -> layer.CommandGenerator[None]:
-        yield from self.event_to_child(
-            events.DataReceived(self.conn, data)
-        )
+        yield from self.event_to_child(events.DataReceived(self.conn, data))
 
     def receive_close(self) -> layer.CommandGenerator[None]:
-        yield from self.event_to_child(
-            events.ConnectionClosed(self.conn)
-        )
+        yield from self.event_to_child(events.ConnectionClosed(self.conn))
 
     def send_data(self, data: bytes) -> layer.CommandGenerator[None]:
         yield commands.SendData(self.tunnel_connection, data)

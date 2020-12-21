@@ -7,7 +7,7 @@ import sys
 
 import pytest
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
     # workaround for
     # https://github.com/tornadoweb/tornado/issues/2751
     # https://www.tornadoweb.org/en/stable/index.html#installation
@@ -26,13 +26,13 @@ from mitmproxy.tools.web import master as webmaster  # noqa
 
 @pytest.fixture(scope="module")
 def no_tornado_logging():
-    logging.getLogger('tornado.access').disabled = True
-    logging.getLogger('tornado.application').disabled = True
-    logging.getLogger('tornado.general').disabled = True
+    logging.getLogger("tornado.access").disabled = True
+    logging.getLogger("tornado.application").disabled = True
+    logging.getLogger("tornado.general").disabled = True
     yield
-    logging.getLogger('tornado.access').disabled = False
-    logging.getLogger('tornado.application').disabled = False
-    logging.getLogger('tornado.general').disabled = False
+    logging.getLogger("tornado.access").disabled = False
+    logging.getLogger("tornado.application").disabled = False
+    logging.getLogger("tornado.general").disabled = False
 
 
 def json(resp: httpclient.HTTPResponse):
@@ -107,8 +107,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         for f in self.view:
             f.intercept()
 
-        assert self.fetch(
-            "/flows/42/resume", method="POST").code == 200
+        assert self.fetch("/flows/42/resume", method="POST").code == 200
         assert sum(f.intercepted for f in self.view) == 1
         assert self.fetch("/flows/resume", method="POST").code == 200
         assert all(not f.intercepted for f in self.view)
@@ -153,7 +152,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 "code": 404,
                 "headers": [("bar", "baz")],
                 "content": "resp",
-            }
+            },
         }
         assert self.put_json("/flows/42", upd).code == 200
         assert f.request.method == "PATCH"
@@ -171,12 +170,15 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert self.put_json("/flows/42", {"request": {"foo": 42}}).code == 400
         assert self.put_json("/flows/42", {"response": {"foo": 42}}).code == 400
         assert self.fetch("/flows/42", method="PUT", body="{}").code == 400
-        assert self.fetch(
-            "/flows/42",
-            method="PUT",
-            headers={"Content-Type": "application/json"},
-            body="!!"
-        ).code == 400
+        assert (
+            self.fetch(
+                "/flows/42",
+                method="PUT",
+                headers={"Content-Type": "application/json"},
+                body="!!",
+            ).code
+            == 400
+        )
 
     def test_flow_duplicate(self):
         resp = self.fetch("/flows/42/duplicate", method="POST")
@@ -211,9 +213,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
         del f.response.headers["Content-Disposition"]
         f.request.path = "/foo/bar.jpg"
-        assert self.fetch(
-            "/flows/42/response/content.data"
-        ).headers["Content-Disposition"] == 'attachment; filename=bar.jpg'
+        assert (
+            self.fetch("/flows/42/response/content.data").headers["Content-Disposition"]
+            == "attachment; filename=bar.jpg"
+        )
 
         f.response.content = b""
         assert self.fetch("/flows/42/response/content.data").code == 400
@@ -221,11 +224,10 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         f.revert()
 
     def test_update_flow_content(self):
-        assert self.fetch(
-            "/flows/42/request/content.data",
-            method="POST",
-            body="new"
-        ).code == 200
+        assert (
+            self.fetch("/flows/42/request/content.data", method="POST", body="new").code
+            == 200
+        )
         f = self.view.get_by_id("42")
         assert f.request.content == b"new"
         assert f.modified()
@@ -233,18 +235,23 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_update_flow_content_multipart(self):
         body = (
-            b'--somefancyboundary\r\n'
+            b"--somefancyboundary\r\n"
             b'Content-Disposition: form-data; name="a"; filename="a.txt"\r\n'
-            b'\r\n'
-            b'such multipart. very wow.\r\n'
-            b'--somefancyboundary--\r\n'
+            b"\r\n"
+            b"such multipart. very wow.\r\n"
+            b"--somefancyboundary--\r\n"
         )
-        assert self.fetch(
-            "/flows/42/request/content.data",
-            method="POST",
-            headers={"Content-Type": 'multipart/form-data; boundary="somefancyboundary"'},
-            body=body
-        ).code == 200
+        assert (
+            self.fetch(
+                "/flows/42/request/content.data",
+                method="POST",
+                headers={
+                    "Content-Type": 'multipart/form-data; boundary="somefancyboundary"'
+                },
+                body=body,
+            ).code
+            == 200
+        )
         f = self.view.get_by_id("42")
         assert f.request.content == b"such multipart. very wow."
         assert f.modified()
@@ -252,10 +259,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_flow_content_view(self):
         assert json(self.fetch("/flows/42/request/content/raw")) == {
-            "lines": [
-                [["text", "content"]]
-            ],
-            "description": "Raw"
+            "lines": [[["text", "content"]]],
+            "description": "Raw",
         }
 
     def test_events(self):
@@ -273,7 +278,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def test_options(self):
         j = json(self.fetch("/options"))
         assert type(j) == dict
-        assert type(j['anticache']) == dict
+        assert type(j["anticache"]) == dict
 
     def test_option_update(self):
         assert self.put_json("/options", {"anticache": True}).code == 200
@@ -300,14 +305,14 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         j1 = _json.loads(r1)
         j2 = _json.loads(r2)
         response = dict()
-        response[j1['resource']] = j1
-        response[j2['resource']] = j2
-        assert response['settings'] == {
+        response[j1["resource"]] = j1
+        response[j2["resource"]] = j2
+        assert response["settings"] == {
             "resource": "settings",
             "cmd": "update",
             "data": {"anticomp": True},
         }
-        assert response['options'] == {
+        assert response["options"] == {
             "resource": "options",
             "cmd": "update",
             "data": {
@@ -318,7 +323,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                     "help": "Try to convince servers to send us un-compressed data.",
                     "type": "bool",
                 }
-            }
+            },
         }
         ws_client.close()
 
@@ -329,16 +334,16 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
     def _test_generate_tflow_js(self):
         _tflow = app.flow_to_json(tflow.tflow(resp=True, err=True))
         # Set some value as constant, so that _tflow.js would not change every time.
-        _tflow['client_conn']['id'] = "4a18d1a0-50a1-48dd-9aa6-d45d74282939"
-        _tflow['id'] = "d91165be-ca1f-4612-88a9-c0f8696f3e29"
-        _tflow['error']['timestamp'] = 1495370312.4814785
-        _tflow['response']['timestamp_end'] = 1495370312.4814625
-        _tflow['response']['timestamp_start'] = 1495370312.481462
-        _tflow['server_conn']['id'] = "f087e7b2-6d0a-41a8-a8f0-e1a4761395f8"
+        _tflow["client_conn"]["id"] = "4a18d1a0-50a1-48dd-9aa6-d45d74282939"
+        _tflow["id"] = "d91165be-ca1f-4612-88a9-c0f8696f3e29"
+        _tflow["error"]["timestamp"] = 1495370312.4814785
+        _tflow["response"]["timestamp_end"] = 1495370312.4814625
+        _tflow["response"]["timestamp_start"] = 1495370312.481462
+        _tflow["server_conn"]["id"] = "f087e7b2-6d0a-41a8-a8f0-e1a4761395f8"
         tflow_json = _json.dumps(_tflow, indent=4, sort_keys=True)
         here = os.path.abspath(os.path.dirname(__file__))
-        web_root = os.path.join(here, os.pardir, os.pardir, os.pardir, os.pardir, 'web')
-        tflow_path = os.path.join(web_root, 'src/js/__tests__/ducks/_tflow.js')
+        web_root = os.path.join(here, os.pardir, os.pardir, os.pardir, os.pardir, "web")
+        tflow_path = os.path.join(web_root, "src/js/__tests__/ducks/_tflow.js")
         content = f"""export default function(){{\n    return {tflow_json}\n}}"""
-        with open(tflow_path, 'w', newline="\n") as f:
+        with open(tflow_path, "w", newline="\n") as f:
             f.write(content)

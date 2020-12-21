@@ -29,5 +29,6 @@ def test_hook():
     assert FooHook in commands.all_hooks.values()
 
     with pytest.raises(RuntimeError, match="Two conflicting hooks"):
+
         class FooHook2(commands.Hook):
             name = "foo"

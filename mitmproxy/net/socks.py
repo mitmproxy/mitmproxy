@@ -12,22 +12,11 @@ class SocksError(Exception):
         self.code = code
 
 
-VERSION = bidi.BiDi(
-    SOCKS4=0x04,
-    SOCKS5=0x05
-)
+VERSION = bidi.BiDi(SOCKS4=0x04, SOCKS5=0x05)
 
-CMD = bidi.BiDi(
-    CONNECT=0x01,
-    BIND=0x02,
-    UDP_ASSOCIATE=0x03
-)
+CMD = bidi.BiDi(CONNECT=0x01, BIND=0x02, UDP_ASSOCIATE=0x03)
 
-ATYP = bidi.BiDi(
-    IPV4_ADDRESS=0x01,
-    DOMAINNAME=0x03,
-    IPV6_ADDRESS=0x04
-)
+ATYP = bidi.BiDi(IPV4_ADDRESS=0x01, DOMAINNAME=0x03, IPV6_ADDRESS=0x04)
 
 REP = bidi.BiDi(
     SUCCEEDED=0x00,
@@ -45,12 +34,10 @@ METHOD = bidi.BiDi(
     NO_AUTHENTICATION_REQUIRED=0x00,
     GSSAPI=0x01,
     USERNAME_PASSWORD=0x02,
-    NO_ACCEPTABLE_METHODS=0xFF
+    NO_ACCEPTABLE_METHODS=0xFF,
 )
 
-USERNAME_PASSWORD_VERSION = bidi.BiDi(
-    DEFAULT=0x01
-)
+USERNAME_PASSWORD_VERSION = bidi.BiDi(DEFAULT=0x01)
 
 
 class ClientGreeting:
@@ -70,7 +57,7 @@ class ClientGreeting:
 
             raise SocksError(
                 REP.GENERAL_SOCKS_SERVER_FAILURE,
-                guess + "Invalid SOCKS version. Expected 0x05, got 0x%x" % self.ver
+                guess + "Invalid SOCKS version. Expected 0x05, got 0x%x" % self.ver,
             )
 
     @classmethod
@@ -106,7 +93,7 @@ class ServerGreeting:
 
             raise SocksError(
                 REP.GENERAL_SOCKS_SERVER_FAILURE,
-                guess + "Invalid SOCKS version. Expected 0x05, got 0x%x" % self.ver
+                guess + "Invalid SOCKS version. Expected 0x05, got 0x%x" % self.ver,
             )
 
     @classmethod
@@ -129,15 +116,14 @@ class UsernamePasswordAuth:
     def assert_authver1(self):
         if self.ver != USERNAME_PASSWORD_VERSION.DEFAULT:
             raise SocksError(
-                0,
-                "Invalid auth version. Expected 0x01, got 0x%x" % self.ver
+                0, "Invalid auth version. Expected 0x01, got 0x%x" % self.ver
             )
 
     @classmethod
     def from_file(cls, f):
         ver, ulen = struct.unpack("!BB", f.safe_read(2))
         username = f.safe_read(ulen)
-        plen, = struct.unpack("!B", f.safe_read(1))
+        (plen,) = struct.unpack("!B", f.safe_read(1))
         password = f.safe_read(plen)
         return cls(ver, username.decode(), password.decode())
 
@@ -158,8 +144,7 @@ class UsernamePasswordAuthResponse:
     def assert_authver1(self):
         if self.ver != USERNAME_PASSWORD_VERSION.DEFAULT:
             raise SocksError(
-                0,
-                "Invalid auth version. Expected 0x01, got 0x%x" % self.ver
+                0, "Invalid auth version. Expected 0x01, got 0x%x" % self.ver
             )
 
     @classmethod
@@ -184,7 +169,7 @@ class Message:
         if self.ver != VERSION.SOCKS5:
             raise SocksError(
                 REP.GENERAL_SOCKS_SERVER_FAILURE,
-                "Invalid SOCKS version. Expected 0x05, got 0x%x" % self.ver
+                "Invalid SOCKS version. Expected 0x05, got 0x%x" % self.ver,
             )
 
     @classmethod
@@ -193,7 +178,7 @@ class Message:
         if rsv != 0x00:
             raise SocksError(
                 REP.GENERAL_SOCKS_SERVER_FAILURE,
-                "Socks Request: Invalid reserved byte: %s" % rsv
+                "Socks Request: Invalid reserved byte: %s" % rsv,
             )
         if atyp == ATYP.IPV4_ADDRESS:
             # We use tnoa here as ntop is not commonly available on Windows.
@@ -201,16 +186,19 @@ class Message:
         elif atyp == ATYP.IPV6_ADDRESS:
             host = ipaddress.IPv6Address(f.safe_read(16)).compressed
         elif atyp == ATYP.DOMAINNAME:
-            length, = struct.unpack("!B", f.safe_read(1))
+            (length,) = struct.unpack("!B", f.safe_read(1))
             host = f.safe_read(length)
             if not check.is_valid_host(host):
-                raise SocksError(REP.GENERAL_SOCKS_SERVER_FAILURE, "Invalid hostname: %s" % host)
+                raise SocksError(
+                    REP.GENERAL_SOCKS_SERVER_FAILURE, "Invalid hostname: %s" % host
+                )
             host = host.decode("idna")
         else:
-            raise SocksError(REP.ADDRESS_TYPE_NOT_SUPPORTED,
-                             "Socks Request: Unknown ATYP: %s" % atyp)
+            raise SocksError(
+                REP.ADDRESS_TYPE_NOT_SUPPORTED, "Socks Request: Unknown ATYP: %s" % atyp
+            )
 
-        port, = struct.unpack("!H", f.safe_read(2))
+        (port,) = struct.unpack("!H", f.safe_read(2))
         addr = (host, port)
         return cls(ver, msg, atyp, addr)
 
@@ -225,7 +213,6 @@ class Message:
             f.write(self.addr[0].encode("idna"))
         else:
             raise SocksError(
-                REP.ADDRESS_TYPE_NOT_SUPPORTED,
-                "Unknown ATYP: %s" % self.atyp
+                REP.ADDRESS_TYPE_NOT_SUPPORTED, "Unknown ATYP: %s" % self.atyp
             )
         f.write(struct.pack("!H", self.addr[1]))

@@ -5,10 +5,20 @@ import pytest
 from mitmproxy import exceptions
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http.http1.read import (
-    read_request, read_response, read_request_head,
-    read_response_head, read_body, connection_close, expected_http_body_size, _get_first_line,
-    _read_request_line, _read_response_line, _check_http_version,
-    _read_headers, _read_chunked, get_header_tokens
+    read_request,
+    read_response,
+    read_request_head,
+    read_response_head,
+    read_body,
+    connection_close,
+    expected_http_body_size,
+    _get_first_line,
+    _read_request_line,
+    _read_response_line,
+    _check_http_version,
+    _read_headers,
+    _read_chunked,
+    get_header_tokens,
 )
 from mitmproxy.test.tutils import treq, tresp
 
@@ -24,12 +34,15 @@ def test_get_header_tokens():
     assert get_header_tokens(headers, "foo") == ["bar", "voing", "oink"]
 
 
-@pytest.mark.parametrize("input", [
-    b"GET / HTTP/1.1\r\n\r\nskip",
-    b"GET  / HTTP/1.1\r\n\r\nskip",
-    b"GET  /  HTTP/1.1\r\n\r\nskip",
-    b"GET   /   HTTP/1.1   \r\n\r\nskip",
-])
+@pytest.mark.parametrize(
+    "input",
+    [
+        b"GET / HTTP/1.1\r\n\r\nskip",
+        b"GET  / HTTP/1.1\r\n\r\nskip",
+        b"GET  /  HTTP/1.1\r\n\r\nskip",
+        b"GET   /   HTTP/1.1   \r\n\r\nskip",
+    ],
+)
 def test_read_request(input):
     rfile = BytesIO(input)
     r = read_request(rfile)
@@ -40,9 +53,12 @@ def test_read_request(input):
     assert rfile.read() == b"skip"
 
 
-@pytest.mark.parametrize("input", [
-    b"CONNECT :0 0",
-])
+@pytest.mark.parametrize(
+    "input",
+    [
+        b"CONNECT :0 0",
+    ],
+)
 def test_read_request_error(input):
     rfile = BytesIO(input)
     with pytest.raises(exceptions.HttpException):
@@ -50,12 +66,7 @@ def test_read_request_error(input):
 
 
 def test_read_request_head():
-    rfile = BytesIO(
-        b"GET / HTTP/1.1\r\n"
-        b"Content-Length: 4\r\n"
-        b"\r\n"
-        b"skip"
-    )
+    rfile = BytesIO(b"GET / HTTP/1.1\r\n" b"Content-Length: 4\r\n" b"\r\n" b"skip")
     rfile.reset_timestamps = Mock()
     rfile.first_byte_timestamp = 42
     r = read_request_head(rfile)
@@ -67,12 +78,15 @@ def test_read_request_head():
     assert rfile.read() == b"skip"
 
 
-@pytest.mark.parametrize("input", [
-    b"HTTP/1.1 418 I'm a teapot\r\n\r\nbody",
-    b"HTTP/1.1   418 I'm a teapot\r\n\r\nbody",
-    b"HTTP/1.1   418   I'm a teapot\r\n\r\nbody",
-    b"HTTP/1.1   418   I'm a teapot   \r\n\r\nbody",
-])
+@pytest.mark.parametrize(
+    "input",
+    [
+        b"HTTP/1.1 418 I'm a teapot\r\n\r\nbody",
+        b"HTTP/1.1   418 I'm a teapot\r\n\r\nbody",
+        b"HTTP/1.1   418   I'm a teapot\r\n\r\nbody",
+        b"HTTP/1.1   418   I'm a teapot   \r\n\r\nbody",
+    ],
+)
 def test_read_response(input):
     req = treq()
     rfile = BytesIO(input)
@@ -86,10 +100,7 @@ def test_read_response(input):
 
 def test_read_response_head():
     rfile = BytesIO(
-        b"HTTP/1.1 418 I'm a teapot\r\n"
-        b"Content-Length: 4\r\n"
-        b"\r\n"
-        b"skip"
+        b"HTTP/1.1 418 I'm a teapot\r\n" b"Content-Length: 4\r\n" b"\r\n" b"skip"
     )
     rfile.reset_timestamps = Mock()
     rfile.first_byte_timestamp = 42
@@ -139,7 +150,14 @@ class TestReadBody:
         rfile = BytesIO(b"123456")
         assert list(read_body(rfile, -1, max_chunk_size=None)) == [b"123456"]
         rfile = BytesIO(b"123456")
-        assert list(read_body(rfile, -1, max_chunk_size=1)) == [b"1", b"2", b"3", b"4", b"5", b"6"]
+        assert list(read_body(rfile, -1, max_chunk_size=1)) == [
+            b"1",
+            b"2",
+            b"3",
+            b"4",
+            b"5",
+            b"6",
+        ]
 
 
 def test_connection_close():
@@ -161,64 +179,74 @@ def test_connection_close():
 
 def test_expected_http_body_size():
     # Expect: 100-continue
-    assert expected_http_body_size(
-        treq(headers=Headers(expect="100-continue", content_length="42")),
-        expect_continue_as_0=True
-    ) == 0
+    assert (
+        expected_http_body_size(
+            treq(headers=Headers(expect="100-continue", content_length="42")),
+            expect_continue_as_0=True,
+        )
+        == 0
+    )
     # Expect: 100-continue
-    assert expected_http_body_size(
-        treq(headers=Headers(expect="100-continue", content_length="42")),
-        expect_continue_as_0=False
-    ) == 42
+    assert (
+        expected_http_body_size(
+            treq(headers=Headers(expect="100-continue", content_length="42")),
+            expect_continue_as_0=False,
+        )
+        == 42
+    )
 
     # http://tools.ietf.org/html/rfc7230#section-3.3
-    assert expected_http_body_size(
-        treq(method=b"HEAD"),
-        tresp(headers=Headers(content_length="42"))
-    ) == 0
-    assert expected_http_body_size(
-        treq(method=b"CONNECT"),
-        tresp()
-    ) == 0
+    assert (
+        expected_http_body_size(
+            treq(method=b"HEAD"), tresp(headers=Headers(content_length="42"))
+        )
+        == 0
+    )
+    assert expected_http_body_size(treq(method=b"CONNECT"), tresp()) == 0
     for code in (100, 204, 304):
-        assert expected_http_body_size(
-            treq(),
-            tresp(status_code=code)
-        ) == 0
+        assert expected_http_body_size(treq(), tresp(status_code=code)) == 0
 
     # chunked
-    assert expected_http_body_size(
-        treq(headers=Headers(transfer_encoding="chunked")),
-    ) is None
+    assert (
+        expected_http_body_size(
+            treq(headers=Headers(transfer_encoding="chunked")),
+        )
+        is None
+    )
 
     # explicit length
     for val in (b"foo", b"-7"):
         with pytest.raises(exceptions.HttpSyntaxException):
-            expected_http_body_size(
-                treq(headers=Headers(content_length=val))
-            )
-    assert expected_http_body_size(
-        treq(headers=Headers(content_length="42"))
-    ) == 42
+            expected_http_body_size(treq(headers=Headers(content_length=val)))
+    assert expected_http_body_size(treq(headers=Headers(content_length="42"))) == 42
 
     # more than 1 content-length headers with same value
-    assert expected_http_body_size(
-        treq(headers=Headers([(b'content-length', b'42'), (b'content-length', b'42')]))
-    ) == 42
+    assert (
+        expected_http_body_size(
+            treq(
+                headers=Headers(
+                    [(b"content-length", b"42"), (b"content-length", b"42")]
+                )
+            )
+        )
+        == 42
+    )
 
     # more than 1 content-length headers with conflicting value
     with pytest.raises(exceptions.HttpSyntaxException):
         expected_http_body_size(
-            treq(headers=Headers([(b'content-length', b'42'), (b'content-length', b'45')]))
+            treq(
+                headers=Headers(
+                    [(b"content-length", b"42"), (b"content-length", b"45")]
+                )
+            )
         )
 
     # no length
-    assert expected_http_body_size(
-        treq(headers=Headers())
-    ) == 0
-    assert expected_http_body_size(
-        treq(headers=Headers()), tresp(headers=Headers())
-    ) == -1
+    assert expected_http_body_size(treq(headers=Headers())) == 0
+    assert (
+        expected_http_body_size(treq(headers=Headers()), tresp(headers=Headers())) == -1
+    )
 
 
 def test_get_first_line():
@@ -242,14 +270,26 @@ def test_read_request_line():
     def t(b):
         return _read_request_line(BytesIO(b))
 
-    assert (t(b"GET / HTTP/1.1") ==
-            ("", 0, b"GET", b"", b"", b"/", b"HTTP/1.1"))
-    assert (t(b"OPTIONS * HTTP/1.1") ==
-            ("", 0, b"OPTIONS", b"", b"", b"*", b"HTTP/1.1"))
-    assert (t(b"CONNECT foo:42 HTTP/1.1") ==
-            ("foo", 42, b"CONNECT", b"", b"foo:42", b"", b"HTTP/1.1"))
-    assert (t(b"GET http://foo:42/bar HTTP/1.1") ==
-            ("foo", 42, b"GET", b"http", b"foo:42", b"/bar", b"HTTP/1.1"))
+    assert t(b"GET / HTTP/1.1") == ("", 0, b"GET", b"", b"", b"/", b"HTTP/1.1")
+    assert t(b"OPTIONS * HTTP/1.1") == ("", 0, b"OPTIONS", b"", b"", b"*", b"HTTP/1.1")
+    assert t(b"CONNECT foo:42 HTTP/1.1") == (
+        "foo",
+        42,
+        b"CONNECT",
+        b"",
+        b"foo:42",
+        b"",
+        b"HTTP/1.1",
+    )
+    assert t(b"GET http://foo:42/bar HTTP/1.1") == (
+        "foo",
+        42,
+        b"GET",
+        b"http",
+        b"foo:42",
+        b"/bar",
+        b"HTTP/1.1",
+    )
 
     with pytest.raises(exceptions.HttpSyntaxException):
         t(b"GET / WTF/1.1")
@@ -271,7 +311,11 @@ def test_read_response_line():
     assert t(b"HTTP/1.1 200") == (b"HTTP/1.1", 200, b"")
 
     # https://github.com/mitmproxy/mitmproxy/issues/784
-    assert t(b"HTTP/1.1 200 Non-Autoris\xc3\xa9") == (b"HTTP/1.1", 200, b"Non-Autoris\xc3\xa9")
+    assert t(b"HTTP/1.1 200 Non-Autoris\xc3\xa9") == (
+        b"HTTP/1.1",
+        200,
+        b"Non-Autoris\xc3\xa9",
+    )
 
     with pytest.raises(exceptions.HttpSyntaxException):
         assert t(b"HTTP/1.1")
@@ -303,30 +347,17 @@ class TestReadHeaders:
         return _read_headers(BytesIO(data))
 
     def test_read_simple(self):
-        data = (
-            b"Header: one\r\n"
-            b"Header2: two\r\n"
-            b"\r\n"
-        )
+        data = b"Header: one\r\n" b"Header2: two\r\n" b"\r\n"
         headers = self._read(data)
         assert headers.fields == ((b"Header", b"one"), (b"Header2", b"two"))
 
     def test_read_multi(self):
-        data = (
-            b"Header: one\r\n"
-            b"Header: two\r\n"
-            b"\r\n"
-        )
+        data = b"Header: one\r\n" b"Header: two\r\n" b"\r\n"
         headers = self._read(data)
         assert headers.fields == ((b"Header", b"one"), (b"Header", b"two"))
 
     def test_read_continued(self):
-        data = (
-            b"Header: one\r\n"
-            b"\ttwo\r\n"
-            b"Header2: three\r\n"
-            b"\r\n"
-        )
+        data = b"Header: one\r\n" b"\ttwo\r\n" b"Header2: three\r\n" b"\r\n"
         headers = self._read(data)
         assert headers.fields == ((b"Header", b"one\r\n two"), (b"Header2", b"three"))
 

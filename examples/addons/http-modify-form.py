@@ -9,6 +9,4 @@ def request(flow: http.HTTPFlow) -> None:
     else:
         # One can also just pass new form data.
         # This sets the proper content type and overrides the body.
-        flow.request.urlencoded_form = [
-            ("foo", "bar")
-        ]
+        flow.request.urlencoded_form = [("foo", "bar")]

@@ -2,7 +2,16 @@ import asyncio
 import warnings
 from typing import Optional
 
-from mitmproxy import controller, ctx, eventsequence, flow, log, master, options, platform
+from mitmproxy import (
+    controller,
+    ctx,
+    eventsequence,
+    flow,
+    log,
+    master,
+    options,
+    platform,
+)
 from mitmproxy.flow import Error
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import server
@@ -28,7 +37,11 @@ class AsyncReply(controller.Reply):
             pass  # event loop may already be closed.
 
     def kill(self, force=False):  # pragma: no cover
-        warnings.warn("reply.kill() is deprecated, set the error attribute instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn(
+            "reply.kill() is deprecated, set the error attribute instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.obj.error = flow.Error(Error.KILLED_MESSAGE)
 
 
@@ -43,7 +56,7 @@ class ProxyConnectionHandler(server.StreamConnectionHandler):
     async def handle_hook(self, hook: commands.Hook) -> None:
         with self.timeout_watchdog.disarm():
             # We currently only support single-argument hooks.
-            data, = hook.args()
+            (data,) = hook.args()
             data.reply = AsyncReply(data)
             await self.master.addons.handle_lifecycle(hook.name, data)
             await data.reply.done.wait()
@@ -54,7 +67,7 @@ class ProxyConnectionHandler(server.StreamConnectionHandler):
         x.reply = controller.DummyReply()  # type: ignore
         asyncio_utils.create_task(
             self.master.addons.handle_lifecycle("log", x),
-            name="ProxyConnectionHandler.log"
+            name="ProxyConnectionHandler.log",
         )
 
 
@@ -62,6 +75,7 @@ class Proxyserver:
     """
     This addon runs the actual proxy server.
     """
+
     server: Optional[asyncio.AbstractServer]
     listen_port: int
     master: master.Master
@@ -75,12 +89,16 @@ class Proxyserver:
 
     def load(self, loader):
         loader.add_option(
-            "connection_strategy", str, "lazy",
+            "connection_strategy",
+            str,
+            "lazy",
             "Determine when server connections should be established.",
-            choices=("eager", "lazy")
+            choices=("eager", "lazy"),
         )
         loader.add_option(
-            "proxy_debug", bool, False,
+            "proxy_debug",
+            bool,
+            False,
             "Enable debug logs in the proxy core.",
         )
         # FIXME: Update allowed events to include new ones.
@@ -109,13 +127,18 @@ class Proxyserver:
                 self.server = None
             if ctx.options.server:
                 if not ctx.master.addons.get("nextlayer"):
-                    ctx.log.warn("Warning: Running proxyserver without nextlayer addon!")
+                    ctx.log.warn(
+                        "Warning: Running proxyserver without nextlayer addon!"
+                    )
                 self.server = await asyncio.start_server(
                     self.handle_connection,
                     self.options.listen_host,
                     self.options.listen_port,
                 )
-                addrs = {f"http://{human.format_address(s.getsockname())}" for s in self.server.sockets}
+                addrs = {
+                    f"http://{human.format_address(s.getsockname())}"
+                    for s in self.server.sockets
+                }
                 ctx.log.info(f"Proxy server listening at {' and '.join(addrs)}")
 
     async def shutdown_server(self):
@@ -128,12 +151,7 @@ class Proxyserver:
         asyncio_utils.set_task_debug_info(
             asyncio.current_task(),
             name=f"Proxyserver.handle_connection",
-            client=w.get_extra_info('peername'),
+            client=w.get_extra_info("peername"),
         )
-        handler = ProxyConnectionHandler(
-            self.master,
-            r,
-            w,
-            self.options
-        )
+        handler = ProxyConnectionHandler(self.master, r, w, self.options)
         await handler.handle_client()

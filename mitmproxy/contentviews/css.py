@@ -17,7 +17,7 @@ CSS_SPECIAL_AREAS = (
     "'" + strutils.SINGLELINE_CONTENT + strutils.NO_ESCAPE + "'",
     '"' + strutils.SINGLELINE_CONTENT + strutils.NO_ESCAPE + '"',
     r"/\*" + strutils.MULTILINE_CONTENT + r"\*/",
-    "//" + strutils.SINGLELINE_CONTENT + "$"
+    "//" + strutils.SINGLELINE_CONTENT + "$",
 )
 CSS_SPECIAL_CHARS = "{};:"
 
@@ -50,9 +50,7 @@ def beautify(data: str, indent: str = "    "):
 
 class ViewCSS(base.View):
     name = "CSS"
-    content_types = [
-        "text/css"
-    ]
+    content_types = ["text/css"]
 
     def __call__(self, data, **metadata):
         data = data.decode("utf8", "surrogateescape")

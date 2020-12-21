@@ -27,6 +27,9 @@ def test_parse():
 
 
 def test_parse_with_mode():
-    assert server_spec.parse_with_mode("m:example.com") == ("m", ("https", ("example.com", 443)))
+    assert server_spec.parse_with_mode("m:example.com") == (
+        "m",
+        ("https", ("example.com", 443)),
+    )
     with pytest.raises(ValueError):
         server_spec.parse_with_mode("moo")

@@ -24,10 +24,9 @@ class SearchError(Exception):
 
 
 class FlowViewHeader(urwid.WidgetWrap):
-
     def __init__(
-            self,
-            master: "mitmproxy.tools.console.master.ConsoleMaster",
+        self,
+        master: "mitmproxy.tools.console.master.ConsoleMaster",
     ) -> None:
         self.master = master
         self.focus_changed()
@@ -118,12 +117,12 @@ class FlowDetails(tabs.Tabs):
             urwid.Text(
                 [
                     " ",
-                    ('heading', "["),
-                    ('heading_key', "m"),
-                    ('heading', (":%s]" % viewmode)),
+                    ("heading", "["),
+                    ("heading_key", "m"),
+                    ("heading", (":%s]" % viewmode)),
                 ],
-                align="right"
-            )
+                align="right",
+            ),
         ]
         contentview_status_bar = urwid.AttrWrap(urwid.Columns(cols), "heading")
         return contentview_status_bar
@@ -168,7 +167,9 @@ class FlowDetails(tabs.Tabs):
             markup = widget_lines[-1].get_text()[0]
             widget_lines[-1].set_text(("intercept", markup))
 
-        widget_lines.insert(0, self._contentview_status_bar(viewmode.capitalize(), viewmode))
+        widget_lines.insert(
+            0, self._contentview_status_bar(viewmode.capitalize(), viewmode)
+        )
 
         return searchable.Searchable(widget_lines)
 
@@ -180,20 +181,26 @@ class FlowDetails(tabs.Tabs):
             msg, body = "", [urwid.Text([("error", "[content missing]")])]
             return msg, body
         else:
-            full = self.master.commands.execute("view.settings.getval @focus fullcontents false")
+            full = self.master.commands.execute(
+                "view.settings.getval @focus fullcontents false"
+            )
             if full == "true":
                 limit = sys.maxsize
             else:
                 limit = ctx.options.content_view_lines_cutoff
 
-            flow_modify_cache_invalidation = hash((
-                message.raw_content,
-                message.headers.fields,
-                getattr(message, "path", None),
-            ))
+            flow_modify_cache_invalidation = hash(
+                (
+                    message.raw_content,
+                    message.headers.fields,
+                    getattr(message, "path", None),
+                )
+            )
             # we need to pass the message off-band because it's not hashable
             self._get_content_view_message = message
-            return self._get_content_view(viewmode, limit, flow_modify_cache_invalidation)
+            return self._get_content_view(
+                viewmode, limit, flow_modify_cache_invalidation
+            )
 
     @lru_cache(maxsize=200)
     def _get_content_view(self, viewmode, max_lines, _):
@@ -217,7 +224,7 @@ class FlowDetails(tabs.Tabs):
             txt = []
             for (style, text) in line:
                 if total_chars + len(text) > max_chars:
-                    text = text[:max_chars - total_chars]
+                    text = text[: max_chars - total_chars]
                 txt.append((style, text))
                 total_chars += len(text)
                 if total_chars == max_chars:
@@ -228,11 +235,19 @@ class FlowDetails(tabs.Tabs):
 
             text_objects.append(urwid.Text(txt))
             if total_chars == max_chars:
-                text_objects.append(urwid.Text([
-                    ("highlight", "Stopped displaying data after %d lines. Press " % max_lines),
-                    ("key", "f"),
-                    ("highlight", " to load all data.")
-                ]))
+                text_objects.append(
+                    urwid.Text(
+                        [
+                            (
+                                "highlight",
+                                "Stopped displaying data after %d lines. Press "
+                                % max_lines,
+                            ),
+                            ("key", "f"),
+                            ("highlight", " to load all data."),
+                        ]
+                    )
+                )
                 break
 
         return description, text_objects
@@ -261,10 +276,7 @@ class FlowDetails(tabs.Tabs):
                 k = strutils.bytes_to_escaped_str(k) + ":"
                 v = strutils.bytes_to_escaped_str(v)
                 hdrs.append((k, v))
-            txt = common.format_keyvals(
-                hdrs,
-                key_format="header"
-            )
+            txt = common.format_keyvals(hdrs, key_format="header")
             viewmode = self.master.commands.call("console.flowview.mode")
             msg, body = self.content_view(viewmode, conn)
 
@@ -277,12 +289,12 @@ class FlowDetails(tabs.Tabs):
                 urwid.Text(
                     [
                         " ",
-                        ('heading', "["),
-                        ('heading_key', "m"),
-                        ('heading', (":%s]" % viewmode)),
+                        ("heading", "["),
+                        ("heading_key", "m"),
+                        ("heading", (":%s]" % viewmode)),
                     ],
-                    align="right"
-                )
+                    align="right",
+                ),
             ]
             title = urwid.AttrWrap(urwid.Columns(cols), "heading")
 
@@ -297,7 +309,7 @@ class FlowDetails(tabs.Tabs):
                         ("key", "e"),
                         ("highlight", " and edit any aspect to add one."),
                     ]
-                )
+                ),
             ]
         return searchable.Searchable(txt)
 

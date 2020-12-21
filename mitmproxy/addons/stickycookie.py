@@ -10,7 +10,7 @@ TOrigin = Tuple[str, int, str]
 
 def ckey(attrs: Dict[str, str], f: http.HTTPFlow) -> TOrigin:
     """
-        Returns a (domain, port, path) tuple.
+    Returns a (domain, port, path) tuple.
     """
     domain = f.request.host
     path = "/"
@@ -36,8 +36,10 @@ class StickyCookie:
 
     def load(self, loader):
         loader.add_option(
-            "stickycookie", Optional[str], None,
-            "Set sticky cookie filter. Matched against requests."
+            "stickycookie",
+            Optional[str],
+            None,
+            "Set sticky cookie filter. Matched against requests.",
         )
 
     def configure(self, updated):
@@ -46,7 +48,8 @@ class StickyCookie:
                 flt = flowfilter.parse(ctx.options.stickycookie)
                 if not flt:
                     raise exceptions.OptionsError(
-                        "stickycookie: invalid filter expression: %s" % ctx.options.stickycookie
+                        "stickycookie: invalid filter expression: %s"
+                        % ctx.options.stickycookie
                     )
                 self.flt = flt
             else:
@@ -80,11 +83,13 @@ class StickyCookie:
                     match = [
                         domain_match(flow.request.host, domain),
                         flow.request.port == port,
-                        flow.request.path.startswith(path)
+                        flow.request.path.startswith(path),
                     ]
                     if all(match):
                         cookie_list.extend(c.items())
             if cookie_list:
                 # FIXME: we need to formalise this...
                 flow.metadata["stickycookie"] = True
-                flow.request.headers["cookie"] = cookies.format_cookie_header(cookie_list)
+                flow.request.headers["cookie"] = cookies.format_cookie_header(
+                    cookie_list
+                )

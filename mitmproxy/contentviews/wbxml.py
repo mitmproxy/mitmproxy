@@ -4,10 +4,7 @@ from . import base
 
 class ViewWBXML(base.View):
     name = "WBXML"
-    content_types = [
-        "application/vnd.wap.wbxml",
-        "application/vnd.ms-sync.wbxml"
-    ]
+    content_types = ["application/vnd.wap.wbxml", "application/vnd.ms-sync.wbxml"]
 
     def __call__(self, data, **metadata):
         try:

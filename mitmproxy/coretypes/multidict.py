@@ -6,13 +6,9 @@ from mitmproxy.coretypes import serializable
 
 class _MultiDict(MutableMapping, metaclass=ABCMeta):
     def __repr__(self):
-        fields = (
-            repr(field)
-            for field in self.fields
-        )
+        fields = (repr(field) for field in self.fields)
         return "{cls}[{fields}]".format(
-            cls=type(self).__name__,
-            fields=", ".join(fields)
+            cls=type(self).__name__, fields=", ".join(fields)
         )
 
     @staticmethod
@@ -47,8 +43,7 @@ class _MultiDict(MutableMapping, metaclass=ABCMeta):
             raise KeyError(key)
         key = self._kconv(key)
         self.fields = tuple(
-            field for field in self.fields
-            if key != self._kconv(field[0])
+            field for field in self.fields if key != self._kconv(field[0])
         )
 
     def __iter__(self):
@@ -73,11 +68,7 @@ class _MultiDict(MutableMapping, metaclass=ABCMeta):
         If that key is not in the MultiDict, the return value will be an empty list.
         """
         key = self._kconv(key)
-        return [
-            value
-            for k, value in self.fields
-            if self._kconv(k) == key
-        ]
+        return [value for k, value in self.fields if self._kconv(k) == key]
 
     def set_all(self, key, values):
         """
@@ -89,15 +80,11 @@ class _MultiDict(MutableMapping, metaclass=ABCMeta):
         for field in self.fields:
             if self._kconv(field[0]) == key_kconv:
                 if values:
-                    new_fields.append(
-                        (field[0], values.pop(0))
-                    )
+                    new_fields.append((field[0], values.pop(0)))
             else:
                 new_fields.append(field)
         while values:
-            new_fields.append(
-                (key, values.pop(0))
-            )
+            new_fields.append((key, values.pop(0)))
         self.fields = tuple(new_fields)
 
     def add(self, key, value):
@@ -122,10 +109,7 @@ class _MultiDict(MutableMapping, metaclass=ABCMeta):
                 If True, one key per value will be returned.
                 If False, duplicate keys will only be returned once.
         """
-        return (
-            k
-            for k, _ in self.items(multi)
-        )
+        return (k for k, _ in self.items(multi))
 
     def values(self, multi=False):
         """
@@ -136,10 +120,7 @@ class _MultiDict(MutableMapping, metaclass=ABCMeta):
                 If True, all values will be returned.
                 If False, only the first value per key will be returned.
         """
-        return (
-            v
-            for _, v in self.items(multi)
-        )
+        return (v for _, v in self.items(multi))
 
     def items(self, multi=False):
         """
@@ -159,9 +140,7 @@ class _MultiDict(MutableMapping, metaclass=ABCMeta):
 class MultiDict(_MultiDict, serializable.Serializable):
     def __init__(self, fields=()):
         super().__init__()
-        self.fields = tuple(
-            tuple(i) for i in fields
-        )
+        self.fields = tuple(tuple(i) for i in fields)
 
     @staticmethod
     def _reduce_values(values):
@@ -188,6 +167,7 @@ class MultiDictView(_MultiDict):
     The view itself contains no state - data is retrieved from the parent on
     request, and stored back to the parent on change.
     """
+
     def __init__(self, getter, setter):
         self._getter = getter
         self._setter = setter

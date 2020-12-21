@@ -26,7 +26,9 @@ def dump_system_info():
     return "\n".join(data)
 
 
-def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragma: no cover
+def dump_info(
+    signal=None, frame=None, file=sys.stdout, testing=False
+):  # pragma: no cover
     with redirect_stdout(file):
         print("****************************************************")
         print("Summary")
@@ -92,10 +94,11 @@ def dump_info(signal=None, frame=None, file=sys.stdout, testing=False):  # pragm
             print("=======")
             for task in asyncio.all_tasks():
                 f = task.get_stack(limit=1)[0]
-                line = linecache.getline(f.f_code.co_filename, f.f_lineno, f.f_globals).strip()
+                line = linecache.getline(
+                    f.f_code.co_filename, f.f_lineno, f.f_globals
+                ).strip()
                 line = f"{line}  # at {os.path.basename(f.f_code.co_filename)}:{f.f_lineno}"
-                print(f"{asyncio_utils.task_repr(task)}\n"
-                      f"    {line}")
+                print(f"{asyncio_utils.task_repr(task)}\n" f"    {line}")
 
         print("****************************************************")
 
@@ -107,11 +110,7 @@ def dump_stacks(signal=None, frame=None, file=sys.stdout, testing=False):
     id2name = {th.ident: th.name for th in threading.enumerate()}
     code = []
     for threadId, stack in sys._current_frames().items():
-        code.append(
-            "\n# Thread: %s(%d)" % (
-                id2name.get(threadId, ""), threadId
-            )
-        )
+        code.append("\n# Thread: %s(%d)" % (id2name.get(threadId, ""), threadId))
         for filename, lineno, name, line in traceback.extract_stack(stack):
             code.append('File: "%s", line %d, in %s' % (filename, lineno, name))
             if line:

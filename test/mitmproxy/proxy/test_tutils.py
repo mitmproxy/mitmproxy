@@ -43,36 +43,18 @@ def tplaybook(tctx):
 
 
 def test_simple(tplaybook):
-    assert (
-            tplaybook
-            >> TEvent()
-            << TCommand()
-            >> TEvent([])
-            << None
-    )
+    assert tplaybook >> TEvent() << TCommand() >> TEvent([]) << None
 
 
 def test_mismatch(tplaybook):
     with pytest.raises(AssertionError, match="Playbook mismatch"):
-        assert (
-                tplaybook
-                >> TEvent([])
-                << TCommand()
-        )
+        assert tplaybook >> TEvent([]) << TCommand()
 
 
 def test_partial_assert(tplaybook):
     """Developers can assert parts of a playbook and the continue later on."""
-    assert (
-            tplaybook
-            >> TEvent()
-            << TCommand()
-    )
-    assert (
-            tplaybook
-            >> TEvent()
-            << TCommand()
-    )
+    assert tplaybook >> TEvent() << TCommand()
+    assert tplaybook >> TEvent() << TCommand()
     assert len(tplaybook.actual) == len(tplaybook.expected) == 4
 
 
@@ -83,23 +65,17 @@ def test_placeholder(tplaybook, typed):
         f = tutils.Placeholder(int)
     else:
         f = tutils.Placeholder()
-    assert (
-            tplaybook
-            >> TEvent([42])
-            << TCommand(f)
-    )
+    assert tplaybook >> TEvent([42]) << TCommand(f)
     assert f() == 42
 
 
 def test_placeholder_type_mismatch(tplaybook):
     """Developers can specify placeholders for yet unknown attributes."""
     f = tutils.Placeholder(str)
-    with pytest.raises(TypeError, match="Placeholder type error for TCommand.x: expected str, got int."):
-        assert (
-                tplaybook
-                >> TEvent([42])
-                << TCommand(f)
-        )
+    with pytest.raises(
+        TypeError, match="Placeholder type error for TCommand.x: expected str, got int."
+    ):
+        assert tplaybook >> TEvent([42]) << TCommand(f)
 
 
 def test_unfinished(tplaybook):
@@ -113,12 +89,7 @@ def test_unfinished(tplaybook):
 
 def test_command_reply(tplaybook):
     """CommandReplies can use relative offsets to point to the matching command."""
-    assert (
-            tplaybook
-            >> TEvent()
-            << TCommand()
-            >> tutils.reply()
-    )
+    assert tplaybook >> TEvent() << TCommand() >> tutils.reply()
     assert tplaybook.actual[1] == tplaybook.actual[2].command
 
 
@@ -162,12 +133,7 @@ def test_command_multiple_replies(tplaybook, swap):
     command1 = TCommand(a)
     command2 = TCommand(b)
 
-    (tplaybook
-     >> TEvent([1])
-     << command1
-     >> TEvent([2])
-     << command2
-     )
+    (tplaybook >> TEvent([1]) << command1 >> TEvent([2]) << command2)
     if swap:
         tplaybook >> tutils.reply(to=command1)
         tplaybook >> tutils.reply(to=command2)

@@ -5,19 +5,23 @@ from mitmproxy import ctx
 class Block:
     def load(self, loader):
         loader.add_option(
-            "block_global", bool, True,
+            "block_global",
+            bool,
+            True,
             """
             Block connections from globally reachable networks, as defined in
             the IANA special purpose registries.
-            """
+            """,
         )
         loader.add_option(
-            "block_private", bool, False,
+            "block_private",
+            bool,
+            False,
             """
             Block connections from private networks, as defined in the IANA
             special purpose registries. This option does not affect loopback
             addresses.
-            """
+            """,
         )
 
     def client_connected(self, client):  # pragma: no cover
@@ -30,11 +34,15 @@ class Block:
             return
 
         if ctx.options.block_private and address.is_private:
-            ctx.log.warn(f"Client connection from {client.peername[0]} killed by block_private option.")
+            ctx.log.warn(
+                f"Client connection from {client.peername[0]} killed by block_private option."
+            )
             client.error = "Connection killed by block_private."
 
         if ctx.options.block_global and address.is_global:
-            ctx.log.warn(f"Client connection from {client.peername[0]} killed by block_global option.")
+            ctx.log.warn(
+                f"Client connection from {client.peername[0]} killed by block_global option."
+            )
             client.error = "Connection killed by block_global."
 
     # FIXME: Remove old proxy core hook below and remove no cover statements.

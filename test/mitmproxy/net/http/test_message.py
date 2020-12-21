@@ -16,7 +16,9 @@ def _test_decoded_attr(message, attr):
     setattr(message, attr, "foo")
     assert getattr(message.data, attr) == b"foo"
     # Set raw bytes, get decoded
-    setattr(message.data, attr, b"BAR")  # use uppercase so that we can also cover request.method
+    setattr(
+        message.data, attr, b"BAR"
+    )  # use uppercase so that we can also cover request.method
     assert getattr(message, attr) == "BAR"
     # Set bytes, get raw bytes
     setattr(message, attr, b"baz")
@@ -48,13 +50,14 @@ class TestMessageData:
 
     def test_serializable(self):
         data1 = tutils.tresp(timestamp_start=42, timestamp_end=42).data
-        data2 = tutils.tresp().data.from_state(data1.get_state())  # ResponseData.from_state()
+        data2 = tutils.tresp().data.from_state(
+            data1.get_state()
+        )  # ResponseData.from_state()
 
         assert data1 == data2
 
 
 class TestMessage:
-
     def test_init(self):
         resp = tutils.tresp()
         assert resp.data
@@ -199,7 +202,7 @@ class TestMessageContentEncoding:
 
 class TestMessageText:
     def test_simple(self):
-        r = tutils.tresp(content=b'\xfc')
+        r = tutils.tresp(content=b"\xfc")
         assert r.raw_content == b"\xfc"
         assert r.content == b"\xfc"
         assert r.text == "ü"
@@ -221,28 +224,36 @@ class TestMessageText:
         assert r.text == '"ü"'
 
     def test_guess_meta_charset(self):
-        r = tutils.tresp(content=b'<meta http-equiv="content-type" '
-                                 b'content="text/html;charset=gb2312">\xe6\x98\x8e\xe4\xbc\xaf')
+        r = tutils.tresp(
+            content=b'<meta http-equiv="content-type" '
+            b'content="text/html;charset=gb2312">\xe6\x98\x8e\xe4\xbc\xaf'
+        )
         # "鏄庝集" is decoded form of \xe6\x98\x8e\xe4\xbc\xaf in gb18030
         assert "鏄庝集" in r.text
 
     def test_guess_css_charset(self):
         # @charset but not text/css
-        r = tutils.tresp(content=b'@charset "gb2312";'
-                                 b'#foo::before {content: "\xe6\x98\x8e\xe4\xbc\xaf"}')
+        r = tutils.tresp(
+            content=b'@charset "gb2312";'
+            b'#foo::before {content: "\xe6\x98\x8e\xe4\xbc\xaf"}'
+        )
         # "鏄庝集" is decoded form of \xe6\x98\x8e\xe4\xbc\xaf in gb18030
         assert "鏄庝集" not in r.text
 
         # @charset not at the beginning
-        r = tutils.tresp(content=b'foo@charset "gb2312";'
-                                 b'#foo::before {content: "\xe6\x98\x8e\xe4\xbc\xaf"}')
+        r = tutils.tresp(
+            content=b'foo@charset "gb2312";'
+            b'#foo::before {content: "\xe6\x98\x8e\xe4\xbc\xaf"}'
+        )
         r.headers["content-type"] = "text/css"
         # "鏄庝集" is decoded form of \xe6\x98\x8e\xe4\xbc\xaf in gb18030
         assert "鏄庝集" not in r.text
 
         # @charset and text/css
-        r = tutils.tresp(content=b'@charset "gb2312";'
-                                 b'#foo::before {content: "\xe6\x98\x8e\xe4\xbc\xaf"}')
+        r = tutils.tresp(
+            content=b'@charset "gb2312";'
+            b'#foo::before {content: "\xe6\x98\x8e\xe4\xbc\xaf"}'
+        )
         r.headers["content-type"] = "text/css"
         # "鏄庝集" is decoded form of \xe6\x98\x8e\xe4\xbc\xaf in gb18030
         assert "鏄庝集" in r.text
@@ -285,7 +296,7 @@ class TestMessageText:
         with pytest.raises(ValueError):
             assert r.text
 
-        assert r.get_text(strict=False) == '\udcff'
+        assert r.get_text(strict=False) == "\udcff"
 
     def test_cannot_encode(self):
         r = tutils.tresp()
@@ -296,19 +307,19 @@ class TestMessageText:
         r.headers["content-type"] = "text/html; charset=latin1; foo=bar"
         r.text = "☃"
         assert r.headers["content-type"] == "text/html; charset=utf-8; foo=bar"
-        assert r.raw_content == b'\xe2\x98\x83'
+        assert r.raw_content == b"\xe2\x98\x83"
 
         r.headers["content-type"] = "gibberish"
         r.text = "☃"
         assert r.headers["content-type"] == "text/plain; charset=utf-8"
-        assert r.raw_content == b'\xe2\x98\x83'
+        assert r.raw_content == b"\xe2\x98\x83"
 
         del r.headers["content-type"]
         r.text = "☃"
         assert r.headers["content-type"] == "text/plain; charset=utf-8"
-        assert r.raw_content == b'\xe2\x98\x83'
+        assert r.raw_content == b"\xe2\x98\x83"
 
         r.headers["content-type"] = "text/html; charset=latin1"
-        r.text = '\udcff'
+        r.text = "\udcff"
         assert r.headers["content-type"] == "text/html; charset=utf-8"
         assert r.raw_content == b"\xFF"

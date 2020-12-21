@@ -84,14 +84,15 @@ Cookies = Dict[str, str]
 
 
 def get_cookies(flow: http.HTTPFlow) -> Cookies:
-    """ Return a dict going from cookie names to cookie values
-          - Note that it includes both the cookies sent in the original request and
-            the cookies sent by the server """
+    """Return a dict going from cookie names to cookie values
+    - Note that it includes both the cookies sent in the original request and
+      the cookies sent by the server"""
     return {name: value for name, value in flow.request.cookies.fields}
 
 
 def find_unclaimed_URLs(body, requestUrl):
     """ Look for unclaimed URLs in script tags and log them if found"""
+
     def getValue(attrs: List[Tuple[str, str]], attrName: str) -> Optional[str]:
         for name, value in attrs:
             if attrName == name:
@@ -102,9 +103,15 @@ def find_unclaimed_URLs(body, requestUrl):
         script_URLs: List[str] = []
 
         def handle_starttag(self, tag, attrs):
-            if (tag == "script" or tag == "iframe") and "src" in [name for name, value in attrs]:
+            if (tag == "script" or tag == "iframe") and "src" in [
+                name for name, value in attrs
+            ]:
                 self.script_URLs.append(getValue(attrs, "src"))
-            if tag == "link" and getValue(attrs, "rel") == "stylesheet" and "href" in [name for name, value in attrs]:
+            if (
+                tag == "link"
+                and getValue(attrs, "rel") == "stylesheet"
+                and "href" in [name for name, value in attrs]
+            ):
                 self.script_URLs.append(getValue(attrs, "href"))
 
     parser = ScriptURLExtractor()
@@ -115,17 +122,21 @@ def find_unclaimed_URLs(body, requestUrl):
         try:
             socket.gethostbyname(domain)
         except socket.gaierror:
-            ctx.log.error(f"XSS found in {requestUrl} due to unclaimed URL \"{url}\".")
+            ctx.log.error(f'XSS found in {requestUrl} due to unclaimed URL "{url}".')
 
 
-def test_end_of_URL_injection(original_body: str, request_URL: str, cookies: Cookies) -> VulnData:
-    """ Test the given URL for XSS via injection onto the end of the URL and
-        log the XSS if found """
+def test_end_of_URL_injection(
+    original_body: str, request_URL: str, cookies: Cookies
+) -> VulnData:
+    """Test the given URL for XSS via injection onto the end of the URL and
+    log the XSS if found"""
     parsed_URL = urlparse(request_URL)
     path = parsed_URL.path
     if path != "" and path[-1] != "/":  # ensure the path ends in a /
         path += "/"
-    path += FULL_PAYLOAD.decode('utf-8')  # the path must be a string while the payload is bytes
+    path += FULL_PAYLOAD.decode(
+        "utf-8"
+    )  # the path must be a string while the payload is bytes
     url = parsed_URL._replace(path=path).geturl()
     body = requests.get(url, cookies=cookies).text.lower()
     xss_info = get_XSS_data(body, url, "End of URL")
@@ -133,31 +144,42 @@ def test_end_of_URL_injection(original_body: str, request_URL: str, cookies: Coo
     return xss_info, sqli_info
 
 
-def test_referer_injection(original_body: str, request_URL: str, cookies: Cookies) -> VulnData:
-    """ Test the given URL for XSS via injection into the referer and
-        log the XSS if found """
-    body = requests.get(request_URL, headers={'referer': FULL_PAYLOAD}, cookies=cookies).text.lower()
+def test_referer_injection(
+    original_body: str, request_URL: str, cookies: Cookies
+) -> VulnData:
+    """Test the given URL for XSS via injection into the referer and
+    log the XSS if found"""
+    body = requests.get(
+        request_URL, headers={"referer": FULL_PAYLOAD}, cookies=cookies
+    ).text.lower()
     xss_info = get_XSS_data(body, request_URL, "Referer")
     sqli_info = get_SQLi_data(body, original_body, request_URL, "Referer")
     return xss_info, sqli_info
 
 
-def test_user_agent_injection(original_body: str, request_URL: str, cookies: Cookies) -> VulnData:
-    """ Test the given URL for XSS via injection into the user agent and
-        log the XSS if found """
-    body = requests.get(request_URL, headers={'User-Agent': FULL_PAYLOAD}, cookies=cookies).text.lower()
+def test_user_agent_injection(
+    original_body: str, request_URL: str, cookies: Cookies
+) -> VulnData:
+    """Test the given URL for XSS via injection into the user agent and
+    log the XSS if found"""
+    body = requests.get(
+        request_URL, headers={"User-Agent": FULL_PAYLOAD}, cookies=cookies
+    ).text.lower()
     xss_info = get_XSS_data(body, request_URL, "User Agent")
     sqli_info = get_SQLi_data(body, original_body, request_URL, "User Agent")
     return xss_info, sqli_info
 
 
 def test_query_injection(original_body: str, request_URL: str, cookies: Cookies):
-    """ Test the given URL for XSS via injection into URL queries and
-        log the XSS if found """
+    """Test the given URL for XSS via injection into URL queries and
+    log the XSS if found"""
     parsed_URL = urlparse(request_URL)
     query_string = parsed_URL.query
     # queries is a list of parameters where each parameter is set to the payload
-    queries = [query.split("=")[0] + "=" + FULL_PAYLOAD.decode('utf-8') for query in query_string.split("&")]
+    queries = [
+        query.split("=")[0] + "=" + FULL_PAYLOAD.decode("utf-8")
+        for query in query_string.split("&")
+    ]
     new_query_string = "&".join(queries)
     new_URL = parsed_URL._replace(query=new_query_string).geturl()
     body = requests.get(new_URL, cookies=cookies).text.lower()
@@ -190,51 +212,88 @@ def log_SQLi_data(sqli_info: Optional[SQLiData]) -> None:
     return
 
 
-def get_SQLi_data(new_body: str, original_body: str, request_URL: str, injection_point: str) -> Optional[SQLiData]:
-    """ Return a SQLiDict if there is a SQLi otherwise return None
-        String String URL String -> (SQLiDict or None) """
+def get_SQLi_data(
+    new_body: str, original_body: str, request_URL: str, injection_point: str
+) -> Optional[SQLiData]:
+    """Return a SQLiDict if there is a SQLi otherwise return None
+    String String URL String -> (SQLiDict or None)"""
     # Regexes taken from Damn Small SQLi Scanner: https://github.com/stamparm/DSSS/blob/master/dsss.py#L17
     DBMS_ERRORS = {
-        "MySQL": (r"SQL syntax.*MySQL", r"Warning.*mysql_.*", r"valid MySQL result", r"MySqlClient\."),
-        "PostgreSQL": (r"PostgreSQL.*ERROR", r"Warning.*\Wpg_.*", r"valid PostgreSQL result", r"Npgsql\."),
-        "Microsoft SQL Server": (r"Driver.* SQL[\-\_\ ]*Server", r"OLE DB.* SQL Server", r"(\W|\A)SQL Server.*Driver",
-                                 r"Warning.*mssql_.*", r"(\W|\A)SQL Server.*[0-9a-fA-F]{8}",
-                                 r"(?s)Exception.*\WSystem\.Data\.SqlClient\.", r"(?s)Exception.*\WRoadhouse\.Cms\."),
-        "Microsoft Access": (r"Microsoft Access Driver", r"JET Database Engine", r"Access Database Engine"),
-        "Oracle": (r"\bORA-[0-9][0-9][0-9][0-9]", r"Oracle error", r"Oracle.*Driver", r"Warning.*\Woci_.*", r"Warning.*\Wora_.*"),
+        "MySQL": (
+            r"SQL syntax.*MySQL",
+            r"Warning.*mysql_.*",
+            r"valid MySQL result",
+            r"MySqlClient\.",
+        ),
+        "PostgreSQL": (
+            r"PostgreSQL.*ERROR",
+            r"Warning.*\Wpg_.*",
+            r"valid PostgreSQL result",
+            r"Npgsql\.",
+        ),
+        "Microsoft SQL Server": (
+            r"Driver.* SQL[\-\_\ ]*Server",
+            r"OLE DB.* SQL Server",
+            r"(\W|\A)SQL Server.*Driver",
+            r"Warning.*mssql_.*",
+            r"(\W|\A)SQL Server.*[0-9a-fA-F]{8}",
+            r"(?s)Exception.*\WSystem\.Data\.SqlClient\.",
+            r"(?s)Exception.*\WRoadhouse\.Cms\.",
+        ),
+        "Microsoft Access": (
+            r"Microsoft Access Driver",
+            r"JET Database Engine",
+            r"Access Database Engine",
+        ),
+        "Oracle": (
+            r"\bORA-[0-9][0-9][0-9][0-9]",
+            r"Oracle error",
+            r"Oracle.*Driver",
+            r"Warning.*\Woci_.*",
+            r"Warning.*\Wora_.*",
+        ),
         "IBM DB2": (r"CLI Driver.*DB2", r"DB2 SQL error", r"\bdb2_\w+\("),
-        "SQLite": (r"SQLite/JDBCDriver", r"SQLite.Exception", r"System.Data.SQLite.SQLiteException", r"Warning.*sqlite_.*",
-                   r"Warning.*SQLite3::", r"\[SQLITE_ERROR\]"),
-        "Sybase": (r"(?i)Warning.*sybase.*", r"Sybase message", r"Sybase.*Server message.*"),
+        "SQLite": (
+            r"SQLite/JDBCDriver",
+            r"SQLite.Exception",
+            r"System.Data.SQLite.SQLiteException",
+            r"Warning.*sqlite_.*",
+            r"Warning.*SQLite3::",
+            r"\[SQLITE_ERROR\]",
+        ),
+        "Sybase": (
+            r"(?i)Warning.*sybase.*",
+            r"Sybase message",
+            r"Sybase.*Server message.*",
+        ),
     }
     for dbms, regexes in DBMS_ERRORS.items():
         for regex in regexes:  # type: ignore
-            if re.search(regex, new_body, re.IGNORECASE) and not re.search(regex, original_body, re.IGNORECASE):
-                return SQLiData(request_URL,
-                                injection_point,
-                                regex,
-                                dbms)
+            if re.search(regex, new_body, re.IGNORECASE) and not re.search(
+                regex, original_body, re.IGNORECASE
+            ):
+                return SQLiData(request_URL, injection_point, regex, dbms)
     return None
 
 
 # A qc is either ' or "
-def inside_quote(qc: str, substring_bytes: bytes, text_index: int, body_bytes: bytes) -> bool:
-    """ Whether the Numberth occurrence of the first string in the second
-        string is inside quotes as defined by the supplied QuoteChar """
-    substring = substring_bytes.decode('utf-8')
-    body = body_bytes.decode('utf-8')
+def inside_quote(
+    qc: str, substring_bytes: bytes, text_index: int, body_bytes: bytes
+) -> bool:
+    """Whether the Numberth occurrence of the first string in the second
+    string is inside quotes as defined by the supplied QuoteChar"""
+    substring = substring_bytes.decode("utf-8")
+    body = body_bytes.decode("utf-8")
     num_substrings_found = 0
     in_quote = False
     for index, char in enumerate(body):
         # Whether the next chunk of len(substring) chars is the substring
-        next_part_is_substring = (
-            (not (index + len(substring) > len(body))) and
-            (body[index:index + len(substring)] == substring)
+        next_part_is_substring = (not (index + len(substring) > len(body))) and (
+            body[index : index + len(substring)] == substring
         )
         # Whether this char is escaped with a \
-        is_not_escaped = (
-            (index - 1 < 0 or index - 1 > len(body)) or
-            (body[index - 1] != "\\")
+        is_not_escaped = (index - 1 < 0 or index - 1 > len(body)) or (
+            body[index - 1] != "\\"
         )
         if char == qc and is_not_escaped:
             in_quote = not in_quote
@@ -246,25 +305,27 @@ def inside_quote(qc: str, substring_bytes: bytes, text_index: int, body_bytes: b
 
 
 def paths_to_text(html: str, string: str) -> List[str]:
-    """ Return list of Paths to a given str in the given HTML tree
-          - Note that it does a BFS """
+    """Return list of Paths to a given str in the given HTML tree
+    - Note that it does a BFS"""
 
     def remove_last_occurence_of_sub_string(string: str, substr: str) -> str:
-        """ Delete the last occurrence of substr from str
+        """Delete the last occurrence of substr from str
         String String -> String
         """
         index = string.rfind(substr)
-        return string[:index] + string[index + len(substr):]
+        return string[:index] + string[index + len(substr) :]
 
     class PathHTMLParser(HTMLParser):
         currentPath = ""
         paths: List[str] = []
 
         def handle_starttag(self, tag, attrs):
-            self.currentPath += ("/" + tag)
+            self.currentPath += "/" + tag
 
         def handle_endtag(self, tag):
-            self.currentPath = remove_last_occurence_of_sub_string(self.currentPath, "/" + tag)
+            self.currentPath = remove_last_occurence_of_sub_string(
+                self.currentPath, "/" + tag
+            )
 
         def handle_data(self, data):
             if string in data:
@@ -275,12 +336,15 @@ def paths_to_text(html: str, string: str) -> List[str]:
     return parser.paths
 
 
-def get_XSS_data(body: Union[str, bytes], request_URL: str, injection_point: str) -> Optional[XSSData]:
+def get_XSS_data(
+    body: Union[str, bytes], request_URL: str, injection_point: str
+) -> Optional[XSSData]:
     """ Return a XSSDict if there is a XSS otherwise return None """
+
     def in_script(text, index, body) -> bool:
-        """ Whether the Numberth occurrence of the first string in the second
-            string is inside a script tag """
-        paths = paths_to_text(body.decode('utf-8'), text.decode("utf-8"))
+        """Whether the Numberth occurrence of the first string in the second
+        string is inside a script tag"""
+        paths = paths_to_text(body.decode("utf-8"), text.decode("utf-8"))
         try:
             path = paths[index]
             return "script" in path
@@ -288,12 +352,12 @@ def get_XSS_data(body: Union[str, bytes], request_URL: str, injection_point: str
             return False
 
     def in_HTML(text: bytes, index: int, body: bytes) -> bool:
-        """ Whether the Numberth occurrence of the first string in the second
-            string is inside the HTML but not inside a script tag or part of
-            a HTML attribute"""
+        """Whether the Numberth occurrence of the first string in the second
+        string is inside the HTML but not inside a script tag or part of
+        a HTML attribute"""
         # if there is a < then lxml will interpret that as a tag, so only search for the stuff before it
         text = text.split(b"<")[0]
-        paths = paths_to_text(body.decode('utf-8'), text.decode("utf-8"))
+        paths = paths_to_text(body.decode("utf-8"), text.decode("utf-8"))
         try:
             path = paths[index]
             return "script" not in path
@@ -302,20 +366,22 @@ def get_XSS_data(body: Union[str, bytes], request_URL: str, injection_point: str
 
     def inject_javascript_handler(html: str) -> bool:
         """ Whether you can inject a Javascript:alert(0) as a link """
+
         class injectJSHandlerHTMLParser(HTMLParser):
             injectJSHandler = False
 
             def handle_starttag(self, tag, attrs):
                 for name, value in attrs:
-                    if name == "href" and value.startswith(FRONT_WALL.decode('utf-8')):
+                    if name == "href" and value.startswith(FRONT_WALL.decode("utf-8")):
                         self.injectJSHandler = True
 
         parser = injectJSHandlerHTMLParser()
         parser.feed(html)
         return parser.injectJSHandler
+
     # Only convert the body to bytes if needed
     if isinstance(body, str):
-        body = bytes(body, 'utf-8')
+        body = bytes(body, "utf-8")
     # Regex for between 24 and 72 (aka 24*3) characters encapsulated by the walls
     regex = re.compile(b"""%s.{24,72}?%s""" % (FRONT_WALL, BACK_WALL))
     matches = regex.findall(body)
@@ -334,64 +400,121 @@ def get_XSS_data(body: Union[str, bytes], request_URL: str, injection_point: str
         inject_slash = b"sl/bsl" in match  # forward slashes
         inject_semi = b"se;sl" in match  # semicolons
         inject_equals = b"eq=" in match  # equals sign
-        if in_script_val and inject_slash and inject_open_angle and inject_close_angle:  # e.g. <script>PAYLOAD</script>
-            return XSSData(request_URL,
-                           injection_point,
-                           '</script><script>alert(0)</script><script>',
-                           match.decode('utf-8'))
-        elif in_script_val and in_single_quotes and inject_single_quotes and inject_semi:  # e.g. <script>t='PAYLOAD';</script>
-            return XSSData(request_URL,
-                           injection_point,
-                           "';alert(0);g='",
-                           match.decode('utf-8'))
-        elif in_script_val and in_double_quotes and inject_double_quotes and inject_semi:  # e.g. <script>t="PAYLOAD";</script>
-            return XSSData(request_URL,
-                           injection_point,
-                           '";alert(0);g="',
-                           match.decode('utf-8'))
-        elif in_tag and in_single_quotes and inject_single_quotes and inject_open_angle and inject_close_angle and inject_slash:
+        if (
+            in_script_val and inject_slash and inject_open_angle and inject_close_angle
+        ):  # e.g. <script>PAYLOAD</script>
+            return XSSData(
+                request_URL,
+                injection_point,
+                "</script><script>alert(0)</script><script>",
+                match.decode("utf-8"),
+            )
+        elif (
+            in_script_val and in_single_quotes and inject_single_quotes and inject_semi
+        ):  # e.g. <script>t='PAYLOAD';</script>
+            return XSSData(
+                request_URL, injection_point, "';alert(0);g='", match.decode("utf-8")
+            )
+        elif (
+            in_script_val and in_double_quotes and inject_double_quotes and inject_semi
+        ):  # e.g. <script>t="PAYLOAD";</script>
+            return XSSData(
+                request_URL, injection_point, '";alert(0);g="', match.decode("utf-8")
+            )
+        elif (
+            in_tag
+            and in_single_quotes
+            and inject_single_quotes
+            and inject_open_angle
+            and inject_close_angle
+            and inject_slash
+        ):
             # e.g. <a href='PAYLOAD'>Test</a>
-            return XSSData(request_URL,
-                           injection_point,
-                           "'><script>alert(0)</script>",
-                           match.decode('utf-8'))
-        elif in_tag and in_double_quotes and inject_double_quotes and inject_open_angle and inject_close_angle and inject_slash:
+            return XSSData(
+                request_URL,
+                injection_point,
+                "'><script>alert(0)</script>",
+                match.decode("utf-8"),
+            )
+        elif (
+            in_tag
+            and in_double_quotes
+            and inject_double_quotes
+            and inject_open_angle
+            and inject_close_angle
+            and inject_slash
+        ):
             # e.g. <a href="PAYLOAD">Test</a>
-            return XSSData(request_URL,
-                           injection_point,
-                           '"><script>alert(0)</script>',
-                           match.decode('utf-8'))
-        elif in_tag and not in_double_quotes and not in_single_quotes and inject_open_angle and inject_close_angle and inject_slash:
+            return XSSData(
+                request_URL,
+                injection_point,
+                '"><script>alert(0)</script>',
+                match.decode("utf-8"),
+            )
+        elif (
+            in_tag
+            and not in_double_quotes
+            and not in_single_quotes
+            and inject_open_angle
+            and inject_close_angle
+            and inject_slash
+        ):
             # e.g. <a href=PAYLOAD>Test</a>
-            return XSSData(request_URL,
-                           injection_point,
-                           '><script>alert(0)</script>',
-                           match.decode('utf-8'))
-        elif inject_javascript_handler(body.decode('utf-8')):  # e.g. <html><a href=PAYLOAD>Test</a>
-            return XSSData(request_URL,
-                           injection_point,
-                           'Javascript:alert(0)',
-                           match.decode('utf-8'))
-        elif in_tag and in_double_quotes and inject_double_quotes and inject_equals:  # e.g. <a href="PAYLOAD">Test</a>
-            return XSSData(request_URL,
-                           injection_point,
-                           '" onmouseover="alert(0)" t="',
-                           match.decode('utf-8'))
-        elif in_tag and in_single_quotes and inject_single_quotes and inject_equals:  # e.g. <a href='PAYLOAD'>Test</a>
-            return XSSData(request_URL,
-                           injection_point,
-                           "' onmouseover='alert(0)' t='",
-                           match.decode('utf-8'))
-        elif in_tag and not in_single_quotes and not in_double_quotes and inject_equals:  # e.g. <a href=PAYLOAD>Test</a>
-            return XSSData(request_URL,
-                           injection_point,
-                           " onmouseover=alert(0) t=",
-                           match.decode('utf-8'))
-        elif in_HTML_val and not in_script_val and inject_open_angle and inject_close_angle and inject_slash:  # e.g. <html>PAYLOAD</html>
-            return XSSData(request_URL,
-                           injection_point,
-                           '<script>alert(0)</script>',
-                           match.decode('utf-8'))
+            return XSSData(
+                request_URL,
+                injection_point,
+                "><script>alert(0)</script>",
+                match.decode("utf-8"),
+            )
+        elif inject_javascript_handler(
+            body.decode("utf-8")
+        ):  # e.g. <html><a href=PAYLOAD>Test</a>
+            return XSSData(
+                request_URL,
+                injection_point,
+                "Javascript:alert(0)",
+                match.decode("utf-8"),
+            )
+        elif (
+            in_tag and in_double_quotes and inject_double_quotes and inject_equals
+        ):  # e.g. <a href="PAYLOAD">Test</a>
+            return XSSData(
+                request_URL,
+                injection_point,
+                '" onmouseover="alert(0)" t="',
+                match.decode("utf-8"),
+            )
+        elif (
+            in_tag and in_single_quotes and inject_single_quotes and inject_equals
+        ):  # e.g. <a href='PAYLOAD'>Test</a>
+            return XSSData(
+                request_URL,
+                injection_point,
+                "' onmouseover='alert(0)' t='",
+                match.decode("utf-8"),
+            )
+        elif (
+            in_tag and not in_single_quotes and not in_double_quotes and inject_equals
+        ):  # e.g. <a href=PAYLOAD>Test</a>
+            return XSSData(
+                request_URL,
+                injection_point,
+                " onmouseover=alert(0) t=",
+                match.decode("utf-8"),
+            )
+        elif (
+            in_HTML_val
+            and not in_script_val
+            and inject_open_angle
+            and inject_close_angle
+            and inject_slash
+        ):  # e.g. <html>PAYLOAD</html>
+            return XSSData(
+                request_URL,
+                injection_point,
+                "<script>alert(0)</script>",
+                match.decode("utf-8"),
+            )
         else:
             return None
     return None

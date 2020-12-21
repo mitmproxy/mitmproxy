@@ -148,7 +148,7 @@ def test_options(tmpdir):
 
         sa.options_load("/nonexistent")
 
-        with open(p, 'a') as f:
+        with open(p, "a") as f:
             f.write("'''")
         with pytest.raises(exceptions.CommandError):
             sa.options_load(p)
@@ -158,20 +158,18 @@ def test_validation_simple():
     sa = core.Core()
     with taddons.context() as tctx:
         with pytest.raises(exceptions.OptionsError):
-            tctx.configure(sa, body_size_limit = "invalid")
-        tctx.configure(sa, body_size_limit = "1m")
+            tctx.configure(sa, body_size_limit="invalid")
+        tctx.configure(sa, body_size_limit="1m")
 
-        with pytest.raises(exceptions.OptionsError, match="requires the upstream_cert option to be enabled"):
+        with pytest.raises(
+            exceptions.OptionsError,
+            match="requires the upstream_cert option to be enabled",
+        ):
             tctx.configure(
-                sa,
-                add_upstream_certs_to_client_chain = True,
-                upstream_cert = False
+                sa, add_upstream_certs_to_client_chain=True, upstream_cert=False
             )
         with pytest.raises(exceptions.OptionsError, match="Invalid mode"):
-            tctx.configure(
-                sa,
-                mode = "Flibble"
-            )
+            tctx.configure(sa, mode="Flibble")
 
 
 @mock.patch("mitmproxy.platform.original_addr", None)
@@ -179,25 +177,29 @@ def test_validation_no_transparent():
     sa = core.Core()
     with taddons.context() as tctx:
         with pytest.raises(Exception, match="Transparent mode not supported"):
-            tctx.configure(sa, mode = "transparent")
+            tctx.configure(sa, mode="transparent")
 
 
 @mock.patch("mitmproxy.platform.original_addr")
 def test_validation_modes(m):
     sa = core.Core()
     with taddons.context() as tctx:
-        tctx.configure(sa, mode = "reverse:http://localhost")
+        tctx.configure(sa, mode="reverse:http://localhost")
         with pytest.raises(Exception, match="Invalid server specification"):
-            tctx.configure(sa, mode = "reverse:")
+            tctx.configure(sa, mode="reverse:")
 
 
 def test_client_certs(tdata):
     sa = core.Core()
     with taddons.context() as tctx:
         # Folders should work.
-        tctx.configure(sa, client_certs = tdata.path("mitmproxy/data/clientcert"))
+        tctx.configure(sa, client_certs=tdata.path("mitmproxy/data/clientcert"))
         # Files, too.
-        tctx.configure(sa, client_certs = tdata.path("mitmproxy/data/clientcert/client.pem"))
+        tctx.configure(
+            sa, client_certs=tdata.path("mitmproxy/data/clientcert/client.pem")
+        )
 
-        with pytest.raises(exceptions.OptionsError, match="certificate path does not exist"):
-            tctx.configure(sa, client_certs = "invalid")
+        with pytest.raises(
+            exceptions.OptionsError, match="certificate path does not exist"
+        ):
+            tctx.configure(sa, client_certs="invalid")

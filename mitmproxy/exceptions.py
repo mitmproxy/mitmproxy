@@ -25,6 +25,7 @@ class Kill(MitmproxyException):
     """
     Signal that both client and server connection(s) should be killed immediately.
     """
+
     pass
 
 
@@ -33,6 +34,7 @@ class ProtocolException(MitmproxyException):
     ProtocolExceptions are caused by invalid user input, unavailable network resources,
     or other events that are outside of our influence.
     """
+
     pass
 
 
@@ -41,7 +43,6 @@ class TlsProtocolException(ProtocolException):
 
 
 class ClientHandshakeException(TlsProtocolException):
-
     def __init__(self, message, server):
         super().__init__(message)
         self.server = server
@@ -107,8 +108,9 @@ class AddonManagerError(MitmproxyException):
 
 class AddonHalt(MitmproxyException):
     """
-        Raised by addons to signal that no further handlers should handle this event.
+    Raised by addons to signal that no further handlers should handle this event.
     """
+
     pass
 
 
@@ -125,6 +127,7 @@ class NetlibException(MitmproxyException):
     """
     Base class for all exceptions thrown by mitmproxy.net.
     """
+
     def __init__(self, message=None):
         super().__init__(message)
 

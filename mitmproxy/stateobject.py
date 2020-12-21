@@ -66,14 +66,11 @@ def _process(typeinfo: typecheck.Type, val: typing.Any, make: bool) -> typing.An
         Ts = typecheck.tuple_types(typeinfo)
         if len(Ts) != len(val):
             raise ValueError(f"Invalid data. Expected {Ts}, got {val}.")
-        return tuple(
-            _process(T, x, make) for T, x in zip(Ts, val)
-        )
+        return tuple(_process(T, x, make) for T, x in zip(Ts, val))
     elif typename.startswith("typing.Dict"):
         k_cls, v_cls = typecheck.mapping_types(typeinfo)
         return {
-            _process(k_cls, k, make): _process(v_cls, v, make)
-            for k, v in val.items()
+            _process(k_cls, k, make): _process(v_cls, v, make) for k, v in val.items()
         }
     elif typename.startswith("typing.Any"):
         # This requires a bit of explanation. We can't import our IO layer here,

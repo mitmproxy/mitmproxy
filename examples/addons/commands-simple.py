@@ -13,6 +13,4 @@ class MyAddon:
         ctx.log.info(f"num = {self.num}")
 
 
-addons = [
-    MyAddon()
-]
+addons = [MyAddon()]

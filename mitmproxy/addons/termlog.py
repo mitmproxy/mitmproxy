@@ -16,9 +16,7 @@ class TermLog:
 
     def load(self, loader):
         loader.add_option(
-            "termlog_verbosity", str, 'info',
-            "Log verbosity.",
-            choices=log.LogTierOrder
+            "termlog_verbosity", str, "info", "Log verbosity.", choices=log.LogTierOrder
         )
 
     def log(self, e):
@@ -31,8 +29,7 @@ class TermLog:
             click.secho(
                 e.msg,
                 file=outfile,
-                fg=dict(error="red", warn="yellow",
-                        alert="magenta").get(e.level),
+                fg=dict(error="red", warn="yellow", alert="magenta").get(e.level),
                 dim=(e.level == "debug"),
-                err=(e.level == "error")
+                err=(e.level == "error"),
             )

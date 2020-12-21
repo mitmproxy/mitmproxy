@@ -9,7 +9,7 @@ import pyparsing
 
 PartialQuotedString = pyparsing.Regex(
     re.compile(
-        r'''
+        r"""
             (["'])  # start quote
             (?:
                 (?:\\.)  # escape sequence
@@ -17,8 +17,8 @@ PartialQuotedString = pyparsing.Regex(
                 (?!\1).  # unescaped character that is not our quote nor the begin of an escape sequence. We can't use \1 in []
             )*
             (?:\1|$)  # end quote
-        ''',
-        re.VERBOSE
+        """,
+        re.VERBOSE,
     )
 )
 
@@ -36,10 +36,8 @@ def quote(val: str) -> str:
 
 
 def unquote(x: str) -> str:
-    quoted = (
-            (x.startswith('"') and x.endswith('"'))
-            or
-            (x.startswith("'") and x.endswith("'"))
+    quoted = (x.startswith('"') and x.endswith('"')) or (
+        x.startswith("'") and x.endswith("'")
     )
     if quoted:
         try:

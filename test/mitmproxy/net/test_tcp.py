@@ -42,7 +42,6 @@ class ClientCipherListHandler(tcp.BaseHandler):
 
 
 class HangHandler(tcp.BaseHandler):
-
     def handle(self):
         # Hang as long as the client connection is alive
         while True:
@@ -85,7 +84,9 @@ class TestServer(tservers.ServerTestBase):
             assert c.rfile.readline() == testval
 
     def test_thread_start_error(self):
-        with mock.patch.object(threading.Thread, "start", side_effect=threading.ThreadError("nonewthread")) as m:
+        with mock.patch.object(
+            threading.Thread, "start", side_effect=threading.ThreadError("nonewthread")
+        ) as m:
             c = tcp.TCPClient(("127.0.0.1", self.port))
             with c.connect():
                 assert not c.rfile.read(1)
@@ -95,9 +96,7 @@ class TestServer(tservers.ServerTestBase):
 
 
 class TestServerBind(tservers.ServerTestBase):
-
     class handler(tcp.BaseHandler):
-
         def handle(self):
             # We may get an ipv4-mapped ipv6 address here, e.g. ::ffff:127.0.0.1.
             # Those still appear as "127.0.0.1" in the table, so we need to strip the prefix.
@@ -114,10 +113,12 @@ class TestServerBind(tservers.ServerTestBase):
             random_port = random.randrange(1024, 65535)
             try:
                 c = tcp.TCPClient(
-                    ("127.0.0.1", self.port), source_address=(
-                        "127.0.0.1", random_port))
+                    ("127.0.0.1", self.port), source_address=("127.0.0.1", random_port)
+                )
                 with c.connect():
-                    assert c.rfile.readline() == str(("127.0.0.1", random_port)).encode()
+                    assert (
+                        c.rfile.readline() == str(("127.0.0.1", random_port)).encode()
+                    )
                     return
             except exceptions.TcpException:  # port probably already in use
                 pass
@@ -150,7 +151,6 @@ class TestEcho(tservers.ServerTestBase):
 
 
 class HardDisconnectHandler(tcp.BaseHandler):
-
     def handle(self):
         self.connection.close()
 
@@ -158,9 +158,10 @@ class HardDisconnectHandler(tcp.BaseHandler):
 class TestFinishFail(tservers.ServerTestBase):
 
     """
-        This tests a difficult-to-trigger exception in the .finish() method of
-        the handler.
+    This tests a difficult-to-trigger exception in the .finish() method of
+    the handler.
     """
+
     handler = EchoHandler
 
     def test_disconnect_in_finish(self):
@@ -173,10 +174,7 @@ class TestFinishFail(tservers.ServerTestBase):
 
 class TestServerSSL(tservers.ServerTestBase):
     handler = EchoHandler
-    ssl = dict(
-        cipher_list="AES256-SHA",
-        chain_file=cdata.path("data/server.crt")
-    )
+    ssl = dict(cipher_list="AES256-SHA", chain_file=cdata.path("data/server.crt"))
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -199,10 +197,7 @@ class TestServerSSL(tservers.ServerTestBase):
 
 class TestSSLv3Only(tservers.ServerTestBase):
     handler = EchoHandler
-    ssl = dict(
-        request_client_cert=False,
-        v3_only=True
-    )
+    ssl = dict(request_client_cert=False, v3_only=True)
 
     def test_failure(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -219,7 +214,7 @@ class TestInvalidTrustFile(tservers.ServerTestBase):
                 c.convert_to_tls(
                     sni="example.mitmproxy.org",
                     verify=SSL.VERIFY_PEER,
-                    ca_pemfile=cdata.path("data/verificationcerts/generate.py")
+                    ca_pemfile=cdata.path("data/verificationcerts/generate.py"),
                 )
 
 
@@ -228,7 +223,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
 
     ssl = dict(
         cert=cdata.path("data/verificationcerts/self-signed.crt"),
-        key=cdata.path("data/verificationcerts/self-signed.key")
+        key=cdata.path("data/verificationcerts/self-signed.key"),
     )
 
     def test_mode_default_should_pass(self):
@@ -265,7 +260,7 @@ class TestSSLUpstreamCertVerificationWBadServerCert(tservers.ServerTestBase):
                 c.convert_to_tls(
                     sni="example.mitmproxy.org",
                     verify=SSL.VERIFY_PEER,
-                    ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt")
+                    ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt"),
                 )
 
             assert c.ssl_verification_error
@@ -280,7 +275,7 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
 
     ssl = dict(
         cert=cdata.path("data/verificationcerts/trusted-leaf.crt"),
-        key=cdata.path("data/verificationcerts/trusted-leaf.key")
+        key=cdata.path("data/verificationcerts/trusted-leaf.key"),
     )
 
     def test_should_fail_without_sni(self, tdata):
@@ -289,18 +284,19 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
             with pytest.raises(exceptions.TlsException):
                 c.convert_to_tls(
                     verify=SSL.VERIFY_PEER,
-                    ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt")
+                    ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt"),
                 )
 
     def test_mode_none_should_pass_without_sni(self, tdata):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_tls(
-                verify=SSL.VERIFY_NONE,
-                ca_path=cdata.path("data/verificationcerts/")
+                verify=SSL.VERIFY_NONE, ca_path=cdata.path("data/verificationcerts/")
             )
 
-            assert "Cannot validate hostname, SNI missing." in str(c.ssl_verification_error)
+            assert "Cannot validate hostname, SNI missing." in str(
+                c.ssl_verification_error
+            )
 
     def test_should_fail(self, tdata):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -309,7 +305,7 @@ class TestSSLUpstreamCertVerificationWBadHostname(tservers.ServerTestBase):
                 c.convert_to_tls(
                     sni="mitmproxy.org",
                     verify=SSL.VERIFY_PEER,
-                    ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt")
+                    ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt"),
                 )
             assert c.ssl_verification_error
 
@@ -319,7 +315,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
 
     ssl = dict(
         cert=cdata.path("data/verificationcerts/trusted-leaf.crt"),
-        key=cdata.path("data/verificationcerts/trusted-leaf.key")
+        key=cdata.path("data/verificationcerts/trusted-leaf.key"),
     )
 
     def test_mode_strict_w_pemfile_should_pass(self, tdata):
@@ -328,7 +324,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
             c.convert_to_tls(
                 sni="example.mitmproxy.org",
                 verify=SSL.VERIFY_PEER,
-                ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt")
+                ca_pemfile=cdata.path("data/verificationcerts/trusted-root.crt"),
             )
 
             assert c.ssl_verification_error is None
@@ -344,7 +340,7 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
             c.convert_to_tls(
                 sni="example.mitmproxy.org",
                 verify=SSL.VERIFY_PEER,
-                ca_path=cdata.path("data/verificationcerts/")
+                ca_path=cdata.path("data/verificationcerts/"),
             )
 
             assert c.ssl_verification_error is None
@@ -356,7 +352,6 @@ class TestSSLUpstreamCertVerificationWValidCertChain(tservers.ServerTestBase):
 
 
 class TestSSLClientCert(tservers.ServerTestBase):
-
     class handler(tcp.BaseHandler):
         sni = None
 
@@ -367,16 +362,12 @@ class TestSSLClientCert(tservers.ServerTestBase):
             self.wfile.write(b"%d\n" % self.clientcert.serial)
             self.wfile.flush()
 
-    ssl = dict(
-        request_client_cert=True,
-        v3_only=False
-    )
+    ssl = dict(request_client_cert=True, v3_only=False)
 
     def test_clientcert(self, tdata):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
-            c.convert_to_tls(
-                cert=cdata.path("data/clientcert/client.pem"))
+            c.convert_to_tls(cert=cdata.path("data/clientcert/client.pem"))
             assert c.rfile.readline().strip() == b"1"
 
     def test_clientcert_err(self, tdata):
@@ -387,7 +378,6 @@ class TestSSLClientCert(tservers.ServerTestBase):
 
 
 class TestSNI(tservers.ServerTestBase):
-
     class handler(tcp.BaseHandler):
         sni = None
 
@@ -417,9 +407,7 @@ class TestSNI(tservers.ServerTestBase):
 
 class TestServerCipherList(tservers.ServerTestBase):
     handler = ClientCipherListHandler
-    ssl = dict(
-        cipher_list='AES256-GCM-SHA384'
-    )
+    ssl = dict(cipher_list="AES256-GCM-SHA384")
 
     @pytest.mark.xfail
     def test_echo(self):
@@ -440,9 +428,7 @@ class TestServerCurrentCipher(tservers.ServerTestBase):
             self.wfile.write(str(self.get_current_cipher()).encode())
             self.wfile.flush()
 
-    ssl = dict(
-        cipher_list='AES256-GCM-SHA384'
-    )
+    ssl = dict(cipher_list="AES256-GCM-SHA384")
 
     @pytest.mark.xfail
     def test_echo(self):
@@ -451,14 +437,12 @@ class TestServerCurrentCipher(tservers.ServerTestBase):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_tls(sni="foo.com")
-            assert b'AES256-GCM-SHA384' in c.rfile.readline()
+            assert b"AES256-GCM-SHA384" in c.rfile.readline()
 
 
 class TestServerCipherListError(tservers.ServerTestBase):
     handler = ClientCipherListHandler
-    ssl = dict(
-        cipher_list=b'bogus'
-    )
+    ssl = dict(cipher_list=b"bogus")
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -469,9 +453,7 @@ class TestServerCipherListError(tservers.ServerTestBase):
 
 class TestClientCipherListError(tservers.ServerTestBase):
     handler = ClientCipherListHandler
-    ssl = dict(
-        cipher_list='RC4-SHA'
-    )
+    ssl = dict(cipher_list="RC4-SHA")
 
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
@@ -481,9 +463,7 @@ class TestClientCipherListError(tservers.ServerTestBase):
 
 
 class TestSSLDisconnect(tservers.ServerTestBase):
-
     class handler(tcp.BaseHandler):
-
         def handle(self):
             self.finish()
 
@@ -518,7 +498,6 @@ class TestSSLHardDisconnect(tservers.ServerTestBase):
 
 
 class TestDisconnect(tservers.ServerTestBase):
-
     def test_echo(self):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
@@ -529,9 +508,7 @@ class TestDisconnect(tservers.ServerTestBase):
 
 
 class TestServerTimeOut(tservers.ServerTestBase):
-
     class handler(tcp.BaseHandler):
-
         def handle(self):
             self.timeout = False
             self.settimeout(0.01)
@@ -561,16 +538,19 @@ class TestTimeOut(tservers.ServerTestBase):
 
 class TestALPNClient(tservers.ServerTestBase):
     handler = ALPNHandler
-    ssl = dict(
-        alpn_select=b"bar"
-    )
+    ssl = dict(alpn_select=b"bar")
 
-    @pytest.mark.parametrize('alpn_protos, expected_negotiated, expected_response', [
-        ([b"foo", b"bar", b"fasel"], b'bar', b'bar'),
-        ([], b'', b'NONE'),
-        (None, b'', b'NONE'),
-    ])
-    def test_alpn(self, monkeypatch, alpn_protos, expected_negotiated, expected_response):
+    @pytest.mark.parametrize(
+        "alpn_protos, expected_negotiated, expected_response",
+        [
+            ([b"foo", b"bar", b"fasel"], b"bar", b"bar"),
+            ([], b"", b"NONE"),
+            (None, b"", b"NONE"),
+        ],
+    )
+    def test_alpn(
+        self, monkeypatch, alpn_protos, expected_negotiated, expected_response
+    ):
         c = tcp.TCPClient(("127.0.0.1", self.port))
         with c.connect():
             c.convert_to_tls(alpn_protos=alpn_protos)
@@ -607,7 +587,7 @@ class TestDHParams(tservers.ServerTestBase):
         dhparams=certs.CertStore.load_dhparam(
             cdata.path("data/dhparam.pem"),
         ),
-        cipher_list="DHE-RSA-AES256-SHA"
+        cipher_list="DHE-RSA-AES256-SHA",
     )
 
     def test_dhparams(self):
@@ -619,7 +599,6 @@ class TestDHParams(tservers.ServerTestBase):
 
 
 class TestTCPClient(tservers.ServerTestBase):
-
     def test_conerr(self):
         c = tcp.TCPClient(("127.0.0.1", 0))
         with pytest.raises(exceptions.TcpException, match="Error connecting"):
@@ -631,13 +610,14 @@ class TestTCPClient(tservers.ServerTestBase):
             assert conn.gettimeout() == 20
 
     def test_spoof_address(self):
-        c = tcp.TCPClient(("127.0.0.1", self.port), spoof_source_address=("127.0.0.1", 0))
+        c = tcp.TCPClient(
+            ("127.0.0.1", self.port), spoof_source_address=("127.0.0.1", 0)
+        )
         with pytest.raises(exceptions.TcpException, match="Failed to spoof"):
             c.connect()
 
 
 class TestTCPServer:
-
     def test_binderr(self):
         with pytest.raises(socket.error, match="prohibited"):
             tcp.TCPServer(("localhost", 8080))
@@ -651,7 +631,6 @@ class TestTCPServer:
 
 
 class TestFileLike:
-
     def test_blocksize(self):
         s = BytesIO(b"1234567890abcdefghijklmnopqrstuvwxyz")
         s = tcp.Reader(s)

@@ -29,10 +29,8 @@ def concurrent(fn):
                 if not obj.reply.has_message:
                     obj.reply.ack()
                 obj.reply.commit()
+
         obj.reply.take()
-        ScriptThread(
-            "script.concurrent (%s)" % fn.__name__,
-            target=run
-        ).start()
+        ScriptThread("script.concurrent (%s)" % fn.__name__, target=run).start()
 
     return _concurrent

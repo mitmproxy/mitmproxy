@@ -55,7 +55,7 @@ def dumps(value: TSerializable) -> bytes:
     #  than creating all the intermediate strings.
     q: collections.deque = collections.deque()
     _rdumpq(q, 0, value)
-    return b''.join(q)
+    return b"".join(q)
 
 
 def dump(value: TSerializable, file_handle: typing.BinaryIO) -> None:
@@ -84,19 +84,19 @@ def _rdumpq(q: collections.deque, size: int, value: TSerializable) -> int:
     """
     write = q.appendleft
     if value is None:
-        write(b'0:~')
+        write(b"0:~")
         return size + 3
     elif value is True:
-        write(b'4:true!')
+        write(b"4:true!")
         return size + 7
     elif value is False:
-        write(b'5:false!')
+        write(b"5:false!")
         return size + 8
     elif isinstance(value, int):
         data = str(value).encode()
         ldata = len(data)
         span = str(ldata).encode()
-        write(b'%s:%s#' % (span, data))
+        write(b"%s:%s#" % (span, data))
         return size + 2 + len(span) + ldata
     elif isinstance(value, float):
         #  Use repr() for float rather than str().
@@ -106,43 +106,43 @@ def _rdumpq(q: collections.deque, size: int, value: TSerializable) -> int:
         data = repr(value).encode()
         ldata = len(data)
         span = str(ldata).encode()
-        write(b'%s:%s^' % (span, data))
+        write(b"%s:%s^" % (span, data))
         return size + 2 + len(span) + ldata
     elif isinstance(value, bytes):
         data = value
         ldata = len(data)
         span = str(ldata).encode()
-        write(b',')
+        write(b",")
         write(data)
-        write(b':')
+        write(b":")
         write(span)
         return size + 2 + len(span) + ldata
     elif isinstance(value, str):
         data = value.encode("utf8")
         ldata = len(data)
         span = str(ldata).encode()
-        write(b';')
+        write(b";")
         write(data)
-        write(b':')
+        write(b":")
         write(span)
         return size + 2 + len(span) + ldata
     elif isinstance(value, (list, tuple)):
-        write(b']')
+        write(b"]")
         init_size = size = size + 1
         for item in reversed(value):
             size = _rdumpq(q, size, item)
         span = str(size - init_size).encode()
-        write(b':')
+        write(b":")
         write(span)
         return size + 1 + len(span)
     elif isinstance(value, dict):
-        write(b'}')
+        write(b"}")
         init_size = size = size + 1
         for (k, v) in value.items():
             size = _rdumpq(q, size, v)
             size = _rdumpq(q, size, k)
         span = str(size - init_size).encode()
-        write(b':')
+        write(b":")
         write(span)
         return size + 1 + len(span)
     else:
@@ -184,38 +184,38 @@ def load(file_handle: typing.BinaryIO) -> TSerializable:
 
 
 def parse(data_type: int, data: bytes) -> TSerializable:
-    if data_type == ord(b','):
+    if data_type == ord(b","):
         return data
-    if data_type == ord(b';'):
+    if data_type == ord(b";"):
         return data.decode("utf8")
-    if data_type == ord(b'#'):
+    if data_type == ord(b"#"):
         try:
             return int(data)
         except ValueError:
             raise ValueError(f"not a tnetstring: invalid integer literal: {data!r}")
-    if data_type == ord(b'^'):
+    if data_type == ord(b"^"):
         try:
             return float(data)
         except ValueError:
             raise ValueError(f"not a tnetstring: invalid float literal: {data!r}")
-    if data_type == ord(b'!'):
-        if data == b'true':
+    if data_type == ord(b"!"):
+        if data == b"true":
             return True
-        elif data == b'false':
+        elif data == b"false":
             return False
         else:
             raise ValueError(f"not a tnetstring: invalid boolean literal: {data!r}")
-    if data_type == ord(b'~'):
+    if data_type == ord(b"~"):
         if data:
             raise ValueError(f"not a tnetstring: invalid null literal: {data!r}")
         return None
-    if data_type == ord(b']'):
+    if data_type == ord(b"]"):
         l = []
         while data:
             item, data = pop(data)
             l.append(item)  # type: ignore
         return l
-    if data_type == ord(b'}'):
+    if data_type == ord(b"}"):
         d = {}
         while data:
             key, data = pop(data)
@@ -233,12 +233,14 @@ def pop(data: bytes) -> typing.Tuple[TSerializable, bytes]:
     """
     #  Parse out data length, type and remaining string.
     try:
-        blength, data = data.split(b':', 1)
+        blength, data = data.split(b":", 1)
         length = int(blength)
     except ValueError:
-        raise ValueError(f"not a tnetstring: missing or invalid length prefix: {data!r}")
+        raise ValueError(
+            f"not a tnetstring: missing or invalid length prefix: {data!r}"
+        )
     try:
-        data, data_type, remain = data[:length], data[length], data[length + 1:]
+        data, data_type, remain = data[:length], data[length], data[length + 1 :]
     except IndexError:
         #  This fires if len(data) < dlen, meaning we don't need
         #  to further validate that data is the right length.

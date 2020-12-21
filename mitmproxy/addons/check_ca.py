@@ -8,13 +8,15 @@ class CheckCA:
 
     def configure(self, updated):
         has_ca = (
-            mitmproxy.ctx.master.server and
-            mitmproxy.ctx.master.server.config and
-            mitmproxy.ctx.master.server.config.certstore and
-            mitmproxy.ctx.master.server.config.certstore.default_ca
+            mitmproxy.ctx.master.server
+            and mitmproxy.ctx.master.server.config
+            and mitmproxy.ctx.master.server.config.certstore
+            and mitmproxy.ctx.master.server.config.certstore.default_ca
         )
         if has_ca:
-            self.failed = mitmproxy.ctx.master.server.config.certstore.default_ca.has_expired()
+            self.failed = (
+                mitmproxy.ctx.master.server.config.certstore.default_ca.has_expired()
+            )
             if self.failed:
                 ctx.log.warn(
                     "The mitmproxy certificate authority has expired!\n"

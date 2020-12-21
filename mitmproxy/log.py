@@ -17,41 +17,42 @@ class LogEntry:
 
 class Log:
     """
-        The central logger, exposed to scripts as mitmproxy.ctx.log.
+    The central logger, exposed to scripts as mitmproxy.ctx.log.
     """
+
     def __init__(self, master):
         self.master = master
 
     def debug(self, txt):
         """
-            Log with level debug.
+        Log with level debug.
         """
         self(txt, "debug")
 
     def info(self, txt):
         """
-            Log with level info.
+        Log with level info.
         """
         self(txt, "info")
 
     def alert(self, txt):
         """
-            Log with level alert. Alerts have the same urgency as info, but
-            signals to interactive tools that the user's attention should be
-            drawn to the output even if they're not currently looking at the
-            event log.
+        Log with level alert. Alerts have the same urgency as info, but
+        signals to interactive tools that the user's attention should be
+        drawn to the output even if they're not currently looking at the
+        event log.
         """
         self(txt, "alert")
 
     def warn(self, txt):
         """
-            Log with level warn.
+        Log with level warn.
         """
         self(txt, "warn")
 
     def error(self, txt):
         """
-            Log with level error.
+        Log with level error.
         """
         self(txt, "error")
 

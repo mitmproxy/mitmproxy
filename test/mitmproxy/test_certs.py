@@ -33,7 +33,6 @@ from ..conftest import skip_windows
 
 
 class TestCertStore:
-
     def test_create_explicit(self, tmpdir):
         ca = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         assert ca.get_cert(b"foo", [])
@@ -97,7 +96,9 @@ class TestCertStore:
     def test_overrides(self, tmpdir):
         ca1 = certs.CertStore.from_store(str(tmpdir.join("ca1")), "test", 2048)
         ca2 = certs.CertStore.from_store(str(tmpdir.join("ca2")), "test", 2048)
-        assert not ca1.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
+        assert (
+            not ca1.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
+        )
 
         dc = ca2.get_cert(b"foo.com", [b"sans.example.com"])
         dcp = tmpdir.join("dc")
@@ -122,7 +123,6 @@ class TestCertStore:
 
 
 class TestDummyCert:
-
     def test_with_ca(self, tmpdir):
         ca = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         r = certs.dummy_cert(
@@ -130,26 +130,19 @@ class TestDummyCert:
             ca.default_ca,
             b"foo.com",
             [b"one.com", b"two.com", b"*.three.com", b"127.0.0.1"],
-            b"Foo Ltd."
+            b"Foo Ltd.",
         )
         assert r.cn == b"foo.com"
-        assert r.altnames == [b'one.com', b'two.com', b'*.three.com']
+        assert r.altnames == [b"one.com", b"two.com", b"*.three.com"]
         assert r.organization == b"Foo Ltd."
 
-        r = certs.dummy_cert(
-            ca.default_privatekey,
-            ca.default_ca,
-            None,
-            [],
-            None
-        )
+        r = certs.dummy_cert(ca.default_privatekey, ca.default_ca, None, [], None)
         assert r.cn is None
         assert r.organization is None
         assert r.altnames == []
 
 
 class TestCert:
-
     def test_simple(self, tdata):
         with open(tdata.path("mitmproxy/net/data/text_cert"), "rb") as f:
             d = f.read()
@@ -201,7 +194,7 @@ class TestCert:
         assert c == c2
         assert c is not c2
 
-        x = certs.Cert('')
+        x = certs.Cert("")
         x.set_state(a)
         assert x == c
 

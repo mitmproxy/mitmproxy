@@ -9,7 +9,9 @@ class TestProxyConfig:
     def test_invalid_confdir(self):
         opts = options.Options()
         opts.confdir = "foo"
-        with pytest.raises(exceptions.OptionsError, match="parent directory does not exist"):
+        with pytest.raises(
+            exceptions.OptionsError, match="parent directory does not exist"
+        ):
             ProxyConfig(opts)
 
     def test_invalid_certificate(self, tdata):
@@ -22,7 +24,10 @@ class TestProxyConfig:
         opts = options.Options()
         opts.ignore_hosts = ["foo"]
         opts.allow_hosts = ["bar"]
-        with pytest.raises(exceptions.OptionsError, match="--ignore-hosts and --allow-hosts are "
-                                                          "mutually exclusive; please choose "
-                                                          "one."):
+        with pytest.raises(
+            exceptions.OptionsError,
+            match="--ignore-hosts and --allow-hosts are "
+            "mutually exclusive; please choose "
+            "one.",
+        ):
             ProxyConfig(opts)

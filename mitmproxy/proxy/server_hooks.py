@@ -10,6 +10,7 @@ class ClientConnectedHook(commands.Hook):
 
     Setting client.error kills the connection.
     """
+
     client: context.Client
 
 
@@ -17,6 +18,7 @@ class ClientClosedHook(commands.Hook):
     """
     A client connection has been closed (either by us or the client).
     """
+
     blocking = False
     client: context.Client
 
@@ -34,6 +36,7 @@ class ServerConnectHook(commands.Hook):
 
     Setting data.server.error kills the connection.
     """
+
     data: ServerConnectionHookData
 
 
@@ -41,6 +44,7 @@ class ServerConnectedHook(commands.Hook):
     """
     Mitmproxy has connected to a server.
     """
+
     blocking = False
     data: ServerConnectionHookData
 
@@ -49,5 +53,6 @@ class ServerClosedHook(commands.Hook):
     """
     A server connection has been closed (either by us or the server).
     """
+
     blocking = False
     data: ServerConnectionHookData

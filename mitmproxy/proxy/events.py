@@ -25,6 +25,7 @@ class Start(Event):
     Every layer initially receives a start event.
     This is useful to emit events on startup.
     """
+
     pass
 
 
@@ -33,6 +34,7 @@ class ConnectionEvent(Event):
     """
     All events involving connection IO.
     """
+
     connection: Connection
 
 
@@ -41,6 +43,7 @@ class DataReceived(ConnectionEvent):
     """
     Remote has sent some data.
     """
+
     data: bytes
 
     def __repr__(self):
@@ -52,6 +55,7 @@ class ConnectionClosed(ConnectionEvent):
     """
     Remote has closed a connection.
     """
+
     pass
 
 
@@ -60,6 +64,7 @@ class CommandReply(Event):
     Emitted when a command has been finished, e.g.
     when the master has replied or when we have established a server connection.
     """
+
     command: commands.Command
     reply: typing.Any
 
@@ -72,13 +77,18 @@ class CommandReply(Event):
     def __init_subclass__(cls, **kwargs):
         command_cls = cls.__annotations__["command"]
         valid_command_subclass = (
-                issubclass(command_cls, commands.Command) and command_cls is not commands.Command
+            issubclass(command_cls, commands.Command)
+            and command_cls is not commands.Command
         )
         if not valid_command_subclass:
-            raise RuntimeError(f"{command_cls} needs a properly annotated command attribute.")
+            raise RuntimeError(
+                f"{command_cls} needs a properly annotated command attribute."
+            )
         if command_cls in command_reply_subclasses:
             other = command_reply_subclasses[command_cls]
-            raise RuntimeError(f"Two conflicting subclasses for {command_cls}: {cls} and {other}")
+            raise RuntimeError(
+                f"Two conflicting subclasses for {command_cls}: {cls} and {other}"
+            )
         command_reply_subclasses[command_cls] = cls
 
     def __repr__(self):

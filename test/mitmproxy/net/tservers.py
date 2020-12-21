@@ -10,7 +10,6 @@ cdata = data.Data(__name__)
 
 
 class _ServerThread(threading.Thread):
-
     def __init__(self, server):
         self.server = server
         threading.Thread.__init__(self)
@@ -20,13 +19,12 @@ class _ServerThread(threading.Thread):
 
 
 class _TServer(tcp.TCPServer):
-
     def __init__(self, ssl, q, handler_klass, addr, **kwargs):
         """
-            ssl: A dictionary of SSL parameters:
+        ssl: A dictionary of SSL parameters:
 
-                    cert, key, request_client_cert, cipher_list,
-                    dhparams, v3_only
+                cert, key, request_client_cert, cipher_list,
+                dhparams, v3_only
         """
         tcp.TCPServer.__init__(self, addr)
 
@@ -47,12 +45,8 @@ class _TServer(tcp.TCPServer):
         h = self.handler_klass(request, client_address, self)
         self.last_handler = h
         if self.ssl is not None:
-            cert = self.ssl.get(
-                "cert",
-                cdata.path("data/server.crt"))
-            raw_key = self.ssl.get(
-                "key",
-                cdata.path("data/server.key"))
+            cert = self.ssl.get("cert", cdata.path("data/server.crt"))
+            raw_key = self.ssl.get("key", cdata.path("data/server.key"))
             with open(raw_key) as f:
                 raw_key = f.read()
             key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, raw_key)
@@ -72,7 +66,7 @@ class _TServer(tcp.TCPServer):
                 cipher_list=self.ssl.get("cipher_list", None),
                 dhparams=self.ssl.get("dhparams", None),
                 chain_file=self.ssl.get("chain_file", None),
-                alpn_select=self.ssl.get("alpn_select", None)
+                alpn_select=self.ssl.get("alpn_select", None),
             )
         h.handle()
         h.finish()
@@ -98,7 +92,7 @@ class ServerTestBase:
 
     @classmethod
     def makeserver(cls, **kwargs):
-        ssl = kwargs.pop('ssl', cls.ssl)
+        ssl = kwargs.pop("ssl", cls.ssl)
         return _TServer(ssl, cls.q, cls.handler, cls.addr, **kwargs)
 
     @classmethod

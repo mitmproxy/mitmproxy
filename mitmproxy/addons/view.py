@@ -133,16 +133,16 @@ class View(collections.abc.Sequence):
 
         self.default_order = OrderRequestStart(self)
         self.orders = dict(
-            time = OrderRequestStart(self), method = OrderRequestMethod(self),
-            url = OrderRequestURL(self), size = OrderKeySize(self),
+            time=OrderRequestStart(self),
+            method=OrderRequestMethod(self),
+            url=OrderRequestURL(self),
+            size=OrderKeySize(self),
         )
         self.order_key = self.default_order
         self.order_reversed = False
         self.focus_follow = False
 
-        self._view = sortedcontainers.SortedListWithKey(
-            key = self.order_key
-        )
+        self._view = sortedcontainers.SortedListWithKey(key=self.order_key)
 
         # The sig_view* signals broadcast events that affect the view. That is,
         # an update to a flow in the store but not in the view does not trigger
@@ -166,21 +166,23 @@ class View(collections.abc.Sequence):
 
     def load(self, loader):
         loader.add_option(
-            "view_filter", typing.Optional[str], None,
-            "Limit the view to matching flows."
+            "view_filter",
+            typing.Optional[str],
+            None,
+            "Limit the view to matching flows.",
         )
         loader.add_option(
-            "view_order", str, "time",
+            "view_order",
+            str,
+            "time",
             "Flow sort order.",
             choices=list(map(lambda c: c[1], orders)),
         )
         loader.add_option(
-            "view_order_reversed", bool, False,
-            "Reverse the sorting order."
+            "view_order_reversed", bool, False, "Reverse the sorting order."
         )
         loader.add_option(
-            "console_focus_follow", bool, False,
-            "Focus follows new flows."
+            "console_focus_follow", bool, False, "Focus follows new flows."
         )
 
     def store_count(self):
@@ -188,7 +190,7 @@ class View(collections.abc.Sequence):
 
     def _rev(self, idx: int) -> int:
         """
-            Reverses an index, if needed
+        Reverses an index, if needed
         """
         if self.order_reversed:
             if idx < 0:
@@ -211,7 +213,9 @@ class View(collections.abc.Sequence):
         v = self._view.bisect_right(f)
         return self._rev(v - 1) + 1
 
-    def index(self, f: mitmproxy.flow.Flow, start: int = 0, stop: typing.Optional[int] = None) -> int:
+    def index(
+        self, f: mitmproxy.flow.Flow, start: int = 0, stop: typing.Optional[int] = None
+    ) -> int:
         return self._rev(self._view.index(f, start, stop))
 
     def __contains__(self, f: typing.Any) -> bool:
@@ -239,9 +243,9 @@ class View(collections.abc.Sequence):
     @command.command("view.focus.go")
     def go(self, offset: int) -> None:
         """
-            Go to a specified offset. Positive offests are from the beginning of
-            the view, negative from the end of the view, so that 0 is the first
-            flow, -1 is the last flow.
+        Go to a specified offset. Positive offests are from the beginning of
+        the view, negative from the end of the view, so that 0 is the first
+        flow, -1 is the last flow.
         """
         if len(self) == 0:
             return
@@ -256,7 +260,7 @@ class View(collections.abc.Sequence):
     @command.command("view.focus.next")
     def focus_next(self) -> None:
         """
-            Set focus to the next flow.
+        Set focus to the next flow.
         """
         if self.focus.index is not None:
             idx = self.focus.index + 1
@@ -268,7 +272,7 @@ class View(collections.abc.Sequence):
     @command.command("view.focus.prev")
     def focus_prev(self) -> None:
         """
-            Set focus to the previous flow.
+        Set focus to the previous flow.
         """
         if self.focus.index is not None:
             idx = self.focus.index - 1
@@ -281,7 +285,7 @@ class View(collections.abc.Sequence):
     @command.command("view.order.options")
     def order_options(self) -> typing.Sequence[str]:
         """
-            Choices supported by the view_order option.
+        Choices supported by the view_order option.
         """
         return list(sorted(self.orders.keys()))
 
@@ -293,12 +297,10 @@ class View(collections.abc.Sequence):
     @command.command("view.order.set")
     def set_order(self, order_key: str) -> None:
         """
-            Sets the current view order.
+        Sets the current view order.
         """
         if order_key not in self.orders:
-            raise exceptions.CommandError(
-                "Unknown flow order: %s" % order_key
-            )
+            raise exceptions.CommandError("Unknown flow order: %s" % order_key)
         order_key = self.orders[order_key]
         self.order_key = order_key
         newview = sortedcontainers.SortedListWithKey(key=order_key)
@@ -320,7 +322,7 @@ class View(collections.abc.Sequence):
     @command.command("view.filter.set")
     def set_filter_cmd(self, filter_expr: str) -> None:
         """
-            Sets the current view filter.
+        Sets the current view filter.
         """
         filt = None
         if filter_expr:
@@ -339,7 +341,7 @@ class View(collections.abc.Sequence):
     @command.command("view.clear")
     def clear(self) -> None:
         """
-            Clears both the store and view.
+        Clears both the store and view.
         """
         self._store.clear()
         self._view.clear()
@@ -349,7 +351,7 @@ class View(collections.abc.Sequence):
     @command.command("view.clear_unmarked")
     def clear_not_marked(self) -> None:
         """
-            Clears only the unmarked flows.
+        Clears only the unmarked flows.
         """
         for flow in self._store.copy().values():
             if not flow.marked:
@@ -362,19 +364,17 @@ class View(collections.abc.Sequence):
     @command.command("view.settings.getval")
     def getvalue(self, flow: mitmproxy.flow.Flow, key: str, default: str) -> str:
         """
-            Get a value from the settings store for the specified flow.
+        Get a value from the settings store for the specified flow.
         """
         return self.settings[flow].get(key, default)
 
     @command.command("view.settings.setval.toggle")
     def setvalue_toggle(
-        self,
-        flows: typing.Sequence[mitmproxy.flow.Flow],
-        key: str
+        self, flows: typing.Sequence[mitmproxy.flow.Flow], key: str
     ) -> None:
         """
-            Toggle a boolean value in the settings store, setting the value to
-            the string "true" or "false".
+        Toggle a boolean value in the settings store, setting the value to
+        the string "true" or "false".
         """
         updated = []
         for f in flows:
@@ -385,12 +385,10 @@ class View(collections.abc.Sequence):
 
     @command.command("view.settings.setval")
     def setvalue(
-        self,
-        flows: typing.Sequence[mitmproxy.flow.Flow],
-        key: str, value: str
+        self, flows: typing.Sequence[mitmproxy.flow.Flow], key: str, value: str
     ) -> None:
         """
-            Set a value in the settings store for the specified flows.
+        Set a value in the settings store for the specified flows.
         """
         updated = []
         for f in flows:
@@ -402,8 +400,8 @@ class View(collections.abc.Sequence):
     @command.command("view.flows.duplicate")
     def duplicate(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
-            Duplicates the specified flows, and sets the focus to the first
-            duplicate.
+        Duplicates the specified flows, and sets the focus to the first
+        duplicate.
         """
         dups = [f.copy() for f in flows]
         if dups:
@@ -414,7 +412,7 @@ class View(collections.abc.Sequence):
     @command.command("view.flows.remove")
     def remove(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
-            Removes the flow from the underlying store and the view.
+        Removes the flow from the underlying store and the view.
         """
         for f in flows:
             if f.id in self._store:
@@ -434,7 +432,7 @@ class View(collections.abc.Sequence):
     @command.command("view.flows.resolve")
     def resolve(self, flow_spec: str) -> typing.Sequence[mitmproxy.flow.Flow]:
         """
-            Resolve a flow list specification to an actual list of flows.
+        Resolve a flow list specification to an actual list of flows.
         """
         if flow_spec == "@all":
             return [i for i in self._store.values()]
@@ -472,7 +470,7 @@ class View(collections.abc.Sequence):
     @command.command("view.flows.load")
     def load_file(self, path: mitmproxy.types.Path) -> None:
         """
-            Load flows into the view, without processing them with addons.
+        Load flows into the view, without processing them with addons.
         """
         try:
             with open(path, "rb") as f:
@@ -488,8 +486,8 @@ class View(collections.abc.Sequence):
 
     def add(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
-            Adds a flow to the state. If the flow already exists, it is
-            ignored.
+        Adds a flow to the state. If the flow already exists, it is
+        ignored.
         """
         for f in flows:
             if f.id not in self._store:
@@ -502,8 +500,8 @@ class View(collections.abc.Sequence):
 
     def get_by_id(self, flow_id: str) -> typing.Optional[mitmproxy.flow.Flow]:
         """
-            Get flow with the given id from the store.
-            Returns None if the flow is not found.
+        Get flow with the given id from the store.
+        Returns None if the flow is not found.
         """
         return self._store.get(flow_id)
 
@@ -511,21 +509,21 @@ class View(collections.abc.Sequence):
     @command.command("view.properties.length")
     def get_length(self) -> int:
         """
-            Returns view length.
+        Returns view length.
         """
         return len(self)
 
     @command.command("view.properties.marked")
     def get_marked(self) -> bool:
         """
-            Returns true if view is in marked mode.
+        Returns true if view is in marked mode.
         """
         return self.show_marked
 
     @command.command("view.properties.marked.toggle")
     def toggle_marked(self) -> None:
         """
-            Toggle whether to show marked views only.
+        Toggle whether to show marked views only.
         """
         self.show_marked = not self.show_marked
         self._refilter()
@@ -533,7 +531,7 @@ class View(collections.abc.Sequence):
     @command.command("view.properties.inbounds")
     def inbounds(self, index: int) -> bool:
         """
-            Is this 0 <= index < len(self)?
+        Is this 0 <= index < len(self)?
         """
         return 0 <= index < len(self)
 
@@ -591,7 +589,7 @@ class View(collections.abc.Sequence):
 
     def update(self, flows: typing.Sequence[mitmproxy.flow.Flow]) -> None:
         """
-            Updates a list of flows. If flow is not in the state, it's ignored.
+        Updates a list of flows. If flow is not in the state, it's ignored.
         """
         for f in flows:
             if f.id in self._store:
@@ -620,8 +618,9 @@ class View(collections.abc.Sequence):
 
 class Focus:
     """
-        Tracks a focus element within a View.
+    Tracks a focus element within a View.
     """
+
     def __init__(self, v: View) -> None:
         self.view = v
         self._flow: typing.Optional[mitmproxy.flow.Flow] = None

@@ -61,7 +61,7 @@ cd test/mitmproxy/addons
 pytest --cov mitmproxy.addons.anticache --cov-report term-missing --looponfail test_anticache.py
 ```
 
-Pytest does not check the code style, so you want to run `tox -e flake8` and `tox -e mypy` again before committing.
+Pytest does not check the code style, so you want to run `tox -e black` and `tox -e mypy` again before committing.
 
 Please ensure that all patches are accompanied by matching changes in the test suite. The project tries to maintain 100%
 test coverage and enforces this strictly for some parts of the codebase.
@@ -80,13 +80,16 @@ modd
 
 ## Code Style
 
-Keeping to a consistent code style throughout the project makes it easier to contribute and collaborate. Please stick to
-the guidelines in [PEP8](https://www.python.org/dev/peps/pep-0008) unless there's a good reason not to.
+Keeping to a consistent code style throughout the project makes it easier to
+contribute and collaborate. Please stick to the guidelines in
+[PEP8](https://www.python.org/dev/peps/pep-0008) unless there's a good reason
+not to.
 
-This is automatically enforced on every PR. If we detect a linting error, the PR checks will fail and block merging. You
-can run our lint checks yourself with the following commands:
+This is automatically enforced on every PR. If we detect a formatting or typing
+error, the PR checks will fail and block merging. You can run our style checks
+yourself with the following commands:
 
 ```shell
-tox -e flake8
-tox -e mypy    # checks static types
+tox -e black   # code formatting
+tox -e mypy    # static type checking
 ```

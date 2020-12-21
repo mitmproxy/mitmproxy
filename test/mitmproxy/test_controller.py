@@ -10,7 +10,6 @@ import mitmproxy.ctx
 
 @pytest.mark.asyncio
 async def test_master():
-
     class tAddon:
         def log(self, _):
             ctx.master.should_exit.set()

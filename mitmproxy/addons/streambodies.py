@@ -12,19 +12,23 @@ class StreamBodies:
 
     def load(self, loader):
         loader.add_option(
-            "stream_large_bodies", typing.Optional[str], None,
+            "stream_large_bodies",
+            typing.Optional[str],
+            None,
             """
             Stream data to the client if response body exceeds the given
             threshold. If streamed, the body will not be stored in any way.
             Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
-            """
+            """,
         )
         loader.add_option(
-            "stream_websockets", bool, False,
+            "stream_websockets",
+            bool,
+            False,
             """
             Stream WebSocket messages between client and server.
             Messages are captured and cannot be modified.
-            """
+            """,
         )
 
     def configure(self, updated):
@@ -44,10 +48,19 @@ class StreamBodies:
             except exceptions.HttpException:
                 f.reply.kill()
                 return
-            if expected_size and not r.raw_content and not (0 <= expected_size <= self.max_size):
+            if (
+                expected_size
+                and not r.raw_content
+                and not (0 <= expected_size <= self.max_size)
+            ):
                 # r.stream may already be a callable, which we want to preserve.
                 r.stream = r.stream or True
-                ctx.log.info("Streaming {} {}".format("response from" if not is_request else "request to", f.request.host))
+                ctx.log.info(
+                    "Streaming {} {}".format(
+                        "response from" if not is_request else "request to",
+                        f.request.host,
+                    )
+                )
 
     def requestheaders(self, f):
         self.run(f, True)
@@ -58,7 +71,9 @@ class StreamBodies:
     def websocket_start(self, f):
         if ctx.options.stream_websockets:
             f.stream = True
-            ctx.log.info("Streaming WebSocket messages between {client} and {server}".format(
-                client=human.format_address(f.client_conn.peername),
-                server=human.format_address(f.server_conn.address))
+            ctx.log.info(
+                "Streaming WebSocket messages between {client} and {server}".format(
+                    client=human.format_address(f.client_conn.peername),
+                    server=human.format_address(f.server_conn.address),
+                )
             )

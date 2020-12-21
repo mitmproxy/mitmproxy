@@ -143,7 +143,7 @@ def test_filter():
     v.request(tft(method="put"))
     v.request(tft(method="get"))
     v.request(tft(method="put"))
-    assert(len(v)) == 4
+    assert (len(v)) == 4
     v.set_filter_cmd("~m get")
     assert [i.request.method for i in v] == ["GET", "GET"]
     assert len(v._store) == 4
@@ -199,13 +199,7 @@ async def test_load(tmpdir):
     v = view.View()
     with taddons.context() as tctx:
         tctx.master.addons.add(v)
-        tdump(
-            path,
-            [
-                tflow.tflow(resp=True),
-                tflow.tflow(resp=True)
-            ]
-        )
+        tdump(path, [tflow.tflow(resp=True), tflow.tflow(resp=True)])
         v.load_file(path)
         assert len(v) == 2
         v.load_file(path)
@@ -271,13 +265,15 @@ def test_movement():
     v = view.View()
     with taddons.context():
         v.go(0)
-        v.add([
-            tflow.tflow(),
-            tflow.tflow(),
-            tflow.tflow(),
-            tflow.tflow(),
-            tflow.tflow(),
-        ])
+        v.add(
+            [
+                tflow.tflow(),
+                tflow.tflow(),
+                tflow.tflow(),
+                tflow.tflow(),
+                tflow.tflow(),
+            ]
+        )
         assert v.focus.index == 0
         v.go(-1)
         assert v.focus.index == 4
@@ -547,12 +543,14 @@ def test_focus():
     assert f.index is None
     assert f.flow is None
 
-    v.add([
-        tft(method="get", start=0),
-        tft(method="get", start=1),
-        tft(method="put", start=2),
-        tft(method="get", start=3),
-    ])
+    v.add(
+        [
+            tft(method="get", start=0),
+            tft(method="get", start=1),
+            tft(method="put", start=2),
+            tft(method="get", start=3),
+        ]
+    )
 
     f.flow = v[2]
     assert f.flow.request.method == "PUT"

@@ -7,32 +7,33 @@ from wsproto.frame_protocol import Opcode, RsvBits, Header, Frame
 from mitmproxy.net import http, websocket
 
 
-@pytest.mark.parametrize("input,masking_key,payload_length", [
-    (b'\x01\rserver-foobar', None, 13),
-    (b'\x01\x8dasdf\x12\x16\x16\x10\x04\x01I\x00\x0e\x1c\x06\x07\x13', b'asdf', 13),
-    (b'\x01~\x04\x00server-foobar', None, 1024),
-    (b'\x01\x7f\x00\x00\x00\x00\x00\x02\x00\x00server-foobar', None, 131072),
-])
+@pytest.mark.parametrize(
+    "input,masking_key,payload_length",
+    [
+        (b"\x01\rserver-foobar", None, 13),
+        (b"\x01\x8dasdf\x12\x16\x16\x10\x04\x01I\x00\x0e\x1c\x06\x07\x13", b"asdf", 13),
+        (b"\x01~\x04\x00server-foobar", None, 1024),
+        (b"\x01\x7f\x00\x00\x00\x00\x00\x02\x00\x00server-foobar", None, 131072),
+    ],
+)
 def test_read_frame(input, masking_key, payload_length):
     bio = BytesIO(input)
     bio.safe_read = bio.read
 
     header, frame, consumed_bytes = websocket.read_frame(bio)
-    assert header == \
-        Header(
-            fin=False,
-            rsv=RsvBits(rsv1=False, rsv2=False, rsv3=False),
-            opcode=Opcode.TEXT,
-            payload_len=payload_length,
-            masking_key=masking_key,
-        )
-    assert frame == \
-        Frame(
-            opcode=Opcode.TEXT,
-            payload=b'server-foobar',
-            frame_finished=False,
-            message_finished=False,
-        )
+    assert header == Header(
+        fin=False,
+        rsv=RsvBits(rsv1=False, rsv2=False, rsv3=False),
+        opcode=Opcode.TEXT,
+        payload_len=payload_length,
+        masking_key=masking_key,
+    )
+    assert frame == Frame(
+        opcode=Opcode.TEXT,
+        payload=b"server-foobar",
+        frame_finished=False,
+        message_finished=False,
+    )
     assert consumed_bytes == input
 
     bio = BytesIO(input)
@@ -43,53 +44,64 @@ def test_read_frame(input, masking_key, payload_length):
     assert consumed_bytes == input
 
 
-@mock.patch('os.urandom', return_value=b'pumpkinspumpkins')
+@mock.patch("os.urandom", return_value=b"pumpkinspumpkins")
 def test_client_handshake_headers(_):
-    assert websocket.client_handshake_headers() == \
-        http.Headers([
-            (b'connection', b'upgrade'),
-            (b'upgrade', b'websocket'),
-            (b'sec-websocket-version', b'13'),
-            (b'sec-websocket-key', b'cHVtcGtpbnNwdW1wa2lucw=='),
-        ])
-    assert websocket.client_handshake_headers(b"13", b"foobar", b"foo", b"bar") == \
-        http.Headers([
-            (b'connection', b'upgrade'),
-            (b'upgrade', b'websocket'),
-            (b'sec-websocket-version', b'13'),
-            (b'sec-websocket-key', b'foobar'),
-            (b'sec-websocket-protocol', b'foo'),
-            (b'sec-websocket-extensions', b'bar')
-        ])
+    assert websocket.client_handshake_headers() == http.Headers(
+        [
+            (b"connection", b"upgrade"),
+            (b"upgrade", b"websocket"),
+            (b"sec-websocket-version", b"13"),
+            (b"sec-websocket-key", b"cHVtcGtpbnNwdW1wa2lucw=="),
+        ]
+    )
+    assert websocket.client_handshake_headers(
+        b"13", b"foobar", b"foo", b"bar"
+    ) == http.Headers(
+        [
+            (b"connection", b"upgrade"),
+            (b"upgrade", b"websocket"),
+            (b"sec-websocket-version", b"13"),
+            (b"sec-websocket-key", b"foobar"),
+            (b"sec-websocket-protocol", b"foo"),
+            (b"sec-websocket-extensions", b"bar"),
+        ]
+    )
 
 
 def test_server_handshake_headers():
-    assert websocket.server_handshake_headers("foobar", "foo", "bar") == \
-        http.Headers([
-            (b'connection', b'upgrade'),
-            (b'upgrade', b'websocket'),
-            (b'sec-websocket-accept', b'AzhRPA4TNwR6I/riJheN0TfR7+I='),
-            (b'sec-websocket-protocol', b'foo'),
-            (b'sec-websocket-extensions', b'bar'),
-        ])
+    assert websocket.server_handshake_headers("foobar", "foo", "bar") == http.Headers(
+        [
+            (b"connection", b"upgrade"),
+            (b"upgrade", b"websocket"),
+            (b"sec-websocket-accept", b"AzhRPA4TNwR6I/riJheN0TfR7+I="),
+            (b"sec-websocket-protocol", b"foo"),
+            (b"sec-websocket-extensions", b"bar"),
+        ]
+    )
 
 
 def test_check_handshake():
-    assert not websocket.check_handshake({
-        "connection": "upgrade",
-        "upgrade": "webFOOsocket",
-        "sec-websocket-key": "foo",
-    })
-    assert websocket.check_handshake({
-        "connection": "upgrade",
-        "upgrade": "websocket",
-        "sec-websocket-key": "foo",
-    })
-    assert websocket.check_handshake({
-        "connection": "upgrade",
-        "upgrade": "websocket",
-        "sec-websocket-accept": "bar",
-    })
+    assert not websocket.check_handshake(
+        {
+            "connection": "upgrade",
+            "upgrade": "webFOOsocket",
+            "sec-websocket-key": "foo",
+        }
+    )
+    assert websocket.check_handshake(
+        {
+            "connection": "upgrade",
+            "upgrade": "websocket",
+            "sec-websocket-key": "foo",
+        }
+    )
+    assert websocket.check_handshake(
+        {
+            "connection": "upgrade",
+            "upgrade": "websocket",
+            "sec-websocket-accept": "bar",
+        }
+    )
 
 
 def test_create_server_nonce():

@@ -10,7 +10,6 @@ from mitmproxy import http
 
 
 class TestHTTPRequest:
-
     def test_simple(self):
         f = tflow.tflow()
         r = f.request
@@ -61,7 +60,6 @@ class TestHTTPRequest:
 
 
 class TestHTTPResponse:
-
     def test_simple(self):
         f = tflow.tflow(resp=True)
         resp = f.response
@@ -75,7 +73,6 @@ class TestHTTPResponse:
 
 
 class TestHTTPFlow:
-
     def test_copy(self):
         f = tflow.tflow(resp=True)
         assert repr(f)
@@ -137,14 +134,12 @@ class TestHTTPFlow:
     def test_getset_state(self):
         f = tflow.tflow(resp=True)
         state = f.get_state()
-        assert f.get_state() == http.HTTPFlow.from_state(
-            state).get_state()
+        assert f.get_state() == http.HTTPFlow.from_state(state).get_state()
 
         f.response = None
         f.error = flow.Error("error")
         state = f.get_state()
-        assert f.get_state() == http.HTTPFlow.from_state(
-            state).get_state()
+        assert f.get_state() == http.HTTPFlow.from_state(state).get_state()
 
         f2 = f.copy()
         f2.id = f.id  # copy creates a different uuid
@@ -200,24 +195,24 @@ class TestHTTPFlow:
 
 
 def test_make_error_response():
-    resp = http.make_error_response(543, 'foobar', Headers())
+    resp = http.make_error_response(543, "foobar", Headers())
     assert resp
 
 
 def test_make_connect_request():
-    req = http.make_connect_request(('invalidhost', 1234))
-    assert req.first_line_format == 'authority'
-    assert req.method == 'CONNECT'
-    assert req.http_version == 'HTTP/1.1'
+    req = http.make_connect_request(("invalidhost", 1234))
+    assert req.first_line_format == "authority"
+    assert req.method == "CONNECT"
+    assert req.http_version == "HTTP/1.1"
 
 
 def test_make_connect_response():
-    resp = http.make_connect_response('foobar')
-    assert resp.http_version == 'foobar'
+    resp = http.make_connect_response("foobar")
+    assert resp.http_version == "foobar"
     assert resp.status_code == 200
 
 
 def test_expect_continue_response():
     resp = http.make_expect_continue_response()
-    assert resp.http_version == 'HTTP/1.1'
+    assert resp.http_version == "HTTP/1.1"
     assert resp.status_code == 100

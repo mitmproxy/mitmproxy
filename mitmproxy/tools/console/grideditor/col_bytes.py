@@ -44,9 +44,5 @@ class Edit(base.Cell):
         try:
             return strutils.escaped_str_to_bytes(txt)
         except ValueError:
-            signals.status_message.send(
-                self,
-                message="Invalid data.",
-                expire=1000
-            )
+            signals.status_message.send(self, message="Invalid data.", expire=1000)
             raise

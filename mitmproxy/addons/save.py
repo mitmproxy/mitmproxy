@@ -18,12 +18,16 @@ class Save:
 
     def load(self, loader):
         loader.add_option(
-            "save_stream_file", typing.Optional[str], None,
-            "Stream flows to file as they arrive. Prefix path with + to append."
+            "save_stream_file",
+            typing.Optional[str],
+            None,
+            "Stream flows to file as they arrive. Prefix path with + to append.",
         )
         loader.add_option(
-            "save_stream_filter", typing.Optional[str], None,
-            "Filter which flows are written to file."
+            "save_stream_filter",
+            typing.Optional[str],
+            None,
+            "Filter which flows are written to file.",
         )
 
     def open_file(self, path):
@@ -50,7 +54,8 @@ class Save:
                 self.filt = flowfilter.parse(ctx.options.save_stream_filter)
                 if not self.filt:
                     raise exceptions.OptionsError(
-                        "Invalid filter specification: %s" % ctx.options.save_stream_filter
+                        "Invalid filter specification: %s"
+                        % ctx.options.save_stream_filter
                     )
             else:
                 self.filt = None
@@ -61,10 +66,12 @@ class Save:
                 self.start_stream_to_path(ctx.options.save_stream_file, self.filt)
 
     @command.command("save.file")
-    def save(self, flows: typing.Sequence[flow.Flow], path: mitmproxy.types.Path) -> None:
+    def save(
+        self, flows: typing.Sequence[flow.Flow], path: mitmproxy.types.Path
+    ) -> None:
         """
-            Save flows to a file. If the path starts with a +, flows are
-            appended to the file, otherwise it is over-written.
+        Save flows to a file. If the path starts with a +, flows are
+        appended to the file, otherwise it is over-written.
         """
         try:
             f = self.open_file(path)

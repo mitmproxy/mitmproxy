@@ -20,14 +20,14 @@ def cli():
 
 
 @cli.command()
-@click.option('--level', default=1, help='Detail level')
+@click.option("--level", default=1, help="Detail level")
 def tcp(level):
     f1 = tflow.ttcpflow(client_conn=True, server_conn=True)
     show(level, [f1])
 
 
 @cli.command()
-@click.option('--level', default=1, help='Detail level')
+@click.option("--level", default=1, help="Detail level")
 def large(level):
     f1 = tflow.tflow(client_conn=True, server_conn=True, resp=True)
     f1.response.headers["content-type"] = "text/html"
@@ -36,7 +36,7 @@ def large(level):
 
 
 @cli.command()
-@click.option('--level', default=1, help='Detail level')
+@click.option("--level", default=1, help="Detail level")
 def small(level):
     f1 = tflow.tflow(client_conn=True, server_conn=True, resp=True)
     f1.response.headers["content-type"] = "text/html"
@@ -47,8 +47,9 @@ def small(level):
     show(
         level,
         [
-            f1, f2,
-        ]
+            f1,
+            f2,
+        ],
     )
 
 

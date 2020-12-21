@@ -6,6 +6,7 @@ class HttpRequestHeadersHook(commands.Hook):
     """
     HTTP request headers were successfully read. At this point, the body is empty.
     """
+
     name = "requestheaders"
     flow: http.HTTPFlow
 
@@ -17,6 +18,7 @@ class HttpRequestHook(commands.Hook):
     Note: This event fires immediately after requestheaders if the request body is streamed.
     This ensures that requestheaders -> request -> responseheaders -> response happen in that order.
     """
+
     name = "request"
     flow: http.HTTPFlow
 
@@ -25,6 +27,7 @@ class HttpResponseHeadersHook(commands.Hook):
     """
     The full HTTP response has been read.
     """
+
     name = "responseheaders"
     flow: http.HTTPFlow
 
@@ -35,6 +38,7 @@ class HttpResponseHook(commands.Hook):
 
     Note: If response streaming is active, this event fires after the entire body has been streamed.
     """
+
     name = "response"
     flow: http.HTTPFlow
 
@@ -47,6 +51,7 @@ class HttpErrorHook(commands.Hook):
 
     Every flow will receive either an error or an response event, but not both.
     """
+
     name = "error"
     flow: http.HTTPFlow
 
@@ -63,4 +68,5 @@ class HttpConnectHook(commands.Hook):
     and not forwarded. They do not generate the usual HTTP handler events,
     but all requests going over the newly opened connection will.
     """
+
     flow: http.HTTPFlow

@@ -10,7 +10,9 @@ from ..mitmproxy import tservers
 class TestScripts(tservers.MasterTest):
     def test_add_header(self, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/addons/scripting-minimal-example.py"))
+            a = tctx.script(
+                tdata.path("../examples/addons/scripting-minimal-example.py")
+            )
             f = tflow.tflow()
             a.request(f)
             assert f.request.headers["myheader"] == "value"
@@ -20,7 +22,7 @@ class TestScripts(tservers.MasterTest):
             tctx.script(tdata.path("../examples/addons/contentview.py"))
             swapcase = contentviews.get("swapcase")
             _, fmt = swapcase(b"<html>Test!</html>")
-            assert any(b'tEST!' in val[0][1] for val in fmt)
+            assert any(b"tEST!" in val[0][1] for val in fmt)
 
     def test_modify_form(self, tdata):
         with taddons.context() as tctx:
@@ -38,7 +40,9 @@ class TestScripts(tservers.MasterTest):
 
     def test_modify_querystring(self, tdata):
         with taddons.context() as tctx:
-            sc = tctx.script(tdata.path("../examples/addons/http-modify-query-string.py"))
+            sc = tctx.script(
+                tdata.path("../examples/addons/http-modify-query-string.py")
+            )
             f = tflow.tflow(req=tutils.treq(path="/search?q=term"))
 
             sc.request(f)

@@ -23,7 +23,7 @@ def cleanup_request(f: flow.Flow) -> http.HTTPRequest:
 
 def pop_headers(request: http.HTTPRequest) -> http.HTTPRequest:
     # Remove some headers that are redundant for curl/httpie export
-    request.headers.pop('content-length')
+    request.headers.pop("content-length")
     if request.headers.get("host", "") == request.host:
         request.headers.pop("host")
     if request.headers.get(":authority", "") == request.host:
@@ -49,10 +49,7 @@ def request_content_for_console(request: http.HTTPRequest) -> str:
         # see https://github.com/python/cpython/pull/10871
         raise exceptions.CommandError("Request content must be valid unicode")
     escape_control_chars = {chr(i): f"\\x{i:02x}" for i in range(32)}
-    return "".join(
-        escape_control_chars.get(x, x)
-        for x in text
-    )
+    return "".join(escape_control_chars.get(x, x) for x in text)
 
 
 def curl_command(f: flow.Flow) -> str:
@@ -70,7 +67,7 @@ def curl_command(f: flow.Flow) -> str:
     args.append(request.url)
     if request.content:
         args += ["-d", request_content_for_console(request)]
-    return ' '.join(shlex.quote(arg) for arg in args)
+    return " ".join(shlex.quote(arg) for arg in args)
 
 
 def httpie_command(f: flow.Flow) -> str:
@@ -79,7 +76,7 @@ def httpie_command(f: flow.Flow) -> str:
     args = ["http", request.method, request.url]
     for k, v in request.headers.items(multi=True):
         args.append(f"{k}: {v}")
-    cmd = ' '.join(shlex.quote(arg) for arg in args)
+    cmd = " ".join(shlex.quote(arg) for arg in args)
     if request.content:
         cmd += " <<< " + shlex.quote(request_content_for_console(request))
     return cmd
@@ -118,18 +115,18 @@ formats = dict(
 )
 
 
-class Export():
+class Export:
     @command.command("export.formats")
     def formats(self) -> typing.Sequence[str]:
         """
-            Return a list of the supported export formats.
+        Return a list of the supported export formats.
         """
         return list(sorted(formats.keys()))
 
     @command.command("export.file")
     def file(self, format: str, flow: flow.Flow, path: mitmproxy.types.Path) -> None:
         """
-            Export a flow to path.
+        Export a flow to path.
         """
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
@@ -147,7 +144,7 @@ class Export():
     @command.command("export.clip")
     def clip(self, format: str, flow: flow.Flow) -> None:
         """
-            Export a flow to the system clipboard.
+        Export a flow to the system clipboard.
         """
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)

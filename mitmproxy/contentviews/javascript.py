@@ -4,12 +4,12 @@ import re
 from mitmproxy.utils import strutils
 from mitmproxy.contentviews import base
 
-DELIMITERS = '{};\n'
+DELIMITERS = "{};\n"
 SPECIAL_AREAS = (
     r"(?<=[^\w\s)])\s*/(?:[^\n/]|(?<!\\)(?:\\\\)*\\/)+?/(?=[gimsuy]{0,6}\s*(?:[;,).\n]|$))",
     r"'" + strutils.MULTILINE_CONTENT_LINE_CONTINUATION + strutils.NO_ESCAPE + "'",
     r'"' + strutils.MULTILINE_CONTENT_LINE_CONTINUATION + strutils.NO_ESCAPE + '"',
-    r'`' + strutils.MULTILINE_CONTENT + strutils.NO_ESCAPE + '`',
+    r"`" + strutils.MULTILINE_CONTENT + strutils.NO_ESCAPE + "`",
     r"/\*" + strutils.MULTILINE_CONTENT + r"\*/",
     r"//" + strutils.SINGLELINE_CONTENT + "$",
     r"for\(" + strutils.SINGLELINE_CONTENT + r"\)",
@@ -17,11 +17,7 @@ SPECIAL_AREAS = (
 
 
 def beautify(data):
-    data = strutils.escape_special_areas(
-        data,
-        SPECIAL_AREAS,
-        DELIMITERS
-    )
+    data = strutils.escape_special_areas(data, SPECIAL_AREAS, DELIMITERS)
 
     data = re.sub(r"\s*{\s*(?!};)", " {\n", data)
     data = re.sub(r"\s*;\s*", ";\n", data)
@@ -49,7 +45,7 @@ class ViewJavaScript(base.View):
     content_types = [
         "application/x-javascript",
         "application/javascript",
-        "text/javascript"
+        "text/javascript",
     ]
 
     def __call__(self, data, **metadata):

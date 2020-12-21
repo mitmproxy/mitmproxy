@@ -25,22 +25,23 @@ class Request(message.Message):
     """
     An HTTP request.
     """
+
     data: RequestData
 
     def __init__(
-            self,
-            host: str,
-            port: int,
-            method: bytes,
-            scheme: bytes,
-            authority: bytes,
-            path: bytes,
-            http_version: bytes,
-            headers: Union[Headers, Tuple[Tuple[bytes, bytes], ...]],
-            content: Optional[bytes],
-            trailers: Union[None, Headers, Tuple[Tuple[bytes, bytes], ...]],
-            timestamp_start: float,
-            timestamp_end: Optional[float],
+        self,
+        host: str,
+        port: int,
+        method: bytes,
+        scheme: bytes,
+        authority: bytes,
+        path: bytes,
+        http_version: bytes,
+        headers: Union[Headers, Tuple[Tuple[bytes, bytes], ...]],
+        content: Optional[bytes],
+        trailers: Union[None, Headers, Tuple[Tuple[bytes, bytes], ...]],
+        timestamp_start: float,
+        timestamp_end: Optional[float],
     ):
         # auto-convert invalid types to retain compatibility with older code.
         if isinstance(host, bytes):
@@ -88,11 +89,15 @@ class Request(message.Message):
 
     @classmethod
     def make(
-            cls,
-            method: str,
-            url: str,
-            content: Union[bytes, str] = "",
-            headers: Union[Headers, Dict[Union[str, bytes], Union[str, bytes]], Iterable[Tuple[bytes, bytes]]] = ()
+        cls,
+        method: str,
+        url: str,
+        content: Union[bytes, str] = "",
+        headers: Union[
+            Headers,
+            Dict[Union[str, bytes], Union[str, bytes]],
+            Iterable[Tuple[bytes, bytes]],
+        ] = (),
     ) -> "Request":
         """
         Simplified API for creating request objects.
@@ -102,16 +107,20 @@ class Request(message.Message):
             pass
         elif isinstance(headers, dict):
             headers = Headers(
-                (always_bytes(k, "utf-8", "surrogateescape"),
-                 always_bytes(v, "utf-8", "surrogateescape"))
+                (
+                    always_bytes(k, "utf-8", "surrogateescape"),
+                    always_bytes(v, "utf-8", "surrogateescape"),
+                )
                 for k, v in headers.items()
             )
         elif isinstance(headers, Iterable):
             headers = Headers(headers)
         else:
-            raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
-                type(headers).__name__
-            ))
+            raise TypeError(
+                "Expected headers to be an iterable or dict, but is {}.".format(
+                    type(headers).__name__
+                )
+            )
 
         req = cls(
             "",
@@ -135,7 +144,9 @@ class Request(message.Message):
         elif isinstance(content, str):
             req.text = content
         else:
-            raise TypeError(f"Expected content to be str or bytes, but is {type(content).__name__}.")
+            raise TypeError(
+                f"Expected content to be str or bytes, but is {type(content).__name__}."
+            )
 
         return req
 
@@ -219,7 +230,9 @@ class Request(message.Message):
             self.data.headers["Host"] = val
         # Update authority
         if self.data.authority:
-            self.authority = mitmproxy.net.http.url.hostport(self.scheme, self.host, self.port)
+            self.authority = mitmproxy.net.http.url.hostport(
+                self.scheme, self.host, self.port
+            )
 
     @property
     def host_header(self) -> Optional[str]:
@@ -277,7 +290,9 @@ class Request(message.Message):
         """
         if self.first_line_format == "authority":
             return f"{self.host}:{self.port}"
-        return mitmproxy.net.http.url.unparse(self.scheme, self.host, self.port, self.path)
+        return mitmproxy.net.http.url.unparse(
+            self.scheme, self.host, self.port, self.path
+        )
 
     @url.setter
     def url(self, val: Union[str, bytes]) -> None:
@@ -309,10 +324,16 @@ class Request(message.Message):
         if not host_header:
             return self.url
 
-        pretty_host, pretty_port = mitmproxy.net.http.url.parse_authority(host_header, check=False)
-        pretty_port = pretty_port or mitmproxy.net.http.url.default_port(self.scheme) or 443
+        pretty_host, pretty_port = mitmproxy.net.http.url.parse_authority(
+            host_header, check=False
+        )
+        pretty_port = (
+            pretty_port or mitmproxy.net.http.url.default_port(self.scheme) or 443
+        )
 
-        return mitmproxy.net.http.url.unparse(self.scheme, pretty_host, pretty_port, self.path)
+        return mitmproxy.net.http.url.unparse(
+            self.scheme, pretty_host, pretty_port, self.path
+        )
 
     def _get_query(self):
         query = urllib.parse.urlparse(self.url).query
@@ -328,10 +349,7 @@ class Request(message.Message):
         """
         The request query string as an :py:class:`~mitmproxy.net.multidict.MultiDictView` object.
         """
-        return multidict.MultiDictView(
-            self._get_query,
-            self._set_query
-        )
+        return multidict.MultiDictView(self._get_query, self._set_query)
 
     @query.setter
     def query(self, value):
@@ -351,10 +369,7 @@ class Request(message.Message):
 
         An empty :py:class:`~mitmproxy.net.multidict.MultiDictView` object if the cookie monster ate them all.
         """
-        return multidict.MultiDictView(
-            self._get_cookies,
-            self._set_cookies
-        )
+        return multidict.MultiDictView(self._get_cookies, self._set_cookies)
 
     @cookies.setter
     def cookies(self, value):
@@ -405,16 +420,17 @@ class Request(message.Message):
         """
         accept_encoding = self.headers.get("accept-encoding")
         if accept_encoding:
-            self.headers["accept-encoding"] = (
-                ', '.join(
-                    e
-                    for e in {"gzip", "identity", "deflate", "br", "zstd"}
-                    if e in accept_encoding
-                )
+            self.headers["accept-encoding"] = ", ".join(
+                e
+                for e in {"gzip", "identity", "deflate", "br", "zstd"}
+                if e in accept_encoding
             )
 
     def _get_urlencoded_form(self):
-        is_valid_content_type = "application/x-www-form-urlencoded" in self.headers.get("content-type", "").lower()
+        is_valid_content_type = (
+            "application/x-www-form-urlencoded"
+            in self.headers.get("content-type", "").lower()
+        )
         if is_valid_content_type:
             return tuple(mitmproxy.net.http.url.decode(self.get_text(strict=False)))
         return ()
@@ -425,7 +441,9 @@ class Request(message.Message):
         This will overwrite the existing content if there is one.
         """
         self.headers["content-type"] = "application/x-www-form-urlencoded"
-        self.content = mitmproxy.net.http.url.encode(form_data, self.get_text(strict=False)).encode()
+        self.content = mitmproxy.net.http.url.encode(
+            form_data, self.get_text(strict=False)
+        ).encode()
 
     @property
     def urlencoded_form(self):
@@ -437,8 +455,7 @@ class Request(message.Message):
         Starting with mitmproxy 1.0, key and value are strings.
         """
         return multidict.MultiDictView(
-            self._get_urlencoded_form,
-            self._set_urlencoded_form
+            self._get_urlencoded_form, self._set_urlencoded_form
         )
 
     @urlencoded_form.setter
@@ -446,7 +463,9 @@ class Request(message.Message):
         self._set_urlencoded_form(value)
 
     def _get_multipart_form(self):
-        is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
+        is_valid_content_type = (
+            "multipart/form-data" in self.headers.get("content-type", "").lower()
+        )
         if is_valid_content_type:
             try:
                 return multipart.decode(self.headers, self.content)
@@ -468,8 +487,7 @@ class Request(message.Message):
         Key and value are bytes.
         """
         return multidict.MultiDictView(
-            self._get_multipart_form,
-            self._set_multipart_form
+            self._get_multipart_form, self._set_multipart_form
         )
 
     @multipart_form.setter

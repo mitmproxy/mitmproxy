@@ -48,49 +48,36 @@ def create_ca(organization, cn, exp, key_size):
     cert.gmtime_adj_notAfter(exp)
     cert.set_issuer(cert.get_subject())
     cert.set_pubkey(key)
-    cert.add_extensions([
-        OpenSSL.crypto.X509Extension(
-            b"basicConstraints",
-            True,
-            b"CA:TRUE"
-        ),
-        OpenSSL.crypto.X509Extension(
-            b"nsCertType",
-            False,
-            b"sslCA"
-        ),
-        OpenSSL.crypto.X509Extension(
-            b"extendedKeyUsage",
-            False,
-            b"serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC"
-        ),
-        OpenSSL.crypto.X509Extension(
-            b"keyUsage",
-            True,
-            b"keyCertSign, cRLSign"
-        ),
-        OpenSSL.crypto.X509Extension(
-            b"subjectKeyIdentifier",
-            False,
-            b"hash",
-            subject=cert
-        ),
-    ])
+    cert.add_extensions(
+        [
+            OpenSSL.crypto.X509Extension(b"basicConstraints", True, b"CA:TRUE"),
+            OpenSSL.crypto.X509Extension(b"nsCertType", False, b"sslCA"),
+            OpenSSL.crypto.X509Extension(
+                b"extendedKeyUsage",
+                False,
+                b"serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC",
+            ),
+            OpenSSL.crypto.X509Extension(b"keyUsage", True, b"keyCertSign, cRLSign"),
+            OpenSSL.crypto.X509Extension(
+                b"subjectKeyIdentifier", False, b"hash", subject=cert
+            ),
+        ]
+    )
     cert.sign(key, "sha256")
     return key, cert
 
 
 def dummy_cert(privkey, cacert, commonname, sans, organization):
     """
-        Generates a dummy certificate.
+    Generates a dummy certificate.
 
-        privkey: CA private key
-        cacert: CA certificate
-        commonname: Common name for the generated certificate.
-        sans: A list of Subject Alternate Names.
-        organization: Organization name for the generated certificate.
+    privkey: CA private key
+    cacert: CA certificate
+    commonname: Common name for the generated certificate.
+    sans: A list of Subject Alternate Names.
+    organization: Organization name for the generated certificate.
 
-        Returns cert if operation succeeded, None if not.
+    Returns cert if operation succeeded, None if not.
     """
     ss = []
     for i in sans:
@@ -106,9 +93,7 @@ def dummy_cert(privkey, cacert, commonname, sans, organization):
     cert.gmtime_adj_notBefore(-3600 * 48)
     cert.gmtime_adj_notAfter(DEFAULT_EXP_DUMMY_CERT)
     cert.set_issuer(cacert.get_subject())
-    is_valid_commonname = (
-        commonname is not None and len(commonname) < 64
-    )
+    is_valid_commonname = commonname is not None and len(commonname) < 64
     if is_valid_commonname:
         cert.get_subject().CN = commonname
     if organization is not None:
@@ -117,27 +102,28 @@ def dummy_cert(privkey, cacert, commonname, sans, organization):
     if ss:
         cert.set_version(2)
         cert.add_extensions(
-            [OpenSSL.crypto.X509Extension(
-                b"subjectAltName",
-                # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
-                not is_valid_commonname,
-                ss
-            )]
+            [
+                OpenSSL.crypto.X509Extension(
+                    b"subjectAltName",
+                    # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
+                    not is_valid_commonname,
+                    ss,
+                )
+            ]
         )
-    cert.add_extensions([
-        OpenSSL.crypto.X509Extension(
-            b"extendedKeyUsage",
-            False,
-            b"serverAuth,clientAuth"
-        )
-    ])
+    cert.add_extensions(
+        [
+            OpenSSL.crypto.X509Extension(
+                b"extendedKeyUsage", False, b"serverAuth,clientAuth"
+            )
+        ]
+    )
     cert.set_pubkey(cacert.get_pubkey())
     cert.sign(privkey, "sha256")
     return Cert(cert)
 
 
 class CertStoreEntry:
-
     def __init__(self, cert, privatekey, chain_file):
         self.cert = cert
         self.privatekey = privatekey
@@ -145,23 +131,21 @@ class CertStoreEntry:
 
 
 TCustomCertId = bytes  # manually provided certs (e.g. mitmproxy's --certs)
-TGeneratedCertId = typing.Tuple[typing.Optional[bytes], typing.Tuple[bytes, ...]]  # (common_name, sans)
+TGeneratedCertId = typing.Tuple[
+    typing.Optional[bytes], typing.Tuple[bytes, ...]
+]  # (common_name, sans)
 TCertId = typing.Union[TCustomCertId, TGeneratedCertId]
 
 
 class CertStore:
 
     """
-        Implements an in-memory certificate store.
+    Implements an in-memory certificate store.
     """
+
     STORE_CAP = 100
 
-    def __init__(
-            self,
-            default_privatekey,
-            default_ca,
-            default_chain_file,
-            dhparams):
+    def __init__(self, default_privatekey, default_ca, default_chain_file, dhparams):
         self.default_privatekey = default_privatekey
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
@@ -184,32 +168,31 @@ class CertStore:
             with open(path, "wb") as f:
                 f.write(DEFAULT_DHPARAM)
 
-        bio = OpenSSL.SSL._lib.BIO_new_file(path.encode(sys.getfilesystemencoding()), b"r")
+        bio = OpenSSL.SSL._lib.BIO_new_file(
+            path.encode(sys.getfilesystemencoding()), b"r"
+        )
         if bio != OpenSSL.SSL._ffi.NULL:
             bio = OpenSSL.SSL._ffi.gc(bio, OpenSSL.SSL._lib.BIO_free)
             dh = OpenSSL.SSL._lib.PEM_read_bio_DHparams(
-                bio,
-                OpenSSL.SSL._ffi.NULL,
-                OpenSSL.SSL._ffi.NULL,
-                OpenSSL.SSL._ffi.NULL)
+                bio, OpenSSL.SSL._ffi.NULL, OpenSSL.SSL._ffi.NULL, OpenSSL.SSL._ffi.NULL
+            )
             dh = OpenSSL.SSL._ffi.gc(dh, OpenSSL.SSL._lib.DH_free)
             return dh
 
     @classmethod
-    def from_store(cls, path, basename, key_size, passphrase: typing.Optional[bytes] = None):
+    def from_store(
+        cls, path, basename, key_size, passphrase: typing.Optional[bytes] = None
+    ):
         ca_path = os.path.join(path, basename + "-ca.pem")
         if not os.path.exists(ca_path):
             key, ca = cls.create_store(path, basename, key_size)
         else:
             with open(ca_path, "rb") as f:
                 raw = f.read()
-            ca = OpenSSL.crypto.load_certificate(
-                OpenSSL.crypto.FILETYPE_PEM,
-                raw)
+            ca = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw)
             key = OpenSSL.crypto.load_privatekey(
-                OpenSSL.crypto.FILETYPE_PEM,
-                raw,
-                passphrase)
+                OpenSSL.crypto.FILETYPE_PEM, raw, passphrase
+            )
         dh_path = os.path.join(path, basename + "-dhparam.pem")
         dh = cls.load_dhparam(dh_path)
         return cls(key, ca, ca_path, dh)
@@ -218,9 +201,9 @@ class CertStore:
     @contextlib.contextmanager
     def umask_secret():
         """
-            Context to temporarily set umask to its original value bitor 0o77.
-            Useful when writing private keys to disk so that only the owner
-            will be able to read them.
+        Context to temporarily set umask to its original value bitor 0o77.
+        Useful when writing private keys to disk so that only the owner
+        will be able to read them.
         """
         original_umask = os.umask(0)
         os.umask(original_umask | 0o77)
@@ -230,38 +213,32 @@ class CertStore:
             os.umask(original_umask)
 
     @staticmethod
-    def create_store(path, basename, key_size, organization=None, cn=None, expiry=DEFAULT_EXP):
+    def create_store(
+        path, basename, key_size, organization=None, cn=None, expiry=DEFAULT_EXP
+    ):
         if not os.path.exists(path):
             os.makedirs(path)
 
         organization = organization or basename
         cn = cn or basename
 
-        key, ca = create_ca(organization=organization, cn=cn, exp=expiry, key_size=key_size)
+        key, ca = create_ca(
+            organization=organization, cn=cn, exp=expiry, key_size=key_size
+        )
         # Dump the CA plus private key
-        with CertStore.umask_secret(), open(os.path.join(path, basename + "-ca.pem"), "wb") as f:
-            f.write(
-                OpenSSL.crypto.dump_privatekey(
-                    OpenSSL.crypto.FILETYPE_PEM,
-                    key))
-            f.write(
-                OpenSSL.crypto.dump_certificate(
-                    OpenSSL.crypto.FILETYPE_PEM,
-                    ca))
+        with CertStore.umask_secret(), open(
+            os.path.join(path, basename + "-ca.pem"), "wb"
+        ) as f:
+            f.write(OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, key))
+            f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
 
         # Dump the certificate in PEM format
         with open(os.path.join(path, basename + "-ca-cert.pem"), "wb") as f:
-            f.write(
-                OpenSSL.crypto.dump_certificate(
-                    OpenSSL.crypto.FILETYPE_PEM,
-                    ca))
+            f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
 
         # Create a .cer file with the same contents for Android
         with open(os.path.join(path, basename + "-ca-cert.cer"), "wb") as f:
-            f.write(
-                OpenSSL.crypto.dump_certificate(
-                    OpenSSL.crypto.FILETYPE_PEM,
-                    ca))
+            f.write(OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, ca))
 
         # Dump the certificate in PKCS12 format for Windows devices
         with open(os.path.join(path, basename + "-ca-cert.p12"), "wb") as f:
@@ -270,7 +247,9 @@ class CertStore:
             f.write(p12.export())
 
         # Dump the certificate and key in a PKCS12 format for Windows devices
-        with CertStore.umask_secret(), open(os.path.join(path, basename + "-ca.p12"), "wb") as f:
+        with CertStore.umask_secret(), open(
+            os.path.join(path, basename + "-ca.p12"), "wb"
+        ) as f:
             p12 = OpenSSL.crypto.PKCS12()
             p12.set_certificate(ca)
             p12.set_privatekey(key)
@@ -281,29 +260,24 @@ class CertStore:
 
         return key, ca
 
-    def add_cert_file(self, spec: str, path: str, passphrase: typing.Optional[bytes] = None) -> None:
+    def add_cert_file(
+        self, spec: str, path: str, passphrase: typing.Optional[bytes] = None
+    ) -> None:
         with open(path, "rb") as f:
             raw = f.read()
-        cert = Cert(
-            OpenSSL.crypto.load_certificate(
-                OpenSSL.crypto.FILETYPE_PEM,
-                raw))
+        cert = Cert(OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, raw))
         try:
             privatekey = OpenSSL.crypto.load_privatekey(
-                OpenSSL.crypto.FILETYPE_PEM,
-                raw,
-                passphrase)
+                OpenSSL.crypto.FILETYPE_PEM, raw, passphrase
+            )
         except Exception:
             privatekey = self.default_privatekey
-        self.add_cert(
-            CertStoreEntry(cert, privatekey, path),
-            spec.encode("idna")
-        )
+        self.add_cert(CertStoreEntry(cert, privatekey, path), spec.encode("idna"))
 
     def add_cert(self, entry: CertStoreEntry, *names: bytes):
         """
-            Adds a cert to the certstore. We register the CN in the cert plus
-            any SANs, and also the list of names provided as an argument.
+        Adds a cert to the certstore. We register the CN in the cert plus
+        any SANs, and also the list of names provided as an argument.
         """
         if entry.cert.cn:
             self.certs[entry.cert.cn] = entry
@@ -325,20 +299,20 @@ class CertStore:
         return ret
 
     def get_cert(
-            self,
-            commonname: typing.Optional[bytes],
-            sans: typing.List[bytes],
-            organization: typing.Optional[bytes] = None
+        self,
+        commonname: typing.Optional[bytes],
+        sans: typing.List[bytes],
+        organization: typing.Optional[bytes] = None,
     ) -> typing.Tuple["Cert", OpenSSL.SSL.PKey, str]:
         """
-            Returns an (cert, privkey, cert_chain) tuple.
+        Returns an (cert, privkey, cert_chain) tuple.
 
-            commonname: Common name for the generated certificate. Must be a
-            valid, plain-ASCII, IDNA-encoded domain name.
+        commonname: Common name for the generated certificate. Must be a
+        valid, plain-ASCII, IDNA-encoded domain name.
 
-            sans: A list of Subject Alternate Names.
+        sans: A list of Subject Alternate Names.
 
-            organization: Organization name for the generated certificate.
+        organization: Organization name for the generated certificate.
         """
 
         potential_keys: typing.List[TCertId] = []
@@ -349,10 +323,7 @@ class CertStore:
         potential_keys.append(b"*")
         potential_keys.append((commonname, tuple(sans)))
 
-        name = next(
-            filter(lambda key: key in self.certs, potential_keys),
-            None
-        )
+        name = next(filter(lambda key: key in self.certs, potential_keys), None)
         if name:
             entry = self.certs[name]
         else:
@@ -362,9 +333,11 @@ class CertStore:
                     self.default_ca,
                     commonname,
                     sans,
-                    organization),
+                    organization,
+                ),
                 privatekey=self.default_privatekey,
-                chain_file=self.default_chain_file)
+                chain_file=self.default_chain_file,
+            )
             self.certs[(commonname, tuple(sans))] = entry
             self.expire(entry)
 
@@ -374,26 +347,30 @@ class CertStore:
 class _GeneralName(univ.Choice):
     # We only care about dNSName and iPAddress
     componentType = namedtype.NamedTypes(
-        namedtype.NamedType('dNSName', char.IA5String().subtype(
-            implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 2)
-        )),
-        namedtype.NamedType('iPAddress', univ.OctetString().subtype(
-            implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 7)
-        )),
+        namedtype.NamedType(
+            "dNSName",
+            char.IA5String().subtype(
+                implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 2)
+            ),
+        ),
+        namedtype.NamedType(
+            "iPAddress",
+            univ.OctetString().subtype(
+                implicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 7)
+            ),
+        ),
     )
 
 
 class _GeneralNames(univ.SequenceOf):
     componentType = _GeneralName()
-    sizeSpec = univ.SequenceOf.sizeSpec + \
-        constraint.ValueSizeConstraint(1, 1024)
+    sizeSpec = univ.SequenceOf.sizeSpec + constraint.ValueSizeConstraint(1, 1024)
 
 
 class Cert(serializable.Serializable):
-
     def __init__(self, cert):
         """
-            Returns a (common name, [subject alternative names]) tuple.
+        Returns a (common name, [subject alternative names]) tuple.
         """
         self.x509 = cert
 
@@ -421,9 +398,7 @@ class Cert(serializable.Serializable):
         return cls.from_pem(pem)
 
     def to_pem(self):
-        return OpenSSL.crypto.dump_certificate(
-            OpenSSL.crypto.FILETYPE_PEM,
-            self.x509)
+        return OpenSSL.crypto.dump_certificate(OpenSSL.crypto.FILETYPE_PEM, self.x509)
 
     def digest(self, name):
         return self.x509.digest(name)
@@ -461,10 +436,7 @@ class Cert(serializable.Serializable):
             OpenSSL.crypto.TYPE_RSA: "RSA",
             OpenSSL.crypto.TYPE_DSA: "DSA",
         }
-        return (
-            types.get(pk.type(), "UNKNOWN"),
-            pk.bits()
-        )
+        return (types.get(pk.type(), "UNKNOWN"), pk.bits())
 
     @property
     def cn(self) -> typing.Optional[bytes]:

@@ -30,7 +30,6 @@ class HostMatcher:
 
 
 class ProxyConfig:
-
     def __init__(self, options: moptions.Options) -> None:
         self.options = options
 
@@ -43,8 +42,10 @@ class ProxyConfig:
 
     def configure(self, options: moptions.Options, updated: typing.Any) -> None:
         if options.allow_hosts and options.ignore_hosts:
-            raise exceptions.OptionsError("--ignore-hosts and --allow-hosts are mutually "
-                                          "exclusive; please choose one.")
+            raise exceptions.OptionsError(
+                "--ignore-hosts and --allow-hosts are mutually "
+                "exclusive; please choose one."
+            )
 
         if options.ignore_hosts:
             self.check_filter = HostMatcher("ignore", options.ignore_hosts)
@@ -58,16 +59,15 @@ class ProxyConfig:
         certstore_path = os.path.expanduser(options.confdir)
         if not os.path.exists(os.path.dirname(certstore_path)):
             raise exceptions.OptionsError(
-                "Certificate Authority parent directory does not exist: %s" %
-                os.path.dirname(certstore_path)
+                "Certificate Authority parent directory does not exist: %s"
+                % os.path.dirname(certstore_path)
             )
         key_size = options.key_size
-        passphrase = options.cert_passphrase.encode("utf-8") if options.cert_passphrase else None
+        passphrase = (
+            options.cert_passphrase.encode("utf-8") if options.cert_passphrase else None
+        )
         self.certstore = certs.CertStore.from_store(
-            certstore_path,
-            moptions.CONF_BASENAME,
-            key_size,
-            passphrase
+            certstore_path, moptions.CONF_BASENAME, key_size, passphrase
         )
 
         for c in options.certs:
@@ -83,9 +83,7 @@ class ProxyConfig:
             try:
                 self.certstore.add_cert_file(parts[0], cert, passphrase)
             except crypto.Error:
-                raise exceptions.OptionsError(
-                    "Invalid certificate format: %s" % cert
-                )
+                raise exceptions.OptionsError("Invalid certificate format: %s" % cert)
         m = options.mode
         if m.startswith("upstream:") or m.startswith("reverse:"):
             _, spec = server_spec.parse_with_mode(options.mode)

@@ -114,7 +114,10 @@ tls_strategy = None
 
 def load(l):
     l.add_option(
-        "tlsstrat", int, 0, "TLS passthrough strategy (0-100)",
+        "tlsstrat",
+        int,
+        0,
+        "TLS passthrough strategy (0-100)",
     )
 
 
@@ -140,7 +143,9 @@ def next_layer(next_layer):
             next_layer.__class__ = TlsFeedback
         else:
             # We don't intercept - reply with a pass-through layer and add a "skipped" entry.
-            mitmproxy.ctx.log("TLS passthrough for %s" % repr(next_layer.server_conn.address), "info")
+            mitmproxy.ctx.log(
+                "TLS passthrough for %s" % repr(next_layer.server_conn.address), "info"
+            )
             next_layer_replacement = RawTCPLayer(next_layer.ctx, ignore=True)
             next_layer.reply.send(next_layer_replacement)
             tls_strategy.record_skipped(server_address)

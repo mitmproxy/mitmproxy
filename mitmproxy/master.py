@@ -22,16 +22,14 @@ from . import ctx as mitmproxy_ctx
 # very hard. We could build a thread sync infrastructure for this, or we could
 # wait until we ditch threads and move all the protocols into the async loop.
 # Until then, silence non-critical errors.
-logging.getLogger('asyncio').setLevel(logging.CRITICAL)
+logging.getLogger("asyncio").setLevel(logging.CRITICAL)
 
 
 class ServerThread(basethread.BaseThread):
     def __init__(self, server):
         self.server = server
         address = getattr(self.server, "address", None)
-        super().__init__(
-            "ServerThread ({})".format(repr(address))
-        )
+        super().__init__("ServerThread ({})".format(repr(address)))
 
     def run(self):
         self.server.serve_forever()
@@ -39,8 +37,9 @@ class ServerThread(basethread.BaseThread):
 
 class Master:
     """
-        The master handles mitmproxy's main event loop.
+    The master handles mitmproxy's main event loop.
     """
+
     def __init__(self, opts):
         self.should_exit = threading.Event()
         self.channel = controller.Channel(
@@ -116,11 +115,13 @@ class Master:
 
     def shutdown(self):
         """
-            Shut down the proxy. This method is thread-safe.
+        Shut down the proxy. This method is thread-safe.
         """
         if not self.should_exit.is_set():
             self.should_exit.set()
-            ret = asyncio.run_coroutine_threadsafe(self._shutdown(), loop=self.channel.loop)
+            ret = asyncio.run_coroutine_threadsafe(
+                self._shutdown(), loop=self.channel.loop
+            )
             # Weird band-aid to make sure that self._shutdown() is actually executed,
             # which otherwise hangs the process as the proxy server is threaded.
             # This all needs to be simplified when the proxy server runs on asyncio as well.
@@ -148,11 +149,15 @@ class Master:
 
         if isinstance(f, http.HTTPFlow):
             self._change_reverse_host(f)
-            if 'websocket' in f.metadata:
+            if "websocket" in f.metadata:
                 self.waiting_flows.append(f)
 
         if isinstance(f, websocket.WebSocketFlow):
-            hfs = [hf for hf in self.waiting_flows if hf.id == f.metadata['websocket_handshake']]
+            hfs = [
+                hf
+                for hf in self.waiting_flows
+                if hf.id == f.metadata["websocket_handshake"]
+            ]
             if hfs:
                 hf = hfs[0]
                 f.handshake_flow = hf

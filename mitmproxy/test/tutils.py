@@ -6,7 +6,7 @@ from mitmproxy.net import http
 
 def treader(bytes):
     """
-        Construct a tcp.Read object from bytes.
+    Construct a tcp.Read object from bytes.
     """
     fp = BytesIO(bytes)
     return tcp.Reader(fp)
@@ -44,7 +44,9 @@ def tresp(**kwargs) -> http.Response:
         http_version=b"HTTP/1.1",
         status_code=200,
         reason=b"OK",
-        headers=http.Headers(((b"header-response", b"svalue"), (b"content-length", b"7"))),
+        headers=http.Headers(
+            ((b"header-response", b"svalue"), (b"content-length", b"7"))
+        ),
         content=b"message",
         trailers=None,
         timestamp_start=946681202,

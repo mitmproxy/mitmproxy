@@ -15,7 +15,7 @@ class HelperAddon:
         self.flows = []
         self.layers = [
             lambda ctx: layers.modes.HttpProxy(ctx),
-            lambda ctx: layers.HttpLayer(ctx, HTTPMode.regular)
+            lambda ctx: layers.HttpLayer(ctx, HTTPMode.regular),
         ]
 
     def request(self, f):
@@ -27,7 +27,7 @@ class HelperAddon:
 
 @asynccontextmanager
 async def tcp_server(handle_conn) -> Address:
-    server = await asyncio.start_server(handle_conn, '127.0.0.1', 0)
+    server = await asyncio.start_server(handle_conn, "127.0.0.1", 0)
     await server.start_serving()
     try:
         yield server.sockets[0].getsockname()
@@ -37,7 +37,9 @@ async def tcp_server(handle_conn) -> Address:
 
 @pytest.mark.asyncio
 async def test_start_stop():
-    async def server_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+    async def server_handler(
+        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ):
         assert await reader.readuntil(b"\r\n\r\n") == b"GET /hello HTTP/1.1\r\n\r\n"
         writer.write(b"HTTP/1.1 204 No Content\r\n\r\n")
         await writer.drain()
@@ -58,7 +60,10 @@ async def test_start_stop():
             reader, writer = await asyncio.open_connection(*proxy_addr)
             req = f"GET http://{addr[0]}:{addr[1]}/hello HTTP/1.1\r\n\r\n"
             writer.write(req.encode())
-            assert await reader.readuntil(b"\r\n\r\n") == b"HTTP/1.1 204 No Content\r\n\r\n"
+            assert (
+                await reader.readuntil(b"\r\n\r\n")
+                == b"HTTP/1.1 204 No Content\r\n\r\n"
+            )
 
             tctx.configure(ps, server=False)
             assert await tctx.master.await_log("Stopping server", level="info")
@@ -78,5 +83,7 @@ async def test_warn_no_nextlayer():
     with taddons.context(ps) as tctx:
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
         ps.running()
-        assert await tctx.master.await_log("Warning: Running proxyserver without nextlayer addon!", level="warn")
+        assert await tctx.master.await_log(
+            "Warning: Running proxyserver without nextlayer addon!", level="warn"
+        )
         await ps.shutdown_server()

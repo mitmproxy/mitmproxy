@@ -12,8 +12,10 @@ class StickyAuth:
 
     def load(self, loader):
         loader.add_option(
-            "stickyauth", typing.Optional[str], None,
-            "Set sticky auth filter. Matched against requests."
+            "stickyauth",
+            typing.Optional[str],
+            None,
+            "Set sticky auth filter. Matched against requests.",
         )
 
     def configure(self, updated):
@@ -22,7 +24,8 @@ class StickyAuth:
                 flt = flowfilter.parse(ctx.options.stickyauth)
                 if not flt:
                     raise exceptions.OptionsError(
-                        "stickyauth: invalid filter expression: %s" % ctx.options.stickyauth
+                        "stickyauth: invalid filter expression: %s"
+                        % ctx.options.stickyauth
                     )
                 self.flt = flt
             else:

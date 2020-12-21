@@ -21,9 +21,7 @@ def mkauth(username: str, password: str, scheme: str = "basic") -> str:
     """
     Craft a basic auth string
     """
-    v = binascii.b2a_base64(
-        (username + ":" + password).encode("utf8")
-    ).decode("ascii")
+    v = binascii.b2a_base64((username + ":" + password).encode("utf8")).decode("ascii")
     return scheme + " " + v
 
 
@@ -36,7 +34,9 @@ def parse_http_basic_auth(s: str) -> Tuple[str, str, str]:
     if scheme.lower() != "basic":
         raise ValueError("Unknown scheme")
     try:
-        user, password = binascii.a2b_base64(authinfo.encode()).decode("utf8", "replace").split(":")
+        user, password = (
+            binascii.a2b_base64(authinfo.encode()).decode("utf8", "replace").split(":")
+        )
     except binascii.Error as e:
         raise ValueError(str(e))
     return scheme, user, password
@@ -49,23 +49,35 @@ class ProxyAuth:
         self.singleuser = None
         self.ldapconn = None
         self.ldapserver = None
-        self.authenticated: MutableMapping[context.Client, Tuple[str, str]] = weakref.WeakKeyDictionary()
+        self.authenticated: MutableMapping[
+            context.Client, Tuple[str, str]
+        ] = weakref.WeakKeyDictionary()
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def load(self, loader):
         loader.add_option(
-            "proxyauth", Optional[str], None,
+            "proxyauth",
+            Optional[str],
+            None,
             """
             Require proxy authentication. Format:
             "username:pass",
             "any" to accept any user/pass combination,
             "@path" to use an Apache htpasswd file,
             or "ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" for LDAP authentication.
-            """
+            """,
         )
 
     def enabled(self) -> bool:
-        return any([self.nonanonymous, self.htpasswd, self.singleuser, self.ldapconn, self.ldapserver])
+        return any(
+            [
+                self.nonanonymous,
+                self.htpasswd,
+                self.singleuser,
+                self.ldapconn,
+                self.ldapserver,
+            ]
+        )
 
     def is_proxy_auth(self) -> bool:
         """
@@ -77,20 +89,24 @@ class ProxyAuth:
 
     def which_auth_header(self) -> str:
         if self.is_proxy_auth():
-            return 'Proxy-Authorization'
+            return "Proxy-Authorization"
         else:
-            return 'Authorization'
+            return "Authorization"
 
     def auth_required_response(self) -> http.HTTPResponse:
         if self.is_proxy_auth():
             return http.make_error_response(
                 status_codes.PROXY_AUTH_REQUIRED,
-                headers=mitmproxy.net.http.Headers(Proxy_Authenticate=f'Basic realm="{REALM}"'),
+                headers=mitmproxy.net.http.Headers(
+                    Proxy_Authenticate=f'Basic realm="{REALM}"'
+                ),
             )
         else:
             return http.make_error_response(
                 status_codes.UNAUTHORIZED,
-                headers=mitmproxy.net.http.Headers(WWW_Authenticate=f'Basic realm="{REALM}"'),
+                headers=mitmproxy.net.http.Headers(
+                    WWW_Authenticate=f'Basic realm="{REALM}"'
+                ),
             )
 
     def check(self, f: http.HTTPFlow) -> Optional[Tuple[str, str]]:
@@ -117,13 +133,16 @@ class ProxyAuth:
         elif self.ldapconn:
             if not username or not password:
                 return None
-            self.ldapconn.search(ctx.options.proxyauth.split(':')[4], '(cn=' + username + ')')
+            self.ldapconn.search(
+                ctx.options.proxyauth.split(":")[4], "(cn=" + username + ")"
+            )
             if self.ldapconn.response:
                 conn = ldap3.Connection(
                     self.ldapserver,
-                    self.ldapconn.response[0]['dn'],
+                    self.ldapconn.response[0]["dn"],
                     password,
-                    auto_bind=True)
+                    auto_bind=True,
+                )
                 if conn:
                     return username, password
         return None
@@ -157,11 +176,9 @@ class ProxyAuth:
                             "Could not open htpasswd file: %s" % p
                         )
                 elif ctx.options.proxyauth.startswith("ldap"):
-                    parts = ctx.options.proxyauth.split(':')
+                    parts = ctx.options.proxyauth.split(":")
                     if len(parts) != 5:
-                        raise exceptions.OptionsError(
-                            "Invalid ldap specification"
-                        )
+                        raise exceptions.OptionsError("Invalid ldap specification")
                     security = parts[0]
                     ldap_server = parts[1]
                     dn_baseauth = parts[2]
@@ -175,14 +192,12 @@ class ProxyAuth:
                             "Invalid ldap specification on the first part"
                         )
                     conn = ldap3.Connection(
-                        server,
-                        dn_baseauth,
-                        password_baseauth,
-                        auto_bind=True)
+                        server, dn_baseauth, password_baseauth, auto_bind=True
+                    )
                     self.ldapconn = conn
                     self.ldapserver = server
                 else:
-                    parts = ctx.options.proxyauth.split(':')
+                    parts = ctx.options.proxyauth.split(":")
                     if len(parts) != 2:
                         raise exceptions.OptionsError(
                             "Invalid single-user auth specification."

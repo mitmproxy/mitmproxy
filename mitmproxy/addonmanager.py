@@ -46,16 +46,15 @@ def safecall():
         etype, value, tb = sys.exc_info()
         tb = cut_traceback(tb, "invoke_addon")
         ctx.log.error(
-            "Addon error: %s" % "".join(
-                traceback.format_exception(etype, value, tb)
-            )
+            "Addon error: %s" % "".join(traceback.format_exception(etype, value, tb))
         )
 
 
 class Loader:
     """
-        A loader object is passed to the load() event when addons start up.
+    A loader object is passed to the load() event when addons start up.
     """
+
     def __init__(self, master):
         self.master = master
 
@@ -65,35 +64,29 @@ class Loader:
         typespec: type,
         default: typing.Any,
         help: str,
-        choices: typing.Optional[typing.Sequence[str]] = None
+        choices: typing.Optional[typing.Sequence[str]] = None,
     ) -> None:
         """
-            Add an option to mitmproxy.
+        Add an option to mitmproxy.
 
-            Help should be a single paragraph with no linebreaks - it will be
-            reflowed by tools. Information on the data type should be omitted -
-            it will be generated and added by tools as needed.
+        Help should be a single paragraph with no linebreaks - it will be
+        reflowed by tools. Information on the data type should be omitted -
+        it will be generated and added by tools as needed.
         """
         if name in self.master.options:
             existing = self.master.options._options[name]
             same_signature = (
-                existing.name == name and
-                existing.typespec == typespec and
-                existing.default == default and
-                existing.help == help and
-                existing.choices == choices
+                existing.name == name
+                and existing.typespec == typespec
+                and existing.default == default
+                and existing.help == help
+                and existing.choices == choices
             )
             if same_signature:
                 return
             else:
                 ctx.log.warn("Over-riding existing option %s" % name)
-        self.master.options.add_option(
-            name,
-            typespec,
-            default,
-            help,
-            choices
-        )
+        self.master.options.add_option(name, typespec, default, help, choices)
 
     def add_command(self, path: str, func: typing.Callable) -> None:
         self.master.commands.add(path, func)
@@ -101,7 +94,7 @@ class Loader:
 
 def traverse(chain):
     """
-        Recursively traverse an addon chain.
+    Recursively traverse an addon chain.
     """
     for a in chain:
         yield a
@@ -121,7 +114,7 @@ class AddonManager:
 
     def clear(self):
         """
-            Remove all addons.
+        Remove all addons.
         """
         for a in self.chain:
             self.invoke_addon(a, "done")
@@ -130,21 +123,21 @@ class AddonManager:
 
     def get(self, name):
         """
-            Retrieve an addon by name. Addon names are equal to the .name
-            attribute on the instance, or the lower case class name if that
-            does not exist.
+        Retrieve an addon by name. Addon names are equal to the .name
+        attribute on the instance, or the lower case class name if that
+        does not exist.
         """
         return self.lookup.get(name, None)
 
     def register(self, addon):
         """
-            Register an addon, call its load event, and then register all its
-            sub-addons. This should be used by addons that dynamically manage
-            addons.
+        Register an addon, call its load event, and then register all its
+        sub-addons. This should be used by addons that dynamically manage
+        addons.
 
-            If the calling addon is already running, it should follow with
-            running and configure events. Must be called within a current
-            context.
+        If the calling addon is already running, it should follow with
+        running and configure events. Must be called within a current
+        context.
         """
         for a in traverse([addon]):
             name = _get_name(a)
@@ -164,19 +157,19 @@ class AddonManager:
 
     def add(self, *addons):
         """
-            Add addons to the end of the chain, and run their load event.
-            If any addon has sub-addons, they are registered.
+        Add addons to the end of the chain, and run their load event.
+        If any addon has sub-addons, they are registered.
         """
         for i in addons:
             self.chain.append(self.register(i))
 
     def remove(self, addon):
         """
-            Remove an addon and all its sub-addons.
+        Remove an addon and all its sub-addons.
 
-            If the addon is not in the chain - that is, if it's managed by a
-            parent addon - it's the parent's responsibility to remove it from
-            its own addons attribute.
+        If the addon is not in the chain - that is, if it's managed by a
+        parent addon - it's the parent's responsibility to remove it from
+        its own addons attribute.
         """
         for a in traverse([addon]):
             n = _get_name(a)
@@ -198,7 +191,7 @@ class AddonManager:
 
     async def handle_lifecycle(self, name, message):
         """
-            Handle a lifecycle event.
+        Handle a lifecycle event.
         """
         if not hasattr(message, "reply"):  # pragma: no cover
             raise exceptions.ControlException(
@@ -227,7 +220,7 @@ class AddonManager:
 
     def invoke_addon(self, addon, name, *args, **kwargs):
         """
-            Invoke an event on an addon and all its children.
+        Invoke an event on an addon and all its children.
         """
         if name not in eventsequence.Events:
             raise exceptions.AddonManagerError("Unknown event: %s" % name)
@@ -249,7 +242,7 @@ class AddonManager:
 
     def trigger(self, name, *args, **kwargs):
         """
-            Trigger an event across all addons.
+        Trigger an event across all addons.
         """
         for i in self.chain:
             try:

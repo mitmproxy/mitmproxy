@@ -18,7 +18,12 @@ class WebSocketMessage(serializable.Serializable):
     """
 
     def __init__(
-        self, type: int, from_client: bool, content: Union[bytes, str], timestamp: Optional[float]=None, killed: bool=False
+        self,
+        type: int,
+        from_client: bool,
+        content: Union[bytes, str],
+        timestamp: Optional[float] = None,
+        killed: bool = False,
     ) -> None:
         self.type = Opcode(type)  # type: ignore
         """indicates either TEXT or BINARY (from wsproto.frame_protocol.Opcode)."""
@@ -36,7 +41,13 @@ class WebSocketMessage(serializable.Serializable):
         return cls(*state)
 
     def get_state(self):
-        return int(self.type), self.from_client, self.content, self.timestamp, self.killed
+        return (
+            int(self.type),
+            self.from_client,
+            self.content,
+            self.timestamp,
+            self.killed,
+        )
 
     def set_state(self, state):
         self.type, self.from_client, self.content, self.timestamp, self.killed = state
@@ -46,7 +57,9 @@ class WebSocketMessage(serializable.Serializable):
         if self.type == Opcode.TEXT:
             return "text message: {}".format(repr(self.content))
         else:
-            return "binary message: {}".format(strutils.bytes_to_escaped_str(self.content))
+            return "binary message: {}".format(
+                strutils.bytes_to_escaped_str(self.content)
+            )
 
     def kill(self):  # pragma: no cover
         """
@@ -73,13 +86,13 @@ class WebSocketFlow(flow.Flow):
 
         self.messages: List[WebSocketMessage] = []
         """A list containing all WebSocketMessage's."""
-        self.close_sender = 'client'
+        self.close_sender = "client"
         """'client' if the client initiated connection closing."""
         self.close_code = CloseReason.NORMAL_CLOSURE
         """WebSocket close code."""
-        self.close_message = '(message missing)'
+        self.close_message = "(message missing)"
         """WebSocket close message."""
-        self.close_reason = 'unknown status code'
+        self.close_reason = "unknown status code"
         """WebSocket close reason."""
         self.stream = False
         """True of this connection is streaming directly to the other endpoint."""
@@ -93,41 +106,53 @@ class WebSocketFlow(flow.Flow):
 
         if handshake_flow:
             self.client_key = websocket.get_client_key(handshake_flow.request.headers)
-            self.client_protocol = websocket.get_protocol(handshake_flow.request.headers)
-            self.client_extensions = websocket.get_extensions(handshake_flow.request.headers)
-            self.server_accept = websocket.get_server_accept(handshake_flow.response.headers)
-            self.server_protocol = websocket.get_protocol(handshake_flow.response.headers)
-            self.server_extensions = websocket.get_extensions(handshake_flow.response.headers)
+            self.client_protocol = websocket.get_protocol(
+                handshake_flow.request.headers
+            )
+            self.client_extensions = websocket.get_extensions(
+                handshake_flow.request.headers
+            )
+            self.server_accept = websocket.get_server_accept(
+                handshake_flow.response.headers
+            )
+            self.server_protocol = websocket.get_protocol(
+                handshake_flow.response.headers
+            )
+            self.server_extensions = websocket.get_extensions(
+                handshake_flow.response.headers
+            )
         else:
-            self.client_key = ''
-            self.client_protocol = ''
-            self.client_extensions = ''
-            self.server_accept = ''
-            self.server_protocol = ''
-            self.server_extensions = ''
+            self.client_key = ""
+            self.client_protocol = ""
+            self.client_extensions = ""
+            self.server_accept = ""
+            self.server_protocol = ""
+            self.server_extensions = ""
 
     _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
     # mypy doesn't support update with kwargs
-    _stateobject_attributes.update(dict(
-        messages=List[WebSocketMessage],
-        close_sender=str,
-        close_code=int,
-        close_message=str,
-        close_reason=str,
-        client_key=str,
-        client_protocol=str,
-        client_extensions=str,
-        server_accept=str,
-        server_protocol=str,
-        server_extensions=str,
-        # Do not include handshake_flow, to prevent recursive serialization!
-        # Since mitmproxy-console currently only displays HTTPFlows,
-        # dumping the handshake_flow will include the WebSocketFlow too.
-    ))
+    _stateobject_attributes.update(
+        dict(
+            messages=List[WebSocketMessage],
+            close_sender=str,
+            close_code=int,
+            close_message=str,
+            close_reason=str,
+            client_key=str,
+            client_protocol=str,
+            client_extensions=str,
+            server_accept=str,
+            server_protocol=str,
+            server_extensions=str,
+            # Do not include handshake_flow, to prevent recursive serialization!
+            # Since mitmproxy-console currently only displays HTTPFlows,
+            # dumping the handshake_flow will include the WebSocketFlow too.
+        )
+    )
 
     def get_state(self):
         d = super().get_state()
-        d['close_code'] = int(d['close_code'])  # replace enum with bare int
+        d["close_code"] = int(d["close_code"])  # replace enum with bare int
         return d
 
     @classmethod
@@ -168,4 +193,4 @@ class WebSocketFlow(flow.Flow):
         elif endpoint == self.server_conn:
             self._inject_messages_server.put(payload)
         else:
-            raise ValueError('Invalid endpoint')
+            raise ValueError("Invalid endpoint")

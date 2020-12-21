@@ -35,7 +35,9 @@ class TTunnelLayer(tunnel.TunnelLayer):
     def start_handshake(self) -> layer.CommandGenerator[None]:
         yield SendData(self.tunnel_connection, b"handshake-hello")
 
-    def receive_handshake_data(self, data: bytes) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
+    def receive_handshake_data(
+        self, data: bytes
+    ) -> layer.CommandGenerator[Tuple[bool, Optional[str]]]:
         yield SendData(self.tunnel_connection, data)
         if data == b"handshake-success":
             return True, None
@@ -62,11 +64,11 @@ def test_tunnel_handshake_start(tctx: Context, success):
 
     playbook = Playbook(tl, logs=True)
     (
-            playbook
-            << SendData(server, b"handshake-hello")
-            >> DataReceived(tctx.client, b"client-hello")
-            >> DataReceived(server, b"handshake-" + success.encode())
-            << SendData(server, b"handshake-" + success.encode())
+        playbook
+        << SendData(server, b"handshake-hello")
+        >> DataReceived(tctx.client, b"client-hello")
+        >> DataReceived(server, b"handshake-" + success.encode())
+        << SendData(server, b"handshake-" + success.encode())
     )
     if success == "success":
         playbook << Log("Got start. Server state: OPEN")
@@ -91,40 +93,40 @@ def test_tunnel_handshake_command(tctx: Context, success):
 
     playbook = Playbook(tl, logs=True)
     (
-            playbook
-            << Log("Got start. Server state: CLOSED")
-            >> DataReceived(tctx.client, b"client-hello")
-            << SendData(tctx.client, b"client-hello-reply")
-            >> DataReceived(tctx.client, b"open")
-            << OpenConnection(server)
-            >> reply(None)
-            << SendData(server, b"handshake-hello")
-            >> DataReceived(server, b"handshake-" + success.encode())
-            << SendData(server, b"handshake-" + success.encode())
+        playbook
+        << Log("Got start. Server state: CLOSED")
+        >> DataReceived(tctx.client, b"client-hello")
+        << SendData(tctx.client, b"client-hello-reply")
+        >> DataReceived(tctx.client, b"open")
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(server, b"handshake-hello")
+        >> DataReceived(server, b"handshake-" + success.encode())
+        << SendData(server, b"handshake-" + success.encode())
     )
     if success == "success":
         assert (
-                playbook
-                << Log(f"Opened: err=None. Server state: OPEN")
-                >> DataReceived(server, b"tunneled-server-hello")
-                << SendData(server, b"tunneled-server-hello-reply")
-                >> ConnectionClosed(tctx.client)
-                << Log("Got client close.")
-                << CloseConnection(tctx.client)
+            playbook
+            << Log(f"Opened: err=None. Server state: OPEN")
+            >> DataReceived(server, b"tunneled-server-hello")
+            << SendData(server, b"tunneled-server-hello-reply")
+            >> ConnectionClosed(tctx.client)
+            << Log("Got client close.")
+            << CloseConnection(tctx.client)
         )
         assert tl.tunnel_state is tunnel.TunnelState.OPEN
         assert (
-                playbook
-                >> ConnectionClosed(server)
-                << Log("Got server close.")
-                << CloseConnection(server)
+            playbook
+            >> ConnectionClosed(server)
+            << Log("Got server close.")
+            << CloseConnection(server)
         )
         assert tl.tunnel_state is tunnel.TunnelState.CLOSED
     else:
         assert (
-                playbook
-                << CloseConnection(server)
-                << Log("Opened: err='handshake error'. Server state: CLOSED")
+            playbook
+            << CloseConnection(server)
+            << Log("Opened: err='handshake error'. Server state: CLOSED")
         )
         assert tl.tunnel_state is tunnel.TunnelState.CLOSED
 
@@ -140,28 +142,28 @@ def test_tunnel_default_impls(tctx: Context):
     tl.child_layer = TChildLayer(tctx)
     playbook = Playbook(tl, logs=True)
     assert (
-            playbook
-            << Log("Got start. Server state: OPEN")
-            >> DataReceived(server, b"server-hello")
-            << SendData(server, b"server-hello-reply")
+        playbook
+        << Log("Got start. Server state: OPEN")
+        >> DataReceived(server, b"server-hello")
+        << SendData(server, b"server-hello-reply")
     )
     assert tl.tunnel_state is tunnel.TunnelState.OPEN
     assert (
-            playbook
-            >> ConnectionClosed(server)
-            << Log("Got server close.")
-            << CloseConnection(server)
+        playbook
+        >> ConnectionClosed(server)
+        << Log("Got server close.")
+        << CloseConnection(server)
     )
     assert tl.tunnel_state is tunnel.TunnelState.CLOSED
 
     assert (
-            playbook
-            >> DataReceived(tctx.client, b"open")
-            << OpenConnection(server)
-            >> reply(None)
-            << Log("Opened: err=None. Server state: OPEN")
-            >> DataReceived(server, b"half-close")
-            << CloseConnection(server, half_close=True)
+        playbook
+        >> DataReceived(tctx.client, b"open")
+        << OpenConnection(server)
+        >> reply(None)
+        << Log("Opened: err=None. Server state: OPEN")
+        >> DataReceived(server, b"half-close")
+        << CloseConnection(server, half_close=True)
     )
 
 
@@ -173,16 +175,16 @@ def test_tunnel_openconnection_error(tctx: Context):
 
     playbook = Playbook(tl, logs=True)
     assert (
-            playbook
-            << Log("Got start. Server state: CLOSED")
-            >> DataReceived(tctx.client, b"open")
-            << OpenConnection(server)
+        playbook
+        << Log("Got start. Server state: CLOSED")
+        >> DataReceived(tctx.client, b"open")
+        << OpenConnection(server)
     )
     assert tl.tunnel_state is tunnel.TunnelState.ESTABLISHING
     assert (
-            playbook
-            >> reply("IPoAC packet dropped.")
-            << Log("Opened: err='IPoAC packet dropped.'. Server state: CLOSED")
+        playbook
+        >> reply("IPoAC packet dropped.")
+        << Log("Opened: err='IPoAC packet dropped.'. Server state: CLOSED")
     )
     assert tl.tunnel_state is tunnel.TunnelState.CLOSED
 
@@ -197,26 +199,25 @@ def test_disconnect_during_handshake_start(tctx: Context, disconnect):
 
     playbook = Playbook(tl, logs=True)
 
-    assert (
-            playbook
-            << SendData(server, b"handshake-hello")
-    )
+    assert playbook << SendData(server, b"handshake-hello")
     if disconnect == "client":
         assert (
-                playbook
-                >> ConnectionClosed(tctx.client)
-                >> ConnectionClosed(server)  # proxyserver will cancel all other connections as well.
-                << CloseConnection(server)
-                << Log("Got start. Server state: CLOSED")
-                << Log("Got client close.")
-                << CloseConnection(tctx.client)
+            playbook
+            >> ConnectionClosed(tctx.client)
+            >> ConnectionClosed(
+                server
+            )  # proxyserver will cancel all other connections as well.
+            << CloseConnection(server)
+            << Log("Got start. Server state: CLOSED")
+            << Log("Got client close.")
+            << CloseConnection(tctx.client)
         )
     else:
         assert (
-                playbook
-                >> ConnectionClosed(server)
-                << CloseConnection(server)
-                << Log("Got start. Server state: CLOSED")
+            playbook
+            >> ConnectionClosed(server)
+            << CloseConnection(server)
+            << Log("Got start. Server state: CLOSED")
         )
 
 
@@ -229,31 +230,37 @@ def test_disconnect_during_handshake_command(tctx: Context, disconnect):
 
     playbook = Playbook(tl, logs=True)
     assert (
-            playbook
-            << Log("Got start. Server state: CLOSED")
-            >> DataReceived(tctx.client, b"client-hello")
-            << SendData(tctx.client, b"client-hello-reply")
-            >> DataReceived(tctx.client, b"open")
-            << OpenConnection(server)
-            >> reply(None)
-            << SendData(server, b"handshake-hello")
+        playbook
+        << Log("Got start. Server state: CLOSED")
+        >> DataReceived(tctx.client, b"client-hello")
+        << SendData(tctx.client, b"client-hello-reply")
+        >> DataReceived(tctx.client, b"open")
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(server, b"handshake-hello")
     )
     if disconnect == "client":
         assert (
-                playbook
-                >> ConnectionClosed(tctx.client)
-                >> ConnectionClosed(server)  # proxyserver will cancel all other connections as well.
-                << CloseConnection(server)
-                << Log("Opened: err='connection closed without notice'. Server state: CLOSED")
-                << Log("Got client close.")
-                << CloseConnection(tctx.client)
+            playbook
+            >> ConnectionClosed(tctx.client)
+            >> ConnectionClosed(
+                server
+            )  # proxyserver will cancel all other connections as well.
+            << CloseConnection(server)
+            << Log(
+                "Opened: err='connection closed without notice'. Server state: CLOSED"
+            )
+            << Log("Got client close.")
+            << CloseConnection(tctx.client)
         )
     else:
         assert (
-                playbook
-                >> ConnectionClosed(server)
-                << CloseConnection(server)
-                << Log("Opened: err='connection closed without notice'. Server state: CLOSED")
+            playbook
+            >> ConnectionClosed(server)
+            << CloseConnection(server)
+            << Log(
+                "Opened: err='connection closed without notice'. Server state: CLOSED"
+            )
         )
 
 

@@ -50,11 +50,11 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
         if resp:
             parts.append(("HTTP Version", resp.http_version))
         if sc.alpn_proto_negotiated:
-            parts.append(("ALPN", strutils.bytes_to_escaped_str(sc.alpn_proto_negotiated)))
+            parts.append(
+                ("ALPN", strutils.bytes_to_escaped_str(sc.alpn_proto_negotiated))
+            )
 
-        text.extend(
-            common.format_keyvals(parts, indent=4)
-        )
+        text.extend(common.format_keyvals(parts, indent=4))
 
         c = sc.cert
         if c:
@@ -69,38 +69,30 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
                     "Subject",
                     urwid.BoxAdapter(
                         urwid.ListBox(
-                            common.format_keyvals(
-                                c.subject,
-                                key_format="highlight"
-                            )
+                            common.format_keyvals(c.subject, key_format="highlight")
                         ),
-                        len(c.subject)
-                    )
+                        len(c.subject),
+                    ),
                 ),
                 (
                     "Issuer",
                     urwid.BoxAdapter(
                         urwid.ListBox(
-                            common.format_keyvals(
-                                c.issuer,
-                                key_format="highlight"
-                            )
+                            common.format_keyvals(c.issuer, key_format="highlight")
                         ),
-                        len(c.issuer)
-                    )
-                )
+                        len(c.issuer),
+                    ),
+                ),
             ]
 
             if c.altnames:
                 parts.append(
                     (
                         "Alt names",
-                        ", ".join(strutils.bytes_to_escaped_str(x) for x in c.altnames)
+                        ", ".join(strutils.bytes_to_escaped_str(x) for x in c.altnames),
                     )
                 )
-            text.extend(
-                common.format_keyvals(parts, indent=4)
-            )
+            text.extend(common.format_keyvals(parts, indent=4))
 
     if cc is not None:
         text.append(urwid.Text([("head", "Client Connection:")]))
@@ -113,94 +105,59 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
         if cc.tls_version:
             parts.append(("TLS Version", cc.tls_version))
         if cc.sni:
-            parts.append(("Server Name Indication",
-                          strutils.bytes_to_escaped_str(strutils.always_bytes(cc.sni, "idna"))))
+            parts.append(
+                (
+                    "Server Name Indication",
+                    strutils.bytes_to_escaped_str(
+                        strutils.always_bytes(cc.sni, "idna")
+                    ),
+                )
+            )
         if cc.cipher_name:
             parts.append(("Cipher Name", cc.cipher_name))
         if cc.alpn_proto_negotiated:
-            parts.append(("ALPN", strutils.bytes_to_escaped_str(cc.alpn_proto_negotiated)))
+            parts.append(
+                ("ALPN", strutils.bytes_to_escaped_str(cc.alpn_proto_negotiated))
+            )
 
-        text.extend(
-            common.format_keyvals(parts, indent=4)
-        )
+        text.extend(common.format_keyvals(parts, indent=4))
 
     parts = []
 
     if cc is not None and cc.timestamp_start:
         parts.append(
-            (
-                "Client conn. established",
-                maybe_timestamp(cc, "timestamp_start")
-            )
+            ("Client conn. established", maybe_timestamp(cc, "timestamp_start"))
         )
         if cc.tls_established:
             parts.append(
                 (
                     "Client conn. TLS handshake",
-                    maybe_timestamp(cc, "timestamp_tls_setup")
+                    maybe_timestamp(cc, "timestamp_tls_setup"),
                 )
             )
-        parts.append(
-            (
-                "Client conn. closed",
-                maybe_timestamp(cc, "timestamp_end")
-            )
-        )
+        parts.append(("Client conn. closed", maybe_timestamp(cc, "timestamp_end")))
 
     if sc is not None and sc.timestamp_start:
+        parts.append(("Server conn. initiated", maybe_timestamp(sc, "timestamp_start")))
         parts.append(
-            (
-                "Server conn. initiated",
-                maybe_timestamp(sc, "timestamp_start")
-            )
-        )
-        parts.append(
-            (
-                "Server conn. TCP handshake",
-                maybe_timestamp(sc, "timestamp_tcp_setup")
-            )
+            ("Server conn. TCP handshake", maybe_timestamp(sc, "timestamp_tcp_setup"))
         )
         if sc.tls_established:
             parts.append(
                 (
                     "Server conn. TLS handshake",
-                    maybe_timestamp(sc, "timestamp_tls_setup")
+                    maybe_timestamp(sc, "timestamp_tls_setup"),
                 )
             )
-        parts.append(
-            (
-                "Server conn. closed",
-                maybe_timestamp(sc, "timestamp_end")
-            )
-        )
+        parts.append(("Server conn. closed", maybe_timestamp(sc, "timestamp_end")))
 
     if req is not None and req.timestamp_start:
-        parts.append(
-            (
-                "First request byte",
-                maybe_timestamp(req, "timestamp_start")
-            )
-        )
-        parts.append(
-            (
-                "Request complete",
-                maybe_timestamp(req, "timestamp_end")
-            )
-        )
+        parts.append(("First request byte", maybe_timestamp(req, "timestamp_start")))
+        parts.append(("Request complete", maybe_timestamp(req, "timestamp_end")))
 
     if resp is not None and resp.timestamp_start:
-        parts.append(
-            (
-                "First response byte",
-                maybe_timestamp(resp, "timestamp_start")
-            )
-        )
-        parts.append(
-            (
-                "Response complete",
-                maybe_timestamp(resp, "timestamp_end")
-            )
-        )
+        parts.append(("First response byte", maybe_timestamp(resp, "timestamp_start")))
+        parts.append(("Response complete", maybe_timestamp(resp, "timestamp_end")))
 
     if parts:
         # sort operations by timestamp

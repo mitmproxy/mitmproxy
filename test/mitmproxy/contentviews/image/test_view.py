@@ -14,4 +14,7 @@ def test_view_image(tdata):
             viewname, lines = v(f.read())
             assert img.split(".")[-1].upper() in viewname
 
-    assert v(b"flibble") == ('Unknown Image', [[('header', 'Image Format: '), ('text', 'unknown')]])
+    assert v(b"flibble") == (
+        "Unknown Image",
+        [[("header", "Image Format: "), ("text", "unknown")]],
+    )

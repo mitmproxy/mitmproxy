@@ -9,6 +9,7 @@ import time
 # Certificate for client connection is generated in dummy_cert() in certs.py. Monkeypatching
 # the function to generate test cases for SSL Pinning.
 
+
 def monkey_dummy_cert(privkey, cacert, commonname, sans):
     ss = []
     for i in sans:
@@ -42,7 +43,7 @@ def monkey_dummy_cert(privkey, cacert, commonname, sans):
         if ctx.options.certwrongCN:
             # append an extra char to make certs common name different than original one.
             # APpending a char in the end of the domain name.
-            new_cn = commonname + b'm'
+            new_cn = commonname + b"m"
             cert.get_subject().CN = new_cn
 
         else:
@@ -52,7 +53,8 @@ def monkey_dummy_cert(privkey, cacert, commonname, sans):
     if ss:
         cert.set_version(2)
         cert.add_extensions(
-            [OpenSSL.crypto.X509Extension(b"subjectAltName", False, ss)])
+            [OpenSSL.crypto.X509Extension(b"subjectAltName", False, ss)]
+        )
         cert.set_pubkey(cacert.get_pubkey())
         cert.sign(privkey, "sha256")
         return Cert(cert)
@@ -61,23 +63,29 @@ def monkey_dummy_cert(privkey, cacert, commonname, sans):
 class CheckSSLPinning:
     def load(self, loader):
         loader.add_option(
-            "certbeginon", bool, False,
+            "certbeginon",
+            bool,
+            False,
             """
             Sets SSL Certificate's 'Begins On' time in future.
-            """
+            """,
         )
         loader.add_option(
-            "certexpire", bool, False,
+            "certexpire",
+            bool,
+            False,
             """
             Sets SSL Certificate's 'Expires On' time in the past.
-            """
+            """,
         )
 
         loader.add_option(
-            "certwrongCN", bool, False,
+            "certwrongCN",
+            bool,
+            False,
             """
             Sets SSL Certificate's CommonName(CN) different from the domain name.
-            """
+            """,
         )
 
     def clientconnect(self, layer):

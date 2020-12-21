@@ -4,11 +4,7 @@ from mitmproxy.test import tflow, taddons
 
 class TestConnection:
     def test_basic(self):
-        c = context.Client(
-            ("127.0.0.1", 52314),
-            ("127.0.0.1", 8080),
-            1607780791
-        )
+        c = context.Client(("127.0.0.1", 52314), ("127.0.0.1", 8080), 1607780791)
         assert not c.tls_established
         c.timestamp_tls_setup = 1607780792
         assert c.tls_established
@@ -30,11 +26,7 @@ class TestConnection:
 
 class TestClient:
     def test_basic(self):
-        c = context.Client(
-            ("127.0.0.1", 52314),
-            ("127.0.0.1", 8080),
-            1607780791
-        )
+        c = context.Client(("127.0.0.1", 52314), ("127.0.0.1", 8080), 1607780791)
         assert repr(c)
 
     def test_state(self):
@@ -69,10 +61,7 @@ class TestServer:
 
 def test_context():
     with taddons.context() as tctx:
-        c = context.Context(
-            tflow.tclient_conn(),
-            tctx.options
-        )
+        c = context.Context(tflow.tclient_conn(), tctx.options)
         assert repr(c)
         c.layers.append(1)
         c2 = c.fork()

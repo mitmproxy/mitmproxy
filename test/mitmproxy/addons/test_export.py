@@ -15,36 +15,36 @@ from unittest import mock
 @pytest.fixture
 def get_request():
     return tflow.tflow(
-        req=tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz"))
+        req=tutils.treq(method=b"GET", content=b"", path=b"/path?a=foo&a=bar&b=baz")
+    )
 
 
 @pytest.fixture
 def get_response():
     return tflow.tflow(
-        resp=tutils.tresp(status_code=404, content=b"Test Response Body"))
+        resp=tutils.tresp(status_code=404, content=b"Test Response Body")
+    )
 
 
 @pytest.fixture
 def get_flow():
     return tflow.tflow(
-        req=tutils.treq(method=b'GET', content=b'', path=b"/path?a=foo&a=bar&b=baz"),
-        resp=tutils.tresp(status_code=404, content=b"Test Response Body"))
+        req=tutils.treq(method=b"GET", content=b"", path=b"/path?a=foo&a=bar&b=baz"),
+        resp=tutils.tresp(status_code=404, content=b"Test Response Body"),
+    )
 
 
 @pytest.fixture
 def post_request():
     return tflow.tflow(
-        req=tutils.treq(method=b'POST', headers=(), content=bytes(range(256))))
+        req=tutils.treq(method=b"POST", headers=(), content=bytes(range(256)))
+    )
 
 
 @pytest.fixture
 def patch_request():
     return tflow.tflow(
-        req=tutils.treq(
-            method=b'PATCH',
-            content=b'content',
-            path=b"/path?query=param"
-        )
+        req=tutils.treq(method=b"PATCH", content=b"content", path=b"/path?query=param")
     )
 
 
@@ -55,11 +55,13 @@ def tcp_flow():
 
 class TestExportCurlCommand:
     def test_get(self, get_request):
-        result = """curl -H 'header: qvalue' 'http://address:22/path?a=foo&a=bar&b=baz'"""
+        result = (
+            """curl -H 'header: qvalue' 'http://address:22/path?a=foo&a=bar&b=baz'"""
+        )
         assert export.curl_command(get_request) == result
 
     def test_post(self, post_request):
-        post_request.request.content = b'nobinarysupport'
+        post_request.request.content = b"nobinarysupport"
         result = "curl -X POST http://address:22/path -d nobinarysupport"
         assert export.curl_command(post_request) == result
 
@@ -80,14 +82,10 @@ class TestExportCurlCommand:
 
     def test_escape_single_quotes_in_body(self):
         request = tflow.tflow(
-            req=tutils.treq(
-                method=b'POST',
-                headers=(),
-                content=b"'&#"
-            )
+            req=tutils.treq(method=b"POST", headers=(), content=b"'&#")
         )
         command = export.curl_command(request)
-        assert shlex.split(command)[-2] == '-d'
+        assert shlex.split(command)[-2] == "-d"
         assert shlex.split(command)[-1] == "'&#"
 
     def test_strip_unnecessary(self, get_request):
@@ -101,11 +99,13 @@ class TestExportCurlCommand:
 
 class TestExportHttpieCommand:
     def test_get(self, get_request):
-        result = """http GET 'http://address:22/path?a=foo&a=bar&b=baz' 'header: qvalue'"""
+        result = (
+            """http GET 'http://address:22/path?a=foo&a=bar&b=baz' 'header: qvalue'"""
+        )
         assert export.httpie_command(get_request) == result
 
     def test_post(self, post_request):
-        post_request.request.content = b'nobinarysupport'
+        post_request.request.content = b"nobinarysupport"
         result = "http POST http://address:22/path <<< nobinarysupport"
         assert export.httpie_command(post_request) == result
 
@@ -126,14 +126,10 @@ class TestExportHttpieCommand:
 
     def test_escape_single_quotes_in_body(self):
         request = tflow.tflow(
-            req=tutils.treq(
-                method=b'POST',
-                headers=(),
-                content=b"'&#"
-            )
+            req=tutils.treq(method=b"POST", headers=(), content=b"'&#")
         )
         command = export.httpie_command(request)
-        assert shlex.split(command)[-2] == '<<<'
+        assert shlex.split(command)[-2] == "<<<"
         assert shlex.split(command)[-1] == "'&#"
 
 
@@ -147,12 +143,12 @@ class TestRaw:
         assert b"content-length: 0" in export.raw_request(get_request)
 
     def test_get_response_present(self, get_response):
-        delattr(get_response, 'request')
+        delattr(get_response, "request")
         assert b"header-response: svalue" in export.raw(get_response)
 
     def test_missing_both(self, get_request):
-        delattr(get_request, 'request')
-        delattr(get_request, 'response')
+        delattr(get_request, "request")
+        delattr(get_request, "response")
         with pytest.raises(exceptions.CommandError):
             export.raw(get_request)
 
@@ -167,7 +163,7 @@ class TestRawRequest:
         assert b"content-length: 0" in export.raw_request(get_request)
 
     def test_no_request(self, get_response):
-        delattr(get_response, 'request')
+        delattr(get_response, "request")
         with pytest.raises(exceptions.CommandError):
             export.raw_request(get_response)
 
@@ -219,11 +215,14 @@ def test_export(tmpdir):
         os.unlink(f)
 
 
-@pytest.mark.parametrize("exception, log_message", [
-    (PermissionError, "Permission denied"),
-    (IsADirectoryError, "Is a directory"),
-    (FileNotFoundError, "No such file or directory")
-])
+@pytest.mark.parametrize(
+    "exception, log_message",
+    [
+        (PermissionError, "Permission denied"),
+        (IsADirectoryError, "Is a directory"),
+        (FileNotFoundError, "No such file or directory"),
+    ],
+)
 @pytest.mark.asyncio
 async def test_export_open(exception, log_message, tmpdir):
     f = str(tmpdir.join("path"))
@@ -242,25 +241,26 @@ async def test_clip(tmpdir):
         with pytest.raises(exceptions.CommandError):
             e.clip("nonexistent", tflow.tflow(resp=True))
 
-        with mock.patch('pyperclip.copy') as pc:
+        with mock.patch("pyperclip.copy") as pc:
             e.clip("raw_request", tflow.tflow(resp=True))
             assert pc.called
 
-        with mock.patch('pyperclip.copy') as pc:
+        with mock.patch("pyperclip.copy") as pc:
             e.clip("raw_response", tflow.tflow(resp=True))
             assert pc.called
 
-        with mock.patch('pyperclip.copy') as pc:
+        with mock.patch("pyperclip.copy") as pc:
             e.clip("curl", tflow.tflow(resp=True))
             assert pc.called
 
-        with mock.patch('pyperclip.copy') as pc:
+        with mock.patch("pyperclip.copy") as pc:
             e.clip("httpie", tflow.tflow(resp=True))
             assert pc.called
 
-        with mock.patch('pyperclip.copy') as pc:
-            log_message = "Pyperclip could not find a " \
-                          "copy/paste mechanism for your system."
+        with mock.patch("pyperclip.copy") as pc:
+            log_message = (
+                "Pyperclip could not find a " "copy/paste mechanism for your system."
+            )
             pc.side_effect = pyperclip.PyperclipException(log_message)
             e.clip("raw_request", tflow.tflow(resp=True))
             assert await tctx.master.await_log(log_message, level="error")

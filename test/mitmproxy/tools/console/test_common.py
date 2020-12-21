@@ -14,7 +14,9 @@ def test_format_flow():
     for f in flows:
         for render_mode in common.RenderMode:
             assert common.format_flow(f, render_mode=render_mode)
-            assert common.format_flow(f, render_mode=render_mode, hostheader=True, focused=False)
+            assert common.format_flow(
+                f, render_mode=render_mode, hostheader=True, focused=False
+            )
 
 
 def test_format_keyvals():
@@ -27,14 +29,9 @@ def test_format_keyvals():
     )
     wrapped = urwid.BoxAdapter(
         urwid.ListBox(
-            urwid.SimpleFocusListWalker(
-                common.format_keyvals([("foo", "bar")])
-            )
-        ), 1
+            urwid.SimpleFocusListWalker(common.format_keyvals([("foo", "bar")]))
+        ),
+        1,
     )
     assert wrapped.render((30,))
-    assert common.format_keyvals(
-        [
-            ("aa", wrapped)
-        ]
-    )
+    assert common.format_keyvals([("aa", wrapped)])

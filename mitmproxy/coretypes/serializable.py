@@ -2,7 +2,7 @@ import abc
 import uuid
 from typing import Type, TypeVar
 
-T = TypeVar('T', bound='Serializable')
+T = TypeVar("T", bound="Serializable")
 
 
 class Serializable(metaclass=abc.ABCMeta):

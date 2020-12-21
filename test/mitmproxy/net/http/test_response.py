@@ -31,6 +31,7 @@ class TestResponseCore:
     """
     Tests for addons and the attributes that are directly proxied from the data structure
     """
+
     def test_repr(self):
         response = tresp()
         assert repr(response) == "Response(200, unknown content type, 7b)"
@@ -77,7 +78,7 @@ class TestResponseCore:
         resp.reason = b"DEF"
         assert resp.data.reason == b"DEF"
 
-        resp.data.reason = b'cr\xe9e'
+        resp.data.reason = b"cr\xe9e"
         assert resp.reason == "crée"
 
 
@@ -85,6 +86,7 @@ class TestResponseUtils:
     """
     Tests for additional convenience methods.
     """
+
     def test_get_cookies_none(self):
         resp = tresp()
         resp.headers = Headers()
@@ -120,7 +122,9 @@ class TestResponseUtils:
 
     def test_get_cookies_no_value(self):
         resp = tresp()
-        resp.headers = Headers(set_cookie="cookiename=; Expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/")
+        resp.headers = Headers(
+            set_cookie="cookiename=; Expires=Thu, 01-Jan-1970 00:00:01 GMT; path=/"
+        )
         result = resp.cookies
         assert len(result) == 1
         assert "cookiename" in result
@@ -129,10 +133,12 @@ class TestResponseUtils:
 
     def test_get_cookies_twocookies(self):
         resp = tresp()
-        resp.headers = Headers([
-            [b"Set-Cookie", b"cookiename=cookievalue"],
-            [b"Set-Cookie", b"othercookie=othervalue"]
-        ])
+        resp.headers = Headers(
+            [
+                [b"Set-Cookie", b"cookiename=cookievalue"],
+                [b"Set-Cookie", b"othercookie=othervalue"],
+            ]
+        )
         result = resp.cookies
         assert len(result) == 2
         assert "cookiename" in result
@@ -145,7 +151,10 @@ class TestResponseUtils:
         resp.cookies["foo"] = ("bar", {})
         assert len(resp.cookies) == 1
         assert resp.cookies["foo"] == ("bar", CookieAttrs())
-        resp.cookies = [["one", ("uno", CookieAttrs())], ["two", ("due", CookieAttrs())]]
+        resp.cookies = [
+            ["one", ("uno", CookieAttrs())],
+            ["two", ("due", CookieAttrs())],
+        ]
         assert list(resp.cookies.keys()) == ["one", "two"]
 
     def test_refresh(self):
@@ -168,6 +177,6 @@ class TestResponseUtils:
         # Cookie refreshing is tested in test_cookies, we just make sure that it's triggered here.
         assert cookie != r.headers["set-cookie"]
 
-        with mock.patch('mitmproxy.net.http.cookies.refresh_set_cookie_header') as m:
+        with mock.patch("mitmproxy.net.http.cookies.refresh_set_cookie_header") as m:
             m.side_effect = ValueError
             r.refresh(n)

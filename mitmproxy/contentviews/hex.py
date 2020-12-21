@@ -8,11 +8,7 @@ class ViewHex(base.View):
     @staticmethod
     def _format(data):
         for offset, hexa, s in strutils.hexdump(data):
-            yield [
-                ("offset", offset + " "),
-                ("text", hexa + "   "),
-                ("text", s)
-            ]
+            yield [("offset", offset + " "), ("text", hexa + "   "), ("text", s)]
 
     def __call__(self, data, **metadata):
         return "Hex", self._format(data)

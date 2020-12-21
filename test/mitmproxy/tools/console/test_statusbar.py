@@ -27,7 +27,7 @@ def test_statusbar(monkeypatch):
         mode="transparent",
     )
 
-    m.options.update(view_order='url', console_focus_follow=True)
+    m.options.update(view_order="url", console_focus_follow=True)
     monkeypatch.setattr(m.addons.get("clientplayback"), "count", lambda: 42)
     monkeypatch.setattr(m.addons.get("serverplayback"), "count", lambda: 42)
     monkeypatch.setattr(statusbar.StatusBar, "refresh", lambda x: None)
@@ -36,17 +36,28 @@ def test_statusbar(monkeypatch):
     assert bar.ib._w
 
 
-@pytest.mark.parametrize("message,ready_message", [
-    ("", [(None, ""), ("warn", "")]),
-    (("info", "Line fits into statusbar"), [("info", "Line fits into statusbar"),
-                                            ("warn", "")]),
-    ("Line doesn't fit into statusbar", [(None, "Line doesn'\u2026"),
-                                         ("warn", "(more in eventlog)")]),
-    (("alert", "Two lines.\nFirst fits"), [("alert", "Two lines."),
-                                           ("warn", "(more in eventlog)")]),
-    ("Two long lines\nFirst doesn't fit", [(None, "Two long li\u2026"),
-                                           ("warn", "(more in eventlog)")])
-])
+@pytest.mark.parametrize(
+    "message,ready_message",
+    [
+        ("", [(None, ""), ("warn", "")]),
+        (
+            ("info", "Line fits into statusbar"),
+            [("info", "Line fits into statusbar"), ("warn", "")],
+        ),
+        (
+            "Line doesn't fit into statusbar",
+            [(None, "Line doesn'\u2026"), ("warn", "(more in eventlog)")],
+        ),
+        (
+            ("alert", "Two lines.\nFirst fits"),
+            [("alert", "Two lines."), ("warn", "(more in eventlog)")],
+        ),
+        (
+            "Two long lines\nFirst doesn't fit",
+            [(None, "Two long li\u2026"), ("warn", "(more in eventlog)")],
+        ),
+    ],
+)
 def test_shorten_message(message, ready_message):
     o = options.Options()
     m = master.ConsoleMaster(o)

@@ -29,9 +29,7 @@ def request(flow: http.HTTPFlow):
         # HTTP 2+ supports trailers on all requests/responses
 
         flow.request.headers["trailer"] = "x-my-injected-trailer-header"
-        flow.request.trailers = Headers([
-            (b"x-my-injected-trailer-header", b"foobar")
-        ])
+        flow.request.trailers = Headers([(b"x-my-injected-trailer-header", b"foobar")])
         print("Injected a new request trailer...", flow.request.headers["trailer"])
 
 
@@ -48,7 +46,5 @@ def response(flow: http.HTTPFlow):
             flow.response.headers["transfer-encoding"] = "chunked"
 
         flow.response.headers["trailer"] = "x-my-injected-trailer-header"
-        flow.response.trailers = Headers([
-            (b"x-my-injected-trailer-header", b"foobar")
-        ])
+        flow.response.trailers = Headers([(b"x-my-injected-trailer-header", b"foobar")])
         print("Injected a new response trailer...", flow.response.headers["trailer"])

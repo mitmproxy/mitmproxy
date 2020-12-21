@@ -19,7 +19,6 @@ class MockParser(argparse.ArgumentParser):
 
 
 class TestProcessProxyOptions:
-
     def p(self, *args):
         parser = MockParser()
         opts = options.Options()
@@ -38,13 +37,10 @@ class TestProcessProxyOptions:
 
     def test_certs(self, tdata):
         with pytest.raises(Exception, match="ambiguous option"):
-            self.assert_noerr(
-                "--cert",
-                tdata.path("mitmproxy/data/testkey.pem"))
+            self.assert_noerr("--cert", tdata.path("mitmproxy/data/testkey.pem"))
 
 
 class TestDummyServer:
-
     def test_simple(self):
         d = DummyServer(None)
         d.set_channel(None)

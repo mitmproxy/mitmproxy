@@ -15,10 +15,7 @@ PlaybookEntry = typing.Union[commands.Command, events.Event]
 PlaybookEntryList = typing.List[PlaybookEntry]
 
 
-def _eq(
-        a: PlaybookEntry,
-        b: PlaybookEntry
-) -> bool:
+def _eq(a: PlaybookEntry, b: PlaybookEntry) -> bool:
     """Compare two commands/events, and possibly update placeholders."""
     if type(a) != type(b):
         return False
@@ -39,7 +36,9 @@ def _eq(
             try:
                 x = x.setdefault(y)
             except TypeError as e:
-                raise TypeError(f"Placeholder type error for {type(a).__name__}.{k}: {e}")
+                raise TypeError(
+                    f"Placeholder type error for {type(a).__name__}.{k}: {e}"
+                )
         if x != y:
             return False
 
@@ -47,28 +46,30 @@ def _eq(
 
 
 def eq(
-        a: typing.Union[PlaybookEntry, typing.Iterable[PlaybookEntry]],
-        b: typing.Union[PlaybookEntry, typing.Iterable[PlaybookEntry]]
+    a: typing.Union[PlaybookEntry, typing.Iterable[PlaybookEntry]],
+    b: typing.Union[PlaybookEntry, typing.Iterable[PlaybookEntry]],
 ):
     """
     Compare an indiviual event/command or a list of events/commands.
     """
-    if isinstance(a, collections.abc.Iterable) and isinstance(b, collections.abc.Iterable):
-        return all(
-            _eq(x, y) for x, y in itertools.zip_longest(a, b)
-        )
+    if isinstance(a, collections.abc.Iterable) and isinstance(
+        b, collections.abc.Iterable
+    ):
+        return all(_eq(x, y) for x, y in itertools.zip_longest(a, b))
     return _eq(a, b)
 
 
 def _fmt_entry(x: PlaybookEntry):
     arrow = ">>" if isinstance(x, events.Event) else "<<"
     x = str(x)
-    x = re.sub('Placeholder:None', '<unset placeholder>', x, flags=re.IGNORECASE)
-    x = re.sub('Placeholder:', '', x, flags=re.IGNORECASE)
+    x = re.sub("Placeholder:None", "<unset placeholder>", x, flags=re.IGNORECASE)
+    x = re.sub("Placeholder:", "", x, flags=re.IGNORECASE)
     return f"{arrow} {x}"
 
 
-def _merge_sends(lst: typing.List[commands.Command], ignore_hooks: bool, ignore_logs: bool) -> PlaybookEntryList:
+def _merge_sends(
+    lst: typing.List[commands.Command], ignore_hooks: bool, ignore_logs: bool
+) -> PlaybookEntryList:
     current_send = None
     for x in lst:
         if isinstance(x, commands.SendData):
@@ -78,10 +79,8 @@ def _merge_sends(lst: typing.List[commands.Command], ignore_hooks: bool, ignore_
             else:
                 current_send.data += x.data
         else:
-            ignore = (
-                    (ignore_hooks and isinstance(x, commands.Hook))
-                    or
-                    (ignore_logs and isinstance(x, commands.Log))
+            ignore = (ignore_hooks and isinstance(x, commands.Hook)) or (
+                ignore_logs and isinstance(x, commands.Log)
             )
             if not ignore:
                 current_send = None
@@ -116,6 +115,7 @@ class Playbook:
     x2 = list(t.handle_event(events.OpenConnectionReply(x1[-1])))
     assert x2 == []
     """
+
     layer: Layer
     """The base layer"""
     expected: PlaybookEntryList
@@ -130,16 +130,14 @@ class Playbook:
     """If False, the playbook specification doesn't include hooks or hook replies. They are automatically replied to."""
 
     def __init__(
-            self,
-            layer: Layer,
-            hooks: bool = True,
-            logs: bool = False,
-            expected: typing.Optional[PlaybookEntryList] = None,
+        self,
+        layer: Layer,
+        hooks: bool = True,
+        logs: bool = False,
+        expected: typing.Optional[PlaybookEntryList] = None,
     ):
         if expected is None:
-            expected = [
-                events.Start()
-            ]
+            expected = [events.Start()]
 
         self.layer = layer
         self.expected = expected
@@ -162,9 +160,9 @@ class Playbook:
 
         prev = self.expected[-1]
         two_subsequent_sends_to_the_same_remote = (
-                isinstance(c, commands.SendData)
-                and isinstance(prev, commands.SendData)
-                and prev.connection is c.connection
+            isinstance(c, commands.SendData)
+            and isinstance(prev, commands.SendData)
+            and prev.connection is c.connection
         )
         if two_subsequent_sends_to_the_same_remote:
             prev.data += c.data
@@ -198,12 +196,18 @@ class Playbook:
 
                 self.actual.append(x)
                 try:
-                    cmds: typing.List[commands.Command] = list(self.layer.handle_event(x))
+                    cmds: typing.List[commands.Command] = list(
+                        self.layer.handle_event(x)
+                    )
                 except Exception:
                     self.actual.append(_TracebackInPlaybook(traceback.format_exc()))
                     break
 
-                cmds = list(_merge_sends(cmds, ignore_hooks=not self.hooks, ignore_logs=not self.logs))
+                cmds = list(
+                    _merge_sends(
+                        cmds, ignore_hooks=not self.hooks, ignore_logs=not self.logs
+                    )
+                )
 
                 self.actual.extend(cmds)
                 pos = len(self.actual) - len(cmds) - 1
@@ -218,25 +222,24 @@ class Playbook:
                             cmd.connection.state = ConnectionState.CLOSED
                     elif isinstance(cmd, commands.Log):
                         need_to_emulate_log = (
-                                not self.logs and
-                                cmd.level in ("debug", "info") and
-                                (
-                                        pos >= len(self.expected)
-                                        or not isinstance(self.expected[pos], commands.Log)
-                                )
+                            not self.logs
+                            and cmd.level in ("debug", "info")
+                            and (
+                                pos >= len(self.expected)
+                                or not isinstance(self.expected[pos], commands.Log)
+                            )
                         )
                         if need_to_emulate_log:
                             self.expected.insert(pos, cmd)
                     elif isinstance(cmd, commands.Hook) and not self.hooks:
-                        need_to_emulate_hook = (
-                                not self.hooks
-                                and (
-                                        pos >= len(self.expected) or
-                                        (not (
-                                                isinstance(self.expected[pos], commands.Hook)
-                                                and self.expected[pos].name == cmd.name
-                                        ))
+                        need_to_emulate_hook = not self.hooks and (
+                            pos >= len(self.expected)
+                            or (
+                                not (
+                                    isinstance(self.expected[pos], commands.Hook)
+                                    and self.expected[pos].name == cmd.name
                                 )
+                            )
                         )
                         if need_to_emulate_hook:
                             self.expected.insert(pos, cmd)
@@ -244,17 +247,23 @@ class Playbook:
                                 # the current event may still have yielded more events, so we need to insert
                                 # the reply *after* those additional events.
                                 hook_replies.append(events.HookReply(cmd))
-                self.expected = self.expected[:pos + 1] + hook_replies + self.expected[pos + 1:]
+                self.expected = (
+                    self.expected[: pos + 1] + hook_replies + self.expected[pos + 1 :]
+                )
 
-                eq(self.expected[i:], self.actual[i:])  # compare now already to set placeholders
+                eq(
+                    self.expected[i:], self.actual[i:]
+                )  # compare now already to set placeholders
             i += 1
 
         if not eq(self.expected, self.actual):
             self._errored = True
-            diffs = list(difflib.ndiff(
-                [_fmt_entry(x) for x in self.expected],
-                [_fmt_entry(x) for x in self.actual]
-            ))
+            diffs = list(
+                difflib.ndiff(
+                    [_fmt_entry(x) for x in self.expected],
+                    [_fmt_entry(x) for x in self.actual],
+                )
+            )
             if already_asserted:
                 diffs.insert(already_asserted, "==== asserted until here ====")
             diff = "\n".join(diffs)
@@ -267,7 +276,9 @@ class Playbook:
         # complete), so we need to signal if someone forgets to assert and playbooks aren't
         # evaluated.
         is_final_destruct = not hasattr(self, "_errored")
-        if is_final_destruct or (not self._errored and len(self.actual) < len(self.expected)):
+        if is_final_destruct or (
+            not self._errored and len(self.actual) < len(self.expected)
+        ):
             raise RuntimeError("Unfinished playbook!")
 
 
@@ -277,10 +288,10 @@ class reply(events.Event):
     side_effect: typing.Callable[[typing.Any], typing.Any]
 
     def __init__(
-            self,
-            *args,
-            to: typing.Union[commands.Command, int] = -1,
-            side_effect: typing.Callable[[typing.Any], None] = lambda x: None
+        self,
+        *args,
+        to: typing.Union[commands.Command, int] = -1,
+        side_effect: typing.Callable[[typing.Any], None] = lambda x: None,
     ):
         """Utility method to reply to the latest hook in playbooks."""
         assert not args or not isinstance(args[0], commands.Command)
@@ -290,7 +301,7 @@ class reply(events.Event):
 
     def playbook_eval(self, playbook: Playbook) -> events.CommandReply:
         if isinstance(self.to, int):
-            expected = playbook.expected[:playbook.expected.index(self)]
+            expected = playbook.expected[: playbook.expected.index(self)]
             assert abs(self.to) < len(expected)
             to = expected[self.to]
             if not isinstance(to, commands.Command):
@@ -344,7 +355,9 @@ class _Placeholder:
     def setdefault(self, value):
         if self._obj is None:
             if self._cls is not typing.Any and not isinstance(value, self._cls):
-                raise TypeError(f"expected {self._cls.__name__}, got {type(value).__name__}.")
+                raise TypeError(
+                    f"expected {self._cls.__name__}, got {type(value).__name__}."
+                )
             self._obj = value
         return self._obj
 
@@ -359,7 +372,9 @@ T = typing.TypeVar("T")
 
 
 # noinspection PyPep8Naming
-def Placeholder(cls: typing.Type[T] = typing.Any) -> typing.Union[T, typing.Callable[[], T]]:
+def Placeholder(
+    cls: typing.Type[T] = typing.Any,
+) -> typing.Union[T, typing.Callable[[], T]]:
     return _Placeholder(cls)
 
 
@@ -375,6 +390,7 @@ class EchoLayer(Layer):
 
 class RecordLayer(Layer):
     """Layer that records all events but does nothing."""
+
     event_log: typing.List[events.Event]
 
     def __init__(self, context: context.Context) -> None:
@@ -387,13 +403,15 @@ class RecordLayer(Layer):
 
 
 def reply_next_layer(
-        child_layer: typing.Union[typing.Type[Layer], typing.Callable[[context.Context], Layer]],
-        *args,
-        **kwargs
+    child_layer: typing.Union[
+        typing.Type[Layer], typing.Callable[[context.Context], Layer]
+    ],
+    *args,
+    **kwargs,
 ) -> reply:
     """Helper function to simplify the syntax for next_layer events to this:
-        << NextLayerHook(nl)
-        >> reply_next_layer(tutils.EchoLayer)
+    << NextLayerHook(nl)
+    >> reply_next_layer(tutils.EchoLayer)
     """
 
     def set_layer(next_layer: layer.NextLayer) -> None:

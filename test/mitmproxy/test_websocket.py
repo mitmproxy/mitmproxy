@@ -9,7 +9,6 @@ from mitmproxy.test import tflow
 
 
 class TestWebSocketFlow:
-
     def test_copy(self):
         f = tflow.twebsocketflow()
         f.get_state()
@@ -73,9 +72,9 @@ class TestWebSocketFlow:
     def test_repr(self):
         f = tflow.twebsocketflow()
         assert f.message_info(f.messages[0])
-        assert 'WebSocketFlow' in repr(f)
-        assert 'binary message: ' in repr(f.messages[0])
-        assert 'text message: ' in repr(f.messages[1])
+        assert "WebSocketFlow" in repr(f)
+        assert "binary message: " in repr(f.messages[0])
+        assert "text message: " in repr(f.messages[1])
 
     def test_serialize(self):
         b = io.BytesIO()
@@ -92,10 +91,10 @@ class TestWebSocketFlow:
         f = tflow.twebsocketflow()
 
         with pytest.raises(ValueError):
-            f.inject_message(None, 'foobar')
+            f.inject_message(None, "foobar")
 
-        f.inject_message(f.client_conn, 'foobar')
+        f.inject_message(f.client_conn, "foobar")
         assert f._inject_messages_client.qsize() == 1
 
-        f.inject_message(f.server_conn, 'foobar')
+        f.inject_message(f.server_conn, "foobar")
         assert f._inject_messages_client.qsize() == 1

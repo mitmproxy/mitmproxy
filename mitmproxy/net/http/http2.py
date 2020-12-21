@@ -12,10 +12,12 @@ def read_frame(rfile, parse=True):
     Returns a parsed frame and the consumed bytes.
     """
     header = rfile.safe_read(9)
-    length = int(codecs.encode(header[:3], 'hex_codec'), 16)
+    length = int(codecs.encode(header[:3], "hex_codec"), 16)
 
     if length == 4740180:
-        raise exceptions.HttpException("Length field looks more like HTTP/1.1:\n{}".format(rfile.read(-1)))
+        raise exceptions.HttpException(
+            "Length field looks more like HTTP/1.1:\n{}".format(rfile.read(-1))
+        )
 
     body = rfile.safe_read(length)
 
@@ -25,4 +27,4 @@ def read_frame(rfile, parse=True):
     else:
         frame = None
 
-    return frame, b''.join([header, body])
+    return frame, b"".join([header, body])

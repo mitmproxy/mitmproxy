@@ -146,7 +146,7 @@ class TestRequestCore:
 
         h1 = treq(
             headers=((b"host", b"header.example.com"),),
-            authority=b"authority.example.com"
+            authority=b"authority.example.com",
         )
         assert h1.host_header == "header.example.com"
 
@@ -257,7 +257,7 @@ class TestRequestUtils:
         request.query["foo"] = "bar"
         assert request.query["foo"] == "bar"
         assert request.path == "/path?foo=bar"
-        request.query = [('foo', 'bar')]
+        request.query = [("foo", "bar")]
         assert request.query["foo"] == "bar"
         assert request.path == "/path?foo=bar"
 
@@ -270,23 +270,27 @@ class TestRequestUtils:
         request = treq()
         request.headers = Headers(cookie="cookiename=cookievalue")
         assert len(request.cookies) == 1
-        assert request.cookies['cookiename'] == 'cookievalue'
+        assert request.cookies["cookiename"] == "cookievalue"
 
     def test_get_cookies_double(self):
         request = treq()
-        request.headers = Headers(cookie="cookiename=cookievalue;othercookiename=othercookievalue")
+        request.headers = Headers(
+            cookie="cookiename=cookievalue;othercookiename=othercookievalue"
+        )
         result = request.cookies
         assert len(result) == 2
-        assert result['cookiename'] == 'cookievalue'
-        assert result['othercookiename'] == 'othercookievalue'
+        assert result["cookiename"] == "cookievalue"
+        assert result["othercookiename"] == "othercookievalue"
 
     def test_get_cookies_withequalsign(self):
         request = treq()
-        request.headers = Headers(cookie="cookiename=coo=kievalue;othercookiename=othercookievalue")
+        request.headers = Headers(
+            cookie="cookiename=coo=kievalue;othercookiename=othercookievalue"
+        )
         result = request.cookies
         assert len(result) == 2
-        assert result['cookiename'] == 'coo=kievalue'
-        assert result['othercookiename'] == 'othercookievalue'
+        assert result["cookiename"] == "coo=kievalue"
+        assert result["othercookiename"] == "othercookievalue"
 
     def test_set_cookies(self):
         request = treq()
@@ -354,7 +358,7 @@ class TestRequestUtils:
 
     def test_set_urlencoded_form(self):
         request = treq(content=b"\xec\xed")
-        request.urlencoded_form = [('foo', 'bar'), ('rab', 'oof')]
+        request.urlencoded_form = [("foo", "bar"), ("rab", "oof")]
         assert request.headers["Content-Type"] == "application/x-www-form-urlencoded"
         assert request.content
 
@@ -365,12 +369,12 @@ class TestRequestUtils:
         request.headers["Content-Type"] = "multipart/form-data"
         assert list(request.multipart_form.items()) == []
 
-        with mock.patch('mitmproxy.net.http.multipart.decode') as m:
+        with mock.patch("mitmproxy.net.http.multipart.decode") as m:
             m.side_effect = ValueError
             assert list(request.multipart_form.items()) == []
 
     def test_set_multipart_form(self):
         request = treq()
         request.multipart_form = [("file", "shell.jpg"), ("file_size", "1000")]
-        assert request.headers["Content-Type"] == 'multipart/form-data'
+        assert request.headers["Content-Type"] == "multipart/form-data"
         assert request.content is None

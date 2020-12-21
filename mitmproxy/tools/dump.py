@@ -14,7 +14,6 @@ class ErrorCheck:
 
 
 class DumpMaster(master.Master):
-
     def __init__(
         self,
         options: options.Options,
@@ -29,7 +28,5 @@ class DumpMaster(master.Master):
         if with_dumper:
             self.addons.add(dumper.Dumper())
         self.addons.add(
-            keepserving.KeepServing(),
-            readfile.ReadFileStdin(),
-            self.errorcheck
+            keepserving.KeepServing(), readfile.ReadFileStdin(), self.errorcheck
         )
