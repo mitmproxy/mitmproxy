@@ -133,22 +133,6 @@ class Options(optmanager.OptManager):
             """
         )
         self.add_option(
-            "ssl_version_client", str, "secure",
-            """
-            Set supported SSL/TLS versions for client connections. SSLv2, SSLv3
-            and 'all' are INSECURE. Defaults to secure, which is TLS1.0+.
-            """,
-            choices=list(tls.VERSION_CHOICES.keys()),
-        )
-        self.add_option(
-            "ssl_version_server", str, "secure",
-            """
-            Set supported SSL/TLS versions for server connections. SSLv2, SSLv3
-            and 'all' are INSECURE. Defaults to secure, which is TLS1.0+.
-            """,
-            choices=list(tls.VERSION_CHOICES.keys()),
-        )
-        self.add_option(
             "ssl_insecure", bool, False,
             "Do not verify upstream server SSL/TLS certificates."
         )

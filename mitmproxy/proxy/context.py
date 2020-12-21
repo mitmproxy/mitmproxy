@@ -63,7 +63,7 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     cipher: Optional[str] = None
     """The active cipher name as returned by OpenSSL's SSL_CIPHER_get_name"""
     cipher_list: Sequence[str] = ()
-    """Ciphers accepted by the proxy server."""
+    """Ciphers accepted by the proxy server on this connection."""
     tls_version: Optional[str] = None
     sni: Union[bytes, Literal[True], None]
 

@@ -16,6 +16,33 @@ FULL_CLIENT_HELLO_NO_EXTENSIONS = (
     CLIENT_HELLO_NO_EXTENSIONS
 )
 
+
+def test_make_master_secret_logger():
+    assert tls.make_master_secret_logger(None) is None
+    assert isinstance(tls.make_master_secret_logger("filepath"), tls.MasterSecretLogger)
+
+
+"""
+def test_sslkeylogfile(tdata, monkeypatch):
+    keylog = []
+    monkeypatch.setattr(tls, "log_master_secret", lambda conn, secrets: keylog.append(secrets))
+
+    ctx = tls.create_client_context()
+
+    ta = tlsconfig.TlsConfig()
+    with taddons.context(ta) as tctx:
+        ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
+        ctx.server.address = ("example.mitmproxy.org", 443)
+        tctx.configure(ta, ssl_verify_upstream_trusted_ca=tdata.path(
+            "mitmproxy/net/data/verificationcerts/trusted-root.crt"))
+
+        tls_start = tls.TlsStartData(ctx.server, context=ctx)
+        ta.tls_start(tls_start)
+        tssl_client = tls_start.ssl_conn
+        tssl_server = test_tls.SSLTest(server_side=True)
+        assert self.do_handshake(tssl_client, tssl_server)
+"""
+
 """
 class TestMasterSecretLogger(tservers.ServerTestBase):
     handler = EchoHandler
@@ -56,14 +83,14 @@ class TestTLSInvalid:
     def test_invalid_ssl_method_should_fail(self):
         fake_ssl_method = 100500
         with pytest.raises(exceptions.TlsException):
-            tls.create_client_context(method=fake_ssl_method)
+            tls.create_proxy_server_context(method=fake_ssl_method)
 
     def test_alpn_error(self):
         with pytest.raises(exceptions.TlsException, match="must be a function"):
-            tls.create_client_context(alpn_select_callback="foo")
+            tls.create_proxy_server_context(alpn_select_callback="foo")
 
         with pytest.raises(exceptions.TlsException, match="ALPN error"):
-            tls.create_client_context(alpn_select="foo", alpn_select_callback="bar")
+            tls.create_proxy_server_context(alpn_select="foo", alpn_select_callback="bar")
 
 
 def test_is_record_magic():
@@ -74,25 +101,6 @@ def test_is_record_magic():
     assert tls.is_tls_record_magic(b"\x16\x03\x01")
     assert tls.is_tls_record_magic(b"\x16\x03\x02")
     assert tls.is_tls_record_magic(b"\x16\x03\x03")
-
-
-def test_get_client_hello():
-    rfile = io.BufferedReader(io.BytesIO(
-        FULL_CLIENT_HELLO_NO_EXTENSIONS
-    ))
-    assert tls.get_client_hello(rfile)
-
-    rfile = io.BufferedReader(io.BytesIO(
-        FULL_CLIENT_HELLO_NO_EXTENSIONS[:30]
-    ))
-    with pytest.raises(exceptions.TlsProtocolException, match="Unexpected EOF"):
-        tls.get_client_hello(rfile)
-
-    rfile = io.BufferedReader(io.BytesIO(
-        b"GET /"
-    ))
-    with pytest.raises(exceptions.TlsProtocolException, match="Expected TLS record"):
-        tls.get_client_hello(rfile)
 
 
 class TestClientHello:
@@ -133,23 +141,3 @@ class TestClientHello:
             (11, b'\x01\x00'),
             (10, b'\x00\x06\x00\x1d\x00\x17\x00\x18')
         ]
-
-    def test_from_file(self):
-        rfile = io.BufferedReader(io.BytesIO(
-            FULL_CLIENT_HELLO_NO_EXTENSIONS
-        ))
-        assert tls.ClientHello.from_file(rfile)
-
-        rfile = io.BufferedReader(io.BytesIO(
-            b""
-        ))
-        with pytest.raises(exceptions.TlsProtocolException):
-            tls.ClientHello.from_file(rfile)
-
-        rfile = io.BufferedReader(io.BytesIO(
-            b"\x16\x03\x03\x00\x07"  # record layer
-            b"\x01\x00\x00\x03" +  # handshake header
-            b"foo"
-        ))
-        with pytest.raises(exceptions.TlsProtocolException, match='Cannot parse Client Hello'):
-            tls.ClientHello.from_file(rfile)
