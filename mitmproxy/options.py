@@ -1,8 +1,6 @@
 from typing import Optional, Sequence
 
 from mitmproxy import optmanager
-from mitmproxy.net import tls
-
 
 CONF_DIR = "~/.mitmproxy"
 CONF_BASENAME = "mitmproxy"

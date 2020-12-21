@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import List, Optional, Tuple, TypedDict, Union, Any
+from typing import List, Optional, Tuple, TypedDict, Any
 
 from OpenSSL import SSL, crypto
 from mitmproxy import certs, ctx, exceptions

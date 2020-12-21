@@ -1,8 +1,3 @@
-import io
-
-import pytest
-
-from mitmproxy import exceptions
 from mitmproxy.net import tls
 
 CLIENT_HELLO_NO_EXTENSIONS = bytes.fromhex(
@@ -11,9 +6,9 @@ CLIENT_HELLO_NO_EXTENSIONS = bytes.fromhex(
     "61006200640100"
 )
 FULL_CLIENT_HELLO_NO_EXTENSIONS = (
-    b"\x16\x03\x03\x00\x65"  # record layer
-    b"\x01\x00\x00\x61" +  # handshake header
-    CLIENT_HELLO_NO_EXTENSIONS
+        b"\x16\x03\x03\x00\x65"  # record layer
+        b"\x01\x00\x00\x61" +  # handshake header
+        CLIENT_HELLO_NO_EXTENSIONS
 )
 
 

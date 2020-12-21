@@ -22,8 +22,8 @@ class Method(Enum):
 
 
 # TODO: remove once https://github.com/pyca/pyopenssl/pull/985 has landed.
-SSL.Context._methods.setdefault(Method.TLS_SERVER_METHOD.value, "TLS_server_method")
-SSL.Context._methods.setdefault(Method.TLS_CLIENT_METHOD.value, "TLS_client_method")
+SSL.Context._methods.setdefault(Method.TLS_SERVER_METHOD.value, SSL._lib.TLS_server_method)
+SSL.Context._methods.setdefault(Method.TLS_CLIENT_METHOD.value, SSL._lib.TLS_client_method)
 
 
 class Version(Enum):
