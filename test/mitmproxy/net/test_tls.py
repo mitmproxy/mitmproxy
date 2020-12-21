@@ -76,7 +76,7 @@ class TestMasterSecretLogger(tservers.ServerTestBase):
             tls.MasterSecretLogger.create_logfun("test"),
             tls.MasterSecretLogger)
         assert not tls.MasterSecretLogger.create_logfun(False)
-"""
+
 
 
 class TestTLSInvalid:
@@ -91,6 +91,7 @@ class TestTLSInvalid:
 
         with pytest.raises(exceptions.TlsException, match="ALPN error"):
             tls.create_proxy_server_context(alpn_select="foo", alpn_select_callback="bar")
+"""
 
 
 def test_is_record_magic():

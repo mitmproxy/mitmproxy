@@ -3,7 +3,7 @@ import os
 import threading
 from enum import Enum
 from pathlib import Path
-from typing import Iterable, Callable, Optional, Union, Tuple, List, Any
+from typing import Iterable, Callable, Optional, Tuple, List, Any
 
 import certifi
 from kaitaistruct import KaitaiStream
@@ -16,18 +16,24 @@ from mitmproxy.net import check
 
 # redeclared here for strict type checking
 class Method(Enum):
-    TLS_client_method = SSL.TLS_client_method
-    TLS_server_method = SSL.TLS_server_method
+    # TODO: just SSL attributes once https://github.com/pyca/pyopenssl/pull/985 has landed.
+    TLS_SERVER_METHOD = getattr(SSL, "TLS_SERVER_METHOD", 8)
+    TLS_CLIENT_METHOD = getattr(SSL, "TLS_CLIENT_METHOD", 9)
 
 
-# https://github.com/pyca/cryptography/pull/5662
+# TODO: remove once https://github.com/pyca/pyopenssl/pull/985 has landed.
+SSL.Context._methods.setdefault(Method.TLS_SERVER_METHOD.value, "TLS_server_method")
+SSL.Context._methods.setdefault(Method.TLS_CLIENT_METHOD.value, "TLS_client_method")
+
+
 class Version(Enum):
     UNBOUNDED = 0
-    SSL3 = 768
-    TLS1 = 769
-    TLS1_1 = 770
-    TLS1_2 = 771
-    TLS1_3 = 772
+    # TODO: just SSL attributes once https://github.com/pyca/pyopenssl/pull/985 has landed.
+    SSL3 = getattr(SSL, "SSL3_VERSION", 768)
+    TLS1 = getattr(SSL, "TLS1_VERSION", 768)
+    TLS1_1 = getattr(SSL, "TLS1_1_VERSION", 770)
+    TLS1_2 = getattr(SSL, "TLS1_2_VERSION", 771)
+    TLS1_3 = getattr(SSL, "TLS1_3_VERSION", 772)
 
 
 class Verify(Enum):
@@ -125,7 +131,7 @@ def create_proxy_server_context(
         alpn_protos: Iterable[bytes],
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
-        method=Method.TLS_client_method,
+        method=Method.TLS_CLIENT_METHOD,
         min_version=min_version,
         max_version=max_version,
         cipher_list=cipher_list,
@@ -185,7 +191,7 @@ def create_client_proxy_context(
         dhparams,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
-        method=Method.TLS_server_method,
+        method=Method.TLS_SERVER_METHOD,
         min_version=min_version,
         max_version=max_version,
         cipher_list=cipher_list,
