@@ -50,7 +50,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             "timestamp_end": flow.client_conn.timestamp_end,
             # ideally idna, but we don't want errors
             "sni": always_str(flow.client_conn.sni, "ascii", "backslashreplace"),
-            "cipher_name": flow.client_conn.cipher_name,
+            "cipher_name": flow.client_conn.cipher,
             "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
             "tls_version": flow.client_conn.tls_version,
         }

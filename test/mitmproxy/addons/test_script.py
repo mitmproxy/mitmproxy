@@ -246,6 +246,7 @@ class TestScriptLoader:
             os.remove(tdata.path("mitmproxy/data/addonscripts/dummy.py"))
 
             await tctx.master.await_log("Removing")
+            await asyncio.sleep(0.1)
             assert not tctx.options.scripts
             assert not sl.addons
 
@@ -302,7 +303,7 @@ class TestScriptLoader:
                 ]
             )
 
-            await tctx.master.await_log("c configure")
+            await tctx.master.await_log("b configure")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'c configure',
@@ -318,7 +319,7 @@ class TestScriptLoader:
                     "%s/a.py" % rec,
                 ]
             )
-            await tctx.master.await_log("Loading")
+            await tctx.master.await_log("e configure")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'c done',

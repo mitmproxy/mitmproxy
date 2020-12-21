@@ -75,13 +75,13 @@ class Test_Format(unittest.TestCase):
             self.assertEqual((expect, b''), tnetstring.pop(data))
 
     def test_roundtrip_format_random(self):
-        for _ in range(500):
+        for _ in range(10):
             v = get_random_object()
             self.assertEqual(v, tnetstring.loads(tnetstring.dumps(v)))
             self.assertEqual((v, b""), tnetstring.pop(tnetstring.dumps(v)))
 
     def test_roundtrip_format_unicode(self):
-        for _ in range(500):
+        for _ in range(10):
             v = get_random_object()
             self.assertEqual(v, tnetstring.loads(tnetstring.dumps(v)))
             self.assertEqual((v, b''), tnetstring.pop(tnetstring.dumps(v)))
@@ -111,7 +111,7 @@ class Test_FileLoading(unittest.TestCase):
             self.assertEqual(b'OK', s.read())
 
     def test_roundtrip_file_random(self):
-        for _ in range(500):
+        for _ in range(10):
             v = get_random_object()
             s = io.BytesIO()
             tnetstring.dump(v, s)
