@@ -364,7 +364,7 @@ class ConsoleAddon:
         """
             Spawn an external viewer for a flow request or response body based
             on the detected MIME type. We use the mailcap system to find the
-            correct viewier, and fall back to the programs in $PAGER or $EDITOR
+            correct viewer, and fall back to the programs in $PAGER or $EDITOR
             if necessary.
         """
         fpart = getattr(flow, part, None)
