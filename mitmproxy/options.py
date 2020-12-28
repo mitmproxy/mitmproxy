@@ -1,8 +1,6 @@
 from typing import Optional, Sequence
 
 from mitmproxy import optmanager
-from mitmproxy.net import tls
-
 
 CONF_DIR = "~/.mitmproxy"
 CONF_BASENAME = "mitmproxy"
@@ -131,22 +129,6 @@ class Options(optmanager.OptManager):
             Use the client's IP for server-side connections. Combine with
             --upstream-bind-address to spoof a fixed source address.
             """
-        )
-        self.add_option(
-            "ssl_version_client", str, "secure",
-            """
-            Set supported SSL/TLS versions for client connections. SSLv2, SSLv3
-            and 'all' are INSECURE. Defaults to secure, which is TLS1.0+.
-            """,
-            choices=list(tls.VERSION_CHOICES.keys()),
-        )
-        self.add_option(
-            "ssl_version_server", str, "secure",
-            """
-            Set supported SSL/TLS versions for server connections. SSLv2, SSLv3
-            and 'all' are INSECURE. Defaults to secure, which is TLS1.0+.
-            """,
-            choices=list(tls.VERSION_CHOICES.keys()),
         )
         self.add_option(
             "ssl_insecure", bool, False,

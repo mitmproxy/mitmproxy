@@ -196,7 +196,6 @@ class _TLSLayer(tunnel.TunnelLayer):
             self.conn.alpn = self.tls.get_alpn_proto_negotiated()
             self.conn.certificate_list = [certs.Cert(x) for x in all_certs]
             self.conn.cipher = self.tls.get_cipher_name()
-            self.conn.cipher_list = self.tls.get_cipher_list()
             self.conn.tls_version = self.tls.get_protocol_version_name()
             if self.debug:
                 yield commands.Log(f"{self.debug}[tls] tls established: {self.conn}", "debug")
