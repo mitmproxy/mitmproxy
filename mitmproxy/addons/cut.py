@@ -107,8 +107,8 @@ class Cut:
                         fp.write(v.encode("utf8"))
                 ctx.log.alert("Saved single cut.")
             else:
-                with open(path, "a" if append else "w", newline='', encoding="utf8") as fp:
-                    writer = csv.writer(fp)
+                with open(path, "a" if append else "w", newline='', encoding="utf8") as tfp:
+                    writer = csv.writer(tfp)
                     for f in flows:
                         vals = [extract(c, f) for c in cuts]
                         writer.writerow(
