@@ -108,7 +108,11 @@ class TestTlsConfig:
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             ta.configure(["confdir"])
-            tctx.configure(ta, certs=[tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.pem")])
+            tctx.configure(
+                ta,
+                certs=[tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.pem")],
+                ciphers_client="ECDHE-ECDSA-AES128-GCM-SHA256",
+            )
             ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
             tctx.options.add_upstream_certs_to_client_chain = True
 
