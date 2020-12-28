@@ -76,7 +76,7 @@ async def test_playback_crash(monkeypatch):
     with taddons.context(cp) as tctx:
         cp.running()
         cp.start_replay([tflow.tflow()])
-        assert await tctx.master.await_log("Client replay has crashed!", level="error")
+        await tctx.master.await_log("Client replay has crashed!", level="error")
         assert cp.count() == 0
 
 
@@ -110,7 +110,7 @@ async def test_start_stop(tdata):
         assert cp.count() == 1
 
         cp.start_replay([tflow.twebsocketflow()])
-        assert await tctx.master.await_log("Can only replay HTTP flows.", level="warn")
+        await tctx.master.await_log("Can only replay HTTP flows.", level="warn")
         assert cp.count() == 1
 
         cp.stop_replay()

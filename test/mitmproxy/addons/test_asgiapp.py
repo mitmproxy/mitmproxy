@@ -1,14 +1,13 @@
 import asyncio
 import json
 
-import pytest
-
 import flask
+import pytest
 from flask import request
 
 from mitmproxy.addons import asgiapp
-from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons import next_layer
+from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.test import taddons
 
 tapp = flask.Flask(__name__)
@@ -53,7 +52,7 @@ async def test_asgi_full():
         tctx.master.addons.add(next_layer.NextLayer())
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
         ps.running()
-        assert await tctx.master.await_log("Proxy server listening", level="info")
+        await tctx.master.await_log("Proxy server listening", level="info")
         proxy_addr = ps.server.sockets[0].getsockname()[:2]
 
         reader, writer = await asyncio.open_connection(*proxy_addr)

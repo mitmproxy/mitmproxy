@@ -1,12 +1,10 @@
 import pytest
 
-from mitmproxy import exceptions
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http.http1.read import (
     read_request_head,
     read_response_head, connection_close, expected_http_body_size,
-    _read_request_line, _read_response_line, _check_http_version,
-    _read_headers, get_header_tokens
+    _read_request_line, _read_response_line, _read_headers, get_header_tokens
 )
 from mitmproxy.test.tutils import treq, tresp
 
@@ -37,19 +35,6 @@ def test_connection_close():
     headers["connection"] = "foobar"
     assert connection_close(b"HTTP/1.0", headers)
     assert not connection_close(b"HTTP/1.1", headers)
-
-
-def test_check_http_version():
-    _check_http_version(b"HTTP/0.9")
-    _check_http_version(b"HTTP/1.0")
-    _check_http_version(b"HTTP/1.1")
-    _check_http_version(b"HTTP/2.0")
-    with pytest.raises(exceptions.HttpSyntaxException):
-        _check_http_version(b"WTF/1.0")
-    with pytest.raises(exceptions.HttpSyntaxException):
-        _check_http_version(b"HTTP/1.10")
-    with pytest.raises(exceptions.HttpSyntaxException):
-        _check_http_version(b"HTTP/1.b")
 
 
 def test_read_request_head():
@@ -112,7 +97,7 @@ def test_expected_http_body_size():
 
     # explicit length
     for val in (b"foo", b"-7"):
-        with pytest.raises(exceptions.HttpSyntaxException):
+        with pytest.raises(ValueError):
             expected_http_body_size(
                 treq(headers=Headers(content_length=val))
             )
@@ -126,7 +111,7 @@ def test_expected_http_body_size():
     ) == 42
 
     # more than 1 content-length headers with conflicting value
-    with pytest.raises(exceptions.HttpSyntaxException):
+    with pytest.raises(ValueError):
         expected_http_body_size(
             treq(headers=Headers([(b'content-length', b'42'), (b'content-length', b'45')]))
         )

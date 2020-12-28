@@ -203,6 +203,11 @@ class TlsConfig:
         tls_start.ssl_conn.set_tlsext_host_name(server.sni)
         tls_start.ssl_conn.set_connect_state()
 
+    def running(self):
+        # FIXME: We have a weird bug where the contract for configure is not followed and it is never called with
+        # confdir or command_history as updated.
+        self.configure("confdir")  # pragma: no cover
+
     def configure(self, updated):
         if "confdir" not in updated and "certs" not in updated:
             return
@@ -219,7 +224,7 @@ class TlsConfig:
                 "The mitmproxy certificate authority has expired!\n"
                 "Please delete all CA-related files in your ~/.mitmproxy folder.\n"
                 "The CA will be regenerated automatically after restarting mitmproxy.\n"
-                "Then make sure all your clients have the new CA installed.",
+                "See https://docs.mitmproxy.org/stable/concepts-certificates/ for additional help.",
             )
 
         for certspec in ctx.options.certs:

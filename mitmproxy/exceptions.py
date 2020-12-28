@@ -25,21 +25,6 @@ class MitmproxyException(Exception):
         super().__init__(message)
 
 
-class Kill(MitmproxyException):
-    """
-    Signal that both client and server connection(s) should be killed immediately.
-    """
-    pass
-
-
-class ContentViewException(MitmproxyException):
-    pass
-
-
-class ReplayException(MitmproxyException):
-    pass
-
-
 class FlowReadException(MitmproxyException):
     pass
 
@@ -68,25 +53,4 @@ class AddonHalt(MitmproxyException):
 
 
 class TypeError(MitmproxyException):
-    pass
-
-
-class NetlibException(MitmproxyException):
-    """
-    Base class for all exceptions thrown by mitmproxy.net.
-    """
-
-    def __init__(self, message=None):
-        super().__init__(message)
-
-
-class HttpException(NetlibException):
-    pass
-
-
-class HttpSyntaxException(HttpException):
-    pass
-
-
-class TlsException(NetlibException):
     pass

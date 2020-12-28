@@ -41,8 +41,8 @@ class StreamBodies:
                 expected_size = http1.expected_http_body_size(
                     f.request, f.response if not is_request else None
                 )
-            except exceptions.HttpException:
-                f.reply.kill()
+            except ValueError:
+                f.kill()
                 return
             if expected_size and not r.raw_content and not (0 <= expected_size <= self.max_size):
                 # r.stream may already be a callable, which we want to preserve.

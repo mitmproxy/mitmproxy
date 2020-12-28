@@ -34,6 +34,6 @@ class TestMapRemote:
             tctx.configure(mr, map_remote=[":example.org:mitmproxy.org"])
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/test.jpg"
-            f.kill()
+            f.reply.take()
             mr.request(f)
             assert f.request.url == "https://example.org/images/test.jpg"

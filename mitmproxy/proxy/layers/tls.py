@@ -140,6 +140,9 @@ class _TLSLayer(tunnel.TunnelLayer):
 
         tls_start = TlsStartData(self.conn, self.context)
         yield TlsStartHook(tls_start)
+        if not tls_start.ssl_conn:
+            yield commands.Log("No TLS context was provided, failing connection.", "error")
+            yield commands.CloseConnection(self.conn)
         assert tls_start.ssl_conn
         self.tls = tls_start.ssl_conn
 

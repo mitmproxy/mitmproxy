@@ -193,14 +193,14 @@ class TestContentView:
     @pytest.mark.asyncio
     async def test_contentview(self):
         with mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__") as va:
-            va.side_effect = exceptions.ContentViewException("")
+            va.side_effect = ValueError("")
             sio = io.StringIO()
             sio_err = io.StringIO()
             d = dumper.Dumper(sio, sio_err)
-            with taddons.context(d) as ctx:
-                ctx.configure(d, flow_detail=4)
+            with taddons.context(d) as tctx:
+                tctx.configure(d, flow_detail=4)
                 d.response(tflow.tflow())
-                assert await ctx.master.await_log("content viewer failed")
+                await tctx.master.await_log("content viewer failed")
 
 
 def test_tcp():

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import sys
 import threading
 import traceback
@@ -14,6 +15,12 @@ from mitmproxy import websocket
 from mitmproxy.net import server_spec
 from . import ctx as mitmproxy_ctx
 
+# Conclusively preventing cross-thread races on proxy shutdown turns out to be
+# very hard. We could build a thread sync infrastructure for this, or we could
+# wait until we ditch threads and move all the protocols into the async loop.
+# Until then, silence non-critical errors.
+logging.getLogger('asyncio').setLevel(logging.CRITICAL)
+
 
 class Master:
     """
@@ -22,7 +29,7 @@ class Master:
 
     def __init__(self, opts):
         self.should_exit = threading.Event()
-        self.loop = asyncio.get_event_loop()
+        self.event_loop = asyncio.get_event_loop()
         self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
@@ -81,13 +88,13 @@ class Master:
         """
         if not self.should_exit.is_set():
             self.should_exit.set()
-            ret = asyncio.run_coroutine_threadsafe(self._shutdown(), loop=self.loop)
+            ret = asyncio.run_coroutine_threadsafe(self._shutdown(), loop=self.event_loop)
             # Weird band-aid to make sure that self._shutdown() is actually executed,
             # which otherwise hangs the process as the proxy server is threaded.
             # This all needs to be simplified when the proxy server runs on asyncio as well.
-            if not self.loop.is_running():  # pragma: no cover
+            if not self.event_loop.is_running():  # pragma: no cover
                 try:
-                    self.loop.run_until_complete(asyncio.wrap_future(ret))
+                    self.event_loop.run_until_complete(asyncio.wrap_future(ret))
                 except RuntimeError:
                     pass  # Event loop stopped before Future completed.
 

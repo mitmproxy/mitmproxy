@@ -1,5 +1,5 @@
+from mitmproxy import flow
 from mitmproxy.addons import disable_h2c
-from mitmproxy.exceptions import Kill
 from mitmproxy.test import taddons, tutils
 from mitmproxy.test import tflow
 
@@ -35,4 +35,4 @@ class TestDisableH2CleartextUpgrade:
 
             a.request(f)
             assert not f.killable
-            assert f.reply.value == Kill
+            assert f.error.msg == flow.Error.KILLED_MESSAGE

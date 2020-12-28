@@ -69,7 +69,7 @@ class TestReadFile:
             tf.write(corrupt_data.getvalue())
             tctx.configure(rf, rfile=str(tf))
             rf.running()
-            assert await tctx.master.await_log("corrupted")
+            await tctx.master.await_log("corrupted")
 
     @pytest.mark.asyncio
     async def test_corrupt(self, corrupt_data):
@@ -81,7 +81,7 @@ class TestReadFile:
             tctx.master.clear()
             with pytest.raises(exceptions.FlowReadException):
                 await rf.load_flows(corrupt_data)
-            assert await tctx.master.await_log("file corrupted")
+            await tctx.master.await_log("file corrupted")
 
     @pytest.mark.asyncio
     async def test_nonexistent_file(self):
@@ -89,7 +89,7 @@ class TestReadFile:
         with taddons.context(rf) as tctx:
             with pytest.raises(exceptions.FlowReadException):
                 await rf.load_flows_from_path("nonexistent")
-            assert await tctx.master.await_log("nonexistent")
+            await tctx.master.await_log("nonexistent")
 
 
 class TestReadFileStdin:

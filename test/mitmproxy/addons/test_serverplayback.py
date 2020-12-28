@@ -356,7 +356,7 @@ def test_server_playback_kill():
         f = tflow.tflow()
         f.request.host = "nonexistent"
         tctx.cycle(s, f)
-        assert f.reply.value == exceptions.Kill
+        assert f.error
 
 
 def test_server_playback_response_deleted():

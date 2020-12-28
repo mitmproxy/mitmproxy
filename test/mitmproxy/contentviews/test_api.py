@@ -1,11 +1,11 @@
 from unittest import mock
+
 import pytest
 
 from mitmproxy import contentviews
-from mitmproxy.exceptions import ContentViewException
 from mitmproxy.net.http import Headers
-from mitmproxy.test import tutils
 from mitmproxy.test import tflow
+from mitmproxy.test import tutils
 
 
 class TestContentView(contentviews.View):
@@ -19,7 +19,7 @@ def test_add_remove():
     assert tcv in contentviews.views
 
     # repeated addition causes exception
-    with pytest.raises(ContentViewException, match="Duplicate view"):
+    with pytest.raises(ValueError, match="Duplicate view"):
         contentviews.add(tcv)
 
     contentviews.remove(tcv)

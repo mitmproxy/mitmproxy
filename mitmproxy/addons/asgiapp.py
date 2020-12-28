@@ -1,4 +1,5 @@
 import asyncio
+import traceback
 import urllib.parse
 
 import asgiref.compatibility
@@ -28,7 +29,7 @@ class ASGIApp:
         assert flow.reply
         return bool(
             (flow.request.pretty_host, flow.request.port) == (self.host, self.port)
-            and not flow.reply.has_message
+            and flow.reply.state == "start" and not flow.error and not flow.response
             and not isinstance(flow.reply, DummyReply)  # ignore the HTTP flows of this app loaded from somewhere
         )
 
@@ -96,6 +97,7 @@ async def serve(app, flow: http.HTTPFlow):
     scope = make_scope(flow)
     done = asyncio.Event()
     received_body = False
+    sent_response = False
 
     async def receive():
         nonlocal received_body
@@ -120,18 +122,18 @@ async def serve(app, flow: http.HTTPFlow):
         elif event["type"] == "http.response.body":
             flow.response.content += event.get("body", b"")
             if not event.get("more_body", False):
-                flow.reply.ack()
+                nonlocal sent_response
+                sent_response = True
         else:
             raise AssertionError(f"Unexpected event: {event['type']}")
 
     try:
         await app(scope, receive, send)
-        if not flow.reply.has_message:
+        if not sent_response:
             raise RuntimeError(f"no response sent.")
-    except Exception as e:
-        ctx.log.error(f"Error in asgi app: {e}")
+    except Exception:
+        ctx.log.error(f"Error in asgi app:\n{traceback.format_exc(limit=-5)}")
         flow.response = http.HTTPResponse.make(500, b"ASGI Error.")
-        flow.reply.ack(force=True)
     finally:
         flow.reply.commit()
         done.set()

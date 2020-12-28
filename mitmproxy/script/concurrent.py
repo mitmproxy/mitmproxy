@@ -26,12 +26,10 @@ def concurrent(fn):
         def run():
             fn(*args)
             if obj.reply.state == "taken":
-                if not obj.reply.has_message:
-                    obj.reply.ack()
                 obj.reply.commit()
         obj.reply.take()
         ScriptThread(
-            "script.concurrent (%s)" % fn.__name__,
+            f"script.concurrent {fn.__name__}",
             target=run
         ).start()
 

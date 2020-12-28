@@ -1,8 +1,8 @@
-import queue
+import asyncio
+import warnings
+from typing import Any
 
-from mitmproxy import exceptions
-
-NO_REPLY = object()  # special object we can distinguish from a valid "None" reply.
+from mitmproxy import exceptions, flow
 
 
 class Reply:
@@ -12,14 +12,10 @@ class Reply:
     """
 
     def __init__(self, obj):
-        self.obj = obj
-        # Spawn an event loop in the current thread
-        self.q = queue.Queue()
-
-        self._state = "start"  # "start" -> "taken" -> "committed"
-
-        # Holds the reply value. May change before things are actually committed.
-        self.value = NO_REPLY
+        self.obj: Any = obj
+        self.done: asyncio.Event = asyncio.Event()
+        self._loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+        self._state: str = "start"  # "start" -> "taken" -> "committed"
 
     @property
     def state(self):
@@ -36,19 +32,13 @@ class Reply:
         """
         return self._state
 
-    @property
-    def has_message(self):
-        return self.value != NO_REPLY
-
     def take(self):
         """
         Scripts or other parties make "take" a reply out of a normal flow.
         For example, intercepted flows are taken out so that the connection thread does not proceed.
         """
         if self.state != "start":
-            raise exceptions.ControlException(
-                f"Reply is {self.state}, but expected it to be start."
-            )
+            raise exceptions.ControlException(f"Reply is {self.state}, but expected it to be start.")
         self._state = "taken"
 
     def commit(self):
@@ -58,35 +48,22 @@ class Reply:
         called .take().
         """
         if self.state != "taken":
-            raise exceptions.ControlException(
-                f"Reply is {self.state}, but expected it to be taken."
-            )
-        if not self.has_message:
-            raise exceptions.ControlException("There is no reply message.")
+            raise exceptions.ControlException(f"Reply is {self.state}, but expected it to be taken.")
         self._state = "committed"
-        self.q.put(self.value)
+        try:
+            self._loop.call_soon_threadsafe(lambda: self.done.set())
+        except RuntimeError:  # pragma: no cover
+            pass  # event loop may already be closed.
 
-    def ack(self, force=False):
-        self.send(self.obj, force)
-
-    def kill(self, force=False):
-        self.send(exceptions.Kill, force)
-        if self._state == "taken":
-            self.commit()
-
-    def send(self, msg, force=False):
-        if self.state not in {"start", "taken"}:
-            raise exceptions.ControlException(
-                f"Reply is {self.state}, but expected it to be start or taken."
-            )
-        if self.has_message and not force:
-            raise exceptions.ControlException("There is already a reply message.")
-        self.value = msg
+    def kill(self, force=False):  # pragma: no cover
+        warnings.warn("reply.kill() is deprecated, use flow.kill() or set the error attribute instead.",
+                      DeprecationWarning, stacklevel=2)
+        self.obj.error = flow.Error(flow.Error.KILLED_MESSAGE)
 
     def __del__(self):
         if self.state != "committed":
             # This will be ignored by the interpreter, but emit a warning
-            raise exceptions.ControlException("Uncommitted reply: %s" % self.obj)
+            raise exceptions.ControlException(f"Uncommitted reply: {self.obj}")
 
 
 class DummyReply(Reply):
@@ -103,13 +80,12 @@ class DummyReply(Reply):
 
     def mark_reset(self):
         if self.state != "committed":
-            raise exceptions.ControlException("Uncommitted reply: %s" % self.obj)
+            raise exceptions.ControlException(f"Uncommitted reply: {self.obj}")
         self._should_reset = True
 
     def reset(self):
         if self._should_reset:
             self._state = "start"
-            self.value = NO_REPLY
 
     def __del__(self):
         pass

@@ -9,7 +9,7 @@ import certifi
 from kaitaistruct import KaitaiStream
 
 from OpenSSL import SSL
-from mitmproxy import certs, exceptions
+from mitmproxy import certs
 from mitmproxy.contrib.kaitaistruct import tls_client_hello
 from mitmproxy.net import check
 
@@ -101,7 +101,7 @@ def _create_ssl_context(
     ok = SSL._lib.SSL_CTX_set_min_proto_version(context._context, min_version.value)
     ok += SSL._lib.SSL_CTX_set_max_proto_version(context._context, max_version.value)
     if ok != 2:
-        raise exceptions.TlsException(
+        raise RuntimeError(
             f"Error setting TLS versions ({min_version=}, {max_version=}). "
             "The version you specified may be unavailable in your libssl."
         )
@@ -113,8 +113,8 @@ def _create_ssl_context(
     if cipher_list is not None:
         try:
             context.set_cipher_list(b":".join(x.encode() for x in cipher_list))
-        except SSL.Error as v:
-            raise exceptions.TlsException("SSL cipher specification error: %s" % str(v))
+        except SSL.Error as e:
+            raise RuntimeError("SSL cipher specification error: {e}") from e
 
     # SSLKEYLOGFILE
     if log_master_secret:
@@ -143,7 +143,7 @@ def create_proxy_server_context(
     )
 
     if verify is not Verify.VERIFY_NONE and sni is None:
-        raise exceptions.TlsException("Cannot validate certificate hostname without SNI")
+        raise ValueError("Cannot validate certificate hostname without SNI")
 
     context.set_verify(verify.value, None)
     if sni is not None:
@@ -164,16 +164,16 @@ def create_proxy_server_context(
         ca_pemfile = certifi.where()
     try:
         context.load_verify_locations(ca_pemfile, ca_path)
-    except SSL.Error:
-        raise exceptions.TlsException(f"Cannot load trusted certificates ({ca_pemfile=}, {ca_path=}).")
+    except SSL.Error as e:
+        raise RuntimeError(f"Cannot load trusted certificates ({ca_pemfile=}, {ca_path=}).") from e
 
     # Client Certs
     if client_cert:
         try:
             context.use_privatekey_file(client_cert)
             context.use_certificate_chain_file(client_cert)
-        except SSL.Error as v:
-            raise exceptions.TlsException(f"TLS client certificate error: {v}")
+        except SSL.Error as e:
+            raise RuntimeError(f"Cannot load TLS client certificate: {e}") from e
 
     if alpn_protos is not None:
         # advertise application layer protocols
@@ -206,8 +206,8 @@ def create_client_proxy_context(
     context.use_privatekey(key)
     try:
         context.load_verify_locations(chain_file, None)
-    except SSL.Error:
-        raise exceptions.TlsException(f"Cannot load certificate chain ({chain_file}).")
+    except SSL.Error as e:
+        raise RuntimeError(f"Cannot load certificate chain ({chain_file}).") from e
 
     if alpn_select_callback is not None:
         assert callable(alpn_select_callback)

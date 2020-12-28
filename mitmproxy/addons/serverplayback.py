@@ -212,5 +212,4 @@ class ServerPlayback:
                         f.request.url
                     )
                 )
-                assert f.reply
-                f.reply.kill()
+                f.kill()

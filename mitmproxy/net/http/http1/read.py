@@ -2,7 +2,6 @@ import re
 import time
 from typing import List, Tuple, Iterable, Optional
 
-from mitmproxy import exceptions
 from mitmproxy.net.http import request, response, headers, url
 
 
@@ -54,7 +53,7 @@ def expected_http_body_size(
             - -1, if all data should be read until end of stream.
 
         Raises:
-            exceptions.HttpSyntaxException, if the content length header is invalid
+            ValueError, if the content length header is invalid
     """
     # Determine response size according to
     # http://tools.ietf.org/html/rfc7230#section-3.3
@@ -78,25 +77,17 @@ def expected_http_body_size(
     if "chunked" in headers.get("transfer-encoding", "").lower():
         return None
     if "content-length" in headers:
-        try:
-            sizes = headers.get_all("content-length")
-            different_content_length_headers = any(x != sizes[0] for x in sizes)
-            if different_content_length_headers:
-                raise exceptions.HttpSyntaxException("Conflicting Content Length Headers")
-            size = int(sizes[0])
-            if size < 0:
-                raise ValueError()
-            return size
-        except ValueError as e:
-            raise exceptions.HttpSyntaxException("Unparseable Content Length") from e
+        sizes = headers.get_all("content-length")
+        different_content_length_headers = any(x != sizes[0] for x in sizes)
+        if different_content_length_headers:
+            raise ValueError("Conflicting Content Length Headers")
+        size = int(sizes[0])
+        if size < 0:
+            raise ValueError("Negative Content Length")
+        return size
     if not response:
         return 0
     return -1
-
-
-def _check_http_version(http_version):
-    if not re.match(br"^HTTP/\d\.\d$", http_version):
-        raise exceptions.HttpSyntaxException(f"Unknown HTTP version: {http_version}")
 
 
 def raise_if_http_version_unknown(http_version: bytes) -> None:

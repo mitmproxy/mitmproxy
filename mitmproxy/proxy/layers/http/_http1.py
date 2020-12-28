@@ -5,7 +5,7 @@ import h11
 from h11._readers import ChunkedReader, ContentLengthReader, Http10Reader
 from h11._receivebuffer import ReceiveBuffer
 
-from mitmproxy import exceptions, http
+from mitmproxy import http
 from mitmproxy.net import http as net_http
 from mitmproxy.net.http import http1, status_codes
 from mitmproxy.proxy import commands, events, layer
@@ -228,7 +228,7 @@ class Http1Server(Http1Connection):
                 try:
                     self.request = http1.read_request_head(request_head)
                     expected_body_size = http1.expected_http_body_size(self.request, expect_continue_as_0=False)
-                except (ValueError, exceptions.HttpSyntaxException) as e:
+                except ValueError as e:
                     yield commands.Log(f"{human.format_address(self.conn.peername)}: {e}")
                     yield commands.CloseConnection(self.conn)
                     self.state = self.done
@@ -317,7 +317,7 @@ class Http1Client(Http1Connection):
                 try:
                     self.response = http1.read_response_head(response_head)
                     expected_size = http1.expected_http_body_size(self.request, self.response)
-                except (ValueError, exceptions.HttpSyntaxException) as e:
+                except ValueError as e:
                     yield commands.CloseConnection(self.conn)
                     yield ReceiveHttp(ResponseProtocolError(self.stream_id, f"Cannot parse HTTP response: {e}"))
                     return
