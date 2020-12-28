@@ -94,7 +94,7 @@ async def test_cut_clip():
                           "copy/paste mechanism for your system."
             pc.side_effect = pyperclip.PyperclipException(log_message)
             tctx.command(c.clip, "@all", "request.method")
-            assert await tctx.master.await_log(log_message, level="error")
+            await tctx.master.await_log(log_message, level="error")
 
 
 def test_cut_save(tmpdir):
@@ -136,7 +136,7 @@ async def test_cut_save_open(exception, log_message, tmpdir):
         with mock.patch("mitmproxy.addons.cut.open") as m:
             m.side_effect = exception(log_message)
             tctx.command(c.save, "@all", "request.method", f)
-            assert await tctx.master.await_log(log_message, level="error")
+            await tctx.master.await_log(log_message, level="error")
 
 
 def test_cut():

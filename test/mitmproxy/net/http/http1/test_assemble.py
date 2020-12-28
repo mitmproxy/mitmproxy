@@ -1,6 +1,5 @@
 import pytest
 
-from mitmproxy import exceptions
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http.http1.assemble import (
     assemble_request, assemble_request_head, assemble_response,
@@ -19,7 +18,7 @@ def test_assemble_request():
         b"content"
     )
 
-    with pytest.raises(exceptions.HttpException):
+    with pytest.raises(ValueError):
         assemble_request(treq(content=None))
 
 
@@ -56,7 +55,7 @@ def test_assemble_response():
         b"my-little-trailer: foobar\r\n\r\n"
     )
 
-    with pytest.raises(exceptions.HttpException):
+    with pytest.raises(ValueError):
         assemble_response(tresp(content=None))
 
 
@@ -80,7 +79,7 @@ def test_assemble_body():
     c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"], Headers(trailer="trailer")))
     assert c == [b"a\r\n123456789a\r\n", b"0\r\ntrailer: trailer\r\n\r\n"]
 
-    with pytest.raises(exceptions.HttpException):
+    with pytest.raises(ValueError):
         list(assemble_body(Headers(), [b"body"], Headers(trailer="trailer")))
 
 

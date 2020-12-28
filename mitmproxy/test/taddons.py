@@ -38,16 +38,16 @@ class RecordingMaster(mitmproxy.master.Master):
                 return True
         return False
 
-    async def await_log(self, txt, level=None):
+    async def await_log(self, txt, level=None, timeout=1):
         # start with a sleep(0), which lets all other coroutines advance.
         # often this is enough to not sleep at all.
         await asyncio.sleep(0)
-        for i in range(20):
+        for i in range(int(timeout / 0.001)):
             if self.has_log(txt, level):
                 return True
             else:
                 await asyncio.sleep(0.001)
-        return False
+        raise AssertionError(f"Did not find log entry {txt!r} in {self.logs}.")
 
     def clear(self):
         self.logs = []

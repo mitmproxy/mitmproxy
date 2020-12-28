@@ -1,9 +1,8 @@
 import pytest
 
-from mitmproxy.test import tflow
-from mitmproxy.test import taddons
-
 from mitmproxy.addons.modifyheaders import parse_modify_spec, ModifyHeaders
+from mitmproxy.test import taddons
+from mitmproxy.test import tflow
 
 
 def test_parse_modify_spec():
@@ -114,6 +113,23 @@ class TestModifyHeaders:
             mh.response(f)
             assert "one" not in f.response.headers
 
+    @pytest.mark.parametrize("take", [True, False])
+    def test_taken(self, take):
+        mh = ModifyHeaders()
+        with taddons.context(mh) as tctx:
+            tctx.configure(mh, modify_headers=["/content-length/42"])
+            f = tflow.tflow()
+            if take:
+                f.reply.take()
+            mh.request(f)
+            assert (f.request.headers["content-length"] == "42") ^ take
+
+            f = tflow.tflow(resp=True)
+            if take:
+                f.reply.take()
+            mh.response(f)
+            assert (f.response.headers["content-length"] == "42") ^ take
+
 
 class TestModifyHeadersFile:
     def test_simple(self, tmpdir):
@@ -150,4 +166,4 @@ class TestModifyHeadersFile:
             f = tflow.tflow()
             f.request.content = b"foo"
             mh.request(f)
-            assert await tctx.master.await_log("could not read")
+            await tctx.master.await_log("could not read")

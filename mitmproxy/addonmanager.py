@@ -215,8 +215,6 @@ class AddonManager:
 
         if message.reply.state == "start":
             message.reply.take()
-            if not message.reply.has_message:
-                message.reply.ack()
             message.reply.commit()
 
             if isinstance(message.reply, controller.DummyReply):

@@ -129,16 +129,17 @@ async def test_simple():
         a.add(TAddon("one"))
 
         a.trigger("nonexistent")
-        assert await tctx.master.await_log("unknown event")
+        await tctx.master.await_log("unknown event")
 
         a.trigger("running")
         a.trigger("response")
-        assert await tctx.master.await_log("not callable")
+        await tctx.master.await_log("not callable")
 
         tctx.master.clear()
         a.get("one").response = addons
         a.trigger("response")
-        assert not await tctx.master.await_log("not callable")
+        with pytest.raises(AssertionError):
+            await tctx.master.await_log("not callable", timeout=0.01)
 
         a.remove(a.get("one"))
         assert not a.get("one")

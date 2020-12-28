@@ -23,20 +23,20 @@ class TestApp:
 
     @pytest.mark.parametrize("ext", ["pem", "p12", "cer"])
     @pytest.mark.asyncio
-    async def test_cert(self, client, ext):
+    async def test_cert(self, client, ext, tdata):
         ob = onboarding.Onboarding()
         with taddons.context(ob) as tctx:
-            tctx.configure(ob)
+            tctx.configure(ob, confdir=tdata.path("mitmproxy/data/confdir"))
             resp = client.get(f"/cert/{ext}")
             assert resp.status_code == 200
             assert resp.data
 
     @pytest.mark.parametrize("ext", ["pem", "p12", "cer"])
     @pytest.mark.asyncio
-    async def test_head(self, client, ext):
+    async def test_head(self, client, ext, tdata):
         ob = onboarding.Onboarding()
         with taddons.context(ob) as tctx:
-            tctx.configure(ob)
+            tctx.configure(ob, confdir=tdata.path("mitmproxy/data/confdir"))
             resp = client.head(f"http://{tctx.options.onboarding_host}/cert/{ext}")
             assert resp.status_code == 200
             assert "Content-Length" in resp.headers

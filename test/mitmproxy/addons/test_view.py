@@ -217,7 +217,7 @@ async def test_load(tmpdir):
         with open(path, "wb") as f:
             f.write(b"invalidflows")
         v.load_file(path)
-        assert await tctx.master.await_log("Invalid data format.")
+        await tctx.master.await_log("Invalid data format.")
 
 
 def test_resolve():

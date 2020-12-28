@@ -5,10 +5,9 @@ import h11
 from h11._readers import ChunkedReader, ContentLengthReader, Http10Reader
 from h11._receivebuffer import ReceiveBuffer
 
-from mitmproxy import exceptions, http
+from mitmproxy import http
 from mitmproxy.net import http as net_http
 from mitmproxy.net.http import http1, status_codes
-from mitmproxy.net.http.http1 import read_sansio as http1_sansio
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.context import Connection, ConnectionState, Context
 from mitmproxy.proxy.layers.http._base import ReceiveHttp, StreamId
@@ -148,7 +147,7 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                 yield from self.make_pipe()
                 return
             connection_done = (
-                    http1_sansio.expected_http_body_size(self.request, self.response) == -1
+                    http1.expected_http_body_size(self.request, self.response) == -1
                     or http1.connection_close(self.request.http_version, self.request.headers)
                     or http1.connection_close(self.response.http_version, self.response.headers)
                     # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
@@ -227,9 +226,9 @@ class Http1Server(Http1Connection):
             if request_head:
                 request_head = [bytes(x) for x in request_head]  # TODO: Make url.parse compatible with bytearrays
                 try:
-                    self.request = http1_sansio.read_request_head(request_head)
-                    expected_body_size = http1_sansio.expected_http_body_size(self.request, expect_continue_as_0=False)
-                except (ValueError, exceptions.HttpSyntaxException) as e:
+                    self.request = http1.read_request_head(request_head)
+                    expected_body_size = http1.expected_http_body_size(self.request, expect_continue_as_0=False)
+                except ValueError as e:
                     yield commands.Log(f"{human.format_address(self.conn.peername)}: {e}")
                     yield commands.CloseConnection(self.conn)
                     self.state = self.done
@@ -294,7 +293,7 @@ class Http1Client(Http1Connection):
             assert self.request
             if "chunked" in self.request.headers.get("transfer-encoding", "").lower():
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
-            elif http1_sansio.expected_http_body_size(self.request, self.response) == -1:
+            elif http1.expected_http_body_size(self.request, self.response) == -1:
                 yield commands.CloseConnection(self.conn, half_close=True)
             yield from self.mark_done(request=True)
         elif isinstance(event, RequestProtocolError):
@@ -316,9 +315,9 @@ class Http1Client(Http1Connection):
             if response_head:
                 response_head = [bytes(x) for x in response_head]  # TODO: Make url.parse compatible with bytearrays
                 try:
-                    self.response = http1_sansio.read_response_head(response_head)
-                    expected_size = http1_sansio.expected_http_body_size(self.request, self.response)
-                except (ValueError, exceptions.HttpSyntaxException) as e:
+                    self.response = http1.read_response_head(response_head)
+                    expected_size = http1.expected_http_body_size(self.request, self.response)
+                except ValueError as e:
                     yield commands.CloseConnection(self.conn)
                     yield ReceiveHttp(ResponseProtocolError(self.stream_id, f"Cannot parse HTTP response: {e}"))
                     return

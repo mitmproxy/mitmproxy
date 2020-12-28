@@ -11,7 +11,6 @@ from mitmproxy.addons import intercept
 from mitmproxy.addons import readfile
 from mitmproxy.addons import termlog
 from mitmproxy.addons import view
-from mitmproxy.addons import termstatus
 from mitmproxy.tools.web import app, webaddons, static_viewer
 
 
@@ -41,7 +40,7 @@ class WebMaster(master.Master):
             self.events,
         )
         if with_termlog:
-            self.addons.add(termlog.TermLog(), termstatus.TermStatus())
+            self.addons.add(termlog.TermLog())
         self.app = app.Application(
             self, self.options.web_debug
         )

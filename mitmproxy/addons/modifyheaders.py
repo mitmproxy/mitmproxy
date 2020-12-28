@@ -73,12 +73,14 @@ class ModifyHeaders:
                 self.replacements.append(spec)
 
     def request(self, flow):
-        if not flow.reply.has_message:
-            self.run(flow, flow.request.headers)
+        if flow.response or flow.error or flow.reply.state == "taken":
+            return
+        self.run(flow, flow.request.headers)
 
     def response(self, flow):
-        if not flow.reply.has_message:
-            self.run(flow, flow.response.headers)
+        if flow.error or flow.reply.state == "taken":
+            return
+        self.run(flow, flow.response.headers)
 
     def run(self, flow: http.HTTPFlow, hdrs: Headers) -> None:
         # unset all specified headers

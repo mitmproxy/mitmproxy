@@ -18,4 +18,4 @@ def websocket_message(flow):
 
     if 'FOOBAR' in message.content:
         # kill the message and not send it to the other endpoint
-        message.kill()
+        message.content = ""

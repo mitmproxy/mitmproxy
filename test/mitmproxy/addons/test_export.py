@@ -232,7 +232,7 @@ async def test_export_open(exception, log_message, tmpdir):
         with mock.patch("mitmproxy.addons.export.open") as m:
             m.side_effect = exception(log_message)
             e.file("raw_request", tflow.tflow(resp=True), f)
-            assert await tctx.master.await_log(log_message, level="error")
+            await tctx.master.await_log(log_message, level="error")
 
 
 @pytest.mark.asyncio
@@ -263,4 +263,4 @@ async def test_clip(tmpdir):
                           "copy/paste mechanism for your system."
             pc.side_effect = pyperclip.PyperclipException(log_message)
             e.clip("raw_request", tflow.tflow(resp=True))
-            assert await tctx.master.await_log(log_message, level="error")
+            await tctx.master.await_log(log_message, level="error")

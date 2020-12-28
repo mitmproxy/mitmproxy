@@ -3,7 +3,7 @@ import io
 import pytest
 
 from mitmproxy import flowfilter
-from mitmproxy.exceptions import Kill, ControlException
+from mitmproxy.exceptions import ControlException
 from mitmproxy.io import tnetstring
 from mitmproxy.test import tflow
 
@@ -56,7 +56,6 @@ class TestWebSocketFlow:
         assert f.killable
         f.kill()
         assert not f.killable
-        assert f.reply.value == Kill
 
     def test_match(self):
         f = tflow.twebsocketflow()

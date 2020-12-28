@@ -51,7 +51,7 @@ async def test_start_stop():
             tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
             assert not ps.server
             ps.running()
-            assert await tctx.master.await_log("Proxy server listening", level="info")
+            await tctx.master.await_log("Proxy server listening", level="info")
             assert ps.server
 
             proxy_addr = ps.server.sockets[0].getsockname()[:2]
@@ -61,7 +61,7 @@ async def test_start_stop():
             assert await reader.readuntil(b"\r\n\r\n") == b"HTTP/1.1 204 No Content\r\n\r\n"
 
             tctx.configure(ps, server=False)
-            assert await tctx.master.await_log("Stopping server", level="info")
+            await tctx.master.await_log("Stopping server", level="info")
             assert not ps.server
             assert state.flows
             assert state.flows[0].request.path == "/hello"
@@ -78,6 +78,6 @@ async def test_warn_no_nextlayer():
     with taddons.context(ps) as tctx:
         tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
         ps.running()
-        assert await tctx.master.await_log("Proxy server listening at", level="info")
+        await tctx.master.await_log("Proxy server listening at", level="info")
         assert tctx.master.has_log("Warning: Running proxyserver without nextlayer addon!", level="warn")
         await ps.shutdown_server()

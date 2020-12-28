@@ -36,7 +36,7 @@ class TestCommandHistory:
             ch.history.append('cmd3')
             tctx.options.confdir = '/non/existent/path/foobar1234/'
             ch.done()
-            assert await tctx.master.await_log(f"Failed writing to {ch.history_file}")
+            await tctx.master.await_log(f"Failed writing to {ch.history_file}")
 
     def test_add_command(self):
         ch = command_history.CommandHistory()
@@ -54,7 +54,7 @@ class TestCommandHistory:
         with taddons.context(ch) as tctx:
             tctx.options.confdir = '/non/existent/path/foobar1234/'
             ch.add_command('cmd1')
-            assert await tctx.master.await_log(f"Failed writing to {ch.history_file}")
+            await tctx.master.await_log(f"Failed writing to {ch.history_file}")
 
     def test_get_next_and_prev(self, tmpdir):
         ch = command_history.CommandHistory()
@@ -168,7 +168,7 @@ class TestCommandHistory:
                 with patch.object(Path, 'unlink') as mock_unlink:
                     mock_unlink.side_effect = IOError()
                     ch.clear_history()
-            assert await tctx.master.await_log(f"Failed deleting {ch.history_file}")
+            await tctx.master.await_log(f"Failed deleting {ch.history_file}")
 
     def test_filter(self, tmpdir):
         ch = command_history.CommandHistory()

@@ -367,6 +367,7 @@ class HttpStream(layer.Layer):
         is_client_error_but_we_already_talk_upstream = (
                 isinstance(event, RequestProtocolError)
                 and self.client_state in (self.state_stream_request_body, self.state_done)
+                and self.server_state != self.state_errored
         )
         need_error_hook = not (
                 self.client_state in (self.state_wait_for_request_headers, self.state_errored)

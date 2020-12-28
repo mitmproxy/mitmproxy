@@ -151,16 +151,17 @@ class Flow(stateobject.StateObject):
         return (
             self.reply and
             self.reply.state in {"start", "taken"} and
-            self.reply.value != exceptions.Kill
+            not (self.error and self.error.msg == Error.KILLED_MESSAGE)
         )
 
     def kill(self):
         """
             Kill this request.
         """
+        if not self.killable:
+            raise exceptions.ControlException("Flow is not killable.")
         self.error = Error(Error.KILLED_MESSAGE)
         self.intercepted = False
-        self.reply.kill(force=True)
         self.live = False
 
     def intercept(self):
@@ -182,7 +183,6 @@ class Flow(stateobject.StateObject):
         self.intercepted = False
         # If a flow is intercepted and then duplicated, the duplicated one is not taken.
         if self.reply.state == "taken":
-            self.reply.ack()
             self.reply.commit()
 
     @property

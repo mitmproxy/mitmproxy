@@ -1,15 +1,14 @@
-import os
-import sys
-import asyncio
 import argparse
+import asyncio
+import os
 import signal
+import sys
 import typing
 
-from mitmproxy.tools import cmdline
 from mitmproxy import exceptions, master
 from mitmproxy import options
 from mitmproxy import optmanager
-from mitmproxy import proxy
+from mitmproxy.tools import cmdline
 from mitmproxy.utils import debug, arg_check
 
 
@@ -48,8 +47,6 @@ def process_options(parser, opts, args):
             adict[n] = getattr(args, n)
     opts.merge(adict)
 
-    return proxy.config.ProxyConfig(opts)
-
 
 def run(
         master_cls: typing.Type[master.Master],
@@ -85,10 +82,7 @@ def run(
             os.path.join(opts.confdir, "config.yaml"),
             os.path.join(opts.confdir, "config.yml"),
         )
-        pconf = process_options(parser, opts, args)
-
-        # new core initializes itself as an addon
-        master.server = proxy.DummyServer(pconf)
+        process_options(parser, opts, args)
 
         if args.options:
             print(optmanager.dump_defaults(opts))
@@ -97,7 +91,7 @@ def run(
             master.commands.dump()
             sys.exit(0)
         if extra:
-            if(args.filter_args):
+            if args.filter_args:
                 master.log.info(f"Only processing flows that match \"{' & '.join(args.filter_args)}\"")
             opts.update(**extra(args))
 

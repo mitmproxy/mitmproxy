@@ -29,14 +29,14 @@ async def test_load_script(tdata):
         script.load_script(
             "nonexistent"
         )
-        assert await tctx.master.await_log("No such file or directory")
+        await tctx.master.await_log("No such file or directory")
 
         script.load_script(
             tdata.path(
                 "mitmproxy/data/addonscripts/recorder/error.py"
             )
         )
-        assert await tctx.master.await_log("invalid syntax")
+        await tctx.master.await_log("invalid syntax")
 
 
 def test_load_fullname(tdata):
@@ -108,7 +108,7 @@ class TestScript:
             f.write("\n")
             sc = script.Script(str(f), True)
             tctx.configure(sc)
-            assert await tctx.master.await_log("Loading")
+            await tctx.master.await_log("Loading")
 
             tctx.master.clear()
             for i in range(20):
@@ -133,8 +133,8 @@ class TestScript:
             f = tflow.tflow(resp=True)
             tctx.master.addons.trigger("request", f)
 
-            assert await tctx.master.await_log("ValueError: Error!")
-            assert await tctx.master.await_log("error.py")
+            await tctx.master.await_log("ValueError: Error!")
+            await tctx.master.await_log("error.py")
 
     @pytest.mark.asyncio
     async def test_optionexceptions(self, tdata):
@@ -145,7 +145,7 @@ class TestScript:
             )
             tctx.master.addons.add(sc)
             tctx.configure(sc)
-            assert await tctx.master.await_log("Options Error")
+            await tctx.master.await_log("Options Error")
 
     @pytest.mark.asyncio
     async def test_addon(self, tdata):
@@ -201,7 +201,7 @@ class TestScriptLoader:
         sc = script.ScriptLoader()
         with taddons.context(sc) as tctx:
             sc.script_run([tflow.tflow(resp=True)], "/")
-            assert await tctx.master.await_log("No such script")
+            await tctx.master.await_log("No such script")
 
     def test_simple(self, tdata):
         sc = script.ScriptLoader()
@@ -258,10 +258,10 @@ class TestScriptLoader:
         tb = True
         with taddons.context() as tctx:
             script.script_error_handler(path, exc, msg, tb)
-            assert await tctx.master.await_log("/sample/path/example.py")
-            assert await tctx.master.await_log("Error raised")
-            assert await tctx.master.await_log("lineno")
-            assert await tctx.master.await_log("NoneType")
+            await tctx.master.await_log("/sample/path/example.py")
+            await tctx.master.await_log("Error raised")
+            await tctx.master.await_log("lineno")
+            await tctx.master.await_log("NoneType")
 
     @pytest.mark.asyncio
     async def test_order(self, tdata):

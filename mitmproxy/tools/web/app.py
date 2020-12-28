@@ -14,7 +14,6 @@ import tornado.websocket
 import mitmproxy.flow
 import mitmproxy.tools.web.master  # noqa
 from mitmproxy import contentviews
-from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
@@ -380,14 +379,7 @@ class RevertFlow(RequestHandler):
 
 class ReplayFlow(RequestHandler):
     def post(self, flow_id):
-        self.flow.backup()
-        self.flow.response = None
-        self.view.update([self.flow])
-
-        try:
-            self.master.commands.call("replay.client", [self.flow])
-        except exceptions.ReplayException as e:
-            raise APIError(400, str(e))
+        self.master.commands.call("replay.client", [self.flow])
 
 
 class FlowContent(RequestHandler):

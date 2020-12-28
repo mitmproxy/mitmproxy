@@ -39,7 +39,7 @@ class TestConcurrent:
                     "mitmproxy/data/addonscripts/concurrent_decorator_err.py"
                 )
             )
-            assert await tctx.master.await_log("decorator not supported")
+            await tctx.master.await_log("decorator not supported")
 
     def test_concurrent_class(self, tdata):
         with taddons.context() as tctx:

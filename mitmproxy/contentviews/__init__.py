@@ -18,7 +18,6 @@ import traceback
 from typing import Dict, Optional  # noqa
 from typing import List  # noqa
 
-from mitmproxy import exceptions
 from mitmproxy.net import http
 from mitmproxy.utils import strutils
 from . import (
@@ -42,7 +41,7 @@ def add(view: View) -> None:
     # TODO: auto-select a different name (append an integer?)
     for i in views:
         if i.name == view.name:
-            raise exceptions.ContentViewException("Duplicate view: " + view.name)
+            raise ValueError("Duplicate view: " + view.name)
 
     views.append(view)
 

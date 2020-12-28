@@ -219,3 +219,11 @@ class TestTlsConfig:
 
             assert self.do_handshake(tssl_client, tssl_server)
             assert tssl_server.obj.getpeercert()
+
+    @pytest.mark.asyncio
+    async def test_ca_expired(self, monkeypatch):
+        monkeypatch.setattr(SSL.X509, "has_expired", lambda self: True)
+        ta = tlsconfig.TlsConfig()
+        with taddons.context(ta) as tctx:
+            ta.configure(["confdir"])
+            await tctx.master.await_log("The mitmproxy certificate authority has expired", "warn")

@@ -18,28 +18,3 @@ The most important primitives are:
     - Context: The context is the connection context each layer is provided with, which is always a client connection
       and sometimes also a server connection.
 """
-
-from .config import ProxyConfig
-
-
-class DummyServer:
-    bound = False
-
-    def __init__(self, config=None):
-        self.config = config
-        self.address = "dummy"
-
-    def set_channel(self, channel):
-        pass
-
-    def serve_forever(self):
-        pass
-
-    def shutdown(self):
-        pass
-
-
-__all__ = [
-    "DummyServer",
-    "ProxyConfig",
-]
