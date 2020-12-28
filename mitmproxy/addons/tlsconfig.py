@@ -214,6 +214,14 @@ class TlsConfig:
             key_size=ctx.options.key_size,
             passphrase=ctx.options.cert_passphrase.encode("utf8") if ctx.options.cert_passphrase else None,
         )
+        if self.certstore.default_ca.has_expired():
+            ctx.log.warn(
+                "The mitmproxy certificate authority has expired!\n"
+                "Please delete all CA-related files in your ~/.mitmproxy folder.\n"
+                "The CA will be regenerated automatically after restarting mitmproxy.\n"
+                "Then make sure all your clients have the new CA installed.",
+            )
+
         for certspec in ctx.options.certs:
             parts = certspec.split("=", 1)
             if len(parts) == 1:

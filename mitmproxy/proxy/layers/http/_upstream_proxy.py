@@ -5,7 +5,6 @@ from h11._receivebuffer import ReceiveBuffer
 from mitmproxy import http
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import http1
-from mitmproxy.net.http.http1 import read_sansio as http1_sansio
 from mitmproxy.proxy import commands, context, layer, tunnel
 from mitmproxy.utils import human
 
@@ -57,7 +56,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         if response_head:
             response_head = [bytes(x) for x in response_head]  # TODO: Make url.parse compatible with bytearrays
             try:
-                response = http1_sansio.read_response_head(response_head)
+                response = http1.read_response_head(response_head)
             except ValueError as e:
                 yield commands.Log(f"{human.format_address(self.tunnel_connection.address)}: {e}")
                 return False, str(e)

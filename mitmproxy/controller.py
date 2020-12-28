@@ -1,49 +1,6 @@
 import queue
-import asyncio
+
 from mitmproxy import exceptions
-
-
-class Channel:
-    """
-        The only way for the proxy server to communicate with the master
-        is to use the channel it has been given.
-    """
-    def __init__(self, master, loop, should_exit):
-        self.master = master
-        self.loop = loop
-        self.should_exit = should_exit
-
-    def ask(self, mtype, m):
-        """
-        Decorate a message with a reply attribute, and send it to the master.
-        Then wait for a response.
-
-        Raises:
-            exceptions.Kill: All connections should be closed immediately.
-        """
-        if not self.should_exit.is_set():
-            m.reply = Reply(m)
-            asyncio.run_coroutine_threadsafe(
-                self.master.addons.handle_lifecycle(mtype, m),
-                self.loop,
-            )
-            g = m.reply.q.get()
-            if g == exceptions.Kill:
-                raise exceptions.Kill()
-            return g
-
-    def tell(self, mtype, m):
-        """
-        Decorate a message with a dummy reply attribute, send it to the master,
-        then return immediately.
-        """
-        if not self.should_exit.is_set():
-            m.reply = DummyReply()
-            asyncio.run_coroutine_threadsafe(
-                self.master.addons.handle_lifecycle(mtype, m),
-                self.loop,
-            )
-
 
 NO_REPLY = object()  # special object we can distinguish from a valid "None" reply.
 
@@ -53,6 +10,7 @@ class Reply:
     Messages sent through a channel are decorated with a "reply" attribute. This
     object is used to respond to the message through the return channel.
     """
+
     def __init__(self, obj):
         self.obj = obj
         # Spawn an event loop in the current thread
@@ -138,6 +96,7 @@ class DummyReply(Reply):
     handler so that they can be used multiple times. Useful when we need an
     object to seem like it has a channel, and during testing.
     """
+
     def __init__(self):
         super().__init__(None)
         self._should_reset = False

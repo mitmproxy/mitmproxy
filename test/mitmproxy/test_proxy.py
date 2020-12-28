@@ -3,7 +3,6 @@ import argparse
 import pytest
 
 from mitmproxy import options
-from mitmproxy.proxy import DummyServer
 from mitmproxy.tools import cmdline
 from mitmproxy.tools import main
 
@@ -41,11 +40,3 @@ class TestProcessProxyOptions:
             self.assert_noerr(
                 "--cert",
                 tdata.path("mitmproxy/data/testkey.pem"))
-
-
-class TestDummyServer:
-
-    def test_simple(self):
-        d = DummyServer(None)
-        d.set_channel(None)
-        d.shutdown()

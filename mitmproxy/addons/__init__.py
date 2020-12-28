@@ -2,7 +2,6 @@ from mitmproxy.addons import anticache
 from mitmproxy.addons import anticomp
 from mitmproxy.addons import block
 from mitmproxy.addons import browser
-from mitmproxy.addons import check_ca
 from mitmproxy.addons import clientplayback
 from mitmproxy.addons import command_history
 from mitmproxy.addons import core
@@ -34,7 +33,6 @@ def default_addons():
         block.Block(),
         anticache.AntiCache(),
         anticomp.AntiComp(),
-        check_ca.CheckCA(),
         clientplayback.ClientPlayback(),
         command_history.CommandHistory(),
         cut.Cut(),

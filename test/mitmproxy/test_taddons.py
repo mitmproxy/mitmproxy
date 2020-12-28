@@ -19,7 +19,7 @@ async def test_recordingmaster():
 async def test_dumplog():
     with taddons.context() as tctx:
         ctx.log.info("testing")
-        await ctx.master.await_log("testing")
+        assert await ctx.master.await_log("testing")
         s = io.StringIO()
         tctx.master.dump_log(s)
         assert s.getvalue()

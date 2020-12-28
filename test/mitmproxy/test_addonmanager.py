@@ -138,7 +138,8 @@ async def test_simple():
         tctx.master.clear()
         a.get("one").response = addons
         a.trigger("response")
-        assert not await tctx.master.await_log("not callable")
+        with pytest.raises(AssertionError):
+            await tctx.master.await_log("not callable")
 
         a.remove(a.get("one"))
         assert not a.get("one")
