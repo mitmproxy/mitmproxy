@@ -4,8 +4,9 @@ import time
 import datetime
 import ipaddress
 import sys
-import typing
 import contextlib
+from pathlib import Path
+from typing import Tuple, Optional, Union, Dict, List
 
 from pyasn1.type import univ, constraint, char, namedtype, tag
 from pyasn1.codec.der.decoder import decode
@@ -36,7 +37,7 @@ rD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=
 """
 
 
-def create_ca(organization, cn, exp, key_size):
+def create_ca(organization: str, cn: str, exp: int, key_size: int) -> Tuple[OpenSSL.crypto.PKey, OpenSSL.crypto.X509]:
     key = OpenSSL.crypto.PKey()
     key.generate_key(OpenSSL.crypto.TYPE_RSA, key_size)
     cert = OpenSSL.crypto.X509()
@@ -145,8 +146,8 @@ class CertStoreEntry:
 
 
 TCustomCertId = bytes  # manually provided certs (e.g. mitmproxy's --certs)
-TGeneratedCertId = typing.Tuple[typing.Optional[bytes], typing.Tuple[bytes, ...]]  # (common_name, sans)
-TCertId = typing.Union[TCustomCertId, TGeneratedCertId]
+TGeneratedCertId = Tuple[Optional[bytes], Tuple[bytes, ...]]  # (common_name, sans)
+TCertId = Union[TCustomCertId, TGeneratedCertId]
 
 
 class CertStore:
@@ -166,7 +167,7 @@ class CertStore:
         self.default_ca = default_ca
         self.default_chain_file = default_chain_file
         self.dhparams = dhparams
-        self.certs: typing.Dict[TCertId, CertStoreEntry] = {}
+        self.certs: Dict[TCertId, CertStoreEntry] = {}
         self.expire_queue = []
 
     def expire(self, entry):
@@ -176,7 +177,7 @@ class CertStore:
             self.certs = {k: v for k, v in self.certs.items() if v != d}
 
     @staticmethod
-    def load_dhparam(path):
+    def load_dhparam(path: str):
 
         # mitmproxy<=0.10 doesn't generate a dhparam file.
         # Create it now if necessary.
@@ -196,23 +197,28 @@ class CertStore:
             return dh
 
     @classmethod
-    def from_store(cls, path, basename, key_size, passphrase: typing.Optional[bytes] = None):
-        ca_path = os.path.join(path, basename + "-ca.pem")
-        if not os.path.exists(ca_path):
-            key, ca = cls.create_store(path, basename, key_size)
-        else:
-            with open(ca_path, "rb") as f:
-                raw = f.read()
-            ca = OpenSSL.crypto.load_certificate(
-                OpenSSL.crypto.FILETYPE_PEM,
-                raw)
-            key = OpenSSL.crypto.load_privatekey(
-                OpenSSL.crypto.FILETYPE_PEM,
-                raw,
-                passphrase)
-        dh_path = os.path.join(path, basename + "-dhparam.pem")
-        dh = cls.load_dhparam(dh_path)
-        return cls(key, ca, ca_path, dh)
+    def from_store(cls, path: Union[Path, str], basename: str, key_size, passphrase: Optional[bytes] = None) -> "CertStore":
+        path = Path(path)
+        ca_file = path / f"{basename}-ca.pem"
+        dhparam_file = path / f"{basename}-dhparam.pem"
+        if not ca_file.exists():
+            cls.create_store(path, basename, key_size)
+        return cls.from_files(ca_file, dhparam_file, passphrase)
+
+    @classmethod
+    def from_files(cls, ca_file: Path, dhparam_file: Path, passphrase: Optional[bytes] = None) -> "CertStore":
+        raw = ca_file.read_bytes()
+        ca = OpenSSL.crypto.load_certificate(
+            OpenSSL.crypto.FILETYPE_PEM,
+            raw
+        )
+        key = OpenSSL.crypto.load_privatekey(
+            OpenSSL.crypto.FILETYPE_PEM,
+            raw,
+            passphrase
+        )
+        dh = cls.load_dhparam(str(dhparam_file))
+        return cls(key, ca, str(ca_file), dh)
 
     @staticmethod
     @contextlib.contextmanager
@@ -230,16 +236,15 @@ class CertStore:
             os.umask(original_umask)
 
     @staticmethod
-    def create_store(path, basename, key_size, organization=None, cn=None, expiry=DEFAULT_EXP):
-        if not os.path.exists(path):
-            os.makedirs(path)
+    def create_store(path: Path, basename: str, key_size: int, organization=None, cn=None, expiry=DEFAULT_EXP) -> None:
+        path.mkdir(parents=True, exist_ok=True)
 
         organization = organization or basename
         cn = cn or basename
 
         key, ca = create_ca(organization=organization, cn=cn, exp=expiry, key_size=key_size)
         # Dump the CA plus private key
-        with CertStore.umask_secret(), open(os.path.join(path, basename + "-ca.pem"), "wb") as f:
+        with CertStore.umask_secret(), (path / f"{basename}-ca.pem").open("wb") as f:
             f.write(
                 OpenSSL.crypto.dump_privatekey(
                     OpenSSL.crypto.FILETYPE_PEM,
@@ -250,38 +255,36 @@ class CertStore:
                     ca))
 
         # Dump the certificate in PEM format
-        with open(os.path.join(path, basename + "-ca-cert.pem"), "wb") as f:
+        with (path / f"{basename}-ca-cert.pem").open("wb") as f:
             f.write(
                 OpenSSL.crypto.dump_certificate(
                     OpenSSL.crypto.FILETYPE_PEM,
                     ca))
 
         # Create a .cer file with the same contents for Android
-        with open(os.path.join(path, basename + "-ca-cert.cer"), "wb") as f:
+        with (path / f"{basename}-ca-cert.cer").open("wb") as f:
             f.write(
                 OpenSSL.crypto.dump_certificate(
                     OpenSSL.crypto.FILETYPE_PEM,
                     ca))
 
         # Dump the certificate in PKCS12 format for Windows devices
-        with open(os.path.join(path, basename + "-ca-cert.p12"), "wb") as f:
+        with (path / f"{basename}-ca-cert.p12").open("wb") as f:
             p12 = OpenSSL.crypto.PKCS12()
             p12.set_certificate(ca)
             f.write(p12.export())
 
         # Dump the certificate and key in a PKCS12 format for Windows devices
-        with CertStore.umask_secret(), open(os.path.join(path, basename + "-ca.p12"), "wb") as f:
+        with CertStore.umask_secret(), (path / f"{basename}-ca.p12").open("wb") as f:
             p12 = OpenSSL.crypto.PKCS12()
             p12.set_certificate(ca)
             p12.set_privatekey(key)
             f.write(p12.export())
 
-        with open(os.path.join(path, basename + "-dhparam.pem"), "wb") as f:
+        with (path / f"{basename}-dhparam.pem").open("wb") as f:
             f.write(DEFAULT_DHPARAM)
 
-        return key, ca
-
-    def add_cert_file(self, spec: str, path: str, passphrase: typing.Optional[bytes] = None) -> None:
+    def add_cert_file(self, spec: str, path: str, passphrase: Optional[bytes] = None) -> None:
         with open(path, "rb") as f:
             raw = f.read()
         cert = Cert(
@@ -313,7 +316,7 @@ class CertStore:
             self.certs[i] = entry
 
     @staticmethod
-    def asterisk_forms(dn: bytes) -> typing.List[bytes]:
+    def asterisk_forms(dn: bytes) -> List[bytes]:
         """
         Return all asterisk forms for a domain. For example, for www.example.com this will return
         [b"www.example.com", b"*.example.com", b"*.com"]. The single wildcard "*" is omitted.
@@ -326,10 +329,10 @@ class CertStore:
 
     def get_cert(
             self,
-            commonname: typing.Optional[bytes],
-            sans: typing.List[bytes],
-            organization: typing.Optional[bytes] = None
-    ) -> typing.Tuple["Cert", OpenSSL.SSL.PKey, str]:
+            commonname: Optional[bytes],
+            sans: List[bytes],
+            organization: Optional[bytes] = None
+    ) -> Tuple["Cert", OpenSSL.SSL.PKey, str]:
         """
             Returns an (cert, privkey, cert_chain) tuple.
 
@@ -341,7 +344,7 @@ class CertStore:
             organization: Organization name for the generated certificate.
         """
 
-        potential_keys: typing.List[TCertId] = []
+        potential_keys: List[TCertId] = []
         if commonname:
             potential_keys.extend(self.asterisk_forms(commonname))
         for s in sans:
@@ -467,7 +470,7 @@ class Cert(serializable.Serializable):
         )
 
     @property
-    def cn(self) -> typing.Optional[bytes]:
+    def cn(self) -> Optional[bytes]:
         c = None
         for i in self.subject:
             if i[0] == b"CN":
@@ -475,7 +478,7 @@ class Cert(serializable.Serializable):
         return c
 
     @property
-    def organization(self) -> typing.Optional[bytes]:
+    def organization(self) -> Optional[bytes]:
         c = None
         for i in self.subject:
             if i[0] == b"O":
@@ -483,7 +486,7 @@ class Cert(serializable.Serializable):
         return c
 
     @property
-    def altnames(self) -> typing.List[bytes]:
+    def altnames(self) -> List[bytes]:
         """
         Returns:
             All DNS altnames.

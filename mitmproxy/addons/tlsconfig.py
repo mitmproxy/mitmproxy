@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 from typing import List, Optional, Tuple, TypedDict, Any
 
 from OpenSSL import SSL, crypto
@@ -61,21 +60,34 @@ class TlsConfig:
     #  - ssl_verify_upstream_trusted_confdir
 
     def load(self, loader):
-        for c in ["client", "server"]:
-            loader.add_option(
-                name=f"tls_version_{c}_min",
-                typespec=str,
-                default=net_tls.DEFAULT_MIN_VERSION.name,
-                choices=[x.name for x in net_tls.Version],
-                help=f"Set the minimum TLS version for {c} connections.",
-            )
-            loader.add_option(
-                name=f"tls_version_{c}_max",
-                typespec=str,
-                default=net_tls.DEFAULT_MAX_VERSION.name,
-                choices=[x.name for x in net_tls.Version],
-                help=f"Set the maximum TLS version for {c} connections.",
-            )
+        loader.add_option(
+            name="tls_version_client_min",
+            typespec=str,
+            default=net_tls.DEFAULT_MIN_VERSION.name,
+            choices=[x.name for x in net_tls.Version],
+            help=f"Set the minimum TLS version for client connections.",
+        )
+        loader.add_option(
+            name="tls_version_client_max",
+            typespec=str,
+            default=net_tls.DEFAULT_MAX_VERSION.name,
+            choices=[x.name for x in net_tls.Version],
+            help=f"Set the maximum TLS version for client connections.",
+        )
+        loader.add_option(
+            name="tls_version_server_min",
+            typespec=str,
+            default=net_tls.DEFAULT_MIN_VERSION.name,
+            choices=[x.name for x in net_tls.Version],
+            help=f"Set the minimum TLS version for server connections.",
+        )
+        loader.add_option(
+            name="tls_version_server_max",
+            typespec=str,
+            default=net_tls.DEFAULT_MAX_VERSION.name,
+            choices=[x.name for x in net_tls.Version],
+            help=f"Set the maximum TLS version for server connections.",
+        )
 
     def tls_clienthello(self, tls_clienthello: tls.ClientHelloData):
         conn_context = tls_clienthello.context
@@ -163,15 +175,15 @@ class TlsConfig:
         # don't assign to client.cipher_list, doesn't need to be stored.
         cipher_list = server.cipher_list or DEFAULT_CIPHERS
 
-        client_cert: Optional[Path] = None
+        client_cert: Optional[str] = None
         if ctx.options.client_certs:
-            client_certs = Path(ctx.options.client_certs).expanduser()
-            if client_certs.is_file():
+            client_certs = os.path.expanduser(ctx.options.client_certs)
+            if os.path.isfile(client_certs):
                 client_cert = client_certs
             else:
                 server_name: str = (server.sni or server.address[0].encode("idna")).decode()
-                p = (client_certs / f"{server_name}.pem")
-                if p.is_file():
+                p = os.path.join(client_certs, f"{server_name}.pem")
+                if os.path.isfile(p):
                     client_cert = p
 
         ssl_ctx = net_tls.create_proxy_server_context(

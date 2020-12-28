@@ -3,7 +3,7 @@ import os
 import threading
 from enum import Enum
 from pathlib import Path
-from typing import Iterable, Callable, Optional, Tuple, List, Any
+from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO
 
 import certifi
 from kaitaistruct import KaitaiStream
@@ -22,6 +22,11 @@ class Method(Enum):
 
 
 # TODO: remove once https://github.com/pyca/pyopenssl/pull/985 has landed.
+try:
+    SSL._lib.TLS_server_method
+except AttributeError as e:  # pragma: no cover
+    raise RuntimeError("Your installation of the cryptography Python package is outdated.") from e
+
 SSL.Context._methods.setdefault(Method.TLS_SERVER_METHOD.value, SSL._lib.TLS_server_method)
 SSL.Context._methods.setdefault(Method.TLS_CLIENT_METHOD.value, SSL._lib.TLS_client_method)
 
@@ -52,7 +57,7 @@ DEFAULT_OPTIONS = (
 class MasterSecretLogger:
     def __init__(self, filename: Path):
         self.filename = filename.expanduser()
-        self.f = None
+        self.f: Optional[BinaryIO] = None
         self.lock = threading.Lock()
 
     # required for functools.wraps, which pyOpenSSL uses.
@@ -89,7 +94,7 @@ def _create_ssl_context(
         method: Method,
         min_version: Version,
         max_version: Version,
-        cipher_list: List[str],
+        cipher_list: Optional[Iterable[str]],
 ) -> SSL.Context:
     context = SSL.Context(method.value)
 
@@ -105,7 +110,7 @@ def _create_ssl_context(
     context.set_options(DEFAULT_OPTIONS)
 
     # Cipher List
-    if cipher_list:
+    if cipher_list is not None:
         try:
             context.set_cipher_list(b":".join(x.encode() for x in cipher_list))
         except SSL.Error as v:
@@ -122,13 +127,13 @@ def create_proxy_server_context(
         *,
         min_version: Version,
         max_version: Version,
-        cipher_list: List[str],
+        cipher_list: Optional[Iterable[str]],
         verify: Verify,
         sni: Optional[bytes],
-        ca_path: Path,
-        ca_pemfile: Path,
-        client_cert: Path,
-        alpn_protos: Iterable[bytes],
+        ca_path: Optional[str],
+        ca_pemfile: Optional[str],
+        client_cert: Optional[str],
+        alpn_protos: Optional[Iterable[bytes]],
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_CLIENT_METHOD,
@@ -165,8 +170,8 @@ def create_proxy_server_context(
     # Client Certs
     if client_cert:
         try:
-            context.use_privatekey_file(str(client_cert))
-            context.use_certificate_chain_file(str(client_cert))
+            context.use_privatekey_file(client_cert)
+            context.use_certificate_chain_file(client_cert)
         except SSL.Error as v:
             raise exceptions.TlsException(f"TLS client certificate error: {v}")
 
@@ -181,11 +186,11 @@ def create_client_proxy_context(
         *,
         min_version: Version,
         max_version: Version,
-        cipher_list: List[str],
+        cipher_list: Optional[Iterable[str]],
         cert: certs.Cert,
         key: SSL.PKey,
         chain_file: str,
-        alpn_select_callback: Callable[[SSL.Connection, List[bytes]], Any],
+        alpn_select_callback: Optional[Callable[[SSL.Connection, List[bytes]], Any]],
         request_client_cert: bool,
         extra_chain_certs: Iterable[certs.Cert],
         dhparams,
@@ -249,8 +254,9 @@ def is_tls_record_magic(d):
     """
     d = d[:3]
 
-    # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2
+    # TLS ClientHello magic, works for SSLv3, TLSv1.0, TLSv1.1, TLSv1.2, and TLSv1.3
     # http://www.moserware.com/2009/06/first-few-milliseconds-of-https.html#client-hello
+    # https://tls13.ulfheim.net/
     return (
             len(d) == 3 and
             d[0] == 0x16 and

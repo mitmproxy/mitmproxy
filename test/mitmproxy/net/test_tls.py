@@ -1,3 +1,7 @@
+from pathlib import Path
+
+from OpenSSL import SSL
+from mitmproxy import certs
 from mitmproxy.net import tls
 
 CLIENT_HELLO_NO_EXTENSIONS = bytes.fromhex(
@@ -17,76 +21,59 @@ def test_make_master_secret_logger():
     assert isinstance(tls.make_master_secret_logger("filepath"), tls.MasterSecretLogger)
 
 
-"""
 def test_sslkeylogfile(tdata, monkeypatch):
     keylog = []
     monkeypatch.setattr(tls, "log_master_secret", lambda conn, secrets: keylog.append(secrets))
 
-    ctx = tls.create_client_context()
+    store = certs.CertStore.from_files(
+        Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.pem")),
+        Path(tdata.path("mitmproxy/net/data/dhparam.pem"))
+    )
+    cert, key, chain_file = store.get_cert(b"example.com", [], None)
 
-    ta = tlsconfig.TlsConfig()
-    with taddons.context(ta) as tctx:
-        ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
-        ctx.server.address = ("example.mitmproxy.org", 443)
-        tctx.configure(ta, ssl_verify_upstream_trusted_ca=tdata.path(
-            "mitmproxy/net/data/verificationcerts/trusted-root.crt"))
-
-        tls_start = tls.TlsStartData(ctx.server, context=ctx)
-        ta.tls_start(tls_start)
-        tssl_client = tls_start.ssl_conn
-        tssl_server = test_tls.SSLTest(server_side=True)
-        assert self.do_handshake(tssl_client, tssl_server)
-"""
-
-"""
-class TestMasterSecretLogger(tservers.ServerTestBase):
-    handler = EchoHandler
-    ssl = dict(
-        cipher_list="AES256-SHA"
+    cctx = tls.create_proxy_server_context(
+        min_version=tls.DEFAULT_MIN_VERSION,
+        max_version=tls.DEFAULT_MAX_VERSION,
+        cipher_list=None,
+        verify=tls.Verify.VERIFY_NONE,
+        sni=None,
+        ca_path=None,
+        ca_pemfile=None,
+        client_cert=None,
+        alpn_protos=(),
+    )
+    sctx = tls.create_client_proxy_context(
+        min_version=tls.DEFAULT_MIN_VERSION,
+        max_version=tls.DEFAULT_MAX_VERSION,
+        cipher_list=None,
+        cert=cert,
+        key=key,
+        chain_file=chain_file,
+        alpn_select_callback=None,
+        request_client_cert=False,
+        extra_chain_certs=(),
+        dhparams=store.dhparams,
     )
 
-    def test_log(self, tmpdir):
-        testval = b"echo!\n"
-        _logfun = tls.log_master_secret
+    server = SSL.Connection(sctx)
+    server.set_accept_state()
 
-        logfile = str(tmpdir.join("foo", "bar", "logfile"))
-        tls.log_master_secret = tls.MasterSecretLogger(logfile)
+    client = SSL.Connection(cctx)
+    client.set_connect_state()
 
-        c = TCPClient(("127.0.0.1", self.port))
-        with c.connect():
-            c.convert_to_tls()
-            c.wfile.write(testval)
-            c.wfile.flush()
-            assert c.rfile.readline() == testval
-            c.finish()
+    read, write = client, server
+    while True:
+        try:
+            print(read)
+            read.do_handshake()
+        except SSL.WantReadError:
+            write.bio_write(read.bio_read(2 ** 16))
+        else:
+            break
+        read, write = write, read
 
-            tls.log_master_secret.close()
-            with open(logfile, "rb") as f:
-                assert f.read().count(b"SERVER_HANDSHAKE_TRAFFIC_SECRET") >= 2
-
-        tls.log_master_secret = _logfun
-
-    def test_create_logfun(self):
-        assert isinstance(
-            tls.MasterSecretLogger.create_logfun("test"),
-            tls.MasterSecretLogger)
-        assert not tls.MasterSecretLogger.create_logfun(False)
-
-
-
-class TestTLSInvalid:
-    def test_invalid_ssl_method_should_fail(self):
-        fake_ssl_method = 100500
-        with pytest.raises(exceptions.TlsException):
-            tls.create_proxy_server_context(method=fake_ssl_method)
-
-    def test_alpn_error(self):
-        with pytest.raises(exceptions.TlsException, match="must be a function"):
-            tls.create_proxy_server_context(alpn_select_callback="foo")
-
-        with pytest.raises(exceptions.TlsException, match="ALPN error"):
-            tls.create_proxy_server_context(alpn_select="foo", alpn_select_callback="bar")
-"""
+    assert keylog
+    assert keylog[0].startswith(b"SERVER_HANDSHAKE_TRAFFIC_SECRET")
 
 
 def test_is_record_magic():

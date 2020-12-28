@@ -206,7 +206,7 @@ class TestCert:
         assert x == c
 
     def test_from_store_with_passphrase(self, tdata, tmpdir):
-        ca = certs.CertStore.from_store(str(tmpdir), "mitmproxy", 2048, "password")
-        ca.add_cert_file("*", tdata.path("mitmproxy/data/mitmproxy.pem"), "password")
+        ca = certs.CertStore.from_store(str(tmpdir), "mitmproxy", 2048, b"password")
+        ca.add_cert_file("*", tdata.path("mitmproxy/data/mitmproxy.pem"), b"password")
 
         assert ca.get_cert(b"foo", [])
