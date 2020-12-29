@@ -1,23 +1,26 @@
-import os
-import ssl
-import time
+import contextlib
 import datetime
 import ipaddress
+import os
+import ssl
 import sys
-import contextlib
 from pathlib import Path
 from typing import Tuple, Optional, Union, Dict, List
 
-from pyasn1.type import univ, constraint, char, namedtype, tag
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import rsa
 from pyasn1.codec.der.decoder import decode
 from pyasn1.error import PyAsn1Error
-import OpenSSL
+from pyasn1.type import univ, constraint, char, namedtype, tag
 
+import OpenSSL
+from cryptography.x509 import NameOID, ExtendedKeyUsageOID
 from mitmproxy.coretypes import serializable
 
 # Default expiry must not be too long: https://github.com/mitmproxy/mitmproxy/issues/815
-DEFAULT_EXP = 94608000  # = 60 * 60 * 24 * 365 * 3 = 3 years
-DEFAULT_EXP_DUMMY_CERT = 31536000  # = 60 * 60 * 24 * 365 = 1 year
+CA_EXPIRY = datetime.timedelta(days=3 * 365)
+CERT_EXPIRY = datetime.timedelta(days=365)
 
 # Generated with "openssl dhparam". It's too slow to generate this on startup.
 DEFAULT_DHPARAM = b"""
@@ -37,51 +40,50 @@ rD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=
 """
 
 
-def create_ca(organization: str, cn: str, exp: int, key_size: int) -> Tuple[OpenSSL.crypto.PKey, OpenSSL.crypto.X509]:
-    key = OpenSSL.crypto.PKey()
-    key.generate_key(OpenSSL.crypto.TYPE_RSA, key_size)
-    cert = OpenSSL.crypto.X509()
-    cert.set_serial_number(int(time.time() * 10000))
-    cert.set_version(2)
-    cert.get_subject().CN = cn
-    cert.get_subject().O = organization
-    cert.gmtime_adj_notBefore(-3600 * 48)
-    cert.gmtime_adj_notAfter(exp)
-    cert.set_issuer(cert.get_subject())
-    cert.set_pubkey(key)
-    cert.add_extensions([
-        OpenSSL.crypto.X509Extension(
-            b"basicConstraints",
-            True,
-            b"CA:TRUE"
-        ),
-        OpenSSL.crypto.X509Extension(
-            b"nsCertType",
-            False,
-            b"sslCA"
-        ),
-        OpenSSL.crypto.X509Extension(
-            b"extendedKeyUsage",
-            False,
-            b"serverAuth,clientAuth,emailProtection,timeStamping,msCodeInd,msCodeCom,msCTLSign,msSGC,msEFS,nsSGC"
-        ),
-        OpenSSL.crypto.X509Extension(
-            b"keyUsage",
-            True,
-            b"keyCertSign, cRLSign"
-        ),
-        OpenSSL.crypto.X509Extension(
-            b"subjectKeyIdentifier",
-            False,
-            b"hash",
-            subject=cert
-        ),
+def create_ca(organization: str, cn: str, key_size: int) -> Tuple[OpenSSL.crypto.PKey, OpenSSL.crypto.X509]:
+    now = datetime.datetime.now()
+
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=key_size,
+    )
+    name = x509.Name([
+        x509.NameAttribute(NameOID.COMMON_NAME, cn),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization)
     ])
-    cert.sign(key, "sha256")
-    return key, cert
+    builder = x509.CertificateBuilder()
+    builder = builder.serial_number(x509.random_serial_number())
+    builder = builder.subject_name(name)
+    builder = builder.not_valid_before(now - datetime.timedelta(days=2))
+    builder = builder.not_valid_after(now + CA_EXPIRY)
+    builder = builder.issuer_name(name)
+    builder = builder.public_key(private_key.public_key())
+    builder = builder.add_extension(x509.BasicConstraints(ca=True, path_length=None), critical=True)
+    builder = builder.add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
+    builder = builder.add_extension(
+        x509.KeyUsage(
+            digital_signature=False,
+            content_commitment=False,
+            key_encipherment=False,
+            data_encipherment=False,
+            key_agreement=False,
+            key_cert_sign=True,
+            crl_sign=True,
+            encipher_only=False,
+            decipher_only=False,
+        ), critical=True)
+    builder = builder.add_extension(x509.SubjectKeyIdentifier.from_public_key(private_key.public_key()), critical=False)
+    cert = builder.sign(private_key=private_key, algorithm=hashes.SHA256())
+    return OpenSSL.crypto.PKey.from_cryptography_key(private_key), OpenSSL.crypto.X509.from_cryptography(cert)
 
 
-def dummy_cert(privkey, cacert, commonname, sans, organization):
+def dummy_cert(
+        privkey: OpenSSL.crypto.PKey,
+        cacert: OpenSSL.crypto.X509,
+        commonname: Optional[bytes],
+        sans: List[bytes],
+        organization: Optional[bytes] = None,
+) -> "Cert":
     """
         Generates a dummy certificate.
 
@@ -93,48 +95,44 @@ def dummy_cert(privkey, cacert, commonname, sans, organization):
 
         Returns cert if operation succeeded, None if not.
     """
-    ss = []
-    for i in sans:
-        try:
-            ipaddress.ip_address(i.decode("ascii"))
-        except ValueError:
-            ss.append(b"DNS:%s" % i)
-        else:
-            ss.append(b"IP:%s" % i)
-    ss = b", ".join(ss)
+    XX_privkey = privkey.to_cryptography_key()
+    XX_cacert: x509.Certificate = cacert.to_cryptography()
+    XX_commonname: Optional[str] = commonname.decode("idna") if commonname else None
+    XX_organization: Optional[str] = organization.decode() if organization else None
+    XX_sans: Optional[List[str]] = [x.decode("ascii") for x in sans]
 
-    cert = OpenSSL.crypto.X509()
-    cert.gmtime_adj_notBefore(-3600 * 48)
-    cert.gmtime_adj_notAfter(DEFAULT_EXP_DUMMY_CERT)
-    cert.set_issuer(cacert.get_subject())
+    now = datetime.datetime.now()
+
+    builder = x509.CertificateBuilder()
+    builder = builder.not_valid_before(now - datetime.timedelta(days=2))
+    builder = builder.not_valid_after(now + CERT_EXPIRY)
+    builder = builder.issuer_name(XX_cacert.subject)
+
+    subject = []
     is_valid_commonname = (
-        commonname is not None and len(commonname) < 64
+            commonname is not None and len(commonname) < 64
     )
     if is_valid_commonname:
-        cert.get_subject().CN = commonname
+        subject.append(x509.NameAttribute(NameOID.COMMON_NAME, XX_commonname))
     if organization is not None:
-        cert.get_subject().O = organization
-    cert.set_serial_number(int(time.time() * 10000))
-    if ss:
-        cert.set_version(2)
-        cert.add_extensions(
-            [OpenSSL.crypto.X509Extension(
-                b"subjectAltName",
-                # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
-                not is_valid_commonname,
-                ss
-            )]
-        )
-    cert.add_extensions([
-        OpenSSL.crypto.X509Extension(
-            b"extendedKeyUsage",
-            False,
-            b"serverAuth,clientAuth"
-        )
-    ])
-    cert.set_pubkey(cacert.get_pubkey())
-    cert.sign(privkey, "sha256")
-    return Cert(cert)
+        subject.append(x509.NameAttribute(NameOID.ORGANIZATION_NAME, XX_organization))
+    builder = builder.subject_name(x509.Name(subject))
+    builder = builder.serial_number(x509.random_serial_number())
+
+    ss = []
+    for x in XX_sans:
+        try:
+            ip = ipaddress.ip_address(x)
+        except ValueError:
+            ss.append(x509.DNSName(x))
+        else:
+            ss.append(x509.IPAddress(ip))
+    # RFC 5280 §4.2.1.6: subjectAltName is critical if subject is empty.
+    builder = builder.add_extension(x509.SubjectAlternativeName(ss), critical=not is_valid_commonname)
+    builder = builder.add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
+    builder = builder.public_key(XX_cacert.public_key())
+    cert = builder.sign(private_key=XX_privkey, algorithm=hashes.SHA256())
+    return Cert(OpenSSL.crypto.X509.from_cryptography(cert))
 
 
 class CertStoreEntry:
@@ -151,7 +149,6 @@ TCertId = Union[TCustomCertId, TGeneratedCertId]
 
 
 class CertStore:
-
     """
         Implements an in-memory certificate store.
     """
@@ -197,7 +194,8 @@ class CertStore:
             return dh
 
     @classmethod
-    def from_store(cls, path: Union[Path, str], basename: str, key_size, passphrase: Optional[bytes] = None) -> "CertStore":
+    def from_store(cls, path: Union[Path, str], basename: str, key_size,
+                   passphrase: Optional[bytes] = None) -> "CertStore":
         path = Path(path)
         ca_file = path / f"{basename}-ca.pem"
         dhparam_file = path / f"{basename}-dhparam.pem"
@@ -236,13 +234,13 @@ class CertStore:
             os.umask(original_umask)
 
     @staticmethod
-    def create_store(path: Path, basename: str, key_size: int, organization=None, cn=None, expiry=DEFAULT_EXP) -> None:
+    def create_store(path: Path, basename: str, key_size: int, organization=None, cn=None) -> None:
         path.mkdir(parents=True, exist_ok=True)
 
         organization = organization or basename
         cn = cn or basename
 
-        key, ca = create_ca(organization=organization, cn=cn, exp=expiry, key_size=key_size)
+        key, ca = create_ca(organization=organization, cn=cn, key_size=key_size)
         # Dump the CA plus private key
         with CertStore.umask_secret(), (path / f"{basename}-ca.pem").open("wb") as f:
             f.write(
@@ -389,7 +387,7 @@ class _GeneralName(univ.Choice):
 class _GeneralNames(univ.SequenceOf):
     componentType = _GeneralName()
     sizeSpec = univ.SequenceOf.sizeSpec + \
-        constraint.ValueSizeConstraint(1, 1024)
+               constraint.ValueSizeConstraint(1, 1024)
 
 
 class Cert(serializable.Serializable):

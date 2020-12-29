@@ -38,6 +38,7 @@ If you depend on these features, please raise your voice in
 ### Full Changelog
 
 * New Proxy Core based on sans-io pattern (@mhils)
+* Use cryptography to generate certificates, not pyOpenSSL (@mhils)
 * Remove the legacy protocol stack (@Kriechi)
 * Remove all deprecated pathod and pathoc tools and modules (@Kriechi)
 * --- TODO: add new PRs above this line ---
