@@ -518,7 +518,7 @@ class JsonDumpHandler(RequestHandler):
 
         obj['timestamp'] = flow.request.timestamp_start
         if flow.response:
-            obj['time'] = round((flow.response.timestamp_end - flow.request.timestamp_start)*1000)
+            obj['time'] = round((flow.response.timestamp_end - flow.request.timestamp_start) * 1000)
         else:
             obj['time'] = -1
 
