@@ -1,6 +1,7 @@
 import os
-
-from flask import Flask, render_template
+import urllib
+import requests
+from flask import Flask, render_template,request, Response
 
 from mitmproxy.options import CONF_BASENAME, CONF_DIR
 
@@ -40,3 +41,17 @@ def read_cert(ext, content_type):
         "Content-Type": content_type,
         "Content-Disposition": f"inline; filename={filename}",
     }
+
+
+@app.route('/download-traffic', methods=['GET'])
+def proxy():
+    url = "http://localhost:8081/download-traffic"
+    query = request.query_string
+    if query:
+        url += "?" + urllib.parse.unquote(query.decode("utf-8"))
+
+    resp = requests.get(url)
+    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
+    headers = [(name, value) for (name, value) in resp.raw.headers.items() if name.lower() not in excluded_headers]
+    response = Response(resp.content, resp.status_code, headers)
+    return response

@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import hashlib
 import json
 import logging
@@ -490,6 +491,116 @@ class DnsRebind(RequestHandler):
         )
 
 
+class JsonDumpHandler(RequestHandler):
+    def get_json(self, flow):
+        obj = {}
+
+        if flow.request:
+            obj['method'] = flow.request.method
+            obj['url'] = flow.request.url
+            obj['host'] = flow.request.host
+            obj['requestHeader'] = '\r\n'.join('{}: {}'.format(key, value) for key, value in flow.request.headers.items())
+
+        if flow.response:
+            obj['responseStatus'] = flow.response.status_code
+            obj['responseHeader'] = '\r\n'.join('{}: {}'.format(key, value) for key, value in flow.request.headers.items())
+
+        if flow.client_conn:
+            obj['localIP'] = flow.client_conn.address[0]
+            obj['localPort'] = flow.client_conn.address[1]
+
+        if flow.server_conn.ip_address:
+            obj['remoteIP'] = flow.server_conn.ip_address[0]
+            obj['remotePort'] = flow.server_conn.ip_address[1]
+
+        if flow.request.headers['User-Agent']:
+            obj['userAgent'] = flow.request.headers['User-Agent']
+
+        obj['timestamp'] = flow.request.timestamp_start
+        if flow.response:
+            obj['time'] = round((flow.response.timestamp_end - flow.request.timestamp_start)*1000)
+        else:
+            obj['time'] = -1
+
+        if flow.request.content:
+            obj['requestPayload'] = flow.request.text
+
+        return obj
+
+    def get_timestamp(self, str):
+        try:
+            date_time_obj = datetime.datetime.strptime(str, '%Y-%m-%d-%H-%M-%S')
+            return datetime.datetime.timestamp(date_time_obj)
+        except:
+            return None
+
+    def get(self):
+        ts_start = self.get_timestamp('2000-01-01-00-00-00')
+        ts_end = self.get_timestamp('2999-12-31-23-59-59')
+
+        query_start = self.get_query_arguments('start')
+        query_end = self.get_query_arguments('end')
+
+        pat_timestamp = re.compile(r'\d+$')
+
+        pat_date = re.compile(
+            r'^\d{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])-(0[0-9]|1[0-9]|2[0-3])-([0-5][0-9])-([0-5][0-9])$')
+
+        valid_format = None
+        if len(query_start) > 0:
+            if len(query_end) > 0:
+                if pat_date.match(query_start[0]) and pat_date.match(query_end[0]):
+                    valid_format = "date"
+                elif pat_timestamp.match(query_start[0]) and pat_timestamp.match(query_end[0]):
+                    valid_format = "timestamp"
+                else:
+                    valid_format = None
+            else:
+                if pat_date.match(query_start[0]):
+                    valid_format = "date"
+                elif pat_timestamp.match(query_start[0]):
+                    valid_format = "timestamp"
+                else:
+                    valid_format = None
+        elif len(query_end) > 0:
+            if pat_date.match(query_end[0]):
+                valid_format = "date"
+            elif pat_timestamp.match(query_end[0]):
+                valid_format = "timestamp"
+            else:
+                valid_format = None
+
+        if valid_format is None:
+            obj = {}
+            obj['error'] = "Timestamp should be number in milliseconds(e.g. 1600104169000) or in format " \
+                           "yyyy-mm-dd-hh-MM-ss. (e.g. 2020-09-15-02-30-00) "
+            self.write(json.dumps(obj))
+            return
+
+        if len(query_start) > 0:
+            if valid_format == "date":
+                ts_start = self.get_timestamp(query_start[0])
+            else:
+                ts_start = int(query_start[0]) / 1000
+
+        if len(query_end) > 0:
+            if valid_format == "date":
+                ts_end = self.get_timestamp(query_end[0])
+            else:
+                ts_end = int(query_end[0]) / 1000
+
+        self.set_header("Content-Disposition", "attachment; filename=dump.json")
+        self.set_header("Content-Type", "application/json; charset=UTF-8")
+        self.write("[")
+
+        for f in self.view:
+            if f.request.timestamp_start >= ts_start and f.request.timestamp_start <= ts_end:
+                if f.request.host and f.request.host != 'mitm.it':
+                    self.write(json.dumps(self.get_json(f)) + ",")
+
+        self.write("]")
+
+
 class Application(tornado.web.Application):
     master: "mitmproxy.tools.web.master.WebMaster"
 
@@ -531,6 +642,7 @@ class Application(tornado.web.Application):
                 (r"/settings(?:\.json)?", Settings),
                 (r"/clear", ClearAll),
                 (r"/options(?:\.json)?", Options),
-                (r"/options/save", SaveOptions)
+                (r"/options/save", SaveOptions),
+                (r"/download-traffic", JsonDumpHandler)
             ]
         )
