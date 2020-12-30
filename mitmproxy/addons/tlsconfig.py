@@ -1,7 +1,8 @@
 import os
-from typing import List, Optional, Tuple, TypedDict, Any
+from pathlib import Path
+from typing import List, Optional, TypedDict, Any
 
-from OpenSSL import SSL, crypto
+from OpenSSL import SSL
 from mitmproxy import certs, ctx, exceptions
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
@@ -115,7 +116,7 @@ class TlsConfig:
         client: context.Client = tls_start.context.client
         server: context.Server = tls_start.context.server
 
-        cert, key, chain_file = self.get_cert(tls_start.context)
+        entry = self.get_cert(tls_start.context)
 
         if not client.cipher_list and ctx.options.ciphers_client:
             client.cipher_list = ctx.options.ciphers_client.split(":")
@@ -126,9 +127,9 @@ class TlsConfig:
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=cipher_list,
-            cert=cert,
-            key=key,
-            chain_file=chain_file,
+            cert=entry.cert,
+            key=entry.privatekey,
+            chain_file=entry.chain_file,
             request_client_cert=False,
             alpn_select_callback=alpn_select_callback,
             extra_chain_certs=server.certificate_list,
@@ -232,8 +233,8 @@ class TlsConfig:
             if len(parts) == 1:
                 parts = ["*", parts[0]]
 
-            cert = os.path.expanduser(parts[1])
-            if not os.path.exists(cert):
+            cert = Path(parts[1]).expanduser()
+            if not cert.exists():
                 raise exceptions.OptionsError(f"Certificate file does not exist: {cert}")
             try:
                 self.certstore.add_cert_file(
@@ -241,10 +242,10 @@ class TlsConfig:
                     cert,
                     passphrase=ctx.options.cert_passphrase.encode("utf8") if ctx.options.cert_passphrase else None,
                 )
-            except crypto.Error as e:
-                raise exceptions.OptionsError(f"Invalid certificate format: {cert}") from e
+            except ValueError as e:
+                raise exceptions.OptionsError(f"Invalid certificate format for {cert}: {e}") from e
 
-    def get_cert(self, conn_context: context.Context) -> Tuple[certs.Cert, SSL.PKey, str]:
+    def get_cert(self, conn_context: context.Context) -> certs.CertStoreEntry:
         """
         This function determines the Common Name (CN), Subject Alternative Names (SANs) and Organization Name
         our certificate should have and then fetches a matching cert from the certstore.

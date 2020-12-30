@@ -29,7 +29,7 @@ def test_sslkeylogfile(tdata, monkeypatch):
         Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.pem")),
         Path(tdata.path("mitmproxy/net/data/dhparam.pem"))
     )
-    cert, key, chain_file = store.get_cert(b"example.com", [], None)
+    entry = store.get_cert(b"example.com", [], None)
 
     cctx = tls.create_proxy_server_context(
         min_version=tls.DEFAULT_MIN_VERSION,
@@ -46,9 +46,9 @@ def test_sslkeylogfile(tdata, monkeypatch):
         min_version=tls.DEFAULT_MIN_VERSION,
         max_version=tls.DEFAULT_MAX_VERSION,
         cipher_list=None,
-        cert=cert,
-        key=key,
-        chain_file=chain_file,
+        cert=entry.cert,
+        key=entry.privatekey,
+        chain_file=entry.chain_file,
         alpn_select_callback=None,
         request_client_cert=False,
         extra_chain_certs=(),

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pytest
 
@@ -50,10 +51,10 @@ class TestCertStore:
         ca2 = certs.CertStore.from_store(str(tmpdir), "test", 2048)
         assert ca2.get_cert(b"foo", [])
 
-        assert ca.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
+        assert ca.default_ca.serial == ca2.default_ca.serial
 
     def test_create_no_common_name(self, tstore):
-        assert tstore.get_cert(None, [])[0].cn is None
+        assert tstore.get_cert(None, []).cert.cn is None
 
     def test_sans(self, tstore):
         c1 = tstore.get_cert(b"foo.com", [b"*.bar.com"])
@@ -64,8 +65,8 @@ class TestCertStore:
 
     def test_sans_change(self, tstore):
         tstore.get_cert(b"foo.com", [b"*.bar.com"])
-        cert, key, chain_file = tstore.get_cert(b"foo.bar.com", [b"*.baz.com"])
-        assert b"*.baz.com" in cert.altnames
+        entry = tstore.get_cert(b"foo.bar.com", [b"*.baz.com"])
+        assert b"*.baz.com" in entry.cert.altnames
 
     def test_expire(self, tstore):
         tstore.STORE_CAP = 3
@@ -90,23 +91,23 @@ class TestCertStore:
         assert (b"three.com", ()) in tstore.certs
         assert (b"four.com", ()) in tstore.certs
 
-    def test_overrides(self, tmpdir):
-        ca1 = certs.CertStore.from_store(str(tmpdir.join("ca1")), "test", 2048)
-        ca2 = certs.CertStore.from_store(str(tmpdir.join("ca2")), "test", 2048)
-        assert not ca1.default_ca.get_serial_number() == ca2.default_ca.get_serial_number()
+    def test_overrides(self, tmp_path):
+        ca1 = certs.CertStore.from_store(tmp_path / "ca1", "test", 2048)
+        ca2 = certs.CertStore.from_store(tmp_path / "ca2", "test", 2048)
+        assert not ca1.default_ca.serial == ca2.default_ca.serial
 
         dc = ca2.get_cert(b"foo.com", [b"sans.example.com"])
-        dcp = tmpdir.join("dc")
-        dcp.write(dc[0].to_pem())
-        ca1.add_cert_file("foo.com", str(dcp))
+        dcp = tmp_path / "dc"
+        dcp.write_bytes(dc.cert.to_pem())
+        ca1.add_cert_file("foo.com", dcp)
 
         ret = ca1.get_cert(b"foo.com", [])
-        assert ret[0].serial == dc[0].serial
+        assert ret.cert.serial == dc.cert.serial
 
-    def test_create_dhparams(self, tmpdir):
-        filename = str(tmpdir.join("dhparam.pem"))
+    def test_create_dhparams(self, tmp_path):
+        filename = tmp_path / "dhparam.pem"
         certs.CertStore.load_dhparam(filename)
-        assert os.path.exists(filename)
+        assert filename.exists()
 
     @skip_windows
     def test_umask_secret(self, tmpdir):
@@ -122,18 +123,18 @@ class TestDummyCert:
     def test_with_ca(self, tstore):
         r = certs.dummy_cert(
             tstore.default_privatekey,
-            tstore.default_ca,
+            tstore.default_ca._cert,
             b"foo.com",
             [b"one.com", b"two.com", b"*.three.com", b"127.0.0.1"],
             b"Foo Ltd."
         )
         assert r.cn == b"foo.com"
-        assert r.altnames == [b'one.com', b'two.com', b'*.three.com']
+        assert r.altnames == [b"one.com", b"two.com", b"*.three.com", b"127.0.0.1"]
         assert r.organization == b"Foo Ltd."
 
         r = certs.dummy_cert(
             tstore.default_privatekey,
-            tstore.default_ca,
+            tstore.default_ca._cert,
             None,
             [],
             None
@@ -158,7 +159,7 @@ class TestCert:
         c2 = certs.Cert.from_pem(d)
         assert c2.cn == b"www.inode.co.nz"
         assert len(c2.altnames) == 2
-        assert c2.digest("sha1")
+        assert c2.fingerprint()
         assert c2.notbefore
         assert c2.notafter
         assert c2.subject
@@ -177,12 +178,6 @@ class TestCert:
         # This breaks unless we ignore a decoding error.
         assert c.altnames is not None
 
-    def test_der(self, tdata):
-        with open(tdata.path("mitmproxy/net/data/dercert"), "rb") as f:
-            d = f.read()
-        s = certs.Cert.from_der(d)
-        assert s.cn
-
     def test_state(self, tdata):
         with open(tdata.path("mitmproxy/net/data/text_cert"), "rb") as f:
             d = f.read()
@@ -196,11 +191,10 @@ class TestCert:
         assert c == c2
         assert c is not c2
 
-        x = certs.Cert('')
-        x.set_state(a)
-        assert x == c
+        c2.set_state(a)
+        assert c == c2
 
     def test_from_store_with_passphrase(self, tdata, tstore):
-        tstore.add_cert_file("*", tdata.path("mitmproxy/data/mitmproxy.pem"), b"password")
+        tstore.add_cert_file("*", Path(tdata.path("mitmproxy/data/mitmproxy.pem")), b"password")
 
         assert tstore.get_cert(b"foo", [])

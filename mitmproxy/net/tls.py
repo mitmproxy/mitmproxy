@@ -3,12 +3,15 @@ import os
 import threading
 from enum import Enum
 from pathlib import Path
-from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO
+from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO, NewType
 
 import certifi
 from kaitaistruct import KaitaiStream
 
-from OpenSSL import SSL
+from OpenSSL import SSL, crypto
+from cryptography import x509
+
+from cryptography.hazmat.primitives.asymmetric import rsa
 from mitmproxy import certs
 from mitmproxy.contrib.kaitaistruct import tls_client_hello
 from mitmproxy.net import check
@@ -188,12 +191,12 @@ def create_client_proxy_context(
         max_version: Version,
         cipher_list: Optional[Iterable[str]],
         cert: certs.Cert,
-        key: SSL.PKey,
-        chain_file: str,
+        key: rsa.RSAPrivateKey,
+        chain_file: Optional[Path],
         alpn_select_callback: Optional[Callable[[SSL.Connection, List[bytes]], Any]],
         request_client_cert: bool,
         extra_chain_certs: Iterable[certs.Cert],
-        dhparams,
+        dhparams: certs.DHParams,
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_SERVER_METHOD,
@@ -202,12 +205,13 @@ def create_client_proxy_context(
         cipher_list=cipher_list,
     )
 
-    context.use_certificate(cert.x509)
-    context.use_privatekey(key)
-    try:
-        context.load_verify_locations(chain_file, None)
-    except SSL.Error as e:
-        raise RuntimeError(f"Cannot load certificate chain ({chain_file}).") from e
+    context.use_certificate(cert.to_pyopenssl())
+    context.use_privatekey(crypto.PKey.from_cryptography_key(key))
+    if chain_file is not None:
+        try:
+            context.load_verify_locations(str(chain_file), None)
+        except SSL.Error as e:
+            raise RuntimeError(f"Cannot load certificate chain ({chain_file}).") from e
 
     if alpn_select_callback is not None:
         assert callable(alpn_select_callback)
@@ -227,7 +231,7 @@ def create_client_proxy_context(
         context.set_verify(Verify.VERIFY_NONE.value, None)
 
     for i in extra_chain_certs:
-        context.add_extra_chain_cert(i.x509)
+        context.add_extra_chain_cert(i._cert)
 
     if dhparams:
         SSL._lib.SSL_CTX_set_tmp_dh(context._context, dhparams)

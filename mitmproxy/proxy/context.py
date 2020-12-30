@@ -109,6 +109,7 @@ class Client(Connection):
     timestamp_start: float
     """TCP SYN received"""
 
+    mitmcert: Optional[certs.Cert] = None
     sni: Union[bytes, None] = None
 
     def __init__(self, peername, sockname, timestamp_start):
@@ -125,7 +126,7 @@ class Client(Connection):
             'alpn_proto_negotiated': self.alpn,
             'cipher_name': self.cipher,
             'id': self.id,
-            'mitmcert': None,
+            'mitmcert': self.mitmcert.get_state() if self.mitmcert is not None else None,
             'sni': self.sni,
             'timestamp_end': self.timestamp_end,
             'timestamp_start': self.timestamp_start,
@@ -169,6 +170,7 @@ class Client(Connection):
         self.error = state["error"]
         self.tls = state["tls"]
         self.certificate_list = [certs.Cert.from_state(x) for x in state["certificate_list"]]
+        self.mitmcert = certs.Cert.from_state(state["mitmcert"]) if state["mitmcert"] is not None else None
         self.alpn_offers = state["alpn_offers"]
         self.cipher_list = state["cipher_list"]
 
