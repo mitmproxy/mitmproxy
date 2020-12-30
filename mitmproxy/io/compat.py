@@ -235,11 +235,9 @@ def convert_10_11(data):
 
     def conv_conn(conn):
         conn["sni"] = strutils.always_str(conn["sni"], "ascii", "backslashreplace")
-        conn["alpn"] = strutils.always_str(conn.pop("alpn_proto_negotiated"), "utf8", "backslashreplace")
-        conn["alpn_offers"] = [
-            strutils.always_str(alpn, "utf8", "backslashreplace")
-            for alpn in (conn["alpn_offers"] or [])
-        ]
+        conn["alpn"] = conn.pop("alpn_proto_negotiated")
+        conn["alpn_offers"] = conn["alpn_offers"] or []
+        conn["cipher_list"] = conn["cipher_list"] or []
 
     conv_conn(data["client_conn"])
     conv_conn(data["server_conn"])

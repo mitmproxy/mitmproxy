@@ -91,8 +91,8 @@ def parse_client_hello(data: bytes) -> Optional[net_tls.ClientHello]:
     return None
 
 
-HTTP1_ALPNS = ("http/1.1", "http/1.0", "http/0.9")
-HTTP_ALPNS = ("h2",) + HTTP1_ALPNS
+HTTP1_ALPNS = (b"http/1.1", b"http/1.0", b"http/0.9")
+HTTP_ALPNS = (b"h2",) + HTTP1_ALPNS
 
 
 # We need these classes as hooks can only have one argument at the moment.
@@ -196,7 +196,7 @@ class _TLSLayer(tunnel.TunnelLayer):
                     all_certs.insert(0, cert)
 
             self.conn.timestamp_tls_setup = time.time()
-            self.conn.alpn = self.tls.get_alpn_proto_negotiated().decode()
+            self.conn.alpn = self.tls.get_alpn_proto_negotiated()
             self.conn.certificate_list = [certs.Cert.from_pyopenssl(x) for x in all_certs]
             self.conn.cipher = self.tls.get_cipher_name()
             self.conn.tls_version = self.tls.get_protocol_version_name()

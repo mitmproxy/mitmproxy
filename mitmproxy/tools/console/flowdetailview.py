@@ -4,7 +4,7 @@ import urwid
 import mitmproxy.flow
 from mitmproxy import http
 from mitmproxy.tools.console import common, searchable
-from mitmproxy.utils import human
+from mitmproxy.utils import human, strutils
 
 
 def maybe_timestamp(base, attr):
@@ -49,7 +49,7 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
         if resp:
             parts.append(("HTTP Version", resp.http_version))
         if sc.alpn:
-            parts.append(("ALPN", sc.alpn))
+            parts.append(("ALPN", strutils.bytes_to_escaped_str(sc.alpn)))
 
         text.extend(
             common.format_keyvals(parts, indent=4)
@@ -69,7 +69,7 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
             ]
 
             if c.altnames:
-                parts.append(("Alt names", ", ".join(c.altnames)))
+                parts.append(("Alt names", ", ".join(strutils.bytes_to_escaped_str(x) for x in c.altnames)))
             text.extend(
                 common.format_keyvals(parts, indent=4)
             )
@@ -89,7 +89,7 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
         if cc.cipher:
             parts.append(("Cipher Name", cc.cipher))
         if cc.alpn:
-            parts.append(("ALPN", cc.alpn))
+            parts.append(("ALPN", strutils.bytes_to_escaped_str(cc.alpn)))
 
         text.extend(
             common.format_keyvals(parts, indent=4)

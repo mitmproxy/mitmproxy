@@ -158,7 +158,7 @@ def tclient_conn() -> context.Client:
         timestamp_end=946681206,
         sni="address",
         cipher_name="cipher",
-        alpn="http/1.1",
+        alpn=b"http/1.1",
         tls_version="TLSv1.2",
         tls_extensions=[(0x00, bytes.fromhex("000e00000b6578616d"))],
         state=0,

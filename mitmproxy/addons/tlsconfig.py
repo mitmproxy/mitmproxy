@@ -8,7 +8,6 @@ from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import tls
-from mitmproxy.utils.strutils import always_bytes
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://ssl-config.mozilla.org/#config=old
@@ -36,7 +35,7 @@ def alpn_select_callback(conn: SSL.Connection, options: List[bytes]) -> Any:
         return server_alpn
     http_alpns = tls.HTTP_ALPNS if http2 else tls.HTTP1_ALPNS
     for alpn in options:  # client sends in order of preference, so we are nice and respect that.
-        if alpn.decode(errors="replace") in http_alpns:
+        if alpn in http_alpns:
             return alpn
     else:
         return SSL.NO_OVERLAPPING_PROTOCOLS
@@ -138,7 +137,7 @@ class TlsConfig:
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
         tls_start.ssl_conn.set_app_data(AppData(
-            server_alpn=always_bytes(server.alpn, "utf8", "replace"),
+            server_alpn=server.alpn,
             http2=ctx.options.http2,
         ))
         tls_start.ssl_conn.set_accept_state()
@@ -155,14 +154,13 @@ class TlsConfig:
 
         if server.sni is True:
             server.sni = client.sni or server.address[0]
-        sni: Optional[bytes] = server.sni.encode("ascii") if server.sni else None
 
         if not server.alpn_offers:
             if client.alpn_offers:
                 if ctx.options.http2:
                     server.alpn_offers = tuple(client.alpn_offers)
                 else:
-                    server.alpn_offers = tuple(x for x in client.alpn_offers if x != "h2")
+                    server.alpn_offers = tuple(x for x in client.alpn_offers if x != b"h2")
             elif client.tls_established:
                 # We would perfectly support HTTP/1 -> HTTP/2, but we want to keep things on the same protocol version.
                 # There are some edge cases where we want to mirror the regular server's behavior accurately,
@@ -172,7 +170,6 @@ class TlsConfig:
                 server.alpn_offers = tls.HTTP_ALPNS
             else:
                 server.alpn_offers = tls.HTTP1_ALPNS
-        alpn_offers: List[bytes] = [alpn.encode() for alpn in server.alpn_offers]
 
         if not server.cipher_list and ctx.options.ciphers_server:
             server.cipher_list = ctx.options.ciphers_server.split(":")
@@ -195,15 +192,16 @@ class TlsConfig:
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=cipher_list,
             verify=verify,
-            sni=sni,
+            sni=server.sni,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
             client_cert=client_cert,
-            alpn_protos=alpn_offers,
+            alpn_protos=server.alpn_offers,
         )
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
-        tls_start.ssl_conn.set_tlsext_host_name(sni)
+        if server.sni:
+            tls_start.ssl_conn.set_tlsext_host_name(server.sni.encode())
         tls_start.ssl_conn.set_connect_state()
 
     def running(self):

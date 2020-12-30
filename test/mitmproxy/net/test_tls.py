@@ -110,7 +110,7 @@ class TestClientHello:
             49195, 49199, 49196, 49200, 52393, 52392, 52244, 52243, 49161,
             49171, 49162, 49172, 156, 157, 47, 53, 10
         ]
-        assert c.alpn_protocols == ['h2', 'http/1.1']
+        assert c.alpn_protocols == [b'h2', b'http/1.1']
         assert c.extensions == [
             (65281, b'\x00'),
             (0, b'\x00\x0e\x00\x00\x0bexample.com'),

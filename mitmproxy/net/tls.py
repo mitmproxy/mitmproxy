@@ -130,7 +130,7 @@ def create_proxy_server_context(
         max_version: Version,
         cipher_list: Optional[Iterable[str]],
         verify: Verify,
-        sni: Optional[bytes],
+        sni: Optional[str],
         ca_path: Optional[str],
         ca_pemfile: Optional[str],
         client_cert: Optional[str],
@@ -148,6 +148,7 @@ def create_proxy_server_context(
 
     context.set_verify(verify.value, None)
     if sni is not None:
+        assert isinstance(sni, str)
         # Manually enable hostname verification on the context object.
         # https://wiki.openssl.org/index.php/Hostname_validation
         param = SSL._lib.SSL_CTX_get0_param(context._context)
@@ -158,7 +159,7 @@ def create_proxy_server_context(
             SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT
         )
         SSL._openssl_assert(
-            SSL._lib.X509_VERIFY_PARAM_set1_host(param, sni, 0) == 1
+            SSL._lib.X509_VERIFY_PARAM_set1_host(param, sni.encode(), 0) == 1
         )
 
     if ca_path is None and ca_pemfile is None:
@@ -293,14 +294,11 @@ class ClientHello:
         return None
 
     @property
-    def alpn_protocols(self) -> List[str]:
+    def alpn_protocols(self) -> List[bytes]:
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 if extension.type == 0x10:
-                    try:
-                        return [x.name.decode() for x in extension.body.alpn_protocols]
-                    except UnicodeDecodeError:
-                        return []
+                    return list(x.name for x in extension.body.alpn_protocols)
         return []
 
     @property

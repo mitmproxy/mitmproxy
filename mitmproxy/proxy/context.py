@@ -56,8 +56,8 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     TLS version, with the exception of the end-entity certificate which
     MUST be first.
     """
-    alpn: Optional[str] = None
-    alpn_offers: Sequence[str] = ()
+    alpn: Optional[bytes] = None
+    alpn_offers: Sequence[bytes] = ()
 
     # we may want to add SSL_CIPHER_description here, but that's currently not exposed by cryptography
     cipher: Optional[str] = None
@@ -98,9 +98,7 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     @property
     def alpn_proto_negotiated(self) -> Optional[bytes]:  # pragma: no cover
         warnings.warn("Server.alpn_proto_negotiated is deprecated, use Server.alpn instead.", DeprecationWarning)
-        if self.alpn is not None:
-            return self.alpn.encode()
-        return None
+        return self.alpn
 
 
 class Client(Connection):

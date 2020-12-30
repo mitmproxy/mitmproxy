@@ -20,6 +20,7 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
+from mitmproxy.utils.strutils import always_str
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
@@ -48,7 +49,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             "timestamp_end": flow.client_conn.timestamp_end,
             "sni": flow.client_conn.sni,
             "cipher_name": flow.client_conn.cipher,
-            "alpn_proto_negotiated": flow.client_conn.alpn,
+            "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
             "tls_version": flow.client_conn.tls_version,
         }
 
@@ -60,7 +61,7 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             "source_address": flow.server_conn.sockname,
             "tls_established": flow.server_conn.tls_established,
             "sni": flow.server_conn.sni,
-            "alpn_proto_negotiated": flow.server_conn.alpn,
+            "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
             "tls_version": flow.server_conn.tls_version,
             "timestamp_start": flow.server_conn.timestamp_start,
             "timestamp_tcp_setup": flow.server_conn.timestamp_tcp_setup,

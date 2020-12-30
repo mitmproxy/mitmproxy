@@ -351,7 +351,7 @@ class HttpStream(layer.Layer):
                 yield HttpErrorHook(self.flow)
             # For HTTP/2 we only want to kill the specific stream, for HTTP/1 we want to kill the connection
             # *without* sending an HTTP response (that could be achieved by the user by setting flow.response).
-            if self.context.client.alpn == "h2":
+            if self.context.client.alpn == b"h2":
                 yield SendHttp(ResponseProtocolError(self.stream_id, "killed"), self.context.client)
             else:
                 if self.context.client.state & ConnectionState.CAN_WRITE:
@@ -532,7 +532,7 @@ class HttpLayer(layer.Layer):
         self.command_sources = {}
 
         http_conn: HttpConnection
-        if self.context.client.alpn == "h2":
+        if self.context.client.alpn == b"h2":
             http_conn = Http2Server(context.fork())
         else:
             http_conn = Http1Server(context.fork())
@@ -606,10 +606,10 @@ class HttpLayer(layer.Layer):
             for connection in self.connections:
                 # see "tricky multiplexing edge case" in make_http_connection for an explanation
                 conn_is_pending_or_h2 = (
-                        connection.alpn == "h2"
+                        connection.alpn == b"h2"
                         or connection in self.waiting_for_establishment
                 )
-                h2_to_h1 = self.context.client.alpn == "h2" and not conn_is_pending_or_h2
+                h2_to_h1 = self.context.client.alpn == b"h2" and not conn_is_pending_or_h2
                 connection_suitable = (
                         event.connection_spec_matches(connection)
                         and not h2_to_h1
@@ -679,7 +679,7 @@ class HttpLayer(layer.Layer):
             # that neither have a content-length specified nor a chunked transfer encoding.
             # We can't process these two flows to the same h1 connection as they would both have
             # "read until eof" semantics. The only workaround left is to open a separate connection for each flow.
-            if not command.err and self.context.client.alpn == "h2" and command.connection.alpn != "h2":
+            if not command.err and self.context.client.alpn == b"h2" and command.connection.alpn != b"h2":
                 for cmd in waiting[1:]:
                     yield from self.get_connection(cmd, reuse=False)
                 break
@@ -695,7 +695,7 @@ class HttpClient(layer.Layer):
             err = yield commands.OpenConnection(self.context.server)
         if not err:
             child_layer: layer.Layer
-            if self.context.server.alpn == "h2":
+            if self.context.server.alpn == b"h2":
                 child_layer = Http2Client(self.context)
             else:
                 child_layer = Http1Client(self.context)

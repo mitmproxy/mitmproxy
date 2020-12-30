@@ -44,7 +44,7 @@ def decode_frames(data: bytes) -> List[hyperframe.frame.Frame]:
 
 
 def start_h2_client(tctx: Context) -> Tuple[Playbook, FrameFactory]:
-    tctx.client.alpn = "h2"
+    tctx.client.alpn = b"h2"
     frame_factory = FrameFactory()
 
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
@@ -58,7 +58,7 @@ def start_h2_client(tctx: Context) -> Tuple[Playbook, FrameFactory]:
 
 
 def make_h2(open_connection: OpenConnection) -> None:
-    open_connection.connection.alpn = "h2"
+    open_connection.connection.alpn = b"h2"
 
 
 def test_simple(tctx):

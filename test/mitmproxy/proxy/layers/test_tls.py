@@ -188,7 +188,7 @@ def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tut
             tls_start.ssl_conn = SSL.Connection(ssl_context)
             tls_start.ssl_conn.set_connect_state()
             # Set SNI
-            tls_start.ssl_conn.set_tlsext_host_name(tls_start.conn.sni.encode("ascii"))
+            tls_start.ssl_conn.set_tlsext_host_name(tls_start.conn.sni.encode())
 
             # Manually enable hostname verification.
             # Recent OpenSSL versions provide slightly nicer ways to do this, but they are not exposed in
@@ -202,7 +202,7 @@ def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tut
                 SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT
             )
             SSL._openssl_assert(
-                SSL._lib.X509_VERIFY_PARAM_set1_host(param, tls_start.conn.sni.encode("ascii"), 0) == 1
+                SSL._lib.X509_VERIFY_PARAM_set1_host(param, tls_start.conn.sni.encode(), 0) == 1
             )
 
     return tutils.reply(*args, side_effect=make_conn, **kwargs)
@@ -446,8 +446,8 @@ class TestClientTLS:
         assert tctx.client.tls_established
         assert tctx.server.tls_established
         assert tctx.server.sni == tctx.client.sni
-        assert tctx.client.alpn == "quux"
-        assert tctx.server.alpn == "quux"
+        assert tctx.client.alpn == b"quux"
+        assert tctx.server.alpn == b"quux"
         _test_echo(playbook, tssl_server, tctx.server)
         _test_echo(playbook, tssl_client, tctx.client)
 

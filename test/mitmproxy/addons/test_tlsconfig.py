@@ -127,7 +127,7 @@ class TestTlsConfig:
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
-            ctx.client.alpn_offers = ["h2"]
+            ctx.client.alpn_offers = [b"h2"]
             ctx.client.cipher_list = ["TLS_AES_256_GCM_SHA384", "ECDHE-RSA-AES128-SHA"]
             ctx.server.address = ("example.mitmproxy.org", 443)
 
@@ -185,8 +185,8 @@ class TestTlsConfig:
                 ta.tls_start(tls_start)
                 assert ctx.server.alpn_offers == expected
 
-            assert_alpn(True, tls.HTTP_ALPNS + ("foo",), tls.HTTP_ALPNS + ("foo",))
-            assert_alpn(False, tls.HTTP_ALPNS + ("foo",), tls.HTTP1_ALPNS + ("foo",))
+            assert_alpn(True, tls.HTTP_ALPNS + (b"foo",), tls.HTTP_ALPNS + (b"foo",))
+            assert_alpn(False, tls.HTTP_ALPNS + (b"foo",), tls.HTTP1_ALPNS + (b"foo",))
             assert_alpn(True, [], tls.HTTP_ALPNS)
             assert_alpn(False, [], tls.HTTP1_ALPNS)
             ctx.client.timestamp_tls_setup = time.time()
