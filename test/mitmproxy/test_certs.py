@@ -56,6 +56,16 @@ class TestCertStore:
     def test_create_no_common_name(self, tstore):
         assert tstore.get_cert(None, []).cert.cn is None
 
+    def test_chain_file(self, tdata, tmp_path):
+        cert = Path(tdata.path("mitmproxy/data/confdir/mitmproxy-ca.pem")).read_bytes()
+        (tmp_path / "mitmproxy-ca.pem").write_bytes(cert)
+        ca = certs.CertStore.from_store(tmp_path, "mitmproxy", 2048)
+        assert ca.default_chain_file is None
+
+        (tmp_path / "mitmproxy-ca.pem").write_bytes(2 * cert)
+        ca = certs.CertStore.from_store(tmp_path, "mitmproxy", 2048)
+        assert ca.default_chain_file == (tmp_path / "mitmproxy-ca.pem")
+
     def test_sans(self, tstore):
         c1 = tstore.get_cert("foo.com", ["*.bar.com"])
         tstore.get_cert("foo.bar.com", [])
@@ -167,9 +177,29 @@ class TestCert:
         assert c2.serial
         assert c2.issuer
         assert c2.to_pem()
-        assert c2.has_expired is not None
+        assert c2.has_expired() is not None
 
         assert c1 != c2
+
+    def test_convert(self, tdata):
+        with open(tdata.path("mitmproxy/net/data/text_cert"), "rb") as f:
+            d = f.read()
+        c = certs.Cert.from_pem(d)
+
+        assert c == certs.Cert.from_pem(c.to_pem())
+        assert c == certs.Cert.from_state(c.get_state())
+        assert c == certs.Cert.from_pyopenssl(c.to_pyopenssl())
+
+    @pytest.mark.parametrize("filename,name,bits", [
+        ("text_cert", "RSA", 1024),
+        ("dsa_cert.pem", "DSA", 1024),
+        ("ec_cert.pem", "EC (secp256r1)", 256),
+    ])
+    def test_keyinfo(self, tdata, filename, name, bits):
+        with open(tdata.path(f"mitmproxy/net/data/{filename}"), "rb") as f:
+            d = f.read()
+        c = certs.Cert.from_pem(d)
+        assert c.keyinfo == (name, bits)
 
     def test_err_broken_sans(self, tdata):
         with open(tdata.path("mitmproxy/net/data/text_cert_weird1"), "rb") as f:
@@ -195,6 +225,9 @@ class TestCert:
         assert c == c2
 
     def test_from_store_with_passphrase(self, tdata, tstore):
-        tstore.add_cert_file("*", Path(tdata.path("mitmproxy/data/mitmproxy.pem")), b"password")
+        tstore.add_cert_file("unencrypted-no-pass", Path(tdata.path("mitmproxy/data/testkey.pem")), None)
+        tstore.add_cert_file("unencrypted-pass", Path(tdata.path("mitmproxy/data/testkey.pem")), b"password")
+        tstore.add_cert_file("encrypted-pass", Path(tdata.path("mitmproxy/data/mitmproxy.pem")), b"password")
 
-        assert tstore.get_cert("foo", [])
+        with pytest.raises(TypeError):
+            tstore.add_cert_file("encrypted-no-pass", Path(tdata.path("mitmproxy/data/mitmproxy.pem")), None)

@@ -9,7 +9,7 @@ from typing import Tuple, Optional, Union, Dict, List, NewType
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa, dsa
+from cryptography.hazmat.primitives.asymmetric import rsa, dsa, ec
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509 import NameOID, ExtendedKeyUsageOID
 
@@ -106,7 +106,10 @@ class Cert(serializable.Serializable):
             return "RSA", public_key.key_size
         if isinstance(public_key, dsa.DSAPublicKey):
             return "DSA", public_key.key_size
-        return public_key.__class__.__name__.replace("PublicKey", "").replace("_", ""), -1
+        if isinstance(public_key, ec.EllipticCurvePublicKey):
+            return f"EC ({public_key.curve.name})", public_key.key_size
+        return (public_key.__class__.__name__.replace("PublicKey", "").replace("_", ""),
+                getattr(public_key, "key_size", -1))  # pragma: no cover
 
     @property
     def cn(self) -> Optional[str]:
@@ -491,8 +494,7 @@ def load_pem_private_key(data: bytes, password: Optional[bytes]) -> rsa.RSAPriva
     """
     try:
         return serialization.load_pem_private_key(data, password)  # type: ignore
-    except Exception as e:
+    except TypeError:
         if password is not None:
             return load_pem_private_key(data, None)
-        else:
-            raise ValueError("Error loading private key") from e
+        raise
