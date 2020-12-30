@@ -65,7 +65,7 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     cipher_list: Sequence[str] = ()
     """Ciphers accepted by the proxy server on this connection."""
     tls_version: Optional[str] = None
-    sni: Union[bytes, Literal[True], None]
+    sni: Union[str, Literal[True], None]
 
     timestamp_end: Optional[float] = None
     """Connection end timestamp"""
@@ -109,7 +109,8 @@ class Client(Connection):
     timestamp_start: float
     """TCP SYN received"""
 
-    sni: Union[bytes, None] = None
+    mitmcert: Optional[certs.Cert] = None
+    sni: Union[str, None] = None
 
     def __init__(self, peername, sockname, timestamp_start):
         self.id = str(uuid.uuid4())
@@ -122,10 +123,10 @@ class Client(Connection):
         # This means we need to add all new fields to the old implementation.
         return {
             'address': self.peername,
-            'alpn_proto_negotiated': self.alpn,
+            'alpn': self.alpn,
             'cipher_name': self.cipher,
             'id': self.id,
-            'mitmcert': None,
+            'mitmcert': self.mitmcert.get_state() if self.mitmcert is not None else None,
             'sni': self.sni,
             'timestamp_end': self.timestamp_end,
             'timestamp_start': self.timestamp_start,
@@ -155,7 +156,7 @@ class Client(Connection):
 
     def set_state(self, state):
         self.peername = tuple(state["address"]) if state["address"] else None
-        self.alpn = state["alpn_proto_negotiated"]
+        self.alpn = state["alpn"]
         self.cipher = state["cipher_name"]
         self.id = state["id"]
         self.sni = state["sni"]
@@ -169,6 +170,7 @@ class Client(Connection):
         self.error = state["error"]
         self.tls = state["tls"]
         self.certificate_list = [certs.Cert.from_state(x) for x in state["certificate_list"]]
+        self.mitmcert = certs.Cert.from_state(state["mitmcert"]) if state["mitmcert"] is not None else None
         self.alpn_offers = state["alpn_offers"]
         self.cipher_list = state["cipher_list"]
 
@@ -215,7 +217,7 @@ class Server(Connection):
     timestamp_tcp_setup: Optional[float] = None
     """TCP ACK received"""
 
-    sni: Union[bytes, Literal[True], None] = True
+    sni: Union[str, Literal[True], None] = True
     """True: client SNI, False: no SNI, bytes: custom value"""
     via: Optional[server_spec.ServerSpec] = None
 
@@ -226,7 +228,7 @@ class Server(Connection):
     def get_state(self):
         return {
             'address': self.address,
-            'alpn_proto_negotiated': self.alpn,
+            'alpn': self.alpn,
             'id': self.id,
             'ip_address': self.peername,
             'sni': self.sni,
@@ -257,7 +259,7 @@ class Server(Connection):
 
     def set_state(self, state):
         self.address = tuple(state["address"]) if state["address"] else None
-        self.alpn = state["alpn_proto_negotiated"]
+        self.alpn = state["alpn"]
         self.id = state["id"]
         self.peername = tuple(state["ip_address"]) if state["ip_address"] else None
         self.sni = state["sni"]

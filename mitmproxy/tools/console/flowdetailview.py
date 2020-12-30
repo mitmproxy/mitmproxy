@@ -4,8 +4,7 @@ import urwid
 import mitmproxy.flow
 from mitmproxy import http
 from mitmproxy.tools.console import common, searchable
-from mitmproxy.utils import human
-from mitmproxy.utils import strutils
+from mitmproxy.utils import human, strutils
 
 
 def maybe_timestamp(base, attr):
@@ -40,64 +39,37 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
         text.append(urwid.Text([("head", "Metadata:")]))
         text.extend(common.format_keyvals(parts, indent=4))
 
-    if sc is not None and sc.ip_address:
+    if sc is not None and sc.peername:
         text.append(urwid.Text([("head", "Server Connection:")]))
         parts = [
             ("Address", human.format_address(sc.address)),
         ]
-        if sc.ip_address:
-            parts.append(("Resolved Address", human.format_address(sc.ip_address)))
+        if sc.peername:
+            parts.append(("Resolved Address", human.format_address(sc.peername)))
         if resp:
             parts.append(("HTTP Version", resp.http_version))
-        if sc.alpn_proto_negotiated:
-            parts.append(("ALPN", strutils.bytes_to_escaped_str(sc.alpn_proto_negotiated)))
+        if sc.alpn:
+            parts.append(("ALPN", strutils.bytes_to_escaped_str(sc.alpn)))
 
         text.extend(
             common.format_keyvals(parts, indent=4)
         )
 
-        c = sc.cert
+        c = sc.certificate_list[0]
         if c:
             text.append(urwid.Text([("head", "Server Certificate:")]))
             parts = [
                 ("Type", "%s, %s bits" % c.keyinfo),
-                ("SHA1 digest", c.digest("sha1")),
+                ("SHA256 digest", c.fingerprint().hex()),
                 ("Valid to", str(c.notafter)),
                 ("Valid from", str(c.notbefore)),
                 ("Serial", str(c.serial)),
-                (
-                    "Subject",
-                    urwid.BoxAdapter(
-                        urwid.ListBox(
-                            common.format_keyvals(
-                                c.subject,
-                                key_format="highlight"
-                            )
-                        ),
-                        len(c.subject)
-                    )
-                ),
-                (
-                    "Issuer",
-                    urwid.BoxAdapter(
-                        urwid.ListBox(
-                            common.format_keyvals(
-                                c.issuer,
-                                key_format="highlight"
-                            )
-                        ),
-                        len(c.issuer)
-                    )
-                )
+                ("Subject", urwid.Pile(common.format_keyvals(c.subject, key_format="highlight"))),
+                ("Issuer", urwid.Pile(common.format_keyvals(c.issuer, key_format="highlight")))
             ]
 
             if c.altnames:
-                parts.append(
-                    (
-                        "Alt names",
-                        ", ".join(strutils.bytes_to_escaped_str(x) for x in c.altnames)
-                    )
-                )
+                parts.append(("Alt names", ", ".join(strutils.bytes_to_escaped_str(x) for x in c.altnames)))
             text.extend(
                 common.format_keyvals(parts, indent=4)
             )
@@ -106,19 +78,18 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
         text.append(urwid.Text([("head", "Client Connection:")]))
 
         parts = [
-            ("Address", "{}:{}".format(cc.address[0], cc.address[1])),
+            ("Address", human.format_address(cc.peername)),
         ]
         if req:
             parts.append(("HTTP Version", req.http_version))
         if cc.tls_version:
             parts.append(("TLS Version", cc.tls_version))
         if cc.sni:
-            parts.append(("Server Name Indication",
-                          strutils.bytes_to_escaped_str(strutils.always_bytes(cc.sni, "idna"))))
-        if cc.cipher_name:
-            parts.append(("Cipher Name", cc.cipher_name))
-        if cc.alpn_proto_negotiated:
-            parts.append(("ALPN", strutils.bytes_to_escaped_str(cc.alpn_proto_negotiated)))
+            parts.append(("Server Name Indication", cc.sni))
+        if cc.cipher:
+            parts.append(("Cipher Name", cc.cipher))
+        if cc.alpn:
+            parts.append(("ALPN", strutils.bytes_to_escaped_str(cc.alpn)))
 
         text.extend(
             common.format_keyvals(parts, indent=4)

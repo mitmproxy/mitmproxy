@@ -435,7 +435,7 @@ class HttpStream(layer.Layer):
 
         stack = tunnel.LayerStack()
         if self.context.server.via.scheme == "https":
-            http_proxy.sni = self.context.server.via.address[0].encode()
+            http_proxy.sni = self.context.server.via.address[0]
             stack /= tls.ServerTLSLayer(self.context, http_proxy)
         stack /= _upstream_proxy.HttpUpstreamProxy(self.context, http_proxy, True)
 
@@ -635,7 +635,7 @@ class HttpLayer(layer.Layer):
 
             context.server = Server(event.address)
             if event.tls:
-                context.server.sni = event.address[0].encode()
+                context.server.sni = event.address[0]
 
             if event.via:
                 assert event.via.scheme in ("http", "https")
@@ -643,7 +643,7 @@ class HttpLayer(layer.Layer):
 
                 if event.via.scheme == "https":
                     http_proxy.alpn_offers = tls.HTTP_ALPNS
-                    http_proxy.sni = event.via.address[0].encode()
+                    http_proxy.sni = event.via.address[0]
                     stack /= tls.ServerTLSLayer(context, http_proxy)
 
                 send_connect = not (self.mode == HTTPMode.upstream and not event.tls)

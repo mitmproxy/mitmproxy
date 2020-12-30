@@ -202,7 +202,7 @@ def test_reverse_proxy_tcp_over_tls(tctx: Context, monkeypatch, patch, connectio
                 >> reply_tls_start()
                 << SendData(tctx.server, data)
         )
-        assert tls.parse_client_hello(data()).sni == b"localhost"
+        assert tls.parse_client_hello(data()).sni == "localhost"
 
 
 @pytest.mark.parametrize("connection_strategy", ["eager", "lazy"])

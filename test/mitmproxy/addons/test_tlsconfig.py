@@ -57,21 +57,21 @@ class TestTlsConfig:
             ctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
 
             # Edge case first: We don't have _any_ idea about the server, so we just return "mitmproxy" as subject.
-            cert, pkey, chainfile = ta.get_cert(ctx)
-            assert cert.cn == b"mitmproxy"
+            entry = ta.get_cert(ctx)
+            assert entry.cert.cn == "mitmproxy"
 
             # Here we have an existing server connection...
             ctx.server.address = ("server-address.example", 443)
             with open(tdata.path("mitmproxy/net/data/verificationcerts/trusted-leaf.crt"), "rb") as f:
                 ctx.server.certificate_list = [certs.Cert.from_pem(f.read())]
-            cert, pkey, chainfile = ta.get_cert(ctx)
-            assert cert.cn == b"example.mitmproxy.org"
-            assert cert.altnames == [b"example.mitmproxy.org", b"server-address.example"]
+            entry = ta.get_cert(ctx)
+            assert entry.cert.cn == "example.mitmproxy.org"
+            assert entry.cert.altnames == ["example.mitmproxy.org", "server-address.example"]
 
             # And now we also incorporate SNI.
-            ctx.client.sni = b"sni.example"
-            cert, pkey, chainfile = ta.get_cert(ctx)
-            assert cert.altnames == [b"example.mitmproxy.org", b"sni.example"]
+            ctx.client.sni = "sni.example"
+            entry = ta.get_cert(ctx)
+            assert entry.cert.altnames == ["example.mitmproxy.org", "sni.example"]
 
     def test_tls_clienthello(self):
         # only really testing for coverage here, there's no point in mirroring the individual conditions
@@ -222,7 +222,7 @@ class TestTlsConfig:
 
     @pytest.mark.asyncio
     async def test_ca_expired(self, monkeypatch):
-        monkeypatch.setattr(SSL.X509, "has_expired", lambda self: True)
+        monkeypatch.setattr(certs.Cert, "has_expired", lambda self: True)
         ta = tlsconfig.TlsConfig()
         with taddons.context(ta) as tctx:
             ta.configure(["confdir"])
