@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import Iterator, Optional, Tuple
 
 from OpenSSL import SSL
-
 from mitmproxy import certs
 from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy import commands, events, layer, tunnel
@@ -198,8 +197,7 @@ class _TLSLayer(tunnel.TunnelLayer):
             self.conn.sni = self.tls.get_servername()
             self.conn.alpn = self.tls.get_alpn_proto_negotiated()
             self.conn.certificate_list = [certs.Cert.from_pyopenssl(x) for x in all_certs]
-            cert = self.tls.get_certificate()
-            if cert is not None:
+            if isinstance(self.conn, context.Client):
                 self.conn.mitmcert = certs.Cert.from_pyopenssl(self.tls.get_certificate())
             self.conn.cipher = self.tls.get_cipher_name()
             self.conn.tls_version = self.tls.get_protocol_version_name()

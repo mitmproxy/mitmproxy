@@ -5,7 +5,7 @@ import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Tuple, Optional, Union, Dict, List, NewType, Any
+from typing import Tuple, Optional, Union, Dict, List, NewType
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
@@ -60,7 +60,7 @@ class Cert(serializable.Serializable):
 
     @classmethod
     def from_pem(cls, data: bytes) -> "Cert":
-        cert = x509.load_pem_x509_certificate(data)
+        cert = x509.load_pem_x509_certificate(data)  # type: ignore
         return cls(cert)
 
     def to_pem(self) -> bytes:
@@ -78,11 +78,7 @@ class Cert(serializable.Serializable):
 
     @property
     def issuer(self) -> List[Tuple[str, str]]:
-        # noinspection PyTypeChecker
-        return [
-            tuple(rdn.rfc4514_string().split("=", maxsplit=1))
-            for rdn in self._cert.issuer.rdns
-        ]
+        return _name_to_keyval(self._cert.issuer)
 
     @property
     def notbefore(self) -> datetime.datetime:
@@ -97,11 +93,7 @@ class Cert(serializable.Serializable):
 
     @property
     def subject(self) -> List[Tuple[str, str]]:
-        # noinspection PyTypeChecker
-        return [
-            tuple(rdn.rfc4514_string().split("=", maxsplit=1))
-            for rdn in self._cert.subject.rdns
-        ]
+        return _name_to_keyval(self._cert.subject)
 
     @property
     def serial(self) -> int:
@@ -145,6 +137,14 @@ class Cert(serializable.Serializable):
                     +
                     [str(x).encode() for x in ext.get_values_for_type(x509.IPAddress)]
             )
+
+
+def _name_to_keyval(name: x509.Name) -> List[Tuple[str, str]]:
+    parts = []
+    for rdn in name.rdns:
+        k, v = rdn.rfc4514_string().split("=", maxsplit=1)
+        parts.append((k, v))
+    return parts
 
 
 def create_ca(
@@ -257,7 +257,7 @@ TCustomCertId = bytes  # manually provided certs (e.g. mitmproxy's --certs)
 TGeneratedCertId = Tuple[Optional[bytes], Tuple[bytes, ...]]  # (common_name, sans)
 TCertId = Union[TCustomCertId, TGeneratedCertId]
 
-DHParams = NewType("DHParams", Any)
+DHParams = NewType("DHParams", bytes)
 
 
 class CertStore:
@@ -266,7 +266,7 @@ class CertStore:
     """
     STORE_CAP = 100
     certs: Dict[TCertId, CertStoreEntry]
-    expire_queue: List[Cert]
+    expire_queue: List[CertStoreEntry]
 
     def __init__(
             self,
@@ -308,6 +308,7 @@ class CertStore:
             )
             dh = OpenSSL.SSL._ffi.gc(dh, OpenSSL.SSL._lib.DH_free)
             return dh
+        raise RuntimeError("Error loading DH Params.")  # pragma: no cover
 
     @classmethod
     def from_store(
@@ -328,10 +329,10 @@ class CertStore:
     def from_files(cls, ca_file: Path, dhparam_file: Path, passphrase: Optional[bytes] = None) -> "CertStore":
         raw = ca_file.read_bytes()
         key = load_pem_private_key(raw, passphrase)
-        ca = Cert(x509.load_pem_x509_certificate(raw))
+        ca = Cert.from_pem(raw)
         dh = cls.load_dhparam(dhparam_file)
         if raw.count(b"BEGIN CERTIFICATE") != 1:
-            chain_file = ca_file
+            chain_file: Optional[Path] = ca_file
         else:
             chain_file = None
         return cls(key, ca, chain_file, dh)
@@ -493,7 +494,7 @@ def load_pem_private_key(data: bytes, password: Optional[bytes]) -> rsa.RSAPriva
     if the private key is unencrypted.
     """
     try:
-        return serialization.load_pem_private_key(data, password)
+        return serialization.load_pem_private_key(data, password)  # type: ignore
     except Exception as e:
         if password is not None:
             return load_pem_private_key(data, None)

@@ -3,15 +3,13 @@ import os
 import threading
 from enum import Enum
 from pathlib import Path
-from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO, NewType
+from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO
 
 import certifi
+from cryptography.hazmat.primitives.asymmetric import rsa
 from kaitaistruct import KaitaiStream
 
 from OpenSSL import SSL, crypto
-from cryptography import x509
-
-from cryptography.hazmat.primitives.asymmetric import rsa
 from mitmproxy import certs
 from mitmproxy.contrib.kaitaistruct import tls_client_hello
 from mitmproxy.net import check
