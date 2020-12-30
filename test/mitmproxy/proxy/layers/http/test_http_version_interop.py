@@ -22,7 +22,7 @@ def event_types(events):
 
 
 def h2_client(tctx: Context) -> Tuple[h2.connection.H2Connection, Playbook]:
-    tctx.client.alpn = b"h2"
+    tctx.client.alpn = "h2"
 
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
     conn = h2.connection.H2Connection()

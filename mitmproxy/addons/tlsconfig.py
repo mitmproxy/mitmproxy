@@ -8,6 +8,7 @@ from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
 from mitmproxy.proxy.layers import tls
+from mitmproxy.utils.strutils import always_bytes
 
 # We manually need to specify this, otherwise OpenSSL may select a non-HTTP2 cipher by default.
 # https://ssl-config.mozilla.org/#config=old
@@ -35,7 +36,7 @@ def alpn_select_callback(conn: SSL.Connection, options: List[bytes]) -> Any:
         return server_alpn
     http_alpns = tls.HTTP_ALPNS if http2 else tls.HTTP1_ALPNS
     for alpn in options:  # client sends in order of preference, so we are nice and respect that.
-        if alpn in http_alpns:
+        if alpn.decode(errors="replace") in http_alpns:
             return alpn
     else:
         return SSL.NO_OVERLAPPING_PROTOCOLS
@@ -137,7 +138,7 @@ class TlsConfig:
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
         tls_start.ssl_conn.set_app_data(AppData(
-            server_alpn=server.alpn,
+            server_alpn=always_bytes(server.alpn, "utf8", "replace"),
             http2=ctx.options.http2,
         ))
         tls_start.ssl_conn.set_accept_state()
@@ -153,15 +154,15 @@ class TlsConfig:
             verify = net_tls.Verify.VERIFY_PEER
 
         if server.sni is True:
-            server.sni = client.sni or server.address[0].encode()
-        sni = server.sni or None  # make sure that false-y values are None
+            server.sni = client.sni or server.address[0]
+        sni: Optional[bytes] = server.sni.encode("ascii") if server.sni else None
 
         if not server.alpn_offers:
             if client.alpn_offers:
                 if ctx.options.http2:
                     server.alpn_offers = tuple(client.alpn_offers)
                 else:
-                    server.alpn_offers = tuple(x for x in client.alpn_offers if x != b"h2")
+                    server.alpn_offers = tuple(x for x in client.alpn_offers if x != "h2")
             elif client.tls_established:
                 # We would perfectly support HTTP/1 -> HTTP/2, but we want to keep things on the same protocol version.
                 # There are some edge cases where we want to mirror the regular server's behavior accurately,
@@ -171,6 +172,7 @@ class TlsConfig:
                 server.alpn_offers = tls.HTTP_ALPNS
             else:
                 server.alpn_offers = tls.HTTP1_ALPNS
+        alpn_offers: List[bytes] = [alpn.encode() for alpn in server.alpn_offers]
 
         if not server.cipher_list and ctx.options.ciphers_server:
             server.cipher_list = ctx.options.ciphers_server.split(":")
@@ -183,7 +185,7 @@ class TlsConfig:
             if os.path.isfile(client_certs):
                 client_cert = client_certs
             else:
-                server_name: str = (server.sni or server.address[0].encode("idna")).decode()
+                server_name: str = server.sni or server.address[0]
                 p = os.path.join(client_certs, f"{server_name}.pem")
                 if os.path.isfile(p):
                     client_cert = p
@@ -197,11 +199,11 @@ class TlsConfig:
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
             client_cert=client_cert,
-            alpn_protos=server.alpn_offers,
+            alpn_protos=alpn_offers,
         )
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
-        tls_start.ssl_conn.set_tlsext_host_name(server.sni)
+        tls_start.ssl_conn.set_tlsext_host_name(sni)
         tls_start.ssl_conn.set_connect_state()
 
     def running(self):
@@ -250,8 +252,8 @@ class TlsConfig:
         This function determines the Common Name (CN), Subject Alternative Names (SANs) and Organization Name
         our certificate should have and then fetches a matching cert from the certstore.
         """
-        altnames: List[bytes] = []
-        organization: Optional[bytes] = None
+        altnames: List[str] = []
+        organization: Optional[str] = None
 
         # Use upstream certificate if available.
         if conn_context.server.certificate_list:
@@ -266,11 +268,11 @@ class TlsConfig:
         if conn_context.client.sni:
             altnames.append(conn_context.client.sni)
         elif conn_context.server.address:
-            altnames.append(conn_context.server.address[0].encode("idna"))
+            altnames.append(conn_context.server.address[0])
 
         # As a last resort, add *something* so that we have a certificate to serve.
         if not altnames:
-            altnames.append(b"mitmproxy")
+            altnames.append("mitmproxy")
 
         # only keep first occurrence of each hostname
         altnames = list(dict.fromkeys(altnames))

@@ -91,8 +91,8 @@ def parse_client_hello(data: bytes) -> Optional[net_tls.ClientHello]:
     return None
 
 
-HTTP1_ALPNS = (b"http/1.1", b"http/1.0", b"http/0.9")
-HTTP_ALPNS = (b"h2",) + HTTP1_ALPNS
+HTTP1_ALPNS = ("http/1.1", "http/1.0", "http/0.9")
+HTTP_ALPNS = ("h2",) + HTTP1_ALPNS
 
 
 # We need these classes as hooks can only have one argument at the moment.
@@ -183,6 +183,8 @@ class _TLSLayer(tunnel.TunnelLayer):
                 err = f"OpenSSL {e!r}"
             return False, err
         else:
+            # Here we set all attributes that are only known *after* the handshake.
+
             # Get all peer certificates.
             # https://www.openssl.org/docs/man1.1.1/man3/SSL_get_peer_cert_chain.html
             # If called on the client side, the stack also contains the peer's certificate; if called on the server
@@ -194,11 +196,8 @@ class _TLSLayer(tunnel.TunnelLayer):
                     all_certs.insert(0, cert)
 
             self.conn.timestamp_tls_setup = time.time()
-            self.conn.sni = self.tls.get_servername()
-            self.conn.alpn = self.tls.get_alpn_proto_negotiated()
+            self.conn.alpn = self.tls.get_alpn_proto_negotiated().decode()
             self.conn.certificate_list = [certs.Cert.from_pyopenssl(x) for x in all_certs]
-            if isinstance(self.conn, context.Client):
-                self.conn.mitmcert = certs.Cert.from_pyopenssl(self.tls.get_certificate())
             self.conn.cipher = self.tls.get_cipher_name()
             self.conn.tls_version = self.tls.get_protocol_version_name()
             if self.debug:
@@ -339,8 +338,7 @@ class ClientTLSLayer(_TLSLayer):
 
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
         if self.conn.sni:
-            assert isinstance(self.conn.sni, bytes)
-            dest = self.conn.sni.decode("idna")
+            dest = self.conn.sni
         else:
             dest = human.format_address(self.context.server.address)
         if err.startswith("Cannot parse ClientHello"):

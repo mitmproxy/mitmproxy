@@ -56,8 +56,8 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     TLS version, with the exception of the end-entity certificate which
     MUST be first.
     """
-    alpn: Optional[bytes] = None
-    alpn_offers: Sequence[bytes] = ()
+    alpn: Optional[str] = None
+    alpn_offers: Sequence[str] = ()
 
     # we may want to add SSL_CIPHER_description here, but that's currently not exposed by cryptography
     cipher: Optional[str] = None
@@ -65,7 +65,7 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     cipher_list: Sequence[str] = ()
     """Ciphers accepted by the proxy server on this connection."""
     tls_version: Optional[str] = None
-    sni: Union[bytes, Literal[True], None]
+    sni: Union[str, Literal[True], None]
 
     timestamp_end: Optional[float] = None
     """Connection end timestamp"""
@@ -98,7 +98,9 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     @property
     def alpn_proto_negotiated(self) -> Optional[bytes]:  # pragma: no cover
         warnings.warn("Server.alpn_proto_negotiated is deprecated, use Server.alpn instead.", DeprecationWarning)
-        return self.alpn
+        if self.alpn is not None:
+            return self.alpn.encode()
+        return None
 
 
 class Client(Connection):
@@ -110,7 +112,7 @@ class Client(Connection):
     """TCP SYN received"""
 
     mitmcert: Optional[certs.Cert] = None
-    sni: Union[bytes, None] = None
+    sni: Union[str, None] = None
 
     def __init__(self, peername, sockname, timestamp_start):
         self.id = str(uuid.uuid4())
@@ -123,7 +125,7 @@ class Client(Connection):
         # This means we need to add all new fields to the old implementation.
         return {
             'address': self.peername,
-            'alpn_proto_negotiated': self.alpn,
+            'alpn': self.alpn,
             'cipher_name': self.cipher,
             'id': self.id,
             'mitmcert': self.mitmcert.get_state() if self.mitmcert is not None else None,
@@ -156,7 +158,7 @@ class Client(Connection):
 
     def set_state(self, state):
         self.peername = tuple(state["address"]) if state["address"] else None
-        self.alpn = state["alpn_proto_negotiated"]
+        self.alpn = state["alpn"]
         self.cipher = state["cipher_name"]
         self.id = state["id"]
         self.sni = state["sni"]
@@ -217,7 +219,7 @@ class Server(Connection):
     timestamp_tcp_setup: Optional[float] = None
     """TCP ACK received"""
 
-    sni: Union[bytes, Literal[True], None] = True
+    sni: Union[str, Literal[True], None] = True
     """True: client SNI, False: no SNI, bytes: custom value"""
     via: Optional[server_spec.ServerSpec] = None
 
@@ -228,7 +230,7 @@ class Server(Connection):
     def get_state(self):
         return {
             'address': self.address,
-            'alpn_proto_negotiated': self.alpn,
+            'alpn': self.alpn,
             'id': self.id,
             'ip_address': self.peername,
             'sni': self.sni,
@@ -259,7 +261,7 @@ class Server(Connection):
 
     def set_state(self, state):
         self.address = tuple(state["address"]) if state["address"] else None
-        self.alpn = state["alpn_proto_negotiated"]
+        self.alpn = state["alpn"]
         self.id = state["id"]
         self.peername = tuple(state["ip_address"]) if state["ip_address"] else None
         self.sni = state["sni"]

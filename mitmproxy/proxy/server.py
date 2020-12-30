@@ -427,7 +427,8 @@ if __name__ == "__main__":  # pragma: no cover
                 tls_start.ssl_conn.set_accept_state()
             else:
                 tls_start.ssl_conn.set_connect_state()
-                tls_start.ssl_conn.set_tlsext_host_name(tls_start.context.client.sni)
+                if tls_start.context.client.sni is not None:
+                    tls_start.ssl_conn.set_tlsext_host_name(tls_start.context.client.sni.encode())
 
         await SimpleConnectionHandler(reader, writer, opts, {
             "next_layer": next_layer,

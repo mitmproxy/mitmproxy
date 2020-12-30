@@ -109,21 +109,21 @@ class Cert(serializable.Serializable):
         return public_key.__class__.__name__.replace("PublicKey", "").replace("_", ""), -1
 
     @property
-    def cn(self) -> Optional[bytes]:  # TODO: make this return str
+    def cn(self) -> Optional[str]:
         attrs = self._cert.subject.get_attributes_for_oid(x509.NameOID.COMMON_NAME)
         if attrs:
-            return attrs[0].value.encode()
+            return attrs[0].value
         return None
 
     @property
-    def organization(self) -> Optional[bytes]:  # TODO: make this return str
+    def organization(self) -> Optional[str]:
         attrs = self._cert.subject.get_attributes_for_oid(x509.NameOID.ORGANIZATION_NAME)
         if attrs:
-            return attrs[0].value.encode()
+            return attrs[0].value
         return None
 
     @property
-    def altnames(self) -> List[bytes]:  # TODO: make this return str
+    def altnames(self) -> List[str]:
         """
         Get all SubjectAlternativeName DNS altnames.
         """
@@ -133,9 +133,9 @@ class Cert(serializable.Serializable):
             return []
         else:
             return (
-                    [x.encode() for x in ext.get_values_for_type(x509.DNSName)]
+                    ext.get_values_for_type(x509.DNSName)
                     +
-                    [str(x).encode() for x in ext.get_values_for_type(x509.IPAddress)]
+                    [str(x) for x in ext.get_values_for_type(x509.IPAddress)]
             )
 
 
@@ -191,9 +191,9 @@ def create_ca(
 def dummy_cert(
         privkey: rsa.RSAPrivateKey,
         cacert: x509.Certificate,
-        commonname: Optional[bytes],
-        sans: List[bytes],
-        organization: Optional[bytes] = None,
+        commonname: Optional[str],
+        sans: List[str],
+        organization: Optional[str] = None,
 ) -> Cert:
     """
         Generates a dummy certificate.
@@ -206,10 +206,6 @@ def dummy_cert(
 
         Returns cert if operation succeeded, None if not.
     """
-    XX_commonname: Optional[str] = commonname.decode("idna") if commonname else None
-    XX_organization: Optional[str] = organization.decode() if organization else None
-    XX_sans: List[str] = [x.decode("ascii") for x in sans]
-
     builder = x509.CertificateBuilder()
     builder = builder.issuer_name(cacert.subject)
     builder = builder.add_extension(x509.ExtendedKeyUsage([ExtendedKeyUsageOID.SERVER_AUTH]), critical=False)
@@ -221,19 +217,19 @@ def dummy_cert(
 
     subject = []
     is_valid_commonname = (
-            XX_commonname is not None and len(XX_commonname) < 64
+            commonname is not None and len(commonname) < 64
     )
     if is_valid_commonname:
-        assert XX_commonname is not None
-        subject.append(x509.NameAttribute(NameOID.COMMON_NAME, XX_commonname))
-    if XX_organization is not None:
-        assert XX_organization is not None
-        subject.append(x509.NameAttribute(NameOID.ORGANIZATION_NAME, XX_organization))
+        assert commonname is not None
+        subject.append(x509.NameAttribute(NameOID.COMMON_NAME, commonname))
+    if organization is not None:
+        assert organization is not None
+        subject.append(x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization))
     builder = builder.subject_name(x509.Name(subject))
     builder = builder.serial_number(x509.random_serial_number())
 
     ss: List[x509.GeneralName] = []
-    for x in XX_sans:
+    for x in sans:
         try:
             ip = ipaddress.ip_address(x)
         except ValueError:
@@ -253,8 +249,8 @@ class CertStoreEntry:
     chain_file: Optional[Path]
 
 
-TCustomCertId = bytes  # manually provided certs (e.g. mitmproxy's --certs)
-TGeneratedCertId = Tuple[Optional[bytes], Tuple[bytes, ...]]  # (common_name, sans)
+TCustomCertId = str  # manually provided certs (e.g. mitmproxy's --certs)
+TGeneratedCertId = Tuple[Optional[str], Tuple[str, ...]]  # (common_name, sans)
 TCertId = Union[TCustomCertId, TGeneratedCertId]
 
 DHParams = NewType("DHParams", bytes)
@@ -415,10 +411,10 @@ class CertStore:
 
         self.add_cert(
             CertStoreEntry(cert, key, path),
-            spec.encode("idna")
+            spec
         )
 
-    def add_cert(self, entry: CertStoreEntry, *names: bytes) -> None:
+    def add_cert(self, entry: CertStoreEntry, *names: str) -> None:
         """
             Adds a cert to the certstore. We register the CN in the cert plus
             any SANs, and also the list of names provided as an argument.
@@ -431,22 +427,22 @@ class CertStore:
             self.certs[i] = entry
 
     @staticmethod
-    def asterisk_forms(dn: bytes) -> List[bytes]:
+    def asterisk_forms(dn: str) -> List[str]:
         """
         Return all asterisk forms for a domain. For example, for www.example.com this will return
         [b"www.example.com", b"*.example.com", b"*.com"]. The single wildcard "*" is omitted.
         """
-        parts = dn.split(b".")
+        parts = dn.split(".")
         ret = [dn]
         for i in range(1, len(parts)):
-            ret.append(b"*." + b".".join(parts[i:]))
+            ret.append("*." + ".".join(parts[i:]))
         return ret
 
     def get_cert(
             self,
-            commonname: Optional[bytes],
-            sans: List[bytes],
-            organization: Optional[bytes] = None
+            commonname: Optional[str],
+            sans: List[str],
+            organization: Optional[str] = None
     ) -> CertStoreEntry:
         """
             commonname: Common name for the generated certificate. Must be a
@@ -462,7 +458,7 @@ class CertStore:
             potential_keys.extend(self.asterisk_forms(commonname))
         for s in sans:
             potential_keys.extend(self.asterisk_forms(s))
-        potential_keys.append(b"*")
+        potential_keys.append("*")
         potential_keys.append((commonname, tuple(sans)))
 
         name = next(

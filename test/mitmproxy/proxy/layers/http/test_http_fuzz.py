@@ -208,7 +208,7 @@ def h2_frames(draw):
 
 def h2_layer(opts):
     tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
-    tctx.client.alpn = b"h2"
+    tctx.client.alpn = "h2"
 
     layer = http.HttpLayer(tctx, HTTPMode.regular)
     for _ in layer.handle_event(Start()):

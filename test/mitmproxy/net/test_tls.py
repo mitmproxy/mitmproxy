@@ -29,7 +29,7 @@ def test_sslkeylogfile(tdata, monkeypatch):
         Path(tdata.path("mitmproxy/net/data/verificationcerts/trusted-root.pem")),
         Path(tdata.path("mitmproxy/net/data/dhparam.pem"))
     )
-    entry = store.get_cert(b"example.com", [], None)
+    entry = store.get_cert("example.com", [], None)
 
     cctx = tls.create_proxy_server_context(
         min_version=tls.DEFAULT_MIN_VERSION,
@@ -105,12 +105,12 @@ class TestClientHello:
         )
         c = tls.ClientHello(data)
         assert repr(c)
-        assert c.sni == b'example.com'
+        assert c.sni == 'example.com'
         assert c.cipher_suites == [
             49195, 49199, 49196, 49200, 52393, 52392, 52244, 52243, 49161,
             49171, 49162, 49172, 156, 157, 47, 53, 10
         ]
-        assert c.alpn_protocols == [b'h2', b'http/1.1']
+        assert c.alpn_protocols == ['h2', 'http/1.1']
         assert c.extensions == [
             (65281, b'\x00'),
             (0, b'\x00\x0e\x00\x00\x0bexample.com'),

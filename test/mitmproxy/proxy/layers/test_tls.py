@@ -76,7 +76,7 @@ def test_get_client_hello():
 
 
 def test_parse_client_hello():
-    assert tls.parse_client_hello(client_hello_with_extensions).sni == b"example.com"
+    assert tls.parse_client_hello(client_hello_with_extensions).sni == "example.com"
     assert tls.parse_client_hello(client_hello_with_extensions[:50]) is None
     with pytest.raises(ValueError):
         tls.parse_client_hello(client_hello_with_extensions[:183] + b'\x00\x00\x00\x00\x00\x00\x00\x00\x00')
@@ -188,7 +188,7 @@ def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tut
             tls_start.ssl_conn = SSL.Connection(ssl_context)
             tls_start.ssl_conn.set_connect_state()
             # Set SNI
-            tls_start.ssl_conn.set_tlsext_host_name(tls_start.conn.sni)
+            tls_start.ssl_conn.set_tlsext_host_name(tls_start.conn.sni.encode("ascii"))
 
             # Manually enable hostname verification.
             # Recent OpenSSL versions provide slightly nicer ways to do this, but they are not exposed in
@@ -202,7 +202,7 @@ def reply_tls_start(alpn: typing.Optional[bytes] = None, *args, **kwargs) -> tut
                 SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT
             )
             SSL._openssl_assert(
-                SSL._lib.X509_VERIFY_PARAM_set1_host(param, tls_start.conn.sni, 0) == 1
+                SSL._lib.X509_VERIFY_PARAM_set1_host(param, tls_start.conn.sni.encode("ascii"), 0) == 1
             )
 
     return tutils.reply(*args, side_effect=make_conn, **kwargs)
@@ -227,7 +227,7 @@ class TestServerTLS:
         playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
         tctx.server.state = ConnectionState.OPEN
         tctx.server.address = ("example.mitmproxy.org", 443)
-        tctx.server.sni = b"example.mitmproxy.org"
+        tctx.server.sni = "example.mitmproxy.org"
 
         tssl = SSLTest(server_side=True)
 
@@ -280,7 +280,7 @@ class TestServerTLS:
         """If the certificate is not trusted, we should fail."""
         playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
         tctx.server.address = ("wrong.host.mitmproxy.org", 443)
-        tctx.server.sni = b"wrong.host.mitmproxy.org"
+        tctx.server.sni = "wrong.host.mitmproxy.org"
 
         tssl = SSLTest(server_side=True)
 
@@ -316,7 +316,7 @@ class TestServerTLS:
     def test_remote_speaks_no_tls(self, tctx):
         playbook = tutils.Playbook(tls.ServerTLSLayer(tctx))
         tctx.server.state = ConnectionState.OPEN
-        tctx.server.sni = b"example.mitmproxy.org"
+        tctx.server.sni = "example.mitmproxy.org"
 
         # send ClientHello, receive random garbage back
         data = tutils.Placeholder(bytes)
@@ -345,7 +345,7 @@ def make_client_tls_layer(
 
     # Add some server config, this is needed anyways.
     tctx.server.address = ("example.mitmproxy.org", 443)
-    tctx.server.sni = b"example.mitmproxy.org"
+    tctx.server.sni = "example.mitmproxy.org"
 
     tssl_client = SSLTest(**kwargs)
     # Start handshake.
@@ -446,8 +446,8 @@ class TestClientTLS:
         assert tctx.client.tls_established
         assert tctx.server.tls_established
         assert tctx.server.sni == tctx.client.sni
-        assert tctx.client.alpn == b"quux"
-        assert tctx.server.alpn == b"quux"
+        assert tctx.client.alpn == "quux"
+        assert tctx.server.alpn == "quux"
         _test_echo(playbook, tssl_server, tctx.server)
         _test_echo(playbook, tssl_client, tctx.client)
 

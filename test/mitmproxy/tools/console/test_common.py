@@ -25,12 +25,10 @@ def test_format_keyvals():
             ("ee", None),
         ]
     )
-    wrapped = urwid.BoxAdapter(
-        urwid.ListBox(
-            urwid.SimpleFocusListWalker(
-                common.format_keyvals([("foo", "bar")])
-            )
-        ), 1
+    wrapped = urwid.Pile(
+        urwid.SimpleFocusListWalker(
+            common.format_keyvals([("foo", "bar")])
+        )
     )
     assert wrapped.render((30,))
     assert common.format_keyvals(

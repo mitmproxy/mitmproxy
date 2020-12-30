@@ -66,7 +66,7 @@ class NextLayer:
                 pass
             else:
                 if sni:
-                    hostnames.append(sni.decode("idna"))
+                    hostnames.append(sni)
 
         if not hostnames:
             return False

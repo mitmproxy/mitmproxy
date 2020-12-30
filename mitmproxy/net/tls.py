@@ -279,7 +279,7 @@ class ClientHello:
         return self._client_hello.cipher_suites.cipher_suites
 
     @property
-    def sni(self) -> Optional[bytes]:
+    def sni(self) -> Optional[str]:
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 is_valid_sni_extension = (
@@ -289,15 +289,18 @@ class ClientHello:
                         check.is_valid_host(extension.body.server_names[0].host_name)
                 )
                 if is_valid_sni_extension:
-                    return extension.body.server_names[0].host_name
+                    return extension.body.server_names[0].host_name.decode("ascii")
         return None
 
     @property
-    def alpn_protocols(self):
+    def alpn_protocols(self) -> List[str]:
         if self._client_hello.extensions:
             for extension in self._client_hello.extensions.extensions:
                 if extension.type == 0x10:
-                    return list(x.name for x in extension.body.alpn_protocols)
+                    try:
+                        return [x.name.decode() for x in extension.body.alpn_protocols]
+                    except UnicodeDecodeError:
+                        return []
         return []
 
     @property

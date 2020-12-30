@@ -46,10 +46,10 @@ class TestCertStore:
 
     def test_create_explicit(self, tmpdir):
         ca = certs.CertStore.from_store(str(tmpdir), "test", 2048)
-        assert ca.get_cert(b"foo", [])
+        assert ca.get_cert("foo", [])
 
         ca2 = certs.CertStore.from_store(str(tmpdir), "test", 2048)
-        assert ca2.get_cert(b"foo", [])
+        assert ca2.get_cert("foo", [])
 
         assert ca.default_ca.serial == ca2.default_ca.serial
 
@@ -57,51 +57,51 @@ class TestCertStore:
         assert tstore.get_cert(None, []).cert.cn is None
 
     def test_sans(self, tstore):
-        c1 = tstore.get_cert(b"foo.com", [b"*.bar.com"])
-        tstore.get_cert(b"foo.bar.com", [])
+        c1 = tstore.get_cert("foo.com", ["*.bar.com"])
+        tstore.get_cert("foo.bar.com", [])
         # assert c1 == c2
-        c3 = tstore.get_cert(b"bar.com", [])
+        c3 = tstore.get_cert("bar.com", [])
         assert not c1 == c3
 
     def test_sans_change(self, tstore):
-        tstore.get_cert(b"foo.com", [b"*.bar.com"])
-        entry = tstore.get_cert(b"foo.bar.com", [b"*.baz.com"])
-        assert b"*.baz.com" in entry.cert.altnames
+        tstore.get_cert("foo.com", ["*.bar.com"])
+        entry = tstore.get_cert("foo.bar.com", ["*.baz.com"])
+        assert "*.baz.com" in entry.cert.altnames
 
     def test_expire(self, tstore):
         tstore.STORE_CAP = 3
-        tstore.get_cert(b"one.com", [])
-        tstore.get_cert(b"two.com", [])
-        tstore.get_cert(b"three.com", [])
+        tstore.get_cert("one.com", [])
+        tstore.get_cert("two.com", [])
+        tstore.get_cert("three.com", [])
 
-        assert (b"one.com", ()) in tstore.certs
-        assert (b"two.com", ()) in tstore.certs
-        assert (b"three.com", ()) in tstore.certs
+        assert ("one.com", ()) in tstore.certs
+        assert ("two.com", ()) in tstore.certs
+        assert ("three.com", ()) in tstore.certs
 
-        tstore.get_cert(b"one.com", [])
+        tstore.get_cert("one.com", [])
 
-        assert (b"one.com", ()) in tstore.certs
-        assert (b"two.com", ()) in tstore.certs
-        assert (b"three.com", ()) in tstore.certs
+        assert ("one.com", ()) in tstore.certs
+        assert ("two.com", ()) in tstore.certs
+        assert ("three.com", ()) in tstore.certs
 
-        tstore.get_cert(b"four.com", [])
+        tstore.get_cert("four.com", [])
 
-        assert (b"one.com", ()) not in tstore.certs
-        assert (b"two.com", ()) in tstore.certs
-        assert (b"three.com", ()) in tstore.certs
-        assert (b"four.com", ()) in tstore.certs
+        assert ("one.com", ()) not in tstore.certs
+        assert ("two.com", ()) in tstore.certs
+        assert ("three.com", ()) in tstore.certs
+        assert ("four.com", ()) in tstore.certs
 
     def test_overrides(self, tmp_path):
         ca1 = certs.CertStore.from_store(tmp_path / "ca1", "test", 2048)
         ca2 = certs.CertStore.from_store(tmp_path / "ca2", "test", 2048)
         assert not ca1.default_ca.serial == ca2.default_ca.serial
 
-        dc = ca2.get_cert(b"foo.com", [b"sans.example.com"])
+        dc = ca2.get_cert("foo.com", ["sans.example.com"])
         dcp = tmp_path / "dc"
         dcp.write_bytes(dc.cert.to_pem())
         ca1.add_cert_file("foo.com", dcp)
 
-        ret = ca1.get_cert(b"foo.com", [])
+        ret = ca1.get_cert("foo.com", [])
         assert ret.cert.serial == dc.cert.serial
 
     def test_create_dhparams(self, tmp_path):
@@ -124,13 +124,13 @@ class TestDummyCert:
         r = certs.dummy_cert(
             tstore.default_privatekey,
             tstore.default_ca._cert,
-            b"foo.com",
-            [b"one.com", b"two.com", b"*.three.com", b"127.0.0.1"],
-            b"Foo Ltd."
+            "foo.com",
+            ["one.com", "two.com", "*.three.com", "127.0.0.1"],
+            "Foo Ltd."
         )
-        assert r.cn == b"foo.com"
-        assert r.altnames == [b"one.com", b"two.com", b"*.three.com", b"127.0.0.1"]
-        assert r.organization == b"Foo Ltd."
+        assert r.cn == "foo.com"
+        assert r.altnames == ["one.com", "two.com", "*.three.com", "127.0.0.1"]
+        assert r.organization == "Foo Ltd."
 
         r = certs.dummy_cert(
             tstore.default_privatekey,
@@ -150,14 +150,14 @@ class TestCert:
         with open(tdata.path("mitmproxy/net/data/text_cert"), "rb") as f:
             d = f.read()
         c1 = certs.Cert.from_pem(d)
-        assert c1.cn == b"google.com"
+        assert c1.cn == "google.com"
         assert len(c1.altnames) == 436
-        assert c1.organization == b"Google Inc"
+        assert c1.organization == "Google Inc"
 
         with open(tdata.path("mitmproxy/net/data/text_cert_2"), "rb") as f:
             d = f.read()
         c2 = certs.Cert.from_pem(d)
-        assert c2.cn == b"www.inode.co.nz"
+        assert c2.cn == "www.inode.co.nz"
         assert len(c2.altnames) == 2
         assert c2.fingerprint()
         assert c2.notbefore
@@ -197,4 +197,4 @@ class TestCert:
     def test_from_store_with_passphrase(self, tdata, tstore):
         tstore.add_cert_file("*", Path(tdata.path("mitmproxy/data/mitmproxy.pem")), b"password")
 
-        assert tstore.get_cert(b"foo", [])
+        assert tstore.get_cert("foo", [])

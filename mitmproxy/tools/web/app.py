@@ -20,7 +20,6 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
-from mitmproxy.utils.strutils import always_str
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
@@ -47,10 +46,9 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             "timestamp_start": flow.client_conn.timestamp_start,
             "timestamp_tls_setup": flow.client_conn.timestamp_tls_setup,
             "timestamp_end": flow.client_conn.timestamp_end,
-            # ideally idna, but we don't want errors
-            "sni": always_str(flow.client_conn.sni, "ascii", "backslashreplace"),
+            "sni": flow.client_conn.sni,
             "cipher_name": flow.client_conn.cipher,
-            "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
+            "alpn_proto_negotiated": flow.client_conn.alpn,
             "tls_version": flow.client_conn.tls_version,
         }
 
@@ -61,18 +59,14 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             "ip_address": flow.server_conn.peername,
             "source_address": flow.server_conn.sockname,
             "tls_established": flow.server_conn.tls_established,
-            "alpn_proto_negotiated": always_str(flow.server_conn.alpn, "ascii", "backslashreplace"),
+            "sni": flow.server_conn.sni,
+            "alpn_proto_negotiated": flow.server_conn.alpn,
             "tls_version": flow.server_conn.tls_version,
             "timestamp_start": flow.server_conn.timestamp_start,
             "timestamp_tcp_setup": flow.server_conn.timestamp_tcp_setup,
             "timestamp_tls_setup": flow.server_conn.timestamp_tls_setup,
             "timestamp_end": flow.server_conn.timestamp_end,
         }
-        if flow.server_conn.sni is True:
-            f["server_conn"] = None
-        else:
-            # ideally idna, but we don't want errors
-            f["server_conn"] = always_str(flow.server_conn.sni, "ascii", "backslashreplace")
     if flow.error:
         f["error"] = flow.error.get_state()
 

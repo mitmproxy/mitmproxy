@@ -230,6 +230,25 @@ def convert_9_10(data):
     return data
 
 
+def convert_10_11(data):
+    data["version"] = 11
+
+    def conv_conn(conn):
+        conn["sni"] = strutils.always_str(conn["sni"], "ascii", "backslashreplace")
+        conn["alpn"] = strutils.always_str(conn.pop("alpn_proto_negotiated"), "utf8", "backslashreplace")
+        conn["alpn_offers"] = [
+            strutils.always_str(alpn, "utf8", "backslashreplace")
+            for alpn in (conn["alpn_offers"] or [])
+        ]
+
+    conv_conn(data["client_conn"])
+    conv_conn(data["server_conn"])
+    if data["server_conn"]["via"]:
+        conv_conn(data["server_conn"]["via"])
+
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -287,6 +306,7 @@ converters = {
     7: convert_7_8,
     8: convert_8_9,
     9: convert_9_10,
+    10: convert_10_11,
 }
 
 
