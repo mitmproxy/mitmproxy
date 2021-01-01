@@ -123,6 +123,12 @@ class TlsConfig:
         # don't assign to client.cipher_list, doesn't need to be stored.
         cipher_list = client.cipher_list or DEFAULT_CIPHERS
 
+        if ctx.options.add_upstream_certs_to_client_chain:  # pragma: no cover
+            # exempted from coverage until https://bugs.python.org/issue18233 is fixed.
+            extra_chain_certs = server.certificate_list
+        else:
+            extra_chain_certs = []
+
         ssl_ctx = net_tls.create_client_proxy_context(
             min_version=net_tls.Version[ctx.options.tls_version_client_min],
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
@@ -132,7 +138,7 @@ class TlsConfig:
             chain_file=entry.chain_file,
             request_client_cert=False,
             alpn_select_callback=alpn_select_callback,
-            extra_chain_certs=server.certificate_list,
+            extra_chain_certs=extra_chain_certs,
             dhparams=self.certstore.dhparams,
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
