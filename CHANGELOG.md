@@ -41,6 +41,8 @@ If you depend on these features, please raise your voice in
 * Use pyca/cryptography to generate certificates, not pyOpenSSL (@mhils)
 * Remove the legacy protocol stack (@Kriechi)
 * Remove all deprecated pathod and pathoc tools and modules (@Kriechi)
+* In reverse proxy mode, mitmproxy now does not assume TLS if no scheme
+  is given but a custom port is provided (@mhils)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
