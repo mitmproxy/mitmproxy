@@ -321,10 +321,15 @@ class HttpStream(layer.Layer):
                     and
                     self.flow.request.headers.get("Sec-WebSocket-Version", "") == "13"
             )
-            if is_websocket:
+            if is_websocket and self.context.options.websocket:
                 self.child_layer = websocket.WebsocketLayer(self.context, self.flow)
-            else:
+            elif self.context.options.rawtcp:
                 self.child_layer = tcp.TCPLayer(self.context)
+            else:
+                yield commands.Log(f"Sent HTTP 101 response, but no protocol is enabled to upgrade to.", "warn")
+                yield commands.CloseConnection(self.context.client)
+                self.client_state = self.server_state = self.state_errored
+                return
             if self.debug:
                 yield commands.Log(f"{self.debug}[http] upgrading to {self.child_layer}", "debug")
             yield from self.child_layer.handle_event(events.Start())
