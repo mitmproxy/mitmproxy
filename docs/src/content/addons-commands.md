@@ -62,7 +62,7 @@ and adds a header to every request. The really interesting aspect of this
 example is how users specify flows. Because mitmproxy can inspect the type
 signature, it can expand a text flow selector into a sequence of flows for us
 transparently. This means that the user has the full flexibility of [flow
-filters]({{< relref addons-options >}}) available. Let's try it out.
+filters]({{< relref concepts-filters >}}) available. Let's try it out.
 
 Start by loading the addon into mitmproxy and sending some traffic through so we
 have flows to work with:
