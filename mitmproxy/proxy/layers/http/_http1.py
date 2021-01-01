@@ -123,7 +123,6 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
         if self.buf:
             already_received = self.buf.maybe_extract_at_most(len(self.buf))
             yield from self.state(events.DataReceived(self.conn, already_received))
-            self.buf.compress()
 
     def passthrough(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert self.stream_id
