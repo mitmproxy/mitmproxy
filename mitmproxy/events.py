@@ -9,7 +9,6 @@ if TYPE_CHECKING:
     import mitmproxy.log
 
 
-@dataclass
 class MitmproxyEvent:
     name: ClassVar[str]
 
@@ -28,7 +27,7 @@ class MitmproxyEvent:
 
     def __init_subclass__(cls, **kwargs):
         # initialize .name attribute. HttpRequestHook -> http_request
-        if not getattr(cls, "name", None):
+        if cls.__dict__.get("name", None) is None:
             name = cls.__name__.replace("Hook", "").replace("Event", "")
             cls.name = re.sub('(?!^)([A-Z]+)', r'_\1', name).lower()
         if cls.name in all_events:

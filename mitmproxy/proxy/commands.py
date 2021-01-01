@@ -97,9 +97,6 @@ class Hook(Command, mitmproxy.events.MitmproxyEvent):
             raise TypeError("Hook may not be instantiated directly.")
         return super().__new__(cls, *args, **kwargs)
 
-    def __repr__(self):
-        return f"Hook({self.name})"
-
 
 class GetSocket(ConnectionCommand):
     """

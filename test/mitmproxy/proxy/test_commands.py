@@ -24,15 +24,9 @@ def test_hook():
         commands.Hook()
 
     @dataclass
-    class FooHook(commands.Hook):
+    class TestHook(commands.Hook):
         data: bytes
 
-    f = FooHook(b"foo")
-    assert repr(f)
+    f = TestHook(b"foo")
     assert f.args() == [b"foo"]
-    assert FooHook in all_events.values()
-
-    with pytest.raises(RuntimeError, match="Two conflicting event classes"):
-        @dataclass
-        class FooHook2(commands.Hook):
-            name = "foo"
+    assert TestHook in all_events.values()

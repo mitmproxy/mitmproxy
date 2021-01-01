@@ -49,7 +49,8 @@ def category(name: str, hooks: List[Type[events.MitmproxyEvent]]) -> None:
             first = False
         else:
             print()
-        assert hook.name not in known
+        if hook.name in known:
+            raise RuntimeError(f"Already documented: {hook}")
         known.add(hook.name)
         doc = inspect.getdoc(hook)
         print(f"def {hook.name}({', '.join(str(p) for p in params)}):")
