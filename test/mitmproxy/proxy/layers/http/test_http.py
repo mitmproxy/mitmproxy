@@ -5,10 +5,14 @@ from mitmproxy.http import HTTPFlow, HTTPResponse
 from mitmproxy.net.server_spec import ServerSpec
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import layer
-from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData
+from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData, Log
 from mitmproxy.proxy.context import ConnectionState, Server
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import TCPLayer, http, tls
+from mitmproxy.proxy.layers.tcp import TcpStartHook
+from mitmproxy.proxy.layers.websocket import WebsocketStartHook
+from mitmproxy.tcp import TCPFlow
+from mitmproxy.websocket import WebSocketFlow
 from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply, reply_next_layer
 
 
@@ -911,3 +915,57 @@ def test_connection_close_header(tctx, client_close, server_close):
                         b"\r\n")
             << CloseConnection(tctx.client)
     )
+
+
+@pytest.mark.parametrize("proto", ["websocket", "tcp", "none"])
+def test_upgrade(tctx, proto):
+    """Test a HTTP -> WebSocket upgrade with different protocols enabled"""
+    if proto != "websocket":
+        tctx.options.websocket = False
+    if proto != "tcp":
+        tctx.options.rawtcp = False
+
+    tctx.server.address = ("example.com", 80)
+    tctx.server.state = ConnectionState.OPEN
+    http_flow = Placeholder(HTTPFlow)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.transparent))
+    (
+            playbook
+            >> DataReceived(tctx.client,
+                            b"GET / HTTP/1.1\r\n"
+                            b"Connection: upgrade\r\n"
+                            b"Upgrade: websocket\r\n"
+                            b"Sec-WebSocket-Version: 13\r\n"
+                            b"\r\n")
+            << http.HttpRequestHeadersHook(http_flow)
+            >> reply()
+            << http.HttpRequestHook(http_flow)
+            >> reply()
+            << SendData(tctx.server, b"GET / HTTP/1.1\r\n"
+                                     b"Connection: upgrade\r\n"
+                                     b"Upgrade: websocket\r\n"
+                                     b"Sec-WebSocket-Version: 13\r\n"
+                                     b"\r\n")
+            >> DataReceived(tctx.server, b"HTTP/1.1 101 Switching Protocols\r\n"
+                                         b"Upgrade: websocket\r\n"
+                                         b"Connection: Upgrade\r\n"
+                                         b"\r\n")
+            << http.HttpResponseHeadersHook(http_flow)
+            >> reply()
+            << http.HttpResponseHook(http_flow)
+            >> reply()
+            << SendData(tctx.client, b"HTTP/1.1 101 Switching Protocols\r\n"
+                                     b"Upgrade: websocket\r\n"
+                                     b"Connection: Upgrade\r\n"
+                                     b"\r\n")
+    )
+    if proto == "websocket":
+        assert playbook << WebsocketStartHook(Placeholder(WebSocketFlow))
+    elif proto == "tcp":
+        assert playbook << TcpStartHook(Placeholder(TCPFlow))
+    else:
+        assert (
+            playbook
+            << Log("Sent HTTP 101 response, but no protocol is enabled to upgrade to.", "warn")
+            << CloseConnection(tctx.client)
+        )
