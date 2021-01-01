@@ -84,10 +84,6 @@ class Options(optmanager.OptManager):
             "Proxy service port."
         )
         self.add_option(
-            "upstream_bind_address", str, "",
-            "Address to bind upstream requests to."
-        )
-        self.add_option(
             "mode", str, "regular",
             """
             Mode can be "regular", "transparent", "socks5", "reverse:SPEC",
@@ -106,13 +102,6 @@ class Options(optmanager.OptManager):
             "HTTP/2 support is enabled by default.",
         )
         self.add_option(
-            "http2_priority", bool, False,
-            """
-            PRIORITY forwarding for HTTP/2 connections. Disabled by default to ensure compatibility
-            with misbehaving servers.
-            """
-        )
-        self.add_option(
             "websocket", bool, True,
             "Enable/disable WebSocket support. "
             "WebSocket support is enabled by default.",
@@ -121,14 +110,6 @@ class Options(optmanager.OptManager):
             "rawtcp", bool, True,
             "Enable/disable raw TCP connections. "
             "TCP connections are enabled by default. "
-        )
-
-        self.add_option(
-            "spoof_source_address", bool, False,
-            """
-            Use the client's IP for server-side connections. Combine with
-            --upstream-bind-address to spoof a fixed source address.
-            """
         )
         self.add_option(
             "ssl_insecure", bool, False,
@@ -164,12 +145,6 @@ class Options(optmanager.OptManager):
             "key_size", int, KEY_SIZE,
             """
             TLS key size for certificates and CA.
-            """
-        )
-        self.add_option(
-            "relax_http_form_validation", bool, False,
-            """
-            Disable HTTP form validation.
             """
         )
 
