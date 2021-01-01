@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from . import commands, context
 
 
+@dataclass
 class ClientConnectedHook(commands.Hook):
     """
     A client has connected to mitmproxy. Note that a connection can
@@ -13,7 +14,8 @@ class ClientConnectedHook(commands.Hook):
     client: context.Client
 
 
-class ClientClosedHook(commands.Hook):
+@dataclass
+class ClientDisconnectedHook(commands.Hook):
     """
     A client connection has been closed (either by us or the client).
     """
@@ -27,6 +29,7 @@ class ServerConnectionHookData:
     client: context.Client
 
 
+@dataclass
 class ServerConnectHook(commands.Hook):
     """
     Mitmproxy is about to connect to a server.
@@ -37,6 +40,7 @@ class ServerConnectHook(commands.Hook):
     data: ServerConnectionHookData
 
 
+@dataclass
 class ServerConnectedHook(commands.Hook):
     """
     Mitmproxy has connected to a server.
@@ -45,7 +49,8 @@ class ServerConnectedHook(commands.Hook):
     data: ServerConnectionHookData
 
 
-class ServerClosedHook(commands.Hook):
+@dataclass
+class ServerDisconnectedHook(commands.Hook):
     """
     A server connection has been closed (either by us or the server).
     """

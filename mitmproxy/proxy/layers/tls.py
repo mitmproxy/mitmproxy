@@ -98,6 +98,23 @@ HTTP_ALPNS = (b"h2",) + HTTP1_ALPNS
 # We need these classes as hooks can only have one argument at the moment.
 
 @dataclass
+class ClientHelloData:
+    context: context.Context
+    establish_server_tls_first: bool = False
+
+
+@dataclass
+class TlsClienthelloHook(Hook):
+    """
+    Mitmproxy has received a TLS ClientHello message.
+
+    This hook decides whether a server connection is needed
+    to negotiate TLS with the client (data.establish_server_tls_first)
+    """
+    data: ClientHelloData
+
+
+@dataclass
 class TlsStartData:
     conn: context.Connection
     context: context.Context
@@ -105,17 +122,14 @@ class TlsStartData:
 
 
 @dataclass
-class ClientHelloData:
-    context: context.Context
-    establish_server_tls_first: bool = False
-
-
 class TlsStartHook(Hook):
+    """
+    TLS Negotation is about to start.
+
+    An addon is expected to initialize data.ssl_conn.
+    (by default, this is done by mitmproxy.addons.TlsConfig)
+    """
     data: TlsStartData
-
-
-class TlsClienthelloHook(Hook):
-    data: ClientHelloData
 
 
 class _TLSLayer(tunnel.TunnelLayer):

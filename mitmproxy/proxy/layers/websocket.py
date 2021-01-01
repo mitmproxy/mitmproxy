@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Union, List, Iterator
 
 import wsproto
@@ -13,6 +14,7 @@ from wsproto import ConnectionState
 from wsproto.frame_protocol import CloseReason, Opcode
 
 
+@dataclass
 class WebsocketStartHook(Hook):
     """
     A WebSocket connection has commenced.
@@ -20,6 +22,7 @@ class WebsocketStartHook(Hook):
     flow: websocket.WebSocketFlow
 
 
+@dataclass
 class WebsocketMessageHook(Hook):
     """
     Called when a WebSocket message is received from the client or
@@ -30,6 +33,7 @@ class WebsocketMessageHook(Hook):
     flow: websocket.WebSocketFlow
 
 
+@dataclass
 class WebsocketEndHook(Hook):
     """
     A WebSocket connection has ended.
@@ -38,6 +42,7 @@ class WebsocketEndHook(Hook):
     flow: websocket.WebSocketFlow
 
 
+@dataclass
 class WebsocketErrorHook(Hook):
     """
     A WebSocket connection has had an error.

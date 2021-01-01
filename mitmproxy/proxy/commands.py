@@ -6,10 +6,9 @@ possibly to the master and addons.
 
 The counterpart to commands are events.
 """
-import dataclasses
-import re
-from typing import Any, ClassVar, Dict, List, Literal, Type, Union, TYPE_CHECKING
+from typing import Literal, Union, TYPE_CHECKING
 
+import mitmproxy.events
 from mitmproxy.proxy.context import Connection, Server
 
 if TYPE_CHECKING:
@@ -87,45 +86,19 @@ class CloseConnection(ConnectionCommand):
         self.half_close = half_close
 
 
-class Hook(Command):
+class Hook(Command, mitmproxy.events.MitmproxyEvent):
     """
     Callback to the master (like ".ask()")
     """
     blocking = True
-    name: ClassVar[str]
 
     def __new__(cls, *args, **kwargs):
         if cls is Hook:
             raise TypeError("Hook may not be instantiated directly.")
-        return super().__new__(cls)
-
-    def __init_subclass__(cls, **kwargs):
-        # initialize .name attribute. HttpRequestHook -> http_request
-        if not getattr(cls, "name", None):
-            cls.name = re.sub('(?!^)([A-Z]+)', r'_\1', cls.__name__.replace("Hook", "")).lower()
-        if cls.name in all_hooks:
-            other = all_hooks[cls.name]
-            raise RuntimeError(f"Two conflicting hooks for {cls.name}: {cls} and {other}")
-        all_hooks[cls.name] = cls
-
-        # a bit hacky: add a default constructor.
-        dataclasses.dataclass(cls, repr=False, eq=False)
+        return super().__new__(cls, *args, **kwargs)
 
     def __repr__(self):
         return f"Hook({self.name})"
-
-    def args(self) -> List[Any]:
-        args = []
-        # noinspection PyDataclass
-        for field in dataclasses.fields(self):
-            args.append(getattr(self, field.name))
-        return args
-
-
-all_hooks: Dict[str, Type[Hook]] = {}
-
-
-# TODO: Move descriptions from addons/events.py into hooks and have hook documentation generated from all_hooks.
 
 
 class GetSocket(ConnectionCommand):

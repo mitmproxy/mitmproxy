@@ -120,7 +120,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
 
         self.log("client disconnect")
         self.client.timestamp_end = time.time()
-        await self.handle_hook(server_hooks.ClientClosedHook(self.client))
+        await self.handle_hook(server_hooks.ClientDisconnectedHook(self.client))
 
         if self.transports:
             self.log("closing transports...", "debug")
@@ -202,7 +202,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 self.log(f"server disconnect {addr}")
                 command.connection.timestamp_end = time.time()
                 await connected_hook  # wait here for this so that closed always comes after connected.
-                await self.handle_hook(server_hooks.ServerClosedHook(hook_data))
+                await self.handle_hook(server_hooks.ServerDisconnectedHook(hook_data))
 
     async def handle_connection(self, connection: Connection) -> None:
         """

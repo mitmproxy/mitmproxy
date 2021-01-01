@@ -1,5 +1,8 @@
+from dataclasses import dataclass
+
 import pytest
 
+from mitmproxy.events import all_events
 from mitmproxy.proxy import commands, context
 
 
@@ -20,14 +23,16 @@ def test_hook():
     with pytest.raises(TypeError):
         commands.Hook()
 
+    @dataclass
     class FooHook(commands.Hook):
         data: bytes
 
     f = FooHook(b"foo")
     assert repr(f)
     assert f.args() == [b"foo"]
-    assert FooHook in commands.all_hooks.values()
+    assert FooHook in all_events.values()
 
-    with pytest.raises(RuntimeError, match="Two conflicting hooks"):
+    with pytest.raises(RuntimeError, match="Two conflicting event classes"):
+        @dataclass
         class FooHook2(commands.Hook):
             name = "foo"

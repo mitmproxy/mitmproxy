@@ -8,6 +8,7 @@ import pytest
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
 from mitmproxy.addons import script
+from mitmproxy.proxy.layers.http import HttpRequestHook
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
@@ -96,7 +97,7 @@ class TestScript:
 
             rec.call_log = []
             f = tflow.tflow(resp=True)
-            tctx.master.addons.trigger("request", f)
+            tctx.master.addons.trigger(HttpRequestHook(f))
 
             assert rec.call_log[0][1] == "request"
 
@@ -131,7 +132,7 @@ class TestScript:
             tctx.configure(sc)
 
             f = tflow.tflow(resp=True)
-            tctx.master.addons.trigger("request", f)
+            tctx.master.addons.trigger(HttpRequestHook(f))
 
             await tctx.master.await_log("ValueError: Error!")
             await tctx.master.await_log("error.py")

@@ -4,6 +4,7 @@ Base class for protocol layers.
 import collections
 import textwrap
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import Optional, List, ClassVar, Deque, NamedTuple, Generator, Any, TypeVar
 
 from mitmproxy.proxy import commands, events
@@ -159,10 +160,6 @@ class Layer:
 mevents = events  # alias here because autocomplete above should not have aliased version.
 
 
-class NextLayerHook(Hook):
-    data: "NextLayer"
-
-
 class NextLayer(Layer):
     layer: Optional[Layer]
     """The next layer. To be set by an addon."""
@@ -241,3 +238,13 @@ class NextLayer(Layer):
             if isinstance(e, mevents.DataReceived) and e.connection == connection
         )
         return b"".join(data)
+
+
+@dataclass
+class NextLayerHook(Hook):
+    """
+    Network layers are being switched. You may change which layer will be used by setting data.layer.
+
+    (by default, this is done by mitmproxy.addons.NextLayer)
+    """
+    data: NextLayer
