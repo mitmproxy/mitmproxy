@@ -25,4 +25,5 @@ def test_should_render():
     assert v.should_render("image/vnd.microsoft.icon")
     assert v.should_render("image/x-icon")
     assert v.should_render("image/webp")
+    assert v.should_render("image/future-unknown-format-42")
     assert not v.should_render("image/svg+xml")
