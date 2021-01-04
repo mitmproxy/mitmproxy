@@ -122,10 +122,10 @@ def run(
 
 def mitmproxy(args=None) -> typing.Optional[int]:  # pragma: no cover
     if os.name == "nt":
-        print("Error: mitmproxy's console interface is not supported on Windows. "
-              "You can run mitmdump or mitmweb instead.", file=sys.stderr)
-        return 1
-    assert_utf8_env()
+        import urwid
+        urwid.set_encoding("utf8")
+    else:
+        assert_utf8_env()
     from mitmproxy.tools import console
     run(console.master.ConsoleMaster, cmdline.mitmproxy, args)
     return None

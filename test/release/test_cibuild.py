@@ -205,7 +205,7 @@ def test_buildenviron_windows(tmpdir):
     )
     assert be.platform_tag == "windows"
     assert be.bdists == {
-        "mitmproxy": ["mitmdump", "mitmweb"],
+        "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
     }
     assert be.archive_name("mitmproxy") == "mitmproxy-0.0.1-windows.zip"
 

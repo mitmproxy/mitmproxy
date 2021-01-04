@@ -8,7 +8,6 @@ import mitmproxy.options
 from mitmproxy import master
 from mitmproxy.tools.console import window
 from mitmproxy.tools.console.master import ConsoleMaster
-from test.conftest import skip_windows
 
 
 def tokenize(input: str) -> List[str]:
@@ -40,7 +39,6 @@ def console(monkeypatch):
     return m
 
 
-@skip_windows
 def test_integration(tdata, console):
     console.type(f":view.flows.load {tdata.path('mitmproxy/data/dumpfile-018.bin')}<enter>")
     console.type("<enter><tab><tab>")

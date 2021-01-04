@@ -725,7 +725,9 @@ class Screen(BaseScreen, RealTerminal):
                     assert self._term_output_file == sys.stdout
                     handle = win32.GetStdHandle(win32.STD_OUTPUT_HANDLE)
                     info = win32.CONSOLE_SCREEN_BUFFER_INFO()
-                    win32.GetConsoleScreenBufferInfo(handle, byref(info))
+                    ok = win32.GetConsoleScreenBufferInfo(handle, byref(info))
+                    if ok == 0:
+                        raise IOError()
                     y, x = info.dwSize.Y, info.dwSize.X
                 else:
                     buf = fcntl.ioctl(self._term_output_file.fileno(),
