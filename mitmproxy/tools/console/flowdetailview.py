@@ -69,7 +69,7 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
             ]
 
             if c.altnames:
-                parts.append(("Alt names", ", ".join(strutils.bytes_to_escaped_str(x) for x in c.altnames)))
+                parts.append(("Alt names", ", ".join(c.altnames)))
             text.extend(
                 common.format_keyvals(parts, indent=4)
             )
