@@ -13,8 +13,8 @@ from mitmproxy.http import HTTPFlow
 from mitmproxy.utils import human
 from mitmproxy.tcp import TCPFlow
 
-# Detect Windows Subsystem for Linux
-IS_WSL = "Microsoft" in platform.platform()
+# Detect Windows Subsystem for Linux and Windows
+IS_WINDOWS = "Microsoft" in platform.platform() or "Windows" in platform.platform()
 
 
 def is_keypress(k):

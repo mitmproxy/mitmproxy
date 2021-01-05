@@ -121,12 +121,9 @@ class BuildEnviron:
 
     @property
     def bdists(self):
-        ret = {
+        return {
             "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
         }
-        if self.system == "Windows":
-            ret["mitmproxy"].remove("mitmproxy")
-        return ret
 
     @property
     def branch(self) -> str:

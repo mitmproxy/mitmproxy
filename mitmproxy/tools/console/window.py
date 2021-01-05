@@ -1,3 +1,4 @@
+import os
 import re
 
 import urwid
@@ -13,6 +14,11 @@ from mitmproxy.tools.console import options
 from mitmproxy.tools.console import overlay
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console import statusbar
+
+if os.name == "nt":
+    from mitmproxy.contrib.urwid import raw_display
+else:
+    from urwid import raw_display
 
 
 class StackWidget(urwid.Frame):
@@ -315,10 +321,10 @@ class Window(urwid.Frame):
             )
 
 
-class Screen(urwid.raw_display.Screen):
+class Screen(raw_display.Screen):
 
     def write(self, data):
-        if common.IS_WSL:
+        if common.IS_WINDOWS:
             # replace urwid's SI/SO, which produce artifacts under WSL.
             # at some point we may figure out what they actually do.
             data = re.sub("[\x0e\x0f]", "", data)

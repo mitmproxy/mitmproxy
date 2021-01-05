@@ -4,6 +4,5 @@ Contribs:
 wbxml
     - https://github.com/davidpshaw/PyWBXMLDecoder
 
-tls, BSD license
-    - https://github.com/mhils/tls/tree/mitmproxy
-    - limited to required files.
+urwid
+    - Patches vendored from https://github.com/urwid/urwid/pull/448.
