@@ -39,6 +39,8 @@ If you depend on these features, please raise your voice in
 
 * New Proxy Core based on sans-io pattern (@mhils)
 * mitmproxy's command line interface now supports Windows (@mhils)
+* The `clientconnect`, `clientdisconnect`, `serverconnect`, `serverdisconnect`, and `log`
+  events have been replaced with new events, see addon documentation for details (@mhils)
 * Use pyca/cryptography to generate certificates, not pyOpenSSL (@mhils)
 * Remove the legacy protocol stack (@Kriechi)
 * Remove all deprecated pathod and pathoc tools and modules (@Kriechi)

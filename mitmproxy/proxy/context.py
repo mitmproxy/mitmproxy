@@ -8,6 +8,7 @@ from mitmproxy import certs
 from mitmproxy.coretypes import serializable
 from mitmproxy.net import server_spec
 from mitmproxy.options import Options
+from mitmproxy.utils import human
 
 if TYPE_CHECKING:
     import mitmproxy.proxy.layer
@@ -90,7 +91,10 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
 
     def __repr__(self):
         attrs = repr({
-            k: {"cipher_list": lambda: f"<{len(v)} ciphers>"}.get(k, lambda: v)()
+            k: {
+                "cipher_list": lambda: f"<{len(v)} ciphers>",
+                "id": lambda: f"…{v[-6:]}"
+            }.get(k, lambda: v)()
             for k, v in self.__dict__.items()
         })
         return f"{type(self).__name__}({attrs})"
@@ -117,6 +121,15 @@ class Client(Connection):
         self.peername = peername
         self.sockname = sockname
         self.timestamp_start = timestamp_start
+
+    def __str__(self):
+        if self.alpn:
+            tls_state = f", alpn={self.alpn.decode(errors='replace')}"
+        elif self.tls_established:
+            tls_state = ", tls"
+        else:
+            tls_state = ""
+        return f"Client({human.format_address(self.peername)}, state={self.state.name.lower()}{tls_state})"
 
     def get_state(self):
         # Important: Retain full compatibility with old proxy core for now!
@@ -191,7 +204,8 @@ class Client(Connection):
 
     @property
     def clientcert(self) -> Optional[certs.Cert]:  # pragma: no cover
-        warnings.warn("Client.clientcert is deprecated, use Client.certificate_list instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn("Client.clientcert is deprecated, use Client.certificate_list instead.", DeprecationWarning,
+                      stacklevel=2)
         if self.certificate_list:
             return self.certificate_list[0]
         else:
@@ -224,6 +238,19 @@ class Server(Connection):
     def __init__(self, address: Optional[Address]):
         self.id = str(uuid.uuid4())
         self.address = address
+
+    def __str__(self):
+        if self.alpn:
+            tls_state = f", alpn={self.alpn.decode(errors='replace')}"
+        elif self.tls_established:
+            tls_state = ", tls"
+        else:
+            tls_state = ""
+        if self.sockname:
+            local_port = f", src_port={self.sockname[1]}"
+        else:
+            local_port = ""
+        return f"Server({human.format_address(self.address)}, state={self.state.name.lower()}{tls_state}{local_port})"
 
     def get_state(self):
         return {
@@ -285,7 +312,8 @@ class Server(Connection):
 
     @property
     def cert(self) -> Optional[certs.Cert]:  # pragma: no cover
-        warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", DeprecationWarning,
+                      stacklevel=2)
         if self.certificate_list:
             return self.certificate_list[0]
         else:
@@ -293,7 +321,8 @@ class Server(Connection):
 
     @cert.setter
     def cert(self, val):  # pragma: no cover
-        warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", DeprecationWarning, stacklevel=2)
+        warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", DeprecationWarning,
+                      stacklevel=2)
         if val:
             self.certificate_list = [val]
         else:

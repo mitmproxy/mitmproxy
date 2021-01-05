@@ -1,8 +1,11 @@
+from dataclasses import dataclass
+
 from mitmproxy import http
 from mitmproxy.proxy import commands
 
 
-class HttpRequestHeadersHook(commands.Hook):
+@dataclass
+class HttpRequestHeadersHook(commands.StartHook):
     """
     HTTP request headers were successfully read. At this point, the body is empty.
     """
@@ -10,7 +13,8 @@ class HttpRequestHeadersHook(commands.Hook):
     flow: http.HTTPFlow
 
 
-class HttpRequestHook(commands.Hook):
+@dataclass
+class HttpRequestHook(commands.StartHook):
     """
     The full HTTP request has been read.
 
@@ -21,7 +25,8 @@ class HttpRequestHook(commands.Hook):
     flow: http.HTTPFlow
 
 
-class HttpResponseHeadersHook(commands.Hook):
+@dataclass
+class HttpResponseHeadersHook(commands.StartHook):
     """
     The full HTTP response has been read.
     """
@@ -29,7 +34,8 @@ class HttpResponseHeadersHook(commands.Hook):
     flow: http.HTTPFlow
 
 
-class HttpResponseHook(commands.Hook):
+@dataclass
+class HttpResponseHook(commands.StartHook):
     """
     HTTP response headers were successfully read. At this point, the body is empty.
 
@@ -39,7 +45,8 @@ class HttpResponseHook(commands.Hook):
     flow: http.HTTPFlow
 
 
-class HttpErrorHook(commands.Hook):
+@dataclass
+class HttpErrorHook(commands.StartHook):
     """
     An HTTP error has occurred, e.g. invalid server responses, or
     interrupted connections. This is distinct from a valid server HTTP
@@ -51,7 +58,8 @@ class HttpErrorHook(commands.Hook):
     flow: http.HTTPFlow
 
 
-class HttpConnectHook(commands.Hook):
+@dataclass
+class HttpConnectHook(commands.StartHook):
     """
     An HTTP CONNECT request was received. This event can be ignored for most practical purposes.
 

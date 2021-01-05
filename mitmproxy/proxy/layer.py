@@ -4,10 +4,11 @@ Base class for protocol layers.
 import collections
 import textwrap
 from abc import abstractmethod
+from dataclasses import dataclass
 from typing import Optional, List, ClassVar, Deque, NamedTuple, Generator, Any, TypeVar
 
 from mitmproxy.proxy import commands, events
-from mitmproxy.proxy.commands import Command, Hook
+from mitmproxy.proxy.commands import Command, StartHook
 from mitmproxy.proxy.context import Connection, Context
 
 T = TypeVar('T')
@@ -34,8 +35,8 @@ class Layer:
     Most layers only implement ._handle_event, which is called by the default implementation of .handle_event.
     The default implementation allows layers to emulate blocking code:
     When ._handle_event yields a command that has its blocking attribute set to True, .handle_event pauses
-    the execution of ._handle_event and waits until it is called with the corresponding CommandReply. All events
-    encountered in the meantime are buffered and replayed after execution is resumed.
+    the execution of ._handle_event and waits until it is called with the corresponding CommandCompleted event. All
+    events encountered in the meantime are buffered and replayed after execution is resumed.
 
     The result is code that looks like blocking code, but is not blocking:
 
@@ -95,13 +96,13 @@ class Layer:
         if self._paused:
             # did we just receive the reply we were waiting for?
             pause_finished = (
-                    isinstance(event, events.CommandReply) and
+                    isinstance(event, events.CommandCompleted) and
                     event.command is self._paused.command
             )
             if self.debug is not None:
                 yield self.__debug(f"{'>>' if pause_finished else '>!'} {event}")
             if pause_finished:
-                assert isinstance(event, events.CommandReply)
+                assert isinstance(event, events.CommandCompleted)
                 yield from self.__continue(event)
             else:
                 self._paused_event_queue.append(event)
@@ -141,7 +142,7 @@ class Layer:
                 except StopIteration:
                     return
 
-    def __continue(self, event: events.CommandReply):
+    def __continue(self, event: events.CommandCompleted):
         """continue processing events after being paused"""
         assert self._paused is not None
         command_generator = self._paused.generator
@@ -157,10 +158,6 @@ class Layer:
 
 
 mevents = events  # alias here because autocomplete above should not have aliased version.
-
-
-class NextLayerHook(Hook):
-    data: "NextLayer"
 
 
 class NextLayer(Layer):
@@ -241,3 +238,13 @@ class NextLayer(Layer):
             if isinstance(e, mevents.DataReceived) and e.connection == connection
         )
         return b"".join(data)
+
+
+@dataclass
+class NextLayerHook(StartHook):
+    """
+    Network layers are being switched. You may change which layer will be used by setting data.layer.
+
+    (by default, this is done by mitmproxy.addons.NextLayer)
+    """
+    data: NextLayer

@@ -3,7 +3,7 @@ import typing
 import urllib
 
 import mitmproxy.types
-from mitmproxy import command
+from mitmproxy import command, hooks
 from mitmproxy import ctx, http
 from mitmproxy import exceptions
 from mitmproxy import flow
@@ -89,7 +89,7 @@ class ServerPlayback:
             if isinstance(f, http.HTTPFlow):
                 lst = self.flowmap.setdefault(self._hash(f), [])
                 lst.append(f)
-        ctx.master.addons.trigger("update", [])
+        ctx.master.addons.trigger(hooks.UpdateHook([]))
 
     @command.command("replay.server.file")
     def load_file(self, path: mitmproxy.types.Path) -> None:
@@ -105,7 +105,7 @@ class ServerPlayback:
             Stop server replay.
         """
         self.flowmap = {}
-        ctx.master.addons.trigger("update", [])
+        ctx.master.addons.trigger(hooks.UpdateHook([]))
 
     @command.command("replay.server.count")
     def count(self) -> int:

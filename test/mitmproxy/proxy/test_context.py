@@ -36,6 +36,11 @@ class TestClient:
             1607780791
         )
         assert repr(c)
+        assert str(c)
+        c.timestamp_tls_setup = 1607780791
+        assert str(c)
+        c.alpn = b"foo"
+        assert str(c) == "Client(127.0.0.1:52314, state=open, alpn=foo)"
 
     def test_state(self):
         c = tflow.tclient_conn()
@@ -58,6 +63,12 @@ class TestServer:
     def test_basic(self):
         s = context.Server(("address", 22))
         assert repr(s)
+        assert str(s)
+        s.timestamp_tls_setup = 1607780791
+        assert str(s)
+        s.alpn = b"foo"
+        s.sockname = ("127.0.0.1", 54321)
+        assert str(s) == "Server(address:22, state=closed, alpn=foo, src_port=54321)"
 
     def test_state(self):
         c = tflow.tserver_conn()

@@ -1,15 +1,16 @@
+import contextlib
+import pprint
+import sys
+import traceback
 import types
 import typing
-import traceback
-import contextlib
-import sys
+from dataclasses import dataclass
 
-from mitmproxy import exceptions
-from mitmproxy import eventsequence
 from mitmproxy import controller
+from mitmproxy import hooks
+from mitmproxy import exceptions
 from mitmproxy import flow
 from . import ctx
-import pprint
 
 
 def _get_name(itm):
@@ -56,16 +57,17 @@ class Loader:
     """
         A loader object is passed to the load() event when addons start up.
     """
+
     def __init__(self, master):
         self.master = master
 
     def add_option(
-        self,
-        name: str,
-        typespec: type,
-        default: typing.Any,
-        help: str,
-        choices: typing.Optional[typing.Sequence[str]] = None
+            self,
+            name: str,
+            typespec: type,
+            default: typing.Any,
+            help: str,
+            choices: typing.Optional[typing.Sequence[str]] = None
     ) -> None:
         """
             Add an option to mitmproxy.
@@ -77,11 +79,11 @@ class Loader:
         if name in self.master.options:
             existing = self.master.options._options[name]
             same_signature = (
-                existing.name == name and
-                existing.typespec == typespec and
-                existing.default == default and
-                existing.help == help and
-                existing.choices == choices
+                    existing.name == name and
+                    existing.typespec == typespec and
+                    existing.default == default and
+                    existing.help == help and
+                    existing.choices == choices
             )
             if same_signature:
                 return
@@ -109,6 +111,16 @@ def traverse(chain):
             yield from traverse(a.addons)
 
 
+@dataclass
+class LoadHook(hooks.Hook):
+    """
+    Called when an addon is first loaded. This event receives a Loader
+    object, which contains methods for adding options and commands. This
+    method is where the addon configures itself.
+    """
+    loader: Loader
+
+
 class AddonManager:
     def __init__(self, master):
         self.lookup = {}
@@ -117,14 +129,14 @@ class AddonManager:
         master.options.changed.connect(self._configure_all)
 
     def _configure_all(self, options, updated):
-        self.trigger("configure", updated)
+        self.trigger(hooks.ConfigureHook(updated))
 
     def clear(self):
         """
             Remove all addons.
         """
         for a in self.chain:
-            self.invoke_addon(a, "done")
+            self.invoke_addon(a, hooks.DoneHook())
         self.lookup = {}
         self.chain = []
 
@@ -146,14 +158,25 @@ class AddonManager:
             running and configure events. Must be called within a current
             context.
         """
+        api_changes = {
+            # mitmproxy 6 -> mitmproxy 7
+            "clientconnect": "client_connected",
+            "clientdisconnect": "client_disconnected",
+            "serverconnect": "server_connect and server_connected",
+            "serverdisconnect": "server_disconnected",
+        }
         for a in traverse([addon]):
+            for old, new in api_changes.items():
+                if hasattr(a, old):
+                    ctx.log.warn(f"The {old} event has been removed, use {new} instead. "
+                                 f"For more details, see https://docs.mitmproxy.org/stable/addons-events/.")
             name = _get_name(a)
             if name in self.lookup:
                 raise exceptions.AddonManagerError(
                     "An addon called '%s' already exists." % name
                 )
         l = Loader(self.master)
-        self.invoke_addon(addon, "load", l)
+        self.invoke_addon(addon, LoadHook(l))
         for a in traverse([addon]):
             name = _get_name(a)
             self.lookup[name] = a
@@ -184,7 +207,7 @@ class AddonManager:
                 raise exceptions.AddonManagerError("No such addon: %s" % n)
             self.chain = [i for i in self.chain if i is not a]
             del self.lookup[_get_name(a)]
-        self.invoke_addon(addon, "done")
+        self.invoke_addon(addon, hooks.DoneHook())
 
     def __len__(self):
         return len(self.chain)
@@ -196,10 +219,11 @@ class AddonManager:
         name = _get_name(item)
         return name in self.lookup
 
-    async def handle_lifecycle(self, name, message):
+    async def handle_lifecycle(self, event: hooks.Hook):
         """
             Handle a lifecycle event.
         """
+        message = event.args()[0]
         if not hasattr(message, "reply"):  # pragma: no cover
             raise exceptions.ControlException(
                 "Message %s has no reply attribute" % message
@@ -211,7 +235,7 @@ class AddonManager:
         if isinstance(message.reply, controller.DummyReply):
             message.reply.reset()
 
-        self.trigger(name, message)
+        self.trigger(event)
 
         if message.reply.state == "start":
             message.reply.take()
@@ -221,19 +245,18 @@ class AddonManager:
                 message.reply.mark_reset()
 
         if isinstance(message, flow.Flow):
-            self.trigger("update", [message])
+            self.trigger(hooks.UpdateHook([message]))
 
-    def invoke_addon(self, addon, name, *args, **kwargs):
+    def invoke_addon(self, addon, event: hooks.Hook):
         """
             Invoke an event on an addon and all its children.
         """
-        if name not in eventsequence.Events:
-            raise exceptions.AddonManagerError("Unknown event: %s" % name)
+        assert isinstance(event, hooks.Hook)
         for a in traverse([addon]):
-            func = getattr(a, name, None)
+            func = getattr(a, event.name, None)
             if func:
                 if callable(func):
-                    func(*args, **kwargs)
+                    func(*event.args())
                 elif isinstance(func, types.ModuleType):
                     # we gracefully exclude module imports with the same name as hooks.
                     # For example, a user may have "from mitmproxy import log" in an addon,
@@ -242,16 +265,16 @@ class AddonManager:
                     pass
                 else:
                     raise exceptions.AddonManagerError(
-                        f"Addon handler {name} ({a}) not callable"
+                        f"Addon handler {event.name} ({a}) not callable"
                     )
 
-    def trigger(self, name, *args, **kwargs):
+    def trigger(self, event: hooks.Hook):
         """
             Trigger an event across all addons.
         """
         for i in self.chain:
             try:
                 with safecall():
-                    self.invoke_addon(i, name, *args, **kwargs)
+                    self.invoke_addon(i, event)
             except exceptions.AddonHalt:
                 return

@@ -1,13 +1,15 @@
+from dataclasses import dataclass
 from typing import Optional
 
 from mitmproxy import flow, tcp
 from mitmproxy.proxy import commands, events, layer
-from mitmproxy.proxy.commands import Hook
+from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import ConnectionState, Context, Connection
 from mitmproxy.proxy.utils import expect
 
 
-class TcpStartHook(Hook):
+@dataclass
+class TcpStartHook(StartHook):
     """
     A TCP connection has started.
     """
@@ -15,7 +17,8 @@ class TcpStartHook(Hook):
     flow: tcp.TCPFlow
 
 
-class TcpMessageHook(Hook):
+@dataclass
+class TcpMessageHook(StartHook):
     """
     A TCP connection has received a message. The most recent message
     will be flow.messages[-1]. The message is user-modifiable.
@@ -23,14 +26,16 @@ class TcpMessageHook(Hook):
     flow: tcp.TCPFlow
 
 
-class TcpEndHook(Hook):
+@dataclass
+class TcpEndHook(StartHook):
     """
     A TCP connection has ended.
     """
     flow: tcp.TCPFlow
 
 
-class TcpErrorHook(Hook):
+@dataclass
+class TcpErrorHook(StartHook):
     """
     A TCP error has occurred.
 

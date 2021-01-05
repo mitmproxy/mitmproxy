@@ -8,7 +8,7 @@ class ErrorCheck:
     def __init__(self):
         self.has_errored = False
 
-    def log(self, e):
+    def add_log(self, e):
         if e.level == "error":
             self.has_errored = True
 

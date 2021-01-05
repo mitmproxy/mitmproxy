@@ -29,14 +29,14 @@ class TestLayer:
         assert (
                 tutils.Playbook(tlayer, hooks=True, logs=True)
                 << commands.Log(" >> Start({})", "debug")
-                << commands.Log(" << OpenConnection({'connection': Server({'id': 'serverid', 'address': None})})",
+                << commands.Log(" << OpenConnection({'connection': Server({'id': '…rverid', 'address': None})})",
                                 "debug")
                 << commands.OpenConnection(tctx.server)
                 >> events.DataReceived(tctx.client, b"foo")
                 << commands.Log(" >! DataReceived(client, b'foo')", "debug")
                 >> tutils.reply(None, to=-3)
                 << commands.Log(" >> Reply(OpenConnection({'connection': Server("
-                                "{'id': 'serverid', 'address': None, 'state': <ConnectionState.OPEN: 3>})}))", "debug")
+                                "{'id': '…rverid', 'address': None, 'state': <ConnectionState.OPEN: 3>})}))", "debug")
                 << commands.Log(" !> DataReceived(client, b'foo')", "debug")
 
                 << commands.Log("baz", "info")

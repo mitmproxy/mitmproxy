@@ -1,5 +1,8 @@
+from dataclasses import dataclass
+
 import pytest
 
+from mitmproxy.hooks import all_hooks
 from mitmproxy.proxy import commands, context
 
 
@@ -16,18 +19,14 @@ def test_dataclasses(tconn):
     assert repr(commands.Log("hello", "info"))
 
 
-def test_hook():
+def test_start_hook():
     with pytest.raises(TypeError):
-        commands.Hook()
+        commands.StartHook()
 
-    class FooHook(commands.Hook):
+    @dataclass
+    class TestHook(commands.StartHook):
         data: bytes
 
-    f = FooHook(b"foo")
-    assert repr(f)
+    f = TestHook(b"foo")
     assert f.args() == [b"foo"]
-    assert FooHook in commands.all_hooks.values()
-
-    with pytest.raises(RuntimeError, match="Two conflicting hooks"):
-        class FooHook2(commands.Hook):
-            name = "foo"
+    assert TestHook in all_hooks.values()

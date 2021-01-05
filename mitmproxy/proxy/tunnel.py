@@ -89,7 +89,7 @@ class TunnelLayer(layer.Layer):
         else:
             self.tunnel_state = TunnelState.OPEN
         if self.command_to_reply_to:
-            yield from self.event_to_child(events.OpenConnectionReply(self.command_to_reply_to, err))
+            yield from self.event_to_child(events.OpenConnectionCompleted(self.command_to_reply_to, err))
             self.command_to_reply_to = None
         else:
             for evt in self._event_queue:
@@ -117,7 +117,7 @@ class TunnelLayer(layer.Layer):
                     self.tunnel_state = TunnelState.ESTABLISHING
                     err = yield commands.OpenConnection(self.tunnel_connection)
                     if err:
-                        yield from self.event_to_child(events.OpenConnectionReply(command, err))
+                        yield from self.event_to_child(events.OpenConnectionCompleted(command, err))
                         self.tunnel_state = TunnelState.CLOSED
                     else:
                         yield from self.start_handshake()

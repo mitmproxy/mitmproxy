@@ -16,21 +16,21 @@ def test_dataclasses(tconn):
     assert repr(events.ConnectionClosed(tconn))
 
 
-def test_commandreply():
+def test_command_completed():
     with pytest.raises(TypeError):
-        events.CommandReply()
-    assert repr(events.HookReply(Mock(), None))
+        events.CommandCompleted()
+    assert repr(events.HookCompleted(Mock(), None))
 
     class FooCommand(commands.Command):
         pass
 
     with pytest.raises(RuntimeError, match="properly annotated"):
-        class FooReply(events.CommandReply):
+        class FooCompleted(events.CommandCompleted):
             pass
 
-    class FooReply1(events.CommandReply):
+    class FooCompleted1(events.CommandCompleted):
         command: FooCommand
 
     with pytest.raises(RuntimeError, match="conflicting subclasses"):
-        class FooReply2(events.CommandReply):
+        class FooCompleted2(events.CommandCompleted):
             command: FooCommand

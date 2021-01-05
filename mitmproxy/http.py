@@ -1,6 +1,7 @@
 import html
 import time
 from typing import Optional, Tuple
+
 from mitmproxy import flow
 from mitmproxy import version
 from mitmproxy.net import http

@@ -11,7 +11,7 @@ from mitmproxy.test import taddons
 @pytest.mark.asyncio
 async def test_master():
     class tAddon:
-        def log(self, _):
+        def add_log(self, _):
             mitmproxy.ctx.master.should_exit.set()
 
     with taddons.context(tAddon()) as tctx:

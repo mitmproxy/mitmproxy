@@ -2,7 +2,7 @@ import asyncio
 import warnings
 from typing import Optional
 
-from mitmproxy import controller, ctx, eventsequence, flow, log, master, options, platform
+from mitmproxy import controller, ctx, flow, log, master, options, platform
 from mitmproxy.flow import Error
 from mitmproxy.proxy import commands
 from mitmproxy.proxy import server
@@ -40,12 +40,12 @@ class ProxyConnectionHandler(server.StreamConnectionHandler):
         super().__init__(r, w, options)
         self.log_prefix = f"{human.format_address(self.client.peername)}: "
 
-    async def handle_hook(self, hook: commands.Hook) -> None:
+    async def handle_hook(self, hook: commands.StartHook) -> None:
         with self.timeout_watchdog.disarm():
             # We currently only support single-argument hooks.
             data, = hook.args()
             data.reply = AsyncReply(data)
-            await self.master.addons.handle_lifecycle(hook.name, data)
+            await self.master.addons.handle_lifecycle(hook)
             await data.reply.done.wait()
             data.reply = None
 
@@ -53,7 +53,7 @@ class ProxyConnectionHandler(server.StreamConnectionHandler):
         x = log.LogEntry(self.log_prefix + message, level)
         x.reply = controller.DummyReply()  # type: ignore
         asyncio_utils.create_task(
-            self.master.addons.handle_lifecycle("log", x),
+            self.master.addons.handle_lifecycle(log.AddLogHook(x)),
             name="ProxyConnectionHandler.log"
         )
 
@@ -82,10 +82,6 @@ class Proxyserver:
         loader.add_option(
             "proxy_debug", bool, False,
             "Enable debug logs in the proxy core.",
-        )
-        # FIXME: Update allowed events to include new ones.
-        eventsequence.Events = frozenset(
-            eventsequence.Events | set(commands.all_hooks.keys())
         )
 
     def running(self):
