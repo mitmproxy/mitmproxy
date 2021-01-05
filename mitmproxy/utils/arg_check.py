@@ -71,7 +71,6 @@ REPLACEMENTS = {
     "--order": "view_order",
     "--no-mouse": "console_mouse",
     "--reverse": "view_order_reversed",
-    "--no-http2-priority": "http2_priority",
     "--no-websocket": "websocket",
     "--no-upstream-cert": "upstream_cert",
     "--upstream-trusted-confdir": "ssl_verify_upstream_trusted_confdir",

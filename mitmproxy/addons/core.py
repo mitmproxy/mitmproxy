@@ -42,6 +42,10 @@ class Core:
                 "add_upstream_certs_to_client_chain requires the upstream_cert option to be enabled."
             )
         if "body_size_limit" in updated:
+            if opts.body_size_limit:  # pragma: no cover
+                ctx.log.warn(
+                    "body_size_limit is currently nonfunctioning, "
+                    "see https://github.com/mitmproxy/mitmproxy/issues/4348")
             try:
                 human.parse_size(opts.body_size_limit)
             except ValueError:
