@@ -86,21 +86,6 @@ class BuildEnviron:
 
         is_pull_request = os.environ.get("GITHUB_EVENT_NAME", "pull_request") == "pull_request"
 
-        is_untrusted = (
-                is_pull_request
-                or
-                os.environ.get("GITHUB_REPOSITORY", "other") != "mitmproxy/mitmproxy"
-        )
-        has_creds = any(
-            x in os.environ for x in
-            ["AWS_ACCESS_KEY_ID",
-             "TWINE_USERNAME", "TWINE_PASSWORD",
-             "DOCKER_USERNAME", "DOCKER_PASSWORD",
-             "CI_BUILD_KEY"]
-        )
-        if is_untrusted and has_creds:
-            raise RuntimeError("Found upload credentials even though we aren't running on CI!")
-
         return cls(
             system=platform.system(),
             root_dir=Path(__file__).parent.parent,
