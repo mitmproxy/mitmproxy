@@ -55,7 +55,7 @@ class ConnectionClosed(ConnectionEvent):
     pass
 
 
-class CommandReply(Event):
+class CommandCompleted(Event):
     """
     Emitted when a command has been finished, e.g.
     when the master has replied or when we have established a server connection.
@@ -64,8 +64,8 @@ class CommandReply(Event):
     reply: typing.Any
 
     def __new__(cls, *args, **kwargs):
-        if cls is CommandReply:
-            raise TypeError("CommandReply may not be instantiated directly.")
+        if cls is CommandCompleted:
+            raise TypeError("CommandCompleted may not be instantiated directly.")
         assert is_dataclass(cls)
         return super().__new__(cls)
 
@@ -85,23 +85,23 @@ class CommandReply(Event):
         return f"Reply({repr(self.command)})"
 
 
-command_reply_subclasses: typing.Dict[commands.Command, typing.Type[CommandReply]] = {}
+command_reply_subclasses: typing.Dict[commands.Command, typing.Type[CommandCompleted]] = {}
 
 
 @dataclass(repr=False)
-class OpenConnectionReply(CommandReply):
+class OpenConnectionCompleted(CommandCompleted):
     command: commands.OpenConnection
     reply: typing.Optional[str]
     """error message"""
 
 
 @dataclass(repr=False)
-class HookReply(CommandReply):
-    command: commands.Hook
+class HookCompleted(CommandCompleted):
+    command: commands.StartHook
     reply: None = None
 
 
 @dataclass(repr=False)
-class GetSocketReply(CommandReply):
+class GetSocketCompleted(CommandCompleted):
     command: commands.GetSocket
     reply: socket.socket

@@ -8,7 +8,7 @@ from mitmproxy import certs
 from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy import commands, events, layer, tunnel
 from mitmproxy.proxy import context
-from mitmproxy.proxy.commands import Hook
+from mitmproxy.proxy.commands import StartHook
 from mitmproxy.utils import human
 
 
@@ -104,7 +104,7 @@ class ClientHelloData:
 
 
 @dataclass
-class TlsClienthelloHook(Hook):
+class TlsClienthelloHook(StartHook):
     """
     Mitmproxy has received a TLS ClientHello message.
 
@@ -122,7 +122,7 @@ class TlsStartData:
 
 
 @dataclass
-class TlsStartHook(Hook):
+class TlsStartHook(StartHook):
     """
     TLS Negotation is about to start.
 

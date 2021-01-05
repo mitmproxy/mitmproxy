@@ -1,5 +1,5 @@
 ---
-title: "Events"
+title: "Event Hooks"
 menu:
     addons:
         weight: 2

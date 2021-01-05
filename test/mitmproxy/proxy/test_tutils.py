@@ -22,7 +22,7 @@ class TCommand(commands.Command):
 
 
 @dataclass
-class TCommandReply(events.CommandReply):
+class TCommandCompleted(events.CommandCompleted):
     command: TCommand
 
 

@@ -40,7 +40,7 @@ class ProxyConnectionHandler(server.StreamConnectionHandler):
         super().__init__(r, w, options)
         self.log_prefix = f"{human.format_address(self.client.peername)}: "
 
-    async def handle_hook(self, hook: commands.Hook) -> None:
+    async def handle_hook(self, hook: commands.StartHook) -> None:
         with self.timeout_watchdog.disarm():
             # We currently only support single-argument hooks.
             data, = hook.args()
@@ -53,7 +53,7 @@ class ProxyConnectionHandler(server.StreamConnectionHandler):
         x = log.LogEntry(self.log_prefix + message, level)
         x.reply = controller.DummyReply()  # type: ignore
         asyncio_utils.create_task(
-            self.master.addons.handle_lifecycle(log.AddLogEvent(x)),
+            self.master.addons.handle_lifecycle(log.AddLogEventHook(x)),
             name="ProxyConnectionHandler.log"
         )
 

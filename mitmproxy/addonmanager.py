@@ -7,7 +7,7 @@ import typing
 from dataclasses import dataclass
 
 from mitmproxy import controller
-from mitmproxy import events
+from mitmproxy import event_hooks
 from mitmproxy import exceptions
 from mitmproxy import flow
 from . import ctx
@@ -112,7 +112,7 @@ def traverse(chain):
 
 
 @dataclass
-class LoadEvent(events.MitmproxyEvent):
+class LoadEventHook(event_hooks.EventHook):
     """
     Called when an addon is first loaded. This event receives a Loader
     object, which contains methods for adding options and commands. This
@@ -129,14 +129,14 @@ class AddonManager:
         master.options.changed.connect(self._configure_all)
 
     def _configure_all(self, options, updated):
-        self.trigger(events.ConfigureEvent(updated))
+        self.trigger(event_hooks.ConfigureEventHook(updated))
 
     def clear(self):
         """
             Remove all addons.
         """
         for a in self.chain:
-            self.invoke_addon(a, events.DoneEvent())
+            self.invoke_addon(a, event_hooks.DoneEventHook())
         self.lookup = {}
         self.chain = []
 
@@ -176,7 +176,7 @@ class AddonManager:
                     "An addon called '%s' already exists." % name
                 )
         l = Loader(self.master)
-        self.invoke_addon(addon, LoadEvent(l))
+        self.invoke_addon(addon, LoadEventHook(l))
         for a in traverse([addon]):
             name = _get_name(a)
             self.lookup[name] = a
@@ -207,7 +207,7 @@ class AddonManager:
                 raise exceptions.AddonManagerError("No such addon: %s" % n)
             self.chain = [i for i in self.chain if i is not a]
             del self.lookup[_get_name(a)]
-        self.invoke_addon(addon, events.DoneEvent())
+        self.invoke_addon(addon, event_hooks.DoneEventHook())
 
     def __len__(self):
         return len(self.chain)
@@ -219,7 +219,7 @@ class AddonManager:
         name = _get_name(item)
         return name in self.lookup
 
-    async def handle_lifecycle(self, event: events.MitmproxyEvent):
+    async def handle_lifecycle(self, event: event_hooks.EventHook):
         """
             Handle a lifecycle event.
         """
@@ -245,13 +245,13 @@ class AddonManager:
                 message.reply.mark_reset()
 
         if isinstance(message, flow.Flow):
-            self.trigger(events.UpdateEvent([message]))
+            self.trigger(event_hooks.UpdateEventHook([message]))
 
-    def invoke_addon(self, addon, event: events.MitmproxyEvent):
+    def invoke_addon(self, addon, event: event_hooks.EventHook):
         """
             Invoke an event on an addon and all its children.
         """
-        assert isinstance(event, events.MitmproxyEvent)
+        assert isinstance(event, event_hooks.EventHook)
         for a in traverse([addon]):
             func = getattr(a, event.name, None)
             if func:
@@ -268,7 +268,7 @@ class AddonManager:
                         f"Addon handler {event.name} ({a}) not callable"
                     )
 
-    def trigger(self, event: events.MitmproxyEvent):
+    def trigger(self, event: event_hooks.EventHook):
         """
             Trigger an event across all addons.
         """

@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     import mitmproxy.log
 
 
-class MitmproxyEvent:
+class EventHook:
     name: ClassVar[str]
 
     def args(self) -> List[Any]:
@@ -19,7 +19,7 @@ class MitmproxyEvent:
         return args
 
     def __new__(cls, *args, **kwargs):
-        if cls is MitmproxyEvent:
+        if cls is EventHook:
             raise TypeError("MitmproxyEvent may not be instantiated directly.")
         if not is_dataclass(cls):
             raise TypeError("Subclass is not a dataclass.")
@@ -42,11 +42,11 @@ class MitmproxyEvent:
         cls.__eq__ = object.__eq__
 
 
-all_events: Dict[str, Type[MitmproxyEvent]] = {}
+all_events: Dict[str, Type[EventHook]] = {}
 
 
 @dataclass
-class ConfigureEvent(MitmproxyEvent):
+class ConfigureEventHook(EventHook):
     """
     Called when configuration changes. The updated argument is a
     set-like object containing the keys of all changed options. This
@@ -56,7 +56,7 @@ class ConfigureEvent(MitmproxyEvent):
 
 
 @dataclass
-class DoneEvent(MitmproxyEvent):
+class DoneEventHook(EventHook):
     """
     Called when the addon shuts down, either by being removed from
     the mitmproxy instance, or when mitmproxy itself shuts down. On
@@ -68,7 +68,7 @@ class DoneEvent(MitmproxyEvent):
 
 
 @dataclass
-class RunningEvent(MitmproxyEvent):
+class RunningEventHook(EventHook):
     """
     Called when the proxy is completely up and running. At this point,
     you can expect the proxy to be bound to a port, and all addons to be
@@ -77,7 +77,7 @@ class RunningEvent(MitmproxyEvent):
 
 
 @dataclass
-class UpdateEvent(MitmproxyEvent):
+class UpdateEventHook(EventHook):
     """
     Update is called when one or more flow objects have been modified,
     usually from a different addon.

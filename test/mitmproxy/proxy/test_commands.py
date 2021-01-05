@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from mitmproxy.events import all_events
+from mitmproxy.event_hooks import all_events
 from mitmproxy.proxy import commands, context
 
 
@@ -21,10 +21,10 @@ def test_dataclasses(tconn):
 
 def test_hook():
     with pytest.raises(TypeError):
-        commands.Hook()
+        commands.StartHook()
 
     @dataclass
-    class TestHook(commands.Hook):
+    class TestHook(commands.StartHook):
         data: bytes
 
     f = TestHook(b"foo")

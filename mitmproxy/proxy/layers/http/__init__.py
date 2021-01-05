@@ -66,7 +66,7 @@ class GetHttpConnection(HttpCommand):
 
 
 @dataclass
-class GetHttpConnectionReply(events.CommandReply):
+class GetHttpConnectionCompleted(events.CommandCompleted):
     command: GetHttpConnection
     reply: Union[Tuple[None, str], Tuple[Connection, None]]
     """connection object, error message"""
@@ -554,7 +554,7 @@ class HttpLayer(layer.Layer):
             yield from self.event_to_child(self.connections[self.context.client], event)
             if self.mode is HTTPMode.upstream:
                 self.context.server.via = server_spec.parse_with_mode(self.context.options.mode)[1]
-        elif isinstance(event, events.CommandReply):
+        elif isinstance(event, events.CommandCompleted):
             stream = self.command_sources.pop(event.command)
             yield from self.event_to_child(stream, event)
         elif isinstance(event, events.ConnectionEvent):
@@ -574,7 +574,7 @@ class HttpLayer(layer.Layer):
     ) -> layer.CommandGenerator[None]:
         for command in child.handle_event(event):
             assert isinstance(command, commands.Command)
-            # Streams may yield blocking commands, which ultimately generate CommandReply events.
+            # Streams may yield blocking commands, which ultimately generate CommandCompleted events.
             # Those need to be routed back to the correct stream, so we need to keep track of that.
 
             if command.blocking:
@@ -624,7 +624,7 @@ class HttpLayer(layer.Layer):
                         self.waiting_for_establishment[connection].append(event)
                     else:
                         stream = self.command_sources.pop(event)
-                        yield from self.event_to_child(stream, GetHttpConnectionReply(event, (connection, None)))
+                        yield from self.event_to_child(stream, GetHttpConnectionCompleted(event, (connection, None)))
                     return
 
         can_use_context_connection = (
@@ -674,7 +674,7 @@ class HttpLayer(layer.Layer):
 
         for cmd in waiting:
             stream = self.command_sources.pop(cmd)
-            yield from self.event_to_child(stream, GetHttpConnectionReply(cmd, reply))
+            yield from self.event_to_child(stream, GetHttpConnectionCompleted(cmd, reply))
 
             # Somewhat ugly edge case: If we do HTTP/2 -> HTTP/1 proxying we don't want
             # to handle everything over a single connection.

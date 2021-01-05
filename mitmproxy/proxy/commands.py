@@ -8,7 +8,7 @@ The counterpart to commands are events.
 """
 from typing import Literal, Union, TYPE_CHECKING
 
-import mitmproxy.events
+import mitmproxy.event_hooks
 from mitmproxy.proxy.context import Connection, Server
 
 if TYPE_CHECKING:
@@ -86,15 +86,16 @@ class CloseConnection(ConnectionCommand):
         self.half_close = half_close
 
 
-class Hook(Command, mitmproxy.events.MitmproxyEvent):
+class StartHook(Command, mitmproxy.event_hooks.EventHook):
     """
-    Callback to the master (like ".ask()")
+    Start an event hook in the mitmproxy core.
+    This triggers a particular function (derived from the class name) in all addons.
     """
     blocking = True
 
     def __new__(cls, *args, **kwargs):
-        if cls is Hook:
-            raise TypeError("Hook may not be instantiated directly.")
+        if cls is StartHook:
+            raise TypeError("StartHook may not be instantiated directly.")
         return super().__new__(cls, *args, **kwargs)
 
 

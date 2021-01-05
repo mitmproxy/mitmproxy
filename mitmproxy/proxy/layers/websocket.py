@@ -7,7 +7,7 @@ import wsproto.frame_protocol
 import wsproto.utilities
 from mitmproxy import flow, websocket, http
 from mitmproxy.proxy import commands, events, layer, context
-from mitmproxy.proxy.commands import Hook
+from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.utils import expect
 from wsproto import ConnectionState
@@ -15,7 +15,7 @@ from wsproto.frame_protocol import CloseReason, Opcode
 
 
 @dataclass
-class WebsocketStartHook(Hook):
+class WebsocketStartHook(StartHook):
     """
     A WebSocket connection has commenced.
     """
@@ -23,7 +23,7 @@ class WebsocketStartHook(Hook):
 
 
 @dataclass
-class WebsocketMessageHook(Hook):
+class WebsocketMessageHook(StartHook):
     """
     Called when a WebSocket message is received from the client or
     server. The most recent message will be flow.messages[-1]. The
@@ -34,7 +34,7 @@ class WebsocketMessageHook(Hook):
 
 
 @dataclass
-class WebsocketEndHook(Hook):
+class WebsocketEndHook(StartHook):
     """
     A WebSocket connection has ended.
     """
@@ -43,7 +43,7 @@ class WebsocketEndHook(Hook):
 
 
 @dataclass
-class WebsocketErrorHook(Hook):
+class WebsocketErrorHook(StartHook):
     """
     A WebSocket connection has had an error.
 

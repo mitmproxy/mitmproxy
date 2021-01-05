@@ -1,14 +1,14 @@
 from typing import Iterator, Any, Dict, Type, Callable
 
 from mitmproxy import controller
-from mitmproxy import events
+from mitmproxy import event_hooks
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
 from mitmproxy.proxy import layers
 
-TEventGenerator = Iterator[events.MitmproxyEvent]
+TEventGenerator = Iterator[event_hooks.EventHook]
 
 
 def _iterate_http(f: http.HTTPFlow) -> TEventGenerator:

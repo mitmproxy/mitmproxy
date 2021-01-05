@@ -18,7 +18,7 @@ class TestDumpMaster:
         m = self.mkmaster()
         ent = log.LogEntry("foo", "error")
         ent.reply = controller.DummyReply()
-        m.addons.trigger(log.AddLogEvent(ent))
+        m.addons.trigger(log.AddLogEventHook(ent))
         assert m.errorcheck.has_errored
 
     @pytest.mark.parametrize("termlog", [False, True])
