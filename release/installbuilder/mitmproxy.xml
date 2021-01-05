@@ -31,7 +31,7 @@
                     <distributionFileList>
                         <distributionFile>
                             <allowWildcards>1</allowWildcards>
-                            <origin>../build/binaries/${platform_name}/*</origin>
+                            <origin>../build/binaries/windows/onedir/*</origin>
                         </distributionFile>
                         <distributionFile>
                             <origin>run.ps1</origin>

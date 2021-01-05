@@ -1,9 +1,11 @@
 import io
-import os
+from pathlib import Path
 
 import pytest
 
 from release import cibuild
+
+root = Path(__file__).parent.parent.parent
 
 
 def test_buildenviron_live():
@@ -14,13 +16,12 @@ def test_buildenviron_live():
 def test_buildenviron_common():
     be = cibuild.BuildEnviron(
         system="Linux",
-        root_dir="/foo",
-        github_ref="refs/heads/master",
+        root_dir=root,
+        branch="master",
     )
-    assert be.release_dir == os.path.join(be.root_dir, "release")
-    assert be.dist_dir == os.path.join(be.root_dir, "release", "dist")
-    assert be.build_dir == os.path.join(be.root_dir, "release", "build")
-    assert be.is_pull_request is False
+    assert be.release_dir == be.root_dir / "release"
+    assert be.dist_dir == be.root_dir / "release" / "dist"
+    assert be.build_dir == be.root_dir / "release" / "build"
     assert not be.has_docker_creds
 
     cs = io.StringIO()
@@ -29,7 +30,7 @@ def test_buildenviron_common():
 
     be = cibuild.BuildEnviron(
         system="Unknown",
-        root_dir="/foo",
+        root_dir=root,
     )
     with pytest.raises(cibuild.BuildError):
         be.version
@@ -37,41 +38,27 @@ def test_buildenviron_common():
         be.platform_tag
 
 
-def test_buildenviron_pr():
+def test_buildenviron_pr(monkeypatch):
     # Simulates a PR. We build everything, but don't have access to secret
     # credential env variables.
-    be = cibuild.BuildEnviron(
-        github_event_name="pull_request",
-        should_build_wheel=True,
-        should_build_pyinstaller=True,
-        should_build_docker=True,
-    )
+    monkeypatch.setenv("GITHUB_REF", "refs/pull/42/merge")
+    monkeypatch.setenv("CI_BUILD_WHEEL", "1")
+    monkeypatch.setenv("GITHUB_EVENT_NAME", "pull_request")
+
+    be = cibuild.BuildEnviron.from_env()
+    assert be.branch == "pr-42"
     assert be.is_pull_request
-
-
-def test_ci_systems():
-    github = cibuild.BuildEnviron(
-        github_event_name="pull_request",
-        github_ref="refs/heads/master"
-    )
-    assert github.is_pull_request
-    assert github.branch == "master"
-    assert github.tag == ""
-
-    github2 = cibuild.BuildEnviron(
-        github_event_name="pull_request",
-        github_ref="refs/tags/qux"
-    )
-    assert github2.is_pull_request
-    assert github2.branch == ""
-    assert github2.tag == "qux"
+    assert be.should_build_wheel
+    assert not be.should_upload_pypi
 
 
 def test_buildenviron_commit():
     # Simulates an ordinary commit on the master branch.
     be = cibuild.BuildEnviron(
-        github_ref="refs/heads/master",
-        github_event_name="push",
+        system="Linux",
+        root_dir=root,
+        branch="master",
+        is_pull_request=False,
         should_build_wheel=True,
         should_build_pyinstaller=True,
         should_build_docker=True,
@@ -92,8 +79,8 @@ def test_buildenviron_releasetag():
     # Simulates a tagged release on a release branch.
     be = cibuild.BuildEnviron(
         system="Linux",
-        root_dir="/foo",
-        github_ref="refs/tags/v0.0.1",
+        root_dir=root,
+        tag="v0.0.1",
         should_build_wheel=True,
         should_build_docker=True,
         should_build_pyinstaller=True,
@@ -102,7 +89,7 @@ def test_buildenviron_releasetag():
         docker_password="bar",
     )
     assert be.tag == "v0.0.1"
-    assert be.branch == ""
+    assert be.branch is None
     assert be.version == "0.0.1"
     assert be.upload_dir == "0.0.1"
     assert be.docker_tag == "mitmproxy/mitmproxy:0.0.1"
@@ -116,8 +103,8 @@ def test_buildenviron_namedtag():
     # Simulates a non-release tag on a branch.
     be = cibuild.BuildEnviron(
         system="Linux",
-        root_dir="/foo",
-        github_ref="refs/tags/anyname",
+        root_dir=root,
+        tag="anyname",
         should_build_wheel=True,
         should_build_docker=True,
         should_build_pyinstaller=True,
@@ -126,7 +113,7 @@ def test_buildenviron_namedtag():
         docker_password="bar",
     )
     assert be.tag == "anyname"
-    assert be.branch == ""
+    assert be.branch is None
     assert be.version == "anyname"
     assert be.upload_dir == "anyname"
     assert be.docker_tag == "mitmproxy/mitmproxy:anyname"
@@ -140,8 +127,8 @@ def test_buildenviron_dev_branch():
     # Simulates a commit on a development branch on the main repo
     be = cibuild.BuildEnviron(
         system="Linux",
-        root_dir="/foo",
-        github_ref="refs/heads/mybranch",
+        root_dir=root,
+        branch="mybranch",
         should_build_wheel=True,
         should_build_docker=True,
         should_build_pyinstaller=True,
@@ -149,7 +136,7 @@ def test_buildenviron_dev_branch():
         docker_username="foo",
         docker_password="bar",
     )
-    assert be.tag == ""
+    assert be.tag is None
     assert be.branch == "mybranch"
     assert be.version == "mybranch"
     assert be.upload_dir == "branches/mybranch"
@@ -162,8 +149,8 @@ def test_buildenviron_maintenance_branch():
     # Simulates a commit on a release maintenance branch on the main repo
     be = cibuild.BuildEnviron(
         system="Linux",
-        root_dir="/foo",
-        github_ref="refs/heads/v0.x",
+        root_dir=root,
+        branch="v0.x",
         should_build_wheel=True,
         should_build_docker=True,
         should_build_pyinstaller=True,
@@ -171,7 +158,7 @@ def test_buildenviron_maintenance_branch():
         docker_username="foo",
         docker_password="bar",
     )
-    assert be.tag == ""
+    assert be.tag is None
     assert be.branch == "v0.x"
     assert be.version == "v0.x"
     assert be.upload_dir == "branches/v0.x"
@@ -180,38 +167,32 @@ def test_buildenviron_maintenance_branch():
     assert be.is_maintenance_branch
 
 
-def test_buildenviron_osx(tmpdir):
+def test_buildenviron_osx(tmp_path):
     be = cibuild.BuildEnviron(
         system="Darwin",
-        root_dir="/foo",
-        github_ref="refs/tags/v0.0.1",
+        root_dir=root,
+        tag="v0.0.1",
     )
     assert be.platform_tag == "osx"
-    assert be.bdists == {
-        "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
-    }
-    assert be.archive_name("mitmproxy") == "mitmproxy-0.0.1-osx.tar.gz"
+    assert be.archive_path == be.dist_dir / "mitmproxy-0.0.1-osx.tar.gz"
 
-    a = be.archive(os.path.join(tmpdir, "arch"))
-    assert a
-    a.close()
+    with be.archive(tmp_path / "arch"):
+        pass
+    assert (tmp_path / "arch").exists()
 
 
-def test_buildenviron_windows(tmpdir):
+def test_buildenviron_windows(tmp_path):
     be = cibuild.BuildEnviron(
         system="Windows",
-        root_dir="/foo",
-        github_ref="refs/tags/v0.0.1",
+        root_dir=root,
+        tag="v0.0.1",
     )
     assert be.platform_tag == "windows"
-    assert be.bdists == {
-        "mitmproxy": ["mitmproxy", "mitmdump", "mitmweb"],
-    }
-    assert be.archive_name("mitmproxy") == "mitmproxy-0.0.1-windows.zip"
+    assert be.archive_path == be.dist_dir / "mitmproxy-0.0.1-windows.zip"
 
-    a = be.archive(os.path.join(tmpdir, "arch"))
-    assert a
-    a.close()
+    with be.archive(tmp_path / "arch"):
+        pass
+    assert (tmp_path / "arch").exists()
 
 
 @pytest.mark.parametrize("version, tag, ok", [
@@ -229,7 +210,8 @@ def test_buildenviron_check_version(version, tag, ok, tmpdir):
 
     be = cibuild.BuildEnviron(
         root_dir=tmpdir,
-        github_ref=f"refs/tags/{tag}",
+        system="Windows",
+        tag=tag,
     )
     if ok:
         be.check_version()
