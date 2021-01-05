@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     import mitmproxy.log
 
 
-class EventHook:
+class Hook:
     name: ClassVar[str]
 
     def args(self) -> List[Any]:
@@ -19,8 +19,8 @@ class EventHook:
         return args
 
     def __new__(cls, *args, **kwargs):
-        if cls is EventHook:
-            raise TypeError("MitmproxyEvent may not be instantiated directly.")
+        if cls is Hook:
+            raise TypeError("Hook may not be instantiated directly.")
         if not is_dataclass(cls):
             raise TypeError("Subclass is not a dataclass.")
         return super().__new__(cls)
@@ -28,25 +28,25 @@ class EventHook:
     def __init_subclass__(cls, **kwargs):
         # initialize .name attribute. HttpRequestHook -> http_request
         if cls.__dict__.get("name", None) is None:
-            name = cls.__name__.replace("Hook", "").replace("Event", "")
+            name = cls.__name__.replace("Hook", "")
             cls.name = re.sub('(?!^)([A-Z]+)', r'_\1', name).lower()
-        if cls.name in all_events:
-            other = all_events[cls.name]
+        if cls.name in all_hooks:
+            other = all_hooks[cls.name]
             raise RuntimeError(f"Two conflicting event classes for {cls.name}: {cls} and {other}")
         if cls.name == "":
             return  # don't register Hook class.
-        all_events[cls.name] = cls
+        all_hooks[cls.name] = cls
 
         # define a custom hash and __eq__ function so that events are hashable and not comparable.
         cls.__hash__ = object.__hash__
         cls.__eq__ = object.__eq__
 
 
-all_events: Dict[str, Type[EventHook]] = {}
+all_hooks: Dict[str, Type[Hook]] = {}
 
 
 @dataclass
-class ConfigureEventHook(EventHook):
+class ConfigureHook(Hook):
     """
     Called when configuration changes. The updated argument is a
     set-like object containing the keys of all changed options. This
@@ -56,7 +56,7 @@ class ConfigureEventHook(EventHook):
 
 
 @dataclass
-class DoneEventHook(EventHook):
+class DoneHook(Hook):
     """
     Called when the addon shuts down, either by being removed from
     the mitmproxy instance, or when mitmproxy itself shuts down. On
@@ -68,7 +68,7 @@ class DoneEventHook(EventHook):
 
 
 @dataclass
-class RunningEventHook(EventHook):
+class RunningHook(Hook):
     """
     Called when the proxy is completely up and running. At this point,
     you can expect the proxy to be bound to a port, and all addons to be
@@ -77,7 +77,7 @@ class RunningEventHook(EventHook):
 
 
 @dataclass
-class UpdateEventHook(EventHook):
+class UpdateHook(Hook):
     """
     Update is called when one or more flow objects have been modified,
     usually from a different addon.

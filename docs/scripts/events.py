@@ -4,14 +4,14 @@ import textwrap
 from typing import List, Type
 
 import mitmproxy.addons.next_layer  # noqa
-from mitmproxy import event_hooks, log, addonmanager
+from mitmproxy import hooks, log, addonmanager
 from mitmproxy.proxy import server_hooks, layer
 from mitmproxy.proxy.layers import http, tcp, tls, websocket
 
 known = set()
 
 
-def category(name: str, hooks: List[Type[event_hooks.EventHook]]) -> None:
+def category(name: str, hooks: List[Type[hooks.Hook]]) -> None:
     print(f"### {name} Events")
     print("```python")
 
@@ -65,10 +65,10 @@ def category(name: str, hooks: List[Type[event_hooks.EventHook]]) -> None:
 category(
     "Lifecycle",
     [
-        addonmanager.LoadEventHook,
-        event_hooks.RunningEventHook,
-        event_hooks.ConfigureEventHook,
-        event_hooks.DoneEventHook,
+        addonmanager.LoadHook,
+        hooks.RunningHook,
+        hooks.ConfigureHook,
+        hooks.DoneHook,
     ]
 )
 
@@ -127,12 +127,12 @@ category(
     "Advanced Lifecycle",
     [
         layer.NextLayerHook,
-        event_hooks.UpdateEventHook,
-        log.AddLogEventHook,
+        hooks.UpdateHook,
+        log.AddLogHook,
     ]
 )
 
-not_documented = set(event_hooks.all_events.keys()) - known
+not_documented = set(hooks.all_hooks.keys()) - known
 if not_documented:
     raise RuntimeError(f"Not documented: {not_documented}")
 

@@ -4,7 +4,7 @@ import sys
 import threading
 import traceback
 
-from mitmproxy import addonmanager, event_hooks
+from mitmproxy import addonmanager, hooks
 from mitmproxy import command
 from mitmproxy import controller
 from mitmproxy import eventsequence
@@ -45,7 +45,7 @@ class Master:
         self.should_exit.clear()
 
     async def running(self):
-        self.addons.trigger(event_hooks.RunningEventHook())
+        self.addons.trigger(hooks.RunningHook())
 
     def run_loop(self, loop):
         self.start()
@@ -71,7 +71,7 @@ class Master:
             print("Please lodge a bug report at:", file=sys.stderr)
             print("\thttps://github.com/mitmproxy/mitmproxy", file=sys.stderr)
 
-        self.addons.trigger(event_hooks.DoneEventHook())
+        self.addons.trigger(hooks.DoneHook())
 
     def run(self):
         loop = asyncio.get_event_loop()

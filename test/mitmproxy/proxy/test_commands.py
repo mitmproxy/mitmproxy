@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from mitmproxy.event_hooks import all_events
+from mitmproxy.hooks import all_hooks
 from mitmproxy.proxy import commands, context
 
 
@@ -19,7 +19,7 @@ def test_dataclasses(tconn):
     assert repr(commands.Log("hello", "info"))
 
 
-def test_hook():
+def test_start_hook():
     with pytest.raises(TypeError):
         commands.StartHook()
 
@@ -29,4 +29,4 @@ def test_hook():
 
     f = TestHook(b"foo")
     assert f.args() == [b"foo"]
-    assert TestHook in all_events.values()
+    assert TestHook in all_hooks.values()

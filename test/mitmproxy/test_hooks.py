@@ -2,35 +2,35 @@ from dataclasses import dataclass
 
 import pytest
 
-from mitmproxy import event_hooks
+from mitmproxy import hooks
 
 
-def test_event():
+def test_hook():
     with pytest.raises(TypeError, match="may not be instantiated directly"):
-        event_hooks.EventHook()
+        hooks.Hook()
 
-    class NoDataClass(event_hooks.EventHook):
+    class NoDataClass(hooks.Hook):
         pass
 
     with pytest.raises(TypeError, match="not a dataclass"):
         NoDataClass()
 
     @dataclass
-    class FooEventHook(event_hooks.EventHook):
+    class FooHook(hooks.Hook):
         data: bytes
 
-    e = FooEventHook(b"foo")
+    e = FooHook(b"foo")
     assert repr(e)
     assert e.args() == [b"foo"]
-    assert FooEventHook in event_hooks.all_events.values()
+    assert FooHook in hooks.all_hooks.values()
 
     with pytest.raises(RuntimeError, match="Two conflicting event classes"):
         @dataclass
-        class FooEventHook2(event_hooks.EventHook):
+        class FooHook2(hooks.Hook):
             name = "foo"
 
     @dataclass
-    class AnotherABC(event_hooks.EventHook):
+    class AnotherABC(hooks.Hook):
         name = ""
 
-    assert AnotherABC not in event_hooks.all_events.values()
+    assert AnotherABC not in hooks.all_hooks.values()

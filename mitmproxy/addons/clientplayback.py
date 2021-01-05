@@ -11,7 +11,7 @@ from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import io
 from mitmproxy.addons.proxyserver import AsyncReply
-from mitmproxy.event_hooks import UpdateEventHook
+from mitmproxy.hooks import UpdateHook
 from mitmproxy.net import server_spec
 from mitmproxy.options import Options
 from mitmproxy.proxy.layers.http import HTTPMode
@@ -185,7 +185,7 @@ class ClientPlayback:
                 f.revert()
                 updated.append(f)
 
-        ctx.master.addons.trigger(UpdateEventHook(updated))
+        ctx.master.addons.trigger(UpdateHook(updated))
         ctx.log.alert("Client replay queue cleared.")
 
     @command.command("replay.client")
@@ -209,7 +209,7 @@ class ClientPlayback:
             http_flow.error = None
             self.queue.put_nowait(http_flow)
             updated.append(http_flow)
-        ctx.master.addons.trigger(UpdateEventHook(updated))
+        ctx.master.addons.trigger(UpdateHook(updated))
 
     @command.command("replay.client.file")
     def load_file(self, path: mitmproxy.types.Path) -> None:

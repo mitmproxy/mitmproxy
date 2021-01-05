@@ -7,7 +7,7 @@ import types
 import typing
 import traceback
 
-from mitmproxy import addonmanager, event_hooks
+from mitmproxy import addonmanager, hooks
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import command
@@ -104,11 +104,11 @@ class Script:
         if self.ns:
             # We're already running, so we have to explicitly register and
             # configure the addon
-            ctx.master.addons.invoke_addon(self.ns, event_hooks.RunningEventHook())
+            ctx.master.addons.invoke_addon(self.ns, hooks.RunningHook())
             try:
                 ctx.master.addons.invoke_addon(
                     self.ns,
-                    event_hooks.ConfigureEventHook(ctx.options.keys())
+                    hooks.ConfigureHook(ctx.options.keys())
                 )
             except exceptions.OptionsError as e:
                 script_error_handler(self.fullpath, e, msg=str(e))
@@ -160,10 +160,10 @@ class ScriptLoader:
         mod = load_script(path)
         if mod:
             with addonmanager.safecall():
-                ctx.master.addons.invoke_addon(mod, event_hooks.RunningEventHook())
+                ctx.master.addons.invoke_addon(mod, hooks.RunningHook())
                 ctx.master.addons.invoke_addon(
                     mod,
-                    event_hooks.ConfigureEventHook(ctx.options.keys()),
+                    hooks.ConfigureHook(ctx.options.keys()),
                 )
                 for f in flows:
                     for evt in eventsequence.iterate(f):
@@ -208,4 +208,4 @@ class ScriptLoader:
                 if self.is_running:
                     # If we're already running, we configure and tell the addon
                     # we're up and running.
-                    ctx.master.addons.invoke_addon(s, event_hooks.RunningEventHook())
+                    ctx.master.addons.invoke_addon(s, hooks.RunningHook())

@@ -3,9 +3,10 @@ from unittest import mock
 import pytest
 
 from mitmproxy import addonmanager
-from mitmproxy import addons, event_hooks
+from mitmproxy import addons
 from mitmproxy import command
 from mitmproxy import exceptions
+from mitmproxy import hooks
 from mitmproxy import master
 from mitmproxy import options
 from mitmproxy.proxy.layers.http import HttpRequestHook, HttpResponseHook
@@ -66,11 +67,11 @@ def test_halt():
     a.add(end)
 
     assert not end.running_called
-    a.trigger(event_hooks.RunningEventHook())
+    a.trigger(hooks.RunningHook())
     assert not end.running_called
 
     a.remove(halt)
-    a.trigger(event_hooks.RunningEventHook())
+    a.trigger(hooks.RunningHook())
     assert end.running_called
 
 
@@ -138,7 +139,7 @@ async def test_simple():
         await tctx.master.await_log("AssertionError")
 
         f = tflow.tflow()
-        a.trigger(event_hooks.RunningEventHook())
+        a.trigger(hooks.RunningHook())
         a.trigger(HttpResponseHook(f))
         await tctx.master.await_log("not callable")
 
@@ -153,7 +154,7 @@ async def test_simple():
 
         ta = TAddon("one")
         a.add(ta)
-        a.trigger(event_hooks.RunningEventHook())
+        a.trigger(hooks.RunningHook())
         assert ta.running_called
 
         assert ta in a
@@ -187,7 +188,7 @@ def test_nesting():
     assert a.get("three")
     assert a.get("four")
 
-    a.trigger(event_hooks.RunningEventHook())
+    a.trigger(hooks.RunningHook())
     assert a.get("one").running_called
     assert a.get("two").running_called
     assert a.get("three").running_called

@@ -4,7 +4,7 @@ import sys
 
 import mitmproxy.master
 import mitmproxy.options
-from mitmproxy import addonmanager, event_hooks, log
+from mitmproxy import addonmanager, hooks, log
 from mitmproxy import command
 from mitmproxy import eventsequence
 from mitmproxy.addons import script, core
@@ -14,8 +14,8 @@ class TestAddons(addonmanager.AddonManager):
     def __init__(self, master):
         super().__init__(master)
 
-    def trigger(self, event: event_hooks.EventHook):
-        if isinstance(event, log.AddLogEventHook):
+    def trigger(self, event: hooks.Hook):
+        if isinstance(event, log.AddLogHook):
             self.master.logs.append(event.entry)
         super().trigger(event)
 
@@ -106,7 +106,7 @@ class context:
             if kwargs:
                 self.options.update(**kwargs)
             else:
-                self.master.addons.invoke_addon(addon, event_hooks.ConfigureEventHook(set()))
+                self.master.addons.invoke_addon(addon, hooks.ConfigureHook(set()))
 
     def script(self, path):
         """
@@ -115,7 +115,7 @@ class context:
         sc = script.Script(path, False)
         return sc.addons[0] if sc.addons else None
 
-    def invoke(self, addon, event: event_hooks.EventHook):
+    def invoke(self, addon, event: hooks.Hook):
         """
             Recursively invoke an event on an addon and all its children.
         """

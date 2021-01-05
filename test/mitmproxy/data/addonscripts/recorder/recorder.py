@@ -1,5 +1,5 @@
 from mitmproxy import ctx
-from mitmproxy import event_hooks
+from mitmproxy import hooks
 
 
 class Recorder:
@@ -9,7 +9,7 @@ class Recorder:
         self.name = name
 
     def __getattr__(self, attr):
-        if attr in event_hooks.all_events:
+        if attr in hooks.all_hooks:
             def prox(*args, **kwargs):
                 lg = (self.name, attr, args, kwargs)
                 if attr != "add_log":

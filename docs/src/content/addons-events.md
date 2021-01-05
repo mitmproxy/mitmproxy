@@ -5,9 +5,9 @@ menu:
         weight: 2
 ---
 
-# Events
+# Event Hooks
 
-Addons hook into mitmproxy's internal mechanisms through events. These are
+Addons hook into mitmproxy's internal mechanisms through event hooks. These are
 implemented on addons as methods with a set of well-known names. Many events
 receive `Flow` objects as arguments - by modifying these objects, addons can
 change traffic on the fly. For instance, here is an addon that adds a response
