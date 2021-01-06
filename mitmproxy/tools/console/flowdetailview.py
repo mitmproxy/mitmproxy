@@ -55,8 +55,8 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
             common.format_keyvals(parts, indent=4)
         )
 
-        c = sc.certificate_list[0]
-        if c:
+        if sc.certificate_list:
+            c = sc.certificate_list[0]
             text.append(urwid.Text([("head", "Server Certificate:")]))
             parts = [
                 ("Type", "%s, %s bits" % c.keyinfo),
