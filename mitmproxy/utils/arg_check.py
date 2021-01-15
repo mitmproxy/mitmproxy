@@ -97,7 +97,7 @@ REPLACEMENTS = {
     "--cert": "--certs",
     "--insecure": "--ssl-insecure",
     "-c": "-C",
-    "--replace": "--replacements",
+    "--replace": ["--modify-body", "--modify-headers"],
     "--replacements": ["--modify-body", "--modify-headers"],
     "-i": "--intercept",
     "-f": "--view-filter",
