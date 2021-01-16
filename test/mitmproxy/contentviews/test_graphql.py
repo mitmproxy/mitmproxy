@@ -13,11 +13,12 @@ def test_detect_graphql():
 
 
 def test_format_graphql():
-    assert graphql.format_graphql({ "query": "query P { \\n }" })
+    assert graphql.format_graphql({"query": "query P { \\n }"})
 
 
 def test_format_query_list():
-    assert graphql.format_query_list([{ "query": "query P { \\n }" }])
+    assert graphql.format_query_list([{"query": "query P { \\n }"}])
+
 
 @given(binary())
 def test_view_graphql_doesnt_crash(data):
