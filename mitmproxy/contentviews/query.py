@@ -1,7 +1,7 @@
 from typing import Optional
 
 from . import base
-from ..http import HTTPMessage, HTTPRequest
+from ..http import HTTPMessage
 
 
 class ViewQuery(base.View):

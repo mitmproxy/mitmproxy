@@ -20,8 +20,8 @@ def test_wbxml(tdata):
     assert p.xmlString == expected
 
 
-def test_should_render():
+def test_render_priority():
     v = wbxml.ViewWBXML()
-    assert v.should_render("application/vnd.wap.wbxml")
-    assert v.should_render("application/vnd.ms-sync.wbxml")
-    assert not v.should_render("text/plain")
+    assert v.render_priority(b"", content_type="application/vnd.wap.wbxml")
+    assert v.render_priority(b"", content_type="application/vnd.ms-sync.wbxml")
+    assert not v.render_priority(b"", content_type="text/plain")

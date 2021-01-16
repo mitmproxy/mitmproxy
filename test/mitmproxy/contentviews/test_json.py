@@ -43,10 +43,10 @@ def test_view_json_doesnt_crash(data):
     v(data)
 
 
-def test_should_render():
+def test_render_priority():
     v = json.ViewJSON()
-    assert v.should_render("application/json")
-    assert v.should_render("application/json-rpc")
-    assert v.should_render("application/vnd.api+json")
-    assert v.should_render("application/acme+json")
-    assert not v.should_render("text/plain")
+    assert v.render_priority(b"", content_type="application/json")
+    assert v.render_priority(b"", content_type="application/json-rpc")
+    assert v.render_priority(b"", content_type="application/vnd.api+json")
+    assert v.render_priority(b"", content_type="application/acme+json")
+    assert not v.render_priority(b"", content_type="text/plain")

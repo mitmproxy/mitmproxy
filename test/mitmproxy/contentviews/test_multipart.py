@@ -12,20 +12,16 @@ Content-Disposition: form-data; name="submit-name"
 Larry
 --AaB03x
         """.strip()
-    h = http.Headers(content_type="multipart/form-data; boundary=AaB03x")
-    assert view(v, headers=h)
+    assert view(v, content_type="multipart/form-data; boundary=AaB03x")
 
-    h = http.Headers()
-    assert not view(v, headers=h)
+    assert not view(v)
 
-    h = http.Headers(content_type="multipart/form-data")
-    assert not view(v, headers=h)
+    assert not view(v, content_type="multipart/form-data")
 
-    h = http.Headers(content_type="unparseable")
-    assert not view(v, headers=h)
+    assert not view(v, content_type="unparseable")
 
 
-def test_should_render():
+def test_render_priority():
     v = multipart.ViewMultipart()
-    assert v.should_render("multipart/form-data")
-    assert not v.should_render("text/plain")
+    assert v.render_priority(b"", content_type="multipart/form-data")
+    assert not v.render_priority(b"", content_type="text/plain")

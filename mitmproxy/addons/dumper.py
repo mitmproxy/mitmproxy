@@ -1,19 +1,20 @@
 import itertools
 import shutil
 import sys
-from typing import Optional, TextIO
+from typing import Optional, TextIO, Union
 
 import click
 
 from mitmproxy import contentviews
 from mitmproxy import ctx
-from mitmproxy import flow
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy.net import http as net_http
+from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
+from mitmproxy.websocket import WebSocketFlow, WebSocketMessage
 
 
 def indent(n: int, text: str) -> str:
@@ -94,7 +95,11 @@ class Dumper:
         self.echo(click.style("--- HTTP Trailers", fg="magenta"), ident=4)
         self._echo_headers(trailers)
 
-    def _echo_message(self, message, flow: flow.Flow):
+    def _echo_message(
+        self,
+        message: Union[http.HTTPMessage, TCPMessage, WebSocketMessage],
+        flow: Union[http.HTTPFlow, TCPFlow, WebSocketFlow]
+    ):
         _, lines, error = contentviews.get_message_content_view(
             ctx.options.dumper_default_contentview,
             message,
@@ -165,8 +170,8 @@ class Dumper:
 
         http_version = ""
         if (
-                flow.request.http_version not in ("HTTP/1.1", "HTTP/1.0")
-                or flow.request.http_version != getattr(flow.response, "http_version", "HTTP/1.1")
+            flow.request.http_version not in ("HTTP/1.1", "HTTP/1.0")
+            or flow.request.http_version != getattr(flow.response, "http_version", "HTTP/1.1")
         ):
             # Hide version for h1 <-> h1 connections.
             http_version = " " + flow.request.http_version
@@ -215,8 +220,8 @@ class Dumper:
 
         http_version = ""
         if (
-                flow.response.http_version not in ("HTTP/1.1", "HTTP/1.0")
-                or flow.request.http_version != flow.response.http_version
+            flow.response.http_version not in ("HTTP/1.1", "HTTP/1.0")
+            or flow.request.http_version != flow.response.http_version
         ):
             # Hide version for h1 <-> h1 connections.
             http_version = f"{flow.response.http_version} "
@@ -226,7 +231,8 @@ class Dumper:
             # This aligns the HTTP response code with the HTTP request method:
             # 127.0.0.1:59519: GET http://example.com/
             #               << 304 Not Modified 0b
-            pad = max(0, len(human.format_address(flow.client_conn.peername)) - (2 + len(http_version) + len(replay_str)))
+            pad = max(0,
+                      len(human.format_address(flow.client_conn.peername)) - (2 + len(http_version) + len(replay_str)))
             arrows = " " * pad + arrows
 
         self.echo(f"{replay}{arrows} {http_version}{code} {reason} {size}")

@@ -17,13 +17,13 @@ def test_view_image(tdata):
     assert v(b"flibble") == ('Unknown Image', [[('header', 'Image Format: '), ('text', 'unknown')]])
 
 
-def test_should_render():
+def test_render_priority():
     v = image.ViewImage()
-    assert v.should_render("image/png")
-    assert v.should_render("image/jpeg")
-    assert v.should_render("image/gif")
-    assert v.should_render("image/vnd.microsoft.icon")
-    assert v.should_render("image/x-icon")
-    assert v.should_render("image/webp")
-    assert v.should_render("image/future-unknown-format-42")
-    assert not v.should_render("image/svg+xml")
+    assert v.render_priority(b"", content_type="image/png")
+    assert v.render_priority(b"", content_type="image/jpeg")
+    assert v.render_priority(b"", content_type="image/gif")
+    assert v.render_priority(b"", content_type="image/vnd.microsoft.icon")
+    assert v.render_priority(b"", content_type="image/x-icon")
+    assert v.render_priority(b"", content_type="image/webp")
+    assert v.render_priority(b"", content_type="image/future-unknown-format-42")
+    assert not v.render_priority(b"", content_type="image/svg+xml")

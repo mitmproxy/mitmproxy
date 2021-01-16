@@ -59,6 +59,10 @@ class View(ABC):
         """
         return 0
 
+    def __lt__(self, other):
+        assert isinstance(other, View)
+        return self.name.__lt__(other.name)
+
 
 def format_pairs(
     items: typing.Iterable[typing.Tuple[TTextType, TTextType]]

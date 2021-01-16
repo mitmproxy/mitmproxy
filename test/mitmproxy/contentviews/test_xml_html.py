@@ -36,8 +36,9 @@ def test_format_xml(filename, tdata):
     assert xml_html.format_xml(tokens) == expected
 
 
-def test_should_render():
+def test_render_priority():
     v = xml_html.ViewXmlHtml()
-    assert v.should_render("text/xml")
-    assert v.should_render("text/html")
-    assert not v.should_render("text/plain")
+    assert v.render_priority(b"", content_type="text/xml")
+    assert v.render_priority(b"", content_type="text/xml")
+    assert v.render_priority(b"", content_type="text/html")
+    assert not v.render_priority(b"", content_type="text/plain")

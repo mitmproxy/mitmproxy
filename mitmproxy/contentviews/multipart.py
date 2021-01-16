@@ -14,11 +14,10 @@ class ViewMultipart(base.View):
         yield [("highlight", "Form data:\n")]
         yield from base.format_dict(multidict.MultiDict(v))
 
-    def __call__(self, data: bytes, http_message: Optional[HTTPMessage] = None, **metadata):
-        if http_message is None:
+    def __call__(self, data: bytes, content_type: Optional[str] = None, **metadata):
+        if content_type is None:
             return
-        headers = http_message.headers
-        v = http.multipart.decode(headers, data)
+        v = http.multipart.decode(content_type, data)
         if v:
             return "Multipart form", self._format(v)
 

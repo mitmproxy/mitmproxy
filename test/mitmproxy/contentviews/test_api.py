@@ -43,7 +43,7 @@ def test_get_content_view():
     desc, lines, err = contentviews.get_content_view(
         contentviews.get("Auto"),
         b"[1, 2, 3]",
-        headers=Headers(content_type="application/json")
+        content_type="application/json",
     )
     assert desc == "JSON"
     assert list(lines)

@@ -1,5 +1,6 @@
 import re
 import mimetypes
+from typing import Tuple, List, Optional
 from urllib.parse import quote
 from mitmproxy.net.http import headers
 
@@ -38,17 +39,16 @@ def encode(head, l):
             return temp
 
 
-def decode(hdrs, content):
+def decode(content_type: Optional[str], content: bytes) -> List[Tuple[bytes,bytes]]:
     """
         Takes a multipart boundary encoded string and returns list of (key, value) tuples.
     """
-    v = hdrs.get("content-type")
-    if v:
-        v = headers.parse_content_type(v)
-        if not v:
+    if content_type:
+        ct = headers.parse_content_type(content_type)
+        if not ct:
             return []
         try:
-            boundary = v[2]["boundary"].encode("ascii")
+            boundary = ct[2]["boundary"].encode("ascii")
         except (KeyError, UnicodeError):
             return []
 

@@ -75,9 +75,13 @@ def get_message_content_view(
     viewmode = get(viewname)
     if not viewmode:
         viewmode = get("auto")
+    assert viewmode
+
+    content: Optional[bytes]
     try:
-        content = message.content
+        content = message.content  # type: ignore
     except ValueError:
+        assert isinstance(message, HTTPMessage)
         content = message.raw_content
         enc = "[cannot decode]"
     else:
@@ -86,7 +90,7 @@ def get_message_content_view(
                 message.headers.get("content-encoding")
             )
         else:
-            enc = None
+            enc = ""
 
     if content is None:
         return "", iter([[("error", "content missing")]]), None
@@ -96,8 +100,8 @@ def get_message_content_view(
     if isinstance(message, HTTPMessage):
         http_message = message
         if ctype := message.headers.get("content-type"):
-            ct = http.parse_content_type(ctype)
-            content_type = f"{ct[0]}/{ct[1]}"
+            if ct := http.parse_content_type(ctype):
+                content_type = f"{ct[0]}/{ct[1]}"
 
     description, lines, error = get_content_view(
         viewmode, content,

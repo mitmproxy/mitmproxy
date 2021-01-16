@@ -38,8 +38,8 @@ class ViewImage(base.View):
         return view_name, base.format_dict(multidict.MultiDict(image_metadata))
 
     def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
-        return float(
+        return float(bool(
             content_type
             and content_type.startswith("image/")
             and content_type != "image/svg+xml"
-        )
+        ))

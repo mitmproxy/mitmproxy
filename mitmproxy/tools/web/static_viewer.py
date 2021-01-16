@@ -5,7 +5,7 @@ import shutil
 import time
 import typing
 
-from mitmproxy import contentviews
+from mitmproxy import contentviews, http
 from mitmproxy import ctx
 from mitmproxy import flowfilter
 from mitmproxy import io, flow
@@ -49,6 +49,7 @@ def save_flows(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
 
 def save_flows_content(path: pathlib.Path, flows: typing.Iterable[flow.Flow]) -> None:
     for f in flows:
+        assert isinstance(f, http.HTTPFlow)
         for m in ('request', 'response'):
             message = getattr(f, m)
             message_path = path / "flows" / f.id / m

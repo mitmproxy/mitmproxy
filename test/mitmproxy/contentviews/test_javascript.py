@@ -29,9 +29,9 @@ def test_format_xml(filename, tdata):
     assert js == expected
 
 
-def test_should_render():
+def test_render_priority():
     v = javascript.ViewJavaScript()
-    assert v.should_render("application/x-javascript")
-    assert v.should_render("application/javascript")
-    assert v.should_render("text/javascript")
-    assert not v.should_render("text/plain")
+    assert v.render_priority(b"", content_type="application/x-javascript")
+    assert v.render_priority(b"", content_type="application/javascript")
+    assert v.render_priority(b"", content_type="text/javascript")
+    assert not v.render_priority(b"", content_type="text/plain")

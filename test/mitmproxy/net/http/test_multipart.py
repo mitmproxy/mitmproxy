@@ -5,9 +5,6 @@ import pytest
 
 def test_decode():
     boundary = 'somefancyboundary'
-    headers = Headers(
-        content_type='multipart/form-data; boundary=' + boundary
-    )
     content = (
         "--{0}\n"
         "Content-Disposition: form-data; name=\"field1\"\n\n"
@@ -17,24 +14,17 @@ def test_decode():
         "value2\n"
         "--{0}--".format(boundary).encode()
     )
-
-    form = multipart.decode(headers, content)
+    form = multipart.decode(f'multipart/form-data; boundary={boundary}', content)
 
     assert len(form) == 2
     assert form[0] == (b"field1", b"value1")
     assert form[1] == (b"field2", b"value2")
 
     boundary = 'boundary茅莽'
-    headers = Headers(
-        content_type='multipart/form-data; boundary=' + boundary
-    )
-    result = multipart.decode(headers, content)
+    result = multipart.decode(f'multipart/form-data; boundary={boundary}', content)
     assert result == []
 
-    headers = Headers(
-        content_type=''
-    )
-    assert multipart.decode(headers, content) == []
+    assert multipart.decode("", content) == []
 
 
 def test_encode():

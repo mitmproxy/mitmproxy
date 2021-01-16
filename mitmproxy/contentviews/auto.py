@@ -15,3 +15,6 @@ class ViewAuto(base.View):
         if priority == 0 and not data:
             return "No content", []
         return view(data, **metadata)
+
+    def render_priority(self, data: bytes, **metadata) -> float:
+        return -1  # don't recurse.
