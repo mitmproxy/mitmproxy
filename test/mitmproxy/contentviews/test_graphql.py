@@ -6,7 +6,7 @@ from . import full_eval
 
 
 def test_detect_graphql():
-    v = full_eval(json.ViewGraphQL())
+    v = full_eval(graphql.ViewGraphQL())
     assert "GraphQL" == v("""{"query": "query P { \n }"}""")[1]
     assert "GraphQL" == v("""[{"query": "query P { \n }"}]""")[1]
     assert "GraphQL" != v("""[{"xquery": "query P { \n }"}]""")[1]
@@ -14,5 +14,5 @@ def test_detect_graphql():
 
 @given(binary())
 def test_view_graphql_doesnt_crash(data):
-    v = full_eval(json.ViewGraphQL())
+    v = full_eval(graphql.ViewGraphQL())
     v(data)
