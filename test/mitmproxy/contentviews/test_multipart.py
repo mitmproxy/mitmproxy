@@ -1,5 +1,4 @@
 from mitmproxy.contentviews import multipart
-from mitmproxy.net import http
 from . import full_eval
 
 

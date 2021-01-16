@@ -3,7 +3,6 @@ from unittest import mock
 import pytest
 
 from mitmproxy import contentviews
-from mitmproxy.net.http import Headers
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 

@@ -13,3 +13,11 @@ def test_view_query():
     assert f[1] == [[("header", "foo: "), ("text", "bar")], [("header", "foo: "), ("text", "baz")]]
 
     assert v(d) == ("Query", [])
+
+
+def test_render_priority():
+    view = query.ViewQuery()
+    req = tutils.treq()
+    req.query = [("foo", "bar"), ("foo", "baz")]
+    assert view.render_priority(b"", http_message=req)
+    assert not view.render_priority(b"")

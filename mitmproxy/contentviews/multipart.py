@@ -3,7 +3,6 @@ from typing import Optional
 from mitmproxy.coretypes import multidict
 from mitmproxy.net import http
 from . import base
-from ..http import HTTPMessage
 
 
 class ViewMultipart(base.View):

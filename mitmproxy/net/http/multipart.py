@@ -1,12 +1,12 @@
-import re
 import mimetypes
+import re
 from typing import Tuple, List, Optional
 from urllib.parse import quote
+
 from mitmproxy.net.http import headers
 
 
 def encode(head, l):
-
     k = head.get("content-type")
     if k:
         k = headers.parse_content_type(k)
@@ -39,7 +39,7 @@ def encode(head, l):
             return temp
 
 
-def decode(content_type: Optional[str], content: bytes) -> List[Tuple[bytes,bytes]]:
+def decode(content_type: Optional[str], content: bytes) -> List[Tuple[bytes, bytes]]:
     """
         Takes a multipart boundary encoded string and returns list of (key, value) tuples.
     """

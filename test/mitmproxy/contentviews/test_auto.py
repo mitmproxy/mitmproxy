@@ -1,6 +1,4 @@
 from mitmproxy.contentviews import auto
-from mitmproxy.coretypes import multidict
-from mitmproxy.net import http
 from mitmproxy.test import tflow
 from . import full_eval
 
@@ -57,7 +55,7 @@ def test_view_auto():
     assert f[0] == "No content"
 
     flow = tflow.tflow()
-    flow.request.query = [("foo","bar")]
+    flow.request.query = [("foo", "bar")]
     f = v(
         b"",
         flow=flow,
