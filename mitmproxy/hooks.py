@@ -1,4 +1,5 @@
 import re
+import warnings
 from dataclasses import dataclass, is_dataclass, fields
 from typing import ClassVar, Any, Dict, Type, Set, List, TYPE_CHECKING, Sequence
 
@@ -32,7 +33,7 @@ class Hook:
             cls.name = re.sub('(?!^)([A-Z]+)', r'_\1', name).lower()
         if cls.name in all_hooks:
             other = all_hooks[cls.name]
-            raise RuntimeError(f"Two conflicting event classes for {cls.name}: {cls} and {other}")
+            warnings.warn(f"Two conflicting event classes for {cls.name}: {cls} and {other}", RuntimeWarning)
         if cls.name == "":
             return  # don't register Hook class.
         all_hooks[cls.name] = cls

@@ -24,7 +24,7 @@ def test_hook():
     assert e.args() == [b"foo"]
     assert FooHook in hooks.all_hooks.values()
 
-    with pytest.raises(RuntimeError, match="Two conflicting event classes"):
+    with pytest.warns(RuntimeWarning, match="Two conflicting event classes"):
         @dataclass
         class FooHook2(hooks.Hook):
             name = "foo"
