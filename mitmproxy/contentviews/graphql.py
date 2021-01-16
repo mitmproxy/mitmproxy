@@ -43,9 +43,9 @@ class ViewGraphQL(base.View):
     def __call__(self, data, **metadata):
         data = parse_json(data)
         if data is not PARSE_ERROR:
-            if isinstance(data, list) and "query" in data[0]:
-                return "GraphQL", base.format_text(format_query_list(data))
-            elif "query" in data and '\n' in data["query"]:
+            if isinstance(data, dict) and "query" in data and "\n" in data["query"]:
                 return "GraphQL", base.format_text(format_graphql(data))
+            elif isinstance(data, list) and isinstance(data[0], dict) and "query" in data[0]:
+                return "GraphQL", base.format_text(format_query_list(data))
             else:
                 return "JSON", format_json(data)
