@@ -1,4 +1,5 @@
 import imghdr
+from typing import Optional
 
 from mitmproxy.contentviews import base
 from mitmproxy.coretypes import multidict
@@ -36,5 +37,9 @@ class ViewImage(base.View):
             view_name = "Unknown Image"
         return view_name, base.format_dict(multidict.MultiDict(image_metadata))
 
-    def should_render(self, content_type):
-        return content_type.startswith("image/") and content_type != "image/svg+xml"
+    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
+        return float(
+            content_type
+            and content_type.startswith("image/")
+            and content_type != "image/svg+xml"
+        )

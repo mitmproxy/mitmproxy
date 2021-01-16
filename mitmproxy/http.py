@@ -8,6 +8,7 @@ from mitmproxy.net import http
 
 HTTPRequest = http.Request
 HTTPResponse = http.Response
+HTTPMessage = http.Message
 
 
 class HTTPFlow(flow.Flow):

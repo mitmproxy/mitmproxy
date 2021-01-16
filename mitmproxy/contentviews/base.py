@@ -1,5 +1,9 @@
 # Default view cutoff *in lines*
 import typing
+from abc import ABC, abstractmethod
+
+from mitmproxy import flow
+from mitmproxy.net import http
 
 KEY_MAX = 30
 
@@ -8,48 +12,57 @@ TViewLine = typing.List[typing.Tuple[str, TTextType]]
 TViewResult = typing.Tuple[str, typing.Iterator[TViewLine]]
 
 
-class View:
+class View(ABC):
     name: typing.ClassVar[str]
 
-    def __call__(self, data: bytes, **metadata) -> TViewResult:
+    @abstractmethod
+    def __call__(
+        self,
+        data: bytes,
+        *,
+        content_type: typing.Optional[str] = None,
+        flow: typing.Optional[flow.Flow] = None,
+        http_message: typing.Optional[http.Message] = None,
+        **unknown_metadata,
+    ) -> TViewResult:
         """
         Transform raw data into human-readable output.
 
-        Args:
-            data: the data to decode/format.
-            metadata: optional keyword-only arguments for metadata. Implementations must not
-                rely on a given argument being present.
+        Returns a (description, content generator) tuple.
+        The content generator yields lists of (style, text) tuples, where each list represents
+        a single line. ``text`` is a unfiltered string which may need to be escaped,
+        depending on the used output.
 
-        Returns:
-            A (description, content generator) tuple.
+        Except for `data`, implementations must not rely on any given argument to be present.
+        To ensure compatibility with future mitmproxy versions, unknown keyword arguments should be ignored.
 
-            The content generator yields lists of (style, text) tuples, where each list represents
-            a single line. ``text`` is a unfiltered byte string which may need to be escaped,
-            depending on the used output.
-
-        Caveats:
-            The content generator must not yield tuples of tuples,
-            because urwid cannot process that. You have to yield a *list* of tuples per line.
+        The content generator must not yield tuples of tuples, because urwid cannot process that.
+        You have to yield a *list* of tuples per line.
         """
         raise NotImplementedError()  # pragma: no cover
 
-    def should_render(self, content_type) -> bool:
+    def render_priority(
+        self,
+        data: bytes,
+        *,
+        content_type: typing.Optional[str] = None,
+        flow: typing.Optional[flow.Flow] = None,
+        http_message: typing.Optional[http.Message] = None,
+        **unknown_metadata,
+    ) -> float:
         """
-        Check if a ``View`` implementation should be used to render the data of provided content type.
+        Return the priority of this view for rendering `data`.
+        If no particular view is chosen by the user, the view with the highest priority is selected.
 
-        Args:
-            content_type: content type string without parameters.
-
-        Returns:
-            A bool value. ``True`` indicates that the View can be used to render the data.
+        Except for `data`, implementations must not rely on any given argument to be present.
+        To ensure compatibility with future mitmproxy versions, unknown keyword arguments should be ignored.
         """
-        return False
+        return 0
 
 
 def format_pairs(
-        items: typing.Iterable[typing.Tuple[TTextType, TTextType]]
+    items: typing.Iterable[typing.Tuple[TTextType, TTextType]]
 ) -> typing.Iterator[TViewLine]:
-
     """
     Helper function that accepts a list of (k,v) pairs into a list of
     [
@@ -78,7 +91,7 @@ def format_pairs(
 
 
 def format_dict(
-        d: typing.Mapping[TTextType, TTextType]
+    d: typing.Mapping[TTextType, TTextType]
 ) -> typing.Iterator[TViewLine]:
     """
     Helper function that transforms the given dictionary into a list of

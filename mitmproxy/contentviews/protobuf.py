@@ -1,4 +1,5 @@
 import io
+from typing import Optional
 
 from kaitaistruct import KaitaiStream
 from . import base
@@ -78,5 +79,5 @@ class ViewProtobuf(base.View):
 
         return "Protobuf", base.format_text(decoded)
 
-    def should_render(self, content_type):
-        return content_type in self.__content_types
+    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
+        return float(content_type in self.__content_types)

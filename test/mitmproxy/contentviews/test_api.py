@@ -11,6 +11,9 @@ from mitmproxy.test import tflow
 class TestContentView(contentviews.View):
     name = "test"
 
+    def __call__(self, *args, **kwargs):
+        pass
+
     def should_render(self, content_type):
         return content_type == "test/123"
 

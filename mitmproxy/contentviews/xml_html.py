@@ -4,7 +4,7 @@ import textwrap
 from typing import Iterable, Optional
 
 from mitmproxy.contentviews import base
-from mitmproxy.utils import sliding_window
+from mitmproxy.utils import sliding_window, strutils
 
 """
 A custom XML/HTML prettifier. Compared to other prettifiers, its main features are:
@@ -214,7 +214,7 @@ def format_xml(tokens: Iterable[Token]) -> str:
 
 class ViewXmlHtml(base.View):
     name = "XML/HTML"
-    __content_types = ["text/xml", "text/html"]
+    __content_types = ("text/xml", "text/html")
 
     def __call__(self, data, **metadata):
         # TODO:
@@ -234,5 +234,9 @@ class ViewXmlHtml(base.View):
             t = "XML"
         return t, pretty
 
-    def should_render(self, content_type):
-        return content_type in self.__content_types
+    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
+        if content_type in self.__content_types:
+            return 1
+        elif strutils.is_xml(data):
+            return 0.4
+        return float(content_type in self.__content_types)

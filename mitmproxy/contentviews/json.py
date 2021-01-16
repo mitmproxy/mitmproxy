@@ -44,7 +44,12 @@ class ViewJSON(base.View):
         if data is not PARSE_ERROR:
             return "JSON", format_json(data)
 
-    def should_render(self, content_type):
-        return content_type == "application/json" \
-            or content_type == "application/json-rpc" \
-            or (content_type.startswith("application/") and content_type.endswith("+json"))
+    def render_priority(self, data: bytes, *, content_type: typing.Optional[str] = None, **metadata) -> float:
+        if content_type in (
+            "application/json",
+            "application/json-rpc",
+        ):
+            return 1
+        if content_type and content_type.startswith("application/") and content_type.endswith("+json"):
+            return 1
+        return 0

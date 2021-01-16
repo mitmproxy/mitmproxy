@@ -39,15 +39,15 @@ def format_msgpack(data):
 
 class ViewMsgPack(base.View):
     name = "MsgPack"
-    __content_types = [
+    __content_types = (
         "application/msgpack",
         "application/x-msgpack",
-    ]
+    )
 
     def __call__(self, data, **metadata):
         data = parse_msgpack(data)
         if data is not PARSE_ERROR:
             return "MsgPack", format_msgpack(data)
 
-    def should_render(self, content_type):
-        return content_type in self.__content_types
+    def render_priority(self, data: bytes, *, content_type: typing.Optional[str] = None, **metadata) -> float:
+        return float(content_type in self.__content_types)
