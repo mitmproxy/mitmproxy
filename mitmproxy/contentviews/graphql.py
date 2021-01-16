@@ -25,7 +25,7 @@ def format_graphql(data):
 """.format(header=json.dumps(header_data, indent=2), query = query)
 
 
-def format_query_list(data: []) -> typing.Iterator:
+def format_query_list(data: List[Dict]):
     num_queries = len(data) - 1
     result = ""
     for i, op in enumerate(data):
