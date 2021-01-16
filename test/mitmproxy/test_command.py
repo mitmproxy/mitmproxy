@@ -509,7 +509,7 @@ class TDec:
 
 class TAttr:
     def __getattr__(self, item):
-        raise IOError
+        raise OSError
 
 
 class TAttr2:

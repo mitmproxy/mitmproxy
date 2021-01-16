@@ -21,7 +21,7 @@ class TermLog:
             choices=log.LogTierOrder
         )
 
-    def log(self, e):
+    def add_log(self, e):
         if log.log_tier(e.level) == log.log_tier("error"):
             outfile = self.outfile or realstderr
         else:

@@ -14,13 +14,13 @@ import tornado.websocket
 import mitmproxy.flow
 import mitmproxy.tools.web.master  # noqa
 from mitmproxy import contentviews
-from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
+from mitmproxy.utils.strutils import always_str
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
@@ -34,20 +34,40 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
         "id": flow.id,
         "intercepted": flow.intercepted,
         "is_replay": flow.is_replay,
-        "client_conn": flow.client_conn.get_state(),
-        "server_conn": flow.server_conn.get_state(),
         "type": flow.type,
         "modified": flow.modified(),
         "marked": flow.marked,
     }
-    # .alpn_proto_negotiated is bytes, we need to decode that.
-    for conn in "client_conn", "server_conn":
-        if f[conn]["alpn_proto_negotiated"] is None:
-            continue
-        f[conn]["alpn_proto_negotiated"] = \
-            f[conn]["alpn_proto_negotiated"].decode(errors="backslashreplace")
-    # There are some bytes in here as well, let's skip it until we have them in the UI.
-    f["client_conn"].pop("tls_extensions", None)
+
+    if flow.client_conn:
+        f["client_conn"] = {
+            "id": flow.client_conn.id,
+            "address": flow.client_conn.peername,
+            "tls_established": flow.client_conn.tls_established,
+            "timestamp_start": flow.client_conn.timestamp_start,
+            "timestamp_tls_setup": flow.client_conn.timestamp_tls_setup,
+            "timestamp_end": flow.client_conn.timestamp_end,
+            "sni": flow.client_conn.sni,
+            "cipher_name": flow.client_conn.cipher,
+            "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
+            "tls_version": flow.client_conn.tls_version,
+        }
+
+    if flow.server_conn:
+        f["server_conn"] = {
+            "id": flow.server_conn.id,
+            "address": flow.server_conn.address,
+            "ip_address": flow.server_conn.peername,
+            "source_address": flow.server_conn.sockname,
+            "tls_established": flow.server_conn.tls_established,
+            "sni": flow.server_conn.sni,
+            "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
+            "tls_version": flow.server_conn.tls_version,
+            "timestamp_start": flow.server_conn.timestamp_start,
+            "timestamp_tcp_setup": flow.server_conn.timestamp_tcp_setup,
+            "timestamp_tls_setup": flow.server_conn.timestamp_tls_setup,
+            "timestamp_end": flow.server_conn.timestamp_end,
+        }
     if flow.error:
         f["error"] = flow.error.get_state()
 
@@ -97,9 +117,6 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
             if flow.response.data.trailers:
                 f["response"]["trailers"] = tuple(flow.response.data.trailers.items(True))
 
-    f.get("server_conn", {}).pop("cert", None)
-    f.get("client_conn", {}).pop("mitmcert", None)
-
     return f
 
 
@@ -124,7 +141,7 @@ class RequestHandler(tornado.web.RequestHandler):
         if isinstance(chunk, list):
             chunk = tornado.escape.json_encode(chunk)
             self.set_header("Content-Type", "application/json; charset=UTF-8")
-        super(RequestHandler, self).write(chunk)
+        super().write(chunk)
 
     def set_default_headers(self):
         super().set_default_headers()
@@ -312,7 +329,7 @@ class FlowHandler(RequestHandler):
                         elif k == "content":
                             request.text = v
                         else:
-                            raise APIError(400, "Unknown update request.{}: {}".format(k, v))
+                            raise APIError(400, f"Unknown update request.{k}: {v}")
 
                 elif a == "response" and hasattr(flow, "response"):
                     response = flow.response
@@ -332,9 +349,9 @@ class FlowHandler(RequestHandler):
                         elif k == "content":
                             response.text = v
                         else:
-                            raise APIError(400, "Unknown update response.{}: {}".format(k, v))
+                            raise APIError(400, f"Unknown update response.{k}: {v}")
                 else:
-                    raise APIError(400, "Unknown update {}: {}".format(a, b))
+                    raise APIError(400, f"Unknown update {a}: {b}")
         except APIError:
             flow.revert()
             raise
@@ -357,14 +374,7 @@ class RevertFlow(RequestHandler):
 
 class ReplayFlow(RequestHandler):
     def post(self, flow_id):
-        self.flow.backup()
-        self.flow.response = None
-        self.view.update([self.flow])
-
-        try:
-            self.master.commands.call("replay.client", [self.flow])
-        except exceptions.ReplayException as e:
-            raise APIError(400, str(e))
+        self.master.commands.call("replay.client", [self.flow])
 
 
 class FlowContent(RequestHandler):
@@ -395,7 +405,7 @@ class FlowContent(RequestHandler):
             filename = self.flow.request.path.split("?")[0].split("/")[-1]
 
         filename = re.sub(r'[^-\w" .()]', "", filename)
-        cd = "attachment; filename={}".format(filename)
+        cd = f"attachment; filename={filename}"
         self.set_header("Content-Disposition", cd)
         self.set_header("Content-Type", "application/text")
         self.set_header("X-Content-Type-Options", "nosniff")
@@ -456,7 +466,7 @@ class Settings(RequestHandler):
         }
         for k in update:
             if k not in allowed_options:
-                raise APIError(400, "Unknown setting {}".format(k))
+                raise APIError(400, f"Unknown setting {k}")
         self.master.options.update(**update)
 
 
@@ -469,7 +479,7 @@ class Options(RequestHandler):
         try:
             self.master.options.update(**update)
         except Exception as err:
-            raise APIError(400, "{}".format(err))
+            raise APIError(400, f"{err}")
 
 
 class SaveOptions(RequestHandler):

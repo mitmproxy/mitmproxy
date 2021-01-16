@@ -20,14 +20,14 @@ export function TimeStamp({ t, deltaTo, title }) {
     )
 }
 
-export function ConnectionInfo({ conn }) {
+export function ConnectionInfo({ conn }) {    
     return (
         <table className="connection-table">
             <tbody>
-                <tr key="address">
+                    <tr key="address">
                     <td>Address:</td>
                     <td>{conn.address.join(':')}</td>
-                </tr>
+                </tr>      
                 {conn.sni && (
                     <tr key="sni">
                         <td><abbr title="TLS Server Name Indication">TLS SNI:</abbr></td>
@@ -136,9 +136,13 @@ export default function Details({ flow }) {
             <h4>Client Connection</h4>
             <ConnectionInfo conn={flow.client_conn}/>
 
-            <h4>Server Connection</h4>
-            <ConnectionInfo conn={flow.server_conn}/>
-
+            {flow.server_conn.address && 
+                    [
+                        <h4>Server Connection</h4>,
+                        <ConnectionInfo conn={flow.server_conn}/>
+                    ]    
+            }
+            
             <CertificateInfo flow={flow}/>
 
             <Timing flow={flow}/>

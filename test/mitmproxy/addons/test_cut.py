@@ -1,4 +1,3 @@
-
 from mitmproxy.addons import cut
 from mitmproxy.addons import view
 from mitmproxy import exceptions
@@ -36,18 +35,18 @@ def test_extract(tdata):
         ["response.timestamp_start", "946681202"],
         ["response.timestamp_end", "946681203"],
 
-        ["client_conn.address.port", "22"],
-        ["client_conn.address.host", "127.0.0.1"],
+        ["client_conn.peername.port", "22"],
+        ["client_conn.peername.host", "127.0.0.1"],
         ["client_conn.tls_version", "TLSv1.2"],
         ["client_conn.sni", "address"],
-        ["client_conn.tls_established", "false"],
+        ["client_conn.tls_established", "true"],
 
         ["server_conn.address.port", "22"],
         ["server_conn.address.host", "address"],
-        ["server_conn.ip_address.host", "192.168.0.1"],
+        ["server_conn.peername.host", "192.168.0.1"],
         ["server_conn.tls_version", "TLSv1.2"],
         ["server_conn.sni", "address"],
-        ["server_conn.tls_established", "false"],
+        ["server_conn.tls_established", "true"],
     ]
     for spec, expected in tests:
         ret = cut.extract(spec, tf)
@@ -56,8 +55,8 @@ def test_extract(tdata):
     with open(tdata.path("mitmproxy/net/data/text_cert"), "rb") as f:
         d = f.read()
     c1 = certs.Cert.from_pem(d)
-    tf.server_conn.cert = c1
-    assert "CERTIFICATE" in cut.extract("server_conn.cert", tf)
+    tf.server_conn.certificate_list = [c1]
+    assert "CERTIFICATE" in cut.extract("server_conn.certificate_list", tf)
 
 
 def test_headername():
@@ -95,7 +94,7 @@ async def test_cut_clip():
                           "copy/paste mechanism for your system."
             pc.side_effect = pyperclip.PyperclipException(log_message)
             tctx.command(c.clip, "@all", "request.method")
-            assert await tctx.master.await_log(log_message, level="error")
+            await tctx.master.await_log(log_message, level="error")
 
 
 def test_cut_save(tmpdir):
@@ -137,7 +136,7 @@ async def test_cut_save_open(exception, log_message, tmpdir):
         with mock.patch("mitmproxy.addons.cut.open") as m:
             m.side_effect = exception(log_message)
             tctx.command(c.save, "@all", "request.method", f)
-            assert await tctx.master.await_log(log_message, level="error")
+            await tctx.master.await_log(log_message, level="error")
 
 
 def test_cut():

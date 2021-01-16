@@ -299,7 +299,7 @@ def test_ignore_payload_params():
     boundary = 'somefancyboundary'
 
     def multipart_setter(r, **kwargs):
-        b = "--{0}\n".format(boundary)
+        b = f"--{boundary}\n"
         parts = []
         for k, v in kwargs.items():
             parts.append(
@@ -356,7 +356,7 @@ def test_server_playback_kill():
         f = tflow.tflow()
         f.request.host = "nonexistent"
         tctx.cycle(s, f)
-        assert f.reply.value == exceptions.Kill
+        assert f.error
 
 
 def test_server_playback_response_deleted():

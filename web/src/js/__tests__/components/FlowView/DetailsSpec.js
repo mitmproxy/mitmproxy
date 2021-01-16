@@ -47,4 +47,24 @@ describe('Details Component', () => {
             tree = details.toJSON()
         expect(tree).toMatchSnapshot()
     })
+
+    it('should render correctly when server address is missing', () => {
+        let tflowServerAddressNull = tflow
+
+        tflowServerAddressNull.server_conn.address = null
+        tflowServerAddressNull.server_conn.ip_address = null
+        tflowServerAddressNull.server_conn.alpn_proto_negotiated = null
+        tflowServerAddressNull.server_conn.sni = null
+        tflowServerAddressNull.server_conn.ssl_established = false
+        tflowServerAddressNull.server_conn.tls_version = null
+        tflowServerAddressNull.server_conn.timestamp_tcp_setup = null
+        tflowServerAddressNull.server_conn.timestamp_ssl_setup = null
+        tflowServerAddressNull.server_conn.timestamp_start = null
+        tflowServerAddressNull.server_conn.timestamp_end = null
+        
+        let details = renderer.create(<Details flow={tflowServerAddressNull}/>),
+            tree = details.toJSON()
+        expect(tree).toMatchSnapshot()
+    })
+
 })

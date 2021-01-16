@@ -1,12 +1,11 @@
+import time
+
 import pytest
+
+from mitmproxy import controller
 
 from mitmproxy.test import tflow
 from mitmproxy.test import taddons
-
-from mitmproxy import controller
-import time
-
-from .. import tservers
 
 
 class Thing:
@@ -15,7 +14,7 @@ class Thing:
         self.live = True
 
 
-class TestConcurrent(tservers.MasterTest):
+class TestConcurrent:
     def test_concurrent(self, tdata):
         with taddons.context() as tctx:
             sc = tctx.script(
@@ -40,7 +39,7 @@ class TestConcurrent(tservers.MasterTest):
                     "mitmproxy/data/addonscripts/concurrent_decorator_err.py"
                 )
             )
-            assert await tctx.master.await_log("decorator not supported")
+            await tctx.master.await_log("decorator not supported")
 
     def test_concurrent_class(self, tdata):
         with taddons.context() as tctx:

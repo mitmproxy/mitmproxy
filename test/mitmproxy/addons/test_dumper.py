@@ -6,6 +6,7 @@ import pytest
 
 from mitmproxy import exceptions
 from mitmproxy.addons import dumper
+from mitmproxy.net.http import Headers
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
@@ -80,7 +81,7 @@ def test_simple():
         flow = tflow.tflow()
         flow.request = tutils.treq()
         flow.client_conn = mock.MagicMock()
-        flow.client_conn.address[0] = "foo"
+        flow.client_conn.peername[0] = "foo"
         flow.response = tutils.tresp(content=None)
         flow.is_replay = "response"
         flow.response.status_code = 300
@@ -126,6 +127,35 @@ def test_echo_body():
         assert "cut off" in t
 
 
+def test_echo_trailer():
+    sio = io.StringIO()
+    sio_err = io.StringIO()
+    d = dumper.Dumper(sio, sio_err)
+    with taddons.context(d) as ctx:
+        ctx.configure(d, flow_detail=3)
+        f = tflow.tflow(client_conn=True, server_conn=True, resp=True)
+
+        f.request.headers["content-type"] = "text/html"
+        f.request.headers["transfer-encoding"] = "chunked"
+        f.request.headers["trailer"] = "my-little-request-trailer"
+        f.request.content = b"some request content\n" * 100
+        f.request.trailers = Headers([(b"my-little-request-trailer", b"foobar-request-trailer")])
+
+        f.response.headers["transfer-encoding"] = "chunked"
+        f.response.headers["trailer"] = "my-little-response-trailer"
+        f.response.content = b"some response content\n" * 100
+        f.response.trailers = Headers([(b"my-little-response-trailer", b"foobar-response-trailer")])
+
+        d.echo_flow(f)
+        t = sio.getvalue()
+        assert "content-type" in t
+        assert "cut off" in t
+        assert "some request content" in t
+        assert "foobar-request-trailer" in t
+        assert "some response content" in t
+        assert "foobar-response-trailer" in t
+
+
 def test_echo_request_line():
     sio = io.StringIO()
     sio_err = io.StringIO()
@@ -163,14 +193,14 @@ class TestContentView:
     @pytest.mark.asyncio
     async def test_contentview(self):
         with mock.patch("mitmproxy.contentviews.auto.ViewAuto.__call__") as va:
-            va.side_effect = exceptions.ContentViewException("")
+            va.side_effect = ValueError("")
             sio = io.StringIO()
             sio_err = io.StringIO()
             d = dumper.Dumper(sio, sio_err)
-            with taddons.context(d) as ctx:
-                ctx.configure(d, flow_detail=4)
+            with taddons.context(d) as tctx:
+                tctx.configure(d, flow_detail=4)
                 d.response(tflow.tflow())
-                assert await ctx.master.await_log("content viewer failed")
+                await tctx.master.await_log("content viewer failed")
 
 
 def test_tcp():
@@ -206,3 +236,14 @@ def test_websocket():
         f = tflow.twebsocketflow(client_conn=True, err=True)
         d.websocket_error(f)
         assert "Error in WebSocket" in sio_err.getvalue()
+
+
+def test_http2():
+    sio = io.StringIO()
+    sio_err = io.StringIO()
+    d = dumper.Dumper(sio, sio_err)
+    with taddons.context(d):
+        f = tflow.tflow(resp=True)
+        f.response.http_version = b"HTTP/2.0"
+        d.response(f)
+        assert "HTTP/2.0 200 OK" in sio.getvalue()

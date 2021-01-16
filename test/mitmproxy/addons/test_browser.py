@@ -17,7 +17,7 @@ async def test_browser():
             b.start()
             b.browser.poll = lambda: None
             b.start()
-            assert await tctx.master.await_log("already running")
+            await tctx.master.await_log("already running")
             b.done()
             assert not b.browser
 
@@ -30,4 +30,4 @@ async def test_no_browser():
         b = browser.Browser()
         with taddons.context() as tctx:
             b.start()
-            assert await tctx.master.await_log("platform is not supported")
+            await tctx.master.await_log("platform is not supported")

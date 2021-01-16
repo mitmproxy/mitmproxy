@@ -1,5 +1,3 @@
-
-
 class LayoutWidget:
     """
         All top-level layout widgets and all widgets that may be set in an

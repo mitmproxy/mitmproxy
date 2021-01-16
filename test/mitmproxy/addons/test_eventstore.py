@@ -16,7 +16,7 @@ def test_simple():
     assert not sig_refresh.called
 
     # test .log()
-    store.log(log.LogEntry("test", "info"))
+    store.add_log(log.LogEntry("test", "info"))
     assert store.data
 
     assert sig_add.called
@@ -35,13 +35,13 @@ def test_simple():
 def test_max_size():
     store = eventstore.EventStore(3)
     assert store.size == 3
-    store.log(log.LogEntry("foo", "info"))
-    store.log(log.LogEntry("bar", "info"))
-    store.log(log.LogEntry("baz", "info"))
+    store.add_log(log.LogEntry("foo", "info"))
+    store.add_log(log.LogEntry("bar", "info"))
+    store.add_log(log.LogEntry("baz", "info"))
     assert len(store.data) == 3
     assert ["foo", "bar", "baz"] == [x.msg for x in store.data]
 
     # overflow
-    store.log(log.LogEntry("boo", "info"))
+    store.add_log(log.LogEntry("boo", "info"))
     assert len(store.data) == 3
     assert ["bar", "baz", "boo"] == [x.msg for x in store.data]

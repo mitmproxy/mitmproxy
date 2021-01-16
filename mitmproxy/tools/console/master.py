@@ -48,7 +48,6 @@ class ConsoleMaster(master.Master):
 
         self.view_stack = []
 
-        signals.call_in.connect(self.sig_call_in)
         self.addons.add(*addons.default_addons())
         self.addons.add(
             intercept.Intercept(),
@@ -193,6 +192,7 @@ class ConsoleMaster(master.Master):
                   "Please run mitmproxy in an interactive shell environment.", file=sys.stderr)
             sys.exit(1)
 
+        signals.call_in.connect(self.sig_call_in)
         self.ui = window.Screen()
         self.ui.set_terminal_properties(256)
         self.set_palette(self.options, None)

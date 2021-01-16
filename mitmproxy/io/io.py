@@ -82,6 +82,6 @@ def read_flows_from_paths(paths):
             path = os.path.expanduser(path)
             with open(path, "rb") as f:
                 flows.extend(FlowReader(f).stream())
-    except IOError as e:
+    except OSError as e:
         raise exceptions.FlowReadException(e.strerror)
     return flows

@@ -201,7 +201,7 @@ def _format_pairs(pairs, specials=(), sep="; "):
         if k.lower() not in specials and _has_special(v):
             v = ESCAPE.sub(r"\\\1", v)
             v = '"%s"' % v
-        vals.append("%s=%s" % (k, v))
+        vals.append(f"{k}={v}")
     return sep.join(vals)
 
 

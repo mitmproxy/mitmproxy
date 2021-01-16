@@ -58,7 +58,7 @@ def monkey_dummy_cert(privkey, cacert, commonname, sans):
         return Cert(cert)
 
 
-class CheckSSLPinning(object):
+class CheckSSLPinning:
     def load(self, loader):
         loader.add_option(
             "certbeginon", bool, False,

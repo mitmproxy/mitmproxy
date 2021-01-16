@@ -1,4 +1,3 @@
-
 def map(km):
     km.add(":", "console.command ", ["commonkey", "global"], "Command prompt")
     km.add("?", "console.view.help", ["global"], "View help")

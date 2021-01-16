@@ -45,8 +45,11 @@ def extract(cut: str, f: flow.Flow) -> typing.Union[str, bytes]:
                 return part
             elif isinstance(part, bool):
                 return "true" if part else "false"
-            elif isinstance(part, certs.Cert):
+            elif isinstance(part, certs.Cert):  # pragma: no cover
                 return part.to_pem().decode("ascii")
+            elif isinstance(part, list) and len(part) > 0 and isinstance(part[0], certs.Cert):
+                # TODO: currently this extracts only the very first cert as PEM-encoded string.
+                return part[0].to_pem().decode("ascii")
         current = part
     return str(current or "")
 
@@ -104,15 +107,15 @@ class Cut:
                         fp.write(v.encode("utf8"))
                 ctx.log.alert("Saved single cut.")
             else:
-                with open(path, "a" if append else "w", newline='', encoding="utf8") as fp:
-                    writer = csv.writer(fp)
+                with open(path, "a" if append else "w", newline='', encoding="utf8") as tfp:
+                    writer = csv.writer(tfp)
                     for f in flows:
                         vals = [extract(c, f) for c in cuts]
                         writer.writerow(
                             [strutils.always_str(x) or "" for x in vals]  # type: ignore
                         )
                 ctx.log.alert("Saved %s cuts over %d flows as CSV." % (len(cuts), len(flows)))
-        except IOError as e:
+        except OSError as e:
             ctx.log.error(str(e))
 
     @command.command("cut.clip")

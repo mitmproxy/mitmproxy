@@ -7,7 +7,7 @@ def test_always_bytes():
     assert strutils.always_bytes(bytes(range(256))) == bytes(range(256))
     assert strutils.always_bytes("foo") == b"foo"
     with pytest.raises(ValueError):
-        strutils.always_bytes(u"\u2605", "ascii")
+        strutils.always_bytes("\u2605", "ascii")
     with pytest.raises(TypeError):
         strutils.always_bytes(42, "ascii")
 
@@ -21,20 +21,20 @@ def test_always_str():
 
 
 def test_escape_control_characters():
-    assert strutils.escape_control_characters(u"one") == u"one"
-    assert strutils.escape_control_characters(u"\00ne") == u".ne"
-    assert strutils.escape_control_characters(u"\nne") == u"\nne"
-    assert strutils.escape_control_characters(u"\nne", False) == u".ne"
-    assert strutils.escape_control_characters(u"\u2605") == u"\u2605"
+    assert strutils.escape_control_characters("one") == "one"
+    assert strutils.escape_control_characters("\00ne") == ".ne"
+    assert strutils.escape_control_characters("\nne") == "\nne"
+    assert strutils.escape_control_characters("\nne", False) == ".ne"
+    assert strutils.escape_control_characters("\u2605") == "\u2605"
     assert (
         strutils.escape_control_characters(bytes(bytearray(range(128))).decode()) ==
-        u'.........\t\n..\r.................. !"#$%&\'()*+,-./0123456789:;<'
-        u'=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~.'
+        '.........\t\n..\r.................. !"#$%&\'()*+,-./0123456789:;<'
+        '=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~.'
     )
     assert (
         strutils.escape_control_characters(bytes(bytearray(range(128))).decode(), False) ==
-        u'................................ !"#$%&\'()*+,-./0123456789:;<'
-        u'=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~.'
+        '................................ !"#$%&\'()*+,-./0123456789:;<'
+        '=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~.'
     )
 
     with pytest.raises(ValueError):
@@ -61,16 +61,16 @@ def test_bytes_to_escaped_str():
     assert strutils.bytes_to_escaped_str(b"\\\\n", True) == "\\ \\ \\ \\ n".replace(" ", "")
 
     with pytest.raises(ValueError):
-        strutils.bytes_to_escaped_str(u"such unicode")
+        strutils.bytes_to_escaped_str("such unicode")
 
 
 def test_escaped_str_to_bytes():
     assert strutils.escaped_str_to_bytes("foo") == b"foo"
     assert strutils.escaped_str_to_bytes("\x08") == b"\b"
     assert strutils.escaped_str_to_bytes("&!?=\\\\)") == br"&!?=\)"
-    assert strutils.escaped_str_to_bytes(u"\\x08") == b"\b"
-    assert strutils.escaped_str_to_bytes(u"&!?=\\\\)") == br"&!?=\)"
-    assert strutils.escaped_str_to_bytes(u"\u00fc") == b'\xc3\xbc'
+    assert strutils.escaped_str_to_bytes("\\x08") == b"\b"
+    assert strutils.escaped_str_to_bytes("&!?=\\\\)") == br"&!?=\)"
+    assert strutils.escaped_str_to_bytes("\u00fc") == b'\xc3\xbc'
 
     with pytest.raises(ValueError):
         strutils.escaped_str_to_bytes(b"very byte")

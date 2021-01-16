@@ -252,8 +252,8 @@ class _CutSpecType(_BaseType):
         "response.raw_content",
         "response.header[",
 
-        "client_conn.address.port",
-        "client_conn.address.host",
+        "client_conn.peername.port",
+        "client_conn.peername.host",
         "client_conn.tls_version",
         "client_conn.sni",
         "client_conn.tls_established",

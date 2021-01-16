@@ -105,7 +105,7 @@ class MapLocal:
                 self.replacements.append(spec)
 
     def request(self, flow: http.HTTPFlow) -> None:
-        if flow.reply and flow.reply.has_message:
+        if flow.response or flow.error or (flow.reply and flow.reply.state == "taken"):
             return
 
         url = flow.request.pretty_url
@@ -135,7 +135,7 @@ class MapLocal:
 
                     try:
                         contents = local_file.read_bytes()
-                    except IOError as e:
+                    except OSError as e:
                         ctx.log.warn(f"Could not read file: {e}")
                         continue
 

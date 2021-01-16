@@ -21,7 +21,7 @@ def test_bind():
         assert km.get("options", "key")
         assert km.get("commands", "key")
         assert not km.get("flowlist", "key")
-        assert len((km.list("commands"))) == 1
+        assert len(km.list("commands")) == 1
 
         km.handle("unknown", "unknown")
         assert not km.executor.called
@@ -34,7 +34,7 @@ def test_bind():
         km.handle("options", "glob")
         assert km.executor.called
 
-        assert len((km.list("global"))) == 1
+        assert len(km.list("global")) == 1
 
 
 def test_join():

@@ -3,21 +3,18 @@ Mitmproxy Content Views
 =======================
 
 mitmproxy includes a set of content views which can be used to
-format/decode/highlight data. While they are currently used for HTTP message
-bodies only, the may be used in other contexts in the future, e.g. to decode
-protobuf messages sent as WebSocket frames.
+format/decode/highlight data. While they are mostly used for HTTP message
+bodies, the may be used in other contexts, e.g. to decode WebSocket messages.
 
 Thus, the View API is very minimalistic. The only arguments are `data` and
 `**metadata`, where `data` is the actual content (as bytes). The contents on
-metadata depend on the protocol in use. For HTTP, the message headers are
-passed as the ``headers`` keyword argument. For HTTP requests, the query
-parameters are passed as the ``query`` keyword argument.
+metadata depend on the protocol in use. Known attributes can be found in
+`base.View`.
 """
 import traceback
 from typing import List, Union
 from typing import Optional
 
-from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy.net import http
 from mitmproxy.utils import strutils
@@ -44,7 +41,7 @@ def add(view: View) -> None:
     # TODO: auto-select a different name (append an integer?)
     for i in views:
         if i.name == view.name:
-            raise exceptions.ContentViewException("Duplicate view: " + view.name)
+            raise ValueError("Duplicate view: " + view.name)
 
     views.append(view)
 
@@ -110,7 +107,7 @@ def get_message_content_view(
     )
 
     if enc:
-        description = "{} {}".format(enc, description)
+        description = f"{enc} {description}"
 
     return description, lines, error
 

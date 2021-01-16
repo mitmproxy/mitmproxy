@@ -20,10 +20,8 @@ class Block:
             """
         )
 
-    def clientconnect(self, layer):
-        astr = layer.client_conn.address[0]
-
-        parts = astr.rsplit("%", 1)
+    def client_connected(self, client):
+        parts = client.peername[0].rsplit("%", 1)
         address = ipaddress.ip_address(parts[0])
         if isinstance(address, ipaddress.IPv6Address):
             address = address.ipv4_mapped or address
@@ -32,8 +30,9 @@ class Block:
             return
 
         if ctx.options.block_private and address.is_private:
-            ctx.log.warn("Client connection from %s killed by block_private" % astr)
-            layer.reply.kill()
+            ctx.log.warn(f"Client connection from {client.peername[0]} killed by block_private option.")
+            client.error = "Connection killed by block_private."
+
         if ctx.options.block_global and address.is_global:
-            ctx.log.warn("Client connection from %s killed by block_global" % astr)
-            layer.reply.kill()
+            ctx.log.warn(f"Client connection from {client.peername[0]} killed by block_global option.")
+            client.error = "Connection killed by block_global."

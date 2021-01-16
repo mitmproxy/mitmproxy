@@ -222,7 +222,7 @@ def parse(data_type: int, data: bytes) -> TSerializable:
             val, data = pop(data)
             d[key] = val  # type: ignore
         return d
-    raise ValueError("unknown type tag: {}".format(data_type))
+    raise ValueError(f"unknown type tag: {data_type}")
 
 
 def pop(data: bytes) -> typing.Tuple[TSerializable, bytes]:
@@ -242,7 +242,7 @@ def pop(data: bytes) -> typing.Tuple[TSerializable, bytes]:
     except IndexError:
         #  This fires if len(data) < dlen, meaning we don't need
         #  to further validate that data is the right length.
-        raise ValueError("not a tnetstring: invalid length prefix: {}".format(length))
+        raise ValueError(f"not a tnetstring: invalid length prefix: {length}")
     # Parse the data based on the type tag.
     return parse(data_type, data), remain
 

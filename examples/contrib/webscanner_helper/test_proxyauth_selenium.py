@@ -7,7 +7,8 @@ from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.http import HTTPFlow
 
-from examples.complex.webscanner_helper.proxyauth_selenium import logger, randomString, AuthorizationOracle, SeleniumAddon
+from examples.contrib.webscanner_helper.proxyauth_selenium import logger, randomString, AuthorizationOracle, \
+    SeleniumAddon
 
 
 class TestRandomString:
@@ -104,7 +105,8 @@ class TestSeleniumAddon:
         f = tflow.tflow(resp=tutils.tresp())
         f.request.url = "http://example.com/login.php"
         selenium_addon.set_cookies = False
-        with mock.patch('examples.complex.webscanner_helper.proxyauth_selenium.SeleniumAddon.login', return_value=[]) as mock_login:
+        with mock.patch('examples.complex.webscanner_helper.proxyauth_selenium.SeleniumAddon.login',
+                        return_value=[]) as mock_login:
             selenium_addon.response(f)
         mock_login.assert_called()
 

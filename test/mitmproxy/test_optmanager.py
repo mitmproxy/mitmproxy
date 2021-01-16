@@ -347,7 +347,7 @@ def test_option():
 
 
 def test_dump_defaults():
-    o = options.Options()
+    o = TTypes()
     assert optmanager.dump_defaults(o)
 
 
@@ -361,7 +361,8 @@ class TTypes(optmanager.OptManager):
     def __init__(self):
         super().__init__()
         self.add_option("str", str, "str", "help")
-        self.add_option("optstr", typing.Optional[str], "optstr", "help", "help")
+        self.add_option("choices", str, "foo", "help", ["foo", "bar", "baz"])
+        self.add_option("optstr", typing.Optional[str], "optstr", "help")
         self.add_option("bool", bool, False, "help")
         self.add_option("bool_on", bool, True, "help")
         self.add_option("int", int, 0, "help")

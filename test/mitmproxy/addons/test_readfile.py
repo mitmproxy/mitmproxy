@@ -2,7 +2,7 @@ import asyncio
 import io
 
 import pytest
-import asynctest
+from unittest import mock
 
 import mitmproxy.io
 from mitmproxy import exceptions
@@ -54,22 +54,22 @@ class TestReadFile:
 
             tf = tmpdir.join("tfile")
 
-            with asynctest.patch('mitmproxy.master.Master.load_flow') as mck:
+            with mock.patch('mitmproxy.master.Master.load_flow') as mck:
                 tf.write(data.getvalue())
                 tctx.configure(
                     rf,
                     rfile = str(tf),
                     readfile_filter = ".*"
                 )
-                assert not mck.awaited
+                mck.assert_not_awaited()
                 rf.running()
                 await asyncio.sleep(0)
-                assert mck.awaited
+                mck.assert_awaited()
 
             tf.write(corrupt_data.getvalue())
             tctx.configure(rf, rfile=str(tf))
             rf.running()
-            assert await tctx.master.await_log("corrupted")
+            await tctx.master.await_log("corrupted")
 
     @pytest.mark.asyncio
     async def test_corrupt(self, corrupt_data):
@@ -81,7 +81,7 @@ class TestReadFile:
             tctx.master.clear()
             with pytest.raises(exceptions.FlowReadException):
                 await rf.load_flows(corrupt_data)
-            assert await tctx.master.await_log("file corrupted")
+            await tctx.master.await_log("file corrupted")
 
     @pytest.mark.asyncio
     async def test_nonexistent_file(self):
@@ -89,20 +89,20 @@ class TestReadFile:
         with taddons.context(rf) as tctx:
             with pytest.raises(exceptions.FlowReadException):
                 await rf.load_flows_from_path("nonexistent")
-            assert await tctx.master.await_log("nonexistent")
+            await tctx.master.await_log("nonexistent")
 
 
 class TestReadFileStdin:
-    @asynctest.patch('sys.stdin')
+    @mock.patch('sys.stdin')
     @pytest.mark.asyncio
     async def test_stdin(self, stdin, data, corrupt_data):
         rf = readfile.ReadFileStdin()
         with taddons.context(rf):
-            with asynctest.patch('mitmproxy.master.Master.load_flow') as mck:
+            with mock.patch('mitmproxy.master.Master.load_flow') as mck:
                 stdin.buffer = data
-                assert not mck.awaited
+                mck.assert_not_awaited()
                 await rf.load_flows(stdin.buffer)
-                assert mck.awaited
+                mck.assert_awaited()
 
                 stdin.buffer = corrupt_data
                 with pytest.raises(exceptions.FlowReadException):
@@ -113,10 +113,10 @@ class TestReadFileStdin:
         rf = readfile.ReadFileStdin()
         with taddons.context(rf) as tctx:
             tf = tmpdir.join("tfile")
-            with asynctest.patch('mitmproxy.master.Master.load_flow') as mck:
+            with mock.patch('mitmproxy.master.Master.load_flow') as mck:
                 tf.write(data.getvalue())
                 tctx.configure(rf, rfile=str(tf))
-                assert not mck.awaited
+                mck.assert_not_awaited()
                 rf.running()
                 await asyncio.sleep(0)
-                assert mck.awaited
+                mck.assert_awaited()

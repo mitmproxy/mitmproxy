@@ -197,6 +197,56 @@ def convert_8_9(data):
     return data
 
 
+def convert_9_10(data):
+    data["version"] = 10
+
+    def conv_conn(conn):
+        conn["state"] = 0
+        conn["error"] = None
+        conn["tls"] = conn["tls_established"]
+        alpn = conn["alpn_proto_negotiated"]
+        conn["alpn_offers"] = [alpn] if alpn else None
+        cipher = conn["cipher_name"]
+        conn["cipher_list"] = [cipher] if cipher else None
+
+    def conv_cconn(conn):
+        conn["sockname"] = ("", 0)
+        cc = conn.pop("clientcert", None)
+        conn["certificate_list"] = [cc] if cc else []
+        conv_conn(conn)
+
+    def conv_sconn(conn):
+        crt = conn.pop("cert", None)
+        conn["certificate_list"] = [crt] if crt else []
+        conn["cipher_name"] = None
+        conn["via2"] = None
+        conv_conn(conn)
+
+    conv_cconn(data["client_conn"])
+    conv_sconn(data["server_conn"])
+    if data["server_conn"]["via"]:
+        conv_sconn(data["server_conn"]["via"])
+
+    return data
+
+
+def convert_10_11(data):
+    data["version"] = 11
+
+    def conv_conn(conn):
+        conn["sni"] = strutils.always_str(conn["sni"], "ascii", "backslashreplace")
+        conn["alpn"] = conn.pop("alpn_proto_negotiated")
+        conn["alpn_offers"] = conn["alpn_offers"] or []
+        conn["cipher_list"] = conn["cipher_list"] or []
+
+    conv_conn(data["client_conn"])
+    conv_conn(data["server_conn"])
+    if data["server_conn"]["via"]:
+        conv_conn(data["server_conn"]["via"])
+
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -253,6 +303,8 @@ converters = {
     6: convert_6_7,
     7: convert_7_8,
     8: convert_8_9,
+    9: convert_9_10,
+    10: convert_10_11,
 }
 
 

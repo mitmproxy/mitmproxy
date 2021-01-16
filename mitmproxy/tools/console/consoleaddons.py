@@ -60,18 +60,6 @@ class UnsupportedLog:
             f.close_message,
             f.close_reason))
 
-    def tcp_message(self, f):
-        message = f.messages[-1]
-        direction = "->" if message.from_client else "<-"
-        ctx.log.info("{client_host}:{client_port} {direction} tcp {direction} {server_host}:{server_port}".format(
-            client_host=f.client_conn.address[0],
-            client_port=f.client_conn.address[1],
-            server_host=f.server_conn.address[0],
-            server_port=f.server_conn.address[1],
-            direction=direction,
-        ))
-        ctx.log.debug(strutils.bytes_to_escaped_str(message.content))
-
 
 class ConsoleAddon:
     """
@@ -364,7 +352,7 @@ class ConsoleAddon:
         """
             Spawn an external viewer for a flow request or response body based
             on the detected MIME type. We use the mailcap system to find the
-            correct viewier, and fall back to the programs in $PAGER or $EDITOR
+            correct viewer, and fall back to the programs in $PAGER or $EDITOR
             if necessary.
         """
         fpart = getattr(flow, part, None)
@@ -533,7 +521,7 @@ class ConsoleAddon:
                         [strutils.always_str(x) or "" for x in row]  # type: ignore
                     )
             ctx.log.alert("Saved %s rows as CSV." % (len(rows)))
-        except IOError as e:
+        except OSError as e:
             ctx.log.error(str(e))
 
     @command.command("console.grideditor.editor")
@@ -560,7 +548,7 @@ class ConsoleAddon:
         try:
             self.master.commands.call_strings(
                 "view.settings.setval",
-                ["@focus", "flowview_mode_%s" % (idx,), mode]
+                ["@focus", f"flowview_mode_{idx}", mode]
             )
         except exceptions.CommandError as e:
             ctx.log.error(str(e))
@@ -584,7 +572,7 @@ class ConsoleAddon:
 
         return self.master.commands.call_strings(
             "view.settings.getval",
-            ["@focus", "flowview_mode_%s" % (idx,), self.master.options.console_default_contentview]
+            ["@focus", f"flowview_mode_{idx}", self.master.options.console_default_contentview]
         )
 
     @command.command("console.key.contexts")

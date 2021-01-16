@@ -17,6 +17,14 @@ def test_dump_info():
     cs = io.StringIO()
     debug.dump_info(None, None, file=cs, testing=True)
     assert cs.getvalue()
+    assert "Tasks" not in cs.getvalue()
+
+
+@pytest.mark.asyncio
+async def test_dump_info_async():
+    cs = io.StringIO()
+    debug.dump_info(None, None, file=cs, testing=True)
+    assert "Tasks" in cs.getvalue()
 
 
 def test_dump_stacks():

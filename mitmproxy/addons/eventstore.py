@@ -17,7 +17,7 @@ class EventStore:
     def size(self) -> typing.Optional[int]:
         return self.data.maxlen
 
-    def log(self, entry: LogEntry) -> None:
+    def add_log(self, entry: LogEntry) -> None:
         self.data.append(entry)
         self.sig_add.send(self, entry=entry)
 

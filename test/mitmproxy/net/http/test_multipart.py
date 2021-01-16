@@ -38,8 +38,8 @@ def test_decode():
 
 
 def test_encode():
-    data = [("file".encode('utf-8'), "shell.jpg".encode('utf-8')),
-            ("file_size".encode('utf-8'), "1000".encode('utf-8'))]
+    data = [(b"file", b"shell.jpg"),
+            (b"file_size", b"1000")]
     headers = Headers(
         content_type='multipart/form-data; boundary=127824672498'
     )
@@ -51,7 +51,7 @@ def test_encode():
     assert len(content) == 252
 
     with pytest.raises(ValueError, match=r"boundary found in encoded string"):
-        multipart.encode(headers, [("key".encode('utf-8'), "--127824672498".encode('utf-8'))])
+        multipart.encode(headers, [(b"key", b"--127824672498")])
 
     boundary = 'boundary茅莽'
     headers = Headers(

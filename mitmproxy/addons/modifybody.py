@@ -31,19 +31,21 @@ class ModifyBody:
                 self.replacements.append(spec)
 
     def request(self, flow):
-        if not flow.reply.has_message:
-            self.run(flow)
+        if flow.response or flow.error or flow.reply.state == "taken":
+            return
+        self.run(flow)
 
     def response(self, flow):
-        if not flow.reply.has_message:
-            self.run(flow)
+        if flow.error or flow.reply.state == "taken":
+            return
+        self.run(flow)
 
     def run(self, flow):
         for spec in self.replacements:
             if spec.matches(flow):
                 try:
                     replacement = spec.read_replacement()
-                except IOError as e:
+                except OSError as e:
                     ctx.log.warn(f"Could not read replacement file: {e}")
                     continue
                 if flow.response:

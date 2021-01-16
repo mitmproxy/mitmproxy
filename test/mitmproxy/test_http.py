@@ -1,12 +1,12 @@
 import pytest
 
-from mitmproxy.test import tflow
-from mitmproxy.net.http import Headers
 import mitmproxy.io
-from mitmproxy import flowfilter
-from mitmproxy.exceptions import Kill, ControlException
 from mitmproxy import flow
+from mitmproxy import flowfilter
 from mitmproxy import http
+from mitmproxy.exceptions import ControlException
+from mitmproxy.net.http import Headers
+from mitmproxy.test import tflow
 
 
 class TestHTTPRequest:
@@ -169,7 +169,7 @@ class TestHTTPFlow:
         assert f.killable
         f.kill()
         assert not f.killable
-        assert f.reply.value == Kill
+        assert f.error.msg == flow.Error.KILLED_MESSAGE
 
     def test_intercept(self):
         f = tflow.tflow()

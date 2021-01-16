@@ -1,12 +1,13 @@
 import time
 import queue
+import warnings
 from typing import List, Optional, Union
 
 from wsproto.frame_protocol import CloseReason
 from wsproto.frame_protocol import Opcode
 
 from mitmproxy import flow
-from mitmproxy.net import websockets
+from mitmproxy.net import websocket
 from mitmproxy.coretypes import serializable
 from mitmproxy.utils import strutils, human
 
@@ -47,18 +48,24 @@ class WebSocketMessage(serializable.Serializable):
         else:
             return "binary message: {}".format(strutils.bytes_to_escaped_str(self.content))
 
-    def kill(self):
+    def kill(self):  # pragma: no cover
         """
         Kill this message.
 
         It will not be sent to the other endpoint. This has no effect in streaming mode.
         """
-        self.killed = True
+        warnings.warn(
+            "WebSocketMessage.kill is deprecated, set an empty content instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        # empty str or empty bytes.
+        self.content = type(self.content)()
 
 
 class WebSocketFlow(flow.Flow):
     """
-    A WebSocketFlow is a simplified representation of a Websocket connection.
+    A WebSocketFlow is a simplified representation of a WebSocket connection.
     """
 
     def __init__(self, client_conn, server_conn, handshake_flow, live=None):
@@ -85,12 +92,12 @@ class WebSocketFlow(flow.Flow):
         self._inject_messages_server = queue.Queue(maxsize=1)
 
         if handshake_flow:
-            self.client_key = websockets.get_client_key(handshake_flow.request.headers)
-            self.client_protocol = websockets.get_protocol(handshake_flow.request.headers)
-            self.client_extensions = websockets.get_extensions(handshake_flow.request.headers)
-            self.server_accept = websockets.get_server_accept(handshake_flow.response.headers)
-            self.server_protocol = websockets.get_protocol(handshake_flow.response.headers)
-            self.server_extensions = websockets.get_extensions(handshake_flow.response.headers)
+            self.client_key = websocket.get_client_key(handshake_flow.request.headers)
+            self.client_protocol = websocket.get_protocol(handshake_flow.request.headers)
+            self.client_extensions = websocket.get_extensions(handshake_flow.request.headers)
+            self.server_accept = websocket.get_server_accept(handshake_flow.response.headers)
+            self.server_protocol = websocket.get_protocol(handshake_flow.response.headers)
+            self.server_extensions = websocket.get_extensions(handshake_flow.response.headers)
         else:
             self.client_key = ''
             self.client_protocol = ''
@@ -135,7 +142,7 @@ class WebSocketFlow(flow.Flow):
     def message_info(self, message: WebSocketMessage) -> str:
         return "{client} {direction} WebSocket {type} message {direction} {server}{endpoint}".format(
             type=message.type,
-            client=human.format_address(self.client_conn.address),
+            client=human.format_address(self.client_conn.peername),
             server=human.format_address(self.server_conn.address),
             direction="->" if message.from_client else "<-",
             endpoint=self.handshake_flow.request.path,

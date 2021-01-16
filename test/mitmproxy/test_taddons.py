@@ -12,14 +12,14 @@ async def test_recordingmaster():
         assert not tctx.master.has_log("nonexistent")
         ctx.log.error("foo")
         assert not tctx.master.has_log("foo", level="debug")
-        assert await tctx.master.await_log("foo", level="error")
+        await tctx.master.await_log("foo", level="error")
 
 
 @pytest.mark.asyncio
 async def test_dumplog():
     with taddons.context() as tctx:
         ctx.log.info("testing")
-        await ctx.master.await_log("testing")
+        await tctx.master.await_log("testing")
         s = io.StringIO()
         tctx.master.dump_log(s)
         assert s.getvalue()

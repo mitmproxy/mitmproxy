@@ -1,10 +1,11 @@
 import asyncio
+import traceback
 import urllib.parse
 
 import asgiref.compatibility
 import asgiref.wsgi
-
 from mitmproxy import ctx, http
+from mitmproxy.controller import DummyReply
 
 
 class ASGIApp:
@@ -24,9 +25,17 @@ class ASGIApp:
     def name(self) -> str:
         return f"asgiapp:{self.host}:{self.port}"
 
+    def should_serve(self, flow: http.HTTPFlow) -> bool:
+        assert flow.reply
+        return bool(
+            (flow.request.pretty_host, flow.request.port) == (self.host, self.port)
+            and flow.reply.state == "start" and not flow.error and not flow.response
+            and not isinstance(flow.reply, DummyReply)  # ignore the HTTP flows of this app loaded from somewhere
+        )
+
     def request(self, flow: http.HTTPFlow) -> None:
         assert flow.reply
-        if (flow.request.pretty_host, flow.request.port) == (self.host, self.port) and not flow.reply.has_message:
+        if self.should_serve(flow):
             flow.reply.take()  # pause hook completion
             asyncio.ensure_future(serve(self.asgi_app, flow))
 
@@ -55,7 +64,7 @@ def make_scope(flow: http.HTTPFlow) -> dict:
     # (byte string) – URL portion after the ?, percent-encoded.
     query_string: bytes
     if len(quoted_path) > 1:
-        query_string = quoted_path[1].encode()
+        query_string = urllib.parse.unquote(quoted_path[1]).encode()
     else:
         query_string = b""
 
@@ -72,7 +81,7 @@ def make_scope(flow: http.HTTPFlow) -> dict:
         "raw_path": flow.request.path,
         "query_string": query_string,
         "headers": list(list(x) for x in flow.request.headers.fields),
-        "client": flow.client_conn.address,
+        "client": flow.client_conn.peername,
         "extensions": {
             "mitmproxy.master": ctx.master,
         }
@@ -88,6 +97,7 @@ async def serve(app, flow: http.HTTPFlow):
     scope = make_scope(flow)
     done = asyncio.Event()
     received_body = False
+    sent_response = False
 
     async def receive():
         nonlocal received_body
@@ -112,18 +122,18 @@ async def serve(app, flow: http.HTTPFlow):
         elif event["type"] == "http.response.body":
             flow.response.content += event.get("body", b"")
             if not event.get("more_body", False):
-                flow.reply.ack()
+                nonlocal sent_response
+                sent_response = True
         else:
             raise AssertionError(f"Unexpected event: {event['type']}")
 
     try:
         await app(scope, receive, send)
-        if not flow.reply.has_message:
+        if not sent_response:
             raise RuntimeError(f"no response sent.")
-    except Exception as e:
-        ctx.log.error(f"Error in asgi app: {e}")
+    except Exception:
+        ctx.log.error(f"Error in asgi app:\n{traceback.format_exc(limit=-5)}")
         flow.response = http.HTTPResponse.make(500, b"ASGI Error.")
-        flow.reply.ack(force=True)
     finally:
         flow.reply.commit()
         done.set()

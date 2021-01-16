@@ -34,4 +34,4 @@ async def test_commands_exist():
         try:
             cmd_obj.prepare_args(args)
         except Exception as e:
-            raise ValueError("Invalid command: {}".format(binding.command)) from e
+            raise ValueError(f"Invalid command: {binding.command}") from e
