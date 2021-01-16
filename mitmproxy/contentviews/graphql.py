@@ -1,4 +1,3 @@
-import re
 import json
 
 import typing
@@ -25,13 +24,15 @@ def format_graphql(data):
 {query}
 """.format(header=json.dumps(header_data, indent=2), query = query)
 
+
 def format_query_list(data: []) -> typing.Iterator:
-    num_queries = len(data)-1
+    num_queries = len(data) - 1
     result = ""
     for i, op in enumerate(data):
-        result +=  "--- {i}/{num_queries}\n".format(i=i, num_queries=num_queries)
+        result += "--- {i}/{num_queries}\n".format(i=i, num_queries=num_queries)
         result += format_graphql(op)
     return result
+
 
 class ViewGraphQL(base.View):
     name = "GraphQL"
@@ -43,9 +44,8 @@ class ViewGraphQL(base.View):
         data = parse_json(data)
         if data is not PARSE_ERROR:
             if isinstance(data, list) and "query" in data[0]:
-                num_queries = len(data)
                 return "GraphQL", base.format_text(format_query_list(data))
             elif "query" in data and '\n' in data["query"]:
                 return "GraphQL", base.format_text(format_graphql(data))
             else:
-                return "JSON", format_json(data);
+                return "JSON", format_json(data)
