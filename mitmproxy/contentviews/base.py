@@ -31,7 +31,8 @@ class View(ABC):
         Returns a (description, content generator) tuple.
         The content generator yields lists of (style, text) tuples, where each list represents
         a single line. ``text`` is a unfiltered string which may need to be escaped,
-        depending on the used output.
+        depending on the used output. For example, it may contain terminal control sequences
+        or unfiltered HTML.
 
         Except for `data`, implementations must not rely on any given argument to be present.
         To ensure compatibility with future mitmproxy versions, unknown keyword arguments should be ignored.

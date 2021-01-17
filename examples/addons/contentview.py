@@ -7,7 +7,8 @@ The content view API is explained in the mitmproxy.contentviews module.
 """
 from typing import Optional
 
-from mitmproxy import contentviews, flow, http
+from mitmproxy import contentviews, flow
+from mitmproxy.net import http
 
 
 class ViewSwapCase(contentviews.View):
@@ -22,7 +23,7 @@ class ViewSwapCase(contentviews.View):
         *,
         content_type: Optional[str] = None,
         flow: Optional[flow.Flow] = None,
-        http_message: Optional[http.HTTPMessage] = None,
+        http_message: Optional[http.Message] = None,
         **unknown_metadata,
     ) -> float:
         if content_type == "text/plain":

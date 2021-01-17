@@ -97,7 +97,7 @@ class Dumper:
 
     def _echo_message(
         self,
-        message: Union[http.HTTPMessage, TCPMessage, WebSocketMessage],
+        message: Union[net_http.Message, TCPMessage, WebSocketMessage],
         flow: Union[http.HTTPFlow, TCPFlow, WebSocketFlow]
     ):
         _, lines, error = contentviews.get_message_content_view(
@@ -170,7 +170,7 @@ class Dumper:
 
         http_version = ""
         if (
-            flow.request.http_version not in ("HTTP/1.1", "HTTP/1.0")
+            not (flow.request.is_http10 or flow.request.is_http11)
             or flow.request.http_version != getattr(flow.response, "http_version", "HTTP/1.1")
         ):
             # Hide version for h1 <-> h1 connections.
@@ -220,7 +220,7 @@ class Dumper:
 
         http_version = ""
         if (
-            flow.response.http_version not in ("HTTP/1.1", "HTTP/1.0")
+            not (flow.response.is_http10 or flow.response.is_http11)
             or flow.request.http_version != flow.response.http_version
         ):
             # Hide version for h1 <-> h1 connections.

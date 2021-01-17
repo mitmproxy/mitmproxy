@@ -23,7 +23,7 @@ from . import (
     urlencoded, multipart, image, query, protobuf, msgpack
 )
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
-from ..http import HTTPMessage, HTTPFlow
+from ..http import HTTPFlow
 from ..tcp import TCPMessage, TCPFlow
 from ..websocket import WebSocketMessage, WebSocketFlow
 
@@ -66,7 +66,7 @@ def safe_to_print(lines, encoding="utf8"):
 
 def get_message_content_view(
     viewname: str,
-    message: Union[HTTPMessage, TCPMessage, WebSocketMessage],
+    message: Union[http.Message, TCPMessage, WebSocketMessage],
     flow: Union[HTTPFlow, TCPFlow, WebSocketFlow],
 ):
     """
@@ -81,11 +81,11 @@ def get_message_content_view(
     try:
         content = message.content  # type: ignore
     except ValueError:
-        assert isinstance(message, HTTPMessage)
+        assert isinstance(message, http.Message)
         content = message.raw_content
         enc = "[cannot decode]"
     else:
-        if isinstance(message, HTTPMessage) and content != message.raw_content:
+        if isinstance(message, http.Message) and content != message.raw_content:
             enc = "[decoded {}]".format(
                 message.headers.get("content-encoding")
             )
@@ -97,7 +97,7 @@ def get_message_content_view(
 
     content_type = None
     http_message = None
-    if isinstance(message, HTTPMessage):
+    if isinstance(message, http.Message):
         http_message = message
         if ctype := message.headers.get("content-type"):
             if ct := http.parse_content_type(ctype):
@@ -139,7 +139,7 @@ def get_content_view(
     *,
     content_type: Optional[str] = None,
     flow: Optional[flow.Flow] = None,
-    http_message: Optional[HTTPMessage] = None,
+    http_message: Optional[http.Message] = None,
 ):
     """
         Args:
