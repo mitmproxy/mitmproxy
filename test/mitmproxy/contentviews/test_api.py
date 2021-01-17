@@ -3,14 +3,18 @@ from unittest import mock
 import pytest
 
 from mitmproxy import contentviews
-from mitmproxy.net.http import Headers
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 
 
 class TestContentView(contentviews.View):
     name = "test"
-    content_types = ["test/123"]
+
+    def __call__(self, *args, **kwargs):
+        pass
+
+    def should_render(self, content_type):
+        return content_type == "test/123"
 
 
 def test_add_remove():
@@ -38,7 +42,7 @@ def test_get_content_view():
     desc, lines, err = contentviews.get_content_view(
         contentviews.get("Auto"),
         b"[1, 2, 3]",
-        headers=Headers(content_type="application/json")
+        content_type="application/json",
     )
     assert desc == "JSON"
     assert list(lines)

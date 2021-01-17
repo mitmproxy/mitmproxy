@@ -1,4 +1,5 @@
 import imghdr
+from typing import Optional
 
 from mitmproxy.contentviews import base
 from mitmproxy.coretypes import multidict
@@ -15,16 +16,6 @@ imghdr.tests.append(test_ico)
 
 class ViewImage(base.View):
     name = "Image"
-
-    # there is also a fallback in the auto view for image/*.
-    content_types = [
-        "image/png",
-        "image/jpeg",
-        "image/gif",
-        "image/vnd.microsoft.icon",
-        "image/x-icon",
-        "image/webp",
-    ]
 
     def __call__(self, data, **metadata):
         image_type = imghdr.what('', h=data)
@@ -45,3 +36,10 @@ class ViewImage(base.View):
         else:
             view_name = "Unknown Image"
         return view_name, base.format_dict(multidict.MultiDict(image_metadata))
+
+    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
+        return float(bool(
+            content_type
+            and content_type.startswith("image/")
+            and content_type != "image/svg+xml"
+        ))

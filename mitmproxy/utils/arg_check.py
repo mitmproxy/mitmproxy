@@ -156,7 +156,7 @@ def check():
 
     # Check for underscores in the options. Options always follow '--'.
     for argument in args:
-        underscoreParam = re.search('[-]{2}((.*?_)(.*?(\s|$)))+', argument)
+        underscoreParam = re.search(r'[-]{2}((.*?_)(.*?(\s|$)))+', argument)
         if underscoreParam is not None:
             print("{} uses underscores, please use hyphens {}".format(
                 argument,

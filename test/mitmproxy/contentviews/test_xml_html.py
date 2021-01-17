@@ -34,3 +34,12 @@ def test_format_xml(filename, tdata):
         expected = f.read()
     tokens = xml_html.tokenize(input)
     assert xml_html.format_xml(tokens) == expected
+
+
+def test_render_priority():
+    v = xml_html.ViewXmlHtml()
+    assert v.render_priority(b"", content_type="text/xml")
+    assert v.render_priority(b"", content_type="text/xml")
+    assert v.render_priority(b"", content_type="text/html")
+    assert not v.render_priority(b"", content_type="text/plain")
+    assert v.render_priority(b"<html/>")

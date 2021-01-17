@@ -27,3 +27,11 @@ def test_format_xml(filename, tdata):
         expected = f.read()
     js = javascript.beautify(input)
     assert js == expected
+
+
+def test_render_priority():
+    v = javascript.ViewJavaScript()
+    assert v.render_priority(b"", content_type="application/x-javascript")
+    assert v.render_priority(b"", content_type="application/javascript")
+    assert v.render_priority(b"", content_type="text/javascript")
+    assert not v.render_priority(b"", content_type="text/plain")
