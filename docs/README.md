@@ -17,6 +17,6 @@ Now you can run `hugo server -D` in ./src.
 
 This is required to modify CSS files.
 
- 1. Install hugo extended version.
+ 1. Install "extended" hugo version.
 
 You can now run `modd` in this directory instead of running hugo directly.
