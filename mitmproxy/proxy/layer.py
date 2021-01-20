@@ -222,7 +222,7 @@ class NextLayer(Layer):
             #  3. Some layers may however still have a reference to the old .handle_event.
             #     ._handle is just an optimization to reduce the callstack in these cases.
             self.handle_event = self.layer.handle_event
-            self._handle_event = self.layer._handle_event
+            self._handle_event = self.layer.handle_event
             self._handle = self.layer.handle_event
 
     # Utility methods for whoever decides what the next layer is going to be.
