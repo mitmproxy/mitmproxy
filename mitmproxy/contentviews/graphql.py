@@ -12,7 +12,7 @@ PARSE_ERROR = object()
 def format_graphql(data):
     query = data["query"]
     header_data = data.copy()
-    del header_data["query"]
+    header_data["query"] = "..."
     return """{header}
 ---
 {query}
