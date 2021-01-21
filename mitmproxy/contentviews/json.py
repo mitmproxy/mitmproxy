@@ -1,5 +1,6 @@
 import re
 import json
+from functools import lru_cache
 
 import typing
 
@@ -8,6 +9,7 @@ from mitmproxy.contentviews import base
 PARSE_ERROR = object()
 
 
+@lru_cache(1)
 def parse_json(s: bytes) -> typing.Any:
     try:
         return json.loads(s.decode('utf-8'))

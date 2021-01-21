@@ -3,16 +3,10 @@ import json
 import typing
 
 from mitmproxy.contentviews import base
-from mitmproxy.contentviews.json import format_json
+from mitmproxy.contentviews.json import parse_json
+
 
 PARSE_ERROR = object()
-
-
-def parse_json(s: bytes) -> typing.Any:
-    try:
-        return json.loads(s.decode('utf-8'))
-    except ValueError:
-        return PARSE_ERROR
 
 
 def format_graphql(data):
@@ -34,18 +28,33 @@ def format_query_list(data: typing.List[typing.Any]):
     return result
 
 
+def is_graphql_query(data):
+    return isinstance(data, dict) and "query" in data and "\n" in data["query"]
+
+
+def is_graphql_batch_query(data):
+    return isinstance(data, list) and isinstance(data[0], dict) and "query" in data[0]
+
+
 class ViewGraphQL(base.View):
     name = "GraphQL"
-    content_types = [
-        "application/json",
-    ]
 
     def __call__(self, data, **metadata):
         data = parse_json(data)
         if data is not PARSE_ERROR:
-            if isinstance(data, dict) and "query" in data and "\n" in data["query"]:
+            if is_graphql_query(data):
                 return "GraphQL", base.format_text(format_graphql(data))
-            elif isinstance(data, list) and isinstance(data[0], dict) and "query" in data[0]:
+            elif is_graphql_batch_query(data):
                 return "GraphQL", base.format_text(format_query_list(data))
-            else:
-                return "JSON", format_json(data)
+
+    def render_priority(self, data: bytes, *, content_type: typing.Optional[str] = None, **metadata) -> float:
+        if content_type != "application/json":
+            return 0
+
+        data = parse_json(data)
+
+        if data is not PARSE_ERROR:
+            if is_graphql_query(data) or is_graphql_batch_query(data):
+                return 2
+
+        return 0

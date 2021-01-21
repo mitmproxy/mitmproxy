@@ -5,11 +5,12 @@ from mitmproxy.contentviews import graphql
 from . import full_eval
 
 
-def test_detect_graphql():
+def test_render_priority():
     v = graphql.ViewGraphQL()
-    assert "GraphQL" == v(b"""{"query": "query P { \\n }"}""")[0]
-    assert "GraphQL" == v(b"""[{"query": "query P { \\n }"}]""")[0]
-    assert "GraphQL" != v(b"""[{"xquery": "query P { \\n }"}]""")[0]
+    assert 2 == v.render_priority(b"""{"query": "query P { \\n }"}""", content_type="application/json")
+    assert 2 == v.render_priority(b"""[{"query": "query P { \\n }"}]""", content_type="application/json")
+    assert 0 == v.render_priority(b"""[{"query": "query P { \\n }"}]""", content_type="text/html")
+    assert 0 == v.render_priority(b"""[{"xquery": "query P { \\n }"}]""", content_type="application/json")
 
 
 def test_format_graphql():
