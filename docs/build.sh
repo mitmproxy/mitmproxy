@@ -15,5 +15,6 @@ for script in scripts/*.py ; do
   "${script}" > "${output}"
 done
 
+rm -rf ./public
 cd src
 hugo
