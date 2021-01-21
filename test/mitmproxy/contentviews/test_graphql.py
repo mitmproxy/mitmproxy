@@ -21,6 +21,12 @@ def test_format_query_list():
     assert graphql.format_query_list([{"query": "query P { \\n }"}])
 
 
+def test_view_graphql():
+    v = graphql.ViewGraphQL()
+    assert v(b"""{"query": "query P { \\n }"}""", content_type="application/json")
+    assert v(b"""[{"query": "query P { \\n }"}]""", content_type="application/json")
+
+
 @given(binary())
 def test_view_graphql_doesnt_crash(data):
     v = full_eval(graphql.ViewGraphQL())
