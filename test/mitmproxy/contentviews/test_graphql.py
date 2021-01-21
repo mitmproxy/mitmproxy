@@ -11,6 +11,7 @@ def test_render_priority():
     assert 2 == v.render_priority(b"""[{"query": "query P { \\n }"}]""", content_type="application/json")
     assert 0 == v.render_priority(b"""[{"query": "query P { \\n }"}]""", content_type="text/html")
     assert 0 == v.render_priority(b"""[{"xquery": "query P { \\n }"}]""", content_type="application/json")
+    assert 0 == v.render_priority(b"}", content_type="application/json")
 
 
 def test_format_graphql():
