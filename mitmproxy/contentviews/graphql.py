@@ -3,10 +3,7 @@ import json
 import typing
 
 from mitmproxy.contentviews import base
-from mitmproxy.contentviews.json import parse_json
-
-
-PARSE_ERROR = object()
+from mitmproxy.contentviews.json import parse_json, PARSE_ERROR
 
 
 def format_graphql(data):
