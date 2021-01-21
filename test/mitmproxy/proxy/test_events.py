@@ -31,6 +31,6 @@ def test_command_completed():
     class FooCompleted1(events.CommandCompleted):
         command: FooCommand
 
-    with pytest.raises(RuntimeError, match="conflicting subclasses"):
+    with pytest.warns(RuntimeWarning, match="conflicting subclasses"):
         class FooCompleted2(events.CommandCompleted):
             command: FooCommand

@@ -133,7 +133,11 @@ def is_mostly_bin(s: bytes) -> bool:
 
 
 def is_xml(s: bytes) -> bool:
-    return s.strip().startswith(b"<")
+    for char in s:
+        if char in (9, 10, 32):  # is space?
+            continue
+        return char == 60  # is a "<"?
+    return False
 
 
 def clean_hanging_newline(t):

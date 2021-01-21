@@ -13,3 +13,9 @@ def test_view_urlencoded():
     assert v(d)
 
     assert not v(b"\xFF\x00")
+
+
+def test_render_priority():
+    v = urlencoded.ViewURLEncoded()
+    assert v.render_priority(b"", content_type="application/x-www-form-urlencoded")
+    assert not v.render_priority(b"", content_type="text/plain")

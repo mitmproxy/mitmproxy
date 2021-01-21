@@ -37,3 +37,9 @@ def test_simple():
     assert v(b"console.log('not really css')") == (
         'CSS', [[('text', "console.log('not really css')")]]
     )
+
+
+def test_render_priority():
+    v = css.ViewCSS()
+    assert v.render_priority(b"", content_type="text/css")
+    assert not v.render_priority(b"", content_type="text/plain")

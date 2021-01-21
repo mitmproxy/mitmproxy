@@ -69,7 +69,7 @@ class Master:
             print(exc, file=sys.stderr)
             print("mitmproxy has crashed!", file=sys.stderr)
             print("Please lodge a bug report at:", file=sys.stderr)
-            print("\thttps://github.com/mitmproxy/mitmproxy", file=sys.stderr)
+            print("\thttps://github.com/mitmproxy/mitmproxy/issues", file=sys.stderr)
 
         self.addons.trigger(hooks.DoneHook())
 

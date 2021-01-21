@@ -1,5 +1,6 @@
 import io
 import re
+from typing import Optional
 
 from mitmproxy.utils import strutils
 from mitmproxy.contentviews import base
@@ -46,13 +47,16 @@ def beautify(data):
 
 class ViewJavaScript(base.View):
     name = "JavaScript"
-    content_types = [
+    __content_types = (
         "application/x-javascript",
         "application/javascript",
         "text/javascript"
-    ]
+    )
 
     def __call__(self, data, **metadata):
         data = data.decode("utf-8", "replace")
         res = beautify(data)
         return "JavaScript", base.format_text(res)
+
+    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
+        return float(content_type in self.__content_types)

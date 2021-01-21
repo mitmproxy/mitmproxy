@@ -28,3 +28,10 @@ def test_format_pbuf(filename, tdata):
         expected = f.read()
 
     assert protobuf.format_pbuf(input) == expected
+
+
+def test_render_priority():
+    v = protobuf.ViewProtobuf()
+    assert v.render_priority(b"", content_type="application/x-protobuf")
+    assert v.render_priority(b"", content_type="application/x-protobuffer")
+    assert not v.render_priority(b"", content_type="text/plain")

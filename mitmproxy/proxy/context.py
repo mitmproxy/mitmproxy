@@ -4,6 +4,7 @@ from abc import ABCMeta
 from enum import Flag
 from typing import List, Literal, Optional, Sequence, Tuple, Union, TYPE_CHECKING
 
+import mitmproxy
 from mitmproxy import certs
 from mitmproxy.coretypes import serializable
 from mitmproxy.net import server_spec
