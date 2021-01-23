@@ -449,7 +449,7 @@ class Request(message.Message):
         is_valid_content_type = "multipart/form-data" in self.headers.get("content-type", "").lower()
         if is_valid_content_type:
             try:
-                return multipart.decode(self.headers, self.content)
+                return multipart.decode(self.headers.get("content-type"), self.content)
             except ValueError:
                 pass
         return ()

@@ -65,9 +65,9 @@ class HTTPFlow(flow.Flow):
 
 
 def make_error_response(
-        status_code: int,
-        message: str = "",
-        headers: Optional[http.Headers] = None,
+    status_code: int,
+    message: str = "",
+    headers: Optional[http.Headers] = None,
 ) -> http.Response:
     body: bytes = """
         <html>

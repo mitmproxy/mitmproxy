@@ -5,6 +5,7 @@ The counterpart to events are commands.
 """
 import socket
 import typing
+import warnings
 from dataclasses import dataclass, is_dataclass
 
 from mitmproxy.proxy import commands
@@ -78,7 +79,7 @@ class CommandCompleted(Event):
             raise RuntimeError(f"{command_cls} needs a properly annotated command attribute.")
         if command_cls in command_reply_subclasses:
             other = command_reply_subclasses[command_cls]
-            raise RuntimeError(f"Two conflicting subclasses for {command_cls}: {cls} and {other}")
+            warnings.warn(f"Two conflicting subclasses for {command_cls}: {cls} and {other}", RuntimeWarning)
         command_reply_subclasses[command_cls] = cls
 
     def __repr__(self):

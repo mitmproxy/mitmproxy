@@ -1,4 +1,5 @@
 import io
+from typing import Optional
 
 from kaitaistruct import KaitaiStream
 from . import base
@@ -66,7 +67,7 @@ class ViewProtobuf(base.View):
     """
 
     name = "Protocol Buffer"
-    content_types = [
+    __content_types = [
         "application/x-protobuf",
         "application/x-protobuffer",
     ]
@@ -77,3 +78,6 @@ class ViewProtobuf(base.View):
             raise ValueError("Failed to parse input.")
 
         return "Protobuf", base.format_text(decoded)
+
+    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
+        return float(content_type in self.__content_types)

@@ -16,3 +16,6 @@ class ViewHex(base.View):
 
     def __call__(self, data, **metadata):
         return "Hex", self._format(data)
+
+    def render_priority(self, data: bytes, **metadata) -> float:
+        return 0.2 * strutils.is_mostly_bin(data)
