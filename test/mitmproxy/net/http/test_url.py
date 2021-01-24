@@ -166,6 +166,7 @@ def test_default_port():
         ["foo", True, ("foo", None)],
         ["foo..bar", False, ("foo..bar", None)],
         ["foo:bar", False, ("foo:bar", None)],
+        [b"foo:bar", False, ("foo:bar", None)],
         ["foo:999999999", False, ("foo:999999999", None)],
         [b"\xff", False, ('\udcff', None)]
     ]
