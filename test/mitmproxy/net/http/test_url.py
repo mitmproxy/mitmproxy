@@ -162,9 +162,11 @@ def test_default_port():
         ["127.0.0.1:443", True, ("127.0.0.1", 443)],
         ["[2001:db8:42::]:443", True, ("2001:db8:42::", 443)],
         [b"xn--aaa-pla.example:80", True, ("äaaa.example", 80)],
+        [b"xn--r8jz45g.xn--zckzah:80", True, ('例え.テスト', 80)],
         ["foo", True, ("foo", None)],
         ["foo..bar", False, ("foo..bar", None)],
         ["foo:bar", False, ("foo:bar", None)],
+        [b"foo:bar", False, ("foo:bar", None)],
         ["foo:999999999", False, ("foo:999999999", None)],
         [b"\xff", False, ('\udcff', None)]
     ]

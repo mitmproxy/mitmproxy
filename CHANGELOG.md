@@ -51,6 +51,7 @@ If you depend on these features, please raise your voice in
 * Remove the following options: `http2_priority`, `relax_http_form_validation`, `upstream_bind_address`,
   `spoof_source_address`, and `stream_websockets`. If you depended on one of them please let us know. 
   mitmproxy never phones home, which means we don't know how prominently these options were used. (@mhils)
+* Fix IDNA host 'Bad HTTP request line' error (@grahamrobbins)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
