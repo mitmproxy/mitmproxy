@@ -77,7 +77,7 @@ setup(
         "h2>=4.0,<5",
         "hyperframe>=6.0,<7",
         "kaitaistruct>=0.7,<0.10",
-        "ldap3>=2.8,<2.9",
+        "ldap3>=2.9,<2.10",
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
         "protobuf>=3.14,<3.15",
