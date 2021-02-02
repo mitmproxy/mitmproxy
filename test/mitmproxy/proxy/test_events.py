@@ -24,7 +24,7 @@ def test_command_completed():
     class FooCommand(commands.Command):
         pass
 
-    with pytest.raises(RuntimeError, match="properly annotated"):
+    with pytest.warns(RuntimeWarning, match="properly annotated"):
         class FooCompleted(events.CommandCompleted):
             pass
 
