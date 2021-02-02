@@ -16,6 +16,7 @@ if TYPE_CHECKING:
 
 
 class ConnectionState(Flag):
+    """The current state of the underlying socket."""
     CLOSED = 0
     CAN_READ = 1
     CAN_WRITE = 2
@@ -30,56 +31,78 @@ Address = Tuple[str, int]
 
 class Connection(serializable.Serializable, metaclass=ABCMeta):
     """
-    Connections exposed to the layers only contain metadata, no socket objects.
+    Base class for client and server connections.
+
+    The connection object only exposes metadata about the connection, but not the underlying socket object.
+    This is intentional, all I/O should be handled by mitmproxy.proxy.server exclusively.
     """
     # all connections have a unique id. While
     # f.client_conn == f2.client_conn already holds true for live flows (where we have object identity),
     # we also want these semantics for recorded flows.
     id: str
+    """A unique UUID to identify the connection."""
     state: ConnectionState
+    """The current connection state."""
     peername: Optional[Address]
+    """The remote's `(ip, port)` tuple for this connection."""
     sockname: Optional[Address]
+    """Our local `(ip, port)` tuple for this connection."""
     error: Optional[str] = None
+    """A string describing the connection error."""
 
     tls: bool = False
+    """
+    `True` if TLS should be established, `False` otherwise.
+    Note that this property only describes if a connection should eventually be protected using TLS.
+    To check if TLS has already been established, use `Connection.tls_established`.
+    """
     certificate_list: Sequence[certs.Cert] = ()
     """
     The TLS certificate list as sent by the peer.
     The first certificate is the end-entity certificate.
 
-    [RFC 8446] Prior to TLS 1.3, "certificate_list" ordering required each
-    certificate to certify the one immediately preceding it; however,
-    some implementations allowed some flexibility.  Servers sometimes
-    send both a current and deprecated intermediate for transitional
-    purposes, and others are simply configured incorrectly, but these
-    cases can nonetheless be validated properly.  For maximum
-    compatibility, all implementations SHOULD be prepared to handle
-    potentially extraneous certificates and arbitrary orderings from any
-    TLS version, with the exception of the end-entity certificate which
-    MUST be first.
+    > [RFC 8446] Prior to TLS 1.3, "certificate_list" ordering required each
+    > certificate to certify the one immediately preceding it; however,
+    > some implementations allowed some flexibility.  Servers sometimes
+    > send both a current and deprecated intermediate for transitional
+    > purposes, and others are simply configured incorrectly, but these
+    > cases can nonetheless be validated properly.  For maximum
+    > compatibility, all implementations SHOULD be prepared to handle
+    > potentially extraneous certificates and arbitrary orderings from any
+    > TLS version, with the exception of the end-entity certificate which
+    > MUST be first.
     """
     alpn: Optional[bytes] = None
+    """The application-layer protocol as negotiated using
+    [ALPN](https://en.wikipedia.org/wiki/Application-Layer_Protocol_Negotiation)."""
     alpn_offers: Sequence[bytes] = ()
-
+    """The ALPN offers as sent in the ClientHello."""
     # we may want to add SSL_CIPHER_description here, but that's currently not exposed by cryptography
     cipher: Optional[str] = None
-    """The active cipher name as returned by OpenSSL's SSL_CIPHER_get_name"""
+    """The active cipher name as returned by OpenSSL's `SSL_CIPHER_get_name`."""
     cipher_list: Sequence[str] = ()
     """Ciphers accepted by the proxy server on this connection."""
     tls_version: Optional[str] = None
+    """The active TLS version."""
     sni: Union[str, Literal[True], None]
+    """
+    The [Server Name Indication (SNI)](https://en.wikipedia.org/wiki/Server_Name_Indication) sent in the ClientHello.
+    For server connections, this value may also be set to `True`, which means "use `Server.address`".
+    """
 
     timestamp_end: Optional[float] = None
-    """Connection end timestamp"""
+    """*Timestamp:* Connection has been closed."""
     timestamp_tls_setup: Optional[float] = None
-    """TLS session established."""
+    """*Timestamp:* TLS handshake has been completed successfully."""
 
     @property
-    def connected(self):
+    def connected(self) -> bool:
+        """`True` if Connection.state is ConnectionState.OPEN, `False` otherwise. Read-only."""
         return self.state is ConnectionState.OPEN
 
     @property
     def tls_established(self) -> bool:
+        """`True` if TLS has been established, `False` otherwise. Read-only."""
         return self.timestamp_tls_setup is not None
 
     def __eq__(self, other):
@@ -102,26 +125,35 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
 
     @property
     def alpn_proto_negotiated(self) -> Optional[bytes]:  # pragma: no cover
-        warnings.warn("Server.alpn_proto_negotiated is deprecated, use Server.alpn instead.", DeprecationWarning)
+        """*Deprecated:* An outdated alias for Connection.alpn."""
+        warnings.warn("Connection.alpn_proto_negotiated is deprecated, use Connection.alpn instead.",
+                      DeprecationWarning)
         return self.alpn
 
 
 class Client(Connection):
-    state: ConnectionState = ConnectionState.OPEN
+    """A connection between a client and mitmproxy."""
     peername: Address
+    """The client's address."""
     sockname: Address
-
-    timestamp_start: float
-    """TCP SYN received"""
+    """The local address we received this connection on."""
 
     mitmcert: Optional[certs.Cert] = None
+    """
+    The certificate used by mitmproxy to establish TLS with the client.
+    """
     sni: Union[str, None] = None
+    """The Server Name Indication sent by the client."""
+
+    timestamp_start: float
+    """*Timestamp:* TCP SYN received"""
 
     def __init__(self, peername, sockname, timestamp_start):
         self.id = str(uuid.uuid4())
         self.peername = peername
         self.sockname = sockname
         self.timestamp_start = timestamp_start
+        self.state = ConnectionState.OPEN
 
     def __str__(self):
         if self.alpn:
@@ -190,6 +222,7 @@ class Client(Connection):
 
     @property
     def address(self):  # pragma: no cover
+        """*Deprecated:* An outdated alias for Client.peername."""
         warnings.warn("Client.address is deprecated, use Client.peername instead.", DeprecationWarning, stacklevel=2)
         return self.peername
 
@@ -200,11 +233,13 @@ class Client(Connection):
 
     @property
     def cipher_name(self) -> Optional[str]:  # pragma: no cover
+        """*Deprecated:* An outdated alias for Connection.cipher."""
         warnings.warn("Client.cipher_name is deprecated, use Client.cipher instead.", DeprecationWarning, stacklevel=2)
         return self.cipher
 
     @property
     def clientcert(self) -> Optional[certs.Cert]:  # pragma: no cover
+        """*Deprecated:* An outdated alias for Connection.certificate_list[0]."""
         warnings.warn("Client.clientcert is deprecated, use Client.certificate_list instead.", DeprecationWarning,
                       stacklevel=2)
         if self.certificate_list:
@@ -222,23 +257,27 @@ class Client(Connection):
 
 
 class Server(Connection):
-    state: ConnectionState = ConnectionState.CLOSED
+    """A connection between mitmproxy and an upstream server."""
+
     peername: Optional[Address] = None
+    """The server's resolved `(ip, port)` tuple. Will be set during connection establishment."""
     sockname: Optional[Address] = None
     address: Optional[Address]
+    """The server's `(host, port)` address tuple. The host can either be a domain or a plain IP address."""
 
     timestamp_start: Optional[float] = None
-    """TCP SYN sent"""
+    """*Timestamp:* TCP SYN sent."""
     timestamp_tcp_setup: Optional[float] = None
-    """TCP ACK received"""
+    """*Timestamp:* TCP ACK received."""
 
     sni: Union[str, Literal[True], None] = True
-    """True: client SNI, False: no SNI, bytes: custom value"""
     via: Optional[server_spec.ServerSpec] = None
+    """An optional proxy server specification via which the connection should be established."""
 
     def __init__(self, address: Optional[Address]):
         self.id = str(uuid.uuid4())
         self.address = address
+        self.state = ConnectionState.CLOSED
 
     def __str__(self):
         if self.alpn:
@@ -308,11 +347,13 @@ class Server(Connection):
 
     @property
     def ip_address(self) -> Optional[Address]:  # pragma: no cover
+        """*Deprecated:* An outdated alias for `Server.peername`."""
         warnings.warn("Server.ip_address is deprecated, use Server.peername instead.", DeprecationWarning, stacklevel=2)
         return self.peername
 
     @property
     def cert(self) -> Optional[certs.Cert]:  # pragma: no cover
+        """*Deprecated:* An outdated alias for `Connection.certificate_list[0]`."""
         warnings.warn("Server.cert is deprecated, use Server.certificate_list instead.", DeprecationWarning,
                       stacklevel=2)
         if self.certificate_list:
@@ -332,7 +373,7 @@ class Server(Connection):
 
 class Context:
     """
-    Layers get a context object that has all contextual information they require.
+    The context object provided to each `mitmproxy.proxy.layer.Layer` by its parent layer.
     """
 
     client: Client

@@ -29,7 +29,8 @@ class TestLayer:
         assert (
                 tutils.Playbook(tlayer, hooks=True, logs=True)
                 << commands.Log(" >> Start({})", "debug")
-                << commands.Log(" << OpenConnection({'connection': Server({'id': '…rverid', 'address': None})})",
+                << commands.Log(" << OpenConnection({'connection': Server({'id': '…rverid', 'address': None, "
+                                "'state': <ConnectionState.CLOSED: 0>})})",
                                 "debug")
                 << commands.OpenConnection(tctx.server)
                 >> events.DataReceived(tctx.client, b"foo")

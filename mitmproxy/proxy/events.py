@@ -76,7 +76,7 @@ class CommandCompleted(Event):
                 issubclass(command_cls, commands.Command) and command_cls is not commands.Command
         )
         if not valid_command_subclass:
-            raise RuntimeError(f"{command_cls} needs a properly annotated command attribute.")
+            warnings.warn(f"{command_cls} needs a properly annotated command attribute.", RuntimeWarning)
         if command_cls in command_reply_subclasses:
             other = command_reply_subclasses[command_cls]
             warnings.warn(f"Two conflicting subclasses for {command_cls}: {cls} and {other}", RuntimeWarning)
