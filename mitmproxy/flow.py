@@ -185,3 +185,9 @@ class Flow(stateobject.StateObject):
     def timestamp_start(self) -> float:
         """Start time of the flow."""
         return self.client_conn.timestamp_start
+
+
+__all__ = [
+    "Flow",
+    "Error",
+]
