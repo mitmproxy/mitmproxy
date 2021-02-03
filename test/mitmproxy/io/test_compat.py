@@ -8,6 +8,7 @@ from mitmproxy import exceptions
     ["dumpfile-011.mitm", "https://example.com/", 1],
     ["dumpfile-018.mitm", "https://www.example.com/", 1],
     ["dumpfile-019.mitm", "https://webrv.rtb-seller.com/", 1],
+    ["dumpfile-7-websocket.mitm", "https://echo.websocket.org/", 5],
 ])
 def test_load(tdata, dumpfile, url, count):
     with open(tdata.path("mitmproxy/data/" + dumpfile), "rb") as f:
