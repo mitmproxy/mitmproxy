@@ -120,7 +120,7 @@ async def test_start_stop(tdata):
 def test_load(tdata):
     cp = ClientPlayback()
     with taddons.context(cp):
-        cp.load_file(tdata.path("mitmproxy/data/dumpfile-018.bin"))
+        cp.load_file(tdata.path("mitmproxy/data/dumpfile-018.mitm"))
         assert cp.count() == 1
 
         with pytest.raises(CommandError):
@@ -132,7 +132,7 @@ def test_configure(tdata):
     cp = ClientPlayback()
     with taddons.context(cp) as tctx:
         assert cp.count() == 0
-        tctx.configure(cp, client_replay=[tdata.path("mitmproxy/data/dumpfile-018.bin")])
+        tctx.configure(cp, client_replay=[tdata.path("mitmproxy/data/dumpfile-018.mitm")])
         assert cp.count() == 1
         tctx.configure(cp, client_replay=[])
         with pytest.raises(OptionsError):
