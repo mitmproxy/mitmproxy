@@ -40,6 +40,6 @@ def console(monkeypatch):
 
 
 def test_integration(tdata, console):
-    console.type(f":view.flows.load {tdata.path('mitmproxy/data/dumpfile-7.bin')}<enter>")
+    console.type(f":view.flows.load {tdata.path('mitmproxy/data/dumpfile-7.mitm')}<enter>")
     console.type("<enter><tab><tab>")
     console.type("<space><tab><tab>")  # view second flow
