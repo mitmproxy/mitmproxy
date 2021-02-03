@@ -21,7 +21,7 @@ class TestHARDump:
 
     def test_simple(self, tmpdir, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
             tctx.invoke(a, "response", self.flow())
@@ -32,7 +32,7 @@ class TestHARDump:
 
     def test_base64(self, tmpdir, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
 
@@ -46,7 +46,7 @@ class TestHARDump:
 
     def test_format_cookies(self, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
 
             CA = cookies.CookieAttrs
 
@@ -65,7 +65,7 @@ class TestHARDump:
 
     def test_binary(self, tmpdir, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
 
