@@ -21,7 +21,7 @@ def treq(**kwargs) -> http.Request:
         timestamp_end=946681201,
     )
     default.update(kwargs)
-    return http.Request(**default)
+    return http.Request(**default)  # type: ignore
 
 
 def tresp(**kwargs) -> http.Response:
@@ -40,4 +40,4 @@ def tresp(**kwargs) -> http.Response:
         timestamp_end=946681203,
     )
     default.update(kwargs)
-    return http.Response(**default)
+    return http.Response(**default)  # type: ignore

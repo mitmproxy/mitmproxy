@@ -1,15 +1,13 @@
-import io
 import uuid
 
-from mitmproxy.test import tutils
+from mitmproxy import controller
+from mitmproxy import flow
+from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
-from mitmproxy import controller
-from mitmproxy import http
-from mitmproxy import flow
 from mitmproxy.net import http as net_http
 from mitmproxy.proxy import context
-
+from mitmproxy.test import tutils
 from wsproto.frame_protocol import Opcode
 
 
@@ -34,7 +32,6 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
 
 
 def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, handshake_flow=True):
-
     if client_conn is True:
         client_conn = tclient_conn()
     if server_conn is True:
@@ -169,7 +166,7 @@ def tclient_conn() -> context.Client:
         alpn_offers=[],
         cipher_list=[],
     ))
-    c.reply = controller.DummyReply()
+    c.reply = controller.DummyReply()  # type: ignore
     return c
 
 
@@ -197,9 +194,7 @@ def tserver_conn() -> context.Server:
         cipher_list=[],
         via2=None,
     ))
-    c.reply = controller.DummyReply()
-    c.rfile = io.BytesIO()
-    c.wfile = io.BytesIO()
+    c.reply = controller.DummyReply()  # type: ignore
     return c
 
 
