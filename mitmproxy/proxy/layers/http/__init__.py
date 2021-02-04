@@ -144,7 +144,7 @@ class HttpStream(layer.Layer):
         self.flow.request = event.request
 
         if err := validate_request(self.mode, self.flow.request):
-            self.flow.response = http.HTTPResponse.make(502, str(err))
+            self.flow.response = http.Response.make(502, str(err))
             self.client_state = self.state_errored
             return (yield from self.send_response())
 
@@ -162,7 +162,7 @@ class HttpStream(layer.Layer):
             try:
                 host, port = url.parse_authority(self.flow.request.host_header or "", check=True)
             except ValueError:
-                self.flow.response = http.HTTPResponse.make(
+                self.flow.response = http.Response.make(
                     400,
                     "HTTP request has no host header, destination unknown."
                 )
@@ -194,7 +194,7 @@ class HttpStream(layer.Layer):
             return
 
         if self.flow.request.headers.get("expect", "").lower() == "100-continue":
-            continue_response = http.HTTPResponse.make(100)
+            continue_response = http.Response.make(100)
             continue_response.headers.clear()
             yield SendHttp(ResponseHeaders(self.stream_id, continue_response), self.context.client)
             self.flow.request.headers.pop("expect")
@@ -427,7 +427,7 @@ class HttpStream(layer.Layer):
         if not self.flow.response and self.context.options.connection_strategy == "eager":
             err = yield commands.OpenConnection(self.context.server)
             if err:
-                self.flow.response = http.HTTPResponse.make(
+                self.flow.response = http.Response.make(
                     502, f"Cannot connect to {human.format_address(self.context.server.address)}: {err}"
                 )
         self.child_layer = layer.NextLayer(self.context)

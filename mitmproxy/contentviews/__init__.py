@@ -16,7 +16,7 @@ from typing import List, Union
 from typing import Optional
 
 from mitmproxy import flow
-from mitmproxy.net import http
+from mitmproxy import http
 from mitmproxy.utils import strutils
 from . import (
     auto, raw, hex, json, xml_html, wbxml, javascript, css,

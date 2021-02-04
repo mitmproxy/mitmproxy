@@ -1,8 +1,8 @@
 import collections
 import pytest
 
-from mitmproxy.net.http.headers import Headers, parse_content_type, assemble_content_type
-
+from mitmproxy.http import Headers
+from mitmproxy.net.http.headers import parse_content_type, assemble_content_type
 
 class TestHeaders:
     def _2host(self):

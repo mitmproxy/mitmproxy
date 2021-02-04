@@ -1,7 +1,7 @@
 import pytest
 
 from mitmproxy.flow import Error
-from mitmproxy.http import HTTPFlow, HTTPResponse
+from mitmproxy.http import HTTPFlow, Response
 from mitmproxy.net.server_spec import ServerSpec
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import layer
@@ -205,7 +205,7 @@ def test_http_reply_from_proxy(tctx):
     """Test a response served by mitmproxy itself."""
 
     def reply_from_proxy(flow: HTTPFlow):
-        flow.response = HTTPResponse.make(418)
+        flow.response = Response.make(418)
 
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
@@ -843,7 +843,7 @@ def test_kill_flow(tctx, when):
         return assert_kill()
     if when == "script-response-responseheaders":
         assert (playbook
-                >> reply(side_effect=lambda f: setattr(f, "response", HTTPResponse.make()))
+                >> reply(side_effect=lambda f: setattr(f, "response", Response.make()))
                 << http.HttpResponseHeadersHook(flow))
         return assert_kill()
     assert (playbook

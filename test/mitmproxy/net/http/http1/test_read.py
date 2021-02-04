@@ -1,6 +1,6 @@
 import pytest
 
-from mitmproxy.net.http import Headers
+from mitmproxy.http import Headers
 from mitmproxy.net.http.http1.read import (
     read_request_head,
     read_response_head, connection_close, expected_http_body_size,

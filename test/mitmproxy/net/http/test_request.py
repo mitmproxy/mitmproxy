@@ -1,7 +1,7 @@
 from unittest import mock
 import pytest
 
-from mitmproxy.net.http import Headers, Request
+from mitmproxy.http import Headers, Request
 from mitmproxy.test.tutils import treq
 from .test_message import _test_decoded_attr, _test_passthrough_attr
 

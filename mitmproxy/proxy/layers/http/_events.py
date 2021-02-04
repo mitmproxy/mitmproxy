@@ -8,7 +8,7 @@ from ._base import HttpEvent
 
 @dataclass
 class RequestHeaders(HttpEvent):
-    request: http.HTTPRequest
+    request: http.Request
     end_stream: bool
     """
     If True, we already know at this point that there is no message body. This is useful for HTTP/2, where it allows
@@ -21,7 +21,7 @@ class RequestHeaders(HttpEvent):
 
 @dataclass
 class ResponseHeaders(HttpEvent):
-    response: http.HTTPResponse
+    response: http.Response
     end_stream: bool = False
 
 

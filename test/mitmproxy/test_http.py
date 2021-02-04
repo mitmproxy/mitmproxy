@@ -5,7 +5,7 @@ from mitmproxy import flow
 from mitmproxy import flowfilter
 from mitmproxy import http
 from mitmproxy.exceptions import ControlException
-from mitmproxy.net.http import Headers
+from mitmproxy.http import Headers
 from mitmproxy.test import tflow
 
 

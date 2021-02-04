@@ -6,7 +6,7 @@ import pytest
 
 from mitmproxy import exceptions
 from mitmproxy.addons import dumper
-from mitmproxy.net.http import Headers
+from mitmproxy.http import Headers
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils

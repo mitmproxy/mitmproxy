@@ -139,7 +139,7 @@ class MapLocal:
                         ctx.log.warn(f"Could not read file: {e}")
                         continue
 
-                    flow.response = http.HTTPResponse.make(
+                    flow.response = http.Response.make(
                         200,
                         contents,
                         headers
@@ -147,5 +147,5 @@ class MapLocal:
                     # only set flow.response once, for the first matching rule
                     return
         if all_candidates:
-            flow.response = http.HTTPResponse.make(404)
+            flow.response = http.Response.make(404)
             ctx.log.info(f"None of the local file candidates exist: {', '.join(str(x) for x in all_candidates)}")

@@ -3,7 +3,7 @@ import typing
 from pathlib import Path
 
 from mitmproxy import ctx, exceptions, flowfilter, http
-from mitmproxy.net.http import Headers
+from mitmproxy.http import Headers
 from mitmproxy.utils import strutils
 from mitmproxy.utils.spec import parse_spec
 

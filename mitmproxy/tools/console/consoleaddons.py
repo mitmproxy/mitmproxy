@@ -419,7 +419,7 @@ class ConsoleAddon:
                 flow.response is None
         )
         if require_dummy_response:
-            flow.response = http.HTTPResponse.make()
+            flow.response = http.Response.make()
         if flow_part == "cookies":
             self.master.switch_view("edit_focus_cookies")
         elif flow_part == "urlencoded form":

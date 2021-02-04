@@ -6,7 +6,6 @@ from h11._readers import ChunkedReader, ContentLengthReader, Http10Reader
 from h11._receivebuffer import ReceiveBuffer
 
 from mitmproxy import http
-from mitmproxy.net import http as net_http
 from mitmproxy.net.http import http1, status_codes
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.context import Connection, ConnectionState, Context
@@ -22,8 +21,8 @@ TBodyReader = Union[ChunkedReader, Http10Reader, ContentLengthReader]
 
 class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     stream_id: Optional[StreamId] = None
-    request: Optional[http.HTTPRequest] = None
-    response: Optional[http.HTTPResponse] = None
+    request: Optional[http.Request] = None
+    response: Optional[http.Response] = None
     request_done: bool = False
     response_done: bool = False
     # this is a bit of a hack to make both mypy and PyCharm happy.
@@ -345,7 +344,7 @@ class Http1Client(Http1Connection):
             raise AssertionError(f"Unexpected event: {event}")
 
 
-def should_make_pipe(request: net_http.Request, response: net_http.Response) -> bool:
+def should_make_pipe(request: http.Request, response: http.Response) -> bool:
     if response.status_code == 101:
         return True
     elif response.status_code == 200 and request.method.upper() == "CONNECT":

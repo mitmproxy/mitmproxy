@@ -2,7 +2,8 @@ import re
 import time
 from typing import List, Tuple, Iterable, Optional
 
-from mitmproxy.net.http import request, response, headers, url
+from mitmproxy.http import Request, Headers, Response
+from mitmproxy.net.http import url
 
 
 def get_header_tokens(headers, key):
@@ -38,8 +39,8 @@ def connection_close(http_version, headers):
 
 
 def expected_http_body_size(
-        request: request.Request,
-        response: Optional[response.Response] = None,
+        request: Request,
+        response: Optional[Response] = None,
         expect_continue_as_0: bool = True
 ):
     """
@@ -141,7 +142,7 @@ def _read_response_line(line: bytes) -> Tuple[bytes, int, bytes]:
     return http_version, status_code, reason
 
 
-def _read_headers(lines: Iterable[bytes]) -> headers.Headers:
+def _read_headers(lines: Iterable[bytes]) -> Headers:
     """
         Read a set of headers.
         Stop once a blank line is reached.
@@ -168,10 +169,10 @@ def _read_headers(lines: Iterable[bytes]) -> headers.Headers:
                 ret.append((name, value))
             except ValueError:
                 raise ValueError(f"Invalid header line: {line!r}")
-    return headers.Headers(ret)
+    return Headers(ret)
 
 
-def read_request_head(lines: List[bytes]) -> request.Request:
+def read_request_head(lines: List[bytes]) -> Request:
     """
     Parse an HTTP request head (request line + headers) from an iterable of lines
 
@@ -187,7 +188,7 @@ def read_request_head(lines: List[bytes]) -> request.Request:
     host, port, method, scheme, authority, path, http_version = _read_request_line(lines[0])
     headers = _read_headers(lines[1:])
 
-    return request.Request(
+    return Request(
         host=host,
         port=port,
         method=method,
@@ -203,7 +204,7 @@ def read_request_head(lines: List[bytes]) -> request.Request:
     )
 
 
-def read_response_head(lines: List[bytes]) -> response.Response:
+def read_response_head(lines: List[bytes]) -> Response:
     """
     Parse an HTTP response head (response line + headers) from an iterable of lines
 
@@ -219,7 +220,7 @@ def read_response_head(lines: List[bytes]) -> response.Response:
     http_version, status_code, reason = _read_response_line(lines[0])
     headers = _read_headers(lines[1:])
 
-    return response.Response(
+    return Response(
         http_version=http_version,
         status_code=status_code,
         reason=reason,

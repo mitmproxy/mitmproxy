@@ -1,6 +1,6 @@
 import pytest
 
-from mitmproxy.net import http
+from mitmproxy import http
 from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers.http import Http1Server, ReceiveHttp, RequestHeaders, RequestEndOfMessage, \

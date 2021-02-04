@@ -8,7 +8,7 @@ body.
 """
 
 from mitmproxy import http
-from mitmproxy.net.http import Headers
+from mitmproxy.http import Headers
 
 
 def request(flow: http.HTTPFlow):

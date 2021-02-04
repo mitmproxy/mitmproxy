@@ -205,7 +205,7 @@ class FlowDetails(tabs.Tabs):
         if error:
             self.master.log.debug(error)
         # Give hint that you have to tab for the response.
-        if description == "No content" and isinstance(message, http.HTTPRequest):
+        if description == "No content" and isinstance(message, http.Request):
             description = "No request content"
 
         # If the users has a wide terminal, he gets fewer lines; this should not be an issue.

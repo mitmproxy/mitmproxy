@@ -401,7 +401,7 @@ if __name__ == "__main__":  # pragma: no cover
 
         def request(flow: http.HTTPFlow):
             if "cached" in flow.request.path:
-                flow.response = http.HTTPResponse.make(418, f"(cached) {flow.request.text}")
+                flow.response = http.Response.make(418, f"(cached) {flow.request.text}")
             if "toggle-tls" in flow.request.path:
                 if flow.request.url.startswith("https://"):
                     flow.request.url = flow.request.url.replace("https://", "http://")

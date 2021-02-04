@@ -1,7 +1,7 @@
 import pytest
 
 from mitmproxy.test import tutils
-from mitmproxy.net import http
+from mitmproxy import http
 
 
 def _test_passthrough_attr(message, attr):

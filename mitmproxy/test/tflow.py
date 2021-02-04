@@ -5,7 +5,7 @@ from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
-from mitmproxy.net import http as net_http
+from mitmproxy.net.http import status_codes
 from mitmproxy.proxy import context
 from mitmproxy.test import tutils
 from wsproto.frame_protocol import Opcode
@@ -37,7 +37,7 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
     if server_conn is True:
         server_conn = tserver_conn()
     if handshake_flow is True:
-        req = http.HTTPRequest(
+        req = http.Request(
             "example.com",
             80,
             b"GET",
@@ -45,7 +45,7 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
             b"example.com",
             b"/ws",
             b"HTTP/1.1",
-            headers=net_http.Headers(
+            headers=http.Headers(
                 connection="upgrade",
                 upgrade="websocket",
                 sec_websocket_version="13",
@@ -57,11 +57,11 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
             timestamp_end=946681201,
 
         )
-        resp = http.HTTPResponse(
+        resp = http.Response(
             b"HTTP/1.1",
             101,
-            reason=net_http.status_codes.RESPONSES.get(101),
-            headers=net_http.Headers(
+            reason=status_codes.RESPONSES.get(101),
+            headers=http.Headers(
                 connection='upgrade',
                 upgrade='websocket',
                 sec_websocket_accept=b'',
@@ -99,8 +99,8 @@ def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):
     """
     @type client_conn: bool | None | mitmproxy.proxy.connection.ClientConnection
     @type server_conn: bool | None | mitmproxy.proxy.connection.ServerConnection
-    @type req:         bool | None | mitmproxy.proxy.protocol.http.HTTPRequest
-    @type resp:        bool | None | mitmproxy.proxy.protocol.http.HTTPResponse
+    @type req:         bool | None | mitmproxy.proxy.protocol.http.Request
+    @type resp:        bool | None | mitmproxy.proxy.protocol.http.Response
     @type err:         bool | None | mitmproxy.proxy.protocol.primitives.Error
     @return:           mitmproxy.proxy.protocol.http.HTTPFlow
     """

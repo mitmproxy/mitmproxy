@@ -457,7 +457,7 @@ class View(collections.abc.Sequence):
     @command.command("view.flows.create")
     def create(self, method: str, url: str) -> None:
         try:
-            req = http.HTTPRequest.make(method.upper(), url)
+            req = http.Request.make(method.upper(), url)
         except ValueError as e:
             raise exceptions.CommandError("Invalid URL: %s" % e)
 

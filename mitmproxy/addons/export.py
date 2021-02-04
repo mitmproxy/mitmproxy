@@ -12,7 +12,7 @@ from mitmproxy.net.http.http1 import assemble
 from mitmproxy.utils import strutils
 
 
-def cleanup_request(f: flow.Flow) -> http.HTTPRequest:
+def cleanup_request(f: flow.Flow) -> http.Request:
     if not getattr(f, "request", None):
         raise exceptions.CommandError("Can't export flow with no request.")
     assert isinstance(f, http.HTTPFlow)
@@ -21,7 +21,7 @@ def cleanup_request(f: flow.Flow) -> http.HTTPRequest:
     return request
 
 
-def pop_headers(request: http.HTTPRequest) -> http.HTTPRequest:
+def pop_headers(request: http.Request) -> http.Request:
     # Remove some headers that are redundant for curl/httpie export
     request.headers.pop('content-length')
     if request.headers.get("host", "") == request.host:
@@ -31,7 +31,7 @@ def pop_headers(request: http.HTTPRequest) -> http.HTTPRequest:
     return request
 
 
-def cleanup_response(f: flow.Flow) -> http.HTTPResponse:
+def cleanup_response(f: flow.Flow) -> http.Response:
     if not getattr(f, "response", None):
         raise exceptions.CommandError("Can't export flow with no response.")
     assert isinstance(f, http.HTTPFlow)
@@ -40,7 +40,7 @@ def cleanup_response(f: flow.Flow) -> http.HTTPResponse:
     return response
 
 
-def request_content_for_console(request: http.HTTPRequest) -> str:
+def request_content_for_console(request: http.Request) -> str:
     try:
         text = request.get_text(strict=True)
         assert text

@@ -1,4 +1,4 @@
-from mitmproxy.net import http
+from mitmproxy import http
 
 
 def treq(**kwargs) -> http.Request:

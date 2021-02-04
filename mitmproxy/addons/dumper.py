@@ -10,7 +10,6 @@ from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flowfilter
 from mitmproxy import http
-from mitmproxy.net import http as net_http
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
@@ -79,7 +78,7 @@ class Dumper:
         if self.errfp:
             self.errfp.flush()
 
-    def _echo_headers(self, headers: net_http.Headers):
+    def _echo_headers(self, headers: http.Headers):
         for k, v in headers.fields:
             k = strutils.bytes_to_escaped_str(k)
             v = strutils.bytes_to_escaped_str(v)
@@ -89,7 +88,7 @@ class Dumper:
             )
             self.echo(out, ident=4)
 
-    def _echo_trailers(self, trailers: Optional[net_http.Headers]):
+    def _echo_trailers(self, trailers: Optional[http.Headers]):
         if not trailers:
             return
         self.echo(click.style("--- HTTP Trailers", fg="magenta"), ident=4)
@@ -97,7 +96,7 @@ class Dumper:
 
     def _echo_message(
         self,
-        message: Union[net_http.Message, TCPMessage, WebSocketMessage],
+        message: Union[http.Message, TCPMessage, WebSocketMessage],
         flow: Union[http.HTTPFlow, TCPFlow, WebSocketFlow]
     ):
         _, lines, error = contentviews.get_message_content_view(
@@ -205,7 +204,7 @@ class Dumper:
         if not flow.response.is_http2:
             reason = flow.response.reason
         else:
-            reason = net_http.status_codes.RESPONSES.get(flow.response.status_code, "")
+            reason = http.status_codes.RESPONSES.get(flow.response.status_code, "")
         reason = click.style(
             strutils.escape_control_characters(reason),
             fg=code_color,
