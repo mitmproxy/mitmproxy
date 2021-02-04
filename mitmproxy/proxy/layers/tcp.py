@@ -4,7 +4,8 @@ from typing import Optional
 from mitmproxy import flow, tcp
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
-from mitmproxy.proxy.context import ConnectionState, Context, Connection
+from mitmproxy.connection import ConnectionState, Connection
+from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.utils import expect
 
 

@@ -1,5 +1,4 @@
 import re
-import re
 import time
 import urllib.parse
 from dataclasses import dataclass
@@ -13,7 +12,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-from mitmproxy import flow
+from mitmproxy import flow, connection
 from mitmproxy.coretypes import multidict
 from mitmproxy.coretypes import serializable
 from mitmproxy.net import encoding
@@ -21,7 +20,6 @@ from mitmproxy.net.http import cookies, multipart
 from mitmproxy.net.http import status_codes
 from mitmproxy.net.http import url
 from mitmproxy.net.http.headers import assemble_content_type, parse_content_type
-from mitmproxy.proxy import context
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
 from mitmproxy.utils import typecheck
@@ -1117,8 +1115,8 @@ class HTTPFlow(flow.Flow):
     object. This might happen, for instance, when a response was received
     from the server, but there was an error sending it back to the client.
     """
-    server_conn: context.Server
-    client_conn: context.Client
+    server_conn: connection.Server
+    client_conn: connection.Client
     intercepted: bool = False
     """ Is this flow currently being intercepted? """
     mode: str

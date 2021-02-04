@@ -9,13 +9,14 @@ from h11._receivebuffer import ReceiveBuffer
 from mitmproxy import http, version
 from mitmproxy.net.http import http1, status_codes
 from mitmproxy.proxy import commands, events, layer
-from mitmproxy.proxy.context import Connection, ConnectionState, Context
+from mitmproxy.connection import Connection, ConnectionState
 from mitmproxy.proxy.layers.http._base import ReceiveHttp, StreamId
 from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
 from ._base import HttpConnection
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
+from ...context import Context
 
 TBodyReader = Union[ChunkedReader, Http10Reader, ContentLengthReader]
 

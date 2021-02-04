@@ -4,7 +4,8 @@ import pytest
 
 from mitmproxy.proxy import tunnel, layer
 from mitmproxy.proxy.commands import SendData, Log, CloseConnection, OpenConnection
-from mitmproxy.proxy.context import Context, Server, ConnectionState
+from mitmproxy.connection import Server, ConnectionState
+from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.events import Event, DataReceived, Start, ConnectionClosed
 from test.mitmproxy.proxy.tutils import Playbook, reply
 

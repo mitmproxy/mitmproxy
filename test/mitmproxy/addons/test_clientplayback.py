@@ -5,7 +5,7 @@ import pytest
 
 from mitmproxy.addons.clientplayback import ClientPlayback, ReplayHandler
 from mitmproxy.exceptions import CommandError, OptionsError
-from mitmproxy.proxy.context import Address
+from mitmproxy.connection import Address
 from mitmproxy.test import taddons, tflow
 
 

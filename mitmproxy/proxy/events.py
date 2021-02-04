@@ -9,7 +9,7 @@ import warnings
 from dataclasses import dataclass, is_dataclass
 
 from mitmproxy.proxy import commands
-from mitmproxy.proxy.context import Connection
+from mitmproxy.connection import Connection
 
 
 class Event:

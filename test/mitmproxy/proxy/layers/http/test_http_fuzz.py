@@ -6,13 +6,13 @@ from hypothesis import example, given
 from hypothesis.strategies import binary, booleans, composite, dictionaries, integers, lists, sampled_from, sets, text, \
     data
 
-from mitmproxy import options
+from mitmproxy import options, connection
 from mitmproxy.addons.proxyserver import Proxyserver
+from mitmproxy.connection import Server
 from mitmproxy.http import HTTPFlow
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import context, events
 from mitmproxy.proxy.commands import OpenConnection, SendData
-from mitmproxy.proxy.context import Server
 from mitmproxy.proxy.events import DataReceived, Start, ConnectionClosed
 from mitmproxy.proxy.layers import http
 from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory
@@ -100,7 +100,7 @@ def h2_responses(draw):
 
 @given(chunks(mutations(h1_requests())))
 def test_fuzz_h1_request(data):
-    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
+    tctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
 
     layer = http.HttpLayer(tctx, HTTPMode.regular)
     for _ in layer.handle_event(Start()):
@@ -113,8 +113,8 @@ def test_fuzz_h1_request(data):
 @given(chunks(mutations(h2_responses())))
 @example([b'0 OK\r\n\r\n', b'\r\n', b'5\r\n12345\r\n0\r\n\r\n'])
 def test_fuzz_h1_response(data):
-    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
-    server = Placeholder(context.Server)
+    tctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
+    server = Placeholder(connection.Server)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
     assert (
             playbook
@@ -207,7 +207,7 @@ def h2_frames(draw):
 
 
 def h2_layer(opts):
-    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
+    tctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
     tctx.client.alpn = b"h2"
 
     layer = http.HttpLayer(tctx, HTTPMode.regular)
@@ -246,9 +246,9 @@ def test_fuzz_h2_request_mutations(chunks):
 
 
 def _h2_response(chunks):
-    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
+    tctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
-    server = Placeholder(context.Server)
+    server = Placeholder(connection.Server)
     assert (
             playbook
             >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
@@ -314,7 +314,7 @@ def _test_cancel(stream_req, stream_resp, draw):
     """
     Test that we don't raise an exception if someone disconnects.
     """
-    tctx = context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
+    tctx = context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), opts)
     playbook, cff = start_h2_client(tctx)
     flow = Placeholder(HTTPFlow)
     server = Placeholder(Server)

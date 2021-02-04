@@ -3,7 +3,7 @@ from typing import Optional, Tuple
 
 from h11._receivebuffer import ReceiveBuffer
 
-from mitmproxy import http
+from mitmproxy import http, connection
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import http1
 from mitmproxy.proxy import commands, context, layer, tunnel
@@ -13,13 +13,13 @@ from mitmproxy.utils import human
 class HttpUpstreamProxy(tunnel.TunnelLayer):
     buf: ReceiveBuffer
     send_connect: bool
-    conn: context.Server
-    tunnel_connection: context.Server
+    conn: connection.Server
+    tunnel_connection: connection.Server
 
     def __init__(
             self,
             ctx: context.Context,
-            tunnel_conn: context.Server,
+            tunnel_conn: connection.Server,
             send_connect: bool
     ):
         super().__init__(

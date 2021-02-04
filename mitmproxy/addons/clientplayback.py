@@ -14,9 +14,10 @@ from mitmproxy.addons.proxyserver import AsyncReply
 from mitmproxy.hooks import UpdateHook
 from mitmproxy.net import server_spec
 from mitmproxy.options import Options
+from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import commands, events, layers, server
-from mitmproxy.proxy.context import ConnectionState, Context, Server
+from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.proxy.layer import CommandGenerator
 from mitmproxy.utils import asyncio_utils
 

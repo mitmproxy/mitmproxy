@@ -5,8 +5,8 @@ import wsproto
 import wsproto.extensions
 import wsproto.frame_protocol
 import wsproto.utilities
-from mitmproxy import flow, websocket, http
-from mitmproxy.proxy import commands, events, layer, context
+from mitmproxy import flow, websocket, http, connection
+from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.utils import expect
@@ -60,10 +60,10 @@ class WebsocketConnection(wsproto.Connection):
      - we add a framebuffer for incomplete messages
      - we wrap .send() so that we can directly yield it.
     """
-    conn: context.Connection
+    conn: connection.Connection
     frame_buf: List[Union[str, bytes]]
 
-    def __init__(self, *args, conn: context.Connection, **kwargs):
+    def __init__(self, *args, conn: connection.Connection, **kwargs):
         super(WebsocketConnection, self).__init__(*args, **kwargs)
         self.conn = conn
         self.frame_buf = []

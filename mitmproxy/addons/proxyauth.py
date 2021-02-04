@@ -7,11 +7,10 @@ from typing import Tuple
 import ldap3
 import passlib.apache
 
-from mitmproxy import ctx
+from mitmproxy import ctx, connection
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy.net.http import status_codes
-from mitmproxy.proxy import context
 
 REALM = "mitmproxy"
 
@@ -48,7 +47,7 @@ class ProxyAuth:
         self.singleuser = None
         self.ldapconn = None
         self.ldapserver = None
-        self.authenticated: MutableMapping[context.Client, Tuple[str, str]] = weakref.WeakKeyDictionary()
+        self.authenticated: MutableMapping[connection.Client, Tuple[str, str]] = weakref.WeakKeyDictionary()
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def load(self, loader):

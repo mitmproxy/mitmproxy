@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
-from . import commands, context
+from mitmproxy import connection
+from . import commands
 
 
 @dataclass
@@ -11,7 +12,7 @@ class ClientConnectedHook(commands.StartHook):
 
     Setting client.error kills the connection.
     """
-    client: context.Client
+    client: connection.Client
 
 
 @dataclass
@@ -20,13 +21,13 @@ class ClientDisconnectedHook(commands.StartHook):
     A client connection has been closed (either by us or the client).
     """
     blocking = False
-    client: context.Client
+    client: connection.Client
 
 
 @dataclass
 class ServerConnectionHookData:
-    server: context.Server
-    client: context.Client
+    server: connection.Server
+    client: connection.Client
 
 
 @dataclass

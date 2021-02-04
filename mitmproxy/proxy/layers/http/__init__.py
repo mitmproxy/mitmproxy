@@ -5,15 +5,14 @@ from dataclasses import dataclass
 from typing import Optional, Tuple, Union, Dict, DefaultDict, List
 
 from mitmproxy import flow, http
+from mitmproxy.connection import Connection, ConnectionState, Server
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import url
 from mitmproxy.proxy import commands, events, layer, tunnel
-from mitmproxy.proxy.context import Connection, ConnectionState, Context, Server
 from mitmproxy.proxy.layers import tls, websocket, tcp
 from mitmproxy.proxy.layers.http import _upstream_proxy
 from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
-
 from ._base import HttpCommand, ReceiveHttp, StreamId, HttpConnection
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
@@ -21,6 +20,7 @@ from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, Http
     HttpResponseHook
 from ._http1 import Http1Client, Http1Server
 from ._http2 import Http2Client, Http2Server
+from ...context import Context
 
 
 class HTTPMode(enum.Enum):
@@ -55,13 +55,13 @@ class GetHttpConnection(HttpCommand):
 
     def connection_spec_matches(self, connection: Connection) -> bool:
         return (
-                isinstance(connection, Server)
-                and
-                self.address == connection.address
-                and
-                self.tls == connection.tls
-                and
-                self.via == connection.via
+            isinstance(connection, Server)
+            and
+            self.address == connection.address
+            and
+            self.tls == connection.tls
+            and
+            self.via == connection.via
         )
 
 
@@ -317,9 +317,9 @@ class HttpStream(layer.Layer):
 
         if self.flow.response.status_code == 101:
             is_websocket = (
-                    self.flow.response.headers.get("upgrade", "").lower() == "websocket"
-                    and
-                    self.flow.request.headers.get("Sec-WebSocket-Version", "") == "13"
+                self.flow.response.headers.get("upgrade", "").lower() == "websocket"
+                and
+                self.flow.request.headers.get("Sec-WebSocket-Version", "") == "13"
             )
             if is_websocket and self.context.options.websocket:
                 self.child_layer = websocket.WebsocketLayer(self.context, self.flow)
@@ -338,7 +338,7 @@ class HttpStream(layer.Layer):
 
     def check_killed(self, emit_error_hook: bool) -> layer.CommandGenerator[bool]:
         killed_by_us = (
-                self.flow.error and self.flow.error.msg == flow.Error.KILLED_MESSAGE
+            self.flow.error and self.flow.error.msg == flow.Error.KILLED_MESSAGE
         )
         # The client may have closed the connection while we were waiting for the hook to complete.
         # We peek into the event queue to see if that is the case.
@@ -366,18 +366,18 @@ class HttpStream(layer.Layer):
         return False
 
     def handle_protocol_error(
-            self,
-            event: Union[RequestProtocolError, ResponseProtocolError]
+        self,
+        event: Union[RequestProtocolError, ResponseProtocolError]
     ) -> layer.CommandGenerator[None]:
         is_client_error_but_we_already_talk_upstream = (
-                isinstance(event, RequestProtocolError)
-                and self.client_state in (self.state_stream_request_body, self.state_done)
-                and self.server_state != self.state_errored
+            isinstance(event, RequestProtocolError)
+            and self.client_state in (self.state_stream_request_body, self.state_done)
+            and self.server_state != self.state_errored
         )
         need_error_hook = not (
-                self.client_state in (self.state_wait_for_request_headers, self.state_errored)
-                or
-                self.server_state in (self.state_done, self.state_errored)
+            self.client_state in (self.state_wait_for_request_headers, self.state_errored)
+            or
+            self.server_state in (self.state_done, self.state_errored)
         )
 
         if is_client_error_but_we_already_talk_upstream:
@@ -579,9 +579,9 @@ class HttpLayer(layer.Layer):
             raise AssertionError(f"Unexpected event: {event}")
 
     def event_to_child(
-            self,
-            child: Union[layer.Layer, HttpStream],
-            event: events.Event,
+        self,
+        child: Union[layer.Layer, HttpStream],
+        event: events.Event,
     ) -> layer.CommandGenerator[None]:
         for command in child.handle_event(event):
             assert isinstance(command, commands.Command)
@@ -622,13 +622,13 @@ class HttpLayer(layer.Layer):
             for connection in self.connections:
                 # see "tricky multiplexing edge case" in make_http_connection for an explanation
                 conn_is_pending_or_h2 = (
-                        connection.alpn == b"h2"
-                        or connection in self.waiting_for_establishment
+                    connection.alpn == b"h2"
+                    or connection in self.waiting_for_establishment
                 )
                 h2_to_h1 = self.context.client.alpn == b"h2" and not conn_is_pending_or_h2
                 connection_suitable = (
-                        event.connection_spec_matches(connection)
-                        and not h2_to_h1
+                    event.connection_spec_matches(connection)
+                    and not h2_to_h1
                 )
                 if connection_suitable:
                     if connection in self.waiting_for_establishment:
@@ -639,9 +639,9 @@ class HttpLayer(layer.Layer):
                     return
 
         can_use_context_connection = (
-                self.context.server not in self.connections and
-                self.context.server.connected and
-                event.connection_spec_matches(self.context.server)
+            self.context.server not in self.connections and
+            self.context.server.connected and
+            event.connection_spec_matches(self.context.server)
         )
         context = self.context.fork()
 

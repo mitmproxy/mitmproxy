@@ -1,10 +1,11 @@
+from mitmproxy import connection
 from mitmproxy.proxy import context
 from mitmproxy.test import tflow, taddons
 
 
 class TestConnection:
     def test_basic(self):
-        c = context.Client(
+        c = connection.Client(
             ("127.0.0.1", 52314),
             ("127.0.0.1", 8080),
             1607780791
@@ -13,7 +14,7 @@ class TestConnection:
         c.timestamp_tls_setup = 1607780792
         assert c.tls_established
         assert c.connected
-        c.state = context.ConnectionState.CAN_WRITE
+        c.state = connection.ConnectionState.CAN_WRITE
         assert not c.connected
 
     def test_eq(self):
@@ -30,7 +31,7 @@ class TestConnection:
 
 class TestClient:
     def test_basic(self):
-        c = context.Client(
+        c = connection.Client(
             ("127.0.0.1", 52314),
             ("127.0.0.1", 8080),
             1607780791
@@ -44,7 +45,7 @@ class TestClient:
 
     def test_state(self):
         c = tflow.tclient_conn()
-        assert context.Client.from_state(c.get_state()).get_state() == c.get_state()
+        assert connection.Client.from_state(c.get_state()).get_state() == c.get_state()
 
         c2 = tflow.tclient_conn()
         assert c != c2
@@ -61,7 +62,7 @@ class TestClient:
 
 class TestServer:
     def test_basic(self):
-        s = context.Server(("address", 22))
+        s = connection.Server(("address", 22))
         assert repr(s)
         assert str(s)
         s.timestamp_tls_setup = 1607780791

@@ -13,6 +13,7 @@ import h2.stream
 import h2.utilities
 
 from mitmproxy import http
+from mitmproxy.connection import Connection
 from mitmproxy.net.http import url, status_codes
 from mitmproxy.utils import human
 from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
@@ -20,7 +21,7 @@ from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolE
 from ._base import HttpConnection, HttpEvent, ReceiveHttp
 from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
 from ...commands import CloseConnection, Log, SendData
-from ...context import Connection, Context
+from ...context import Context
 from ...events import ConnectionClosed, DataReceived, Event, Start
 from ...layer import CommandGenerator
 from ...utils import expect

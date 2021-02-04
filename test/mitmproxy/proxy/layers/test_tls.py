@@ -4,8 +4,9 @@ import typing
 import pytest
 
 from OpenSSL import SSL
+from mitmproxy import connection
+from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.proxy import commands, context, events, layer
-from mitmproxy.proxy.context import ConnectionState
 from mitmproxy.proxy.layers import tls
 from mitmproxy.utils import data
 from test.mitmproxy.proxy import tutils
@@ -121,7 +122,7 @@ class SSLTest:
         return self.obj.do_handshake()
 
 
-def _test_echo(playbook: tutils.Playbook, tssl: SSLTest, conn: context.Connection) -> None:
+def _test_echo(playbook: tutils.Playbook, tssl: SSLTest, conn: connection.Connection) -> None:
     tssl.obj.write(b"Hello World")
     data = tutils.Placeholder(bytes)
     assert (
@@ -145,7 +146,7 @@ class TlsEchoLayer(tutils.EchoLayer):
             yield from super()._handle_event(event)
 
 
-def interact(playbook: tutils.Playbook, conn: context.Connection, tssl: SSLTest):
+def interact(playbook: tutils.Playbook, conn: connection.Connection, tssl: SSLTest):
     data = tutils.Placeholder(bytes)
     assert (
             playbook
@@ -383,7 +384,7 @@ class TestClientTLS:
 
         # Echo
         _test_echo(playbook, tssl_client, tctx.client)
-        other_server = context.Server(None)
+        other_server = Server(None)
         assert (
                 playbook
                 >> events.DataReceived(other_server, b"Plaintext")

@@ -9,7 +9,7 @@ The counterpart to commands are events.
 from typing import Literal, Union, TYPE_CHECKING
 
 import mitmproxy.hooks
-from mitmproxy.proxy.context import Connection, Server
+from mitmproxy.connection import Connection, Server
 
 if TYPE_CHECKING:
     import mitmproxy.proxy.layer

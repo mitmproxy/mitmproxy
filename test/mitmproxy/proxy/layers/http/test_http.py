@@ -6,7 +6,7 @@ from mitmproxy.net.server_spec import ServerSpec
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import layer
 from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData, Log
-from mitmproxy.proxy.context import ConnectionState, Server
+from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import TCPLayer, http, tls
 from mitmproxy.proxy.layers.tcp import TcpStartHook

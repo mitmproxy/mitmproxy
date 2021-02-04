@@ -1,7 +1,7 @@
 import pytest
 
 from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData
-from mitmproxy.proxy.context import ConnectionState
+from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import tcp
 from mitmproxy.tcp import TCPFlow

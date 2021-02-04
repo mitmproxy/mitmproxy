@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from mitmproxy import connection
 from mitmproxy.addons.next_layer import NextLayer
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import context, layers
@@ -10,7 +11,7 @@ from mitmproxy.test import taddons
 
 @pytest.fixture
 def tctx():
-    context.Context(context.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
+    context.Context(connection.Client(("client", 1234), ("127.0.0.1", 8080), 1605699329), tctx.options)
 
 
 client_hello_no_extensions = bytes.fromhex(

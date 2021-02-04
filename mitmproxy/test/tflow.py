@@ -1,12 +1,12 @@
 import uuid
 
+from mitmproxy import connection
 from mitmproxy import controller
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
 from mitmproxy.net.http import status_codes
-from mitmproxy.proxy import context
 from mitmproxy.test import tutils
 from wsproto.frame_protocol import Opcode
 
@@ -144,8 +144,8 @@ def tdummyflow(client_conn=True, server_conn=True, err=None):
     return f
 
 
-def tclient_conn() -> context.Client:
-    c = context.Client.from_state(dict(
+def tclient_conn() -> connection.Client:
+    c = connection.Client.from_state(dict(
         id=str(uuid.uuid4()),
         address=("127.0.0.1", 22),
         mitmcert=None,
@@ -170,8 +170,8 @@ def tclient_conn() -> context.Client:
     return c
 
 
-def tserver_conn() -> context.Server:
-    c = context.Server.from_state(dict(
+def tserver_conn() -> connection.Server:
+    c = connection.Server.from_state(dict(
         id=str(uuid.uuid4()),
         address=("address", 22),
         source_address=("address", 22),
