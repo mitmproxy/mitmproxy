@@ -1,3 +1,36 @@
 {% extends "default/module.html.jinja2" %}
 {% block nav %}{% endblock %}
 {% block style_layout %}{% endblock %}
+
+{#
+We do a bit of hackery here: generated/events.py is automatically created by scripts/api-events.py,
+and then documented using a heavily customized style.
+#}
+{% if module.name == "events" %}
+    {% macro module_name() %}
+        <style type="text/css">
+            .pdoc .classattr {
+                margin-left: 0 !important;
+            }
+        </style>
+    {% endmacro %}
+    {% macro view_source(doc) %}
+        {% if doc.type == "function" %}
+            <details>
+                <summary>View Source</summary>
+                {{ doc.source | dedent | highlight }}
+            </details>
+        {% endif %}
+    {% endmacro %}
+    {% macro is_public(doc) %}
+        {% if doc.name != "__init__" %}
+            {{ default_is_public(doc) }}
+        {% endif %}
+    {% endmacro %}
+    {% macro class(cls) %}
+        <h3>
+            {{ headerlink(cls) }}
+            <strong>{{ cls.name.replace("_", " ") }}</strong>
+        </h3>
+    {% endmacro %}
+{% endif %}

@@ -20,6 +20,7 @@ pdoc.render.configure(
 )
 
 modules = [
+    here / ".." / "src" / "generated" / "events.py",
     "mitmproxy.proxy.context",
     "mitmproxy.http",
     "mitmproxy.flow",
@@ -39,6 +40,8 @@ if api_content.exists():
 api_content.mkdir()
 
 for module in modules:
+    if isinstance(module, Path):
+        continue
     filename = f"api/{ module.replace('.','/') }.html"
     (api_content / f"{module}.md").write_text(f"""
 ---
@@ -47,20 +50,8 @@ url: "{filename}"
 
 menu:
     addons:
-        parent: 'API Reference'
+        parent: 'API'
 ---
 
 {{{{< readfile file="/generated/{filename}" >}}}}
-""")
-
-(api_content / f"_index.md").write_text(f"""
----
-title: "API Reference"
-layout: single
-menu:
-    addons:
-        weight: 5
----
-
-# API Reference
 """)

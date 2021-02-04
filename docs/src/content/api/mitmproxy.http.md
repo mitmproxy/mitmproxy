@@ -5,7 +5,7 @@ url: "api/mitmproxy/http.html"
 
 menu:
     addons:
-        parent: 'API Reference'
+        parent: 'API'
 ---
 
 {{< readfile file="/generated/api/mitmproxy/http.html" >}}
