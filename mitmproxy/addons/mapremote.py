@@ -48,7 +48,7 @@ class MapRemote:
                 self.replacements.append(spec)
 
     def request(self, flow: http.HTTPFlow) -> None:
-        if flow.reply and flow.reply.has_message:
+        if flow.response or flow.error or (flow.reply and flow.reply.state == "taken"):
             return
         for spec in self.replacements:
             if spec.matches(flow):

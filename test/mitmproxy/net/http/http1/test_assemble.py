@@ -1,6 +1,5 @@
 import pytest
 
-from mitmproxy import exceptions
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http.http1.assemble import (
     assemble_request, assemble_request_head, assemble_response,
@@ -19,7 +18,7 @@ def test_assemble_request():
         b"content"
     )
 
-    with pytest.raises(exceptions.HttpException):
+    with pytest.raises(ValueError):
         assemble_request(treq(content=None))
 
 
@@ -40,7 +39,23 @@ def test_assemble_response():
         b"message"
     )
 
-    with pytest.raises(exceptions.HttpException):
+    resp = tresp()
+    resp.headers["transfer-encoding"] = "chunked"
+    resp.headers["trailer"] = "my-little-trailer"
+    resp.trailers = Headers([(b"my-little-trailer", b"foobar")])
+    assert assemble_response(resp) == (
+        b"HTTP/1.1 200 OK\r\n"
+        b"header-response: svalue\r\n"
+        b"content-length: 7\r\n"
+        b"transfer-encoding: chunked\r\n"
+        b"trailer: my-little-trailer\r\n"
+        b"\r\n7\r\n"
+        b"message"
+        b"\r\n0\r\n"
+        b"my-little-trailer: foobar\r\n\r\n"
+    )
+
+    with pytest.raises(ValueError):
         assemble_response(tresp(content=None))
 
 
@@ -52,14 +67,20 @@ def test_assemble_response_head():
 
 
 def test_assemble_body():
-    c = list(assemble_body(Headers(), [b"body"]))
+    c = list(assemble_body(Headers(), [b"body"], Headers()))
     assert c == [b"body"]
 
-    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a", b""]))
+    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a", b""], Headers()))
     assert c == [b"a\r\n123456789a\r\n", b"0\r\n\r\n"]
 
-    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"]))
+    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"], Headers()))
     assert c == [b"a\r\n123456789a\r\n", b"0\r\n\r\n"]
+
+    c = list(assemble_body(Headers(transfer_encoding="chunked"), [b"123456789a"], Headers(trailer="trailer")))
+    assert c == [b"a\r\n123456789a\r\n", b"0\r\ntrailer: trailer\r\n\r\n"]
+
+    with pytest.raises(ValueError):
+        list(assemble_body(Headers(), [b"body"], Headers(trailer="trailer")))
 
 
 def test_assemble_request_line():

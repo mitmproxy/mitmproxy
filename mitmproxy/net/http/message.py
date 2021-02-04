@@ -71,6 +71,14 @@ class Message(serializable.Serializable):
         self.data.http_version = strutils.always_bytes(http_version, "utf-8", "surrogateescape")
 
     @property
+    def is_http10(self) -> bool:
+        return self.data.http_version == b"HTTP/1.0"
+
+    @property
+    def is_http11(self) -> bool:
+        return self.data.http_version == b"HTTP/1.1"
+
+    @property
     def is_http2(self) -> bool:
         return self.data.http_version == b"HTTP/2.0"
 
@@ -126,7 +134,7 @@ class Message(serializable.Serializable):
                 content = encoding.decode(self.raw_content, ce)
                 # A client may illegally specify a byte -> str encoding here (e.g. utf8)
                 if isinstance(content, str):
-                    raise ValueError("Invalid Content-Encoding: {}".format(ce))
+                    raise ValueError(f"Invalid Content-Encoding: {ce}")
                 return content
             except ValueError:
                 if strict:

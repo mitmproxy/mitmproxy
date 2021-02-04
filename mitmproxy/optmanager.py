@@ -40,7 +40,7 @@ class _Option:
         self.choices = choices
 
     def __repr__(self):
-        return "{value} [{type}]".format(value=self.current(), type=self.typespec)
+        return f"{self.current()} [{self.typespec}]"
 
     @property
     def default(self):
@@ -517,18 +517,18 @@ def load_paths(opts: OptManager, *paths: str) -> None:
     for p in paths:
         p = os.path.expanduser(p)
         if os.path.exists(p) and os.path.isfile(p):
-            with open(p, "rt", encoding="utf8") as f:
+            with open(p, encoding="utf8") as f:
                 try:
                     txt = f.read()
                 except UnicodeDecodeError as e:
                     raise exceptions.OptionsError(
-                        "Error reading %s: %s" % (p, e)
+                        f"Error reading {p}: {e}"
                     )
             try:
                 load(opts, txt)
             except exceptions.OptionsError as e:
                 raise exceptions.OptionsError(
-                    "Error reading %s: %s" % (p, e)
+                    f"Error reading {p}: {e}"
                 )
 
 
@@ -563,12 +563,12 @@ def save(opts: OptManager, path: str, defaults: bool =False) -> None:
     """
     path = os.path.expanduser(path)
     if os.path.exists(path) and os.path.isfile(path):
-        with open(path, "rt", encoding="utf8") as f:
+        with open(path, encoding="utf8") as f:
             try:
                 data = f.read()
             except UnicodeDecodeError as e:
                 raise exceptions.OptionsError(
-                    "Error trying to modify %s: %s" % (path, e)
+                    f"Error trying to modify {path}: {e}"
                 )
     else:
         data = ""

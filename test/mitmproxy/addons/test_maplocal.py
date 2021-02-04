@@ -151,7 +151,7 @@ class TestMapLocal:
             f.request.url = b"https://example.org/css/nonexistent"
             ml.request(f)
             assert f.response.status_code == 404
-            assert await tctx.master.await_log("None of the local file candidates exist")
+            await tctx.master.await_log("None of the local file candidates exist")
 
             tmpfile = tmpdir.join("foo.jpg")
             tmpfile.write("foo")
@@ -166,7 +166,7 @@ class TestMapLocal:
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/foo.jpg"
             ml.request(f)
-            assert await tctx.master.await_log("could not read file")
+            await tctx.master.await_log("could not read file")
 
     def test_has_reply(self, tmpdir):
         ml = MapLocal()
@@ -181,6 +181,6 @@ class TestMapLocal:
             )
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/foo.jpg"
-            f.kill()
+            f.reply.take()
             ml.request(f)
             assert not f.response

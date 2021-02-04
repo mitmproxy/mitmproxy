@@ -1,10 +1,10 @@
 """
 Generate SSL test certificates.
 """
-import subprocess
-import shlex
 import os
+import shlex
 import shutil
+import subprocess
 import textwrap
 
 ROOT_CA = "trusted-root"
@@ -28,7 +28,7 @@ def sign(cert: str, subject: str):
         authorityKeyIdentifier=keyid,issuer
         basicConstraints=CA:FALSE
         keyUsage = digitalSignature, keyEncipherment
-        subjectAltName = {subject}
+        subjectAltName = DNS:{subject}
         """))
     do(f"openssl x509 -req -in {cert}.csr "
        f"-CA {ROOT_CA}.crt "
@@ -46,7 +46,8 @@ def mkcert(cert, subject):
     genrsa(cert)
     do(f"openssl req -new -nodes -batch "
        f"-key {cert}.key "
-       f"-addext \"subjectAltName = {subject}\" "
+       f"-subj /CN={subject}/O=mitmproxy "
+       f"-addext \"subjectAltName = DNS:{subject}\" "
        f"-out {cert}.csr"
        )
     sign(cert, subject)
@@ -61,10 +62,10 @@ do("openssl req -x509 -new -nodes -batch "
    "-out trusted-root.crt"
    )
 h = do("openssl x509 -hash -noout -in trusted-root.crt").decode("ascii").strip()
-shutil.copyfile("trusted-root.crt", "{}.0".format(h))
+shutil.copyfile("trusted-root.crt", f"{h}.0")
 
 # create trusted leaf cert.
-mkcert("trusted-leaf", f'DNS:{SUBJECT}')
+mkcert("trusted-leaf", SUBJECT)
 
 # create self-signed cert
 genrsa("self-signed")
@@ -74,3 +75,10 @@ do("openssl req -x509 -new -nodes -batch "
    "-days 7300 "
    "-out self-signed.crt"
    )
+
+for x in ["self-signed", "trusted-leaf", "trusted-root"]:
+    with open(f"{x}.crt") as crt, open(f"{x}.key") as key, open(f"{x}.pem", "w") as pem:
+        pem.write(crt.read())
+        pem.write(key.read())
+
+shutil.copyfile("trusted-leaf.pem", "example.mitmproxy.org.pem")

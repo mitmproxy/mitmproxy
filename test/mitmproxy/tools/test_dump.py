@@ -1,15 +1,14 @@
-import pytest
 from unittest import mock
 
-from mitmproxy import log
+import pytest
+
 from mitmproxy import controller
+from mitmproxy import log
 from mitmproxy import options
 from mitmproxy.tools import dump
 
-from .. import tservers
 
-
-class TestDumpMaster(tservers.MasterTest):
+class TestDumpMaster:
     def mkmaster(self, **opts):
         o = options.Options(**opts)
         m = dump.DumpMaster(o, with_termlog=False, with_dumper=False)
@@ -19,7 +18,7 @@ class TestDumpMaster(tservers.MasterTest):
         m = self.mkmaster()
         ent = log.LogEntry("foo", "error")
         ent.reply = controller.DummyReply()
-        m.addons.trigger("log", ent)
+        m.addons.trigger(log.AddLogHook(ent))
         assert m.errorcheck.has_errored
 
     @pytest.mark.parametrize("termlog", [False, True])

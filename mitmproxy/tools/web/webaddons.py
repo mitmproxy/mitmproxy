@@ -24,11 +24,11 @@ class WebAddon:
 
     def running(self):
         if hasattr(ctx.options, "web_open_browser") and ctx.options.web_open_browser:
-            web_url = "http://{}:{}/".format(ctx.options.web_host, ctx.options.web_port)
+            web_url = f"http://{ctx.options.web_host}:{ctx.options.web_port}/"
             success = open_browser(web_url)
             if not success:
                 ctx.log.info(
-                    "No web browser found. Please open a browser and point it to {}".format(web_url),
+                    f"No web browser found. Please open a browser and point it to {web_url}",
                 )
 
 

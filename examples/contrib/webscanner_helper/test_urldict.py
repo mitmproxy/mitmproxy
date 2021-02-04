@@ -1,5 +1,5 @@
 from mitmproxy.test import tflow, tutils
-from examples.complex.webscanner_helper.urldict import URLDict
+from examples.contrib.webscanner_helper.urldict import URLDict
 
 url = "http://10.10.10.10"
 new_content_body = "New Body"
@@ -26,7 +26,7 @@ class TestUrlDict:
         tmpfile = tmpdir.join("tmpfile")
         with open(tmpfile, "w") as tfile:
             tfile.write(input_file_content_error)
-        with open(tmpfile, "r") as tfile:
+        with open(tmpfile) as tfile:
             try:
                 URLDict.load(tfile)
             except ValueError:
@@ -38,7 +38,7 @@ class TestUrlDict:
         tmpfile = tmpdir.join("tmpfile")
         with open(tmpfile, "w") as tfile:
             tfile.write(input_file_content)
-        with open(tmpfile, "r") as tfile:
+        with open(tmpfile) as tfile:
             urldict = URLDict.load(tfile)
 
         f = tflow.tflow(resp=tutils.tresp())
@@ -68,7 +68,7 @@ class TestUrlDict:
         tmpfile = tmpdir.join("tmpfile")
         with open(tmpfile, "w") as tfile:
             tfile.write(input_file_content)
-        with open(tmpfile, "r") as tfile:
+        with open(tmpfile) as tfile:
             urldict = URLDict.load(tfile)
 
         dump = urldict.dumps()
@@ -79,11 +79,11 @@ class TestUrlDict:
         outfile = tmpdir.join("outfile")
         with open(tmpfile, "w") as tfile:
             tfile.write(input_file_content)
-        with open(tmpfile, "r") as tfile:
+        with open(tmpfile) as tfile:
             urldict = URLDict.load(tfile)
         with open(outfile, "w") as ofile:
             urldict.dump(ofile)
 
-        with open(outfile, "r") as ofile:
+        with open(outfile) as ofile:
             output = ofile.read()
         assert output == input_file_content

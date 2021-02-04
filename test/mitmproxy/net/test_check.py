@@ -1,5 +1,3 @@
-# coding=utf-8
-
 from mitmproxy.net import check
 
 

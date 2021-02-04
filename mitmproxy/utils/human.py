@@ -24,7 +24,7 @@ def pretty_size(size):
             if x == int(x):
                 x = int(x)
             return str(x) + suf
-    return "%s%s" % (size, SIZE_TABLE[0][0])
+    return "{}{}".format(size, SIZE_TABLE[0][0])
 
 
 @functools.lru_cache()
@@ -75,6 +75,7 @@ def format_timestamp_with_milli(s):
     return d.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
 
+@functools.lru_cache()
 def format_address(address: typing.Optional[tuple]) -> str:
     """
     This function accepts IPv4/IPv6 tuples and

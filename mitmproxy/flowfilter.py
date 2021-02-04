@@ -39,11 +39,8 @@ from typing import Callable, ClassVar, Optional, Sequence, Type
 
 import pyparsing as pp
 
-from mitmproxy import flow
-from mitmproxy import http
-from mitmproxy import tcp
-from mitmproxy import websocket
-from mitmproxy.net import websockets as net_websockets
+from mitmproxy import flow, http, tcp, websocket
+from mitmproxy.net.websocket import check_handshake
 
 
 def only(*types):
@@ -110,7 +107,7 @@ class FWebSocket(_Action):
     @only(http.HTTPFlow, websocket.WebSocketFlow)
     def __call__(self, f):
         m = (
-            (isinstance(f, http.HTTPFlow) and f.request and net_websockets.check_handshake(f.request.headers))
+            (isinstance(f, http.HTTPFlow) and f.request and check_handshake(f.request.headers))
             or isinstance(f, websocket.WebSocketFlow)
         )
         return m
@@ -365,10 +362,10 @@ class FSrc(_Rex):
     is_binary = False
 
     def __call__(self, f):
-        if not f.client_conn or not f.client_conn.address:
+        if not f.client_conn or not f.client_conn.peername:
             return False
-        r = "{}:{}".format(f.client_conn.address[0], f.client_conn.address[1])
-        return f.client_conn.address and self.re.search(r)
+        r = "{}:{}".format(f.client_conn.peername[0], f.client_conn.peername[1])
+        return f.client_conn.peername and self.re.search(r)
 
 
 class FDst(_Rex):

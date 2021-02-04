@@ -152,7 +152,7 @@ class FlowDetails(tabs.Tabs):
 
         from_client = flow.messages[0].from_client
         for m in messages:
-            _, lines, _ = contentviews.get_tcp_content_view(viewmode, m)
+            _, lines, _ = contentviews.get_tcp_content_view(viewmode, m, flow)
 
             for line in lines:
                 if from_client:

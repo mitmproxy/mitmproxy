@@ -2,10 +2,11 @@ import time
 import typing  # noqa
 import uuid
 
-from mitmproxy import connections
-from mitmproxy import controller, exceptions  # noqa
+from mitmproxy import controller
+from mitmproxy import exceptions
 from mitmproxy import stateobject
 from mitmproxy import version
+from mitmproxy.proxy import context
 
 
 class Error(stateobject.StateObject):
@@ -63,8 +64,8 @@ class Flow(stateobject.StateObject):
     def __init__(
             self,
             type: str,
-            client_conn: connections.ClientConnection,
-            server_conn: connections.ServerConnection,
+            client_conn: context.Client,
+            server_conn: context.Server,
             live: bool=None
     ) -> None:
         self.type = type
@@ -84,8 +85,8 @@ class Flow(stateobject.StateObject):
     _stateobject_attributes = dict(
         id=str,
         error=Error,
-        client_conn=connections.ClientConnection,
-        server_conn=connections.ServerConnection,
+        client_conn=context.Client,
+        server_conn=context.Server,
         type=str,
         intercepted=bool,
         is_replay=str,
@@ -150,16 +151,17 @@ class Flow(stateobject.StateObject):
         return (
             self.reply and
             self.reply.state in {"start", "taken"} and
-            self.reply.value != exceptions.Kill
+            not (self.error and self.error.msg == Error.KILLED_MESSAGE)
         )
 
     def kill(self):
         """
             Kill this request.
         """
+        if not self.killable:
+            raise exceptions.ControlException("Flow is not killable.")
         self.error = Error(Error.KILLED_MESSAGE)
         self.intercepted = False
-        self.reply.kill(force=True)
         self.live = False
 
     def intercept(self):
@@ -181,7 +183,6 @@ class Flow(stateobject.StateObject):
         self.intercepted = False
         # If a flow is intercepted and then duplicated, the duplicated one is not taken.
         if self.reply.state == "taken":
-            self.reply.ack()
             self.reply.commit()
 
     @property

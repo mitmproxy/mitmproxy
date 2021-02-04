@@ -1,20 +1,24 @@
-from mitmproxy.net import http
+from typing import Optional
+
 from mitmproxy.coretypes import multidict
+from mitmproxy.net import http
 from . import base
 
 
 class ViewMultipart(base.View):
     name = "Multipart Form"
-    content_types = ["multipart/form-data"]
 
     @staticmethod
     def _format(v):
         yield [("highlight", "Form data:\n")]
-        for message in base.format_dict(multidict.MultiDict(v)):
-            yield message
+        yield from base.format_dict(multidict.MultiDict(v))
 
-    def __call__(self, data, **metadata):
-        headers = metadata.get("headers", {})
-        v = http.multipart.decode(headers, data)
+    def __call__(self, data: bytes, content_type: Optional[str] = None, **metadata):
+        if content_type is None:
+            return
+        v = http.multipart.decode(content_type, data)
         if v:
             return "Multipart form", self._format(v)
+
+    def render_priority(self, data: bytes, *, content_type: Optional[str] = None, **metadata) -> float:
+        return float(content_type == "multipart/form-data")

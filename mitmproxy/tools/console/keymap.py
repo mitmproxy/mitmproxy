@@ -161,7 +161,7 @@ keyAttrs = {
     "ctx": lambda x: isinstance(x, list) and [isinstance(v, str) for v in x],
     "help": lambda x: isinstance(x, str),
 }
-requiredKeyAttrs = set(["key", "cmd"])
+requiredKeyAttrs = {"key", "cmd"}
 
 
 class KeymapConfig:
@@ -186,18 +186,18 @@ class KeymapConfig:
 
     def load_path(self, km, p):
         if os.path.exists(p) and os.path.isfile(p):
-            with open(p, "rt", encoding="utf8") as f:
+            with open(p, encoding="utf8") as f:
                 try:
                     txt = f.read()
                 except UnicodeDecodeError as e:
                     raise KeyBindingError(
-                        "Encoding error - expected UTF8: %s: %s" % (p, e)
+                        f"Encoding error - expected UTF8: {p}: {e}"
                     )
             try:
                 vals = self.parse(txt)
             except KeyBindingError as e:
                 raise KeyBindingError(
-                    "Error reading %s: %s" % (p, e)
+                    f"Error reading {p}: {e}"
                 ) from e
             for v in vals:
                 user_ctxs = v.get("ctx", ["global"])
@@ -212,7 +212,7 @@ class KeymapConfig:
                     )
                 except ValueError as e:
                     raise KeyBindingError(
-                        "Error reading %s: %s" % (p, e)
+                        f"Error reading {p}: {e}"
                     ) from e
 
     def parse(self, text):

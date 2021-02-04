@@ -1,10 +1,11 @@
 import urwid
 
-from mitmproxy import options
-from mitmproxy.tools import console
-from ... import tservers
-
 import pytest
+
+from mitmproxy import options, hooks
+from mitmproxy.tools import console
+
+from ... import tservers
 
 
 @pytest.mark.asyncio
@@ -12,7 +13,7 @@ class TestMaster(tservers.MasterTest):
     def mkmaster(self, **opts):
         o = options.Options(**opts)
         m = console.master.ConsoleMaster(o)
-        m.addons.trigger("configure", o.keys())
+        m.addons.trigger(hooks.ConfigureHook(o.keys()))
         return m
 
     async def test_basic(self):

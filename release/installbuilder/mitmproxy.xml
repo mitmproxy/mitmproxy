@@ -31,8 +31,10 @@
                     <distributionFileList>
                         <distributionFile>
                             <allowWildcards>1</allowWildcards>
-                            <excludeFiles>*/patho*</excludeFiles>
-                            <origin>../build/binaries/${platform_name}/*</origin>
+                            <origin>../build/binaries/windows/onedir/*</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>run.ps1</origin>
                         </distributionFile>
                     </distributionFileList>
                 </folder>
@@ -52,24 +54,34 @@
             </postUninstallationActionList>
             <startMenuShortcutList>
                 <startMenuShortcut>
-                    <comment></comment>
-                    <name>mitmproxy ui</name>
+                    <comment>mitmproxy command line interface</comment>
+                    <name>mitmproxy</name>
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
-                    <windowsExec>${installdir}\bin\mitmweb.exe</windowsExec>
-                    <windowsExecArgs></windowsExecArgs>
+                    <windowsExec>powershell.exe</windowsExec>
+                    <windowsExecArgs>-File "${installdir}\bin\run.ps1" mitmproxy</windowsExecArgs>
                     <windowsIcon>${installdir}/logo.ico</windowsIcon>
-                    <windowsPath>${installdir}</windowsPath>
+                    <windowsPath>${user_home_directory}</windowsPath>
                 </startMenuShortcut>
                 <startMenuShortcut>
-                    <comment></comment>
+                    <comment>mitmproxy web interface</comment>
+                    <name>mitmweb</name>
+                    <runAsAdmin>0</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>powershell.exe</windowsExec>
+                    <windowsExecArgs>-File "${installdir}\bin\run.ps1" mitmweb</windowsExecArgs>
+                    <windowsIcon>${installdir}/logo.ico</windowsIcon>
+                    <windowsPath>${user_home_directory}</windowsPath>
+                </startMenuShortcut>
+                <startMenuShortcut>
+                    <comment>mitmproxy non-interactive interface</comment>
                     <name>mitmdump</name>
                     <runAsAdmin>0</runAsAdmin>
                     <runInTerminal>0</runInTerminal>
-                    <windowsExec>${installdir}\bin\mitmdump.exe</windowsExec>
-                    <windowsExecArgs></windowsExecArgs>
+                    <windowsExec>powershell.exe</windowsExec>
+                    <windowsExecArgs>-File "${installdir}\bin\run.ps1" mitmdump</windowsExecArgs>
                     <windowsIcon>${installdir}/logo.ico</windowsIcon>
-                    <windowsPath>${installdir}</windowsPath>
+                    <windowsPath>${user_home_directory}</windowsPath>
                 </startMenuShortcut>
             </startMenuShortcutList>
         </component>
@@ -86,24 +98,9 @@
     <finalPageActionList>
         <runProgram>
             <program>cmd</program>
-            <programArguments>/c start "mitmproxy ui" "${installdir}\bin\mitmweb.exe" &amp;</programArguments>
-            <progressText>Launch mitmproxy ui now</progressText>
-            <ruleList>
-                <platformTest>
-                    <type>windows</type>
-                </platformTest>
-            </ruleList>
-        </runProgram>
-        <runProgram>
-            <program>${installdir}/mitmproxy</program>
-            <programArguments>&amp;</programArguments>
+            <programArguments>/c powershell -File "${installdir}\bin\run.ps1" mitmproxy &amp;</programArguments>
             <progressText>Launch mitmproxy now</progressText>
-            <ruleList>
-                <platformTest>
-                    <negate>1</negate>
-                    <type>windows</type>
-                </platformTest>
-            </ruleList>
+            <workingDirectory>${user_home_directory}</workingDirectory>
         </runProgram>
     </finalPageActionList>
     <parameterList>
@@ -121,6 +118,7 @@
             <width>40</width>
             <postShowPageActionList>
                 <!-- This will skip the readytoinstall page -->
+
                 <setInstallerVariable name="next_page" value="installation"/>
             </postShowPageActionList>
             <preShowPageActionList>

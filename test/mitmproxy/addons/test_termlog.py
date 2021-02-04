@@ -18,10 +18,10 @@ class TestTermLog:
         with taddons.context(t) as tctx:
             tctx.options.termlog_verbosity = "info"
             tctx.configure(t)
-            t.log(log.LogEntry("one", "info"))
-            t.log(log.LogEntry("two", "debug"))
-            t.log(log.LogEntry("three", "warn"))
-            t.log(log.LogEntry("four", "error"))
+            t.add_log(log.LogEntry("one", "info"))
+            t.add_log(log.LogEntry("two", "debug"))
+            t.add_log(log.LogEntry("three", "warn"))
+            t.add_log(log.LogEntry("four", "error"))
         out, err = capfd.readouterr()
         assert out.strip().splitlines() == expected_out
         assert err.strip().splitlines() == expected_err

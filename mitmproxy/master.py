@@ -1,22 +1,19 @@
-import sys
-import traceback
-import threading
 import asyncio
 import logging
+import sys
+import threading
+import traceback
 
-from mitmproxy import addonmanager
-from mitmproxy import options
+from mitmproxy import addonmanager, hooks
+from mitmproxy import command
 from mitmproxy import controller
 from mitmproxy import eventsequence
-from mitmproxy import command
 from mitmproxy import http
-from mitmproxy import websocket
 from mitmproxy import log
+from mitmproxy import options
+from mitmproxy import websocket
 from mitmproxy.net import server_spec
-from mitmproxy.coretypes import basethread
-
 from . import ctx as mitmproxy_ctx
-
 
 # Conclusively preventing cross-thread races on proxy shutdown turns out to be
 # very hard. We could build a thread sync infrastructure for this, or we could
@@ -25,30 +22,14 @@ from . import ctx as mitmproxy_ctx
 logging.getLogger('asyncio').setLevel(logging.CRITICAL)
 
 
-class ServerThread(basethread.BaseThread):
-    def __init__(self, server):
-        self.server = server
-        address = getattr(self.server, "address", None)
-        super().__init__(
-            "ServerThread ({})".format(repr(address))
-        )
-
-    def run(self):
-        self.server.serve_forever()
-
-
 class Master:
     """
         The master handles mitmproxy's main event loop.
     """
+
     def __init__(self, opts):
         self.should_exit = threading.Event()
-        self.channel = controller.Channel(
-            self,
-            asyncio.get_event_loop(),
-            self.should_exit,
-        )
-
+        self.event_loop = asyncio.get_event_loop()
         self.options: options.Options = opts or options.Options()
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
@@ -60,22 +41,11 @@ class Master:
         mitmproxy_ctx.log = self.log
         mitmproxy_ctx.options = self.options
 
-    @property
-    def server(self):
-        return self._server
-
-    @server.setter
-    def server(self, server):
-        server.set_channel(self.channel)
-        self._server = server
-
     def start(self):
         self.should_exit.clear()
-        if self.server:
-            ServerThread(self.server).start()
 
     async def running(self):
-        self.addons.trigger("running")
+        self.addons.trigger(hooks.RunningHook())
 
     def run_loop(self, loop):
         self.start()
@@ -90,7 +60,7 @@ class Master:
             if not self.should_exit.is_set():  # pragma: no cover
                 self.shutdown()
             loop = asyncio.get_event_loop()
-            tasks = asyncio.all_tasks(loop) if sys.version_info >= (3, 7) else asyncio.Task.all_tasks(loop)
+            tasks = asyncio.all_tasks(loop)
             for p in tasks:
                 p.cancel()
             loop.close()
@@ -99,18 +69,16 @@ class Master:
             print(exc, file=sys.stderr)
             print("mitmproxy has crashed!", file=sys.stderr)
             print("Please lodge a bug report at:", file=sys.stderr)
-            print("\thttps://github.com/mitmproxy/mitmproxy", file=sys.stderr)
+            print("\thttps://github.com/mitmproxy/mitmproxy/issues", file=sys.stderr)
 
-        self.addons.trigger("done")
+        self.addons.trigger(hooks.DoneHook())
 
-    def run(self, func=None):
+    def run(self):
         loop = asyncio.get_event_loop()
         self.run_loop(loop.run_forever)
 
     async def _shutdown(self):
         self.should_exit.set()
-        if self.server:
-            self.server.shutdown()
         loop = asyncio.get_event_loop()
         loop.stop()
 
@@ -120,13 +88,13 @@ class Master:
         """
         if not self.should_exit.is_set():
             self.should_exit.set()
-            ret = asyncio.run_coroutine_threadsafe(self._shutdown(), loop=self.channel.loop)
+            ret = asyncio.run_coroutine_threadsafe(self._shutdown(), loop=self.event_loop)
             # Weird band-aid to make sure that self._shutdown() is actually executed,
             # which otherwise hangs the process as the proxy server is threaded.
             # This all needs to be simplified when the proxy server runs on asyncio as well.
-            if not self.channel.loop.is_running():  # pragma: no cover
+            if not self.event_loop.is_running():  # pragma: no cover
                 try:
-                    self.channel.loop.run_until_complete(asyncio.wrap_future(ret))
+                    self.event_loop.run_until_complete(asyncio.wrap_future(ret))
                 except RuntimeError:
                     pass  # Event loop stopped before Future completed.
 
@@ -163,5 +131,5 @@ class Master:
                 f.handshake_flow = http.HTTPFlow(None, None)
 
         f.reply = controller.DummyReply()
-        for e, o in eventsequence.iterate(f):
-            await self.addons.handle_lifecycle(e, o)
+        for e in eventsequence.iterate(f):
+            await self.addons.handle_lifecycle(e)

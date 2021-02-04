@@ -8,6 +8,7 @@ import pytest
 from mitmproxy import addonmanager
 from mitmproxy import exceptions
 from mitmproxy.addons import script
+from mitmproxy.proxy.layers.http import HttpRequestHook
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
@@ -29,14 +30,14 @@ async def test_load_script(tdata):
         script.load_script(
             "nonexistent"
         )
-        assert await tctx.master.await_log("No such file or directory")
+        await tctx.master.await_log("No such file or directory")
 
         script.load_script(
             tdata.path(
                 "mitmproxy/data/addonscripts/recorder/error.py"
             )
         )
-        assert await tctx.master.await_log("invalid syntax")
+        await tctx.master.await_log("invalid syntax")
 
 
 def test_load_fullname(tdata):
@@ -74,7 +75,7 @@ class TestScript:
         path = tdata.path("mitmproxy/data/addonscripts/recorder/recorder.py")
 
         s = script.Script(
-            '"{}"'.format(path),
+            f'"{path}"',
             False
         )
         assert '"' not in s.fullpath
@@ -96,7 +97,7 @@ class TestScript:
 
             rec.call_log = []
             f = tflow.tflow(resp=True)
-            tctx.master.addons.trigger("request", f)
+            tctx.master.addons.trigger(HttpRequestHook(f))
 
             assert rec.call_log[0][1] == "request"
 
@@ -108,7 +109,7 @@ class TestScript:
             f.write("\n")
             sc = script.Script(str(f), True)
             tctx.configure(sc)
-            assert await tctx.master.await_log("Loading")
+            await tctx.master.await_log("Loading")
 
             tctx.master.clear()
             for i in range(20):
@@ -131,10 +132,10 @@ class TestScript:
             tctx.configure(sc)
 
             f = tflow.tflow(resp=True)
-            tctx.master.addons.trigger("request", f)
+            tctx.master.addons.trigger(HttpRequestHook(f))
 
-            assert await tctx.master.await_log("ValueError: Error!")
-            assert await tctx.master.await_log("error.py")
+            await tctx.master.await_log("ValueError: Error!")
+            await tctx.master.await_log("error.py")
 
     @pytest.mark.asyncio
     async def test_optionexceptions(self, tdata):
@@ -145,7 +146,7 @@ class TestScript:
             )
             tctx.master.addons.add(sc)
             tctx.configure(sc)
-            assert await tctx.master.await_log("Options Error")
+            await tctx.master.await_log("Options Error")
 
     @pytest.mark.asyncio
     async def test_addon(self, tdata):
@@ -201,7 +202,7 @@ class TestScriptLoader:
         sc = script.ScriptLoader()
         with taddons.context(sc) as tctx:
             sc.script_run([tflow.tflow(resp=True)], "/")
-            assert await tctx.master.await_log("No such script")
+            await tctx.master.await_log("No such script")
 
     def test_simple(self, tdata):
         sc = script.ScriptLoader()
@@ -246,6 +247,7 @@ class TestScriptLoader:
             os.remove(tdata.path("mitmproxy/data/addonscripts/dummy.py"))
 
             await tctx.master.await_log("Removing")
+            await asyncio.sleep(0.1)
             assert not tctx.options.scripts
             assert not sl.addons
 
@@ -257,10 +259,10 @@ class TestScriptLoader:
         tb = True
         with taddons.context() as tctx:
             script.script_error_handler(path, exc, msg, tb)
-            assert await tctx.master.await_log("/sample/path/example.py")
-            assert await tctx.master.await_log("Error raised")
-            assert await tctx.master.await_log("lineno")
-            assert await tctx.master.await_log("NoneType")
+            await tctx.master.await_log("/sample/path/example.py")
+            await tctx.master.await_log("Error raised")
+            await tctx.master.await_log("lineno")
+            await tctx.master.await_log("NoneType")
 
     @pytest.mark.asyncio
     async def test_order(self, tdata):
@@ -302,7 +304,7 @@ class TestScriptLoader:
                 ]
             )
 
-            await tctx.master.await_log("c configure")
+            await tctx.master.await_log("b configure")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'c configure',
@@ -318,7 +320,7 @@ class TestScriptLoader:
                     "%s/a.py" % rec,
                 ]
             )
-            await tctx.master.await_log("Loading")
+            await tctx.master.await_log("e configure")
             debug = [i.msg for i in tctx.master.logs if i.level == "debug"]
             assert debug == [
                 'c done',

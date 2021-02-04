@@ -56,7 +56,7 @@ def parse(url):
         if isinstance(parsed, urllib.parse.ParseResult):
             parsed = parsed.encode("ascii")
 
-    port = parsed.port  # Returns None if port number invalid in Py3.5. Will throw ValueError in Py3.6
+    port = parsed.port
     if not port:
         port = 443 if parsed.scheme == b"https" else 80
 
@@ -160,14 +160,16 @@ def parse_authority(authority: AnyStr, check: bool) -> Tuple[str, Optional[int]]
     """
     try:
         if isinstance(authority, bytes):
-            authority_str = authority.decode("idna")
+            m = _authority_re.match(authority.decode("utf-8"))
+            if not m:
+                raise ValueError
+            host = m["host"].encode("utf-8").decode("idna")
         else:
-            authority_str = authority
-        m = _authority_re.match(authority_str)
-        if not m:
-            raise ValueError
+            m = _authority_re.match(authority)
+            if not m:
+                raise ValueError
+            host = m.group("host")
 
-        host = m.group("host")
         if host.startswith("[") and host.endswith("]"):
             host = host[1:-1]
         if not is_valid_host(host):

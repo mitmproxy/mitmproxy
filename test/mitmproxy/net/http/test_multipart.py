@@ -1,13 +1,11 @@
+import pytest
+
 from mitmproxy.net.http import Headers
 from mitmproxy.net.http import multipart
-import pytest
 
 
 def test_decode():
     boundary = 'somefancyboundary'
-    headers = Headers(
-        content_type='multipart/form-data; boundary=' + boundary
-    )
     content = (
         "--{0}\n"
         "Content-Disposition: form-data; name=\"field1\"\n\n"
@@ -17,29 +15,22 @@ def test_decode():
         "value2\n"
         "--{0}--".format(boundary).encode()
     )
-
-    form = multipart.decode(headers, content)
+    form = multipart.decode(f'multipart/form-data; boundary={boundary}', content)
 
     assert len(form) == 2
     assert form[0] == (b"field1", b"value1")
     assert form[1] == (b"field2", b"value2")
 
     boundary = 'boundary茅莽'
-    headers = Headers(
-        content_type='multipart/form-data; boundary=' + boundary
-    )
-    result = multipart.decode(headers, content)
+    result = multipart.decode(f'multipart/form-data; boundary={boundary}', content)
     assert result == []
 
-    headers = Headers(
-        content_type=''
-    )
-    assert multipart.decode(headers, content) == []
+    assert multipart.decode("", content) == []
 
 
 def test_encode():
-    data = [("file".encode('utf-8'), "shell.jpg".encode('utf-8')),
-            ("file_size".encode('utf-8'), "1000".encode('utf-8'))]
+    data = [(b"file", b"shell.jpg"),
+            (b"file_size", b"1000")]
     headers = Headers(
         content_type='multipart/form-data; boundary=127824672498'
     )
@@ -51,7 +42,7 @@ def test_encode():
     assert len(content) == 252
 
     with pytest.raises(ValueError, match=r"boundary found in encoded string"):
-        multipart.encode(headers, [("key".encode('utf-8'), "--127824672498".encode('utf-8'))])
+        multipart.encode(headers, [(b"key", b"--127824672498")])
 
     boundary = 'boundary茅莽'
     headers = Headers(

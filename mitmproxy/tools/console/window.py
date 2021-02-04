@@ -1,18 +1,24 @@
+import os
 import re
 
 import urwid
+from mitmproxy.tools.console import commands
 from mitmproxy.tools.console import common
-from mitmproxy.tools.console import signals
-from mitmproxy.tools.console import statusbar
+from mitmproxy.tools.console import eventlog
 from mitmproxy.tools.console import flowlist
 from mitmproxy.tools.console import flowview
-from mitmproxy.tools.console import commands
+from mitmproxy.tools.console import grideditor
+from mitmproxy.tools.console import help
 from mitmproxy.tools.console import keybindings
 from mitmproxy.tools.console import options
 from mitmproxy.tools.console import overlay
-from mitmproxy.tools.console import help
-from mitmproxy.tools.console import grideditor
-from mitmproxy.tools.console import eventlog
+from mitmproxy.tools.console import signals
+from mitmproxy.tools.console import statusbar
+
+if os.name == "nt":
+    from mitmproxy.contrib.urwid import raw_display
+else:
+    from urwid import raw_display  # type: ignore
 
 
 class StackWidget(urwid.Frame):
@@ -52,23 +58,23 @@ class WindowStack:
     def __init__(self, master, base):
         self.master = master
         self.windows = dict(
-            flowlist = flowlist.FlowListBox(master),
-            flowview = flowview.FlowView(master),
-            commands = commands.Commands(master),
-            keybindings = keybindings.KeyBindings(master),
-            options = options.Options(master),
-            help = help.HelpView(master),
-            eventlog = eventlog.EventLog(master),
+            flowlist=flowlist.FlowListBox(master),
+            flowview=flowview.FlowView(master),
+            commands=commands.Commands(master),
+            keybindings=keybindings.KeyBindings(master),
+            options=options.Options(master),
+            help=help.HelpView(master),
+            eventlog=eventlog.EventLog(master),
 
-            edit_focus_query = grideditor.QueryEditor(master),
-            edit_focus_cookies = grideditor.CookieEditor(master),
-            edit_focus_setcookies = grideditor.SetCookieEditor(master),
-            edit_focus_setcookie_attrs = grideditor.CookieAttributeEditor(master),
+            edit_focus_query=grideditor.QueryEditor(master),
+            edit_focus_cookies=grideditor.CookieEditor(master),
+            edit_focus_setcookies=grideditor.SetCookieEditor(master),
+            edit_focus_setcookie_attrs=grideditor.CookieAttributeEditor(master),
             edit_focus_multipart_form=grideditor.RequestMultipartEditor(master),
             edit_focus_urlencoded_form=grideditor.RequestUrlEncodedEditor(master),
-            edit_focus_path = grideditor.PathEditor(master),
-            edit_focus_request_headers = grideditor.RequestHeaderEditor(master),
-            edit_focus_response_headers = grideditor.ResponseHeaderEditor(master),
+            edit_focus_path=grideditor.PathEditor(master),
+            edit_focus_request_headers=grideditor.RequestHeaderEditor(master),
+            edit_focus_response_headers=grideditor.ResponseHeaderEditor(master),
         )
         self.stack = [base]
         self.overlay = None
@@ -127,8 +133,8 @@ class Window(urwid.Frame):
         self.statusbar = statusbar.StatusBar(master)
         super().__init__(
             None,
-            header = None,
-            footer = urwid.AttrWrap(self.statusbar, "background")
+            header=None,
+            footer=urwid.AttrWrap(self.statusbar, "background")
         )
         self.master = master
         self.master.view.sig_view_refresh.connect(self.view_changed)
@@ -295,8 +301,8 @@ class Window(urwid.Frame):
         if not k:
             if args[1] == "mouse drag":
                 signals.status_message.send(
-                    message = "Hold down fn, shift, alt or ctrl to select text or use the --set console_mouse=false parameter.",
-                    expire = 1
+                    message="Hold down fn, shift, alt or ctrl to select text or use the --set console_mouse=false parameter.",
+                    expire=1
                 )
             elif args[1] == "mouse press" and args[2] == 4:
                 self.keypress(args[0], "up")
@@ -315,10 +321,10 @@ class Window(urwid.Frame):
             )
 
 
-class Screen(urwid.raw_display.Screen):
+class Screen(raw_display.Screen):
 
     def write(self, data):
-        if common.IS_WSL:
+        if common.IS_WINDOWS:
             # replace urwid's SI/SO, which produce artifacts under WSL.
             # at some point we may figure out what they actually do.
             data = re.sub("[\x0e\x0f]", "", data)

@@ -38,7 +38,7 @@ class Save:
     def start_stream_to_path(self, path, flt):
         try:
             f = self.open_file(path)
-        except IOError as v:
+        except OSError as v:
             raise exceptions.OptionsError(str(v))
         self.stream = io.FilteredFlowWriter(f, flt)
         self.active_flows = set()
@@ -68,7 +68,7 @@ class Save:
         """
         try:
             f = self.open_file(path)
-        except IOError as v:
+        except OSError as v:
             raise exceptions.CommandError(v) from v
         stream = io.FlowWriter(f)
         for i in flows:
@@ -107,6 +107,6 @@ class Save:
         if self.stream:
             for f in self.active_flows:
                 self.stream.add(f)
-            self.active_flows = set([])
+            self.active_flows = set()
             self.stream.fo.close()
             self.stream = None

@@ -1,15 +1,14 @@
-import io
 import uuid
 
-from mitmproxy.net import websockets
-from mitmproxy.test import tutils
+from mitmproxy import controller
+from mitmproxy import flow
+from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
-from mitmproxy import controller
-from mitmproxy import http
-from mitmproxy import connections
-from mitmproxy import flow
 from mitmproxy.net import http as net_http
+from mitmproxy.proxy import context
+from mitmproxy.test import tutils
+from wsproto.frame_protocol import Opcode
 
 
 def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
@@ -33,7 +32,6 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
 
 
 def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, handshake_flow=True):
-
     if client_conn is True:
         client_conn = tclient_conn()
     if server_conn is True:
@@ -84,9 +82,9 @@ def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, 
 
     if messages is True:
         messages = [
-            websocket.WebSocketMessage(websockets.OPCODE.BINARY, True, b"hello binary"),
-            websocket.WebSocketMessage(websockets.OPCODE.TEXT, True, "hello text".encode()),
-            websocket.WebSocketMessage(websockets.OPCODE.TEXT, False, "it's me".encode()),
+            websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary"),
+            websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text"),
+            websocket.WebSocketMessage(Opcode.TEXT, False, b"it's me"),
         ]
     if err is True:
         err = terr()
@@ -146,54 +144,57 @@ def tdummyflow(client_conn=True, server_conn=True, err=None):
     return f
 
 
-def tclient_conn():
-    """
-    @return: mitmproxy.proxy.connection.ClientConnection
-    """
-    c = connections.ClientConnection.from_state(dict(
+def tclient_conn() -> context.Client:
+    c = context.Client.from_state(dict(
         id=str(uuid.uuid4()),
         address=("127.0.0.1", 22),
-        clientcert=None,
         mitmcert=None,
-        tls_established=False,
+        tls_established=True,
         timestamp_start=946681200,
         timestamp_tls_setup=946681201,
         timestamp_end=946681206,
         sni="address",
         cipher_name="cipher",
-        alpn_proto_negotiated=b"http/1.1",
+        alpn=b"http/1.1",
         tls_version="TLSv1.2",
         tls_extensions=[(0x00, bytes.fromhex("000e00000b6578616d"))],
+        state=0,
+        sockname=("", 0),
+        error=None,
+        tls=False,
+        certificate_list=[],
+        alpn_offers=[],
+        cipher_list=[],
     ))
-    c.reply = controller.DummyReply()
-    c.rfile = io.BytesIO()
-    c.wfile = io.BytesIO()
+    c.reply = controller.DummyReply()  # type: ignore
     return c
 
 
-def tserver_conn():
-    """
-    @return: mitmproxy.proxy.connection.ServerConnection
-    """
-    c = connections.ServerConnection.from_state(dict(
+def tserver_conn() -> context.Server:
+    c = context.Server.from_state(dict(
         id=str(uuid.uuid4()),
         address=("address", 22),
         source_address=("address", 22),
         ip_address=("192.168.0.1", 22),
-        cert=None,
         timestamp_start=946681202,
         timestamp_tcp_setup=946681203,
         timestamp_tls_setup=946681204,
         timestamp_end=946681205,
-        tls_established=False,
+        tls_established=True,
         sni="address",
-        alpn_proto_negotiated=None,
+        alpn=None,
         tls_version="TLSv1.2",
         via=None,
+        state=0,
+        error=None,
+        tls=False,
+        certificate_list=[],
+        alpn_offers=[],
+        cipher_name=None,
+        cipher_list=[],
+        via2=None,
     ))
-    c.reply = controller.DummyReply()
-    c.rfile = io.BytesIO()
-    c.wfile = io.BytesIO()
+    c.reply = controller.DummyReply()  # type: ignore
     return c
 
 

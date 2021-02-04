@@ -3,31 +3,31 @@ Mitmproxy Content Views
 =======================
 
 mitmproxy includes a set of content views which can be used to
-format/decode/highlight data. While they are currently used for HTTP message
-bodies only, the may be used in other contexts in the future, e.g. to decode
-protobuf messages sent as WebSocket frames.
+format/decode/highlight data. While they are mostly used for HTTP message
+bodies, the may be used in other contexts, e.g. to decode WebSocket messages.
 
 Thus, the View API is very minimalistic. The only arguments are `data` and
 `**metadata`, where `data` is the actual content (as bytes). The contents on
-metadata depend on the protocol in use. For HTTP, the message headers are
-passed as the ``headers`` keyword argument. For HTTP requests, the query
-parameters are passed as the ``query`` keyword argument.
+metadata depend on the protocol in use. Known attributes can be found in
+`base.View`.
 """
 import traceback
-from typing import Dict, Optional  # noqa
-from typing import List  # noqa
+from typing import List, Union
+from typing import Optional
 
-from mitmproxy import exceptions
+from mitmproxy import flow
 from mitmproxy.net import http
 from mitmproxy.utils import strutils
 from . import (
     auto, raw, hex, json, xml_html, wbxml, javascript, css,
-    urlencoded, multipart, image, query, protobuf, msgpack
+    urlencoded, multipart, image, query, protobuf, msgpack, graphql
 )
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
+from ..http import HTTPFlow
+from ..tcp import TCPMessage, TCPFlow
+from ..websocket import WebSocketMessage, WebSocketFlow
 
 views: List[View] = []
-content_types_map: Dict[str, List[View]] = {}
 
 
 def get(name: str) -> Optional[View]:
@@ -41,23 +41,12 @@ def add(view: View) -> None:
     # TODO: auto-select a different name (append an integer?)
     for i in views:
         if i.name == view.name:
-            raise exceptions.ContentViewException("Duplicate view: " + view.name)
+            raise ValueError("Duplicate view: " + view.name)
 
     views.append(view)
 
-    for ct in view.content_types:
-        l = content_types_map.setdefault(ct, [])
-        l.append(view)
-
 
 def remove(view: View) -> None:
-    for ct in view.content_types:
-        l = content_types_map.setdefault(ct, [])
-        l.remove(view)
-
-        if not len(l):
-            del content_types_map[ct]
-
     views.remove(view)
 
 
@@ -75,16 +64,24 @@ def safe_to_print(lines, encoding="utf8"):
         yield clean_line
 
 
-def get_message_content_view(viewname, message, flow):
+def get_message_content_view(
+    viewname: str,
+    message: Union[http.Message, TCPMessage, WebSocketMessage],
+    flow: Union[HTTPFlow, TCPFlow, WebSocketFlow],
+):
     """
     Like get_content_view, but also handles message encoding.
     """
     viewmode = get(viewname)
     if not viewmode:
         viewmode = get("auto")
+    assert viewmode
+
+    content: Optional[bytes]
     try:
-        content = message.content
+        content = message.content  # type: ignore
     except ValueError:
+        assert isinstance(message, http.Message)
         content = message.raw_content
         enc = "[cannot decode]"
     else:
@@ -93,30 +90,37 @@ def get_message_content_view(viewname, message, flow):
                 message.headers.get("content-encoding")
             )
         else:
-            enc = None
+            enc = ""
 
     if content is None:
         return "", iter([[("error", "content missing")]]), None
 
-    metadata = {}
-    if isinstance(message, http.Request):
-        metadata["query"] = message.query
+    content_type = None
+    http_message = None
     if isinstance(message, http.Message):
-        metadata["headers"] = message.headers
-    metadata["message"] = message
-    metadata["flow"] = flow
+        http_message = message
+        if ctype := message.headers.get("content-type"):
+            if ct := http.parse_content_type(ctype):
+                content_type = f"{ct[0]}/{ct[1]}"
 
     description, lines, error = get_content_view(
-        viewmode, content, **metadata
+        viewmode, content,
+        content_type=content_type,
+        flow=flow,
+        http_message=http_message,
     )
 
     if enc:
-        description = "{} {}".format(enc, description)
+        description = f"{enc} {description}"
 
     return description, lines, error
 
 
-def get_tcp_content_view(viewname: str, data: bytes):
+def get_tcp_content_view(
+    viewname: str,
+    data: bytes,
+    flow: TCPFlow,
+):
     viewmode = get(viewname)
     if not viewmode:
         viewmode = get("auto")
@@ -124,12 +128,19 @@ def get_tcp_content_view(viewname: str, data: bytes):
     # https://github.com/mitmproxy/mitmproxy/pull/3970#issuecomment-623024447
     assert viewmode
 
-    description, lines, error = get_content_view(viewmode, data)
+    description, lines, error = get_content_view(viewmode, data, flow=flow)
 
     return description, lines, error
 
 
-def get_content_view(viewmode: View, data: bytes, **metadata):
+def get_content_view(
+    viewmode: View,
+    data: bytes,
+    *,
+    content_type: Optional[str] = None,
+    flow: Optional[flow.Flow] = None,
+    http_message: Optional[http.Message] = None,
+):
     """
         Args:
             viewmode: the view to use.
@@ -142,9 +153,11 @@ def get_content_view(viewmode: View, data: bytes, **metadata):
             In contrast to calling the views directly, text is always safe-to-print unicode.
     """
     try:
-        ret = viewmode(data, **metadata)
+        ret = viewmode(data, content_type=content_type, flow=flow, http_message=http_message)
         if ret is None:
-            ret = "Couldn't parse: falling back to Raw", get("Raw")(data, **metadata)[1]
+            ret = "Couldn't parse: falling back to Raw", get("Raw")(
+                data, content_type=content_type, flow=flow, http_message=http_message
+            )[1]
         desc, content = ret
         error = None
     # Third-party viewers can fail in unexpected ways...
@@ -152,11 +165,8 @@ def get_content_view(viewmode: View, data: bytes, **metadata):
         desc = "Couldn't parse: falling back to Raw"
         raw = get("Raw")
         assert raw
-        content = raw(data, **metadata)[1]
-        error = "{} Content viewer failed: \n{}".format(
-            getattr(viewmode, "name"),
-            traceback.format_exc()
-        )
+        content = raw(data, content_type=content_type, flow=flow, http_message=http_message)[1]
+        error = f"{getattr(viewmode, 'name')} content viewer failed: \n{traceback.format_exc()}"
 
     return desc, safe_to_print(content), error
 
@@ -165,6 +175,7 @@ def get_content_view(viewmode: View, data: bytes, **metadata):
 add(auto.ViewAuto())
 add(raw.ViewRaw())
 add(hex.ViewHex())
+add(graphql.ViewGraphQL())
 add(json.ViewJSON())
 add(xml_html.ViewXmlHtml())
 add(wbxml.ViewWBXML())

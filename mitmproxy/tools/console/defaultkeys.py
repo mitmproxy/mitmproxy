@@ -1,4 +1,3 @@
-
 def map(km):
     km.add(":", "console.command ", ["commonkey", "global"], "Command prompt")
     km.add("?", "console.view.help", ["global"], "View help")
@@ -13,6 +12,8 @@ def map(km):
     km.add("shift tab", "console.panes.next", ["global"], "Focus next layout pane")
     km.add("ctrl right", "console.panes.next", ["global"], "Focus next layout pane")
     km.add("P", "console.view.flow @focus", ["global"], "View flow details")
+
+    km.add("?", "console.view.pop", ["help"], "Exit help")
 
     km.add("g", "console.nav.start", ["global"], "Go to start")
     km.add("G", "console.nav.end", ["global"], "Go to end")

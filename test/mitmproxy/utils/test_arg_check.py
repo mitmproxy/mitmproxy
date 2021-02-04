@@ -26,7 +26,8 @@ from mitmproxy.utils import arg_check
                          '"ldap[s]:url_server_ldap:dn_auth:password:dn_subtree" '
                          'for LDAP authentication.'),
     (["--replacements"], "--replacements is deprecated.\n"
-                         "Please use `--modify-body` or `--modify-headers` instead.")
+                         "Please use `--modify-body` or `--modify-headers` instead."),
+    (["--underscore_option"], "--underscore_option uses underscores, please use hyphens --underscore-option")
 ])
 def test_check_args(arg, output):
     f = io.StringIO()

@@ -3,7 +3,7 @@ import typing
 import os
 
 from mitmproxy.utils import human
-from mitmproxy import ctx
+from mitmproxy import ctx, hooks
 from mitmproxy import exceptions
 from mitmproxy import command
 from mitmproxy import flow
@@ -39,18 +39,13 @@ class Core:
         opts = ctx.options
         if opts.add_upstream_certs_to_client_chain and not opts.upstream_cert:
             raise exceptions.OptionsError(
-                "The no-upstream-cert and add-upstream-certs-to-client-chain "
-                "options are mutually exclusive. If no-upstream-cert is enabled "
-                "then the upstream certificate is not retrieved before generating "
-                "the client certificate chain."
-            )
-        if opts.add_upstream_certs_to_client_chain and not opts.ssl_insecure:
-            raise exceptions.OptionsError(
-                "The verify-upstream-cert requires certificate verification to be disabled. "
-                "If upstream certificates are verified then extra upstream certificates are "
-                "not available for inclusion to the client chain."
+                "add_upstream_certs_to_client_chain requires the upstream_cert option to be enabled."
             )
         if "body_size_limit" in updated:
+            if opts.body_size_limit:  # pragma: no cover
+                ctx.log.warn(
+                    "body_size_limit is currently nonfunctioning, "
+                    "see https://github.com/mitmproxy/mitmproxy/issues/4348")
             try:
                 human.parse_size(opts.body_size_limit)
             except ValueError:
@@ -79,7 +74,7 @@ class Core:
                 client_certs = os.path.expanduser(opts.client_certs)
                 if not os.path.exists(client_certs):
                     raise exceptions.OptionsError(
-                        "Client certificate path does not exist: {}".format(opts.client_certs)
+                        f"Client certificate path does not exist: {opts.client_certs}"
                     )
 
     @command.command("set")
@@ -104,7 +99,7 @@ class Core:
         intercepted = [i for i in flows if i.intercepted]
         for f in intercepted:
             f.resume()
-        ctx.master.addons.trigger("update", intercepted)
+        ctx.master.addons.trigger(hooks.UpdateHook(intercepted))
 
     # FIXME: this will become view.mark later
     @command.command("flow.mark")
@@ -117,7 +112,7 @@ class Core:
             if i.marked != boolean:
                 i.marked = boolean
                 updated.append(i)
-        ctx.master.addons.trigger("update", updated)
+        ctx.master.addons.trigger(hooks.UpdateHook(updated))
 
     # FIXME: this will become view.mark.toggle later
     @command.command("flow.mark.toggle")
@@ -127,7 +122,7 @@ class Core:
         """
         for i in flows:
             i.marked = not i.marked
-        ctx.master.addons.trigger("update", flows)
+        ctx.master.addons.trigger(hooks.UpdateHook(flows))
 
     @command.command("flow.kill")
     def kill(self, flows: typing.Sequence[flow.Flow]) -> None:
@@ -140,7 +135,7 @@ class Core:
                 f.kill()
                 updated.append(f)
         ctx.log.alert("Killed %s flows." % len(updated))
-        ctx.master.addons.trigger("update", updated)
+        ctx.master.addons.trigger(hooks.UpdateHook(updated))
 
     # FIXME: this will become view.revert later
     @command.command("flow.revert")
@@ -154,7 +149,7 @@ class Core:
                 f.revert()
                 updated.append(f)
         ctx.log.alert("Reverted %s flows." % len(updated))
-        ctx.master.addons.trigger("update", updated)
+        ctx.master.addons.trigger(hooks.UpdateHook(updated))
 
     @command.command("flow.set.options")
     def flow_set_options(self) -> typing.Sequence[str]:
@@ -203,7 +198,7 @@ class Core:
                         req.url = val
                     except ValueError as e:
                         raise exceptions.CommandError(
-                            "URL %s is invalid: %s" % (repr(val), e)
+                            "URL {} is invalid: {}".format(repr(val), e)
                         ) from e
                 else:
                     self.rupdate = False
@@ -223,8 +218,8 @@ class Core:
             if rupdate or supdate:
                 updated.append(f)
 
-        ctx.master.addons.trigger("update", updated)
-        ctx.log.alert("Set %s on  %s flows." % (attr, len(updated)))
+        ctx.master.addons.trigger(hooks.UpdateHook(updated))
+        ctx.log.alert("Set {} on  {} flows.".format(attr, len(updated)))
 
     @command.command("flow.decode")
     def decode(self, flows: typing.Sequence[flow.Flow], part: str) -> None:
@@ -238,7 +233,7 @@ class Core:
                 f.backup()
                 p.decode()
                 updated.append(f)
-        ctx.master.addons.trigger("update", updated)
+        ctx.master.addons.trigger(hooks.UpdateHook(updated))
         ctx.log.alert("Decoded %s flows." % len(updated))
 
     @command.command("flow.encode.toggle")
@@ -257,7 +252,7 @@ class Core:
                 else:
                     p.decode()
                 updated.append(f)
-        ctx.master.addons.trigger("update", updated)
+        ctx.master.addons.trigger(hooks.UpdateHook(updated))
         ctx.log.alert("Toggled encoding on %s flows." % len(updated))
 
     @command.command("flow.encode")
@@ -280,7 +275,7 @@ class Core:
                     f.backup()
                     p.encode(encoding)
                     updated.append(f)
-        ctx.master.addons.trigger("update", updated)
+        ctx.master.addons.trigger(hooks.UpdateHook(updated))
         ctx.log.alert("Encoded %s flows." % len(updated))
 
     @command.command("flow.encode.options")

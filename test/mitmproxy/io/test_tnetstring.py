@@ -15,9 +15,9 @@ FORMAT_EXAMPLES = {
     {b'hello': [12345678901, b'this', True, None, b'\x00\x00\x00\x00']},
     b'5:12345#': 12345,
     b'12:this is cool,': b'this is cool',
-    b'19:this is unicode \xe2\x98\x85;': u'this is unicode \u2605',
+    b'19:this is unicode \xe2\x98\x85;': 'this is unicode \u2605',
     b'0:,': b'',
-    b'0:;': u'',
+    b'0:;': '',
     b'0:~': None,
     b'4:true!': True,
     b'5:false!': False,
@@ -75,13 +75,13 @@ class Test_Format(unittest.TestCase):
             self.assertEqual((expect, b''), tnetstring.pop(data))
 
     def test_roundtrip_format_random(self):
-        for _ in range(500):
+        for _ in range(10):
             v = get_random_object()
             self.assertEqual(v, tnetstring.loads(tnetstring.dumps(v)))
             self.assertEqual((v, b""), tnetstring.pop(tnetstring.dumps(v)))
 
     def test_roundtrip_format_unicode(self):
-        for _ in range(500):
+        for _ in range(10):
             v = get_random_object()
             self.assertEqual(v, tnetstring.loads(tnetstring.dumps(v)))
             self.assertEqual((v, b''), tnetstring.pop(tnetstring.dumps(v)))
@@ -111,7 +111,7 @@ class Test_FileLoading(unittest.TestCase):
             self.assertEqual(b'OK', s.read())
 
     def test_roundtrip_file_random(self):
-        for _ in range(500):
+        for _ in range(10):
             v = get_random_object()
             s = io.BytesIO()
             tnetstring.dump(v, s)

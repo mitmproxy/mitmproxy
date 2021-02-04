@@ -1,7 +1,7 @@
-from unittest import mock
 import pytest
 
 from mitmproxy.addons import block
+from mitmproxy.proxy import context
 from mitmproxy.test import taddons
 
 
@@ -55,13 +55,7 @@ from mitmproxy.test import taddons
 async def test_block_global(block_global, block_private, should_be_killed, address):
     ar = block.Block()
     with taddons.context(ar) as tctx:
-        tctx.options.block_global = block_global
-        tctx.options.block_private = block_private
-        with mock.patch('mitmproxy.proxy.protocol.base.Layer') as layer:
-            layer.client_conn.address = address
-            ar.clientconnect(layer)
-            if should_be_killed:
-                assert layer.reply.kill.called
-                assert await tctx.master.await_log("killed", "warn")
-            else:
-                assert not layer.reply.kill.called
+        tctx.configure(ar, block_global=block_global, block_private=block_private)
+        client = context.Client(address, ("127.0.0.1", 8080), 1607699500)
+        ar.client_connected(client)
+        assert bool(client.error) == should_be_killed

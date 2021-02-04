@@ -47,6 +47,9 @@ class UpstreamAuth():
             if ctx.options.upstream_auth is None:
                 self.auth = None
             else:
+                if ctx.options.upstream_auth:  # pragma: no cover
+                    ctx.log.warn("upstream_auth is currently nonfunctioning, "
+                                 "see https://github.com/mitmproxy/mitmproxy/issues/4348")
                 self.auth = parse_upstream_auth(ctx.options.upstream_auth)
 
     def http_connect(self, f):

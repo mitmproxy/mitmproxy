@@ -159,7 +159,7 @@ class CommandManager:
                             self.add(o.command_name, o)
                         except exceptions.CommandError as e:
                             self.master.log.warn(
-                                "Could not load command %s: %s" % (o.command_name, e)
+                                f"Could not load command {o.command_name}: {e}"
                             )
 
     def add(self, path: str, func: typing.Callable):

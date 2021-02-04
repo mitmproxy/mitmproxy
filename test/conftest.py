@@ -17,11 +17,6 @@ skip_not_windows = pytest.mark.skipif(
     reason='Skipping due to not Windows'
 )
 
-skip_appveyor = pytest.mark.skipif(
-    "APPVEYOR" in os.environ,
-    reason='Skipping due to Appveyor'
-)
-
 try:
     s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
     s.bind(("::1", 0))

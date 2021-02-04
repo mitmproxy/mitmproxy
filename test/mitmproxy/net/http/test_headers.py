@@ -41,11 +41,11 @@ class TestHeaders:
         assert headers["Accept"] == "text/plain"
 
         with pytest.raises(TypeError):
-            Headers([[b"Host", u"not-bytes"]])
+            Headers([[b"Host", "not-bytes"]])
 
     def test_set(self):
         headers = Headers()
-        headers[u"foo"] = u"1"
+        headers["foo"] = "1"
         headers[b"bar"] = b"2"
         headers["baz"] = b"3"
         with pytest.raises(TypeError):

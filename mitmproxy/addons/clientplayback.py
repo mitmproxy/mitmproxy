@@ -1,133 +1,141 @@
-import queue
-import threading
+import asyncio
 import time
+import traceback
 import typing
 
 import mitmproxy.types
 from mitmproxy import command
-from mitmproxy import connections
-from mitmproxy import controller
 from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import io
-from mitmproxy import log
-from mitmproxy import options
-from mitmproxy.coretypes import basethread
-from mitmproxy.net import server_spec, tls
-from mitmproxy.net.http import http1
-from mitmproxy.net.http.url import hostport
-from mitmproxy.utils import human
+from mitmproxy.addons.proxyserver import AsyncReply
+from mitmproxy.hooks import UpdateHook
+from mitmproxy.net import server_spec
+from mitmproxy.options import Options
+from mitmproxy.proxy.layers.http import HTTPMode
+from mitmproxy.proxy import commands, events, layers, server
+from mitmproxy.proxy.context import ConnectionState, Context, Server
+from mitmproxy.proxy.layer import CommandGenerator
+from mitmproxy.utils import asyncio_utils
 
 
-class RequestReplayThread(basethread.BaseThread):
-    daemon = True
+class MockServer(layers.http.HttpConnection):
+    """
+    A mock HTTP "server" that just pretends it received a full HTTP request,
+    which is then processed by the proxy core.
+    """
+    flow: http.HTTPFlow
 
-    def __init__(
-            self,
-            opts: options.Options,
-            channel: controller.Channel,
-            queue: queue.Queue,
-    ) -> None:
-        self.options = opts
-        self.channel = channel
-        self.queue = queue
-        self.inflight = threading.Event()
-        super().__init__("RequestReplayThread")
+    def __init__(self, flow: http.HTTPFlow, context: Context):
+        super().__init__(context, context.client)
+        self.flow = flow
 
-    def run(self):
-        while True:
-            f = self.queue.get()
-            self.inflight.set()
-            self.replay(f)
-            self.inflight.clear()
+    def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
+        if isinstance(event, events.Start):
+            content = self.flow.request.raw_content
+            self.flow.request.timestamp_start = self.flow.request.timestamp_end = time.time()
+            yield layers.http.ReceiveHttp(layers.http.RequestHeaders(
+                1,
+                self.flow.request,
+                end_stream=not content,
+                replay_flow=self.flow,
+            ))
+            if content:
+                yield layers.http.ReceiveHttp(layers.http.RequestData(1, content))
+            yield layers.http.ReceiveHttp(layers.http.RequestEndOfMessage(1))
+        elif isinstance(event, (
+                layers.http.ResponseHeaders,
+                layers.http.ResponseData,
+                layers.http.ResponseEndOfMessage,
+                layers.http.ResponseProtocolError,
+        )):
+            pass
+        else:  # pragma: no cover
+            ctx.log(f"Unexpected event during replay: {events}")
 
-    def replay(self, f):  # pragma: no cover
-        f.live = True
-        r = f.request
-        bsl = human.parse_size(self.options.body_size_limit)
-        authority_backup = r.authority
-        server = None
-        try:
-            f.response = None
 
-            # If we have a channel, run script hooks.
-            request_reply = self.channel.ask("request", f)
-            if isinstance(request_reply, http.HTTPResponse):
-                f.response = request_reply
+class ReplayHandler(server.ConnectionHandler):
+    layer: layers.HttpLayer
 
-            if not f.response:
-                # In all modes, we directly connect to the server displayed
-                if self.options.mode.startswith("upstream:"):
-                    server_address = server_spec.parse_with_mode(self.options.mode)[1].address
-                    server = connections.ServerConnection(server_address)
-                    server.connect()
-                    if r.scheme == "https":
-                        connect_request = http.make_connect_request((r.data.host, r.port))
-                        server.wfile.write(http1.assemble_request(connect_request))
-                        server.wfile.flush()
-                        resp = http1.read_response(
-                            server.rfile,
-                            connect_request,
-                            body_size_limit=bsl
-                        )
-                        if resp.status_code != 200:
-                            raise exceptions.ReplayException(
-                                "Upstream server refuses CONNECT request"
-                            )
-                        server.establish_tls(
-                            sni=f.server_conn.sni,
-                            **tls.client_arguments_from_options(self.options)
-                        )
-                        r.authority = b""
-                    else:
-                        r.authority = hostport(r.scheme, r.host, r.port)
-                else:
-                    server_address = (r.host, r.port)
-                    server = connections.ServerConnection(server_address)
-                    server.connect()
-                    if r.scheme == "https":
-                        server.establish_tls(
-                            sni=f.server_conn.sni,
-                            **tls.client_arguments_from_options(self.options)
-                        )
-                    r.authority = ""
+    def __init__(self, flow: http.HTTPFlow, options: Options) -> None:
+        client = flow.client_conn.copy()
+        client.state = ConnectionState.OPEN
 
-                server.wfile.write(http1.assemble_request(r))
-                server.wfile.flush()
-                r.timestamp_start = r.timestamp_end = time.time()
+        context = Context(client, options)
+        context.server = Server(
+            (flow.request.host, flow.request.port)
+        )
+        context.server.tls = flow.request.scheme == "https"
+        if options.mode.startswith("upstream:"):
+            context.server.via = server_spec.parse_with_mode(options.mode)[1]
 
-                if f.server_conn:
-                    f.server_conn.close()
-                f.server_conn = server
+        super().__init__(context)
 
-                f.response = http1.read_response(server.rfile, r, body_size_limit=bsl)
-            response_reply = self.channel.ask("response", f)
-            if response_reply == exceptions.Kill:
-                raise exceptions.Kill()
-        except (exceptions.ReplayException, exceptions.NetlibException) as e:
-            f.error = flow.Error(str(e))
-            self.channel.ask("error", f)
-        except exceptions.Kill:
-            self.channel.tell("log", log.LogEntry(flow.Error.KILLED_MESSAGE, "info"))
-        except Exception as e:
-            self.channel.tell("log", log.LogEntry(repr(e), "error"))
-        finally:
-            r.authority = authority_backup
-            f.live = False
-            if server and server.connected():
-                server.finish()
-                server.close()
+        self.layer = layers.HttpLayer(context, HTTPMode.transparent)
+        self.layer.connections[client] = MockServer(flow, context.fork())
+        self.flow = flow
+        self.done = asyncio.Event()
+
+    async def replay(self) -> None:
+        self.server_event(events.Start())
+        await self.done.wait()
+
+    def log(self, message: str, level: str = "info") -> None:
+        ctx.log(f"[replay] {message}", level)
+
+    async def handle_hook(self, hook: commands.StartHook) -> None:
+        data, = hook.args()
+        data.reply = AsyncReply(data)
+        await ctx.master.addons.handle_lifecycle(hook)
+        await data.reply.done.wait()
+        if isinstance(hook, (layers.http.HttpResponseHook, layers.http.HttpErrorHook)):
+            if self.transports:
+                # close server connections
+                for x in self.transports.values():
+                    if x.handler:
+                        x.handler.cancel()
+                await asyncio.wait([x.handler for x in self.transports.values() if x.handler])
+            # signal completion
+            self.done.set()
 
 
 class ClientPlayback:
-    def __init__(self):
-        self.q = queue.Queue()
-        self.thread: RequestReplayThread = None
+    playback_task: typing.Optional[asyncio.Task] = None
+    inflight: typing.Optional[http.HTTPFlow]
+    queue: asyncio.Queue
+    options: Options
 
-    def check(self, f: flow.Flow):
-        if f.live:
+    def __init__(self):
+        self.queue = asyncio.Queue()
+        self.inflight = None
+        self.task = None
+
+    def running(self):
+        self.playback_task = asyncio_utils.create_task(
+            self.playback(),
+            name="client playback"
+        )
+        self.options = ctx.options
+
+    def done(self):
+        if self.playback_task:
+            self.playback_task.cancel()
+
+    async def playback(self):
+        while True:
+            self.inflight = await self.queue.get()
+            try:
+                h = ReplayHandler(self.inflight, self.options)
+                await h.replay()
+            except Exception:
+                ctx.log(f"Client replay has crashed!\n{traceback.format_exc()}", "error")
+            self.queue.task_done()
+            self.inflight = None
+
+    def check(self, f: flow.Flow) -> typing.Optional[str]:
+        if f.live or f == self.inflight:
             return "Can't replay live flow."
         if f.intercepted:
             return "Can't replay intercepted flow."
@@ -138,20 +146,13 @@ class ClientPlayback:
                 return "Can't replay flow with missing content."
         else:
             return "Can only replay HTTP flows."
+        return None
 
     def load(self, loader):
         loader.add_option(
             "client_replay", typing.Sequence[str], [],
             "Replay client requests from a saved file."
         )
-
-    def running(self):
-        self.thread = RequestReplayThread(
-            ctx.options,
-            ctx.master.channel,
-            self.q,
-        )
-        self.thread.start()
 
     def configure(self, updated):
         if "client_replay" in updated and ctx.options.client_replay:
@@ -166,20 +167,25 @@ class ClientPlayback:
         """
             Approximate number of flows queued for replay.
         """
-        inflight = 1 if self.thread and self.thread.inflight.is_set() else 0
-        return self.q.qsize() + inflight
+        return self.queue.qsize() + int(bool(self.inflight))
 
     @command.command("replay.client.stop")
     def stop_replay(self) -> None:
         """
             Clear the replay queue.
         """
-        with self.q.mutex:
-            lst = list(self.q.queue)
-            self.q.queue.clear()
-            for f in lst:
+        updated = []
+        while True:
+            try:
+                f = self.queue.get_nowait()
+            except asyncio.QueueEmpty:
+                break
+            else:
+                self.queue.task_done()
                 f.revert()
-        ctx.master.addons.trigger("update", lst)
+                updated.append(f)
+
+        ctx.master.addons.trigger(UpdateHook(updated))
         ctx.log.alert("Client replay queue cleared.")
 
     @command.command("replay.client")
@@ -187,29 +193,23 @@ class ClientPlayback:
         """
             Add flows to the replay queue, skipping flows that can't be replayed.
         """
-        lst = []
+        updated: typing.List[http.HTTPFlow] = []
         for f in flows:
-            hf = typing.cast(http.HTTPFlow, f)
-
-            err = self.check(hf)
+            err = self.check(f)
             if err:
                 ctx.log.warn(err)
                 continue
 
-            lst.append(hf)
+            http_flow = typing.cast(http.HTTPFlow, f)
+
             # Prepare the flow for replay
-            hf.backup()
-            hf.is_replay = "request"
-            hf.response = None
-            hf.error = None
-            # https://github.com/mitmproxy/mitmproxy/issues/2197
-            if hf.request.http_version == "HTTP/2.0":
-                hf.request.http_version = "HTTP/1.1"
-                host = hf.request.headers.pop(":authority", None)
-                if host is not None:
-                    hf.request.headers.insert(0, "host", host)
-            self.q.put(hf)
-        ctx.master.addons.trigger("update", lst)
+            http_flow.backup()
+            http_flow.is_replay = "request"
+            http_flow.response = None
+            http_flow.error = None
+            self.queue.put_nowait(http_flow)
+            updated.append(http_flow)
+        ctx.master.addons.trigger(UpdateHook(updated))
 
     @command.command("replay.client.file")
     def load_file(self, path: mitmproxy.types.Path) -> None:

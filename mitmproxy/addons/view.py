@@ -15,14 +15,14 @@ import blinker
 import sortedcontainers
 
 import mitmproxy.flow
-from mitmproxy import flowfilter
+from mitmproxy import flowfilter, hooks
 from mitmproxy import exceptions
 from mitmproxy import command
-from mitmproxy import connections
 from mitmproxy import ctx
 from mitmproxy import io
 from mitmproxy import http
 from mitmproxy import tcp
+from mitmproxy.proxy import context
 from mitmproxy.utils import human
 
 
@@ -381,7 +381,7 @@ class View(collections.abc.Sequence):
             current = self.settings[f].get("key", "false")
             self.settings[f][key] = "false" if current == "true" else "true"
             updated.append(f)
-        ctx.master.addons.trigger("update", updated)
+        ctx.master.addons.trigger(hooks.UpdateHook(updated))
 
     @command.command("view.settings.setval")
     def setvalue(
@@ -396,7 +396,7 @@ class View(collections.abc.Sequence):
         for f in flows:
             self.settings[f][key] = value
             updated.append(f)
-        ctx.master.addons.trigger("update", updated)
+        ctx.master.addons.trigger(hooks.UpdateHook(updated))
 
     # Flows
     @command.command("view.flows.duplicate")
@@ -460,8 +460,10 @@ class View(collections.abc.Sequence):
             req = http.HTTPRequest.make(method.upper(), url)
         except ValueError as e:
             raise exceptions.CommandError("Invalid URL: %s" % e)
-        c = connections.ClientConnection.make_dummy(("", 0))
-        s = connections.ServerConnection.make_dummy((req.host, req.port))
+
+        c = context.Client(("", 0), ("", 0), req.timestamp_start - 0.0001)
+        s = context.Server((req.host, req.port))
+
         f = http.HTTPFlow(c, s)
         f.request = req
         f.request.headers["Host"] = req.host
@@ -479,7 +481,7 @@ class View(collections.abc.Sequence):
                     # get new flows each time. It would be more efficient to just have a
                     # .newid() method or something.
                     self.add([i.copy()])
-        except IOError as e:
+        except OSError as e:
             ctx.log.error(e.strerror)
         except exceptions.FlowReadException as e:
             ctx.log.error(str(e))

@@ -1,4 +1,8 @@
 import os
+from unittest.mock import patch
+from pathlib import Path
+
+import pytest
 
 from mitmproxy.addons import command_history
 from mitmproxy.test import taddons
@@ -19,19 +23,38 @@ class TestCommandHistory:
             ch.add_command("cmd4")
             ch.done()
 
-        with open(history_file, "r") as f:
+        with open(history_file) as f:
             assert f.read() == "cmd3\ncmd4\n"
 
+    @pytest.mark.asyncio
+    async def test_done_writing_failed(self):
+        ch = command_history.CommandHistory()
+        ch.VACUUM_SIZE = 1
+        with taddons.context(ch) as tctx:
+            ch.history.append('cmd1')
+            ch.history.append('cmd2')
+            ch.history.append('cmd3')
+            tctx.options.confdir = '/non/existent/path/foobar1234/'
+            ch.done()
+            await tctx.master.await_log(f"Failed writing to {ch.history_file}")
+
     def test_add_command(self):
-        history = command_history.CommandHistory()
+        ch = command_history.CommandHistory()
 
-        history.add_command('cmd1')
-        history.add_command('cmd2')
+        ch.add_command('cmd1')
+        ch.add_command('cmd2')
+        assert ch.history == ['cmd1', 'cmd2']
 
-        assert history.history == ['cmd1', 'cmd2']
+        ch.add_command('')
+        assert ch.history == ['cmd1', 'cmd2']
 
-        history.add_command('')
-        assert history.history == ['cmd1', 'cmd2']
+    @pytest.mark.asyncio
+    async def test_add_command_failed(self):
+        ch = command_history.CommandHistory()
+        with taddons.context(ch) as tctx:
+            tctx.options.confdir = '/non/existent/path/foobar1234/'
+            ch.add_command('cmd1')
+            await tctx.master.await_log(f"Failed writing to {ch.history_file}")
 
     def test_get_next_and_prev(self, tmpdir):
         ch = command_history.CommandHistory()
@@ -132,6 +155,20 @@ class TestCommandHistory:
             assert ch.get_prev() == ''
 
             ch.clear_history()
+
+    @pytest.mark.asyncio
+    async def test_clear_failed(self, monkeypatch):
+        ch = command_history.CommandHistory()
+
+        with taddons.context(ch) as tctx:
+            tctx.options.confdir = '/non/existent/path/foobar1234/'
+
+            with patch.object(Path, 'exists') as mock_exists:
+                mock_exists.return_value = True
+                with patch.object(Path, 'unlink') as mock_unlink:
+                    mock_unlink.side_effect = IOError()
+                    ch.clear_history()
+            await tctx.master.await_log(f"Failed deleting {ch.history_file}")
 
     def test_filter(self, tmpdir):
         ch = command_history.CommandHistory()
@@ -239,7 +276,7 @@ class TestCommandHistory:
         instances.pop(0).done()
 
         _path = os.path.join(tctx.options.confdir, 'command_history')
-        lines = open(_path, 'r').readlines()
+        lines = open(_path).readlines()
         saved_commands = [cmd.strip() for cmd in lines]
         assert saved_commands == ['cmd1', 'cmd2', 'cmd3', 'cmd4', 'cmd_before_close', 'new_cmd']
 
@@ -267,6 +304,6 @@ class TestCommandHistory:
         instances.pop().done()
 
         _path = os.path.join(tctx.options.confdir, 'command_history')
-        lines = open(_path, 'r').readlines()
+        lines = open(_path).readlines()
         saved_commands = [cmd.strip() for cmd in lines]
         assert saved_commands == ['cmd1', 'cmd2', 'cmd3', 'cmd4', 'cmd5']

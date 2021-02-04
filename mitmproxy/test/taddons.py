@@ -4,7 +4,7 @@ import sys
 
 import mitmproxy.master
 import mitmproxy.options
-from mitmproxy import addonmanager
+from mitmproxy import addonmanager, hooks, log
 from mitmproxy import command
 from mitmproxy import eventsequence
 from mitmproxy.addons import script, core
@@ -14,10 +14,10 @@ class TestAddons(addonmanager.AddonManager):
     def __init__(self, master):
         super().__init__(master)
 
-    def trigger(self, event, *args, **kwargs):
-        if event == "log":
-            self.master.logs.append(args[0])
-        super().trigger(event, *args, **kwargs)
+    def trigger(self, event: hooks.Hook):
+        if isinstance(event, log.AddLogHook):
+            self.master.logs.append(event.entry)
+        super().trigger(event)
 
 
 class RecordingMaster(mitmproxy.master.Master):
@@ -28,7 +28,7 @@ class RecordingMaster(mitmproxy.master.Master):
 
     def dump_log(self, outf=sys.stdout):
         for i in self.logs:
-            print("%s: %s" % (i.level, i.msg), file=outf)
+            print(f"{i.level}: {i.msg}", file=outf)
 
     def has_log(self, txt, level=None):
         for i in self.logs:
@@ -38,13 +38,16 @@ class RecordingMaster(mitmproxy.master.Master):
                 return True
         return False
 
-    async def await_log(self, txt, level=None):
-        for i in range(20):
+    async def await_log(self, txt, level=None, timeout=1):
+        # start with a sleep(0), which lets all other coroutines advance.
+        # often this is enough to not sleep at all.
+        await asyncio.sleep(0)
+        for i in range(int(timeout / 0.01)):
             if self.has_log(txt, level):
                 return True
             else:
-                await asyncio.sleep(0.1)
-        return False
+                await asyncio.sleep(0.01)
+        raise AssertionError(f"Did not find log entry {txt!r} in {self.logs}.")
 
     def clear(self):
         self.logs = []
@@ -83,11 +86,10 @@ class context:
             is taken (as in flow interception).
         """
         f.reply._state = "start"
-        for evt, arg in eventsequence.iterate(f):
+        for evt in eventsequence.iterate(f):
             self.master.addons.invoke_addon(
                 addon,
-                evt,
-                arg
+                evt
             )
             if f.reply.state == "taken":
                 return
@@ -104,7 +106,7 @@ class context:
             if kwargs:
                 self.options.update(**kwargs)
             else:
-                self.master.addons.invoke_addon(addon, "configure", {})
+                self.master.addons.invoke_addon(addon, hooks.ConfigureHook(set()))
 
     def script(self, path):
         """
@@ -113,11 +115,11 @@ class context:
         sc = script.Script(path, False)
         return sc.addons[0] if sc.addons else None
 
-    def invoke(self, addon, event, *args, **kwargs):
+    def invoke(self, addon, event: hooks.Hook):
         """
             Recursively invoke an event on an addon and all its children.
         """
-        return self.master.addons.invoke_addon(addon, event, *args, **kwargs)
+        return self.master.addons.invoke_addon(addon, event)
 
     def command(self, func, *args):
         """

@@ -93,7 +93,7 @@ The files created by mitmproxy in the .mitmproxy directory are as follows:
 
 ## Using a custom server certificate
 
-You can use your own (leaf) certificate by passing the `--cert
+You can use your own (leaf) certificate by passing the `--certs
 [domain=]path_to_certificate` option to mitmproxy. Mitmproxy then uses the
 provided certificate for interception of the specified domain instead of
 generating a certificate signed by its own CA.
@@ -127,13 +127,13 @@ Now, you can run mitmproxy with the generated certificate:
 **For all domain names**
 
 ```bash
-mitmproxy --cert *=cert.pem
+mitmproxy --certs *=cert.pem
 ```
 
 **For specific domain names**
 
 ```bash
-mitmproxy --cert *.example.com=cert.pem
+mitmproxy --certs *.example.com=cert.pem
 ```
 
 **Note:** `*.example.com` is for all the subdomains. You can also use

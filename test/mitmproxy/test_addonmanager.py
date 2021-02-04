@@ -1,13 +1,15 @@
-import pytest
 from unittest import mock
 
+import pytest
 
-from mitmproxy import addons
 from mitmproxy import addonmanager
-from mitmproxy import exceptions
-from mitmproxy import options
+from mitmproxy import addons
 from mitmproxy import command
+from mitmproxy import exceptions
+from mitmproxy import hooks
 from mitmproxy import master
+from mitmproxy import options
+from mitmproxy.proxy.layers.http import HttpRequestHook, HttpResponseHook
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
@@ -44,6 +46,11 @@ class AOption:
         l.add_option("custom_option", bool, False, "help")
 
 
+class AOldAPI:
+    def clientconnect(self):
+        pass
+
+
 def test_command():
     with taddons.context() as tctx:
         tctx.master.addons.add(TAddon("test"))
@@ -60,11 +67,11 @@ def test_halt():
     a.add(end)
 
     assert not end.running_called
-    a.trigger("running")
+    a.trigger(hooks.RunningHook())
     assert not end.running_called
 
     a.remove(halt)
-    a.trigger("running")
+    a.trigger(hooks.RunningHook())
     assert end.running_called
 
 
@@ -81,7 +88,7 @@ async def test_lifecycle():
         a.remove(TAddon("nonexistent"))
 
     f = tflow.tflow()
-    await a.handle_lifecycle("request", f)
+    await a.handle_lifecycle(HttpRequestHook(f))
 
     a._configure_all(o, o.keys())
 
@@ -129,23 +136,25 @@ async def test_simple():
         a.add(TAddon("one"))
 
         a.trigger("nonexistent")
-        assert await tctx.master.await_log("unknown event")
+        await tctx.master.await_log("AssertionError")
 
-        a.trigger("running")
-        a.trigger("response")
-        assert await tctx.master.await_log("not callable")
+        f = tflow.tflow()
+        a.trigger(hooks.RunningHook())
+        a.trigger(HttpResponseHook(f))
+        await tctx.master.await_log("not callable")
 
         tctx.master.clear()
         a.get("one").response = addons
-        a.trigger("response")
-        assert not await tctx.master.await_log("not callable")
+        a.trigger(HttpResponseHook(f))
+        with pytest.raises(AssertionError):
+            await tctx.master.await_log("not callable", timeout=0.01)
 
         a.remove(a.get("one"))
         assert not a.get("one")
 
         ta = TAddon("one")
         a.add(ta)
-        a.trigger("running")
+        a.trigger(hooks.RunningHook())
         assert ta.running_called
 
         assert ta in a
@@ -179,7 +188,7 @@ def test_nesting():
     assert a.get("three")
     assert a.get("four")
 
-    a.trigger("running")
+    a.trigger(hooks.RunningHook())
     assert a.get("one").running_called
     assert a.get("two").running_called
     assert a.get("three").running_called
@@ -190,9 +199,8 @@ def test_nesting():
     assert not a.get("four")
 
 
-class D:
-    def __init__(self):
-        self.w = None
-
-    def log(self, x):
-        self.w = x
+@pytest.mark.asyncio
+async def test_old_api():
+    with taddons.context(loadcore=False) as tctx:
+        tctx.master.addons.add(AOldAPI())
+        await tctx.master.await_log("clientconnect event has been removed")

@@ -212,12 +212,12 @@ async def test_load(tmpdir):
         assert len(v) == 4
         try:
             v.load_file("nonexistent_file_path")
-        except IOError:
+        except OSError:
             assert False
         with open(path, "wb") as f:
             f.write(b"invalidflows")
         v.load_file(path)
-        assert await tctx.master.await_log("Invalid data format.")
+        await tctx.master.await_log("Invalid data format.")
 
 
 def test_resolve():

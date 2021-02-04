@@ -1,7 +1,6 @@
 from typing import AnyStr
 
 import pytest
-import sys
 
 from mitmproxy.net.http import url
 from mitmproxy.net.http.url import parse_authority
@@ -62,7 +61,6 @@ def test_ascii_check():
                         b'%BD%E7%8C%AB%E6%B0%93%E7%8C%AB%E6%B0%93'
 
 
-@pytest.mark.skipif(sys.version_info < (3, 6), reason='requires Python 3.6 or higher')
 def test_parse_port_range():
     # Port out of range
     with pytest.raises(ValueError):
@@ -164,9 +162,11 @@ def test_default_port():
         ["127.0.0.1:443", True, ("127.0.0.1", 443)],
         ["[2001:db8:42::]:443", True, ("2001:db8:42::", 443)],
         [b"xn--aaa-pla.example:80", True, ("äaaa.example", 80)],
+        [b"xn--r8jz45g.xn--zckzah:80", True, ('例え.テスト', 80)],
         ["foo", True, ("foo", None)],
         ["foo..bar", False, ("foo..bar", None)],
         ["foo:bar", False, ("foo:bar", None)],
+        [b"foo:bar", False, ("foo:bar", None)],
         ["foo:999999999", False, ("foo:999999999", None)],
         [b"\xff", False, ('\udcff', None)]
     ]

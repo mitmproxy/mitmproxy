@@ -55,7 +55,7 @@ def check_option_type(name: str, value: typing.Any, typeinfo: Type) -> None:
         if len(types) != len(value):
             raise e
         for i, (x, T) in enumerate(zip(value, types)):
-            check_option_type("{}[{}]".format(name, i), x, T)
+            check_option_type(f"{name}[{i}]", x, T)
         return
     elif typename.startswith("typing.Sequence"):
         T = sequence_type(typeinfo)
@@ -77,7 +77,7 @@ def check_option_type(name: str, value: typing.Any, typeinfo: Type) -> None:
 
 
 def typespec_to_str(typespec: typing.Any) -> str:
-    if typespec in (str, int, bool):
+    if typespec in (str, int, float, bool):
         t = typespec.__name__
     elif typespec == typing.Optional[str]:
         t = 'optional str'

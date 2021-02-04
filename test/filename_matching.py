@@ -9,9 +9,15 @@ import sys
 def check_src_files_have_test():
     missing_test_files = []
 
-    excluded = ['mitmproxy/contrib/', 'mitmproxy/io/proto/',
-                'mitmproxy/test/', 'mitmproxy/tools/', 'mitmproxy/platform/']
-    src_files = glob.glob('mitmproxy/**/*.py', recursive=True) + glob.glob('pathod/**/*.py', recursive=True)
+    excluded = [
+        'mitmproxy/contrib/',
+        'mitmproxy/io/proto/',
+        'mitmproxy/proxy/layers/http',
+        'mitmproxy/test/',
+        'mitmproxy/tools/',
+        'mitmproxy/platform/',
+    ]
+    src_files = glob.glob('mitmproxy/**/*.py', recursive=True)
     src_files = [f for f in src_files if os.path.basename(f) != '__init__.py']
     src_files = [f for f in src_files if not any(os.path.normpath(p) in f for p in excluded)]
     for f in src_files:
@@ -25,8 +31,13 @@ def check_src_files_have_test():
 def check_test_files_have_src():
     unknown_test_files = []
 
-    excluded = ['test/mitmproxy/data/', 'test/mitmproxy/net/data/', '/tservers.py', '/conftest.py']
-    test_files = glob.glob('test/mitmproxy/**/*.py', recursive=True) + glob.glob('test/pathod/**/*.py', recursive=True)
+    excluded = [
+        'test/mitmproxy/data/',
+        'test/mitmproxy/net/data/',
+        '/tservers.py',
+        '/conftest.py',
+    ]
+    test_files = glob.glob('test/mitmproxy/**/*.py', recursive=True)
     test_files = [f for f in test_files if os.path.basename(f) != '__init__.py']
     test_files = [f for f in test_files if not any(os.path.normpath(p) in f for p in excluded)]
     for f in test_files:
@@ -44,14 +55,14 @@ def main():
     if missing_test_files:
         exitcode += 1
         for f, p in sorted(missing_test_files):
-            print("{} MUST have a matching test file: {}".format(f, p))
+            print(f"{f} MUST have a matching test file: {p}")
 
     unknown_test_files = check_test_files_have_src()
     if unknown_test_files:
         # TODO: enable this in the future
         # exitcode += 1
         for f, p in sorted(unknown_test_files):
-            print("{} DOES NOT MATCH a source file! Expected to find: {}".format(f, p))
+            print(f"{f} DOES NOT MATCH a source file! Expected to find: {p}")
 
     sys.exit(exitcode)
 

@@ -2,6 +2,7 @@ import pytest
 
 from mitmproxy.addons import intercept
 from mitmproxy import exceptions
+from mitmproxy.proxy import layers
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
@@ -64,10 +65,10 @@ def test_already_taken():
         tctx.configure(r, intercept="~q")
 
         f = tflow.tflow()
-        tctx.invoke(r, "request", f)
+        tctx.invoke(r, layers.http.HttpRequestHook(f))
         assert f.intercepted
 
         f = tflow.tflow()
         f.reply.take()
-        tctx.invoke(r, "request", f)
+        tctx.invoke(r, layers.http.HttpRequestHook(f))
         assert not f.intercepted

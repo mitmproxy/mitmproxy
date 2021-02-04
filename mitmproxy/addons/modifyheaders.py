@@ -42,7 +42,7 @@ def parse_modify_spec(option: str, subject_is_regex: bool) -> ModifySpec:
 
     try:
         spec.read_replacement()
-    except IOError as e:
+    except OSError as e:
         raise ValueError(f"Invalid file path: {replacement[1:]} ({e})")
 
     return spec
@@ -63,8 +63,8 @@ class ModifyHeaders:
         )
 
     def configure(self, updated):
-        self.replacements = []
         if "modify_headers" in updated:
+            self.replacements = []
             for option in ctx.options.modify_headers:
                 try:
                     spec = parse_modify_spec(option, False)
@@ -73,12 +73,14 @@ class ModifyHeaders:
                 self.replacements.append(spec)
 
     def request(self, flow):
-        if not flow.reply.has_message:
-            self.run(flow, flow.request.headers)
+        if flow.response or flow.error or flow.reply.state == "taken":
+            return
+        self.run(flow, flow.request.headers)
 
     def response(self, flow):
-        if not flow.reply.has_message:
-            self.run(flow, flow.response.headers)
+        if flow.error or flow.reply.state == "taken":
+            return
+        self.run(flow, flow.response.headers)
 
     def run(self, flow: http.HTTPFlow, hdrs: Headers) -> None:
         matches = []
@@ -98,7 +100,7 @@ class ModifyHeaders:
             if matches[i]:
                 try:
                     replacement = spec.read_replacement()
-                except IOError as e:
+                except OSError as e:
                     ctx.log.warn(f"Could not read replacement file: {e}")
                     continue
                 else:

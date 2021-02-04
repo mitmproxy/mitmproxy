@@ -1,8 +1,9 @@
 import binascii
+from unittest import mock
 
+import ldap3
 import pytest
 
-from unittest import mock
 from mitmproxy import exceptions
 from mitmproxy.addons import proxyauth
 from mitmproxy.test import taddons
@@ -162,63 +163,74 @@ class TestProxyAuth:
             assert not f.response
             assert not f.request.headers.get("Authorization")
 
-    def test_configure(self, tdata):
-        up = proxyauth.ProxyAuth()
-        with taddons.context(up) as ctx:
-            with pytest.raises(exceptions.OptionsError):
-                ctx.configure(up, proxyauth="foo")
+    def test_configure(self, monkeypatch, tdata):
+        monkeypatch.setattr(ldap3, "Server", lambda *_, **__: True)
+        monkeypatch.setattr(ldap3, "Connection", lambda *_, **__: True)
 
-            ctx.configure(up, proxyauth="foo:bar")
-            assert up.singleuser == ["foo", "bar"]
+        pa = proxyauth.ProxyAuth()
+        with taddons.context(pa) as ctx:
+            with pytest.raises(exceptions.OptionsError, match="Invalid proxyauth specification"):
+                ctx.configure(pa, proxyauth="foo")
 
-            ctx.configure(up, proxyauth=None)
-            assert up.singleuser is None
+            with pytest.raises(exceptions.OptionsError, match="Invalid single-user auth specification."):
+                ctx.configure(pa, proxyauth="foo:bar:baz")
 
-            ctx.configure(up, proxyauth="any")
-            assert up.nonanonymous
-            ctx.configure(up, proxyauth=None)
-            assert not up.nonanonymous
+            ctx.configure(pa, proxyauth="foo:bar")
+            assert pa.singleuser == ["foo", "bar"]
 
-            with mock.patch('ldap3.Server', return_value="ldap://fake_server:389 - cleartext"):
-                with mock.patch('ldap3.Connection', return_value="test"):
-                    ctx.configure(up, proxyauth="ldap:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com")
-                    assert up.ldapserver
-                    ctx.configure(up, proxyauth="ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com")
-                    assert up.ldapserver
+            ctx.configure(pa, proxyauth=None)
+            assert pa.singleuser is None
 
-            with pytest.raises(exceptions.OptionsError):
-                ctx.configure(up, proxyauth="ldap:test:test:test")
-
-            with pytest.raises(exceptions.OptionsError):
-                ctx.configure(up, proxyauth="ldap:fake_serveruid=?dc=example,dc=com:person")
-
-            with pytest.raises(exceptions.OptionsError):
-                ctx.configure(up, proxyauth="ldapssssssss:fake_server:dn:password:tree")
-
-            with pytest.raises(exceptions.OptionsError):
-                ctx.configure(
-                    up,
-                    proxyauth= "@" + tdata.path("mitmproxy/net/data/server.crt")
-                )
-            with pytest.raises(exceptions.OptionsError):
-                ctx.configure(up, proxyauth="@nonexistent")
+            ctx.configure(pa, proxyauth="any")
+            assert pa.nonanonymous
+            ctx.configure(pa, proxyauth=None)
+            assert not pa.nonanonymous
 
             ctx.configure(
-                up,
-                proxyauth= "@" + tdata.path(
+                pa,
+                proxyauth="ldap:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
+            )
+            assert pa.ldapserver
+            ctx.configure(
+                pa,
+                proxyauth="ldaps:localhost:cn=default,dc=cdhdt,dc=com:password:ou=application,dc=cdhdt,dc=com"
+            )
+            assert pa.ldapserver
+
+            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
+                ctx.configure(pa, proxyauth="ldap:test:test:test")
+
+            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
+                ctx.configure(pa, proxyauth="ldap:fake_serveruid=?dc=example,dc=com:person")
+
+            with pytest.raises(exceptions.OptionsError, match="Invalid ldap specification"):
+                ctx.configure(pa, proxyauth="ldapssssssss:fake_server:dn:password:tree")
+
+            with pytest.raises(exceptions.OptionsError, match="Could not open htpasswd file"):
+                ctx.configure(
+                    pa,
+                    proxyauth="@" + tdata.path("mitmproxy/net/data/server.crt")
+                )
+            with pytest.raises(exceptions.OptionsError, match="Could not open htpasswd file"):
+                ctx.configure(pa, proxyauth="@nonexistent")
+
+            ctx.configure(
+                pa,
+                proxyauth="@" + tdata.path(
                     "mitmproxy/net/data/htpasswd"
                 )
             )
-            assert up.htpasswd
-            assert up.htpasswd.check_password("test", "test")
-            assert not up.htpasswd.check_password("test", "foo")
-            ctx.configure(up, proxyauth=None)
-            assert not up.htpasswd
+            assert pa.htpasswd
+            assert pa.htpasswd.check_password("test", "test")
+            assert not pa.htpasswd.check_password("test", "foo")
+            ctx.configure(pa, proxyauth=None)
+            assert not pa.htpasswd
 
-            with pytest.raises(exceptions.OptionsError):
-                ctx.configure(up, proxyauth="any", mode="transparent")
-            with pytest.raises(exceptions.OptionsError):
-                ctx.configure(up, proxyauth="any", mode="socks5")
+            with pytest.raises(exceptions.OptionsError,
+                               match="Proxy Authentication not supported in transparent mode."):
+                ctx.configure(pa, proxyauth="any", mode="transparent")
+            with pytest.raises(exceptions.OptionsError, match="Proxy Authentication not supported in SOCKS mode."):
+                ctx.configure(pa, proxyauth="any", mode="socks5")
 
     def test_handlers(self):
         up = proxyauth.ProxyAuth()

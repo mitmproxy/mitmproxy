@@ -174,19 +174,22 @@ def convert_6_7(data):
 
 def convert_7_8(data):
     data["version"] = 8
-    data["request"]["trailers"] = None
-    if data["response"] is not None:
+    if "request" in data and data["request"] is not None:
+        data["request"]["trailers"] = None
+    if "response" in data and data["response"] is not None:
         data["response"]["trailers"] = None
     return data
 
 
 def convert_8_9(data):
     data["version"] = 9
-    data["request"].pop("first_line_format")
-    data["request"]["authority"] = b""
-    is_request_replay = data["request"].pop("is_replay", False)
+    is_request_replay = False
+    if "request" in data:
+        data["request"].pop("first_line_format")
+        data["request"]["authority"] = b""
+        is_request_replay = data["request"].pop("is_replay", False)
     is_response_replay = False
-    if data["response"] is not None:
+    if "response" in data and data["response"] is not None:
         is_response_replay = data["response"].pop("is_replay", False)
     if is_request_replay:  # pragma: no cover
         data["is_replay"] = "request"
@@ -194,6 +197,56 @@ def convert_8_9(data):
         data["is_replay"] = "response"
     else:
         data["is_replay"] = None
+    return data
+
+
+def convert_9_10(data):
+    data["version"] = 10
+
+    def conv_conn(conn):
+        conn["state"] = 0
+        conn["error"] = None
+        conn["tls"] = conn["tls_established"]
+        alpn = conn["alpn_proto_negotiated"]
+        conn["alpn_offers"] = [alpn] if alpn else None
+        cipher = conn["cipher_name"]
+        conn["cipher_list"] = [cipher] if cipher else None
+
+    def conv_cconn(conn):
+        conn["sockname"] = ("", 0)
+        cc = conn.pop("clientcert", None)
+        conn["certificate_list"] = [cc] if cc else []
+        conv_conn(conn)
+
+    def conv_sconn(conn):
+        crt = conn.pop("cert", None)
+        conn["certificate_list"] = [crt] if crt else []
+        conn["cipher_name"] = None
+        conn["via2"] = None
+        conv_conn(conn)
+
+    conv_cconn(data["client_conn"])
+    conv_sconn(data["server_conn"])
+    if data["server_conn"]["via"]:
+        conv_sconn(data["server_conn"]["via"])
+
+    return data
+
+
+def convert_10_11(data):
+    data["version"] = 11
+
+    def conv_conn(conn):
+        conn["sni"] = strutils.always_str(conn["sni"], "ascii", "backslashreplace")
+        conn["alpn"] = conn.pop("alpn_proto_negotiated")
+        conn["alpn_offers"] = conn["alpn_offers"] or []
+        conn["cipher_list"] = conn["cipher_list"] or []
+
+    conv_conn(data["client_conn"])
+    conv_conn(data["server_conn"])
+    if data["server_conn"]["via"]:
+        conv_conn(data["server_conn"]["via"])
+
     return data
 
 
@@ -253,6 +306,8 @@ converters = {
     6: convert_6_7,
     7: convert_7_8,
     8: convert_8_9,
+    9: convert_9_10,
+    10: convert_10_11,
 }
 
 

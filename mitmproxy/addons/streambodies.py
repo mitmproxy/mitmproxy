@@ -19,13 +19,6 @@ class StreamBodies:
             Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
             """
         )
-        loader.add_option(
-            "stream_websockets", bool, False,
-            """
-            Stream WebSocket messages between client and server.
-            Messages are captured and cannot be modified.
-            """
-        )
 
     def configure(self, updated):
         if "stream_large_bodies" in updated and ctx.options.stream_large_bodies:
@@ -41,8 +34,8 @@ class StreamBodies:
                 expected_size = http1.expected_http_body_size(
                     f.request, f.response if not is_request else None
                 )
-            except exceptions.HttpException:
-                f.reply.kill()
+            except ValueError:
+                f.kill()
                 return
             if expected_size and not r.raw_content and not (0 <= expected_size <= self.max_size):
                 # r.stream may already be a callable, which we want to preserve.
@@ -54,11 +47,3 @@ class StreamBodies:
 
     def responseheaders(self, f):
         self.run(f, False)
-
-    def websocket_start(self, f):
-        if ctx.options.stream_websockets:
-            f.stream = True
-            ctx.log.info("Streaming WebSocket messages between {client} and {server}".format(
-                client=human.format_address(f.client_conn.address),
-                server=human.format_address(f.server_conn.address))
-            )

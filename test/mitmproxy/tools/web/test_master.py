@@ -1,7 +1,7 @@
-from mitmproxy.tools.web import master
-from mitmproxy import options
-
 import pytest
+
+from mitmproxy import options
+from mitmproxy.tools.web import master
 
 from ... import tservers
 

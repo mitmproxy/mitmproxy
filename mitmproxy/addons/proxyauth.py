@@ -1,18 +1,18 @@
 import binascii
 import weakref
-import ldap3
+from typing import MutableMapping
 from typing import Optional
-from typing import MutableMapping  # noqa
 from typing import Tuple
 
+import ldap3
 import passlib.apache
 
 import mitmproxy.net.http
-from mitmproxy import connections  # noqa
+from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import http
-from mitmproxy import ctx
 from mitmproxy.net.http import status_codes
+from mitmproxy.proxy import context
 
 REALM = "mitmproxy"
 
@@ -49,7 +49,7 @@ class ProxyAuth:
         self.singleuser = None
         self.ldapconn = None
         self.ldapserver = None
-        self.authenticated: MutableMapping[connections.ClientConnection, Tuple[str, str]] = weakref.WeakKeyDictionary()
+        self.authenticated: MutableMapping[context.Client, Tuple[str, str]] = weakref.WeakKeyDictionary()
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def load(self, loader):
@@ -85,12 +85,12 @@ class ProxyAuth:
         if self.is_proxy_auth():
             return http.make_error_response(
                 status_codes.PROXY_AUTH_REQUIRED,
-                headers=mitmproxy.net.http.Headers(Proxy_Authenticate='Basic realm="{}"'.format(REALM)),
+                headers=mitmproxy.net.http.Headers(Proxy_Authenticate=f'Basic realm="{REALM}"'),
             )
         else:
             return http.make_error_response(
                 status_codes.UNAUTHORIZED,
-                headers=mitmproxy.net.http.Headers(WWW_Authenticate='Basic realm="{}"'.format(REALM)),
+                headers=mitmproxy.net.http.Headers(WWW_Authenticate=f'Basic realm="{REALM}"'),
             )
 
     def check(self, f: http.HTTPFlow) -> Optional[Tuple[str, str]]:
@@ -181,13 +181,15 @@ class ProxyAuth:
                         auto_bind=True)
                     self.ldapconn = conn
                     self.ldapserver = server
-                else:
+                elif ":" in ctx.options.proxyauth:
                     parts = ctx.options.proxyauth.split(':')
                     if len(parts) != 2:
                         raise exceptions.OptionsError(
                             "Invalid single-user auth specification."
                         )
                     self.singleuser = parts
+                else:
+                    raise exceptions.OptionsError("Invalid proxyauth specification.")
         if self.enabled():
             if ctx.options.mode == "transparent":
                 raise exceptions.OptionsError(

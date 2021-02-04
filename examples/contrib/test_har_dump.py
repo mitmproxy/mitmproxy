@@ -21,18 +21,18 @@ class TestHARDump:
 
     def test_simple(self, tmpdir, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
             tctx.invoke(a, "response", self.flow())
             tctx.invoke(a, "done")
-            with open(path, "r") as inp:
+            with open(path) as inp:
                 har = json.load(inp)
             assert len(har["log"]["entries"]) == 1
 
     def test_base64(self, tmpdir, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
 
@@ -40,13 +40,13 @@ class TestHARDump:
                 a, "response", self.flow(resp_content=b"foo" + b"\xFF" * 10)
             )
             tctx.invoke(a, "done")
-            with open(path, "r") as inp:
+            with open(path) as inp:
                 har = json.load(inp)
             assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
 
     def test_format_cookies(self, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
 
             CA = cookies.CookieAttrs
 
@@ -65,7 +65,7 @@ class TestHARDump:
 
     def test_binary(self, tmpdir, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/complex/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
 
@@ -79,6 +79,6 @@ class TestHARDump:
             tctx.invoke(a, "response", f)
             tctx.invoke(a, "done")
 
-            with open(path, "r") as inp:
+            with open(path) as inp:
                 har = json.load(inp)
             assert len(har["log"]["entries"]) == 1

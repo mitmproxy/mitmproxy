@@ -6,7 +6,7 @@ from typing import Dict
 from bs4 import BeautifulSoup
 
 from mitmproxy.http import HTTPFlow
-from examples.complex.webscanner_helper.urldict import URLDict
+from examples.contrib.webscanner_helper.urldict import URLDict
 
 NO_CONTENT = object()
 
@@ -68,7 +68,7 @@ class MappingAddon:
         self.filename = filename
         self.persistent = persistent
         self.logger = logging.getLogger(self.__class__.__name__)
-        with open(filename, "r") as f:
+        with open(filename) as f:
             self.mapping_templates = URLDict.load(f)
 
     def load(self, loader):
@@ -84,7 +84,7 @@ class MappingAddon:
     def configure(self, updated):
         if self.OPT_MAPPING_FILE in updated:
             self.filename = updated[self.OPT_MAPPING_FILE]
-            with open(self.filename, "r") as f:
+            with open(self.filename) as f:
                 self.mapping_templates = URLDict.load(f)
 
         if self.OPT_MAP_PERSISTENT in updated:

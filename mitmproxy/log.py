@@ -1,4 +1,7 @@
 import asyncio
+from dataclasses import dataclass
+
+from mitmproxy import hooks
 
 
 class LogEntry:
@@ -12,7 +15,7 @@ class LogEntry:
         return False
 
     def __repr__(self):
-        return "LogEntry({}, {})".format(self.msg, self.level)
+        return f"LogEntry({self.msg}, {self.level})"
 
 
 class Log:
@@ -57,8 +60,18 @@ class Log:
 
     def __call__(self, text, level="info"):
         asyncio.get_event_loop().call_soon(
-            self.master.addons.trigger, "log", LogEntry(text, level)
+            self.master.addons.trigger, AddLogHook(LogEntry(text, level)),
         )
+
+
+@dataclass
+class AddLogHook(hooks.Hook):
+    """
+    Called whenever a new log entry is created through the mitmproxy
+    context. Be careful not to log from this event, which will cause an
+    infinite loop!
+    """
+    entry: LogEntry
 
 
 LogTierOrder = [
