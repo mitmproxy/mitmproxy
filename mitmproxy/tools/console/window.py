@@ -18,7 +18,7 @@ from mitmproxy.tools.console import statusbar
 if os.name == "nt":
     from mitmproxy.contrib.urwid import raw_display
 else:
-    from urwid import raw_display
+    from urwid import raw_display  # type: ignore
 
 
 class StackWidget(urwid.Frame):

@@ -36,6 +36,7 @@ def request(flow: http.HTTPFlow):
 
 
 def response(flow: http.HTTPFlow):
+    assert flow.response  # make type checker happy
     if flow.response.trailers:
         print("HTTP Trailers detected! Response contains:", flow.response.trailers)
 
