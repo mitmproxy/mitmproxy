@@ -1,3 +1,4 @@
+import time
 from typing import Optional, Tuple
 
 from h11._receivebuffer import ReceiveBuffer
@@ -44,7 +45,20 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         if not self.send_connect:
             return (yield from super().start_handshake())
         assert self.conn.address
-        req = http.make_connect_request(self.conn.address)
+        req = http.Request(
+            host=self.conn.address[0],
+            port=self.conn.address[1],
+            method=b"CONNECT",
+            scheme=b"",
+            authority=f"{self.conn.address[0]}:{self.conn.address[1]}".encode(),
+            path=b"",
+            http_version=b"HTTP/1.1",
+            headers=http.Headers(),
+            content=b"",
+            trailers=None,
+            timestamp_start=time.time(),
+            timestamp_end=time.time(),
+        )
         raw = http1.assemble_request(req)
         yield commands.SendData(self.tunnel_connection, raw)
 

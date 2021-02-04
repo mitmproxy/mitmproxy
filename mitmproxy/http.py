@@ -1,4 +1,4 @@
-import html
+import re
 import re
 import time
 import urllib.parse
@@ -13,14 +13,13 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 
-from mitmproxy.net.http import url
 from mitmproxy import flow
-from mitmproxy import version
 from mitmproxy.coretypes import multidict
 from mitmproxy.coretypes import serializable
-from mitmproxy.net import http, encoding
+from mitmproxy.net import encoding
 from mitmproxy.net.http import cookies, multipart
 from mitmproxy.net.http import status_codes
+from mitmproxy.net.http import url
 from mitmproxy.net.http.headers import assemble_content_type, parse_content_type
 from mitmproxy.proxy import context
 from mitmproxy.utils import human
@@ -1158,69 +1157,10 @@ class HTTPFlow(flow.Flow):
         return f
 
 
-def make_error_response(
-    status_code: int,
-    message: str = "",
-    headers: Optional[Headers] = None,
-) -> Response:
-    body: bytes = """
-        <html>
-            <head>
-                <title>{status_code} {reason}</title>
-            </head>
-            <body>
-            <h1>{status_code} {reason}</h1>
-            <p>{message}</p>
-            </body>
-        </html>
-    """.strip().format(
-        status_code=status_code,
-        reason=http.status_codes.RESPONSES.get(status_code, "Unknown"),
-        message=html.escape(message),
-    ).encode("utf8", "replace")
-
-    if not headers:
-        headers = Headers(
-            Server=version.MITMPROXY,
-            Connection="close",
-            Content_Length=str(len(body)),
-            Content_Type="text/html"
-        )
-
-    return Response.make(status_code, body, headers)
-
-
-def make_connect_request(address: Tuple[str, int]) -> Request:
-    return Request(
-        host=address[0],
-        port=address[1],
-        method=b"CONNECT",
-        scheme=b"",
-        authority=f"{address[0]}:{address[1]}".encode(),
-        path=b"",
-        http_version=b"HTTP/1.1",
-        headers=Headers(),
-        content=b"",
-        trailers=None,
-        timestamp_start=time.time(),
-        timestamp_end=time.time(),
-    )
-
-
-def make_connect_response(http_version):
-    # Do not send any response headers as it breaks proxying non-80 ports on
-    # Android emulators using the -http-proxy option.
-    return Response(
-        http_version,
-        200,
-        b"Connection established",
-        Headers(),
-        b"",
-        None,
-        time.time(),
-        time.time(),
-    )
-
-
-def make_expect_continue_response():
-    return Response.make(100)
+__all__ = [
+    "HTTPFlow",
+    "Message",
+    "Request",
+    "Response",
+    "Headers",
+]

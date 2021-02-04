@@ -5,6 +5,7 @@ from mitmproxy.proxy.commands import SendData
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers.http import Http1Server, ReceiveHttp, RequestHeaders, RequestEndOfMessage, \
     ResponseHeaders, ResponseEndOfMessage, RequestData, Http1Client, ResponseData
+from mitmproxy.proxy.layers.http._http1 import make_error_response
 from test.mitmproxy.proxy.tutils import Placeholder, Playbook
 
 
@@ -199,3 +200,7 @@ class TestClient:
                 >> RequestHeaders(3, req, True)
                 << SendData(tctx.server, Placeholder(bytes))
         )
+
+
+def test_make_error_response():
+    assert make_error_response(543, 'foobar')

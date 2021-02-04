@@ -7,7 +7,6 @@ from typing import Tuple
 import ldap3
 import passlib.apache
 
-import mitmproxy.net.http
 from mitmproxy import ctx
 from mitmproxy import exceptions
 from mitmproxy import http
@@ -83,15 +82,23 @@ class ProxyAuth:
 
     def auth_required_response(self) -> http.Response:
         if self.is_proxy_auth():
-            return http.make_error_response(
-                status_codes.PROXY_AUTH_REQUIRED,
-                headers=mitmproxy.http.Headers(Proxy_Authenticate=f'Basic realm="{REALM}"'),
-            )
+            status_code = status_codes.PROXY_AUTH_REQUIRED
+            headers = {"Proxy-Authenticate": f'Basic realm="{REALM}"'}
         else:
-            return http.make_error_response(
-                status_codes.UNAUTHORIZED,
-                headers=mitmproxy.http.Headers(WWW_Authenticate=f'Basic realm="{REALM}"'),
-            )
+            status_code = status_codes.UNAUTHORIZED
+            headers = {"WWW-Authenticate": f'Basic realm="{REALM}"'}
+
+        reason = http.status_codes.RESPONSES[status_code]
+        return http.Response.make(
+            status_code,
+            (
+                f"<html>"
+                f"<head><title>{status_code} {reason}</title></head>"
+                f"<body><h1>{status_code} {reason}</h1></body>"
+                f"</html>"
+            ),
+            headers
+        )
 
     def check(self, f: http.HTTPFlow) -> Optional[Tuple[str, str]]:
         """

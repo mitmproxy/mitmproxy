@@ -449,7 +449,18 @@ class HttpStream(layer.Layer):
 
     def handle_connect_finish(self):
         if not self.flow.response:
-            self.flow.response = http.make_connect_response(self.flow.request.data.http_version)
+            # Do not send any response headers as it breaks proxying non-80 ports on
+            # Android emulators using the -http-proxy option.
+            self.flow.response = http.Response(
+                self.flow.request.data.http_version,
+                200,
+                b"Connection established",
+                http.Headers(),
+                b"",
+                None,
+                time.time(),
+                time.time(),
+            )
 
         if 200 <= self.flow.response.status_code < 300:
             yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response), self.context.client)

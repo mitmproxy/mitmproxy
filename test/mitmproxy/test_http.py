@@ -197,27 +197,3 @@ class TestHTTPFlow:
     def test_timestamp_start(self):
         f = tflow.tflow()
         assert f.timestamp_start == f.request.timestamp_start
-
-
-def test_make_error_response():
-    resp = http.make_error_response(543, 'foobar', Headers())
-    assert resp
-
-
-def test_make_connect_request():
-    req = http.make_connect_request(('invalidhost', 1234))
-    assert req.first_line_format == 'authority'
-    assert req.method == 'CONNECT'
-    assert req.http_version == 'HTTP/1.1'
-
-
-def test_make_connect_response():
-    resp = http.make_connect_response('foobar')
-    assert resp.http_version == 'foobar'
-    assert resp.status_code == 200
-
-
-def test_expect_continue_response():
-    resp = http.make_expect_continue_response()
-    assert resp.http_version == 'HTTP/1.1'
-    assert resp.status_code == 100
