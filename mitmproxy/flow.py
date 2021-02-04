@@ -13,23 +13,21 @@ class Error(stateobject.StateObject):
         An Error.
 
         This is distinct from an protocol error response (say, a HTTP code 500),
-        which is represented by a normal HTTPResponse object. This class is
+        which is represented by a normal `mitmproxy.http.Response` object. This class is
         responsible for indicating errors that fall outside of normal protocol
         communications, like interrupted connections, timeouts, protocol errors.
-
-        Exposes the following attributes:
-
-            msg: Message describing the error
-            timestamp: Seconds since the epoch
     """
+
+    msg: str
+    """Message describing the error."""
+
+    timestamp: float
+    """Unix timestamp"""
 
     KILLED_MESSAGE = "Connection killed."
 
-    def __init__(self, msg: str, timestamp=None) -> None:
-        """
-        @type msg: str
-        @type timestamp: float
-        """
+    def __init__(self, msg: str, timestamp: typing.Optional[float] = None) -> None:
+        """Create an error. If no timestamp is passed, the current time is used."""
         self.msg = msg
         self.timestamp = timestamp or time.time()
 
