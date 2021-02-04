@@ -5,6 +5,7 @@ theme = "mitmproxydocs"
 publishDir = "../public"
 RelativeURLs = true
 pygmentsCodefences = true
+pygmentsUseClasses = true
 
 [indexes]
 tag = "tags"

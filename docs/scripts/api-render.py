@@ -3,7 +3,7 @@ import os
 import shutil
 from pathlib import Path
 
-import pdoc.render
+import pdoc.render_helpers
 
 here = Path(__file__).parent
 
@@ -18,14 +18,19 @@ pdoc.render.configure(
     template_directory=here / "pdoc-template",
     edit_url_map=edit_url_map,
 )
+# We can't configure Hugo, but we can configure pdoc.
+pdoc.render_helpers.formatter.cssclass = "chroma"
 
 modules = [
-    here / ".." / "src" / "generated" / "events.py",
-    "mitmproxy.proxy.context",
-    "mitmproxy.http",
+    "mitmproxy.addonmanager",
+    "mitmproxy.certs",
+    #"mitmproxy.connection",
     "mitmproxy.flow",
+    "mitmproxy.http",
+    "mitmproxy.proxy.server_hooks",
     "mitmproxy.tcp",
     "mitmproxy.websocket",
+    here / ".." / "src" / "generated" / "events.py",
 ]
 
 pdoc.pdoc(
@@ -42,7 +47,7 @@ api_content.mkdir()
 for module in modules:
     if isinstance(module, Path):
         continue
-    filename = f"api/{ module.replace('.','/') }.html"
+    filename = f"api/{module.replace('.', '/')}.html"
     (api_content / f"{module}.md").write_text(f"""
 ---
 title: "{module}"
@@ -55,3 +60,5 @@ menu:
 
 {{{{< readfile file="/generated/{filename}" >}}}}
 """)
+
+(here / ".." / "src" / "content" / "addons-api.md").touch()

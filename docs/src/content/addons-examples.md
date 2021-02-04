@@ -1,6 +1,6 @@
 
 ---
-title: "Example Addons"
+title: "Examples"
 menu:
     addons:
         weight: 6

@@ -7,13 +7,11 @@ menu:
 
 # Addons
 
-Mitmproxy's addon mechanism consists of a set of APIs that support components of
-any complexity. Addons interact with mitmproxy by responding to **events**,
-which allow them to hook into and change mitmproxy's behaviour. They are
-configured through **[options]({{< relref concepts-options >}})**, which can be
-set in mitmproxy's config file, changed interactively by users, or passed on the
-command-line. Finally, they can expose **commands**, which allows users to
-invoke their actions either directly or by binding them to keys in the
+Mitmproxy's addon mechanism consists of a set of APIs that support components of any complexity. Addons interact with
+mitmproxy by responding to [events]({{< relref addons-api >}}), which allow them to hook into and change mitmproxy's
+behaviour. They are configured through [options]({{< relref addons-options >}}), which can be set in mitmproxy's config
+file, changed interactively by users, or passed on the command-line. Finally, they can expose [commands]({{< relref
+addons-commands >}}), which allows users to invoke their actions either directly or by binding them to keys in the
 interactive tools.
 
 Addons are an exceptionally powerful part of mitmproxy. In fact, much of
@@ -30,16 +28,16 @@ functionality to third-party scripters and extenders.
 This document will show you how to build addons using **events**, **options**
 and **commands**. However, this is not an API manual, and the mitmproxy source
 code remains the canonical reference. One easy way to explore the API from the
-command-line is to use [pydoc](https://docs.python.org/3/library/pydoc.html).
+command-line is to use [pdoc](https://pdoc.dev/).
 Here, for example, is a command that shows the API documentation for the
 mitmproxy's HTTP flow classes:
 
 ```bash
-pydoc mitmproxy.http
+pdoc mitmproxy.http
 ```
 
 You will be referring to the mitmproxy API documentation frequently, so keep
-**pydoc** or an equivalent handy.
+**pdoc** or an equivalent handy.
 
 # Anatomy of an addon
 
@@ -55,7 +53,7 @@ it into your mitmproxy tool of choice. We'll use mitmpdump in these examples,
 but the flag is identical for all tools:
 
 ```bash
-> mitmdump -s ./anatomy.py
+mitmdump -s ./anatomy.py
 ```
 
 Here are a few things to note about the code above:
@@ -63,10 +61,9 @@ Here are a few things to note about the code above:
 - Mitmproxy picks up the contents of the `addons` global list and loads what it
   finds into the addons mechanism.
 - Addons are just objects - in this case our addon is an instance of `Counter`.
-- The `request` method is an example of an **event**. Addons simply implement a
-  method for each event they want to handle. Each event has a signature
-  consisting of arguments that are passed to the method. For `request`, this is
-  an instance of `mitmproxy.http.HTTPFlow`.
+- The `request` method is an example of an *event*. Addons simply implement a
+  method for each event they want to handle. Each event and its signature are documented
+  in the [API documentation]({{< relref "addons-api" >}}).
 - Finally, the `ctx` module is a holdall module that exposes a set of standard
   objects that are commonly used in addons. We could pass a `ctx` object as the
   first parameter to every event, but we've found it neater to just expose it as

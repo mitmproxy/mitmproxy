@@ -1,25 +1,20 @@
 {% extends "default/module.html.jinja2" %}
 {% block nav %}{% endblock %}
 {% block style_layout %}{% endblock %}
-
+{% block style_pygments %}{% endblock %}
 {#
-We do a bit of hackery here: generated/events.py is automatically created by scripts/api-events.py,
-and then documented using a heavily customized style.
+To document all event hooks, we do a bit of hackery:
+  1. scripts/api-events.py auto-generates generated/events.py.
+  2. scripts/api-render.py renders generated/events.py together with the remaining API docs.
+  3. This templates hides some elements of the default pdoc template.
+
 #}
 {% if module.name == "events" %}
     {% macro module_name() %}
-        <style type="text/css">
-            .pdoc .classattr {
-                margin-left: 0 !important;
-            }
-        </style>
     {% endmacro %}
     {% macro view_source(doc) %}
-        {% if doc.type == "function" %}
-            <details>
-                <summary>View Source</summary>
-                {{ doc.source | dedent | highlight }}
-            </details>
+        {% if doc.type != "module" %}
+            {{ default_view_source(doc) }}
         {% endif %}
     {% endmacro %}
     {% macro is_public(doc) %}
@@ -27,10 +22,18 @@ and then documented using a heavily customized style.
             {{ default_is_public(doc) }}
         {% endif %}
     {% endmacro %}
-    {% macro class(cls) %}
-        <h3>
-            {{ headerlink(cls) }}
-            <strong>{{ cls.name.replace("_", " ") }}</strong>
-        </h3>
+{% else %}
+    {% macro is_public(doc) %}
+        {% if doc.modulename == "mitmproxy.addonmanager" %}
+            {% if doc.qualname.startswith("Loader") and not doc.name.startswith("_") %}
+                true
+            {% endif %}
+        {% elif doc.modulename == "mitmproxy.certs" %}
+            {% if doc.qualname == "Cert" or doc.qualname.startswith("Cert.") %}
+                {{ default_is_public(doc) }}
+            {% endif %}
+        {% elif doc.name is not in(["from_state", "get_state", "set_state"]) %}
+            {{ default_is_public(doc) }}
+        {% endif %}
     {% endmacro %}
 {% endif %}

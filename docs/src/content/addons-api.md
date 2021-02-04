@@ -25,7 +25,8 @@ header with a count of the number of responses seen:
 {{< example src="examples/addons/http-add-header.py" lang="py" >}}
 
 
-## Addon Events
+## Example Addons
 
+The following addons showcase all available event hooks.
 
 {{< readfile file="/generated/api/events.html" >}}

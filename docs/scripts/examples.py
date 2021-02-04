@@ -31,7 +31,7 @@ for example in examples:
         f"  * [{example.name}](#{slug}){comment}"
     )
     listings.append(f"""
-<h2 id="{slug}">Example: {example.name}</h2>
+<h3 id="{slug}">Example: {example.name}</h3>
 
 ```python
 {code}

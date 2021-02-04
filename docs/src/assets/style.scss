@@ -1,4 +1,12 @@
 @import "./syntax";
+/* background for both hugo *and* pdoc. */
+.chroma pre, pre.chroma {
+    background-color: #f7f7f7;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    padding: .5rem 0 .5rem .5rem;
+}
+
 @import "./badge";
 
 $primary: #C93312;
@@ -19,6 +27,10 @@ bulma.io v0.8.0 | MIT License | github.com/jgthms/bulma */
 @import "./bulma/elements/_all";
 @import "./bulma/components/_all";
 @import "./bulma/layout/_all";
+
+html {
+  scroll-behavior: smooth;
+}
 
 html, body {
     height: 100%;
