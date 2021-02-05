@@ -60,8 +60,9 @@ def curl_command(f: flow.Flow, preserve_ip: bool = False) -> str:
     request = pop_headers(request)
     args = ["curl"]
 
-    server_addr = f.server_conn.ip_address[0]
-    if preserve_ip and request.pretty_host != server_addr:
+    server_addr = f.server_conn.peername[0] if f.server_conn.peername else None
+
+    if preserve_ip and server_addr and request.pretty_host != server_addr:
         resolve = "{}:{}:[{}]".format(request.pretty_host, request.port, server_addr)
         args.append("--resolve")
         args.append(resolve)
