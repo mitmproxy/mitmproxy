@@ -3,7 +3,7 @@ import os
 import pytest
 from hypothesis import settings
 
-from mitmproxy import options
+from mitmproxy import options, connection
 from mitmproxy.addons.core import Core
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons.termlog import TermLog
@@ -17,7 +17,7 @@ def tctx() -> context.Context:
     TermLog().load(opts)
     Core().load(opts)
     return context.Context(
-        context.Client(
+        connection.Client(
             ("client", 1234),
             ("127.0.0.1", 8080),
             1605699329

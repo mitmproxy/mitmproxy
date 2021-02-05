@@ -3,7 +3,7 @@ import typing
 from abc import ABC, abstractmethod
 
 from mitmproxy import flow
-from mitmproxy.net import http
+from mitmproxy import http
 
 KEY_MAX = 30
 

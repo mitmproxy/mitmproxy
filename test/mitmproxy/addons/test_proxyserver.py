@@ -6,7 +6,7 @@ import pytest
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import layers
-from mitmproxy.proxy.context import Address
+from mitmproxy.connection import Address
 from mitmproxy.test import taddons
 
 

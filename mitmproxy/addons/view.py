@@ -15,14 +15,15 @@ import blinker
 import sortedcontainers
 
 import mitmproxy.flow
-from mitmproxy import flowfilter, hooks
-from mitmproxy import exceptions
 from mitmproxy import command
 from mitmproxy import ctx
-from mitmproxy import io
+from mitmproxy import exceptions
+from mitmproxy import hooks
+from mitmproxy import connection
+from mitmproxy import flowfilter
 from mitmproxy import http
+from mitmproxy import io
 from mitmproxy import tcp
-from mitmproxy.proxy import context
 from mitmproxy.utils import human
 
 
@@ -133,15 +134,15 @@ class View(collections.abc.Sequence):
 
         self.default_order = OrderRequestStart(self)
         self.orders = dict(
-            time = OrderRequestStart(self), method = OrderRequestMethod(self),
-            url = OrderRequestURL(self), size = OrderKeySize(self),
+            time=OrderRequestStart(self), method=OrderRequestMethod(self),
+            url=OrderRequestURL(self), size=OrderKeySize(self),
         )
         self.order_key = self.default_order
         self.order_reversed = False
         self.focus_follow = False
 
         self._view = sortedcontainers.SortedListWithKey(
-            key = self.order_key
+            key=self.order_key
         )
 
         # The sig_view* signals broadcast events that affect the view. That is,
@@ -457,12 +458,12 @@ class View(collections.abc.Sequence):
     @command.command("view.flows.create")
     def create(self, method: str, url: str) -> None:
         try:
-            req = http.HTTPRequest.make(method.upper(), url)
+            req = http.Request.make(method.upper(), url)
         except ValueError as e:
             raise exceptions.CommandError("Invalid URL: %s" % e)
 
-        c = context.Client(("", 0), ("", 0), req.timestamp_start - 0.0001)
-        s = context.Server((req.host, req.port))
+        c = connection.Client(("", 0), ("", 0), req.timestamp_start - 0.0001)
+        s = connection.Server((req.host, req.port))
 
         f = http.HTTPFlow(c, s)
         f.request = req
@@ -622,6 +623,7 @@ class Focus:
     """
         Tracks a focus element within a View.
     """
+
     def __init__(self, v: View) -> None:
         self.view = v
         self._flow: typing.Optional[mitmproxy.flow.Flow] = None

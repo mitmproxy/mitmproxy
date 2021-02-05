@@ -5,9 +5,10 @@ import h2.connection
 import h2.events
 
 from mitmproxy.http import HTTPFlow
+from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData
-from mitmproxy.proxy.context import Context, Server
+from mitmproxy.connection import Server
 from mitmproxy.proxy.events import DataReceived
 from mitmproxy.proxy.layers import http
 from test.mitmproxy.proxy.layers.http.hyper_h2_test_helpers import FrameFactory

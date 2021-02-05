@@ -7,9 +7,10 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Optional, List, ClassVar, Deque, NamedTuple, Generator, Any, TypeVar
 
+from mitmproxy.connection import Connection
 from mitmproxy.proxy import commands, events
 from mitmproxy.proxy.commands import Command, StartHook
-from mitmproxy.proxy.context import Connection, Context
+from mitmproxy.proxy.context import Context
 
 T = TypeVar('T')
 CommandGenerator = Generator[Command, Any, T]
@@ -96,8 +97,8 @@ class Layer:
         if self._paused:
             # did we just receive the reply we were waiting for?
             pause_finished = (
-                    isinstance(event, events.CommandCompleted) and
-                    event.command is self._paused.command
+                isinstance(event, events.CommandCompleted) and
+                event.command is self._paused.command
             )
             if self.debug is not None:
                 yield self.__debug(f"{'>>' if pause_finished else '>!'} {event}")

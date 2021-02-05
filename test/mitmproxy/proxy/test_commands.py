@@ -2,13 +2,14 @@ from dataclasses import dataclass
 
 import pytest
 
+from mitmproxy import connection
 from mitmproxy.hooks import all_hooks
-from mitmproxy.proxy import commands, context
+from mitmproxy.proxy import commands
 
 
 @pytest.fixture
-def tconn() -> context.Server:
-    return context.Server(None)
+def tconn() -> connection.Server:
+    return connection.Server(None)
 
 
 def test_dataclasses(tconn):

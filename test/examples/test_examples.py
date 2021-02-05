@@ -2,7 +2,7 @@ from mitmproxy import contentviews
 from mitmproxy.test import tflow
 from mitmproxy.test import tutils
 from mitmproxy.test import taddons
-from mitmproxy.net.http import Headers
+from mitmproxy.http import Headers
 
 from ..mitmproxy import tservers
 

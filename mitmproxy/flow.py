@@ -2,11 +2,10 @@ import time
 import typing  # noqa
 import uuid
 
-from mitmproxy import controller
+from mitmproxy import controller, connection
 from mitmproxy import exceptions
 from mitmproxy import stateobject
 from mitmproxy import version
-from mitmproxy.proxy import context
 
 
 class Error(stateobject.StateObject):
@@ -14,23 +13,21 @@ class Error(stateobject.StateObject):
         An Error.
 
         This is distinct from an protocol error response (say, a HTTP code 500),
-        which is represented by a normal HTTPResponse object. This class is
+        which is represented by a normal `mitmproxy.http.Response` object. This class is
         responsible for indicating errors that fall outside of normal protocol
         communications, like interrupted connections, timeouts, protocol errors.
-
-        Exposes the following attributes:
-
-            msg: Message describing the error
-            timestamp: Seconds since the epoch
     """
+
+    msg: str
+    """Message describing the error."""
+
+    timestamp: float
+    """Unix timestamp"""
 
     KILLED_MESSAGE = "Connection killed."
 
-    def __init__(self, msg: str, timestamp=None) -> None:
-        """
-        @type msg: str
-        @type timestamp: float
-        """
+    def __init__(self, msg: str, timestamp: typing.Optional[float] = None) -> None:
+        """Create an error. If no timestamp is passed, the current time is used."""
         self.msg = msg
         self.timestamp = timestamp or time.time()
 
@@ -55,18 +52,17 @@ class Error(stateobject.StateObject):
 
 
 class Flow(stateobject.StateObject):
-
     """
     A Flow is a collection of objects representing a single transaction.
     This class is usually subclassed for each protocol, e.g. HTTPFlow.
     """
 
     def __init__(
-            self,
-            type: str,
-            client_conn: context.Client,
-            server_conn: context.Server,
-            live: bool=None
+        self,
+        type: str,
+        client_conn: connection.Client,
+        server_conn: connection.Server,
+        live: bool = None
     ) -> None:
         self.type = type
         self.id = str(uuid.uuid4())
@@ -85,8 +81,8 @@ class Flow(stateobject.StateObject):
     _stateobject_attributes = dict(
         id=str,
         error=Error,
-        client_conn=context.Client,
-        server_conn=context.Server,
+        client_conn=connection.Client,
+        server_conn=connection.Server,
         type=str,
         intercepted=bool,
         is_replay=str,

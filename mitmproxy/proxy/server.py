@@ -17,9 +17,10 @@ from dataclasses import dataclass
 
 from OpenSSL import SSL
 from mitmproxy import http, options as moptions
+from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import commands, events, layer, layers, server_hooks
-from mitmproxy.proxy.context import Address, Client, Connection, ConnectionState, Context
+from mitmproxy.connection import Address, Client, Connection, ConnectionState
 from mitmproxy.proxy.layers import tls
 from mitmproxy.utils import asyncio_utils
 from mitmproxy.utils import human
@@ -401,7 +402,7 @@ if __name__ == "__main__":  # pragma: no cover
 
         def request(flow: http.HTTPFlow):
             if "cached" in flow.request.path:
-                flow.response = http.HTTPResponse.make(418, f"(cached) {flow.request.text}")
+                flow.response = http.Response.make(418, f"(cached) {flow.request.text}")
             if "toggle-tls" in flow.request.path:
                 if flow.request.url.startswith("https://"):
                     flow.request.url = flow.request.url.replace("https://", "http://")

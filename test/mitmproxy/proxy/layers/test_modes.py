@@ -3,9 +3,10 @@ import copy
 import pytest
 
 from mitmproxy import platform
+from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData, GetSocket, Log
-from mitmproxy.proxy.context import Client, Context, Server
+from mitmproxy.connection import Client, Server
 from mitmproxy.proxy.events import DataReceived, ConnectionClosed
 from mitmproxy.proxy.layer import NextLayer, NextLayerHook
 from mitmproxy.proxy.layers import http, modes, tcp, tls

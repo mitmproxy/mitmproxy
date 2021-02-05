@@ -1,8 +1,9 @@
+import time
 from typing import Optional, Tuple
 
 from h11._receivebuffer import ReceiveBuffer
 
-from mitmproxy import http
+from mitmproxy import http, connection
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import http1
 from mitmproxy.proxy import commands, context, layer, tunnel
@@ -12,13 +13,13 @@ from mitmproxy.utils import human
 class HttpUpstreamProxy(tunnel.TunnelLayer):
     buf: ReceiveBuffer
     send_connect: bool
-    conn: context.Server
-    tunnel_connection: context.Server
+    conn: connection.Server
+    tunnel_connection: connection.Server
 
     def __init__(
             self,
             ctx: context.Context,
-            tunnel_conn: context.Server,
+            tunnel_conn: connection.Server,
             send_connect: bool
     ):
         super().__init__(
@@ -44,7 +45,20 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
         if not self.send_connect:
             return (yield from super().start_handshake())
         assert self.conn.address
-        req = http.make_connect_request(self.conn.address)
+        req = http.Request(
+            host=self.conn.address[0],
+            port=self.conn.address[1],
+            method=b"CONNECT",
+            scheme=b"",
+            authority=f"{self.conn.address[0]}:{self.conn.address[1]}".encode(),
+            path=b"",
+            http_version=b"HTTP/1.1",
+            headers=http.Headers(),
+            content=b"",
+            trailers=None,
+            timestamp_start=time.time(),
+            timestamp_end=time.time(),
+        )
         raw = http1.assemble_request(req)
         yield commands.SendData(self.tunnel_connection, raw)
 

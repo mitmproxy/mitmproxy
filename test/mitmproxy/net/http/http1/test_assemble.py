@@ -1,6 +1,6 @@
 import pytest
 
-from mitmproxy.net.http import Headers
+from mitmproxy.http import Headers
 from mitmproxy.net.http.http1.assemble import (
     assemble_request, assemble_request_head, assemble_response,
     assemble_response_head, _assemble_request_line, _assemble_request_headers,

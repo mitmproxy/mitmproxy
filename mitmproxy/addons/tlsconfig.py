@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import List, Optional, TypedDict, Any
 
 from OpenSSL import SSL
-from mitmproxy import certs, ctx, exceptions
+from mitmproxy import certs, ctx, exceptions, connection
 from mitmproxy.net import tls as net_tls
 from mitmproxy.options import CONF_BASENAME
 from mitmproxy.proxy import context
@@ -113,8 +113,8 @@ class TlsConfig:
             self.create_proxy_server_ssl_conn(tls_start)
 
     def create_client_proxy_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
-        client: context.Client = tls_start.context.client
-        server: context.Server = tls_start.context.server
+        client: connection.Client = tls_start.context.client
+        server: connection.Server = tls_start.context.server
 
         entry = self.get_cert(tls_start.context)
 
@@ -149,8 +149,8 @@ class TlsConfig:
         tls_start.ssl_conn.set_accept_state()
 
     def create_proxy_server_ssl_conn(self, tls_start: tls.TlsStartData) -> None:
-        client: context.Client = tls_start.context.client
-        server: context.Server = tls_start.context.server
+        client: connection.Client = tls_start.context.client
+        server: connection.Server = tls_start.context.server
         assert server.address
 
         if ctx.options.ssl_insecure:

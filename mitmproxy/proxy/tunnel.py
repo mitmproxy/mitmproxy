@@ -1,6 +1,7 @@
 from enum import Enum, auto
 from typing import List, Optional, Tuple
 
+from mitmproxy import connection
 from mitmproxy.proxy import commands, context, events, layer
 from mitmproxy.proxy.layer import Layer
 
@@ -18,9 +19,9 @@ class TunnelLayer(layer.Layer):
     or TLS.
     """
     child_layer: layer.Layer
-    tunnel_connection: context.Connection
+    tunnel_connection: connection.Connection
     """The 'outer' connection which provides the tunnel protocol I/O"""
-    conn: context.Connection
+    conn: connection.Connection
     """The 'inner' connection which provides data I/O"""
     tunnel_state: TunnelState = TunnelState.INACTIVE
     command_to_reply_to: Optional[commands.OpenConnection] = None
@@ -33,8 +34,8 @@ class TunnelLayer(layer.Layer):
     def __init__(
             self,
             context: context.Context,
-            tunnel_connection: context.Connection,
-            conn: context.Connection,
+            tunnel_connection: connection.Connection,
+            conn: connection.Connection,
     ):
         super().__init__(context)
         self.tunnel_connection = tunnel_connection
@@ -47,7 +48,7 @@ class TunnelLayer(layer.Layer):
 
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, events.Start):
-            if self.tunnel_connection.state is not context.ConnectionState.CLOSED:
+            if self.tunnel_connection.state is not connection.ConnectionState.CLOSED:
                 # we might be in the interesting state here where the connection is already half-closed,
                 # for example because next_layer buffered events and the client disconnected in the meantime.
                 # we still expect a close event to arrive, so we carry on here as normal for now.
@@ -60,17 +61,17 @@ class TunnelLayer(layer.Layer):
                     done, err = yield from self.receive_handshake_data(event.data)
                     if done:
                         if self.conn != self.tunnel_connection:
-                            self.conn.state = context.ConnectionState.OPEN
+                            self.conn.state = connection.ConnectionState.OPEN
                     if err:
                         if self.conn != self.tunnel_connection:
-                            self.conn.state = context.ConnectionState.CLOSED
+                            self.conn.state = connection.ConnectionState.CLOSED
                         yield from self.on_handshake_error(err)
                     if done or err:
                         yield from self._handshake_finished(err)
                 else:
                     yield from self.receive_data(event.data)
             elif isinstance(event, events.ConnectionClosed):
-                self.conn.state &= ~context.ConnectionState.CAN_READ
+                self.conn.state &= ~connection.ConnectionState.CAN_READ
                 if self.tunnel_state is TunnelState.OPEN:
                     yield from self.receive_close()
                 elif self.tunnel_state is TunnelState.ESTABLISHING:
@@ -107,9 +108,9 @@ class TunnelLayer(layer.Layer):
                 elif isinstance(command, commands.CloseConnection):
                     if self.conn != self.tunnel_connection:
                         if command.half_close:
-                            self.conn.state &= ~context.ConnectionState.CAN_WRITE
+                            self.conn.state &= ~connection.ConnectionState.CAN_WRITE
                         else:
-                            self.conn.state = context.ConnectionState.CLOSED
+                            self.conn.state = connection.ConnectionState.CLOSED
                     yield from self.send_close(command.half_close)
                 elif isinstance(command, commands.OpenConnection):
                     # create our own OpenConnection command object that blocks here.

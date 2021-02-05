@@ -8,7 +8,7 @@ The content view API is explained in the mitmproxy.contentviews module.
 from typing import Optional
 
 from mitmproxy import contentviews, flow
-from mitmproxy.net import http
+from mitmproxy import http
 
 
 class ViewSwapCase(contentviews.View):

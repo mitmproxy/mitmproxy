@@ -1,7 +1,7 @@
 from unittest import mock
 import pytest
 
-from mitmproxy.net.http import encoding
+from mitmproxy.net import encoding
 
 
 @pytest.mark.parametrize("encoder", [

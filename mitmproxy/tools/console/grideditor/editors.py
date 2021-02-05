@@ -2,7 +2,7 @@ import urwid
 import typing
 
 from mitmproxy import exceptions
-from mitmproxy.net.http import Headers
+from mitmproxy.http import Headers
 from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import signals
 from mitmproxy.tools.console.grideditor import base

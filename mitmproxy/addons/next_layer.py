@@ -1,7 +1,7 @@
 import re
 from typing import Type, Sequence, Union, Tuple, Any, Iterable, Optional, List
 
-from mitmproxy import ctx, exceptions
+from mitmproxy import ctx, exceptions, connection
 from mitmproxy.net.tls import is_tls_record_magic
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import context, layer, layers
@@ -43,7 +43,7 @@ class NextLayer:
                 re.compile(x, re.IGNORECASE) for x in ctx.options.allow_hosts
             ]
 
-    def ignore_connection(self, server_address: Optional[context.Address], data_client: bytes) -> Optional[bool]:
+    def ignore_connection(self, server_address: Optional[connection.Address], data_client: bytes) -> Optional[bool]:
         """
         Returns:
             True, if the connection should be ignored.

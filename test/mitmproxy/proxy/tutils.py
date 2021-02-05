@@ -7,7 +7,7 @@ import typing
 
 from mitmproxy.proxy import commands, context, layer
 from mitmproxy.proxy import events
-from mitmproxy.proxy.context import ConnectionState
+from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.events import command_reply_subclasses
 from mitmproxy.proxy.layer import Layer
 

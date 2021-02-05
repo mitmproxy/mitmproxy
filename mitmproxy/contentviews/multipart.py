@@ -1,7 +1,7 @@
 from typing import Optional
 
 from mitmproxy.coretypes import multidict
-from mitmproxy.net import http
+from mitmproxy.net.http import multipart
 from . import base
 
 
@@ -16,7 +16,7 @@ class ViewMultipart(base.View):
     def __call__(self, data: bytes, content_type: Optional[str] = None, **metadata):
         if content_type is None:
             return
-        v = http.multipart.decode(content_type, data)
+        v = multipart.decode(content_type, data)
         if v:
             return "Multipart form", self._format(v)
 

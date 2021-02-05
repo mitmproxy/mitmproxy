@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 
 from mitmproxy.proxy import events, layer, commands
-from mitmproxy.proxy.context import Connection, Context
+from mitmproxy.connection import Connection
+from mitmproxy.proxy.context import Context
 
 StreamId = int
 

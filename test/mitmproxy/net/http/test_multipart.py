@@ -1,6 +1,6 @@
 import pytest
 
-from mitmproxy.net.http import Headers
+from mitmproxy.http import Headers
 from mitmproxy.net.http import multipart
 
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Iterator, Optional, Tuple
 
 from OpenSSL import SSL
-from mitmproxy import certs
+from mitmproxy import certs, connection
 from mitmproxy.net import tls as net_tls
 from mitmproxy.proxy import commands, events, layer, tunnel
 from mitmproxy.proxy import context
@@ -116,7 +116,7 @@ class TlsClienthelloHook(StartHook):
 
 @dataclass
 class TlsStartData:
-    conn: context.Connection
+    conn: connection.Connection
     context: context.Context
     ssl_conn: Optional[SSL.Connection] = None
 
@@ -136,7 +136,7 @@ class _TLSLayer(tunnel.TunnelLayer):
     tls: SSL.Connection = None
     """The OpenSSL connection object"""
 
-    def __init__(self, context: context.Context, conn: context.Connection):
+    def __init__(self, context: context.Context, conn: connection.Connection):
         super().__init__(
             context,
             tunnel_connection=conn,
@@ -240,7 +240,7 @@ class _TLSLayer(tunnel.TunnelLayer):
                 events.DataReceived(self.conn, bytes(plaintext))
             )
         if close:
-            self.conn.state &= ~context.ConnectionState.CAN_READ
+            self.conn.state &= ~connection.ConnectionState.CAN_READ
             if self.debug:
                 yield commands.Log(f"{self.debug}[tls] close_notify {self.conn}", level="debug")
             yield from self.event_to_child(
@@ -268,7 +268,7 @@ class ServerTLSLayer(_TLSLayer):
     """
     command_to_reply_to: Optional[commands.OpenConnection] = None
 
-    def __init__(self, context: context.Context, conn: Optional[context.Server] = None):
+    def __init__(self, context: context.Context, conn: Optional[connection.Server] = None):
         super().__init__(context, conn or context.server)
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
@@ -373,4 +373,4 @@ class MockTLSLayer(_TLSLayer):
     """
 
     def __init__(self, ctx: context.Context):
-        super().__init__(ctx, context.Server(None))
+        super().__init__(ctx, connection.Server(None))

@@ -7,11 +7,12 @@ import pytest
 from h2.errors import ErrorCodes
 
 from mitmproxy.flow import Error
-from mitmproxy.http import HTTPFlow
-from mitmproxy.net.http import Headers, Request, status_codes
+from mitmproxy.http import HTTPFlow, Headers, Request
+from mitmproxy.net.http import status_codes
+from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData
-from mitmproxy.proxy.context import Context, Server
+from mitmproxy.connection import Server
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import http
 from mitmproxy.proxy.layers.http._http2 import split_pseudo_headers, Http2Client

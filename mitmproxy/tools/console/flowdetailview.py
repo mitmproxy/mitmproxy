@@ -24,8 +24,8 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
 
     sc = flow.server_conn
     cc = flow.client_conn
-    req: typing.Optional[http.HTTPRequest]
-    resp: typing.Optional[http.HTTPResponse]
+    req: typing.Optional[http.Request]
+    resp: typing.Optional[http.Response]
     if isinstance(flow, http.HTTPFlow):
         req = flow.request
         resp = flow.response

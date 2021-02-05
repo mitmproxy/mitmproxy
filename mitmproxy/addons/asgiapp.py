@@ -117,7 +117,7 @@ async def serve(app, flow: http.HTTPFlow):
 
     async def send(event):
         if event["type"] == "http.response.start":
-            flow.response = http.HTTPResponse.make(event["status"], b"", event.get("headers", []))
+            flow.response = http.Response.make(event["status"], b"", event.get("headers", []))
             flow.response.decode()
         elif event["type"] == "http.response.body":
             flow.response.content += event.get("body", b"")
@@ -133,7 +133,7 @@ async def serve(app, flow: http.HTTPFlow):
             raise RuntimeError(f"no response sent.")
     except Exception:
         ctx.log.error(f"Error in asgi app:\n{traceback.format_exc(limit=-5)}")
-        flow.response = http.HTTPResponse.make(500, b"ASGI Error.")
+        flow.response = http.Response.make(500, b"ASGI Error.")
     finally:
         flow.reply.commit()
         done.set()

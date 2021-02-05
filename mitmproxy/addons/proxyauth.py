@@ -7,12 +7,10 @@ from typing import Tuple
 import ldap3
 import passlib.apache
 
-import mitmproxy.net.http
-from mitmproxy import ctx
+from mitmproxy import ctx, connection
 from mitmproxy import exceptions
 from mitmproxy import http
 from mitmproxy.net.http import status_codes
-from mitmproxy.proxy import context
 
 REALM = "mitmproxy"
 
@@ -49,7 +47,7 @@ class ProxyAuth:
         self.singleuser = None
         self.ldapconn = None
         self.ldapserver = None
-        self.authenticated: MutableMapping[context.Client, Tuple[str, str]] = weakref.WeakKeyDictionary()
+        self.authenticated: MutableMapping[connection.Client, Tuple[str, str]] = weakref.WeakKeyDictionary()
         """Contains all connections that are permanently authenticated after an HTTP CONNECT"""
 
     def load(self, loader):
@@ -81,17 +79,25 @@ class ProxyAuth:
         else:
             return 'Authorization'
 
-    def auth_required_response(self) -> http.HTTPResponse:
+    def auth_required_response(self) -> http.Response:
         if self.is_proxy_auth():
-            return http.make_error_response(
-                status_codes.PROXY_AUTH_REQUIRED,
-                headers=mitmproxy.net.http.Headers(Proxy_Authenticate=f'Basic realm="{REALM}"'),
-            )
+            status_code = status_codes.PROXY_AUTH_REQUIRED
+            headers = {"Proxy-Authenticate": f'Basic realm="{REALM}"'}
         else:
-            return http.make_error_response(
-                status_codes.UNAUTHORIZED,
-                headers=mitmproxy.net.http.Headers(WWW_Authenticate=f'Basic realm="{REALM}"'),
-            )
+            status_code = status_codes.UNAUTHORIZED
+            headers = {"WWW-Authenticate": f'Basic realm="{REALM}"'}
+
+        reason = http.status_codes.RESPONSES[status_code]
+        return http.Response.make(
+            status_code,
+            (
+                f"<html>"
+                f"<head><title>{status_code} {reason}</title></head>"
+                f"<body><h1>{status_code} {reason}</h1></body>"
+                f"</html>"
+            ),
+            headers
+        )
 
     def check(self, f: http.HTTPFlow) -> Optional[Tuple[str, str]]:
         """

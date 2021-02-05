@@ -1,29 +1,30 @@
 import abc
+import html
 from typing import Union, Optional, Callable, Type
 
 import h11
 from h11._readers import ChunkedReader, ContentLengthReader, Http10Reader
 from h11._receivebuffer import ReceiveBuffer
 
-from mitmproxy import http
-from mitmproxy.net import http as net_http
+from mitmproxy import http, version
 from mitmproxy.net.http import http1, status_codes
 from mitmproxy.proxy import commands, events, layer
-from mitmproxy.proxy.context import Connection, ConnectionState, Context
+from mitmproxy.connection import Connection, ConnectionState
 from mitmproxy.proxy.layers.http._base import ReceiveHttp, StreamId
 from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
 from ._base import HttpConnection
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
+from ...context import Context
 
 TBodyReader = Union[ChunkedReader, Http10Reader, ContentLengthReader]
 
 
 class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
     stream_id: Optional[StreamId] = None
-    request: Optional[http.HTTPRequest] = None
-    response: Optional[http.HTTPResponse] = None
+    request: Optional[http.Request] = None
+    response: Optional[http.Response] = None
     request_done: bool = False
     response_done: bool = False
     # this is a bit of a hack to make both mypy and PyCharm happy.
@@ -146,13 +147,13 @@ class Http1Connection(HttpConnection, metaclass=abc.ABCMeta):
                 yield from self.make_pipe()
                 return
             connection_done = (
-                    http1.expected_http_body_size(self.request, self.response) == -1
-                    or http1.connection_close(self.request.http_version, self.request.headers)
-                    or http1.connection_close(self.response.http_version, self.response.headers)
-                    # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
-                    # This simplifies our connection management quite a bit as we can rely on
-                    # the proxyserver's max-connection-per-server throttling.
-                    or (self.request.is_http2 and isinstance(self, Http1Client))
+                http1.expected_http_body_size(self.request, self.response) == -1
+                or http1.connection_close(self.request.http_version, self.request.headers)
+                or http1.connection_close(self.response.http_version, self.response.headers)
+                # If we proxy HTTP/2 to HTTP/1, we only use upstream connections for one request.
+                # This simplifies our connection management quite a bit as we can rely on
+                # the proxyserver's max-connection-per-server throttling.
+                or (self.request.is_http2 and isinstance(self, Http1Client))
             )
             if connection_done:
                 yield commands.CloseConnection(self.conn)
@@ -212,7 +213,7 @@ class Http1Server(Http1Connection):
             yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):
             if not self.response:
-                resp = http.make_error_response(event.code, event.message)
+                resp = make_error_response(event.code, event.message)
                 raw = http1.assemble_response(resp)
                 yield commands.SendData(self.conn, raw)
             yield commands.CloseConnection(self.conn)
@@ -345,7 +346,7 @@ class Http1Client(Http1Connection):
             raise AssertionError(f"Unexpected event: {event}")
 
 
-def should_make_pipe(request: net_http.Request, response: net_http.Response) -> bool:
+def should_make_pipe(request: http.Request, response: http.Response) -> bool:
     if response.status_code == 101:
         return True
     elif response.status_code == 200 and request.method.upper() == "CONNECT":
@@ -361,6 +362,37 @@ def make_body_reader(expected_size: Optional[int]) -> TBodyReader:
         return Http10Reader()
     else:
         return ContentLengthReader(expected_size)
+
+
+def make_error_response(
+    status_code: int,
+    message: str = "",
+) -> http.Response:
+    body: bytes = """
+        <html>
+            <head>
+                <title>{status_code} {reason}</title>
+            </head>
+            <body>
+                <h1>{status_code} {reason}</h1>
+                <p>{message}</p>
+            </body>
+        </html>
+    """.strip().format(
+        status_code=status_code,
+        reason=http.status_codes.RESPONSES.get(status_code, "Unknown"),
+        message=html.escape(message),
+    ).encode("utf8", "replace")
+
+    return http.Response.make(
+        status_code,
+        body,
+        http.Headers(
+            Server=version.MITMPROXY,
+            Connection="close",
+            Content_Type="text/html",
+        )
+    )
 
 
 __all__ = [

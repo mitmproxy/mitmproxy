@@ -13,7 +13,7 @@ import h2.stream
 import h2.utilities
 
 from mitmproxy import http
-from mitmproxy.net import http as net_http
+from mitmproxy.connection import Connection
 from mitmproxy.net.http import url, status_codes
 from mitmproxy.utils import human
 from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
@@ -21,7 +21,7 @@ from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolE
 from ._base import HttpConnection, HttpEvent, ReceiveHttp
 from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
 from ...commands import CloseConnection, Log, SendData
-from ...context import Connection, Context
+from ...context import Context
 from ...events import ConnectionClosed, DataReceived, Event, Start
 from ...layer import CommandGenerator
 from ...utils import expect
@@ -197,9 +197,9 @@ class Http2Connection(HttpConnection):
         return False
 
     def protocol_error(
-            self,
-            message: str,
-            error_code: int = h2.errors.ErrorCodes.PROTOCOL_ERROR,
+        self,
+        message: str,
+        error_code: int = h2.errors.ErrorCodes.PROTOCOL_ERROR,
     ) -> CommandGenerator[None]:
         yield Log(f"{human.format_address(self.conn.peername)}: {message}")
         self.h2_conn.close_connection(error_code, message.encode())
@@ -272,7 +272,7 @@ class Http2Server(Http2Connection):
             except ValueError as e:
                 yield from self.protocol_error(f"Invalid HTTP/2 request headers: {e}")
                 return True
-            request = http.HTTPRequest(
+            request = http.Request(
                 host=host,
                 port=port,
                 method=method,
@@ -333,8 +333,8 @@ class Http2Client(Http2Connection):
             ours = self.our_stream_id.get(event.stream_id, None)
             if ours is None:
                 no_free_streams = (
-                        self.h2_conn.open_outbound_streams >=
-                        (self.provisional_max_concurrency or self.h2_conn.remote_settings.max_concurrent_streams)
+                    self.h2_conn.open_outbound_streams >=
+                    (self.provisional_max_concurrency or self.h2_conn.remote_settings.max_concurrent_streams)
                 )
                 if no_free_streams:
                     self.stream_queue[event.stream_id].append(event)
@@ -350,10 +350,10 @@ class Http2Client(Http2Connection):
             yield cmd
 
         can_resume_queue = (
-                self.stream_queue and
-                self.h2_conn.open_outbound_streams < (
-                        self.provisional_max_concurrency or self.h2_conn.remote_settings.max_concurrent_streams
-                )
+            self.stream_queue and
+            self.h2_conn.open_outbound_streams < (
+                self.provisional_max_concurrency or self.h2_conn.remote_settings.max_concurrent_streams
+            )
         )
         if can_resume_queue:
             # popitem would be LIFO, but we want FIFO.
@@ -402,7 +402,7 @@ class Http2Client(Http2Connection):
                 yield from self.protocol_error(f"Invalid HTTP/2 response headers: {e}")
                 return True
 
-            response = http.HTTPResponse(
+            response = http.Response(
                 http_version=b"HTTP/2.0",
                 status_code=status_code,
                 reason=b"",
@@ -427,7 +427,7 @@ class Http2Client(Http2Connection):
             return (yield from super().handle_h2_event(event))
 
 
-def split_pseudo_headers(h2_headers: Sequence[Tuple[bytes, bytes]]) -> Tuple[Dict[bytes, bytes], net_http.Headers]:
+def split_pseudo_headers(h2_headers: Sequence[Tuple[bytes, bytes]]) -> Tuple[Dict[bytes, bytes], http.Headers]:
     pseudo_headers: Dict[bytes, bytes] = {}
     i = 0
     for (header, value) in h2_headers:
@@ -440,14 +440,14 @@ def split_pseudo_headers(h2_headers: Sequence[Tuple[bytes, bytes]]) -> Tuple[Dic
             # Pseudo-headers must be at the start, we are done here.
             break
 
-    headers = net_http.Headers(h2_headers[i:])
+    headers = http.Headers(h2_headers[i:])
 
     return pseudo_headers, headers
 
 
 def parse_h2_request_headers(
-        h2_headers: Sequence[Tuple[bytes, bytes]]
-) -> Tuple[str, int, bytes, bytes, bytes, bytes, net_http.Headers]:
+    h2_headers: Sequence[Tuple[bytes, bytes]]
+) -> Tuple[str, int, bytes, bytes, bytes, bytes, http.Headers]:
     """Split HTTP/2 pseudo-headers from the actual headers and parse them."""
     pseudo_headers, headers = split_pseudo_headers(h2_headers)
 
@@ -473,7 +473,7 @@ def parse_h2_request_headers(
     return host, port, method, scheme, authority, path, headers
 
 
-def parse_h2_response_headers(h2_headers: Sequence[Tuple[bytes, bytes]]) -> Tuple[int, net_http.Headers]:
+def parse_h2_response_headers(h2_headers: Sequence[Tuple[bytes, bytes]]) -> Tuple[int, http.Headers]:
     """Split HTTP/2 pseudo-headers from the actual headers and parse them."""
     pseudo_headers, headers = split_pseudo_headers(h2_headers)
 

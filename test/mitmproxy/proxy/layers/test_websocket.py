@@ -5,11 +5,10 @@ import pytest
 
 import wsproto
 import wsproto.events
-from mitmproxy.http import HTTPFlow
-from mitmproxy.net.http import Request, Response
+from mitmproxy.http import HTTPFlow, Request, Response
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.commands import SendData, CloseConnection, Log
-from mitmproxy.proxy.context import ConnectionState
+from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.events import DataReceived, ConnectionClosed
 from mitmproxy.proxy.layers import http, websocket
 from mitmproxy.websocket import WebSocketFlow
