@@ -27,7 +27,7 @@ python3 -m venv --help
 git clone https://github.com/mitmproxy/mitmproxy.git
 cd mitmproxy
 python3 -m venv venv
-venv/bin/pip install -e .[dev]
+venv/bin/pip install -e ".[dev]"
 ```
 
 ##### Windows
