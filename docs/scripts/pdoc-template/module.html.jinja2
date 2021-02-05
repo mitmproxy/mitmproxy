@@ -24,7 +24,8 @@ To document all event hooks, we do a bit of hackery:
     {% endmacro %}
 {% else %}
     {% macro is_public(doc) %}
-        {% if doc.modulename == "mitmproxy.addonmanager" %}
+        {% if doc.name is in(["from_state", "get_state", "set_state"]) %}
+        {% elif doc.modulename == "mitmproxy.addonmanager" %}
             {% if doc.qualname.startswith("Loader") and not doc.name.startswith("_") %}
                 true
             {% endif %}
@@ -32,7 +33,29 @@ To document all event hooks, we do a bit of hackery:
             {% if doc.qualname == "Cert" or doc.qualname.startswith("Cert.") %}
                 {{ default_is_public(doc) }}
             {% endif %}
-        {% elif doc.name is not in(["from_state", "get_state", "set_state"]) %}
+        {% elif doc.modulename == "mitmproxy.coretypes.multidict" %}
+            {% if doc.name == "_MultiDict" %}
+                true
+            {% else %}
+                {{ default_is_public(doc) }}
+            {% endif %}
+        {% elif doc.modulename == "mitmproxy.flow" %}
+            {% if doc.name is not in(["__init__", "reply", "metadata"]) %}
+                {{ default_is_public(doc) }}
+            {% endif %}
+        {% elif doc.modulename == "mitmproxy.http" %}
+            {% if doc.qualname is not in([
+                    "Message.__init__", "Message.data",
+                    "Request.data",
+                    "Response.data",
+                    ]) %}
+                {{ default_is_public(doc) }}
+            {% endif %}
+        {% elif doc.modulename == "mitmproxy.proxy.server_hooks" %}
+            {% if doc.qualname.startswith("ServerConnectionHookData") and doc.name != "__init__" %}
+                {{ default_is_public(doc) }}
+            {% endif %}
+        {% else %}
             {{ default_is_public(doc) }}
         {% endif %}
     {% endmacro %}

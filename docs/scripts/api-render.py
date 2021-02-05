@@ -24,7 +24,8 @@ pdoc.render_helpers.formatter.cssclass = "chroma"
 modules = [
     "mitmproxy.addonmanager",
     "mitmproxy.certs",
-    #"mitmproxy.connection",
+    "mitmproxy.connection",
+    "mitmproxy.coretypes.multidict",
     "mitmproxy.flow",
     "mitmproxy.http",
     "mitmproxy.proxy.server_hooks",

@@ -1,15 +1,18 @@
-import time
 import queue
+import time
 import warnings
-from typing import List, Optional, Union
+from typing import List
+from typing import Optional
+from typing import Union
+
+from mitmproxy import flow
+from mitmproxy.coretypes import serializable
+from mitmproxy.net import websocket
+from mitmproxy.utils import human
+from mitmproxy.utils import strutils
 
 from wsproto.frame_protocol import CloseReason
 from wsproto.frame_protocol import Opcode
-
-from mitmproxy import flow
-from mitmproxy.net import websocket
-from mitmproxy.coretypes import serializable
-from mitmproxy.utils import strutils, human
 
 
 class WebSocketMessage(serializable.Serializable):
@@ -17,19 +20,31 @@ class WebSocketMessage(serializable.Serializable):
     A WebSocket message sent from one endpoint to the other.
     """
 
+    type: Opcode
+    """indicates either TEXT or BINARY (from wsproto.frame_protocol.Opcode)."""
+    from_client: bool
+    """True if this messages was sent by the client."""
+    content: bytes
+    """A byte-string representing the content of this message."""
+    timestamp: float
+    """Timestamp of when this message was received or created."""
+
+    killed: bool
+    """True if this messages was killed and should not be sent to the other endpoint."""
+
     def __init__(
-        self, type: int, from_client: bool, content: Union[bytes, str], timestamp: Optional[float]=None, killed: bool=False
+        self,
+        type: int,
+        from_client: bool,
+        content: Union[bytes, str],
+        timestamp: Optional[float] = None,
+        killed: bool = False
     ) -> None:
         self.type = Opcode(type)  # type: ignore
-        """indicates either TEXT or BINARY (from wsproto.frame_protocol.Opcode)."""
         self.from_client = from_client
-        """True if this messages was sent by the client."""
         self.content = content
-        """A byte-string representing the content of this message."""
         self.timestamp: float = timestamp or time.time()
-        """Timestamp of when this message was received or created."""
         self.killed = killed
-        """True if this messages was killed and should not be sent to the other endpoint."""
 
     @classmethod
     def from_state(cls, state):
@@ -147,25 +162,3 @@ class WebSocketFlow(flow.Flow):
             direction="->" if message.from_client else "<-",
             endpoint=self.handshake_flow.request.path,
         )
-
-    def inject_message(self, endpoint, payload):
-        """
-        Inject and send a full WebSocket message to the remote endpoint.
-        This might corrupt your WebSocket connection! Be careful!
-
-        The endpoint needs to be either flow.client_conn or flow.server_conn.
-
-        If ``payload`` is of type ``bytes`` then the message is flagged as
-        being binary If it is of type ``str`` encoded as UTF-8 and sent as
-        text.
-
-        :param payload: The message body to send.
-        :type payload: ``bytes`` or ``str``
-        """
-
-        if endpoint == self.client_conn:
-            self._inject_messages_client.put(payload)
-        elif endpoint == self.server_conn:
-            self._inject_messages_server.put(payload)
-        else:
-            raise ValueError('Invalid endpoint')

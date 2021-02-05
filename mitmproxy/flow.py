@@ -10,21 +10,21 @@ from mitmproxy import version
 
 class Error(stateobject.StateObject):
     """
-        An Error.
+    An Error.
 
-        This is distinct from an protocol error response (say, a HTTP code 500),
-        which is represented by a normal `mitmproxy.http.Response` object. This class is
-        responsible for indicating errors that fall outside of normal protocol
-        communications, like interrupted connections, timeouts, protocol errors.
+    This is distinct from an protocol error response (say, a HTTP code 500),
+    which is represented by a normal `mitmproxy.http.Response` object. This class is
+    responsible for indicating errors that fall outside of normal protocol
+    communications, like interrupted connections, timeouts, or protocol errors.
     """
 
     msg: str
     """Message describing the error."""
 
     timestamp: float
-    """Unix timestamp"""
+    """Unix timestamp of when this error happened."""
 
-    KILLED_MESSAGE = "Connection killed."
+    KILLED_MESSAGE: typing.ClassVar[str] = "Connection killed."
 
     def __init__(self, msg: str, timestamp: typing.Optional[float] = None) -> None:
         """Create an error. If no timestamp is passed, the current time is used."""
@@ -53,8 +53,47 @@ class Error(stateobject.StateObject):
 
 class Flow(stateobject.StateObject):
     """
-    A Flow is a collection of objects representing a single transaction.
-    This class is usually subclassed for each protocol, e.g. HTTPFlow.
+    Base class for network flows. A flow is a collection of objects,
+    for example HTTP request/response pairs or a list of TCP messages.
+
+    See also:
+     - mitmproxy.http.HTTPFlow
+     - mitmproxy.tcp.TCPFlow
+    """
+    client_conn: connection.Client
+    """The client that connected to mitmproxy."""
+
+    server_conn: connection.Server
+    """
+    The server mitmproxy connected to.
+    
+    Some flows may never cause mitmproxy to initiate a server connection,
+    for example because their response is replayed by mitmproxy itself.
+    To simplify implementation, those flows will still have a `server_conn` attribute
+    with a `timestamp_start` set to `None`.
+    """
+
+
+    error: typing.Optional[Error] = None
+    """A connection or protocol error affecting this flow."""
+
+    intercepted: bool
+    """
+    If `True`, the flow is currently paused by mitmproxy.
+    We're waiting for a user action to forward the flow to its destination.
+    """
+
+    marked: bool
+    """
+    If `True`, this flow has been marked by the user.
+    """
+
+    is_replay: typing.Optional[str]
+    """
+    This attribute indicates if this flow has been replayed in either direction.
+    
+     - a value of `request` indicates that the request has been artifically replayed by mitmproxy to the server.
+     - a value of `response` indicates that the response to the client's request has been set by server replay.
     """
 
     def __init__(
@@ -70,7 +109,6 @@ class Flow(stateobject.StateObject):
         self.server_conn = server_conn
         self.live = live
 
-        self.error: typing.Optional[Error] = None
         self.intercepted: bool = False
         self._backup: typing.Optional[Flow] = None
         self.reply: typing.Optional[controller.Reply] = None
@@ -111,6 +149,7 @@ class Flow(stateobject.StateObject):
         return f
 
     def copy(self):
+        """Make a copy of this flow."""
         f = super().copy()
         f.live = False
         if self.reply is not None:
@@ -119,7 +158,7 @@ class Flow(stateobject.StateObject):
 
     def modified(self):
         """
-            Has this Flow been modified?
+        `True` if this file has been modified by a user, `False` otherwise.
         """
         if self._backup:
             return self._backup != self.get_state()
@@ -128,8 +167,7 @@ class Flow(stateobject.StateObject):
 
     def backup(self, force=False):
         """
-            Save a backup of this Flow, which can be reverted to using a
-            call to .revert().
+        Save a backup of this flow, which can be restored by calling `Flow.revert()`.
         """
         if not self._backup:
             self._backup = self.get_state()
@@ -144,6 +182,7 @@ class Flow(stateobject.StateObject):
 
     @property
     def killable(self):
+        """*Read-only:* `True` if this flow can be killed, `False` otherwise."""
         return (
             self.reply and
             self.reply.state in {"start", "taken"} and
@@ -152,7 +191,7 @@ class Flow(stateobject.StateObject):
 
     def kill(self):
         """
-            Kill this request.
+        Kill this flow. The current request/response will not be forwarded to its destination.
         """
         if not self.killable:
             raise exceptions.ControlException("Flow is not killable.")
@@ -162,8 +201,8 @@ class Flow(stateobject.StateObject):
 
     def intercept(self):
         """
-            Intercept this Flow. Processing will stop until resume is
-            called.
+        Intercept this Flow. Processing will stop until resume is
+        called.
         """
         if self.intercepted:
             return
@@ -172,7 +211,7 @@ class Flow(stateobject.StateObject):
 
     def resume(self):
         """
-            Continue with the flow - called after an intercept().
+        Continue with the flow – called after an intercept().
         """
         if not self.intercepted:
             return
@@ -183,7 +222,11 @@ class Flow(stateobject.StateObject):
 
     @property
     def timestamp_start(self) -> float:
-        """Start time of the flow."""
+        """
+        *Read-only:* Start time of the flow.
+        Depending on the flow type, this property is an alias for
+        `mitmproxy.connection.Client.timestamp_start` or `mitmproxy.http.Request.timestamp_start`.
+        """
         return self.client_conn.timestamp_start
 
 
