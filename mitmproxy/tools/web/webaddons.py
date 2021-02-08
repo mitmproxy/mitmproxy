@@ -47,8 +47,7 @@ def open_browser(url: str) -> bool:
         webbrowser.open_new(url)
         return True
     except webbrowser.Error:
-        return False
-    
+        return False   
     """
     As mentioned in issue #4390, adding webbrowser.open_new(url) so that the default browser opens on running mitmweb
     """
