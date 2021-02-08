@@ -43,19 +43,28 @@ def open_browser(url: str) -> bool:
         True, if a browser has been opened
         False, if no suitable browser has been found.
     """
-    browsers = (
-        "windows-default", "macosx",
-        "wslview %s",
-        "x-www-browser %s", "gnome-open %s",
-        "google-chrome", "chrome", "chromium", "chromium-browser",
-        "firefox", "opera", "safari",
-    )
-    for browser in browsers:
-        try:
-            b = webbrowser.get(browser)
-        except webbrowser.Error:
-            pass
-        else:
-            if b.open(url):
-                return True
-    return False
+    try:
+        webbrowser.open_new(url)
+        return True
+    except webbrowser.Error:
+        return False
+    
+    """
+    As mentioned in issue #4390, adding webbrowser.open_new(url) so that the default browser opens on running mitmweb
+    """
+    # browsers = (
+    #     "windows-default", "macosx",
+    #     "wslview %s",
+    #     "x-www-browser %s", "gnome-open %s",
+    #     "google-chrome", "chrome", "chromium", "chromium-browser",
+    #     "firefox", "opera", "safari",
+    # )
+    # for browser in browsers:
+    #     try:
+    #         b = webbrowser.get(browser)
+    #     except webbrowser.Error:
+    #         pass
+    #     else:
+    #         if b.open(url):
+    #             return True
+    # return False
