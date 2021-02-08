@@ -1,4 +1,5 @@
 import webbrowser
+import subprocess
 
 from mitmproxy import ctx
 
@@ -43,27 +44,23 @@ def open_browser(url: str) -> bool:
         True, if a browser has been opened
         False, if no suitable browser has been found.
     """
-    try:
-        webbrowser.open_new(url)
+    if(subprocess.call(["xdg-open", url])) == 0:
         return True
-    except webbrowser.Error:
-        return False   
-    """
-    As mentioned in issue #4390, adding webbrowser.open_new(url) so that the default browser opens on running mitmweb
-    """
-    # browsers = (
-    #     "windows-default", "macosx",
-    #     "wslview %s",
-    #     "x-www-browser %s", "gnome-open %s",
-    #     "google-chrome", "chrome", "chromium", "chromium-browser",
-    #     "firefox", "opera", "safari",
-    # )
-    # for browser in browsers:
-    #     try:
-    #         b = webbrowser.get(browser)
-    #     except webbrowser.Error:
-    #         pass
-    #     else:
-    #         if b.open(url):
-    #             return True
-    # return False
+    else:    
+        browsers = (
+            "windows-default", "macosx",
+            "wslview %s",
+            "x-www-browser %s", "gnome-open %s",
+            "google-chrome", "chrome", "chromium", "chromium-browser",
+            "firefox", "opera", "safari",
+        )
+        for browser in browsers:
+            try:
+                b = webbrowser.get(browser)
+            except webbrowser.Error:
+                pass
+            else:
+                if b.open(url):
+                    return True
+        return False
+        
