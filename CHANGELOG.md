@@ -49,10 +49,11 @@ If you depend on these features, please raise your voice in
 * In reverse proxy mode, mitmproxy now does not assume TLS if no scheme
   is given but a custom port is provided (@mhils)
 * Remove the following options: `http2_priority`, `relax_http_form_validation`, `upstream_bind_address`,
-  `spoof_source_address`, and `stream_websockets`. If you depended on one of them please let us know. 
+  `spoof_source_address`, and `stream_websockets`. If you depended on one of them please let us know.
   mitmproxy never phones home, which means we don't know how prominently these options were used. (@mhils)
 * Fix IDNA host 'Bad HTTP request line' error (@grahamrobbins)
 * Pressing `?` now exits console help view (@abitrolly)
+* `--modify-headers` now works correctly when modifying a header that is also part of the filter expression (@Prinzhorn)
 * Fix SNI-related reproducibility issues when exporting to curl/httpie commands. (@dkasak)
 * Add option `export_preserve_original_ip` to force exported command to connect to IP from original request. Only supports curl at the moment. (@dkasak)
 * --- TODO: add new PRs above this line ---
@@ -90,11 +91,11 @@ If you depend on these features, please raise your voice in
 
 * Support for Python 3.9 (@mhils)
 * Add MsgPack content viewer (@tasn)
-* Use `@charset` to decode CSS files if available (@prinzhorn)
+* Use `@charset` to decode CSS files if available (@Prinzhorn)
 * Fix links to anticache docs in mitmweb and use HTTPS for links to documentation (@rugk)
-* Updated typing for WebsocketMessage.content (@prinzhorn)
+* Updated typing for WebsocketMessage.content (@Prinzhorn)
 * Add option `console_strip_trailing_newlines`, and no longer strip trailing newlines by default (@capt8bit)
-* Prevent transparent mode from connecting to itself in the basic cases (@prinzhorn)
+* Prevent transparent mode from connecting to itself in the basic cases (@Prinzhorn)
 * Display HTTP trailers in mitmweb (@sanlengjingvv)
 * Revamp onboarding app (@mhils)
 * Add ASGI support for embedded apps (@mhils)
