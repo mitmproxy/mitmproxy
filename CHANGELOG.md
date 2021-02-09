@@ -2,9 +2,6 @@
 
 ## Unreleased: mitmproxy next
 
-* Fix SNI-related reproducibility issues when exporting to curl/httpie commands. (@dkasak)
-* Add option `export_preserve_original_ip` to force exported command to connect to IP from original request. Only supports curl at the moment. (@dkasak)
-
 ### New Proxy Core (@mhils)
 
 Mitmproxy has a completely new proxy core, fixing many longstanding issues:
@@ -56,6 +53,8 @@ If you depend on these features, please raise your voice in
   mitmproxy never phones home, which means we don't know how prominently these options were used. (@mhils)
 * Fix IDNA host 'Bad HTTP request line' error (@grahamrobbins)
 * Pressing `?` now exits console help view (@abitrolly)
+* Fix SNI-related reproducibility issues when exporting to curl/httpie commands. (@dkasak)
+* Add option `export_preserve_original_ip` to force exported command to connect to IP from original request. Only supports curl at the moment. (@dkasak)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
