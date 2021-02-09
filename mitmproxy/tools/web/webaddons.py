@@ -47,7 +47,7 @@ def open_browser(url: str) -> bool:
         "windows-default", "macosx",
         "wslview %s",
         "xdg-open",
-        "x-www-browser %s", "gnome-open %s", 
+        "x-www-browser %s", "gnome-open %s",
         "google-chrome", "chrome", "chromium", "chromium-browser",
         "firefox", "opera", "safari",
     )
@@ -60,4 +60,3 @@ def open_browser(url: str) -> bool:
             if b.open(url):
                 return True
     return False
-        
