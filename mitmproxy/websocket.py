@@ -1,3 +1,7 @@
+"""
+*Deprecation Notice:* Mitmproxy's WebSocket API is going to change soon,
+see <https://github.com/mitmproxy/mitmproxy/issues/4425>.
+"""
 import queue
 import time
 import warnings
@@ -24,7 +28,7 @@ class WebSocketMessage(serializable.Serializable):
     """indicates either TEXT or BINARY (from wsproto.frame_protocol.Opcode)."""
     from_client: bool
     """True if this messages was sent by the client."""
-    content: bytes
+    content: Union[bytes, str]
     """A byte-string representing the content of this message."""
     timestamp: float
     """Timestamp of when this message was received or created."""

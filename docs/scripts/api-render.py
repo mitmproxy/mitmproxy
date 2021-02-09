@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import shutil
+import textwrap
 from pathlib import Path
 
 import pdoc.render_helpers
@@ -28,6 +29,7 @@ modules = [
     "mitmproxy.coretypes.multidict",
     "mitmproxy.flow",
     "mitmproxy.http",
+    "mitmproxy.net.server_spec",
     "mitmproxy.proxy.server_hooks",
     "mitmproxy.tcp",
     "mitmproxy.websocket",
@@ -49,17 +51,17 @@ for module in modules:
     if isinstance(module, Path):
         continue
     filename = f"api/{module.replace('.', '/')}.html"
-    (api_content / f"{module}.md").write_text(f"""
----
-title: "{module}"
-url: "{filename}"
+    (api_content / f"{module}.md").write_text(textwrap.dedent(f"""
+        ---
+        title: "{module}"
+        url: "{filename}"
 
-menu:
-    addons:
-        parent: 'API'
----
+        menu:
+            addons:
+                parent: 'Event Hooks & API'
+        ---
 
-{{{{< readfile file="/generated/{filename}" >}}}}
-""")
+        {{{{< readfile file="/generated/{filename}" >}}}}
+        """))
 
 (here / ".." / "src" / "content" / "addons-api.md").touch()

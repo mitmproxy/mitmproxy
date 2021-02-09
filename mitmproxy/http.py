@@ -6,7 +6,6 @@ from dataclasses import fields
 from email.utils import formatdate
 from email.utils import mktime_tz
 from email.utils import parsedate_tz
-from typing import AbstractSet
 from typing import Callable
 from typing import Dict
 from typing import Iterable
@@ -44,7 +43,8 @@ def _always_bytes(x: Union[str, bytes]) -> bytes:
     return strutils.always_bytes(x, "utf-8", "surrogateescape")
 
 
-class Headers(multidict.MultiDict[str, str]):
+# This cannot be easily typed with mypy yet, so we just specify MultiDict without concrete types.
+class Headers(multidict.MultiDict):  # type: ignore
     """
     Header class which allows both convenient access to individual headers as well as
     direct access to the underlying raw data. Provides a full dictionary interface.
@@ -107,11 +107,10 @@ class Headers(multidict.MultiDict[str, str]):
                 raise TypeError("Header fields must be bytes.")
 
         # content_type -> content-type
-        headers = {
+        self.update({
             _always_bytes(name).replace(b"_", b"-"): _always_bytes(value)
             for name, value in headers.items()
-        }
-        self.update(headers)
+        })
 
     fields: Tuple[Tuple[bytes, bytes], ...]
 
@@ -131,7 +130,7 @@ class Headers(multidict.MultiDict[str, str]):
         else:
             return b""
 
-    def __delitem__(self, key: str) -> None:
+    def __delitem__(self, key: Union[str, bytes]) -> None:
         key = _always_bytes(key)
         super().__delitem__(key)
 
@@ -166,7 +165,7 @@ class Headers(multidict.MultiDict[str, str]):
         value = _always_bytes(value)
         super().insert(index, key, value)
 
-    def items(self, multi=False) -> AbstractSet[Tuple[str, str]]:
+    def items(self, multi=False):
         if multi:
             return (
                 (_native(k), _native(v))
@@ -249,7 +248,7 @@ class Message(serializable.Serializable):
     but immediately streamed to the destination instead.
     Alternatively, a transformation function can be specified, but please note
     that packet should not be relied upon.
-    
+
     This attribute must be set in the `requestheaders` or `responseheaders` hook.
     Setting it in `request` or  `response` is already too late, mitmproxy has buffered the message body already.
     """
@@ -421,7 +420,7 @@ class Message(serializable.Serializable):
         enc = self._guess_encoding()
 
         try:
-            self.content = encoding.encode(text, enc)
+            self.content = cast(bytes, encoding.encode(text, enc))
         except ValueError:
             # Fall back to UTF-8 and update the content-type header.
             ct = parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
@@ -581,7 +580,7 @@ class Request(Message):
                 for k, v in headers.items()
             )
         elif isinstance(headers, Iterable):
-            headers = Headers(headers)
+            headers = Headers(headers)  # type: ignore
         else:
             raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
                 type(headers).__name__
@@ -860,7 +859,7 @@ class Request(Message):
         return tuple(url.unquote(i) for i in path.split("/") if i)
 
     @path_components.setter
-    def path_components(self, components: Tuple[str, ...]):
+    def path_components(self, components: Iterable[str]):
         components = map(lambda x: url.quote(x, safe=""), components)
         path = "/" + "/".join(components)
         _, _, _, params, query, fragment = urllib.parse.urlparse(self.url)
@@ -1027,12 +1026,12 @@ class Response(Message):
             headers = headers
         elif isinstance(headers, dict):
             headers = Headers(
-                (always_bytes(k, "utf-8", "surrogateescape"),
+                (always_bytes(k, "utf-8", "surrogateescape"),  # type: ignore
                  always_bytes(v, "utf-8", "surrogateescape"))
                 for k, v in headers.items()
             )
         elif isinstance(headers, Iterable):
-            headers = Headers(headers)
+            headers = Headers(headers)  # type: ignore
         else:
             raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
                 type(headers).__name__
@@ -1164,7 +1163,7 @@ class HTTPFlow(flow.Flow):
     error: Optional[flow.Error] = None
     """
     A connection or protocol error affecting this flow.
-    
+
     Note that it's possible for a Flow to have both a response and an error
     object. This might happen, for instance, when a response was received
     from the server, but there was an error sending it back to the client.

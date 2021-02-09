@@ -1,5 +1,5 @@
 ---
-title: "API"
+title: "Event Hooks & API"
 url: "api/events.html"
 aliases:
     - /addons-events/
@@ -8,11 +8,6 @@ menu:
     addons:
         weight: 3
 ---
-
-# Mitmproxy API
-
-TODO: Some more text here.
-
 
 # Event Hooks
 
@@ -25,8 +20,8 @@ header with a count of the number of responses seen:
 {{< example src="examples/addons/http-add-header.py" lang="py" >}}
 
 
-## Example Addons
+## Available Hooks
 
-The following addons showcase all available event hooks.
+The following addons list all available event hooks.
 
 {{< readfile file="/generated/api/events.html" >}}

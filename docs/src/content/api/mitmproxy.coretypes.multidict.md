@@ -5,7 +5,7 @@ url: "api/mitmproxy/coretypes/multidict.html"
 
 menu:
     addons:
-        parent: 'API'
+        parent: 'Event Hooks & API'
 ---
 
 {{< readfile file="/generated/api/mitmproxy/coretypes/multidict.html" >}}

@@ -28,21 +28,38 @@ for example in examples:
     else:
         comment = ""
     overview.append(
-        f"  * [{example.name}](#{slug}){comment}"
+        f"  * [{example.name}](#{slug}){comment}\n"
     )
     listings.append(f"""
 <h3 id="{slug}">Example: {example.name}</h3>
 
 ```python
-{code}
+{code.strip()}
 ```
 """)
-print("\n".join(overview))
-print("""
-### Community Examples
+
+print(f"""
+# Addon Examples
+
+### Dedicated Example Addons
+
+{"".join(overview)}
+
+### Built-In Addons
+
+Much of mitmproxy’s own functionality is defined in
+[a suite of built-in addons](https://github.com/mitmproxy/mitmproxy/tree/master/mitmproxy/addons),
+implementing everything from functionality like anticaching and sticky cookies to our onboarding webapp.
+The built-in addons make for instructive reading, and you will quickly see that quite complex functionality
+can often boil down to a very small, completely self-contained modules.
+
+
+### Additional Community Examples
 
 Additional examples contributed by the mitmproxy community can be found
 [on GitHub](https://github.com/mitmproxy/mitmproxy/tree/master/examples/contrib).
 
+-------------------------
+
+{"".join(listings)}
 """)
-print("\n".join(listings))

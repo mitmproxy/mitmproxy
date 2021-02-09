@@ -66,13 +66,12 @@ class Flow(stateobject.StateObject):
     server_conn: connection.Server
     """
     The server mitmproxy connected to.
-    
+
     Some flows may never cause mitmproxy to initiate a server connection,
     for example because their response is replayed by mitmproxy itself.
     To simplify implementation, those flows will still have a `server_conn` attribute
     with a `timestamp_start` set to `None`.
     """
-
 
     error: typing.Optional[Error] = None
     """A connection or protocol error affecting this flow."""
@@ -91,7 +90,7 @@ class Flow(stateobject.StateObject):
     is_replay: typing.Optional[str]
     """
     This attribute indicates if this flow has been replayed in either direction.
-    
+
      - a value of `request` indicates that the request has been artifically replayed by mitmproxy to the server.
      - a value of `response` indicates that the response to the client's request has been set by server replay.
     """

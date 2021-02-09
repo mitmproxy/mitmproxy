@@ -1,5 +1,4 @@
 import time
-
 from typing import List
 
 from mitmproxy import flow
@@ -50,6 +49,7 @@ class TCPFlow(flow.Flow):
 
     def __repr__(self):
         return "<TCPFlow ({} messages)>".format(len(self.messages))
+
 
 __all__ = [
     "TCPFlow",

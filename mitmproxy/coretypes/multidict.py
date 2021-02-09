@@ -1,9 +1,9 @@
 from abc import ABCMeta
 from abc import abstractmethod
-from typing import AbstractSet
 from typing import Iterator
 from typing import List
 from typing import MutableMapping
+from typing import Sequence
 from typing import Tuple
 from typing import TypeVar
 
@@ -18,7 +18,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
     A MultiDict is a dictionary-like data structure that supports multiple values per key.
     """
 
-    fields: Tuple[Tuple, ...]
+    fields: Tuple[Tuple[KT, VT], ...]
     """The underlying raw datastructure."""
 
     def __repr__(self):
@@ -33,7 +33,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def _reduce_values(values) -> VT:
+    def _reduce_values(values: Sequence[VT]) -> VT:
         """
         If a user accesses multidict["foo"], this method
         reduces all values for "foo" to a single value that is returned.
@@ -43,7 +43,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def _kconv(key) -> KT:
+    def _kconv(key: KT) -> KT:
         """
         This method converts a key to its canonical representation.
         For example, HTTP headers are case-insensitive, so this method returns key.lower().
@@ -101,7 +101,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
         """
         key_kconv = self._kconv(key)
 
-        new_fields = []
+        new_fields: List[Tuple[KT, VT]] = []
         for field in self.fields:
             if self._kconv(field[0]) == key_kconv:
                 if values:
@@ -129,7 +129,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
         item = (key, value)
         self.fields = self.fields[:index] + (item,) + self.fields[index:]
 
-    def keys(self, multi: bool = False) -> Iterator[KT]:
+    def keys(self, multi: bool = False):
         """
         Get all keys.
 
@@ -141,7 +141,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
             for k, _ in self.items(multi)
         )
 
-    def values(self, multi: bool = False) -> Iterator[VT]:
+    def values(self, multi: bool = False):
         """
         Get all values.
 
@@ -153,7 +153,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
             for _, v in self.items(multi)
         )
 
-    def items(self, multi: bool = False) -> AbstractSet[Tuple[KT,VT]]:
+    def items(self, multi: bool = False):
         """
         Get all (key, value) tuples.
 
@@ -168,6 +168,7 @@ class _MultiDict(MutableMapping[KT, VT], metaclass=ABCMeta):
 
 class MultiDict(_MultiDict[KT, VT], serializable.Serializable):
     """A concrete MultiDict, storing its own data."""
+
     def __init__(self, fields=()):
         super().__init__()
         self.fields = tuple(
@@ -193,7 +194,7 @@ class MultiDict(_MultiDict[KT, VT], serializable.Serializable):
         return cls(state)
 
 
-class MultiDictView(_MultiDict):
+class MultiDictView(_MultiDict[KT, VT]):
     """
     The MultiDictView provides the MultiDict interface over calculated data.
     The view itself contains no state - data is retrieved from the parent on
@@ -216,7 +217,7 @@ class MultiDictView(_MultiDict):
         # multiple elements exist with the same key.
         return values[0]
 
-    @property
+    @property  # type: ignore
     def fields(self):
         return self._getter()
 

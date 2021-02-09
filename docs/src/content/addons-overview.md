@@ -7,37 +7,19 @@ menu:
 
 # Addons
 
-Mitmproxy's addon mechanism consists of a set of APIs that support components of any complexity. Addons interact with
-mitmproxy by responding to [events]({{< relref addons-api >}}), which allow them to hook into and change mitmproxy's
-behaviour. They are configured through [options]({{< relref addons-options >}}), which can be set in mitmproxy's config
-file, changed interactively by users, or passed on the command-line. Finally, they can expose [commands]({{< relref
-addons-commands >}}), which allows users to invoke their actions either directly or by binding them to keys in the
-interactive tools.
+Mitmproxy's addon mechanism is an exceptionally powerful part of mitmproxy. In fact, much of mitmproxy's own
+functionality is defined in 
+[a suite of built-in addons](https://github.com/mitmproxy/mitmproxy/tree/master/mitmproxy/addons), 
+implementing everything from functionality like
+[anticaching]({{< relref "overview-features#anticache" >}}) and [sticky cookies]({{< relref
+"overview-features#sticky-cookies" >}}) to our onboarding webapp.
 
-Addons are an exceptionally powerful part of mitmproxy. In fact, much of
-mitmproxy's own functionality is defined in [a suite of built-in
-addons](https://github.com/mitmproxy/mitmproxy/tree/master/mitmproxy/addons),
-implementing everything from functionality like [anticaching]({{< relref
-"overview-features#anticache" >}}) and [sticky cookies]({{< relref
-"overview-features#sticky-cookies" >}}) to our onboarding webapp. The built-in
-addons make for instructive reading, and you will quickly see that quite complex
-functionality can often boil down to a very small, completely self-contained
-modules. Mitmproxy provides the exact same set of facilities it uses for its own
-functionality to third-party scripters and extenders.
+Addons interact with mitmproxy by responding to [events]({{< relref addons-api >}}), which allow them to hook into and 
+change mitmproxy's behaviour. They are configured through [options]({{< relref addons-options >}}), which can be set in 
+mitmproxy's config file, changed interactively by users, or passed on the command-line. Finally, they can expose 
+[commands]({{< relref addons-commands >}}), which allows users to invoke their actions either directly or by binding 
+them to keys in the interactive tools.
 
-This document will show you how to build addons using **events**, **options**
-and **commands**. However, this is not an API manual, and the mitmproxy source
-code remains the canonical reference. One easy way to explore the API from the
-command-line is to use [pdoc](https://pdoc.dev/).
-Here, for example, is a command that shows the API documentation for the
-mitmproxy's HTTP flow classes:
-
-```bash
-pdoc mitmproxy.http
-```
-
-You will be referring to the mitmproxy API documentation frequently, so keep
-**pdoc** or an equivalent handy.
 
 # Anatomy of an addon
 
@@ -69,3 +51,13 @@ Here are a few things to note about the code above:
   first parameter to every event, but we've found it neater to just expose it as
   an importable global. In this case, we're using the `ctx.log` object to do our
   logging.
+
+
+# Abbreviated Scripting Syntax
+
+Sometimes, we would like to write a quick script without going through the trouble of creating a class.
+The addons mechanism has a shorthand that allows a module as a whole to be treated as an addon object. 
+This lets us place event handler functions in the module scope. 
+For instance, here is a complete script that adds a header to every request:
+
+{{< example src="examples/addons/anatomy2.py" lang="py" >}}

@@ -5,7 +5,7 @@ url: "api/mitmproxy/certs.html"
 
 menu:
     addons:
-        parent: 'API'
+        parent: 'Event Hooks & API'
 ---
 
 {{< readfile file="/generated/api/mitmproxy/certs.html" >}}

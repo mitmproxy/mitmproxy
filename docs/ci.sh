@@ -6,7 +6,7 @@ set -o pipefail
 
 # This script gets run from CI to render and upload docs for the master branch.
 
-./build.sh
+./build.py
 
 # Only upload if we have defined credentials - we only have these defined for
 # trusted commits (i.e. not PRs).
