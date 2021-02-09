@@ -1,5 +1,4 @@
 import webbrowser
-import subprocess
 
 from mitmproxy import ctx
 
@@ -44,23 +43,21 @@ def open_browser(url: str) -> bool:
         True, if a browser has been opened
         False, if no suitable browser has been found.
     """
-    if(subprocess.call(["xdg-open", url])) == 0:
-        return True
-    else:    
-        browsers = (
-            "windows-default", "macosx",
-            "wslview %s",
-            "x-www-browser %s", "gnome-open %s",
-            "google-chrome", "chrome", "chromium", "chromium-browser",
-            "firefox", "opera", "safari",
-        )
-        for browser in browsers:
-            try:
-                b = webbrowser.get(browser)
-            except webbrowser.Error:
-                pass
-            else:
-                if b.open(url):
-                    return True
-        return False
+    browsers = (
+        "windows-default", "macosx",
+        "wslview %s",
+        "xdg-open",
+        "x-www-browser %s", "gnome-open %s", 
+        "google-chrome", "chrome", "chromium", "chromium-browser",
+        "firefox", "opera", "safari",
+    )
+    for browser in browsers:
+        try:
+            b = webbrowser.get(browser)
+        except webbrowser.Error:
+            pass
+        else:
+            if b.open(url):
+                return True
+    return False
         
