@@ -83,14 +83,21 @@ class ModifyHeaders:
         self.run(flow, flow.response.headers)
 
     def run(self, flow: http.HTTPFlow, hdrs: Headers) -> None:
-        # unset all specified headers
+        matches = []
+
+        # first check all the filters against the original, unmodified flow
         for spec in self.replacements:
-            if spec.matches(flow):
+            matches.append(spec.matches(flow))
+
+        # unset all specified headers
+        for i, spec in enumerate(self.replacements):
+            if matches[i]:
                 hdrs.pop(spec.subject, None)
 
         # set all specified headers if the replacement string is not empty
-        for spec in self.replacements:
-            if spec.matches(flow):
+
+        for i, spec in enumerate(self.replacements):
+            if matches[i]:
                 try:
                     replacement = spec.read_replacement()
                 except OSError as e:

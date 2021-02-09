@@ -113,6 +113,19 @@ class TestModifyHeaders:
             mh.response(f)
             assert "one" not in f.response.headers
 
+            # test modifying a header that is also part of the filter expression
+            # https://github.com/mitmproxy/mitmproxy/issues/4245
+            tctx.configure(
+                mh,
+                modify_headers=[
+                    "/~hq ^user-agent:.+Mozilla.+$/user-agent/Definitely not Mozilla ;)"
+                ]
+            )
+            f = tflow.tflow()
+            f.request.headers["user-agent"] = "Hello, it's me, Mozilla"
+            mh.request(f)
+            assert "Definitely not Mozilla ;)" == f.request.headers["user-agent"]
+
     @pytest.mark.parametrize("take", [True, False])
     def test_taken(self, take):
         mh = ModifyHeaders()
