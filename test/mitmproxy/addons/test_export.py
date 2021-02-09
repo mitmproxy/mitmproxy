@@ -98,6 +98,20 @@ class TestExportCurlCommand:
         result = """curl --compressed 'http://address:22/path?a=foo&a=bar&b=baz'"""
         assert export.curl_command(get_request) == result
 
+    # This tests that we always specify the original host in the URL, which is
+    # important for SNI. If option `export_preserve_original_ip` is true, we
+    # ensure that we still connect to the same IP by using curl's `--resolve`
+    # option.
+    def test_correct_host_used(self, get_request):
+        get_request.request.headers["host"] = "domain:22"
+
+        result = """curl -H 'header: qvalue' -H 'host: domain:22' 'http://domain:22/path?a=foo&a=bar&b=baz'"""
+        assert export.curl_command(get_request) == result
+
+        result = """curl --resolve 'domain:22:[192.168.0.1]' -H 'header: qvalue' -H 'host: domain:22' """ \
+                 """'http://domain:22/path?a=foo&a=bar&b=baz'"""
+        assert export.curl_command(get_request, preserve_ip=True) == result
+
 
 class TestExportHttpieCommand:
     def test_get(self, get_request):
@@ -135,6 +149,19 @@ class TestExportHttpieCommand:
         command = export.httpie_command(request)
         assert shlex.split(command)[-2] == '<<<'
         assert shlex.split(command)[-1] == "'&#"
+
+    # See comment in `TestExportCurlCommand.test_correct_host_used`. httpie
+    # currently doesn't have a way of forcing connection to a particular IP, so
+    # the command-line may not always reproduce the original request, in case
+    # the host is resolved to a different IP address.
+    #
+    # httpie tracking issue: https://github.com/httpie/httpie/issues/414
+    def test_correct_host_used(self, get_request):
+        get_request.request.headers["host"] = "domain:22"
+
+        result = """http GET 'http://domain:22/path?a=foo&a=bar&b=baz' """ \
+                 """'header: qvalue' 'host: domain:22'"""
+        assert export.httpie_command(get_request) == result
 
 
 class TestRaw:
@@ -197,7 +224,9 @@ def qr(f):
 def test_export(tmpdir):
     f = str(tmpdir.join("path"))
     e = export.Export()
-    with taddons.context():
+    with taddons.context() as tctx:
+        tctx.configure(e)
+
         assert e.formats() == ["curl", "httpie", "raw", "raw_request", "raw_response"]
         with pytest.raises(exceptions.CommandError):
             e.file("nonexistent", tflow.tflow(resp=True), f)
@@ -239,6 +268,8 @@ async def test_export_open(exception, log_message, tmpdir):
 async def test_clip(tmpdir):
     e = export.Export()
     with taddons.context() as tctx:
+        tctx.configure(e)
+
         with pytest.raises(exceptions.CommandError):
             e.clip("nonexistent", tflow.tflow(resp=True))
 

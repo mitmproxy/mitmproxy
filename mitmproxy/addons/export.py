@@ -55,10 +55,18 @@ def request_content_for_console(request: http.Request) -> str:
     )
 
 
-def curl_command(f: flow.Flow) -> str:
+def curl_command(f: flow.Flow, preserve_ip: bool = False) -> str:
     request = cleanup_request(f)
     request = pop_headers(request)
     args = ["curl"]
+
+    server_addr = f.server_conn.peername[0] if f.server_conn.peername else None
+
+    if preserve_ip and server_addr and request.pretty_host != server_addr:
+        resolve = "{}:{}:[{}]".format(request.pretty_host, request.port, server_addr)
+        args.append("--resolve")
+        args.append(resolve)
+
     for k, v in request.headers.items(multi=True):
         if k.lower() == "accept-encoding":
             args.append("--compressed")
@@ -67,7 +75,9 @@ def curl_command(f: flow.Flow) -> str:
 
     if request.method != "GET":
         args += ["-X", request.method]
-    args.append(request.url)
+
+    args.append(request.pretty_url)
+
     if request.content:
         args += ["-d", request_content_for_console(request)]
     return ' '.join(shlex.quote(arg) for arg in args)
@@ -76,7 +86,13 @@ def curl_command(f: flow.Flow) -> str:
 def httpie_command(f: flow.Flow) -> str:
     request = cleanup_request(f)
     request = pop_headers(request)
-    args = ["http", request.method, request.url]
+
+    # TODO: Once https://github.com/httpie/httpie/issues/414 is implemented, we
+    # should ensure we always connect to the IP address specified in the flow,
+    # similar to how it's done in curl_command.
+    url = request.pretty_url
+
+    args = ["http", request.method, url]
     for k, v in request.headers.items(multi=True):
         args.append(f"{k}: {v}")
     cmd = ' '.join(shlex.quote(arg) for arg in args)
@@ -119,6 +135,18 @@ formats = dict(
 
 
 class Export():
+    def load(self, loader):
+        loader.add_option(
+            "export_preserve_original_ip", bool, False,
+            """
+            When exporting a request as an external command, make an effort to
+            connect to the same IP as in the original request. This helps with
+            reproducibility in cases where the behaviour depends on the
+            particular host we are connecting to. Currently this only affects
+            curl exports.
+            """
+        )
+
     @command.command("export.formats")
     def formats(self) -> typing.Sequence[str]:
         """
@@ -134,7 +162,10 @@ class Export():
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
         func: typing.Any = formats[format]
-        v = func(flow)
+        if format == "curl":
+            v = func(flow, preserve_ip=ctx.options.export_preserve_original_ip)
+        else:
+            v = func(flow)
         try:
             with open(path, "wb") as fp:
                 if isinstance(v, bytes):
@@ -152,7 +183,10 @@ class Export():
         if format not in formats:
             raise exceptions.CommandError("No such export format: %s" % format)
         func: typing.Any = formats[format]
-        v = strutils.always_str(func(flow))
+        if format == "curl":
+            v = strutils.always_str(func(flow, preserve_ip=ctx.options.export_preserve_original_ip))
+        else:
+            v = strutils.always_str(func(flow))
         try:
             pyperclip.copy(v)
         except pyperclip.PyperclipException as e:
