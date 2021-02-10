@@ -20,8 +20,14 @@ class TestHARDump:
         )
 
     def test_simple(self, tmpdir, tdata):
+        # context is needed to provide ctx.log function that
+        # is invoked if there are exceptions
         with taddons.context() as tctx:
             a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
+            # check script is read without errors
+            assert tctx.master.logs == []
+            assert a.name_value   # last function in har_dump.py
+
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
             tctx.invoke(a, "response", self.flow())
