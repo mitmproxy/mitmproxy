@@ -20,7 +20,7 @@ from datetime import timezone
 
 import mitmproxy
 
-from mitmproxy import connections  # noqa
+from mitmproxy import connection
 from mitmproxy import version
 from mitmproxy import ctx
 from mitmproxy.utils import strutils
@@ -30,7 +30,7 @@ HAR: typing.Dict = {}
 
 # A list of server seen till now is maintained so we can avoid
 # using 'connect' time for entries that use an existing connection.
-SERVERS_SEEN: typing.Set[connections.ServerConnection] = set()
+SERVERS_SEEN: typing.Set[connection.Server] = set()
 
 
 def load(l):
@@ -53,7 +53,7 @@ def configure(updated):
     })
 
 
-def response(flow):
+def response(flow: mitmproxy.http.HTTPFlow):
     """
        Called when a server response has been received.
     """
@@ -153,7 +153,7 @@ def response(flow):
             "params": params
         }
 
-    if flow.server_conn.connected():
+    if flow.server_conn.connected:
         entry["serverIPAddress"] = str(flow.server_conn.ip_address[0])
 
     HAR["log"]["entries"].append(entry)
