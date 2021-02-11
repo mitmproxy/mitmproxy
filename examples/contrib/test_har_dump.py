@@ -30,8 +30,8 @@ class TestHARDump:
 
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
-            tctx.invoke(a, "response", self.flow())
-            tctx.invoke(a, "done")
+            a.response(self.flow())
+            a.done()
             with open(path) as inp:
                 har = json.load(inp)
             assert len(har["log"]["entries"]) == 1
@@ -42,10 +42,8 @@ class TestHARDump:
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
 
-            tctx.invoke(
-                a, "response", self.flow(resp_content=b"foo" + b"\xFF" * 10)
-            )
-            tctx.invoke(a, "done")
+            a.response(self.flow(resp_content=b"foo" + b"\xFF" * 10))
+            a.done()
             with open(path) as inp:
                 har = json.load(inp)
             assert har["log"]["entries"][0]["response"]["content"]["encoding"] == "base64"
@@ -82,8 +80,8 @@ class TestHARDump:
             f.response.headers["random-junk"] = bytes(range(256))
             f.response.content = bytes(range(256))
 
-            tctx.invoke(a, "response", f)
-            tctx.invoke(a, "done")
+            a.response(f)
+            a.done()
 
             with open(path) as inp:
                 har = json.load(inp)
