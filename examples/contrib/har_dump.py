@@ -53,7 +53,7 @@ def configure(updated):
     })
 
 
-def response(flow):
+def response(flow: mitmproxy.http.HTTPFlow):
     """
        Called when a server response has been received.
     """
@@ -153,7 +153,7 @@ def response(flow):
             "params": params
         }
 
-    if flow.server_conn.connected():
+    if flow.server_conn.connected:
         entry["serverIPAddress"] = str(flow.server_conn.ip_address[0])
 
     HAR["log"]["entries"].append(entry)
