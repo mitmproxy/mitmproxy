@@ -64,6 +64,18 @@ jobs:
         with:
           file: ./coverage.xml
           name: ${{ matrix.os }}
+
+  test_examples:
+    runs-on: ubuntu-latest
+    steps:
+      - run: printenv
+      - uses: actions/checkout@v2
+      - run: pip install pipenv
+      - run: pipenv install
+      - run: |
+          ln -sr test/conftest.py examples/
+          pipenv run pytest examples/
+
   build-wheel:
     runs-on: ubuntu-latest
     env:
