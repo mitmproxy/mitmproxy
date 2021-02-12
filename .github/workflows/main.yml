@@ -71,10 +71,10 @@ jobs:
       - run: printenv
       - uses: actions/checkout@v2
       - run: pip install pipenv
-      - run: pipenv install
+      - run: python -m pipenv install
       - run: |
           ln -sr test/conftest.py examples/
-          pipenv run pytest examples/
+          python -m pipenv run pytest examples/
 
   build-wheel:
     runs-on: ubuntu-latest
