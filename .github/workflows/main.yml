@@ -73,7 +73,7 @@ jobs:
       - run: pip install pytest -e ".[dev]"
       - run: |
           ln -sr test/conftest.py examples/
-          pytest examples/
+          python -m pytest examples/
 
   build-wheel:
     runs-on: ubuntu-latest
