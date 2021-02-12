@@ -71,7 +71,7 @@ jobs:
       - run: printenv
       - uses: actions/checkout@v2
       - run: pip install pipenv
-      - run: python -m pipenv install
+      - run: python -m pipenv install -e .
       - run: |
           ln -sr test/conftest.py examples/
           python -m pipenv run pytest examples/
