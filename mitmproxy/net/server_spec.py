@@ -1,5 +1,5 @@
 """
-Parse scheme, host and port from a string.
+Server specs are used to describe an upstream proxy or server.
 """
 import functools
 import re
@@ -31,12 +31,12 @@ def parse(server_spec: str) -> ServerSpec:
     """
     Parses a server mode specification, e.g.:
 
-        - http://example.com/
-        - example.org
-        - example.com:443
+     - http://example.com/
+     - example.org
+     - example.com:443
 
-    Raises:
-        ValueError, if the server specification is invalid.
+    *Raises:*
+     - ValueError, if the server specification is invalid.
     """
     m = server_spec_re.match(server_spec)
     if not m:
@@ -71,13 +71,10 @@ def parse(server_spec: str) -> ServerSpec:
 
 def parse_with_mode(mode: str) -> Tuple[str, ServerSpec]:
     """
-    Parse a proxy mode specification, which is usually just (reverse|upstream):server-spec
+    Parse a proxy mode specification, which is usually just `(reverse|upstream):server-spec`.
 
-    Returns:
-        A (mode, server_spec) tuple.
-
-    Raises:
-        ValueError, if the specification is invalid.
+    *Raises:*
+     - ValueError, if the specification is invalid.
     """
     mode, server_spec = mode.split(":", maxsplit=1)
     return mode, parse(server_spec)

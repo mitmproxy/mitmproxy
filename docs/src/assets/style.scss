@@ -1,4 +1,12 @@
 @import "./syntax";
+/* background for both hugo *and* pdoc. */
+.chroma pre, pre.chroma {
+    background-color: #f7f7f7;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    padding: .5rem 0 .5rem .5rem;
+}
+
 @import "./badge";
 
 $primary: #C93312;
@@ -7,6 +15,9 @@ $family-sans-serif: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Ox
 
 $panel-heading-size: 1em;
 $panel-heading-weight: 600;
+$menu-list-link-padding: .3em .75em;
+$menu-label-spacing: .7em;
+$menu-nested-list-margin: .3em .75em;
 
 /*!*
 bulma.io v0.8.0 | MIT License | github.com/jgthms/bulma */
@@ -16,6 +27,10 @@ bulma.io v0.8.0 | MIT License | github.com/jgthms/bulma */
 @import "./bulma/elements/_all";
 @import "./bulma/components/_all";
 @import "./bulma/layout/_all";
+
+html {
+  scroll-behavior: smooth;
+}
 
 html, body {
     height: 100%;

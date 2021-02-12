@@ -3,9 +3,19 @@
     {{ $currentPage := .ctx }}
     {{ $menuname := .menuname }}
     {{ range $menu.ByWeight }}
-        <li >
+        <li>
             <a class="{{ if $currentPage.IsMenuCurrent $menuname . }}is-active{{ end }}"
-                href="{{.URL}}">{{ .Name }}</a>
+               href="{{.URL}}">{{ .Name }}</a>
+            {{ if and .HasChildren (or ($currentPage.IsMenuCurrent $menuname .) ($currentPage.HasMenuCurrent $menuname .)) }}
+            <ul>
+                {{ range .Children }}
+                    <li>
+                        <a class="{{ if $currentPage.IsMenuCurrent $menuname . }}is-active{{ end }}"
+                           href="{{ .URL }}">{{ .Name }}</a>
+                    </li>
+                {{ end }}
+            </ul>
+            {{ end }}
         </li>
     {{end}}
 </ul>

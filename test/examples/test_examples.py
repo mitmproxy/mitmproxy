@@ -10,7 +10,7 @@ from ..mitmproxy import tservers
 class TestScripts(tservers.MasterTest):
     def test_add_header(self, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/addons/scripting-minimal-example.py"))
+            a = tctx.script(tdata.path("../examples/addons/anatomy2.py"))
             f = tflow.tflow()
             a.request(f)
             assert f.request.headers["myheader"] == "value"

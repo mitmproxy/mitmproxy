@@ -751,7 +751,7 @@ class TestHeaders:
         headers = Headers()
         assert len(headers) == 0
 
-        headers = Headers([[b"Host", b"example.com"]])
+        headers = Headers([(b"Host", b"example.com")])
         assert len(headers) == 1
         assert headers["Host"] == "example.com"
 
@@ -760,14 +760,14 @@ class TestHeaders:
         assert headers["Host"] == "example.com"
 
         headers = Headers(
-            [[b"Host", b"invalid"]],
+            [(b"Host", b"invalid")],
             Host="example.com"
         )
         assert len(headers) == 1
         assert headers["Host"] == "example.com"
 
         headers = Headers(
-            [[b"Host", b"invalid"], [b"Accept", b"text/plain"]],
+            [(b"Host", b"invalid"), (b"Accept", b"text/plain")],
             Host="example.com"
         )
         assert len(headers) == 2
@@ -775,7 +775,7 @@ class TestHeaders:
         assert headers["Accept"] == "text/plain"
 
         with pytest.raises(TypeError):
-            Headers([[b"Host", "not-bytes"]])
+            Headers([(b"Host", "not-bytes")])
 
     def test_set(self):
         headers = Headers()
@@ -791,8 +791,8 @@ class TestHeaders:
         assert bytes(headers) == b"Host: example.com\r\n"
 
         headers = Headers([
-            [b"Host", b"example.com"],
-            [b"Accept", b"text/plain"]
+            (b"Host", b"example.com"),
+            (b"Accept", b"text/plain")
         ])
         assert bytes(headers) == b"Host: example.com\r\nAccept: text/plain\r\n"
 
@@ -801,8 +801,8 @@ class TestHeaders:
 
     def test_iter(self):
         headers = Headers([
-            [b"Set-Cookie", b"foo"],
-            [b"Set-Cookie", b"bar"]
+            (b"Set-Cookie", b"foo"),
+            (b"Set-Cookie", b"bar")
         ])
         assert list(headers) == ["Set-Cookie"]
 
@@ -816,9 +816,9 @@ class TestHeaders:
 
     def test_items(self):
         headers = Headers([
-            [b"Set-Cookie", b"foo"],
-            [b"Set-Cookie", b"bar"],
-            [b'Accept', b'text/plain'],
+            (b"Set-Cookie", b"foo"),
+            (b"Set-Cookie", b"bar"),
+            (b'Accept', b'text/plain'),
         ])
         assert list(headers.items()) == [
             ('Set-Cookie', 'foo, bar'),

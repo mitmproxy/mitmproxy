@@ -1,8 +1,12 @@
 ---
-title: "Event Hooks"
+title: "Event Hooks & API"
+url: "api/events.html"
+aliases:
+    - /addons-events/
+layout: single
 menu:
     addons:
-        weight: 2
+        weight: 3
 ---
 
 # Event Hooks
@@ -16,9 +20,8 @@ header with a count of the number of responses seen:
 {{< example src="examples/addons/http-add-header.py" lang="py" >}}
 
 
-## Supported Events
+## Available Hooks
 
-Below we list events supported by mitmproxy. We've added
-annotations to illustrate the argument types.
+The following addons list all available event hooks.
 
-{{< readfile file="/generated/events.html" markdown="true" >}}
+{{< readfile file="/generated/api/events.html" >}}

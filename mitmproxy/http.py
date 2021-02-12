@@ -3,23 +3,30 @@ import time
 import urllib.parse
 from dataclasses import dataclass
 from dataclasses import fields
-from email.utils import formatdate, mktime_tz, parsedate_tz
-from typing import Callable, cast
+from email.utils import formatdate
+from email.utils import mktime_tz
+from email.utils import parsedate_tz
+from typing import Callable
 from typing import Dict
 from typing import Iterable
+from typing import Iterator
+from typing import List
 from typing import Mapping
 from typing import Optional
 from typing import Tuple
 from typing import Union
+from typing import cast
 
-from mitmproxy import flow, connection
+from mitmproxy import flow
 from mitmproxy.coretypes import multidict
 from mitmproxy.coretypes import serializable
 from mitmproxy.net import encoding
-from mitmproxy.net.http import cookies, multipart
+from mitmproxy.net.http import cookies
+from mitmproxy.net.http import multipart
 from mitmproxy.net.http import status_codes
 from mitmproxy.net.http import url
-from mitmproxy.net.http.headers import assemble_content_type, parse_content_type
+from mitmproxy.net.http.headers import assemble_content_type
+from mitmproxy.net.http.headers import parse_content_type
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
 from mitmproxy.utils import typecheck
@@ -28,72 +35,70 @@ from mitmproxy.utils.strutils import always_str
 
 
 # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
-def _native(x):
+def _native(x: bytes) -> str:
     return x.decode("utf-8", "surrogateescape")
 
 
-def _always_bytes(x):
+def _always_bytes(x: Union[str, bytes]) -> bytes:
     return strutils.always_bytes(x, "utf-8", "surrogateescape")
 
 
-class Headers(multidict.MultiDict):
+# This cannot be easily typed with mypy yet, so we just specify MultiDict without concrete types.
+class Headers(multidict.MultiDict):  # type: ignore
     """
     Header class which allows both convenient access to individual headers as well as
     direct access to the underlying raw data. Provides a full dictionary interface.
 
-    Example:
+    Create headers with keyword arguments:
+    >>> h = Headers(host="example.com", content_type="application/xml")
 
-    .. code-block:: python
+    Headers mostly behave like a normal dict:
+    >>> h["Host"]
+    "example.com"
 
-        # Create headers with keyword arguments
-        >>> h = Headers(host="example.com", content_type="application/xml")
+    Headers are case insensitive:
+    >>> h["host"]
+    "example.com"
 
-        # Headers mostly behave like a normal dict.
-        >>> h["Host"]
-        "example.com"
+    Headers can also be created from a list of raw (header_name, header_value) byte tuples:
+    >>> h = Headers([
+        (b"Host",b"example.com"),
+        (b"Accept",b"text/html"),
+        (b"accept",b"application/xml")
+    ])
 
-        # HTTP Headers are case insensitive
-        >>> h["host"]
-        "example.com"
+    Multiple headers are folded into a single header as per RFC 7230:
+    >>> h["Accept"]
+    "text/html, application/xml"
 
-        # Headers can also be created from a list of raw (header_name, header_value) byte tuples
-        >>> h = Headers([
-            (b"Host",b"example.com"),
-            (b"Accept",b"text/html"),
-            (b"accept",b"application/xml")
-        ])
+    Setting a header removes all existing headers with the same name:
+    >>> h["Accept"] = "application/text"
+    >>> h["Accept"]
+    "application/text"
 
-        # Multiple headers are folded into a single header as per RFC7230
-        >>> h["Accept"]
-        "text/html, application/xml"
+    `bytes(h)` returns an HTTP/1 header block:
+    >>> print(bytes(h))
+    Host: example.com
+    Accept: application/text
 
-        # Setting a header removes all existing headers with the same name.
-        >>> h["Accept"] = "application/text"
-        >>> h["Accept"]
-        "application/text"
-
-        # bytes(h) returns a HTTP1 header block.
-        >>> print(bytes(h))
-        Host: example.com
-        Accept: application/text
-
-        # For full control, the raw header fields can be accessed
-        >>> h.fields
+    For full control, the raw header fields can be accessed:
+    >>> h.fields
 
     Caveats:
-        For use with the "Set-Cookie" header, see :py:meth:`get_all`.
+     - For use with the "Set-Cookie" header, either use `Response.cookies` or see `Headers.get_all`.
     """
 
-    def __init__(self, fields=(), **headers):
+    def __init__(self, fields: Iterable[Tuple[bytes, bytes]] = (), **headers):
         """
-        Args:
-            fields: (optional) list of ``(name, value)`` header byte tuples,
-                e.g. ``[(b"Host", b"example.com")]``. All names and values must be bytes.
-            **headers: Additional headers to set. Will overwrite existing values from `fields`.
-                For convenience, underscores in header names will be transformed to dashes -
-                this behaviour does not extend to other methods.
-                If ``**headers`` contains multiple keys that have equal ``.lower()`` s,
-                the behavior is undefined.
+        *Args:*
+         - *fields:* (optional) list of ``(name, value)`` header byte tuples,
+           e.g. ``[(b"Host", b"example.com")]``. All names and values must be bytes.
+         - *\*\*headers:* Additional headers to set. Will overwrite existing values from `fields`.
+           For convenience, underscores in header names will be transformed to dashes -
+           this behaviour does not extend to other methods.
+
+        If ``**headers`` contains multiple keys that have equal ``.lower()`` representations,
+        the behavior is undefined.
         """
         super().__init__(fields)
 
@@ -102,41 +107,43 @@ class Headers(multidict.MultiDict):
                 raise TypeError("Header fields must be bytes.")
 
         # content_type -> content-type
-        headers = {
+        self.update({
             _always_bytes(name).replace(b"_", b"-"): _always_bytes(value)
             for name, value in headers.items()
-        }
-        self.update(headers)
+        })
+
+    fields: Tuple[Tuple[bytes, bytes], ...]
 
     @staticmethod
-    def _reduce_values(values):
+    def _reduce_values(values) -> str:
         # Headers can be folded
         return ", ".join(values)
 
     @staticmethod
-    def _kconv(key):
+    def _kconv(key) -> str:
         # Headers are case-insensitive
         return key.lower()
 
-    def __bytes__(self):
+    def __bytes__(self) -> bytes:
         if self.fields:
             return b"\r\n".join(b": ".join(field) for field in self.fields) + b"\r\n"
         else:
             return b""
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Union[str, bytes]) -> None:
         key = _always_bytes(key)
         super().__delitem__(key)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         for x in super().__iter__():
             yield _native(x)
 
-    def get_all(self, name):
+    def get_all(self, name: Union[str, bytes]) -> List[str]:
         """
-        Like :py:meth:`get`, but does not fold multiple headers into a single one.
+        Like `Headers.get`, but does not fold multiple headers into a single one.
         This is useful for Set-Cookie headers, which do not support folding.
-        See also: https://tools.ietf.org/html/rfc7230#section-3.2.2
+
+        *See also:* <https://tools.ietf.org/html/rfc7230#section-3.2.2>
         """
         name = _always_bytes(name)
         return [
@@ -144,16 +151,16 @@ class Headers(multidict.MultiDict):
             super().get_all(name)
         ]
 
-    def set_all(self, name, values):
+    def set_all(self, name: Union[str, bytes], values: List[Union[str, bytes]]):
         """
         Explicitly set multiple headers for the given key.
-        See: :py:meth:`get_all`
+        See `Headers.get_all`.
         """
         name = _always_bytes(name)
         values = [_always_bytes(x) for x in values]
         return super().set_all(name, values)
 
-    def insert(self, index, key, value):
+    def insert(self, index: int, key: Union[str, bytes], value: Union[str, bytes]):
         key = _always_bytes(key)
         value = _always_bytes(value)
         super().insert(index, key, value)
@@ -222,6 +229,8 @@ class ResponseData(MessageData):
 
 
 class Message(serializable.Serializable):
+    """Base class for `Request` and `Response`."""
+
     @classmethod
     def from_state(cls, state):
         return cls(**state)
@@ -233,12 +242,21 @@ class Message(serializable.Serializable):
         self.data.set_state(state)
 
     data: MessageData
-    stream: Union[Callable, bool] = False
+    stream: Union[Callable[[bytes], bytes], bool] = False
+    """
+    If `True`, the message body will not be buffered on the proxy
+    but immediately streamed to the destination instead.
+    Alternatively, a transformation function can be specified, but please note
+    that packet should not be relied upon.
+
+    This attribute must be set in the `requestheaders` or `responseheaders` hook.
+    Setting it in `request` or  `response` is already too late, mitmproxy has buffered the message body already.
+    """
 
     @property
     def http_version(self) -> str:
         """
-        Version string, e.g. "HTTP/1.1"
+        HTTP version string, for example `HTTP/1.1`.
         """
         return self.data.http_version.decode("utf-8", "surrogateescape")
 
@@ -272,7 +290,7 @@ class Message(serializable.Serializable):
     @property
     def trailers(self) -> Optional[Headers]:
         """
-        The HTTP trailers.
+        The [HTTP trailers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Trailer).
         """
         return self.data.trailers
 
@@ -283,9 +301,11 @@ class Message(serializable.Serializable):
     @property
     def raw_content(self) -> Optional[bytes]:
         """
-        The raw (potentially compressed) HTTP message body as bytes.
+        The raw (potentially compressed) HTTP message body.
 
-        See also: :py:attr:`content`, :py:class:`text`
+        In contrast to `Message.content` and `Message.text`, accessing this property never raises.
+
+        *See also:* `Message.content`, `Message.text`
         """
         return self.data.content
 
@@ -293,31 +313,35 @@ class Message(serializable.Serializable):
     def raw_content(self, content: Optional[bytes]) -> None:
         self.data.content = content
 
-    def get_content(self, strict: bool = True) -> Optional[bytes]:
+    @property
+    def content(self) -> Optional[bytes]:
         """
         The uncompressed HTTP message body as bytes.
 
-        Raises:
-            ValueError, when the HTTP content-encoding is invalid and strict is True.
+        Accessing this attribute may raise a `ValueError` when the HTTP content-encoding is invalid.
 
-        See also: :py:class:`raw_content`, :py:attr:`text`
+        *See also:* `Message.raw_content`, `Message.text`
         """
-        if self.raw_content is None:
-            return None
-        ce = self.headers.get("content-encoding")
-        if ce:
-            try:
-                content = encoding.decode(self.raw_content, ce)
-                # A client may illegally specify a byte -> str encoding here (e.g. utf8)
-                if isinstance(content, str):
-                    raise ValueError(f"Invalid Content-Encoding: {ce}")
-                return content
-            except ValueError:
-                if strict:
-                    raise
-                return self.raw_content
-        else:
-            return self.raw_content
+        return self.get_content()
+
+    @content.setter
+    def content(self, value: Optional[bytes]) -> None:
+        self.set_content(value)
+
+    @property
+    def text(self) -> Optional[str]:
+        """
+        The uncompressed and decoded HTTP message body as text.
+
+        Accessing this attribute may raise a `ValueError` when either content-encoding or charset is invalid.
+
+        *See also:* `Message.raw_content`, `Message.content`
+        """
+        return self.get_text()
+
+    @text.setter
+    def text(self, value: Optional[str]) -> None:
+        self.set_text(value)
 
     def set_content(self, value: Optional[bytes]) -> None:
         if value is None:
@@ -338,29 +362,27 @@ class Message(serializable.Serializable):
             self.raw_content = value
         self.headers["content-length"] = str(len(self.raw_content))
 
-    content = property(get_content, set_content)
-
-    @property
-    def timestamp_start(self) -> float:
+    def get_content(self, strict: bool = True) -> Optional[bytes]:
         """
-        First byte timestamp
+        Similar to `Message.content`, but does not raise if `strict` is `False`.
+        Instead, the compressed message body is returned as-is.
         """
-        return self.data.timestamp_start
-
-    @timestamp_start.setter
-    def timestamp_start(self, timestamp_start: float) -> None:
-        self.data.timestamp_start = timestamp_start
-
-    @property
-    def timestamp_end(self) -> Optional[float]:
-        """
-        Last byte timestamp
-        """
-        return self.data.timestamp_end
-
-    @timestamp_end.setter
-    def timestamp_end(self, timestamp_end: Optional[float]):
-        self.data.timestamp_end = timestamp_end
+        if self.raw_content is None:
+            return None
+        ce = self.headers.get("content-encoding")
+        if ce:
+            try:
+                content = encoding.decode(self.raw_content, ce)
+                # A client may illegally specify a byte -> str encoding here (e.g. utf8)
+                if isinstance(content, str):
+                    raise ValueError(f"Invalid Content-Encoding: {ce}")
+                return content
+            except ValueError:
+                if strict:
+                    raise
+                return self.raw_content
+        else:
+            return self.raw_content
 
     def _get_content_type_charset(self) -> Optional[str]:
         ct = parse_content_type(self.headers.get("content-type", ""))
@@ -391,14 +413,26 @@ class Message(serializable.Serializable):
 
         return enc
 
+    def set_text(self, text: Optional[str]) -> None:
+        if text is None:
+            self.content = None
+            return
+        enc = self._guess_encoding()
+
+        try:
+            self.content = cast(bytes, encoding.encode(text, enc))
+        except ValueError:
+            # Fall back to UTF-8 and update the content-type header.
+            ct = parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
+            ct[2]["charset"] = "utf-8"
+            self.headers["content-type"] = assemble_content_type(*ct)
+            enc = "utf8"
+            self.content = text.encode(enc, "surrogateescape")
+
     def get_text(self, strict: bool = True) -> Optional[str]:
         """
-        The uncompressed and decoded HTTP message body as text.
-
-        Raises:
-            ValueError, when either content-encoding or charset is invalid and strict is True.
-
-        See also: :py:attr:`content`, :py:class:`raw_content`
+        Similar to `Message.text`, but does not raise if `strict` is `False`.
+        Instead, the message body is returned as surrogate-escaped UTF-8.
         """
         content = self.get_content(strict)
         if content is None:
@@ -411,23 +445,27 @@ class Message(serializable.Serializable):
                 raise
             return content.decode("utf8", "surrogateescape")
 
-    def set_text(self, text: Optional[str]) -> None:
-        if text is None:
-            self.content = None
-            return
-        enc = self._guess_encoding()
+    @property
+    def timestamp_start(self) -> float:
+        """
+        *Timestamp:* Headers received.
+        """
+        return self.data.timestamp_start
 
-        try:
-            self.content = encoding.encode(text, enc)
-        except ValueError:
-            # Fall back to UTF-8 and update the content-type header.
-            ct = parse_content_type(self.headers.get("content-type", "")) or ("text", "plain", {})
-            ct[2]["charset"] = "utf-8"
-            self.headers["content-type"] = assemble_content_type(*ct)
-            enc = "utf8"
-            self.content = text.encode(enc, "surrogateescape")
+    @timestamp_start.setter
+    def timestamp_start(self, timestamp_start: float) -> None:
+        self.data.timestamp_start = timestamp_start
 
-    text = property(get_text, set_text)
+    @property
+    def timestamp_end(self) -> Optional[float]:
+        """
+        *Timestamp:* Last byte received.
+        """
+        return self.data.timestamp_end
+
+    @timestamp_end.setter
+    def timestamp_end(self, timestamp_end: Optional[float]):
+        self.data.timestamp_end = timestamp_end
 
     def decode(self, strict: bool = True) -> None:
         """
@@ -435,26 +473,25 @@ class Message(serializable.Serializable):
         removes the header. If there is no Content-Encoding header, no
         action is taken.
 
-        Raises:
-            ValueError, when the content-encoding is invalid and strict is True.
+        *Raises:*
+         - `ValueError`, when the content-encoding is invalid and strict is True.
         """
         decoded = self.get_content(strict)
         self.headers.pop("content-encoding", None)
         self.content = decoded
 
-    def encode(self, e: str) -> None:
+    def encode(self, encoding: str) -> None:
         """
-        Encodes body with the encoding e, where e is "gzip", "deflate", "identity", "br", or "zstd".
-        Any existing content-encodings are overwritten,
-        the content is not decoded beforehand.
+        Encodes body with the given encoding, where e is "gzip", "deflate", "identity", "br", or "zstd".
+        Any existing content-encodings are overwritten, the content is not decoded beforehand.
 
-        Raises:
-            ValueError, when the specified content-encoding is invalid.
+        *Raises:*
+         - `ValueError`, when the specified content-encoding is invalid.
         """
-        self.headers["content-encoding"] = e
+        self.headers["content-encoding"] = encoding
         self.content = self.raw_content
         if "content-encoding" not in self.headers:
-            raise ValueError("Invalid content encoding {}".format(repr(e)))
+            raise ValueError("Invalid content encoding {}".format(repr(encoding)))
 
 
 class Request(Message):
@@ -474,7 +511,7 @@ class Request(Message):
         http_version: bytes,
         headers: Union[Headers, Tuple[Tuple[bytes, bytes], ...]],
         content: Optional[bytes],
-        trailers: Union[None, Headers, Tuple[Tuple[bytes, bytes], ...]],
+        trailers: Union[Headers, Tuple[Tuple[bytes, bytes], ...], None],
         timestamp_start: float,
         timestamp_end: Optional[float],
     ):
@@ -543,7 +580,7 @@ class Request(Message):
                 for k, v in headers.items()
             )
         elif isinstance(headers, Iterable):
-            headers = Headers(headers)
+            headers = Headers(headers)  # type: ignore
         else:
             raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
                 type(headers).__name__
@@ -578,7 +615,7 @@ class Request(Message):
     @property
     def first_line_format(self) -> str:
         """
-        HTTP request form as defined in `RFC7230 <https://tools.ietf.org/html/rfc7230#section-5.3>`_.
+        *Read-only:* HTTP request form as defined in [RFC 7230](https://tools.ietf.org/html/rfc7230#section-5.3).
 
         origin-form and asterisk-form are subsumed as "relative".
         """
@@ -617,9 +654,12 @@ class Request(Message):
         HTTP request authority.
 
         For HTTP/1, this is the authority portion of the request target
-        (in either absolute-form or authority-form)
+        (in either absolute-form or authority-form).
+        For origin-form and asterisk-form requests, this property is set to an empty string.
 
         For HTTP/2, this is the :authority pseudo header.
+
+        *See also:* `Request.host`, `Request.host_header`, `Request.pretty_host`
         """
         try:
             return self.data.authority.decode("idna")
@@ -638,11 +678,13 @@ class Request(Message):
     @property
     def host(self) -> str:
         """
-        Target host. This may be parsed from the raw request
+        Target server for this request. This may be parsed from the raw request
         (e.g. from a ``GET http://example.com/ HTTP/1.1`` request line)
         or inferred from the proxy mode (e.g. an IP in transparent mode).
 
         Setting the host attribute also updates the host header and authority information, if present.
+
+        *See also:* `Request.authority`, `Request.host_header`, `Request.pretty_host`
         """
         return self.data.host
 
@@ -664,6 +706,8 @@ class Request(Message):
 
         This property maps to either ``request.headers["Host"]`` or
         ``request.authority``, depending on whether it's HTTP/1.x or HTTP/2.0.
+
+        *See also:* `Request.authority`,`Request.host`, `Request.pretty_host`
         """
         if self.is_http2:
             return self.authority or self.data.headers.get("Host", None)
@@ -686,7 +730,7 @@ class Request(Message):
     @property
     def port(self) -> int:
         """
-        Target port
+        Target port.
         """
         return self.data.port
 
@@ -709,7 +753,9 @@ class Request(Message):
     @property
     def url(self) -> str:
         """
-        The URL string, constructed from the request's URL components.
+        The full URL string, constructed from `Request.scheme`, `Request.host`, `Request.port` and `Request.path`.
+
+        Settings this property updates these attributes as well.
         """
         if self.first_line_format == "authority":
             return f"{self.host}:{self.port}"
@@ -723,9 +769,11 @@ class Request(Message):
     @property
     def pretty_host(self) -> str:
         """
-        Similar to :py:attr:`host`, but using the host/:authority header as an additional (preferred) data source.
-        This is useful in transparent mode where :py:attr:`host` is only an IP address,
-        but may not reflect the actual destination as the Host header could be spoofed.
+        *Read-only:* Like `Request.host`, but using `Request.host_header` header as an additional (preferred) data source.
+        This is useful in transparent mode where `Request.host` is only an IP address.
+
+        *Warning:* When working in adversarial environments, this may not reflect the actual destination
+        as the Host header could be spoofed.
         """
         authority = self.host_header
         if authority:
@@ -736,7 +784,7 @@ class Request(Message):
     @property
     def pretty_url(self) -> str:
         """
-        Like :py:attr:`url`, but using :py:attr:`pretty_host` instead of :py:attr:`host`.
+        *Read-only:* Like `Request.url`, but using `Request.pretty_host` instead of `Request.host`.
         """
         if self.first_line_format == "authority":
             return self.authority
@@ -760,9 +808,11 @@ class Request(Message):
         self.path = urllib.parse.urlunparse(["", "", path, params, query, fragment])
 
     @property
-    def query(self) -> multidict.MultiDictView:
+    def query(self) -> multidict.MultiDictView[str, str]:
         """
-        The request query string as an :py:class:`~mitmproxy.net.multidict.MultiDictView` object.
+        The request query as a mutable mapping view on the request's path.
+        For the most part, this behaves like a dictionary.
+        Modifications to the MultiDictView update `Request.path`, and vice versa.
         """
         return multidict.MultiDictView(
             self._get_query,
@@ -781,11 +831,11 @@ class Request(Message):
         self.headers["cookie"] = cookies.format_cookie_header(value)
 
     @property
-    def cookies(self) -> multidict.MultiDictView:
+    def cookies(self) -> multidict.MultiDictView[str, str]:
         """
         The request cookies.
-
-        An empty :py:class:`~mitmproxy.net.multidict.MultiDictView` object if the cookie monster ate them all.
+        For the most part, this behaves like a dictionary.
+        Modifications to the MultiDictView update `Request.headers`, and vice versa.
         """
         return multidict.MultiDictView(
             self._get_cookies,
@@ -797,7 +847,7 @@ class Request(Message):
         self._set_cookies(value)
 
     @property
-    def path_components(self):
+    def path_components(self) -> Tuple[str, ...]:
         """
         The URL's path components as a tuple of strings.
         Components are unquoted.
@@ -809,7 +859,7 @@ class Request(Message):
         return tuple(url.unquote(i) for i in path.split("/") if i)
 
     @path_components.setter
-    def path_components(self, components):
+    def path_components(self, components: Iterable[str]):
         components = map(lambda x: url.quote(x, safe=""), components)
         path = "/" + "/".join(components)
         _, _, _, params, query, fragment = urllib.parse.urlparse(self.url)
@@ -817,27 +867,24 @@ class Request(Message):
 
     def anticache(self) -> None:
         """
-        Modifies this request to remove headers that might produce a cached
-        response. That is, we remove ETags and If-Modified-Since headers.
+        Modifies this request to remove headers that might produce a cached response.
         """
-        delheaders = [
+        delheaders = (
             "if-modified-since",
             "if-none-match",
-        ]
+        )
         for i in delheaders:
             self.headers.pop(i, None)
 
     def anticomp(self) -> None:
         """
-        Modifies this request to remove headers that will compress the
-        resource's data.
+        Modify the Accept-Encoding header to only accept uncompressed responses.
         """
         self.headers["accept-encoding"] = "identity"
 
     def constrain_encoding(self) -> None:
         """
-        Limits the permissible Accept-Encoding values, based on what we can
-        decode appropriately.
+        Limits the permissible Accept-Encoding values, based on what we can decode appropriately.
         """
         accept_encoding = self.headers.get("accept-encoding")
         if accept_encoding:
@@ -864,13 +911,14 @@ class Request(Message):
         self.content = url.encode(form_data, self.get_text(strict=False)).encode()
 
     @property
-    def urlencoded_form(self):
+    def urlencoded_form(self) -> multidict.MultiDictView[str, str]:
         """
-        The URL-encoded form data as an :py:class:`~mitmproxy.net.multidict.MultiDictView` object.
-        An empty multidict.MultiDictView if the content-type indicates non-form data
-        or the content could not be parsed.
+        The URL-encoded form data.
 
-        Starting with mitmproxy 1.0, key and value are strings.
+        If the content-type indicates non-form data or the form could not be parsed, this is set to
+        an empty `MultiDictView`.
+
+        Modifications to the MultiDictView update `Request.content`, and vice versa.
         """
         return multidict.MultiDictView(
             self._get_urlencoded_form,
@@ -895,13 +943,14 @@ class Request(Message):
         self.headers["content-type"] = "multipart/form-data"
 
     @property
-    def multipart_form(self):
+    def multipart_form(self) -> multidict.MultiDictView[bytes, bytes]:
         """
-        The multipart form data as an :py:class:`~mitmproxy.net.multidict.MultiDictView` object.
-        An empty multidict.MultiDictView if the content-type indicates non-form data
-        or the content could not be parsed.
+        The multipart form data.
 
-        Key and value are bytes.
+        If the content-type indicates non-form data or the form could not be parsed, this is set to
+        an empty `MultiDictView`.
+
+        Modifications to the MultiDictView update `Request.content`, and vice versa.
         """
         return multidict.MultiDictView(
             self._get_multipart_form,
@@ -977,12 +1026,12 @@ class Response(Message):
             headers = headers
         elif isinstance(headers, dict):
             headers = Headers(
-                (always_bytes(k, "utf-8", "surrogateescape"),
+                (always_bytes(k, "utf-8", "surrogateescape"),  # type: ignore
                  always_bytes(v, "utf-8", "surrogateescape"))
                 for k, v in headers.items()
             )
         elif isinstance(headers, Iterable):
-            headers = Headers(headers)
+            headers = Headers(headers)  # type: ignore
         else:
             raise TypeError("Expected headers to be an iterable or dict, but is {}.".format(
                 type(headers).__name__
@@ -1023,7 +1072,8 @@ class Response(Message):
     @property
     def reason(self) -> str:
         """
-        HTTP Reason Phrase, e.g. "Not Found".
+        HTTP reason phrase, for example "Not Found".
+
         HTTP/2 responses do not contain a reason phrase, an empty string will be returned instead.
         """
         # Encoding: http://stackoverflow.com/a/16674906/934719
@@ -1049,16 +1099,15 @@ class Response(Message):
         self.headers.set_all("set-cookie", cookie_headers)
 
     @property
-    def cookies(self) -> multidict.MultiDictView:
+    def cookies(self) -> multidict.MultiDictView[str, Tuple[str, multidict.MultiDict[str, Optional[str]]]]:
         """
-        The response cookies. A possibly empty
-        :py:class:`~mitmproxy.net.multidict.MultiDictView`, where the keys are cookie
-        name strings, and values are (value, attr) tuples. Value is a string,
-        and attr is an MultiDictView containing cookie attributes. Within
-        attrs, unary attributes (e.g. HTTPOnly) are indicated by a Null value.
+        The response cookies. A possibly empty `MultiDictView`, where the keys are cookie
+        name strings, and values are `(cookie value, attributes)` tuples. Within
+        attributes, unary attributes (e.g. `HTTPOnly`) are indicated by a `None` value.
+        Modifications to the MultiDictView update `Response.headers`, and vice versa.
 
-        Caveats:
-            Updating the attr
+        *Warning:* Changes to `attributes` will not be picked up unless you also reassign
+        the `(cookie value, attributes)` tuple directly in the `MultiDictView`.
         """
         return multidict.MultiDictView(
             self._get_cookies,
@@ -1074,8 +1123,8 @@ class Response(Message):
         This fairly complex and heuristic function refreshes a server
         response for replay.
 
-            - It adjusts date, expires and last-modified headers.
-            - It adjusts cookie expiration.
+         - It adjusts date, expires, and last-modified headers.
+         - It adjusts cookie expiration.
         """
         if not now:
             now = time.time()
@@ -1108,19 +1157,17 @@ class HTTPFlow(flow.Flow):
     transaction.
     """
     request: Request
+    """The client's HTTP request."""
     response: Optional[Response] = None
+    """The server's HTTP response."""
     error: Optional[flow.Error] = None
     """
+    A connection or protocol error affecting this flow.
+
     Note that it's possible for a Flow to have both a response and an error
     object. This might happen, for instance, when a response was received
     from the server, but there was an error sending it back to the client.
     """
-    server_conn: connection.Server
-    client_conn: connection.Client
-    intercepted: bool = False
-    """ Is this flow currently being intercepted? """
-    mode: str
-    """ What mode was the proxy layer in when receiving this request? """
 
     def __init__(self, client_conn, server_conn, live=None, mode="regular"):
         super().__init__("http", client_conn, server_conn, live)
@@ -1144,6 +1191,7 @@ class HTTPFlow(flow.Flow):
 
     @property
     def timestamp_start(self) -> float:
+        """*Read-only:* An alias for `Request.timestamp_start`."""
         return self.request.timestamp_start
 
     def copy(self):

@@ -1,5 +1,4 @@
 import time
-
 from typing import List
 
 from mitmproxy import flow
@@ -7,6 +6,12 @@ from mitmproxy.coretypes import serializable
 
 
 class TCPMessage(serializable.Serializable):
+    """
+    An individual TCP "message".
+    Note that TCP is *stream-based* and not *message-based*.
+    For practical purposes the stream is chunked into messages here,
+    but you should not rely on message boundaries.
+    """
 
     def __init__(self, from_client, content, timestamp=None):
         self.from_client = from_client
@@ -31,7 +36,6 @@ class TCPMessage(serializable.Serializable):
 
 
 class TCPFlow(flow.Flow):
-
     """
     A TCPFlow is a simplified representation of a TCP session.
     """
@@ -45,3 +49,9 @@ class TCPFlow(flow.Flow):
 
     def __repr__(self):
         return "<TCPFlow ({} messages)>".format(len(self.messages))
+
+
+__all__ = [
+    "TCPFlow",
+    "TCPMessage",
+]

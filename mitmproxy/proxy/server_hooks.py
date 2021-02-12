@@ -26,8 +26,12 @@ class ClientDisconnectedHook(commands.StartHook):
 
 @dataclass
 class ServerConnectionHookData:
+    """Event data for server connection event hooks."""
+
     server: connection.Server
+    """The server connection this hook is about."""
     client: connection.Client
+    """The client on the other end."""
 
 
 @dataclass

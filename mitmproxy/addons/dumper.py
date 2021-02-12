@@ -80,11 +80,11 @@ class Dumper:
 
     def _echo_headers(self, headers: http.Headers):
         for k, v in headers.fields:
-            k = strutils.bytes_to_escaped_str(k)
-            v = strutils.bytes_to_escaped_str(v)
+            ks = strutils.bytes_to_escaped_str(k)
+            vs = strutils.bytes_to_escaped_str(v)
             out = "{}: {}".format(
-                click.style(k, fg="blue"),
-                click.style(v)
+                click.style(ks, fg="blue"),
+                click.style(vs)
             )
             self.echo(out, ident=4)
 

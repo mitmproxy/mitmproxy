@@ -39,6 +39,7 @@ rD693XKIHUCWOjMh1if6omGXKHH40QuME2gNa50+YPn1iYDl88uDbbMCAQI=
 
 
 class Cert(serializable.Serializable):
+    """Representation of a (TLS) certificate."""
     _cert: x509.Certificate
 
     def __init__(self, cert: x509.Certificate):

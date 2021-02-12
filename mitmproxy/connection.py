@@ -29,7 +29,7 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     Base class for client and server connections.
 
     The connection object only exposes metadata about the connection, but not the underlying socket object.
-    This is intentional, all I/O should be handled by mitmproxy.proxy.server exclusively.
+    This is intentional, all I/O should be handled by `mitmproxy.proxy.server` exclusively.
     """
     # all connections have a unique id. While
     # f.client_conn == f2.client_conn already holds true for live flows (where we have object identity),
@@ -92,12 +92,12 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
 
     @property
     def connected(self) -> bool:
-        """`True` if Connection.state is ConnectionState.OPEN, `False` otherwise. Read-only."""
+        """*Read-only:* `True` if Connection.state is ConnectionState.OPEN, `False` otherwise."""
         return self.state is ConnectionState.OPEN
 
     @property
     def tls_established(self) -> bool:
-        """`True` if TLS has been established, `False` otherwise. Read-only."""
+        """*Read-only:* `True` if TLS has been established, `False` otherwise."""
         return self.timestamp_tls_setup is not None
 
     def __eq__(self, other):
@@ -143,7 +143,7 @@ class Client(Connection):
     timestamp_start: float
     """*Timestamp:* TCP SYN received"""
 
-    def __init__(self, peername, sockname, timestamp_start):
+    def __init__(self, peername: Address, sockname: Address, timestamp_start: float):
         self.id = str(uuid.uuid4())
         self.peername = peername
         self.sockname = sockname
