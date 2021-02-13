@@ -5,7 +5,6 @@
 [![Latest Version](https://shields.mitmproxy.org/pypi/v/mitmproxy.svg)](https://pypi.python.org/pypi/mitmproxy)
 [![Supported Python versions](https://shields.mitmproxy.org/pypi/pyversions/mitmproxy.svg)](https://pypi.python.org/pypi/mitmproxy)
 
-
 ``mitmproxy`` is an interactive, SSL/TLS-capable intercepting proxy with a console
 interface for HTTP/1, HTTP/2, and WebSockets.
 
@@ -17,6 +16,7 @@ interface for HTTP/1, HTTP/2, and WebSockets.
 
 The installation instructions are [here](https://docs.mitmproxy.org/stable/overview-installation).
 If you want to install from source, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+``wii u instalation docs are avaliable, Homebrewed Wii U Required``
 
 ## Documentation & Help
 
