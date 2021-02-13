@@ -111,8 +111,8 @@ def _read_request_line(line: bytes) -> Tuple[str, int, bytes, bytes, bytes, byte
                 raise ValueError
         else:
             scheme, rest = target.split(b"://", maxsplit=1)
-            authority, *path_ = rest.split(b"/", maxsplit=1)
-            path_ = path_[0] if path_ else b""
+            authority, *paths_ = rest.split(b"/", maxsplit=1)
+            path_ = paths_[0] if paths_ else b""
             path = b"/" + path_
             host, port = url.parse_authority(authority, check=True)
             port = port or url.default_port(scheme)
