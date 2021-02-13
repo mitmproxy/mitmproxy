@@ -6,7 +6,7 @@ from pathlib import Path
 
 here = Path(__file__).parent
 
-for script in (here / "scripts").glob("*.py"):
+for script in sorted((here / "scripts").glob("*.py")):
     print(f"Generating output for {script.name}...")
     out = subprocess.check_output(["python3", script.absolute()], text=True)
     if out:
