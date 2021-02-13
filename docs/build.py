@@ -14,4 +14,4 @@ for script in (here / "scripts").glob("*.py"):
 
 if (here / "public").exists():
     shutil.rmtree(here / "public")
-subprocess.run(["hugo"], cwd=here / "src")
+subprocess.run(["hugo"], cwd=here / "src", check=True)
