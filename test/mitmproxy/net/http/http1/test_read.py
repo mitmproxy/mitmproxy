@@ -137,6 +137,8 @@ def test_read_request_line():
             ("foo", 42, b"CONNECT", b"", b"foo:42", b"", b"HTTP/1.1"))
     assert (t(b"GET http://foo:42/bar HTTP/1.1") ==
             ("foo", 42, b"GET", b"http", b"foo:42", b"/bar", b"HTTP/1.1"))
+    assert (t(b"GET http://foo:42 HTTP/1.1") ==
+            ("foo", 42, b"GET", b"http", b"foo:42", b"/", b"HTTP/1.1"))
 
     with pytest.raises(ValueError):
         t(b"GET / WTF/1.1")
