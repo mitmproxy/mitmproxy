@@ -56,6 +56,7 @@ If you depend on these features, please raise your voice in
 * `--modify-headers` now works correctly when modifying a header that is also part of the filter expression (@Prinzhorn)
 * Fix SNI-related reproducibility issues when exporting to curl/httpie commands. (@dkasak)
 * Add option `export_preserve_original_ip` to force exported command to connect to IP from original request. Only supports curl at the moment. (@dkasak)
+* Add `tzdata` package to Docker image  (@AltoNyan)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
