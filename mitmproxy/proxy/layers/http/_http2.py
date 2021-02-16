@@ -64,10 +64,28 @@ class Http2Connection(HttpConnection):
     def is_closed(self, stream_id: int) -> bool:
         """Check if a non-idle stream is closed"""
         stream = self.h2_conn.streams.get(stream_id, None)
-        if stream is not None:
-            return stream.closed
+        if (
+            stream is not None
+            and
+            stream.state_machine.state is not h2.stream.StreamState.CLOSED
+        ):
+            return False
         else:
             return True
+
+    def is_open_for_us(self, stream_id: int) -> bool:
+        """Check if we can write to a non-idle stream."""
+        stream = self.h2_conn.streams.get(stream_id, None)
+        if (
+            stream is not None
+            and
+            stream.state_machine.state is not h2.stream.StreamState.HALF_CLOSED_LOCAL
+            and
+            stream.state_machine.state is not h2.stream.StreamState.CLOSED
+        ):
+            return True
+        else:
+            return False
 
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, Start):
@@ -77,24 +95,18 @@ class Http2Connection(HttpConnection):
         elif isinstance(event, HttpEvent):
             if isinstance(event, self.SendData):
                 assert isinstance(event, (RequestData, ResponseData))
-                self.h2_conn.send_data(event.stream_id, event.data)
+                if self.is_open_for_us(event.stream_id):
+                    self.h2_conn.send_data(event.stream_id, event.data)
             elif isinstance(event, self.SendEndOfMessage):
-                stream = self.h2_conn.streams.get(event.stream_id)
-                if stream.state_machine.state not in (h2.stream.StreamState.HALF_CLOSED_LOCAL,
-                                                      h2.stream.StreamState.CLOSED):
+                if self.is_open_for_us(event.stream_id):
                     self.h2_conn.end_stream(event.stream_id)
-                if self.is_closed(event.stream_id):
-                    self.streams.pop(event.stream_id, None)
             elif isinstance(event, self.SendProtocolError):
                 assert isinstance(event, (RequestProtocolError, ResponseProtocolError))
-                stream = self.h2_conn.streams.get(event.stream_id)
-                if stream.state_machine.state is not h2.stream.StreamState.CLOSED:
+                if not self.is_closed(event.stream_id):
                     code = {
                         status_codes.CLIENT_CLOSED_REQUEST: h2.errors.ErrorCodes.CANCEL,
                     }.get(event.code, h2.errors.ErrorCodes.INTERNAL_ERROR)
                     self.h2_conn.reset_stream(event.stream_id, code)
-                if self.is_closed(event.stream_id):
-                    self.streams.pop(event.stream_id, None)
             else:
                 raise AssertionError(f"Unexpected event: {event}")
             data_to_send = self.h2_conn.data_to_send()
@@ -250,18 +262,19 @@ class Http2Server(Http2Connection):
 
     def _handle_event(self, event: Event) -> CommandGenerator[None]:
         if isinstance(event, ResponseHeaders):
-            headers = [
-                (b":status", b"%d" % event.response.status_code),
-                *event.response.headers.fields
-            ]
-            if not event.response.is_http2:
-                headers = normalize_h1_headers(headers, False)
+            if self.is_open_for_us(event.stream_id):
+                headers = [
+                    (b":status", b"%d" % event.response.status_code),
+                    *event.response.headers.fields
+                ]
+                if not event.response.is_http2:
+                    headers = normalize_h1_headers(headers, False)
 
-            self.h2_conn.send_headers(
-                event.stream_id,
-                headers,
-            )
-            yield SendData(self.conn, self.h2_conn.data_to_send())
+                self.h2_conn.send_headers(
+                    event.stream_id,
+                    headers,
+                )
+                yield SendData(self.conn, self.h2_conn.data_to_send())
         else:
             yield from super()._handle_event(event)
 
