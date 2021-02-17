@@ -3,7 +3,7 @@ import os
 import threading
 from enum import Enum
 from pathlib import Path
-from typing import Iterable, Callable, Optional, Tuple, List, Any, BinaryIO
+from typing import Iterable, Callable, Optional, Sequence, Tuple, List, Any, BinaryIO
 
 import certifi
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -134,7 +134,7 @@ def create_proxy_server_context(
         ca_path: Optional[str],
         ca_pemfile: Optional[str],
         client_cert: Optional[str],
-        alpn_protos: Optional[Iterable[bytes]],
+        alpn_protos: Optional[Sequence[bytes]],
 ) -> SSL.Context:
     context: SSL.Context = _create_ssl_context(
         method=Method.TLS_CLIENT_METHOD,
@@ -177,7 +177,7 @@ def create_proxy_server_context(
         except SSL.Error as e:
             raise RuntimeError(f"Cannot load TLS client certificate: {e}") from e
 
-    if alpn_protos is not None:
+    if alpn_protos:
         # advertise application layer protocols
         context.set_alpn_protos(alpn_protos)
 
