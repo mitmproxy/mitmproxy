@@ -969,3 +969,26 @@ def test_upgrade(tctx, proto):
             << Log("Sent HTTP 101 response, but no protocol is enabled to upgrade to.", "warn")
             << CloseConnection(tctx.client)
         )
+
+
+def test_dont_reuse_closed(tctx):
+    """Test that a closed connection is not reused."""
+    server = Placeholder(Server)
+    server2 = Placeholder(Server)
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
+            >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"GET / HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+            >> ConnectionClosed(server)
+            << CloseConnection(server)
+            >> DataReceived(tctx.client, b"GET http://example.com/two HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            << OpenConnection(server2)
+            >> reply(None)
+            << SendData(server2, b"GET /two HTTP/1.1\r\nHost: example.com\r\n\r\n")
+            >> DataReceived(server2, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+    )

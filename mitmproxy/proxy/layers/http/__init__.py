@@ -628,6 +628,7 @@ class HttpLayer(layer.Layer):
                 h2_to_h1 = self.context.client.alpn == b"h2" and not conn_is_pending_or_h2
                 connection_suitable = (
                     event.connection_spec_matches(connection)
+                    and connection.connected
                     and not h2_to_h1
                 )
                 if connection_suitable:
