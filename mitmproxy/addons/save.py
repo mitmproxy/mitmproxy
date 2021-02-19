@@ -85,6 +85,9 @@ class Save:
             self.stream.add(flow)
             self.active_flows.discard(flow)
 
+    def tcp_error(self, flow):
+        self.tcp_end(flow)
+
     def websocket_start(self, flow):
         if self.stream:
             self.active_flows.add(flow)
@@ -94,14 +97,20 @@ class Save:
             self.stream.add(flow)
             self.active_flows.discard(flow)
 
+    def websocket_error(self, flow):
+        self.websocket_end(flow)
+
+    def request(self, flow):
+        if self.stream:
+            self.active_flows.add(flow)
+
     def response(self, flow):
         if self.stream:
             self.stream.add(flow)
             self.active_flows.discard(flow)
 
-    def request(self, flow):
-        if self.stream:
-            self.active_flows.add(flow)
+    def error(self, flow):
+        self.response(flow)
 
     def done(self):
         if self.stream:

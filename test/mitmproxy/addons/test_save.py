@@ -39,8 +39,13 @@ def test_tcp(tmpdir):
         tt = tflow.ttcpflow()
         sa.tcp_start(tt)
         sa.tcp_end(tt)
+
+        tt = tflow.ttcpflow()
+        sa.tcp_start(tt)
+        sa.tcp_error(tt)
+
         tctx.configure(sa, save_stream_file=None)
-        assert rd(p)
+        assert len(rd(p)) == 2
 
 
 def test_websocket(tmpdir):
@@ -52,8 +57,13 @@ def test_websocket(tmpdir):
         f = tflow.twebsocketflow()
         sa.websocket_start(f)
         sa.websocket_end(f)
+
+        f = tflow.twebsocketflow()
+        sa.websocket_start(f)
+        sa.websocket_error(f)
+
         tctx.configure(sa, save_stream_file=None)
-        assert rd(p)
+        assert len(rd(p)) == 2
 
 
 def test_save_command(tmpdir):
@@ -90,7 +100,14 @@ def test_simple(tmpdir):
         assert rd(p)[0].response
 
         tctx.configure(sa, save_stream_file="+" + p)
+        f = tflow.tflow(err=True)
+        sa.request(f)
+        sa.error(f)
+        tctx.configure(sa, save_stream_file=None)
+        assert rd(p)[1].error
+
+        tctx.configure(sa, save_stream_file="+" + p)
         f = tflow.tflow()
         sa.request(f)
         tctx.configure(sa, save_stream_file=None)
-        assert not rd(p)[1].response
+        assert not rd(p)[2].response
