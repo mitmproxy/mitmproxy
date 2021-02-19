@@ -467,6 +467,29 @@ def test_max_concurrency(tctx):
     assert req2.stream_id == 3
 
 
+def test_stream_concurrent_get_connection(tctx):
+    """Test that an immediate second request for the same domain does not trigger a second connection attempt."""
+    playbook, cff = start_h2_client(tctx)
+    playbook.hooks = False
+
+    server = Placeholder(Server)
+    data = Placeholder(bytes)
+
+    assert (playbook
+            >> DataReceived(tctx.client, cff.build_headers_frame(example_request_headers, flags=["END_STREAM"], stream_id=1).serialize())
+            << (o := OpenConnection(server))
+            >> DataReceived(tctx.client, cff.build_headers_frame(example_request_headers, flags=["END_STREAM"], stream_id=3).serialize())
+            >> reply(None, to=o, side_effect=make_h2)
+            << SendData(server, data)
+            )
+    frames = decode_frames(data())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.HeadersFrame,
+        hyperframe.frame.HeadersFrame,
+    ]
+
+
 def test_kill_stream(tctx):
     """Test that we can kill individual streams."""
     playbook, cff = start_h2_client(tctx)
