@@ -628,16 +628,18 @@ class HttpLayer(layer.Layer):
                 h2_to_h1 = self.context.client.alpn == b"h2" and not conn_is_pending_or_h2
                 connection_suitable = (
                     event.connection_spec_matches(connection)
-                    and connection.connected
                     and not h2_to_h1
                 )
                 if connection_suitable:
                     if connection in self.waiting_for_establishment:
                         self.waiting_for_establishment[connection].append(event)
-                    else:
+                        return
+                    elif connection.connected:
                         stream = self.command_sources.pop(event)
                         yield from self.event_to_child(stream, GetHttpConnectionCompleted(event, (connection, None)))
-                    return
+                        return
+                    else:
+                        pass  # the connection is at least half-closed already, we want a new one.
 
         can_use_context_connection = (
             self.context.server not in self.connections and
