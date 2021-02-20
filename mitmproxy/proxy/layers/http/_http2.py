@@ -1,7 +1,7 @@
 import collections
 import time
 from enum import Enum
-from typing import ClassVar, DefaultDict, Dict, List, Optional, Tuple, Type, Union, Sequence
+from typing import ClassVar, DefaultDict, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import h2.config
 import h2.connection
@@ -12,13 +12,13 @@ import h2.settings
 import h2.stream
 import h2.utilities
 
-from mitmproxy import http
+from mitmproxy import http, version
 from mitmproxy.connection import Connection
-from mitmproxy.net.http import url, status_codes
+from mitmproxy.net.http import status_codes, url
 from mitmproxy.utils import human
 from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
-from ._base import HttpConnection, HttpEvent, ReceiveHttp
+from ._base import HttpConnection, HttpEvent, ReceiveHttp, format_error
 from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
 from ...commands import CloseConnection, Log, SendData
 from ...context import Context
@@ -106,7 +106,25 @@ class Http2Connection(HttpConnection):
                     code = {
                         status_codes.CLIENT_CLOSED_REQUEST: h2.errors.ErrorCodes.CANCEL,
                     }.get(event.code, h2.errors.ErrorCodes.INTERNAL_ERROR)
-                    self.h2_conn.reset_stream(event.stream_id, code)
+                    stream: h2.stream.H2Stream = self.h2_conn.streams[event.stream_id]
+                    send_error_message = (
+                        isinstance(event, ResponseProtocolError)
+                        and not stream.state_machine.headers_sent
+                        and event.code != status_codes.NO_RESPONSE
+                    )
+                    if send_error_message:
+                        self.h2_conn.send_headers(event.stream_id, [
+                            (b":status", b"%d" % event.code),
+                            (b"server", version.MITMPROXY.encode()),
+                            (b"content-type", b"text/html"),
+                        ])
+                        self.h2_conn.send_data(
+                            event.stream_id,
+                            format_error(event.code, event.message),
+                            end_stream=True
+                        )
+                    else:
+                        self.h2_conn.reset_stream(event.stream_id, code)
             else:
                 raise AssertionError(f"Unexpected event: {event}")
             data_to_send = self.h2_conn.data_to_send()

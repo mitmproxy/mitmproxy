@@ -1,7 +1,10 @@
+import html
+import textwrap
 from dataclasses import dataclass
 
-from mitmproxy.proxy import events, layer, commands
+from mitmproxy import http
 from mitmproxy.connection import Connection
+from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.context import Context
 
 StreamId = int
@@ -35,8 +38,16 @@ class ReceiveHttp(HttpCommand):
         return f"Receive({self.event})"
 
 
-__all__ = [
-    "HttpConnection",
-    "StreamId",
-    "HttpEvent",
-]
+def format_error(status_code: int, message: str) -> bytes:
+    reason = http.status_codes.RESPONSES.get(status_code, "Unknown")
+    return textwrap.dedent(f"""
+    <html>
+    <head>
+        <title>{status_code} {reason}</title>
+    </head>
+    <body>
+        <h1>{status_code} {reason}</h1>
+        <p>{html.escape(message)}</p>
+    </body>
+    </html>
+    """).strip().encode("utf8", "replace")

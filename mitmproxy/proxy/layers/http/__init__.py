@@ -2,18 +2,18 @@ import collections
 import enum
 import time
 from dataclasses import dataclass
-from typing import Optional, Tuple, Union, Dict, DefaultDict, List
+from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
 from mitmproxy import flow, http
-from mitmproxy.connection import Connection, ConnectionState, Server
+from mitmproxy.connection import Connection, Server
 from mitmproxy.net import server_spec
-from mitmproxy.net.http import url
+from mitmproxy.net.http import status_codes, url
 from mitmproxy.proxy import commands, events, layer, tunnel
-from mitmproxy.proxy.layers import tls, websocket, tcp
+from mitmproxy.proxy.layers import tcp, tls, websocket
 from mitmproxy.proxy.layers.http import _upstream_proxy
 from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
-from ._base import HttpCommand, ReceiveHttp, StreamId, HttpConnection
+from ._base import HttpCommand, HttpConnection, ReceiveHttp, StreamId
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
 from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, HttpRequestHook, HttpResponseHeadersHook, \
@@ -354,13 +354,11 @@ class HttpStream(layer.Layer):
         if killed_by_us or killed_by_remote:
             if emit_error_hook:
                 yield HttpErrorHook(self.flow)
-            # For HTTP/2 we only want to kill the specific stream, for HTTP/1 we want to kill the connection
-            # *without* sending an HTTP response (that could be achieved by the user by setting flow.response).
-            if self.context.client.alpn == b"h2":
-                yield SendHttp(ResponseProtocolError(self.stream_id, "killed"), self.context.client)
-            else:
-                if self.context.client.state & ConnectionState.CAN_WRITE:
-                    yield commands.CloseConnection(self.context.client)
+            # Use the special NO_RESPONSE status code to make sure that no error message is sent to the client.
+            yield SendHttp(
+                ResponseProtocolError(self.stream_id, "killed", status_codes.NO_RESPONSE),
+                self.context.client
+            )
             self._handle_event = self.state_errored
             return True
         return False
