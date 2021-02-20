@@ -103,6 +103,36 @@ def test_simple(tctx):
     assert flow().response.text == "Hello, World!"
 
 
+def test_upstream_error(tctx):
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    err = Placeholder(bytes)
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply("oops server <> error")
+            << http.HttpErrorHook(flow)
+            >> reply()
+            << SendData(tctx.client, err)
+    )
+    frames = decode_frames(err())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.HeadersFrame,
+        hyperframe.frame.DataFrame,
+    ]
+    d = frames[1]
+    assert isinstance(d, hyperframe.frame.DataFrame)
+    assert b"502 Bad Gateway" in d.data
+    assert b"server &lt;&gt; error" in d.data
+
+
 @pytest.mark.parametrize("stream", ["stream", ""])
 @pytest.mark.parametrize("when", ["request", "response"])
 @pytest.mark.parametrize("how", ["RST", "disconnect", "RST+disconnect"])

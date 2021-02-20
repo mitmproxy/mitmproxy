@@ -1,19 +1,18 @@
 import abc
-import html
-from typing import Union, Optional, Callable, Type
+from typing import Callable, Optional, Type, Union
 
 import h11
 from h11._readers import ChunkedReader, ContentLengthReader, Http10Reader
 from h11._receivebuffer import ReceiveBuffer
 
 from mitmproxy import http, version
+from mitmproxy.connection import Connection, ConnectionState
 from mitmproxy.net.http import http1, status_codes
 from mitmproxy.proxy import commands, events, layer
-from mitmproxy.connection import Connection, ConnectionState
 from mitmproxy.proxy.layers.http._base import ReceiveHttp, StreamId
 from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
-from ._base import HttpConnection
+from ._base import HttpConnection, format_error
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
 from ...context import Context
@@ -212,11 +211,20 @@ class Http1Server(Http1Connection):
                 yield commands.SendData(self.conn, b"0\r\n\r\n")
             yield from self.mark_done(response=True)
         elif isinstance(event, ResponseProtocolError):
-            if not self.response:
-                resp = make_error_response(event.code, event.message)
+            if not self.response and event.code != status_codes.NO_RESPONSE:
+                resp = http.Response.make(
+                    event.code,
+                    format_error(event.code, event.message),
+                    http.Headers(
+                        Server=version.MITMPROXY,
+                        Connection="close",
+                        Content_Type="text/html",
+                    )
+                )
                 raw = http1.assemble_response(resp)
                 yield commands.SendData(self.conn, raw)
-            yield commands.CloseConnection(self.conn)
+            if self.conn.state & ConnectionState.CAN_WRITE:
+                yield commands.CloseConnection(self.conn)
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
@@ -368,25 +376,9 @@ def make_error_response(
     status_code: int,
     message: str = "",
 ) -> http.Response:
-    body: bytes = """
-        <html>
-            <head>
-                <title>{status_code} {reason}</title>
-            </head>
-            <body>
-                <h1>{status_code} {reason}</h1>
-                <p>{message}</p>
-            </body>
-        </html>
-    """.strip().format(
-        status_code=status_code,
-        reason=http.status_codes.RESPONSES.get(status_code, "Unknown"),
-        message=html.escape(message),
-    ).encode("utf8", "replace")
-
     return http.Response.make(
         status_code,
-        body,
+        format_error(status_code, message),
         http.Headers(
             Server=version.MITMPROXY,
             Connection="close",
