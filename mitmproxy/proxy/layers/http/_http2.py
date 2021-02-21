@@ -109,6 +109,7 @@ class Http2Connection(HttpConnection):
                     stream: h2.stream.H2Stream = self.h2_conn.streams[event.stream_id]
                     send_error_message = (
                         isinstance(event, ResponseProtocolError)
+                        and self.is_open_for_us(event.stream_id)
                         and not stream.state_machine.headers_sent
                         and event.code != status_codes.NO_RESPONSE
                     )
@@ -291,6 +292,7 @@ class Http2Server(Http2Connection):
                 self.h2_conn.send_headers(
                     event.stream_id,
                     headers,
+                    end_stream=event.end_stream,
                 )
                 yield SendData(self.conn, self.h2_conn.data_to_send())
         else:

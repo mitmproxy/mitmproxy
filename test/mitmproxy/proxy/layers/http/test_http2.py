@@ -282,9 +282,7 @@ def test_no_normalization(tctx):
             >> reply()
             << http.HttpResponseHook(flow)
             >> reply()
-            << SendData(tctx.client,
-                        cff.build_headers_frame(response_headers).serialize() +
-                        cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
+            << SendData(tctx.client, cff.build_headers_frame(response_headers, flags=["END_STREAM"]).serialize())
     )
     assert flow().request.headers.fields == ((b"Should-Not-Be-Capitalized! ", b" :) "),)
     assert flow().response.headers.fields == ((b"Same", b"Here"),)
