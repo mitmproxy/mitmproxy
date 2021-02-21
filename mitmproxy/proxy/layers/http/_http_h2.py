@@ -6,6 +6,7 @@ import h2.connection
 import h2.events
 import h2.exceptions
 import h2.settings
+import h2.stream
 
 
 class H2ConnectionLogger(h2.config.DummyLogger):
@@ -38,11 +39,11 @@ class BufferedH2Connection(h2.connection.H2Connection):
         self.stream_buffers = collections.defaultdict(collections.deque)
 
     def send_data(
-            self,
-            stream_id: int,
-            data: bytes,
-            end_stream: bool = False,
-            pad_length: None = None
+        self,
+        stream_id: int,
+        data: bytes,
+        end_stream: bool = False,
+        pad_length: None = None
     ) -> None:
         """
         Send data on a given stream.
@@ -79,6 +80,13 @@ class BufferedH2Connection(h2.connection.H2Connection):
                     SendH2Data(data, end_stream)
                 )
 
+    def end_stream(self, stream_id) -> None:
+        self.send_data(stream_id, b"", end_stream=True)
+
+    def reset_stream(self, stream_id: int, error_code: int = 0) -> None:
+        self.stream_buffers.pop(stream_id, None)
+        super().reset_stream(stream_id, error_code)
+
     def receive_data(self, data: bytes):
         events = super().receive_data(data)
         ret = []
@@ -103,6 +111,12 @@ class BufferedH2Connection(h2.connection.H2Connection):
         """
         The window for a specific stream has updated. Send as much buffered data as possible.
         """
+        # If the stream has been reset in the meantime, we just clear the buffer.
+        stream: h2.stream.H2Stream = self.streams[stream_id]
+        if stream.state_machine.state not in (h2.stream.StreamState.OPEN, h2.stream.StreamState.HALF_CLOSED_REMOTE):
+            self.stream_buffers.pop(stream_id, None)
+            return False
+
         available_window = self.local_flow_control_window(stream_id)
         sent_any_data = False
         while available_window > 0 and stream_id in self.stream_buffers:
@@ -129,7 +143,7 @@ class BufferedH2Connection(h2.connection.H2Connection):
 
         return sent_any_data
 
-    def connection_window_updated(self):
+    def connection_window_updated(self) -> None:
         """
         The connection window has updated. Send data from buffers in a round-robin fashion.
         """
