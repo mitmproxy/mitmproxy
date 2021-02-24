@@ -14,10 +14,20 @@ RUN groupadd mitmproxy && useradd mitmproxy -g mitmproxy\
     && apt-get install -y\
         git \
         g++ \
+<<<<<<< HEAD
         libffi-dev \
         openssl \
         libssl-dev \
         python3 \
+=======
+        # libffi \
+        libffi-dev \
+        # libstdc++\
+        openssl \
+        libssl-dev \
+        python3 \
+        # python3-dev \
+>>>>>>> b35af38e4 (Docker: Moved from Alpine to Debian Buster)
     && python3 -m ensurepip --upgrade \
     && pip3 install -U pip \
     && LDFLAGS=-L/lib pip3 install -U /home/mitmproxy/${WHEEL_BASENAME_MITMPROXY} \
