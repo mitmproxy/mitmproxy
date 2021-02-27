@@ -57,6 +57,7 @@ If you depend on these features, please raise your voice in
 * Fix SNI-related reproducibility issues when exporting to curl/httpie commands. (@dkasak)
 * Add option `export_preserve_original_ip` to force exported command to connect to IP from original request. Only supports curl at the moment. (@dkasak)
 * Major proxy protocol testing (@r00t-)
+* Never `stream_large_bodies` when the size is unknown due to missing `content-length` (@Prinzhorn)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
