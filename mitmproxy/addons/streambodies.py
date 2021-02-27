@@ -37,7 +37,8 @@ class StreamBodies:
             except ValueError:
                 f.kill()
                 return
-            if expected_size and not r.raw_content and not (0 <= expected_size <= self.max_size):
+
+            if (expected_size > self.max_size) and not r.raw_content:
                 # r.stream may already be a callable, which we want to preserve.
                 r.stream = r.stream or True
                 ctx.log.info("Streaming {} {}".format("response from" if not is_request else "request to", f.request.host))
