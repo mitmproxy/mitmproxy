@@ -35,6 +35,14 @@ def test_simple():
         sa.responseheaders(f)
         assert not f.response.stream
 
+        # Don't stream chunked
+        f = tflow.tflow(resp=True)
+        f.response.content = b""
+        f.response.headers["Transfer-Encoding"] = "chunked"
+        assert not f.response.stream
+        sa.responseheaders(f)
+        assert not f.response.stream
+
         # Don't stream if a body already exists
         f = tflow.tflow(resp=True)
         f.response.content = b"exists"
