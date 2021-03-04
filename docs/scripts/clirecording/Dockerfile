@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y \
     && pip3 install libtmux curl requests mitmproxy
 
 # install latest tmux (to support popups)
-RUN git clone https://github.com/tmux/tmux.git \
+RUN git clone --depth 1 https://github.com/tmux/tmux.git \
     && cd tmux \
     && sh autogen.sh \
     && ./configure && make && make install
