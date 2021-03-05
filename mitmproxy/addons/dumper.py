@@ -42,7 +42,8 @@ class Dumper:
               0: shortened request URL, response status code, WebSocket and TCP message notifications.
               1: full request URL with response status code
               2: 1 + HTTP headers
-              3: 2 + full response content, content of WebSocket and TCP messages.
+              3: 2 + truncated response content, content of WebSocket and TCP messages
+              4: 3 + nothing is truncated
             """
         )
         loader.add_option(
