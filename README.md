@@ -17,7 +17,7 @@ interface for HTTP/1, HTTP/2, and WebSockets.
 The installation instructions are [here](https://docs.mitmproxy.org/stable/overview-installation).
 If you want to install from source, see [CONTRIBUTING.md](./CONTRIBUTING.md).
 
-``Wii U instalation docs are avaliable, Homebrewed Wii U Required``
+If you want to check the tutorial on how to install mitmproxy-ca-cert.pem on Wii U, please check the [pull request](https://github.com/mitmproxy/mitmproxy/pull/4445) for the tutorial.
 
 ## Documentation & Help
 
