@@ -60,6 +60,7 @@ setup(
             "mitmproxy = mitmproxy.tools.main:mitmproxy",
             "mitmdump = mitmproxy.tools.main:mitmdump",
             "mitmweb = mitmproxy.tools.main:mitmweb",
+            "browserup-proxy = mitmproxy.tools.main:browserupproxy",
         ]
     },
     python_requires='>=3.8',
