@@ -78,8 +78,7 @@ class TestNextLayer:
             assert isinstance(nl.make_top_layer(ctx), layers.modes.ReverseProxy)
 
             tctx.configure(nl, mode="socks5")
-            with pytest.raises(NotImplementedError):
-                nl.make_top_layer(ctx)
+            assert isinstance(nl.make_top_layer(ctx), layers.modes.Socks5Proxy)
 
     def test_next_layer(self):
         nl = NextLayer()

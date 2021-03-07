@@ -168,7 +168,7 @@ class NextLayer:
             return layers.modes.ReverseProxy(context)
 
         elif ctx.options.mode == "socks5":
-            raise NotImplementedError("Mode not implemented.")
+            return layers.modes.Socks5Proxy(context)
 
         else:  # pragma: no cover
             raise AssertionError("Unknown mode.")
