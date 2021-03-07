@@ -276,6 +276,22 @@ def test_reverse_eager_connect_failure(tctx: Context):
     )
 
 
+def test_transparent_eager_connect_failure(tctx: Context, monkeypatch):
+    """Test that we recover from a transparent mode resolve error."""
+    tctx.options.connection_strategy = "eager"
+    monkeypatch.setattr(platform, "original_addr", lambda sock: ("address", 22))
+
+    assert (
+        Playbook(modes.TransparentProxy(tctx), logs=True)
+        << GetSocket(tctx.client)
+        >> reply(object())
+        << OpenConnection(tctx.server)
+        >> reply("something something")
+        << CloseConnection(tctx.client)
+        >> ConnectionClosed(tctx.client)
+    )
+
+
 CLIENT_HELLO = b"\x05\x01\x00"
 SERVER_HELLO = b"\x05\x00"
 

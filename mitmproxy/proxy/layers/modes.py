@@ -26,10 +26,10 @@ class DestinationKnown(layer.Layer, metaclass=ABCMeta):
         if self.context.options.connection_strategy == "eager":
             err = yield commands.OpenConnection(self.context.server)
             if err:
-                self._handle_event = self.done
+                self._handle_event = self.done  # type: ignore
                 return err
 
-        self._handle_event = self.child_layer.handle_event
+        self._handle_event = self.child_layer.handle_event  # type: ignore
         yield from self.child_layer.handle_event(events.Start())
         return None
 
