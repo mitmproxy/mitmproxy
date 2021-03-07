@@ -1,3 +1,4 @@
+import ipaddress
 import os
 from pathlib import Path
 from typing import List, Optional, TypedDict, Any
@@ -198,7 +199,7 @@ class TlsConfig:
             max_version=net_tls.Version[ctx.options.tls_version_client_max],
             cipher_list=cipher_list,
             verify=verify,
-            sni=server.sni,
+            hostname=server.sni,
             ca_path=ctx.options.ssl_verify_upstream_trusted_confdir,
             ca_pemfile=ctx.options.ssl_verify_upstream_trusted_ca,
             client_cert=client_cert,
@@ -207,7 +208,15 @@ class TlsConfig:
 
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
         if server.sni:
-            tls_start.ssl_conn.set_tlsext_host_name(server.sni.encode())
+            try:
+                ipaddress.ip_address(server.sni)
+            except ValueError:
+                tls_start.ssl_conn.set_tlsext_host_name(server.sni.encode())
+            else:
+                # RFC 6066: Literal IPv4 and IPv6 addresses are not permitted in "HostName".
+                # It's not really ideal that we only enforce that here, but otherwise we need to add checks everywhere
+                # where we assign .sni, which is much less robust.
+                pass
         tls_start.ssl_conn.set_connect_state()
 
     def running(self):

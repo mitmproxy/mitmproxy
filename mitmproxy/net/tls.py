@@ -130,7 +130,7 @@ def create_proxy_server_context(
         max_version: Version,
         cipher_list: Optional[Iterable[str]],
         verify: Verify,
-        sni: Optional[str],
+        hostname: Optional[str],
         ca_path: Optional[str],
         ca_pemfile: Optional[str],
         client_cert: Optional[str],
@@ -143,12 +143,12 @@ def create_proxy_server_context(
         cipher_list=cipher_list,
     )
 
-    if verify is not Verify.VERIFY_NONE and sni is None:
+    if verify is not Verify.VERIFY_NONE and hostname is None:
         raise ValueError("Cannot validate certificate hostname without SNI")
 
     context.set_verify(verify.value, None)
-    if sni is not None:
-        assert isinstance(sni, str)
+    if hostname is not None:
+        assert isinstance(hostname, str)
         # Manually enable hostname verification on the context object.
         # https://wiki.openssl.org/index.php/Hostname_validation
         param = SSL._lib.SSL_CTX_get0_param(context._context)
@@ -159,7 +159,7 @@ def create_proxy_server_context(
             SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT
         )
         SSL._openssl_assert(
-            SSL._lib.X509_VERIFY_PARAM_set1_host(param, sni.encode(), 0) == 1
+            SSL._lib.X509_VERIFY_PARAM_set1_host(param, hostname.encode(), 0) == 1
         )
 
     if ca_path is None and ca_pemfile is None:
