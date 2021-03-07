@@ -1,8 +1,11 @@
 import time
-import json
 import asyncio
-
+import mitmproxy.tcp
 import typing
+
+from mitmproxy.utils import strutils
+from mitmproxy import ctx
+from mitmproxy import tcp
 
 from mitmproxy import ctx
 from mitmproxy import connection
@@ -61,6 +64,9 @@ class HttpConnectCaptureAddOn:
         }
 
     # TCP Callbacks
+
+    def tcp_message(flow: tcp.TCPFlow):
+        print("---->" + flow.messages[-1].length)
 
     def tcp_resolving_server_address_finished(self, flow):
         if not hasattr(flow.request, 'har_entry'):
@@ -273,7 +279,6 @@ class HttpConnectCaptureAddOn:
     @staticmethod
     def nano_to_ms(time_nano):
         return int(time_nano / 1000000)
-
 
 addons = [
     HttpConnectCaptureAddOn()

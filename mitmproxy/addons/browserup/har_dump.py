@@ -41,6 +41,9 @@ class HarCaptureTypes(Enum):
     RESPONSE_CONTENT = auto()
     RESPONSE_BINARY_CONTENT = auto()
 
+    WEBSOCKET_MESSAGES = auto()
+
+
     REQUEST_CAPTURE_TYPES = {
         REQUEST_HEADERS,
         REQUEST_CONTENT,
@@ -240,6 +243,7 @@ class HarDumpAddOn:
             if hp['title'] == DEFAULT_PAGE_TITLE:
                 return hp
         return None
+
 
     def generate_new_har_log(self):
         return {
@@ -584,6 +588,7 @@ class HarDumpAddOn:
     def request(self, flow):
         if 'WhiteListFiltered' in flow.metadata or 'BlackListFiltered' in flow.metadata:
             return
+        print("request called in addon {}".format(self.__class__.__name__))
 
         har_entry = self.get_har_entry(flow)
 
@@ -616,6 +621,7 @@ class HarDumpAddOn:
             har_entry['timings']['blockedNanos'] = connect_timing['blockedTimeNanos']
             har_entry['timings']['dnsNanos'] = connect_timing['dnsTimeNanos']
 
+
     def capture_request_cookies(self, flow):
         har_entry = self.get_har_entry(flow)
         har_entry['request']['cookies'] = \
@@ -637,6 +643,32 @@ class HarDumpAddOn:
             "text": flow.request.get_text(strict=False),
             "params": params
         }
+
+    def capture_websocket_message(self, flow):
+        har_entry = self.get_har_entry(flow.handshake_flow)
+        msg = flow.messages[-1]
+        har_entry.setdefault("_webSocketMessages", []).append({
+            "type": 'send' if msg.from_client else 'receive',
+            "opcode": msg.type.value,
+            "data": msg.content,
+            "time": msg.timestamp
+        })
+
+    # Capture errors as messages like Chrome har export does
+    def capture_websocket_error(self, flow):
+        har_entry = self.get_har_entry(flow.handshake_flow)
+        har_entry.setdefault("_webSocketMessages", []).append({
+            "type": 'error',
+            "time": flow.error.timestamp,
+            "opcode": -1,
+            "data": flow.error.msg
+        })
+
+    def websocket_message(self, flow):
+        self.capture_websocket_message(flow)
+
+    def websocket_error(self, flow):
+        self.capture_websocket_error(flow)
 
     def response(self, flow):
         har_entry = self.get_har_entry(flow)
@@ -720,6 +752,7 @@ class HarDumpAddOn:
                 flow.server_conn.ip_address[0])
 
         ctx.log.debug('Populated har entry for response: {}, entry: {}'.format(flow.request.url, str(har_entry)))
+
 
     def calculate_timings(self, connect_time, flow, ssl_time):
         timings_raw = {

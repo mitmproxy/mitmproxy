@@ -31,16 +31,15 @@ class DumpMaster(master.Master):
             self.addons.add(termlog.TermLog())
         self.addons.add(*addons.default_addons())
 
-        if with_dumper:
-            self.addons.add(har_dump.HarDumpAddOn())
-
         self.addons.add(dumper.Dumper())
 
         self.addons.add(http_connect_capture.HttpConnectCaptureAddOn())
+        self.addons.add(har_dump.HarDumpAddOn())
+
         self.addons.add(
             keepserving.KeepServing(),
             readfile.ReadFileStdin(),
-            init_flow.InitFlowAddOn(),
+            init_flow.BrowserupInitFlowAddOn(),
             bu_addons_manager.BuAddonsManagerAddOn(),
             self.errorcheck
         )

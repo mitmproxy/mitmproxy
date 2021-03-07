@@ -1,22 +1,3 @@
-import json
-import base64
-import typing
-import tempfile
-
-import re
-
-from datetime import datetime
-from datetime import timezone
-
-import falcon
-
-from mitmproxy import ctx
-
-from mitmproxy import connections
-from mitmproxy import version
-from mitmproxy.utils import strutils
-from mitmproxy.net.http import cookies
-from mitmproxy import http
 
 class AddHeadersResource:
 
@@ -32,7 +13,6 @@ class AddHeadersResource:
     def on_add_headers(self, req, resp):
         for k, v in req.params.items():
             self.additional_headers_addon.headers[k] = v
-
 
     def on_add_header(self, req, resp):
         for k, v in req.params.items():
@@ -54,9 +34,9 @@ class AddHeadersAddOn:
         return AddHeadersResource(self)
 
     def request(self, flow):
+
         for k, v in self.headers.items():
             flow.request.headers[k] = v
-
 
 addons = [
     AddHeadersAddOn()

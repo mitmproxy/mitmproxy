@@ -1,23 +1,3 @@
-import json
-import base64
-import typing
-import tempfile
-
-import re
-
-from datetime import datetime
-from datetime import timezone
-
-import falcon
-
-from mitmproxy import ctx
-
-from mitmproxy import connections
-from mitmproxy import version
-from mitmproxy.utils import strutils
-from mitmproxy.net.http import cookies
-from mitmproxy import http
-
 class AuthBasicResource:
 
     def addon_path(self):
@@ -50,8 +30,3 @@ class AuthBasicAddOn:
     def request(self, flow):
         if flow.request.host in self.credentials_map:
             flow.request.headers['Authorization'] = 'Basic ' + self.credentials_map[flow.request.host]
-
-
-addons = [
-    AuthBasicAddOn()
-]

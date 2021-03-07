@@ -14,14 +14,9 @@ import typing
 import tempfile
 
 import re
-
-from datetime import datetime
-from datetime import timezone
-
 import falcon
 
 from mitmproxy import ctx
-
 from mitmproxy import connections
 from mitmproxy import version
 from mitmproxy.utils import strutils
@@ -114,7 +109,6 @@ class AllowListAddOn:
                 {"Content-Type": "text/html"}
             )
             flow.metadata['AllowListFiltered'] = True
-
 
 addons = [
     AllowListAddOn()

@@ -1,24 +1,4 @@
-import json
-import base64
-import typing
-import tempfile
-
-from time import sleep
-
-import re
-
-from datetime import datetime
-from datetime import timezone
-
-import falcon
-
 from mitmproxy import ctx
-
-#from mitmproxy import connections
-from mitmproxy import version
-from mitmproxy.utils import strutils
-from mitmproxy.net.http import cookies
-from mitmproxy import http
 
 class InitFlowResource:
 
@@ -31,8 +11,8 @@ class InitFlowResource:
     def on_get(self, req, resp, method_name):
         getattr(self, "on_" + method_name)(req, resp)
 
-
-class InitFlowAddOn:
+# All addons should be "loaded" before we init flow
+class BrowserupInitFlowAddOn:
 
     def __init__(self):
         self.num = 0
@@ -40,20 +20,18 @@ class InitFlowAddOn:
     def get_resource(self):
         return InitFlowResource(self)
 
-    # def http_connect(self, flow):
-    #     if not hasattr(flow.request, 'har_entry'):
-    #         self.init_har_entry(flow)
-
     def request(self, flow):
+        ctx.log.debug("request called in addon {}".format(self.__class__.__name__))
         if not hasattr(flow.request, 'har_entry'):
             self.init_har_entry(flow)
 
     def init_har_entry(self, flow):
         ctx.log.debug("Initializing har entry for flow request: {}".format(str(flow.request)))
-        hardumpaddon = ctx.master.addons.get('hardumpaddon')
-        setattr(flow.request, 'har_entry', hardumpaddon.generate_har_entry())
-        hardumpaddon.append_har_entry(flow.request.har_entry)
+        har_dump_addon = ctx.master.addons.get('hardumpaddon')
+        entry = har_dump_addon.generate_har_entry()
+        setattr(flow.request, 'har_entry', entry)
+        har_dump_addon.append_har_entry(entry)
 
 addons = [
-    InitFlowAddOn()
+    BrowserupInitFlowAddOn()
 ]
