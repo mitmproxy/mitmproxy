@@ -36,7 +36,7 @@ def test_sslkeylogfile(tdata, monkeypatch):
         max_version=tls.DEFAULT_MAX_VERSION,
         cipher_list=None,
         verify=tls.Verify.VERIFY_NONE,
-        sni=None,
+        hostname=None,
         ca_path=None,
         ca_pemfile=None,
         client_cert=None,
