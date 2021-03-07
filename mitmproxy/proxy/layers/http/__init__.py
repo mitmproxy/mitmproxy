@@ -200,17 +200,23 @@ class HttpStream(layer.Layer):
             self.flow.request.headers.pop("expect")
 
         if self.flow.request.stream:
-            if self.flow.response:
-                raise NotImplementedError("Can't set a response and enable streaming at the same time.")
-            yield HttpRequestHook(self.flow)
-            ok = yield from self.make_server_connection()
-            if not ok:
-                return
-            yield SendHttp(event, self.context.server)
-            self.client_state = self.state_stream_request_body
+            yield from self.start_request_stream()
         else:
             self.client_state = self.state_consume_request_body
         self.server_state = self.state_wait_for_response_headers
+
+    def start_request_stream(self) -> layer.CommandGenerator[None]:
+        if self.flow.response:
+            raise NotImplementedError("Can't set a response and enable streaming at the same time.")
+        yield HttpRequestHook(self.flow)
+        ok = yield from self.make_server_connection()
+        if not ok:
+            return
+        yield SendHttp(
+            RequestHeaders(self.stream_id, self.flow.request, end_stream=False),
+            self.context.server
+        )
+        self.client_state = self.state_stream_request_body
 
     @expect(RequestData, RequestEndOfMessage)
     def state_stream_request_body(self, event: Union[RequestData, RequestEndOfMessage]) -> layer.CommandGenerator[None]:
