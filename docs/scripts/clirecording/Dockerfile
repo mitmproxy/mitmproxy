@@ -6,7 +6,7 @@ ENV LANGUAGE en_US.UTF-8
 ENV TERM screen-256color
 
 # install mitmproxy, asciinema, and dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install --no-install-recommends -y \
     asciinema \
     autoconf \
     automake \
@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     pkg-config \
     python3-pip \
     python3 \
+    python3-setuptools \
     wget \
     xterm \
     && locale-gen --purge "en_US.UTF-8" \
