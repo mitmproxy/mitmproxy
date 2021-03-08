@@ -110,7 +110,7 @@ async def test_start_stop(tdata):
         assert cp.count() == 1
 
         cp.start_replay([tflow.twebsocketflow()])
-        await tctx.master.await_log("Can only replay HTTP flows.", level="warn")
+        await tctx.master.await_log("Can't replay WebSocket flows.", level="warn")
         assert cp.count() == 1
 
         cp.stop_replay()

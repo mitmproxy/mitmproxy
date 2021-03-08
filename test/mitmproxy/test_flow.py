@@ -123,20 +123,6 @@ class TestFlowMaster:
             assert s.flows[0].request.host == "use-this-domain"
 
     @pytest.mark.asyncio
-    async def test_load_websocket_flow(self):
-        opts = options.Options(
-            mode="reverse:https://use-this-domain"
-        )
-        s = State()
-        with taddons.context(s, options=opts) as ctx:
-            f = tflow.twebsocketflow()
-            await ctx.master.load_flow(f.handshake_flow)
-            await ctx.master.load_flow(f)
-            assert s.flows[0].request.host == "use-this-domain"
-            assert s.flows[1].handshake_flow == f.handshake_flow
-            assert len(s.flows[1].messages) == len(f.messages)
-
-    @pytest.mark.asyncio
     async def test_all(self):
         opts = options.Options(
             mode="reverse:https://use-this-domain"

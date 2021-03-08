@@ -119,6 +119,8 @@ else:
 SCHEME_STYLES = {
     'http': 'scheme_http',
     'https': 'scheme_https',
+    'ws': 'scheme_ws',
+    'wss': 'scheme_wss',
     'tcp': 'scheme_tcp',
 }
 HTTP_REQUEST_METHOD_STYLES = {

@@ -60,14 +60,23 @@ class FlowDetails(tabs.Tabs):
         return self.master.view.focus.flow
 
     def focus_changed(self):
-        if self.flow:
-            if isinstance(self.flow, http.HTTPFlow):
-                self.tabs = [
-                    (self.tab_http_request, self.view_request),
-                    (self.tab_http_response, self.view_response),
-                    (self.tab_details, self.view_details),
-                ]
-            elif isinstance(self.flow, tcp.TCPFlow):
+        f = self.flow
+        if f:
+            if isinstance(f, http.HTTPFlow):
+                if f.websocket:
+                    self.tabs = [
+                        (self.tab_http_request, self.view_request),
+                        (self.tab_http_response, self.view_response),
+                        (self.tab_websocket_messages, self.view_websocket_messages),
+                        (self.tab_details, self.view_details),
+                    ]
+                else:
+                    self.tabs = [
+                        (self.tab_http_request, self.view_request),
+                        (self.tab_http_response, self.view_response),
+                        (self.tab_details, self.view_details),
+                    ]
+            elif isinstance(f, tcp.TCPFlow):
                 self.tabs = [
                     (self.tab_tcp_stream, self.view_tcp_stream),
                     (self.tab_details, self.view_details),
@@ -94,6 +103,9 @@ class FlowDetails(tabs.Tabs):
 
     def tab_tcp_stream(self):
         return "TCP Stream"
+
+    def tab_websocket_messages(self):
+        return "WebSocket Messages"
 
     def tab_details(self):
         return "Detail"
@@ -127,6 +139,36 @@ class FlowDetails(tabs.Tabs):
         ]
         contentview_status_bar = urwid.AttrWrap(urwid.Columns(cols), "heading")
         return contentview_status_bar
+
+    def view_websocket_messages(self):
+        flow = self.flow
+        assert isinstance(flow, http.HTTPFlow)
+        assert flow.websocket is not None
+
+        if not flow.websocket.messages:
+            return searchable.Searchable([urwid.Text(("highlight", "No messages."))])
+
+        viewmode = self.master.commands.call("console.flowview.mode")
+
+        widget_lines = []
+        for m in flow.websocket.messages:
+            _, lines, _ = contentviews.get_message_content_view(viewmode, m, flow)
+
+            for line in lines:
+                if m.from_client:
+                    line.insert(0, ("from_client", f"{common.SYMBOL_FROM_CLIENT} "))
+                else:
+                    line.insert(0, ("to_client", f"{common.SYMBOL_TO_CLIENT} "))
+
+                widget_lines.append(urwid.Text(line))
+
+        if flow.intercepted:
+            markup = widget_lines[-1].get_text()[0]
+            widget_lines[-1].set_text(("intercept", markup))
+
+        widget_lines.insert(0, self._contentview_status_bar(viewmode.capitalize(), viewmode))
+
+        return searchable.Searchable(widget_lines)
 
     def view_tcp_stream(self) -> urwid.Widget:
         flow = self.flow

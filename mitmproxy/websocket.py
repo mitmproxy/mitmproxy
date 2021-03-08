@@ -1,168 +1,136 @@
 """
-*Deprecation Notice:* Mitmproxy's WebSocket API is going to change soon,
-see <https://github.com/mitmproxy/mitmproxy/issues/4425>.
+Mitmproxy used to have its own WebSocketFlow type until mitmproxy 6, but now WebSocket connections now are represented
+as HTTP flows as well. They can be distinguished from regular HTTP requests by having the
+`mitmproxy.http.HTTPFlow.websocket` attribute set.
+
+This module only defines the classes for individual `WebSocketMessage`s and the `WebSocketData` container.
 """
-import queue
 import time
 import warnings
 from typing import List
 from typing import Optional
-from typing import Union
 
-from mitmproxy import flow
+from mitmproxy import stateobject
 from mitmproxy.coretypes import serializable
-from mitmproxy.net import websocket
-from mitmproxy.utils import human
-from mitmproxy.utils import strutils
-
-from wsproto.frame_protocol import CloseReason
-from wsproto.frame_protocol import Opcode
 
 
 class WebSocketMessage(serializable.Serializable):
     """
-    A WebSocket message sent from one endpoint to the other.
+    A single WebSocket message sent from one peer to the other.
+
+    Fragmented WebSocket messages are reassembled by mitmproxy and the
+    represented as a single instance of this class.
+
+    The [WebSocket RFC](https://tools.ietf.org/html/rfc6455) specifies both
+    text and binary messages. To avoid a whole class of nasty type confusion bugs,
+    mitmproxy stores all message contents as binary. If you need text, you can decode the `content` property:
+
+    >>> if message.is_text:
+    >>>     text = message.content.decode()
     """
 
-    type: Opcode
-    """indicates either TEXT or BINARY (from wsproto.frame_protocol.Opcode)."""
     from_client: bool
     """True if this messages was sent by the client."""
-    content: Union[bytes, str]
+    is_text: bool
+    """
+    True if the message is a text message, False if the message is a binary message.
+    
+    In either case, mitmproxy will store the message contents as *bytes*.
+    """
+    content: bytes
     """A byte-string representing the content of this message."""
     timestamp: float
     """Timestamp of when this message was received or created."""
 
-    killed: bool
-    """True if this messages was killed and should not be sent to the other endpoint."""
-
     def __init__(
         self,
-        type: int,
         from_client: bool,
-        content: Union[bytes, str],
+        is_text: bool,
+        content: bytes,
         timestamp: Optional[float] = None,
-        killed: bool = False
     ) -> None:
-        self.type = Opcode(type)  # type: ignore
         self.from_client = from_client
+        self.is_text = is_text
         self.content = content
         self.timestamp: float = timestamp or time.time()
-        self.killed = killed
 
     @classmethod
     def from_state(cls, state):
         return cls(*state)
 
     def get_state(self):
-        return int(self.type), self.from_client, self.content, self.timestamp, self.killed
+        return self.from_client, self.is_text, self.content, self.timestamp
 
     def set_state(self, state):
-        self.type, self.from_client, self.content, self.timestamp, self.killed = state
-        self.type = Opcode(self.type)  # replace enum with bare int
+        self.from_client, self.is_text, self.content, self.timestamp = state
 
     def __repr__(self):
-        if self.type == Opcode.TEXT:
-            return "text message: {}".format(repr(self.content))
+        if self.is_text:
+            return repr(self.content.decode(errors="replace"))
         else:
-            return "binary message: {}".format(strutils.bytes_to_escaped_str(self.content))
+            return repr(self.content)
 
     def kill(self):  # pragma: no cover
         """
         Kill this message.
 
-        It will not be sent to the other endpoint. This has no effect in streaming mode.
+        It will not be sent to the other endpoint.
         """
         warnings.warn(
             "WebSocketMessage.kill is deprecated, set an empty content instead.",
             DeprecationWarning,
             stacklevel=2,
         )
-        # empty str or empty bytes.
-        self.content = type(self.content)()
+        self.content = b""
+
+    @property
+    def killed(self) -> bool:  # pragma: no cover
+        """
+        True if this messages was killed and should not be sent to the other endpoint.
+        """
+        warnings.warn(
+            "WebSocketMessage.killed is deprecated, check for an empty content instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return bool(self.content)
 
 
-class WebSocketFlow(flow.Flow):
+class WebSocketData(stateobject.StateObject):
     """
-    A WebSocketFlow is a simplified representation of a WebSocket connection.
+    A data container for everything related to a single WebSocket connection.
+    This is typically accessed as `mitmproxy.http.HTTPFlow.websocket`.
     """
 
-    def __init__(self, client_conn, server_conn, handshake_flow, live=None):
-        super().__init__("websocket", client_conn, server_conn, live)
+    messages: List[WebSocketMessage]
+    """All `WebSocketMessage`s transferred over this connection."""
 
-        self.messages: List[WebSocketMessage] = []
-        """A list containing all WebSocketMessage's."""
-        self.close_sender = 'client'
-        """'client' if the client initiated connection closing."""
-        self.close_code = CloseReason.NORMAL_CLOSURE
-        """WebSocket close code."""
-        self.close_message = '(message missing)'
-        """WebSocket close message."""
-        self.close_reason = 'unknown status code'
-        """WebSocket close reason."""
-        self.stream = False
-        """True of this connection is streaming directly to the other endpoint."""
-        self.handshake_flow = handshake_flow
-        """The HTTP flow containing the initial WebSocket handshake."""
-        self.ended = False
-        """True when the WebSocket connection has been closed."""
+    close_by_client: Optional[bool] = None
+    """
+    True if the client closed the connection, 
+    False if the server closed the connection, 
+    None if the connection is active.
+    """
+    close_code: Optional[int] = None
+    """[Close Code](https://tools.ietf.org/html/rfc6455#section-7.1.5)"""
+    close_reason: Optional[str] = None
+    """[Close Reason](https://tools.ietf.org/html/rfc6455#section-7.1.6)"""
 
-        self._inject_messages_client = queue.Queue(maxsize=1)
-        self._inject_messages_server = queue.Queue(maxsize=1)
-
-        if handshake_flow:
-            self.client_key = websocket.get_client_key(handshake_flow.request.headers)
-            self.client_protocol = websocket.get_protocol(handshake_flow.request.headers)
-            self.client_extensions = websocket.get_extensions(handshake_flow.request.headers)
-            self.server_accept = websocket.get_server_accept(handshake_flow.response.headers)
-            self.server_protocol = websocket.get_protocol(handshake_flow.response.headers)
-            self.server_extensions = websocket.get_extensions(handshake_flow.response.headers)
-        else:
-            self.client_key = ''
-            self.client_protocol = ''
-            self.client_extensions = ''
-            self.server_accept = ''
-            self.server_protocol = ''
-            self.server_extensions = ''
-
-    _stateobject_attributes = flow.Flow._stateobject_attributes.copy()
-    # mypy doesn't support update with kwargs
-    _stateobject_attributes.update(dict(
+    _stateobject_attributes = dict(
         messages=List[WebSocketMessage],
-        close_sender=str,
+        close_by_client=bool,
         close_code=int,
-        close_message=str,
         close_reason=str,
-        client_key=str,
-        client_protocol=str,
-        client_extensions=str,
-        server_accept=str,
-        server_protocol=str,
-        server_extensions=str,
-        # Do not include handshake_flow, to prevent recursive serialization!
-        # Since mitmproxy-console currently only displays HTTPFlows,
-        # dumping the handshake_flow will include the WebSocketFlow too.
-    ))
+    )
 
-    def get_state(self):
-        d = super().get_state()
-        d['close_code'] = int(d['close_code'])  # replace enum with bare int
-        return d
+    def __init__(self):
+        self.messages = []
+
+    def __repr__(self):
+        return f"<WebSocketData ({len(self.messages)} messages)>"
 
     @classmethod
     def from_state(cls, state):
-        f = cls(None, None, None)
-        f.set_state(state)
-        return f
-
-    def __repr__(self):
-        return "<WebSocketFlow ({} messages)>".format(len(self.messages))
-
-    def message_info(self, message: WebSocketMessage) -> str:
-        return "{client} {direction} WebSocket {type} message {direction} {server}{endpoint}".format(
-            type=message.type,
-            client=human.format_address(self.client_conn.peername),
-            server=human.format_address(self.server_conn.address),
-            direction="->" if message.from_client else "<-",
-            endpoint=self.handshake_flow.request.path,
-        )
+        d = WebSocketData()
+        d.set_state(state)
+        return d

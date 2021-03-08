@@ -1,17 +1,18 @@
 from dataclasses import dataclass
-from typing import Union, List, Iterator
+from typing import Iterator, List
 
 import wsproto
 import wsproto.extensions
 import wsproto.frame_protocol
 import wsproto.utilities
-from mitmproxy import flow, websocket, http, connection
+from mitmproxy import connection, flow, http, websocket
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.utils import expect
+from mitmproxy.utils import strutils
 from wsproto import ConnectionState
-from wsproto.frame_protocol import CloseReason, Opcode
+from wsproto.frame_protocol import CloseReason
 
 
 @dataclass
@@ -19,7 +20,7 @@ class WebsocketStartHook(StartHook):
     """
     A WebSocket connection has commenced.
     """
-    flow: websocket.WebSocketFlow
+    flow: http.HTTPFlow
 
 
 @dataclass
@@ -30,7 +31,7 @@ class WebsocketMessageHook(StartHook):
     message is user-modifiable. Currently there are two types of
     messages, corresponding to the BINARY and TEXT frame types.
     """
-    flow: websocket.WebSocketFlow
+    flow: http.HTTPFlow
 
 
 @dataclass
@@ -39,7 +40,7 @@ class WebsocketEndHook(StartHook):
     A WebSocket connection has ended.
     """
 
-    flow: websocket.WebSocketFlow
+    flow: http.HTTPFlow
 
 
 @dataclass
@@ -49,7 +50,7 @@ class WebsocketErrorHook(StartHook):
 
     Every WebSocket flow will receive either a websocket_error or a websocket_end event, but not both.
     """
-    flow: websocket.WebSocketFlow
+    flow: http.HTTPFlow
 
 
 class WebsocketConnection(wsproto.Connection):
@@ -61,7 +62,7 @@ class WebsocketConnection(wsproto.Connection):
      - we wrap .send() so that we can directly yield it.
     """
     conn: connection.Connection
-    frame_buf: List[Union[str, bytes]]
+    frame_buf: List[bytes]
 
     def __init__(self, *args, conn: connection.Connection, **kwargs):
         super(WebsocketConnection, self).__init__(*args, **kwargs)
@@ -80,13 +81,13 @@ class WebsocketLayer(layer.Layer):
     """
     WebSocket layer that intercepts and relays messages.
     """
-    flow: websocket.WebSocketFlow
+    flow: http.HTTPFlow
     client_ws: WebsocketConnection
     server_ws: WebsocketConnection
 
-    def __init__(self, context: Context, handshake_flow: http.HTTPFlow):
+    def __init__(self, context: Context, flow: http.HTTPFlow):
         super().__init__(context)
-        self.flow = websocket.WebSocketFlow(context.client, context.server, handshake_flow)
+        self.flow = flow
         assert context.server.connected
 
     @expect(events.Start)
@@ -96,7 +97,7 @@ class WebsocketLayer(layer.Layer):
         server_extensions = []
 
         # Parse extension headers. We only support deflate at the moment and ignore everything else.
-        ext_header = self.flow.handshake_flow.response.headers.get("Sec-WebSocket-Extensions", "")
+        ext_header = self.flow.response.headers.get("Sec-WebSocket-Extensions", "")
         if ext_header:
             for ext in wsproto.utilities.split_comma_header(ext_header.encode("ascii", "replace")):
                 ext_name = ext.split(";", 1)[0].strip()
@@ -114,9 +115,6 @@ class WebsocketLayer(layer.Layer):
         self.server_ws = WebsocketConnection(wsproto.ConnectionType.CLIENT, server_extensions, conn=self.context.server)
 
         yield WebsocketStartHook(self.flow)
-
-        if self.flow.stream:  # pragma: no cover
-            raise NotImplementedError("WebSocket streaming is not supported at the moment.")
 
         self._handle_event = self.relay_messages
 
@@ -142,24 +140,18 @@ class WebsocketLayer(layer.Layer):
 
         for ws_event in src_ws.events():
             if isinstance(ws_event, wsproto.events.Message):
-                src_ws.frame_buf.append(ws_event.data)
+                src_ws.frame_buf.append(strutils.always_bytes(ws_event.data))
 
                 if ws_event.message_finished:
-                    if isinstance(ws_event, wsproto.events.TextMessage):
-                        frame_type = Opcode.TEXT
-                        content = "".join(src_ws.frame_buf)  # type: ignore
-                    else:
-                        frame_type = Opcode.BINARY
-                        content = b"".join(src_ws.frame_buf)  # type: ignore
+                    is_text = isinstance(ws_event.data, str)
+                    content = b"".join(src_ws.frame_buf)
 
-                    fragmentizer = Fragmentizer(src_ws.frame_buf)
+                    fragmentizer = Fragmentizer(src_ws.frame_buf, is_text)
                     src_ws.frame_buf.clear()
 
-                    message = websocket.WebSocketMessage(frame_type, from_client, content)
-                    self.flow.messages.append(message)
+                    message = websocket.WebSocketMessage(from_client, is_text, content)
+                    self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
-
-                    assert not message.killed  # this is deprecated, instead we should have .content set to emptystr.
 
                     for msg in fragmentizer(message.content):
                         yield dst_ws.send2(msg)
@@ -171,9 +163,9 @@ class WebsocketLayer(layer.Layer):
                 )
                 yield dst_ws.send2(ws_event)
             elif isinstance(ws_event, wsproto.events.CloseConnection):
-                self.flow.close_sender = from_str
-                self.flow.close_code = ws_event.code
-                self.flow.close_reason = ws_event.reason
+                self.flow.websocket.close_by_client = from_client
+                self.flow.websocket.close_code = ws_event.code
+                self.flow.websocket.close_reason = ws_event.reason
 
                 for ws in [self.server_ws, self.client_ws]:
                     if ws.state in {ConnectionState.OPEN, ConnectionState.REMOTE_CLOSING}:
@@ -215,27 +207,35 @@ class Fragmentizer:
 
     As a workaround, we either retain the original chunking or, if the payload has been modified, use ~4kB chunks.
     """
-    # A bit less than 4kb to accomodate for headers.
+    # A bit less than 4kb to accommodate for headers.
     FRAGMENT_SIZE = 4000
 
-    def __init__(self, fragments: List[Union[str, bytes]]):
+    def __init__(self, fragments: List[bytes], is_text: bool):
         assert fragments
         self.fragment_lengths = [len(x) for x in fragments]
+        self.is_text = is_text
 
-    def __call__(self, content: Union[str, bytes]) -> Iterator[wsproto.events.Message]:
+    def msg(self, data: bytes, message_finished: bool):
+        if self.is_text:
+            data_str = data.decode(errors="replace")
+            return wsproto.events.TextMessage(data_str, message_finished=message_finished)
+        else:
+            return wsproto.events.BytesMessage(data, message_finished=message_finished)
+
+    def __call__(self, content: bytes) -> Iterator[wsproto.events.Message]:
         if not content:
             return
         if len(content) == sum(self.fragment_lengths):
             # message has the same length, we can reuse the same sizes
             offset = 0
             for fl in self.fragment_lengths[:-1]:
-                yield wsproto.events.Message(content[offset:offset + fl], message_finished=False)
+                yield self.msg(content[offset:offset + fl], False)
                 offset += fl
-            yield wsproto.events.Message(content[offset:], message_finished=True)
+            yield self.msg(content[offset:], True)
         else:
             offset = 0
             total = len(content) - self.FRAGMENT_SIZE
             while offset < total:
-                yield wsproto.events.Message(content[offset:offset + self.FRAGMENT_SIZE], message_finished=False)
+                yield self.msg(content[offset:offset + self.FRAGMENT_SIZE], False)
                 offset += self.FRAGMENT_SIZE
-            yield wsproto.events.Message(content[offset:], message_finished=True)
+            yield self.msg(content[offset:], True)

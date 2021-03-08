@@ -13,6 +13,7 @@ from mitmproxy.proxy.layers import tcp, tls, websocket
 from mitmproxy.proxy.layers.http import _upstream_proxy
 from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
+from mitmproxy.websocket import WebSocketData
 from ._base import HttpCommand, HttpConnection, ReceiveHttp, StreamId
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
@@ -308,6 +309,25 @@ class HttpStream(layer.Layer):
         """We have either consumed the entire response from the server or the response was set by an addon."""
         assert self.flow.response
         self.flow.response.timestamp_end = time.time()
+
+        is_websocket = (
+            self.flow.response.status_code == 101
+            and
+            self.flow.response.headers.get("upgrade", "").lower() == "websocket"
+            and
+            self.flow.request.headers.get("Sec-WebSocket-Version", "") == "13"
+            and
+            self.context.options.websocket
+        )
+        if is_websocket:
+            # We need to set this before calling the response hook
+            # so that addons can determine if a WebSocket connection is following up.
+            self.flow.websocket = WebSocketData()
+            if self.flow.request.scheme == "http":
+                self.flow.request.scheme = "ws"
+            elif self.flow.request.scheme == "https":
+                self.flow.request.scheme = "wss"
+
         yield HttpResponseHook(self.flow)
         self.server_state = self.state_done
         if (yield from self.check_killed(False)):
@@ -322,12 +342,7 @@ class HttpStream(layer.Layer):
         yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
         if self.flow.response.status_code == 101:
-            is_websocket = (
-                self.flow.response.headers.get("upgrade", "").lower() == "websocket"
-                and
-                self.flow.request.headers.get("Sec-WebSocket-Version", "") == "13"
-            )
-            if is_websocket and self.context.options.websocket:
+            if is_websocket:
                 self.child_layer = websocket.WebsocketLayer(self.context, self.flow)
             elif self.context.options.rawtcp:
                 self.child_layer = tcp.TCPLayer(self.context)

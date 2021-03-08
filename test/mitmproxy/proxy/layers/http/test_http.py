@@ -12,7 +12,6 @@ from mitmproxy.proxy.layers import TCPLayer, http, tls
 from mitmproxy.proxy.layers.tcp import TcpStartHook
 from mitmproxy.proxy.layers.websocket import WebsocketStartHook
 from mitmproxy.tcp import TCPFlow
-from mitmproxy.websocket import WebSocketFlow
 from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply, reply_next_layer
 
 
@@ -960,7 +959,7 @@ def test_upgrade(tctx, proto):
                                      b"\r\n")
     )
     if proto == "websocket":
-        assert playbook << WebsocketStartHook(Placeholder(WebSocketFlow))
+        assert playbook << WebsocketStartHook(http_flow)
     elif proto == "tcp":
         assert playbook << TcpStartHook(Placeholder(TCPFlow))
     else:

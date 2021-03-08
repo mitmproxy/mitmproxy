@@ -13,7 +13,7 @@ from mitmproxy import http
 from mitmproxy.tcp import TCPFlow, TCPMessage
 from mitmproxy.utils import human
 from mitmproxy.utils import strutils
-from mitmproxy.websocket import WebSocketFlow, WebSocketMessage
+from mitmproxy.websocket import WebSocketMessage
 
 
 def indent(n: int, text: str) -> str:
@@ -98,7 +98,7 @@ class Dumper:
     def _echo_message(
         self,
         message: Union[http.Message, TCPMessage, WebSocketMessage],
-        flow: Union[http.HTTPFlow, TCPFlow, WebSocketFlow]
+        flow: Union[http.HTTPFlow, TCPFlow]
     ):
         _, lines, error = contentviews.get_message_content_view(
             ctx.options.dumper_default_contentview,
@@ -277,37 +277,37 @@ class Dumper:
         if self.match(f):
             self.echo_flow(f)
 
-    def websocket_error(self, f):
+    def websocket_error(self, f: http.HTTPFlow):
         self.echo_error(
-            "Error in WebSocket connection to {}: {}".format(
-                human.format_address(f.server_conn.address), f.error
-            ),
+            f"Error in WebSocket connection to {human.format_address(f.server_conn.address)}: {f.error}",
             fg="red"
         )
 
-    def websocket_message(self, f):
+    def websocket_message(self, f: http.HTTPFlow):
         if self.match(f):
-            message = f.messages[-1]
-            self.echo(f.message_info(message))
+            message = f.websocket.messages[-1]
+
+            direction = "->" if message.from_client else "<-"
+            typ = "text" if message.is_text else "binary"
+            self.echo(
+                f"{human.format_address(f.client_conn.peername)} "
+                f"{direction} WebSocket {typ} message "
+                f"{direction} {human.format_address(f.server_conn.address)}{f.request.path}"
+            )
             if ctx.options.flow_detail >= 3:
                 message = message.from_state(message.get_state())
                 message.content = message.content.encode() if isinstance(message.content, str) else message.content
                 self._echo_message(message, f)
 
-    def websocket_end(self, f):
+    def websocket_end(self, f: http.HTTPFlow):
         if self.match(f):
-            self.echo("WebSocket connection closed by {}: {} {}, {}".format(
-                f.close_sender,
-                f.close_code,
-                f.close_message,
-                f.close_reason))
+            c = 'client' if f.websocket.close_by_client else 'server'
+            self.echo(f"WebSocket connection closed by {c}: {f.websocket.close_code} {f.websocket.close_reason}")
 
     def tcp_error(self, f):
         if self.match(f):
             self.echo_error(
-                "Error in TCP connection to {}: {}".format(
-                    human.format_address(f.server_conn.address), f.error
-                ),
+                f"Error in TCP connection to {human.format_address(f.server_conn.address)}: {f.error}",
                 fg="red"
             )
 

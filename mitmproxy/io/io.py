@@ -13,7 +13,6 @@ from mitmproxy.io import tnetstring
 
 FLOW_TYPES: Dict[str, Type[flow.Flow]] = dict(
     http=http.HTTPFlow,
-    websocket=websocket.WebSocketFlow,
     tcp=tcp.TCPFlow,
 )
 

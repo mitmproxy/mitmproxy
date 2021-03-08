@@ -41,26 +41,6 @@ console_flowlist_layout = [
     "list"
 ]
 
-
-class UnsupportedLog:
-    """
-        A small addon to dump info on flow types we don't support yet.
-    """
-
-    def websocket_message(self, f):
-        message = f.messages[-1]
-        ctx.log.info(f.message_info(message))
-        ctx.log.debug(
-            message.content if isinstance(message.content, str) else strutils.bytes_to_escaped_str(message.content))
-
-    def websocket_end(self, f):
-        ctx.log.info("WebSocket connection closed by {}: {} {}, {}".format(
-            f.close_sender,
-            f.close_code,
-            f.close_message,
-            f.close_reason))
-
-
 class ConsoleAddon:
     """
         An addon that exposes console-specific commands, and hooks into required

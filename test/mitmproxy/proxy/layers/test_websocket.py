@@ -11,7 +11,6 @@ from mitmproxy.proxy.commands import SendData, CloseConnection, Log
 from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.events import DataReceived, ConnectionClosed
 from mitmproxy.proxy.layers import http, websocket
-from mitmproxy.websocket import WebSocketFlow
 from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply
 
 
@@ -53,8 +52,7 @@ def test_upgrade(tctx):
     """Test a HTTP -> WebSocket upgrade"""
     tctx.server.address = ("example.com", 80)
     tctx.server.state = ConnectionState.OPEN
-    http_flow = Placeholder(HTTPFlow)
-    flow = Placeholder(WebSocketFlow)
+    flow = Placeholder(HTTPFlow)
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.transparent))
             >> DataReceived(tctx.client,
@@ -63,9 +61,9 @@ def test_upgrade(tctx):
                             b"Upgrade: websocket\r\n"
                             b"Sec-WebSocket-Version: 13\r\n"
                             b"\r\n")
-            << http.HttpRequestHeadersHook(http_flow)
+            << http.HttpRequestHeadersHook(flow)
             >> reply()
-            << http.HttpRequestHook(http_flow)
+            << http.HttpRequestHook(flow)
             >> reply()
             << SendData(tctx.server, b"GET / HTTP/1.1\r\n"
                                      b"Connection: upgrade\r\n"
@@ -76,9 +74,9 @@ def test_upgrade(tctx):
                                          b"Upgrade: websocket\r\n"
                                          b"Connection: Upgrade\r\n"
                                          b"\r\n")
-            << http.HttpResponseHeadersHook(http_flow)
+            << http.HttpResponseHeadersHook(flow)
             >> reply()
-            << http.HttpResponseHook(http_flow)
+            << http.HttpResponseHook(flow)
             >> reply()
             << SendData(tctx.client, b"HTTP/1.1 101 Switching Protocols\r\n"
                                      b"Upgrade: websocket\r\n"
@@ -95,12 +93,11 @@ def test_upgrade(tctx):
             >> reply()
             << SendData(tctx.client, b"\x82\nhello back")
     )
-    assert flow().handshake_flow == http_flow()
-    assert len(flow().messages) == 2
-    assert flow().messages[0].content == "hello world"
-    assert flow().messages[0].from_client
-    assert flow().messages[1].content == b"hello back"
-    assert flow().messages[1].from_client is False
+    assert len(flow().websocket.messages) == 2
+    assert flow().websocket.messages[0].content == "hello world"
+    assert flow().websocket.messages[0].from_client
+    assert flow().websocket.messages[1].content == b"hello back"
+    assert flow().websocket.messages[1].from_client is False
 
 
 @pytest.fixture()
@@ -120,12 +117,11 @@ def ws_testdata(tctx):
         "Connection": "upgrade",
         "Upgrade": "websocket",
     })
-    return tctx, Playbook(websocket.WebsocketLayer(tctx, flow))
+    return tctx, Playbook(websocket.WebsocketLayer(tctx, flow)), flow
 
 
 def test_modify_message(ws_testdata):
-    tctx, playbook = ws_testdata
-    flow = Placeholder(WebSocketFlow)
+    tctx, playbook, flow = ws_testdata
     assert (
             playbook
             << websocket.WebsocketStartHook(flow)
@@ -133,7 +129,7 @@ def test_modify_message(ws_testdata):
             >> DataReceived(tctx.server, b"\x81\x03foo")
             << websocket.WebsocketMessageHook(flow)
     )
-    flow().messages[-1].content = flow().messages[-1].content.replace("foo", "foobar")
+    flow.websocket.messages[-1].content = flow.websocket.messages[-1].content.replace("foo", "foobar")
     assert (
             playbook
             >> reply()
@@ -142,8 +138,7 @@ def test_modify_message(ws_testdata):
 
 
 def test_drop_message(ws_testdata):
-    tctx, playbook = ws_testdata
-    flow = Placeholder(WebSocketFlow)
+    tctx, playbook, flow = ws_testdata
     assert (
             playbook
             << websocket.WebsocketStartHook(flow)
@@ -151,7 +146,7 @@ def test_drop_message(ws_testdata):
             >> DataReceived(tctx.server, b"\x81\x03foo")
             << websocket.WebsocketMessageHook(flow)
     )
-    flow().messages[-1].content = ""
+    flow.websocket.messages[-1].content = ""
     assert (
             playbook
             >> reply()
@@ -160,8 +155,7 @@ def test_drop_message(ws_testdata):
 
 
 def test_fragmented(ws_testdata):
-    tctx, playbook = ws_testdata
-    flow = Placeholder(WebSocketFlow)
+    tctx, playbook, flow = ws_testdata
     assert (
             playbook
             << websocket.WebsocketStartHook(flow)
@@ -173,12 +167,11 @@ def test_fragmented(ws_testdata):
             << SendData(tctx.client, b"\x01\x03foo")
             << SendData(tctx.client, b"\x80\x03bar")
     )
-    assert flow().messages[-1].content == "foobar"
+    assert flow.websocket.messages[-1].content == "foobar"
 
 
 def test_protocol_error(ws_testdata):
-    tctx, playbook = ws_testdata
-    flow = Placeholder(WebSocketFlow)
+    tctx, playbook, flow = ws_testdata
     assert (
             playbook
             << websocket.WebsocketStartHook(flow)
@@ -193,12 +186,11 @@ def test_protocol_error(ws_testdata):
             >> reply()
 
     )
-    assert not flow().messages
+    assert not flow.websocket.messages
 
 
 def test_ping(ws_testdata):
-    tctx, playbook = ws_testdata
-    flow = Placeholder(WebSocketFlow)
+    tctx, playbook, flow = ws_testdata
     assert (
             playbook
             << websocket.WebsocketStartHook(flow)
@@ -210,12 +202,11 @@ def test_ping(ws_testdata):
             << Log("Received WebSocket pong from server (payload: b'pong-with-payload')")
             << SendData(tctx.client, b"\x8a\x11pong-with-payload")
     )
-    assert not flow().messages
+    assert not flow.websocket.messages
 
 
 def test_close_normal(ws_testdata):
-    tctx, playbook = ws_testdata
-    flow = Placeholder(WebSocketFlow)
+    tctx, playbook, flow = ws_testdata
     masked_close = Placeholder(bytes)
     close = Placeholder(bytes)
     assert (
@@ -235,12 +226,11 @@ def test_close_normal(ws_testdata):
     assert masked_close() == masked(b"\x88\x02\x03\xe8") or masked_close() == masked(b"\x88\x00")
     assert close() == b"\x88\x02\x03\xe8" or close() == b"\x88\x00"
 
-    assert flow().close_code == 1005
+    assert flow.websocket.close_code == 1005
 
 
 def test_close_disconnect(ws_testdata):
-    tctx, playbook = ws_testdata
-    flow = Placeholder(WebSocketFlow)
+    tctx, playbook, flow = ws_testdata
     assert (
             playbook
             << websocket.WebsocketStartHook(flow)
@@ -253,12 +243,11 @@ def test_close_disconnect(ws_testdata):
             >> reply()
             >> ConnectionClosed(tctx.client)
     )
-    assert "ABNORMAL_CLOSURE" in flow().error.msg
+    assert "ABNORMAL_CLOSURE" in flow.error.msg
 
 
 def test_close_error(ws_testdata):
-    tctx, playbook = ws_testdata
-    flow = Placeholder(WebSocketFlow)
+    tctx, playbook, flow = ws_testdata
     assert (
             playbook
             << websocket.WebsocketStartHook(flow)
@@ -271,15 +260,12 @@ def test_close_error(ws_testdata):
             << websocket.WebsocketErrorHook(flow)
             >> reply()
     )
-    assert "UNKNOWN_ERROR=4000" in flow().error.msg
+    assert "UNKNOWN_ERROR=4000" in flow.error.msg
 
 
 def test_deflate(ws_testdata):
-    tctx, playbook = ws_testdata
-    flow = Placeholder(WebSocketFlow)
-    # noinspection PyUnresolvedReferences
-    http_flow: HTTPFlow = playbook.layer.flow.handshake_flow
-    http_flow.response.headers["Sec-WebSocket-Extensions"] = "permessage-deflate; server_max_window_bits=10"
+    tctx, playbook, flow = ws_testdata
+    flow.response.headers["Sec-WebSocket-Extensions"] = "permessage-deflate; server_max_window_bits=10"
     assert (
             playbook
             << websocket.WebsocketStartHook(flow)
@@ -290,15 +276,12 @@ def test_deflate(ws_testdata):
             >> reply()
             << SendData(tctx.client, bytes.fromhex("c1 07 f2 48 cd c9 c9 07 00"))
     )
-    assert flow().messages[0].content == "Hello"
+    assert flow.messages[0].content == "Hello"
 
 
 def test_unknown_ext(ws_testdata):
-    tctx, playbook = ws_testdata
-    flow = Placeholder(WebSocketFlow)
-    # noinspection PyUnresolvedReferences
-    http_flow: HTTPFlow = playbook.layer.flow.handshake_flow
-    http_flow.response.headers["Sec-WebSocket-Extensions"] = "funky-bits; param=42"
+    tctx, playbook, flow = ws_testdata
+    flow.response.headers["Sec-WebSocket-Extensions"] = "funky-bits; param=42"
     assert (
             playbook
             << Log("Ignoring unknown WebSocket extension 'funky-bits'.")

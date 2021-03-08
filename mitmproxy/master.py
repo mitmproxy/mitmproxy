@@ -34,7 +34,6 @@ class Master:
         self.commands = command.CommandManager(self)
         self.addons = addonmanager.AddonManager(self)
         self._server = None
-        self.waiting_flows = []
         self.log = log.Log(self)
 
         mitmproxy_ctx.master = self
@@ -111,24 +110,11 @@ class Master:
 
     async def load_flow(self, f):
         """
-        Loads a flow and links websocket & handshake flows
+        Loads a flow
         """
 
         if isinstance(f, http.HTTPFlow):
             self._change_reverse_host(f)
-            if 'websocket' in f.metadata:
-                self.waiting_flows.append(f)
-
-        if isinstance(f, websocket.WebSocketFlow):
-            hfs = [hf for hf in self.waiting_flows if hf.id == f.metadata['websocket_handshake']]
-            if hfs:
-                hf = hfs[0]
-                f.handshake_flow = hf
-                self.waiting_flows.remove(hf)
-                self._change_reverse_host(f.handshake_flow)
-            else:
-                # this will fail - but at least it will load the remaining flows
-                f.handshake_flow = http.HTTPFlow(None, None)
 
         f.reply = controller.DummyReply()
         for e in eventsequence.iterate(f):

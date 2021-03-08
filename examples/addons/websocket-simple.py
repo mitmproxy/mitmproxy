@@ -1,11 +1,11 @@
 """Process individual messages from a WebSocket connection."""
 import re
-from mitmproxy import ctx
+from mitmproxy import ctx, http
 
 
-def websocket_message(flow):
+def websocket_message(flow: http.HTTPFlow):
     # get the latest message
-    message = flow.messages[-1]
+    message = flow.websocket.messages[-1]
 
     # was the message sent from the client or server?
     if message.from_client:

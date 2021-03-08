@@ -39,8 +39,7 @@ from typing import Callable, ClassVar, Optional, Sequence, Type
 
 import pyparsing as pp
 
-from mitmproxy import flow, http, tcp, websocket
-from mitmproxy.net.websocket import check_handshake
+from mitmproxy import flow, http, tcp
 
 
 def only(*types):
@@ -102,15 +101,11 @@ class FHTTP(_Action):
 
 class FWebSocket(_Action):
     code = "websocket"
-    help = "Match WebSocket flows (and HTTP-WebSocket handshake flows)"
+    help = "Match WebSocket flows"
 
-    @only(http.HTTPFlow, websocket.WebSocketFlow)
-    def __call__(self, f):
-        m = (
-            (isinstance(f, http.HTTPFlow) and f.request and check_handshake(f.request.headers))
-            or isinstance(f, websocket.WebSocketFlow)
-        )
-        return m
+    @only(http.HTTPFlow)
+    def __call__(self, f: http.HTTPFlow):
+        return f.websocket is not None
 
 
 class FTCP(_Action):
@@ -258,7 +253,7 @@ class FBod(_Rex):
     help = "Body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, websocket.WebSocketFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
@@ -267,10 +262,10 @@ class FBod(_Rex):
             if f.response and f.response.raw_content:
                 if self.re.search(f.response.get_content(strict=False)):
                     return True
-        elif isinstance(f, websocket.WebSocketFlow) or isinstance(f, tcp.TCPFlow):
-            for msg in f.messages:
-                if self.re.search(msg.content):
-                    return True
+            if f.websocket:
+                for msg in f.websocket.messages:
+                    if self.re.search(msg.content):
+                        return True
         return False
 
 
@@ -279,13 +274,17 @@ class FBodRequest(_Rex):
     help = "Request body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, websocket.WebSocketFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.request and f.request.raw_content:
                 if self.re.search(f.request.get_content(strict=False)):
                     return True
-        elif isinstance(f, websocket.WebSocketFlow) or isinstance(f, tcp.TCPFlow):
+            if f.websocket:
+                for msg in f.websocket.messages:
+                    if msg.from_client and self.re.search(msg.content):
+                        return True
+        elif isinstance(f, tcp.TCPFlow):
             for msg in f.messages:
                 if msg.from_client and self.re.search(msg.content):
                     return True
@@ -296,13 +295,17 @@ class FBodResponse(_Rex):
     help = "Response body"
     flags = re.DOTALL
 
-    @only(http.HTTPFlow, websocket.WebSocketFlow, tcp.TCPFlow)
+    @only(http.HTTPFlow, tcp.TCPFlow)
     def __call__(self, f):
         if isinstance(f, http.HTTPFlow):
             if f.response and f.response.raw_content:
                 if self.re.search(f.response.get_content(strict=False)):
                     return True
-        elif isinstance(f, websocket.WebSocketFlow) or isinstance(f, tcp.TCPFlow):
+            if f.websocket:
+                for msg in f.websocket.messages:
+                    if not msg.from_client and self.re.search(msg.content):
+                        return True
+        elif isinstance(f, tcp.TCPFlow):
             for msg in f.messages:
                 if not msg.from_client and self.re.search(msg.content):
                     return True
@@ -324,10 +327,8 @@ class FDomain(_Rex):
     flags = re.IGNORECASE
     is_binary = False
 
-    @only(http.HTTPFlow, websocket.WebSocketFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
-        if isinstance(f, websocket.WebSocketFlow):
-            f = f.handshake_flow
         return bool(
             self.re.search(f.request.host) or
             self.re.search(f.request.pretty_host)
@@ -347,10 +348,8 @@ class FUrl(_Rex):
             toks = toks[1:]
         return klass(*toks)
 
-    @only(http.HTTPFlow, websocket.WebSocketFlow)
+    @only(http.HTTPFlow)
     def __call__(self, f):
-        if isinstance(f, websocket.WebSocketFlow):
-            f = f.handshake_flow
         if not f or not f.request:
             return False
         return self.re.search(f.request.pretty_url)
@@ -482,9 +481,9 @@ def _make():
     unicode_words = pp.CharsNotIn("()~'\"" + pp.ParserElement.DEFAULT_WHITE_CHARS)
     unicode_words.skipWhitespace = True
     regex = (
-            unicode_words
-            | pp.QuotedString('"', escChar='\\')
-            | pp.QuotedString("'", escChar='\\')
+        unicode_words
+        | pp.QuotedString('"', escChar='\\')
+        | pp.QuotedString("'", escChar='\\')
     )
     for cls in filter_rex:
         f = pp.Literal(f"~{cls.code}") + pp.WordEnd() + regex.copy()

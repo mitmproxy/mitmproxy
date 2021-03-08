@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from mitmproxy.test import tflow
 
-from mitmproxy import flowfilter
+from mitmproxy import flowfilter, http
 
 
 class TestParsing:
@@ -424,10 +424,10 @@ class TestMatchingTCPFlow:
 
 class TestMatchingWebSocketFlow:
 
-    def flow(self):
+    def flow(self) -> http.HTTPFlow:
         return tflow.twebsocketflow()
 
-    def err(self):
+    def err(self) -> http.HTTPFlow:
         return tflow.twebsocketflow(err=True)
 
     def q(self, q, o):
@@ -440,7 +440,7 @@ class TestMatchingWebSocketFlow:
         assert not self.q("~http", f)
 
     def test_handshake(self):
-        f = self.flow().handshake_flow
+        f = self.flow()
         assert self.q("~websocket", f)
         assert not self.q("~tcp", f)
         assert self.q("~http", f)

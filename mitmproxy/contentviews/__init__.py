@@ -25,7 +25,7 @@ from . import (
 from .base import View, KEY_MAX, format_text, format_dict, TViewResult
 from ..http import HTTPFlow
 from ..tcp import TCPMessage, TCPFlow
-from ..websocket import WebSocketMessage, WebSocketFlow
+from ..websocket import WebSocketMessage
 
 views: List[View] = []
 
@@ -67,7 +67,7 @@ def safe_to_print(lines, encoding="utf8"):
 def get_message_content_view(
     viewname: str,
     message: Union[http.Message, TCPMessage, WebSocketMessage],
-    flow: Union[HTTPFlow, TCPFlow, WebSocketFlow],
+    flow: Union[HTTPFlow, TCPFlow],
 ):
     """
     Like get_content_view, but also handles message encoding.
@@ -79,7 +79,7 @@ def get_message_content_view(
 
     content: Optional[bytes]
     try:
-        content = message.content  # type: ignore
+        content = message.content
     except ValueError:
         assert isinstance(message, http.Message)
         content = message.raw_content
