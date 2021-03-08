@@ -1,11 +1,10 @@
-from typing import Iterator, Any, Dict, Type, Callable
+from typing import Any, Callable, Dict, Iterator, Type
 
 from mitmproxy import controller
-from mitmproxy import hooks
 from mitmproxy import flow
+from mitmproxy import hooks
 from mitmproxy import http
 from mitmproxy import tcp
-from mitmproxy import websocket
 from mitmproxy.proxy import layers
 
 TEventGenerator = Iterator[hooks.Hook]

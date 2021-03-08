@@ -11,6 +11,7 @@ from mitmproxy.proxy.commands import SendData, CloseConnection, Log
 from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.events import DataReceived, ConnectionClosed
 from mitmproxy.proxy.layers import http, websocket
+from mitmproxy.websocket import WebSocketData
 from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply
 
 
@@ -94,10 +95,12 @@ def test_upgrade(tctx):
             << SendData(tctx.client, b"\x82\nhello back")
     )
     assert len(flow().websocket.messages) == 2
-    assert flow().websocket.messages[0].content == "hello world"
+    assert flow().websocket.messages[0].content == b"hello world"
     assert flow().websocket.messages[0].from_client
+    assert flow().websocket.messages[0].is_text
     assert flow().websocket.messages[1].content == b"hello back"
     assert flow().websocket.messages[1].from_client is False
+    assert flow().websocket.messages[1].is_text is False
 
 
 @pytest.fixture()
@@ -117,6 +120,7 @@ def ws_testdata(tctx):
         "Connection": "upgrade",
         "Upgrade": "websocket",
     })
+    flow.websocket = WebSocketData()
     return tctx, Playbook(websocket.WebsocketLayer(tctx, flow)), flow
 
 
@@ -129,7 +133,7 @@ def test_modify_message(ws_testdata):
             >> DataReceived(tctx.server, b"\x81\x03foo")
             << websocket.WebsocketMessageHook(flow)
     )
-    flow.websocket.messages[-1].content = flow.websocket.messages[-1].content.replace("foo", "foobar")
+    flow.websocket.messages[-1].content = flow.websocket.messages[-1].content.replace(b"foo", b"foobar")
     assert (
             playbook
             >> reply()
@@ -167,7 +171,7 @@ def test_fragmented(ws_testdata):
             << SendData(tctx.client, b"\x01\x03foo")
             << SendData(tctx.client, b"\x80\x03bar")
     )
-    assert flow.websocket.messages[-1].content == "foobar"
+    assert flow.websocket.messages[-1].content == b"foobar"
 
 
 def test_protocol_error(ws_testdata):
@@ -276,7 +280,7 @@ def test_deflate(ws_testdata):
             >> reply()
             << SendData(tctx.client, bytes.fromhex("c1 07 f2 48 cd c9 c9 07 00"))
     )
-    assert flow.messages[0].content == "Hello"
+    assert flow.websocket.messages[0].content == b"Hello"
 
 
 def test_unknown_ext(ws_testdata):
@@ -297,20 +301,20 @@ def test_websocket_connection_repr(tctx):
 
 class TestFragmentizer:
     def test_empty(self):
-        f = websocket.Fragmentizer([b"foo"])
+        f = websocket.Fragmentizer([b"foo"], False)
         assert list(f(b"")) == []
 
     def test_keep_sizes(self):
-        f = websocket.Fragmentizer([b"foo", b"bar"])
+        f = websocket.Fragmentizer([b"foo", b"bar"], True)
         assert list(f(b"foobaz")) == [
-            wsproto.events.Message(b"foo", message_finished=False),
-            wsproto.events.Message(b"baz", message_finished=True),
+            wsproto.events.TextMessage("foo", message_finished=False),
+            wsproto.events.TextMessage("baz", message_finished=True),
         ]
 
     def test_rechunk(self):
-        f = websocket.Fragmentizer([b"foo"])
+        f = websocket.Fragmentizer([b"foo"], False)
         f.FRAGMENT_SIZE = 4
         assert list(f(b"foobar")) == [
-            wsproto.events.Message(b"foob", message_finished=False),
-            wsproto.events.Message(b"ar", message_finished=True),
+            wsproto.events.BytesMessage(b"foob", message_finished=False),
+            wsproto.events.BytesMessage(b"ar", message_finished=True),
         ]

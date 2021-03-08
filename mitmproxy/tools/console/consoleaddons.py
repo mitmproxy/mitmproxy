@@ -41,6 +41,7 @@ console_flowlist_layout = [
     "list"
 ]
 
+
 class ConsoleAddon:
     """
         An addon that exposes console-specific commands, and hooks into required
@@ -206,11 +207,11 @@ class ConsoleAddon:
 
     @command.command("console.choose")
     def console_choose(
-            self,
-            prompt: str,
-            choices: typing.Sequence[str],
-            cmd: mitmproxy.types.Cmd,
-            *args: mitmproxy.types.CmdArgs
+        self,
+        prompt: str,
+        choices: typing.Sequence[str],
+        cmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
@@ -232,11 +233,11 @@ class ConsoleAddon:
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
-            self,
-            prompt: str,
-            choicecmd: mitmproxy.types.Cmd,
-            subcmd: mitmproxy.types.Cmd,
-            *args: mitmproxy.types.CmdArgs
+        self,
+        prompt: str,
+        choicecmd: mitmproxy.types.Cmd,
+        subcmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
@@ -395,8 +396,8 @@ class ConsoleAddon:
         flow.backup()
 
         require_dummy_response = (
-                flow_part in ("response-headers", "response-body", "set-cookies") and
-                flow.response is None
+            flow_part in ("response-headers", "response-body", "set-cookies") and
+            flow.response is None
         )
         if require_dummy_response:
             flow.response = http.Response.make()
@@ -564,11 +565,11 @@ class ConsoleAddon:
 
     @command.command("console.key.bind")
     def key_bind(
-            self,
-            contexts: typing.Sequence[str],
-            key: str,
-            cmd: mitmproxy.types.Cmd,
-            *args: mitmproxy.types.CmdArgs
+        self,
+        contexts: typing.Sequence[str],
+        key: str,
+        cmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Bind a shortcut key.

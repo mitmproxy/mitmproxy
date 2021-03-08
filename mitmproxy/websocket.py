@@ -34,7 +34,7 @@ class WebSocketMessage(serializable.Serializable):
     is_text: bool
     """
     True if the message is a text message, False if the message is a binary message.
-    
+
     In either case, mitmproxy will store the message contents as *bytes*.
     """
     content: bytes
@@ -107,8 +107,8 @@ class WebSocketData(stateobject.StateObject):
 
     close_by_client: Optional[bool] = None
     """
-    True if the client closed the connection, 
-    False if the server closed the connection, 
+    True if the client closed the connection,
+    False if the server closed the connection,
     None if the connection is active.
     """
     close_code: Optional[int] = None

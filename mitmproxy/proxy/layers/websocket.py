@@ -10,7 +10,6 @@ from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.utils import expect
-from mitmproxy.utils import strutils
 from wsproto import ConnectionState
 from wsproto.frame_protocol import CloseReason
 
@@ -97,6 +96,7 @@ class WebsocketLayer(layer.Layer):
         server_extensions = []
 
         # Parse extension headers. We only support deflate at the moment and ignore everything else.
+        assert self.flow.response
         ext_header = self.flow.response.headers.get("Sec-WebSocket-Extensions", "")
         if ext_header:
             for ext in wsproto.utilities.split_comma_header(ext_header.encode("ascii", "replace")):
@@ -122,6 +122,8 @@ class WebsocketLayer(layer.Layer):
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def relay_messages(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
+        assert self.flow.websocket
+
         from_client = event.connection == self.context.client
         from_str = 'client' if from_client else 'server'
         if from_client:
@@ -140,10 +142,13 @@ class WebsocketLayer(layer.Layer):
 
         for ws_event in src_ws.events():
             if isinstance(ws_event, wsproto.events.Message):
-                src_ws.frame_buf.append(strutils.always_bytes(ws_event.data))
+                is_text = isinstance(ws_event.data, str)
+                if is_text:
+                    src_ws.frame_buf.append(ws_event.data.encode())
+                else:
+                    src_ws.frame_buf.append(ws_event.data)
 
                 if ws_event.message_finished:
-                    is_text = isinstance(ws_event.data, str)
                     content = b"".join(src_ws.frame_buf)
 
                     fragmentizer = Fragmentizer(src_ws.frame_buf, is_text)

@@ -11,7 +11,6 @@ from mitmproxy import eventsequence
 from mitmproxy import http
 from mitmproxy import log
 from mitmproxy import options
-from mitmproxy import websocket
 from mitmproxy.net import server_spec
 from . import ctx as mitmproxy_ctx
 

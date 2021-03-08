@@ -254,8 +254,6 @@ _websocket_handshakes = {}
 
 
 def convert_11_12(data):
-    from pprint import pprint
-    pprint(data)
     data["version"] = 12
 
     if "websocket" in data["metadata"]:
@@ -264,7 +262,7 @@ def convert_11_12(data):
     if "websocket_handshake" in data["metadata"]:
         ws_flow = data
         try:
-            data = _websocket_handshakes[data["metadata"]["websocket_handshake"]]
+            data = _websocket_handshakes.pop(data["metadata"]["websocket_handshake"])
         except KeyError:
             # The handshake flow is missing, which should never really happen. We make up a dummy.
             data = {

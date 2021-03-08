@@ -437,7 +437,7 @@ class TestMatchingWebSocketFlow:
         f = self.flow()
         assert self.q("~websocket", f)
         assert not self.q("~tcp", f)
-        assert not self.q("~http", f)
+        assert self.q("~http", f)
 
     def test_handshake(self):
         f = self.flow()
@@ -464,9 +464,6 @@ class TestMatchingWebSocketFlow:
         assert self.q("~u example.com", q)
         assert self.q("~u example.com/ws", q)
         assert not self.q("~u moo/path", q)
-
-        q.handshake_flow = None
-        assert not self.q("~u example.com", q)
 
     def test_body(self):
         f = self.flow()

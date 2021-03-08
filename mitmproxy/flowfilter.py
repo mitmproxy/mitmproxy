@@ -266,6 +266,10 @@ class FBod(_Rex):
                 for msg in f.websocket.messages:
                     if self.re.search(msg.content):
                         return True
+        elif isinstance(f, tcp.TCPFlow):
+            for msg in f.messages:
+                if self.re.search(msg.content):
+                    return True
         return False
 
 
