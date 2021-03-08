@@ -27,7 +27,8 @@ RUN apt-get update && apt-get install -y \
     xterm \
     && locale-gen --purge "en_US.UTF-8" \
     && update-locale "LANG=en_US.UTF-8" \
-    && pip3 install libtmux curl requests mitmproxy
+    && pip3 install libtmux curl requests mitmproxy \
+    && rm -rf /var/lib/apt/lists/*
 
 # install latest tmux (to support popups)
 RUN git clone --depth 1 https://github.com/tmux/tmux.git \
