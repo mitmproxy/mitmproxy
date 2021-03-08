@@ -12,6 +12,7 @@ import copy
 import asyncio
 
 from mitmproxy import ctx
+from mitmproxy import tcp
 
 from enum import Enum, auto
 

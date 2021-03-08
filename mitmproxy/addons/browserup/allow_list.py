@@ -16,13 +16,7 @@ import tempfile
 import re
 import falcon
 
-from mitmproxy import ctx
-from mitmproxy import connections
-from mitmproxy import version
-from mitmproxy.utils import strutils
-from mitmproxy.net.http import cookies
 from mitmproxy import http
-
 
 class AllowListResource:
 
@@ -32,7 +26,16 @@ class AllowListResource:
     def __init__(self, allow_list_addon):
         self.allow_list_addon = allow_list_addon
 
+
     def on_get(self, req, resp, method_name):
+        """Get an AllowList.
+        ---
+        description: Get an allowlist
+        responses:
+            200:
+                description: The current allowlist
+                schema: AllowList
+        """
         getattr(self, "on_" + method_name)(req, resp)
 
     def on_allowlist_requests(self, req, resp):

@@ -1,15 +1,7 @@
 import time
 import asyncio
-import mitmproxy.tcp
-import typing
-
-from mitmproxy.utils import strutils
-from mitmproxy import ctx
-from mitmproxy import tcp
 
 from mitmproxy import ctx
-from mitmproxy import connection
-#from mitmproxy.exceptions import TcpTimeout
 
 RESOLUTION_FAILED_ERROR_MESSAGE = "Unable to resolve host: "
 CONNECTION_FAILED_ERROR_MESSAGE = "Unable to connect to host"
@@ -39,6 +31,7 @@ class HttpConnectCaptureResource:
         getattr(self, "on_" + method_name)(req, resp)
 
 
+
 class HttpConnectCaptureAddOn:
 
     def __init__(self):
@@ -47,8 +40,10 @@ class HttpConnectCaptureAddOn:
 
         self.dns_resolution_started_nanos = 0
         self.dns_resolution_finished_nanos = 0
+
         self.connection_started_nanos = 0
         self.connection_succeeded_time_nanos = 0
+
         self.send_started_nanos = 0
         self.send_finished_nanos = 0
         self.response_receive_started_nanos = 0
@@ -65,8 +60,6 @@ class HttpConnectCaptureAddOn:
 
     # TCP Callbacks
 
-    def tcp_message(flow: tcp.TCPFlow):
-        print("---->" + flow.messages[-1].length)
 
     def tcp_resolving_server_address_finished(self, flow):
         if not hasattr(flow.request, 'har_entry'):

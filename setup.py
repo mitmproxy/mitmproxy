@@ -92,6 +92,10 @@ setup(
         "wsproto>=1.0,<1.1",
         "publicsuffix2>=2.20190812,<3",
         "zstandard>=0.11,<0.16",
+        "falcon>=2.0.0",
+        "marshmallow>=3.0.0",
+        "falcon-apispec>=0.4.0",
+        "python-dateutil>=2.8.1"
     ],
     extras_require={
         ':sys_platform == "win32"': [
