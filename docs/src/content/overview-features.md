@@ -272,10 +272,13 @@ Remove existing `Host` headers from all requests:
 
 Asks the user for authentication before they are permitted to use the proxy.
 Authentication headers are stripped from the flows, so they are not passed to
-upstream servers. For now, only HTTP Basic authentication is supported. The
-proxy auth options are not compatible with the transparent, socks or reverse
-proxy mode.
+upstream servers. For now, only HTTP Basic Authentication is supported.
 
+Proxy Authentication does not work well in transparent proxy mode by design
+because the client is not aware that it is talking to a proxy.
+Mitmproxy will re-request credentials for every individual domain.
+SOCKS proxy authentication is currently unimplemented 
+([#738](https://github.com/mitmproxy/mitmproxy/issues/738)).
 
 ## Server-side replay
 
