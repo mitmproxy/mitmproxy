@@ -291,12 +291,7 @@ def convert_11_12(data):
             "and may appear duplicated."
         )
         data["websocket"] = {
-            "messages": [
-                # old: int(self.type), self.from_client, self.content, self.timestamp, self.killed
-                # new: self.from_client, self.is_text, self.content, self.timestamp
-                [from_client, typ == 0x1, strutils.always_bytes(content) if not killed else b"", timestamp]
-                for typ, from_client, content, timestamp, killed in ws_flow["messages"]
-            ],
+            "messages": ws_flow["messages"],
             "close_by_client": ws_flow["close_sender"] == "client",
             "close_code": ws_flow["close_code"],
             "close_reason": ws_flow["close_reason"],

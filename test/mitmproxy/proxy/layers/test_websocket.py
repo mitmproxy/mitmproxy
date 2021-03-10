@@ -13,6 +13,7 @@ from mitmproxy.proxy.events import DataReceived, ConnectionClosed
 from mitmproxy.proxy.layers import http, websocket
 from mitmproxy.websocket import WebSocketData
 from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply
+from wsproto.frame_protocol import Opcode
 
 
 @dataclass
@@ -97,10 +98,10 @@ def test_upgrade(tctx):
     assert len(flow().websocket.messages) == 2
     assert flow().websocket.messages[0].content == b"hello world"
     assert flow().websocket.messages[0].from_client
-    assert flow().websocket.messages[0].is_text
+    assert flow().websocket.messages[0].type == Opcode.TEXT
     assert flow().websocket.messages[1].content == b"hello back"
     assert flow().websocket.messages[1].from_client is False
-    assert flow().websocket.messages[1].is_text is False
+    assert flow().websocket.messages[1].type == Opcode.BINARY
 
 
 @pytest.fixture()
@@ -150,7 +151,7 @@ def test_drop_message(ws_testdata):
             >> DataReceived(tctx.server, b"\x81\x03foo")
             << websocket.WebsocketMessageHook(flow)
     )
-    flow.websocket.messages[-1].content = ""
+    flow.websocket.messages[-1].kill()
     assert (
             playbook
             >> reply()

@@ -1,6 +1,7 @@
 from mitmproxy import http
 from mitmproxy import websocket
 from mitmproxy.test import tflow
+from wsproto.frame_protocol import Opcode
 
 
 class TestWebSocketData:
@@ -15,9 +16,13 @@ class TestWebSocketData:
 
 class TestWebSocketMessage:
     def test_basic(self):
-        m = websocket.WebSocketMessage(True, True, b"foo")
+        m = websocket.WebSocketMessage(Opcode.TEXT, True, b"foo")
         m.set_state(m.get_state())
         assert m.content == b"foo"
         assert repr(m) == "'foo'"
-        m.is_text = False
+        m.type = Opcode.BINARY
         assert repr(m) == "b'foo'"
+
+        assert not m.killed
+        m.kill()
+        assert m.killed

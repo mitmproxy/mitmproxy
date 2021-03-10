@@ -11,7 +11,7 @@ from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import Context
 from mitmproxy.proxy.utils import expect
 from wsproto import ConnectionState
-from wsproto.frame_protocol import CloseReason
+from wsproto.frame_protocol import CloseReason, Opcode
 
 
 @dataclass
@@ -96,7 +96,7 @@ class WebsocketLayer(layer.Layer):
         server_extensions = []
 
         # Parse extension headers. We only support deflate at the moment and ignore everything else.
-        assert self.flow.response
+        assert self.flow.response  # satisfy type checker
         ext_header = self.flow.response.headers.get("Sec-WebSocket-Extensions", "")
         if ext_header:
             for ext in wsproto.utilities.split_comma_header(ext_header.encode("ascii", "replace")):
@@ -122,7 +122,7 @@ class WebsocketLayer(layer.Layer):
 
     @expect(events.DataReceived, events.ConnectionClosed)
     def relay_messages(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
-        assert self.flow.websocket
+        assert self.flow.websocket  # satisfy type checker
 
         from_client = event.connection == self.context.client
         from_str = 'client' if from_client else 'server'
@@ -144,8 +144,10 @@ class WebsocketLayer(layer.Layer):
             if isinstance(ws_event, wsproto.events.Message):
                 is_text = isinstance(ws_event.data, str)
                 if is_text:
+                    typ = Opcode.TEXT
                     src_ws.frame_buf.append(ws_event.data.encode())
                 else:
+                    typ = Opcode.BINARY
                     src_ws.frame_buf.append(ws_event.data)
 
                 if ws_event.message_finished:
@@ -154,12 +156,13 @@ class WebsocketLayer(layer.Layer):
                     fragmentizer = Fragmentizer(src_ws.frame_buf, is_text)
                     src_ws.frame_buf.clear()
 
-                    message = websocket.WebSocketMessage(from_client, is_text, content)
+                    message = websocket.WebSocketMessage(typ, from_client, content)
                     self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
 
-                    for msg in fragmentizer(message.content):
-                        yield dst_ws.send2(msg)
+                    if not message.killed:
+                        for msg in fragmentizer(message.content):
+                            yield dst_ws.send2(msg)
 
             elif isinstance(ws_event, (wsproto.events.Ping, wsproto.events.Pong)):
                 yield commands.Log(

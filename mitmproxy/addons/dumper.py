@@ -284,22 +284,21 @@ class Dumper:
         )
 
     def websocket_message(self, f: http.HTTPFlow):
-        assert f.websocket is not None
+        assert f.websocket is not None  # satisfy type checker
         if self.match(f):
             message = f.websocket.messages[-1]
 
             direction = "->" if message.from_client else "<-"
-            typ = "text" if message.is_text else "binary"
             self.echo(
                 f"{human.format_address(f.client_conn.peername)} "
-                f"{direction} WebSocket {typ} message "
+                f"{direction} WebSocket {message.type.name.lower()} message "
                 f"{direction} {human.format_address(f.server_conn.address)}{f.request.path}"
             )
             if ctx.options.flow_detail >= 3:
                 self._echo_message(message, f)
 
     def websocket_end(self, f: http.HTTPFlow):
-        assert f.websocket is not None
+        assert f.websocket is not None  # satisfy type checker
         if self.match(f):
             c = 'client' if f.websocket.close_by_client else 'server'
             self.echo(f"WebSocket connection closed by {c}: {f.websocket.close_code} {f.websocket.close_reason}")

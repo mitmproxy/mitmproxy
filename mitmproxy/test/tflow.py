@@ -7,6 +7,7 @@ from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
 from mitmproxy.test import tutils
+from wsproto.frame_protocol import Opcode
 
 
 def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
@@ -69,9 +70,9 @@ def twebsocketflow(messages=True, err=None) -> http.HTTPFlow:
 
     if messages is True:
         flow.websocket.messages = [
-            websocket.WebSocketMessage(True, False, b"hello binary", 946681203),
-            websocket.WebSocketMessage(True, True, b"hello text", 946681204),
-            websocket.WebSocketMessage(False, True, b"it's me", 946681205),
+            websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary", 946681203),
+            websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text", 946681204),
+            websocket.WebSocketMessage(Opcode.TEXT, False, b"it's me", 946681205),
         ]
     if err is True:
         flow.error = terr()

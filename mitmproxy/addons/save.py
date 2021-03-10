@@ -102,6 +102,8 @@ class Save:
             self.active_flows.add(flow)
 
     def response(self, flow: http.HTTPFlow):
+        # websocket flows will receive either websocket_end or websocket_error,
+        # we don't want to persist them here already
         if self.stream and flow.websocket is None:
             self.stream.add(flow)
             self.active_flows.discard(flow)

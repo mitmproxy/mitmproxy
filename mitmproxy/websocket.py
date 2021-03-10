@@ -6,12 +6,14 @@ as HTTP flows as well. They can be distinguished from regular HTTP requests by h
 This module only defines the classes for individual `WebSocketMessage`s and the `WebSocketData` container.
 """
 import time
-import warnings
-from typing import List
+from typing import List, Tuple, Union
 from typing import Optional
 
 from mitmproxy import stateobject
 from mitmproxy.coretypes import serializable
+from wsproto.frame_protocol import Opcode
+
+WebSocketMessageState = Tuple[int, bool, bytes, float, bool]
 
 
 class WebSocketMessage(serializable.Serializable):
@@ -25,75 +27,63 @@ class WebSocketMessage(serializable.Serializable):
     text and binary messages. To avoid a whole class of nasty type confusion bugs,
     mitmproxy stores all message contents as binary. If you need text, you can decode the `content` property:
 
-    >>> if message.is_text:
+    >>> from wsproto.frame_protocol import Opcode
+    >>> if message.type == Opcode.TEXT:
     >>>     text = message.content.decode()
+
+    Per the WebSocket spec, text messages always use UTF-8 encoding.
     """
 
     from_client: bool
     """True if this messages was sent by the client."""
-    is_text: bool
+    type: Opcode
     """
-    True if the message is a text message, False if the message is a binary message.
+    The message type, as per RFC 6455's [opcode](https://tools.ietf.org/html/rfc6455#section-5.2).
 
-    In either case, mitmproxy will store the message contents as *bytes*.
+    Note that mitmproxy will always store the message contents as *bytes*.
+    A dedicated `.text` property for text messages is planned, see https://github.com/mitmproxy/mitmproxy/pull/4486.
     """
     content: bytes
     """A byte-string representing the content of this message."""
     timestamp: float
     """Timestamp of when this message was received or created."""
+    killed: bool
+    """True if the message has not been forwarded by mitmproxy, False otherwise."""
 
     def __init__(
         self,
+        type: Union[int, Opcode],
         from_client: bool,
-        is_text: bool,
         content: bytes,
         timestamp: Optional[float] = None,
+        killed: bool = False,
     ) -> None:
         self.from_client = from_client
-        self.is_text = is_text
+        self.type = Opcode(type)
         self.content = content
         self.timestamp: float = timestamp or time.time()
+        self.killed = killed
 
     @classmethod
-    def from_state(cls, state):
+    def from_state(cls, state: WebSocketMessageState):
         return cls(*state)
 
-    def get_state(self):
-        return self.from_client, self.is_text, self.content, self.timestamp
+    def get_state(self) -> WebSocketMessageState:
+        return int(self.type), self.from_client, self.content, self.timestamp, self.killed
 
-    def set_state(self, state):
-        self.from_client, self.is_text, self.content, self.timestamp = state
+    def set_state(self, state: WebSocketMessageState) -> None:
+        typ, self.from_client, self.content, self.timestamp, self.killed = state
+        self.type = Opcode(typ)
 
     def __repr__(self):
-        if self.is_text:
+        if self.type == Opcode.TEXT:
             return repr(self.content.decode(errors="replace"))
         else:
             return repr(self.content)
 
-    def kill(self):  # pragma: no cover
-        """
-        Kill this message.
-
-        It will not be sent to the other endpoint.
-        """
-        warnings.warn(
-            "WebSocketMessage.kill is deprecated, set an empty content instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.content = b""
-
-    @property
-    def killed(self) -> bool:  # pragma: no cover
-        """
-        True if this messages was killed and should not be sent to the other endpoint.
-        """
-        warnings.warn(
-            "WebSocketMessage.killed is deprecated, check for an empty content instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return bool(self.content)
+    def kill(self):
+        # Likely to be replaced with .drop() in the future, see https://github.com/mitmproxy/mitmproxy/pull/4486
+        self.killed = True
 
 
 class WebSocketData(stateobject.StateObject):
