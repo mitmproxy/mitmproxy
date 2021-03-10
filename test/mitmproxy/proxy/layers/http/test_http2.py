@@ -30,6 +30,10 @@ example_response_headers = (
     (b':status', b'200'),
 )
 
+example_response_trailers = (
+    (b'my-trailer-b', b'0'),
+    (b'my-trailer-b', b'0')
+)
 
 def decode_frames(data: bytes) -> List[hyperframe.frame.Frame]:
     # swallow preamble
@@ -98,6 +102,50 @@ def test_simple(tctx):
                         cff.build_headers_frame(example_response_headers).serialize() +
                         cff.build_data_frame(b"Hello, World!").serialize() +
                         cff.build_data_frame(b"", flags=["END_STREAM"]).serialize())
+    )
+    assert flow().request.url == "http://example.com/"
+    assert flow().response.text == "Hello, World!"
+
+
+def test_trailers(tctx):
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    initial = Placeholder(bytes)
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers, flags=["END_STREAM"]).serialize())
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None, side_effect=make_h2)
+            << SendData(server, initial)
+    )
+    frames = decode_frames(initial())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.HeadersFrame,
+    ]
+    sff = FrameFactory()
+    assert (
+            playbook
+            # a conforming h2 server would send settings first, we disregard this for now.
+            >> DataReceived(server, sff.build_headers_frame(example_response_headers).serialize())
+            << http.HttpResponseHeadersHook(flow)
+            >> reply()
+            >> DataReceived(server, sff.build_data_frame(b"Hello, World!").serialize())
+            >> DataReceived(server, sff.build_headers_frame(example_response_trailers, flags=["END_STREAM"]).serialize())
+            << http.HttpResponseTrailersHook(flow)
+            >> reply()
+            << http.HttpResponseHook(flow)
+            >> reply()
+            << SendData(tctx.client,
+                        cff.build_headers_frame(example_response_headers).serialize() +
+                        cff.build_data_frame(b"Hello, World!").serialize() +
+                        cff.build_headers_frame(example_response_trailers, flags=["END_STREAM"]).serialize())
     )
     assert flow().request.url == "http://example.com/"
     assert flow().response.text == "Hello, World!"

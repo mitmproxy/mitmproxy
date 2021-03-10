@@ -17,10 +17,10 @@ from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
 from mitmproxy.websocket import WebSocketData
 from ._base import HttpCommand, HttpConnection, ReceiveHttp, StreamId
-from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
+from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, ResponseTrailers, \
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
 from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, HttpRequestHook, HttpResponseHeadersHook, \
-    HttpResponseHook
+    HttpResponseHook, HttpResponseTrailersHook
 from ._http1 import Http1Client, Http1Server
 from ._http2 import Http2Client, Http2Server
 from ...context import Context
@@ -297,10 +297,13 @@ class HttpStream(layer.Layer):
         elif isinstance(event, ResponseEndOfMessage):
             yield from self.send_response(already_streamed=True)
 
-    @expect(ResponseData, ResponseEndOfMessage)
+    @expect(ResponseData, ResponseTrailers, ResponseEndOfMessage)
     def state_consume_response_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, ResponseData):
             self.response_body_buf += event.data
+        elif isinstance(event, ResponseTrailers):
+            self.flow.response.trailers = event.trailers
+            yield HttpResponseTrailersHook(self.flow)
         elif isinstance(event, ResponseEndOfMessage):
             assert self.flow.response
             self.flow.response.data.content = self.response_body_buf
@@ -336,6 +339,8 @@ class HttpStream(layer.Layer):
             yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response, not content), self.context.client)
             if content:
                 yield SendHttp(ResponseData(self.stream_id, content), self.context.client)
+            if self.flow.response.trailers:
+                yield SendHttp(ResponseTrailers(self.stream_id, self.flow.response.trailers, end_stream=True), self.context.client)
 
         yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 

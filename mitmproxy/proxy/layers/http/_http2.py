@@ -17,7 +17,7 @@ from mitmproxy.connection import Connection
 from mitmproxy.net.http import status_codes, url
 from mitmproxy.utils import human
 from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
-    ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
+    ResponseEndOfMessage, ResponseHeaders, ResponseTrailers, ResponseProtocolError
 from ._base import HttpConnection, HttpEvent, ReceiveHttp, format_error
 from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
 from ...commands import CloseConnection, Log, SendData
@@ -97,6 +97,13 @@ class Http2Connection(HttpConnection):
                 assert isinstance(event, (RequestData, ResponseData))
                 if self.is_open_for_us(event.stream_id):
                     self.h2_conn.send_data(event.stream_id, event.data)
+            elif isinstance(event, ResponseTrailers):
+                if self.is_open_for_us(event.stream_id):
+                    trailers = [
+                    *event.trailers.fields
+                    ]
+                    r = event.trailers.fields
+                    self.h2_conn.send_headers(event.stream_id, trailers, event.end_stream)
             elif isinstance(event, self.SendEndOfMessage):
                 if self.is_open_for_us(event.stream_id):
                     self.h2_conn.end_stream(event.stream_id)
@@ -216,7 +223,7 @@ class Http2Connection(HttpConnection):
         elif isinstance(event, h2.events.PingAckReceived):
             pass
         elif isinstance(event, h2.events.TrailersReceived):
-            yield Log("Received HTTP/2 trailers, which are currently unimplemented and silently discarded", "error")
+            yield Log("Received HTTP/2 request trailers, which are currently unimplemented and silently discarded", "error")
         elif isinstance(event, h2.events.PushedStreamReceived):
             yield Log("Received HTTP/2 push promise, even though we signalled no support.", "error")
         elif isinstance(event, h2.events.UnknownFrameReceived):
@@ -448,6 +455,9 @@ class Http2Client(Http2Connection):
             self.streams[event.stream_id] = StreamState.HEADERS_RECEIVED
             yield ReceiveHttp(ResponseHeaders(event.stream_id, response, bool(event.stream_ended)))
             return False
+        elif isinstance(event, h2.events.TrailersReceived):
+            pseudo_trailers, trailers = split_pseudo_headers(event.headers)
+            yield ReceiveHttp(ResponseTrailers(event.stream_id, trailers, bool(event.stream_ended)))
         elif isinstance(event, h2.events.RequestReceived):
             yield from self.protocol_error(f"HTTP/2 protocol error: received request from server")
             return True
