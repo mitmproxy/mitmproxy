@@ -300,7 +300,7 @@ class Dumper:
     def websocket_end(self, f: http.HTTPFlow):
         assert f.websocket is not None  # satisfy type checker
         if self.match(f):
-            c = 'client' if f.websocket.close_by_client else 'server'
+            c = 'client' if f.websocket.closed_by_client else 'server'
             self.echo(f"WebSocket connection closed by {c}: {f.websocket.close_code} {f.websocket.close_reason}")
 
     def tcp_error(self, f):

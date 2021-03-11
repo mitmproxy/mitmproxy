@@ -95,7 +95,7 @@ class WebSocketData(stateobject.StateObject):
     messages: List[WebSocketMessage]
     """All `WebSocketMessage`s transferred over this connection."""
 
-    close_by_client: Optional[bool] = None
+    closed_by_client: Optional[bool] = None
     """
     True if the client closed the connection,
     False if the server closed the connection,
@@ -108,7 +108,7 @@ class WebSocketData(stateobject.StateObject):
 
     _stateobject_attributes = dict(
         messages=List[WebSocketMessage],
-        close_by_client=bool,
+        closed_by_client=bool,
         close_code=int,
         close_reason=str,
     )

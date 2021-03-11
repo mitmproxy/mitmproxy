@@ -4,6 +4,8 @@ import time
 from dataclasses import dataclass
 from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
+import wsproto.handshake
+
 from mitmproxy import flow, http
 from mitmproxy.connection import Connection, Server
 from mitmproxy.net import server_spec
@@ -315,7 +317,7 @@ class HttpStream(layer.Layer):
             and
             self.flow.response.headers.get("upgrade", "").lower() == "websocket"
             and
-            self.flow.request.headers.get("Sec-WebSocket-Version", "") == "13"
+            self.flow.request.headers.get("Sec-WebSocket-Version", "").encode() == wsproto.handshake.WEBSOCKET_VERSION
             and
             self.context.options.websocket
         )
@@ -323,10 +325,6 @@ class HttpStream(layer.Layer):
             # We need to set this before calling the response hook
             # so that addons can determine if a WebSocket connection is following up.
             self.flow.websocket = WebSocketData()
-            if self.flow.request.scheme == "http":
-                self.flow.request.scheme = "ws"
-            elif self.flow.request.scheme == "https":
-                self.flow.request.scheme = "wss"
 
         yield HttpResponseHook(self.flow)
         self.server_state = self.state_done

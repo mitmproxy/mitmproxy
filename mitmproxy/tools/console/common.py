@@ -299,12 +299,8 @@ def colorize_url(url):
     parts = url.split('/', 3)
     if len(parts) < 4 or len(parts[1]) > 0 or parts[0][-1:] != ':':
         return [('error', len(url))]  # bad URL
-    schemes = {
-        'http:': 'scheme_http',
-        'https:': 'scheme_https',
-    }
     return [
-               (schemes.get(parts[0], "scheme_other"), len(parts[0]) - 1),
+               (SCHEME_STYLES.get(parts[0], "scheme_other"), len(parts[0]) - 1),
                ('url_punctuation', 3),  # ://
            ] + colorize_host(parts[2]) + colorize_req('/' + parts[3])
 
@@ -701,6 +697,13 @@ def format_flow(
             response_content_type = None
             duration = None
 
+        scheme = f.request.scheme
+        if f.websocket is not None:
+            if scheme == "https":
+                scheme = "wss"
+            elif scheme == "http":
+                scheme = "ws"
+
         if render_mode in (RenderMode.LIST, RenderMode.DETAILVIEW):
             render_func = format_http_flow_list
         else:
@@ -711,7 +714,7 @@ def format_flow(
             marked=f.marked,
             is_replay=f.is_replay,
             request_method=f.request.method,
-            request_scheme=f.request.scheme,
+            request_scheme=scheme,
             request_host=f.request.pretty_host if hostheader else f.request.host,
             request_path=f.request.path,
             request_url=f.request.pretty_url if hostheader else f.request.url,

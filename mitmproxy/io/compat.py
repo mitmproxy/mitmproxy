@@ -282,17 +282,13 @@ def convert_11_12(data):
                 'type': 'http',
                 'version': 12
             }
-        data["request"]["scheme"] = {
-            b"http": b"ws",
-            b"https": b"wss"
-        }.get(data["request"]["scheme"], data["request"]["scheme"])
         data["metadata"]["duplicated"] = (
             "This WebSocket flow has been migrated from an old file format version "
             "and may appear duplicated."
         )
         data["websocket"] = {
             "messages": ws_flow["messages"],
-            "close_by_client": ws_flow["close_sender"] == "client",
+            "closed_by_client": ws_flow["close_sender"] == "client",
             "close_code": ws_flow["close_code"],
             "close_reason": ws_flow["close_reason"],
         }
