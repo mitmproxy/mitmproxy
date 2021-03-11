@@ -34,7 +34,6 @@ We wanted to bring these improvements out, so we have a few temporary regression
 If you depend on these features, please raise your voice in
 [#4348](https://github.com/mitmproxy/mitmproxy/issues/4348)!
 
-
 ### Full Changelog
 
 * New Proxy Core based on sans-io pattern (@mhils)
@@ -485,7 +484,6 @@ If you depend on these features, please raise your voice in
 * Fix XSS vulnerability in HTTP errors (Will Coster)
 * Numerous bugfixes and minor improvements
 
-
 ## 15 February 2016: mitmproxy 0.16
 
 * Completely revised HTTP2 implementation based on hyper-h2 (Thomas Kriechbaumer)
@@ -643,7 +641,6 @@ If you depend on these features, please raise your voice in
 * Big improvements to fuzzing, including random spec selection and memoization to avoid repeating randomly generated patterns
 * Reflected patterns, allowing you to embed a pathod server response specification in a pathoc request, resolving both on client side. This makes fuzzing proxies and other intermediate systems much better.
 
-
 ## 28 January 2014: mitmproxy 0.10
 
 * Support for multiple scripts and multiple script arguments
@@ -724,7 +721,6 @@ If you depend on these features, please raise your voice in
   targets.
 * Pathoc client certificate support.
 * API improvements, bugfixes.
-
 
 ## 16 November 2012: pathod 0.3
 

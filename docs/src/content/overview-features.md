@@ -7,7 +7,6 @@ menu:
 
 # Features
 
-
 - [Anticache](#anticache)
 - [Client-side replay](#client-side-replay)
 - [Map Local](#map-local)
@@ -21,7 +20,6 @@ menu:
 - [Streaming](#streaming)
 - [Upstream Certificates](#upstream-certificates)
 
-
 ## Anticache
 
 When the `anticache` option is set, it removes headers (`if-none-match` and
@@ -29,7 +27,6 @@ When the `anticache` option is set, it removes headers (`if-none-match` and
 server. This is useful when you want to make sure you capture an HTTP exchange
 in its totality. It's also often used during client-side replay, when you want
 to make sure the server responds with complete data.
-
 
 ## Client-side replay
 
@@ -41,7 +38,6 @@ conversation, where requests may have been made concurrently.
 
 You may want to use client-side replay in conjunction with the `anticache`
 option, to make sure the server responds with complete data.
-
 
 ## Map Local
 
@@ -115,9 +111,6 @@ Served File:                 Preferred: <span style="color:#82b719">~/static-dir
                              Otherwise: 404 response without content
 </pre>
 
-
-
-
 ## Map Remote
 
 The `map_remote` option lets you specify an arbitrary number of patterns that
@@ -158,7 +151,6 @@ Re-route all GET requests from `example.org` to `mitmproxy.org` (using `|` as th
 ```
 |~m GET|//example.org/|//mitmproxy.org/
 ```
-
 
 ## Modify Body
 
@@ -203,7 +195,6 @@ Replace `foo` with the data read from `~/xss-exploit`:
 ```bash
 mitmdump --modify-body :~q:foo:@~/xss-exploit
 ```
-
 
 ## Modify Headers
 
@@ -277,7 +268,7 @@ upstream servers. For now, only HTTP Basic Authentication is supported.
 Proxy Authentication does not work well in transparent proxy mode by design
 because the client is not aware that it is talking to a proxy.
 Mitmproxy will re-request credentials for every individual domain.
-SOCKS proxy authentication is currently unimplemented 
+SOCKS proxy authentication is currently unimplemented
 ([#738](https://github.com/mitmproxy/mitmproxy/issues/738)).
 
 ## Server-side replay
@@ -322,7 +313,6 @@ then the respective recorded responses are simply replayed by mitmproxy.
 Otherwise, the unmatched requests is forwarded to the upstream server. If
 forwarding is not desired, you can use the --kill (-k) switch to prevent that.
 
-
 ## Sticky auth
 
 The `stickyauth` option is analogous to the sticky cookie option, in that HTTP
@@ -331,7 +321,6 @@ seen. This is enough to allow you to access a server resource using HTTP Basic
 authentication through the proxy. Note that <span
 data-role="program">mitmproxy</span> doesn't (yet) support replay of HTTP Digest
 authentication.
-
 
 ## Sticky cookies
 
@@ -349,7 +338,6 @@ Sticky cookies are especially powerful when used in conjunction with [client
 replay]({{< relref "#client-side-replay" >}}) - you can record the
 authentication process once, and simply replay it on startup every time you need
 to interact with the secured resources.
-
 
 ## Streaming
 
@@ -379,7 +367,6 @@ changes to the WebSocket message payloads will not have any effect on the actual
 payload sent to the server as the frames are immediately forwarded to the
 server. In contrast to HTTP streaming, where the body is not stored, the message
 payload will still be stored in the WebSocket flow.
-
 
 ## Upstream Certificates
 

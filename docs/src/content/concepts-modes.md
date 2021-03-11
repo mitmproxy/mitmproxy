@@ -17,7 +17,6 @@ Now, which one should you pick? Use this flow chart:
 
 {{< figure src="/schematics/proxy-modes-flowchart.png" >}}
 
-
 ## Regular Proxy
 
 Mitmproxy's regular mode is the simplest and the easiest to set up.
@@ -183,7 +182,6 @@ One possible way to address this is to modify the hosts file of your OS so that
 directly to example.com. Make sure that your proxy can still resolve the
 original IP, or specify an IP in mitmproxy.
 
-
 {{% note %}}
 
 ### Caveat: Interactive Use
@@ -194,7 +192,6 @@ remains unchanged - as soon as the user clicks on an non-relative URL
 (or downloads a non-relative image resource), traffic no longer passes
 through mitmproxy.
 {{% /note %}}
-
 
 ## Upstream Proxy
 
@@ -209,7 +206,6 @@ mitmproxy supports both explicit HTTP and explicit HTTPS in upstream
 proxy mode. You could in theory chain multiple mitmproxy instances in a
 row, but that doesn't make any sense in practice (i.e. outside of our
 tests).
-
 
 ## SOCKS Proxy
 

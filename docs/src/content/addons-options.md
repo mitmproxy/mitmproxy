@@ -18,7 +18,6 @@ presenting typed values for editing in interactive programs. Attempting to set a
 value with the wrong type will result in an error. This means that addon options
 get full support throughout mitmproxy's toolchain simply by declaring a type.
 
-
 ## Simple example
 
 {{< example src="examples/addons/options-simple.py" lang="py" >}}
@@ -62,7 +61,6 @@ using the `--set` flag:
 mitmproxy -s ./examples/addons/options-simple.py --set addheader=true
 ```
 
-
 ## Handling configuration updates
 
 Sometimes, simply testing the value of an option from an event is not
@@ -90,7 +88,6 @@ now see an error:
 Loading script: ./examples/addons/options-configure.py
 /Users/cortesi/mitmproxy/mitmproxy/venv/bin/mitmdump: addheader must be <= 100
 ```
-
 
 ## Supported Types
 

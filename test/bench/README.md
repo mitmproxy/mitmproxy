@@ -4,7 +4,6 @@ the moment, this is simply to give developers a quick way to see the impact of
 their work. Eventually, this might grow into a performance dashboard with
 historical data, so we can track performance over time.
 
-
 # Setup
 
 Install the following tools:
@@ -23,4 +22,3 @@ Now run the benchmark by loading the addon. A typical invocation is as follows:
 
 This will start up the backend server, run the benchmark, save the results to
 /tmp/foo.bench and /tmp/foo.prof, and exit.
-

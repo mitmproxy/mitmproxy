@@ -33,13 +33,10 @@ This is a proxy GET request - an extended form of the vanilla HTTP GET
 request that includes a schema and host specification, and it includes
 all the information mitmproxy needs to proceed.
 
-
 {{< figure src="/schematics/how-mitmproxy-works-explicit.png" title="Explicit" >}}
-
 
 1. The client connects to the proxy and makes a request.
 2. Mitmproxy connects to the upstream server and simply forwards the request on.
-
 
 ## Explicit HTTPS
 
