@@ -19,7 +19,6 @@ header with a count of the number of responses seen:
 
 {{< example src="examples/addons/http-add-header.py" lang="py" >}}
 
-
 ## Available Hooks
 
 The following addons list all available event hooks.

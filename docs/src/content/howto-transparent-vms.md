@@ -24,11 +24,9 @@ Usually with Ubuntu and Virtualbox, **eth0** or **enp0s3** (Ubuntu 15.10 and new
 
 ### VirtualBox configuration
 
-
 {{< figure src="/transparent-vms/step1_vbox_eth0.png" >}}
 
 {{< figure src="/transparent-vms/step1_vbox_eth1.png" >}}
-
 
 ### VM Network Configuration
 

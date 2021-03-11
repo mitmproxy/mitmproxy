@@ -10,7 +10,6 @@ menu:
 
 mitmproxy is a set of tools that provide an interactive, SSL/TLS-capable intercepting proxy for HTTP/1, HTTP/2, and WebSockets.
 
-
 ## Features
 
 - Intercept HTTP & HTTPS requests and responses and modify them on the fly
@@ -22,7 +21,6 @@ mitmproxy is a set of tools that provide an interactive, SSL/TLS-capable interce
 - Make scripted changes to HTTP traffic using Python
 - SSL/TLS certificates for interception are generated on the fly
 - And [much, much more...]({{< relref "overview-features">}})
-
 
 ## 3 Powerful Core Tools
 
@@ -77,7 +75,6 @@ tcpdump-like functionality to let you view, record, and programmatically
 transform HTTP traffic. See the `--help` flag output for complete
 documentation.
 
-
 #### Example: Saving traffic
 
 ```bash
@@ -131,4 +128,3 @@ mitmdump -ns examples/simple/add_header.py -r srcfile -w dstfile
 
 This command loads flows from **srcfile**, transforms it according to
 the specified script, then writes it back to **dstfile**.
-

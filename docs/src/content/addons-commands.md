@@ -14,7 +14,6 @@ invocations and data returned from commands are checked at runtime. Commands are
 a very powerful construct - for instance, all user interaction in mitmproxy
 console are built by binding commands to keys.
 
-
 ## Simple example
 
 Let's begin with a simple example.
@@ -45,7 +44,6 @@ builtin commands. There are a few things to note about this example:
   its toolset - runtime invocations are type checked, addon commands are
   included in the built-in help, the command editor in mitmproxy console can
   perform sophisticated completion and error checking, and so forth.
-
 
 ## Working with flows
 
@@ -95,7 +93,6 @@ mitmproxy if we plan to use them frequently. Flow selectors combined with
 commands are amazingly powerful, and lets us build and expose re-usable functions
 for operating on flows.
 
-
 ## Paths
 
 Commands can take an arbitrary number of arguments. Let's build on the previous
@@ -113,8 +110,6 @@ command. Try invoking it like this:
 
 Notice that mitmproxy provides tab completion both for the flow specification
 and the path.
-
-
 
 ## Supported Types
 

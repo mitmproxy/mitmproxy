@@ -23,7 +23,6 @@ If you want to peek into (SSL-protected) non-HTTP connections, check out the
 **tcp_proxy** feature. If you want to ignore traffic from mitmproxy's processing
 because of large response bodies, take a look at the [streaming]({{< relref "overview-features#streaming" >}}) feature.
 
-
 ## ignore_hosts
 
 The `ignore_hosts` option allows you to specify a regex which is matched against
@@ -34,7 +33,6 @@ are excluded from interception, and passed on unmodified.
 | ------------------ | ------------------------------------------------------------------ |
 | command-line alias | `--ignore-hosts regex`                                             |
 | mitmproxy option   | `ignore_hosts` |
-
 
 ## Limitations
 
@@ -58,7 +56,6 @@ method to do so:
     information in the serverconnect messages. mitmproxy will filter on these.
 2. Take the `host:port` string, surround it with ^ and $, escape all dots (.
     becomes \\.) and use this as your ignore pattern:
-
 
 ```
 >>> mitmdump -v

@@ -12,7 +12,6 @@ This directory houses the mitmproxy documentation available at <https://docs.mit
 
 Now you can run `hugo server -D` in ./src.
 
-
 ## Extended Install
 
 This is required to modify CSS files.

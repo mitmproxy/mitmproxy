@@ -1,4 +1,3 @@
-
 ---
 title: "Examples"
 menu:

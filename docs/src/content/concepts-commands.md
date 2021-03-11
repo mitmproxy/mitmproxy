@@ -21,7 +21,6 @@ all registered commands, their arguments and their return values to screen. In
 mimtproxy console you can also view a palette of all commands in the command
 browser (by default accessible with the `C` key binding).
 
-
 # Working with Flows
 
 Many of mitmproxy's commands take flows as arguments. For instance, the
@@ -30,7 +29,6 @@ signature for the client replay commands looks like this:
 ```
 replay.client [flow]
 ```
-
 
 That means that it expects a sequence of one or more flows. This is where [flow
 specifications]({{< relref concepts-filters >}}) come in - mitmproxy will

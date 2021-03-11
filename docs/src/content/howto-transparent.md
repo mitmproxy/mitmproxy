@@ -26,7 +26,6 @@ connection.
 At the moment, mitmproxy supports transparent proxying on OSX Lion and above,
 and all current flavors of Linux.
 
-
 ## Linux
 
 On Linux, mitmproxy integrates with the iptables redirection mechanism to
@@ -107,11 +106,10 @@ ip6tables -t nat -A OUTPUT -p tcp -m owner ! --uid-owner mitmproxyuser --dport 4
 ```
 
 This will redirect the packets from all users other than `mitmproxyuser` on the machine to mitmproxy. To avoid circularity, run mitmproxy as the user `mitmproxyuser`. Hence step **4** should look like:
+
 ```bash
 sudo -u mitmproxyuser -H bash -c '$HOME/.local/bin/mitmproxy --mode transparent --showhost --set block_global=false'
 ```
-
-
 
 ## OpenBSD
 
@@ -160,8 +158,6 @@ mitmproxy to use the value of the Host header for URL display.
 Set the test device up to use the host on which mitmproxy is running as the default gateway and
 [install the mitmproxy certificate authority on the test device]({{< relref "concepts-certificates" >}}).
 
-
-
 {{% note %}}
 Note that the **divert-to** rules in the pf.conf given above only apply
 to inbound traffic. **This means that they will NOT redirect traffic
@@ -173,7 +169,6 @@ flexible to cater for a range of creative possibilities, like
 intercepting traffic emanating from VMs. See the **pf.conf** man page
 for more.
 {{% /note %}}
-
 
 ## macOS
 
@@ -189,7 +184,6 @@ sudo sysctl -w net.inet.ip.forwarding=1
 ```
 
 ### 2. Place the following line in a file called, say, **pf.conf**.
-
 
 ```
 rdr pass on en0 inet proto tcp to any port {80, 443} -> 127.0.0.1 port 8080

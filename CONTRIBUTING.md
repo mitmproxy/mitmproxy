@@ -14,10 +14,11 @@ forward, please consider contributing in the following areas:
 
 ## Development Setup
 
-To get started hacking on mitmproxy, please install a recent version of Python (we require at least Python 3.8). 
+To get started hacking on mitmproxy, please install a recent version of Python (we require at least Python 3.8).
 Then, do the following:
 
 ##### Linux / macOS
+
 ```shell
 # 1) Verify that these commands work:
 python3 --version
@@ -31,6 +32,7 @@ venv/bin/pip install -e ".[dev]"
 ```
 
 ##### Windows
+
 ```shell
 # 1) Verify that this command works:
 python --version
@@ -49,12 +51,14 @@ The main executables for the project – `mitmdump`, `mitmproxy`, and `mitmweb` 
 After activating the virtualenv, they will be on your $PATH, and you can run them like any other command:
 
 ##### Linux / macOS
+
 ```shell
 source venv/bin/activate
 mitmdump --version
 ```
 
 ##### Windows
+
 ```shell
 venv\Scripts\activate
 mitmdump --version
