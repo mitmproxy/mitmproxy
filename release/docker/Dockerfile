@@ -13,7 +13,7 @@ RUN pip3 install --no-cache-dir -U /home/mitmproxy/${MITMPROXY_WHEEL} \
 
 VOLUME /home/mitmproxy/.mitmproxy
 
-COPY release/docker/docker-entrypoint.sh /usr/local/bin/
+COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 EXPOSE 8080 8081
