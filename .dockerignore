@@ -1,0 +1,3 @@
+*
+!release/docker/docker-entrypoint.sh
+!**/*.whl
