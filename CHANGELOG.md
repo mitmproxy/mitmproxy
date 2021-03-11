@@ -37,7 +37,6 @@ If you depend on these features, please raise your voice in
 
 ### Full Changelog
 
-* Switch Docker image release to be based on Debian (@PeterDaveHello)
 * New Proxy Core based on sans-io pattern (@mhils)
 * mitmproxy's command line interface now supports Windows (@mhils)
 * The `clientconnect`, `clientdisconnect`, `serverconnect`, `serverdisconnect`, and `log`
@@ -58,6 +57,7 @@ If you depend on these features, please raise your voice in
 * Fix SNI-related reproducibility issues when exporting to curl/httpie commands. (@dkasak)
 * Add option `export_preserve_original_ip` to force exported command to connect to IP from original request. Only supports curl at the moment. (@dkasak)
 * Major proxy protocol testing (@r00t-)
+* Switch Docker image release to be based on Debian (@PeterDaveHello)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
