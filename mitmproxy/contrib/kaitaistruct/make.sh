@@ -10,4 +10,4 @@ wget -N https://raw.githubusercontent.com/kaitai-io/kaitai_struct_formats/master
 wget -N https://raw.githubusercontent.com/kaitai-io/kaitai_struct_formats/master/common/vlq_base128_le.ksy
 wget -N https://raw.githubusercontent.com/kaitai-io/kaitai_struct_formats/master/serialization/google_protobuf.ksy
 
-kaitai-struct-compiler --target python --opaque-types=true *.ksy
+kaitai-struct-compiler --target python --opaque-types=true ./*.ksy
