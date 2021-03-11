@@ -250,6 +250,55 @@ def convert_10_11(data):
     return data
 
 
+_websocket_handshakes = {}
+
+
+def convert_11_12(data):
+    data["version"] = 12
+
+    if "websocket" in data["metadata"]:
+        _websocket_handshakes[data["id"]] = data
+
+    if "websocket_handshake" in data["metadata"]:
+        ws_flow = data
+        try:
+            data = _websocket_handshakes.pop(data["metadata"]["websocket_handshake"])
+        except KeyError:
+            # The handshake flow is missing, which should never really happen. We make up a dummy.
+            data = {
+                'client_conn': data["client_conn"],
+                'error': data["error"],
+                'id': data["id"],
+                'intercepted': data["intercepted"],
+                'is_replay': data["is_replay"],
+                'marked': data["marked"],
+                'metadata': {},
+                'mode': 'transparent',
+                'request': {'authority': b'', 'content': None, 'headers': [], 'host': b'unknown',
+                            'http_version': b'HTTP/1.1', 'method': b'GET', 'path': b'/', 'port': 80, 'scheme': b'http',
+                            'timestamp_end': 0, 'timestamp_start': 0, 'trailers': None, },
+                'response': None,
+                'server_conn': data["server_conn"],
+                'type': 'http',
+                'version': 12
+            }
+        data["metadata"]["duplicated"] = (
+            "This WebSocket flow has been migrated from an old file format version "
+            "and may appear duplicated."
+        )
+        data["websocket"] = {
+            "messages": ws_flow["messages"],
+            "closed_by_client": ws_flow["close_sender"] == "client",
+            "close_code": ws_flow["close_code"],
+            "close_reason": ws_flow["close_reason"],
+        }
+
+    else:
+        data["websocket"] = None
+
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -308,6 +357,7 @@ converters = {
     8: convert_8_9,
     9: convert_9_10,
     10: convert_10_11,
+    11: convert_11_12,
 }
 
 
@@ -325,8 +375,8 @@ def migrate_flow(flow_data: Dict[Union[bytes, str], Any]) -> Dict[Union[bytes, s
             flow_data = converters[flow_version](flow_data)
         else:
             should_upgrade = (
-                    isinstance(flow_version, int)
-                    and flow_version > version.FLOW_FORMAT_VERSION
+                isinstance(flow_version, int)
+                and flow_version > version.FLOW_FORMAT_VERSION
             )
             raise ValueError(
                 "{} cannot read files with flow format version {}{}.".format(

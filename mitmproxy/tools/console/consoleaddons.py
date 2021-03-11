@@ -42,25 +42,6 @@ console_flowlist_layout = [
 ]
 
 
-class UnsupportedLog:
-    """
-        A small addon to dump info on flow types we don't support yet.
-    """
-
-    def websocket_message(self, f):
-        message = f.messages[-1]
-        ctx.log.info(f.message_info(message))
-        ctx.log.debug(
-            message.content if isinstance(message.content, str) else strutils.bytes_to_escaped_str(message.content))
-
-    def websocket_end(self, f):
-        ctx.log.info("WebSocket connection closed by {}: {} {}, {}".format(
-            f.close_sender,
-            f.close_code,
-            f.close_message,
-            f.close_reason))
-
-
 class ConsoleAddon:
     """
         An addon that exposes console-specific commands, and hooks into required
@@ -226,11 +207,11 @@ class ConsoleAddon:
 
     @command.command("console.choose")
     def console_choose(
-            self,
-            prompt: str,
-            choices: typing.Sequence[str],
-            cmd: mitmproxy.types.Cmd,
-            *args: mitmproxy.types.CmdArgs
+        self,
+        prompt: str,
+        choices: typing.Sequence[str],
+        cmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Prompt the user to choose from a specified list of strings, then
@@ -252,11 +233,11 @@ class ConsoleAddon:
 
     @command.command("console.choose.cmd")
     def console_choose_cmd(
-            self,
-            prompt: str,
-            choicecmd: mitmproxy.types.Cmd,
-            subcmd: mitmproxy.types.Cmd,
-            *args: mitmproxy.types.CmdArgs
+        self,
+        prompt: str,
+        choicecmd: mitmproxy.types.Cmd,
+        subcmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Prompt the user to choose from a list of strings returned by a
@@ -415,8 +396,8 @@ class ConsoleAddon:
         flow.backup()
 
         require_dummy_response = (
-                flow_part in ("response-headers", "response-body", "set-cookies") and
-                flow.response is None
+            flow_part in ("response-headers", "response-body", "set-cookies") and
+            flow.response is None
         )
         if require_dummy_response:
             flow.response = http.Response.make()
@@ -584,11 +565,11 @@ class ConsoleAddon:
 
     @command.command("console.key.bind")
     def key_bind(
-            self,
-            contexts: typing.Sequence[str],
-            key: str,
-            cmd: mitmproxy.types.Cmd,
-            *args: mitmproxy.types.CmdArgs
+        self,
+        contexts: typing.Sequence[str],
+        key: str,
+        cmd: mitmproxy.types.Cmd,
+        *args: mitmproxy.types.CmdArgs
     ) -> None:
         """
             Bind a shortcut key.

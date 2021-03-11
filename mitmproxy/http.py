@@ -18,6 +18,7 @@ from typing import Union
 from typing import cast
 
 from mitmproxy import flow
+from mitmproxy.websocket import WebSocketData
 from mitmproxy.coretypes import multidict
 from mitmproxy.coretypes import serializable
 from mitmproxy.net import encoding
@@ -1169,6 +1170,11 @@ class HTTPFlow(flow.Flow):
     from the server, but there was an error sending it back to the client.
     """
 
+    websocket: Optional[WebSocketData] = None
+    """
+    If this HTTP flow initiated a WebSocket connection, this attribute contains all associated WebSocket data.
+    """
+
     def __init__(self, client_conn, server_conn, live=None, mode="regular"):
         super().__init__("http", client_conn, server_conn, live)
         self.mode = mode
@@ -1178,12 +1184,13 @@ class HTTPFlow(flow.Flow):
     _stateobject_attributes.update(dict(
         request=Request,
         response=Response,
+        websocket=WebSocketData,
         mode=str
     ))
 
     def __repr__(self):
         s = "<HTTPFlow"
-        for a in ("request", "response", "error", "client_conn", "server_conn"):
+        for a in ("request", "response", "websocket", "error", "client_conn", "server_conn"):
             if getattr(self, a, False):
                 s += f"\r\n  {a} = {{flow.{a}}}"
         s += ">"

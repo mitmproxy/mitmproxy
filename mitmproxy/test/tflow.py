@@ -6,7 +6,6 @@ from mitmproxy import flow
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
-from mitmproxy.net.http import status_codes
 from mitmproxy.test import tutils
 from wsproto.frame_protocol import Opcode
 
@@ -31,68 +30,55 @@ def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):
     return f
 
 
-def twebsocketflow(client_conn=True, server_conn=True, messages=True, err=None, handshake_flow=True):
-    if client_conn is True:
-        client_conn = tclient_conn()
-    if server_conn is True:
-        server_conn = tserver_conn()
-    if handshake_flow is True:
-        req = http.Request(
-            "example.com",
-            80,
-            b"GET",
-            b"http",
-            b"example.com",
-            b"/ws",
-            b"HTTP/1.1",
-            headers=http.Headers(
-                connection="upgrade",
-                upgrade="websocket",
-                sec_websocket_version="13",
-                sec_websocket_key="1234",
-            ),
-            content=b'',
-            trailers=None,
-            timestamp_start=946681200,
-            timestamp_end=946681201,
+def twebsocketflow(messages=True, err=None) -> http.HTTPFlow:
+    flow = http.HTTPFlow(tclient_conn(), tserver_conn())
+    flow.request = http.Request(
+        "example.com",
+        80,
+        b"GET",
+        b"http",
+        b"example.com",
+        b"/ws",
+        b"HTTP/1.1",
+        headers=http.Headers(
+            connection="upgrade",
+            upgrade="websocket",
+            sec_websocket_version="13",
+            sec_websocket_key="1234",
+        ),
+        content=b'',
+        trailers=None,
+        timestamp_start=946681200,
+        timestamp_end=946681201,
 
-        )
-        resp = http.Response(
-            b"HTTP/1.1",
-            101,
-            reason=status_codes.RESPONSES.get(101),
-            headers=http.Headers(
-                connection='upgrade',
-                upgrade='websocket',
-                sec_websocket_accept=b'',
-            ),
-            content=b'',
-            trailers=None,
-            timestamp_start=946681202,
-            timestamp_end=946681203,
-        )
-        handshake_flow = http.HTTPFlow(client_conn, server_conn)
-        handshake_flow.request = req
-        handshake_flow.response = resp
-
-    f = websocket.WebSocketFlow(client_conn, server_conn, handshake_flow)
-    f.metadata['websocket_handshake'] = handshake_flow.id
-    handshake_flow.metadata['websocket_flow'] = f.id
-    handshake_flow.metadata['websocket'] = True
+    )
+    flow.response = http.Response(
+        b"HTTP/1.1",
+        101,
+        reason=b"Switching Protocols",
+        headers=http.Headers(
+            connection='upgrade',
+            upgrade='websocket',
+            sec_websocket_accept=b'',
+        ),
+        content=b'',
+        trailers=None,
+        timestamp_start=946681202,
+        timestamp_end=946681203,
+    )
+    flow.websocket = websocket.WebSocketData()
 
     if messages is True:
-        messages = [
-            websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary"),
-            websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text"),
-            websocket.WebSocketMessage(Opcode.TEXT, False, b"it's me"),
+        flow.websocket.messages = [
+            websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary", 946681203),
+            websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text", 946681204),
+            websocket.WebSocketMessage(Opcode.TEXT, False, b"it's me", 946681205),
         ]
     if err is True:
-        err = terr()
+        flow.error = terr()
 
-    f.messages = messages
-    f.error = err
-    f.reply = controller.DummyReply()
-    return f
+    flow.reply = controller.DummyReply()
+    return flow
 
 
 def tflow(client_conn=True, server_conn=True, req=True, resp=None, err=None):

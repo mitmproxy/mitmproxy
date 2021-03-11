@@ -55,11 +55,11 @@ def test_websocket(tmpdir):
         tctx.configure(sa, save_stream_file=p)
 
         f = tflow.twebsocketflow()
-        sa.websocket_start(f)
+        sa.request(f)
         sa.websocket_end(f)
 
         f = tflow.twebsocketflow()
-        sa.websocket_start(f)
+        sa.request(f)
         sa.websocket_error(f)
 
         tctx.configure(sa, save_stream_file=None)

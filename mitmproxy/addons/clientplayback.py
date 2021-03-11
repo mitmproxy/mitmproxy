@@ -145,6 +145,8 @@ class ClientPlayback:
                 return "Can't replay flow with missing request."
             if f.request.raw_content is None:
                 return "Can't replay flow with missing content."
+            if f.websocket is not None:
+                return "Can't replay WebSocket flows."
         else:
             return "Can only replay HTTP flows."
         return None

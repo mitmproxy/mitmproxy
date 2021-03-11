@@ -53,7 +53,6 @@ class ConsoleMaster(master.Master):
             intercept.Intercept(),
             self.view,
             self.events,
-            consoleaddons.UnsupportedLog(),
             readfile.ReadFile(),
             consoleaddons.ConsoleAddon(self),
             keymap.KeymapConfig(),

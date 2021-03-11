@@ -5,17 +5,17 @@ from mitmproxy import ctx
 
 def websocket_message(flow):
     # get the latest message
-    message = flow.messages[-1]
+    message = flow.websocket.messages[-1]
 
     # was the message sent from the client or server?
     if message.from_client:
-        ctx.log.info(f"Client sent a message: {message.content}")
+        ctx.log.info(f"Client sent a message: {message.content!r}")
     else:
-        ctx.log.info(f"Server sent a message: {message.content}")
+        ctx.log.info(f"Server sent a message: {message.content!r}")
 
     # manipulate the message content
-    message.content = re.sub(r'^Hello', 'HAPPY', message.content)
+    message.content = re.sub(rb'^Hello', b'HAPPY', message.content)
 
-    if 'FOOBAR' in message.content:
+    if b'FOOBAR' in message.content:
         # kill the message and not send it to the other endpoint
         message.content = ""

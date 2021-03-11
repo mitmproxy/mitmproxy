@@ -23,7 +23,7 @@ class Palette:
 
         # List and Connections
         'method_get', 'method_post', 'method_delete', 'method_other', 'method_head', 'method_put', 'method_http2_push',
-        'scheme_http', 'scheme_https', 'scheme_tcp', 'scheme_other',
+        'scheme_http', 'scheme_https', 'scheme_ws', 'scheme_wss', 'scheme_tcp', 'scheme_other',
         'url_punctuation', 'url_domain', 'url_filename', 'url_extension', 'url_query_key', 'url_query_value',
         'content_none', 'content_text', 'content_script', 'content_media', 'content_data', 'content_raw', 'content_other',
         'focus',
@@ -136,6 +136,8 @@ class LowDark(Palette):
 
         scheme_http = ('dark cyan', 'default'),
         scheme_https = ('dark green', 'default'),
+        scheme_ws=('brown', 'default'),
+        scheme_wss=('dark magenta', 'default'),
         scheme_tcp=('dark magenta', 'default'),
         scheme_other = ('dark magenta', 'default'),
 
@@ -245,6 +247,8 @@ class LowLight(Palette):
 
         scheme_http = ('dark cyan', 'default'),
         scheme_https = ('light green', 'default'),
+        scheme_ws=('brown', 'default'),
+        scheme_wss=('light magenta', 'default'),
         scheme_tcp=('light magenta', 'default'),
         scheme_other = ('light magenta', 'default'),
 
@@ -373,6 +377,8 @@ class SolarizedLight(LowLight):
 
         scheme_http = (sol_cyan, 'default'),
         scheme_https = ('light green', 'default'),
+        scheme_ws=(sol_orange, 'default'),
+        scheme_wss=('light magenta', 'default'),
         scheme_tcp=('light magenta', 'default'),
         scheme_other = ('light magenta', 'default'),
 

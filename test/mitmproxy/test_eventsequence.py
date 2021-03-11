@@ -27,14 +27,20 @@ def test_http_flow(resp, err):
 def test_websocket_flow(err):
     f = tflow.twebsocketflow(err=err)
     i = eventsequence.iterate(f)
+
+    assert isinstance(next(i), layers.http.HttpRequestHeadersHook)
+    assert isinstance(next(i), layers.http.HttpRequestHook)
+    assert isinstance(next(i), layers.http.HttpResponseHeadersHook)
+    assert isinstance(next(i), layers.http.HttpResponseHook)
+
     assert isinstance(next(i), layers.websocket.WebsocketStartHook)
-    assert len(f.messages) == 0
+    assert len(f.websocket.messages) == 0
     assert isinstance(next(i), layers.websocket.WebsocketMessageHook)
-    assert len(f.messages) == 1
+    assert len(f.websocket.messages) == 1
     assert isinstance(next(i), layers.websocket.WebsocketMessageHook)
-    assert len(f.messages) == 2
+    assert len(f.websocket.messages) == 2
     assert isinstance(next(i), layers.websocket.WebsocketMessageHook)
-    assert len(f.messages) == 3
+    assert len(f.websocket.messages) == 3
     if err:
         assert isinstance(next(i), layers.websocket.WebsocketErrorHook)
     else:
