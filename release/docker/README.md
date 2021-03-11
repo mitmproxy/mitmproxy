@@ -5,7 +5,7 @@ Containerized version of [mitmproxy](https://mitmproxy.org/): an interactive, SS
 # Usage
 
 ```sh
-$ docker run --rm -it [-v ~/.mitmproxy:/home/mitmproxy/.mitmproxy] -p 8080:8080 mitmproxy/mitmproxy
+$ docker run --rm -it -e HOME=/home/mitmproxy [-v $HOME/.mitmproxy:/home/mitmproxy/.mitmproxy] -p 8080:8080 mitmproxy/mitmproxy
 ```
 The *volume mount* is optional: It's to store the generated CA certificates.
 
