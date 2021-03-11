@@ -37,6 +37,7 @@ If you depend on these features, please raise your voice in
 
 ### Full Changelog
 
+* Switch Docker image release to be based on Debian (@PeterDaveHello)
 * New Proxy Core based on sans-io pattern (@mhils)
 * mitmproxy's command line interface now supports Windows (@mhils)
 * The `clientconnect`, `clientdisconnect`, `serverconnect`, `serverdisconnect`, and `log`

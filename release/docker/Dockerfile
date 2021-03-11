@@ -1,36 +1,17 @@
-FROM alpine:3.12
-
-ENV LANG=en_US.UTF-8
+FROM python:3.9-slim-buster
 
 ARG WHEEL_MITMPROXY
 ARG WHEEL_BASENAME_MITMPROXY
 
+RUN useradd -mU mitmproxy
 COPY $WHEEL_MITMPROXY /home/mitmproxy/
 
-# Add our user first to make sure the ID get assigned consistently,
-# regardless of whatever dependencies get added.
-RUN addgroup -S mitmproxy && adduser -S -G mitmproxy mitmproxy \
-    && apk add --no-cache \
-        su-exec \
-        git \
-        g++ \
-        libffi \
-        libffi-dev \
-        libstdc++ \
-        openssl \
-        openssl-dev \
-        python3 \
-        python3-dev \
-    && python3 -m ensurepip --upgrade \
-    && pip3 install -U pip \
-    && LDFLAGS=-L/lib pip3 install -U /home/mitmproxy/${WHEEL_BASENAME_MITMPROXY} \
-    && apk del --purge \
-        git \
-        g++ \
-        libffi-dev \
-        openssl-dev \
-        python3-dev \
-    && rm -rf ~/.cache/pip /home/mitmproxy/${WHEEL_BASENAME_MITMPROXY}
+RUN pip3 install --no-cache-dir -U /home/mitmproxy/${WHEEL_BASENAME_MITMPROXY} \
+    && rm -rf /home/mitmproxy/${WHEEL_BASENAME_MITMPROXY}
+
+RUN apt-get update \
+    && apt-get install -y gosu \
+    && rm -rf /var/lib/apt/lists/*
 
 VOLUME /home/mitmproxy/.mitmproxy
 
