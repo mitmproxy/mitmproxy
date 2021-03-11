@@ -1,6 +1,4 @@
-
 ---
-
 title: "Examples"
 menu:
     addons:
