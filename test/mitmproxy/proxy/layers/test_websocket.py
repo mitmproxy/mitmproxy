@@ -11,7 +11,8 @@ from mitmproxy.proxy.commands import SendData, CloseConnection, Log
 from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.events import DataReceived, ConnectionClosed
 from mitmproxy.proxy.layers import http, websocket
-from mitmproxy.websocket import WebSocketData
+from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
+from mitmproxy.websocket import WebSocketData, WebSocketMessage
 from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply
 from wsproto.frame_protocol import Opcode
 
@@ -319,3 +320,21 @@ class TestFragmentizer:
             wsproto.events.BytesMessage(b"foob", message_finished=False),
             wsproto.events.BytesMessage(b"ar", message_finished=True),
         ]
+
+
+def test_inject_message(ws_testdata):
+    tctx, playbook, flow = ws_testdata
+    assert (
+            playbook
+            << websocket.WebsocketStartHook(flow)
+            >> reply()
+            >> WebSocketMessageInjected(tctx.server, WebSocketMessage(Opcode.TEXT, False, b"hello"))
+            << websocket.WebsocketMessageHook(flow)
+    )
+    assert flow.websocket.messages[-1].content == b"hello"
+    assert flow.websocket.messages[-1].from_client is False
+    assert (
+            playbook
+            >> reply()
+            << SendData(tctx.client, b"\x81\x05hello")
+    )

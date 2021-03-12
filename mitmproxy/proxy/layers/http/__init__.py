@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
 import wsproto.handshake
-
 from mitmproxy import flow, http
 from mitmproxy.connection import Connection, Server
 from mitmproxy.net import server_spec
@@ -21,7 +20,7 @@ from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders
     ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
 from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, HttpRequestHook, HttpResponseHeadersHook, \
     HttpResponseHook
-from ._http1 import Http1Client, Http1Server
+from ._http1 import Http1Client, Http1Connection, Http1Server
 from ._http2 import Http2Client, Http2Server
 from ...context import Context
 
@@ -115,13 +114,16 @@ class HttpStream(layer.Layer):
         self.stream_id = stream_id
 
     def __repr__(self):
-        return (
-            f"HttpStream("
-            f"id={self.stream_id}, "
-            f"client_state={self.client_state.__name__}, "
-            f"server_state={self.server_state.__name__}"
-            f")"
-        )
+        if self._handle_event == self.passthrough:
+            return f"HttpStream(id={self.stream_id}, passthrough)"
+        else:
+            return (
+                f"HttpStream("
+                f"id={self.stream_id}, "
+                f"client_state={self.client_state.__name__}, "
+                f"server_state={self.server_state.__name__}"
+                f")"
+            )
 
     @expect(events.Start, HttpEvent)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -585,6 +587,20 @@ class HttpLayer(layer.Layer):
         elif isinstance(event, events.CommandCompleted):
             stream = self.command_sources.pop(event.command)
             yield from self.event_to_child(stream, event)
+        elif isinstance(event, events.MessageInjected):
+            # For injected messages we pass the HTTP stacks entirely and directly address the stream.
+            conn = self.connections[event.connection]
+            if isinstance(conn, Http1Server):
+                stream_id = conn.stream_id
+            elif isinstance(conn, HttpStream):
+                stream_id = conn.stream_id
+            else:
+                # We reach to the end of the connection's child stack to get the HTTP/1 client layer,
+                # which tells us which stream we are dealing with.
+                conn = conn.context.layers[-1]
+                assert isinstance(conn, Http1Client)
+                stream_id = conn.stream_id
+            yield from self.event_to_child(self.streams[stream_id], event)
         elif isinstance(event, events.ConnectionEvent):
             if event.connection == self.context.server and self.context.server not in self.connections:
                 # We didn't do anything with this connection yet, now the peer has closed it - let's close it too!
@@ -722,6 +738,8 @@ class HttpLayer(layer.Layer):
 
 
 class HttpClient(layer.Layer):
+    child_layer: layer.Layer
+
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         err: Optional[str]
@@ -730,11 +748,10 @@ class HttpClient(layer.Layer):
         else:
             err = yield commands.OpenConnection(self.context.server)
         if not err:
-            child_layer: layer.Layer
             if self.context.server.alpn == b"h2":
-                child_layer = Http2Client(self.context)
+                self.child_layer = Http2Client(self.context)
             else:
-                child_layer = Http1Client(self.context)
-            self._handle_event = child_layer.handle_event
+                self.child_layer = Http1Client(self.context)
+            self._handle_event = self.child_layer.handle_event
             yield from self._handle_event(event)
         yield RegisterHttpConnection(self.context.server, err)

@@ -88,6 +88,12 @@ class Layer:
             "debug"
         )
 
+    @property
+    def stack_pos(self) -> str:
+        """repr() for this layer and all its parent layers, only useful for debugging."""
+        idx = self.context.layers.index(self)
+        return " >> ".join(repr(x) for x in self.context.layers[:idx + 1])
+
     @abstractmethod
     def _handle_event(self, event: events.Event) -> CommandGenerator[None]:
         """Handle a proxy server event"""
@@ -111,7 +117,34 @@ class Layer:
             if self.debug is not None:
                 yield self.__debug(f">> {event}")
             command_generator = self._handle_event(event)
-            yield from self.__process(command_generator)
+            send = None
+
+            # inlined copy of __process to reduce call stack.
+            # <✂✂✂>
+            try:
+                command = command_generator.send(send)
+            except StopIteration:
+                return
+
+            while True:
+                if self.debug is not None:
+                    if not isinstance(command, commands.Log):
+                        yield self.__debug(f"<< {command}")
+                if command.blocking is True:
+                    command.blocking = self  # assign to our layer so that higher layers don't block.
+                    self._paused = Paused(
+                        command,
+                        command_generator,
+                    )
+                    yield command
+                    return
+                else:
+                    yield command
+                    try:
+                        command = next(command_generator)
+                    except StopIteration:
+                        return
+            # </✂✂✂>
 
     def __process(self, command_generator: CommandGenerator, send=None):
         """

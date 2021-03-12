@@ -1,12 +1,14 @@
 import asyncio
 import warnings
-from typing import Optional
+from typing import Dict, Optional, Sequence, Tuple
 
-from mitmproxy import controller, ctx, flow, log, master, options, platform
+from mitmproxy import command, controller, ctx, flow, http, log, master, options, platform, tcp, websocket
 from mitmproxy.flow import Error
-from mitmproxy.proxy import commands
+from mitmproxy.proxy import commands, events
 from mitmproxy.proxy import server
+from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
 from mitmproxy.utils import asyncio_utils, human
+from wsproto.frame_protocol import Opcode
 
 
 class AsyncReply(controller.Reply):
@@ -67,11 +69,16 @@ class Proxyserver:
     master: master.Master
     options: options.Options
     is_running: bool
+    _connections: Dict[Tuple, ProxyConnectionHandler]
 
     def __init__(self):
         self._lock = asyncio.Lock()
         self.server = None
         self.is_running = False
+        self._connections = {}
+
+    def __repr__(self):
+        return f"ProxyServer({'running' if self.server else 'stopped'}, {len(self._connections)} active conns)"
 
     def load(self, loader):
         loader.add_option(
@@ -121,10 +128,11 @@ class Proxyserver:
         self.server = None
 
     async def handle_connection(self, r, w):
+        peername = w.get_extra_info('peername')
         asyncio_utils.set_task_debug_info(
             asyncio.current_task(),
             name=f"Proxyserver.handle_connection",
-            client=w.get_extra_info('peername'),
+            client=peername,
         )
         handler = ProxyConnectionHandler(
             self.master,
@@ -132,4 +140,36 @@ class Proxyserver:
             w,
             self.options
         )
-        await handler.handle_client()
+        self._connections[peername] = handler
+        try:
+            await handler.handle_client()
+        finally:
+            del self._connections[peername]
+
+    def inject_event(self, flow: flow.Flow, event: events.Event):
+        if flow.client_conn.peername not in self._connections:
+            raise ValueError("Flow is not from a live connection.")
+        self._connections[flow.client_conn.peername].server_event(event)
+
+    @command.command("inject.text")
+    def inject(self, flows: Sequence[flow.Flow], from_client: bool, message: str):
+        for f in flows:
+            if isinstance(f, http.HTTPFlow):
+                if f.websocket:
+                    event = WebSocketMessageInjected(
+                        f.client_conn if from_client else f.server_conn,
+                        websocket.WebSocketMessage(
+                            Opcode.TEXT, from_client, message.encode()
+                        )
+                    )
+                else:
+                    ctx.log.warn("Cannot inject messages into HTTP connections.")
+                    continue
+            elif isinstance(f, tcp.TCPFlow):
+                raise NotImplementedError
+            else:
+                raise NotImplementedError
+            try:
+                self.inject_event(f, event)
+            except ValueError as e:
+                ctx.log.warn(str(e))

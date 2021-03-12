@@ -106,3 +106,14 @@ class HookCompleted(CommandCompleted):
 class GetSocketCompleted(CommandCompleted):
     command: commands.GetSocket
     reply: socket.socket
+
+
+T = typing.TypeVar('T')
+
+
+@dataclass
+class MessageInjected(ConnectionEvent, typing.Generic[T]):
+    """
+    The user has injected a custom WebSocket/TCP/... message.
+    """
+    message: T
