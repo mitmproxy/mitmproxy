@@ -589,14 +589,22 @@ class HttpLayer(layer.Layer):
             yield from self.event_to_child(stream, event)
         elif isinstance(event, events.MessageInjected):
             # For injected messages we pass the HTTP stacks entirely and directly address the stream.
-            conn = self.connections[event.flow.server_conn]
+            try:
+                conn = self.connections[event.flow.server_conn]
+            except KeyError:
+                # We have a miss for the server connection, which means we're looking at a connection object
+                # that is tunneled over another connection (for example: over an upstream HTTP proxy).
+                # We now take the stream associated with the client connection. That won't work for HTTP/2,
+                # but it's good enough for HTTP/1.
+                conn = self.connections[event.flow.client_conn]
             if isinstance(conn, HttpStream):
                 stream_id = conn.stream_id
             else:
                 # We reach to the end of the connection's child stack to get the HTTP/1 client layer,
                 # which tells us which stream we are dealing with.
                 conn = conn.context.layers[-1]
-                assert isinstance(conn, Http1Client)
+                assert isinstance(conn, Http1Connection)
+                assert conn.stream_id
                 stream_id = conn.stream_id
             yield from self.event_to_child(self.streams[stream_id], event)
         elif isinstance(event, events.ConnectionEvent):

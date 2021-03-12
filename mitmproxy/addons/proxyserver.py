@@ -6,8 +6,9 @@ from mitmproxy import command, controller, ctx, flow, http, log, master, options
 from mitmproxy.flow import Error
 from mitmproxy.proxy import commands, events
 from mitmproxy.proxy import server
+from mitmproxy.proxy.layers.tcp import TcpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
-from mitmproxy.utils import asyncio_utils, human
+from mitmproxy.utils import asyncio_utils, human, strutils
 from wsproto.frame_protocol import Opcode
 
 
@@ -151,24 +152,23 @@ class Proxyserver:
             raise ValueError("Flow is not from a live connection.")
         self._connections[flow.client_conn.peername].server_event(event)
 
-    @command.command("inject.text")
+    @command.command("inject")
     def inject(self, flows: Sequence[flow.Flow], from_client: bool, message: str):
+        message_bytes = strutils.escaped_str_to_bytes(message)
+        event: events.MessageInjected
         for f in flows:
             if isinstance(f, http.HTTPFlow):
                 if f.websocket:
-                    event = WebSocketMessageInjected(
-                        f,
-                        websocket.WebSocketMessage(
-                            Opcode.TEXT, from_client, message.encode()
-                        )
-                    )
+                    msg = websocket.WebSocketMessage(Opcode.TEXT, from_client, message_bytes)
+                    event = WebSocketMessageInjected(f, msg)
                 else:
                     ctx.log.warn("Cannot inject messages into HTTP connections.")
                     continue
             elif isinstance(f, tcp.TCPFlow):
-                raise NotImplementedError
+                event = TcpMessageInjected(f, tcp.TCPMessage(from_client, message_bytes))
             else:
-                raise NotImplementedError
+                ctx.log.warn(f"Cannot inject message into {f.__class__.__name__}, skipping.")
+
             try:
                 self.inject_event(f, event)
             except ValueError as e:

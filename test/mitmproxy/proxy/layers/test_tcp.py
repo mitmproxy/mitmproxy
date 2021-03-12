@@ -4,7 +4,8 @@ from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData
 from mitmproxy.connection import ConnectionState
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import tcp
-from mitmproxy.tcp import TCPFlow
+from mitmproxy.proxy.layers.tcp import TcpMessageInjected
+from mitmproxy.tcp import TCPFlow, TCPMessage
 from ..tutils import Placeholder, Playbook, reply
 
 
@@ -122,3 +123,27 @@ def test_ignore(tctx, ignore):
     else:
         with pytest.raises(AssertionError):
             no_flow_hooks()
+
+
+def test_inject(tctx):
+    """inject data into an open connection."""
+    f = Placeholder(TCPFlow)
+
+    assert (
+            Playbook(tcp.TCPLayer(tctx))
+            << tcp.TcpStartHook(f)
+            >> TcpMessageInjected(f, TCPMessage(True, b"hello!"))
+            >> reply(to=-2)
+            << OpenConnection(tctx.server)
+            >> reply(None)
+            << tcp.TcpMessageHook(f)
+            >> reply()
+            << SendData(tctx.server, b"hello!")
+            # and the other way...
+            >> TcpMessageInjected(f, TCPMessage(False, b"I have already done the greeting for you."))
+            << tcp.TcpMessageHook(f)
+            >> reply()
+            << SendData(tctx.client, b"I have already done the greeting for you.")
+            << None
+    )
+    assert len(f().messages) == 2
