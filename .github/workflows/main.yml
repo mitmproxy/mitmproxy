@@ -149,6 +149,7 @@ jobs:
 
   # Separate from everything else because slow.
   build-and-deploy-docker:
+    if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
     needs: [test, test-web-ui, build-wheel]
     runs-on: ubuntu-latest
     env:
@@ -166,7 +167,7 @@ jobs:
           name: wheel
           path: release/dist
       - run: tox -e cibuild -- build
-      #- run: tox -e cibuild -- upload
+      - run: tox -e cibuild -- upload
 
   deploy:
     if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
