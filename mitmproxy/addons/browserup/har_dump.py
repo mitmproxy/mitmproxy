@@ -1,7 +1,8 @@
 import json
 import base64
-import typing
 import tempfile
+import os
+import glob
 
 from datetime import datetime
 from datetime import timezone
@@ -9,23 +10,21 @@ import dateutil.parser
 
 import copy
 
+from pathlib import Path
 import asyncio
 
 from mitmproxy import ctx
-from mitmproxy import tcp
 
 from enum import Enum, auto
 
 import falcon
 
-from mitmproxy import connection
 from mitmproxy.utils import strutils
 from mitmproxy.net.http import cookies
 
 # A list of server seen till now is maintained so we can avoid
 # using 'connect' time for entries that use an existing connection.
 SERVERS_SEEN = set()
-
 
 DEFAULT_PAGE_REF = "Default"
 DEFAULT_PAGE_TITLE = "Default"
@@ -78,8 +77,17 @@ class HarCaptureTypes(Enum):
         REQUEST_COOKIES,
         RESPONSE_COOKIES}
 
-
 class HarDumpAddonResource:
+
+    def apispec(self, spec):
+        here = os.path.abspath(os.path.dirname(__file__))
+        for filepath in glob.iglob(here + '/schemas/*.json'):
+
+            filename = Path(filepath).resolve().stem
+            with open(filepath, encoding='utf-8') as f:
+                schema = json.load(f)
+            spec.components.schema(filename, component=schema)
+            spec.path(resource=self)
 
     def addon_path(self):
         return "har"
@@ -88,7 +96,21 @@ class HarDumpAddonResource:
         self.name = "hardump"
         self.harDumpAddOn = harDumpAddOn
 
+
     def on_get(self, req, resp, method_name):
+        """Get the Har.
+        ---
+        description: Get the current HAR
+        tags:
+            - proxy
+        responses:
+            200:
+                description: The current Har file.
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/har"
+        """
         try:
             asyncio.get_event_loop()
         except:

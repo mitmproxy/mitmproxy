@@ -5,23 +5,66 @@ import falcon
 
 from mitmproxy import ctx
 from mitmproxy import http
+from marshmallow import Schema, fields
+
+class BlockListSchema(Schema):
+    urlPattern = fields.Str(required=True,description="URL Regex Pattern")
+    statusCode = fields.Str(required=True,description="HTTP Status Code")
+    httpMethodPattern = fields.Str(required=True,description="HTTP Method Regex Pattern")
 
 class BlockListResource:
+
+    def apispec(self, spec):
+        spec.components.schema('BlockList', schema=BlockListSchema)
+        spec.path(resource=self)
 
     def addon_path(self):
         return "blocklist"
 
+    def apispec(self, spec):
+        # Register entities and paths with apispec
+        spec.components.schema('BlockList', schema=BlockListSchema)
+        spec.path(resource=self)
+
     def __init__(self, block_list_addon):
         self.block_list_addon = block_list_addon
 
-    def on_get(self, req, resp, method_name):
+    def on_get(self, req, resp):
+        """Get a BlockList.
+        ---
+        description: Get a blocklist
+        tags:
+            - proxy
+        responses:
+            200:
+                description: The current blocklist.
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/BlockList"
+        """
         try:
             asyncio.get_event_loop()
         except:
             asyncio.set_event_loop(asyncio.new_event_loop())
         getattr(self, "on_" + method_name)(req, resp)
 
-    def on_put(self, req, resp, method_name):
+
+    def on_post(self, req, resp):
+        """Posts the BlockList.
+        ---
+        description: Sets an BlockList
+        tags:
+            - proxy
+        requestBody:
+            content:
+              application/json:
+                schema:
+                    $ref: "#/components/schemas/BlockList"
+        responses:
+            204:
+                description: Success!
+        """
         try:
             asyncio.get_event_loop()
         except:

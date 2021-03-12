@@ -1,0 +1,67 @@
+#package for generated api classes (Default: org.openapitools.client.api)
+
+apiPackage: com.browserup.proxy.api
+artifactDescription: browserup-proxy-client
+
+# artifactId in generated pom.xml. This also becomes part of the generated library's filename (Default: openapi-java-client)
+artifactId: browserup-proxy-client
+
+#  artifact URL in generated pom.xml (Default: https://github.com/openapitools/openapi-generator)
+# artifactUrl
+
+# artifact version in generated pom.xml. This also becomes part of the generated library's filename (Default: 1.0.0)
+# artifactVersion
+
+#  package for generated models (Default: org.openapitools.client.model)
+modelPackage: com.browserup.proxy-client
+
+#  Make API response's headers case-insensitive. Available on okhttp-gson, jersey2 libraries (Default: false)
+caseInsensitiveResponseHeaders: true
+
+developerEmail: hello@browserup.com
+developerName: BrowserUp
+developerOrganization: BrowserUp
+developerOrganizationUrl: https://browserup.com
+# Disable HTML escaping of JSON strings when using gson (needed to avoid problems with byte[] fields) (Default: false)
+disableHtmlEscaping: true
+
+#  Generate operations dynamically at runtime from an OAS (Default: false)
+dynamicOperations: false
+
+# groupId in generated pom.xml (Default: org.openapitools)
+groupId: com.browserup
+
+#Hides the generation timestamp when files are generated. (Default: false)
+hideGenerationTimestamp: true
+
+# Ignore anyOf keyword in enum (Default: false)
+#    ignoreAnyOfInEnum
+
+# root package for generated code (Default: org.openapitools.client)
+invokerPackage: com.browserup.proxy-client
+
+
+#library: okhttp-gson
+#  library template (sub-template) to use (Default: okhttp-gson)
+#    jersey1 - HTTP client: Jersey client 1.19.x. JSON processing: Jackson 2.9.x. Enable gzip request encoding using '-DuseGzipFeature=true'. IMPORTANT NOTE: jersey 1.x is no longer actively maintained so please upgrade to 'jersey2' or other HTTP libaries instead.
+#    jersey2 - HTTP client: Jersey client 2.25.1. JSON processing: Jackson 2.9.x
+#    feign - HTTP client: OpenFeign 10.x. JSON processing: Jackson 2.9.x.
+#    okhttp-gson - [DEFAULT] HTTP client: OkHttp 3.x. JSON processing: Gson 2.8.x. Enable Parcelable models on Android using '-DparcelableModel=true'. Enable gzip request encoding using '-DuseGzipFeature=true'.
+#    retrofit2 - HTTP client: OkHttp 3.x. JSON processing: Gson 2.x (Retrofit 2.3.0). Enable the RxJava adapter using '-DuseRxJava[2/3]=true'. (RxJava 1.x or 2.x or 3.x)
+#    resttemplate - HTTP client: Spring RestTemplate 4.x. JSON processing: Jackson 2.9.x
+#    webclient - HTTP client: Spring WebClient 5.x. JSON processing: Jackson 2.9.x
+#    resteasy - HTTP client: Resteasy client 3.x. JSON processing: Jackson 2.9.x
+#    vertx - HTTP client: VertX client 3.x. JSON processing: Jackson 2.9.x
+#    google-api-client - HTTP client: Google API client 1.x. JSON processing: Jackson 2.9.x
+#    rest-assured - HTTP client: rest-assured : 4.x. JSON processing: Gson 2.x or Jackson 2.10.x. Only for Java 8
+#    native - HTTP client: Java native HttpClient. JSON processing: Jackson 2.9.x. Only for Java11+
+#    microprofile - HTTP client: Microprofile client 1.x. JSON processing: Jackson 2.9.x
+
+licenseName: MIT
+ #licenseUrl:
+
+#    microprofileFramework
+#    Framework for microprofile. Possible values "kumuluzee"
+
+
+

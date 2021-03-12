@@ -1,24 +1,18 @@
-"""
-This inline script can be used to dump flows as HAR files.
-
-example cmdline invocation:
-mitmdump -s ./har_dump.py --set hardump=./dump.har
-
-filename endwith '.zhar' will be compressed:
-mitmdump -s ./har_dump.py --set hardump=./dump.zhar
-"""
-
-import json
-import base64
-import typing
-import tempfile
-
 import re
 import falcon
 
 from mitmproxy import http
+from marshmallow import Schema, fields
+
+class AllowListSchema(Schema):
+    urlPattern = fields.Str(required=True,description="URL Regex Pattern to match")
+    statusCode = fields.Str(required=True,description="HTTP Status Code to match")
 
 class AllowListResource:
+
+    def apispec(self, spec):
+        spec.components.schema('AllowList', schema=AllowListSchema)
+        spec.path(resource=self)
 
     def addon_path(self):
         return "allowlist"
@@ -26,77 +20,83 @@ class AllowListResource:
     def __init__(self, allow_list_addon):
         self.allow_list_addon = allow_list_addon
 
-
-    def on_get(self, req, resp, method_name):
-        """Get an AllowList.
+    def on_get(self, req, resp):
+        """Get the AllowList.
         ---
-        description: Get an allowlist
+        description: Get an AllowList
+        tags:
+            - proxy
         responses:
             200:
-                description: The current allowlist
-                schema: AllowList
+                description: The current allowlist.
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AllowList"
         """
-        getattr(self, "on_" + method_name)(req, resp)
 
-    def on_allowlist_requests(self, req, resp):
+    def on_post(self, req, resp):
+        """Posts the AllowList.
+        ---
+        description: Sets an AllowList
+        tags:
+            - proxy
+        requestBody:
+            content:
+              application/json:
+                schema:
+                    $ref: "#/components/schemas/AllowList"
+        responses:
+            204:
+                description: Success!
+        """
         raw_url_patterns = req.get_param('urlPatterns')
         status_code = req.get_param('statusCode')
 
-        url_patterns = raw_url_patterns.strip("[]").split(",")
-        url_patterns_compiled = []
-
         try:
-            for raw_pattern in url_patterns:
-                url_patterns_compiled.append(self.parse_regexp(raw_pattern))
+            self.allow_list_addon.set_allow_list(status_code, raw_url_patterns)
         except re.error:
             raise falcon.HTTPBadRequest("Invalid regexp patterns")
 
-        self.allow_list_addon.allow_list = {
-            "status_code": status_code,
-            "url_patterns": url_patterns_compiled
-        }
+    def on_delete(self, req, resp):
+        """Delete the AllowList.
+        ---
+        description: Deletes the AllowList, which will turn-off allowlist based filtering
+        tags:
+            - proxy
+        responses:
+            204:
+                description: The current allowlist, if any, was destroyed an all requests are enabled.
+        """
+        self.allow_list_addon.allow_list = None
 
-    def on_add_allowlist_pattern(self, req, resp):
-        url_pattern = req.get_param('urlPattern')
+class AllowListAddOn:
 
-        if not hasattr(self.allow_list_addon.allow_list, "status_code") \
-                or not hasattr(self.allow_list_addon.allow_list, "url_patterns"):
-            raise falcon.HTTPBadRequest("Allowlist is disabled. Cannot add patterns to a disabled allowlist.")
+    def __init__(self):
+        self.num = 0
+        self.allow_list = None
 
-        self.allow_list_addon.allow_list["url_patterns"].append(url_pattern)
-
-    def on_enable_empty_allowlist(self, req, resp):
-        status_code = req.get_param('statusCode')
-
-        self.allow_list_addon.allow_list["url_patterns"] = []
-        self.allow_list_addon.allow_list["status_code"] = status_code
-
-    def on_disable_allowlist(self, req, resp):
-        self.allow_list_addon.allow_list = {}
-
-    def parse_regexp(self, raw_regexp):
+    def __parse_regexp(self, raw_regexp):
         if not raw_regexp.startswith('^'):
             raw_regexp = '^' + raw_regexp
         if not raw_regexp.endswith('$'):
             raw_regexp = raw_regexp + '$'
         return re.compile(raw_regexp)
 
-class AllowListAddOn:
-
-    def __init__(self):
-        self.num = 0
-        self.allow_list = {}
+    def set_allowlist(self, status_code, allowlist_pattern_str):
+        url_patterns = allowlist_pattern_str.strip("[]").split(",")
+        url_patterns_compiled = []
+        for raw_pattern in url_patterns:
+            url_patterns_compiled.append(self.__parse_regexp(raw_pattern))
 
     def get_resource(self):
         return AllowListResource(self)
 
-    def is_allowlist_enabled(self):
-        if 'status_code' in self.allow_list and 'url_patterns' in self.allow_list:
-            return True
-        return False
+    def allowlist_enabled(self):
+        return (self.allow_list is not None)
 
     def request(self, flow):
-        if not self.is_allowlist_enabled():
+        if not self.allowlist_enabled():
             return
 
         is_allowlisted = False

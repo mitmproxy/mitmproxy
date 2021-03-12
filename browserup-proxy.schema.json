@@ -1,0 +1,653 @@
+{
+  "tags": [
+    {
+      "name": "proxy",
+      "description": "BrowserUp Proxy Control API"
+    }
+  ],
+  "info": {
+    "description": "BrowserUp Proxy Control API",
+    "title": "BrowserUp Proxy",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/har": {
+      "get": {
+        "description": "Get the current HAR",
+        "tags": [
+          "proxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current Har file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/har"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/allowlist": {
+      "delete": {
+        "description": "Deletes the AllowList, which will turn-off allowlist based filtering",
+        "tags": [
+          "proxy"
+        ],
+        "responses": {
+          "204": {
+            "description": "The current allowlist, if any, was destroyed an all requests are enabled."
+          }
+        }
+      },
+      "get": {
+        "description": "Get an AllowList",
+        "tags": [
+          "proxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current allowlist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllowList"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Sets an AllowList",
+        "tags": [
+          "proxy"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllowList"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Success!"
+          }
+        }
+      }
+    },
+    "/blocklist": {
+      "get": {
+        "description": "Get a blocklist",
+        "tags": [
+          "proxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current blocklist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockList"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Sets an BlockList",
+        "tags": [
+          "proxy"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockList"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Success!"
+          }
+        }
+      }
+    }
+  },
+  "openapi": "3.0.3",
+  "components": {
+    "schemas": {
+      "entry": {
+        "type": "object",
+        "required": [
+          "startedDateTime",
+          "time",
+          "request",
+          "response",
+          "cache",
+          "timings"
+        ],
+        "properties": {
+          "pageref": {
+            "type": "string"
+          },
+          "startedDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))"
+          },
+          "time": {
+            "type": "number",
+            "minimum": 0
+          },
+          "request": {
+            "type": "object",
+            "required": [
+              "method",
+              "url",
+              "httpVersion",
+              "cookies",
+              "headers",
+              "queryString",
+              "headersSize",
+              "bodySize"
+            ],
+            "properties": {
+              "method": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "httpVersion": {
+                "type": "string"
+              },
+              "cookies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "domain": {
+                      "type": "string"
+                    },
+                    "expires": {
+                      "type": "string"
+                    },
+                    "httpOnly": {
+                      "type": "boolean"
+                    },
+                    "secure": {
+                      "type": "boolean"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/header"
+                }
+              },
+              "queryString": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/query"
+                }
+              },
+              "postData": {
+                "description": "Posted data info.",
+                "required": [
+                  "mimeType"
+                ],
+                "properties": {
+                  "mimeType": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "params": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "fileName": {
+                          "type": "string"
+                        },
+                        "contentType": {
+                          "type": "string"
+                        },
+                        "comment": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "headersSize": {
+                "type": "integer"
+              },
+              "bodySize": {
+                "type": "integer"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "response": {
+            "type": "object",
+            "required": [
+              "status",
+              "statusText",
+              "httpVersion",
+              "cookies",
+              "headers",
+              "content",
+              "redirectURL",
+              "headersSize",
+              "bodySize"
+            ],
+            "properties": {
+              "status": {
+                "type": "integer"
+              },
+              "statusText": {
+                "type": "string"
+              },
+              "httpVersion": {
+                "type": "string"
+              },
+              "cookies": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/cookie"
+                }
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/header"
+                }
+              },
+              "content": {
+                "type": "object",
+                "required": [
+                  "size",
+                  "mimeType"
+                ],
+                "properties": {
+                  "size": {
+                    "type": "integer"
+                  },
+                  "compression": {
+                    "type": "integer"
+                  },
+                  "mimeType": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "encoding": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              },
+              "redirectURL": {
+                "type": "string"
+              },
+              "headersSize": {
+                "type": "integer"
+              },
+              "bodySize": {
+                "type": "integer"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "cache": {
+            "properties": {
+              "beforeRequest": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "lastAccess",
+                      "eTag",
+                      "hitCount"
+                    ],
+                    "properties": {
+                      "expires": {
+                        "type": "string",
+                        "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                      },
+                      "lastAccess": {
+                        "type": "string",
+                        "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                      },
+                      "eTag": {
+                        "type": "string"
+                      },
+                      "hitCount": {
+                        "type": "integer"
+                      },
+                      "comment": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "afterRequest": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "lastAccess",
+                      "eTag",
+                      "hitCount"
+                    ],
+                    "properties": {
+                      "expires": {
+                        "type": "string",
+                        "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                      },
+                      "lastAccess": {
+                        "type": "string",
+                        "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                      },
+                      "eTag": {
+                        "type": "string"
+                      },
+                      "hitCount": {
+                        "type": "integer"
+                      },
+                      "comment": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "timings": {
+            "required": [
+              "send",
+              "wait",
+              "receive"
+            ],
+            "properties": {
+              "dns": {
+                "type": "number",
+                "minimum": -1
+              },
+              "connect": {
+                "type": "number",
+                "minimum": -1
+              },
+              "blocked": {
+                "type": "number",
+                "minimum": -1
+              },
+              "send": {
+                "type": "number",
+                "minimum": -1
+              },
+              "wait": {
+                "type": "number",
+                "minimum": -1
+              },
+              "receive": {
+                "type": "number",
+                "minimum": -1
+              },
+              "ssl": {
+                "type": "number",
+                "minimum": -1
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "serverIPAddress": {
+            "type": "string",
+            "oneOf": [
+              {
+                "format": "ipv4"
+              },
+              {
+                "format": "ipv6"
+              }
+            ]
+          },
+          "connection": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "header": {
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "har": {
+        "type": "object",
+        "required": [
+          "log"
+        ],
+        "properties": {
+          "log": {
+            "type": "object",
+            "required": [
+              "version",
+              "creator",
+              "entries"
+            ],
+            "properties": {
+              "version": {
+                "type": "string"
+              },
+              "creator": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "version"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              },
+              "browser": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "version"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              },
+              "pages": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/page"
+                }
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/entry"
+                }
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "page": {
+        "type": "object",
+        "required": [
+          "startedDateTime",
+          "id",
+          "title",
+          "pageTimings"
+        ],
+        "properties": {
+          "startedDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))"
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "pageTimings": {
+            "type": "object",
+            "properties": {
+              "onContentLoad": {
+                "type": "number",
+                "minimum": -1
+              },
+              "onLoad": {
+                "type": "number",
+                "minimum": -1
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "AllowList": {
+        "type": "object",
+        "properties": {
+          "urlPattern": {
+            "type": "string",
+            "description": "URL Regex Pattern to match"
+          },
+          "statusCode": {
+            "type": "string",
+            "description": "HTTP Status Code to match"
+          }
+        },
+        "required": [
+          "statusCode",
+          "urlPattern"
+        ]
+      },
+      "BlockList": {
+        "type": "object",
+        "properties": {
+          "httpMethodPattern": {
+            "type": "string",
+            "description": "HTTP Method Regex Pattern"
+          },
+          "urlPattern": {
+            "type": "string",
+            "description": "URL Regex Pattern"
+          },
+          "statusCode": {
+            "type": "string",
+            "description": "HTTP Status Code"
+          }
+        },
+        "required": [
+          "httpMethodPattern",
+          "statusCode",
+          "urlPattern"
+        ]
+      }
+    }
+  }
+}

@@ -5,7 +5,7 @@ from mitmproxy import addons
 from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.addons import dumper, termlog, keepserving, readfile
-from mitmproxy.addons.browserup import har_dump, init_flow, http_connect_capture, bu_addons_manager
+from mitmproxy.addons.browserup import har_dump, init_flow, http_connect_capture, browserup_addons_manager, allow_list, block_list
 
 
 class ErrorCheck:
@@ -40,7 +40,9 @@ class DumpMaster(master.Master):
             keepserving.KeepServing(),
             readfile.ReadFileStdin(),
             init_flow.BrowserupInitFlowAddOn(),
-            bu_addons_manager.BuAddonsManagerAddOn(),
+            browserup_addons_manager.BrowserUpAddonsManagerAddOn(),
+            allow_list.AllowListAddOn(),
+            block_list.BlockListAddOn(),
             self.errorcheck
         )
 

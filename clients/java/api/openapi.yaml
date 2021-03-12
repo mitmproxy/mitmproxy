@@ -1,0 +1,112 @@
+openapi: 3.0.3
+info:
+  description: BrowserUp Proxy Control API
+  title: BrowserUp Proxy
+  version: 1.0.0
+servers:
+- url: /
+tags:
+- description: BrowserUp Proxy Control API
+  name: proxy
+paths:
+  /allowlist:
+    delete:
+      description: Deletes the AllowList, which will turn-off allowlist based filtering
+      responses:
+        "204":
+          description: The current allowlist, if any, was destroyed an all requests
+            are enabled.
+      tags:
+      - proxy
+      x-accepts: application/json
+    get:
+      description: Get an AllowList
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllowList'
+          description: The current allowlist.
+      tags:
+      - proxy
+      x-accepts: application/json
+    post:
+      description: Sets an AllowList
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AllowList'
+      responses:
+        "204":
+          description: Success!
+      tags:
+      - proxy
+      x-contentType: application/json
+      x-accepts: application/json
+  /blocklist:
+    get:
+      description: Get a blocklist
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockList'
+          description: The current blocklist.
+      tags:
+      - proxy
+      x-accepts: application/json
+    post:
+      description: Sets an BlockList
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BlockList'
+      responses:
+        "204":
+          description: Success!
+      tags:
+      - proxy
+      x-contentType: application/json
+      x-accepts: application/json
+components:
+  schemas:
+    AllowList:
+      example:
+        urlPattern: urlPattern
+        statusCode: statusCode
+      properties:
+        statusCode:
+          description: HTTP Status Code to match
+          type: string
+        urlPattern:
+          description: URL Regex Pattern to match
+          type: string
+      required:
+      - statusCode
+      - urlPattern
+      type: object
+    BlockList:
+      example:
+        urlPattern: urlPattern
+        statusCode: statusCode
+        httpMethodPattern: httpMethodPattern
+      properties:
+        statusCode:
+          description: HTTP Status Code
+          type: string
+        urlPattern:
+          description: URL Regex Pattern
+          type: string
+        httpMethodPattern:
+          description: HTTP Method Regex Pattern
+          type: string
+      required:
+      - httpMethodPattern
+      - statusCode
+      - urlPattern
+      type: object
+

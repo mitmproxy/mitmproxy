@@ -79,7 +79,7 @@ def run(
         opts.set(*args.setoptions, defer=True)
         optmanager.load_paths(
             opts,
-            os.path.join(opts.confdir, "config.yaml"),
+            os.path.join(opts.confdir, "config-ruby.yaml"),
             os.path.join(opts.confdir, "config.yml"),
         )
         process_options(parser, opts, args)

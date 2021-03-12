@@ -1,7 +1,17 @@
+from marshmallow import Schema, fields
+
+class AuthBasicSchema:
+    base64EncodedCredentials = fields.Str(required=True, description="base 64 encoding of the username and password")
+    domain = fields.Str(required=True,description="Domain for Basic Auth")
+
 class AuthBasicResource:
 
     def addon_path(self):
         return "auth_basic"
+
+    def apispec(self, spec):
+        spec.components.schema('AuthBasic', AuthBasicSchema(many=True))
+        spec.path(resource=self)
 
     def __init__(self, auth_basic_addon):
         self.auth_basic_addon = auth_basic_addon

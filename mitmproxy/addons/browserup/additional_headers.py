@@ -1,5 +1,14 @@
+from marshmallow import Schema, fields
+
+class HeaderSchema:
+    urlPattern = fields.Str(required=True)
+    statusCode = fields.Str(required=True)
 
 class AddHeadersResource:
+
+    def apispec(self, spec):
+        spec.components.schema('Headers', HeaderSchema(many=True))
+        spec.path(resource=self)
 
     def addon_path(self):
         return "additional_headers"

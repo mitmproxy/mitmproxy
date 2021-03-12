@@ -5,30 +5,16 @@ from mitmproxy import ctx
 
 from wsgiref.simple_server import make_server
 
-import re
+import os
 import json
+
+from pathlib import Path
 
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from falcon_apispec import FalconPlugin
-from marshmallow import Schema, fields
 
-#class BlockList(Schema):
-#    urlPattern = fields.Str(required=True)
-#    statusCode = fields.Str(required=True)
-#    httpMethodPattern = fields.Str(required=True)
-
-
-#regex - A comma separated list of regular expressions.
-#status - The HTTP status code to return for URLs that do not match the whitelist.
-
-from marshmallow import Schema, fields
-
-class AllowList(Schema):
-    urlPattern = fields.Str(required=True)
-    statusCode = fields.Str(required=True)
-
-class BuAddonsManagerAddOn:
+class BrowserUpAddonsManagerAddOn:
     initialized = False
 
     def load(self, l):
@@ -41,12 +27,8 @@ class BuAddonsManagerAddOn:
         global initialized
         if not self.initialized and self.is_script_loader_initialized():
             ctx.log.info('Scanning for custom add-ons resources...')
-            resources = self.get_resources()
-            ctx.log.info('Found resources:')
-            for r in resources:
-                ctx.log.info('  - ' + str(r.__class__))
             ctx.log.info('Starting falcon REST service...')
-            _thread.start_new_thread(self.start_falcon, tuple([resources]))
+            _thread.start_new_thread(self.start_falcon())
             initialized = True
 
 
@@ -59,25 +41,52 @@ class BuAddonsManagerAddOn:
 
         return True
 
+    def basic_spec(self, app):
+        return APISpec(
+            title='BrowserUp Proxy',
+            version='1.0.0',
+            tags = [{ "name": 'proxy', "description": "BrowserUp Proxy Control API" }],
+            info= { "description": "BrowserUp Proxy Control API" },
+            openapi_version='3.0.3',
+            plugins=[
+                FalconPlugin(app),
+                MarshmallowPlugin(),
+            ],
+        )
 
-    def get_resources(self):
+    def write_spec(self, spec):
+        pretty_json = json.dumps(spec.to_dict(), indent=2)
+        print(pretty_json)
+        root = Path(__file__).parent.parent.parent.parent
+        schema_path = os.path.join(root, 'browserup-proxy.schema.json')
+        print(schema_path)
+        f = open(schema_path, 'w')
+        f.write(pretty_json)
+        f.close()
+
+
+    def get_resources(self, app, spec):
         addons = ctx.master.addons
         resources = []
         get_resource_fun_name = "get_resource"
-
         for custom_addon in addons.chain:
             if hasattr(custom_addon, get_resource_fun_name):
-                resources.append(getattr(custom_addon, get_resource_fun_name)())
-            if 'add_apispec' in dir(custom_addon):
-                # Register entities and paths
-                custom_addon.add_apispec(spec)
+                resource = getattr(custom_addon, get_resource_fun_name)()
+                resources.append(resource)
+                route = "/" + resource.addon_path()
+                app.add_route(route, resource)
 
+                if 'apispec' in dir(resource):
+                    resource.apispec(spec)
+
+        self.write_spec(spec)
         return resources
 
 
-    def start_falcon(self, resources):
+    def start_falcon(self):
         app = falcon.API()
-        for resource in resources:
+        spec = self.basic_spec(app)
+        for resource in self.get_resources(app, spec ):
             route = "/" + resource.addon_path() + "/{method_name}"
             print("Adding route: " + route)
             app.add_route(route, resource)
@@ -91,5 +100,5 @@ class BuAddonsManagerAddOn:
             # Schema.loads(json_path)
 
 addons = [
-    BuAddonsManagerAddOn()
+    BrowserUpAddonsManagerAddOn()
 ]

@@ -14,7 +14,7 @@ Configuration:
 
     Send to a URL:
 
-        cat > ~/.mitmproxy/config.yaml <<EOF
+        cat > ~/.mitmproxy/config-ruby.yaml <<EOF
         dump_destination: "https://elastic.search.local/my-index/my-type"
         # Optional Basic auth:
         dump_username: "never-gonna-give-you-up"
@@ -26,7 +26,7 @@ Configuration:
 
     Dump to a local file:
 
-        cat > ~/.mitmproxy/config.yaml <<EOF
+        cat > ~/.mitmproxy/config-ruby.yaml <<EOF
         dump_destination: "/user/rastley/output.log"
         EOF
 """
@@ -186,7 +186,7 @@ class JSONDumper:
     @staticmethod
     def load(loader):
         """
-        Extra options to be specified in `~/.mitmproxy/config.yaml`.
+        Extra options to be specified in `~/.mitmproxy/config-ruby.yaml`.
         """
         loader.add_option('dump_encodecontent', bool, False,
                           'Encode content as base64.')
