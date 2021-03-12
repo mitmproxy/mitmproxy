@@ -8,6 +8,7 @@ import typing
 import warnings
 from dataclasses import dataclass, is_dataclass
 
+from mitmproxy import flow
 from mitmproxy.proxy import commands
 from mitmproxy.connection import Connection
 
@@ -112,8 +113,9 @@ T = typing.TypeVar('T')
 
 
 @dataclass
-class MessageInjected(ConnectionEvent, typing.Generic[T]):
+class MessageInjected(Event, typing.Generic[T]):
     """
     The user has injected a custom WebSocket/TCP/... message.
     """
+    flow: flow.Flow
     message: T

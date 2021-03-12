@@ -128,10 +128,16 @@ class WebsocketLayer(layer.Layer):
     _handle_event = start
 
     @expect(events.DataReceived, events.ConnectionClosed, WebSocketMessageInjected)
-    def relay_messages(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
+    def relay_messages(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert self.flow.websocket  # satisfy type checker
 
-        from_client = event.connection == self.context.client
+        if isinstance(event, events.ConnectionEvent):
+            from_client = event.connection == self.context.client
+        elif isinstance(event, WebSocketMessageInjected):
+            from_client = event.message.from_client
+        else:
+            raise AssertionError(f"Unexpected event: {event}")
+
         from_str = 'client' if from_client else 'server'
         if from_client:
             src_ws = self.client_ws

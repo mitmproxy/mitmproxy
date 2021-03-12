@@ -157,7 +157,7 @@ class Proxyserver:
             if isinstance(f, http.HTTPFlow):
                 if f.websocket:
                     event = WebSocketMessageInjected(
-                        f.client_conn if from_client else f.server_conn,
+                        f,
                         websocket.WebSocketMessage(
                             Opcode.TEXT, from_client, message.encode()
                         )

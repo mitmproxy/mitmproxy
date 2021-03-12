@@ -328,7 +328,7 @@ def test_inject_message(ws_testdata):
             playbook
             << websocket.WebsocketStartHook(flow)
             >> reply()
-            >> WebSocketMessageInjected(tctx.server, WebSocketMessage(Opcode.TEXT, False, b"hello"))
+            >> WebSocketMessageInjected(flow, WebSocketMessage(Opcode.TEXT, False, b"hello"))
             << websocket.WebsocketMessageHook(flow)
     )
     assert flow.websocket.messages[-1].content == b"hello"

@@ -56,10 +56,10 @@ async def test_start_stop():
 
             proxy_addr = ps.server.sockets[0].getsockname()[:2]
             reader, writer = await asyncio.open_connection(*proxy_addr)
-            assert repr(ps) == "ProxyServer(running, 1 active conns)"
             req = f"GET http://{addr[0]}:{addr[1]}/hello HTTP/1.1\r\n\r\n"
             writer.write(req.encode())
             assert await reader.readuntil(b"\r\n\r\n") == b"HTTP/1.1 204 No Content\r\n\r\n"
+            assert repr(ps) == "ProxyServer(running, 1 active conns)"
 
             tctx.configure(ps, server=False)
             await tctx.master.await_log("Stopping server", level="info")

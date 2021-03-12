@@ -589,10 +589,8 @@ class HttpLayer(layer.Layer):
             yield from self.event_to_child(stream, event)
         elif isinstance(event, events.MessageInjected):
             # For injected messages we pass the HTTP stacks entirely and directly address the stream.
-            conn = self.connections[event.connection]
-            if isinstance(conn, Http1Server):
-                stream_id = conn.stream_id
-            elif isinstance(conn, HttpStream):
+            conn = self.connections[event.flow.server_conn]
+            if isinstance(conn, HttpStream):
                 stream_id = conn.stream_id
             else:
                 # We reach to the end of the connection's child stack to get the HTTP/1 client layer,
