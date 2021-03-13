@@ -168,6 +168,7 @@ class Proxyserver:
                 event = TcpMessageInjected(f, tcp.TCPMessage(from_client, message_bytes))
             else:  # pragma: no cover
                 ctx.log.warn(f"Cannot inject message into {f.__class__.__name__}, skipping.")
+                continue
 
             try:
                 self.inject_event(f, event)
