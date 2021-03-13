@@ -7,7 +7,7 @@ from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import layers
 from mitmproxy.connection import Address
-from mitmproxy.test import taddons
+from mitmproxy.test import taddons, tflow
 
 
 class HelperAddon:
@@ -15,10 +15,14 @@ class HelperAddon:
         self.flows = []
         self.layers = [
             lambda ctx: layers.modes.HttpProxy(ctx),
-            lambda ctx: layers.HttpLayer(ctx, HTTPMode.regular)
+            lambda ctx: layers.HttpLayer(ctx, HTTPMode.regular),
+            lambda ctx: layers.TCPLayer(ctx),
         ]
 
     def request(self, f):
+        self.flows.append(f)
+
+    def tcp_start(self, f):
         self.flows.append(f)
 
     def next_layer(self, nl):
@@ -67,6 +71,68 @@ async def test_start_stop():
             assert state.flows
             assert state.flows[0].request.path == "/hello"
             assert state.flows[0].response.status_code == 204
+
+            # Waiting here until everything is really torn down... takes some effort.
+            conn_handler = list(ps._connections.values())[0]
+            client_handler = conn_handler.transports[conn_handler.client].handler
+            writer.close()
+            await writer.wait_closed()
+            try:
+                await client_handler
+            except asyncio.CancelledError:
+                pass
+            for _ in range(5):
+                # Get all other scheduled coroutines to run.
+                await asyncio.sleep(0)
+            assert repr(ps) == "ProxyServer(stopped, 0 active conns)"
+
+
+@pytest.mark.asyncio
+async def test_inject():
+    async def server_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        while s := await reader.read(1):
+            writer.write(s.upper())
+
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        state = HelperAddon()
+        tctx.master.addons.add(state)
+        async with tcp_server(server_handler) as addr:
+            tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+            ps.running()
+            await tctx.master.await_log("Proxy server listening", level="info")
+            proxy_addr = ps.server.sockets[0].getsockname()[:2]
+            reader, writer = await asyncio.open_connection(*proxy_addr)
+
+            req = f"CONNECT {addr[0]}:{addr[1]} HTTP/1.1\r\n\r\n"
+            writer.write(req.encode())
+            assert await reader.readuntil(b"\r\n\r\n") == b"HTTP/1.1 200 Connection established\r\n\r\n"
+
+            writer.write(b"a")
+            assert await reader.read(1) == b"A"
+            ps.inject(state.flows, True, "b")
+            assert await reader.read(1) == b"B"
+            ps.inject(state.flows, False, "c")
+            assert await reader.read(1) == b"c"
+
+
+@pytest.mark.asyncio
+async def test_inject_fail():
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        ps.inject(
+            [tflow.tflow()],
+            False,
+            "test"
+        )
+        await tctx.master.await_log("Cannot inject messages into HTTP connections.", level="warn")
+
+        ps.inject(
+            [tflow.twebsocketflow()],
+            False,
+            "test"
+        )
+        await tctx.master.await_log("Flow is not from a live connection.", level="warn")
 
 
 @pytest.mark.asyncio

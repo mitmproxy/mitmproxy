@@ -166,7 +166,7 @@ class Proxyserver:
                     continue
             elif isinstance(f, tcp.TCPFlow):
                 event = TcpMessageInjected(f, tcp.TCPMessage(from_client, message_bytes))
-            else:
+            else:  # pragma: no cover
                 ctx.log.warn(f"Cannot inject message into {f.__class__.__name__}, skipping.")
 
             try:
