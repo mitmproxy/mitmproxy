@@ -629,13 +629,13 @@
       "BlockList": {
         "type": "object",
         "properties": {
-          "httpMethodPattern": {
-            "type": "string",
-            "description": "HTTP Method Regex Pattern"
-          },
           "urlPattern": {
             "type": "string",
             "description": "URL Regex Pattern"
+          },
+          "httpMethodPattern": {
+            "type": "string",
+            "description": "HTTP Method Regex Pattern"
           },
           "statusCode": {
             "type": "string",

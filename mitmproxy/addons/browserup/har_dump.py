@@ -82,7 +82,6 @@ class HarDumpAddonResource:
     def apispec(self, spec):
         here = os.path.abspath(os.path.dirname(__file__))
         for filepath in glob.iglob(here + '/schemas/*.json'):
-
             filename = Path(filepath).resolve().stem
             with open(filepath, encoding='utf-8') as f:
                 schema = json.load(f)

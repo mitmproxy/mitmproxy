@@ -56,10 +56,8 @@ class BrowserUpAddonsManagerAddOn:
 
     def write_spec(self, spec):
         pretty_json = json.dumps(spec.to_dict(), indent=2)
-        print(pretty_json)
         root = Path(__file__).parent.parent.parent.parent
         schema_path = os.path.join(root, 'browserup-proxy.schema.json')
-        print(schema_path)
         f = open(schema_path, 'w')
         f.write(pretty_json)
         f.close()
