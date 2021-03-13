@@ -91,8 +91,12 @@ class Layer:
     @property
     def stack_pos(self) -> str:
         """repr() for this layer and all its parent layers, only useful for debugging."""
-        idx = self.context.layers.index(self)
-        return " >> ".join(repr(x) for x in self.context.layers[:idx + 1])
+        try:
+            idx = self.context.layers.index(self)
+        except ValueError:
+            return repr(self)
+        else:
+            return " >> ".join(repr(x) for x in self.context.layers[:idx + 1])
 
     @abstractmethod
     def _handle_event(self, event: events.Event) -> CommandGenerator[None]:

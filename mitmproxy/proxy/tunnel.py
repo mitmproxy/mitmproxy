@@ -79,8 +79,6 @@ class TunnelLayer(layer.Layer):
                     yield from self.on_handshake_error(err)
                     yield from self._handshake_finished(err)
                 self.tunnel_state = TunnelState.CLOSED
-            elif isinstance(event, events.MessageInjected):
-                yield from self.event_to_child(event)
             else:  # pragma: no cover
                 raise AssertionError(f"Unexpected event: {event}")
         else:
