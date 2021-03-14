@@ -302,6 +302,7 @@ class HttpStream(layer.Layer):
         if isinstance(event, ResponseData):
             self.response_body_buf += event.data
         elif isinstance(event, ResponseTrailers):
+            assert self.flow.response
             self.flow.response.trailers = event.trailers
             yield HttpResponseTrailersHook(self.flow)
         elif isinstance(event, ResponseEndOfMessage):

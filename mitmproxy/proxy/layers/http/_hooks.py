@@ -44,6 +44,7 @@ class HttpResponseHook(commands.StartHook):
     name = "response"
     flow: http.HTTPFlow
 
+
 @dataclass
 class HttpResponseTrailersHook(commands.StartHook):
     """
@@ -51,6 +52,7 @@ class HttpResponseTrailersHook(commands.StartHook):
     """
     name = "responsetrailers"
     flow: http.HTTPFlow
+
 
 @dataclass
 class HttpErrorHook(commands.StartHook):

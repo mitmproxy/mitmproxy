@@ -35,6 +35,7 @@ example_response_trailers = (
     (b'my-trailer-b', b'0')
 )
 
+
 def decode_frames(data: bytes) -> List[hyperframe.frame.Frame]:
     # swallow preamble
     if data.startswith(b"PRI * HTTP/2.0"):

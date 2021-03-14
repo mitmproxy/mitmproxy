@@ -99,10 +99,7 @@ class Http2Connection(HttpConnection):
                     self.h2_conn.send_data(event.stream_id, event.data)
             elif isinstance(event, ResponseTrailers):
                 if self.is_open_for_us(event.stream_id):
-                    trailers = [
-                    *event.trailers.fields
-                    ]
-                    r = event.trailers.fields
+                    trailers = [*event.trailers.fields]
                     self.h2_conn.send_headers(event.stream_id, trailers, event.end_stream)
             elif isinstance(event, self.SendEndOfMessage):
                 if self.is_open_for_us(event.stream_id):
@@ -458,6 +455,7 @@ class Http2Client(Http2Connection):
         elif isinstance(event, h2.events.TrailersReceived):
             pseudo_trailers, trailers = split_pseudo_headers(event.headers)
             yield ReceiveHttp(ResponseTrailers(event.stream_id, trailers, bool(event.stream_ended)))
+            return False
         elif isinstance(event, h2.events.RequestReceived):
             yield from self.protocol_error(f"HTTP/2 protocol error: received request from server")
             return True
