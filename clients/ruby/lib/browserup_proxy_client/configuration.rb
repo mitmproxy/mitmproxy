@@ -1,7 +1,7 @@
 =begin
 #BrowserUp Proxy
 
-#BrowserUp Proxy Control API
+#___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -10,7 +10,7 @@ OpenAPI Generator version: 5.0.1
 
 =end
 
-module BrowserupProxyClient
+module BrowserupProxy
   class Configuration
     # Defines url scheme
     attr_accessor :scheme
@@ -139,7 +139,7 @@ module BrowserupProxyClient
 
     def initialize
       @scheme = 'http'
-      @host = 'localhost'
+      @host = 'localhost:8080'
       @base_path = ''
       @server_index = 0
       @server_operation_index = {}
@@ -222,8 +222,17 @@ module BrowserupProxyClient
     def server_settings
       [
         {
-          url: "",
-          description: "No description provided",
+          url: "http://localhost:{port}",
+          description: "The development API server",
+          variables: {
+            port: {
+                description: "No description provided",
+                default_value: "8080",
+                enum_values: [
+                  "8080"
+                ]
+              }
+            }
         }
       ]
     end

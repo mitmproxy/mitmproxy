@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * BrowserUp Proxy Control API
+ * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -13,8 +13,8 @@
 
 import ApiClient from '../ApiClient';
 import EntryRequestCookies from './EntryRequestCookies';
+import EntryRequestQueryString from './EntryRequestQueryString';
 import Header from './Header';
-import Query from './Query';
 
 /**
  * The EntryRequest model module.
@@ -30,7 +30,7 @@ class EntryRequest {
      * @param httpVersion {String} 
      * @param cookies {Array.<module:BrowserUpProxyClient/model/EntryRequestCookies>} 
      * @param headers {Array.<module:BrowserUpProxyClient/model/Header>} 
-     * @param queryString {Array.<module:BrowserUpProxyClient/model/Query>} 
+     * @param queryString {Array.<module:BrowserUpProxyClient/model/EntryRequestQueryString>} 
      * @param headersSize {Number} 
      * @param bodySize {Number} 
      */
@@ -82,7 +82,7 @@ class EntryRequest {
                 obj['headers'] = ApiClient.convertToType(data['headers'], [Header]);
             }
             if (data.hasOwnProperty('queryString')) {
-                obj['queryString'] = ApiClient.convertToType(data['queryString'], [Query]);
+                obj['queryString'] = ApiClient.convertToType(data['queryString'], [EntryRequestQueryString]);
             }
             if (data.hasOwnProperty('postData')) {
                 obj['postData'] = ApiClient.convertToType(data['postData'], Object);
@@ -129,7 +129,7 @@ EntryRequest.prototype['cookies'] = undefined;
 EntryRequest.prototype['headers'] = undefined;
 
 /**
- * @member {Array.<module:BrowserUpProxyClient/model/Query>} queryString
+ * @member {Array.<module:BrowserUpProxyClient/model/EntryRequestQueryString>} queryString
  */
 EntryRequest.prototype['queryString'] = undefined;
 

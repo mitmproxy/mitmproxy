@@ -3,7 +3,7 @@
 =begin
 #BrowserUp Proxy
 
-#BrowserUp Proxy Control API
+#___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -17,7 +17,7 @@ require "browserup_proxy_client/version"
 
 Gem::Specification.new do |s|
   s.name        = "browserup_proxy_client"
-  s.version     = BrowserupProxyClient::VERSION
+  s.version     = BrowserupProxy::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["BrowserUp"]
   s.email       = ["hello@browserup.com"]

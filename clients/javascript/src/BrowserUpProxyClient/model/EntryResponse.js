@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * BrowserUp Proxy Control API
+ * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -12,7 +12,7 @@
  */
 
 import ApiClient from '../ApiClient';
-import Cookie from './Cookie';
+import EntryRequestCookies from './EntryRequestCookies';
 import EntryResponseContent from './EntryResponseContent';
 import Header from './Header';
 
@@ -28,7 +28,7 @@ class EntryResponse {
      * @param status {Number} 
      * @param statusText {String} 
      * @param httpVersion {String} 
-     * @param cookies {Array.<module:BrowserUpProxyClient/model/Cookie>} 
+     * @param cookies {Array.<module:BrowserUpProxyClient/model/EntryRequestCookies>} 
      * @param headers {Array.<module:BrowserUpProxyClient/model/Header>} 
      * @param content {module:BrowserUpProxyClient/model/EntryResponseContent} 
      * @param redirectURL {String} 
@@ -78,7 +78,7 @@ class EntryResponse {
                 obj['httpVersion'] = ApiClient.convertToType(data['httpVersion'], 'String');
             }
             if (data.hasOwnProperty('cookies')) {
-                obj['cookies'] = ApiClient.convertToType(data['cookies'], [Cookie]);
+                obj['cookies'] = ApiClient.convertToType(data['cookies'], [EntryRequestCookies]);
             }
             if (data.hasOwnProperty('headers')) {
                 obj['headers'] = ApiClient.convertToType(data['headers'], [Header]);
@@ -121,7 +121,7 @@ EntryResponse.prototype['statusText'] = undefined;
 EntryResponse.prototype['httpVersion'] = undefined;
 
 /**
- * @member {Array.<module:BrowserUpProxyClient/model/Cookie>} cookies
+ * @member {Array.<module:BrowserUpProxyClient/model/EntryRequestCookies>} cookies
  */
 EntryResponse.prototype['cookies'] = undefined;
 

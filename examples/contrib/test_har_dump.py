@@ -23,10 +23,10 @@ class TestHARDump:
         # context is needed to provide ctx.log function that
         # is invoked if there are exceptions
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_capture.py"))
             # check script is read without errors
             assert tctx.master.logs == []
-            assert a.name_value   # last function in har_dump.py
+            assert a.name_value   # last function in har_capture.py
 
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
@@ -38,7 +38,7 @@ class TestHARDump:
 
     def test_base64(self, tmpdir, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_capture.py"))
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
 
@@ -50,7 +50,7 @@ class TestHARDump:
 
     def test_format_cookies(self, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_capture.py"))
 
             CA = cookies.CookieAttrs
 
@@ -69,7 +69,7 @@ class TestHARDump:
 
     def test_binary(self, tmpdir, tdata):
         with taddons.context() as tctx:
-            a = tctx.script(tdata.path("../examples/contrib/har_dump.py"))
+            a = tctx.script(tdata.path("../examples/contrib/har_capture.py"))
             path = str(tmpdir.join("somefile"))
             tctx.configure(a, hardump=path)
 

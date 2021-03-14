@@ -1,22 +1,22 @@
-# BrowserupProxyClient::BlockList
+# BrowserupProxy::BlockList
 
 ## Properties
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **status_code** | **String** |  |  |
-| **url_pattern** | **String** |  |  |
-| **http_method_pattern** | **String** |  |  |
+| **http_method_pattern** | **String** | HTTP Method Regex Pattern |  |
+| **status_code** | **String** | HTTP Status Code |  |
+| **url_pattern** | **String** | URL Regex Pattern |  |
 
 ## Example
 
 ```ruby
 require 'browserup_proxy_client'
 
-instance = BrowserupProxyClient::BlockList.new(
+instance = BrowserupProxy::BlockList.new(
+  http_method_pattern: null,
   status_code: null,
-  url_pattern: null,
-  http_method_pattern: null
+  url_pattern: null
 )
 ```
 

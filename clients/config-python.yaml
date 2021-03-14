@@ -3,4 +3,4 @@ appDescription: "BrowserUp Proxy Client"
 
 # Python
 packageName: "browserup-proxy"
-projectName: "browserup-proxy-cli"
+projectName: "browserup-proxy-client"

@@ -1,7 +1,7 @@
 =begin
 #BrowserUp Proxy
 
-#BrowserUp Proxy Control API
+#___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -13,20 +13,23 @@ OpenAPI Generator version: 5.0.1
 require 'date'
 require 'time'
 
-module BrowserupProxyClient
+module BrowserupProxy
   class BlockList
+    # HTTP Method Regex Pattern
+    attr_accessor :http_method_pattern
+
+    # HTTP Status Code
     attr_accessor :status_code
 
+    # URL Regex Pattern
     attr_accessor :url_pattern
-
-    attr_accessor :http_method_pattern
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
-        :'status_code' => :'statusCode',
-        :'url_pattern' => :'urlPattern',
-        :'http_method_pattern' => :'httpMethodPattern'
+        :'http_method_pattern' => :'http_method_pattern',
+        :'status_code' => :'status_code',
+        :'url_pattern' => :'url_pattern'
       }
     end
 
@@ -38,9 +41,9 @@ module BrowserupProxyClient
     # Attribute type mapping.
     def self.openapi_types
       {
+        :'http_method_pattern' => :'String',
         :'status_code' => :'String',
-        :'url_pattern' => :'String',
-        :'http_method_pattern' => :'String'
+        :'url_pattern' => :'String'
       }
     end
 
@@ -54,16 +57,20 @@ module BrowserupProxyClient
     # @param [Hash] attributes Model attributes in the form of hash
     def initialize(attributes = {})
       if (!attributes.is_a?(Hash))
-        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupProxyClient::BlockList` initialize method"
+        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupProxy::BlockList` initialize method"
       end
 
       # check to see if the attribute exists and convert string to symbol for hash key
       attributes = attributes.each_with_object({}) { |(k, v), h|
         if (!self.class.attribute_map.key?(k.to_sym))
-          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupProxyClient::BlockList`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
+          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupProxy::BlockList`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
         end
         h[k.to_sym] = v
       }
+
+      if attributes.key?(:'http_method_pattern')
+        self.http_method_pattern = attributes[:'http_method_pattern']
+      end
 
       if attributes.key?(:'status_code')
         self.status_code = attributes[:'status_code']
@@ -72,16 +79,16 @@ module BrowserupProxyClient
       if attributes.key?(:'url_pattern')
         self.url_pattern = attributes[:'url_pattern']
       end
-
-      if attributes.key?(:'http_method_pattern')
-        self.http_method_pattern = attributes[:'http_method_pattern']
-      end
     end
 
     # Show invalid properties with the reasons. Usually used together with valid?
     # @return Array for valid properties with the reasons
     def list_invalid_properties
       invalid_properties = Array.new
+      if @http_method_pattern.nil?
+        invalid_properties.push('invalid value for "http_method_pattern", http_method_pattern cannot be nil.')
+      end
+
       if @status_code.nil?
         invalid_properties.push('invalid value for "status_code", status_code cannot be nil.')
       end
@@ -90,19 +97,15 @@ module BrowserupProxyClient
         invalid_properties.push('invalid value for "url_pattern", url_pattern cannot be nil.')
       end
 
-      if @http_method_pattern.nil?
-        invalid_properties.push('invalid value for "http_method_pattern", http_method_pattern cannot be nil.')
-      end
-
       invalid_properties
     end
 
     # Check to see if the all the properties in the model are valid
     # @return true if the model is valid
     def valid?
+      return false if @http_method_pattern.nil?
       return false if @status_code.nil?
       return false if @url_pattern.nil?
-      return false if @http_method_pattern.nil?
       true
     end
 
@@ -111,9 +114,9 @@ module BrowserupProxyClient
     def ==(o)
       return true if self.equal?(o)
       self.class == o.class &&
+          http_method_pattern == o.http_method_pattern &&
           status_code == o.status_code &&
-          url_pattern == o.url_pattern &&
-          http_method_pattern == o.http_method_pattern
+          url_pattern == o.url_pattern
     end
 
     # @see the `==` method
@@ -125,7 +128,7 @@ module BrowserupProxyClient
     # Calculates hash code according to all attributes.
     # @return [Integer] Hash code
     def hash
-      [status_code, url_pattern, http_method_pattern].hash
+      [http_method_pattern, status_code, url_pattern].hash
     end
 
     # Builds the object from hash
@@ -195,7 +198,7 @@ module BrowserupProxyClient
         end
       else # model
         # models (e.g. Pet) or oneOf
-        klass = BrowserupProxyClient.const_get(type)
+        klass = BrowserupProxy.const_get(type)
         klass.respond_to?(:openapi_one_of) ? klass.build(value) : klass.build_from_hash(value)
       end
     end

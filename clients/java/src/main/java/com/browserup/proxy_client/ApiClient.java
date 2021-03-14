@@ -1,6 +1,6 @@
 /*
  * BrowserUp Proxy
- * BrowserUp Proxy Control API
+ * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -54,7 +54,7 @@ import com.browserup.proxy_client.auth.ApiKeyAuth;
 
 public class ApiClient {
 
-    private String basePath = "http://localhost";
+    private String basePath = "http://localhost:8080";
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
     private Map<String, String> defaultCookieMap = new HashMap<String, String>();
@@ -138,7 +138,7 @@ public class ApiClient {
     /**
      * Set base path
      *
-     * @param basePath Base path of the URL (e.g http://localhost
+     * @param basePath Base path of the URL (e.g http://localhost:8080
      * @return An instance of OkHttpClient
      */
     public ApiClient setBasePath(String basePath) {

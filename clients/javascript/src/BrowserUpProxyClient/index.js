@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * BrowserUp Proxy Control API
+ * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -14,19 +14,22 @@
 
 import ApiClient from './ApiClient';
 import AllowList from './model/AllowList';
+import AuthBasic from './model/AuthBasic';
 import BlockList from './model/BlockList';
 import Entry from './model/Entry';
 import EntryRequest from './model/EntryRequest';
 import EntryRequestCookies from './model/EntryRequestCookies';
+import EntryRequestQueryString from './model/EntryRequestQueryString';
 import EntryResponse from './model/EntryResponse';
 import EntryResponseContent from './model/EntryResponseContent';
 import Har from './model/Har';
 import HarLog from './model/HarLog';
 import HarLogCreator from './model/HarLogCreator';
 import Header from './model/Header';
+import Headers from './model/Headers';
 import Page from './model/Page';
 import PagePageTimings from './model/PagePageTimings';
-import ProxyApi from './browserup-proxy-client/ProxyApi';
+import BrowserUpProxyApi from './browserup-proxy-client/BrowserUpProxyApi';
 
 
 /**
@@ -74,6 +77,12 @@ export {
     AllowList,
 
     /**
+     * The AuthBasic model constructor.
+     * @property {module:BrowserUpProxyClient/model/AuthBasic}
+     */
+    AuthBasic,
+
+    /**
      * The BlockList model constructor.
      * @property {module:BrowserUpProxyClient/model/BlockList}
      */
@@ -96,6 +105,12 @@ export {
      * @property {module:BrowserUpProxyClient/model/EntryRequestCookies}
      */
     EntryRequestCookies,
+
+    /**
+     * The EntryRequestQueryString model constructor.
+     * @property {module:BrowserUpProxyClient/model/EntryRequestQueryString}
+     */
+    EntryRequestQueryString,
 
     /**
      * The EntryResponse model constructor.
@@ -134,6 +149,12 @@ export {
     Header,
 
     /**
+     * The Headers model constructor.
+     * @property {module:BrowserUpProxyClient/model/Headers}
+     */
+    Headers,
+
+    /**
      * The Page model constructor.
      * @property {module:BrowserUpProxyClient/model/Page}
      */
@@ -146,8 +167,8 @@ export {
     PagePageTimings,
 
     /**
-    * The ProxyApi service constructor.
-    * @property {module:BrowserUpProxyClient/browserup-proxy-client/ProxyApi}
+    * The BrowserUpProxyApi service constructor.
+    * @property {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi}
     */
-    ProxyApi
+    BrowserUpProxyApi
 };

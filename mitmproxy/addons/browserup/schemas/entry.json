@@ -13,9 +13,7 @@
       "type": "string"
     },
     "startedDateTime": {
-      "type": "string",
-      "format": "date-time",
-      "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))"
+      "type": "string"
     },
     "time": {
       "type": "number",
@@ -88,8 +86,23 @@
         },
         "queryString": {
           "type": "array",
-          "items": {
-            "$ref": "#/components/schemas/query"
+          "items":  {
+            "type": "object",
+            "required": [
+              "name",
+              "value"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
           }
         },
         "postData": {
@@ -164,7 +177,37 @@
         "cookies": {
           "type": "array",
           "items": {
-            "$ref": "#/components/schemas/cookie"
+            "type": "object",
+            "required": [
+              "name",
+              "value"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "expires": {
+                "type": "string"
+              },
+              "httpOnly": {
+                "type": "boolean"
+              },
+              "secure": {
+                "type": "boolean"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
           }
         },
         "headers": {
@@ -230,12 +273,10 @@
               ],
               "properties": {
                 "expires": {
-                  "type": "string",
-                  "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                  "type": "string"
                 },
                 "lastAccess": {
-                  "type": "string",
-                  "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                  "type": "string"
                 },
                 "eTag": {
                   "type": "string"
@@ -264,12 +305,10 @@
               ],
               "properties": {
                 "expires": {
-                  "type": "string",
-                  "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                  "type": "string"
                 },
                 "lastAccess": {
-                  "type": "string",
-                  "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                  "type": "string"
                 },
                 "eTag": {
                   "type": "string"

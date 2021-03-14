@@ -9,7 +9,7 @@ Name | Type | Description | Notes
 **httpVersion** | **String** |  | 
 **cookies** | [**[EntryRequestCookies]**](EntryRequestCookies.md) |  | 
 **headers** | [**[Header]**](Header.md) |  | 
-**queryString** | [**[Query]**](Query.md) |  | 
+**queryString** | [**[EntryRequestQueryString]**](EntryRequestQueryString.md) |  | 
 **postData** | **Object** | Posted data info. | [optional] 
 **headersSize** | **Number** |  | 
 **bodySize** | **Number** |  | 

@@ -43,4 +43,5 @@ different. So see them, follow this pattern:
 
 
 Notes:
-The specs need updating and aren't real out of the box!  Other changes may be necessary!
+The test/specs written by the generators *will not* update if there is an existing spec
+with that name in the folder. The expectation is that you add real tests (not the stubs), and then maintain them.

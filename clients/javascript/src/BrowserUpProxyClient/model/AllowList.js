@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * BrowserUp Proxy Control API
+ * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -22,12 +22,12 @@ class AllowList {
     /**
      * Constructs a new <code>AllowList</code>.
      * @alias module:BrowserUpProxyClient/model/AllowList
-     * @param urlPattern {String} URL Regex Pattern to match
      * @param statusCode {String} HTTP Status Code to match
+     * @param urlPattern {String} URL Regex Pattern to match
      */
-    constructor(urlPattern, statusCode) { 
+    constructor(statusCode, urlPattern) { 
         
-        AllowList.initialize(this, urlPattern, statusCode);
+        AllowList.initialize(this, statusCode, urlPattern);
     }
 
     /**
@@ -35,9 +35,9 @@ class AllowList {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, urlPattern, statusCode) { 
-        obj['urlPattern'] = urlPattern;
-        obj['statusCode'] = statusCode;
+    static initialize(obj, statusCode, urlPattern) { 
+        obj['status_code'] = statusCode;
+        obj['url_pattern'] = urlPattern;
     }
 
     /**
@@ -51,11 +51,11 @@ class AllowList {
         if (data) {
             obj = obj || new AllowList();
 
-            if (data.hasOwnProperty('urlPattern')) {
-                obj['urlPattern'] = ApiClient.convertToType(data['urlPattern'], 'String');
+            if (data.hasOwnProperty('status_code')) {
+                obj['status_code'] = ApiClient.convertToType(data['status_code'], 'String');
             }
-            if (data.hasOwnProperty('statusCode')) {
-                obj['statusCode'] = ApiClient.convertToType(data['statusCode'], 'String');
+            if (data.hasOwnProperty('url_pattern')) {
+                obj['url_pattern'] = ApiClient.convertToType(data['url_pattern'], 'String');
             }
         }
         return obj;
@@ -65,16 +65,16 @@ class AllowList {
 }
 
 /**
- * URL Regex Pattern to match
- * @member {String} urlPattern
+ * HTTP Status Code to match
+ * @member {String} status_code
  */
-AllowList.prototype['urlPattern'] = undefined;
+AllowList.prototype['status_code'] = undefined;
 
 /**
- * HTTP Status Code to match
- * @member {String} statusCode
+ * URL Regex Pattern to match
+ * @member {String} url_pattern
  */
-AllowList.prototype['statusCode'] = undefined;
+AllowList.prototype['url_pattern'] = undefined;
 
 
 

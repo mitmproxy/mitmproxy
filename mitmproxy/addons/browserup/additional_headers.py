@@ -1,13 +1,12 @@
 from marshmallow import Schema, fields
 
-class HeaderSchema:
-    urlPattern = fields.Str(required=True)
-    statusCode = fields.Str(required=True)
+class HeaderSchema(Schema):
+    headers = fields.Dict(required=True,description="Header key-value pairs")
 
 class AddHeadersResource:
 
     def apispec(self, spec):
-        spec.components.schema('Headers', HeaderSchema(many=True))
+        spec.components.schema('Headers', schema=HeaderSchema())
         spec.path(resource=self)
 
     def addon_path(self):
@@ -16,21 +15,52 @@ class AddHeadersResource:
     def __init__(self, additional_headers_addon):
         self.additional_headers_addon = additional_headers_addon
 
-    def on_get(self, req, resp, method_name):
-        getattr(self, "on_" + method_name)(req, resp)
+    def on_get(self, req, resp):
+        """Get the Headers.
+        ---
+        description: Get the current added Headers
+        operationId: getAdditionalHeaders
+        tags:
+            - BrowserUpProxy
+        responses:
+            200:
+                description: The current header settings.
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Headers"
+        """
+        return self.additional_headers_addon.headers
 
-    def on_add_headers(self, req, resp):
-        for k, v in req.params.items():
-            self.additional_headers_addon.headers[k] = v
+    def on_post(self, req, resp):
+        """Post the Headers object to be added in
+        ---
+        description: Set additional headers to add to requests
+        operationId: setAdditionalHeaders
+        tags:
+            - BrowserUpProxy
+        responses:
+            200:
+                description: Show the current additional header settings.
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Headers"
+        """
+        self.additional_headers_addon.headers = req.params.items()
 
-    def on_add_header(self, req, resp):
-        for k, v in req.params.items():
-            self.additional_headers_addon.headers[k] = v
-
-    def on_remove_header(self, req, resp):
-        self.additional_headers_addon.headers.pop(req.get_param('name'))
-
-    def on_remove_all_headers(self, req, resp):
+    def on_delete(self, req, resp):
+        """Clear the current additional Headers, reseting to adding no additional headers
+        ---
+        description: Clear the additional Headers
+        operationId: clearAdditionalHeaders
+        operationId: clearAdditionalHeaders
+        tags:
+            - BrowserUpProxy
+        responses:
+            204:
+                description: The current additional header settings were cleared.
+        """
         self.additional_headers_addon.headers = {}
 
 class AddHeadersAddOn:
@@ -39,11 +69,10 @@ class AddHeadersAddOn:
         self.num = 0
         self.headers = {}
 
-    def get_resource(self):
-        return AddHeadersResource(self)
+    def get_resources(self):
+        return [AddHeadersResource(self)]
 
     def request(self, flow):
-
         for k, v in self.headers.items():
             flow.request.headers[k] = v
 

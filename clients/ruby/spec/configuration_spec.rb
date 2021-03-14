@@ -1,7 +1,7 @@
 =begin
 #BrowserUp Proxy
 
-#BrowserUp Proxy Control API
+#___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -12,14 +12,14 @@ OpenAPI Generator version: 5.0.1
 
 require 'spec_helper'
 
-describe BrowserupProxyClient::Configuration do
-  let(:config) { BrowserupProxyClient::Configuration.default }
+describe BrowserupProxy::Configuration do
+  let(:config) { BrowserupProxy::Configuration.default }
 
   before(:each) do
     # uncomment below to setup host and base_path
     # require 'URI'
-    # uri = URI.parse("http://localhost")
-    # BrowserupProxyClient.configure do |c|
+    # uri = URI.parse("http://localhost:8080")
+    # BrowserupProxy.configure do |c|
     #   c.host = uri.host
     #   c.base_path = uri.path
     # end
@@ -28,14 +28,14 @@ describe BrowserupProxyClient::Configuration do
   describe '#base_url' do
     it 'should have the default value' do
       # uncomment below to test default value of the base path
-      # expect(config.base_url).to eq("http://localhost")
+      # expect(config.base_url).to eq("http://localhost:8080")
     end
 
     it 'should remove trailing slashes' do
       [nil, '', '/', '//'].each do |base_path|
         config.base_path = base_path
         # uncomment below to test trailing slashes
-        # expect(config.base_url).to eq("http://localhost")
+        # expect(config.base_url).to eq("http://localhost:8080")
       end
     end
   end

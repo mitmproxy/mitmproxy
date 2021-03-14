@@ -1,6 +1,6 @@
 /*
  * BrowserUp Proxy
- * BrowserUp Proxy Control API
+ * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -29,11 +29,11 @@ import java.io.IOException;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class AllowList {
-  public static final String SERIALIZED_NAME_STATUS_CODE = "statusCode";
+  public static final String SERIALIZED_NAME_STATUS_CODE = "status_code";
   @SerializedName(SERIALIZED_NAME_STATUS_CODE)
   private String statusCode;
 
-  public static final String SERIALIZED_NAME_URL_PATTERN = "urlPattern";
+  public static final String SERIALIZED_NAME_URL_PATTERN = "url_pattern";
   @SerializedName(SERIALIZED_NAME_URL_PATTERN)
   private String urlPattern;
 

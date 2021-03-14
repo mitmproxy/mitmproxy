@@ -1,21 +1,55 @@
 {
+  "servers": [
+    {
+      "url": "http://localhost:{port}/",
+      "description": "The development API server",
+      "variables": {
+        "port": {
+          "enum": [
+            "8080"
+          ],
+          "default": "8080"
+        }
+      }
+    }
+  ],
   "tags": [
     {
-      "name": "proxy",
-      "description": "BrowserUp Proxy Control API"
+      "name": "BrowserUp Proxy API",
+      "description": "BrowserUp Proxy REST API"
     }
   ],
   "info": {
-    "description": "BrowserUp Proxy Control API",
+    "description": "___\nThis is the REST API for controlling the BrowserUp Proxy. \nThe BrowserUp Proxy is a swiss army knife for automated testing that\ncaptures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.\n___\n",
     "title": "BrowserUp Proxy",
     "version": "1.0.0"
   },
   "paths": {
     "/har": {
       "get": {
-        "description": "Get the current HAR",
+        "description": "Get the current HAR.",
+        "operationId": "getHarLog",
         "tags": [
-          "proxy"
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current Har file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/har"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Starts a fresh HAR capture session.",
+        "operationId": "resetHarLog",
+        "tags": [
+          "BrowserUpProxy"
         ],
         "responses": {
           "200": {
@@ -31,26 +65,106 @@
         }
       }
     },
-    "/allowlist": {
-      "delete": {
-        "description": "Deletes the AllowList, which will turn-off allowlist based filtering",
+    "/har/page": {
+      "put": {
+        "description": "Starts a fresh HAR Page in the current active HAR",
+        "operationId": "setHarPage",
         "tags": [
-          "proxy"
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current Har file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/har"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth_basic/{domain}": {
+      "delete": {
+        "description": "Clears Basic Auth for a domain, disabling Automatic Basic Auth for it.",
+        "operationId": "clearBasicAuthSettings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "domain",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The domain for which to clear the basic auth settings"
+          }
+        ],
+        "tags": [
+          "BrowserUpProxy"
         ],
         "responses": {
           "204": {
-            "description": "The current allowlist, if any, was destroyed an all requests are enabled."
+            "description": "The current Basic Authorization setting is cleared and no longer used for requests to a domain."
+          }
+        }
+      },
+      "post": {
+        "description": "Enables automatic basic auth for a domain",
+        "operationId": "setBasicAuth",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "domain",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The domain for which this Basic Auth should be used"
+          }
+        ],
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthBasic"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Success!"
+          }
+        }
+      }
+    },
+    "/allowlist": {
+      "delete": {
+        "description": "Clears the AllowList, which will turn-off allowlist based filtering",
+        "operationId": "clearAllowList",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "204": {
+            "description": "The allowlist was cleared and allowlist-based filtering is OFF until a new list is posted."
           }
         }
       },
       "get": {
         "description": "Get an AllowList",
+        "operationId": "getAllowList",
         "tags": [
-          "proxy"
+          "BrowserUpProxy"
         ],
         "responses": {
           "200": {
-            "description": "The current allowlist.",
+            "description": "The current allowlist. Only allowed requests will pass through.",
             "content": {
               "application/json": {
                 "schema": {
@@ -63,8 +177,9 @@
       },
       "post": {
         "description": "Sets an AllowList",
+        "operationId": "setAllowList",
         "tags": [
-          "proxy"
+          "BrowserUpProxy"
         ],
         "requestBody": {
           "content": {
@@ -85,8 +200,9 @@
     "/blocklist": {
       "get": {
         "description": "Get a blocklist",
+        "operationId": "getBlockList",
         "tags": [
-          "proxy"
+          "BrowserUpProxy"
         ],
         "responses": {
           "200": {
@@ -103,8 +219,9 @@
       },
       "post": {
         "description": "Sets an BlockList",
+        "operationId": "setBlockList",
         "tags": [
-          "proxy"
+          "BrowserUpProxy"
         ],
         "requestBody": {
           "content": {
@@ -118,6 +235,71 @@
         "responses": {
           "204": {
             "description": "Success!"
+          }
+        }
+      }
+    },
+    "/additional_headers": {
+      "delete": {
+        "description": "Clear the additional Headers",
+        "operationId": "clearAdditionalHeaders",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "204": {
+            "description": "The current additional header settings were cleared."
+          }
+        }
+      },
+      "get": {
+        "description": "Get the current added Headers",
+        "operationId": "getAdditionalHeaders",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current header settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Headers"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Set additional headers to add to requests",
+        "operationId": "setAdditionalHeaders",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "Show the current additional header settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Headers"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthcheck": {
+      "get": {
+        "description": "Get the healthcheck",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK means all is well."
           }
         }
       }
@@ -141,9 +323,7 @@
             "type": "string"
           },
           "startedDateTime": {
-            "type": "string",
-            "format": "date-time",
-            "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))"
+            "type": "string"
           },
           "time": {
             "type": "number",
@@ -217,7 +397,22 @@
               "queryString": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/query"
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  }
                 }
               },
               "postData": {
@@ -294,7 +489,37 @@
               "cookies": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/components/schemas/cookie"
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "domain": {
+                      "type": "string"
+                    },
+                    "expires": {
+                      "type": "string"
+                    },
+                    "httpOnly": {
+                      "type": "boolean"
+                    },
+                    "secure": {
+                      "type": "boolean"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  }
                 }
               },
               "headers": {
@@ -360,12 +585,10 @@
                     ],
                     "properties": {
                       "expires": {
-                        "type": "string",
-                        "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                        "type": "string"
                       },
                       "lastAccess": {
-                        "type": "string",
-                        "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                        "type": "string"
                       },
                       "eTag": {
                         "type": "string"
@@ -394,12 +617,10 @@
                     ],
                     "properties": {
                       "expires": {
-                        "type": "string",
-                        "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                        "type": "string"
                       },
                       "lastAccess": {
-                        "type": "string",
-                        "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))?"
+                        "type": "string"
                       },
                       "eTag": {
                         "type": "string"
@@ -609,43 +830,67 @@
           }
         }
       },
-      "AllowList": {
+      "AuthBasic": {
         "type": "object",
         "properties": {
-          "urlPattern": {
+          "base_64_credentials": {
             "type": "string",
-            "description": "URL Regex Pattern to match"
-          },
-          "statusCode": {
-            "type": "string",
-            "description": "HTTP Status Code to match"
+            "description": "base 64 encoding of the username and password"
           }
         },
         "required": [
-          "statusCode",
-          "urlPattern"
+          "base_64_credentials"
+        ]
+      },
+      "AllowList": {
+        "type": "object",
+        "properties": {
+          "status_code": {
+            "type": "string",
+            "description": "HTTP Status Code to match"
+          },
+          "url_pattern": {
+            "type": "string",
+            "description": "URL Regex Pattern to match"
+          }
+        },
+        "required": [
+          "status_code",
+          "url_pattern"
         ]
       },
       "BlockList": {
         "type": "object",
         "properties": {
-          "urlPattern": {
-            "type": "string",
-            "description": "URL Regex Pattern"
-          },
-          "httpMethodPattern": {
+          "http_method_pattern": {
             "type": "string",
             "description": "HTTP Method Regex Pattern"
           },
-          "statusCode": {
+          "status_code": {
             "type": "string",
             "description": "HTTP Status Code"
+          },
+          "url_pattern": {
+            "type": "string",
+            "description": "URL Regex Pattern"
           }
         },
         "required": [
-          "httpMethodPattern",
-          "statusCode",
-          "urlPattern"
+          "http_method_pattern",
+          "status_code",
+          "url_pattern"
+        ]
+      },
+      "Headers": {
+        "type": "object",
+        "properties": {
+          "headers": {
+            "type": "object",
+            "description": "Header key-value pairs"
+          }
+        },
+        "required": [
+          "headers"
         ]
       }
     }

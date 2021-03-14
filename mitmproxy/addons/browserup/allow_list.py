@@ -5,8 +5,8 @@ from mitmproxy import http
 from marshmallow import Schema, fields
 
 class AllowListSchema(Schema):
-    urlPattern = fields.Str(required=True,description="URL Regex Pattern to match")
-    statusCode = fields.Str(required=True,description="HTTP Status Code to match")
+    url_pattern = fields.Str(required=True,description="URL Regex Pattern to match")
+    status_code = fields.Str(required=True,description="HTTP Status Code to match")
 
 class AllowListResource:
 
@@ -24,11 +24,12 @@ class AllowListResource:
         """Get the AllowList.
         ---
         description: Get an AllowList
+        operationId: getAllowList
         tags:
-            - proxy
+            - BrowserUpProxy
         responses:
             200:
-                description: The current allowlist.
+                description: The current allowlist. Only allowed requests will pass through.
                 content:
                     application/json:
                         schema:
@@ -39,8 +40,9 @@ class AllowListResource:
         """Posts the AllowList.
         ---
         description: Sets an AllowList
+        operationId: setAllowList
         tags:
-            - proxy
+            - BrowserUpProxy
         requestBody:
             content:
               application/json:
@@ -59,14 +61,15 @@ class AllowListResource:
             raise falcon.HTTPBadRequest("Invalid regexp patterns")
 
     def on_delete(self, req, resp):
-        """Delete the AllowList.
+        """Clear the AllowList.
         ---
-        description: Deletes the AllowList, which will turn-off allowlist based filtering
+        description: Clears the AllowList, which will turn-off allowlist based filtering
+        operationId: clearAllowList
         tags:
-            - proxy
+            - BrowserUpProxy
         responses:
             204:
-                description: The current allowlist, if any, was destroyed an all requests are enabled.
+                description: The allowlist was cleared and allowlist-based filtering is OFF until a new list is posted.
         """
         self.allow_list_addon.allow_list = None
 
@@ -89,8 +92,8 @@ class AllowListAddOn:
         for raw_pattern in url_patterns:
             url_patterns_compiled.append(self.__parse_regexp(raw_pattern))
 
-    def get_resource(self):
-        return AllowListResource(self)
+    def get_resources(self):
+        return [AllowListResource(self)]
 
     def allowlist_enabled(self):
         return (self.allow_list is not None)

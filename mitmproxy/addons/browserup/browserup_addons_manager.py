@@ -1,15 +1,11 @@
 import falcon
 import _thread
-
-from mitmproxy import ctx
-
-from wsgiref.simple_server import make_server
-
 import os
 import json
 
+from mitmproxy import ctx
+from wsgiref.simple_server import make_server
 from pathlib import Path
-
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from falcon_apispec import FalconPlugin
@@ -45,8 +41,20 @@ class BrowserUpAddonsManagerAddOn:
         return APISpec(
             title='BrowserUp Proxy',
             version='1.0.0',
-            tags = [{ "name": 'proxy', "description": "BrowserUp Proxy Control API" }],
-            info= { "description": "BrowserUp Proxy Control API" },
+            servers = [ { "url": "http://localhost:{port}/",
+                          "description": "The development API server",
+                          "variables": { "port": { "enum": ["8080"], "default": '8080' } }
+                        }],
+            tags = [{ "name": 'BrowserUp Proxy API', "description": "BrowserUp Proxy REST API" }],
+
+            info= { "description":
+"""___
+This is the REST API for controlling the BrowserUp Proxy. 
+The BrowserUp Proxy is a swiss army knife for automated testing that
+captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
+___
+"""
+                    },
             openapi_version='3.0.3',
             plugins=[
                 FalconPlugin(app),
@@ -63,19 +71,19 @@ class BrowserUpAddonsManagerAddOn:
         f.close()
 
 
-    def get_resources(self, app, spec):
+    def get_resources_from_addons(self, app, spec):
         addons = ctx.master.addons
         resources = []
-        get_resource_fun_name = "get_resource"
+        get_resources_fun_name = "get_resources"
         for custom_addon in addons.chain:
-            if hasattr(custom_addon, get_resource_fun_name):
-                resource = getattr(custom_addon, get_resource_fun_name)()
-                resources.append(resource)
-                route = "/" + resource.addon_path()
-                app.add_route(route, resource)
-
-                if 'apispec' in dir(resource):
-                    resource.apispec(spec)
+            if hasattr(custom_addon, get_resources_fun_name):
+                addon_resources = getattr(custom_addon, get_resources_fun_name)()
+                for resource in addon_resources:
+                    route = "/" + resource.addon_path()
+                    app.add_route(route, resource)
+                    resources.append(resource)
+                    if 'apispec' in dir(resource):
+                        resource.apispec(spec)
 
         self.write_spec(spec)
         return resources
@@ -84,8 +92,8 @@ class BrowserUpAddonsManagerAddOn:
     def start_falcon(self):
         app = falcon.API()
         spec = self.basic_spec(app)
-        for resource in self.get_resources(app, spec ):
-            route = "/" + resource.addon_path() + "/{method_name}"
+        for resource in self.get_resources_from_addons(app, spec ):
+            route = "/" + resource.addon_path()
             print("Adding route: " + route)
             app.add_route(route, resource)
 
@@ -93,9 +101,7 @@ class BrowserUpAddonsManagerAddOn:
             print('Starting REST API management on port: {}'.format(ctx.options.addons_management_port))
             httpd.serve_forever()
 
-            #
             # https://marshmallow.readthedocs.io/en/stable/quickstart.html
-            # Schema.loads(json_path)
 
 addons = [
     BrowserUpAddonsManagerAddOn()

@@ -1,7 +1,7 @@
 =begin
 #BrowserUp Proxy
 
-#BrowserUp Proxy Control API
+#___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -17,7 +17,7 @@ require 'tempfile'
 require 'time'
 require 'typhoeus'
 
-module BrowserupProxyClient
+module BrowserupProxy
   class ApiClient
     # The Configuration object holding settings to be used in the API client.
     attr_accessor :config
@@ -275,7 +275,7 @@ module BrowserupProxyClient
         end
       else
         # models (e.g. Pet) or oneOf
-        klass = BrowserupProxyClient.const_get(return_type)
+        klass = BrowserupProxy.const_get(return_type)
         klass.respond_to?(:openapi_one_of) ? klass.build(data) : klass.build_from_hash(data)
       end
     end

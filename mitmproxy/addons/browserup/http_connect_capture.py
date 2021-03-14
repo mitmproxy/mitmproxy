@@ -1,5 +1,4 @@
 import time
-import asyncio
 
 from mitmproxy import ctx
 
@@ -12,25 +11,6 @@ RESPONSE_TIMED_OUT_ERROR_MESSAGE = "Response timed out"
 
 #SERVERS_SEEN: typing.Set[] = set()
 SERVERS_SEEN = {}
-
-class HttpConnectCaptureResource:
-
-    def addon_path(self):
-        return "http_connect_capture"
-
-    def __init__(self, har_connect_addon):
-        self.har_connect_addon = har_connect_addon
-        for a in ctx.master.addons.get("scriptloader").addons:
-            self.har_connect_addon.har_dump_addon = a.addons[0].addons[0]
-
-    def on_get(self, req, resp, method_name):
-        try:
-            asyncio.get_event_loop()
-        except:
-            asyncio.set_event_loop(asyncio.new_event_loop())
-        getattr(self, "on_" + method_name)(req, resp)
-
-
 
 class HttpConnectCaptureAddOn:
 
@@ -50,13 +30,9 @@ class HttpConnectCaptureAddOn:
         self.ssl_handshake_started_nanos = 0
         self.http_connect_timing = None
 
-    def generate_http_connect_timing(self):
-        return {
-            "blockedTimeNanos": -1,
-            "dnsTimeNanos": -1,
-            "connectTimeNanos": -1,
-            "sslHandshakeTimeNanos": -1,
-        }
+
+
+        # HarBuilder.http_connect_timing
 
     # TCP Callbacks
 
@@ -187,9 +163,6 @@ class HttpConnectCaptureAddOn:
         har_entry = self.get_har_entry(flow)
         har_entry['timings']['sslNanos'] = ssl_time
         har_entry['timings']['connectNanos'] = connect_time
-
-    def get_resource(self):
-        return HttpConnectCaptureResource(self)
 
     def proxy_to_server_resolution_failed(self, flow, req_host_port, original_error):
         msg = RESOLUTION_FAILED_ERROR_MESSAGE + req_host_port

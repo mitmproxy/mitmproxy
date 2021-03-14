@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * BrowserUp Proxy Control API
+ * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -22,13 +22,13 @@ class BlockList {
     /**
      * Constructs a new <code>BlockList</code>.
      * @alias module:BrowserUpProxyClient/model/BlockList
-     * @param httpMethodPattern {String} HTTP Method Regex Pattern
-     * @param urlPattern {String} URL Regex Pattern
      * @param statusCode {String} HTTP Status Code
+     * @param urlPattern {String} URL Regex Pattern
+     * @param httpMethodPattern {String} HTTP Method Regex Pattern
      */
-    constructor(httpMethodPattern, urlPattern, statusCode) { 
+    constructor(statusCode, urlPattern, httpMethodPattern) { 
         
-        BlockList.initialize(this, httpMethodPattern, urlPattern, statusCode);
+        BlockList.initialize(this, statusCode, urlPattern, httpMethodPattern);
     }
 
     /**
@@ -36,10 +36,10 @@ class BlockList {
      * This method is used by the constructors of any subclasses, in order to implement multiple inheritance (mix-ins).
      * Only for internal use.
      */
-    static initialize(obj, httpMethodPattern, urlPattern, statusCode) { 
-        obj['httpMethodPattern'] = httpMethodPattern;
-        obj['urlPattern'] = urlPattern;
-        obj['statusCode'] = statusCode;
+    static initialize(obj, statusCode, urlPattern, httpMethodPattern) { 
+        obj['status_code'] = statusCode;
+        obj['url_pattern'] = urlPattern;
+        obj['http_method_pattern'] = httpMethodPattern;
     }
 
     /**
@@ -53,14 +53,14 @@ class BlockList {
         if (data) {
             obj = obj || new BlockList();
 
-            if (data.hasOwnProperty('httpMethodPattern')) {
-                obj['httpMethodPattern'] = ApiClient.convertToType(data['httpMethodPattern'], 'String');
+            if (data.hasOwnProperty('status_code')) {
+                obj['status_code'] = ApiClient.convertToType(data['status_code'], 'String');
             }
-            if (data.hasOwnProperty('urlPattern')) {
-                obj['urlPattern'] = ApiClient.convertToType(data['urlPattern'], 'String');
+            if (data.hasOwnProperty('url_pattern')) {
+                obj['url_pattern'] = ApiClient.convertToType(data['url_pattern'], 'String');
             }
-            if (data.hasOwnProperty('statusCode')) {
-                obj['statusCode'] = ApiClient.convertToType(data['statusCode'], 'String');
+            if (data.hasOwnProperty('http_method_pattern')) {
+                obj['http_method_pattern'] = ApiClient.convertToType(data['http_method_pattern'], 'String');
             }
         }
         return obj;
@@ -70,22 +70,22 @@ class BlockList {
 }
 
 /**
- * HTTP Method Regex Pattern
- * @member {String} httpMethodPattern
+ * HTTP Status Code
+ * @member {String} status_code
  */
-BlockList.prototype['httpMethodPattern'] = undefined;
+BlockList.prototype['status_code'] = undefined;
 
 /**
  * URL Regex Pattern
- * @member {String} urlPattern
+ * @member {String} url_pattern
  */
-BlockList.prototype['urlPattern'] = undefined;
+BlockList.prototype['url_pattern'] = undefined;
 
 /**
- * HTTP Status Code
- * @member {String} statusCode
+ * HTTP Method Regex Pattern
+ * @member {String} http_method_pattern
  */
-BlockList.prototype['statusCode'] = undefined;
+BlockList.prototype['http_method_pattern'] = undefined;
 
 
 

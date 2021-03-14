@@ -1,7 +1,7 @@
 =begin
 #BrowserUp Proxy
 
-#BrowserUp Proxy Control API
+#___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -13,17 +13,19 @@ OpenAPI Generator version: 5.0.1
 require 'date'
 require 'time'
 
-module BrowserupProxyClient
+module BrowserupProxy
   class AllowList
+    # HTTP Status Code to match
     attr_accessor :status_code
 
+    # URL Regex Pattern to match
     attr_accessor :url_pattern
 
     # Attribute mapping from ruby-style variable name to JSON key.
     def self.attribute_map
       {
-        :'status_code' => :'statusCode',
-        :'url_pattern' => :'urlPattern'
+        :'status_code' => :'status_code',
+        :'url_pattern' => :'url_pattern'
       }
     end
 
@@ -50,13 +52,13 @@ module BrowserupProxyClient
     # @param [Hash] attributes Model attributes in the form of hash
     def initialize(attributes = {})
       if (!attributes.is_a?(Hash))
-        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupProxyClient::AllowList` initialize method"
+        fail ArgumentError, "The input argument (attributes) must be a hash in `BrowserupProxy::AllowList` initialize method"
       end
 
       # check to see if the attribute exists and convert string to symbol for hash key
       attributes = attributes.each_with_object({}) { |(k, v), h|
         if (!self.class.attribute_map.key?(k.to_sym))
-          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupProxyClient::AllowList`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
+          fail ArgumentError, "`#{k}` is not a valid attribute in `BrowserupProxy::AllowList`. Please check the name to make sure it's valid. List of attributes: " + self.class.attribute_map.keys.inspect
         end
         h[k.to_sym] = v
       }
@@ -181,7 +183,7 @@ module BrowserupProxyClient
         end
       else # model
         # models (e.g. Pet) or oneOf
-        klass = BrowserupProxyClient.const_get(type)
+        klass = BrowserupProxy.const_get(type)
         klass.respond_to?(:openapi_one_of) ? klass.build(value) : klass.build_from_hash(value)
       end
     end

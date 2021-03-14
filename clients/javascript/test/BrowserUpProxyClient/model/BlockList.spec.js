@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * BrowserUp Proxy Control API
+ * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -54,19 +54,19 @@
       //expect(instance).to.be.a(BrowserUpProxyClient.BlockList);
     });
 
-    it('should have the property urlPattern (base name: "urlPattern")', function() {
-      // uncomment below and update the code to test the property urlPattern
-      //var instance = new BrowserUpProxyClient.BlockList();
-      //expect(instance).to.be();
-    });
-
-    it('should have the property statusCode (base name: "statusCode")', function() {
+    it('should have the property statusCode (base name: "status_code")', function() {
       // uncomment below and update the code to test the property statusCode
       //var instance = new BrowserUpProxyClient.BlockList();
       //expect(instance).to.be();
     });
 
-    it('should have the property httpMethodPattern (base name: "httpMethodPattern")', function() {
+    it('should have the property urlPattern (base name: "url_pattern")', function() {
+      // uncomment below and update the code to test the property urlPattern
+      //var instance = new BrowserUpProxyClient.BlockList();
+      //expect(instance).to.be();
+    });
+
+    it('should have the property httpMethodPattern (base name: "http_method_pattern")', function() {
       // uncomment below and update the code to test the property httpMethodPattern
       //var instance = new BrowserUpProxyClient.BlockList();
       //expect(instance).to.be();

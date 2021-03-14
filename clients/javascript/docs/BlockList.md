@@ -4,8 +4,8 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**httpMethodPattern** | **String** | HTTP Method Regex Pattern | 
-**urlPattern** | **String** | URL Regex Pattern | 
 **statusCode** | **String** | HTTP Status Code | 
+**urlPattern** | **String** | URL Regex Pattern | 
+**httpMethodPattern** | **String** | HTTP Method Regex Pattern | 
 
 
