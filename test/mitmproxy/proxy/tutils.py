@@ -318,7 +318,10 @@ class reply(events.Event):
         return inst
 
 
-class _Placeholder:
+T = typing.TypeVar("T")
+
+
+class _Placeholder(typing.Generic[T]):
     """
     Placeholder value in playbooks, so that objects (flows in particular) can be referenced before
     they are known. Example:
@@ -333,15 +336,15 @@ class _Placeholder:
     assert f().messages == 0
     """
 
-    def __init__(self, cls: typing.Type):
+    def __init__(self, cls: typing.Type[T]):
         self._obj = None
         self._cls = cls
 
-    def __call__(self):
+    def __call__(self) -> T:
         """Get the actual object"""
         return self._obj
 
-    def setdefault(self, value):
+    def setdefault(self, value: T) -> T:
         if self._obj is None:
             if self._cls is not typing.Any and not isinstance(value, self._cls):
                 raise TypeError(f"expected {self._cls.__name__}, got {type(value).__name__}.")
@@ -355,11 +358,8 @@ class _Placeholder:
         return f"Placeholder:{str(self._obj)}"
 
 
-T = typing.TypeVar("T")
-
-
 # noinspection PyPep8Naming
-def Placeholder(cls: typing.Type[T] = typing.Any) -> typing.Union[T, typing.Callable[[], T]]:
+def Placeholder(cls: typing.Type[T] = typing.Any) -> typing.Union[T, _Placeholder[T]]:
     return _Placeholder(cls)
 
 

@@ -3,7 +3,7 @@ import os
 import pytest
 from hypothesis import settings
 
-from mitmproxy import options, connection
+from mitmproxy import connection, options
 from mitmproxy.addons.core import Core
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons.termlog import TermLog

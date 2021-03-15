@@ -45,10 +45,6 @@ class Http2Connection(HttpConnection):
     streams: Dict[int, StreamState]
     """keep track of all active stream ids to send protocol errors on teardown"""
 
-    SendProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
-    SendData: Type[Union[RequestData, ResponseData]]
-    SendEndOfMessage: Type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
-
     ReceiveProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
     ReceiveData: Type[Union[RequestData, ResponseData]]
     ReceiveTrailers: Type[Union[RequestTrailers, ResponseTrailers]]
@@ -94,19 +90,17 @@ class Http2Connection(HttpConnection):
             yield SendData(self.conn, self.h2_conn.data_to_send())
 
         elif isinstance(event, HttpEvent):
-            if isinstance(event, self.SendData):
-                assert isinstance(event, (RequestData, ResponseData))
+            if isinstance(event, (RequestData, ResponseData)):
                 if self.is_open_for_us(event.stream_id):
                     self.h2_conn.send_data(event.stream_id, event.data)
             elif isinstance(event, (RequestTrailers, ResponseTrailers)):
                 if self.is_open_for_us(event.stream_id):
                     trailers = [*event.trailers.fields]
                     self.h2_conn.send_headers(event.stream_id, trailers, end_stream=True)
-            elif isinstance(event, self.SendEndOfMessage):
+            elif isinstance(event, (RequestEndOfMessage, ResponseEndOfMessage)):
                 if self.is_open_for_us(event.stream_id):
                     self.h2_conn.end_stream(event.stream_id)
-            elif isinstance(event, self.SendProtocolError):
-                assert isinstance(event, (RequestProtocolError, ResponseProtocolError))
+            elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
                 if not self.is_closed(event.stream_id):
                     code = {
                         status_codes.CLIENT_CLOSED_REQUEST: h2.errors.ErrorCodes.CANCEL,
@@ -274,10 +268,6 @@ class Http2Server(Http2Connection):
         client_side=False,
     )
 
-    SendProtocolError = ResponseProtocolError
-    SendData = ResponseData
-    SendEndOfMessage = ResponseEndOfMessage
-
     ReceiveProtocolError = RequestProtocolError
     ReceiveData = RequestData
     ReceiveTrailers = RequestTrailers
@@ -338,10 +328,6 @@ class Http2Client(Http2Connection):
         **Http2Connection.h2_conf_defaults,
         client_side=True,
     )
-
-    SendProtocolError = RequestProtocolError
-    SendData = RequestData
-    SendEndOfMessage = RequestEndOfMessage
 
     ReceiveProtocolError = ResponseProtocolError
     ReceiveData = ResponseData

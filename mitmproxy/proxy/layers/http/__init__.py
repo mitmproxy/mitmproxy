@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import DefaultDict, Dict, List, Optional, Tuple, Union
 
 import wsproto.handshake
-
 from mitmproxy import flow, http
 from mitmproxy.connection import Connection, Server
 from mitmproxy.net import server_spec
