@@ -207,7 +207,7 @@ class WebsocketLayer(layer.Layer):
             else:  # pragma: no cover
                 raise AssertionError(f"Unexpected WebSocket event: {ws_event}")
 
-    @expect(events.DataReceived, events.ConnectionClosed)
+    @expect(events.DataReceived, events.ConnectionClosed, WebSocketMessageInjected)
     def done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
 

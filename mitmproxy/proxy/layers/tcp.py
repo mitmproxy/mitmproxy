@@ -130,6 +130,6 @@ class TCPLayer(layer.Layer):
         else:
             raise AssertionError(f"Unexpected event: {event}")
 
-    @expect(events.DataReceived, events.ConnectionClosed)
+    @expect(events.DataReceived, events.ConnectionClosed, TcpMessageInjected)
     def done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
