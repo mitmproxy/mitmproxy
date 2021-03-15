@@ -30,9 +30,14 @@ example_response_headers = (
     (b':status', b'200'),
 )
 
+example_request_trailers = (
+    (b'req-trailer-a', b'a'),
+    (b'req-trailer-b', b'b')
+)
+
 example_response_trailers = (
-    (b'my-trailer-b', b'0'),
-    (b'my-trailer-b', b'0')
+    (b'resp-trailer-a', b'a'),
+    (b'resp-trailer-b', b'b')
 )
 
 
@@ -108,7 +113,7 @@ def test_simple(tctx):
     assert flow().response.text == "Hello, World!"
 
 
-def test_trailers(tctx):
+def test_response_trailers(tctx):
     playbook, cff = start_h2_client(tctx)
     flow = Placeholder(HTTPFlow)
     server = Placeholder(Server)
@@ -150,6 +155,37 @@ def test_trailers(tctx):
     )
     assert flow().request.url == "http://example.com/"
     assert flow().response.text == "Hello, World!"
+
+
+def test_request_trailers(tctx):
+    playbook, cff = start_h2_client(tctx)
+    flow = Placeholder(HTTPFlow)
+    server = Placeholder(Server)
+    initial = Placeholder(bytes)
+    assert (
+            playbook
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_headers).serialize())
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            >> DataReceived(tctx.client, cff.build_data_frame(b"Hello, World!").serialize())
+            >> DataReceived(tctx.client,
+                            cff.build_headers_frame(example_request_trailers, flags=["END_STREAM"]).serialize())
+            << http.HttpRequestTrailersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None, side_effect=make_h2)
+            << SendData(server, initial)
+    )
+    frames = decode_frames(initial())
+    assert [type(x) for x in frames] == [
+        hyperframe.frame.SettingsFrame,
+        hyperframe.frame.HeadersFrame,
+        hyperframe.frame.DataFrame,
+        hyperframe.frame.HeadersFrame,
+    ]
 
 
 def test_upstream_error(tctx):

@@ -46,9 +46,13 @@ class ResponseData(HttpEvent):
 
 
 @dataclass
+class RequestTrailers(HttpEvent):
+    trailers: http.Headers
+
+
+@dataclass
 class ResponseTrailers(HttpEvent):
     trailers: http.Headers
-    end_stream: bool = True
 
 
 @dataclass
@@ -92,6 +96,7 @@ __all__ = [
     "RequestEndOfMessage",
     "ResponseHeaders",
     "ResponseData",
+    "RequestTrailers",
     "ResponseTrailers",
     "ResponseEndOfMessage",
     "RequestProtocolError",
