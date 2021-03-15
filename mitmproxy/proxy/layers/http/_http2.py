@@ -51,6 +51,7 @@ class Http2Connection(HttpConnection):
 
     ReceiveProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
     ReceiveData: Type[Union[RequestData, ResponseData]]
+    ReceiveTrailers: Type[Union[RequestTrailers, ResponseTrailers]]
     ReceiveEndOfMessage: Type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
 
     def __init__(self, context: Context, conn: Connection):
@@ -175,6 +176,9 @@ class Http2Connection(HttpConnection):
                 yield from self.protocol_error(f"Received HTTP/2 data frame, expected headers.")
                 return True
             self.h2_conn.acknowledge_received_data(event.flow_controlled_length, event.stream_id)
+        elif isinstance(event, h2.events.TrailersReceived):
+            trailers = http.Headers(event.headers)
+            yield ReceiveHttp(self.ReceiveTrailers(event.stream_id, trailers))
         elif isinstance(event, h2.events.StreamEnded):
             state = self.streams.get(event.stream_id, None)
             if state is StreamState.HEADERS_RECEIVED:
@@ -218,8 +222,6 @@ class Http2Connection(HttpConnection):
         elif isinstance(event, h2.events.PingReceived):
             pass
         elif isinstance(event, h2.events.PingAckReceived):
-            pass
-        elif isinstance(event, h2.events.TrailersReceived):
             pass
         elif isinstance(event, h2.events.PushedStreamReceived):
             yield Log("Received HTTP/2 push promise, even though we signalled no support.", "error")
@@ -278,6 +280,7 @@ class Http2Server(Http2Connection):
 
     ReceiveProtocolError = RequestProtocolError
     ReceiveData = RequestData
+    ReceiveTrailers = RequestTrailers
     ReceiveEndOfMessage = RequestEndOfMessage
 
     def __init__(self, context: Context):
@@ -326,10 +329,6 @@ class Http2Server(Http2Connection):
             self.streams[event.stream_id] = StreamState.HEADERS_RECEIVED
             yield ReceiveHttp(RequestHeaders(event.stream_id, request, end_stream=bool(event.stream_ended)))
             return False
-        elif isinstance(event, h2.events.TrailersReceived):
-            trailers = http.Headers(event.headers)
-            yield ReceiveHttp(RequestTrailers(event.stream_id, trailers))
-            return False
         else:
             return (yield from super().handle_h2_event(event))
 
@@ -346,6 +345,7 @@ class Http2Client(Http2Connection):
 
     ReceiveProtocolError = ResponseProtocolError
     ReceiveData = ResponseData
+    ReceiveTrailers = ResponseTrailers
     ReceiveEndOfMessage = ResponseEndOfMessage
 
     our_stream_id: Dict[int, int]
@@ -455,10 +455,6 @@ class Http2Client(Http2Connection):
             )
             self.streams[event.stream_id] = StreamState.HEADERS_RECEIVED
             yield ReceiveHttp(ResponseHeaders(event.stream_id, response, bool(event.stream_ended)))
-            return False
-        elif isinstance(event, h2.events.TrailersReceived):
-            trailers = http.Headers(event.headers)
-            yield ReceiveHttp(ResponseTrailers(event.stream_id, trailers))
             return False
         elif isinstance(event, h2.events.RequestReceived):
             yield from self.protocol_error(f"HTTP/2 protocol error: received request from server")

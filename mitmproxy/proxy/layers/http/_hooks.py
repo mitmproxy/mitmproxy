@@ -18,8 +18,10 @@ class HttpRequestHook(commands.StartHook):
     """
     The full HTTP request has been read.
 
-    Note: This event fires immediately after requestheaders if the request body is streamed.
-    This ensures that requestheaders -> request -> responseheaders -> response happen in that order.
+    Note: If request streaming is active, this event fires after the entire body has been streamed.
+    HTTP trailers, if present, have not been transmitted to the server yet and can still be modified.
+    Enabling streaming may cause unexpected event sequences: For example, `response` may now occur
+    before `request` because the server replied with "413 Payload Too Large" during upload.
     """
     name = "request"
     flow: http.HTTPFlow
@@ -28,7 +30,7 @@ class HttpRequestHook(commands.StartHook):
 @dataclass
 class HttpResponseHeadersHook(commands.StartHook):
     """
-    The full HTTP response has been read.
+    HTTP response headers were successfully read. At this point, the body is empty.
     """
     name = "responseheaders"
     flow: http.HTTPFlow
@@ -37,39 +39,12 @@ class HttpResponseHeadersHook(commands.StartHook):
 @dataclass
 class HttpResponseHook(commands.StartHook):
     """
-    HTTP response headers were successfully read. At this point, the body is empty.
+    The full HTTP response has been read.
 
     Note: If response streaming is active, this event fires after the entire body has been streamed.
+    HTTP trailers, if present, have not been transmitted to the client yet and can still be modified.
     """
     name = "response"
-    flow: http.HTTPFlow
-
-
-@dataclass
-class HttpRequestTrailersHook(commands.StartHook):
-    """
-    The HTTP request trailers has been read.
-    HTTP trailers are a rarely-used feature in the HTTP specification
-    which allows peers to send additional headers after the message body.
-    This is useful for metadata that is dynamically generated while
-    the message body is sent, for example a digital signature
-    or post-processing status.
-    """
-    name = "requesttrailers"
-    flow: http.HTTPFlow
-
-
-@dataclass
-class HttpResponseTrailersHook(commands.StartHook):
-    """
-    The HTTP response trailers has been read.
-    HTTP trailers are a rarely-used feature in the HTTP specification
-    which allows peers to send additional headers after the message body.
-    This is useful for metadata that is dynamically generated while
-    the message body is sent, for example a digital signature
-    or post-processing status.
-    """
-    name = "responsetrailers"
     flow: http.HTTPFlow
 
 

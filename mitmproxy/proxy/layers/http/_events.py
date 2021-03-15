@@ -49,10 +49,18 @@ class ResponseData(HttpEvent):
 class RequestTrailers(HttpEvent):
     trailers: http.Headers
 
+    def __init__(self, stream_id: int, trailers: http.Headers):
+        self.stream_id = stream_id
+        self.trailers = trailers
+
 
 @dataclass
 class ResponseTrailers(HttpEvent):
     trailers: http.Headers
+
+    def __init__(self, stream_id: int, trailers: http.Headers):
+        self.stream_id = stream_id
+        self.trailers = trailers
 
 
 @dataclass

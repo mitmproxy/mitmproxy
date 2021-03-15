@@ -279,9 +279,9 @@ def test_fuzz_h2_response_mutations(chunks):
 
 @pytest.mark.parametrize("example", [(
         True, False,
-        ["data_req", "reply_hook_req_headers", "reply_hook_req", "reply_openconn", "data_resp", "data_reqbody",
+        ["data_req", "reply_hook_req_headers", "reply_openconn", "data_resp", "data_reqbody",
          "data_respbody", "err_server_rst", "reply_hook_resp_headers"]),
-    (True, False, ["data_req", "reply_hook_req_headers", "reply_hook_req", "reply_openconn", "err_server_rst",
+    (True, False, ["data_req", "reply_hook_req_headers", "reply_openconn", "err_server_rst",
                    "data_reqbody", "reply_hook_error"]),
 ])
 def test_cancel_examples(example):

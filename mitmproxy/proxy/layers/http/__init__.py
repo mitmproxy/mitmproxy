@@ -17,10 +17,10 @@ from mitmproxy.proxy.utils import expect
 from mitmproxy.utils import human
 from mitmproxy.websocket import WebSocketData
 from ._base import HttpCommand, HttpConnection, ReceiveHttp, StreamId
-from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, RequestTrailers, \
-    ResponseTrailers, ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
+from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, RequestTrailers, \
+    ResponseData, ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError, ResponseTrailers
 from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, HttpRequestHook, HttpResponseHeadersHook, \
-    HttpResponseHook, HttpRequestTrailersHook, HttpResponseTrailersHook
+    HttpResponseHook
 from ._http1 import Http1Client, Http1Server
 from ._http2 import Http2Client, Http2Server
 from ...context import Context
@@ -211,7 +211,6 @@ class HttpStream(layer.Layer):
     def start_request_stream(self) -> layer.CommandGenerator[None]:
         if self.flow.response:
             raise NotImplementedError("Can't set a response and enable streaming at the same time.")
-        yield HttpRequestHook(self.flow)
         ok = yield from self.make_server_connection()
         if not ok:
             return
@@ -227,11 +226,12 @@ class HttpStream(layer.Layer):
             if callable(self.flow.request.stream):
                 event.data = self.flow.request.stream(event.data)
         elif isinstance(event, RequestTrailers):
-            assert self.flow.request
             self.flow.request.trailers = event.trailers
-            yield HttpRequestTrailersHook(self.flow)
+            # we don't do anything further here, we wait for RequestEndOfMessage first to trigger the request hook.
+            return
         elif isinstance(event, RequestEndOfMessage):
             self.flow.request.timestamp_end = time.time()
+            yield HttpRequestHook(self.flow)
             self.client_state = self.state_done
 
         # edge case found while fuzzing:
@@ -245,6 +245,8 @@ class HttpStream(layer.Layer):
             if isinstance(evt, ResponseProtocolError):
                 return
         if self.flow.request.trailers:
+            # we've delayed sending trailers until after `request` has been triggered.
+            assert isinstance(event, RequestEndOfMessage)
             yield SendHttp(RequestTrailers(self.stream_id, self.flow.request.trailers), self.context.server)
         yield SendHttp(event, self.context.server)
 
@@ -255,7 +257,6 @@ class HttpStream(layer.Layer):
         elif isinstance(event, RequestTrailers):
             assert self.flow.request
             self.flow.request.trailers = event.trailers
-            yield HttpRequestTrailersHook(self.flow)
         elif isinstance(event, RequestEndOfMessage):
             self.flow.request.timestamp_end = time.time()
             self.flow.request.data.content = self.request_body_buf
@@ -309,7 +310,7 @@ class HttpStream(layer.Layer):
         elif isinstance(event, ResponseTrailers):
             assert self.flow.response
             self.flow.response.trailers = event.trailers
-            yield HttpResponseTrailersHook(self.flow)
+            # will be sent in send_response() after the response hook.
         elif isinstance(event, ResponseEndOfMessage):
             yield from self.send_response(already_streamed=True)
 
@@ -320,7 +321,6 @@ class HttpStream(layer.Layer):
         elif isinstance(event, ResponseTrailers):
             assert self.flow.response
             self.flow.response.trailers = event.trailers
-            yield HttpResponseTrailersHook(self.flow)
         elif isinstance(event, ResponseEndOfMessage):
             assert self.flow.response
             self.flow.response.data.content = self.response_body_buf
@@ -356,9 +356,9 @@ class HttpStream(layer.Layer):
             yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response, not content), self.context.client)
             if content:
                 yield SendHttp(ResponseData(self.stream_id, content), self.context.client)
-            if self.flow.response.trailers:
-                yield SendHttp(ResponseTrailers(self.stream_id, self.flow.response.trailers), self.context.client)
 
+        if self.flow.response.trailers:
+            yield SendHttp(ResponseTrailers(self.stream_id, self.flow.response.trailers), self.context.client)
         yield SendHttp(ResponseEndOfMessage(self.stream_id), self.context.client)
 
         if self.flow.response.status_code == 101:
