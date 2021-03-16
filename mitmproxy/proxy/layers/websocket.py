@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 from typing import Iterator, List
 
@@ -189,6 +190,7 @@ class WebsocketLayer(layer.Layer):
                 )
                 yield dst_ws.send2(ws_event)
             elif isinstance(ws_event, wsproto.events.CloseConnection):
+                self.flow.websocket.timestamp_end = time.time()
                 self.flow.websocket.closed_by_client = from_client
                 self.flow.websocket.close_code = ws_event.code
                 self.flow.websocket.close_reason = ws_event.reason

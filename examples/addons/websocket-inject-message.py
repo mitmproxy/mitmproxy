@@ -21,7 +21,7 @@ def websocket_message(flow):
 
 async def inject_async(flow: http.HTTPFlow):
     msg = "hello from mitmproxy! "
-    while flow.server_conn.connected:
+    while flow.websocket.timestamp_end is None:
         ctx.master.commands.call("inject", [flow], False, msg)
         await asyncio.sleep(1)
         msg = msg[1:] + msg[:1]
