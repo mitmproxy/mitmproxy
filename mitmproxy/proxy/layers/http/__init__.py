@@ -278,7 +278,8 @@ class HttpStream(layer.Layer):
                     return
 
                 content = self.flow.request.raw_content
-                yield SendHttp(RequestHeaders(self.stream_id, self.flow.request, not content), self.context.server)
+                done_after_headers = not (content or self.flow.request.trailers)
+                yield SendHttp(RequestHeaders(self.stream_id, self.flow.request, done_after_headers), self.context.server)
                 if content:
                     yield SendHttp(RequestData(self.stream_id, content), self.context.server)
                 if self.flow.request.trailers:
@@ -352,7 +353,8 @@ class HttpStream(layer.Layer):
 
         if not already_streamed:
             content = self.flow.response.raw_content
-            yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response, not content), self.context.client)
+            done_after_headers = not (content or self.flow.response.trailers)
+            yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response, done_after_headers), self.context.client)
             if content:
                 yield SendHttp(ResponseData(self.stream_id, content), self.context.client)
 

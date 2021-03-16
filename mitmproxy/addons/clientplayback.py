@@ -40,21 +40,25 @@ class MockServer(layers.http.HttpConnection):
             yield layers.http.ReceiveHttp(layers.http.RequestHeaders(
                 1,
                 self.flow.request,
-                end_stream=not content,
+                end_stream=not (content or self.flow.request.trailers),
                 replay_flow=self.flow,
             ))
             if content:
                 yield layers.http.ReceiveHttp(layers.http.RequestData(1, content))
+            if self.flow.request.trailers:  # pragma: no cover
+                # TODO: Cover this once we support HTTP/1 trailers.
+                yield layers.http.ReceiveHttp(layers.http.RequestTrailers(1, self.flow.request.trailers))
             yield layers.http.ReceiveHttp(layers.http.RequestEndOfMessage(1))
         elif isinstance(event, (
                 layers.http.ResponseHeaders,
                 layers.http.ResponseData,
+                layers.http.ResponseTrailers,
                 layers.http.ResponseEndOfMessage,
                 layers.http.ResponseProtocolError,
         )):
             pass
         else:  # pragma: no cover
-            ctx.log(f"Unexpected event during replay: {events}")
+            ctx.log(f"Unexpected event during replay: {event}")
 
 
 class ReplayHandler(server.ConnectionHandler):
