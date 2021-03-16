@@ -33,21 +33,32 @@ class Layer:
 
     Layers interface with their child layer(s) by calling .handle_event(event),
     which returns a list (more precisely: a generator) of commands.
-    Most layers only implement ._handle_event, which is called by the default implementation of .handle_event.
-    The default implementation allows layers to emulate blocking code:
+    Most layers do not implement .directly, but instead implement ._handle_event, which
+    is called by the default implementation of .handle_event.
+    The default implementation of .handle_event allows layers to emulate blocking code:
     When ._handle_event yields a command that has its blocking attribute set to True, .handle_event pauses
-    the execution of ._handle_event and waits until it is called with the corresponding CommandCompleted event. All
-    events encountered in the meantime are buffered and replayed after execution is resumed.
+    the execution of ._handle_event and waits until it is called with the corresponding CommandCompleted event.
+    All events encountered in the meantime are buffered and replayed after execution is resumed.
 
     The result is code that looks like blocking code, but is not blocking:
 
         def _handle_event(self, event):
             err = yield OpenConnection(server)  # execution continues here after a connection has been established.
+
+    Technically this is very similar to how coroutines are implemented.
     """
     __last_debug_message: ClassVar[str] = ""
     context: Context
     _paused: Optional[Paused]
+    """
+    If execution is currently paused, this attribute stores the paused coroutine
+    and the command for which we are expecting a reply.
+    """
     _paused_event_queue: Deque[events.Event]
+    """
+    All events that have occurred since execution was paused.
+    These will be replayed to ._child_layer once we resume.
+    """
     debug: Optional[str] = None
     """
     Enable debug logging by assigning a prefix string for log messages.
@@ -75,6 +86,7 @@ class Layer:
         return f"{type(self).__name__}({state})"
 
     def __debug(self, message):
+        """yield a Log command indicating what message is passing through this layer."""
         if len(message) > 512:
             message = message[:512] + "…"
         if Layer.__last_debug_message == message:
@@ -126,6 +138,9 @@ class Layer:
             # inlined copy of __process to reduce call stack.
             # <✂✂✂>
             try:
+                # Run ._handle_event to the next yield statement.
+                # If you are not familiar with generators and their .send() method,
+                # https://stackoverflow.com/a/12638313/934719 has a good explanation.
                 command = command_generator.send(send)
             except StopIteration:
                 return
@@ -135,7 +150,12 @@ class Layer:
                     if not isinstance(command, commands.Log):
                         yield self.__debug(f"<< {command}")
                 if command.blocking is True:
-                    command.blocking = self  # assign to our layer so that higher layers don't block.
+                    # We only want this layer to block, the outer layers should not block.
+                    # For example, take an HTTP/2 connection: If we intercept one particular request,
+                    # we don't want all other requests in the connection to be blocked a well.
+                    # We signal to outer layers that this command is already handled by assigning our layer to
+                    # `.blocking` here (upper layers explicitly check for `is True`).
+                    command.blocking = self
                     self._paused = Paused(
                         command,
                         command_generator,
@@ -152,11 +172,14 @@ class Layer:
 
     def __process(self, command_generator: CommandGenerator, send=None):
         """
-        yield all commands from a generator.
-        if a command is blocking, the layer is paused and this function returns before
-        processing any other commands.
+        Yield commands from a generator.
+        If a command is blocking, execution is paused and this function returns without
+        processing any further commands.
         """
         try:
+            # Run ._handle_event to the next yield statement.
+            # If you are not familiar with generators and their .send() method,
+            # https://stackoverflow.com/a/12638313/934719 has a good explanation.
             command = command_generator.send(send)
         except StopIteration:
             return
@@ -166,7 +189,12 @@ class Layer:
                 if not isinstance(command, commands.Log):
                     yield self.__debug(f"<< {command}")
             if command.blocking is True:
-                command.blocking = self  # assign to our layer so that higher layers don't block.
+                # We only want this layer to block, the outer layers should not block.
+                # For example, take an HTTP/2 connection: If we intercept one particular request,
+                # we don't want all other requests in the connection to be blocked a well.
+                # We signal to outer layers that this command is already handled by assigning our layer to
+                # `.blocking` here (upper layers explicitly check for `is True`).
+                command.blocking = self
                 self._paused = Paused(
                     command,
                     command_generator,
@@ -181,7 +209,11 @@ class Layer:
                     return
 
     def __continue(self, event: events.CommandCompleted):
-        """continue processing events after being paused"""
+        """
+        Continue processing events after being paused.
+        The tricky part here is that events in the event queue may trigger commands which again pause the execution,
+        so we may not be able to process the entire queue.
+        """
         assert self._paused is not None
         command_generator = self._paused.generator
         self._paused = None

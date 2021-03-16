@@ -23,6 +23,9 @@ class Command:
     blocking: Union[bool, "mitmproxy.proxy.layer.Layer"] = False
     """
     Determines if the command blocks until it has been completed.
+    For practical purposes, this attribute should be thought of as a boolean value,
+    layers may swap out `True` with a reference to themselves to signal to outer layers
+    that they do not need to block as well.
 
     Example:
 
