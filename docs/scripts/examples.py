@@ -48,7 +48,7 @@ print(f"""
 ### Built-In Addons
 
 Much of mitmproxy’s own functionality is defined in
-[a suite of built-in addons](https://github.com/mitmproxy/mitmproxy/tree/master/mitmproxy/addons),
+[a suite of built-in addons](https://github.com/mitmproxy/mitmproxy/tree/main/mitmproxy/addons),
 implementing everything from functionality like anticaching and sticky cookies to our onboarding webapp.
 The built-in addons make for instructive reading, and you will quickly see that quite complex functionality
 can often boil down to a very small, completely self-contained modules.
@@ -57,7 +57,7 @@ can often boil down to a very small, completely self-contained modules.
 ### Additional Community Examples
 
 Additional examples contributed by the mitmproxy community can be found
-[on GitHub](https://github.com/mitmproxy/mitmproxy/tree/master/examples/contrib).
+[on GitHub](https://github.com/mitmproxy/mitmproxy/tree/main/examples/contrib).
 
 -------------------------
 

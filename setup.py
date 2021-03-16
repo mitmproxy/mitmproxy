@@ -4,7 +4,7 @@ from codecs import open
 import re
 from setuptools import setup, find_packages
 
-# Based on https://github.com/pypa/sampleproject/blob/master/setup.py
+# Based on https://github.com/pypa/sampleproject/blob/main/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/
 
 here = os.path.abspath(os.path.dirname(__file__))

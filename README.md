@@ -1,7 +1,7 @@
 # mitmproxy
 
-[![Continuous Integration Status](https://github.com/mitmproxy/mitmproxy/workflows/CI/badge.svg?branch=master)](https://github.com/mitmproxy/mitmproxy/actions?query=branch%3Amaster)
-[![Coverage Status](https://shields.mitmproxy.org/codecov/c/github/mitmproxy/mitmproxy/master.svg?label=codecov)](https://codecov.io/gh/mitmproxy/mitmproxy)
+[![Continuous Integration Status](https://github.com/mitmproxy/mitmproxy/workflows/CI/badge.svg?branch=main)](https://github.com/mitmproxy/mitmproxy/actions?query=branch%3Amain)
+[![Coverage Status](https://shields.mitmproxy.org/codecov/c/github/mitmproxy/mitmproxy/main.svg?label=codecov)](https://codecov.io/gh/mitmproxy/mitmproxy)
 [![Latest Version](https://shields.mitmproxy.org/pypi/v/mitmproxy.svg)](https://pypi.python.org/pypi/mitmproxy)
 [![Supported Python versions](https://shields.mitmproxy.org/pypi/pyversions/mitmproxy.svg)](https://pypi.python.org/pypi/mitmproxy)
 
@@ -26,7 +26,7 @@ General information, tutorials, and precompiled binaries can be found on the mit
 The documentation for mitmproxy is available on our website:
 
 [![mitmproxy documentation stable](https://shields.mitmproxy.org/badge/docs-stable-brightgreen.svg)](https://docs.mitmproxy.org/stable/)
-[![mitmproxy documentation master](https://shields.mitmproxy.org/badge/docs-master-brightgreen.svg)](https://docs.mitmproxy.org/master/)
+[![mitmproxy documentation dev](https://shields.mitmproxy.org/badge/docs-dev-brightgreen.svg)](https://docs.mitmproxy.org/main/)
 
 If you have questions on how to use mitmproxy, please
 ask them on StackOverflow!
