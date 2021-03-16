@@ -110,9 +110,9 @@ async def test_inject():
 
             writer.write(b"a")
             assert await reader.read(1) == b"A"
-            ps.inject(state.flows, True, "b")
+            ps.inject_tcp(state.flows[0], False, "b")
             assert await reader.read(1) == b"B"
-            ps.inject(state.flows, False, "c")
+            ps.inject_tcp(state.flows[0], True, "c")
             assert await reader.read(1) == b"c"
 
 
@@ -120,16 +120,28 @@ async def test_inject():
 async def test_inject_fail():
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
-        ps.inject(
-            [tflow.tflow()],
-            False,
+        ps.inject_websocket(
+            tflow.tflow(),
+            True,
             "test"
         )
-        await tctx.master.await_log("Cannot inject messages into HTTP connections.", level="warn")
+        await tctx.master.await_log("Cannot inject WebSocket messages into non-WebSocket flows.", level="warn")
+        ps.inject_tcp(
+            tflow.tflow(),
+            True,
+            "test"
+        )
+        await tctx.master.await_log("Cannot inject TCP messages into non-TCP flows.", level="warn")
 
-        ps.inject(
-            [tflow.twebsocketflow()],
-            False,
+        ps.inject_websocket(
+            tflow.twebsocketflow(),
+            True,
+            "test"
+        )
+        await tctx.master.await_log("Flow is not from a live connection.", level="warn")
+        ps.inject_websocket(
+            tflow.ttcpflow(),
+            True,
             "test"
         )
         await tctx.master.await_log("Flow is not from a live connection.", level="warn")
