@@ -46,6 +46,24 @@ class ResponseData(HttpEvent):
 
 
 @dataclass
+class RequestTrailers(HttpEvent):
+    trailers: http.Headers
+
+    def __init__(self, stream_id: int, trailers: http.Headers):
+        self.stream_id = stream_id
+        self.trailers = trailers
+
+
+@dataclass
+class ResponseTrailers(HttpEvent):
+    trailers: http.Headers
+
+    def __init__(self, stream_id: int, trailers: http.Headers):
+        self.stream_id = stream_id
+        self.trailers = trailers
+
+
+@dataclass
 class RequestEndOfMessage(HttpEvent):
     def __init__(self, stream_id: int):
         self.stream_id = stream_id
@@ -86,6 +104,8 @@ __all__ = [
     "RequestEndOfMessage",
     "ResponseHeaders",
     "ResponseData",
+    "RequestTrailers",
+    "ResponseTrailers",
     "ResponseEndOfMessage",
     "RequestProtocolError",
     "ResponseProtocolError",

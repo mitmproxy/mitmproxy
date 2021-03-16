@@ -17,7 +17,7 @@ from mitmproxy.connection import Connection
 from mitmproxy.net.http import status_codes, url
 from mitmproxy.utils import human
 from . import RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, ResponseData, \
-    ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError
+    ResponseEndOfMessage, ResponseHeaders, RequestTrailers, ResponseTrailers, ResponseProtocolError
 from ._base import HttpConnection, HttpEvent, ReceiveHttp, format_error
 from ._http_h2 import BufferedH2Connection, H2ConnectionLogger
 from ...commands import CloseConnection, Log, SendData
@@ -45,12 +45,9 @@ class Http2Connection(HttpConnection):
     streams: Dict[int, StreamState]
     """keep track of all active stream ids to send protocol errors on teardown"""
 
-    SendProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
-    SendData: Type[Union[RequestData, ResponseData]]
-    SendEndOfMessage: Type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
-
     ReceiveProtocolError: Type[Union[RequestProtocolError, ResponseProtocolError]]
     ReceiveData: Type[Union[RequestData, ResponseData]]
+    ReceiveTrailers: Type[Union[RequestTrailers, ResponseTrailers]]
     ReceiveEndOfMessage: Type[Union[RequestEndOfMessage, ResponseEndOfMessage]]
 
     def __init__(self, context: Context, conn: Connection):
@@ -93,15 +90,17 @@ class Http2Connection(HttpConnection):
             yield SendData(self.conn, self.h2_conn.data_to_send())
 
         elif isinstance(event, HttpEvent):
-            if isinstance(event, self.SendData):
-                assert isinstance(event, (RequestData, ResponseData))
+            if isinstance(event, (RequestData, ResponseData)):
                 if self.is_open_for_us(event.stream_id):
                     self.h2_conn.send_data(event.stream_id, event.data)
-            elif isinstance(event, self.SendEndOfMessage):
+            elif isinstance(event, (RequestTrailers, ResponseTrailers)):
+                if self.is_open_for_us(event.stream_id):
+                    trailers = [*event.trailers.fields]
+                    self.h2_conn.send_headers(event.stream_id, trailers, end_stream=True)
+            elif isinstance(event, (RequestEndOfMessage, ResponseEndOfMessage)):
                 if self.is_open_for_us(event.stream_id):
                     self.h2_conn.end_stream(event.stream_id)
-            elif isinstance(event, self.SendProtocolError):
-                assert isinstance(event, (RequestProtocolError, ResponseProtocolError))
+            elif isinstance(event, (RequestProtocolError, ResponseProtocolError)):
                 if not self.is_closed(event.stream_id):
                     code = {
                         status_codes.CLIENT_CLOSED_REQUEST: h2.errors.ErrorCodes.CANCEL,
@@ -171,6 +170,9 @@ class Http2Connection(HttpConnection):
                 yield from self.protocol_error(f"Received HTTP/2 data frame, expected headers.")
                 return True
             self.h2_conn.acknowledge_received_data(event.flow_controlled_length, event.stream_id)
+        elif isinstance(event, h2.events.TrailersReceived):
+            trailers = http.Headers(event.headers)
+            yield ReceiveHttp(self.ReceiveTrailers(event.stream_id, trailers))
         elif isinstance(event, h2.events.StreamEnded):
             state = self.streams.get(event.stream_id, None)
             if state is StreamState.HEADERS_RECEIVED:
@@ -215,8 +217,6 @@ class Http2Connection(HttpConnection):
             pass
         elif isinstance(event, h2.events.PingAckReceived):
             pass
-        elif isinstance(event, h2.events.TrailersReceived):
-            yield Log("Received HTTP/2 trailers, which are currently unimplemented and silently discarded", "error")
         elif isinstance(event, h2.events.PushedStreamReceived):
             yield Log("Received HTTP/2 push promise, even though we signalled no support.", "error")
         elif isinstance(event, h2.events.UnknownFrameReceived):
@@ -268,12 +268,9 @@ class Http2Server(Http2Connection):
         client_side=False,
     )
 
-    SendProtocolError = ResponseProtocolError
-    SendData = ResponseData
-    SendEndOfMessage = ResponseEndOfMessage
-
     ReceiveProtocolError = RequestProtocolError
     ReceiveData = RequestData
+    ReceiveTrailers = RequestTrailers
     ReceiveEndOfMessage = RequestEndOfMessage
 
     def __init__(self, context: Context):
@@ -332,12 +329,9 @@ class Http2Client(Http2Connection):
         client_side=True,
     )
 
-    SendProtocolError = RequestProtocolError
-    SendData = RequestData
-    SendEndOfMessage = RequestEndOfMessage
-
     ReceiveProtocolError = ResponseProtocolError
     ReceiveData = ResponseData
+    ReceiveTrailers = ResponseTrailers
     ReceiveEndOfMessage = ResponseEndOfMessage
 
     our_stream_id: Dict[int, int]

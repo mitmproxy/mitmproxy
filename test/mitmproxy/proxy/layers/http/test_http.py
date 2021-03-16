@@ -316,8 +316,6 @@ def test_request_streaming(tctx, response):
                                          b"abc")
             << http.HttpRequestHeadersHook(flow)
             >> reply(side_effect=enable_streaming)
-            << http.HttpRequestHook(flow)
-            >> reply()
             << OpenConnection(server)
             >> reply(None)
             << SendData(server, b"POST / HTTP/1.1\r\n"
@@ -330,6 +328,8 @@ def test_request_streaming(tctx, response):
                 playbook
                 >> DataReceived(tctx.client, b"def")
                 << SendData(server, b"DEF")
+                << http.HttpRequestHook(flow)
+                >> reply()
                 >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
                 << http.HttpResponseHeadersHook(flow)
                 >> reply()
@@ -350,7 +350,9 @@ def test_request_streaming(tctx, response):
                 >> reply()
                 << SendData(tctx.client, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
                 >> DataReceived(tctx.client, b"def")
-                << SendData(server, b"DEF")  # Important: no request hook here!
+                << SendData(server, b"DEF")
+                << http.HttpRequestHook(flow)
+                >> reply()
         )
     elif response == "early close":
         assert (
@@ -705,8 +707,6 @@ def test_http_client_aborts(tctx, stream):
         assert (
                 playbook
                 >> reply(side_effect=enable_streaming)
-                << http.HttpRequestHook(flow)
-                >> reply()
                 << OpenConnection(server)
                 >> reply(None)
                 << SendData(server, b"POST / HTTP/1.1\r\n"
