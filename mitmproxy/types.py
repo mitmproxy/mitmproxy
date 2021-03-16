@@ -214,7 +214,7 @@ class _StrSeqType(_BaseType):
         return [x.strip() for x in s.split(",")]
 
     def is_valid(self, manager: "CommandManager", typ: typing.Any, val: typing.Any) -> bool:
-        if isinstance(val, str) or isinstance(val, bytes):
+        if isinstance(val, (str, bytes)):
             return False
         try:
             for v in val:
@@ -378,7 +378,7 @@ class _DataType(_BaseType):
         try:
             for row in val:
                 for cell in row:
-                    if not (isinstance(cell, str) or isinstance(cell, bytes)):
+                    if not isinstance(cell, (str, bytes)):
                         return False
         except TypeError:
             return False

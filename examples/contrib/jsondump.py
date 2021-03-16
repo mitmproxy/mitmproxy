@@ -155,7 +155,7 @@ class JSONDumper:
         if isinstance(obj, dict):
             return {cls.convert_to_strings(key): cls.convert_to_strings(value)
                     for key, value in obj.items()}
-        elif isinstance(obj, list) or isinstance(obj, tuple):
+        elif isinstance(obj, (list, tuple)):
             return [cls.convert_to_strings(element) for element in obj]
         elif isinstance(obj, bytes):
             return str(obj)[2:-1]

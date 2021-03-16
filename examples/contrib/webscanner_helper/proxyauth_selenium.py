@@ -33,11 +33,11 @@ class AuthorizationOracle(abc.ABC):
 
     @abc.abstractmethod
     def is_unauthorized_request(self, flow: mitmproxy.http.HTTPFlow) -> bool:
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def is_unauthorized_response(self, flow: mitmproxy.http.HTTPFlow) -> bool:
-        pass
+        raise NotImplementedError
 
 
 class SeleniumAddon:
@@ -129,4 +129,4 @@ class SeleniumAddon:
 
     @abc.abstractmethod
     def login(self, flow: mitmproxy.http.HTTPFlow) -> List[Dict[str, str]]:
-        pass
+        raise NotImplementedError

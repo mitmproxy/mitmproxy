@@ -46,15 +46,15 @@ class Column(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def Display(self, data) -> Cell:
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def Edit(self, data) -> Cell:
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def blank(self) -> typing.Any:
-        pass
+        raise NotImplementedError
 
     def keypress(self, key: str, editor: "GridEditor") -> typing.Optional[str]:
         return key

@@ -28,17 +28,15 @@ class UrlIndexWriter(abc.ABC):
 
     @abc.abstractmethod
     def load(self):
-        """Load existing URL index."""
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def add_url(self, flow: HTTPFlow):
-        """Add new URL to URL index."""
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def save(self):
-        pass
+        raise NotImplementedError
 
 
 class SetEncoder(json.JSONEncoder):
