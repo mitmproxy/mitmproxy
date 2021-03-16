@@ -9,9 +9,9 @@ from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData, 
 from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import TCPLayer, http, tls
-from mitmproxy.proxy.layers.tcp import TcpStartHook
+from mitmproxy.proxy.layers.tcp import TcpMessageInjected, TcpStartHook
 from mitmproxy.proxy.layers.websocket import WebsocketStartHook
-from mitmproxy.tcp import TCPFlow
+from mitmproxy.tcp import TCPFlow, TCPMessage
 from test.mitmproxy.proxy.tutils import Placeholder, Playbook, reply, reply_next_layer
 
 
@@ -545,6 +545,7 @@ def test_upstream_proxy(tctx, redirect, scheme):
 def test_http_proxy_tcp(tctx, mode, close_first):
     """Test TCP over HTTP CONNECT."""
     server = Placeholder(Server)
+    f = Placeholder(TCPFlow)
 
     if mode == "upstream":
         tctx.options.mode = "upstream:http://proxy:8080"
@@ -560,7 +561,9 @@ def test_http_proxy_tcp(tctx, mode, close_first):
             << SendData(tctx.client, b"HTTP/1.1 200 Connection established\r\n\r\n")
             >> DataReceived(tctx.client, b"this is not http")
             << layer.NextLayerHook(Placeholder())
-            >> reply_next_layer(lambda ctx: TCPLayer(ctx, ignore=True))
+            >> reply_next_layer(lambda ctx: TCPLayer(ctx, ignore=False))
+            << TcpStartHook(f)
+            >> reply()
             << OpenConnection(server)
     )
 
@@ -580,6 +583,12 @@ def test_http_proxy_tcp(tctx, mode, close_first):
         assert server().address == ("example", 443)
     else:
         assert server().address == ("proxy", 8080)
+
+    assert (
+        playbook
+        >> TcpMessageInjected(f, TCPMessage(False, b"fake news from your friendly man-in-the-middle"))
+        << SendData(tctx.client, b"fake news from your friendly man-in-the-middle")
+    )
 
     if close_first == "client":
         a, b = tctx.client, server

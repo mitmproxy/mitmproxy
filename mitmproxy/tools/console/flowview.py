@@ -3,19 +3,18 @@ import sys
 from functools import lru_cache
 from typing import Optional, Union  # noqa
 
-import urwid
-
 import mitmproxy.flow
+import mitmproxy.tools.console.master  # noqa
+import urwid
 from mitmproxy import contentviews
 from mitmproxy import ctx
 from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy.tools.console import common
-from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import flowdetailview
+from mitmproxy.tools.console import layoutwidget
 from mitmproxy.tools.console import searchable
 from mitmproxy.tools.console import tabs
-import mitmproxy.tools.console.master  # noqa
 from mitmproxy.utils import strutils
 
 
@@ -26,8 +25,8 @@ class SearchError(Exception):
 class FlowViewHeader(urwid.WidgetWrap):
 
     def __init__(
-            self,
-            master: "mitmproxy.tools.console.master.ConsoleMaster",
+        self,
+        master: "mitmproxy.tools.console.master.ConsoleMaster",
     ) -> None:
         self.master = master
         self.focus_changed()
@@ -140,6 +139,9 @@ class FlowDetails(tabs.Tabs):
         contentview_status_bar = urwid.AttrWrap(urwid.Columns(cols), "heading")
         return contentview_status_bar
 
+    FROM_CLIENT_MARKER = ("from_client", f"{common.SYMBOL_FROM_CLIENT} ")
+    TO_CLIENT_MARKER = ("to_client", f"{common.SYMBOL_TO_CLIENT} ")
+
     def view_websocket_messages(self):
         flow = self.flow
         assert isinstance(flow, http.HTTPFlow)
@@ -156,11 +158,18 @@ class FlowDetails(tabs.Tabs):
 
             for line in lines:
                 if m.from_client:
-                    line.insert(0, ("from_client", f"{common.SYMBOL_FROM_CLIENT} "))
+                    line.insert(0, self.FROM_CLIENT_MARKER)
                 else:
-                    line.insert(0, ("to_client", f"{common.SYMBOL_TO_CLIENT} "))
+                    line.insert(0, self.TO_CLIENT_MARKER)
 
                 widget_lines.append(urwid.Text(line))
+
+        if flow.websocket.closed_by_client is not None:
+            widget_lines.append(urwid.Text([
+                (self.FROM_CLIENT_MARKER if flow.websocket.closed_by_client else self.TO_CLIENT_MARKER),
+                ("alert" if flow.websocket.close_code in (1000, 1001, 1005) else "error",
+                 f"Connection closed: {flow.websocket.close_code} {flow.websocket.close_reason}")
+            ]))
 
         if flow.intercepted:
             markup = widget_lines[-1].get_text()[0]
@@ -198,9 +207,9 @@ class FlowDetails(tabs.Tabs):
 
             for line in lines:
                 if from_client:
-                    line.insert(0, ("from_client", f"{common.SYMBOL_FROM_CLIENT} "))
+                    line.insert(0, self.FROM_CLIENT_MARKER)
                 else:
-                    line.insert(0, ("to_client", f"{common.SYMBOL_TO_CLIENT} "))
+                    line.insert(0, self.TO_CLIENT_MARKER)
 
                 widget_lines.append(urwid.Text(line))
 

@@ -291,6 +291,7 @@ def convert_11_12(data):
             "closed_by_client": ws_flow["close_sender"] == "client",
             "close_code": ws_flow["close_code"],
             "close_reason": ws_flow["close_reason"],
+            "timestamp_end": data.get("server_conn", {}).get("timestamp_end", None),
         }
 
     else:

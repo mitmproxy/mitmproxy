@@ -106,11 +106,15 @@ class WebSocketData(stateobject.StateObject):
     close_reason: Optional[str] = None
     """[Close Reason](https://tools.ietf.org/html/rfc6455#section-7.1.6)"""
 
+    timestamp_end: Optional[float] = None
+    """*Timestamp:* WebSocket connection closed."""
+
     _stateobject_attributes = dict(
         messages=List[WebSocketMessage],
         closed_by_client=bool,
         close_code=int,
         close_reason=str,
+        timestamp_end=float,
     )
 
     def __init__(self):

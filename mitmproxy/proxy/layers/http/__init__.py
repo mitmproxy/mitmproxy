@@ -20,7 +20,7 @@ from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders
     ResponseData, ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError, ResponseTrailers
 from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, HttpRequestHook, HttpResponseHeadersHook, \
     HttpResponseHook
-from ._http1 import Http1Client, Http1Server
+from ._http1 import Http1Client, Http1Connection, Http1Server
 from ._http2 import Http2Client, Http2Server
 from ...context import Context
 
@@ -114,13 +114,16 @@ class HttpStream(layer.Layer):
         self.stream_id = stream_id
 
     def __repr__(self):
-        return (
-            f"HttpStream("
-            f"id={self.stream_id}, "
-            f"client_state={self.client_state.__name__}, "
-            f"server_state={self.server_state.__name__}"
-            f")"
-        )
+        if self._handle_event == self.passthrough:
+            return f"HttpStream(id={self.stream_id}, passthrough)"
+        else:
+            return (
+                f"HttpStream("
+                f"id={self.stream_id}, "
+                f"client_state={self.client_state.__name__}, "
+                f"server_state={self.server_state.__name__}"
+                f")"
+            )
 
     @expect(events.Start, HttpEvent)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -608,6 +611,26 @@ class HttpLayer(layer.Layer):
         elif isinstance(event, events.CommandCompleted):
             stream = self.command_sources.pop(event.command)
             yield from self.event_to_child(stream, event)
+        elif isinstance(event, events.MessageInjected):
+            # For injected messages we pass the HTTP stacks entirely and directly address the stream.
+            try:
+                conn = self.connections[event.flow.server_conn]
+            except KeyError:
+                # We have a miss for the server connection, which means we're looking at a connection object
+                # that is tunneled over another connection (for example: over an upstream HTTP proxy).
+                # We now take the stream associated with the client connection. That won't work for HTTP/2,
+                # but it's good enough for HTTP/1.
+                conn = self.connections[event.flow.client_conn]
+            if isinstance(conn, HttpStream):
+                stream_id = conn.stream_id
+            else:
+                # We reach to the end of the connection's child stack to get the HTTP/1 client layer,
+                # which tells us which stream we are dealing with.
+                conn = conn.context.layers[-1]
+                assert isinstance(conn, Http1Connection)
+                assert conn.stream_id
+                stream_id = conn.stream_id
+            yield from self.event_to_child(self.streams[stream_id], event)
         elif isinstance(event, events.ConnectionEvent):
             if event.connection == self.context.server and self.context.server not in self.connections:
                 # We didn't do anything with this connection yet, now the peer has closed it - let's close it too!
@@ -745,6 +768,8 @@ class HttpLayer(layer.Layer):
 
 
 class HttpClient(layer.Layer):
+    child_layer: layer.Layer
+
     @expect(events.Start)
     def _handle_event(self, event: events.Event) -> layer.CommandGenerator[None]:
         err: Optional[str]
@@ -753,11 +778,10 @@ class HttpClient(layer.Layer):
         else:
             err = yield commands.OpenConnection(self.context.server)
         if not err:
-            child_layer: layer.Layer
             if self.context.server.alpn == b"h2":
-                child_layer = Http2Client(self.context)
+                self.child_layer = Http2Client(self.context)
             else:
-                child_layer = Http1Client(self.context)
-            self._handle_event = child_layer.handle_event
+                self.child_layer = Http1Client(self.context)
+            self._handle_event = self.child_layer.handle_event
             yield from self._handle_event(event)
         yield RegisterHttpConnection(self.context.server, err)

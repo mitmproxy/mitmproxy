@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 from typing import Iterator, List
 
@@ -9,6 +10,7 @@ from mitmproxy import connection, flow, http, websocket
 from mitmproxy.proxy import commands, events, layer
 from mitmproxy.proxy.commands import StartHook
 from mitmproxy.proxy.context import Context
+from mitmproxy.proxy.events import MessageInjected
 from mitmproxy.proxy.utils import expect
 from wsproto import ConnectionState
 from wsproto.frame_protocol import CloseReason, Opcode
@@ -50,6 +52,12 @@ class WebsocketErrorHook(StartHook):
     Every WebSocket flow will receive either a websocket_error or a websocket_end event, but not both.
     """
     flow: http.HTTPFlow
+
+
+class WebSocketMessageInjected(MessageInjected[websocket.WebSocketMessage]):
+    """
+    The user has injected a custom WebSocket message.
+    """
 
 
 class WebsocketConnection(wsproto.Connection):
@@ -120,11 +128,17 @@ class WebsocketLayer(layer.Layer):
 
     _handle_event = start
 
-    @expect(events.DataReceived, events.ConnectionClosed)
-    def relay_messages(self, event: events.ConnectionEvent) -> layer.CommandGenerator[None]:
+    @expect(events.DataReceived, events.ConnectionClosed, WebSocketMessageInjected)
+    def relay_messages(self, event: events.Event) -> layer.CommandGenerator[None]:
         assert self.flow.websocket  # satisfy type checker
 
-        from_client = event.connection == self.context.client
+        if isinstance(event, events.ConnectionEvent):
+            from_client = event.connection == self.context.client
+        elif isinstance(event, WebSocketMessageInjected):
+            from_client = event.message.from_client
+        else:
+            raise AssertionError(f"Unexpected event: {event}")
+
         from_str = 'client' if from_client else 'server'
         if from_client:
             src_ws = self.client_ws
@@ -137,6 +151,11 @@ class WebsocketLayer(layer.Layer):
             src_ws.receive_data(event.data)
         elif isinstance(event, events.ConnectionClosed):
             src_ws.receive_data(None)
+        elif isinstance(event, WebSocketMessageInjected):
+            fragmentizer = Fragmentizer([], event.message.type == Opcode.TEXT)
+            src_ws._events.extend(
+                fragmentizer(event.message.content)
+            )
         else:  # pragma: no cover
             raise AssertionError(f"Unexpected event: {event}")
 
@@ -171,6 +190,7 @@ class WebsocketLayer(layer.Layer):
                 )
                 yield dst_ws.send2(ws_event)
             elif isinstance(ws_event, wsproto.events.CloseConnection):
+                self.flow.websocket.timestamp_end = time.time()
                 self.flow.websocket.closed_by_client = from_client
                 self.flow.websocket.close_code = ws_event.code
                 self.flow.websocket.close_reason = ws_event.reason
@@ -189,7 +209,7 @@ class WebsocketLayer(layer.Layer):
             else:  # pragma: no cover
                 raise AssertionError(f"Unexpected WebSocket event: {ws_event}")
 
-    @expect(events.DataReceived, events.ConnectionClosed)
+    @expect(events.DataReceived, events.ConnectionClosed, WebSocketMessageInjected)
     def done(self, _) -> layer.CommandGenerator[None]:
         yield from ()
 
@@ -219,7 +239,6 @@ class Fragmentizer:
     FRAGMENT_SIZE = 4000
 
     def __init__(self, fragments: List[bytes], is_text: bool):
-        assert fragments
         self.fragment_lengths = [len(x) for x in fragments]
         self.is_text = is_text
 
