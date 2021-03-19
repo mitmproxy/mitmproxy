@@ -36,6 +36,7 @@ If you depend on these features, please raise your voice in
 
 ### Full Changelog
 
+* Addition of block_list Option to block requests with a set status code (@ericbeland)
 * New Proxy Core based on sans-io pattern (@mhils)
 * mitmproxy's command line interface now supports Windows (@mhils)
 * The `clientconnect`, `clientdisconnect`, `serverconnect`, `serverdisconnect`, and `log`
