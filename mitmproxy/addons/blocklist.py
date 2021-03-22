@@ -8,7 +8,7 @@ from mitmproxy.net.http.status_codes import RESPONSES
 class BlockListSpec(typing.NamedTuple):
     matches: flowfilter.TFilter
     block_type: str
-    status: int
+    status: str
 
 
 class BlockList:
@@ -20,7 +20,7 @@ class BlockList:
             "block_list", typing.Sequence[str], [],
             """
             Block matching requests and return an empty response with the specified HTTP status.
-            Option is formatted as ":[flow-filter]:(block|allow-only):status", where the
+            Option is formatted as "[:flow-filter:(block|allow-only):status]", where the
             separator can be any character. allow-only allows only matching traffic to be unaffected,
             block will block only matching traffic.
             HTTP status is the HTTP status code to return for blocked requests.
@@ -49,7 +49,8 @@ class BlockList:
                 self.__block_it(flow, spec)
 
     def __block_it(self, flow, spec):
-        if spec.status == 444:
+        status = int(spec.status)
+        if status == 444:
             flow.kill()
         else:
             headers = {"Server": version.MITMPROXY}
@@ -57,7 +58,7 @@ class BlockList:
             if mimetype:
                 headers["Content-Type"] = mimetype
             flow.response = http.Response.make(
-                spec.status,
+                status,
                 headers=headers
             )
         return
@@ -82,4 +83,4 @@ class BlockList:
                 raise ValueError(f"Invalid HTTP status code: {status}")
         else:
             raise ValueError("Invalid number of parameters (3 are expected)")
-        return BlockListSpec(matches=flow_filter, block_type=block_type, status=int(status))
+        return BlockListSpec(matches=flow_filter, block_type=block_type, status=status)
