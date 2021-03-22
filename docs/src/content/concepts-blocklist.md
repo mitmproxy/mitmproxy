@@ -2,64 +2,77 @@
 title: "Blocking Websites and Requests"
 menu:
 concepts:
-weight: 1
+weight: 7
 ---
+# Blocklist
 
-Mitmproxy's Blocklist feature provides a simple method for controlling the proxy's response to certain requests.
-There are various scenarios where this functionality is useful.
+Blocklists provide a method for controlling mitmproxy's response to certain requests by specifying an 
+array of block commands.
 
-:filter:BlockCommand:http_status_code
-Arguments:
+Use-cases:
 
-### Filter
-A [Filter](./concepts-filters.md) 
+* Block specific API calls (3rd party or otherwise) that would usually be loaded by a webpage
+* Block analytics calls to avoid polluting analytics data with automated traffic
+* Block ad networks or other traffic. Automated traffic harms your clickthrough/quality scores for ads on your website.
+* Make your own ad-blocker
+* Block image loads to save bandwidth, etc.
+* Stub an Ajax request to avoid a 404 that triggers a JS error callback
+* Limit all calls to a staging environment with *allow-only*
 
-## Block Commands
+## Block Command
 
-#### BLOCK
+###### Arguments:
+
+```
+[:filter:block-type:status]
+```
+
+* `filter` (**mandatory**): An mitmproxy [Filter](./concepts-filters.md) to select traffic.
+* `block-type` (**mandatory**): The type of block. One of either "block" or the opposite exclusionary "allow-only"
+* `status`  (**mandatory**) HTTP Status code. Status code 444 is special cased to "hang up."
+
+### Block Type
+
+#### block
 
 Block all traffic that ***matches*** the filter.
 
-Example: 
+Examples: 
 
-`:~t image:BLOCK:200`
+* Stop images from downloading by blocking the image content type
+```
+:~t image:block:200`
+```
+* Stop analytics calls by blocking javascript content loads from 3rd party analytics domains 
+```
+:~t javascript & ~d (hs-scripts|segment|yandex|google-analytics|mxpnl|woopra|adobedtm|amplitude||hotjar|heapanalytics):block:200
+```
 
 This command blocks all requests with "image" in their content type and returns an empty response with status 200.
 
-#### BLOCK_UNLESS
+#### allow-only
 
-BLOCK_UNLESS is the less forgiving cousin of BLOCK. It
-blocks all traffic that does ***not* match** the filter.
+allow-only stops any traffic that ***does not*** match the filter.
 
 This command blocks all traffic except to the mysite.com domain. It returns 404 for traffic to all other domains.
 
-Avoid polluting your analytics
-:BLOCK: ~t javascript & ~d (hs-scripts|segment\.com|yandex.ru|google-analytics|mxpnl|woopra|adobedtm|amplitude||hotjar|heapanalytics):200
+Examples:
+
+Limit an app to only access URLs on your staging environment. If it tries to connect anywhere else, it
+gets an empty 200 response.
+
+```
+:~d mysite.com & ~u staging:allow-only:200
+```
 
 
-#### STATUS Codes
+### Status
 
-Any [HTTP Status Code ](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status)
-
-##### I want to block requests entirely, and not respond! 
-
-Good news! HTTP Status code 444, although unofficial, means "connection closed with"
+The [HTTP Status Code ](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) to respond-with.
 
 
+##### Can I make mitmproxy just not respond at all?
 
-
-* Avoid overwhelming 3rd party websites and components that would usually be loaded by a page
- 
-* Avoid polluting analytics data with automated traffic
-* Block ad networks or other traffic. If it is an ad network used by your own website, displaying ads to bots ruins your pricing/quality scores
-* Quickly block image loads block_list: [:~d browserup.com & ~u png:200] so save bandwidth, etc.
-* Quickly stub an ajax request to avoid a 404 that triggers a JS error callback
-
-The AllowList has two modes of operation.
-
-For all usual HTTP status codes, when a request matches, an empty response with the desired HTTP Status is be returned.
-
-mitmproxy honors the unofficial 444 HTTP status code Nginx uses to represent 
-"close the connection without providing *any* response or response code." 
-In short, if response code 444 is specified, no response will occur for matching items. 
-
+Yes! HTTP Status code **444** means "indicate that the server has returned no information to the 
+client and closed the connection." Mitmproxy honors this behavior. In short, if response 444 is specified, no response 
+will occur at all.
