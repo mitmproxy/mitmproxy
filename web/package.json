@@ -2,7 +2,7 @@
   "name": "mitmproxy",
   "private": true,
   "scripts": {
-    "test": "jest --coverage",
+    "test": "TZ=UTC jest --coverage",
     "build": "gulp prod",
     "start": "gulp"
   },
