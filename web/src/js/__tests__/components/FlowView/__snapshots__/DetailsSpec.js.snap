@@ -155,6 +155,22 @@ exports[`Details Component should render correctly 1`] = `
           TLSv1.2
         </td>
       </tr>
+      <tr>
+        <td>
+          Resolved address:
+        </td>
+        <td>
+          192.168.0.1:22
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Source address:
+        </td>
+        <td>
+          address:22
+        </td>
+      </tr>
     </tbody>
   </table>
   <div />

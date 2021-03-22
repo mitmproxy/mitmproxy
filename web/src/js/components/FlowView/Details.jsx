@@ -52,6 +52,18 @@ export function ConnectionInfo({ conn }) {
                         <td>{conn.alpn_proto_negotiated}</td>
                     </tr>
                 )}
+                {conn.ip_address && (
+                    <tr key="ip_address">
+                        <td>Resolved address:</td>
+                        <td>{conn.ip_address.join(':')}</td>
+                    </tr>
+                )}
+                {conn.source_address && (
+                    <tr key="source_address">
+                        <td>Source address:</td>
+                        <td>{conn.source_address.join(':')}</td>
+                    </tr>
+                )}
             </tbody>
         </table>
     )
