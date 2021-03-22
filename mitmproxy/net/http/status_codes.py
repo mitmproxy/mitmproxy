@@ -93,7 +93,9 @@ RESPONSES = {
     REQUESTED_RANGE_NOT_SATISFIABLE: "Requested Range not satisfiable",
     EXPECTATION_FAILED: "Expectation Failed",
     IM_A_TEAPOT: "I'm a teapot",
+    NO_RESPONSE: "No Response",
     CLIENT_CLOSED_REQUEST: "Client Closed Request",
+
 
     # 500
     INTERNAL_SERVER_ERROR: "Internal Server Error",
