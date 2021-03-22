@@ -8,6 +8,12 @@ from mitmproxy.test import tflow
 
 class TestBlockList:
 
+    def test_invalid_filter_pattern(self):
+        bl = blocklist.BlockList()
+        with taddons.context(bl) as tctx:
+            with pytest.raises(OptionsError, match="Invalid filter"):
+                tctx.configure(bl, block_list=[":~d ~d asdfsad sdsdsssdd mysite.com:allow-only:200"])
+
     def test_good_configure(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
