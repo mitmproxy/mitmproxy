@@ -1,0 +1,55 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PureCopyModal Component should render correctly 1`] = `
+<div>
+  <div
+    className="modal-header"
+  >
+    <button
+      className="close"
+      data-dismiss="modal"
+      onClick={[Function]}
+      type="button"
+    >
+      <i
+        className="fa fa-fw fa-times"
+      />
+    </button>
+    <div
+      className="modal-title"
+    >
+      <h4>
+        Curl
+      </h4>
+    </div>
+  </div>
+  <div
+    className="modal-body"
+  >
+    <div
+      id="curl"
+      style={
+        Object {
+          "overflowWrap": "break-word",
+        }
+      }
+    >
+      
+    </div>
+  </div>
+  <div
+    className="modal-footer"
+  >
+    <button
+      className="btn btn-primary"
+      data-clipboard-target="#curl"
+      onClick={[Function]}
+      style={Object {}}
+      title=""
+      type="button"
+    >
+      copy
+    </button>
+  </div>
+</div>
+`;

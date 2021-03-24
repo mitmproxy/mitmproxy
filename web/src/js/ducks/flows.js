@@ -205,6 +205,10 @@ export function update(flow, data) {
     return dispatch => fetchApi.put(`/flows/${flow.id}`, data)
 }
 
+export function copy(flow) {
+    return dispatch => fetchApi(`/flows/${flow.id}/curl`, { method: 'GET' })
+}
+
 export function uploadContent(flow, file, type) {
     const body = new FormData()
     file       = new window.Blob([file], { type: 'plain/text' })

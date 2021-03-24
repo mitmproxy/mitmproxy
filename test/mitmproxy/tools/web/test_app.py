@@ -193,6 +193,13 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         self.fetch("/flows/42/revert", method="POST")
         assert not f._backup
 
+    def test_flow_copy_as_curl(self):
+        resp = self.fetch("/flows/42/curl.json", method="GET")
+        assert resp.code == 200
+        expect = '{"curl": "curl -H \'header: qvalue\' http://address:22/path -d content"}'
+        actual = resp.body.decode()
+        assert expect == actual
+
     def test_flow_replay(self):
         with mock.patch("mitmproxy.command.CommandManager.call") as replay_call:
             assert self.fetch("/flows/42/replay", method="POST").code == 200

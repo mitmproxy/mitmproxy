@@ -152,6 +152,11 @@ describe('flows actions', () => {
         expect(fetchApi.put).toBeCalledWith('/flows/1', 'foo')
     })
 
+    it('should handle copy action', () => {
+        store.dispatch(flowActions.copy(tflow))
+        expect(fetchApi).toBeCalledWith('/flows/1/curl', { method: 'GET' })
+    })
+
     it('should handle uploadContent action', () => {
         let body = new FormData(),
         file     = new window.Blob(['foo'], { type: 'plain/text' })

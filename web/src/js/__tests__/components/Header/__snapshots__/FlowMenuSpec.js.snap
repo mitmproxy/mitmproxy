@@ -76,6 +76,17 @@ exports[`FlowMenu Component should connect to state 1`] = `
         />
         Download
       </div>
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="copy"
+      >
+        <i
+          className="fa fa-fw fa-clipboard"
+        />
+        Copy
+      </div>
     </div>
     <div
       className="menu-legend"
@@ -196,6 +207,17 @@ exports[`FlowMenu Component should render correctly with flow 1`] = `
           className="fa fa-fw fa-download"
         />
         Download
+      </div>
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="copy"
+      >
+        <i
+          className="fa fa-fw fa-clipboard"
+        />
+        Copy
       </div>
     </div>
     <div

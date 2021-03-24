@@ -20,7 +20,9 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
+from mitmproxy import ctx
 from mitmproxy.utils.strutils import always_str
+from mitmproxy.addons.export import curl_command
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
@@ -372,6 +374,13 @@ class RevertFlow(RequestHandler):
             self.view.update([self.flow])
 
 
+class CopyFlowAsCurl(RequestHandler):
+    def get(self, flow_id):
+        curl_text = curl_command(self.flow, preserve_ip=ctx.options.export_preserve_original_ip)
+        resp_body = {'curl': curl_text}
+        self.write(resp_body)
+
+
 class ReplayFlow(RequestHandler):
     def post(self, flow_id):
         self.master.commands.call("replay.client", [self.flow])
@@ -534,6 +543,7 @@ class Application(tornado.web.Application):
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/curl.json", CopyFlowAsCurl),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data", FlowContent),
                 (
                     r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",

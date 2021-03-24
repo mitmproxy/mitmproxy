@@ -5,6 +5,7 @@ import Button from "../common/Button"
 import { MessageUtils } from "../../flow/utils.js"
 import * as flowsActions from "../../ducks/flows"
 import HideInStatic from "../common/HideInStatic";
+import * as modalActions from "../../ducks/ui/modal"
 
 FlowMenu.title = 'Flow'
 
@@ -15,10 +16,11 @@ FlowMenu.propTypes = {
     replayFlow: PropTypes.func.isRequired,
     duplicateFlow: PropTypes.func.isRequired,
     removeFlow: PropTypes.func.isRequired,
-    revertFlow: PropTypes.func.isRequired
+    revertFlow: PropTypes.func.isRequired,
+    openCopyModal: PropTypes.func.isRequired
 }
 
-export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow, removeFlow, revertFlow }) {
+export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow, removeFlow, revertFlow, openCopyModal }) {
     if (!flow)
         return <div/>
     return (
@@ -52,6 +54,10 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
                     <Button title="download" icon="fa-download"
                             onClick={() => window.location = MessageUtils.getContentURL(flow, flow.response)}>
                         Download
+                    </Button>
+                    <Button title="copy" icon="fa-clipboard"
+                            onClick={() => openCopyModal()}>
+                        Copy
                     </Button>
                 </div>
                 <div className="menu-legend">Export</div>
@@ -89,5 +95,6 @@ export default connect(
         duplicateFlow: flowsActions.duplicate,
         removeFlow: flowsActions.remove,
         revertFlow: flowsActions.revert,
+        openCopyModal: () => modalActions.setActiveModal('CopyModal')
     }
 )(FlowMenu)
