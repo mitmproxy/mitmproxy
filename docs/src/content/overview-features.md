@@ -8,6 +8,7 @@ menu:
 # Features
 
 - [Anticache](#anticache)
+- [Blocklist](#blocklist)
 - [Client-side replay](#client-side-replay)
 - [Map Local](#map-local)
 - [Map Remote](#map-remote)
@@ -27,6 +28,59 @@ When the `anticache` option is set, it removes headers (`if-none-match` and
 server. This is useful when you want to make sure you capture an HTTP exchange
 in its totality. It's also often used during client-side replay, when you want
 to make sure the server responds with complete data.
+
+## Blocklist
+
+Block websites and requests via mitmproxy while providing a fixed HTTP Status code, or no response at all.
+
+Use-cases:
+
+* Block specific API calls (3rd party or otherwise) that would usually be loaded by a webpage
+* Block analytics, ad networks calls to avoid polluting analytics data with automated traffic
+* Block ad networks or other traffic. Automated traffic harms your clickthrough/quality scores for ads on your website.
+* Make your own ad-blocker or block image loads to save bandwidth, etc.
+* Stub an Ajax request to avoid a 404 that triggers a JS error callback
+* Restrict all traffic to a staging environment
+
+###### Arguments:
+
+```
+[:filter:status]
+```
+
+* `filter` (**mandatory**): An mitmproxy [Filter](./concepts-filters.md) to select traffic.
+* `status`  (**mandatory**) HTTP Status code. Status code 444 is special cased to "hang up."
+
+Examples:
+
+* Stop images from downloading by blocking the image content type.
+```
+:~t image:200
+```
+The command above blocks all requests with "image" in their content type and returns an empty response with status 200.
+
+
+* Stop analytics calls by blocking javascript content loads from 3rd party analytics domains
+```
+:~t javascript & ~d (hs-scripts|segment|yandex|google-analytics|mxpnl|woopra|adobedtm|amplitude|hotjar|heapanalytics):200
+```
+
+* Limit an app to only access URLs on your staging environment. If it tries to connect anywhere else, it
+  gets an empty 200 response.
+
+```
+:!mysite.com:404
+```
+This command blocks allows only traffic to the mysite.com domain. It returns 404 for everything else.
+
+The [HTTP Status Code ](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) to respond-with.
+
+
+##### Can I make mitmproxy just not respond at all?
+
+Yes! HTTP Status code **444** means "indicate that the server has returned no information to the
+client and closed the connection." Mitmproxy honors this behavior. In short, if response 444 is specified, no response
+will occur.
 
 ## Client-side replay
 

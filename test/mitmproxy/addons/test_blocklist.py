@@ -12,36 +12,30 @@ class TestBlockList:
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             with pytest.raises(OptionsError, match="Invalid filter"):
-                tctx.configure(bl, block_list=[":~d ~d asdfsad sdsdsssdd mysite.com:allow-only:200"])
+                tctx.configure(bl, block_list=[":~d ~d asdfsad sdsdsssdd mysite.com:200"])
 
     def test_good_configure(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
-            tctx.configure(bl, block_list=[":mysite.com:allow-only:200"])
+            tctx.configure(bl, block_list=[":mysite.com:200"])
 
     def test_invalid_parameters_length(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             with pytest.raises(OptionsError, match="Invalid number of parameters"):
-                tctx.configure(bl, block_list=["/~u index.html/300"])
+                tctx.configure(bl, block_list=["/~u index.html/TOOMANY/300"])
 
     def test_configure_bad_http_status_code(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             with pytest.raises(OptionsError, match="Invalid HTTP status code"):
-                tctx.configure(bl, block_list=["/~u index.html/block/999"])
+                tctx.configure(bl, block_list=["/~u index.html/999"])
 
     def test_configure_invalid_status_code(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             with pytest.raises(OptionsError, match="Cannot parse block_list option"):
-                tctx.configure(bl, block_list=[":mysite.com:block:NOT_A_STATUS_CODE"])
-
-    def test_configure_bad_allow_block_option(self):
-        bl = blocklist.BlockList()
-        with taddons.context(bl) as tctx:
-            with pytest.raises(OptionsError, match="Invalid block type"):
-                tctx.configure(bl, block_list=[":mysite.com:notright:400"])
+                tctx.configure(bl, block_list=[":mysite.com:NOT_A_STATUS_CODE"])
 
     def test_special_kill_status_closes_connection(self):
         bl = blocklist.BlockList()
@@ -49,7 +43,7 @@ class TestBlockList:
             tctx.configure(
                 bl,
                 block_list=[
-                    ':~u jpg:block:444',
+                    ':~u jpg:444',
                 ]
             )
             f = tflow.tflow()
@@ -64,7 +58,7 @@ class TestBlockList:
             tctx.configure(
                 bl,
                 block_list=[
-                    ':~u example.org:block:200',
+                    ':~u example.org:200',
                 ]
             )
             f = tflow.tflow()
@@ -72,13 +66,13 @@ class TestBlockList:
             bl.request(f)
             assert f.response.status_code == 200
 
-    def test_allowonly_allows_matches_through(self):
+    def test_negated_filter_allows_passing_traffic(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             tctx.configure(
                 bl,
                 block_list=[
-                    ':jpg:allow-only:404',
+                    ':!jpg:404',
                 ]
             )
             f = tflow.tflow(resp=True)
@@ -86,13 +80,13 @@ class TestBlockList:
             bl.request(f)
             assert f.response.status_code == 200
 
-    def test_allowonly_blocks_non_match(self):
+    def negated_filter_blocks_non_matching_traffic(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
             tctx.configure(
                 bl,
                 block_list=[
-                    ':~u .png:allow-only:404',
+                    ':!~u .png:404',
                 ]
             )
             f = tflow.tflow()
@@ -106,7 +100,7 @@ class TestBlockList:
             tctx.configure(
                 bl,
                 block_list=[
-                    ':~u .jpg:block:404',
+                    ':~u .jpg:404',
                 ]
             )
             f = tflow.tflow()
@@ -120,7 +114,7 @@ class TestBlockList:
             tctx.configure(
                 bl,
                 block_list=[
-                    ':~u .png:block:404',
+                    ':~u .png:404',
                 ]
             )
             f = tflow.tflow(resp=True)
@@ -131,7 +125,7 @@ class TestBlockList:
     def test_has_guessed_content_type(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
-            tctx.configure(bl, block_list=[":example.org:block:204"])
+            tctx.configure(bl, block_list=[":example.org:204"])
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/test.jpg"
             bl.request(f)
@@ -140,7 +134,7 @@ class TestBlockList:
     def test_blocked_response_has_no_content(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
-            tctx.configure(bl, block_list=[":example.org:block:204"])
+            tctx.configure(bl, block_list=[":example.org:204"])
             f = tflow.tflow()
             f.request.url = b"https://example.org/images/test.jpg"
             bl.request(f)
