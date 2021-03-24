@@ -70,14 +70,15 @@ class BlockList:
         """
         sep, rem = option[0], option[1:]
         parts = rem.lower().split(sep, 2)
-        if len(parts) == 2:
-            flow_patt, status = parts
-            status = int(status)
-            flow_filter = flowfilter.parse(flow_patt)
-            if not flow_filter:
-                raise ValueError(f"Invalid filter pattern: {flow_patt}")
-            if not RESPONSES.get(status):
-                raise ValueError(f"Invalid HTTP status code: {status}")
-        else:
+        if len(parts) != 2:
             raise ValueError("Invalid number of parameters (2 are expected)")
-        return BlockListSpec(matches=flow_filter, status=status)
+        flow_patt, status = parts
+        status_code = int(status)
+        flow_filter = flowfilter.parse(flow_patt)
+        if not flow_filter:
+            raise ValueError(f"Invalid filter pattern: {flow_patt}")
+        if not RESPONSES.get(status_code):
+            raise ValueError(f"Invalid HTTP status code: {status}")
+
+
+        return BlockListSpec(matches=flow_filter, status=status_code)
