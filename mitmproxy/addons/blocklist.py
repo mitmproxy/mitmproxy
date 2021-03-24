@@ -80,5 +80,4 @@ class BlockList:
         if not RESPONSES.get(status_code):
             raise ValueError(f"Invalid HTTP status code: {status}")
 
-
         return BlockListSpec(matches=flow_filter, status=status_code)
