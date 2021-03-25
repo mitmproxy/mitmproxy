@@ -187,7 +187,7 @@ If you depend on these features, please raise your voice in
 
 ### Full Changelog
 
-* Moved to Github CI for Continuous Integration, dropping support for old Linux and macOS releases. (#3728)
+* Moved to GitHub CI for Continuous Integration, dropping support for old Linux and macOS releases. (#3728)
 * Vastly improved command parsing, in particular for setting flow filters (@typoon)
 * Added a new flow export for raw responses (@mckeimic)
 * URLs are now edited in an external editor (@Jessonsotoventura)
