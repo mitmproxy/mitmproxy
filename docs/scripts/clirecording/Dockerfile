@@ -35,7 +35,9 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
 RUN git clone --depth 1 https://github.com/tmux/tmux.git \
     && cd tmux \
     && sh autogen.sh \
-    && ./configure && make && make install
+    && ./configure && make && make install \
+    && cd ../ \
+    && rm -rf tmux
 
 WORKDIR /root/clidirector
 
