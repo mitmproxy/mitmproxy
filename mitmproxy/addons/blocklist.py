@@ -47,6 +47,7 @@ class BlockList:
 
     def __block_it(self, flow, spec):
         status = spec.status
+        flow.metadata['blocklisted'] = True
         if status == NO_RESPONSE:
             flow.kill()
         else:

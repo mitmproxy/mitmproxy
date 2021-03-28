@@ -51,6 +51,7 @@ class TestBlockList:
             bl.request(f)
             assert (f.error.msg == f.error.KILLED_MESSAGE)
             assert (f.response is None)
+            assert (f.metadata['blocklisted'] is True)
 
     def test_simple(self):
         bl = blocklist.BlockList()
@@ -65,6 +66,7 @@ class TestBlockList:
             f.request.url = b"https://example.org/images/test.jpg"
             bl.request(f)
             assert f.response.status_code == 200
+            assert (f.metadata['blocklisted'] is True)
 
     def test_negated_filter_allows_passing_traffic(self):
         bl = blocklist.BlockList()
@@ -78,6 +80,7 @@ class TestBlockList:
             f = tflow.tflow(resp=True)
             f.request.url = b"https://foo.org/images/test.jpg"
             bl.request(f)
+            assert ('blocklisted' not in f.metadata)
             assert f.response.status_code == 200
 
     def negated_filter_blocks_non_matching_traffic(self):
