@@ -53,11 +53,11 @@ Use-cases:
 
 Examples:
 
-* Stop images from downloading by blocking the image content type.
-```
-:~t image:200
-```
-The command above blocks all requests with "image" in their content type and returns an empty response with status 200.
+
+Pattern | Description
+------- | -----------
+<code>:~t image:200</code> | Stop items of image content type and return empty 200 response
+`:!mysite.com:404` |Limit an app to only access URLs on your staging environment. If it tries to connect anywhere else, it gets an empty 200 response.
 
 
 * Stop analytics calls by blocking javascript content loads from 3rd party analytics domains
@@ -65,12 +65,7 @@ The command above blocks all requests with "image" in their content type and ret
 :~t javascript & ~d (hs-scripts|segment|yandex|google-analytics|mxpnl|woopra|adobedtm|amplitude|hotjar|heapanalytics):200
 ```
 
-* Limit an app to only access URLs on your staging environment. If it tries to connect anywhere else, it
-  gets an empty 200 response.
 
-```
-:!mysite.com:404
-```
 This command blocks allows only traffic to the mysite.com domain. It returns 404 for everything else.
 
 The [HTTP Status Code ](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) to respond-with.
