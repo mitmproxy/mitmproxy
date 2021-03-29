@@ -160,3 +160,28 @@ async def test_warn_no_nextlayer():
         await tctx.master.await_log("Proxy server listening at", level="info")
         assert tctx.master.has_log("Warning: Running proxyserver without nextlayer addon!", level="warn")
         await ps.shutdown_server()
+
+
+@pytest.mark.asyncio
+async def test_self_connect():
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        state = HelperAddon()
+        state.layers = [
+            lambda ctx: layers.modes.ReverseProxy(ctx),
+            lambda ctx: layers.HttpLayer(ctx, HTTPMode.transparent),
+            lambda ctx: layers.modes.ReverseProxy(ctx),
+        ]
+        tctx.master.addons.add(state)
+
+        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
+        ps.running()
+        await tctx.master.await_log("Proxy server listening", level="info")
+        assert ps.server
+        proxy_addr = ps.server.sockets[0].getsockname()[:2]
+
+        tctx.options.mode = f"reverse:{':'.join(str(x) for x in proxy_addr)}"
+        reader, writer = await asyncio.open_connection(*proxy_addr)
+        writer.write(b"GET / HTTP/1.1\r\n\r\n")
+        assert b"502 Bad Gateway" in await reader.readuntil(b"\r\n\r\n")
+        assert b"Stopped mitmproxy from recursively connecting" in await reader.readuntil(b"</html>")

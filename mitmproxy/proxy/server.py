@@ -177,32 +177,31 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 else:
                     addr = human.format_address(command.connection.address)
                 self.log(f"server connect {addr}")
-                connected_hook = asyncio_utils.create_task(
-                    self.handle_hook(server_hooks.ServerConnectedHook(hook_data)),
-                    name=f"handle_hook(server_connected) {addr}",
-                    client=self.client.peername,
-                )
-                if not connected_hook:
-                    return  # this should not be needed, see asyncio_utils.create_task
+                await self.handle_hook(server_hooks.ServerConnectedHook(hook_data))
 
-                self.server_event(events.OpenConnectionCompleted(command, None))
+                if errmsg := command.connection.error:
+                    self.log(f"server connection to {addr} killed: {errmsg}")
+                    self.server_event(events.OpenConnectionCompleted(command, f"Connection killed: {errmsg}"))
+                    del self.transports[command.connection]
+                    writer.close()
+                else:
+                    self.server_event(events.OpenConnectionCompleted(command, None))
 
-                # during connection opening, this function is the designated handler that can be cancelled.
-                # once we have a connection, we do want the teardown here to happen in any case, so we
-                # reassign the handler to .handle_connection and then clean up here once that is done.
-                new_handler = asyncio_utils.create_task(
-                    self.handle_connection(command.connection),
-                    name=f"server connection handler for {addr}",
-                    client=self.client.peername,
-                )
-                if not new_handler:
-                    return  # this should not be needed, see asyncio_utils.create_task
-                self.transports[command.connection].handler = new_handler
-                await asyncio.wait([new_handler])
+                    # during connection opening, this function is the designated handler that can be cancelled.
+                    # once we have a connection, we do want the teardown here to happen in any case, so we
+                    # reassign the handler to .handle_connection and then clean up here once that is done.
+                    new_handler = asyncio_utils.create_task(
+                        self.handle_connection(command.connection),
+                        name=f"server connection handler for {addr}",
+                        client=self.client.peername,
+                    )
+                    if not new_handler:
+                        return  # this should not be needed, see asyncio_utils.create_task
+                    self.transports[command.connection].handler = new_handler
+                    await asyncio.wait([new_handler])
 
                 self.log(f"server disconnect {addr}")
                 command.connection.timestamp_end = time.time()
-                await connected_hook  # wait here for this so that closed always comes after connected.
                 await self.handle_hook(server_hooks.ServerDisconnectedHook(hook_data))
 
     async def handle_connection(self, connection: Connection) -> None:
