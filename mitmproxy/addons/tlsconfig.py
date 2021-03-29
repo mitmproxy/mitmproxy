@@ -34,6 +34,10 @@ def alpn_select_callback(conn: SSL.Connection, options: List[bytes]) -> Any:
     http2 = app_data["http2"]
     if server_alpn and server_alpn in options:
         return server_alpn
+    if server_alpn == b"":
+        # We do have a server connection, but the remote server refused to negotiate a protocol:
+        # We need to mirror this on the client connection.
+        return SSL.NO_OVERLAPPING_PROTOCOLS
     http_alpns = tls.HTTP_ALPNS if http2 else tls.HTTP1_ALPNS
     for alpn in options:  # client sends in order of preference, so we are nice and respect that.
         if alpn in http_alpns:
