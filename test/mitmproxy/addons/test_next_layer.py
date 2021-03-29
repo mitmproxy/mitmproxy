@@ -97,6 +97,10 @@ class TestNextLayer:
 
             tctx.configure(nl, ignore_hosts=[])
             assert isinstance(nl._next_layer(ctx, client_hello_no_extensions, b""), layers.ServerTLSLayer)
+            assert isinstance(ctx.layers[-1], layers.ClientTLSLayer)
+
+            ctx.layers = []
+            assert isinstance(nl._next_layer(ctx, b"", b""), layers.modes.HttpProxy)
             assert isinstance(nl._next_layer(ctx, client_hello_no_extensions, b""), layers.ClientTLSLayer)
 
             ctx.layers = []

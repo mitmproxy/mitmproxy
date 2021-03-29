@@ -391,11 +391,14 @@ class TestClientTLS:
                 << commands.SendData(other_server, b"plaintext")
         )
 
-    def test_server_required(self, tctx):
+    @pytest.mark.parametrize("eager", ["eager", ""])
+    def test_server_required(self, tctx, eager):
         """
         Test the scenario where a server connection is required (for example, because of an unknown ALPN)
         to establish TLS with the client.
         """
+        if eager:
+            tctx.server.state = ConnectionState.OPEN
         tssl_server = SSLTest(server_side=True, alpn=["quux"])
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx, alpn=["quux"])
 
@@ -405,16 +408,23 @@ class TestClientTLS:
         def require_server_conn(client_hello: tls.ClientHelloData) -> None:
             client_hello.establish_server_tls_first = True
 
-        assert (
+        (
                 playbook
                 >> events.DataReceived(tctx.client, tssl_client.bio_read())
                 << tls.TlsClienthelloHook(tutils.Placeholder())
                 >> tutils.reply(side_effect=require_server_conn)
+        )
+        if not eager:
+            (
+                playbook
                 << commands.OpenConnection(tctx.server)
                 >> tutils.reply(None)
-                << tls.TlsStartHook(tutils.Placeholder())
-                >> reply_tls_start(alpn=b"quux")
-                << commands.SendData(tctx.server, data)
+            )
+        assert (
+            playbook
+            << tls.TlsStartHook(tutils.Placeholder())
+            >> reply_tls_start(alpn=b"quux")
+            << commands.SendData(tctx.server, data)
         )
 
         # Establish TLS with the server...

@@ -270,14 +270,39 @@ class ServerTLSLayer(_TLSLayer):
     """
     This layer establishes TLS for a single server connection.
     """
-    command_to_reply_to: Optional[commands.OpenConnection] = None
+    wait_for_clienthello: bool = False
 
     def __init__(self, context: context.Context, conn: Optional[connection.Server] = None):
         super().__init__(context, conn or context.server)
 
     def start_handshake(self) -> layer.CommandGenerator[None]:
-        yield from self.start_tls()
-        yield from self.receive_handshake_data(b"")
+        wait_for_clienthello = (
+            # if command_to_reply_to is set, we've been instructed to open the connection from the child layer.
+            # in that case any potential ClientHello is already parsed (by the ClientTLS child layer).
+            not self.command_to_reply_to
+            # if command_to_reply_to is not set, the connection was already open when this layer received its Start
+            # event (eager connection strategy). We now want to establish TLS right away, _unless_ we already know
+            # that there's TLS on the client side as well (we check if our immediate child layer is set to be ClientTLS)
+            # In this case want to wait for ClientHello to be parsed, so that we can incorporate SNI/ALPN from there.
+            and isinstance(self.child_layer, ClientTLSLayer)
+        )
+        if wait_for_clienthello:
+            self.wait_for_clienthello = True
+            self.tunnel_state = tunnel.TunnelState.CLOSED
+        else:
+            yield from self.start_tls()
+            yield from self.receive_handshake_data(b"")
+
+    def event_to_child(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if self.wait_for_clienthello:
+            for command in super().event_to_child(event):
+                if isinstance(command, commands.OpenConnection) and command.connection == self.conn:
+                    self.wait_for_clienthello = False
+                    # swallow OpenConnection here by not re-yielding it.
+                else:
+                    yield command
+        else:
+            yield from super().event_to_child(event)
 
     def on_handshake_error(self, err: str) -> layer.CommandGenerator[None]:
         yield commands.Log(f"Server TLS handshake failed. {err}", level="warn")
