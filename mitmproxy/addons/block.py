@@ -7,16 +7,15 @@ class Block:
         loader.add_option(
             "block_global", bool, True,
             """
-            Block connections from globally reachable networks, as defined in
-            the IANA special purpose registries.
+            Block connections from public IP addresses.
             """
         )
         loader.add_option(
             "block_private", bool, False,
             """
-            Block connections from private networks, as defined in the IANA
-            special purpose registries. This option does not affect loopback
-            addresses.
+            Block connections from local (private) IP addresses.
+            This option does not affect loopback addresses (connections from the local machine),
+            which are always permitted.
             """
         )
 

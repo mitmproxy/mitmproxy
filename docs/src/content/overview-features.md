@@ -24,7 +24,7 @@ menu:
 ## Anticache
 
 When the `anticache` option is set, it removes headers (`if-none-match` and
-`if-modified-since`) that might elicit a `304 not modified` response from the
+`if-modified-since`) that might elicit a `304 Not Modified` response from the
 server. This is useful when you want to make sure you capture an HTTP exchange
 in its totality. It's also often used during client-side replay, when you want
 to make sure the server responds with complete data.
@@ -88,7 +88,7 @@ and transparently returned to the client.
 * **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
 that additionally constrains which requests will be redirected.
 
-### Examples
+#### Examples
 
 Pattern | Description
 ------- | -----------
@@ -164,7 +164,7 @@ that defines which requests the `map_remote` option applies to.
 
 The _separator_ is arbitrary, and is defined by the first character.
 
-### Examples
+#### Examples
 
 Map all requests ending with `.jpg` to `https://placedog.net/640/480?random`.
 Note that this might fail if the original HTTP request destination uses HTTP2 but the replaced
@@ -210,7 +210,7 @@ whether the hook triggers on the request, response or both using the
 filter pattern. If you need finer-grained control than this, it's simple
 to create a script using the replacement API on Flow components.
 
-### Examples
+#### Examples
 
 Replace `foo` with `bar` in bodies of requests:
 
@@ -258,7 +258,7 @@ whether the hook triggers on the request, response or both using the
 filter pattern. If you need finer-grained control than this, it's simple
 to create a script using the replacement API on Flow components.
 
-### Examples
+#### Examples
 
 Set the `Host` header to `example.org` for all requests (existing `Host`
 headers are replaced):
@@ -289,7 +289,7 @@ Remove existing `Host` headers from all requests:
 
 ## Proxy Authentication
 
-Asks the user for authentication before they are permitted to use the proxy.
+The `proxyauth` option asks the user for authentication before they are permitted to use the proxy.
 Authentication headers are stripped from the flows, so they are not passed to
 upstream servers. For now, only HTTP Basic Authentication is supported.
 
@@ -328,18 +328,6 @@ updated in a similar way.
 
 You can turn off this behaviour by setting the `server_replay_refresh` option to
 `false`.
-
-### Replaying a session recorded in Reverse-proxy Mode
-
-If you have captured the session in reverse proxy mode, in order to replay it
-you still have to specify the server URL, otherwise you may get the error: 'HTTP
-protocol error in client request: Invalid HTTP request form (expected authority
-or absolute...)'.
-
-During replay, when the client's requests match previously recorded requests,
-then the respective recorded responses are simply replayed by mitmproxy.
-Otherwise, the unmatched requests is forwarded to the upstream server. If
-forwarding is not desired, you can use the --kill (-k) switch to prevent that.
 
 ## Sticky auth
 
@@ -386,29 +374,3 @@ streamed. Requests/Responses that should be tagged for streaming by setting
 their ``.stream`` attribute to ``True``:
 
 {{< example src="examples/addons/http-stream-simple.py" lang="py" >}}
-
-### Websockets
-
-The `stream_websockets` option enables an analogous behaviour for websockets.
-When WebSocket streaming is enabled, portions of the code which may perform
-changes to the WebSocket message payloads will not have any effect on the actual
-payload sent to the server as the frames are immediately forwarded to the
-server. In contrast to HTTP streaming, where the body is not stored, the message
-payload will still be stored in the WebSocket flow.
-
-## Upstream Certificates
-
-When mitmproxy receives a connection destined for an SSL-protected service, it
-freezes the connection before reading its request data, and makes a connection
-to the upstream server to "sniff" the contents of its SSL certificate. The
-information gained - the **Common Name** and **Subject Alternative Names** - is
-then used to generate the interception certificate, which is sent to the client
-so the connection can continue.
-
-This rather intricate little dance lets us seamlessly generate correct
-certificates even if the client has specified only an IP address rather than the
-hostname. It also means that we don't need to sniff additional data to generate
-certs in transparent mode.
-
-Upstream cert sniffing is on by default, and can optionally be turned off with
-the `upstream_cert` option.
