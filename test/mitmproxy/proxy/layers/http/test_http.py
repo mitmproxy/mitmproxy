@@ -1002,3 +1002,18 @@ def test_dont_reuse_closed(tctx):
             >> DataReceived(server2, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
             << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
     )
+
+
+def test_reuse_error(tctx):
+    """Test that an errored connection is reused."""
+    tctx.server.address = ("example.com", 443)
+    tctx.server.error = "tls verify failed"
+    error_html = Placeholder(bytes)
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.transparent), hooks=False)
+            >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
+            << SendData(tctx.client, error_html)
+            << CloseConnection(tctx.client)
+    )
+    assert b"502 Bad Gateway" in error_html()
+    assert b"tls verify failed" in error_html()

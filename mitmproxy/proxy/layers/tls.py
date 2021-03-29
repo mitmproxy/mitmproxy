@@ -193,8 +193,9 @@ class _TLSLayer(tunnel.TunnelLayer):
             elif last_err == ('SSL routines', 'ssl3_get_record', 'wrong version number') and data[:4].isascii():
                 err = f"The remote server does not speak TLS."
             else:  # pragma: no cover
-                # TODO: Add test case one we find one.
+                # TODO: Add test case once we find one.
                 err = f"OpenSSL {e!r}"
+            self.conn.error = err
             return False, err
         else:
             # Here we set all attributes that are only known *after* the handshake.

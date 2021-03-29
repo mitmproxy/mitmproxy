@@ -43,7 +43,13 @@ class Connection(serializable.Serializable, metaclass=ABCMeta):
     sockname: Optional[Address]
     """Our local `(ip, port)` tuple for this connection."""
     error: Optional[str] = None
-    """A string describing the connection error."""
+    """
+    A string describing a general error with connections to this address.
+
+    The purpose of this property is to signal that new connections to the particular endpoint should not be attempted,
+    for example because it uses an untrusted TLS certificate. Regular (unexpected) disconnects do not set the error
+    property. This property is only reused per client connection.
+    """
 
     tls: bool = False
     """
