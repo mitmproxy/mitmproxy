@@ -8,6 +8,7 @@ menu:
 # Features
 
 - [Anticache](#anticache)
+- [Blocklist](#blocklist)
 - [Client-side replay](#client-side-replay)
 - [Map Local](#map-local)
 - [Map Remote](#map-remote)
@@ -27,6 +28,33 @@ When the `anticache` option is set, it removes headers (`if-none-match` and
 server. This is useful when you want to make sure you capture an HTTP exchange
 in its totality. It's also often used during client-side replay, when you want
 to make sure the server responds with complete data.
+
+## Blocklist
+
+Using the `block_list` option, you can block particular websites or requests.
+Mitmproxy returns a fixed HTTP status code instead, or no response at all.
+
+`block_list` patterns look like this:
+
+```
+/flow-filter/status-code
+```
+
+* **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
+  that describes which requests should be blocked.
+* **status-code** is the [HTTP status code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
+  served by mitmproxy for blocked requests.
+  A special status code of 444 instructs mitmproxy to "hang up" and not send any response at all.
+
+The _separator_ is arbitrary, and is defined by the first character.
+
+#### Examples
+
+Pattern | Description
+------- | -----------
+`:~d google-analytics.com:404` | Block all requests to google-analytics.com, and return a "404 Not Found" instead.
+`:~d example.com$:444` | Block all requests to example.com, and do not send an HTTP response.
+`:!~d ^example\.com$:403` | Only allow HTTP requests to *example.com*. Note that this is not secure against an active adversary and can be bypassed, for example by switching to non-HTTP protocols.
 
 ## Client-side replay
 
