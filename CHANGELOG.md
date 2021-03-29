@@ -26,10 +26,9 @@ Mitmproxy has a completely new proxy core, fixing many longstanding issues:
 
 We wanted to bring these improvements out, so we have a few temporary regressions:
 
-* HTTP trailers were added in mitmproxy 5.2, but have not made it into the new core yet.
 * Support for HTTP/2 Push Promises has been dropped.
-* Message Injection for WebSocket and TCP connections is not implemented yet.
-* SOCKS/5 Proxy Mode is not implemented yet.
+* body_size_limit is currently unsupported.
+* upstream_auth is currently unsupported.
 
 If you depend on these features, please raise your voice in
 [#4348](https://github.com/mitmproxy/mitmproxy/issues/4348)!

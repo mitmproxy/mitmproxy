@@ -160,14 +160,13 @@ def _check_content_type(rex, message):
 
 class FAsset(_Action):
     code = "a"
-    help = "Match asset in response: CSS, Javascript, Flash, images."
+    help = "Match asset in response: CSS, JavaScript, images."
     ASSET_TYPES = [re.compile(x) for x in [
         b"text/javascript",
         b"application/x-javascript",
         b"application/javascript",
         b"text/css",
-        b"image/.*",
-        b"application/x-shockwave-flash"
+        b"image/.*"
     ]]
 
     @only(http.HTTPFlow)
