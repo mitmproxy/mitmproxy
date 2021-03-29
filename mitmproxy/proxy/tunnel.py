@@ -75,7 +75,7 @@ class TunnelLayer(layer.Layer):
                 if self.tunnel_state is TunnelState.OPEN:
                     yield from self.receive_close()
                 elif self.tunnel_state is TunnelState.ESTABLISHING:
-                    err = "connection closed without notice"
+                    err = "connection closed"
                     yield from self.on_handshake_error(err)
                     yield from self._handshake_finished(err)
                 self.tunnel_state = TunnelState.CLOSED
