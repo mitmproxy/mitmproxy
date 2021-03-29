@@ -36,12 +36,12 @@ If you depend on these features, please raise your voice in
 
 ### Full Changelog
 
-* Addition of block_list Option to block requests with a set status code (@ericbeland)
 * New Proxy Core based on sans-io pattern (@mhils)
 * mitmproxy's command line interface now supports Windows (@mhils)
 * The `clientconnect`, `clientdisconnect`, `serverconnect`, `serverdisconnect`, and `log`
   events have been replaced with new events, see addon documentation for details (@mhils)
 * Contentviews now implement `render_priority` instead of `should_render`, allowing more specialization (@mhils)
+* Addition of block_list option to block requests with a set status code (@ericbeland)
 * Automatic JSON view mode when `+json` suffix in content type (@kam800)
 * Use pyca/cryptography to generate certificates, not pyOpenSSL (@mhils)
 * Remove the legacy protocol stack (@Kriechi)

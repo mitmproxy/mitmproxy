@@ -31,51 +31,30 @@ to make sure the server responds with complete data.
 
 ## Blocklist
 
-Block websites and requests via mitmproxy while providing a fixed HTTP Status code, or no response at all.
+Using the `block_list` option, you can block particular websites or requests.
+Mitmproxy returns a fixed HTTP status code instead, or no response at all.
 
-Use-cases:
-
-* Block specific API calls (3rd party or otherwise) that would usually be loaded by a webpage
-* Block analytics, ad networks calls to avoid polluting analytics data with automated traffic
-* Block ad networks or other traffic. Automated traffic harms your clickthrough/quality scores for ads on your website.
-* Make your own ad-blocker or block image loads to save bandwidth, etc.
-* Stub an Ajax request to avoid a 404 that triggers a JS error callback
-* Restrict all traffic to a staging environment
-
-###### Arguments:
+`block_list` patterns look like this:
 
 ```
-[:filter:status]
+/flow-filter/status-code
 ```
 
-* `filter` (**mandatory**): An mitmproxy [Filter](./concepts-filters.md) to select traffic.
-* `status`  (**mandatory**) HTTP Status code. Status code 444 is special cased to "hang up."
+* **flow-filter** is an optional mitmproxy [filter expression]({{< relref "concepts-filters">}})
+  that describes which requests should be blocked.
+* **status-code** is the [HTTP status code](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes)
+  served by mitmproxy for blocked requests.
+  A special status code of 444 instructs mitmproxy to "hang up" and not send any response at all.
 
-Examples:
+The _separator_ is arbitrary, and is defined by the first character.
 
+#### Examples
 
 Pattern | Description
 ------- | -----------
-<code>:~t image:200</code> | Stop items of image content type and return empty 200 response
-`:!mysite.com:404` |Limit an app to only access URLs on your staging environment. If it tries to connect anywhere else, it gets an empty 200 response.
-
-
-* Stop analytics calls by blocking javascript content loads from 3rd party analytics domains
-```
-:~t javascript & ~d (hs-scripts|segment|yandex|google-analytics|mxpnl|woopra|adobedtm|amplitude|hotjar|heapanalytics):200
-```
-
-
-This command blocks allows only traffic to the mysite.com domain. It returns 404 for everything else.
-
-The [HTTP Status Code ](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status) to respond-with.
-
-
-##### Can I make mitmproxy just not respond at all?
-
-Yes! HTTP Status code **444** means "indicate that the server has returned no information to the
-client and closed the connection." Mitmproxy honors this behavior. In short, if response 444 is specified, no response
-will occur.
+`:~d google-analytics.com:404` | Block all requests to google-analytics.com, and return a "404 Not Found" instead.
+`:~d example.com$:444` | Block all requests to example.com, and do not send an HTTP response.
+`:!~d ^example\.com$:403` | Only allow HTTP requests to *example.com*. Note that this is not secure against an active adversary and can be bypassed, for example by switching to non-HTTP protocols.
 
 ## Client-side replay
 

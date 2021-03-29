@@ -1,144 +1,65 @@
 import pytest
 
-from mitmproxy.exceptions import OptionsError
 from mitmproxy.addons import blocklist
+from mitmproxy.exceptions import OptionsError
 from mitmproxy.test import taddons
 from mitmproxy.test import tflow
 
 
+@pytest.mark.parametrize("filter,err", [
+    ("/~u index.html/TOOMANY/300", "Invalid number of parameters"),
+    (":~d ~d ~d:200", "Invalid filter"),
+    ("/~u index.html/999", "Invalid HTTP status code"),
+    ("/~u index.html/abc", "Invalid HTTP status code"),
+])
+def test_parse_spec_err(filter, err):
+    with pytest.raises(ValueError, match=err):
+        blocklist.parse_spec(filter)
+
+
 class TestBlockList:
+    @pytest.mark.parametrize("filter,status_code", [
+        (":~u example.org:404", 404),
+        (":~u example.com:404", None),
+        ("/!jpg/418", None),
+        ("/!png/418", 418),
 
-    def test_invalid_filter_pattern(self):
+    ])
+    def test_block(self, filter, status_code):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
-            with pytest.raises(OptionsError, match="Invalid filter"):
-                tctx.configure(bl, block_list=[":~d ~d asdfsad sdsdsssdd mysite.com:200"])
-
-    def test_good_configure(self):
-        bl = blocklist.BlockList()
-        with taddons.context(bl) as tctx:
-            tctx.configure(bl, block_list=[":mysite.com:200"])
-
-    def test_invalid_parameters_length(self):
-        bl = blocklist.BlockList()
-        with taddons.context(bl) as tctx:
-            with pytest.raises(OptionsError, match="Invalid number of parameters"):
-                tctx.configure(bl, block_list=["/~u index.html/TOOMANY/300"])
-
-    def test_configure_bad_http_status_code(self):
-        bl = blocklist.BlockList()
-        with taddons.context(bl) as tctx:
-            with pytest.raises(OptionsError, match="Invalid HTTP status code"):
-                tctx.configure(bl, block_list=["/~u index.html/999"])
-
-    def test_configure_invalid_status_code(self):
-        bl = blocklist.BlockList()
-        with taddons.context(bl) as tctx:
-            with pytest.raises(OptionsError, match="Cannot parse block_list option"):
-                tctx.configure(bl, block_list=[":mysite.com:NOT_A_STATUS_CODE"])
+            tctx.configure(bl, block_list=[filter])
+            f = tflow.tflow()
+            f.request.url = b"https://example.org/images/test.jpg"
+            bl.request(f)
+            if status_code is not None:
+                assert f.response.status_code == status_code
+                assert f.metadata['blocklisted']
+            else:
+                assert not f.response
 
     def test_special_kill_status_closes_connection(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
-            tctx.configure(
-                bl,
-                block_list=[
-                    ':~u jpg:444',
-                ]
-            )
+            tctx.configure(bl, block_list=[':.*:444'])
             f = tflow.tflow()
-            f.request.url = b"https://example.org/images/test.jpg"
             bl.request(f)
-            assert (f.error.msg == f.error.KILLED_MESSAGE)
-            assert (f.response is None)
-            assert (f.metadata['blocklisted'] is True)
+            assert f.error.msg == f.error.KILLED_MESSAGE
+            assert f.response is None
+            assert f.metadata['blocklisted'] is True
 
-    def test_simple(self):
+    def test_already_handled(self):
+        """Test that we don't interfere if another addon already killed this request."""
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
-            tctx.configure(
-                bl,
-                block_list=[
-                    ':~u example.org:200',
-                ]
-            )
+            tctx.configure(bl, block_list=["/.*/404"])
             f = tflow.tflow()
-            f.request.url = b"https://example.org/images/test.jpg"
+            f.kill()  # done by another addon.
             bl.request(f)
-            assert f.response.status_code == 200
-            assert (f.metadata['blocklisted'] is True)
+            assert not f.response
 
-    def test_negated_filter_allows_passing_traffic(self):
+    def test_configure_err(self):
         bl = blocklist.BlockList()
         with taddons.context(bl) as tctx:
-            tctx.configure(
-                bl,
-                block_list=[
-                    ':!jpg:404',
-                ]
-            )
-            f = tflow.tflow(resp=True)
-            f.request.url = b"https://foo.org/images/test.jpg"
-            bl.request(f)
-            assert ('blocklisted' not in f.metadata)
-            assert f.response.status_code == 200
-
-    def negated_filter_blocks_non_matching_traffic(self):
-        bl = blocklist.BlockList()
-        with taddons.context(bl) as tctx:
-            tctx.configure(
-                bl,
-                block_list=[
-                    ':!~u .png:404',
-                ]
-            )
-            f = tflow.tflow()
-            f.request.url = b"https://foo.org/images/test.jpg"
-            bl.request(f)
-            assert f.response.status_code == 404
-
-    def test_block_blocks_matching_flow(self):
-        bl = blocklist.BlockList()
-        with taddons.context(bl) as tctx:
-            tctx.configure(
-                bl,
-                block_list=[
-                    ':~u .jpg:404',
-                ]
-            )
-            f = tflow.tflow()
-            f.request.url = b"https://example.org/images/test.jpg"
-            bl.request(f)
-            assert f.response.status_code == 404
-
-    def block_ignores_non_match(self):
-        bl = blocklist.BlockList()
-        with taddons.context(bl) as tctx:
-            tctx.configure(
-                bl,
-                block_list=[
-                    ':~u .png:404',
-                ]
-            )
-            f = tflow.tflow(resp=True)
-            f.request.url = b"https://foo.org/images/test.jpg"
-            bl.request(f)
-            assert f.response.status_code == 200
-
-    def test_has_guessed_content_type(self):
-        bl = blocklist.BlockList()
-        with taddons.context(bl) as tctx:
-            tctx.configure(bl, block_list=[":example.org:204"])
-            f = tflow.tflow()
-            f.request.url = b"https://example.org/images/test.jpg"
-            bl.request(f)
-            assert f.response.headers['Content-Type'] == 'image/jpeg'
-
-    def test_blocked_response_has_no_content(self):
-        bl = blocklist.BlockList()
-        with taddons.context(bl) as tctx:
-            tctx.configure(bl, block_list=[":example.org:204"])
-            f = tflow.tflow()
-            f.request.url = b"https://example.org/images/test.jpg"
-            bl.request(f)
-            assert f.response.content == b""
+            with pytest.raises(OptionsError):
+                tctx.configure(bl, block_list=["lalelu"])
