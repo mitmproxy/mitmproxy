@@ -112,8 +112,15 @@ class BufferedH2Connection(h2.connection.H2Connection):
         The window for a specific stream has updated. Send as much buffered data as possible.
         """
         # If the stream has been reset in the meantime, we just clear the buffer.
-        stream: h2.stream.H2Stream = self.streams[stream_id]
-        if stream.state_machine.state not in (h2.stream.StreamState.OPEN, h2.stream.StreamState.HALF_CLOSED_REMOTE):
+        try:
+            stream: h2.stream.H2Stream = self.streams[stream_id]
+        except KeyError:
+            stream_was_reset = True
+        else:
+            stream_was_reset = (
+                stream.state_machine.state not in (h2.stream.StreamState.OPEN, h2.stream.StreamState.HALF_CLOSED_REMOTE)
+            )
+        if stream_was_reset:
             self.stream_buffers.pop(stream_id, None)
             return False
 
