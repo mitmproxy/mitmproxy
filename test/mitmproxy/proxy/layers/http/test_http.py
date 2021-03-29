@@ -546,6 +546,7 @@ def test_http_proxy_tcp(tctx, mode, close_first):
     """Test TCP over HTTP CONNECT."""
     server = Placeholder(Server)
     f = Placeholder(TCPFlow)
+    tctx.options.connection_strategy = "lazy"
 
     if mode == "upstream":
         tctx.options.mode = "upstream:http://proxy:8080"
@@ -813,6 +814,7 @@ def test_http_server_aborts(tctx, stream):
                                   "response", "error"])
 def test_kill_flow(tctx, when):
     """Test that we properly kill flows if instructed to do so"""
+    tctx.options.connection_strategy = "lazy"
     server = Placeholder(Server)
     connect_flow = Placeholder(HTTPFlow)
     flow = Placeholder(HTTPFlow)
