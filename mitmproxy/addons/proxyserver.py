@@ -5,7 +5,7 @@ from typing import Dict, Optional, Tuple
 from mitmproxy import command, controller, ctx, flow, http, log, master, options, platform, tcp, websocket
 from mitmproxy.flow import Error, Flow
 from mitmproxy.proxy import commands, events
-from mitmproxy.proxy import server, server_hooks
+from mitmproxy.proxy import server
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
 from mitmproxy.utils import asyncio_utils, human, strutils
@@ -180,8 +180,3 @@ class Proxyserver:
             self.inject_event(event)
         except ValueError as e:
             ctx.log.warn(str(e))
-
-    def server_connected(self, ctx: server_hooks.ServerConnectionHookData):
-        # check if the outbound part of this connection appeared as a new client.
-        if ctx.server.sockname in self._connections:
-            ctx.server.error = "Stopped mitmproxy from recursively connecting to itself."
