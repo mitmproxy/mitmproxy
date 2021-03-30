@@ -5,9 +5,10 @@ import pytest
 
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import layers
+from mitmproxy.proxy import layers, server_hooks
 from mitmproxy.connection import Address
 from mitmproxy.test import taddons, tflow
+from mitmproxy.test.tflow import tclient_conn, tserver_conn
 
 
 class HelperAddon:
@@ -162,26 +163,15 @@ async def test_warn_no_nextlayer():
         await ps.shutdown_server()
 
 
-@pytest.mark.asyncio
-async def test_self_connect():
+def test_self_connect():
+    server = tserver_conn()
+    client = tclient_conn()
+    server.address = ("localhost", 8080)
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
-        state = HelperAddon()
-        state.layers = [
-            lambda ctx: layers.modes.ReverseProxy(ctx),
-            lambda ctx: layers.HttpLayer(ctx, HTTPMode.transparent),
-            lambda ctx: layers.modes.ReverseProxy(ctx),
-        ]
-        tctx.master.addons.add(state)
-
-        tctx.configure(ps, listen_host="127.0.0.1", listen_port=0)
-        ps.running()
-        await tctx.master.await_log("Proxy server listening", level="info")
-        assert ps.server
-        proxy_addr = ps.server.sockets[0].getsockname()[:2]
-
-        tctx.options.mode = f"reverse:{':'.join(str(x) for x in proxy_addr)}"
-        reader, writer = await asyncio.open_connection(*proxy_addr)
-        writer.write(b"GET / HTTP/1.1\r\n\r\n")
-        assert b"502 Bad Gateway" in await reader.readuntil(b"\r\n\r\n")
-        assert b"Stopped mitmproxy from recursively connecting" in await reader.readuntil(b"</html>")
+        # not calling .running() here to avoid unnecessary socket
+        ps.options = tctx.options
+        ps.server_connect(
+            server_hooks.ServerConnectionHookData(server, client)
+        )
+        assert server.error == "Stopped mitmproxy from recursively connecting to itself."

@@ -142,9 +142,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
             server=command.connection
         )
         await self.handle_hook(server_hooks.ServerConnectHook(hook_data))
-        if command.connection.error:
-            self.log(f"server connection to {human.format_address(command.connection.address)} killed before connect.")
-            self.server_event(events.OpenConnectionCompleted(command, "Connection killed."))
+        if err := command.connection.error:
+            self.log(f"server connection to {human.format_address(command.connection.address)} killed before connect: {err}")
+            self.server_event(events.OpenConnectionCompleted(command, f"Connection killed: {err}"))
             return
 
         async with self.max_conns[command.connection.address]:

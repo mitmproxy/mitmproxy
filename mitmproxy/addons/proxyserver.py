@@ -4,7 +4,7 @@ from typing import Dict, Optional, Tuple
 
 from mitmproxy import command, controller, ctx, flow, http, log, master, options, platform, tcp, websocket
 from mitmproxy.flow import Error, Flow
-from mitmproxy.proxy import commands, events
+from mitmproxy.proxy import commands, events, server_hooks
 from mitmproxy.proxy import server
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
@@ -180,3 +180,13 @@ class Proxyserver:
             self.inject_event(event)
         except ValueError as e:
             ctx.log.warn(str(e))
+
+    def server_connect(self, ctx: server_hooks.ServerConnectionHookData):
+        assert ctx.server.address
+        self_connect = (
+            ctx.server.address[1] == self.options.listen_port
+            and
+            ctx.server.address[0] in ("localhost", "127.0.0.1", "::1", self.options.listen_host)
+        )
+        if self_connect:
+            ctx.server.error = "Stopped mitmproxy from recursively connecting to itself."
