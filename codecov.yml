@@ -13,6 +13,3 @@ coverage:
         threshold: 0.1%
         paths:
           - "web/"
-codecov:
-  notify:
-    after_n_builds: 7
