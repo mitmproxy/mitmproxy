@@ -47,7 +47,12 @@ class Options(optmanager.OptManager):
         )
         self.add_option(
             "cert_passphrase", Optional[str], None,
-            "Passphrase for decrypting the private key provided in the --cert option."
+            """
+            Passphrase for decrypting the private key provided in the --cert option.
+
+            Note that passing cert_passphrase on the command line makes your passphrase visible in your system's
+            process list. Specify it in config.yaml to avoid this.
+            """
         )
         self.add_option(
             "ciphers_client", Optional[str], None,
