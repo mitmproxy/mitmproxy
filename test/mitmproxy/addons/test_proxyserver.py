@@ -5,9 +5,10 @@ import pytest
 
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import layers
+from mitmproxy.proxy import layers, server_hooks
 from mitmproxy.connection import Address
 from mitmproxy.test import taddons, tflow
+from mitmproxy.test.tflow import tclient_conn, tserver_conn
 
 
 class HelperAddon:
@@ -160,3 +161,17 @@ async def test_warn_no_nextlayer():
         await tctx.master.await_log("Proxy server listening at", level="info")
         assert tctx.master.has_log("Warning: Running proxyserver without nextlayer addon!", level="warn")
         await ps.shutdown_server()
+
+
+def test_self_connect():
+    server = tserver_conn()
+    client = tclient_conn()
+    server.address = ("localhost", 8080)
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        # not calling .running() here to avoid unnecessary socket
+        ps.options = tctx.options
+        ps.server_connect(
+            server_hooks.ServerConnectionHookData(server, client)
+        )
+        assert server.error == "Stopped mitmproxy from recursively connecting to itself."
