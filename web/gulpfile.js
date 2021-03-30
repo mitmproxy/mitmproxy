@@ -214,7 +214,7 @@ gulp.task(
 
 gulp.task("default", gulp.series(
     "dev",
-    function () {
+    function watch() {
         livereload.listen({auto: true});
         gulp.watch(["src/css/vendor*"], gulp.series("styles-vendor-dev"));
         gulp.watch(["src/css/**"], gulp.series("styles-app-dev"));
