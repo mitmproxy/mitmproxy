@@ -1,12 +1,17 @@
 import React from 'react'
 import renderer from 'react-test-renderer'
 import FlowRow from '../../../components/FlowTable/FlowRow'
-import { TFlow } from '../../ducks/tutils'
+import { TFlow, TStore } from '../../ducks/tutils'
+import { Provider } from 'react-redux'
 
 describe('FlowRow Component', () => {
     let tFlow = new TFlow(),
         selectFn = jest.fn(),
-        flowRow = renderer.create(<FlowRow flow={tFlow} onSelect={selectFn}/>),
+        store = TStore(),
+        flowRow = renderer.create(
+            <Provider store={store} >
+                <FlowRow flow={tFlow} onSelect={selectFn}/>
+            </Provider>),
         tree = flowRow.toJSON()
 
     it('should render correctly', () => {

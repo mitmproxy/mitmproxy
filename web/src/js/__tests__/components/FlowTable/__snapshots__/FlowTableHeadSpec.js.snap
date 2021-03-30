@@ -80,6 +80,12 @@ exports[`FlowTableHead Component should render correctly 1`] = `
     Status
   </th>
   <th
+    className="col-timestamp"
+    onClick={[Function]}
+  >
+    TimeStamp
+  </th>
+  <th
     className="col-size"
     onClick={[Function]}
   >

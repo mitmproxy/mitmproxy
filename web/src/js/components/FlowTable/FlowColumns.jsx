@@ -1,7 +1,9 @@
 import React, { Component } from 'react'
 import classnames from 'classnames'
 import { RequestUtils, ResponseUtils } from '../../flow/utils.js'
-import { formatSize, formatTimeDelta } from '../../utils.js'
+import { formatSize, formatTimeDelta, formatTimeStamp } from '../../utils.js'
+
+export const defaultColumnNames = ["tls", "icon", "path", "method", "status", "size", "time"]
 
 export function TLSColumn({ flow }) {
     return (
@@ -148,12 +150,28 @@ export function TimeColumn({ flow }) {
 TimeColumn.headerClass = 'col-time'
 TimeColumn.headerName = 'Time'
 
+export function TimeStampColumn({ flow }) {
+    return (
+        <td className="col-start">
+            {flow.request.timestamp_start ? (
+                formatTimeStamp(flow.request.timestamp_start)
+            ) : (
+                '...'
+            )}
+        </td>
+    )
+}
+
+TimeStampColumn.headerClass = 'col-timestamp'
+TimeStampColumn.headerName = 'TimeStamp'
+
 export default [
     TLSColumn,
     IconColumn,
     PathColumn,
     MethodColumn,
     StatusColumn,
+    TimeStampColumn,
     SizeColumn,
     TimeColumn,
 ]

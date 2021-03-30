@@ -7,6 +7,10 @@ and activate your virtualenv environment before proceeding.**
 - Run `yarn run gulp` to start live-compilation.
 - Run `mitmweb` and open http://localhost:8081/
 
+## Testing
+
+- Run `yarn run test` to run the testsuite.
+
 ## Architecture
 
 There are two components:
