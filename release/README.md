@@ -49,13 +49,13 @@ These steps assume you are on the correct branch and have a git remote called `o
 
 - The website does not need to be updated for patch releases. New versions are automatically picked up once they are on the download server.
 - Update version here:
-   https://github.com/mitmproxy/www/blob/master/src/config.toml
+   https://github.com/mitmproxy/www/blob/main/src/config.toml
 - Update docs menu here:
-   https://github.com/mitmproxy/www/blob/master/src/themes/mitmproxy/layouts/partials/header.html
+   https://github.com/mitmproxy/www/blob/main/src/themes/mitmproxy/layouts/partials/header.html
 - Run `./build && ./upload-test`.
 - If everything looks alright at https://www-test.mitmproxy.org, run `./upload-prod`.
 
 ### Prepare for next release
 
-- Last but not least, bump the major version on master in
-   [https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/version.py](mitmproxy/version.py) and add a `.dev` suffix.
+- Last but not least, bump the major version on main in
+   [https://github.com/mitmproxy/mitmproxy/blob/main/mitmproxy/version.py](mitmproxy/version.py) and add a `.dev` suffix.

@@ -17,7 +17,7 @@ def test_buildenviron_common():
     be = cibuild.BuildEnviron(
         system="Linux",
         root_dir=root,
-        branch="master",
+        branch="main",
     )
     assert be.release_dir == be.root_dir / "release"
     assert be.dist_dir == be.root_dir / "release" / "dist"
@@ -57,7 +57,7 @@ def test_buildenviron_commit():
     be = cibuild.BuildEnviron(
         system="Linux",
         root_dir=root,
-        branch="master",
+        branch="main",
         is_pull_request=False,
         should_build_wheel=True,
         should_build_pyinstaller=True,

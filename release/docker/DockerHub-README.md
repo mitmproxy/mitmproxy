@@ -38,7 +38,7 @@ For further details, please consult the mitmproxy [documentation](http://docs.mi
 The available release tags can be seen
 [here](https://hub.docker.com/r/mitmproxy/mitmproxy/tags/).
 
-* `master` always tracks the git-master branch and represents the unstable development tree.
+* `dev` always tracks the git-master branch and represents the unstable development tree.
 * `latest` always points to the same image as the most recent stable release, including bugfix releases (e.g., `4.0.0` and `4.0.1`).
 * `X.Y.Z` tags contain the mitmproxy release with this version number.
 

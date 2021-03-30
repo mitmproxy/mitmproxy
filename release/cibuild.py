@@ -127,7 +127,7 @@ class BuildEnviron:
 
     @property
     def docker_tag(self) -> str:
-        if self.branch == "master":
+        if self.branch == "main":
             t = "dev"
         else:
             t = self.version
@@ -214,7 +214,7 @@ class BuildEnviron:
     @property
     def should_upload_docker(self) -> bool:
         return all([
-            (self.is_prod_release or self.branch == "master"),
+            (self.is_prod_release or self.branch == "main"),
             self.should_build_docker,
             self.has_docker_creds,
         ])

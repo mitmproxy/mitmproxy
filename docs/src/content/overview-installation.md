@@ -49,8 +49,8 @@ instructions for Linux.
 ### Development Setup
 
 If you would like to install mitmproxy directly from source code or the
-GitHub master branch, please see the our
-[CONTRIBUTING.md](https://github.com/mitmproxy/mitmproxy/blob/master/CONTRIBUTING.md)
+GitHub main branch, please see the our
+[CONTRIBUTING.md](https://github.com/mitmproxy/mitmproxy/blob/main/CONTRIBUTING.md)
 on GitHub.
 
 ### Installation from the Python Package Index (PyPI)

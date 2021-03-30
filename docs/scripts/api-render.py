@@ -12,7 +12,7 @@ if os.environ.get("DOCS_ARCHIVE", False):
     edit_url_map = {}
 else:
     edit_url_map = {
-        "mitmproxy": "https://github.com/mitmproxy/mitmproxy/blob/master/mitmproxy/",
+        "mitmproxy": "https://github.com/mitmproxy/mitmproxy/blob/main/mitmproxy/",
     }
 
 pdoc.render.configure(

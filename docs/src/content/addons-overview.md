@@ -9,7 +9,7 @@ menu:
 
 Mitmproxy's addon mechanism is an exceptionally powerful part of mitmproxy. In fact, much of mitmproxy's own
 functionality is defined in
-[a suite of built-in addons](https://github.com/mitmproxy/mitmproxy/tree/master/mitmproxy/addons),
+[a suite of built-in addons](https://github.com/mitmproxy/mitmproxy/tree/main/mitmproxy/addons),
 implementing everything from functionality like
 [anticaching]({{< relref "overview-features#anticache" >}}) and [sticky cookies]({{< relref
 "overview-features#sticky-cookies" >}}) to our onboarding webapp.

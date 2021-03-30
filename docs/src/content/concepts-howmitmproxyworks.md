@@ -192,7 +192,7 @@ this introduces the second component required for working transparent
 proxying: a host module that knows how to retrieve the original
 destination address from the router. In mitmproxy, this takes the form
 of a built-in set of
-[modules](https://github.com/mitmproxy/mitmproxy/tree/master/mitmproxy/platform)
+[modules](https://github.com/mitmproxy/mitmproxy/tree/main/mitmproxy/platform)
 that know how to talk to each platform's redirection mechanism. Once we
 have this information, the process is fairly straight-forward.
 
