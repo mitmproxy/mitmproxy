@@ -46,7 +46,7 @@ exports[`FlowRow Component should render correctly 1`] = `
   <td
     className="col-time"
   >
-    415381h
+    3s
   </td>
 </tr>
 `;

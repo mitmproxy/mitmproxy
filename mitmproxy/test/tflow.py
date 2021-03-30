@@ -184,9 +184,6 @@ def tserver_conn() -> connection.Server:
     return c
 
 
-def terr(content="error"):
-    """
-    @return: mitmproxy.proxy.protocol.primitives.Error
-    """
-    err = flow.Error(content)
+def terr(content: str = "error") -> flow.Error:
+    err = flow.Error(content, 946681207)
     return err

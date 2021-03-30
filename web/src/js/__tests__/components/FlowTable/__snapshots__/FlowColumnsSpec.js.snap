@@ -127,7 +127,7 @@ exports[`FlowColumns Components should render TimeColumn 1`] = `
 <td
   className="col-time"
 >
-  415381h
+  3s
 </td>
 `;
 
@@ -136,6 +136,14 @@ exports[`FlowColumns Components should render TimeColumn 2`] = `
   className="col-time"
 >
   ...
+</td>
+`;
+
+exports[`FlowColumns Components should render TimeStampColumn 1`] = `
+<td
+  className="col-start"
+>
+  1999-12-31 23:00:00.000
 </td>
 `;
 

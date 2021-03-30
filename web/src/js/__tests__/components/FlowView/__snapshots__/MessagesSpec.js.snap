@@ -10,7 +10,7 @@ exports[`Error Component should render correctly 1`] = `
     error
     <div>
       <small>
-        2017-05-21 12:38:32.481
+        1999-12-31 23:00:07.000
       </small>
     </div>
   </div>
@@ -240,55 +240,6 @@ exports[`Request Component should render correctly 1`] = `
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "qvalue",
-                }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-          </td>
-        </tr>
-        <tr>
-          <td
-            className="header-name"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "content-length",
-                }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-            <span
-              className="header-colon"
-            >
-              :
-            </span>
-          </td>
-          <td
-            className="header-value"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "7",
                 }
               }
               onBlur={[Function]}
@@ -608,55 +559,6 @@ exports[`Response Component should render correctly 1`] = `
               dangerouslySetInnerHTML={
                 Object {
                   "__html": "qvalue",
-                }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-          </td>
-        </tr>
-        <tr>
-          <td
-            className="header-name"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "content-length",
-                }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-            <span
-              className="header-colon"
-            >
-              :
-            </span>
-          </td>
-          <td
-            className="header-value"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "7",
                 }
               }
               onBlur={[Function]}
