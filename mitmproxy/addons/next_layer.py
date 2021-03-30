@@ -105,8 +105,6 @@ class NextLayer:
         def s(*layers):
             return stack_match(context, layers)
 
-        top_layer = context.layers[-1]
-
         # 1. check for --ignore/--allow
         ignore = self.ignore_connection(context.server.address, data_client)
         if ignore is True:
@@ -116,13 +114,17 @@ class NextLayer:
 
         # 2. Check for TLS
         if client_tls:
-            # client tls requires a server tls layer as parent layer
-            # reverse proxy mode manages this itself.
-            # a secure web proxy doesn't have a server part.
-            if isinstance(top_layer, layers.ServerTLSLayer) or s(modes.ReverseProxy) or s(modes.HttpProxy):
+            # client tls usually requires a server tls layer as parent layer, except:
+            #  - reverse proxy mode manages this itself.
+            #  - a secure web proxy doesn't have a server part.
+            if s(modes.ReverseProxy) or s(modes.HttpProxy):
                 return layers.ClientTLSLayer(context)
             else:
-                return layers.ServerTLSLayer(context)
+                # We already assign the next layer here os that ServerTLSLayer
+                # knows that it can safely wait for a ClientHello.
+                ret = layers.ServerTLSLayer(context)
+                ret.child_layer = layers.ClientTLSLayer(context)
+                return ret
 
         # 3. Setup the HTTP layer for a regular HTTP proxy or an upstream proxy.
         if any([

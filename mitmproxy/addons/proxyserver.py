@@ -83,8 +83,11 @@ class Proxyserver:
 
     def load(self, loader):
         loader.add_option(
-            "connection_strategy", str, "lazy",
-            "Determine when server connections should be established.",
+            "connection_strategy", str, "eager",
+            "Determine when server connections should be established. When set to lazy, mitmproxy "
+            "tries to defer establishing an upstream connection as long as possible. This makes it possible to "
+            "use server replay while being offline. When set to eager, mitmproxy can detect protocols with "
+            "server-side greetings, as well as accurately mirror TLS ALPN negotiation.",
             choices=("eager", "lazy")
         )
         loader.add_option(

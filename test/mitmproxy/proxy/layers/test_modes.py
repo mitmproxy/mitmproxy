@@ -119,6 +119,7 @@ def test_reverse_proxy(tctx, keep_host_header):
     """
     server = Placeholder(Server)
     tctx.options.mode = "reverse:http://localhost:8000"
+    tctx.options.connection_strategy = "lazy"
     tctx.options.keep_host_header = keep_host_header
     assert (
         Playbook(modes.ReverseProxy(tctx), hooks=False)
@@ -321,6 +322,7 @@ def test_socks5_success(address: str, packed: bytes, tctx: Context):
 
 
 def test_socks5_trickle(tctx: Context):
+    tctx.options.connection_strategy = "lazy"
     playbook = Playbook(modes.Socks5Proxy(tctx))
     for x in CLIENT_HELLO:
         playbook >> DataReceived(tctx.client, bytes([x]))

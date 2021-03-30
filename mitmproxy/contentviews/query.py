@@ -15,4 +15,7 @@ class ViewQuery(base.View):
             return "Query", base.format_text("")
 
     def render_priority(self, data: bytes, *, http_message: Optional[http.Message] = None, **metadata) -> float:
-        return 0.3 * float(bool(getattr(http_message, "query", False)))
+        return 0.3 * float(bool(
+            getattr(http_message, "query", False)
+            and not data
+        ))

@@ -84,7 +84,7 @@ class CommandCompleted(Event):
         command_reply_subclasses[command_cls] = cls
 
     def __repr__(self):
-        return f"Reply({repr(self.command)})"
+        return f"Reply({repr(self.command)},{repr(self.reply)})"
 
 
 command_reply_subclasses: typing.Dict[commands.Command, typing.Type[CommandCompleted]] = {}

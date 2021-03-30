@@ -683,32 +683,40 @@ class HttpLayer(layer.Layer):
         # Do we already have a connection we can re-use?
         if reuse:
             for connection in self.connections:
-                # see "tricky multiplexing edge case" in make_http_connection for an explanation
-                conn_is_pending_or_h2 = (
-                    connection.alpn == b"h2"
-                    or connection in self.waiting_for_establishment
-                )
-                h2_to_h1 = self.context.client.alpn == b"h2" and not conn_is_pending_or_h2
                 connection_suitable = (
                     event.connection_spec_matches(connection)
-                    and not h2_to_h1
                 )
                 if connection_suitable:
                     if connection in self.waiting_for_establishment:
                         self.waiting_for_establishment[connection].append(event)
                         return
-                    elif connection.connected:
+                    elif connection.error:
                         stream = self.command_sources.pop(event)
-                        yield from self.event_to_child(stream, GetHttpConnectionCompleted(event, (connection, None)))
+                        yield from self.event_to_child(stream, GetHttpConnectionCompleted(event, (None, connection.error)))
                         return
+                    elif connection.connected:
+                        # see "tricky multiplexing edge case" in make_http_connection for an explanation
+                        h2_to_h1 = self.context.client.alpn == b"h2" and connection.alpn != b"h2"
+                        if not h2_to_h1:
+                            stream = self.command_sources.pop(event)
+                            yield from self.event_to_child(stream, GetHttpConnectionCompleted(event, (connection, None)))
+                            return
                     else:
                         pass  # the connection is at least half-closed already, we want a new one.
 
-        can_use_context_connection = (
+        context_connection_matches = (
             self.context.server not in self.connections and
-            self.context.server.connected and
             event.connection_spec_matches(self.context.server)
         )
+        can_use_context_connection = (
+            context_connection_matches
+            and self.context.server.connected
+        )
+        if context_connection_matches and self.context.server.error:
+            stream = self.command_sources.pop(event)
+            yield from self.event_to_child(stream, GetHttpConnectionCompleted(event, (None, self.context.server.error)))
+            return
+
         context = self.context.fork()
 
         stack = tunnel.LayerStack()

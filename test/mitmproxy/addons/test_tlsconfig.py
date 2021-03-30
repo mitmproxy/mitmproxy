@@ -30,6 +30,10 @@ def test_alpn_select_callback():
     # Test no overlap
     assert tlsconfig.alpn_select_callback(conn, [b"qux", b"quux"]) == SSL.NO_OVERLAPPING_PROTOCOLS
 
+    # Test that we don't select an ALPN if the server refused to select one.
+    conn.set_app_data(tlsconfig.AppData(server_alpn=b"", http2=True))
+    assert tlsconfig.alpn_select_callback(conn, [b"http/1.1"]) == SSL.NO_OVERLAPPING_PROTOCOLS
+
 
 here = Path(__file__).parent
 

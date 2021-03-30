@@ -23,7 +23,7 @@ class DestinationKnown(layer.Layer, metaclass=ABCMeta):
     child_layer: layer.Layer
 
     def finish_start(self) -> layer.CommandGenerator[Optional[str]]:
-        if self.context.options.connection_strategy == "eager":
+        if self.context.options.connection_strategy == "eager" and self.context.server.address:
             err = yield commands.OpenConnection(self.context.server)
             if err:
                 self._handle_event = self.done  # type: ignore

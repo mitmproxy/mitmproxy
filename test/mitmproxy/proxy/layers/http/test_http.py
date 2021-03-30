@@ -546,6 +546,7 @@ def test_http_proxy_tcp(tctx, mode, close_first):
     """Test TCP over HTTP CONNECT."""
     server = Placeholder(Server)
     f = Placeholder(TCPFlow)
+    tctx.options.connection_strategy = "lazy"
 
     if mode == "upstream":
         tctx.options.mode = "upstream:http://proxy:8080"
@@ -813,6 +814,7 @@ def test_http_server_aborts(tctx, stream):
                                   "response", "error"])
 def test_kill_flow(tctx, when):
     """Test that we properly kill flows if instructed to do so"""
+    tctx.options.connection_strategy = "lazy"
     server = Placeholder(Server)
     connect_flow = Placeholder(HTTPFlow)
     flow = Placeholder(HTTPFlow)
@@ -1000,3 +1002,18 @@ def test_dont_reuse_closed(tctx):
             >> DataReceived(server2, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
             << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
     )
+
+
+def test_reuse_error(tctx):
+    """Test that an errored connection is reused."""
+    tctx.server.address = ("example.com", 443)
+    tctx.server.error = "tls verify failed"
+    error_html = Placeholder(bytes)
+    assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.transparent), hooks=False)
+            >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
+            << SendData(tctx.client, error_html)
+            << CloseConnection(tctx.client)
+    )
+    assert b"502 Bad Gateway" in error_html()
+    assert b"tls verify failed" in error_html()

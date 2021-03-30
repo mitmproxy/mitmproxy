@@ -245,7 +245,7 @@ def test_disconnect_during_handshake_command(tctx: Context, disconnect):
                 >> ConnectionClosed(tctx.client)
                 >> ConnectionClosed(server)  # proxyserver will cancel all other connections as well.
                 << CloseConnection(server)
-                << Log("Opened: err='connection closed without notice'. Server state: CLOSED")
+                << Log("Opened: err='connection closed'. Server state: CLOSED")
                 << Log("Got client close.")
                 << CloseConnection(tctx.client)
         )
@@ -254,7 +254,7 @@ def test_disconnect_during_handshake_command(tctx: Context, disconnect):
                 playbook
                 >> ConnectionClosed(server)
                 << CloseConnection(server)
-                << Log("Opened: err='connection closed without notice'. Server state: CLOSED")
+                << Log("Opened: err='connection closed'. Server state: CLOSED")
         )
 
 
