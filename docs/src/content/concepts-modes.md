@@ -209,4 +209,8 @@ tests).
 
 ## SOCKS Proxy
 
-In this mode, mitmproxy acts as a SOCKS5 proxy.
+In this mode, mitmproxy acts as a [SOCKS5 proxy](https://en.wikipedia.org/wiki/SOCKS).[^1]
+
+### Footnotes
+
+[^1]: SOCKS (which stands for secure sockets) is a type of proxy connection protocol that’s used for general needs. With SOCKS5, it cooperates with different authentication methodologies which permit improved security options when making a connection, and for the data stream. [See difference between socks proxy and http proxy](https://bitrebels.com/technology/difference-between-socks-proxy-http-proxy/)
