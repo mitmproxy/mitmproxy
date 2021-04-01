@@ -1,0 +1,65 @@
+html, body, #container, #mitmproxy {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+#container {
+    display: flex;
+    flex-direction: column;
+
+    outline: none; // our root element is focused by default.
+
+    > header, > footer, > .eventlog {
+        flex: 0 0 auto;
+    }
+}
+
+.main-view {
+    flex: 1 1 auto;
+
+    // All children of #container need an explicit height
+    // If we don't set this, the scrollbars disappear
+    // (https://github.com/mitmproxy/mitmproxy/issues/615)
+    height: 0;
+
+    display: flex;
+    flex-direction: row;
+
+    &.vertical {
+        flex-direction: column;
+    }
+
+    .flow-detail, .flow-table {
+        flex: 1 1 auto;
+    }
+
+}
+
+.splitter {
+    flex: 0 0 1px;
+    background-color: #aaa;
+    position: relative;
+
+    > div {
+        position: absolute;
+        //debug: background-color: orange;
+    }
+
+    &.splitter-x {
+        cursor: col-resize;
+        > div {
+            margin-left: -1px;
+            width: 4px;
+            height: 100%;
+        }
+    }
+    &.splitter-y {
+        cursor: row-resize;
+        > div {
+            margin-top: -1px;
+            height: 4px;
+            width: 100%;
+        }
+    }
+}

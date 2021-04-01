@@ -1,0 +1,10 @@
+<exampleOfAComment>
+<!--
+      Since this is a comment
+        I can use all sorts of reserved characters
+      like > < " and &
+  or write things like
+      <foo></bar>
+      but my document is still well formed!
+-->
+</exampleOfAComment>

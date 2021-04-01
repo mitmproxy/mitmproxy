@@ -1,0 +1,9 @@
+{{- if (getenv "DOCS_ARCHIVE") -}}
+<article class="message is-warning">
+    <div class="message-body">
+        You are not viewing the most up to date version of the documentation.
+        Click <a href="https://docs.mitmproxy.org/stable{{ .Page.URL }}">here</a>
+        to view the latest version.
+    </div>
+</article>
+{{- end -}}

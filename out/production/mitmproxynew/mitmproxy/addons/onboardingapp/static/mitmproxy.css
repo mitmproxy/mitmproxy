@@ -1,0 +1,44 @@
+.media {
+    min-height: 110px;
+}
+.media svg {
+    width: 64px;
+    margin-right: 1rem !important;
+}
+
+.instructions {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+/* CSS-only collapsible */
+.show-instructions:target, .hide-instructions, .instructions {
+    display: none;
+}
+.show-instructions:target ~ .hide-instructions {
+    display: inline-block;
+}
+.show-instructions:target ~ .instructions {
+    display: inherit;
+}
+
+.fa-apple {
+    color: #666;
+}
+
+.fa-windows {
+    color: #0078D7;
+}
+
+.fa-firefox-browser {
+    color: #E25821;
+}
+
+.fa-android {
+    margin-top: 10px;
+    color: #3DDC84;
+}
+
+.fa-certificate {
+    color: #FFBB00;
+}

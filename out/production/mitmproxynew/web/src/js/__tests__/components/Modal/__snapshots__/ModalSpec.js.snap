@@ -1,0 +1,255 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Modal Component should render correctly 1`] = `<div />`;
+
+exports[`Modal Component should render correctly 2`] = `
+<div>
+  <div
+    className="modal-backdrop fade in"
+  />
+  <div
+    aria-labelledby="options"
+    className="modal modal-visible"
+    id="optionsModal"
+    role="dialog"
+    tabIndex="-1"
+  >
+    <div
+      className="modal-dialog modal-lg"
+      role="document"
+    >
+      <div
+        className="modal-content"
+      >
+        <div>
+          <div
+            className="modal-header"
+          >
+            <button
+              className="close"
+              data-dismiss="modal"
+              onClick={[Function]}
+              type="button"
+            >
+              <i
+                className="fa fa-fw fa-times"
+              />
+            </button>
+            <div
+              className="modal-title"
+            >
+              <h4>
+                Options
+              </h4>
+            </div>
+          </div>
+          <div
+            className="modal-body"
+          >
+            <div
+              className="form-horizontal"
+            >
+              <div
+                className="form-group"
+              >
+                <div
+                  className="col-xs-6"
+                >
+                  <label
+                    htmlFor="booleanOption"
+                  >
+                    booleanOption
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    foo
+                  </div>
+                </div>
+                <div
+                  className="col-xs-6"
+                >
+                  <div
+                    className=""
+                  >
+                    <div
+                      className="checkbox"
+                    >
+                      <label>
+                        <input
+                          checked={false}
+                          name="booleanOption"
+                          onChange={[Function]}
+                          onKeyDown={[Function]}
+                          type="checkbox"
+                        />
+                        Enable
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div
+                className="form-group"
+              >
+                <div
+                  className="col-xs-6"
+                >
+                  <label
+                    htmlFor="choiceOption"
+                  >
+                    choiceOption
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    foo
+                  </div>
+                </div>
+                <div
+                  className="col-xs-6"
+                >
+                  <div
+                    className=""
+                  >
+                    <select
+                      className="form-control"
+                      name="choiceOption"
+                      onChange={[Function]}
+                      onKeyDown={[Function]}
+                      value="b"
+                    >
+                      <option
+                        value="a"
+                      >
+                        a
+                      </option>
+                      <option
+                        value="b"
+                      >
+                        b
+                      </option>
+                      <option
+                        value="c"
+                      >
+                        c
+                      </option>
+                    </select>
+                  </div>
+                  <div
+                    className="small"
+                  >
+                    Default: 
+                    <strong>
+                       
+                      a
+                       
+                    </strong>
+                     
+                  </div>
+                </div>
+              </div>
+              <div
+                className="form-group"
+              >
+                <div
+                  className="col-xs-6"
+                >
+                  <label
+                    htmlFor="intOption"
+                  >
+                    intOption
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    foo
+                  </div>
+                </div>
+                <div
+                  className="col-xs-6"
+                >
+                  <div
+                    className=""
+                  >
+                    <input
+                      className="form-control"
+                      name="intOption"
+                      onChange={[Function]}
+                      onKeyDown={[Function]}
+                      type="number"
+                      value={1}
+                    />
+                  </div>
+                  <div
+                    className="small"
+                  >
+                    Default: 
+                    <strong>
+                       
+                      0
+                       
+                    </strong>
+                     
+                  </div>
+                </div>
+              </div>
+              <div
+                className="form-group"
+              >
+                <div
+                  className="col-xs-6"
+                >
+                  <label
+                    htmlFor="strOption"
+                  >
+                    strOption
+                  </label>
+                  <div
+                    className="help-block small"
+                  >
+                    foo
+                  </div>
+                </div>
+                <div
+                  className="col-xs-6"
+                >
+                  <div
+                    className="has-error"
+                  >
+                    <input
+                      className="form-control"
+                      name="strOption"
+                      onChange={[Function]}
+                      onKeyDown={[Function]}
+                      type="text"
+                      value="str content"
+                    />
+                  </div>
+                  <div
+                    className="small text-danger"
+                  />
+                  <div
+                    className="small"
+                  >
+                    Default: 
+                    <strong>
+                       
+                      null
+                       
+                    </strong>
+                     
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            className="modal-footer"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

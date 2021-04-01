@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
 from mitmproxy import options, optmanager
-from mitmproxy.tools import dump, console, web
+from mitmproxy.tools import dump, console, web, browserup_proxy
 
 masters = {
     "mitmproxy": console.master.ConsoleMaster,
     "mitmdump": dump.DumpMaster,
-    "mitmweb": web.master.WebMaster
+    "mitmweb": web.master.WebMaster,
+    "browserup-proxy": browserup_proxy.BrowserupProxyMaster
 }
 
 unified_options = {}

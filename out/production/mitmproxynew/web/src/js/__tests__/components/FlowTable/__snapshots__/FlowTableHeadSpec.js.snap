@@ -1,0 +1,95 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FlowTableHead Component should connect to state 1`] = `
+<tr>
+  <th
+    className="col-tls"
+    onClick={[Function]}
+  >
+    
+  </th>
+  <th
+    className="col-icon"
+    onClick={[Function]}
+  >
+    
+  </th>
+  <th
+    className="col-path sort-desc"
+    onClick={[Function]}
+  >
+    Path
+  </th>
+  <th
+    className="col-method"
+    onClick={[Function]}
+  >
+    Method
+  </th>
+  <th
+    className="col-status"
+    onClick={[Function]}
+  >
+    Status
+  </th>
+  <th
+    className="col-size"
+    onClick={[Function]}
+  >
+    Size
+  </th>
+  <th
+    className="col-time"
+    onClick={[Function]}
+  >
+    Time
+  </th>
+</tr>
+`;
+
+exports[`FlowTableHead Component should render correctly 1`] = `
+<tr>
+  <th
+    className="col-tls"
+    onClick={[Function]}
+  >
+    
+  </th>
+  <th
+    className="col-icon"
+    onClick={[Function]}
+  >
+    
+  </th>
+  <th
+    className="col-path"
+    onClick={[Function]}
+  >
+    Path
+  </th>
+  <th
+    className="col-method"
+    onClick={[Function]}
+  >
+    Method
+  </th>
+  <th
+    className="col-status"
+    onClick={[Function]}
+  >
+    Status
+  </th>
+  <th
+    className="col-size"
+    onClick={[Function]}
+  >
+    Size
+  </th>
+  <th
+    className="col-time"
+    onClick={[Function]}
+  >
+    Time
+  </th>
+</tr>
+`;

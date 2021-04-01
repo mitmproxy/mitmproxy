@@ -1,0 +1,25 @@
+<div class="brand">
+    <a href="https://mitmproxy.org/">
+        <img src='{{"logo-docs.png" | relURL}}' alt="mitmproxy docs"/>
+    </a>
+
+</div>
+<nav class="menu">
+    <p class="menu-label">Overview</p>
+    {{ partial "sidemenu" (dict "ctx" . "menuname" "overview") }}
+
+    <p class="menu-label">Beginner Tutorial</p>
+    {{ partial "sidemenu" (dict "ctx" . "menuname" "mitmproxytutorial") }}
+
+    <p class="menu-label">Core concepts</p>
+    {{ partial "sidemenu" (dict "ctx" . "menuname" "concepts") }}
+
+    <p class="menu-label"> Addon Development </p>
+    {{ partial "sidemenu" (dict "ctx" . "menuname" "addons") }}
+
+    <p class="menu-label"> HOWTOs </p>
+    {{ partial "sidemenu" (dict "ctx" . "menuname" "howto") }}
+
+    <p class="menu-label"> Tutorials </p>
+    {{ partial "sidemenu" (dict "ctx" . "menuname" "tutes") }}
+</nav>

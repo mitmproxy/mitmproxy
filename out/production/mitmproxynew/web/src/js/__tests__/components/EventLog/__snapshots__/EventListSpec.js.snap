@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EventList Component should render correctly 1`] = `
+Object {
+  "vScroll": Object {
+    "end": 1,
+    "paddingBottom": 18,
+    "paddingTop": 0,
+    "start": 0,
+  },
+}
+`;
+
+exports[`EventList Component should render correctly 2`] = `
+Object {
+  "events": Array [
+    Object {
+      "id": 1,
+      "level": "info",
+      "message": "foo",
+    },
+    Object {
+      "id": 2,
+      "level": "error",
+      "message": "bar",
+    },
+  ],
+  "rowHeight": 18,
+}
+`;

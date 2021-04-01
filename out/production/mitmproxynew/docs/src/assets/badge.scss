@@ -1,0 +1,18 @@
+.badge {
+  color: #fff;
+  background-color: #6c757d;
+  display: inline-block;
+  padding: .25em .4em;
+  font-size: 75%;
+  font-weight: 1;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+
+  // Empty badges collapse automatically
+  &:empty {
+    display: none;
+  }
+}

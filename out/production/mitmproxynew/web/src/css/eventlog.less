@@ -1,0 +1,53 @@
+.eventlog {
+
+    height: 200px;
+    flex: 0 0 auto;
+
+    display: flex;
+    flex-direction: column;
+
+    > div {
+        background-color: #F2F2F2;
+        padding: 0 5px;
+        flex: 0 0 auto;
+        border-top: 1px solid #aaa;
+        cursor: row-resize;
+    }
+
+    > pre {
+        flex: 1 1 auto;
+
+        margin: 0;
+        border-radius: 0;
+        overflow-x: auto;
+        overflow-y: scroll;
+        background-color: #fcfcfc;
+    }
+
+    .fa-close {
+        cursor: pointer;
+        float: right;
+        color: grey;
+        padding: 3px 0;
+        padding-left: 10px;
+        &:hover {
+            color: black;
+        }
+    }
+
+    .btn-toggle {
+        margin-top: -2px;
+        margin-left: 3px;
+        padding: 2px 2px;
+        font-size: 10px;
+        line-height: 10px;
+        border-radius: 2px;
+    }
+    .label {
+        cursor: pointer;
+        vertical-align: middle;
+        display: inline-block;
+        margin-top: -2px;
+        margin-left: 3px;
+    }
+}

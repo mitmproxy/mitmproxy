@@ -1,0 +1,123 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ViewSelector Component should connect to state 1`] = `
+<div
+  className="dropup pull-left"
+>
+  <a
+    className="btn btn-default btn-xs"
+    href="#"
+    onClick={[Function]}
+  >
+    <span>
+       
+      <b>
+        View:
+      </b>
+       
+      auto
+       
+      <span
+        className="caret"
+      />
+       
+    </span>
+  </a>
+  <ul
+    className="dropdown-menu"
+    role="menu"
+  >
+    <li>
+       
+      <a
+        href="#"
+        onClick={[Function]}
+      >
+        auto
+      </a>
+       
+    </li>
+    <li>
+       
+      <a
+        href="#"
+        onClick={[Function]}
+      >
+        raw
+      </a>
+       
+    </li>
+    <li>
+       
+      <a
+        href="#"
+        onClick={[Function]}
+      >
+        text
+      </a>
+       
+    </li>
+  </ul>
+</div>
+`;
+
+exports[`ViewSelector Component should render correctly 1`] = `
+<div
+  className="dropup pull-left"
+>
+  <a
+    className="btn btn-default btn-xs"
+    href="#"
+    onClick={[Function]}
+  >
+    <span>
+       
+      <b>
+        View:
+      </b>
+       
+      auto
+       
+      <span
+        className="caret"
+      />
+       
+    </span>
+  </a>
+  <ul
+    className="dropdown-menu"
+    role="menu"
+  >
+    <li>
+       
+      <a
+        href="#"
+        onClick={[Function]}
+      >
+        auto
+      </a>
+       
+    </li>
+    <li>
+       
+      <a
+        href="#"
+        onClick={[Function]}
+      >
+        raw
+      </a>
+       
+    </li>
+    <li>
+       
+      <a
+        href="#"
+        onClick={[Function]}
+      >
+        text
+      </a>
+       
+    </li>
+  </ul>
+</div>
+`;

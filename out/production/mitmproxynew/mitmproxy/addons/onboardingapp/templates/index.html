@@ -1,0 +1,128 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="row justify-content-md-center">
+    <div class="col-md-9">
+<!--suppress HtmlUnknownTag -->
+<h3 class="my-4">Install mitmproxy's Certificate Authority</h3>
+
+{% macro entry(title, icon, filetype="pem") -%}
+<li class="media">
+    {% include 'icons/' + icon + '-brands.svg' %}
+    <div class="media-body">
+        <h5 class="mt-0">{{ title | safe }}</h5>
+        <a class="btn btn-sm btn-success" href="/cert/{{ filetype }}" target="_blank">🔏 Get mitmproxy-ca-cert.{{
+            filetype }}</a>
+        <a class="btn btn-sm btn-info show-instructions" href="#{{ title.split(' ')[0] }}" id="{{ title.split(' ')[0] }}">📖
+            Show Instructions</a>
+        <a class="btn btn-sm btn-info hide-instructions" href="#/">📖 Hide Instructions</a>
+        <div class="instructions">{{ caller() }}</div>
+    </div>
+</li>
+{%- endmacro %}
+
+<ul class="list-unstyled">
+    {% call entry('Windows', 'windows', 'p12') %}
+    <h5>Manual Installation</h5>
+    <ol>
+        <li>Double-click the P12 file to start the import wizard.</li>
+        <li>Select a certificate store location. This determines who will trust the certificate &ndash; only the current
+            Windows user or everyone on the machine. Click <samp>Next</samp>.
+        </li>
+        <li>Click <samp>Next</samp> again.</li>
+        <li>Leave <samp>Password</samp> blank and click <samp>Next</samp>.</li>
+        <li><span class="text-danger">Select <samp>Place all certificates in the following store</samp></span>,
+            then click <samp>Browse</samp>, and select <samp>Trusted Root Certification Authorities</samp>.<br>
+            Click <samp>OK</samp> and <samp>Next</samp>.
+        </li>
+        <li>Click <samp>Finish</samp>.</li>
+        <li>Click <samp>Yes</samp> to confirm the warning dialog.</li>
+    </ol>
+    <h5>Automated Installation</h5>
+    <ol>
+        <li>Run <code>certutil.exe -addstore root mitmproxy-ca-cert.cer</code>
+            (<a href="https://technet.microsoft.com/en-us/library/cc732443.aspx">details</a>).
+        </li>
+    </ol>
+    {% endcall %}
+    {% call entry('Linux', 'linux') %}
+    <h5>Ubuntu/Debian</h5>
+    <ol>
+        <li><code>mv mitmproxy-ca-cert.pem /usr/local/share/ca-certificates/mitmproxy.crt</code></li>
+        <li><code>sudo update-ca-certificates</code></li>
+    </ol>
+    {% endcall %}
+    {% call entry('macOS', 'apple') %}
+    <ol>
+        <li>Double-click the PEM file to open the <samp>Keychain Access</samp> application.</li>
+        <li>Locate the new certificate "mitmproxy" in the list and double-click it.</li>
+        <li>Change <samp>Secure Socket Layer (SSL)</samp> to <samp>Always Trust</samp>.</li>
+        <li>Close the dialog window and enter your password if prompted.</li>
+    </ol>
+    {% endcall %}
+    {% call entry('iOS <small>– please read the instructions!</small>', 'apple') %}
+    <h5>iOS 13+</h5>
+    <ol>
+        <li>Use Safari to download the certificate. Other browsers may not open the proper installation prompt.</li>
+        <li>Install the new Profile and activate it (<samp>Settings -> General</samp> ->
+            <samp>Profile</samp>).
+        </li>
+        <li><span class="text-danger"><strong>Important: </strong> Goto
+            <samp>Settings -> General -> About -> Certificate Trust Settings</samp>.
+            Toggle <samp>mitmproxy</samp> to <samp>ON</samp>.</span></li>
+    </ol>
+    {% endcall %}
+    {% call entry('Android', 'android', 'cer') %}
+    <h5>Android 10+</h5>
+    <ol class="mb-2">
+        <li>Open the downloaded CER file.</li>
+        <li>Enter <samp>mitmproxy</samp> (or anything else) as the certificate name.</li>
+        <li>For credential use, select <samp>VPN and apps</samp>.</li>
+        <li>Click OK.</li>
+    </ol>
+
+    <p>Some Android distributions require you to install the certificate via <samp>Settings -> Security -> Advanced ->
+        Encryption and credentials -> Install from storage</samp> instead.</p>
+
+    <div class="alert alert-warning" role="alert">
+        <p><strong>Warning: </strong>Apps that target Android API Level 24 (introduced in 2016) and above only accept
+            certificates from the system trust store
+            (<a href="https://github.com/mitmproxy/mitmproxy/issues/2054">#2054</a>).
+            User-added CAs are not accepted unless the application manually opts in. Except for browsers, you need to
+            patch most apps manually.
+        </p>
+    </div>
+    {% endcall %}
+    {% call entry('Firefox <small>(does not use the OS root certificates)</small>', 'firefox-browser') %}
+    <h5>Firefox</h5>
+    <ol>
+        <li>Open <samp>Options -> Privacy &amp; Security</samp> and click <samp>View Certificates...</samp>
+            at the bottom of the page.</li>
+        <li>Click <samp>Import...</samp> and select the downloaded certificate.</li>
+        <li>Enable <samp>Trust this CA to identify websites</samp> and click <samp>OK</samp>.</li>
+    </ol>
+    {% endcall %}
+    <li class="media">
+    {% include 'icons/certificate-solid.svg' %}
+    <div class="media-body">
+        <h5 class="mt-0">Other Platforms</h5>
+        <a class="btn btn-sm btn-success" href="/cert/pem" target="_blank">🔏 Get mitmproxy-ca-cert.pem</a>
+        <a class="btn btn-sm btn-success" href="/cert/p12" target="_blank">🔏 Get mitmproxy-ca-cert.p12</a>
+    </div>
+    </li>
+</ul>
+    </div>
+
+</div>
+<hr/>
+
+<p>
+    Other mitmproxy users cannot intercept your connection.
+    <span class="text-muted">
+    This page is served by your local mitmproxy instance. The certificate you are about to install has been uniquely
+    generated on mitmproxy's first run and is not shared
+    between mitmproxy installations.
+    </span>
+</p>
+
+
+{% endblock %}

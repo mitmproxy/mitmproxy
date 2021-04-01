@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FileChooser Component should render correctly 1`] = `
+<a
+  className="foo"
+  href="#"
+  onClick={[Function]}
+  title="bar"
+>
+  <i
+    className="fa fa-fw undefined"
+  />
+  <input
+    className="hidden"
+    onChange={[Function]}
+    type="file"
+  />
+</a>
+`;

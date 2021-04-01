@@ -1,14 +1,16 @@
 from datetime import datetime
 from datetime import timezone
 
-class HarBuilder:
+class HarBuilder():
+    # Default templates for building har chunks as dictionaries
 
-    def har(self):
+    @staticmethod
+    def har():
         return {
-            "log": self.log()
+            "log": HarBuilder.log()
         }
-
-    def log(self):
+    @staticmethod
+    def log():
         return {
             "version": "1.1",
             "creator": {
@@ -20,22 +22,25 @@ class HarBuilder:
             "pages": []
         }
 
-    def page_timings(self):
+    @staticmethod
+    def page_timings():
         return {
             "onContentLoad": 0,
             "onLoad": 0,
             "comment": ""
         }
 
-    def page(self, title="", id="", started_date_time=datetime.utcnow().isoformat()):
+    @staticmethod
+    def page(title="", id="", started_date_time=datetime.utcnow().isoformat()):
         return {
             "title": title,
             "id": id,
             "startedDateTime": started_date_time,
-            "pageTimings": self.page_timings()
+            "pageTimings": HarBuilder.page_timings()
         }
 
-    def post_data(self):
+    @staticmethod
+    def post_data():
         return {
             "mimeType": "multipart/form-data",
             "params": [],
@@ -43,7 +48,8 @@ class HarBuilder:
             "comment": ""
         }
 
-    def entry_request(self):
+    @staticmethod
+    def entry_request():
         return {
             "method": "",
             "url": "",
@@ -57,28 +63,21 @@ class HarBuilder:
             "additional": {}
         }
 
-    def timings(self):
+    @staticmethod
+    def entry_timings():
         return {
-            "blockedNanos": -1,
-            "dnsNanos": -1,
-            "connectNanos": -1,
-            "sslNanos": -1,
-            "sendNanos": 0,
-            "waitNanos": 0,
-            "receiveNanos": 0,
-            "comment": ""
-        }
-
-    def http_connect_timing(self):
-        return {
-            "blockedTimeNanos": -1,
-            "dnsTimeNanos": -1,
-            "connectTimeNanos": -1,
-            "sslHandshakeTimeNanos": -1,
+            "blocked": -1,
+            "dns": -1,
+            "connect": -1,
+            "ssl": -1,
+            "send": 0,
+            "wait": 0,
+            "receive": 0
         }
 
 
-    def entry_response(self):
+    @staticmethod
+    def entry_response():
         return {
             "status": 0,
             "statusText": "",
@@ -99,15 +98,17 @@ class HarBuilder:
             "comment": 0,
         }
 
-    def entry_response_for_failure(self):
-        result = self.entry_response()
+    @staticmethod
+    def entry_response_for_failure():
+        result = HarBuilder.entry_response()
         result['status'] = 0
         result['statusText'] = ""
         result['httpVersion'] = "unknown"
         result['_errorMessage'] = "No response received"
         return result
 
-    def entry(self):
+    @staticmethod
+    def entry():
         return {
             "pageref": "",
             "startedDateTime": "",
@@ -115,7 +116,7 @@ class HarBuilder:
             "request": {},
             "response": {},
             "cache": {},
-            "timings": self.timings(),
+            "timings": HarBuilder.entry_timings(),
             "serverIPAddress": "",
             "connection": "",
             "comment": ""

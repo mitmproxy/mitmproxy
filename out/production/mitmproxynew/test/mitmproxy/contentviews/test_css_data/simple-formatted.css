@@ -1,0 +1,16 @@
+menu {
+    color: blue;
+}
+
+box {
+    border-radius: 4px;
+    background-color: red
+}
+
+a {
+    color: green
+}
+
+b {
+    color: red
+}

@@ -1,0 +1,898 @@
+{
+  "servers": [
+    {
+      "url": "http://localhost:{port}/",
+      "description": "The development API server",
+      "variables": {
+        "port": {
+          "enum": [
+            "8080"
+          ],
+          "default": "8080"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "BrowserUp Proxy API",
+      "description": "BrowserUp Proxy REST API"
+    }
+  ],
+  "info": {
+    "description": "___\nThis is the REST API for controlling the BrowserUp Proxy. \nThe BrowserUp Proxy is a swiss army knife for automated testing that\ncaptures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.\n___\n",
+    "title": "BrowserUp Proxy",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/har": {
+      "get": {
+        "description": "Get the current HAR.",
+        "operationId": "getHarLog",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current Har file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/har"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Starts a fresh HAR capture session.",
+        "operationId": "resetHarLog",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current Har file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/har"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/har/page": {
+      "put": {
+        "description": "Starts a fresh HAR Page in the current active HAR",
+        "operationId": "setHarPage",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current Har file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/har"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth_basic/{domain}": {
+      "delete": {
+        "description": "Clears Basic Auth for a domain, disabling Automatic Basic Auth for it.",
+        "operationId": "clearBasicAuthSettings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "domain",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The domain for which to clear the basic auth settings"
+          }
+        ],
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "204": {
+            "description": "The current Basic Authorization setting is cleared and no longer used for requests to a domain."
+          }
+        }
+      },
+      "post": {
+        "description": "Enables automatic basic auth for a domain",
+        "operationId": "setBasicAuth",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "domain",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The domain for which this Basic Auth should be used"
+          }
+        ],
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthBasic"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Success!"
+          }
+        }
+      }
+    },
+    "/allowlist": {
+      "delete": {
+        "description": "Clears the AllowList, which will turn-off allowlist based filtering",
+        "operationId": "clearAllowList",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "204": {
+            "description": "The allowlist was cleared and allowlist-based filtering is OFF until a new list is posted."
+          }
+        }
+      },
+      "get": {
+        "description": "Get an AllowList",
+        "operationId": "getAllowList",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current allowlist. Only allowed requests will pass through.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AllowList"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Sets an AllowList",
+        "operationId": "setAllowList",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AllowList"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Success!"
+          }
+        }
+      }
+    },
+    "/blocklist": {
+      "get": {
+        "description": "Get a blocklist",
+        "operationId": "getBlockList",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current blocklist.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockList"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Sets an BlockList",
+        "operationId": "setBlockList",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockList"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Success!"
+          }
+        }
+      }
+    },
+    "/additional_headers": {
+      "delete": {
+        "description": "Clear the additional Headers",
+        "operationId": "clearAdditionalHeaders",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "204": {
+            "description": "The current additional header settings were cleared."
+          }
+        }
+      },
+      "get": {
+        "description": "Get the current added Headers",
+        "operationId": "getAdditionalHeaders",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current header settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Headers"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Set additional headers to add to requests",
+        "operationId": "setAdditionalHeaders",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "Show the current additional header settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Headers"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthcheck": {
+      "get": {
+        "description": "Get the healthcheck",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK means all is well."
+          }
+        }
+      }
+    }
+  },
+  "openapi": "3.0.3",
+  "components": {
+    "schemas": {
+      "entry": {
+        "type": "object",
+        "required": [
+          "startedDateTime",
+          "time",
+          "request",
+          "response",
+          "cache",
+          "timings"
+        ],
+        "properties": {
+          "pageref": {
+            "type": "string"
+          },
+          "startedDateTime": {
+            "type": "string"
+          },
+          "time": {
+            "type": "number",
+            "minimum": 0
+          },
+          "request": {
+            "type": "object",
+            "required": [
+              "method",
+              "url",
+              "httpVersion",
+              "cookies",
+              "headers",
+              "queryString",
+              "headersSize",
+              "bodySize"
+            ],
+            "properties": {
+              "method": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "httpVersion": {
+                "type": "string"
+              },
+              "cookies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "domain": {
+                      "type": "string"
+                    },
+                    "expires": {
+                      "type": "string"
+                    },
+                    "httpOnly": {
+                      "type": "boolean"
+                    },
+                    "secure": {
+                      "type": "boolean"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/header"
+                }
+              },
+              "queryString": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "postData": {
+                "description": "Posted data info.",
+                "required": [
+                  "mimeType"
+                ],
+                "properties": {
+                  "mimeType": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "params": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "fileName": {
+                          "type": "string"
+                        },
+                        "contentType": {
+                          "type": "string"
+                        },
+                        "comment": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "headersSize": {
+                "type": "integer"
+              },
+              "bodySize": {
+                "type": "integer"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "response": {
+            "type": "object",
+            "required": [
+              "status",
+              "statusText",
+              "httpVersion",
+              "cookies",
+              "headers",
+              "content",
+              "redirectURL",
+              "headersSize",
+              "bodySize"
+            ],
+            "properties": {
+              "status": {
+                "type": "integer"
+              },
+              "statusText": {
+                "type": "string"
+              },
+              "httpVersion": {
+                "type": "string"
+              },
+              "cookies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "domain": {
+                      "type": "string"
+                    },
+                    "expires": {
+                      "type": "string"
+                    },
+                    "httpOnly": {
+                      "type": "boolean"
+                    },
+                    "secure": {
+                      "type": "boolean"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/header"
+                }
+              },
+              "content": {
+                "type": "object",
+                "required": [
+                  "size",
+                  "mimeType"
+                ],
+                "properties": {
+                  "size": {
+                    "type": "integer"
+                  },
+                  "compression": {
+                    "type": "integer"
+                  },
+                  "mimeType": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "encoding": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              },
+              "redirectURL": {
+                "type": "string"
+              },
+              "headersSize": {
+                "type": "integer"
+              },
+              "bodySize": {
+                "type": "integer"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "cache": {
+            "properties": {
+              "beforeRequest": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "lastAccess",
+                      "eTag",
+                      "hitCount"
+                    ],
+                    "properties": {
+                      "expires": {
+                        "type": "string"
+                      },
+                      "lastAccess": {
+                        "type": "string"
+                      },
+                      "eTag": {
+                        "type": "string"
+                      },
+                      "hitCount": {
+                        "type": "integer"
+                      },
+                      "comment": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "afterRequest": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "lastAccess",
+                      "eTag",
+                      "hitCount"
+                    ],
+                    "properties": {
+                      "expires": {
+                        "type": "string"
+                      },
+                      "lastAccess": {
+                        "type": "string"
+                      },
+                      "eTag": {
+                        "type": "string"
+                      },
+                      "hitCount": {
+                        "type": "integer"
+                      },
+                      "comment": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "timings": {
+            "required": [
+              "send",
+              "wait",
+              "receive"
+            ],
+            "properties": {
+              "dns": {
+                "type": "number",
+                "minimum": -1
+              },
+              "connect": {
+                "type": "number",
+                "minimum": -1
+              },
+              "blocked": {
+                "type": "number",
+                "minimum": -1
+              },
+              "send": {
+                "type": "number",
+                "minimum": -1
+              },
+              "wait": {
+                "type": "number",
+                "minimum": -1
+              },
+              "receive": {
+                "type": "number",
+                "minimum": -1
+              },
+              "ssl": {
+                "type": "number",
+                "minimum": -1
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "serverIPAddress": {
+            "type": "string",
+            "oneOf": [
+              {
+                "format": "ipv4"
+              },
+              {
+                "format": "ipv6"
+              }
+            ]
+          },
+          "connection": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "header": {
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "har": {
+        "type": "object",
+        "required": [
+          "log"
+        ],
+        "properties": {
+          "log": {
+            "type": "object",
+            "required": [
+              "version",
+              "creator",
+              "entries"
+            ],
+            "properties": {
+              "version": {
+                "type": "string"
+              },
+              "creator": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "version"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              },
+              "browser": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "version"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              },
+              "pages": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/page"
+                }
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/entry"
+                }
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "page": {
+        "type": "object",
+        "required": [
+          "startedDateTime",
+          "id",
+          "title",
+          "pageTimings"
+        ],
+        "properties": {
+          "startedDateTime": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))"
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "pageTimings": {
+            "type": "object",
+            "properties": {
+              "onContentLoad": {
+                "type": "number",
+                "minimum": -1
+              },
+              "onLoad": {
+                "type": "number",
+                "minimum": -1
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "AuthBasic": {
+        "type": "object",
+        "properties": {
+          "base_64_credentials": {
+            "type": "string",
+            "description": "base 64 encoding of the username and password"
+          }
+        },
+        "required": [
+          "base_64_credentials"
+        ]
+      },
+      "AllowList": {
+        "type": "object",
+        "properties": {
+          "url_pattern": {
+            "type": "string",
+            "description": "URL Regex Pattern to match"
+          },
+          "status_code": {
+            "type": "string",
+            "description": "HTTP Status Code to match"
+          }
+        },
+        "required": [
+          "status_code",
+          "url_pattern"
+        ]
+      },
+      "BlockList": {
+        "type": "object",
+        "properties": {
+          "http_method_pattern": {
+            "type": "string",
+            "description": "HTTP Method Regex Pattern"
+          },
+          "url_pattern": {
+            "type": "string",
+            "description": "URL Regex Pattern"
+          },
+          "status_code": {
+            "type": "string",
+            "description": "HTTP Status Code"
+          }
+        },
+        "required": [
+          "http_method_pattern",
+          "status_code",
+          "url_pattern"
+        ]
+      },
+      "Headers": {
+        "type": "object",
+        "properties": {
+          "headers": {
+            "type": "object",
+            "description": "Header key-value pairs"
+          }
+        },
+        "required": [
+          "headers"
+        ]
+      }
+    }
+  }
+}

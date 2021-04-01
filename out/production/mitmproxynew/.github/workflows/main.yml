@@ -1,0 +1,198 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  lint-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: TrueBrain/actions-flake8@v1.4.1
+  lint-local:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - run: pip install tox
+      - run: tox -e flake8
+  filename-matching:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - run: pip install tox
+      - run: tox -e filename_matching
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - run: pip install tox
+      - run: tox -e mypy
+  individual-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+      - run: pip install tox
+      - run: tox -e individual_coverage
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            py: 3.9
+          - os: macos-latest
+            py: 3.9
+          - os: ubuntu-latest
+            py: 3.9
+          - os: ubuntu-latest
+            py: 3.8
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: printenv
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.py }}
+      - run: pip install tox
+      - run: tox -e py
+      - uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml
+          name: ${{ matrix.os }}
+  build-wheel:
+    runs-on: ubuntu-latest
+    env:
+      CI_BUILD_WHEEL: 1
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install tox
+      - run: tox -e cibuild -- build
+      - uses: actions/upload-artifact@v2
+        with:
+          name: wheel
+          path: release/dist
+  build-binaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        # Old Ubuntu version for old glibc
+        os: [macos-10.15, windows-2019, ubuntu-16.04]
+    runs-on: ${{ matrix.os }}
+    env:
+      CI_BUILD_PYINSTALLER: 1
+      CI_BUILD_WININSTALLER: ${{ matrix.os == 'windows-2019' }}
+      CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - if: matrix.os == 'windows-latest'
+        uses: actions/cache@v1
+        with:
+          path: release/installbuilder/setup
+          key: installbuilder
+      - run: pip install tox
+      - run: tox -e cibuild -- build
+      # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
+      - uses: actions/upload-artifact@v2
+        with:
+          name: binaries.${{ matrix.os }}
+          path: release/dist
+
+  test-web-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - run: git rev-parse --abbrev-ref HEAD
+      - uses: actions/setup-node@v1
+      - id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - working-directory: ./web
+        run: yarn
+      - working-directory: ./web
+        run: npm test
+      - uses: codecov/codecov-action@v1
+        with:
+          file: ./web/coverage/coverage-final.json
+          name: web
+
+  docs:
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install tox
+      - run: |
+          wget https://github.com/gohugoio/hugo/releases/download/v0.70.0/hugo_extended_0.70.0_Linux-64bit.deb
+          sudo dpkg -i hugo*.deb
+      - run: tox -e docs
+
+  # Separate from everything else because slow.
+  build-and-deploy-docker:
+    if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
+    needs: [test, test-web-ui, build-wheel]
+    runs-on: ubuntu-latest
+    env:
+      CI_BUILD_DOCKER: 1
+      DOCKER_USERNAME: mitmbot
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install tox
+      - uses: actions/download-artifact@v2
+        with:
+          name: wheel
+          path: release/dist
+      - run: tox -e cibuild -- build
+      - run: tox -e cibuild -- upload
+
+  deploy:
+    if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: [test, test-web-ui, build-wheel, build-binaries]
+    env:
+      CI_BUILD_WHEEL: 1
+      CI_BUILD_PYINSTALLER: 1
+      CI_BUILD_WININSTALLER: 1
+      TWINE_USERNAME: mitmproxy
+      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - uses: actions/download-artifact@v2
+        with:
+          path: release/dist
+      # move artifacts from their subfolders into release/dist
+      - run: find release/dist -mindepth 2 -type f -exec mv {} release/dist \;
+      # and then delete the empty folders
+      - run: find release/dist -type d -empty -delete
+      - run: ls release/dist
+      - run: pip install tox
+      - run: tox -e cibuild -- upload

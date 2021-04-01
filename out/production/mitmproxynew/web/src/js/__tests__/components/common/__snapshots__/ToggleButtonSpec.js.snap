@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ToggleButton Component should render correctly 1`] = `
+<div
+  className="btn btn-toggle btn-primary"
+  onClick={[Function]}
+>
+  <i
+    className="fa fa-fw fa-check-square-o"
+  />
+   
+  foo
+</div>
+`;

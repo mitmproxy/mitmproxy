@@ -1,0 +1,42 @@
+import mitmproxy.http
+from mitmproxy import ctx
+from mitmproxy.addons.browserup.har.har_resources import *
+from mitmproxy.addons.browserup.har.har_manager import HarManager
+from mitmproxy.addons.browserup.har.flow_capture import FlowCaptureMixin
+from mitmproxy.addons.browserup.har import flow_har_entry_patch
+flow_har_entry_patch.patch_flow() # patch flow object with a har entry method
+
+class HarCaptureAddOn(FlowCaptureMixin):
+
+    def __init__(self):
+        self.har_manager = HarManager()
+
+    def load(self, l):
+        l.add_option("harcapture", str, "", "HAR capture path.")
+
+    def get_resources(self):
+        return [HarResource(self), HarPageResource(self), HarCaptureTypesResource(self)]
+
+    def websocket_message(self, flow: mitmproxy.http.HTTPFlow):
+        self.capture_websocket_message(flow)
+
+    def websocket_error(self, flow: mitmproxy.http.HTTPFlow):
+        self.capture_websocket_error(flow)
+
+    def request(self, flow: mitmproxy.http.HTTPFlow):
+        if 'blocklisted' in flow.metadata:
+            return
+        print("request called in addon {}".format(self.__class__.__name__))
+        self.capture_request(flow)
+
+    def response(self, flow: mitmproxy.http.HTTPFlow):
+        if 'blocklisted' in flow.metadata:
+            ctx.log.debug('Blocklist filtered, return nothing.')
+            return
+
+        self.capture_response(flow)
+
+
+addons = [
+    HarCaptureAddOn()
+]

@@ -43,7 +43,7 @@ class BrowserUpAddonsManagerAddOn:
             version='1.0.0',
             servers = [ { "url": "http://localhost:{port}/",
                           "description": "The development API server",
-                          "variables": { "port": { "enum": ["8080"], "default": '8080' } }
+                          "variables": { "port": { "enum": ["8088"], "default": '8088' } }
                         }],
             tags = [{ "name": 'BrowserUp Proxy API', "description": "BrowserUp Proxy REST API" }],
 

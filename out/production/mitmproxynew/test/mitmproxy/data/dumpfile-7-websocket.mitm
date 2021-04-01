@@ -1,0 +1,153 @@
+2694:7:version;1:7#4:mode;11:transparent;8:response;780:13:timestamp_end;18:1612375499.3996427^15:timestamp_start;18:1612375499.3956554^7:content;0:,7:headers;582:43:32:Access-Control-Allow-Credentials,4:true,]48:28:Access-Control-Allow-Headers,12:content-type,]49:28:Access-Control-Allow-Headers,13:authorization,]58:28:Access-Control-Allow-Headers,22:x-websocket-extensions,]55:28:Access-Control-Allow-Headers,19:x-websocket-version,]56:28:Access-Control-Allow-Headers,20:x-websocket-protocol,]55:27:Access-Control-Allow-Origin,20:http://websocket.org,]24:10:Connection,7:Upgrade,]40:4:Date,29:Wed, 03 Feb 2021 18:03:12 GMT,]56:20:Sec-WebSocket-Accept,28:KHQasWKt4lBrFLDDBlc9uW9oLDc=,]28:6:Server,15:Kaazing Gateway,]22:7:Upgrade,9:websocket,]]6:reason;29:Web Socket Protocol Handshake,11:status_code;3:101#12:http_version;8:HTTP/1.1,}7:request;922:9:is_replay;5:false!13:timestamp_end;18:1612375499.0295076^15:timestamp_start;18:1612375499.0264843^7:content;0:,7:headers;637:29:4:Host,18:echo.websocket.org,]96:10:User-Agent,78:Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0,]15:6:Accept,3:*/*,]37:15:Accept-Language,14:en-US,en;q=0.5,]36:15:Accept-Encoding,13:gzip, deflate,]30:21:Sec-WebSocket-Version,2:13,]33:6:Origin,20:http://websocket.org,]50:24:Sec-WebSocket-Extensions,18:permessage-deflate,]49:17:Sec-WebSocket-Key,24:psOeQKar8m7Otzq5uzGAhw==,]10:3:DNT,1:1,]37:10:Connection,19:keep-alive, Upgrade,]85:6:Cookie,72:_ga=GA1.2.996834645.1605768991; _gid=GA1.2.1281782721.1612375473; _gat=1,]20:6:Pragma,8:no-cache,]28:13:Cache-Control,8:no-cache,]22:7:Upgrade,9:websocket,]]12:http_version;8:HTTP/1.1,4:path;15:/?encoding=text,4:port;2:80#4:host;18:echo.websocket.org,6:scheme;4:http,6:method;3:GET,17:first_line_format;8:relative;}8:metadata;19:9:websocket;4:true!}6:marked;5:false!11:intercepted;5:false!4:type;4:http;11:server_conn;407:3:via;0:~13:timestamp_end;0:~19:timestamp_tls_setup;0:~19:timestamp_tcp_setup;18:1612375499.2238142^15:timestamp_start;17:1612375499.033488^11:tls_version;0:~21:alpn_proto_negotiated;0:~3:sni;0:~4:cert;0:~15:tls_established;5:false!14:source_address;26:14:192.168.188.20;5:52474#]10:ip_address;23:14:174.129.224.73;2:80#]7:address;27:18:echo.websocket.org;2:80#]2:id;36:776c5760-7dd7-4006-9a03-4632f1e9ce03;}11:client_conn;334:14:tls_extensions;0:~11:tls_version;0:~21:alpn_proto_negotiated;0:~11:cipher_name;0:~3:sni;0:~13:timestamp_end;0:~19:timestamp_tls_setup;0:~15:timestamp_start;18:1612375499.0214832^8:mitmcert;0:~10:clientcert;0:~15:tls_established;5:false!7:address;36:16:::ffff:127.0.0.1;5:52473#1:0#1:0#]2:id;36:1e49546f-eddb-4d02-a335-451ba2f06da7;}5:error;0:~2:id;36:468a3735-e4c2-4dea-b6e7-827a47751b36;}1467:7:version;1:7#17:server_extensions;0:~15:server_protocol;0:~13:server_accept;28:KHQasWKt4lBrFLDDBlc9uW9oLDc=;17:client_extensions;18:permessage-deflate;15:client_protocol;0:~10:client_key;24:psOeQKar8m7Otzq5uzGAhw==;12:close_reason;0:;13:close_message;17:(message missing);10:close_code;4:1005#12:close_sender;6:client;8:messages;139:65:1:1#4:true!28:Rock it with HTML5 WebSocket;10:1612375501#5:false!]66:1:1#5:false!28:Rock it with HTML5 WebSocket;10:1612375501#5:false!]]8:metadata;63:19:websocket_handshake;36:468a3735-e4c2-4dea-b6e7-827a47751b36;}6:marked;5:false!11:intercepted;5:false!4:type;9:websocket;11:server_conn;426:3:via;0:~13:timestamp_end;18:1612375503.4515302^19:timestamp_tls_setup;0:~19:timestamp_tcp_setup;18:1612375499.2238142^15:timestamp_start;17:1612375499.033488^11:tls_version;0:~21:alpn_proto_negotiated;0:~3:sni;0:~4:cert;0:~15:tls_established;5:false!14:source_address;26:14:192.168.188.20;5:52474#]10:ip_address;23:14:174.129.224.73;2:80#]7:address;27:18:echo.websocket.org;2:80#]2:id;36:776c5760-7dd7-4006-9a03-4632f1e9ce03;}11:client_conn;334:14:tls_extensions;0:~11:tls_version;0:~21:alpn_proto_negotiated;0:~11:cipher_name;0:~3:sni;0:~13:timestamp_end;0:~19:timestamp_tls_setup;0:~15:timestamp_start;18:1612375499.0214832^8:mitmcert;0:~10:clientcert;0:~15:tls_established;5:false!7:address;36:16:::ffff:127.0.0.1;5:52473#1:0#1:0#]2:id;36:1e49546f-eddb-4d02-a335-451ba2f06da7;}5:error;0:~2:id;36:bb2e201b-2e25-471d-8cc7-a08f6f311e3e;}1467:7:version;1:7#17:server_extensions;0:~15:server_protocol;0:~13:server_accept;28:KHQasWKt4lBrFLDDBlc9uW9oLDc=;17:client_extensions;18:permessage-deflate;15:client_protocol;0:~10:client_key;24:psOeQKar8m7Otzq5uzGAhw==;12:close_reason;0:;13:close_message;17:(message missing);10:close_code;4:1005#12:close_sender;6:client;8:messages;139:65:1:1#4:true!28:Rock it with HTML5 WebSocket;10:1612375501#5:false!]66:1:1#5:false!28:Rock it with HTML5 WebSocket;10:1612375501#5:false!]]8:metadata;63:19:websocket_handshake;36:468a3735-e4c2-4dea-b6e7-827a47751b36;}6:marked;5:false!11:intercepted;5:false!4:type;9:websocket;11:server_conn;426:3:via;0:~13:timestamp_end;18:1612375503.4515302^19:timestamp_tls_setup;0:~19:timestamp_tcp_setup;18:1612375499.2238142^15:timestamp_start;17:1612375499.033488^11:tls_version;0:~21:alpn_proto_negotiated;0:~3:sni;0:~4:cert;0:~15:tls_established;5:false!14:source_address;26:14:192.168.188.20;5:52474#]10:ip_address;23:14:174.129.224.73;2:80#]7:address;27:18:echo.websocket.org;2:80#]2:id;36:776c5760-7dd7-4006-9a03-4632f1e9ce03;}11:client_conn;334:14:tls_extensions;0:~11:tls_version;0:~21:alpn_proto_negotiated;0:~11:cipher_name;0:~3:sni;0:~13:timestamp_end;0:~19:timestamp_tls_setup;0:~15:timestamp_start;18:1612375499.0214832^8:mitmcert;0:~10:clientcert;0:~15:tls_established;5:false!7:address;36:16:::ffff:127.0.0.1;5:52473#1:0#1:0#]2:id;36:1e49546f-eddb-4d02-a335-451ba2f06da7;}5:error;0:~2:id;36:bb2e201b-2e25-471d-8cc7-a08f6f311fff;}6317:7:version;1:7#4:mode;11:transparent;8:response;780:13:timestamp_end;18:1612375506.2545753^15:timestamp_start;17:1612375506.247809^7:content;0:,7:headers;583:43:32:Access-Control-Allow-Credentials,4:true,]48:28:Access-Control-Allow-Headers,12:content-type,]49:28:Access-Control-Allow-Headers,13:authorization,]58:28:Access-Control-Allow-Headers,22:x-websocket-extensions,]55:28:Access-Control-Allow-Headers,19:x-websocket-version,]56:28:Access-Control-Allow-Headers,20:x-websocket-protocol,]56:27:Access-Control-Allow-Origin,21:https://websocket.org,]24:10:Connection,7:Upgrade,]40:4:Date,29:Wed, 03 Feb 2021 18:03:19 GMT,]56:20:Sec-WebSocket-Accept,28:+NHtHddTqcJpEVe8/LYsJhE660c=,]28:6:Server,15:Kaazing Gateway,]22:7:Upgrade,9:websocket,]]6:reason;29:Web Socket Protocol Handshake,11:status_code;3:101#12:http_version;8:HTTP/1.1,}7:request;929:9:is_replay;5:false!13:timestamp_end;18:1612375506.0852509^15:timestamp_start;18:1612375506.0812519^7:content;0:,7:headers;642:29:4:Host,18:echo.websocket.org,]96:10:User-Agent,78:Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0,]15:6:Accept,3:*/*,]37:15:Accept-Language,14:en-US,en;q=0.5,]40:15:Accept-Encoding,17:gzip, deflate, br,]30:21:Sec-WebSocket-Version,2:13,]34:6:Origin,21:https://websocket.org,]50:24:Sec-WebSocket-Extensions,18:permessage-deflate,]49:17:Sec-WebSocket-Key,24:ROAgWXQ1fvXh/GjkGOLhYA==,]10:3:DNT,1:1,]37:10:Connection,19:keep-alive, Upgrade,]85:6:Cookie,72:_ga=GA1.2.996834645.1605768991; _gid=GA1.2.1281782721.1612375473; _gat=1,]20:6:Pragma,8:no-cache,]28:13:Cache-Control,8:no-cache,]22:7:Upgrade,9:websocket,]]12:http_version;8:HTTP/1.1,4:path;15:/?encoding=text,4:port;3:443#4:host;18:echo.websocket.org,6:scheme;5:https,6:method;3:GET,17:first_line_format;8:relative;}8:metadata;19:9:websocket;4:true!}6:marked;5:false!11:intercepted;5:false!4:type;4:http;11:server_conn;2318:3:via;0:~13:timestamp_end;0:~19:timestamp_tls_setup;18:1612375506.0652509^19:timestamp_tcp_setup;18:1612375505.6868358^15:timestamp_start;17:1612375505.527162^11:tls_version;7:TLSv1.2;21:alpn_proto_negotiated;0:,3:sni;18:echo.websocket.org;4:cert;1862:-----BEGIN CERTIFICATE-----
+MIIFMTCCBBmgAwIBAgISBADVpE5hceNT68fIgrNnxd5xMA0GCSqGSIb3DQEBCwUA
+MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQD
+EwJSMzAeFw0yMTAxMDQxNzI0MzBaFw0yMTA0MDQxNzI0MzBaMBgxFjAUBgNVBAMT
+DXdlYnNvY2tldC5vcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCl
+Nk+/arYnijwjz849HbQdD0n/V1zZ26xr0+07PD+5S/xmO+yYLQ2gS0fV7JzeSVmJ
+l4P8x0E3ian0MQvmZzMKuW5Ih2PjS4iuiJeTI50ZZou/5redh8nulJSvbHrrX1Ae
+R+uIUQqflVZuUjHtGi/u5Yca7JzN/yEEuIybnCZduOQ9sa2wUoN+qSy0Y3QXtp+C
+2vauJu3f/pGFMZGvRzgUUvL4ZTnYC1RzY6aYnUJpJf2qpyIXez2QYRJvc4x8lE3u
+RMd2tgSh1tqdX7HQtbE7CNcyiSupV9ee8IZE6L+BC/epbmNhfNRTS30C3zeno9VN
+RIBiGaWyKJwqh+Cbm/bjAgMBAAGjggJZMIICVTAOBgNVHQ8BAf8EBAMCBaAwHQYD
+VR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHQYDVR0O
+BBYEFARj/Uijbb8BQiWYlZxQthCWxmkcMB8GA1UdIwQYMBaAFBQusxe3WFbLrlAJ
+QOYfr52LFMLGMFUGCCsGAQUFBwEBBEkwRzAhBggrBgEFBQcwAYYVaHR0cDovL3Iz
+Lm8ubGVuY3Iub3JnMCIGCCsGAQUFBzAChhZodHRwOi8vcjMuaS5sZW5jci5vcmcv
+MCkGA1UdEQQiMCCCDyoud2Vic29ja2V0Lm9yZ4INd2Vic29ja2V0Lm9yZzBMBgNV
+HSAERTBDMAgGBmeBDAECATA3BgsrBgEEAYLfEwEBATAoMCYGCCsGAQUFBwIBFhpo
+dHRwOi8vY3BzLmxldHNlbmNyeXB0Lm9yZzCCAQQGCisGAQQB1nkCBAIEgfUEgfIA
+8AB2AJQgvB6O1Y1siHMfgosiLA3R2k1ebE+UPWHbTi9YTaLCAAABds6kt84AAAQD
+AEcwRQIhAJ1mC6DCPwIMO1YxBEL4vIDzVG9VaZhp+wixHTLt1wo9AiBiIDJijRus
+MvUtOq2PDarHzFLDutVreiNnLoVjsvGbhgB2APZclC/RdzAiFFQYCDCUVo7jTRMZ
+M7/fDC8gC8xO8WTjAAABds6kt8gAAAQDAEcwRQIgb7JWn0j2/ogIZGlWnZEGR2oC
+rSiqH/rdE+biWg2PRK4CIQCI8/3WBO8DIow9s2RJGd2o8lDKIyoJ25VCOe7WisEJ
+WzANBgkqhkiG9w0BAQsFAAOCAQEAV95drMg7PcH3hCMIXCFX5uZPmoGG71Jnfv/B
+9QRxibGWyWMJJWzA6e6rYYRvwnU8b68orToUlDqXiRI/n4BuEag3ntt3+N7enB7D
+49ujLiFSoo5Nsnq8uMkEm8hR/47qjIEznshXT1Dcnr41UMjecd/JDmupj/z/7tXP
+lVXQDxpdorAoeaqwKCZOXn7Yf2Anhe9mwc6fMa/hVeOJdBRWRaPxXaf5S75Wmbsc
+xOJ89VBnFN736yJaKKFEPSMxzB+prT2+sgFqAsnQlgozuShiPsQ/N40pG09m9P3v
+d9u79pxO9C0aLjhUaKBx/vWwz58vFLS7ILj90jRZZz991UzeBw==
+-----END CERTIFICATE-----
+,15:tls_established;4:true!14:source_address;26:14:192.168.188.20;5:52477#]10:ip_address;24:14:174.129.224.73;3:443#]7:address;28:18:echo.websocket.org;3:443#]2:id;36:5a3b1bce-da91-4994-a875-62efebcdf0e4;}11:client_conn;2037:14:tls_extensions;516:31:1:0#23:   echo.websocket.org,]8:2:23#0:,]12:5:65281#1: ,]23:2:10#14:      ,]10:2:11#2: ,]8:2:35#0:,]23:2:16#14: h2http/1.1,]12:1:5#5:    ,]117:2:51#107: i   ¦3σύ"b΄U¦2Ν¶δ]ΜQ=…Τ¨6p\‰wu  AQΗ†6z8»
+(w_K°»²zΆƒ)@αη—:€ΟΦv/ΨLτ(±φfΎª(yοhπgG‹G΅Ϊ}Ο
+»θ,]13:2:43#5:,]33:2:13#24: ,]10:2:45#2:,]10:2:28#2:@,]150:2:21#140:                                                                                                                                            ,]]11:tls_version;7:TLSv1.2;21:alpn_proto_negotiated;8:http/1.1,11:cipher_name;27:ECDHE-RSA-AES128-GCM-SHA256;3:sni;18:echo.websocket.org;13:timestamp_end;0:~19:timestamp_tls_setup;18:1612375506.0802844^15:timestamp_start;17:1612375505.519176^8:mitmcert;1103:-----BEGIN CERTIFICATE-----
+MIIDATCCAemgAwIBAgIGDqoasV3AMA0GCSqGSIb3DQEBCwUAMCgxEjAQBgNVBAMM
+CW1pdG1wcm94eTESMBAGA1UECgwJbWl0bXByb3h5MB4XDTIxMDIwMTE4MDUwNloX
+DTI0MDIwMzE4MDUwNlowGDEWMBQGA1UEAwwNd2Vic29ja2V0Lm9yZzCCASIwDQYJ
+KoZIhvcNAQEBBQADggEPADCCAQoCggEBAMeSUqCJJQmX4xxQOgUlACR/gQtEKHtr
+LtpOdoi+kbc0/0+vzMOhB41wA8adKl72R6lHNEnDL11tV5tj0r3K/jGu5oWz0Kby
+jQGp/LQPZhsMhQRrUS9YHzWgVy1KX77rOIoX5pNuxOm2XnZf5p+seIIYJ/eQe/Hq
+Ll8hPgvDSHpXTmmuDI4vlJ/8ecxZT4H+qLuI+MQrDHFNdk9zspV9haZgSQWFfM69
+JyYGRd4ejr3pT5BFeUyMcw4s0Qc8SyJ1VI+x/gJsglS12w+kNcf3aUCm4bWKyr6S
+Du1ObXSDPW4x2l1DWXOCcz20Tq70XEVQ815ocuDP0RZ1LfC8aDwNozECAwEAAaNB
+MD8wPQYDVR0RBDYwNIIPKi53ZWJzb2NrZXQub3Jngg13ZWJzb2NrZXQub3JnghJl
+Y2hvLndlYnNvY2tldC5vcmcwDQYJKoZIhvcNAQELBQADggEBACkZuXNCovFnIdGT
+kzIrQVsyS/0HTax8iqTMvh1ZUPIC2XWQoaWr5jb1bLD1SdzNra9nfzvz/tH9yZpB
+hR893uz58Xwu3c8K31KgYzHTvSJJ8VpemWgSNPzDsjwjWU3QjV5cgqulEpfM00OT
+R1Eb2bD4zXrwB8tVimLTzYtNpSiz5R/F33WmLTKbq6ZAzV7LSUnHYOFksnte+Q1r
+GIzZ+5v1KEpTmd4IUt9u0iKtLip4GYF14g7i/ldV4d5dpb9G/qsQnqg3wdwG1APQ
+DeNB8mnOyV5OjrLiNuFfJnQ1HOS7HSnPtBTLXQJ5ZMdDm/jdKtWwuhFre7+egv4o
+TrKhPJI=
+-----END CERTIFICATE-----
+,10:clientcert;0:~15:tls_established;4:true!7:address;36:16:::ffff:127.0.0.1;5:52476#1:0#1:0#]2:id;36:c7cb0f0f-f610-44ca-ad5b-9177d931f6c6;}5:error;0:~2:id;36:2eb8f8f1-26ce-4eb6-9041-7986b7e5e660;}5083:7:version;1:7#17:server_extensions;0:~15:server_protocol;0:~13:server_accept;28:+NHtHddTqcJpEVe8/LYsJhE660c=;17:client_extensions;18:permessage-deflate;15:client_protocol;0:~10:client_key;24:ROAgWXQ1fvXh/GjkGOLhYA==;12:close_reason;0:;13:close_message;17:(message missing);10:close_code;4:1005#12:close_sender;6:client;8:messages;139:65:1:1#4:true!28:Rock it with HTML5 WebSocket;10:1612375507#5:false!]66:1:1#5:false!28:Rock it with HTML5 WebSocket;10:1612375507#5:false!]]8:metadata;63:19:websocket_handshake;36:2eb8f8f1-26ce-4eb6-9041-7986b7e5e660;}6:marked;5:false!11:intercepted;5:false!4:type;9:websocket;11:server_conn;2337:3:via;0:~13:timestamp_end;18:1612375509.1622932^19:timestamp_tls_setup;18:1612375506.0652509^19:timestamp_tcp_setup;18:1612375505.6868358^15:timestamp_start;17:1612375505.527162^11:tls_version;7:TLSv1.2;21:alpn_proto_negotiated;0:,3:sni;18:echo.websocket.org;4:cert;1862:-----BEGIN CERTIFICATE-----
+MIIFMTCCBBmgAwIBAgISBADVpE5hceNT68fIgrNnxd5xMA0GCSqGSIb3DQEBCwUA
+MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQD
+EwJSMzAeFw0yMTAxMDQxNzI0MzBaFw0yMTA0MDQxNzI0MzBaMBgxFjAUBgNVBAMT
+DXdlYnNvY2tldC5vcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCl
+Nk+/arYnijwjz849HbQdD0n/V1zZ26xr0+07PD+5S/xmO+yYLQ2gS0fV7JzeSVmJ
+l4P8x0E3ian0MQvmZzMKuW5Ih2PjS4iuiJeTI50ZZou/5redh8nulJSvbHrrX1Ae
+R+uIUQqflVZuUjHtGi/u5Yca7JzN/yEEuIybnCZduOQ9sa2wUoN+qSy0Y3QXtp+C
+2vauJu3f/pGFMZGvRzgUUvL4ZTnYC1RzY6aYnUJpJf2qpyIXez2QYRJvc4x8lE3u
+RMd2tgSh1tqdX7HQtbE7CNcyiSupV9ee8IZE6L+BC/epbmNhfNRTS30C3zeno9VN
+RIBiGaWyKJwqh+Cbm/bjAgMBAAGjggJZMIICVTAOBgNVHQ8BAf8EBAMCBaAwHQYD
+VR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHQYDVR0O
+BBYEFARj/Uijbb8BQiWYlZxQthCWxmkcMB8GA1UdIwQYMBaAFBQusxe3WFbLrlAJ
+QOYfr52LFMLGMFUGCCsGAQUFBwEBBEkwRzAhBggrBgEFBQcwAYYVaHR0cDovL3Iz
+Lm8ubGVuY3Iub3JnMCIGCCsGAQUFBzAChhZodHRwOi8vcjMuaS5sZW5jci5vcmcv
+MCkGA1UdEQQiMCCCDyoud2Vic29ja2V0Lm9yZ4INd2Vic29ja2V0Lm9yZzBMBgNV
+HSAERTBDMAgGBmeBDAECATA3BgsrBgEEAYLfEwEBATAoMCYGCCsGAQUFBwIBFhpo
+dHRwOi8vY3BzLmxldHNlbmNyeXB0Lm9yZzCCAQQGCisGAQQB1nkCBAIEgfUEgfIA
+8AB2AJQgvB6O1Y1siHMfgosiLA3R2k1ebE+UPWHbTi9YTaLCAAABds6kt84AAAQD
+AEcwRQIhAJ1mC6DCPwIMO1YxBEL4vIDzVG9VaZhp+wixHTLt1wo9AiBiIDJijRus
+MvUtOq2PDarHzFLDutVreiNnLoVjsvGbhgB2APZclC/RdzAiFFQYCDCUVo7jTRMZ
+M7/fDC8gC8xO8WTjAAABds6kt8gAAAQDAEcwRQIgb7JWn0j2/ogIZGlWnZEGR2oC
+rSiqH/rdE+biWg2PRK4CIQCI8/3WBO8DIow9s2RJGd2o8lDKIyoJ25VCOe7WisEJ
+WzANBgkqhkiG9w0BAQsFAAOCAQEAV95drMg7PcH3hCMIXCFX5uZPmoGG71Jnfv/B
+9QRxibGWyWMJJWzA6e6rYYRvwnU8b68orToUlDqXiRI/n4BuEag3ntt3+N7enB7D
+49ujLiFSoo5Nsnq8uMkEm8hR/47qjIEznshXT1Dcnr41UMjecd/JDmupj/z/7tXP
+lVXQDxpdorAoeaqwKCZOXn7Yf2Anhe9mwc6fMa/hVeOJdBRWRaPxXaf5S75Wmbsc
+xOJ89VBnFN736yJaKKFEPSMxzB+prT2+sgFqAsnQlgozuShiPsQ/N40pG09m9P3v
+d9u79pxO9C0aLjhUaKBx/vWwz58vFLS7ILj90jRZZz991UzeBw==
+-----END CERTIFICATE-----
+,15:tls_established;4:true!14:source_address;26:14:192.168.188.20;5:52477#]10:ip_address;24:14:174.129.224.73;3:443#]7:address;28:18:echo.websocket.org;3:443#]2:id;36:5a3b1bce-da91-4994-a875-62efebcdf0e4;}11:client_conn;2037:14:tls_extensions;516:31:1:0#23:   echo.websocket.org,]8:2:23#0:,]12:5:65281#1: ,]23:2:10#14:      ,]10:2:11#2: ,]8:2:35#0:,]23:2:16#14: h2http/1.1,]12:1:5#5:    ,]117:2:51#107: i   ¦3σύ"b΄U¦2Ν¶δ]ΜQ=…Τ¨6p\‰wu  AQΗ†6z8»
+(w_K°»²zΆƒ)@αη—:€ΟΦv/ΨLτ(±φfΎª(yοhπgG‹G΅Ϊ}Ο
+»θ,]13:2:43#5:,]33:2:13#24: ,]10:2:45#2:,]10:2:28#2:@,]150:2:21#140:                                                                                                                                            ,]]11:tls_version;7:TLSv1.2;21:alpn_proto_negotiated;8:http/1.1,11:cipher_name;27:ECDHE-RSA-AES128-GCM-SHA256;3:sni;18:echo.websocket.org;13:timestamp_end;0:~19:timestamp_tls_setup;18:1612375506.0802844^15:timestamp_start;17:1612375505.519176^8:mitmcert;1103:-----BEGIN CERTIFICATE-----
+MIIDATCCAemgAwIBAgIGDqoasV3AMA0GCSqGSIb3DQEBCwUAMCgxEjAQBgNVBAMM
+CW1pdG1wcm94eTESMBAGA1UECgwJbWl0bXByb3h5MB4XDTIxMDIwMTE4MDUwNloX
+DTI0MDIwMzE4MDUwNlowGDEWMBQGA1UEAwwNd2Vic29ja2V0Lm9yZzCCASIwDQYJ
+KoZIhvcNAQEBBQADggEPADCCAQoCggEBAMeSUqCJJQmX4xxQOgUlACR/gQtEKHtr
+LtpOdoi+kbc0/0+vzMOhB41wA8adKl72R6lHNEnDL11tV5tj0r3K/jGu5oWz0Kby
+jQGp/LQPZhsMhQRrUS9YHzWgVy1KX77rOIoX5pNuxOm2XnZf5p+seIIYJ/eQe/Hq
+Ll8hPgvDSHpXTmmuDI4vlJ/8ecxZT4H+qLuI+MQrDHFNdk9zspV9haZgSQWFfM69
+JyYGRd4ejr3pT5BFeUyMcw4s0Qc8SyJ1VI+x/gJsglS12w+kNcf3aUCm4bWKyr6S
+Du1ObXSDPW4x2l1DWXOCcz20Tq70XEVQ815ocuDP0RZ1LfC8aDwNozECAwEAAaNB
+MD8wPQYDVR0RBDYwNIIPKi53ZWJzb2NrZXQub3Jngg13ZWJzb2NrZXQub3JnghJl
+Y2hvLndlYnNvY2tldC5vcmcwDQYJKoZIhvcNAQELBQADggEBACkZuXNCovFnIdGT
+kzIrQVsyS/0HTax8iqTMvh1ZUPIC2XWQoaWr5jb1bLD1SdzNra9nfzvz/tH9yZpB
+hR893uz58Xwu3c8K31KgYzHTvSJJ8VpemWgSNPzDsjwjWU3QjV5cgqulEpfM00OT
+R1Eb2bD4zXrwB8tVimLTzYtNpSiz5R/F33WmLTKbq6ZAzV7LSUnHYOFksnte+Q1r
+GIzZ+5v1KEpTmd4IUt9u0iKtLip4GYF14g7i/ldV4d5dpb9G/qsQnqg3wdwG1APQ
+DeNB8mnOyV5OjrLiNuFfJnQ1HOS7HSnPtBTLXQJ5ZMdDm/jdKtWwuhFre7+egv4o
+TrKhPJI=
+-----END CERTIFICATE-----
+,10:clientcert;0:~15:tls_established;4:true!7:address;36:16:::ffff:127.0.0.1;5:52476#1:0#1:0#]2:id;36:c7cb0f0f-f610-44ca-ad5b-9177d931f6c6;}5:error;0:~2:id;36:a696268a-1093-4684-b91b-df0368737595;}6345:7:version;1:7#4:mode;11:transparent;8:response;781:13:timestamp_end;18:1612375511.6740124^15:timestamp_start;18:1612375511.6679757^7:content;0:,7:headers;583:43:32:Access-Control-Allow-Credentials,4:true,]48:28:Access-Control-Allow-Headers,12:content-type,]49:28:Access-Control-Allow-Headers,13:authorization,]58:28:Access-Control-Allow-Headers,22:x-websocket-extensions,]55:28:Access-Control-Allow-Headers,19:x-websocket-version,]56:28:Access-Control-Allow-Headers,20:x-websocket-protocol,]56:27:Access-Control-Allow-Origin,21:https://websocket.org,]24:10:Connection,7:Upgrade,]40:4:Date,29:Wed, 03 Feb 2021 18:03:24 GMT,]56:20:Sec-WebSocket-Accept,28:LSGz9tnNIGpIksi7SFiBhDw13aE=,]28:6:Server,15:Kaazing Gateway,]22:7:Upgrade,9:websocket,]]6:reason;29:Web Socket Protocol Handshake,11:status_code;3:101#12:http_version;8:HTTP/1.1,}7:request;929:9:is_replay;5:false!13:timestamp_end;18:1612375511.4837923^15:timestamp_start;18:1612375511.4797928^7:content;0:,7:headers;642:29:4:Host,18:echo.websocket.org,]96:10:User-Agent,78:Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0,]15:6:Accept,3:*/*,]37:15:Accept-Language,14:en-US,en;q=0.5,]40:15:Accept-Encoding,17:gzip, deflate, br,]30:21:Sec-WebSocket-Version,2:13,]34:6:Origin,21:https://websocket.org,]50:24:Sec-WebSocket-Extensions,18:permessage-deflate,]49:17:Sec-WebSocket-Key,24:okG1mxlkq3hsAk+9CNRP4w==,]10:3:DNT,1:1,]37:10:Connection,19:keep-alive, Upgrade,]85:6:Cookie,72:_ga=GA1.2.996834645.1605768991; _gid=GA1.2.1281782721.1612375473; _gat=1,]20:6:Pragma,8:no-cache,]28:13:Cache-Control,8:no-cache,]22:7:Upgrade,9:websocket,]]12:http_version;8:HTTP/1.1,4:path;15:/?encoding=text,4:port;3:443#4:host;18:echo.websocket.org,6:scheme;5:https,6:method;3:GET,17:first_line_format;8:relative;}8:metadata;19:9:websocket;4:true!}6:marked;5:false!11:intercepted;5:false!4:type;4:http;11:server_conn;2319:3:via;0:~13:timestamp_end;0:~19:timestamp_tls_setup;18:1612375511.4695532^19:timestamp_tcp_setup;18:1612375511.0721672^15:timestamp_start;18:1612375510.9121788^11:tls_version;7:TLSv1.2;21:alpn_proto_negotiated;0:,3:sni;18:echo.websocket.org;4:cert;1862:-----BEGIN CERTIFICATE-----
+MIIFMTCCBBmgAwIBAgISBADVpE5hceNT68fIgrNnxd5xMA0GCSqGSIb3DQEBCwUA
+MDIxCzAJBgNVBAYTAlVTMRYwFAYDVQQKEw1MZXQncyBFbmNyeXB0MQswCQYDVQQD
+EwJSMzAeFw0yMTAxMDQxNzI0MzBaFw0yMTA0MDQxNzI0MzBaMBgxFjAUBgNVBAMT
+DXdlYnNvY2tldC5vcmcwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCl
+Nk+/arYnijwjz849HbQdD0n/V1zZ26xr0+07PD+5S/xmO+yYLQ2gS0fV7JzeSVmJ
+l4P8x0E3ian0MQvmZzMKuW5Ih2PjS4iuiJeTI50ZZou/5redh8nulJSvbHrrX1Ae
+R+uIUQqflVZuUjHtGi/u5Yca7JzN/yEEuIybnCZduOQ9sa2wUoN+qSy0Y3QXtp+C
+2vauJu3f/pGFMZGvRzgUUvL4ZTnYC1RzY6aYnUJpJf2qpyIXez2QYRJvc4x8lE3u
+RMd2tgSh1tqdX7HQtbE7CNcyiSupV9ee8IZE6L+BC/epbmNhfNRTS30C3zeno9VN
+RIBiGaWyKJwqh+Cbm/bjAgMBAAGjggJZMIICVTAOBgNVHQ8BAf8EBAMCBaAwHQYD
+VR0lBBYwFAYIKwYBBQUHAwEGCCsGAQUFBwMCMAwGA1UdEwEB/wQCMAAwHQYDVR0O
+BBYEFARj/Uijbb8BQiWYlZxQthCWxmkcMB8GA1UdIwQYMBaAFBQusxe3WFbLrlAJ
+QOYfr52LFMLGMFUGCCsGAQUFBwEBBEkwRzAhBggrBgEFBQcwAYYVaHR0cDovL3Iz
+Lm8ubGVuY3Iub3JnMCIGCCsGAQUFBzAChhZodHRwOi8vcjMuaS5sZW5jci5vcmcv
+MCkGA1UdEQQiMCCCDyoud2Vic29ja2V0Lm9yZ4INd2Vic29ja2V0Lm9yZzBMBgNV
+HSAERTBDMAgGBmeBDAECATA3BgsrBgEEAYLfEwEBATAoMCYGCCsGAQUFBwIBFhpo
+dHRwOi8vY3BzLmxldHNlbmNyeXB0Lm9yZzCCAQQGCisGAQQB1nkCBAIEgfUEgfIA
+8AB2AJQgvB6O1Y1siHMfgosiLA3R2k1ebE+UPWHbTi9YTaLCAAABds6kt84AAAQD
+AEcwRQIhAJ1mC6DCPwIMO1YxBEL4vIDzVG9VaZhp+wixHTLt1wo9AiBiIDJijRus
+MvUtOq2PDarHzFLDutVreiNnLoVjsvGbhgB2APZclC/RdzAiFFQYCDCUVo7jTRMZ
+M7/fDC8gC8xO8WTjAAABds6kt8gAAAQDAEcwRQIgb7JWn0j2/ogIZGlWnZEGR2oC
+rSiqH/rdE+biWg2PRK4CIQCI8/3WBO8DIow9s2RJGd2o8lDKIyoJ25VCOe7WisEJ
+WzANBgkqhkiG9w0BAQsFAAOCAQEAV95drMg7PcH3hCMIXCFX5uZPmoGG71Jnfv/B
+9QRxibGWyWMJJWzA6e6rYYRvwnU8b68orToUlDqXiRI/n4BuEag3ntt3+N7enB7D
+49ujLiFSoo5Nsnq8uMkEm8hR/47qjIEznshXT1Dcnr41UMjecd/JDmupj/z/7tXP
+lVXQDxpdorAoeaqwKCZOXn7Yf2Anhe9mwc6fMa/hVeOJdBRWRaPxXaf5S75Wmbsc
+xOJ89VBnFN736yJaKKFEPSMxzB+prT2+sgFqAsnQlgozuShiPsQ/N40pG09m9P3v
+d9u79pxO9C0aLjhUaKBx/vWwz58vFLS7ILj90jRZZz991UzeBw==
+-----END CERTIFICATE-----
+,15:tls_established;4:true!14:source_address;26:14:192.168.188.20;5:52479#]10:ip_address;24:14:174.129.224.73;3:443#]7:address;28:18:echo.websocket.org;3:443#]2:id;36:336e3db7-4a7e-4d26-8e14-f63334204c02;}11:client_conn;2063:14:tls_extensions;541:31:1:0#23:   echo.websocket.org,]8:2:23#0:,]12:5:65281#1: ,]23:2:10#14:      ,]10:2:11#2: ,]186:2:35#176:ΊJ4GκβOµGIVv§o£9@n½ϊ‡Qz#ΦΑθR4pxΪ6KαΧΜ9΅T°!3?#X1εM_.φvu‘φΝ°%JΩ+>άμ<7ΙEΚz?¨‘eΦΰ^Ò-λg‰ΰ6°ΰ|΅‹(ΕSφ±d&&Fμ7$
+¶™q­SƒΞςσ±ή†‰I)¦r™(xβ²fΣ¥_f0gύθ³g“ξGe°wπi,]23:2:16#14: h2http/1.1,]12:1:5#5:    ,]117:2:51#107: i   0—%τσΙp~ι_Φ07Ό\ΔTEΗ4zM­κ—  AΝθΧ²οcFΗ£κq?6(τΐ™L–q§ι`έτο”¶@~+!$c(Ο6όP³κOB·ύtl…RΒ><Vζ«ύ,]13:2:43#5:,]33:2:13#24: ,]10:2:45#2:,]10:2:28#2:@,]]11:tls_version;7:TLSv1.2;21:alpn_proto_negotiated;8:http/1.1,11:cipher_name;27:ECDHE-RSA-AES128-GCM-SHA256;3:sni;18:echo.websocket.org;13:timestamp_end;0:~19:timestamp_tls_setup;18:1612375511.4797928^15:timestamp_start;18:1612375510.9001772^8:mitmcert;1103:-----BEGIN CERTIFICATE-----
+MIIDATCCAemgAwIBAgIGDqoasV3AMA0GCSqGSIb3DQEBCwUAMCgxEjAQBgNVBAMM
+CW1pdG1wcm94eTESMBAGA1UECgwJbWl0bXByb3h5MB4XDTIxMDIwMTE4MDUwNloX
+DTI0MDIwMzE4MDUwNlowGDEWMBQGA1UEAwwNd2Vic29ja2V0Lm9yZzCCASIwDQYJ
+KoZIhvcNAQEBBQADggEPADCCAQoCggEBAMeSUqCJJQmX4xxQOgUlACR/gQtEKHtr
+LtpOdoi+kbc0/0+vzMOhB41wA8adKl72R6lHNEnDL11tV5tj0r3K/jGu5oWz0Kby
+jQGp/LQPZhsMhQRrUS9YHzWgVy1KX77rOIoX5pNuxOm2XnZf5p+seIIYJ/eQe/Hq
+Ll8hPgvDSHpXTmmuDI4vlJ/8ecxZT4H+qLuI+MQrDHFNdk9zspV9haZgSQWFfM69
+JyYGRd4ejr3pT5BFeUyMcw4s0Qc8SyJ1VI+x/gJsglS12w+kNcf3aUCm4bWKyr6S
+Du1ObXSDPW4x2l1DWXOCcz20Tq70XEVQ815ocuDP0RZ1LfC8aDwNozECAwEAAaNB
+MD8wPQYDVR0RBDYwNIIPKi53ZWJzb2NrZXQub3Jngg13ZWJzb2NrZXQub3JnghJl
+Y2hvLndlYnNvY2tldC5vcmcwDQYJKoZIhvcNAQELBQADggEBACkZuXNCovFnIdGT
+kzIrQVsyS/0HTax8iqTMvh1ZUPIC2XWQoaWr5jb1bLD1SdzNra9nfzvz/tH9yZpB
+hR893uz58Xwu3c8K31KgYzHTvSJJ8VpemWgSNPzDsjwjWU3QjV5cgqulEpfM00OT
+R1Eb2bD4zXrwB8tVimLTzYtNpSiz5R/F33WmLTKbq6ZAzV7LSUnHYOFksnte+Q1r
+GIzZ+5v1KEpTmd4IUt9u0iKtLip4GYF14g7i/ldV4d5dpb9G/qsQnqg3wdwG1APQ
+DeNB8mnOyV5OjrLiNuFfJnQ1HOS7HSnPtBTLXQJ5ZMdDm/jdKtWwuhFre7+egv4o
+TrKhPJI=
+-----END CERTIFICATE-----
+,10:clientcert;0:~15:tls_established;4:true!7:address;36:16:::ffff:127.0.0.1;5:52478#1:0#1:0#]2:id;36:f634bbba-042d-4cb4-a3af-8a6a0d0d52bc;}5:error;0:~2:id;36:6a355ad7-303c-44ee-85a4-3a63b3332e70;}

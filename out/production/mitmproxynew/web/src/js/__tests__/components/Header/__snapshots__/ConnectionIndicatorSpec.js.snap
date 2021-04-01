@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConnectionIndicator Component should connect to state 1`] = `
+<span
+  className="connection-indicator established"
+>
+  connected
+</span>
+`;
+
+exports[`ConnectionIndicator Component should render ERROR 1`] = `
+<span
+  className="connection-indicator error"
+  title="foo"
+>
+  connection lost
+</span>
+`;
+
+exports[`ConnectionIndicator Component should render ESTABLISHED 1`] = `
+<span
+  className="connection-indicator established"
+>
+  connected
+</span>
+`;
+
+exports[`ConnectionIndicator Component should render FETCHING 1`] = `
+<span
+  className="connection-indicator fetching"
+>
+  fetching data…
+</span>
+`;
+
+exports[`ConnectionIndicator Component should render INIT 1`] = `
+<span
+  className="connection-indicator init"
+>
+  connecting…
+</span>
+`;
+
+exports[`ConnectionIndicator Component should render OFFLINE 1`] = `
+<span
+  className="connection-indicator offline"
+>
+  offline
+</span>
+`;

@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ContentViewOptions Component should render correctly 1`] = `
+<div
+  className="view-options"
+>
+  <span>
+    <b>
+      View:
+    </b>
+     edit
+  </span>
+   
+  <a
+    className="btn btn-default btn-xs"
+    href="./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/response/content.data"
+    title="Download the content of the flow."
+  >
+    <i
+      className="fa fa-download"
+    />
+  </a>
+   
+  <a
+    className="btn btn-default btn-xs"
+    href="#"
+    onClick={[Function]}
+    title="Upload a file to replace the content."
+  >
+    <i
+      className="fa fa-fw fa-upload"
+    />
+    <input
+      className="hidden"
+      onChange={[Function]}
+      type="file"
+    />
+  </a>
+   
+</div>
+`;

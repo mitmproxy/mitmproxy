@@ -1,0 +1,142 @@
+[
+    {
+        "instruction": "1. Welcome to the mitmproxy tutorial. In this lesson we cover the user interface.",
+        "time_from": 0.0,
+        "time_to": 6.2
+    },
+    {
+        "instruction": "2. This is the default view of mitmproxy.",
+        "time_from": 14.6,
+        "time_to": 17.6
+    },
+    {
+        "instruction": "3. mitmproxy adds rows to the view as new requests come in.",
+        "time_from": 18.2,
+        "time_to": 22.7
+    },
+    {
+        "instruction": "4. Let’s generate some requests using `curl` in a separate terminal.",
+        "time_from": 23.2,
+        "time_to": 28.4
+    },
+    {
+        "instruction": "5. Use curl’s `--proxy` option to configure mitmproxy as a proxy.",
+        "time_from": 31.8,
+        "time_to": 36.8
+    },
+    {
+        "instruction": "6. We use the text-based weather service `wttr.in`.",
+        "time_from": 46.1,
+        "time_to": 49.9
+    },
+    {
+        "instruction": "7. You see the requests to `wttr.in` in the list of flows.",
+        "time_from": 72.6,
+        "time_to": 77.0
+    },
+    {
+        "instruction": "8. mitmproxy is controlled using keyboard shortcuts.",
+        "time_from": 77.5,
+        "time_to": 81.4
+    },
+    {
+        "instruction": "9. Use your arrow keys `↑` and `↓` to change the focused flow (`>>`).",
+        "time_from": 81.9,
+        "time_to": 87.2
+    },
+    {
+        "instruction": "10. The focused flow (`>>`) is used as a target for various commands.",
+        "time_from": 90.6,
+        "time_to": 95.8
+    },
+    {
+        "instruction": "11. One such command shows the flow details, it is bound to `ENTER`.",
+        "time_from": 96.4,
+        "time_to": 101.5
+    },
+    {
+        "instruction": "12. Press `ENTER` to view the details of the focused flow.",
+        "time_from": 102.0,
+        "time_to": 106.3
+    },
+    {
+        "instruction": "13. The flow details view has 3 panes: request, response, and detail.",
+        "time_from": 107.1,
+        "time_to": 112.3
+    },
+    {
+        "instruction": "14. Use your arrow keys `←` and `→` to switch between panes.",
+        "time_from": 112.8,
+        "time_to": 117.3
+    },
+    {
+        "instruction": "15. Press `q` to exit the current view.",
+        "time_from": 130.7,
+        "time_to": 133.5
+    },
+    {
+        "instruction": "16. Press `?` to get a list of all available keyboard shortcuts.",
+        "time_from": 134.1,
+        "time_to": 138.9
+    },
+    {
+        "instruction": "17. Tip: Remember the `?` shortcut. It works in every view.",
+        "time_from": 148.2,
+        "time_to": 152.6
+    },
+    {
+        "instruction": "18. Press `q` to exit the current view.",
+        "time_from": 153.1,
+        "time_to": 155.9
+    },
+    {
+        "instruction": "19. Each shortcut is internally bound to a command.",
+        "time_from": 156.7,
+        "time_to": 160.5
+    },
+    {
+        "instruction": "20. You can also execute commands directly (without using shortcuts).",
+        "time_from": 160.9,
+        "time_to": 166.1
+    },
+    {
+        "instruction": "21. Press `:` to open the command prompt at the bottom.",
+        "time_from": 166.7,
+        "time_to": 170.8
+    },
+    {
+        "instruction": "22. Enter `console.view.flow @focus`.",
+        "time_from": 171.4,
+        "time_to": 174.0
+    },
+    {
+        "instruction": "23. The command `console.view.flow` opens the details view for a flow.",
+        "time_from": 181.0,
+        "time_to": 186.3
+    },
+    {
+        "instruction": "24. The argument `@focus` defines the target flow.",
+        "time_from": 186.8,
+        "time_to": 190.5
+    },
+    {
+        "instruction": "25. Press `ENTER` to execute the command.",
+        "time_from": 191.0,
+        "time_to": 194.0
+    },
+    {
+        "instruction": "26. Commands unleash the full power of mitmproxy, i.e., to configure interceptions.",
+        "time_from": 194.8,
+        "time_to": 201.1
+    },
+    {
+        "instruction": "27. You now know basics of mitmproxy’s UI and how to control it.",
+        "time_from": 201.7,
+        "time_to": 206.5
+    },
+    {
+        "instruction": "28. In the next lesson you will learn to intercept flows.",
+        "time_from": 208.0,
+        "time_to": 212.2
+    }
+]

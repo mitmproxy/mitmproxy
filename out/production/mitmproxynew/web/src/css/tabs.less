@@ -1,0 +1,49 @@
+.nav-tabs {
+
+    @separator-color: lighten(grey, 15%);
+
+    border-bottom: solid @separator-color 1px;
+
+    a {
+        display: inline-block;
+        border: solid transparent 1px;
+        text-decoration: none;
+        //text-transform: uppercase;
+        //font-family: Lato;
+
+        &.active {
+            background-color: white;
+            border-color: @separator-color;
+            border-bottom-color: white;
+        }
+        &.special {
+            @special-color: #396cad;
+            color: white;
+            background-color: @special-color;
+            border-bottom-color: @special-color;
+            &:hover {
+                background-color: lighten(@special-color, 10%);
+            }
+        }
+    }
+
+}
+
+.nav-tabs-lg {
+    a {
+        padding: 3px 14px;
+        margin: 0 2px -1px;
+    }
+}
+
+.nav-tabs-sm {
+    a {
+        padding: 0px 7px;
+        margin: 2px 2px -1px;
+    }
+    a.nav-action {
+        float: right;
+        padding: 0;
+        margin: 1px 0 0px;
+    }
+}

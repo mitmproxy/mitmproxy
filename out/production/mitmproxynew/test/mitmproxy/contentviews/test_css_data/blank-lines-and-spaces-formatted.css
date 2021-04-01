@@ -1,0 +1,35 @@
+/* only one blank line between */
+menu {
+    color: red
+}
+
+navi {
+    color: black
+}
+
+/* automatically insert a blank line */
+button {
+    border: 1px
+}
+
+sidebar {
+    color: #ffe
+}
+
+/* always whitespace before { */
+hidden {
+    opacity: 0%
+}
+
+/* no blank lines inside ruleset */
+imprint {
+    color: blue;
+    opacity: 0.5;
+    font-size: small
+}
+
+/* before colon: no space, after colon: one space only */
+footer {
+    font-family: Arial;
+    float: right;
+}
