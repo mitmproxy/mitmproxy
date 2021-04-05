@@ -8,6 +8,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
     
 COPY $MITMPROXY_WHEEL /home/mitmproxy/
+COPY examples /home/mitmproxy/
+
+WORKDIR /home/mitmproxy
+
 RUN pip3 install --no-cache-dir -U /home/mitmproxy/${MITMPROXY_WHEEL} \
     && rm -rf /home/mitmproxy/${MITMPROXY_WHEEL}
 
