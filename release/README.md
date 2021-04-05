@@ -6,14 +6,14 @@ These steps assume you are on the correct branch and have a git remote called `o
 - Verify that the compiled mitmweb assets are up-to-date.
 - Verify that all CI tests pass.
 - Verify that `mitmproxy/version.py` is correct. Remove `.dev` suffix if it exists.
-- Tag the release and push to Github.
+- Tag the release and push to GitHub.
   - `git tag v4.0.0`
   - `git push origin v4.0.0`
 - Wait for tag CI to complete.
 
 ### GitHub Releases
 
-- Create release notice on Github
+- Create release notice on GitHub
   [here](https://github.com/mitmproxy/mitmproxy/releases/new) if not already
   auto-created by the tag.
 - We DO NOT upload release artifacts to GitHub anymore. Simply add the
