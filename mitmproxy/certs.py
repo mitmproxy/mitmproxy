@@ -101,7 +101,7 @@ class Cert(serializable.Serializable):
         return self._cert.serial_number
 
     @property
-    def keyinfo(self):
+    def keyinfo(self) -> Tuple[str, int]:
         public_key = self._cert.public_key()
         if isinstance(public_key, rsa.RSAPublicKey):
             return "RSA", public_key.key_size
