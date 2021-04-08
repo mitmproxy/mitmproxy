@@ -231,3 +231,11 @@ class TestCert:
 
         with pytest.raises(TypeError):
             tstore.add_cert_file("encrypted-no-pass", Path(tdata.path("mitmproxy/data/mitmproxy.pem")), None)
+
+    def test_special_character(self, tdata):
+        with open(tdata.path("mitmproxy/net/data/text_cert_with_comma"), "rb") as f:
+            d = f.read()
+        c = certs.Cert.from_pem(d)
+
+        assert dict(c.issuer).get('O') == 'DigiCert, Inc.'
+        assert dict(c.subject).get('O') == 'GitHub, Inc.'
