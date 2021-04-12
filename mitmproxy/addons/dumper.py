@@ -291,7 +291,7 @@ class Dumper:
             direction = "->" if message.from_client else "<-"
             self.echo(
                 f"{human.format_address(f.client_conn.peername)} "
-                f"{direction} WebSocket {message.type.name.lower()} message "
+                f"{direction} WebSocket {'TEXT' if message.is_text else 'BINARY'} message "
                 f"{direction} {human.format_address(f.server_conn.address)}{f.request.path}"
             )
             if ctx.options.flow_detail >= 3:

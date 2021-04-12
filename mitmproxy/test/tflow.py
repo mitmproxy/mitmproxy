@@ -7,7 +7,6 @@ from mitmproxy import http
 from mitmproxy import tcp
 from mitmproxy import websocket
 from mitmproxy.test import tutils
-from wsproto.frame_protocol import Opcode
 
 
 def ttcpflow(client_conn=True, server_conn=True, messages=True, err=None):

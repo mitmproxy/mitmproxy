@@ -152,7 +152,7 @@ class WebsocketLayer(layer.Layer):
         elif isinstance(event, events.ConnectionClosed):
             src_ws.receive_data(None)
         elif isinstance(event, WebSocketMessageInjected):
-            fragmentizer = Fragmentizer([], event.message.type == Opcode.TEXT)
+            fragmentizer = Fragmentizer([], event.message.is_text)
             src_ws._events.extend(
                 fragmentizer(event.message.content)
             )
@@ -175,7 +175,7 @@ class WebsocketLayer(layer.Layer):
                     fragmentizer = Fragmentizer(src_ws.frame_buf, is_text)
                     src_ws.frame_buf.clear()
 
-                    message = websocket.WebSocketMessage(typ, from_client, content)
+                    message = websocket.WebSocketMessage(typ == Opcode.TEXT, from_client, content)
                     self.flow.websocket.messages.append(message)
                     yield WebsocketMessageHook(self.flow)
 

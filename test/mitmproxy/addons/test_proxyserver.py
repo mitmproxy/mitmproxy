@@ -131,7 +131,6 @@ async def test_inject_fail():
         ps.inject_tcp(
             tflow.tflow(),
             True,
-            True,
             b"test"
         )
         await tctx.master.await_log("Cannot inject TCP messages into non-TCP flows.", level="warn")

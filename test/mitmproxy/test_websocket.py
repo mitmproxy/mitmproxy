@@ -1,7 +1,6 @@
 from mitmproxy import http
 from mitmproxy import websocket
 from mitmproxy.test import tflow
-from wsproto.frame_protocol import Opcode
 
 
 class TestWebSocketData:
