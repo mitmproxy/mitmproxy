@@ -289,6 +289,7 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                     writer = self.transports[command.connection].writer
                     assert writer
                     writer.write(command.data)
+                    await writer.drain()
                 elif isinstance(command, commands.CloseConnection):
                     self.close_connection(command.connection, command.half_close)
                 elif isinstance(command, commands.GetSocket):
