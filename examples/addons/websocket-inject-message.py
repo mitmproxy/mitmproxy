@@ -5,7 +5,7 @@ This example shows how to inject a WebSocket message into a running connection.
 """
 import asyncio
 
-from mitmproxy import ctx, http, websocket
+from mitmproxy import ctx, http
 
 
 # Simple example: Inject a message as a response to an event
@@ -15,11 +15,11 @@ def websocket_message(flow: http.HTTPFlow):
     if recent_message.is_text and "secret" in recent_message.text:
         recent_message.kill()
         ctx.master.commands.call(
-          "inject.websocket",
-          flow,
-          to_client=recent_message.from_client,
-          is_text=True,
-          content=b"ssssssh"
+            "inject.websocket",
+            flow,
+            to_client=recent_message.from_client,
+            is_text=True,
+            content=b"ssssssh"
         )
 
 

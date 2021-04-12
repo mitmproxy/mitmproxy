@@ -8,7 +8,7 @@ from mitmproxy.proxy import commands, events, server_hooks
 from mitmproxy.proxy import server
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected
 from mitmproxy.proxy.layers.websocket import WebSocketMessageInjected
-from mitmproxy.utils import asyncio_utils, human, strutils
+from mitmproxy.utils import asyncio_utils, human
 
 
 class AsyncReply(controller.Reply):

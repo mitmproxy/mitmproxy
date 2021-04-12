@@ -6,7 +6,7 @@ as HTTP flows as well. They can be distinguished from regular HTTP requests by h
 This module only defines the classes for individual `WebSocketMessage`s and the `WebSocketData` container.
 """
 import time
-from typing import List, Tuple, Union
+from typing import List, Tuple
 from typing import Optional
 
 from mitmproxy import stateobject
