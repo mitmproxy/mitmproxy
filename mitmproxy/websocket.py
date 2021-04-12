@@ -11,9 +11,8 @@ from typing import Optional
 
 from mitmproxy import stateobject
 from mitmproxy.coretypes import serializable
-from wsproto.frame_protocol import Opcode
 
-WebSocketMessageState = Tuple[int, bool, bytes, float, bool]
+WebSocketMessageState = Tuple[bool, bool, bytes, float, bool]
 
 
 class WebSocketMessage(serializable.Serializable):
@@ -25,23 +24,18 @@ class WebSocketMessage(serializable.Serializable):
 
     The [WebSocket RFC](https://tools.ietf.org/html/rfc6455) specifies both
     text and binary messages. To avoid a whole class of nasty type confusion bugs,
-    mitmproxy stores all message contents as binary. If you need text, you can decode the `content` property:
-
-    >>> from wsproto.frame_protocol import Opcode
-    >>> if message.type == Opcode.TEXT:
-    >>>     text = message.content.decode()
+    mitmproxy stores all message contents as binary.
+    If you need text, you can use the `text` property when the message `is_text`.
 
     Per the WebSocket spec, text messages always use UTF-8 encoding.
     """
 
     from_client: bool
     """True if this messages was sent by the client."""
-    type: Opcode
+    is_text: bool
     """
-    The message type, as per RFC 6455's [opcode](https://tools.ietf.org/html/rfc6455#section-5.2).
-
-    Note that mitmproxy will always store the message contents as *bytes*.
-    A dedicated `.text` property for text messages is planned, see https://github.com/mitmproxy/mitmproxy/pull/4486.
+    True if this message is a text message, False if it is binary.
+    Note that mitmproxy will internally always store the message `content` as *bytes*.
     """
     content: bytes
     """A byte-string representing the content of this message."""
@@ -52,14 +46,14 @@ class WebSocketMessage(serializable.Serializable):
 
     def __init__(
         self,
-        type: Union[int, Opcode],
+        is_text: bool,
         from_client: bool,
         content: bytes,
         timestamp: Optional[float] = None,
         killed: bool = False,
     ) -> None:
+        self.is_text = is_text
         self.from_client = from_client
-        self.type = Opcode(type)
         self.content = content
         self.timestamp: float = timestamp or time.time()
         self.killed = killed
@@ -69,14 +63,13 @@ class WebSocketMessage(serializable.Serializable):
         return cls(*state)
 
     def get_state(self) -> WebSocketMessageState:
-        return int(self.type), self.from_client, self.content, self.timestamp, self.killed
+        return self.is_text, self.from_client, self.content, self.timestamp, self.killed
 
     def set_state(self, state: WebSocketMessageState) -> None:
-        typ, self.from_client, self.content, self.timestamp, self.killed = state
-        self.type = Opcode(typ)
+        self.is_text, self.from_client, self.content, self.timestamp, self.killed = state
 
     def __repr__(self):
-        if self.type == Opcode.TEXT:
+        if self.is_text:
             return repr(self.content.decode(errors="replace"))
         else:
             return repr(self.content)
@@ -84,6 +77,34 @@ class WebSocketMessage(serializable.Serializable):
     def kill(self):
         # Likely to be replaced with .drop() in the future, see https://github.com/mitmproxy/mitmproxy/pull/4486
         self.killed = True
+
+    @property
+    def text(self) -> str:
+        """
+        The message content as text.
+
+        Accessing this attribute may raise a `ValueError` when the message is not a text message (Opcode.TEXT).
+
+        *See also:* `WebSocketMessage.content`
+        """
+        if self.is_text:
+            raise ValueError("Cannot access text property of a non-text WebSocket message")
+
+        return self.content.decode()
+
+    @text.setter
+    def text(self, value: str) -> None:
+        """
+        Set the message bytes from the given string.
+
+        Setting this attribute may raise a `ValueError` when the message is not a text message (Opcode.TEXT).
+
+        *See also:* `WebSocketMessage.content`
+        """
+        if self.is_text:
+            raise ValueError("Cannot set text property of a non-text WebSocket message")
+
+        self.content = value.encode()
 
 
 class WebSocketData(stateobject.StateObject):

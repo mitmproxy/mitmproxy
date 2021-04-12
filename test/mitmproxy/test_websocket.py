@@ -16,11 +16,11 @@ class TestWebSocketData:
 
 class TestWebSocketMessage:
     def test_basic(self):
-        m = websocket.WebSocketMessage(Opcode.TEXT, True, b"foo")
+        m = websocket.WebSocketMessage(True, True, b"foo")
         m.set_state(m.get_state())
         assert m.content == b"foo"
         assert repr(m) == "'foo'"
-        m.type = Opcode.BINARY
+        m.is_text = False
         assert repr(m) == "b'foo'"
 
         assert not m.killed

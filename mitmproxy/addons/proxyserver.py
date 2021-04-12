@@ -156,15 +156,14 @@ class Proxyserver:
         self._connections[event.flow.client_conn.peername].server_event(event)
 
     @command.command("inject.websocket")
-    def inject_websocket(self, flow: Flow, to_client: bool, message: str, is_text: bool = True):
+    def inject_websocket(self, flow: Flow, is_text: bool, to_client: bool, content: bytes):
         if not isinstance(flow, http.HTTPFlow) or not flow.websocket:
             ctx.log.warn("Cannot inject WebSocket messages into non-WebSocket flows.")
 
-        message_bytes = strutils.escaped_str_to_bytes(message)
         msg = websocket.WebSocketMessage(
-            Opcode.TEXT if is_text else Opcode.BINARY,
+            is_text,
             not to_client,
-            message_bytes
+            content
         )
         event = WebSocketMessageInjected(flow, msg)
         try:
@@ -173,12 +172,11 @@ class Proxyserver:
             ctx.log.warn(str(e))
 
     @command.command("inject.tcp")
-    def inject_tcp(self, flow: Flow, to_client: bool, message: str):
+    def inject_tcp(self, flow: Flow, to_client: bool, content: bytes):
         if not isinstance(flow, tcp.TCPFlow):
             ctx.log.warn("Cannot inject TCP messages into non-TCP flows.")
 
-        message_bytes = strutils.escaped_str_to_bytes(message)
-        event = TcpMessageInjected(flow, tcp.TCPMessage(not to_client, message_bytes))
+        event = TcpMessageInjected(flow, tcp.TCPMessage(not to_client, content))
         try:
             self.inject_event(event)
         except ValueError as e:
