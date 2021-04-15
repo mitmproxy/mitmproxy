@@ -150,6 +150,7 @@ jobs:
   # Separate from everything else because slow.
   build-and-deploy-docker:
     if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
+    environment: deploy-docker
     needs: [test, test-web-ui, build-wheel]
     runs-on: ubuntu-latest
     env:
@@ -171,6 +172,7 @@ jobs:
 
   deploy:
     if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
+    environment: deploy
     runs-on: ubuntu-latest
     needs: [test, test-web-ui, build-wheel, build-binaries]
     env:
