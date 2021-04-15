@@ -1098,6 +1098,7 @@ class TestMessageText:
     def test_guess_meta_charset(self):
         r = tresp(content=b'<meta http-equiv="content-type" '
                           b'content="text/html;charset=gb2312">\xe6\x98\x8e\xe4\xbc\xaf')
+        r.headers["content-type"] = "text/html"
         # "鏄庝集" is decoded form of \xe6\x98\x8e\xe4\xbc\xaf in gb18030
         assert "鏄庝集" in r.text
 
