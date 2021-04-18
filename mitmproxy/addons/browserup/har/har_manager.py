@@ -11,8 +11,8 @@ DEFAULT_PAGE_REF = "Default"
 DEFAULT_PAGE_TITLE = "Default"
 REQUEST_SUBMITTED_FLAG = "_request_submitted"
 
-class HarManager():
-    # Used like a singleton for the capture addon to manage a single active har
+class HarManagerMixin():
+    # Used to manage a single active har
 
     def __init__(self):
         self.num = 0
@@ -96,7 +96,7 @@ class HarManager():
                 return p
         return None
 
-    def new_har(self, initial_page_ref, initial_page_title, create_page=False):
+    def new_har(self, initial_page_ref=DEFAULT_PAGE_REF, initial_page_title=DEFAULT_PAGE_TITLE, create_page=False):
 
         if create_page:
             ctx.log.info(

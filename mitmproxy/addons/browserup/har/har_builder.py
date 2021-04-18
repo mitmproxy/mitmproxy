@@ -115,6 +115,7 @@ class HarBuilder():
             "time": 0,
             "request": {},
             "response": {},
+            "_webSocketMessages": [],
             "cache": {},
             "timings": HarBuilder.entry_timings(),
             "serverIPAddress": "",

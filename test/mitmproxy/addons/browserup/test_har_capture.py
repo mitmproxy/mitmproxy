@@ -40,19 +40,19 @@ class TestHARCapture:
         with tempfile.TemporaryDirectory() as tmpdirname:
             print('Created temporary directory:', tmpdirname)
             file_path = os.path.join(tmpdirname, 'testbase64.har')
-            hc.har_manager.save_har(file_path)
+            hc.save_har(file_path)
             with open(file_path) as inp:
                 har = json.load(inp)
             assert len(har["log"]["entries"]) == 1
 
     def test_base64(self, hc):
-        hc.har_manager.har_capture_types = [HarCaptureTypes.RESPONSE_BINARY_CONTENT, HarCaptureTypes.RESPONSE_CONTENT ]
+        hc.har_capture_types = [HarCaptureTypes.RESPONSE_BINARY_CONTENT, HarCaptureTypes.RESPONSE_CONTENT ]
 
         hc.response(self.flow(resp_content=b"foo" + b"\xFF" * 10))
         with tempfile.TemporaryDirectory() as tmpdirname:
             print('Created temporary directory:', tmpdirname)
             file_path = os.path.join(tmpdirname, 'testbase64.har')
-            hc.har_manager.save_har(file_path)
+            hc.save_har(file_path)
             with open(file_path) as inp:
                 har = json.load(inp)
                 print(har)
@@ -61,17 +61,17 @@ class TestHARCapture:
     def test_format_cookies(self, hc):
         CA = cookies.CookieAttrs
 
-        f = hc.har_manager.format_cookies([("n", "v", CA([("k", "v")]))])[0]
+        f = hc.format_cookies([("n", "v", CA([("k", "v")]))])[0]
         assert f['name'] == "n"
         assert f['value'] == "v"
         assert not f['httpOnly']
         assert not f['secure']
 
-        f = hc.har_manager.format_cookies([("n", "v", CA([("httponly", None), ("secure", None)]))])[0]
+        f = hc.format_cookies([("n", "v", CA([("httponly", None), ("secure", None)]))])[0]
         assert f['httpOnly']
         assert f['secure']
 
-        f = hc.har_manager.format_cookies([("n", "v", CA([("expires", "Mon, 24-Aug-2037 00:00:00 GMT")]))])[0]
+        f = hc.format_cookies([("n", "v", CA([("expires", "Mon, 24-Aug-2037 00:00:00 GMT")]))])[0]
         assert f['expires']
 
     def test_binary(self, hc, path):
@@ -85,7 +85,7 @@ class TestHARCapture:
         hc.response(f)
         with tempfile.TemporaryDirectory() as tmpdirname:
             file_path = os.path.join(tmpdirname, 'testbase64.har')
-            hc.har_manager.save_har(file_path)
+            hc.save_har(file_path)
             with open(file_path) as inp:
                 har = json.load(inp)
                 assert len(har["log"]["entries"]) == 1
@@ -93,96 +93,124 @@ class TestHARCapture:
     def test_capture_cookies_on(self, hc):
         f=self.flow()
         f.request.headers["cookie"] = "foo=bar"
-        hc.har_manager.har_capture_types = [HarCaptureTypes.REQUEST_COOKIES,HarCaptureTypes.REQUEST_CAPTURE_TYPES.REQUEST_CONTENT  ]
+        hc.har_capture_types = [HarCaptureTypes.REQUEST_COOKIES, HarCaptureTypes.REQUEST_CAPTURE_TYPES.REQUEST_CONTENT  ]
         hc.request(f)
-        assert(hc.har_manager.har['log']['entries'][0]['request']['cookies'][0]['name'] == 'foo')
-        assert(hc.har_manager.har['log']['entries'][0]['request']['cookies'][0]['value'] == 'bar')
+        assert(hc.har['log']['entries'][0]['request']['cookies'][0]['name'] == 'foo')
+        assert(hc.har['log']['entries'][0]['request']['cookies'][0]['value'] == 'bar')
 
     def test_capture_cookies_off(self, hc):
         f=self.flow()
         f.request.headers["cookie"] = "foo=bar"
-        hc.har_manager.har_capture_types = [HarCaptureTypes.REQUEST_CAPTURE_TYPES.REQUEST_CONTENT  ]
+        hc.har_capture_types = [HarCaptureTypes.REQUEST_CAPTURE_TYPES.REQUEST_CONTENT  ]
         hc.request(f)
-        assert(hc.har_manager.har['log']['entries'][0]['request']['cookies'] == [])
+        assert(hc.har['log']['entries'][0]['request']['cookies'] == [])
 
     def test_capture_request_headers_on(self, hc):
         f=self.flow()
         f.request.headers["boo"] = "baz"
-        hc.har_manager.har_capture_types = [HarCaptureTypes.REQUEST_CAPTURE_TYPES.REQUEST_HEADERS ]
+        hc.har_capture_types = [HarCaptureTypes.REQUEST_CAPTURE_TYPES.REQUEST_HEADERS ]
         hc.request(f)
-        assert(hc.har_manager.har['log']['entries'][0]['request']['headers'][2]['name'] == 'boo')
+        assert(hc.har['log']['entries'][0]['request']['headers'][2]['name'] == 'boo')
 
     def test_capture_request_headers_off(self, hc):
         f=self.flow()
         f.request.headers["cookie"] = "foo=bar"
-        hc.har_manager.har_capture_types = []
+        hc.har_capture_types = []
         hc.request(f)
-        assert(hc.har_manager.har['log']['entries'][0]['request']['headers'] == [])
+        assert(hc.har['log']['entries'][0]['request']['headers'] == [])
 
     def test_capture_response_headers_on(self, hc):
         f=self.flow()
         f.response.headers["bee"] = "bazl"
-        hc.har_manager.har_capture_types = [HarCaptureTypes.RESPONSE_HEADERS ]
+        hc.har_capture_types = [HarCaptureTypes.RESPONSE_HEADERS ]
         hc.response(f)
-        assert(hc.har_manager.har['log']['entries'][0]['response']['headers'][2]['name'] == 'bee')
+        assert(hc.har['log']['entries'][0]['response']['headers'][2]['name'] == 'bee')
 
     def test_capture_response_headers_off(self, hc):
         f=self.flow()
         f.response.headers["bee"] = "bazl"
-        hc.har_manager.har_capture_types = []
+        hc.har_capture_types = []
         hc.response(f)
-        assert(hc.har_manager.har['log']['entries'][0]['response']['headers'] == [])
+        assert(hc.har['log']['entries'][0]['response']['headers'] == [])
 
-    def test_websocket_messages_capture_on(self, hc):
+    def test_websocket_messages_capture_off(self, hc):
         f = twebsocketflow()
+        [HarCaptureTypes.RESPONSE_CONTENT]
+        hc.response(f)
         hc.websocket_message(f)
-        assert(hc.har_manager.har['log']['entries'][0]['_webSocketMessages'] is None)
+
+        assert(len(hc.har['log']['entries'][0]['_webSocketMessages']) == 0)
+
+    def test_websocket_error_capture(self, hc):
+        f = twebsocketflow(err=True)
+        hc.har_capture_types = [HarCaptureTypes.WEBSOCKET_MESSAGES ]
+        hc.websocket_error(f)
+        assert(len(hc.har['log']['entries'][0]['_webSocketMessages']) == 1)
 
     def test_websocket_messages_capture_on(self, hc):
         f = twebsocketflow()
-        hc.har_manager.har_capture_types = [HarCaptureTypes.WEBSOCKET_MESSAGES ]
+        hc.har_capture_types = [HarCaptureTypes.WEBSOCKET_MESSAGES ]
 
         f.websocket.messages = [
             websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary", 946681203)
         ]
-
         hc.websocket_message(f)
-
         f.websocket.messages = [
             websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary", 946681203),
             websocket.WebSocketMessage(Opcode.TEXT, True, b"hello text", 946681204)
         ]
         hc.websocket_message(f)
 
+        assert(hc.har['log']['entries'][0]['_webSocketMessages'])
 
 
-        assert(hc.har_manager.har['log']['entries'][0]['_webSocketMessages'])
+    def test_capture_response_on(self, hc):
+        f=self.flow()
+        hc.har_capture_types = [HarCaptureTypes.RESPONSE_CONTENT]
+        hc.response(f)
+        assert(hc.har['log']['entries'][0]['response']['content']['text'] != "")
 
-   # def test_websocket_messages_capture_on(self, hc):
+    def test_capture_response_off(self, hc):
+        f=self.flow()
+        hc.har_capture_types = []
+        hc.response(f)
+        assert(hc.har['log']['entries'][0]['response']['content']['text'] == "")
 
-# def test_capture_response_on
+    # if har is cleared, where do existing flow har_entries point?
+    def test_new_har_clears_har(self, hc):
+        f=self.flow()
+        hc.har_capture_types = []
+        hc.response(f)
+        hc.new_har('','')
+        assert(len(hc.har['log']['entries']) == 0)
+        f = tflow.tflow(
+            req=tutils.treq(method=b'GET'),
+            resp=tutils.tresp()
+        )
+        hc.request(f)
+        assert(len(hc.har['log']['pages']) == 1)
 
-#def test_capture_response_off
+    def test_default_page(self, hc):
+        f=self.flow()
+        hc.request(f)
+        assert(hc.har['log']['pages'][0]['id'] == "Default")
+        hc.new_har()
+        assert(len(hc.har['log']['pages']) == 0)
 
-# def test_new_har_clears_har
+    def test_har_entries_timings(self, hc):
+        f=self.flow()
+        hc.request(f)
+        assert(hc.har['log']['pages'][0]['id'] == "Default")
+    
+# def test_servers_seen_resettable:
 
-# def test_cleared_har_ready
 
-# def test_servers_seen_resettable
 
-# def test_har_entries_timings
-
-# def test_multiple_entries
-
-# def test_default_page_in_new_state
-
-# def test_timings_in_millis
+# def test_default_page_in_new_state:
 
 # def test_ssl_timing_negative_one_for_recycled_connection
 
 # def test_connect_timing_negative_one_for_recycled_connection
-
-# def test_block_listed_are_ignored
 
 @pytest.fixture()
 def hc(path):

@@ -26,15 +26,17 @@ class FlowCaptureMixin(object):
         full_url = self.get_full_url(flow.request)
         ctx.log.debug('Populating har entry for request: {}'.format(full_url))
 
-        har_entry = flow.har_entry()
-        har_entry['pageref'] = self.har_manager.get_current_page_ref()
+        har_entry = flow.get_har_entry()
+        har_entry['pageref'] = self.get_current_page_ref()
         har_entry['startedDateTime'] = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
         har_request = HarBuilder.entry_request()
         har_request['method'] = flow.request.method
         har_request['url'] = full_url
         har_request['httpVersion'] = flow.request.http_version
-        har_request['queryString'] = self.har_manager.name_value(flow.request.query or {})
+        har_request['queryString'] = self.name_value(flow.request.query or {})
         har_request['headersSize'] = len(str(flow.request.headers))
+
+        har_request['_updated'] = datetime.fromtimestamp(flow.request.timestamp_start, timezone.utc).isoformat()
 
         har_entry['request'] = har_request
         req_url = 'none'
@@ -43,13 +45,13 @@ class FlowCaptureMixin(object):
 
         ctx.log.debug('Incoming request, url: {}'.format(req_url))
 
-        if HarCaptureTypes.REQUEST_COOKIES in self.har_manager.har_capture_types:
-            har_entry['request']['cookies'] = self.har_manager.format_request_cookies(flow.request.cookies.fields)
+        if HarCaptureTypes.REQUEST_COOKIES in self.har_capture_types:
+            har_entry['request']['cookies'] = self.format_request_cookies(flow.request.cookies.fields)
 
-        if HarCaptureTypes.REQUEST_HEADERS in self.har_manager.har_capture_types:
-            har_entry['request']['headers'] = self.har_manager.name_value(flow.request.headers)
+        if HarCaptureTypes.REQUEST_HEADERS in self.har_capture_types:
+            har_entry['request']['headers'] = self.name_value(flow.request.headers)
 
-        if HarCaptureTypes.REQUEST_CONTENT in self.har_manager.har_capture_types:
+        if HarCaptureTypes.REQUEST_CONTENT in self.har_capture_types:
             params = [
                 {"name": a, "value": b}
                 for a, b in flow.request.urlencoded_form.items(multi=True)
@@ -70,6 +72,7 @@ class FlowCaptureMixin(object):
         t['wait'] = self.diff_millis(flow.request.timestamp_end, flow.response.timestamp_start)
         t['receive'] = self.diff_millis(flow.response.timestamp_end, flow.response.timestamp_start)
 
+
         if flow.server_conn and flow.server_conn not in SERVERS_SEEN:
             t['connect'] = self.diff_millis(flow.server_conn.timestamp_tcp_setup, flow.server_conn.timestamp_start)
 
@@ -80,7 +83,7 @@ class FlowCaptureMixin(object):
 
         full_time = sum(v for v in t.values() if v > -1)
 
-        har_entry = flow.har_entry()
+        har_entry = flow.get_har_entry()
         har_entry['timings'] = t
 
         # Response body size and encoding
@@ -94,12 +97,12 @@ class FlowCaptureMixin(object):
         har_response["statusText"] = flow.response.reason
         har_response["httpVersion"] = flow.response.http_version
 
-        if HarCaptureTypes.RESPONSE_COOKIES in self.har_manager.har_capture_types:
+        if HarCaptureTypes.RESPONSE_COOKIES in self.har_capture_types:
             har_response["cookies"] = \
                 self.format_response_cookies(flow.response.cookies.fields)
 
-        if HarCaptureTypes.RESPONSE_HEADERS in self.har_manager.har_capture_types:
-            har_response["headers"] = self.har_manager.name_value(flow.response.headers)
+        if HarCaptureTypes.RESPONSE_HEADERS in self.har_capture_types:
+            har_response["headers"] = self.name_value(flow.response.headers)
 
         if flow.response.status_code in [300, 301, 302, 303, 307]:
             har_response['redirectURL'] = flow.response.headers['Location']
@@ -109,9 +112,9 @@ class FlowCaptureMixin(object):
         content['compression'] = response_body_compression
         content['mimeType'] = flow.response.headers.get('Content-Type', '')
 
-        if HarCaptureTypes.RESPONSE_CONTENT in self.har_manager.har_capture_types:
+        if HarCaptureTypes.RESPONSE_CONTENT in self.har_capture_types:
             if strutils.is_mostly_bin(flow.response.content):
-                if HarCaptureTypes.RESPONSE_BINARY_CONTENT in self.har_manager.har_capture_types:
+                if HarCaptureTypes.RESPONSE_BINARY_CONTENT in self.har_capture_types:
                     har_response["content"]["text"] = base64.b64encode(
                         flow.response.content).decode()
                     har_response["content"]["encoding"] = "base64"
@@ -125,7 +128,7 @@ class FlowCaptureMixin(object):
 
         har_entry['response'] = har_response
         har_entry['time'] = full_time
-        har_entry['pageref'] = self.har_manager.get_current_page_ref()
+        har_entry['pageref'] = self.get_current_page_ref()
 
         har_entry['timings'] = t
 
@@ -133,12 +136,13 @@ class FlowCaptureMixin(object):
             har_entry["serverIPAddress"] = str(
                 flow.server_conn.ip_address[0])
 
+        flow.set_har_entry(har_entry)
         ctx.log.debug('Populated har entry for response: {}, entry: {}'.format(flow.request.url, str(har_entry)))
 
 
     def capture_websocket_message(self, flow):
-        if HarCaptureTypes.WEBSOCKET_MESSAGES in self.har_manager.har_capture_types:
-            har_entry = flow.har_entry()
+        if HarCaptureTypes.WEBSOCKET_MESSAGES in self.har_capture_types:
+            har_entry = flow.get_har_entry()
             msg = flow.websocket.messages[-1]
             har_entry.setdefault("_webSocketMessages", []).append({
                 "type": 'send' if msg.from_client else 'receive',
@@ -146,21 +150,19 @@ class FlowCaptureMixin(object):
                 "data": msg.content,
                 "time": msg.timestamp
             })
-            flow['harentry'] = har_entry
-
-
+            flow.set_har_entry(har_entry)
 
     # Capture errors as messages like Chrome har export does
     def capture_websocket_error(self, flow):
-        if HarCaptureTypes.WEBSOCKET_MESSAGES in self.har_manager.har_capture_types:
-            har_entry = flow.handshake_flow.har_entry()
+        if HarCaptureTypes.WEBSOCKET_MESSAGES in self.har_capture_types:
+            har_entry = flow.get_har_entry()
             har_entry.setdefault("_webSocketMessages", []).append({
                 "type": 'error',
                 "time": flow.error.timestamp,
                 "opcode": -1,
                 "data": flow.error.msg
             })
-
+        flow.set_har_entry(har_entry)
 
     # for all of these:  Use -1 if the timing does not apply to the current request.
     # Time required to create TCP connection.
