@@ -201,7 +201,8 @@ class TestHARCapture:
         f=self.flow()
         hc.request(f)
         assert(hc.har['log']['pages'][0]['id'] == "Default")
-    
+
+
 # def test_servers_seen_resettable:
 
 

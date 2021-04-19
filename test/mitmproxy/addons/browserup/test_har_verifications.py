@@ -28,8 +28,11 @@ class TestHARVerifications:
         )
 
     def test_responses(self, hc, path):
-        hv = HarVerifications.new(har)
-        hv.response_less_than(1.2)
+        f=self.flow()
+        hc.request(f)
+
+        hv = HarVerifications(hc.har)
+        hv.present('')
 
 
 #def content_contains(self, str):

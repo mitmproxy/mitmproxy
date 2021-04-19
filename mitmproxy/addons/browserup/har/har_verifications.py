@@ -4,6 +4,8 @@ REQUESTS_PATH = "log.entries[*].request"
 RESPONSE_PATH = "log.entries[*].response"
 WEBSOCKETS_PATH = "log.entries[*]._websocketMessages"
 
+from har_schemas import MatchCriteriaSchema
+
 # do an all on the entries where they have a particular request url first
 # for websockets, then take this filtered list, and gather messages
 # URL filter does the all
@@ -25,13 +27,14 @@ class HarVerifications():
         json_path = base_path + subfilter
         jp = parse(json_path)      
 
+    def present(self, schema):
+        return True
+#    return len(self.entries({})) > 0
 
-    def present(self, path):
-        return len(self.entries({})) > 0;
 
-    def not_present(self, items, property, string_or_regexp):
-        return len(self.entries({})) == 0;
+    def not_present(self,schema):
+        return len(self.entries({})) == 0
 
-    def less_than(self, items, property, val):
-       return all([item[property] < val for item in items])
+   # def less_than(self, schema):#
+   #    return all([item[property] < val for item in items])
 
