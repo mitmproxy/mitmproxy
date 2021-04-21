@@ -97,7 +97,7 @@ setup(
             "pydivert>=2.0.3,<2.2",
         ],
         'dev': [
-            "hypothesis>=6.10,<6.11",
+            "hypothesis>=5.8,<6.11",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
             "pytest-asyncio>=0.10.0,<0.14,!=0.14",
