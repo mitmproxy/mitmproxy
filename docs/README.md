@@ -5,7 +5,6 @@ This directory houses the mitmproxy documentation available at <https://docs.mit
 ## Quick Start
 
  1. Install [hugo "extended"](https://gohugo.io/getting-started/installing/). 
-     - When using snap you can install it using `snap install hugo --channel=extended`
  2. Windows users: Depending on your git settings, you may need to manually create a symlink from
  /docs/src/examples to /examples.
  3. Make sure the mitmproxy Python package is installed and the virtual python environment was activated. See [CONTRIBUTING.md](../CONTRIBUTING.md#development-setup) for details.
