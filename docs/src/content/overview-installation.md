@@ -64,7 +64,7 @@ While there are plenty of options around[^1], we recommend the installation usin
     packages. Most of them (pip, virtualenv, pipenv, etc.) should just work, but we don't have the capacity to
     provide support for it.
 
-1. Install a recent version of Python (we require at least 3.6).
+1. Install a recent version of Python (we require at least 3.8).
 2. Install [pipx](https://pipxproject.github.io/pipx/).
 3. `pipx install mitmproxy`
 
