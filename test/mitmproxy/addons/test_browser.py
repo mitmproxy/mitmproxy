@@ -15,9 +15,8 @@ async def test_browser():
             assert po.called
 
             b.start()
-            b.browser.poll = lambda: None
-            b.start()
-            await tctx.master.await_log("already running")
+            await tctx.master.await_log("Starting additional browser")
+            assert len(b.browser) == 2
             b.done()
             assert not b.browser
 
