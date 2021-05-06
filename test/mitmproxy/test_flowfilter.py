@@ -24,6 +24,9 @@ class TestParsing:
         assert flowfilter.parse("~m foobar")
         assert flowfilter.parse("~u foobar")
         assert flowfilter.parse("~q ~c 10")
+        assert flowfilter.parse("~replay")
+        assert flowfilter.parse("~replayq")
+        assert flowfilter.parse("~replays")
         p = flowfilter.parse("~q ~c 10")
         self._dump(p)
         assert len(p.lst) == 2
@@ -295,6 +298,18 @@ class TestMatchingHTTPFlow:
         assert self.q("! ~c 201", s)
         assert self.q("!~c 201 !~c 202", s)
         assert not self.q("!~c 201 !~c 200", s)
+
+    def test_replay(self):
+        f = tflow.tflow()
+        assert not self.q("~r", f)
+        f.is_replay = "request"
+        assert self.q("~r", f)
+        assert self.q("~rc", f)
+        assert not self.q("~rs", f)
+        f.is_replay = "response"
+        assert self.q("~r", f)
+        assert not self.q("~rc", f)
+        assert self.q("~rs", f)
 
 
 class TestMatchingTCPFlow:
