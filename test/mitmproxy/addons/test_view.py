@@ -8,6 +8,7 @@ from mitmproxy import exceptions
 from mitmproxy import io
 from mitmproxy.test import taddons
 from mitmproxy.tools.console import consoleaddons
+from mitmproxy.tools.console.common import render_marker, SYMBOL_MARK
 
 
 def tft(*, method="get", start=0):
@@ -614,3 +615,13 @@ def test_configure():
 
         tctx.configure(v, console_focus_follow=True)
         assert v.focus_follow
+
+
+@pytest.mark.parametrize("marker, expected", [
+    [":default:", SYMBOL_MARK],
+    ["X", "X"],
+    [":grapes:", "\N{grapes}"],
+    [":not valid:", SYMBOL_MARK], [":weird", SYMBOL_MARK]
+])
+def test_marker(marker, expected):
+    assert render_marker(marker) == expected

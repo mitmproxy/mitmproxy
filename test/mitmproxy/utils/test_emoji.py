@@ -1,0 +1,1 @@
+# No tests required for constants table.

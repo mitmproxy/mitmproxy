@@ -33,8 +33,11 @@ def test_mark():
     with taddons.context(loadcore=False):
         f = tflow.tflow()
         assert not f.marked
-        sa.mark([f], True)
+        sa.mark([f], ":default:")
         assert f.marked
+
+        with pytest.raises(exceptions.CommandError):
+            sa.mark([f], "invalid")
 
         sa.mark_toggle([f])
         assert not f.marked
