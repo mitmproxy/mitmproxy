@@ -58,6 +58,8 @@ If you depend on these features, please raise your voice in
 * Add option `export_preserve_original_ip` to force exported command to connect to IP from original request. Only supports curl at the moment. (@dkasak)
 * Major proxy protocol testing (@r00t-)
 * Switch Docker image release to be based on Debian (@PeterDaveHello)
+* Multiple Browsers: The `browser.start` command may be executed more than once to start additional
+  browser sessions. (@rbdixon)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
