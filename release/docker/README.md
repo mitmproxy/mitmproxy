@@ -1,5 +1,6 @@
 # Build Instructions
 
+ 1. Copy `release/pins/requirements-linux.txt` to `release/docker/requirements.txt`.
  1. Copy `mitmproxy-$VERSION-py3-none-any.whl` into this directory.  
     You can get the latest public release at https://mitmproxy.org/downloads/.
  2. Replace $VERSION with your mitmproxy version and 

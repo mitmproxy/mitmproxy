@@ -9,7 +9,7 @@ RUN apt-get update \
 
 COPY $MITMPROXY_WHEEL /home/mitmproxy/
 COPY requirements.txt /home/mitmproxy/
-RUN pip3 install --no-cache-dir --require-hashes /home/mitmproxy/requirements.txt \
+RUN pip3 install --no-cache-dir --require-hashes -r /home/mitmproxy/requirements.txt \
     && pip3 install --no-cache-dir --no-deps /home/mitmproxy/${MITMPROXY_WHEEL} \
     && rm /home/mitmproxy/${MITMPROXY_WHEEL} /home/mitmproxy/requirements.txt
 

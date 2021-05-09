@@ -4,7 +4,8 @@ import re
 import subprocess
 from pathlib import Path
 
-outfile = Path(f"requirements-{platform.system().lower()}.txt")
+here = Path(__file__).parent
+outfile = here / f"requirements-{platform.system().lower()}.txt"
 
 if __name__ == "__main__":
     subprocess.check_call([
@@ -12,9 +13,9 @@ if __name__ == "__main__":
         "--generate-hashes", "--upgrade", "--allow-unsafe",
         "-o", outfile,
         "requirements.in",
-    ])
+    ], cwd=here)
 
     out = outfile.read_bytes()
     out = re.sub(b"-e .+", b"# --- line removed by make.py ---", out)
-    out = re.sub(b"pip-compile --.+", b"./make.py  (on the same platform)", out, )
+    out = re.sub(b"pip-compile --.+", b"./make.py  (on the same platform)", out)
     outfile.write_bytes(out)
