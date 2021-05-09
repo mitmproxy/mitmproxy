@@ -5,7 +5,7 @@ import subprocess
 from pathlib import Path
 
 here = Path(__file__).parent
-outfile = here / f"requirements-{platform.system().lower()}.txt"
+outfile = (here / f"requirements-{platform.system().lower()}.txt").absolute()
 
 if __name__ == "__main__":
     subprocess.check_call([
