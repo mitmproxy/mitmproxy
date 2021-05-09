@@ -4,13 +4,7 @@ import re
 import subprocess
 from pathlib import Path
 
-suffix = {
-    "Darwin": "macos",
-    "Windows": "windows",
-    "Linux": "linux",
-}[platform.system()]
-
-outfile = Path(f"requirements-{suffix}.txt")
+outfile = Path(f"requirements-{platform.system().lower()}.txt")
 
 if __name__ == "__main__":
     subprocess.check_call([
