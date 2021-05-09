@@ -148,8 +148,8 @@ jobs:
           python-version: '3.9'
       - run: pip install -r release/pins/tox.txt
       - run: |
-          wget https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
-          echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41ffff hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
+          wget -q https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
+          echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41328d hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
           sudo dpkg -i hugo*.deb
       - run: tox -e docs
       - uses: actions/upload-artifact@v2
