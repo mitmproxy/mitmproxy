@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: TrueBrain/actions-flake8@v1.4.1
+      - uses: TrueBrain/actions-flake8@9a43ff1b2c7b96f3edffc48a49973ce3de116ba1
   lint-local:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
