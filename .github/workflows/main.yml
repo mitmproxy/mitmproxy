@@ -86,8 +86,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-          persist-credentials: false
       - run: git rev-parse --abbrev-ref HEAD
       - uses: actions/setup-node@v1
       - id: yarn-cache
@@ -108,8 +106,46 @@ jobs:
           file: ./web/coverage/coverage-final.json
           name: web
 
+  docs:
+    if: github.repository != 'mitmproxy/mitmproxy' || github.ref != 'refs/heads/main'
+    # mirrored below >>>
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install -r release/pins/requirements-linux.txt
+      - run: |
+          wget -q https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
+          echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41328d hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
+          sudo dpkg -i hugo*.deb
+      - run: ./build.py
+        working-directory: docs
+    # <<<
+
 # All actions below this line produce stuff that may eventually be deployed,
 # so we make sure to really pin everything here.
+
+  deploy-docs:
+    if: github.repository == 'mitmproxy/mitmproxy' && github.ref == 'refs/heads/main'
+    environment: deploy-docs
+    # mirrored above >>>
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install -r release/pins/requirements-linux.txt
+      - run: |
+          wget -q https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
+          echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41328d hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
+          sudo dpkg -i hugo*.deb
+      - run: ./build.py
+        working-directory: docs
+    # <<<
+      - run: ./upload-dev.sh
 
   build:
     strategy:
@@ -147,44 +183,6 @@ jobs:
         with:
           name: binaries.${{ matrix.platform }}
           path: release/dist
-
-  docs:
-    if: github.repository != 'mitmproxy/mitmproxy' || github.ref != 'refs/heads/main'
-    # mirrored below >>>
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - run: pip install -r release/pins/requirements-linux.txt
-      - run: |
-          wget -q https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
-          echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41328d hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
-          sudo dpkg -i hugo*.deb
-      - run: ./build.py
-        working-directory: docs
-    # <<<
-
-  deploy-docs:
-    if: github.repository == 'mitmproxy/mitmproxy' && github.ref == 'refs/heads/main'
-    environment: deploy-docs
-    # mirrored above >>>
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - run: pip install -r release/pins/requirements-linux.txt
-      - run: |
-          wget -q https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
-          echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41328d hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
-          sudo dpkg -i hugo*.deb
-      - run: ./build.py
-        working-directory: docs
-    # <<<
-      - run: ./upload-dev.sh
 
   # Separate from everything else because slow.
   build-and-deploy-docker:

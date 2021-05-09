@@ -412,9 +412,9 @@ def build_wininstaller(be: BuildEnviron) -> None:  # pragma: no cover
             tmp.rename(IB_SETUP)
 
         ib_setup_hash = hashlib.sha256()
-        with IB_SETUP.open("rb") as f:
+        with IB_SETUP.open("rb") as fp:
             while True:
-                data = f.read(65_536)
+                data = fp.read(65_536)
                 if not data:
                     break
                 ib_setup_hash.update(data)
