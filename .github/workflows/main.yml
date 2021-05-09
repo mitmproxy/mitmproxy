@@ -140,21 +140,42 @@ jobs:
           name: web
 
   docs:
-    environment: deploy-docs
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
           python-version: '3.9'
-      - run: pip install tox
+      - run: pip install -r release/pins/tox.txt
       - run: |
-          wget https://github.com/gohugoio/hugo/releases/download/v0.70.0/hugo_extended_0.70.0_Linux-64bit.deb
+          wget https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
+          echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41ffff hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
           sudo dpkg -i hugo*.deb
       - run: tox -e docs
+      - uses: actions/upload-artifact@v2
+        with:
+          name: docs
+          path: docs/public
+
+  deploy-docs:
+    if: github.repository == 'mitmproxy/mitmproxy' && github.ref == 'refs/heads/main'
+    environment: deploy-docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - uses: actions/download-artifact@v2
+        with:
+          name: docs
+          path: docs/public
+      - run: pip install pip install -r release/pins/awscli.txt
+      - run: ./upload-dev.sh
+        working-directory: docs
+    #env:
+    #  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
   # Separate from everything else because slow.
   build-and-deploy-docker:
