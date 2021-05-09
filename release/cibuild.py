@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import contextlib
+import hashlib
 import os
 import platform
 import re
@@ -277,6 +278,7 @@ def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
     whl, = be.dist_dir.glob('mitmproxy-*-py3-none-any.whl')
     docker_build_dir = be.release_dir / "docker"
     shutil.copy(whl, docker_build_dir / whl.name)
+    shutil.copy(be.release_dir / "pins" / "requirements-linux.txt", docker_build_dir / "requirements.txt")
     subprocess.check_call([
         "docker",
         "build",
@@ -382,6 +384,7 @@ def build_wininstaller(be: BuildEnviron) -> None:  # pragma: no cover
     click.echo("Building wininstaller package...")
 
     IB_VERSION = "20.12.0"
+    IB_SETUP_SHA256 = "657f4785c7d70f140468435b99e79ced813e7e051106e7525e0c819efffb40d3"
     IB_DIR = be.release_dir / "installbuilder"
     IB_SETUP = IB_DIR / "setup" / f"{IB_VERSION}-installer.exe"
     IB_CLI = Path(fr"C:\Program Files\VMware InstallBuilder Enterprise {IB_VERSION}\bin\builder-cli.exe")
@@ -407,6 +410,16 @@ def build_wininstaller(be: BuildEnviron) -> None:  # pragma: no cover
                 reporthook=report
             )
             tmp.rename(IB_SETUP)
+
+        ib_setup_hash = hashlib.sha256()
+        with IB_SETUP.open("rb") as f:
+            while True:
+                data = f.read(65_536)
+                if not data:
+                    break
+                ib_setup_hash.update(data)
+        if ib_setup_hash.hexdigest() != IB_SETUP_SHA256:  # pragma: no cover
+            raise RuntimeError("InstallBuilder hashes don't match.")
 
         click.echo("Install InstallBuilder...")
         subprocess.run([IB_SETUP, "--mode", "unattended", "--unattendedmodeui", "none"], check=True)

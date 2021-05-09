@@ -1,8 +1,8 @@
 import os
+import re
 from codecs import open
 
-import re
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 # Based on https://github.com/pypa/sampleproject/blob/main/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/
@@ -97,9 +97,12 @@ setup(
             "pydivert>=2.0.3,<2.2",
         ],
         'dev': [
+            "awscli>=1.19,<2",
             "hypothesis>=5.8,<6.11",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
+            "pip-tools>=6.1.0,<6.2",
+            "pyinstaller==4.3",
             "pytest-asyncio>=0.10.0,<0.14,!=0.14",
             "pytest-cov>=2.7.1,<3",
             "pytest-timeout>=1.3.3,<2",
@@ -107,6 +110,7 @@ setup(
             "pytest>=6.1.0,<7",
             "requests>=2.9.1,<3",
             "tox>=3.5,<4",
-        ]
+            "twine>=3.4.1,<4",
+        ],
     }
 )
