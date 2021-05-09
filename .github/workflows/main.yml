@@ -115,7 +115,8 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.9'
-      - run: pip install -r release/pins/requirements-linux.txt
+      - run: python -m pip install --require-hashes -r release/pins/requirements-linux.txt
+      - run: python -m pip install --no-deps -e .
       - run: |
           wget -q https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
           echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41328d hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
@@ -137,7 +138,8 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.9'
-      - run: pip install -r release/pins/requirements-linux.txt
+      - run: python -m pip install --require-hashes -r release/pins/requirements-linux.txt
+      - run: python -m pip install --no-deps -e .
       - run: |
           wget -q https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
           echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41328d hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
@@ -176,8 +178,8 @@ jobs:
         with:
           path: release/installbuilder/setup
           key: installbuilder
-      - run: pip install -r release/pins/requirements-${{ matrix.platform }}.txt
-      - run: ./release/cibuild.py build
+      - run: python -m pip install -r release/pins/requirements-${{ matrix.platform }}.txt
+      - run: python ./release/cibuild.py build
       # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
       - uses: actions/upload-artifact@v2
         with:
@@ -203,9 +205,10 @@ jobs:
         with:
           name: build.linux
           path: release/dist
-      - run: pip install -r release/pins/requirements-linux.txt
-      - run: ./release/cibuild.py build
-      - run: ./release/cibuild.py upload
+      - run: python -m pip install --require-hashes -r release/pins/requirements-linux.txt
+      - run: python -m pip install --no-deps -e .
+      - run: python ./release/cibuild.py build
+      - run: python ./release/cibuild.py upload
 
   deploy:
     if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
@@ -233,5 +236,6 @@ jobs:
       # and then delete the empty folders
       - run: find release/dist -type d -empty -delete
       - run: ls release/dist
-      - run: pip install -r release/pins/requirements-linux.txt
-      - run: ./release/cibuild.py upload
+      - run: python -m pip install --require-hashes -r release/pins/requirements-linux.txt
+      - run: python -m pip install --no-deps -e .
+      - run: python ./release/cibuild.py upload

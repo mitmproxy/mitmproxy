@@ -15,7 +15,7 @@ outfile = Path(f"requirements-{suffix}.txt")
 if __name__ == "__main__":
     subprocess.check_call([
         "pip-compile",
-        "--generate-hashes", "--upgrade",
+        "--generate-hashes", "--upgrade", "--allow-unsafe",
         "-o", outfile,
         "requirements.in",
     ])
