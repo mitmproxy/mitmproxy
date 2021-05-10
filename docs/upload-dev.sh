@@ -5,7 +5,7 @@ set -o pipefail
 set -o nounset
 # set -o xtrace
 
-if [[ $GITHUB_REF != "refs/heads/actions-hardening" ]]; then
+if [[ $GITHUB_REF != "refs/heads/main" ]]; then
   echo "Looks like we are not running on CI."
   exit 1
 fi

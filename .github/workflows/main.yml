@@ -120,7 +120,7 @@ jobs:
           name: web
 
   docs:
-    if: github.repository != 'mitmproxy/mitmproxy' || github.ref != 'refs/heads/actions-hardening'
+    if: github.repository != 'mitmproxy/mitmproxy' || github.ref != 'refs/heads/main'
     # mirrored below >>>
     runs-on: ubuntu-latest
     steps:
@@ -143,7 +143,7 @@ jobs:
 # so we make sure to really pin everything here.
 
   deploy-docs:
-    if: github.repository == 'mitmproxy/mitmproxy' && github.ref == 'refs/heads/actions-hardening'
+    if: github.repository == 'mitmproxy/mitmproxy' && github.ref == 'refs/heads/main'
     environment: deploy-docs
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
