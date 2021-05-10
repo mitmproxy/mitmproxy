@@ -163,6 +163,7 @@ jobs:
         working-directory: docs
     # <<<
       - run: ./upload-dev.sh
+        working-directory: docs
 
   build:
     strategy:
