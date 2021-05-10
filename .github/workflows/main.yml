@@ -145,6 +145,9 @@ jobs:
   deploy-docs:
     if: github.repository == 'mitmproxy/mitmproxy' && github.ref == 'refs/heads/actions-hardening'
     environment: deploy-docs
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     # mirrored above >>>
     runs-on: ubuntu-latest
     steps:
@@ -238,9 +241,9 @@ jobs:
       CI_BUILD_PYINSTALLER: 1
       CI_BUILD_WININSTALLER: 1
       TWINE_USERNAME: mitmproxy
-      #TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-      #AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v2
         with:
