@@ -13,8 +13,5 @@ fi
 # This script is run during CI on the main branch and uploads docs to docs.mitmproxy.org/dev.
 
 aws configure set preview.cloudfront true
-aws --profile mitmproxy \
-    s3 sync --delete --acl public-read ./public s3://docs.mitmproxy.org/dev
-aws --profile mitmproxy \
-    cloudfront create-invalidation --distribution-id E1TH3USJHFQZ5Q \
-    --paths "/dev/*"
+aws s3 sync --delete --acl public-read ./public s3://docs.mitmproxy.org/dev
+aws cloudfront create-invalidation --distribution-id E1TH3USJHFQZ5Q --paths "/dev/*"
