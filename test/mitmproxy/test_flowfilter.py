@@ -301,15 +301,28 @@ class TestMatchingHTTPFlow:
 
     def test_replay(self):
         f = tflow.tflow()
-        assert not self.q("~r", f)
+        assert not self.q("~replay", f)
         f.is_replay = "request"
-        assert self.q("~r", f)
-        assert self.q("~rc", f)
-        assert not self.q("~rs", f)
+        assert self.q("~replay", f)
+        assert self.q("~replayq", f)
+        assert not self.q("~replays", f)
         f.is_replay = "response"
-        assert self.q("~r", f)
-        assert not self.q("~rc", f)
-        assert self.q("~rs", f)
+        assert self.q("~replay", f)
+        assert not self.q("~replayq", f)
+        assert self.q("~replays", f)
+
+    def test_metadata(self):
+        f = tflow.tflow()
+        f.metadata["a"] = 1
+        f.metadata["b"] = "string"
+        f.metadata["c"] = {"key": "value"}
+        assert self.q("~meta a", f)
+        assert not self.q("~meta no", f)
+        assert self.q("~meta string", f)
+        assert self.q("~meta key", f)
+        assert self.q("~meta value", f)
+        assert self.q("~meta \"b: string\"", f)
+        assert self.q("~meta \"'key': 'value'\"", f)
 
 
 class TestMatchingTCPFlow:
