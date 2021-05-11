@@ -221,6 +221,7 @@ jobs:
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-west-2
     steps:
       - uses: actions/checkout@v2
         with:
@@ -232,11 +233,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           path: release/dist
-      - run: ls release/dist  # FIXME REMOVE
       - run: mv release/dist/docs docs/public
-      - run: ls release/dist  # FIXME REMOVE
-      - run: ls docs/  # FIXME REMOVE
-      - run: ls docs/public  # FIXME REMOVE
       # move artifacts from their subfolders into release/dist
       - run: find release/dist -mindepth 2 -type f -exec mv {} release/dist \;
       # and then delete the empty folders

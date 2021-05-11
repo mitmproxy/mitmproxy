@@ -23,7 +23,7 @@ if __name__ == "__main__":
     subprocess.check_call([
         "aws", "s3", "cp",
         "--acl", "public-read",
-        f"release/dist/",
+        f"./release/dist/",
         f"s3://snapshots.mitmproxy.org/{upload_dir}/",
         "--recursive",
     ])
