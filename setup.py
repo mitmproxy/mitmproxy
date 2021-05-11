@@ -97,11 +97,9 @@ setup(
             "pydivert>=2.0.3,<2.2",
         ],
         'dev': [
-            "awscli>=1.19,<2",
             "hypothesis>=5.8,<6.11",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
-            "pip-tools>=6.1.0,<6.2",
             "pyinstaller==4.3",
             "pytest-asyncio>=0.10.0,<0.14,!=0.14",
             "pytest-cov>=2.7.1,<3",
@@ -111,7 +109,6 @@ setup(
             "requests>=2.9.1,<3",
             "tox>=3.5,<4",
             "twine>=3.4.1,<4",
-            "wheel>=0.36.2,<0.37",
         ],
     }
 )

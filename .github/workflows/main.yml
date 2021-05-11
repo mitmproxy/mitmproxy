@@ -16,6 +16,7 @@ jobs:
       - uses: TrueBrain/actions-flake8@9a43ff1b2c7b96f3edffc48a49973ce3de116ba1
         # mirrored at https://github.com/mitmproxy/mitmproxy/settings/actions
   lint-local:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -83,15 +84,12 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.py }}
-      - run: pip install tox pip-tools
       - run: tox -e py
       - uses: codecov/codecov-action@a1ed4b322b4b38cb846afb5a0ebfa17086917d27
         # mirrored below and at https://github.com/mitmproxy/mitmproxy/settings/actions
         with:
           file: ./coverage.xml
           name: ${{ matrix.os }}
-      - run: python release/pins/make.py
-        # kept here so that we can copy configs from CI if necessary.
 
   test-web-ui:
     runs-on: ubuntu-latest
@@ -120,8 +118,6 @@ jobs:
           name: web
 
   docs:
-    if: github.repository != 'mitmproxy/mitmproxy' || github.ref != 'refs/heads/main'
-    # mirrored below >>>
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -130,43 +126,16 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.9'
-      - run: python release/pins/pip-install-pinned.py
       - run: |
           wget -q https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
           echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41328d hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
           sudo dpkg -i hugo*.deb
-      - run: ./build.py
-        working-directory: docs
-    # <<<
-
-# All actions below this line produce stuff that may eventually be deployed,
-# so we make sure to really pin everything here.
-
-  deploy-docs:
-    if: github.repository == 'mitmproxy/mitmproxy' && github.ref == 'refs/heads/main'
-    environment: deploy-docs
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    # mirrored above >>>
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
+      - run: pip install -e .[dev]
+      - run: ./docs/build.py
+      - uses: actions/upload-artifact@v2
         with:
-          persist-credentials: false
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - run: python release/pins/pip-install-pinned.py
-      - run: |
-          wget -q https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
-          echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41328d hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
-          sudo dpkg -i hugo*.deb
-      - run: ./build.py
-        working-directory: docs
-    # <<<
-      - run: ./upload-dev.sh
-        working-directory: docs
+          name: docs
+          path: docs/public
 
   build:
     strategy:
@@ -198,7 +167,7 @@ jobs:
         with:
           path: release/installbuilder/setup
           key: installbuilder
-      - run: python release/pins/pip-install-pinned.py
+      - run: pip install -e .[dev]
       - run: python release/cibuild.py build
       # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
       - uses: actions/upload-artifact@v2
@@ -227,19 +196,18 @@ jobs:
         with:
           name: binaries.linux
           path: release/dist
-      - run: python release/pins/pip-install-pinned.py
+      - run: pip install -e .[dev]
       - run: python release/cibuild.py build
       - run: python release/cibuild.py upload
 
   deploy:
+    # This action has access to our AWS keys, so we are extra careful here.
+    # In particular, we don't blindly `pip install` anything to minimize the risk of supply chain attacks.
     if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
     environment: deploy
     runs-on: ubuntu-latest
-    needs: [test, test-web-ui, build]
+    needs: [test, test-web-ui, build, docs]
     env:
-      CI_BUILD_WHEEL: 1
-      CI_BUILD_PYINSTALLER: 1
-      CI_BUILD_WININSTALLER: 1
       TWINE_USERNAME: mitmproxy
       TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -251,13 +219,18 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.9'
+      - run: apt-get install -y twine awscli
       - uses: actions/download-artifact@v2
         with:
           path: release/dist
+      - run: ls release/dist  # FIXME REMOVE
+      - run: mv release/dist/docs docs/public
+      - run: ls release/dist  # FIXME REMOVE
+      - run: ls docs/  # FIXME REMOVE
+      - run: ls docs/public  # FIXME REMOVE
       # move artifacts from their subfolders into release/dist
       - run: find release/dist -mindepth 2 -type f -exec mv {} release/dist \;
       # and then delete the empty folders
       - run: find release/dist -type d -empty -delete
       - run: ls release/dist
-      - run: python release/pins/pip-install-pinned.py
-      - run: python release/cibuild.py upload
+      - run: ./release/deploy.py
