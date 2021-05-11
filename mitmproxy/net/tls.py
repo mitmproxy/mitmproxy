@@ -1,4 +1,5 @@
 import io
+import ipaddress
 import os
 import threading
 from enum import Enum
@@ -158,9 +159,16 @@ def create_proxy_server_context(
             param,
             SSL._lib.X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS | SSL._lib.X509_CHECK_FLAG_NEVER_CHECK_SUBJECT
         )
-        SSL._openssl_assert(
-            SSL._lib.X509_VERIFY_PARAM_set1_host(param, hostname.encode(), 0) == 1
-        )
+        try:
+            ip: bytes = ipaddress.ip_address(hostname).packed
+        except ValueError:
+            SSL._openssl_assert(
+                SSL._lib.X509_VERIFY_PARAM_set1_host(param, hostname.encode(), 0) == 1
+            )
+        else:
+            SSL._openssl_assert(
+                SSL._lib.X509_VERIFY_PARAM_set1_ip(param, ip, len(ip)) == 1
+            )
 
     if ca_path is None and ca_pemfile is None:
         ca_pemfile = certifi.where()
