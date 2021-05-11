@@ -2,17 +2,18 @@
 import os
 import subprocess
 from pathlib import Path
+from typing import Optional
 
 if __name__ == "__main__":
     ref = os.environ["GITHUB_REF"]
+    branch: Optional[str] = None
+    tag: Optional[str] = None
     if ref.startswith("refs/heads/"):
         branch = ref.replace("refs/heads/", "")
-        tag = None
     elif ref.startswith("refs/tags/"):
-        branch = None
         tag = ref.replace("refs/tags/", "")
     else:
-        raise RuntimeError
+        raise AssertionError
 
     # Upload binaries (be it release or snapshot)
     if tag:
