@@ -393,6 +393,11 @@ class ClientTLSLayer(_TLSLayer):
             err = f"The client may not trust the proxy's certificate for {dest} ({err})"
         yield commands.Log(f"Client TLS handshake failed. {err}", level="warn")
         yield from super().on_handshake_error(err)
+        self.event_to_child = self.errored  # type: ignore
+
+    def errored(self, event: events.Event) -> layer.CommandGenerator[None]:
+        if self.debug is not None:
+            yield commands.Log(f"Swallowing {event} as handshake failed.", "debug")
 
 
 class MockTLSLayer(_TLSLayer):
