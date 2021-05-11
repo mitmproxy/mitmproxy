@@ -84,6 +84,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.py }}
+      - run: pip install tox
       - run: tox -e py
       - uses: codecov/codecov-action@a1ed4b322b4b38cb846afb5a0ebfa17086917d27
         # mirrored below and at https://github.com/mitmproxy/mitmproxy/settings/actions
