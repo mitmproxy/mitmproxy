@@ -62,6 +62,7 @@ If you depend on these features, please raise your voice in
   browser sessions. (@rbdixon)
 * Improve readability of SHA256 fingerprint. (@wrekone)
 * Metadata and Replay Flow Filters: Flows may be filtered based on metadata and replay status. (@rbdixon)
+* Flow control: don't read connection data faster than it can be forwarded. (@hazcod)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
