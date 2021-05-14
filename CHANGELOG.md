@@ -61,6 +61,7 @@ If you depend on these features, please raise your voice in
 * Multiple Browsers: The `browser.start` command may be executed more than once to start additional
   browser sessions. (@rbdixon)
 * Improve readability of SHA256 fingerprint. (@wrekone)
+* Metadata and Replay Flow Filters: Flows may be filtered based on metadata and replay status. (@rbdixon)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 

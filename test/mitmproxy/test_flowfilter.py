@@ -24,6 +24,9 @@ class TestParsing:
         assert flowfilter.parse("~m foobar")
         assert flowfilter.parse("~u foobar")
         assert flowfilter.parse("~q ~c 10")
+        assert flowfilter.parse("~replay")
+        assert flowfilter.parse("~replayq")
+        assert flowfilter.parse("~replays")
         p = flowfilter.parse("~q ~c 10")
         self._dump(p)
         assert len(p.lst) == 2
@@ -295,6 +298,31 @@ class TestMatchingHTTPFlow:
         assert self.q("! ~c 201", s)
         assert self.q("!~c 201 !~c 202", s)
         assert not self.q("!~c 201 !~c 200", s)
+
+    def test_replay(self):
+        f = tflow.tflow()
+        assert not self.q("~replay", f)
+        f.is_replay = "request"
+        assert self.q("~replay", f)
+        assert self.q("~replayq", f)
+        assert not self.q("~replays", f)
+        f.is_replay = "response"
+        assert self.q("~replay", f)
+        assert not self.q("~replayq", f)
+        assert self.q("~replays", f)
+
+    def test_metadata(self):
+        f = tflow.tflow()
+        f.metadata["a"] = 1
+        f.metadata["b"] = "string"
+        f.metadata["c"] = {"key": "value"}
+        assert self.q("~meta a", f)
+        assert not self.q("~meta no", f)
+        assert self.q("~meta string", f)
+        assert self.q("~meta key", f)
+        assert self.q("~meta value", f)
+        assert self.q("~meta \"b: string\"", f)
+        assert self.q("~meta \"'key': 'value'\"", f)
 
 
 class TestMatchingTCPFlow:
