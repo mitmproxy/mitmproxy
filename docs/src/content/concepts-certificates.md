@@ -151,6 +151,27 @@ mitmproxy. Mitmproxy will then look for `mitmproxy-ca.pem` in the
 specified directory. If no such file exists, it will be generated
 automatically.
 
+The `mitmproxy-ca.pem` certificate file has to look roughly like this:
+
+    -----BEGIN PRIVATE KEY-----
+    <private key>
+    -----END PRIVATE KEY-----
+    -----BEGIN CERTIFICATE-----
+    <cert>
+    -----END CERTIFICATE-----
+
+When looking at the certificate with 
+`openssl x509 -noout -text -in ~/.mitmproxy/mitmproxy-ca.pem`
+it should have the at least the following X509v3 extensions, mitmproxy can 
+use it to generate certificates:
+
+    X509v3 extensions:
+        X509v3 Key Usage: critical
+            Certificate Sign
+        X509v3 Basic Constraints: critical
+            CA:TRUE
+
+
 ## Using a client side certificate
 
 You can use a client certificate by passing the `--set client_certs=DIRECTORY|FILE`
