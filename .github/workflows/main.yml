@@ -178,18 +178,13 @@ jobs:
 
   # Separate from everything else because slow.
   build-and-deploy-docker:
-    if: github.repository == 'mitmproxy/mitmproxy' && github.ref == 'refs/heads/main'
-    environment: deploy-docker
     needs:
-     - test
-     - test-web-ui
      - build
-     - docs
     runs-on: ubuntu-latest
     env:
       CI_BUILD_DOCKER: 1
       DOCKER_USERNAME: mitmbot
-      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      DOCKER_PASSWORD: test
     steps:
       - uses: actions/checkout@v2
         with:
