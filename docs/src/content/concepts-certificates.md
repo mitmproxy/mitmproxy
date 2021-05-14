@@ -162,7 +162,7 @@ The `mitmproxy-ca.pem` certificate file has to look roughly like this:
 
 When looking at the certificate with 
 `openssl x509 -noout -text -in ~/.mitmproxy/mitmproxy-ca.pem`
-it should have the at least the following X509v3 extensions, mitmproxy can 
+it should have at least the following X509v3 extensions so mitmproxy can 
 use it to generate certificates:
 
     X509v3 extensions:
