@@ -9,7 +9,6 @@ from datetime import datetime
 from datetime import timezone
 from mitmproxy import ctx
 
-
 # all the specifics to do with converting a flow into a HAR
 # A list of server seen till now is maintained so we can avoid
 # using 'connect' time for entries that use an existing connection.
@@ -63,6 +62,7 @@ class FlowCaptureMixin(object):
             }
 
         har_entry['request']['bodySize'] = len(flow.request.raw_content) if flow.request.raw_content else 0
+        flow.set_har_entry(har_entry)
 
     def capture_response(self, flow):
         ctx.log.debug('Incoming response for request to url: {}'.format(flow.request.url))
@@ -71,7 +71,6 @@ class FlowCaptureMixin(object):
         t['send'] = self.diff_millis(flow.request.timestamp_end, flow.request.timestamp_start)
         t['wait'] = self.diff_millis(flow.request.timestamp_end, flow.response.timestamp_start)
         t['receive'] = self.diff_millis(flow.response.timestamp_end, flow.response.timestamp_start)
-
 
         if flow.server_conn and flow.server_conn not in SERVERS_SEEN:
             t['connect'] = self.diff_millis(flow.server_conn.timestamp_tcp_setup, flow.server_conn.timestamp_start)

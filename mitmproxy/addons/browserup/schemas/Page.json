@@ -9,8 +9,7 @@
   "properties": {
     "startedDateTime": {
       "type": "string",
-      "format": "date-time",
-      "pattern": "^(\\d{4})(-)?(\\d\\d)(-)?(\\d\\d)(T)?(\\d\\d)(:)?(\\d\\d)(:)?(\\d\\d)(\\.\\d+)?(Z|([+-])(\\d\\d)(:)?(\\d\\d))"
+      "format": "date-time"
     },
     "id": {
       "type": "string"

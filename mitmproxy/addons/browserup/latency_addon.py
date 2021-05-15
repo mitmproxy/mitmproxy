@@ -18,6 +18,7 @@ class LatencyResource:
             - in: path
               name: latency
               type: int
+              required: true
         tags:
             - BrowserUpProxy
         responses:

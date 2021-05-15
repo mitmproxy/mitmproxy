@@ -81,7 +81,7 @@
         "headers": {
           "type": "array",
           "items": {
-            "$ref": "#/components/schemas/header"
+            "$ref": "#/components/schemas/Header"
           }
         },
         "queryString": {
@@ -213,7 +213,7 @@
         "headers": {
           "type": "array",
           "items": {
-            "$ref": "#/components/schemas/header"
+            "$ref": "#/components/schemas/Header"
           }
         },
         "content": {

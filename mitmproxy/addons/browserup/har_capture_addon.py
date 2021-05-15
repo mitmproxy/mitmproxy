@@ -17,6 +17,9 @@ class HarCaptureAddOn(FlowCaptureMixin, HarManagerMixin):
                 HarCaptureTypesResource(self),
                 PresentResource(self),
                 NotPresentResource(self),
+                SizeResource(self),
+                SLAResource(self),
+                HealthCheckResource()
                 ]
 
     def websocket_message(self, flow: mitmproxy.http.HTTPFlow):
@@ -43,4 +46,5 @@ class HarCaptureAddOn(FlowCaptureMixin, HarManagerMixin):
 
 addons = [
     HarCaptureAddOn()
+
 ]

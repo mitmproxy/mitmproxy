@@ -6,7 +6,7 @@ from mitmproxy import options
 from mitmproxy import master
 from mitmproxy.addons import dumper, termlog, keepserving, readfile
 from mitmproxy.addons.browserup import har_capture_addon, \
-    browserup_addons_manager, proxy_manager, latency_addon
+    browserup_addons_manager, latency_addon
 
 
 class ErrorCheck:
@@ -41,7 +41,6 @@ class BrowserupProxyMaster(master.Master):
             readfile.ReadFileStdin(),
             browserup_addons_manager.BrowserUpAddonsManagerAddOn(),
             latency_addon.LatencyAddOn(),
-            proxy_manager.ProxyManagerAddOn(),
             self.errorcheck
         )
 

@@ -135,7 +135,7 @@ class TestHARCapture:
 
     def test_websocket_messages_capture_off(self, hc):
         f = twebsocketflow()
-        [HarCaptureTypes.RESPONSE_CONTENT]
+        hc.har_capture_types = []
         hc.response(f)
         hc.websocket_message(f)
 

@@ -1,6 +1,6 @@
 /*
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -27,11 +27,9 @@ import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 
 
-import com.browserup.proxy_client.AllowList;
-import com.browserup.proxy_client.AuthBasic;
-import com.browserup.proxy_client.BlockList;
 import com.browserup.proxy_client.Har;
-import com.browserup.proxy_client.Headers;
+import com.browserup.proxy_client.MatchCriteria;
+import com.browserup.proxy_client.VerifyResult;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -59,21 +57,22 @@ public class BrowserUpProxyApi {
     }
 
     /**
-     * Build call for clearAdditionalHeaders
+     * Build call for addCustomHarFields
+     * @param body  (optional)
      * @param _callback Callback for upload/download progress
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
      * @http.response.details
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The current additional header settings were cleared. </td><td>  -  </td></tr>
+        <tr><td> 204 </td><td> The custom fields were added to the HAR. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call clearAdditionalHeadersCall(final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = null;
+    public okhttp3.Call addCustomHarFieldsCall(Object body, final ApiCallback _callback) throws ApiException {
+        Object localVarPostBody = body;
 
         // create path and map variables
-        String localVarPath = "/additional_headers";
+        String localVarPath = "/har/page";
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
@@ -90,582 +89,73 @@ public class BrowserUpProxyApi {
         }
 
         final String[] localVarContentTypes = {
-            
+            "application/json"
         };
         final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
         localVarHeaderParams.put("Content-Type", localVarContentType);
 
         String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "DELETE", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
+        return localVarApiClient.buildCall(localVarPath, "PUT", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call clearAdditionalHeadersValidateBeforeCall(final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call addCustomHarFieldsValidateBeforeCall(Object body, final ApiCallback _callback) throws ApiException {
         
 
-        okhttp3.Call localVarCall = clearAdditionalHeadersCall(_callback);
+        okhttp3.Call localVarCall = addCustomHarFieldsCall(body, _callback);
         return localVarCall;
 
     }
 
     /**
      * 
-     * Clear the additional Headers
+     * Add custom fields to the current HAR.
+     * @param body  (optional)
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      * @http.response.details
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The current additional header settings were cleared. </td><td>  -  </td></tr>
+        <tr><td> 204 </td><td> The custom fields were added to the HAR. </td><td>  -  </td></tr>
      </table>
      */
-    public void clearAdditionalHeaders() throws ApiException {
-        clearAdditionalHeadersWithHttpInfo();
+    public void addCustomHarFields(Object body) throws ApiException {
+        addCustomHarFieldsWithHttpInfo(body);
     }
 
     /**
      * 
-     * Clear the additional Headers
+     * Add custom fields to the current HAR.
+     * @param body  (optional)
      * @return ApiResponse&lt;Void&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      * @http.response.details
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The current additional header settings were cleared. </td><td>  -  </td></tr>
+        <tr><td> 204 </td><td> The custom fields were added to the HAR. </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<Void> clearAdditionalHeadersWithHttpInfo() throws ApiException {
-        okhttp3.Call localVarCall = clearAdditionalHeadersValidateBeforeCall(null);
+    public ApiResponse<Void> addCustomHarFieldsWithHttpInfo(Object body) throws ApiException {
+        okhttp3.Call localVarCall = addCustomHarFieldsValidateBeforeCall(body, null);
         return localVarApiClient.execute(localVarCall);
     }
 
     /**
      *  (asynchronously)
-     * Clear the additional Headers
+     * Add custom fields to the current HAR.
+     * @param body  (optional)
      * @param _callback The callback to be executed when the API call finishes
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
      * @http.response.details
      <table summary="Response Details" border="1">
         <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The current additional header settings were cleared. </td><td>  -  </td></tr>
+        <tr><td> 204 </td><td> The custom fields were added to the HAR. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call clearAdditionalHeadersAsync(final ApiCallback<Void> _callback) throws ApiException {
+    public okhttp3.Call addCustomHarFieldsAsync(Object body, final ApiCallback<Void> _callback) throws ApiException {
 
-        okhttp3.Call localVarCall = clearAdditionalHeadersValidateBeforeCall(_callback);
+        okhttp3.Call localVarCall = addCustomHarFieldsValidateBeforeCall(body, _callback);
         localVarApiClient.executeAsync(localVarCall, _callback);
-        return localVarCall;
-    }
-    /**
-     * Build call for clearAllowList
-     * @param _callback Callback for upload/download progress
-     * @return Call to execute
-     * @throws ApiException If fail to serialize the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The allowlist was cleared and allowlist-based filtering is OFF until a new list is posted. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call clearAllowListCall(final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = null;
-
-        // create path and map variables
-        String localVarPath = "/allowlist";
-
-        List<Pair> localVarQueryParams = new ArrayList<Pair>();
-        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
-        Map<String, String> localVarCookieParams = new HashMap<String, String>();
-        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
-
-        final String[] localVarAccepts = {
-            
-        };
-        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
-        if (localVarAccept != null) {
-            localVarHeaderParams.put("Accept", localVarAccept);
-        }
-
-        final String[] localVarContentTypes = {
-            
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
-        localVarHeaderParams.put("Content-Type", localVarContentType);
-
-        String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "DELETE", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private okhttp3.Call clearAllowListValidateBeforeCall(final ApiCallback _callback) throws ApiException {
-        
-
-        okhttp3.Call localVarCall = clearAllowListCall(_callback);
-        return localVarCall;
-
-    }
-
-    /**
-     * 
-     * Clears the AllowList, which will turn-off allowlist based filtering
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The allowlist was cleared and allowlist-based filtering is OFF until a new list is posted. </td><td>  -  </td></tr>
-     </table>
-     */
-    public void clearAllowList() throws ApiException {
-        clearAllowListWithHttpInfo();
-    }
-
-    /**
-     * 
-     * Clears the AllowList, which will turn-off allowlist based filtering
-     * @return ApiResponse&lt;Void&gt;
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The allowlist was cleared and allowlist-based filtering is OFF until a new list is posted. </td><td>  -  </td></tr>
-     </table>
-     */
-    public ApiResponse<Void> clearAllowListWithHttpInfo() throws ApiException {
-        okhttp3.Call localVarCall = clearAllowListValidateBeforeCall(null);
-        return localVarApiClient.execute(localVarCall);
-    }
-
-    /**
-     *  (asynchronously)
-     * Clears the AllowList, which will turn-off allowlist based filtering
-     * @param _callback The callback to be executed when the API call finishes
-     * @return The request call
-     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The allowlist was cleared and allowlist-based filtering is OFF until a new list is posted. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call clearAllowListAsync(final ApiCallback<Void> _callback) throws ApiException {
-
-        okhttp3.Call localVarCall = clearAllowListValidateBeforeCall(_callback);
-        localVarApiClient.executeAsync(localVarCall, _callback);
-        return localVarCall;
-    }
-    /**
-     * Build call for clearBasicAuthSettings
-     * @param domain The domain for which to clear the basic auth settings (required)
-     * @param _callback Callback for upload/download progress
-     * @return Call to execute
-     * @throws ApiException If fail to serialize the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The current Basic Authorization setting is cleared and no longer used for requests to a domain. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call clearBasicAuthSettingsCall(String domain, final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = null;
-
-        // create path and map variables
-        String localVarPath = "/auth_basic/{domain}"
-            .replaceAll("\\{" + "domain" + "\\}", localVarApiClient.escapeString(domain.toString()));
-
-        List<Pair> localVarQueryParams = new ArrayList<Pair>();
-        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
-        Map<String, String> localVarCookieParams = new HashMap<String, String>();
-        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
-
-        final String[] localVarAccepts = {
-            
-        };
-        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
-        if (localVarAccept != null) {
-            localVarHeaderParams.put("Accept", localVarAccept);
-        }
-
-        final String[] localVarContentTypes = {
-            
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
-        localVarHeaderParams.put("Content-Type", localVarContentType);
-
-        String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "DELETE", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private okhttp3.Call clearBasicAuthSettingsValidateBeforeCall(String domain, final ApiCallback _callback) throws ApiException {
-        
-        // verify the required parameter 'domain' is set
-        if (domain == null) {
-            throw new ApiException("Missing the required parameter 'domain' when calling clearBasicAuthSettings(Async)");
-        }
-        
-
-        okhttp3.Call localVarCall = clearBasicAuthSettingsCall(domain, _callback);
-        return localVarCall;
-
-    }
-
-    /**
-     * 
-     * Clears Basic Auth for a domain, disabling Automatic Basic Auth for it.
-     * @param domain The domain for which to clear the basic auth settings (required)
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The current Basic Authorization setting is cleared and no longer used for requests to a domain. </td><td>  -  </td></tr>
-     </table>
-     */
-    public void clearBasicAuthSettings(String domain) throws ApiException {
-        clearBasicAuthSettingsWithHttpInfo(domain);
-    }
-
-    /**
-     * 
-     * Clears Basic Auth for a domain, disabling Automatic Basic Auth for it.
-     * @param domain The domain for which to clear the basic auth settings (required)
-     * @return ApiResponse&lt;Void&gt;
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The current Basic Authorization setting is cleared and no longer used for requests to a domain. </td><td>  -  </td></tr>
-     </table>
-     */
-    public ApiResponse<Void> clearBasicAuthSettingsWithHttpInfo(String domain) throws ApiException {
-        okhttp3.Call localVarCall = clearBasicAuthSettingsValidateBeforeCall(domain, null);
-        return localVarApiClient.execute(localVarCall);
-    }
-
-    /**
-     *  (asynchronously)
-     * Clears Basic Auth for a domain, disabling Automatic Basic Auth for it.
-     * @param domain The domain for which to clear the basic auth settings (required)
-     * @param _callback The callback to be executed when the API call finishes
-     * @return The request call
-     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> The current Basic Authorization setting is cleared and no longer used for requests to a domain. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call clearBasicAuthSettingsAsync(String domain, final ApiCallback<Void> _callback) throws ApiException {
-
-        okhttp3.Call localVarCall = clearBasicAuthSettingsValidateBeforeCall(domain, _callback);
-        localVarApiClient.executeAsync(localVarCall, _callback);
-        return localVarCall;
-    }
-    /**
-     * Build call for getAdditionalHeaders
-     * @param _callback Callback for upload/download progress
-     * @return Call to execute
-     * @throws ApiException If fail to serialize the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current header settings. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call getAdditionalHeadersCall(final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = null;
-
-        // create path and map variables
-        String localVarPath = "/additional_headers";
-
-        List<Pair> localVarQueryParams = new ArrayList<Pair>();
-        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
-        Map<String, String> localVarCookieParams = new HashMap<String, String>();
-        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
-
-        final String[] localVarAccepts = {
-            "application/json"
-        };
-        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
-        if (localVarAccept != null) {
-            localVarHeaderParams.put("Accept", localVarAccept);
-        }
-
-        final String[] localVarContentTypes = {
-            
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
-        localVarHeaderParams.put("Content-Type", localVarContentType);
-
-        String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "GET", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private okhttp3.Call getAdditionalHeadersValidateBeforeCall(final ApiCallback _callback) throws ApiException {
-        
-
-        okhttp3.Call localVarCall = getAdditionalHeadersCall(_callback);
-        return localVarCall;
-
-    }
-
-    /**
-     * 
-     * Get the current added Headers
-     * @return Headers
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current header settings. </td><td>  -  </td></tr>
-     </table>
-     */
-    public Headers getAdditionalHeaders() throws ApiException {
-        ApiResponse<Headers> localVarResp = getAdditionalHeadersWithHttpInfo();
-        return localVarResp.getData();
-    }
-
-    /**
-     * 
-     * Get the current added Headers
-     * @return ApiResponse&lt;Headers&gt;
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current header settings. </td><td>  -  </td></tr>
-     </table>
-     */
-    public ApiResponse<Headers> getAdditionalHeadersWithHttpInfo() throws ApiException {
-        okhttp3.Call localVarCall = getAdditionalHeadersValidateBeforeCall(null);
-        Type localVarReturnType = new TypeToken<Headers>(){}.getType();
-        return localVarApiClient.execute(localVarCall, localVarReturnType);
-    }
-
-    /**
-     *  (asynchronously)
-     * Get the current added Headers
-     * @param _callback The callback to be executed when the API call finishes
-     * @return The request call
-     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current header settings. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call getAdditionalHeadersAsync(final ApiCallback<Headers> _callback) throws ApiException {
-
-        okhttp3.Call localVarCall = getAdditionalHeadersValidateBeforeCall(_callback);
-        Type localVarReturnType = new TypeToken<Headers>(){}.getType();
-        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
-        return localVarCall;
-    }
-    /**
-     * Build call for getAllowList
-     * @param _callback Callback for upload/download progress
-     * @return Call to execute
-     * @throws ApiException If fail to serialize the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current allowlist. Only allowed requests will pass through. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call getAllowListCall(final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = null;
-
-        // create path and map variables
-        String localVarPath = "/allowlist";
-
-        List<Pair> localVarQueryParams = new ArrayList<Pair>();
-        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
-        Map<String, String> localVarCookieParams = new HashMap<String, String>();
-        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
-
-        final String[] localVarAccepts = {
-            "application/json"
-        };
-        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
-        if (localVarAccept != null) {
-            localVarHeaderParams.put("Accept", localVarAccept);
-        }
-
-        final String[] localVarContentTypes = {
-            
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
-        localVarHeaderParams.put("Content-Type", localVarContentType);
-
-        String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "GET", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private okhttp3.Call getAllowListValidateBeforeCall(final ApiCallback _callback) throws ApiException {
-        
-
-        okhttp3.Call localVarCall = getAllowListCall(_callback);
-        return localVarCall;
-
-    }
-
-    /**
-     * 
-     * Get an AllowList
-     * @return AllowList
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current allowlist. Only allowed requests will pass through. </td><td>  -  </td></tr>
-     </table>
-     */
-    public AllowList getAllowList() throws ApiException {
-        ApiResponse<AllowList> localVarResp = getAllowListWithHttpInfo();
-        return localVarResp.getData();
-    }
-
-    /**
-     * 
-     * Get an AllowList
-     * @return ApiResponse&lt;AllowList&gt;
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current allowlist. Only allowed requests will pass through. </td><td>  -  </td></tr>
-     </table>
-     */
-    public ApiResponse<AllowList> getAllowListWithHttpInfo() throws ApiException {
-        okhttp3.Call localVarCall = getAllowListValidateBeforeCall(null);
-        Type localVarReturnType = new TypeToken<AllowList>(){}.getType();
-        return localVarApiClient.execute(localVarCall, localVarReturnType);
-    }
-
-    /**
-     *  (asynchronously)
-     * Get an AllowList
-     * @param _callback The callback to be executed when the API call finishes
-     * @return The request call
-     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current allowlist. Only allowed requests will pass through. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call getAllowListAsync(final ApiCallback<AllowList> _callback) throws ApiException {
-
-        okhttp3.Call localVarCall = getAllowListValidateBeforeCall(_callback);
-        Type localVarReturnType = new TypeToken<AllowList>(){}.getType();
-        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
-        return localVarCall;
-    }
-    /**
-     * Build call for getBlockList
-     * @param _callback Callback for upload/download progress
-     * @return Call to execute
-     * @throws ApiException If fail to serialize the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current blocklist. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call getBlockListCall(final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = null;
-
-        // create path and map variables
-        String localVarPath = "/blocklist";
-
-        List<Pair> localVarQueryParams = new ArrayList<Pair>();
-        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
-        Map<String, String> localVarCookieParams = new HashMap<String, String>();
-        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
-
-        final String[] localVarAccepts = {
-            "application/json"
-        };
-        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
-        if (localVarAccept != null) {
-            localVarHeaderParams.put("Accept", localVarAccept);
-        }
-
-        final String[] localVarContentTypes = {
-            
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
-        localVarHeaderParams.put("Content-Type", localVarContentType);
-
-        String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "GET", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private okhttp3.Call getBlockListValidateBeforeCall(final ApiCallback _callback) throws ApiException {
-        
-
-        okhttp3.Call localVarCall = getBlockListCall(_callback);
-        return localVarCall;
-
-    }
-
-    /**
-     * 
-     * Get a blocklist
-     * @return BlockList
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current blocklist. </td><td>  -  </td></tr>
-     </table>
-     */
-    public BlockList getBlockList() throws ApiException {
-        ApiResponse<BlockList> localVarResp = getBlockListWithHttpInfo();
-        return localVarResp.getData();
-    }
-
-    /**
-     * 
-     * Get a blocklist
-     * @return ApiResponse&lt;BlockList&gt;
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current blocklist. </td><td>  -  </td></tr>
-     </table>
-     */
-    public ApiResponse<BlockList> getBlockListWithHttpInfo() throws ApiException {
-        okhttp3.Call localVarCall = getBlockListValidateBeforeCall(null);
-        Type localVarReturnType = new TypeToken<BlockList>(){}.getType();
-        return localVarApiClient.execute(localVarCall, localVarReturnType);
-    }
-
-    /**
-     *  (asynchronously)
-     * Get a blocklist
-     * @param _callback The callback to be executed when the API call finishes
-     * @return The request call
-     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> The current blocklist. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call getBlockListAsync(final ApiCallback<BlockList> _callback) throws ApiException {
-
-        okhttp3.Call localVarCall = getBlockListValidateBeforeCall(_callback);
-        Type localVarReturnType = new TypeToken<BlockList>(){}.getType();
-        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
         return localVarCall;
     }
     /**
@@ -771,7 +261,7 @@ public class BrowserUpProxyApi {
         return localVarCall;
     }
     /**
-     * Build call for healthcheckGet
+     * Build call for healthcheck
      * @param _callback Callback for upload/download progress
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
@@ -781,7 +271,7 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> OK means all is well. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call healthcheckGetCall(final ApiCallback _callback) throws ApiException {
+    public okhttp3.Call healthcheckCall(final ApiCallback _callback) throws ApiException {
         Object localVarPostBody = null;
 
         // create path and map variables
@@ -812,10 +302,10 @@ public class BrowserUpProxyApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call healthcheckGetValidateBeforeCall(final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call healthcheckValidateBeforeCall(final ApiCallback _callback) throws ApiException {
         
 
-        okhttp3.Call localVarCall = healthcheckGetCall(_callback);
+        okhttp3.Call localVarCall = healthcheckCall(_callback);
         return localVarCall;
 
     }
@@ -830,8 +320,8 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> OK means all is well. </td><td>  -  </td></tr>
      </table>
      */
-    public void healthcheckGet() throws ApiException {
-        healthcheckGetWithHttpInfo();
+    public void healthcheck() throws ApiException {
+        healthcheckWithHttpInfo();
     }
 
     /**
@@ -845,8 +335,8 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> OK means all is well. </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<Void> healthcheckGetWithHttpInfo() throws ApiException {
-        okhttp3.Call localVarCall = healthcheckGetValidateBeforeCall(null);
+    public ApiResponse<Void> healthcheckWithHttpInfo() throws ApiException {
+        okhttp3.Call localVarCall = healthcheckValidateBeforeCall(null);
         return localVarApiClient.execute(localVarCall);
     }
 
@@ -862,9 +352,9 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> OK means all is well. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call healthcheckGetAsync(final ApiCallback<Void> _callback) throws ApiException {
+    public okhttp3.Call healthcheckAsync(final ApiCallback<Void> _callback) throws ApiException {
 
-        okhttp3.Call localVarCall = healthcheckGetValidateBeforeCall(_callback);
+        okhttp3.Call localVarCall = healthcheckValidateBeforeCall(_callback);
         localVarApiClient.executeAsync(localVarCall, _callback);
         return localVarCall;
     }
@@ -971,424 +461,6 @@ public class BrowserUpProxyApi {
         return localVarCall;
     }
     /**
-     * Build call for setAdditionalHeaders
-     * @param _callback Callback for upload/download progress
-     * @return Call to execute
-     * @throws ApiException If fail to serialize the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> Show the current additional header settings. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setAdditionalHeadersCall(final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = null;
-
-        // create path and map variables
-        String localVarPath = "/additional_headers";
-
-        List<Pair> localVarQueryParams = new ArrayList<Pair>();
-        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
-        Map<String, String> localVarCookieParams = new HashMap<String, String>();
-        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
-
-        final String[] localVarAccepts = {
-            "application/json"
-        };
-        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
-        if (localVarAccept != null) {
-            localVarHeaderParams.put("Accept", localVarAccept);
-        }
-
-        final String[] localVarContentTypes = {
-            
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
-        localVarHeaderParams.put("Content-Type", localVarContentType);
-
-        String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private okhttp3.Call setAdditionalHeadersValidateBeforeCall(final ApiCallback _callback) throws ApiException {
-        
-
-        okhttp3.Call localVarCall = setAdditionalHeadersCall(_callback);
-        return localVarCall;
-
-    }
-
-    /**
-     * 
-     * Set additional headers to add to requests
-     * @return Headers
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> Show the current additional header settings. </td><td>  -  </td></tr>
-     </table>
-     */
-    public Headers setAdditionalHeaders() throws ApiException {
-        ApiResponse<Headers> localVarResp = setAdditionalHeadersWithHttpInfo();
-        return localVarResp.getData();
-    }
-
-    /**
-     * 
-     * Set additional headers to add to requests
-     * @return ApiResponse&lt;Headers&gt;
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> Show the current additional header settings. </td><td>  -  </td></tr>
-     </table>
-     */
-    public ApiResponse<Headers> setAdditionalHeadersWithHttpInfo() throws ApiException {
-        okhttp3.Call localVarCall = setAdditionalHeadersValidateBeforeCall(null);
-        Type localVarReturnType = new TypeToken<Headers>(){}.getType();
-        return localVarApiClient.execute(localVarCall, localVarReturnType);
-    }
-
-    /**
-     *  (asynchronously)
-     * Set additional headers to add to requests
-     * @param _callback The callback to be executed when the API call finishes
-     * @return The request call
-     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 200 </td><td> Show the current additional header settings. </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setAdditionalHeadersAsync(final ApiCallback<Headers> _callback) throws ApiException {
-
-        okhttp3.Call localVarCall = setAdditionalHeadersValidateBeforeCall(_callback);
-        Type localVarReturnType = new TypeToken<Headers>(){}.getType();
-        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
-        return localVarCall;
-    }
-    /**
-     * Build call for setAllowList
-     * @param allowList  (optional)
-     * @param _callback Callback for upload/download progress
-     * @return Call to execute
-     * @throws ApiException If fail to serialize the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setAllowListCall(AllowList allowList, final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = allowList;
-
-        // create path and map variables
-        String localVarPath = "/allowlist";
-
-        List<Pair> localVarQueryParams = new ArrayList<Pair>();
-        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
-        Map<String, String> localVarCookieParams = new HashMap<String, String>();
-        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
-
-        final String[] localVarAccepts = {
-            
-        };
-        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
-        if (localVarAccept != null) {
-            localVarHeaderParams.put("Accept", localVarAccept);
-        }
-
-        final String[] localVarContentTypes = {
-            "application/json"
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
-        localVarHeaderParams.put("Content-Type", localVarContentType);
-
-        String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private okhttp3.Call setAllowListValidateBeforeCall(AllowList allowList, final ApiCallback _callback) throws ApiException {
-        
-
-        okhttp3.Call localVarCall = setAllowListCall(allowList, _callback);
-        return localVarCall;
-
-    }
-
-    /**
-     * 
-     * Sets an AllowList
-     * @param allowList  (optional)
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public void setAllowList(AllowList allowList) throws ApiException {
-        setAllowListWithHttpInfo(allowList);
-    }
-
-    /**
-     * 
-     * Sets an AllowList
-     * @param allowList  (optional)
-     * @return ApiResponse&lt;Void&gt;
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public ApiResponse<Void> setAllowListWithHttpInfo(AllowList allowList) throws ApiException {
-        okhttp3.Call localVarCall = setAllowListValidateBeforeCall(allowList, null);
-        return localVarApiClient.execute(localVarCall);
-    }
-
-    /**
-     *  (asynchronously)
-     * Sets an AllowList
-     * @param allowList  (optional)
-     * @param _callback The callback to be executed when the API call finishes
-     * @return The request call
-     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setAllowListAsync(AllowList allowList, final ApiCallback<Void> _callback) throws ApiException {
-
-        okhttp3.Call localVarCall = setAllowListValidateBeforeCall(allowList, _callback);
-        localVarApiClient.executeAsync(localVarCall, _callback);
-        return localVarCall;
-    }
-    /**
-     * Build call for setBasicAuth
-     * @param domain The domain for which this Basic Auth should be used (required)
-     * @param authBasic  (optional)
-     * @param _callback Callback for upload/download progress
-     * @return Call to execute
-     * @throws ApiException If fail to serialize the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setBasicAuthCall(String domain, AuthBasic authBasic, final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = authBasic;
-
-        // create path and map variables
-        String localVarPath = "/auth_basic/{domain}"
-            .replaceAll("\\{" + "domain" + "\\}", localVarApiClient.escapeString(domain.toString()));
-
-        List<Pair> localVarQueryParams = new ArrayList<Pair>();
-        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
-        Map<String, String> localVarCookieParams = new HashMap<String, String>();
-        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
-
-        final String[] localVarAccepts = {
-            
-        };
-        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
-        if (localVarAccept != null) {
-            localVarHeaderParams.put("Accept", localVarAccept);
-        }
-
-        final String[] localVarContentTypes = {
-            "application/json"
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
-        localVarHeaderParams.put("Content-Type", localVarContentType);
-
-        String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private okhttp3.Call setBasicAuthValidateBeforeCall(String domain, AuthBasic authBasic, final ApiCallback _callback) throws ApiException {
-        
-        // verify the required parameter 'domain' is set
-        if (domain == null) {
-            throw new ApiException("Missing the required parameter 'domain' when calling setBasicAuth(Async)");
-        }
-        
-
-        okhttp3.Call localVarCall = setBasicAuthCall(domain, authBasic, _callback);
-        return localVarCall;
-
-    }
-
-    /**
-     * 
-     * Enables automatic basic auth for a domain
-     * @param domain The domain for which this Basic Auth should be used (required)
-     * @param authBasic  (optional)
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public void setBasicAuth(String domain, AuthBasic authBasic) throws ApiException {
-        setBasicAuthWithHttpInfo(domain, authBasic);
-    }
-
-    /**
-     * 
-     * Enables automatic basic auth for a domain
-     * @param domain The domain for which this Basic Auth should be used (required)
-     * @param authBasic  (optional)
-     * @return ApiResponse&lt;Void&gt;
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public ApiResponse<Void> setBasicAuthWithHttpInfo(String domain, AuthBasic authBasic) throws ApiException {
-        okhttp3.Call localVarCall = setBasicAuthValidateBeforeCall(domain, authBasic, null);
-        return localVarApiClient.execute(localVarCall);
-    }
-
-    /**
-     *  (asynchronously)
-     * Enables automatic basic auth for a domain
-     * @param domain The domain for which this Basic Auth should be used (required)
-     * @param authBasic  (optional)
-     * @param _callback The callback to be executed when the API call finishes
-     * @return The request call
-     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setBasicAuthAsync(String domain, AuthBasic authBasic, final ApiCallback<Void> _callback) throws ApiException {
-
-        okhttp3.Call localVarCall = setBasicAuthValidateBeforeCall(domain, authBasic, _callback);
-        localVarApiClient.executeAsync(localVarCall, _callback);
-        return localVarCall;
-    }
-    /**
-     * Build call for setBlockList
-     * @param blockList  (optional)
-     * @param _callback Callback for upload/download progress
-     * @return Call to execute
-     * @throws ApiException If fail to serialize the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setBlockListCall(BlockList blockList, final ApiCallback _callback) throws ApiException {
-        Object localVarPostBody = blockList;
-
-        // create path and map variables
-        String localVarPath = "/blocklist";
-
-        List<Pair> localVarQueryParams = new ArrayList<Pair>();
-        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
-        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
-        Map<String, String> localVarCookieParams = new HashMap<String, String>();
-        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
-
-        final String[] localVarAccepts = {
-            
-        };
-        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
-        if (localVarAccept != null) {
-            localVarHeaderParams.put("Accept", localVarAccept);
-        }
-
-        final String[] localVarContentTypes = {
-            "application/json"
-        };
-        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
-        localVarHeaderParams.put("Content-Type", localVarContentType);
-
-        String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
-    }
-
-    @SuppressWarnings("rawtypes")
-    private okhttp3.Call setBlockListValidateBeforeCall(BlockList blockList, final ApiCallback _callback) throws ApiException {
-        
-
-        okhttp3.Call localVarCall = setBlockListCall(blockList, _callback);
-        return localVarCall;
-
-    }
-
-    /**
-     * 
-     * Sets an BlockList
-     * @param blockList  (optional)
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public void setBlockList(BlockList blockList) throws ApiException {
-        setBlockListWithHttpInfo(blockList);
-    }
-
-    /**
-     * 
-     * Sets an BlockList
-     * @param blockList  (optional)
-     * @return ApiResponse&lt;Void&gt;
-     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public ApiResponse<Void> setBlockListWithHttpInfo(BlockList blockList) throws ApiException {
-        okhttp3.Call localVarCall = setBlockListValidateBeforeCall(blockList, null);
-        return localVarApiClient.execute(localVarCall);
-    }
-
-    /**
-     *  (asynchronously)
-     * Sets an BlockList
-     * @param blockList  (optional)
-     * @param _callback The callback to be executed when the API call finishes
-     * @return The request call
-     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
-     * @http.response.details
-     <table summary="Response Details" border="1">
-        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
-        <tr><td> 204 </td><td> Success! </td><td>  -  </td></tr>
-     </table>
-     */
-    public okhttp3.Call setBlockListAsync(BlockList blockList, final ApiCallback<Void> _callback) throws ApiException {
-
-        okhttp3.Call localVarCall = setBlockListValidateBeforeCall(blockList, _callback);
-        localVarApiClient.executeAsync(localVarCall, _callback);
-        return localVarCall;
-    }
-    /**
      * Build call for setHarPage
      * @param _callback Callback for upload/download progress
      * @return Call to execute
@@ -1426,7 +498,7 @@ public class BrowserUpProxyApi {
         localVarHeaderParams.put("Content-Type", localVarContentType);
 
         String[] localVarAuthNames = new String[] {  };
-        return localVarApiClient.buildCall(localVarPath, "PUT", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
+        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
     }
 
     @SuppressWarnings("rawtypes")
@@ -1487,6 +559,470 @@ public class BrowserUpProxyApi {
 
         okhttp3.Call localVarCall = setHarPageValidateBeforeCall(_callback);
         Type localVarReturnType = new TypeToken<Har>(){}.getType();
+        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
+        return localVarCall;
+    }
+    /**
+     * Build call for verifyNotPresent
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @param _callback Callback for upload/download progress
+     * @return Call to execute
+     * @throws ApiException If fail to serialize the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call verifyNotPresentCall(MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+        Object localVarPostBody = matchCriteria;
+
+        // create path and map variables
+        String localVarPath = "/verify/not_present";
+
+        List<Pair> localVarQueryParams = new ArrayList<Pair>();
+        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
+        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+        Map<String, String> localVarCookieParams = new HashMap<String, String>();
+        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+        final String[] localVarAccepts = {
+            "application/json"
+        };
+        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
+        if (localVarAccept != null) {
+            localVarHeaderParams.put("Accept", localVarAccept);
+        }
+
+        final String[] localVarContentTypes = {
+            "application/json"
+        };
+        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
+        localVarHeaderParams.put("Content-Type", localVarContentType);
+
+        String[] localVarAuthNames = new String[] {  };
+        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private okhttp3.Call verifyNotPresentValidateBeforeCall(MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+        
+        // verify the required parameter 'matchCriteria' is set
+        if (matchCriteria == null) {
+            throw new ApiException("Missing the required parameter 'matchCriteria' when calling verifyNotPresent(Async)");
+        }
+        
+
+        okhttp3.Call localVarCall = verifyNotPresentCall(matchCriteria, _callback);
+        return localVarCall;
+
+    }
+
+    /**
+     * 
+     * Verify no matching items are present in the captured traffic
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @return VerifyResult
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
+     </table>
+     */
+    public VerifyResult verifyNotPresent(MatchCriteria matchCriteria) throws ApiException {
+        ApiResponse<VerifyResult> localVarResp = verifyNotPresentWithHttpInfo(matchCriteria);
+        return localVarResp.getData();
+    }
+
+    /**
+     * 
+     * Verify no matching items are present in the captured traffic
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @return ApiResponse&lt;VerifyResult&gt;
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
+     </table>
+     */
+    public ApiResponse<VerifyResult> verifyNotPresentWithHttpInfo(MatchCriteria matchCriteria) throws ApiException {
+        okhttp3.Call localVarCall = verifyNotPresentValidateBeforeCall(matchCriteria, null);
+        Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
+        return localVarApiClient.execute(localVarCall, localVarReturnType);
+    }
+
+    /**
+     *  (asynchronously)
+     * Verify no matching items are present in the captured traffic
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @param _callback The callback to be executed when the API call finishes
+     * @return The request call
+     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call verifyNotPresentAsync(MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+
+        okhttp3.Call localVarCall = verifyNotPresentValidateBeforeCall(matchCriteria, _callback);
+        Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
+        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
+        return localVarCall;
+    }
+    /**
+     * Build call for verifyPresent
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @param _callback Callback for upload/download progress
+     * @return Call to execute
+     * @throws ApiException If fail to serialize the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call verifyPresentCall(MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+        Object localVarPostBody = matchCriteria;
+
+        // create path and map variables
+        String localVarPath = "/verify/present";
+
+        List<Pair> localVarQueryParams = new ArrayList<Pair>();
+        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
+        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+        Map<String, String> localVarCookieParams = new HashMap<String, String>();
+        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+        final String[] localVarAccepts = {
+            "application/json"
+        };
+        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
+        if (localVarAccept != null) {
+            localVarHeaderParams.put("Accept", localVarAccept);
+        }
+
+        final String[] localVarContentTypes = {
+            "application/json"
+        };
+        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
+        localVarHeaderParams.put("Content-Type", localVarContentType);
+
+        String[] localVarAuthNames = new String[] {  };
+        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private okhttp3.Call verifyPresentValidateBeforeCall(MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+        
+        // verify the required parameter 'matchCriteria' is set
+        if (matchCriteria == null) {
+            throw new ApiException("Missing the required parameter 'matchCriteria' when calling verifyPresent(Async)");
+        }
+        
+
+        okhttp3.Call localVarCall = verifyPresentCall(matchCriteria, _callback);
+        return localVarCall;
+
+    }
+
+    /**
+     * 
+     * Verify at least one matching item is present in the captured traffic
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @return VerifyResult
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public VerifyResult verifyPresent(MatchCriteria matchCriteria) throws ApiException {
+        ApiResponse<VerifyResult> localVarResp = verifyPresentWithHttpInfo(matchCriteria);
+        return localVarResp.getData();
+    }
+
+    /**
+     * 
+     * Verify at least one matching item is present in the captured traffic
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @return ApiResponse&lt;VerifyResult&gt;
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public ApiResponse<VerifyResult> verifyPresentWithHttpInfo(MatchCriteria matchCriteria) throws ApiException {
+        okhttp3.Call localVarCall = verifyPresentValidateBeforeCall(matchCriteria, null);
+        Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
+        return localVarApiClient.execute(localVarCall, localVarReturnType);
+    }
+
+    /**
+     *  (asynchronously)
+     * Verify at least one matching item is present in the captured traffic
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @param _callback The callback to be executed when the API call finishes
+     * @return The request call
+     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call verifyPresentAsync(MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+
+        okhttp3.Call localVarCall = verifyPresentValidateBeforeCall(matchCriteria, _callback);
+        Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
+        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
+        return localVarCall;
+    }
+    /**
+     * Build call for verifySLA
+     * @param time The time used for comparison (required)
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @param _callback Callback for upload/download progress
+     * @return Call to execute
+     * @throws ApiException If fail to serialize the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call verifySLACall(Integer time, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+        Object localVarPostBody = matchCriteria;
+
+        // create path and map variables
+        String localVarPath = "/verify/sla/{time}"
+            .replaceAll("\\{" + "time" + "\\}", localVarApiClient.escapeString(time.toString()));
+
+        List<Pair> localVarQueryParams = new ArrayList<Pair>();
+        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
+        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+        Map<String, String> localVarCookieParams = new HashMap<String, String>();
+        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+        final String[] localVarAccepts = {
+            "application/json"
+        };
+        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
+        if (localVarAccept != null) {
+            localVarHeaderParams.put("Accept", localVarAccept);
+        }
+
+        final String[] localVarContentTypes = {
+            "application/json"
+        };
+        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
+        localVarHeaderParams.put("Content-Type", localVarContentType);
+
+        String[] localVarAuthNames = new String[] {  };
+        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private okhttp3.Call verifySLAValidateBeforeCall(Integer time, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+        
+        // verify the required parameter 'time' is set
+        if (time == null) {
+            throw new ApiException("Missing the required parameter 'time' when calling verifySLA(Async)");
+        }
+        
+        // verify the required parameter 'matchCriteria' is set
+        if (matchCriteria == null) {
+            throw new ApiException("Missing the required parameter 'matchCriteria' when calling verifySLA(Async)");
+        }
+        
+
+        okhttp3.Call localVarCall = verifySLACall(time, matchCriteria, _callback);
+        return localVarCall;
+
+    }
+
+    /**
+     * 
+     * Verify each traffic item matching the criteria meets is below SLA time
+     * @param time The time used for comparison (required)
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @return VerifyResult
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public VerifyResult verifySLA(Integer time, MatchCriteria matchCriteria) throws ApiException {
+        ApiResponse<VerifyResult> localVarResp = verifySLAWithHttpInfo(time, matchCriteria);
+        return localVarResp.getData();
+    }
+
+    /**
+     * 
+     * Verify each traffic item matching the criteria meets is below SLA time
+     * @param time The time used for comparison (required)
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @return ApiResponse&lt;VerifyResult&gt;
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public ApiResponse<VerifyResult> verifySLAWithHttpInfo(Integer time, MatchCriteria matchCriteria) throws ApiException {
+        okhttp3.Call localVarCall = verifySLAValidateBeforeCall(time, matchCriteria, null);
+        Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
+        return localVarApiClient.execute(localVarCall, localVarReturnType);
+    }
+
+    /**
+     *  (asynchronously)
+     * Verify each traffic item matching the criteria meets is below SLA time
+     * @param time The time used for comparison (required)
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @param _callback The callback to be executed when the API call finishes
+     * @return The request call
+     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call verifySLAAsync(Integer time, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+
+        okhttp3.Call localVarCall = verifySLAValidateBeforeCall(time, matchCriteria, _callback);
+        Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
+        localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
+        return localVarCall;
+    }
+    /**
+     * Build call for verifySize
+     * @param size The size used for comparison (required)
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @param _callback Callback for upload/download progress
+     * @return Call to execute
+     * @throws ApiException If fail to serialize the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call verifySizeCall(Integer size, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+        Object localVarPostBody = matchCriteria;
+
+        // create path and map variables
+        String localVarPath = "/verify/size/{size}"
+            .replaceAll("\\{" + "size" + "\\}", localVarApiClient.escapeString(size.toString()));
+
+        List<Pair> localVarQueryParams = new ArrayList<Pair>();
+        List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
+        Map<String, String> localVarHeaderParams = new HashMap<String, String>();
+        Map<String, String> localVarCookieParams = new HashMap<String, String>();
+        Map<String, Object> localVarFormParams = new HashMap<String, Object>();
+
+        final String[] localVarAccepts = {
+            "application/json"
+        };
+        final String localVarAccept = localVarApiClient.selectHeaderAccept(localVarAccepts);
+        if (localVarAccept != null) {
+            localVarHeaderParams.put("Accept", localVarAccept);
+        }
+
+        final String[] localVarContentTypes = {
+            "application/json"
+        };
+        final String localVarContentType = localVarApiClient.selectHeaderContentType(localVarContentTypes);
+        localVarHeaderParams.put("Content-Type", localVarContentType);
+
+        String[] localVarAuthNames = new String[] {  };
+        return localVarApiClient.buildCall(localVarPath, "POST", localVarQueryParams, localVarCollectionQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAuthNames, _callback);
+    }
+
+    @SuppressWarnings("rawtypes")
+    private okhttp3.Call verifySizeValidateBeforeCall(Integer size, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+        
+        // verify the required parameter 'size' is set
+        if (size == null) {
+            throw new ApiException("Missing the required parameter 'size' when calling verifySize(Async)");
+        }
+        
+        // verify the required parameter 'matchCriteria' is set
+        if (matchCriteria == null) {
+            throw new ApiException("Missing the required parameter 'matchCriteria' when calling verifySize(Async)");
+        }
+        
+
+        okhttp3.Call localVarCall = verifySizeCall(size, matchCriteria, _callback);
+        return localVarCall;
+
+    }
+
+    /**
+     * 
+     * Verify matching items in the captured traffic meet the size criteria
+     * @param size The size used for comparison (required)
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @return VerifyResult
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public VerifyResult verifySize(Integer size, MatchCriteria matchCriteria) throws ApiException {
+        ApiResponse<VerifyResult> localVarResp = verifySizeWithHttpInfo(size, matchCriteria);
+        return localVarResp.getData();
+    }
+
+    /**
+     * 
+     * Verify matching items in the captured traffic meet the size criteria
+     * @param size The size used for comparison (required)
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @return ApiResponse&lt;VerifyResult&gt;
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public ApiResponse<VerifyResult> verifySizeWithHttpInfo(Integer size, MatchCriteria matchCriteria) throws ApiException {
+        okhttp3.Call localVarCall = verifySizeValidateBeforeCall(size, matchCriteria, null);
+        Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
+        return localVarApiClient.execute(localVarCall, localVarReturnType);
+    }
+
+    /**
+     *  (asynchronously)
+     * Verify matching items in the captured traffic meet the size criteria
+     * @param size The size used for comparison (required)
+     * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
+     * @param _callback The callback to be executed when the API call finishes
+     * @return The request call
+     * @throws ApiException If fail to process the API call, e.g. serializing the request body object
+     * @http.response.details
+     <table summary="Response Details" border="1">
+        <tr><td> Status Code </td><td> Description </td><td> Response Headers </td></tr>
+        <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
+     </table>
+     */
+    public okhttp3.Call verifySizeAsync(Integer size, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+
+        okhttp3.Call localVarCall = verifySizeValidateBeforeCall(size, matchCriteria, _callback);
+        Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
         return localVarCall;
     }

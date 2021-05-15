@@ -1,9 +1,8 @@
 openapi: 3.0.3
 info:
   description: "___\nThis is the REST API for controlling the BrowserUp Proxy. \n\
-    The BrowserUp Proxy is a swiss army knife for automated testing.\nIt allows traffic\
-    \ capture in HAR files and manipulation. \nIt is also useful for Selenium/Cypress\
-    \ tests.\n___\n"
+    The BrowserUp Proxy is a swiss army knife for automated testing that\ncaptures\
+    \ HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.\n___\n"
   title: BrowserUp Proxy
   version: 1.0.0
 servers:
@@ -11,12 +10,12 @@ servers:
   url: http://localhost:{port}/
   variables:
     port:
-      default: "8080"
+      default: "8088"
       enum:
-      - "8080"
+      - "8088"
 tags:
 - description: BrowserUp Proxy REST API
-  name: BrowserUp Proxy API
+  name: The BrowserUp Proxy API
 paths:
   /har:
     get:
@@ -27,7 +26,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/har'
+                $ref: '#/components/schemas/Har'
           description: The current Har file.
       tags:
       - BrowserUpProxy
@@ -40,13 +39,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/har'
+                $ref: '#/components/schemas/Har'
           description: The current Har file.
       tags:
       - BrowserUpProxy
       x-accepts: application/json
   /har/page:
-    put:
+    post:
       description: Starts a fresh HAR Page in the current active HAR
       operationId: setHarPage
       responses:
@@ -54,163 +53,139 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/har'
+                $ref: '#/components/schemas/Har'
           description: The current Har file.
       tags:
       - BrowserUpProxy
       x-accepts: application/json
-  /auth_basic/{domain}:
-    delete:
-      description: Clears Basic Auth for a domain, disabling Automatic Basic Auth
-        for it.
-      operationId: clearBasicAuthSettings
+    put:
+      description: Add custom fields to the current HAR.
+      operationId: addCustomHarFields
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomHarData'
+      responses:
+        "204":
+          description: The custom fields were added to the HAR.
+      tags:
+      - BrowserUpProxy
+      x-contentType: application/json
+      x-accepts: application/json
+  /verify/present:
+    post:
+      description: Verify at least one matching item is present in the captured traffic
+      operationId: verifyPresent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchCriteria'
+        description: Match criteria to select requests - response pairs for size tests
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResult'
+          description: The traffic conformed to the time criteria.
+      tags:
+      - BrowserUpProxy
+      x-contentType: application/json
+      x-accepts: application/json
+  /verify/not_present:
+    post:
+      description: Verify no matching items are present in the captured traffic
+      operationId: verifyNotPresent
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchCriteria'
+        description: Match criteria to select requests - response pairs for size tests
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResult'
+          description: The traffic had no matching items
+      tags:
+      - BrowserUpProxy
+      x-contentType: application/json
+      x-accepts: application/json
+  /verify/size/{size}:
+    post:
+      description: Verify matching items in the captured traffic meet the size criteria
+      operationId: verifySize
       parameters:
-      - description: The domain for which to clear the basic auth settings
+      - description: The size used for comparison
         explode: false
         in: path
-        name: domain
+        name: size
         required: true
         schema:
-          type: string
+          minimum: 0
+          type: integer
         style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchCriteria'
+        description: Match criteria to select requests - response pairs for size tests
+        required: true
       responses:
-        "204":
-          description: The current Basic Authorization setting is cleared and no longer
-            used for requests to a domain.
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResult'
+          description: The traffic conformed to the size criteria.
       tags:
       - BrowserUpProxy
+      x-contentType: application/json
       x-accepts: application/json
+  /verify/sla/{time}:
     post:
-      description: Enables automatic basic auth for a domain
-      operationId: setBasicAuth
+      description: Verify each traffic item matching the criteria meets is below SLA
+        time
+      operationId: verifySLA
       parameters:
-      - description: The domain for which this Basic Auth should be used
+      - description: The time used for comparison
         explode: false
         in: path
-        name: domain
+        name: time
         required: true
         schema:
-          type: string
+          minimum: 0
+          type: integer
         style: simple
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AuthBasic'
+              $ref: '#/components/schemas/MatchCriteria'
+        description: Match criteria to select requests - response pairs for size tests
+        required: true
       responses:
-        "204":
-          description: Success!
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyResult'
+          description: The traffic conformed to the time criteria.
       tags:
       - BrowserUpProxy
       x-contentType: application/json
-      x-accepts: application/json
-  /allowlist:
-    delete:
-      description: Clears the AllowList, which will turn-off allowlist based filtering
-      operationId: clearAllowList
-      responses:
-        "204":
-          description: The allowlist was cleared and allowlist-based filtering is
-            OFF until a new list is posted.
-      tags:
-      - BrowserUpProxy
-      x-accepts: application/json
-    get:
-      description: Get an AllowList
-      operationId: getAllowList
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AllowList'
-          description: The current allowlist. Only allowed requests will pass through.
-      tags:
-      - BrowserUpProxy
-      x-accepts: application/json
-    post:
-      description: Sets an AllowList
-      operationId: setAllowList
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AllowList'
-      responses:
-        "204":
-          description: Success!
-      tags:
-      - BrowserUpProxy
-      x-contentType: application/json
-      x-accepts: application/json
-  /blocklist:
-    get:
-      description: Get a blocklist
-      operationId: getBlockList
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BlockList'
-          description: The current blocklist.
-      tags:
-      - BrowserUpProxy
-      x-accepts: application/json
-    post:
-      description: Sets an BlockList
-      operationId: setBlockList
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BlockList'
-      responses:
-        "204":
-          description: Success!
-      tags:
-      - BrowserUpProxy
-      x-contentType: application/json
-      x-accepts: application/json
-  /additional_headers:
-    delete:
-      description: Clear the additional Headers
-      operationId: clearAdditionalHeaders
-      responses:
-        "204":
-          description: The current additional header settings were cleared.
-      tags:
-      - BrowserUpProxy
-      x-accepts: application/json
-    get:
-      description: Get the current added Headers
-      operationId: getAdditionalHeaders
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Headers'
-          description: The current header settings.
-      tags:
-      - BrowserUpProxy
-      x-accepts: application/json
-    post:
-      description: Set additional headers to add to requests
-      operationId: setAdditionalHeaders
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Headers'
-          description: Show the current additional header settings.
-      tags:
-      - BrowserUpProxy
       x-accepts: application/json
   /healthcheck:
     get:
       description: Get the healthcheck
+      operationId: healthcheck
       responses:
         "200":
           description: OK means all is well.
@@ -219,9 +194,114 @@ paths:
       x-accepts: application/json
 components:
   schemas:
-    entry:
+    NameValuePair:
+      properties:
+        name:
+          description: Name to match
+          type: string
+        value:
+          description: Value to match
+          type: string
+      type: object
+    MatchCriteria:
+      description: A set of criteria for filtering HTTP Requests and Responses. Criteria
+        are AND based, and use python regular expressions for string comparison
       example:
-        startedDateTime: 2000-01-23T04:56:07.000+00:00
+        request_cookie: ""
+        response_cookie: ""
+        json_path: json_path
+        url: url
+        content: content
+        response_header: ""
+        content_type: content_type
+        request_header: ""
+        json_schema: json_schema
+        json_valid: true
+        page: page
+        websocket_message: websocket_message
+        status: status
+      properties:
+        url:
+          description: Request URL regexp to match
+          externalDocs:
+            description: Python Regex
+            url: https://docs.python.org/3/howto/regex.html
+          type: string
+        page:
+          description: current|all
+          externalDocs:
+            description: Python Regex
+            url: https://docs.python.org/3/howto/regex.html
+          type: string
+        status:
+          description: HTTP Status code to match.
+          externalDocs:
+            description: Python Regex
+            url: https://docs.python.org/3/howto/regex.html
+          type: string
+        content:
+          description: Body content regexp content to match
+          externalDocs:
+            description: Python Regex
+            url: https://docs.python.org/3/howto/regex.html
+          type: string
+        content_type:
+          description: Content type
+          externalDocs:
+            description: Python Regex
+            url: https://docs.python.org/3/howto/regex.html
+          type: string
+        websocket_message:
+          description: Websocket message text to match
+          externalDocs:
+            description: Python Regex
+            url: https://docs.python.org/3/howto/regex.html
+          type: string
+        request_header:
+          allOf:
+          - $ref: '#/components/schemas/NameValuePair'
+          externalDocs:
+            description: Python Regex
+            url: https://docs.python.org/3/howto/regex.html
+        request_cookie:
+          allOf:
+          - $ref: '#/components/schemas/NameValuePair'
+          externalDocs:
+            description: Python Regex
+            url: https://docs.python.org/3/howto/regex.html
+        response_header:
+          allOf:
+          - $ref: '#/components/schemas/NameValuePair'
+          externalDocs:
+            description: Python Regex
+            url: https://docs.python.org/3/howto/regex.html
+        response_cookie:
+          allOf:
+          - $ref: '#/components/schemas/NameValuePair'
+          externalDocs:
+            description: Python Regex
+            url: https://docs.python.org/3/howto/regex.html
+        json_valid:
+          description: Is valid JSON
+          type: boolean
+        json_path:
+          description: Has JSON path
+          type: string
+        json_schema:
+          description: Validates against passed JSON schema
+          type: string
+      type: object
+    VerifyResult:
+      example:
+        result: true
+      properties:
+        result:
+          description: Name to match
+          type: boolean
+      type: object
+    Entry:
+      example:
+        startedDateTime: startedDateTime
         request:
           headers:
           - name: name
@@ -311,16 +391,14 @@ components:
         pageref:
           type: string
         startedDateTime:
-          format: date-time
-          pattern: ^(\d{4})(-)?(\d\d)(-)?(\d\d)(T)?(\d\d)(:)?(\d\d)(:)?(\d\d)(\.\d+)?(Z|([+-])(\d\d)(:)?(\d\d))
           type: string
         time:
           minimum: 0
           type: number
         request:
-          $ref: '#/components/schemas/entry_request'
+          $ref: '#/components/schemas/Entry_request'
         response:
-          $ref: '#/components/schemas/entry_response'
+          $ref: '#/components/schemas/Entry_response'
         cache:
           properties:
             beforeRequest:
@@ -328,10 +406,8 @@ components:
               - type: "null"
               - properties:
                   expires:
-                    pattern: ^(\d{4})(-)?(\d\d)(-)?(\d\d)(T)?(\d\d)(:)?(\d\d)(:)?(\d\d)(\.\d+)?(Z|([+-])(\d\d)(:)?(\d\d))?
                     type: string
                   lastAccess:
-                    pattern: ^(\d{4})(-)?(\d\d)(-)?(\d\d)(T)?(\d\d)(:)?(\d\d)(:)?(\d\d)(\.\d+)?(Z|([+-])(\d\d)(:)?(\d\d))?
                     type: string
                   eTag:
                     type: string
@@ -349,10 +425,8 @@ components:
               - type: "null"
               - properties:
                   expires:
-                    pattern: ^(\d{4})(-)?(\d\d)(-)?(\d\d)(T)?(\d\d)(:)?(\d\d)(:)?(\d\d)(\.\d+)?(Z|([+-])(\d\d)(:)?(\d\d))?
                     type: string
                   lastAccess:
-                    pattern: ^(\d{4})(-)?(\d\d)(-)?(\d\d)(T)?(\d\d)(:)?(\d\d)(:)?(\d\d)(\.\d+)?(Z|([+-])(\d\d)(:)?(\d\d))?
                     type: string
                   eTag:
                     type: string
@@ -413,7 +487,7 @@ components:
       - time
       - timings
       type: object
-    header:
+    Header:
       example:
         name: name
         comment: comment
@@ -429,7 +503,7 @@ components:
       - name
       - value
       type: object
-    har:
+    Har:
       example:
         log:
           creator:
@@ -437,7 +511,7 @@ components:
             comment: comment
             version: version
           entries:
-          - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          - startedDateTime: startedDateTime
             request:
               headers:
               - name: name
@@ -523,7 +597,7 @@ components:
             comment: comment
             time: 0.14658129805029452
             pageref: pageref
-          - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          - startedDateTime: startedDateTime
             request:
               headers:
               - name: name
@@ -634,11 +708,14 @@ components:
           version: version
       properties:
         log:
-          $ref: '#/components/schemas/har_log'
+          $ref: '#/components/schemas/Har_log'
       required:
       - log
       type: object
-    page:
+    CustomHarData:
+      minProperties: 1
+      type: object
+    Page:
       example:
         startedDateTime: 2000-01-23T04:56:07.000+00:00
         pageTimings:
@@ -651,14 +728,13 @@ components:
       properties:
         startedDateTime:
           format: date-time
-          pattern: ^(\d{4})(-)?(\d\d)(-)?(\d\d)(T)?(\d\d)(:)?(\d\d)(:)?(\d\d)(\.\d+)?(Z|([+-])(\d\d)(:)?(\d\d))
           type: string
         id:
           type: string
         title:
           type: string
         pageTimings:
-          $ref: '#/components/schemas/page_pageTimings'
+          $ref: '#/components/schemas/Page_pageTimings'
         comment:
           type: string
       required:
@@ -667,62 +743,7 @@ components:
       - startedDateTime
       - title
       type: object
-    AuthBasic:
-      example:
-        base_64_credentials: base_64_credentials
-      properties:
-        base_64_credentials:
-          description: base 64 encoding of the username and password
-          type: string
-      required:
-      - base_64_credentials
-      type: object
-    AllowList:
-      example:
-        url_pattern: url_pattern
-        status_code: status_code
-      properties:
-        status_code:
-          description: HTTP Status Code to match
-          type: string
-        url_pattern:
-          description: URL Regex Pattern to match
-          type: string
-      required:
-      - status_code
-      - url_pattern
-      type: object
-    BlockList:
-      example:
-        url_pattern: url_pattern
-        status_code: status_code
-        http_method_pattern: http_method_pattern
-      properties:
-        status_code:
-          description: HTTP Status Code
-          type: string
-        url_pattern:
-          description: URL Regex Pattern
-          type: string
-        http_method_pattern:
-          description: HTTP Method Regex Pattern
-          type: string
-      required:
-      - http_method_pattern
-      - status_code
-      - url_pattern
-      type: object
-    Headers:
-      example:
-        headers: '{}'
-      properties:
-        headers:
-          description: Header key-value pairs
-          type: object
-      required:
-      - headers
-      type: object
-    entry_request_cookies:
+    Entry_request_cookies:
       example:
         path: path
         expires: expires
@@ -753,7 +774,7 @@ components:
       - name
       - value
       type: object
-    entry_request_queryString:
+    Entry_request_queryString:
       example:
         name: name
         comment: comment
@@ -769,7 +790,7 @@ components:
       - name
       - value
       type: object
-    entry_request:
+    Entry_request:
       example:
         headers:
         - name: name
@@ -819,15 +840,15 @@ components:
           type: string
         cookies:
           items:
-            $ref: '#/components/schemas/entry_request_cookies'
+            $ref: '#/components/schemas/Entry_request_cookies'
           type: array
         headers:
           items:
-            $ref: '#/components/schemas/header'
+            $ref: '#/components/schemas/Header'
           type: array
         queryString:
           items:
-            $ref: '#/components/schemas/entry_request_queryString'
+            $ref: '#/components/schemas/Entry_request_queryString'
           type: array
         postData:
           description: Posted data info.
@@ -869,7 +890,7 @@ components:
       - queryString
       - url
       type: object
-    entry_response_content:
+    Entry_response_content:
       example:
         size: 7
         comment: comment
@@ -894,7 +915,7 @@ components:
       - mimeType
       - size
       type: object
-    entry_response:
+    Entry_response:
       example:
         headers:
         - name: name
@@ -943,14 +964,14 @@ components:
           type: string
         cookies:
           items:
-            $ref: '#/components/schemas/entry_request_cookies'
+            $ref: '#/components/schemas/Entry_request_cookies'
           type: array
         headers:
           items:
-            $ref: '#/components/schemas/header'
+            $ref: '#/components/schemas/Header'
           type: array
         content:
-          $ref: '#/components/schemas/entry_response_content'
+          $ref: '#/components/schemas/Entry_response_content'
         redirectURL:
           type: string
         headersSize:
@@ -970,7 +991,7 @@ components:
       - status
       - statusText
       type: object
-    har_log_creator:
+    Har_log_creator:
       example:
         name: name
         comment: comment
@@ -986,14 +1007,14 @@ components:
       - name
       - version
       type: object
-    har_log:
+    Har_log:
       example:
         creator:
           name: name
           comment: comment
           version: version
         entries:
-        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+        - startedDateTime: startedDateTime
           request:
             headers:
             - name: name
@@ -1079,7 +1100,7 @@ components:
           comment: comment
           time: 0.14658129805029452
           pageref: pageref
-        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+        - startedDateTime: startedDateTime
           request:
             headers:
             - name: name
@@ -1188,20 +1209,23 @@ components:
           version: version
         comment: comment
         version: version
+      externalDocs:
+        description: HAR (HTTP Archive) Log Format
+        url: http://www.softwareishard.com/blog/har-12-spec/
       properties:
         version:
           type: string
         creator:
-          $ref: '#/components/schemas/har_log_creator'
+          $ref: '#/components/schemas/Har_log_creator'
         browser:
-          $ref: '#/components/schemas/har_log_creator'
+          $ref: '#/components/schemas/Har_log_creator'
         pages:
           items:
-            $ref: '#/components/schemas/page'
+            $ref: '#/components/schemas/Page'
           type: array
         entries:
           items:
-            $ref: '#/components/schemas/entry'
+            $ref: '#/components/schemas/Entry'
           type: array
         comment:
           type: string
@@ -1210,7 +1234,7 @@ components:
       - entries
       - version
       type: object
-    page_pageTimings:
+    Page_pageTimings:
       example:
         onContentLoad: -0.9199171809538988
         onLoad: -0.3972543816929597

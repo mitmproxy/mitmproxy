@@ -2,12 +2,13 @@
 
 # Entry
 
+
 ## Properties
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **pageref** | **String** |  |  [optional]
-**startedDateTime** | **OffsetDateTime** |  | 
+**startedDateTime** | **String** |  | 
 **time** | **BigDecimal** |  | 
 **request** | [**EntryRequest**](EntryRequest.md) |  | 
 **response** | [**EntryResponse**](EntryResponse.md) |  | 

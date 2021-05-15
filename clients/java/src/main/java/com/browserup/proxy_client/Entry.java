@@ -1,6 +1,6 @@
 /*
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -27,7 +27,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
 import java.math.BigDecimal;
-import org.threeten.bp.OffsetDateTime;
 
 /**
  * Entry
@@ -40,7 +39,7 @@ public class Entry {
 
   public static final String SERIALIZED_NAME_STARTED_DATE_TIME = "startedDateTime";
   @SerializedName(SERIALIZED_NAME_STARTED_DATE_TIME)
-  private OffsetDateTime startedDateTime;
+  private String startedDateTime;
 
   public static final String SERIALIZED_NAME_TIME = "time";
   @SerializedName(SERIALIZED_NAME_TIME)
@@ -98,7 +97,7 @@ public class Entry {
   }
 
 
-  public Entry startedDateTime(OffsetDateTime startedDateTime) {
+  public Entry startedDateTime(String startedDateTime) {
     
     this.startedDateTime = startedDateTime;
     return this;
@@ -110,12 +109,12 @@ public class Entry {
   **/
   @ApiModelProperty(required = true, value = "")
 
-  public OffsetDateTime getStartedDateTime() {
+  public String getStartedDateTime() {
     return startedDateTime;
   }
 
 
-  public void setStartedDateTime(OffsetDateTime startedDateTime) {
+  public void setStartedDateTime(String startedDateTime) {
     this.startedDateTime = startedDateTime;
   }
 

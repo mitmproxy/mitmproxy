@@ -9,6 +9,8 @@ from pathlib import Path
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from falcon_apispec import FalconPlugin
+from mitmproxy.addons.browserup.har.har_schemas import *
+from mitmproxy.addons.browserup.har_capture_addon import *
 
 class BrowserUpAddonsManagerAddOn:
     initialized = False
@@ -45,8 +47,7 @@ class BrowserUpAddonsManagerAddOn:
                           "description": "The development API server",
                           "variables": { "port": { "enum": ["8088"], "default": '8088' } }
                         }],
-            tags = [{ "name": 'BrowserUp Proxy API', "description": "BrowserUp Proxy REST API" }],
-
+            tags = [{ "name": 'The BrowserUp Proxy API', "description": "BrowserUp Proxy REST API" }],
             info= { "description":
 """___
 This is the REST API for controlling the BrowserUp Proxy. 
@@ -54,7 +55,7 @@ The BrowserUp Proxy is a swiss army knife for automated testing that
 captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
 ___
 """
-                    },
+,"x-logo": {"url": "logo.png" }},
             openapi_version='3.0.3',
             plugins=[
                 FalconPlugin(app),
@@ -89,20 +90,40 @@ ___
         return resources
 
 
-    def start_falcon(self):
+    def get_app(self):
         app = falcon.API()
         spec = self.basic_spec(app)
+        spec.components.schema('MatchCriteria', schema=MatchCriteriaSchema)
+        spec.components.schema('VerifyResult', schema=VerifyResultSchema)
         for resource in self.get_resources_from_addons(app, spec ):
             route = "/" + resource.addon_path()
             print("Adding route: " + route)
             app.add_route(route, resource)
+        print(self.get_all_routes(app))
+        return app
 
+    def get_all_routes(self, app):
+        routes_list = []
+
+        def get_children(node):
+            if len(node.children):
+                for child_node in node.children:
+                    get_children(child_node)
+            else:
+                routes_list.append((node.uri_template, node.resource))
+        [get_children(node) for node in app._router._roots]
+        return routes_list
+
+    def start_falcon(self):
+        app = self.get_app()
         with make_server('', ctx.options.addons_management_port, app) as httpd:
             print('Starting REST API management on port: {}'.format(ctx.options.addons_management_port))
             httpd.serve_forever()
 
             # https://marshmallow.readthedocs.io/en/stable/quickstart.html
 
+
 addons = [
+    HarCaptureAddOn(),
     BrowserUpAddonsManagerAddOn()
 ]

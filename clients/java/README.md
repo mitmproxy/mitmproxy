@@ -5,9 +5,8 @@ BrowserUp Proxy
 
 ___
 This is the REST API for controlling the BrowserUp Proxy. 
-The BrowserUp Proxy is a swiss army knife for automated testing.
-It allows traffic capture in HAR files and manipulation. 
-It is also useful for Selenium/Cypress tests.
+The BrowserUp Proxy is a swiss army knife for automated testing that
+captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
 ___
 
 
@@ -87,13 +86,14 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 public class Example {
   public static void main(String[] args) {
     ApiClient defaultClient = Configuration.getDefaultApiClient();
-    defaultClient.setBasePath("http://localhost:8080");
+    defaultClient.setBasePath("http://localhost:8088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
+    Object body = null; // Object | 
     try {
-      apiInstance.clearAdditionalHeaders();
+      apiInstance.addCustomHarFields(body);
     } catch (ApiException e) {
-      System.err.println("Exception when calling BrowserUpProxyApi#clearAdditionalHeaders");
+      System.err.println("Exception when calling BrowserUpProxyApi#addCustomHarFields");
       System.err.println("Status code: " + e.getCode());
       System.err.println("Reason: " + e.getResponseBody());
       System.err.println("Response headers: " + e.getResponseHeaders());
@@ -106,31 +106,23 @@ public class Example {
 
 ## Documentation for API Endpoints
 
-All URIs are relative to *http://localhost:8080*
+All URIs are relative to *http://localhost:8088*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*BrowserUpProxyApi* | [**clearAdditionalHeaders**](docs/BrowserUpProxyApi.md#clearAdditionalHeaders) | **DELETE** /additional_headers | 
-*BrowserUpProxyApi* | [**clearAllowList**](docs/BrowserUpProxyApi.md#clearAllowList) | **DELETE** /allowlist | 
-*BrowserUpProxyApi* | [**clearBasicAuthSettings**](docs/BrowserUpProxyApi.md#clearBasicAuthSettings) | **DELETE** /auth_basic/{domain} | 
-*BrowserUpProxyApi* | [**getAdditionalHeaders**](docs/BrowserUpProxyApi.md#getAdditionalHeaders) | **GET** /additional_headers | 
-*BrowserUpProxyApi* | [**getAllowList**](docs/BrowserUpProxyApi.md#getAllowList) | **GET** /allowlist | 
-*BrowserUpProxyApi* | [**getBlockList**](docs/BrowserUpProxyApi.md#getBlockList) | **GET** /blocklist | 
+*BrowserUpProxyApi* | [**addCustomHarFields**](docs/BrowserUpProxyApi.md#addCustomHarFields) | **PUT** /har/page | 
 *BrowserUpProxyApi* | [**getHarLog**](docs/BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
-*BrowserUpProxyApi* | [**healthcheckGet**](docs/BrowserUpProxyApi.md#healthcheckGet) | **GET** /healthcheck | 
+*BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 *BrowserUpProxyApi* | [**resetHarLog**](docs/BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
-*BrowserUpProxyApi* | [**setAdditionalHeaders**](docs/BrowserUpProxyApi.md#setAdditionalHeaders) | **POST** /additional_headers | 
-*BrowserUpProxyApi* | [**setAllowList**](docs/BrowserUpProxyApi.md#setAllowList) | **POST** /allowlist | 
-*BrowserUpProxyApi* | [**setBasicAuth**](docs/BrowserUpProxyApi.md#setBasicAuth) | **POST** /auth_basic/{domain} | 
-*BrowserUpProxyApi* | [**setBlockList**](docs/BrowserUpProxyApi.md#setBlockList) | **POST** /blocklist | 
-*BrowserUpProxyApi* | [**setHarPage**](docs/BrowserUpProxyApi.md#setHarPage) | **PUT** /har/page | 
+*BrowserUpProxyApi* | [**setHarPage**](docs/BrowserUpProxyApi.md#setHarPage) | **POST** /har/page | 
+*BrowserUpProxyApi* | [**verifyNotPresent**](docs/BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present | 
+*BrowserUpProxyApi* | [**verifyPresent**](docs/BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present | 
+*BrowserUpProxyApi* | [**verifySLA**](docs/BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time} | 
+*BrowserUpProxyApi* | [**verifySize**](docs/BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size} | 
 
 
 ## Documentation for Models
 
- - [AllowList](docs/AllowList.md)
- - [AuthBasic](docs/AuthBasic.md)
- - [BlockList](docs/BlockList.md)
  - [Entry](docs/Entry.md)
  - [EntryRequest](docs/EntryRequest.md)
  - [EntryRequestCookies](docs/EntryRequestCookies.md)
@@ -141,9 +133,11 @@ Class | Method | HTTP request | Description
  - [HarLog](docs/HarLog.md)
  - [HarLogCreator](docs/HarLogCreator.md)
  - [Header](docs/Header.md)
- - [Headers](docs/Headers.md)
+ - [MatchCriteria](docs/MatchCriteria.md)
+ - [NameValuePair](docs/NameValuePair.md)
  - [Page](docs/Page.md)
  - [PagePageTimings](docs/PagePageTimings.md)
+ - [VerifyResult](docs/VerifyResult.md)
 
 
 ## Documentation for Authorization

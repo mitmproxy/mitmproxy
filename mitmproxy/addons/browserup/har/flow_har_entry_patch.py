@@ -7,7 +7,7 @@ def patch_flow():
         setattr(self, 'har_entry', updated_entry)
 
     def get_har_entry(self):
-        if hasattr(self, 'har_entry') and callable(self.har_entry):
+        if hasattr(self, 'har_entry'):
             return self.har_entry
         else:
             addon = ctx.master.addons.get('harcaptureaddon')
