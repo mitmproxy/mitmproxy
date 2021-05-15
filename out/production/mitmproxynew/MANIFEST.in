@@ -1,2 +1,0 @@
-graft mitmproxy
-recursive-exclude * *.pyc *.pyo *.swo *.swp *.map
