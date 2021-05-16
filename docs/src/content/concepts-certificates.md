@@ -37,6 +37,8 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 - wget on the command line:  
   `wget -e https_proxy=127.0.0.1:8080 --ca-certificate ~/.mitmproxy/mitmproxy-ca-cert.pem https://example.com/`
 - [macOS](https://support.apple.com/guide/keychain-access/add-certificates-to-a-keychain-kyca2431/mac)
+- [macOS (automated)](https://www.dssw.co.uk/reference/security.html):
+  `sudo security add-trusted-cert -d -p ssl -p basic -k /Library/Keychains/System.keychain ~/.mitmproxy/mitmproxy-ca-cert.pem`
 - [Ubuntu/Debian]( https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861)
 - [Mozilla Firefox](https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox)
 - [Chrome on Linux](https://stackoverflow.com/a/15076602/198996)

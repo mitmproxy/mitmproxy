@@ -36,7 +36,6 @@ import functools
 import re
 import sys
 from typing import Callable, ClassVar, Optional, Sequence, Type
-
 import pyparsing as pp
 
 from mitmproxy import flow, http, tcp
@@ -382,6 +381,41 @@ class FDst(_Rex):
         return f.server_conn.address and self.re.search(r)
 
 
+class FReplay(_Action):
+    code = "replay"
+    help = "Match replayed flows"
+
+    def __call__(self, f):
+        return f.is_replay is not None
+
+
+class FReplayClient(_Action):
+    code = "replayq"
+    help = "Match replayed client request"
+
+    def __call__(self, f):
+        return f.is_replay == 'request'
+
+
+class FReplayServer(_Action):
+    code = "replays"
+    help = "Match replayed server response"
+
+    def __call__(self, f):
+        return f.is_replay == 'response'
+
+
+class FMeta(_Rex):
+    code = "meta"
+    help = "Flow metadata"
+    flags = re.MULTILINE
+    is_binary = False
+
+    def __call__(self, f):
+        m = "\n".join([f"{key}: {value}" for key, value in f.metadata.items()])
+        return self.re.search(m)
+
+
 class _Int(_Action):
 
     def __init__(self, num):
@@ -444,6 +478,9 @@ filter_unary: Sequence[Type[_Action]] = [
     FErr,
     FHTTP,
     FMarked,
+    FReplay,
+    FReplayClient,
+    FReplayServer,
     FReq,
     FResp,
     FTCP,
@@ -464,6 +501,7 @@ filter_rex: Sequence[Type[_Rex]] = [
     FMethod,
     FSrc,
     FUrl,
+    FMeta,
 ]
 filter_int = [
     FCode

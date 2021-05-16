@@ -60,7 +60,7 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
             text.append(urwid.Text([("head", "Server Certificate:")]))
             parts = [
                 ("Type", "%s, %s bits" % c.keyinfo),
-                ("SHA256 digest", c.fingerprint().hex()),
+                ("SHA256 digest", c.fingerprint().hex(' ')),
                 ("Valid to", str(c.notafter)),
                 ("Valid from", str(c.notbefore)),
                 ("Serial", str(c.serial)),

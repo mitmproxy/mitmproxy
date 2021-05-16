@@ -1,8 +1,8 @@
 import os
+import re
 from codecs import open
 
-import re
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 # Based on https://github.com/pypa/sampleproject/blob/main/setup.py
 # and https://python-packaging-user-guide.readthedocs.org/
@@ -71,9 +71,9 @@ setup(
         "blinker>=1.4, <1.5",
         "Brotli>=1.0,<1.1",
         "certifi>=2019.9.11",  # no semver here - this should always be on the last release!
-        "click>=7.0,<8",
+        "click>=7.0,<8.1",
         "cryptography>=3.3,<3.5",
-        "flask>=1.1.1,<1.2",
+        "flask>=1.1.1,<2.1",
         "h11>=0.11,<0.13",
         "h2>=4.0,<5",
         "hyperframe>=6.0,<7",
@@ -81,7 +81,7 @@ setup(
         "ldap3>=2.8,<2.10",
         "msgpack>=1.0.0, <1.1.0",
         "passlib>=1.6.5, <1.8",
-        "protobuf>=3.14,<3.16",
+        "protobuf>=3.14,<3.18",
         "pyOpenSSL>=20.0,<20.1",
         "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.9",
@@ -102,9 +102,10 @@ setup(
             "pydivert>=2.0.3,<2.2",
         ],
         'dev': [
-            "hypothesis>=5.8,<6.10",
+            "hypothesis>=5.8,<6.13",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
+            "pyinstaller==4.3",
             "pytest-asyncio>=0.10.0,<0.14,!=0.14",
             "pytest-cov>=2.7.1,<3",
             "pytest-timeout>=1.3.3,<2",
@@ -112,6 +113,7 @@ setup(
             "pytest>=6.1.0,<7",
             "requests>=2.9.1,<3",
             "tox>=3.5,<4",
-        ]
+            "wheel>=0.36.2,<0.37"
+        ],
     }
 )

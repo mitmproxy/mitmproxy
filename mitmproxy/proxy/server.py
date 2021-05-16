@@ -226,6 +226,9 @@ class ConnectionHandler(metaclass=abc.ABCMeta):
                 break
             else:
                 self.server_event(events.DataReceived(connection, data))
+                for transport in self.transports.values():
+                    if transport.writer is not None:
+                        await transport.writer.drain()
 
         if cancelled is None:
             connection.state &= ~ConnectionState.CAN_READ
