@@ -97,7 +97,7 @@ setup(
             "pydivert>=2.0.3,<2.2",
         ],
         'dev': [
-            "hypothesis>=5.8,<6.13",
+            "hypothesis>=6.13,<6.14",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
             "pyinstaller==4.3",
