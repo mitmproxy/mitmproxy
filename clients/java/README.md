@@ -115,10 +115,10 @@ Class | Method | HTTP request | Description
 *BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 *BrowserUpProxyApi* | [**resetHarLog**](docs/BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
 *BrowserUpProxyApi* | [**setHarPage**](docs/BrowserUpProxyApi.md#setHarPage) | **POST** /har/page | 
-*BrowserUpProxyApi* | [**verifyNotPresent**](docs/BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present | 
-*BrowserUpProxyApi* | [**verifyPresent**](docs/BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present | 
-*BrowserUpProxyApi* | [**verifySLA**](docs/BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time} | 
-*BrowserUpProxyApi* | [**verifySize**](docs/BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size} | 
+*BrowserUpProxyApi* | [**verifyNotPresent**](docs/BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
+*BrowserUpProxyApi* | [**verifyPresent**](docs/BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
+*BrowserUpProxyApi* | [**verifySLA**](docs/BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
+*BrowserUpProxyApi* | [**verifySize**](docs/BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} | 
 
 
 ## Documentation for Models

@@ -5,6 +5,8 @@ info:
     \ HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.\n___\n"
   title: BrowserUp Proxy
   version: 1.0.0
+  x-logo:
+    url: logo.png
 servers:
 - description: The development API server
   url: http://localhost:{port}/
@@ -73,10 +75,20 @@ paths:
       - BrowserUpProxy
       x-contentType: application/json
       x-accepts: application/json
-  /verify/present:
+  /verify/present/{name}:
     post:
       description: Verify at least one matching item is present in the captured traffic
       operationId: verifyPresent
+      parameters:
+      - description: The unique name for this verification operation
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          pattern: /[a-zA-Z0-9_]{4,16}/
+          type: string
+        style: simple
       requestBody:
         content:
           application/json:
@@ -95,10 +107,20 @@ paths:
       - BrowserUpProxy
       x-contentType: application/json
       x-accepts: application/json
-  /verify/not_present:
+  /verify/not_present/{name}:
     post:
       description: Verify no matching items are present in the captured traffic
       operationId: verifyNotPresent
+      parameters:
+      - description: The unique name for this verification operation
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          pattern: /[a-zA-Z0-9_]{4,16}/
+          type: string
+        style: simple
       requestBody:
         content:
           application/json:
@@ -117,7 +139,7 @@ paths:
       - BrowserUpProxy
       x-contentType: application/json
       x-accepts: application/json
-  /verify/size/{size}:
+  /verify/size/{size}/{name}:
     post:
       description: Verify matching items in the captured traffic meet the size criteria
       operationId: verifySize
@@ -130,6 +152,15 @@ paths:
         schema:
           minimum: 0
           type: integer
+        style: simple
+      - description: The unique name for this verification operation
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          pattern: /[a-zA-Z0-9_]{4,16}/
+          type: string
         style: simple
       requestBody:
         content:
@@ -149,7 +180,7 @@ paths:
       - BrowserUpProxy
       x-contentType: application/json
       x-accepts: application/json
-  /verify/sla/{time}:
+  /verify/sla/{time}/{name}:
     post:
       description: Verify each traffic item matching the criteria meets is below SLA
         time
@@ -163,6 +194,15 @@ paths:
         schema:
           minimum: 0
           type: integer
+        style: simple
+      - description: The unique name for this verification operation
+        explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          pattern: /[a-zA-Z0-9_]{4,16}/
+          type: string
         style: simple
       requestBody:
         content:

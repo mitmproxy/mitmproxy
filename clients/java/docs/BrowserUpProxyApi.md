@@ -9,10 +9,10 @@ Method | HTTP request | Description
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 [**resetHarLog**](BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
 [**setHarPage**](BrowserUpProxyApi.md#setHarPage) | **POST** /har/page | 
-[**verifyNotPresent**](BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present | 
-[**verifyPresent**](BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present | 
-[**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time} | 
-[**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size} | 
+[**verifyNotPresent**](BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
+[**verifyPresent**](BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
+[**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
+[**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} | 
 
 
 <a name="addCustomHarFields"></a>
@@ -309,7 +309,7 @@ No authorization required
 
 <a name="verifyNotPresent"></a>
 # **verifyNotPresent**
-> VerifyResult verifyNotPresent(matchCriteria)
+> VerifyResult verifyNotPresent(name, matchCriteria)
 
 
 
@@ -330,9 +330,10 @@ public class Example {
     defaultClient.setBasePath("http://localhost:8088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
+    String name = "name_example"; // String | The unique name for this verification operation
     MatchCriteria matchCriteria = new MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
     try {
-      VerifyResult result = apiInstance.verifyNotPresent(matchCriteria);
+      VerifyResult result = apiInstance.verifyNotPresent(name, matchCriteria);
       System.out.println(result);
     } catch (ApiException e) {
       System.err.println("Exception when calling BrowserUpProxyApi#verifyNotPresent");
@@ -349,6 +350,7 @@ public class Example {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **name** | **String**| The unique name for this verification operation |
  **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
 
 ### Return type
@@ -371,7 +373,7 @@ No authorization required
 
 <a name="verifyPresent"></a>
 # **verifyPresent**
-> VerifyResult verifyPresent(matchCriteria)
+> VerifyResult verifyPresent(name, matchCriteria)
 
 
 
@@ -392,9 +394,10 @@ public class Example {
     defaultClient.setBasePath("http://localhost:8088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
+    String name = "name_example"; // String | The unique name for this verification operation
     MatchCriteria matchCriteria = new MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
     try {
-      VerifyResult result = apiInstance.verifyPresent(matchCriteria);
+      VerifyResult result = apiInstance.verifyPresent(name, matchCriteria);
       System.out.println(result);
     } catch (ApiException e) {
       System.err.println("Exception when calling BrowserUpProxyApi#verifyPresent");
@@ -411,6 +414,7 @@ public class Example {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **name** | **String**| The unique name for this verification operation |
  **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
 
 ### Return type
@@ -433,7 +437,7 @@ No authorization required
 
 <a name="verifySLA"></a>
 # **verifySLA**
-> VerifyResult verifySLA(time, matchCriteria)
+> VerifyResult verifySLA(time, name, matchCriteria)
 
 
 
@@ -455,9 +459,10 @@ public class Example {
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     Integer time = 56; // Integer | The time used for comparison
+    String name = "name_example"; // String | The unique name for this verification operation
     MatchCriteria matchCriteria = new MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
     try {
-      VerifyResult result = apiInstance.verifySLA(time, matchCriteria);
+      VerifyResult result = apiInstance.verifySLA(time, name, matchCriteria);
       System.out.println(result);
     } catch (ApiException e) {
       System.err.println("Exception when calling BrowserUpProxyApi#verifySLA");
@@ -475,6 +480,7 @@ public class Example {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **time** | **Integer**| The time used for comparison |
+ **name** | **String**| The unique name for this verification operation |
  **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
 
 ### Return type
@@ -497,7 +503,7 @@ No authorization required
 
 <a name="verifySize"></a>
 # **verifySize**
-> VerifyResult verifySize(size, matchCriteria)
+> VerifyResult verifySize(size, name, matchCriteria)
 
 
 
@@ -519,9 +525,10 @@ public class Example {
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
     Integer size = 56; // Integer | The size used for comparison
+    String name = "name_example"; // String | The unique name for this verification operation
     MatchCriteria matchCriteria = new MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
     try {
-      VerifyResult result = apiInstance.verifySize(size, matchCriteria);
+      VerifyResult result = apiInstance.verifySize(size, name, matchCriteria);
       System.out.println(result);
     } catch (ApiException e) {
       System.err.println("Exception when calling BrowserUpProxyApi#verifySize");
@@ -539,6 +546,7 @@ public class Example {
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **size** | **Integer**| The size used for comparison |
+ **name** | **String**| The unique name for this verification operation |
  **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
 
 ### Return type

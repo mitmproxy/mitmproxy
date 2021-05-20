@@ -1,6 +1,6 @@
 /*
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -14,11 +14,9 @@
 package com.browserup.proxy.api;
 
 import com.browserup.proxy_client.ApiException;
-import com.browserup.proxy_client.AllowList;
-import com.browserup.proxy_client.AuthBasic;
-import com.browserup.proxy_client.BlockList;
 import com.browserup.proxy_client.Har;
-import com.browserup.proxy_client.Headers;
+import com.browserup.proxy_client.MatchCriteria;
+import com.browserup.proxy_client.VerifyResult;
 import org.junit.Test;
 import org.junit.Ignore;
 
@@ -39,90 +37,15 @@ public class BrowserUpProxyApiTest {
     /**
      * 
      *
-     * Clear the additional Headers
+     * Add custom fields to the current HAR.
      *
      * @throws ApiException
      *          if the Api call fails
      */
     @Test
-    public void clearAdditionalHeadersTest() throws ApiException {
-        api.clearAdditionalHeaders();
-
-        // TODO: test validations
-    }
-    
-    /**
-     * 
-     *
-     * Clears the AllowList, which will turn-off allowlist based filtering
-     *
-     * @throws ApiException
-     *          if the Api call fails
-     */
-    @Test
-    public void clearAllowListTest() throws ApiException {
-        api.clearAllowList();
-
-        // TODO: test validations
-    }
-    
-    /**
-     * 
-     *
-     * Clears Basic Auth for a domain, disabling Automatic Basic Auth for it.
-     *
-     * @throws ApiException
-     *          if the Api call fails
-     */
-    @Test
-    public void clearBasicAuthSettingsTest() throws ApiException {
-        String domain = null;
-        api.clearBasicAuthSettings(domain);
-
-        // TODO: test validations
-    }
-    
-    /**
-     * 
-     *
-     * Get the current added Headers
-     *
-     * @throws ApiException
-     *          if the Api call fails
-     */
-    @Test
-    public void getAdditionalHeadersTest() throws ApiException {
-        Headers response = api.getAdditionalHeaders();
-
-        // TODO: test validations
-    }
-    
-    /**
-     * 
-     *
-     * Get an AllowList
-     *
-     * @throws ApiException
-     *          if the Api call fails
-     */
-    @Test
-    public void getAllowListTest() throws ApiException {
-        AllowList response = api.getAllowList();
-
-        // TODO: test validations
-    }
-    
-    /**
-     * 
-     *
-     * Get a blocklist
-     *
-     * @throws ApiException
-     *          if the Api call fails
-     */
-    @Test
-    public void getBlockListTest() throws ApiException {
-        BlockList response = api.getBlockList();
+    public void addCustomHarFieldsTest() throws ApiException {
+        Object body = null;
+        api.addCustomHarFields(body);
 
         // TODO: test validations
     }
@@ -151,8 +74,8 @@ public class BrowserUpProxyApiTest {
      *          if the Api call fails
      */
     @Test
-    public void healthcheckGetTest() throws ApiException {
-        api.healthcheckGet();
+    public void healthcheckTest() throws ApiException {
+        api.healthcheck();
 
         // TODO: test validations
     }
@@ -175,70 +98,6 @@ public class BrowserUpProxyApiTest {
     /**
      * 
      *
-     * Set additional headers to add to requests
-     *
-     * @throws ApiException
-     *          if the Api call fails
-     */
-    @Test
-    public void setAdditionalHeadersTest() throws ApiException {
-        Headers response = api.setAdditionalHeaders();
-
-        // TODO: test validations
-    }
-    
-    /**
-     * 
-     *
-     * Sets an AllowList
-     *
-     * @throws ApiException
-     *          if the Api call fails
-     */
-    @Test
-    public void setAllowListTest() throws ApiException {
-        AllowList allowList = null;
-        api.setAllowList(allowList);
-
-        // TODO: test validations
-    }
-    
-    /**
-     * 
-     *
-     * Enables automatic basic auth for a domain
-     *
-     * @throws ApiException
-     *          if the Api call fails
-     */
-    @Test
-    public void setBasicAuthTest() throws ApiException {
-        String domain = null;
-        AuthBasic authBasic = null;
-        api.setBasicAuth(domain, authBasic);
-
-        // TODO: test validations
-    }
-    
-    /**
-     * 
-     *
-     * Sets an BlockList
-     *
-     * @throws ApiException
-     *          if the Api call fails
-     */
-    @Test
-    public void setBlockListTest() throws ApiException {
-        BlockList blockList = null;
-        api.setBlockList(blockList);
-
-        // TODO: test validations
-    }
-    
-    /**
-     * 
-     *
      * Starts a fresh HAR Page in the current active HAR
      *
      * @throws ApiException
@@ -247,6 +106,76 @@ public class BrowserUpProxyApiTest {
     @Test
     public void setHarPageTest() throws ApiException {
         Har response = api.setHarPage();
+
+        // TODO: test validations
+    }
+    
+    /**
+     * 
+     *
+     * Verify no matching items are present in the captured traffic
+     *
+     * @throws ApiException
+     *          if the Api call fails
+     */
+    @Test
+    public void verifyNotPresentTest() throws ApiException {
+        String name = null;
+        MatchCriteria matchCriteria = null;
+        VerifyResult response = api.verifyNotPresent(name, matchCriteria);
+
+        // TODO: test validations
+    }
+    
+    /**
+     * 
+     *
+     * Verify at least one matching item is present in the captured traffic
+     *
+     * @throws ApiException
+     *          if the Api call fails
+     */
+    @Test
+    public void verifyPresentTest() throws ApiException {
+        String name = null;
+        MatchCriteria matchCriteria = null;
+        VerifyResult response = api.verifyPresent(name, matchCriteria);
+
+        // TODO: test validations
+    }
+    
+    /**
+     * 
+     *
+     * Verify each traffic item matching the criteria meets is below SLA time
+     *
+     * @throws ApiException
+     *          if the Api call fails
+     */
+    @Test
+    public void verifySLATest() throws ApiException {
+        Integer time = null;
+        String name = null;
+        MatchCriteria matchCriteria = null;
+        VerifyResult response = api.verifySLA(time, name, matchCriteria);
+
+        // TODO: test validations
+    }
+    
+    /**
+     * 
+     *
+     * Verify matching items in the captured traffic meet the size criteria
+     *
+     * @throws ApiException
+     *          if the Api call fails
+     */
+    @Test
+    public void verifySizeTest() throws ApiException {
+        Integer size = null;
+        String name = null;
+        MatchCriteria matchCriteria = null;
+        VerifyResult response = api.verifySize(size, name, matchCriteria);
 
         // TODO: test validations
     }

@@ -564,6 +564,7 @@ public class BrowserUpProxyApi {
     }
     /**
      * Build call for verifyNotPresent
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @param _callback Callback for upload/download progress
      * @return Call to execute
@@ -574,11 +575,12 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifyNotPresentCall(MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    public okhttp3.Call verifyNotPresentCall(String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         Object localVarPostBody = matchCriteria;
 
         // create path and map variables
-        String localVarPath = "/verify/not_present";
+        String localVarPath = "/verify/not_present/{name}"
+            .replaceAll("\\{" + "name" + "\\}", localVarApiClient.escapeString(name.toString()));
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
@@ -605,7 +607,12 @@ public class BrowserUpProxyApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call verifyNotPresentValidateBeforeCall(MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call verifyNotPresentValidateBeforeCall(String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+        
+        // verify the required parameter 'name' is set
+        if (name == null) {
+            throw new ApiException("Missing the required parameter 'name' when calling verifyNotPresent(Async)");
+        }
         
         // verify the required parameter 'matchCriteria' is set
         if (matchCriteria == null) {
@@ -613,7 +620,7 @@ public class BrowserUpProxyApi {
         }
         
 
-        okhttp3.Call localVarCall = verifyNotPresentCall(matchCriteria, _callback);
+        okhttp3.Call localVarCall = verifyNotPresentCall(name, matchCriteria, _callback);
         return localVarCall;
 
     }
@@ -621,6 +628,7 @@ public class BrowserUpProxyApi {
     /**
      * 
      * Verify no matching items are present in the captured traffic
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @return VerifyResult
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
@@ -630,14 +638,15 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
      </table>
      */
-    public VerifyResult verifyNotPresent(MatchCriteria matchCriteria) throws ApiException {
-        ApiResponse<VerifyResult> localVarResp = verifyNotPresentWithHttpInfo(matchCriteria);
+    public VerifyResult verifyNotPresent(String name, MatchCriteria matchCriteria) throws ApiException {
+        ApiResponse<VerifyResult> localVarResp = verifyNotPresentWithHttpInfo(name, matchCriteria);
         return localVarResp.getData();
     }
 
     /**
      * 
      * Verify no matching items are present in the captured traffic
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @return ApiResponse&lt;VerifyResult&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
@@ -647,8 +656,8 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<VerifyResult> verifyNotPresentWithHttpInfo(MatchCriteria matchCriteria) throws ApiException {
-        okhttp3.Call localVarCall = verifyNotPresentValidateBeforeCall(matchCriteria, null);
+    public ApiResponse<VerifyResult> verifyNotPresentWithHttpInfo(String name, MatchCriteria matchCriteria) throws ApiException {
+        okhttp3.Call localVarCall = verifyNotPresentValidateBeforeCall(name, matchCriteria, null);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         return localVarApiClient.execute(localVarCall, localVarReturnType);
     }
@@ -656,6 +665,7 @@ public class BrowserUpProxyApi {
     /**
      *  (asynchronously)
      * Verify no matching items are present in the captured traffic
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @param _callback The callback to be executed when the API call finishes
      * @return The request call
@@ -666,15 +676,16 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic had no matching items </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifyNotPresentAsync(MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+    public okhttp3.Call verifyNotPresentAsync(String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
 
-        okhttp3.Call localVarCall = verifyNotPresentValidateBeforeCall(matchCriteria, _callback);
+        okhttp3.Call localVarCall = verifyNotPresentValidateBeforeCall(name, matchCriteria, _callback);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
         return localVarCall;
     }
     /**
      * Build call for verifyPresent
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @param _callback Callback for upload/download progress
      * @return Call to execute
@@ -685,11 +696,12 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifyPresentCall(MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    public okhttp3.Call verifyPresentCall(String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         Object localVarPostBody = matchCriteria;
 
         // create path and map variables
-        String localVarPath = "/verify/present";
+        String localVarPath = "/verify/present/{name}"
+            .replaceAll("\\{" + "name" + "\\}", localVarApiClient.escapeString(name.toString()));
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
@@ -716,7 +728,12 @@ public class BrowserUpProxyApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call verifyPresentValidateBeforeCall(MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call verifyPresentValidateBeforeCall(String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+        
+        // verify the required parameter 'name' is set
+        if (name == null) {
+            throw new ApiException("Missing the required parameter 'name' when calling verifyPresent(Async)");
+        }
         
         // verify the required parameter 'matchCriteria' is set
         if (matchCriteria == null) {
@@ -724,7 +741,7 @@ public class BrowserUpProxyApi {
         }
         
 
-        okhttp3.Call localVarCall = verifyPresentCall(matchCriteria, _callback);
+        okhttp3.Call localVarCall = verifyPresentCall(name, matchCriteria, _callback);
         return localVarCall;
 
     }
@@ -732,6 +749,7 @@ public class BrowserUpProxyApi {
     /**
      * 
      * Verify at least one matching item is present in the captured traffic
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @return VerifyResult
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
@@ -741,14 +759,15 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public VerifyResult verifyPresent(MatchCriteria matchCriteria) throws ApiException {
-        ApiResponse<VerifyResult> localVarResp = verifyPresentWithHttpInfo(matchCriteria);
+    public VerifyResult verifyPresent(String name, MatchCriteria matchCriteria) throws ApiException {
+        ApiResponse<VerifyResult> localVarResp = verifyPresentWithHttpInfo(name, matchCriteria);
         return localVarResp.getData();
     }
 
     /**
      * 
      * Verify at least one matching item is present in the captured traffic
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @return ApiResponse&lt;VerifyResult&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
@@ -758,8 +777,8 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<VerifyResult> verifyPresentWithHttpInfo(MatchCriteria matchCriteria) throws ApiException {
-        okhttp3.Call localVarCall = verifyPresentValidateBeforeCall(matchCriteria, null);
+    public ApiResponse<VerifyResult> verifyPresentWithHttpInfo(String name, MatchCriteria matchCriteria) throws ApiException {
+        okhttp3.Call localVarCall = verifyPresentValidateBeforeCall(name, matchCriteria, null);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         return localVarApiClient.execute(localVarCall, localVarReturnType);
     }
@@ -767,6 +786,7 @@ public class BrowserUpProxyApi {
     /**
      *  (asynchronously)
      * Verify at least one matching item is present in the captured traffic
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @param _callback The callback to be executed when the API call finishes
      * @return The request call
@@ -777,9 +797,9 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifyPresentAsync(MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+    public okhttp3.Call verifyPresentAsync(String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
 
-        okhttp3.Call localVarCall = verifyPresentValidateBeforeCall(matchCriteria, _callback);
+        okhttp3.Call localVarCall = verifyPresentValidateBeforeCall(name, matchCriteria, _callback);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
         return localVarCall;
@@ -787,6 +807,7 @@ public class BrowserUpProxyApi {
     /**
      * Build call for verifySLA
      * @param time The time used for comparison (required)
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @param _callback Callback for upload/download progress
      * @return Call to execute
@@ -797,12 +818,13 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifySLACall(Integer time, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    public okhttp3.Call verifySLACall(Integer time, String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         Object localVarPostBody = matchCriteria;
 
         // create path and map variables
-        String localVarPath = "/verify/sla/{time}"
-            .replaceAll("\\{" + "time" + "\\}", localVarApiClient.escapeString(time.toString()));
+        String localVarPath = "/verify/sla/{time}/{name}"
+            .replaceAll("\\{" + "time" + "\\}", localVarApiClient.escapeString(time.toString()))
+            .replaceAll("\\{" + "name" + "\\}", localVarApiClient.escapeString(name.toString()));
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
@@ -829,11 +851,16 @@ public class BrowserUpProxyApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call verifySLAValidateBeforeCall(Integer time, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call verifySLAValidateBeforeCall(Integer time, String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         
         // verify the required parameter 'time' is set
         if (time == null) {
             throw new ApiException("Missing the required parameter 'time' when calling verifySLA(Async)");
+        }
+        
+        // verify the required parameter 'name' is set
+        if (name == null) {
+            throw new ApiException("Missing the required parameter 'name' when calling verifySLA(Async)");
         }
         
         // verify the required parameter 'matchCriteria' is set
@@ -842,7 +869,7 @@ public class BrowserUpProxyApi {
         }
         
 
-        okhttp3.Call localVarCall = verifySLACall(time, matchCriteria, _callback);
+        okhttp3.Call localVarCall = verifySLACall(time, name, matchCriteria, _callback);
         return localVarCall;
 
     }
@@ -851,6 +878,7 @@ public class BrowserUpProxyApi {
      * 
      * Verify each traffic item matching the criteria meets is below SLA time
      * @param time The time used for comparison (required)
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @return VerifyResult
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
@@ -860,8 +888,8 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public VerifyResult verifySLA(Integer time, MatchCriteria matchCriteria) throws ApiException {
-        ApiResponse<VerifyResult> localVarResp = verifySLAWithHttpInfo(time, matchCriteria);
+    public VerifyResult verifySLA(Integer time, String name, MatchCriteria matchCriteria) throws ApiException {
+        ApiResponse<VerifyResult> localVarResp = verifySLAWithHttpInfo(time, name, matchCriteria);
         return localVarResp.getData();
     }
 
@@ -869,6 +897,7 @@ public class BrowserUpProxyApi {
      * 
      * Verify each traffic item matching the criteria meets is below SLA time
      * @param time The time used for comparison (required)
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @return ApiResponse&lt;VerifyResult&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
@@ -878,8 +907,8 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<VerifyResult> verifySLAWithHttpInfo(Integer time, MatchCriteria matchCriteria) throws ApiException {
-        okhttp3.Call localVarCall = verifySLAValidateBeforeCall(time, matchCriteria, null);
+    public ApiResponse<VerifyResult> verifySLAWithHttpInfo(Integer time, String name, MatchCriteria matchCriteria) throws ApiException {
+        okhttp3.Call localVarCall = verifySLAValidateBeforeCall(time, name, matchCriteria, null);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         return localVarApiClient.execute(localVarCall, localVarReturnType);
     }
@@ -888,6 +917,7 @@ public class BrowserUpProxyApi {
      *  (asynchronously)
      * Verify each traffic item matching the criteria meets is below SLA time
      * @param time The time used for comparison (required)
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @param _callback The callback to be executed when the API call finishes
      * @return The request call
@@ -898,9 +928,9 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the time criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifySLAAsync(Integer time, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+    public okhttp3.Call verifySLAAsync(Integer time, String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
 
-        okhttp3.Call localVarCall = verifySLAValidateBeforeCall(time, matchCriteria, _callback);
+        okhttp3.Call localVarCall = verifySLAValidateBeforeCall(time, name, matchCriteria, _callback);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
         return localVarCall;
@@ -908,6 +938,7 @@ public class BrowserUpProxyApi {
     /**
      * Build call for verifySize
      * @param size The size used for comparison (required)
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @param _callback Callback for upload/download progress
      * @return Call to execute
@@ -918,12 +949,13 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifySizeCall(Integer size, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    public okhttp3.Call verifySizeCall(Integer size, String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         Object localVarPostBody = matchCriteria;
 
         // create path and map variables
-        String localVarPath = "/verify/size/{size}"
-            .replaceAll("\\{" + "size" + "\\}", localVarApiClient.escapeString(size.toString()));
+        String localVarPath = "/verify/size/{size}/{name}"
+            .replaceAll("\\{" + "size" + "\\}", localVarApiClient.escapeString(size.toString()))
+            .replaceAll("\\{" + "name" + "\\}", localVarApiClient.escapeString(name.toString()));
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
@@ -950,11 +982,16 @@ public class BrowserUpProxyApi {
     }
 
     @SuppressWarnings("rawtypes")
-    private okhttp3.Call verifySizeValidateBeforeCall(Integer size, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
+    private okhttp3.Call verifySizeValidateBeforeCall(Integer size, String name, MatchCriteria matchCriteria, final ApiCallback _callback) throws ApiException {
         
         // verify the required parameter 'size' is set
         if (size == null) {
             throw new ApiException("Missing the required parameter 'size' when calling verifySize(Async)");
+        }
+        
+        // verify the required parameter 'name' is set
+        if (name == null) {
+            throw new ApiException("Missing the required parameter 'name' when calling verifySize(Async)");
         }
         
         // verify the required parameter 'matchCriteria' is set
@@ -963,7 +1000,7 @@ public class BrowserUpProxyApi {
         }
         
 
-        okhttp3.Call localVarCall = verifySizeCall(size, matchCriteria, _callback);
+        okhttp3.Call localVarCall = verifySizeCall(size, name, matchCriteria, _callback);
         return localVarCall;
 
     }
@@ -972,6 +1009,7 @@ public class BrowserUpProxyApi {
      * 
      * Verify matching items in the captured traffic meet the size criteria
      * @param size The size used for comparison (required)
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @return VerifyResult
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
@@ -981,8 +1019,8 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public VerifyResult verifySize(Integer size, MatchCriteria matchCriteria) throws ApiException {
-        ApiResponse<VerifyResult> localVarResp = verifySizeWithHttpInfo(size, matchCriteria);
+    public VerifyResult verifySize(Integer size, String name, MatchCriteria matchCriteria) throws ApiException {
+        ApiResponse<VerifyResult> localVarResp = verifySizeWithHttpInfo(size, name, matchCriteria);
         return localVarResp.getData();
     }
 
@@ -990,6 +1028,7 @@ public class BrowserUpProxyApi {
      * 
      * Verify matching items in the captured traffic meet the size criteria
      * @param size The size used for comparison (required)
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @return ApiResponse&lt;VerifyResult&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
@@ -999,8 +1038,8 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public ApiResponse<VerifyResult> verifySizeWithHttpInfo(Integer size, MatchCriteria matchCriteria) throws ApiException {
-        okhttp3.Call localVarCall = verifySizeValidateBeforeCall(size, matchCriteria, null);
+    public ApiResponse<VerifyResult> verifySizeWithHttpInfo(Integer size, String name, MatchCriteria matchCriteria) throws ApiException {
+        okhttp3.Call localVarCall = verifySizeValidateBeforeCall(size, name, matchCriteria, null);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         return localVarApiClient.execute(localVarCall, localVarReturnType);
     }
@@ -1009,6 +1048,7 @@ public class BrowserUpProxyApi {
      *  (asynchronously)
      * Verify matching items in the captured traffic meet the size criteria
      * @param size The size used for comparison (required)
+     * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @param _callback The callback to be executed when the API call finishes
      * @return The request call
@@ -1019,9 +1059,9 @@ public class BrowserUpProxyApi {
         <tr><td> 200 </td><td> The traffic conformed to the size criteria. </td><td>  -  </td></tr>
      </table>
      */
-    public okhttp3.Call verifySizeAsync(Integer size, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
+    public okhttp3.Call verifySizeAsync(Integer size, String name, MatchCriteria matchCriteria, final ApiCallback<VerifyResult> _callback) throws ApiException {
 
-        okhttp3.Call localVarCall = verifySizeValidateBeforeCall(size, matchCriteria, _callback);
+        okhttp3.Call localVarCall = verifySizeValidateBeforeCall(size, name, matchCriteria, _callback);
         Type localVarReturnType = new TypeToken<VerifyResult>(){}.getType();
         localVarApiClient.executeAsync(localVarCall, localVarReturnType, _callback);
         return localVarCall;

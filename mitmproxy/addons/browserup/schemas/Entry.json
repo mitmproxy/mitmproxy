@@ -369,15 +369,7 @@
       }
     },
     "serverIPAddress": {
-      "type": "string",
-      "oneOf": [
-        {
-          "format": "ipv4"
-        },
-        {
-          "format": "ipv6"
-        }
-      ]
+      "type": "string"
     },
     "connection": {
       "type": "string"

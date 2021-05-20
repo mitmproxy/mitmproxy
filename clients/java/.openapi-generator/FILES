@@ -1,4 +1,5 @@
 .gitignore
+.openapi-generator-ignore
 .travis.yml
 README.md
 api/openapi.yaml
@@ -62,3 +63,19 @@ src/main/java/com/browserup/proxy_client/auth/ApiKeyAuth.java
 src/main/java/com/browserup/proxy_client/auth/Authentication.java
 src/main/java/com/browserup/proxy_client/auth/HttpBasicAuth.java
 src/main/java/com/browserup/proxy_client/auth/HttpBearerAuth.java
+src/test/java/com/browserup/proxy/api/BrowserUpProxyApiTest.java
+src/test/java/com/browserup/proxy_client/EntryRequestCookiesTest.java
+src/test/java/com/browserup/proxy_client/EntryRequestQueryStringTest.java
+src/test/java/com/browserup/proxy_client/EntryRequestTest.java
+src/test/java/com/browserup/proxy_client/EntryResponseContentTest.java
+src/test/java/com/browserup/proxy_client/EntryResponseTest.java
+src/test/java/com/browserup/proxy_client/EntryTest.java
+src/test/java/com/browserup/proxy_client/HarLogCreatorTest.java
+src/test/java/com/browserup/proxy_client/HarLogTest.java
+src/test/java/com/browserup/proxy_client/HarTest.java
+src/test/java/com/browserup/proxy_client/HeaderTest.java
+src/test/java/com/browserup/proxy_client/MatchCriteriaTest.java
+src/test/java/com/browserup/proxy_client/NameValuePairTest.java
+src/test/java/com/browserup/proxy_client/PagePageTimingsTest.java
+src/test/java/com/browserup/proxy_client/PageTest.java
+src/test/java/com/browserup/proxy_client/VerifyResultTest.java
