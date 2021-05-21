@@ -137,7 +137,7 @@ class HarVerifications:
     def not_present(self, criteria):
         return len(self.entries(criteria)) == 0
 
-    def max(self, criteria, measurement_name):
+    def get_max(self, criteria, measurement_name):
         items = self.entries(criteria)
         return max(self.measure(items, measurement_name), default=0)
 

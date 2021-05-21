@@ -35,7 +35,6 @@ class HarCaptureAddOn(FlowCaptureMixin, HarManagerMixin):
     def request(self, flow: mitmproxy.http.HTTPFlow):
         if 'blocklisted' in flow.metadata:
             return
-        print("request called in addon {}".format(self.__class__.__name__))
         self.capture_request(flow)
 
     def response(self, flow: mitmproxy.http.HTTPFlow):
