@@ -229,6 +229,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: '3.9'
+      - run: sudo apt-get update
       - run: sudo apt-get install -y twine awscli
       - uses: actions/download-artifact@v2
         with:
