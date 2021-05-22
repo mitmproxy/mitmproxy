@@ -27,17 +27,6 @@ jobs:
           python-version: '3.9'
       - run: pip install tox
       - run: tox -e flake8
-  filename-matching:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - run: pip install tox
-      - run: tox -e filename_matching
   mypy:
     runs-on: ubuntu-latest
     steps:
