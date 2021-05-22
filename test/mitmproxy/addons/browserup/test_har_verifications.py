@@ -181,14 +181,14 @@ class TestHARVerifications:
         hc.request(json_flow)
         hc.response(json_flow)
         hv = HarVerifications(hc.har)
-        assert(hv.max({'status': '200'}, 'time'))
+        assert(hv.get_max({'status': '200'}, 'time'))
 
 
     def test_size_max(self, hc, json_flow):
         hc.request(json_flow)
         hc.response(json_flow)
         hv = HarVerifications(hc.har)
-        assert(hv.max({'status': '200'}, 'response'))
+        assert(hv.get_max({'status': '200'}, 'response'))
 
 
 @pytest.fixture()

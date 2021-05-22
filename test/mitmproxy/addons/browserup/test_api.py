@@ -2,7 +2,7 @@ import falcon
 from falcon import testing
 import pytest
 from mitmproxy.addons.browserup import har_capture_addon
-from  mitmproxy.addons.browserup.browserup_addons_manager import BrowserUpAddonsManagerAddOn
+from mitmproxy.addons.browserup.browserup_addons_manager import BrowserUpAddonsManagerAddOn
 import mitmproxy.addons.browserup.browserup_addons_manager
 import tempfile
 import os
