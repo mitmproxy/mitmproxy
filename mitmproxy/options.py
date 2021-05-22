@@ -4,7 +4,7 @@ from mitmproxy import optmanager
 
 CONF_DIR = "~/.mitmproxy"
 CONF_BASENAME = "mitmproxy"
-LISTEN_PORT = 8080
+LISTEN_PORT = 9009
 CONTENT_VIEW_LINES_CUTOFF = 512
 KEY_SIZE = 2048
 
