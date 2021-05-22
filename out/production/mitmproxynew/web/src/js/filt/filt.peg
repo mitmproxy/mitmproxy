@@ -1,0 +1,311 @@
+// PEG.js filter rules - see https://pegjs.org/
+
+{
+var flowutils = require("../flow/utils.js");
+
+function or(first, second) {
+    // Add explicit function names to ease debugging.
+    function orFilter() {
+        return first.apply(this, arguments) || second.apply(this, arguments);
+    }
+    orFilter.desc = first.desc + " or " + second.desc;
+    return orFilter;
+}
+function and(first, second) {
+    function andFilter() {
+        return first.apply(this, arguments) && second.apply(this, arguments);
+    }
+    andFilter.desc = first.desc + " and " + second.desc;
+    return andFilter;
+}
+function not(expr) {
+    function notFilter() {
+        return !expr.apply(this, arguments);
+    }
+    notFilter.desc = "not " + expr.desc;
+    return notFilter;
+}
+function binding(expr) {
+    function bindingFilter() {
+        return expr.apply(this, arguments);
+    }
+    bindingFilter.desc = "(" + expr.desc + ")";
+    return bindingFilter;
+}
+function trueFilter(flow) {
+    return true;
+}
+trueFilter.desc = "true";
+function falseFilter(flow) {
+    return false;
+}
+falseFilter.desc = "false";
+
+var ASSET_TYPES = [
+    new RegExp("text/javascript"),
+    new RegExp("application/x-javascript"),
+    new RegExp("application/javascript"),
+    new RegExp("text/css"),
+    new RegExp("image/.*"),
+    new RegExp("application/x-shockwave-flash")
+];
+function assetFilter(flow) {
+    if (flow.response) {
+        var ct = flowutils.ResponseUtils.getContentType(flow.response);
+        var i = ASSET_TYPES.length;
+        while (i--) {
+            if (ASSET_TYPES[i].test(ct)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+assetFilter.desc = "is asset";
+function responseCode(code){
+    function responseCodeFilter(flow){
+        return flow.response && flow.response.status_code === code;
+    }
+    responseCodeFilter.desc = "resp. code is " + code;
+    return responseCodeFilter;
+}
+function body(regex){
+    regex = new RegExp(regex, "i");
+    function bodyFilter(flow){
+        return true;
+    }
+    bodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+    return bodyFilter;
+}
+function requestBody(regex){
+    regex = new RegExp(regex, "i");
+    function requestBodyFilter(flow){
+        return true;
+    }
+    requestBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+    return requestBodyFilter;
+}
+function responseBody(regex){
+    regex = new RegExp(regex, "i");
+    function responseBodyFilter(flow){
+        return true;
+    }
+    responseBodyFilter.desc = "body filters are not implemented yet, see https://github.com/mitmproxy/mitmweb/issues/10";
+    return responseBodyFilter;
+}
+function domain(regex){
+    regex = new RegExp(regex, "i");
+    function domainFilter(flow){
+        return flow.request && (regex.test(flow.request.host) || regex.test(flow.request.pretty_host));
+    }
+    domainFilter.desc = "domain matches " + regex;
+    return domainFilter;
+}
+function destination(regex){
+    regex = new RegExp(regex, "i");
+    function destinationFilter(flow){
+    return (!!flow.server_conn.address)
+           &&
+           regex.test(flow.server_conn.address[0] + ":" + flow.server_conn.address[1]);
+    }
+    destinationFilter.desc = "destination address matches " + regex;
+    return destinationFilter;
+}
+function errorFilter(flow){
+    return !!flow.error;
+}
+errorFilter.desc = "has error";
+function header(regex){
+    regex = new RegExp(regex, "i");
+    function headerFilter(flow){
+        return (
+            (flow.request && flowutils.RequestUtils.match_header(flow.request, regex))
+            ||
+            (flow.response && flowutils.ResponseUtils.match_header(flow.response, regex))
+        );
+    }
+    headerFilter.desc = "header matches " + regex;
+    return headerFilter;
+}
+function requestHeader(regex){
+    regex = new RegExp(regex, "i");
+    function requestHeaderFilter(flow){
+        return (flow.request && flowutils.RequestUtils.match_header(flow.request, regex));
+    }
+    requestHeaderFilter.desc = "req. header matches " + regex;
+    return requestHeaderFilter;
+}
+function responseHeader(regex){
+    regex = new RegExp(regex, "i");
+    function responseHeaderFilter(flow){
+        return (flow.response && flowutils.ResponseUtils.match_header(flow.response, regex));
+    }
+    responseHeaderFilter.desc = "resp. header matches " + regex;
+    return responseHeaderFilter;
+}
+function httpFilter(flow){
+    return flow.type === "http";
+}
+httpFilter.desc = "is an HTTP Flow";
+function method(regex){
+    regex = new RegExp(regex, "i");
+    function methodFilter(flow){
+        return flow.request && regex.test(flow.request.method);
+    }
+    methodFilter.desc = "method matches " + regex;
+    return methodFilter;
+}
+function markedFilter(flow){
+    return flow.marked;
+}
+markedFilter.desc = "is marked";
+function noResponseFilter(flow){
+    return flow.request && !flow.response;
+}
+noResponseFilter.desc = "has no response";
+function responseFilter(flow){
+    return !!flow.response;
+}
+responseFilter.desc = "has response";
+function source(regex){
+    regex = new RegExp(regex, "i");
+    function sourceFilter(flow){
+        return (!!flow.client_conn.address)
+               &&
+               regex.test(flow.client_conn.address[0] + ":" + flow.client_conn.address[1]);
+    }
+    sourceFilter.desc = "source address matches " + regex;
+    return sourceFilter;
+}
+function contentType(regex){
+    regex = new RegExp(regex, "i");
+    function contentTypeFilter(flow){
+        return (
+            (flow.request && regex.test(flowutils.RequestUtils.getContentType(flow.request)))
+            ||
+            (flow.response && regex.test(flowutils.ResponseUtils.getContentType(flow.response)))
+        );
+    }
+    contentTypeFilter.desc = "content type matches " + regex;
+    return contentTypeFilter;
+}
+function tcpFilter(flow){
+    return flow.type === "tcp";
+}
+tcpFilter.desc = "is a TCP Flow";
+function requestContentType(regex){
+    regex = new RegExp(regex, "i");
+    function requestContentTypeFilter(flow){
+        return flow.request && regex.test(flowutils.RequestUtils.getContentType(flow.request));
+    }
+    requestContentTypeFilter.desc = "req. content type matches " + regex;
+    return requestContentTypeFilter;
+}
+function responseContentType(regex){
+    regex = new RegExp(regex, "i");
+    function responseContentTypeFilter(flow){
+        return flow.response && regex.test(flowutils.ResponseUtils.getContentType(flow.response));
+    }
+    responseContentTypeFilter.desc = "resp. content type matches " + regex;
+    return responseContentTypeFilter;
+}
+function url(regex){
+    regex = new RegExp(regex, "i");
+    function urlFilter(flow){
+        return flow.request && regex.test(flowutils.RequestUtils.pretty_url(flow.request));
+    }
+    urlFilter.desc = "url matches " + regex;
+    return urlFilter;
+}
+function websocketFilter(flow){
+    return flow.type === "websocket";
+}
+websocketFilter.desc = "is a Websocket Flow";
+}
+
+start "filter expression"
+  = __ orExpr:OrExpr __ { return orExpr; }
+
+ws "whitespace" = [ \t\n\r]
+cc "control character" = [|&!()~"]
+__ "optional whitespace" = ws*
+
+OrExpr
+  = first:AndExpr __ "|" __ second:OrExpr
+    { return or(first, second); }
+  / AndExpr
+
+AndExpr
+  = first:NotExpr __ "&" __ second:AndExpr
+    { return and(first, second); }
+  / first:NotExpr ws+ second:AndExpr
+    { return and(first, second); }
+  / NotExpr
+
+NotExpr
+  = "!" __ expr:NotExpr
+    { return not(expr); }
+  / BindingExpr
+
+BindingExpr
+  = "(" __ expr:OrExpr __ ")"
+    { return binding(expr); }
+  / Expr
+
+/* All the filters except "~s" and "~src" are arranged in the ascending order as
+   given in the docs(https://mitmproxy.org/docs/latest/concepts-filters/).
+   "~s" and "~src" are so arranged as "~s" caused problems in the evaluation of
+   "~src". */
+
+Expr
+  = "true" { return trueFilter; }
+  / "false" { return falseFilter; }
+  / "~a" { return assetFilter; }
+  / "~b" ws+ s:StringLiteral { return body(s); }
+  / "~bq" ws+ s:StringLiteral { return requestBody(s); }
+  / "~bs" ws+ s:StringLiteral { return responseBody(s); }
+  / "~c" ws+ s:IntegerLiteral { return responseCode(s); }
+  / "~d" ws+ s:StringLiteral { return domain(s); }
+  / "~dst" ws+ s:StringLiteral { return destination(s); }
+  / "~e" { return errorFilter; }
+  / "~h" ws+ s:StringLiteral { return header(s); }
+  / "~hq" ws+ s:StringLiteral { return requestHeader(s); }
+  / "~hs" ws+ s:StringLiteral { return responseHeader(s); }
+  / "~http" { return httpFilter; }
+  / "~m" ws+ s:StringLiteral { return method(s); }
+  / "~marked" { return markedFilter; }
+  / "~q" { return noResponseFilter; }
+  / "~src" ws+ s:StringLiteral { return source(s); }
+  / "~s" { return responseFilter; }
+  / "~t" ws+ s:StringLiteral { return contentType(s); }
+  / "~tcp" { return tcpFilter; }
+  / "~tq" ws+ s:StringLiteral { return requestContentType(s); }
+  / "~ts" ws+ s:StringLiteral { return responseContentType(s); }
+  / "~u" ws+ s:StringLiteral { return url(s); }
+  / "~websocket" { return websocketFilter; }
+  / s:StringLiteral { return url(s); }
+
+IntegerLiteral "integer"
+  = ['"]? digits:[0-9]+ ['"]? { return parseInt(digits.join(""), 10); }
+
+StringLiteral "string"
+  = '"' chars:DoubleStringChar* '"' { return chars.join(""); }
+  / "'" chars:SingleStringChar* "'" { return chars.join(""); }
+  / !cc chars:UnquotedStringChar+ { return chars.join(""); }
+
+DoubleStringChar
+  = !["\\] char:. { return char; }
+  / "\\" char:EscapeSequence { return char; }
+
+SingleStringChar
+  = !['\\] char:. { return char; }
+  / "\\" char:EscapeSequence { return char; }
+
+UnquotedStringChar
+  = !ws char:. { return char; }
+
+EscapeSequence
+  = ['"\\]
+  / "n" { return "\n"; }
+  / "r" { return "\r"; }
+  / "t" { return "\t"; }

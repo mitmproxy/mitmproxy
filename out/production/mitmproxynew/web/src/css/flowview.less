@@ -1,0 +1,40 @@
+.flowview-image {
+
+    text-align: center;
+
+    img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+}
+
+.edit-flow-container {
+    position: fixed;
+    right: 20px;
+}
+
+.edit-flow  {
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+    top: 5px;
+    height: 40px;
+    width: 40px;
+    border-radius: 20px;
+    z-index: 10000;
+
+    background-color: rgba(255, 255, 255, 0.7);
+    border: solid 2px rgba(248, 145, 59, 0.7);
+
+    text-align: center;
+    font-size: 22px;
+    line-height: 37px;
+
+    transition: all 100ms ease-in-out;
+}
+
+.edit-flow:hover {
+    background-color: rgba(239, 108, 0, 0.7);
+    color: rgba(0,0,0,0.8);
+    border: solid 2px transparent;
+}

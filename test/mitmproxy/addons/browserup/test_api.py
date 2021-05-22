@@ -2,7 +2,6 @@ import falcon
 from falcon import testing
 import pytest
 from mitmproxy.addons.browserup import har_capture_addon
-from mitmproxy.addons.browserup.browserup_addons_manager import BrowserUpAddonsManagerAddOn
 import mitmproxy.addons.browserup.browserup_addons_manager
 import tempfile
 import os
@@ -24,7 +23,6 @@ class TestAPI:
             req=tutils.treq(method=b'GET', **times),
             resp=tutils.tresp(content=resp_content, **times)
         )
-
 
     def client(self):
         a = mitmproxy.addons.browserup.browserup_addons_manager.BrowserUpAddonsManagerAddOn()
@@ -57,10 +55,12 @@ class TestAPI:
         response = self.client().simulate_post('/verify/size/100/NotTooLarge', json={})
         assert response.status == falcon.HTTP_OK
 
+
 @pytest.fixture()
 def path(tmpdir):
     d = tempfile.TemporaryDirectory().name
     return os.path.join(d, 'test.har')
+
 
 @pytest.fixture()
 def hc(path):
@@ -73,4 +73,3 @@ def hc(path):
 @pytest.fixture()
 def tdata():
     return data.Data(__name__)
-

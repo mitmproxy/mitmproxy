@@ -138,7 +138,6 @@ class FlowCaptureMixin(object):
         flow.set_har_entry(har_entry)
         ctx.log.debug('Populated har entry for response: {}, entry: {}'.format(flow.request.url, str(har_entry)))
 
-
     def capture_websocket_message(self, flow):
         if HarCaptureTypes.WEBSOCKET_MESSAGES in self.har_capture_types:
             har_entry = flow.get_har_entry()
@@ -171,7 +170,6 @@ class FlowCaptureMixin(object):
     # connection id seems like it is unique. We can choose to only report it once.
     # we could also put it on the page object.
 
-
     def get_full_url(self, request):
         host_port = request.host
         if request.method == 'CONNECT':
@@ -185,7 +183,6 @@ class FlowCaptureMixin(object):
                 host_port = host_port + ":" + str(request.port)
 
         return host_port
-
 
     def diff_millis(self, ts_end, ts_start):
         return round((ts_end - ts_start) * 1000)

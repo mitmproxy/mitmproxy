@@ -1,5 +1,5 @@
 from datetime import datetime
-from datetime import timezone
+
 
 class HarBuilder():
     # Default templates for building har chunks as dictionaries
@@ -9,6 +9,7 @@ class HarBuilder():
         return {
             "log": HarBuilder.log()
         }
+
     @staticmethod
     def log():
         return {
@@ -74,7 +75,6 @@ class HarBuilder():
             "wait": 0,
             "receive": 0
         }
-
 
     @staticmethod
     def entry_response():

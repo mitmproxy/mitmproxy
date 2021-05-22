@@ -6,11 +6,11 @@ from mitmproxy.addons.browserup.har.har_builder import HarBuilder
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
 import json
 import copy
-import tempfile
 
 DEFAULT_PAGE_REF = "Default"
 DEFAULT_PAGE_TITLE = "Default"
 REQUEST_SUBMITTED_FLAG = "_request_submitted"
+
 
 class HarManagerMixin():
     # Used to manage a single active har
@@ -29,10 +29,9 @@ class HarManagerMixin():
             HarCaptureTypes.RESPONSE_CONTENT,
             HarCaptureTypes.RESPONSE_BINARY_CONTENT,
             HarCaptureTypes.WEBSOCKET_MESSAGES,
-            ]
+        ]
         self.current_har_page = None
         self.http_connect_timings = {}
-
 
     def create_har_entry(self, flow):
         har = self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, True)
@@ -61,7 +60,7 @@ class HarManagerMixin():
     def new_page(self, page_ref, page_title):
         ctx.log.info(
             'Creating new page with initial page ref: {}, title: {}'.
-                format(page_ref, page_title))
+            format(page_ref, page_title))
 
         har = self.get_or_create_har(page_ref, page_title, False)
 
@@ -106,7 +105,7 @@ class HarManagerMixin():
 
     def add_default_page(self):
         self.get_or_create_har(DEFAULT_PAGE_REF, DEFAULT_PAGE_TITLE, False)
-        new_page = HarBuilder.page(title=DEFAULT_PAGE_REF,id=DEFAULT_PAGE_REF)
+        new_page = HarBuilder.page(title=DEFAULT_PAGE_REF, id=DEFAULT_PAGE_REF)
         self.har['log']['pages'].append(new_page)
         return new_page
 
@@ -121,7 +120,7 @@ class HarManagerMixin():
         if create_page:
             ctx.log.info(
                 'Creating new har with initial page ref: {}, title: {}'.
-                    format(initial_page_ref, initial_page_title))
+                format(initial_page_ref, initial_page_title))
         else:
             ctx.log.info('Creating new har without initial page')
 
@@ -139,12 +138,14 @@ class HarManagerMixin():
 
     def add_verification_to_har(self, verification_name, verification_type, result):
         page = self.get_or_create_current_page()
-        page.setdefault('_verifications', {}).setdefault(verification_name, { "type": verification_type, "passed": result })
+        page.setdefault('_verifications', {}).setdefault(
+            verification_name, {"type": verification_type, "passed": result})
 
     def end_har(self):
         ctx.log.info('Ending current har...')
         old_har = self.har
-        if old_har is None: return
+        if old_har is None:
+            return
 
         self.end_page()
         self.har = None
@@ -204,7 +205,6 @@ class HarManagerMixin():
             for entry in har['log']['entries']:
                 entry[REQUEST_SUBMITTED_FLAG] = True
 
-
     def copy_har_through_page_ref(self, har, page_ref):
         if har is None:
             return None
@@ -233,7 +233,6 @@ class HarManagerMixin():
         har_copy['log'] = log_copy
 
         return har_copy
-
 
     def format_cookies(self, cookie_list):
         rv = []

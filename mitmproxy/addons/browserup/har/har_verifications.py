@@ -5,6 +5,7 @@ from jsonschema import validate
 from jsonschema import ValidationError
 from jsonpath_ng import parse
 
+
 class HarVerifications:
 
     def __init__(self, har):
@@ -39,7 +40,7 @@ class HarVerifications:
             if 'name' in kv:
                 name = self.rmatch(item['name'], kv['name'])
 
-            if 'value'in kv:
+            if 'value' in kv:
                 value = self.rmatch(kv['value'], item['value'])
 
             if name and value:
@@ -49,10 +50,10 @@ class HarVerifications:
 
     def schema_validate(self, item, schema):
         try:
-            if type(item) == str:
+            if isinstance(item, str):
                 item = json.loads(item)
             validate(instance=item, schema=schema)
-        except (ValidationError, ValueError) as e:
+        except (ValidationError, ValueError):
             return False
         return True
 
@@ -61,12 +62,12 @@ class HarVerifications:
             return False
         try:
             json.loads(item)
-        except ValueError as e:
+        except ValueError:
             return False
         return True
 
     def has_json_path(self, json_str, json_path):
-        if self.valid_json(json_str) == False:
+        if self.valid_json(json_str) is False:
             return False
         jsonpath_expr = parse(json_path)
         matches = jsonpath_expr.find(json.loads(json_str))
@@ -81,14 +82,15 @@ class HarVerifications:
     def entries(self, criteria=False):
         entry_list = self.har['log']['entries']
         har_entry_filters = {
-            'page':  (lambda item, pgref: glom(item, 'pageref', default='') == pgref  ),
+            'page': (lambda item, pgref: glom(item, 'pageref', default='') == pgref),
 
             'status': (lambda item, status: self.rmatch(str(glom(item, 'response.status', default=None)), status)),
             'url': (lambda item, url_rxp: self.rmatch(str(glom(item, 'request.url', default=None)), url_rxp)),
             'content': (lambda item, content_rxp: self.rmatch(str(glom(item, 'response.content.text', default=None)), content_rxp)),
-            'content_type': (lambda item, content_type_rxp: self.rmatch(str(glom(item, 'response.content.mimeType', default=None)), content_type_rxp)),
+            'content_type': (lambda item, content_type_rxp: self.rmatch(str(glom(item, 'response.content.mimeType', default=None)),
+                             content_type_rxp)),
 
-            'request_header': (lambda item, match_rgxp: self.rmatch_key_val(glom(item, 'request.headers',default=[]), match_rgxp)),
+            'request_header': (lambda item, match_rgxp: self.rmatch_key_val(glom(item, 'request.headers', default=[]), match_rgxp)),
             'response_header': (lambda item, match_rgxp: self.rmatch_key_val(glom(item, 'response.headers', default=[]), match_rgxp)),
 
             'request_cookie': (lambda item, match_rgxp: self.rmatch_key_val(glom(item, 'request.cookies', default=[]), match_rgxp)),
@@ -96,9 +98,9 @@ class HarVerifications:
 
             'websocket_message': (lambda item, ws_rxp: self.rmatch_any(glom(item, ('_webSocketMessages', ['data']), default=[]), ws_rxp)),
 
-            'json_valid': (lambda item, _:  self.valid_json(str(glom(item, 'response.content.text', default=None)))),
+            'json_valid': (lambda item, _: self.valid_json(str(glom(item, 'response.content.text', default=None)))),
             'json_path': (lambda item, path: self.has_json_path(str(glom(item, 'response.content.text', default=None)), path)),
-            'json_schema': (lambda item, schema: self.schema_validate(str(glom(item, 'response.content.text', default=None)),schema)),
+            'json_schema': (lambda item, schema: self.schema_validate(str(glom(item, 'response.content.text', default=None)), schema)),
         }
 
         for filter_name, target_value in criteria.items():
@@ -112,11 +114,9 @@ class HarVerifications:
     def gsize(self, item, path):
         return self.not_neg(glom(item, 'request.headersSize', default=0))
 
-
     def not_neg(self, val):
         val = int(val)
         return 0 if val == -1 or val is None else val
-
 
     def measure(self, items, measurement):
         measurements = {
@@ -126,7 +126,7 @@ class HarVerifications:
             'response_body': (lambda item: self.gsize(item, 'request.bodySize')),
             'request': (lambda item: self.gsize(item, 'request.bodySize') + self.gsize(item, 'request.headerSize')),
             'response': (lambda item: self.gsize(item, 'response.bodySize') + self.gsize(item, 'response.headerSize')),
-            'time':  (lambda item: self.gsize(item, 'time')),
+            'time': (lambda item: self.gsize(item, 'time')),
         }
         method = measurements[measurement]
         return list(map(method, items))

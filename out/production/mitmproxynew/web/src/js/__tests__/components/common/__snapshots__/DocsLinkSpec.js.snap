@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DocsLink Component should be able to be rendered with children nodes 1`] = `
+<a
+  href="https://docs.mitmproxy.org/stable/bar"
+  target="_blank"
+>
+  foo
+</a>
+`;
+
+exports[`DocsLink Component should be able to be rendered without children nodes 1`] = `
+<a
+  href="https://docs.mitmproxy.org/stable/bar"
+  target="_blank"
+>
+  <i
+    className="fa fa-question-circle"
+  />
+</a>
+`;

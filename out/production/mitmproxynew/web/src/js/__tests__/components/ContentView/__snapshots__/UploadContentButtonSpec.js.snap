@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UpdateContentButton Component should render correctly 1`] = `
+<a
+  className="btn btn-default btn-xs"
+  href="#"
+  onClick={[Function]}
+  title="Upload a file to replace the content."
+>
+  <i
+    className="fa fa-fw fa-upload"
+  />
+  <input
+    className="hidden"
+    onChange={[Function]}
+    type="file"
+  />
+</a>
+`;

@@ -43,5 +43,3 @@ class BrowserupProxyMaster(master.Master):
             latency_addon.LatencyAddOn(),
             self.errorcheck
         )
-
-

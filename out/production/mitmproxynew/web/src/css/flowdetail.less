@@ -1,0 +1,148 @@
+//TODO: Move into some utils
+.monospace() {
+    font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+.flow-detail {
+    width: 100%;
+    overflow:hidden;
+    display: flex;
+    flex-direction: column;
+
+    nav {
+        background-color: #F2F2F2;
+    }
+
+    section {
+        overflow-y: scroll;
+        >article{
+            overflow: auto;
+            padding: 5px 12px 0;
+        }
+        >footer {
+            box-shadow: 0 0 3px gray;
+            padding: 2px;
+            margin: 0;
+            height:23px;
+        }
+    }
+
+    section.detail, section.error{
+        overflow: auto;
+        padding: 5px 12px 0;
+    }
+
+
+    .first-line {
+        .monospace();
+        background-color: #428bca;
+        color: white;
+        margin: 0 -8px;
+        padding: 4px 8px;
+        border-radius: 5px;
+        word-break: break-all;
+        max-height: 100px;
+        overflow-y: auto;
+
+        .inline-input.editable {
+            border-color: rgba(255,255,255,0.5);
+        }
+    }
+    .request-line {
+        margin-bottom: 2px;
+    }
+
+    hr {
+        margin: 0 0 5px;
+    }
+}
+
+
+.inline-input {
+    display: inline;
+    margin: 0 -3px;
+    padding: 0 3px;
+
+    border: solid transparent 1px;
+    &.editable {
+        border-color: #ccc;
+    }
+
+    &[contenteditable] {
+
+        background-color: rgba(255, 255, 255, 0.2);
+
+        &.has-warning {
+            color: rgb(255, 184, 184);
+        }
+        &.has-success {
+            //color: green;
+        }
+    }
+}
+
+.view-all-content-btn{
+    float: right;
+    margin-bottom: 12px;
+}
+
+.flow-detail table {
+    .monospace();
+    width: 100%;
+    table-layout: fixed;
+    word-break: break-all;
+
+    tr {
+        &:not(:first-child) {
+            border-top: 1px solid #f7f7f7;
+        }
+    }
+
+    td {
+        vertical-align: top;
+        //alt:
+        //white-space: nowrap;
+        //overflow: hidden;
+        //text-overflow: ellipsis;
+    }
+}
+
+.connection-table {
+    td:first-child {
+        width: 50%;
+        padding-right: 1em;
+    }
+}
+
+.header-table {
+    td {
+        line-height: 1.3em;
+    }
+    .header-name {
+        width: 33%;
+    }
+    .header-value {
+
+    }
+
+    // This exists so that you can copy
+    // and paste headers out of mitmweb.
+    .header-colon {
+        position: absolute;
+        opacity: 0;
+    }
+
+    .inline-input {
+        display: inline-block;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+.connection-table, .timing-table {
+    td {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}

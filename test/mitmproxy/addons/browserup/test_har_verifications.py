@@ -5,18 +5,18 @@ from mitmproxy.test import taddons
 from mitmproxy import http
 
 from mitmproxy.addons.browserup import har_capture_addon
-from  mitmproxy.addons.browserup.har.har_verifications import HarVerifications
-from mitmproxy.addons.browserup.har.har_schemas import *
+from mitmproxy.addons.browserup.har.har_verifications import HarVerifications
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
 from mitmproxy.test.tflow import twebsocketflow
 from mitmproxy import websocket
 from wsproto.frame_protocol import Opcode
 
+
 class TestHARVerifications:
 
     def test_response_missing_fails(self, hc, flow):
         hv = HarVerifications(hc.har)
-        assert(hv.present({'status': '200'}) == False)
+        assert(hv.present({'status': '200'}) is False)
 
     def test_response_present_succeeds(self, hc, flow):
         hc.response(flow)
@@ -31,9 +31,9 @@ class TestHARVerifications:
     def test_page_response_missing_page(self, hc, flow):
         hc.response(flow)
         hv = HarVerifications(hc.har)
-        assert(hv.present({'status': '200', 'page': 'NoSuch'}) == False)
+        assert(hv.present({'status': '200', 'page': 'NoSuch'}) is False)
 
-    def test_page_response_missing_page(self, hc, flow):
+    def test_page_response_page_current(self, hc, flow):
         hc.response(flow)
         hv = HarVerifications(hc.har)
         assert(hv.present({'status': '200', 'page': 'current'}))
@@ -47,7 +47,7 @@ class TestHARVerifications:
     def test_response_present_url_false(self, hc, flow):
         hc.response(flow)
         hv = HarVerifications(hc.har)
-        assert(hv.present({'status': '200', 'url': r'nope'}) == False)
+        assert(hv.present({'status': '200', 'url': r'nope'}) is False)
 
     def test_response_content_present(self, hc, flow):
         hc.response(flow)
@@ -57,22 +57,22 @@ class TestHARVerifications:
     def test_response_content_not_present(self, hc, flow):
         hc.response(flow)
         hv = HarVerifications(hc.har)
-        assert(hv.present({'status': '200', 'content': r'notThere'}) == False)
+        assert(hv.present({'status': '200', 'content': r'notThere'}) is False)
 
     def test_response_present_false(self, hc, flow):
         hc.response(flow)
         hv = HarVerifications(hc.har)
-        assert(hv.present({'status': '300'}) == False)
+        assert(hv.present({'status': '300'}) is False)
 
     def test_response_not_present(self, hc, flow):
         hc.response(flow)
         hv = HarVerifications(hc.har)
-        assert(hv.not_present({'status': '200'}) == False)
+        assert(hv.not_present({'status': '200'}) is False)
 
     def test_response_present_header_missing(self, hc, flow):
         hc.response(flow)
         hv = HarVerifications(hc.har)
-        assert(hv.present({'status': '200', 'response_header': {'name': 'Nothere'}}) == False)
+        assert(hv.present({'status': '200', 'response_header': {'name': 'Nothere'}}) is False)
 
     def test_request_present_cookie(self, hc, flow):
         flow.request.headers["Cookie"] = b'foo=bar'
@@ -103,24 +103,17 @@ class TestHARVerifications:
         hc.har_capture_types
         hc.response(flow)
         hv = HarVerifications(hc.har)
-        assert(hv.present({'status': '200', 'response_header': {'name': r'content-length', 'value': '9'}}) == False)
+        assert(hv.present({'status': '200', 'response_header': {'name': r'content-length', 'value': '9'}}) is False)
 
     def test_header_no_match(self, hc, flow):
         hc.har_capture_types
         hc.response(flow)
         hv = HarVerifications(hc.har)
-        assert(hv.present({'status': '200', 'response_header': {'name': r'nope'}}) == False)
-
-    def test_header_no_match(self, hc, flow):
-        hc.har_capture_types
-        hc.response(flow)
-        hv = HarVerifications(hc.har)
-        assert(hv.present({'status': '200', 'response_header': {'name': r'nope'}}) == False)
-
+        assert(hv.present({'status': '200', 'response_header': {'name': r'nope'}}) is False)
 
     def test_websocket_messages_match(self, hc):
         f = twebsocketflow()
-        hc.har_capture_types = [HarCaptureTypes.WEBSOCKET_MESSAGES ]
+        hc.har_capture_types = [HarCaptureTypes.WEBSOCKET_MESSAGES]
 
         f.websocket.messages = [
             websocket.WebSocketMessage(Opcode.BINARY, True, b"hello binary", 946681203)
@@ -137,7 +130,7 @@ class TestHARVerifications:
 
     def test_websocket_messages_no_match(self, hc):
         hv = HarVerifications(hc.har)
-        assert(hv.present({'websocket_message': 'hello'}) == False)
+        assert(hv.present({'websocket_message': 'hello'}) is False)
 
     def test_content_type(self, hc, json_flow):
         hc.response(json_flow)
@@ -160,29 +153,27 @@ class TestHARVerifications:
         hc.request(json_flow)
         hc.response(json_flow)
         hv = HarVerifications(hc.har)
-        assert(hv.present({'json_path': '$.nope'}) == False)
+        assert(hv.present({'json_path': '$.nope'}) is False)
 
     def test_json_schema(self, hc, json_flow):
         hc.request(json_flow)
         hc.response(json_flow)
         hv = HarVerifications(hc.har)
-        schema = { "type" : "object", "properties" : { "foo" : {"type" : "string"} } }
+        schema = {"type": "object", "properties": {"foo": {"type": "string"}}}
         assert(hv.present({'json_schema': schema}))
 
     def test_json_schema_not_valid(self, hc, json_flow):
         hc.request(json_flow)
         hc.response(json_flow)
         hv = HarVerifications(hc.har)
-        schema = { "type" : "object", "properties" : { "foo" : {"type" : "integer"} } }
-        assert(hv.present({'json_schema': schema}) == False)
-
+        schema = {"type": "object", "properties": {"foo": {"type": "integer"}}}
+        assert(hv.present({'json_schema': schema}) is False)
 
     def test_time_max(self, hc, json_flow):
         hc.request(json_flow)
         hc.response(json_flow)
         hv = HarVerifications(hc.har)
         assert(hv.get_max({'status': '200'}, 'time'))
-
 
     def test_size_max(self, hc, json_flow):
         hc.request(json_flow)
@@ -193,7 +184,7 @@ class TestHARVerifications:
 
 @pytest.fixture()
 def flow():
-    resp_content=b'message'
+    resp_content = b'message'
     times = dict(
         timestamp_start=746203200,
         timestamp_end=746203290,
@@ -204,6 +195,7 @@ def flow():
         resp=tutils.tresp(content=resp_content, **times)
     )
 
+
 @pytest.fixture()
 def json_flow():
     times = dict(
@@ -212,10 +204,11 @@ def json_flow():
     )
 
     return tflow.tflow(
-        req=tutils.treq(method=b'GET',  path=b"/path/foo.json", **times),
+        req=tutils.treq(method=b'GET', path=b"/path/foo.json", **times),
         resp=tutils.tresp(content=b'{"foo": "bar"}',
                           headers=http.Headers(((b"header-response", b"svalue"), (b"content-type", b"application/json"))), **times)
     )
+
 
 @pytest.fixture()
 def hc(flow):

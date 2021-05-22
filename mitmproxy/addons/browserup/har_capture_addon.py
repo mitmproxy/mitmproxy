@@ -1,10 +1,12 @@
 import mitmproxy.http
 from mitmproxy import ctx
-from mitmproxy.addons.browserup.har.har_resources import *
+from mitmproxy.addons.browserup.har.har_resources import HarResource, HarPageResource, HarCaptureTypesResource, \
+                                                         PresentResource, NotPresentResource, SizeResource, SLAResource, HealthCheckResource
 from mitmproxy.addons.browserup.har.har_manager import HarManagerMixin
 from mitmproxy.addons.browserup.har.flow_capture import FlowCaptureMixin
 from mitmproxy.addons.browserup.har import flow_har_entry_patch
-flow_har_entry_patch.patch_flow() # patch flow object with a har entry method
+flow_har_entry_patch.patch_flow()  # patch flow object with a har entry method
+
 
 class HarCaptureAddOn(FlowCaptureMixin, HarManagerMixin):
 
@@ -43,7 +45,7 @@ class HarCaptureAddOn(FlowCaptureMixin, HarManagerMixin):
             return
         self.capture_response(flow)
 
+
 addons = [
     HarCaptureAddOn()
-
 ]

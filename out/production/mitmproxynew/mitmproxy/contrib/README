@@ -1,0 +1,8 @@
+
+Contribs:
+
+wbxml
+    - https://github.com/davidpshaw/PyWBXMLDecoder
+
+urwid
+    - Patches vendored from https://github.com/urwid/urwid/pull/448.

@@ -1,0 +1,242 @@
+name: CI
+
+on: [ push, pull_request ]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-pr:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - uses: TrueBrain/actions-flake8@9a43ff1b2c7b96f3edffc48a49973ce3de116ba1
+        # mirrored at https://github.com/mitmproxy/mitmproxy/settings/actions
+  lint-local:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install tox
+      - run: tox -e flake8
+  filename-matching:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install tox
+      - run: tox -e filename_matching
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install tox
+      - run: tox -e mypy
+  individual-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: pip install tox
+      - run: tox -e individual_coverage
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            py: 3.9
+          - os: macos-latest
+            py: 3.9
+          - os: ubuntu-latest
+            py: 3.9
+          - os: ubuntu-latest
+            py: 3.8
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: printenv
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.py }}
+      - run: pip install tox
+      - run: tox -e py
+      - uses: codecov/codecov-action@a1ed4b322b4b38cb846afb5a0ebfa17086917d27
+        # mirrored below and at https://github.com/mitmproxy/mitmproxy/settings/actions
+        with:
+          file: ./coverage.xml
+          name: ${{ matrix.os }}
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: macos-10.15
+            platform: macos
+          - image: windows-2019
+            platform: windows
+          - image: ubuntu-16.04  # Old Ubuntu version for old glibc
+            platform: linux
+    runs-on: ${{ matrix.image }}
+    env:
+      CI_BUILD_WHEEL: ${{ matrix.platform == 'linux' }}
+      CI_BUILD_PYINSTALLER: 1
+      CI_BUILD_WININSTALLER: ${{ matrix.platform == 'windows' }}
+      CI_BUILD_KEY: ${{ secrets.CI_BUILD_KEY }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - if: matrix.platform == 'windows'
+        uses: actions/cache@v2
+        with:
+          path: release/installbuilder/setup
+          key: installbuilder
+      - run: pip install -e .[dev]
+      - run: python release/cibuild.py build
+      # artifacts must have different names, see https://github.com/actions/upload-artifact/issues/24
+      - uses: actions/upload-artifact@v2
+        with:
+          name: binaries.${{ matrix.platform }}
+          path: release/dist
+
+  test-web-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - run: git rev-parse --abbrev-ref HEAD
+      - uses: actions/setup-node@v1
+      - id: yarn-cache
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+      - uses: actions/cache@v1
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+      - working-directory: ./web
+        run: yarn
+      - working-directory: ./web
+        run: npm test
+      - uses: codecov/codecov-action@a1ed4b322b4b38cb846afb5a0ebfa17086917d27
+        # mirrored above and at https://github.com/mitmproxy/mitmproxy/settings/actions
+        with:
+          file: ./web/coverage/coverage-final.json
+          name: web
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: |
+          wget -q https://github.com/gohugoio/hugo/releases/download/v0.83.1/hugo_extended_0.83.1_Linux-64bit.deb
+          echo "9487ea3b80f8ddd0ba600d42850b96b6a8b0bb9b41bc08cb285635ebbd41328d hugo_extended_0.83.1_Linux-64bit.deb" | sha256sum -c
+          sudo dpkg -i hugo*.deb
+      - run: pip install -e .[dev]
+      - run: ./docs/build.py
+      - uses: actions/upload-artifact@v2
+        with:
+          name: docs
+          path: docs/public
+
+  # Separate from everything else because slow.
+  build-and-deploy-docker:
+    if: github.repository == 'mitmproxy/mitmproxy' && github.ref == 'refs/heads/main'
+    environment: deploy-docker
+    needs:
+     - test
+     - test-web-ui
+     - build
+     - docs
+    runs-on: ubuntu-latest
+    env:
+      CI_BUILD_DOCKER: 1
+      DOCKER_USERNAME: mitmbot
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - uses: actions/download-artifact@v2
+        with:
+          name: binaries.linux
+          path: release/dist
+      - run: pip install -e .[dev]
+      - run: python release/cibuild.py build
+      - run: python release/cibuild.py upload
+
+  deploy:
+    # This action has access to our AWS keys, so we are extra careful here.
+    # In particular, we don't blindly `pip install` anything to minimize the risk of supply chain attacks.
+    if: github.repository == 'mitmproxy/mitmproxy' && github.event_name == 'push'
+    environment: deploy
+    needs:
+      - test
+      - test-web-ui
+      - build
+      - docs
+    runs-on: ubuntu-latest
+    env:
+      TWINE_USERNAME: mitmproxy
+      TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: us-west-2
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - run: sudo apt-get install -y twine awscli
+      - uses: actions/download-artifact@v2
+        with:
+          path: release/dist
+      - run: mv release/dist/docs docs/public
+      # move artifacts from their subfolders into release/dist
+      - run: find release/dist -mindepth 2 -type f -exec mv {} release/dist \;
+      # and then delete the empty folders
+      - run: find release/dist -type d -empty -delete
+      - run: ls release/dist
+      - run: ./release/deploy.py

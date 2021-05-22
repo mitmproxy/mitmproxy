@@ -1,0 +1,92 @@
+[
+    {
+        "instruction": "1. Welcome to the mitmproxy tutorial. In this lesson we cover the modification of intercepted requests.",
+        "time_from": 0.0,
+        "time_to": 8.0
+    },
+    {
+        "instruction": "2. We configure and use the same interception rule as in the last tutorial.",
+        "time_from": 16.4,
+        "time_to": 22.2
+    },
+    {
+        "instruction": "3. Press `i` to prepopulate mitmproxy’s command prompt, enter the flow filter `~u /Dunedin & ~q`, and press `ENTER`.",
+        "time_from": 22.7,
+        "time_to": 31.7
+    },
+    {
+        "instruction": "4. Let’s generate a request using `curl` in a separate terminal.",
+        "time_from": 40.7,
+        "time_to": 45.6
+    },
+    {
+        "instruction": "5. We now want to modify the intercepted request.",
+        "time_from": 68.3,
+        "time_to": 72.0
+    },
+    {
+        "instruction": "6. Put the focus (`>>`) on the intercepted flow. This is already the case in our example.",
+        "time_from": 72.5,
+        "time_to": 79.4
+    },
+    {
+        "instruction": "7. Press `ENTER` to open the details view for the intercepted flow.",
+        "time_from": 79.9,
+        "time_to": 85.0
+    },
+    {
+        "instruction": "8. Press `e` to edit the intercepted flow.",
+        "time_from": 85.7,
+        "time_to": 88.8
+    },
+    {
+        "instruction": "9. mitmproxy asks which part to modify.",
+        "time_from": 89.6,
+        "time_to": 92.5
+    },
+    {
+        "instruction": "10. Select `path` by using your arrow keys and press `ENTER`.",
+        "time_from": 93.0,
+        "time_to": 97.6
+    },
+    {
+        "instruction": "11. mitmproxy shows all path components line by line, in our example its just `Dunedin`.",
+        "time_from": 101.3,
+        "time_to": 108.0
+    },
+    {
+        "instruction": "12. Press `ENTER` to modify the selected path component.",
+        "time_from": 108.6,
+        "time_to": 112.8
+    },
+    {
+        "instruction": "13. Replace `Dunedin` with `Innsbruck`.",
+        "time_from": 114.5,
+        "time_to": 117.3
+    },
+    {
+        "instruction": "14. Press `ESC` to confirm your change.",
+        "time_from": 124.8,
+        "time_to": 127.6
+    },
+    {
+        "instruction": "15. Press `q` to go back to the flow details view.",
+        "time_from": 128.5,
+        "time_to": 132.2
+    },
+    {
+        "instruction": "16. Press `a` to resume the intercepted flow.",
+        "time_from": 133.0,
+        "time_to": 136.3
+    },
+    {
+        "instruction": "17. You see that the request URL was modified and `wttr.in` replied with the weather report for `Innsbruck`.",
+        "time_from": 139.1,
+        "time_to": 147.4
+    },
+    {
+        "instruction": "18. In the next lesson you will learn to replay flows.",
+        "time_from": 147.9,
+        "time_to": 151.9
+    }
+]

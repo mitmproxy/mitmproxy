@@ -1,0 +1,52 @@
+[
+    {
+        "instruction": "1. Welcome to the mitmproxy tutorial. In this lesson we cover replaying requests.",
+        "time_from": 0.0,
+        "time_to": 6.2
+    },
+    {
+        "instruction": "2. Let’s generate a request that we can replay. We use `curl` in a separate terminal.",
+        "time_from": 15.4,
+        "time_to": 22.0
+    },
+    {
+        "instruction": "3. We now want to replay the this request.",
+        "time_from": 43.8,
+        "time_to": 46.9
+    },
+    {
+        "instruction": "4. Put the focus (`>>`) on the request that should be replayed. This is already the case in our example.",
+        "time_from": 47.4,
+        "time_to": 55.5
+    },
+    {
+        "instruction": "5. Press `r` to replay the request.",
+        "time_from": 56.0,
+        "time_to": 58.6
+    },
+    {
+        "instruction": "6. Note that no new rows are added for replayed flows, but the existing row is updated.",
+        "time_from": 59.2,
+        "time_to": 65.9
+    },
+    {
+        "instruction": "7. Every time you press `r`, mitmproxy sends this request to the server again and updates the flow.",
+        "time_from": 66.5,
+        "time_to": 74.2
+    },
+    {
+        "instruction": "8. You can also modify a flow before replaying it.",
+        "time_from": 80.7,
+        "time_to": 84.5
+    },
+    {
+        "instruction": "9. It works as shown in the previous lesson, by pressing `e`.",
+        "time_from": 85.0,
+        "time_to": 89.6
+    },
+    {
+        "instruction": "10. Congratulations! You have completed all lessons of the mitmproxy tutorial.",
+        "time_from": 90.1,
+        "time_to": 96.0
+    }
+]

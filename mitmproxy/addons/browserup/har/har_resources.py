@@ -3,7 +3,7 @@ import os
 import glob
 import json
 import falcon
-from  mitmproxy.addons.browserup.har.har_verifications import HarVerifications
+from mitmproxy.addons.browserup.har.har_verifications import HarVerifications
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
 
 
@@ -28,17 +28,20 @@ class HealthCheckResource:
         resp.body = 'OK'
         resp.status = falcon.HTTP_200
 
+
 class RespondWithHarMixin:
     def respond_with_har(self, resp, har, har_file):
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
-        resp.body = json.dumps({ "path": har_file.name, "json": har }, ensure_ascii=False)
+        resp.body = json.dumps({"path": har_file.name, "json": har}, ensure_ascii=False)
+
 
 class VerifyResponseMixin:
     def respond_with_bool(self, resp, bool):
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
         resp.body = json.dumps(bool, ensure_ascii=False)
+
 
 class HarResource(RespondWithHarMixin):
     def apispec(self, spec):
@@ -50,7 +53,6 @@ class HarResource(RespondWithHarMixin):
                 schema = json.load(f)
                 spec.components.schema(filename, component=schema)
         spec.path(resource=self)
-
 
     def addon_path(self):
         return "har"
@@ -84,7 +86,6 @@ class HarResource(RespondWithHarMixin):
             self.HarCaptureAddon.mark_har_entries_submitted(har)
         self.respond_with_har(resp, har, har_file)
 
-
     def on_put(self, req, resp):
         """Starts or resets the Har capture session, returns the last session.
         ---
@@ -106,6 +107,7 @@ class HarResource(RespondWithHarMixin):
         har = self.HarCaptureAddon.new_har(page_ref, page_title, True)
         har_file = self.HarCaptureAddon.save_har(har)
         self.respond_with_har(resp, har, har_file)
+
 
 class HarPageResource(RespondWithHarMixin):
 
@@ -142,7 +144,6 @@ class HarPageResource(RespondWithHarMixin):
         har_file = self.HarCaptureAddon.save_har(har)
         self.respond_with_har(resp, har, har_file)
 
-
     def on_post(self, req, resp):
         """Creates a new Har Page to begin capturing to, with a new title
         ---
@@ -164,6 +165,7 @@ class HarPageResource(RespondWithHarMixin):
         har = self.HarCaptureAddon.new_page(page_ref, page_title)
         har_file = self.HarCaptureAddon.save_har(har)
         self.respond_with_har(resp, har, har_file)
+
 
 class HarCaptureTypesResource():
     def __init__(self, HarCaptureAddon):
@@ -219,7 +221,6 @@ class PresentResource(VerifyResponseMixin):
     def apispec(self, spec):
         spec.path(resource=self)
 
-
     def on_post(self, req, resp, name):
         """Verifies traffic matching the criteria is present
         ---
@@ -257,6 +258,7 @@ class PresentResource(VerifyResponseMixin):
         self.HarCaptureAddon.add_verification_to_har(name, 'present', val)
         self.respond_with_bool(resp, val)
 
+
 class NotPresentResource(VerifyResponseMixin):
     def __init__(self, HarCaptureAddon):
         self.name = "harcapture"
@@ -267,7 +269,6 @@ class NotPresentResource(VerifyResponseMixin):
 
     def apispec(self, spec):
         spec.path(resource=self)
-
 
     def on_post(self, req, resp, name):
         """Verifies traffic matching the criteria Text is not present
@@ -361,6 +362,7 @@ class SizeResource(VerifyResponseMixin):
         result = size_val <= max_size
         self.HarCaptureAddon.add_verification_to_har(name, 'size', result)
         self.respond_with_bool(resp, result)
+
 
 class SLAResource(VerifyResponseMixin):
     def __init__(self, HarCaptureAddon):

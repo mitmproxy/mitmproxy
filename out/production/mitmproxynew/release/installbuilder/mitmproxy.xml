@@ -1,0 +1,133 @@
+<project>
+    <shortName>mitmproxy</shortName>
+    <fullName>mitmproxy</fullName>
+    <version>1.0</version>
+    <leftImage>logo-installer.png</leftImage>
+    <logoImage>logo-installer-icon.png</logoImage>
+    <componentList>
+        <component>
+            <name>default</name>
+            <description>Default Component</description>
+            <canBeEdited>1</canBeEdited>
+            <selected>1</selected>
+            <show>1</show>
+            <folderList>
+                <folder>
+                    <description>Program Files</description>
+                    <destination>${installdir}</destination>
+                    <name>programfiles</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <origin>logo.ico</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+                <folder>
+                    <description>Program Files/bin</description>
+                    <destination>${installdir}/bin</destination>
+                    <name>binaries</name>
+                    <platforms>all</platforms>
+                    <distributionFileList>
+                        <distributionFile>
+                            <allowWildcards>1</allowWildcards>
+                            <origin>../build/binaries/windows/onedir/*</origin>
+                        </distributionFile>
+                        <distributionFile>
+                            <origin>run.ps1</origin>
+                        </distributionFile>
+                    </distributionFileList>
+                </folder>
+            </folderList>
+            <postInstallationActionList>
+                <addDirectoryToPath>
+                    <insertAt>end</insertAt>
+                    <path>${installdir}/bin</path>
+                    <scope>user</scope>
+                </addDirectoryToPath>
+            </postInstallationActionList>
+            <postUninstallationActionList>
+                <removeDirectoryFromPath>
+                    <path>${installdir}/bin</path>
+                    <scope>user</scope>
+                </removeDirectoryFromPath>
+            </postUninstallationActionList>
+            <startMenuShortcutList>
+                <startMenuShortcut>
+                    <comment>mitmproxy command line interface</comment>
+                    <name>mitmproxy</name>
+                    <runAsAdmin>0</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>powershell.exe</windowsExec>
+                    <windowsExecArgs>-File "${installdir}\bin\run.ps1" mitmproxy</windowsExecArgs>
+                    <windowsIcon>${installdir}/logo.ico</windowsIcon>
+                    <windowsPath>${user_home_directory}</windowsPath>
+                </startMenuShortcut>
+                <startMenuShortcut>
+                    <comment>mitmproxy web interface</comment>
+                    <name>mitmweb</name>
+                    <runAsAdmin>0</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>powershell.exe</windowsExec>
+                    <windowsExecArgs>-File "${installdir}\bin\run.ps1" mitmweb</windowsExecArgs>
+                    <windowsIcon>${installdir}/logo.ico</windowsIcon>
+                    <windowsPath>${user_home_directory}</windowsPath>
+                </startMenuShortcut>
+                <startMenuShortcut>
+                    <comment>mitmproxy non-interactive interface</comment>
+                    <name>mitmdump</name>
+                    <runAsAdmin>0</runAsAdmin>
+                    <runInTerminal>0</runInTerminal>
+                    <windowsExec>powershell.exe</windowsExec>
+                    <windowsExecArgs>-File "${installdir}\bin\run.ps1" mitmdump</windowsExecArgs>
+                    <windowsIcon>${installdir}/logo.ico</windowsIcon>
+                    <windowsPath>${user_home_directory}</windowsPath>
+                </startMenuShortcut>
+            </startMenuShortcutList>
+        </component>
+    </componentList>
+    <createOsxBundleDmg>1</createOsxBundleDmg>
+    <disableSplashScreen>1</disableSplashScreen>
+    <enableRollback>1</enableRollback>
+    <enableTimestamp>1</enableTimestamp>
+    <outputDirectory>../dist</outputDirectory>
+    <productDisplayIcon>logo.ico</productDisplayIcon>
+    <saveRelativePaths>1</saveRelativePaths>
+    <vendor>mitmproxy.org</vendor>
+    <windowsExecutableIcon>logo.ico</windowsExecutableIcon>
+    <finalPageActionList>
+        <runProgram>
+            <program>cmd</program>
+            <programArguments>/c powershell -File "${installdir}\bin\run.ps1" mitmproxy &amp;</programArguments>
+            <progressText>Launch mitmproxy now</progressText>
+            <workingDirectory>${user_home_directory}</workingDirectory>
+        </runProgram>
+    </finalPageActionList>
+    <parameterList>
+        <directoryParameter>
+            <name>installdir</name>
+            <description>Installer.Parameter.installdir.description</description>
+            <explanation>Installer.Parameter.installdir.explanation</explanation>
+            <value></value>
+            <default>${platform_install_prefix}/${product_shortname}</default>
+            <allowEmptyValue>0</allowEmptyValue>
+            <ask>yes</ask>
+            <cliOptionName>prefix</cliOptionName>
+            <mustBeWritable>yes</mustBeWritable>
+            <mustExist>0</mustExist>
+            <width>40</width>
+            <postShowPageActionList>
+                <!-- This will skip the readytoinstall page -->
+
+                <setInstallerVariable name="next_page" value="installation"/>
+            </postShowPageActionList>
+            <preShowPageActionList>
+                <setInstallerVariable>
+                    <name>ui.button(next).text</name>
+                    <value>${msg(Installer.Button.Install)}</value>
+                </setInstallerVariable>
+            </preShowPageActionList>
+        </directoryParameter>
+    </parameterList>
+</project>
+

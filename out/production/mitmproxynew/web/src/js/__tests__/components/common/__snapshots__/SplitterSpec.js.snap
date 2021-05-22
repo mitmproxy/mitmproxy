@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Splitter Component should render correctly 1`] = `
+<div
+  className="splitter splitter-x"
+>
+  <div
+    draggable="true"
+    onMouseDown={[Function]}
+  />
+</div>
+`;

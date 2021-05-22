@@ -1,0 +1,64 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`BooleanOption Component should render correctly 1`] = `
+<div
+  className="checkbox"
+>
+  <label>
+    <input
+      checked={true}
+      onChange={[Function]}
+      type="checkbox"
+    />
+    Enable
+  </label>
+</div>
+`;
+
+exports[`ChoiceOption Component should render correctly 1`] = `
+<select
+  onChange={[Function]}
+  value="a"
+>
+  <option
+    value="a"
+  >
+    a
+  </option>
+  <option
+    value="b"
+  >
+    b
+  </option>
+  <option
+    value="c"
+  >
+    c
+  </option>
+</select>
+`;
+
+exports[`NumberOption Component should render correctly 1`] = `
+<input
+  onChange={[Function]}
+  type="number"
+  value={1}
+/>
+`;
+
+exports[`StringOption Component should render correctly 1`] = `
+<input
+  onChange={[Function]}
+  type="text"
+  value="foo"
+/>
+`;
+
+exports[`StringOption Component should render correctly 2`] = `
+<textarea
+  onChange={[Function]}
+  rows={2}
+  value="a
+b"
+/>
+`;

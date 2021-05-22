@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DownloadContentButton Component should render correctly 1`] = `
+<a
+  className="btn btn-default btn-xs"
+  href="./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/response/content.data"
+  title="Download the content of the flow."
+>
+  <i
+    className="fa fa-download"
+  />
+</a>
+`;

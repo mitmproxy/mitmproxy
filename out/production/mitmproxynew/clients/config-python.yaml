@@ -1,0 +1,6 @@
+moduleName: "browserup_proxy_client"
+appDescription: "BrowserUp Proxy Client"
+
+# Python
+#packageName: "browserup-proxy"
+#projectName: "browserup-proxy-client"

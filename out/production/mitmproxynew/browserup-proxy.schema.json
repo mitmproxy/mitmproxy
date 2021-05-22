@@ -1,0 +1,990 @@
+{
+  "servers": [
+    {
+      "url": "http://localhost:{port}/",
+      "description": "The development API server",
+      "variables": {
+        "port": {
+          "enum": [
+            "8088"
+          ],
+          "default": "8088"
+        }
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "The BrowserUp Proxy API",
+      "description": "BrowserUp Proxy REST API"
+    }
+  ],
+  "info": {
+    "description": "___\nThis is the REST API for controlling the BrowserUp Proxy. \nThe BrowserUp Proxy is a swiss army knife for automated testing that\ncaptures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.\n___\n",
+    "x-logo": {
+      "url": "logo.png"
+    },
+    "title": "BrowserUp Proxy",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/har": {
+      "get": {
+        "description": "Get the current HAR.",
+        "operationId": "getHarLog",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current Har file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Har"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Starts a fresh HAR capture session.",
+        "operationId": "resetHarLog",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current Har file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Har"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/har/page": {
+      "post": {
+        "description": "Starts a fresh HAR Page in the current active HAR",
+        "operationId": "setHarPage",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "The current Har file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Har"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Add custom fields to the current HAR.",
+        "operationId": "addCustomHarFields",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomHarData"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The custom fields were added to the HAR."
+          }
+        }
+      }
+    },
+    "/verify/present/{name}": {
+      "post": {
+        "description": "Verify at least one matching item is present in the captured traffic",
+        "operationId": "verifyPresent",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "description": "The unique name for this verification operation",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "/[a-zA-Z0-9_]{4,16}/"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Match criteria to select requests - response pairs for size tests",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchCriteria"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The traffic conformed to the time criteria.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verify/not_present/{name}": {
+      "post": {
+        "description": "Verify no matching items are present in the captured traffic",
+        "operationId": "verifyNotPresent",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "requestBody": {
+          "description": "Match criteria to select requests - response pairs for size tests",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchCriteria"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "description": "The unique name for this verification operation",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "/[a-zA-Z0-9_]{4,16}/"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The traffic had no matching items",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verify/size/{size}/{name}": {
+      "post": {
+        "description": "Verify matching items in the captured traffic meet the size criteria",
+        "operationId": "verifySize",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "size",
+            "description": "The size used for comparison",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "description": "The unique name for this verification operation",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "/[a-zA-Z0-9_]{4,16}/"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Match criteria to select requests - response pairs for size tests",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchCriteria"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The traffic conformed to the size criteria.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/verify/sla/{time}/{name}": {
+      "post": {
+        "description": "Verify each traffic item matching the criteria meets is below SLA time",
+        "operationId": "verifySLA",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "time",
+            "description": "The time used for comparison",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "description": "The unique name for this verification operation",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "/[a-zA-Z0-9_]{4,16}/"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Match criteria to select requests - response pairs for size tests",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatchCriteria"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The traffic conformed to the time criteria.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthcheck": {
+      "get": {
+        "description": "Get the healthcheck",
+        "operationId": "healthcheck",
+        "tags": [
+          "BrowserUpProxy"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK means all is well."
+          }
+        }
+      }
+    }
+  },
+  "openapi": "3.0.3",
+  "components": {
+    "schemas": {
+      "NameValuePair": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name to match"
+          },
+          "value": {
+            "type": "string",
+            "description": "Value to match"
+          }
+        }
+      },
+      "MatchCriteria": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Request URL regexp to match",
+            "externalDocs": {
+              "description": "Python Regex",
+              "url": "https://docs.python.org/3/howto/regex.html"
+            }
+          },
+          "page": {
+            "type": "string",
+            "description": "current|all",
+            "externalDocs": {
+              "description": "Python Regex",
+              "url": "https://docs.python.org/3/howto/regex.html"
+            }
+          },
+          "status": {
+            "type": "string",
+            "description": "HTTP Status code to match.",
+            "externalDocs": {
+              "description": "Python Regex",
+              "url": "https://docs.python.org/3/howto/regex.html"
+            }
+          },
+          "content": {
+            "type": "string",
+            "description": "Body content regexp content to match",
+            "externalDocs": {
+              "description": "Python Regex",
+              "url": "https://docs.python.org/3/howto/regex.html"
+            }
+          },
+          "content_type": {
+            "type": "string",
+            "description": "Content type",
+            "externalDocs": {
+              "description": "Python Regex",
+              "url": "https://docs.python.org/3/howto/regex.html"
+            }
+          },
+          "websocket_message": {
+            "type": "string",
+            "description": "Websocket message text to match",
+            "externalDocs": {
+              "description": "Python Regex",
+              "url": "https://docs.python.org/3/howto/regex.html"
+            }
+          },
+          "request_header": {
+            "externalDocs": {
+              "description": "Python Regex",
+              "url": "https://docs.python.org/3/howto/regex.html"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NameValuePair"
+              }
+            ]
+          },
+          "request_cookie": {
+            "externalDocs": {
+              "description": "Python Regex",
+              "url": "https://docs.python.org/3/howto/regex.html"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NameValuePair"
+              }
+            ]
+          },
+          "response_header": {
+            "externalDocs": {
+              "description": "Python Regex",
+              "url": "https://docs.python.org/3/howto/regex.html"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NameValuePair"
+              }
+            ]
+          },
+          "response_cookie": {
+            "externalDocs": {
+              "description": "Python Regex",
+              "url": "https://docs.python.org/3/howto/regex.html"
+            },
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NameValuePair"
+              }
+            ]
+          },
+          "json_valid": {
+            "type": "boolean",
+            "description": "Is valid JSON"
+          },
+          "json_path": {
+            "type": "string",
+            "description": "Has JSON path"
+          },
+          "json_schema": {
+            "type": "string",
+            "description": "Validates against passed JSON schema"
+          }
+        },
+        "description": "A set of criteria for filtering HTTP Requests and Responses. Criteria are AND based, and use python regular expressions for string comparison"
+      },
+      "VerifyResult": {
+        "type": "object",
+        "properties": {
+          "result": {
+            "type": "boolean",
+            "description": "Name to match"
+          }
+        }
+      },
+      "Entry": {
+        "type": "object",
+        "required": [
+          "startedDateTime",
+          "time",
+          "request",
+          "response",
+          "cache",
+          "timings"
+        ],
+        "properties": {
+          "pageref": {
+            "type": "string"
+          },
+          "startedDateTime": {
+            "type": "string"
+          },
+          "time": {
+            "type": "number",
+            "minimum": 0
+          },
+          "request": {
+            "type": "object",
+            "required": [
+              "method",
+              "url",
+              "httpVersion",
+              "cookies",
+              "headers",
+              "queryString",
+              "headersSize",
+              "bodySize"
+            ],
+            "properties": {
+              "method": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "httpVersion": {
+                "type": "string"
+              },
+              "cookies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "domain": {
+                      "type": "string"
+                    },
+                    "expires": {
+                      "type": "string"
+                    },
+                    "httpOnly": {
+                      "type": "boolean"
+                    },
+                    "secure": {
+                      "type": "boolean"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Header"
+                }
+              },
+              "queryString": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "postData": {
+                "description": "Posted data info.",
+                "required": [
+                  "mimeType"
+                ],
+                "properties": {
+                  "mimeType": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "params": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "fileName": {
+                          "type": "string"
+                        },
+                        "contentType": {
+                          "type": "string"
+                        },
+                        "comment": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "headersSize": {
+                "type": "integer"
+              },
+              "bodySize": {
+                "type": "integer"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "response": {
+            "type": "object",
+            "required": [
+              "status",
+              "statusText",
+              "httpVersion",
+              "cookies",
+              "headers",
+              "content",
+              "redirectURL",
+              "headersSize",
+              "bodySize"
+            ],
+            "properties": {
+              "status": {
+                "type": "integer"
+              },
+              "statusText": {
+                "type": "string"
+              },
+              "httpVersion": {
+                "type": "string"
+              },
+              "cookies": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "domain": {
+                      "type": "string"
+                    },
+                    "expires": {
+                      "type": "string"
+                    },
+                    "httpOnly": {
+                      "type": "boolean"
+                    },
+                    "secure": {
+                      "type": "boolean"
+                    },
+                    "comment": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "headers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Header"
+                }
+              },
+              "content": {
+                "type": "object",
+                "required": [
+                  "size",
+                  "mimeType"
+                ],
+                "properties": {
+                  "size": {
+                    "type": "integer"
+                  },
+                  "compression": {
+                    "type": "integer"
+                  },
+                  "mimeType": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "encoding": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              },
+              "redirectURL": {
+                "type": "string"
+              },
+              "headersSize": {
+                "type": "integer"
+              },
+              "bodySize": {
+                "type": "integer"
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "cache": {
+            "properties": {
+              "beforeRequest": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "lastAccess",
+                      "eTag",
+                      "hitCount"
+                    ],
+                    "properties": {
+                      "expires": {
+                        "type": "string"
+                      },
+                      "lastAccess": {
+                        "type": "string"
+                      },
+                      "eTag": {
+                        "type": "string"
+                      },
+                      "hitCount": {
+                        "type": "integer"
+                      },
+                      "comment": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "afterRequest": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "lastAccess",
+                      "eTag",
+                      "hitCount"
+                    ],
+                    "properties": {
+                      "expires": {
+                        "type": "string"
+                      },
+                      "lastAccess": {
+                        "type": "string"
+                      },
+                      "eTag": {
+                        "type": "string"
+                      },
+                      "hitCount": {
+                        "type": "integer"
+                      },
+                      "comment": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "timings": {
+            "required": [
+              "send",
+              "wait",
+              "receive"
+            ],
+            "properties": {
+              "dns": {
+                "type": "number",
+                "minimum": -1
+              },
+              "connect": {
+                "type": "number",
+                "minimum": -1
+              },
+              "blocked": {
+                "type": "number",
+                "minimum": -1
+              },
+              "send": {
+                "type": "number",
+                "minimum": -1
+              },
+              "wait": {
+                "type": "number",
+                "minimum": -1
+              },
+              "receive": {
+                "type": "number",
+                "minimum": -1
+              },
+              "ssl": {
+                "type": "number",
+                "minimum": -1
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "serverIPAddress": {
+            "type": "string",
+            "oneOf": [
+              {
+                "format": "ipv4"
+              },
+              {
+                "format": "ipv6"
+              }
+            ]
+          },
+          "connection": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "Header": {
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "Har": {
+        "type": "object",
+        "required": [
+          "log"
+        ],
+        "properties": {
+          "log": {
+            "type": "object",
+            "externalDocs": {
+              "description": "HAR (HTTP Archive) Log Format",
+              "url": "http://www.softwareishard.com/blog/har-12-spec/"
+            },
+            "required": [
+              "version",
+              "creator",
+              "entries"
+            ],
+            "properties": {
+              "version": {
+                "type": "string"
+              },
+              "creator": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "version"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              },
+              "browser": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "version"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              },
+              "pages": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Page"
+                }
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Entry"
+                }
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "CustomHarData": {
+        "type": "object",
+        "minProperties": 1
+      },
+      "Page": {
+        "type": "object",
+        "required": [
+          "startedDateTime",
+          "id",
+          "title",
+          "pageTimings"
+        ],
+        "properties": {
+          "startedDateTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "pageTimings": {
+            "type": "object",
+            "properties": {
+              "onContentLoad": {
+                "type": "number",
+                "minimum": -1
+              },
+              "onLoad": {
+                "type": "number",
+                "minimum": -1
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

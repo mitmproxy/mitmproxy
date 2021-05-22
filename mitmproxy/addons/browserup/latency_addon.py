@@ -1,5 +1,5 @@
 from time import sleep
-import mitmproxy.addons.browserup.har.flow_har_entry_patch
+
 
 class LatencyResource:
 
@@ -40,6 +40,7 @@ class LatencyAddOn:
     def response(self, flow):
         if self.latency_ms != 0:
             sleep(self.latency_ms / 1000)
+
 
 addons = [
     LatencyAddOn()

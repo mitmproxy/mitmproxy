@@ -1,0 +1,11 @@
+# Ruby
+gemAuthor: "BrowserUp"
+gemAuthorEmail: "hello@browserup.com"
+gemDescription: "A REST client for the browserup-proxy"
+gemHomepage: "https://browserup.com"
+gemName: "browserup_proxy_client"
+gemRequiredRubyVersion: ">= 2.3"
+gemSummary: "Client for the BrowserUp Proxy, an automated testing swiss army knife"
+gemVersion: "1.1"
+moduleName: "BrowserupProxy"
+appDescription: "BrowserUp Proxy Client"

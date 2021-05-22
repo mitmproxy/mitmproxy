@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /archive/
+Disallow: /master/
+Disallow: /dev/

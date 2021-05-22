@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "required": [
+    "startedDateTime",
+    "id",
+    "title",
+    "pageTimings"
+  ],
+  "properties": {
+    "startedDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "pageTimings": {
+      "type": "object",
+      "properties": {
+        "onContentLoad": {
+          "type": "number",
+          "minimum": -1
+        },
+        "onLoad": {
+          "type": "number",
+          "minimum": -1
+        },
+        "comment": {
+          "type": "string"
+        }
+      }
+    },
+    "comment": {
+      "type": "string"
+    }
+  }
+}

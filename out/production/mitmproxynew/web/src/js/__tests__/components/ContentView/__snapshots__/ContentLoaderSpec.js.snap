@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ContentLoader Component should render correctly 1`] = `
+<div
+  className="text-center"
+>
+  <i
+    className="fa fa-spinner fa-spin"
+  />
+</div>
+`;

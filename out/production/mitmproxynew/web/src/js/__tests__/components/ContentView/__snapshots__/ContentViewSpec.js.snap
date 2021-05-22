@@ -1,0 +1,52 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Edit Component should render correctly 1`] = `
+<div
+  className="text-center"
+>
+  <i
+    className="fa fa-spinner fa-spin"
+  />
+</div>
+`;
+
+exports[`ViewImage Component should render correctly 1`] = `
+<div
+  className="flowview-image"
+>
+  <img
+    alt="preview"
+    className="img-thumbnail"
+    src="./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/response/content.data"
+  />
+</div>
+`;
+
+exports[`ViewServer Component should render correctly and connect to state 1`] = `
+<div
+  className="text-center"
+>
+  <i
+    className="fa fa-spinner fa-spin"
+  />
+</div>
+`;
+
+exports[`ViewServer Component should render correctly and connect to state 2`] = `
+<div>
+  <pre>
+    <div>
+      <span
+        className="k"
+      >
+        1
+      </span>
+      <span
+        className="v"
+      >
+        1
+      </span>
+    </div>
+  </pre>
+</div>
+`;

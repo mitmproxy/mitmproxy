@@ -1,0 +1,82 @@
+[
+    {
+        "instruction": "1. Welcome to the mitmproxy tutorial. In this lesson we cover the interception of requests.",
+        "time_from": 0.0,
+        "time_to": 7.0
+    },
+    {
+        "instruction": "2. We first need to configure mitmproxy to intercept requests.",
+        "time_from": 16.1,
+        "time_to": 20.8
+    },
+    {
+        "instruction": "3. Press `i` to prepopulate mitmproxy’s command prompt with `set intercept ''`.",
+        "time_from": 21.4,
+        "time_to": 27.5
+    },
+    {
+        "instruction": "4. We use the flow filter expression `~u <regex>` to only intercept specific URLs.",
+        "time_from": 30.2,
+        "time_to": 36.5
+    },
+    {
+        "instruction": "5. Additionally, we use the filter `~q` to only intercept requests, but not responses.",
+        "time_from": 37.1,
+        "time_to": 43.7
+    },
+    {
+        "instruction": "6. We combine both flow filters using `&`.",
+        "time_from": 44.2,
+        "time_to": 47.3
+    },
+    {
+        "instruction": "7. Enter `~u /Dunedin & ~q` between the quotes of the `set intercept` command and press `ENTER`.",
+        "time_from": 47.8,
+        "time_to": 55.2
+    },
+    {
+        "instruction": "8. The bottom bar shows that the interception has been configured.",
+        "time_from": 62.8,
+        "time_to": 67.8
+    },
+    {
+        "instruction": "9. Let’s generate a request using `curl` in a separate terminal.",
+        "time_from": 68.4,
+        "time_to": 73.3
+    },
+    {
+        "instruction": "10. You see a new line in in the list of flows.",
+        "time_from": 96.1,
+        "time_to": 99.5
+    },
+    {
+        "instruction": "11. The new flow is displayed in red to indicate that it has been intercepted.",
+        "time_from": 100.0,
+        "time_to": 105.9
+    },
+    {
+        "instruction": "12. Put the focus (`>>`) on the intercepted flow. This is already the case in our example.",
+        "time_from": 106.5,
+        "time_to": 113.4
+    },
+    {
+        "instruction": "13. Press `a` to resume this flow without making any changes.",
+        "time_from": 113.9,
+        "time_to": 118.5
+    },
+    {
+        "instruction": "14. Submit another request and focus its flow.",
+        "time_from": 121.1,
+        "time_to": 124.5
+    },
+    {
+        "instruction": "15. Press `X` to kill this flow, i.e., discard it without forwarding it to its final destination `wttr.in`.",
+        "time_from": 128.8,
+        "time_to": 137.0
+    },
+    {
+        "instruction": "16. In the next lesson you will learn to modify intercepted flows.",
+        "time_from": 141.0,
+        "time_to": 146.0
+    }
+]

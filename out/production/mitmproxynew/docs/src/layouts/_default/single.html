@@ -1,0 +1,12 @@
+{{ partial "header" . }}
+<div class="columns container is-marginless">
+    <div id="sidebar" class="column is-one-quarter">
+        {{ partial "sidebar" . }}
+    </div>
+    <div id="main" class="column content">
+        {{ partial "outdated" . }}
+        {{ partial "edit-on-github" . }}
+        {{ partial "add-anchors" .Content}}
+    </div>
+</div>
+{{ partial "footer.html" . }}

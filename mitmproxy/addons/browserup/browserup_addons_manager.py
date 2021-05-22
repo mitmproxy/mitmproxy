@@ -1,16 +1,18 @@
-import falcon
 import _thread
-import os
 import json
 
-from mitmproxy import ctx
+import falcon
+import os
+
 from wsgiref.simple_server import make_server
 from pathlib import Path
 from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from falcon_apispec import FalconPlugin
-from mitmproxy.addons.browserup.har.har_schemas import *
-from mitmproxy.addons.browserup.har_capture_addon import *
+from mitmproxy.addons.browserup.har.har_schemas import MatchCriteriaSchema, VerifyResultSchema
+from mitmproxy.addons.browserup.har_capture_addon import HarCaptureAddOn
+from mitmproxy import ctx
+
 
 class BrowserUpAddonsManagerAddOn:
     initialized = False
@@ -29,7 +31,6 @@ class BrowserUpAddonsManagerAddOn:
             _thread.start_new_thread(self.start_falcon())
             initialized = True
 
-
     def is_script_loader_initialized(self):
         script_loader = ctx.master.addons.get("scriptloader")
 
@@ -43,19 +44,18 @@ class BrowserUpAddonsManagerAddOn:
         return APISpec(
             title='BrowserUp Proxy',
             version='1.0.0',
-            servers = [ { "url": "http://localhost:{port}/",
-                          "description": "The development API server",
-                          "variables": { "port": { "enum": ["8088"], "default": '8088' } }
+            servers = [{"url": "http://localhost:{port}/",
+                        "description": "The development API server",
+                        "variables": {"port": {"enum": ["8088"], "default": '8088'}}
                         }],
-            tags = [{ "name": 'The BrowserUp Proxy API', "description": "BrowserUp Proxy REST API" }],
-            info= { "description":
-"""___
-This is the REST API for controlling the BrowserUp Proxy. 
+            tags = [{"name": 'The BrowserUp Proxy API', "description": "BrowserUp Proxy REST API"}],
+            info= {"description":
+                   """___
+This is the REST API for controlling the BrowserUp Proxy.
 The BrowserUp Proxy is a swiss army knife for automated testing that
 captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
 ___
-"""
-,"x-logo": {"url": "logo.png" }},
+""", "x-logo": {"url": "logo.png"}},
             openapi_version='3.0.3',
             plugins=[
                 FalconPlugin(app),
@@ -70,7 +70,6 @@ ___
         f = open(schema_path, 'w')
         f.write(pretty_json)
         f.close()
-
 
     def get_resources_from_addons(self, app, spec):
         addons = ctx.master.addons
@@ -89,13 +88,12 @@ ___
         self.write_spec(spec)
         return resources
 
-
     def get_app(self):
         app = falcon.API()
         spec = self.basic_spec(app)
         spec.components.schema('MatchCriteria', schema=MatchCriteriaSchema)
         spec.components.schema('VerifyResult', schema=VerifyResultSchema)
-        for resource in self.get_resources_from_addons(app, spec ):
+        for resource in self.get_resources_from_addons(app, spec):
             route = "/" + resource.addon_path()
             print("Adding route: " + route)
             app.add_route(route, resource)
@@ -125,5 +123,4 @@ ___
 
 addons = [
     HarCaptureAddOn(),
-    BrowserUpAddonsManagerAddOn()
 ]

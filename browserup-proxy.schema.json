@@ -20,7 +20,7 @@
     }
   ],
   "info": {
-    "description": "___\nThis is the REST API for controlling the BrowserUp Proxy. \nThe BrowserUp Proxy is a swiss army knife for automated testing that\ncaptures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.\n___\n",
+    "description": "___\nThis is the REST API for controlling the BrowserUp Proxy.\nThe BrowserUp Proxy is a swiss army knife for automated testing that\ncaptures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.\n___\n",
     "x-logo": {
       "url": "logo.png"
     },
@@ -445,7 +445,7 @@
             "description": "Validates against passed JSON schema"
           }
         },
-        "description": "A set of criteria for filtering HTTP Requests and Responses. Criteria are AND based, and use python regular expressions for string comparison"
+        "description": "A set of criteria for filtering HTTP Requests and Responses.\n                         Criteria are AND based, and use python regular expressions for string comparison"
       },
       "VerifyResult": {
         "type": "object",

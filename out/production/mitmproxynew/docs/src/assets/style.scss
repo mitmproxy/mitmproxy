@@ -1,0 +1,141 @@
+@import "./syntax";
+/* background for both hugo *and* pdoc. */
+.chroma pre, pre.chroma {
+    background-color: #f7f7f7;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    padding: .5rem 0 .5rem .5rem;
+}
+
+@import "./badge";
+
+$primary: #C93312;
+$warning-invert: #FFFFFF;
+$family-sans-serif: BlinkMacSystemFont, -apple-system, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", "Helvetica", "Arial", sans-serif, 'Font Awesome 5 Free', 'Font Awesome 5 Brands' !default;
+
+$panel-heading-size: 1em;
+$panel-heading-weight: 600;
+$menu-list-link-padding: .3em .75em;
+$menu-label-spacing: .7em;
+$menu-nested-list-margin: .3em .75em;
+
+/*!*
+bulma.io v0.8.0 | MIT License | github.com/jgthms/bulma */
+@import "./bulma/utilities/_all";
+@import "./bulma/base/_all";
+@import "./bulma/grid/_all";
+@import "./bulma/elements/_all";
+@import "./bulma/components/_all";
+@import "./bulma/layout/_all";
+
+html {
+  scroll-behavior: smooth;
+}
+
+html, body {
+    height: 100%;
+}
+
+body > div {
+    min-height: 100%;
+}
+
+#sidebar {
+    background-color: #eee;
+    border-right: 1px solid #c1c1c1;
+    box-shadow: 0 0 20px rgba(50, 50, 50, .2) inset;
+    padding: $column-gap + 1rem;
+
+    .brand {
+        padding: 1rem 0;
+        text-align: center;
+    }
+}
+
+#main {
+    padding: 3rem 3rem 9rem;
+}
+
+.example {
+    .highlight {
+        margin: 0;
+    }
+    .path {
+        font-style: italic;
+        width: 100%;
+        text-align: right;
+    }
+    max-width: 70vw;
+    margin-bottom: 1em;
+}
+
+code {
+    color: #1a9f1a;
+    font-size: 0.875em;
+    font-weight: normal;
+}
+
+.content {
+    h2 {
+        padding-top: 1em;
+        border-top: 1px solid #c0c0c0;
+    }
+}
+
+h1, h2, h3, h4, h5, h6 {
+    .anchor {
+        display: inline-block;
+        width: 0;
+        margin-left: -1.5rem;
+        margin-right: 1.5rem;
+        transition: all 100ms ease-in-out;
+        opacity: 0;
+    }
+    &:hover .anchor {
+        opacity: 1;
+    }
+    &:target {
+        color: $primary;
+        .anchor {
+            opacity: 1;
+            color: $primary
+        }
+    }
+}
+
+table code {
+    white-space: pre;
+}
+
+.footnotes p {
+    display: inline;
+}
+
+figure.has-border img {
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.25);
+}
+
+.asciicast-wrapper {
+    margin: 2rem 0;
+
+    asciinema-player {
+        display: block;
+        margin-bottom: 1rem;
+    }
+
+    // reset bulma pre styles
+    pre.asciinema-terminal {
+        padding: 0;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: auto;
+    }
+
+    .panel-block {
+        justify-content: space-between;
+    }
+
+    .panel-block.is-active .tag {
+        background-color: $link;
+        color: $white;
+    }
+}

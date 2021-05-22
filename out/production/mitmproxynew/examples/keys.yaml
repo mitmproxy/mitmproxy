@@ -1,0 +1,11 @@
+-
+  # Simple global binding
+  key: ctrl a
+  cmd: replay.client @marked
+-
+  # Bind key only in the flowlist
+  # Note that 1 is quoted, or YAML interprets it as a digit
+  key: "1"
+  ctx: ["flowlist"]
+  cmd: console.nav.down
+  help: Go to next flow

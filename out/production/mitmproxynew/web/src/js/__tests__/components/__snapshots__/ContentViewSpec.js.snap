@@ -1,0 +1,80 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ContentView Component should render correctly 1`] = `
+<div
+  className="contentview"
+>
+  <div
+    className="text-center"
+  >
+    <i
+      className="fa fa-spinner fa-spin"
+    />
+  </div>
+</div>
+`;
+
+exports[`ContentView Component should render correctly with content too large 1`] = `
+<div>
+  <div
+    className="alert alert-warning"
+  >
+    <button
+      className="btn btn-xs btn-warning pull-right"
+      onClick={[Function]}
+    >
+      Display anyway
+    </button>
+    100mb
+     content size.
+  </div>
+  <div
+    className="view-options text-center"
+  >
+    <a
+      className="btn btn-default btn-xs"
+      href="#"
+      onClick={[Function]}
+      title="Upload a file to replace the content."
+    >
+      <i
+        className="fa fa-fw fa-upload"
+      />
+      <input
+        className="hidden"
+        onChange={[Function]}
+        type="file"
+      />
+    </a>
+     
+    <a
+      className="btn btn-default btn-xs"
+      href="./flows/d91165be-ca1f-4612-88a9-c0f8696f3e29/response/content.data"
+      title="Download the content of the flow."
+    >
+      <i
+        className="fa fa-download"
+      />
+    </a>
+  </div>
+</div>
+`;
+
+exports[`ContentView Component should render correctly with empty content 1`] = `
+<div
+  className="alert alert-info"
+>
+  No 
+  response
+   content.
+</div>
+`;
+
+exports[`ContentView Component should render correctly with missing content 1`] = `
+<div
+  className="alert alert-info"
+>
+  Response
+   content missing.
+</div>
+`;

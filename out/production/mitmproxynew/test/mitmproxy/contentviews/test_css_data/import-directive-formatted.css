@@ -1,0 +1,8 @@
+menu {
+    background-color: red
+}
+
+@import url('foobar.css') screen;
+nav {
+    margin: 0
+}

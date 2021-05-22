@@ -1,0 +1,603 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CertificateInfo Component should render correctly 1`] = `<div />`;
+
+exports[`ConnectionInfo Component should render correctly 1`] = `
+<table
+  className="connection-table"
+>
+  <tbody>
+    <tr>
+      <td>
+        Address:
+      </td>
+      <td>
+        127.0.0.1:22
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <abbr
+          title="TLS Server Name Indication"
+        >
+          TLS SNI:
+        </abbr>
+      </td>
+      <td>
+        address
+      </td>
+    </tr>
+    <tr>
+      <td>
+        TLS version:
+      </td>
+      <td>
+        TLSv1.2
+      </td>
+    </tr>
+    <tr>
+      <td>
+        cipher name:
+      </td>
+      <td>
+        cipher
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <abbr
+          title="ALPN protocol negotiated"
+        >
+          ALPN:
+        </abbr>
+      </td>
+      <td>
+        http/1.1
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;
+
+exports[`Details Component should render correctly 1`] = `
+<section
+  className="detail"
+>
+  <h4>
+    Client Connection
+  </h4>
+  <table
+    className="connection-table"
+  >
+    <tbody>
+      <tr>
+        <td>
+          Address:
+        </td>
+        <td>
+          127.0.0.1:22
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <abbr
+            title="TLS Server Name Indication"
+          >
+            TLS SNI:
+          </abbr>
+        </td>
+        <td>
+          address
+        </td>
+      </tr>
+      <tr>
+        <td>
+          TLS version:
+        </td>
+        <td>
+          TLSv1.2
+        </td>
+      </tr>
+      <tr>
+        <td>
+          cipher name:
+        </td>
+        <td>
+          cipher
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <abbr
+            title="ALPN protocol negotiated"
+          >
+            ALPN:
+          </abbr>
+        </td>
+        <td>
+          http/1.1
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <h4>
+    Server Connection
+  </h4>
+  <table
+    className="connection-table"
+  >
+    <tbody>
+      <tr>
+        <td>
+          Address:
+        </td>
+        <td>
+          address:22
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <abbr
+            title="TLS Server Name Indication"
+          >
+            TLS SNI:
+          </abbr>
+        </td>
+        <td>
+          address
+        </td>
+      </tr>
+      <tr>
+        <td>
+          TLS version:
+        </td>
+        <td>
+          TLSv1.2
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <abbr
+            title="ALPN protocol negotiated"
+          >
+            ALPN:
+          </abbr>
+        </td>
+        <td>
+          http/1.1
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Resolved address:
+        </td>
+        <td>
+          192.168.0.1:22
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Source address:
+        </td>
+        <td>
+          address:22
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div />
+  <div>
+    <h4>
+      Timing
+    </h4>
+    <table
+      className="timing-table"
+    >
+      <tbody>
+        <tr>
+          <td>
+            Server conn. initiated
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:02.000
+            <span
+              className="text-muted"
+            >
+              (
+              2s
+              )
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Server conn. TCP handshake
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:03.000
+            <span
+              className="text-muted"
+            >
+              (
+              3s
+              )
+            </span>
+          </td>
+        </tr>
+        <tr />
+        <tr>
+          <td>
+            Client conn. established
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:00.000
+            <span
+              className="text-muted"
+            >
+              (
+              0ms
+              )
+            </span>
+          </td>
+        </tr>
+        <tr />
+        <tr>
+          <td>
+            First request byte
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:00.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Request complete
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:01.000
+            <span
+              className="text-muted"
+            >
+              (
+              1s
+              )
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            First response byte
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:02.000
+            <span
+              className="text-muted"
+            >
+              (
+              2s
+              )
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Response complete
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:03.000
+            <span
+              className="text-muted"
+            >
+              (
+              3s
+              )
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+`;
+
+exports[`Details Component should render correctly when server address is missing 1`] = `
+<section
+  className="detail"
+>
+  <h4>
+    Client Connection
+  </h4>
+  <table
+    className="connection-table"
+  >
+    <tbody>
+      <tr>
+        <td>
+          Address:
+        </td>
+        <td>
+          127.0.0.1:22
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <abbr
+            title="TLS Server Name Indication"
+          >
+            TLS SNI:
+          </abbr>
+        </td>
+        <td>
+          address
+        </td>
+      </tr>
+      <tr>
+        <td>
+          TLS version:
+        </td>
+        <td>
+          TLSv1.2
+        </td>
+      </tr>
+      <tr>
+        <td>
+          cipher name:
+        </td>
+        <td>
+          cipher
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <abbr
+            title="ALPN protocol negotiated"
+          >
+            ALPN:
+          </abbr>
+        </td>
+        <td>
+          http/1.1
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div />
+  <div>
+    <h4>
+      Timing
+    </h4>
+    <table
+      className="timing-table"
+    >
+      <tbody>
+        <tr />
+        <tr />
+        <tr />
+        <tr>
+          <td>
+            Client conn. established
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:00.000
+            <span
+              className="text-muted"
+            >
+              (
+              0ms
+              )
+            </span>
+          </td>
+        </tr>
+        <tr />
+        <tr>
+          <td>
+            First request byte
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:00.000
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Request complete
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:01.000
+            <span
+              className="text-muted"
+            >
+              (
+              1s
+              )
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            First response byte
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:02.000
+            <span
+              className="text-muted"
+            >
+              (
+              2s
+              )
+            </span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Response complete
+            :
+          </td>
+          <td>
+            1999-12-31 23:00:03.000
+            <span
+              className="text-muted"
+            >
+              (
+              3s
+              )
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+`;
+
+exports[`TimeStamp Component should render correctly 1`] = `
+<tr>
+  <td>
+    foo
+    :
+  </td>
+  <td>
+    2017-01-01 00:00:00.000
+    <span
+      className="text-muted"
+    >
+      (
+      2min
+      )
+    </span>
+  </td>
+</tr>
+`;
+
+exports[`TimeStamp Component should render correctly 2`] = `<tr />`;
+
+exports[`Timing Component should render correctly 1`] = `
+<div>
+  <h4>
+    Timing
+  </h4>
+  <table
+    className="timing-table"
+  >
+    <tbody>
+      <tr>
+        <td>
+          Server conn. initiated
+          :
+        </td>
+        <td>
+          1999-12-31 23:00:02.000
+          <span
+            className="text-muted"
+          >
+            (
+            2s
+            )
+          </span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Server conn. TCP handshake
+          :
+        </td>
+        <td>
+          1999-12-31 23:00:03.000
+          <span
+            className="text-muted"
+          >
+            (
+            3s
+            )
+          </span>
+        </td>
+      </tr>
+      <tr />
+      <tr>
+        <td>
+          Client conn. established
+          :
+        </td>
+        <td>
+          1999-12-31 23:00:00.000
+          <span
+            className="text-muted"
+          >
+            (
+            0ms
+            )
+          </span>
+        </td>
+      </tr>
+      <tr />
+      <tr>
+        <td>
+          First request byte
+          :
+        </td>
+        <td>
+          1999-12-31 23:00:00.000
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Request complete
+          :
+        </td>
+        <td>
+          1999-12-31 23:00:01.000
+          <span
+            className="text-muted"
+          >
+            (
+            1s
+            )
+          </span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          First response byte
+          :
+        </td>
+        <td>
+          1999-12-31 23:00:02.000
+          <span
+            className="text-muted"
+          >
+            (
+            2s
+            )
+          </span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          Response complete
+          :
+        </td>
+        <td>
+          1999-12-31 23:00:03.000
+          <span
+            className="text-muted"
+          >
+            (
+            3s
+            )
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;

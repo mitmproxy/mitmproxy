@@ -1,0 +1,115 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OptionMenu Component should render correctly 1`] = `
+<div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="Open Options"
+      >
+        <i
+          className="fa fa-fw fa-cogs text-primary"
+        />
+        Edit Options 
+        <sup>
+          alpha
+        </sup>
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      Options Editor
+    </div>
+  </div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={true}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          Strip cache headers 
+          <a
+            href="https://docs.mitmproxy.org/stable/overview-features/#anticache"
+            target="_blank"
+          >
+            <i
+              className="fa fa-question-circle"
+            />
+          </a>
+        </label>
+      </div>
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={false}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          Use host header for display
+        </label>
+      </div>
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={false}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          Don't verify server certificates
+        </label>
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      Quick Options
+    </div>
+  </div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="menu-entry"
+      >
+        <label>
+          <input
+            checked={true}
+            onChange={[Function]}
+            type="checkbox"
+          />
+          Display Event Log
+        </label>
+      </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      View Options
+    </div>
+  </div>
+</div>
+`;
