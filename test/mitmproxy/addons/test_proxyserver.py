@@ -166,7 +166,7 @@ async def test_warn_no_nextlayer():
 def test_self_connect():
     server = tserver_conn()
     client = tclient_conn()
-    server.address = ("localhost", 8080)
+    server.address = ("localhost", 9009)
     ps = Proxyserver()
     with taddons.context(ps) as tctx:
         # not calling .running() here to avoid unnecessary socket
