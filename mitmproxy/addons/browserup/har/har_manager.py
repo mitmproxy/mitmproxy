@@ -13,7 +13,7 @@ REQUEST_SUBMITTED_FLAG = "_request_submitted"
 
 
 class HarManagerMixin():
-    # Used to manage a single active har
+    # Used to manage a single active har, gets mixed into har_capture_addon
 
     def __init__(self):
         self.num = 0

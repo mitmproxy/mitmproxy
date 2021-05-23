@@ -71,7 +71,10 @@ ___
         f.write(pretty_json)
         f.close()
 
-    def get_resources_from_addons(self, app, spec):
+
+    # Whenever the addons manager loads, we write out our openapi spec
+    # There might be a better place for this, although where isn't clear to me yet
+    def load_resources_from_addons(self, app, spec):
         addons = ctx.master.addons
         resources = []
         get_resources_fun_name = "get_resources"
@@ -81,11 +84,11 @@ ___
                 for resource in addon_resources:
                     route = "/" + resource.addon_path()
                     app.add_route(route, resource)
-                    resources.append(resource)
                     if 'apispec' in dir(resource):
                         resource.apispec(spec)
 
-        self.write_spec(spec)
+
+                    resources.append(resource)
         return resources
 
     def get_app(self):
@@ -93,11 +96,8 @@ ___
         spec = self.basic_spec(app)
         spec.components.schema('MatchCriteria', schema=MatchCriteriaSchema)
         spec.components.schema('VerifyResult', schema=VerifyResultSchema)
-        for resource in self.get_resources_from_addons(app, spec):
-            route = "/" + resource.addon_path()
-            print("Adding route: " + route)
-            app.add_route(route, resource)
-        print(self.get_all_routes(app))
+        self.load_resources_from_addons(app, spec)
+        self.write_spec(spec)
         return app
 
     def get_all_routes(self, app):
