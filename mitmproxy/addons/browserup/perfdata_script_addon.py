@@ -8,6 +8,7 @@ from mitmproxy import ctx
 # these timings which is useful for monitoring and baseline performance monitoring. Devs and managers would like
 # a graph of time to first paint over time (by release) ideally
 
+
 class InjectPerformanceTimingScriptAddOn:
 
     def __init__(self):
