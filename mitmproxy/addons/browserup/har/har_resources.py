@@ -328,7 +328,7 @@ class SizeResource(VerifyResponseMixin):
         parameters:
             - in: path
               name: size
-              description: The size used for comparison
+              description: The size used for comparison, in kilobytes
               required: true
               schema:
                 type: integer
@@ -356,7 +356,7 @@ class SizeResource(VerifyResponseMixin):
                   $ref: "#/components/schemas/VerifyResult"
         """
         criteria = req.media
-        size_val = int(size)
+        size_val = int(size) * 1000
         hv = HarVerifications(self.HarCaptureAddon.har)
         max_size = hv.get_max(criteria, 'response')
         result = size_val <= max_size
