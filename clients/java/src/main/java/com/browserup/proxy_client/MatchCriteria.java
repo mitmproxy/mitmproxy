@@ -1,6 +1,6 @@
 /*
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -26,9 +26,9 @@ import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
 
 /**
- * A set of criteria for filtering HTTP Requests and Responses. Criteria are AND based, and use python regular expressions for string comparison
+ * A set of criteria for filtering HTTP Requests and Responses.                          Criteria are AND based, and use python regular expressions for string comparison
  */
-@ApiModel(description = "A set of criteria for filtering HTTP Requests and Responses. Criteria are AND based, and use python regular expressions for string comparison")
+@ApiModel(description = "A set of criteria for filtering HTTP Requests and Responses.                          Criteria are AND based, and use python regular expressions for string comparison")
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class MatchCriteria {
   public static final String SERIALIZED_NAME_URL = "url";

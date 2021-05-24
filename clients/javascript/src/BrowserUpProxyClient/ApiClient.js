@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -32,9 +32,9 @@ class ApiClient {
         /**
          * The base URL against which to resolve every API call's (relative) path.
          * @type {String}
-         * @default http://localhost:8080
+         * @default http://localhost:8088
          */
-        this.basePath = 'http://localhost:8080'.replace(/\/+$/, '');
+        this.basePath = 'http://localhost:8088'.replace(/\/+$/, '');
 
         /**
          * The authentication methods to be included for all API calls.
@@ -507,7 +507,7 @@ class ApiClient {
     */
     static parseDate(str) {
         if (isNaN(str)) {
-            return new Date(str);
+            return new Date(str.replace(/(\d)(T)(\d)/i, '$1 $3'));
         }
         return new Date(+str);
     }
@@ -592,9 +592,9 @@ class ApiClient {
               'variables': {
                 port: {
                     'description': "No description provided",
-                    'default_value': "8080",
+                    'default_value': "8088",
                     'enum_values': [
-                      "8080"
+                      "8088"
                     ]
                   }
                 }

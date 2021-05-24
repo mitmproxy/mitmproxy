@@ -327,13 +327,13 @@
       "NameValuePair": {
         "type": "object",
         "properties": {
-          "value": {
-            "type": "string",
-            "description": "Value to match"
-          },
           "name": {
             "type": "string",
             "description": "Name to match"
+          },
+          "value": {
+            "type": "string",
+            "description": "Value to match"
           }
         }
       },

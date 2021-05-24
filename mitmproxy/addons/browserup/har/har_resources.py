@@ -40,7 +40,7 @@ class VerifyResponseMixin:
     def respond_with_bool(self, resp, bool):
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
-        resp.body = json.dumps(bool, ensure_ascii=False)
+        resp.body = json.dumps({ "result": bool }, ensure_ascii=False)
 
 
 class HarResource(RespondWithHarMixin):

@@ -9,10 +9,10 @@ All URIs are relative to *http://localhost:8088*
 | [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck |  |
 | [**reset_har_log**](BrowserUpProxyApi.md#reset_har_log) | **PUT** /har |  |
 | [**set_har_page**](BrowserUpProxyApi.md#set_har_page) | **POST** /har/page |  |
-| [**verify_not_present**](BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present |  |
-| [**verify_present**](BrowserUpProxyApi.md#verify_present) | **POST** /verify/present |  |
-| [**verify_size**](BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size} |  |
-| [**verify_sla**](BrowserUpProxyApi.md#verify_sla) | **POST** /verify/sla/{time} |  |
+| [**verify_not_present**](BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present/{name} |  |
+| [**verify_present**](BrowserUpProxyApi.md#verify_present) | **POST** /verify/present/{name} |  |
+| [**verify_size**](BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} |  |
+| [**verify_sla**](BrowserUpProxyApi.md#verify_sla) | **POST** /verify/sla/{time}/{name} |  |
 
 
 ## add_custom_har_fields
@@ -325,7 +325,7 @@ No authorization required
 
 ## verify_not_present
 
-> <VerifyResult> verify_not_present(match_criteria)
+> <VerifyResult> verify_not_present(name, match_criteria)
 
 
 
@@ -338,11 +338,12 @@ require 'time'
 require 'browserup_proxy_client'
 
 api_instance = BrowserupProxy::BrowserUpProxyApi.new
+name = 'name_example' # String | The unique name for this verification operation
 match_criteria = BrowserupProxy::MatchCriteria.new # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
 begin
   
-  result = api_instance.verify_not_present(match_criteria)
+  result = api_instance.verify_not_present(name, match_criteria)
   p result
 rescue BrowserupProxy::ApiError => e
   puts "Error when calling BrowserUpProxyApi->verify_not_present: #{e}"
@@ -353,12 +354,12 @@ end
 
 This returns an Array which contains the response data, status code and headers.
 
-> <Array(<VerifyResult>, Integer, Hash)> verify_not_present_with_http_info(match_criteria)
+> <Array(<VerifyResult>, Integer, Hash)> verify_not_present_with_http_info(name, match_criteria)
 
 ```ruby
 begin
   
-  data, status_code, headers = api_instance.verify_not_present_with_http_info(match_criteria)
+  data, status_code, headers = api_instance.verify_not_present_with_http_info(name, match_criteria)
   p status_code # => 2xx
   p headers # => { ... }
   p data # => <VerifyResult>
@@ -371,6 +372,7 @@ end
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
+| **name** | **String** | The unique name for this verification operation |  |
 | **match_criteria** | [**MatchCriteria**](MatchCriteria.md) | Match criteria to select requests - response pairs for size tests |  |
 
 ### Return type
@@ -389,7 +391,7 @@ No authorization required
 
 ## verify_present
 
-> <VerifyResult> verify_present(match_criteria)
+> <VerifyResult> verify_present(name, match_criteria)
 
 
 
@@ -402,11 +404,12 @@ require 'time'
 require 'browserup_proxy_client'
 
 api_instance = BrowserupProxy::BrowserUpProxyApi.new
+name = 'name_example' # String | The unique name for this verification operation
 match_criteria = BrowserupProxy::MatchCriteria.new # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
 begin
   
-  result = api_instance.verify_present(match_criteria)
+  result = api_instance.verify_present(name, match_criteria)
   p result
 rescue BrowserupProxy::ApiError => e
   puts "Error when calling BrowserUpProxyApi->verify_present: #{e}"
@@ -417,12 +420,12 @@ end
 
 This returns an Array which contains the response data, status code and headers.
 
-> <Array(<VerifyResult>, Integer, Hash)> verify_present_with_http_info(match_criteria)
+> <Array(<VerifyResult>, Integer, Hash)> verify_present_with_http_info(name, match_criteria)
 
 ```ruby
 begin
   
-  data, status_code, headers = api_instance.verify_present_with_http_info(match_criteria)
+  data, status_code, headers = api_instance.verify_present_with_http_info(name, match_criteria)
   p status_code # => 2xx
   p headers # => { ... }
   p data # => <VerifyResult>
@@ -435,6 +438,7 @@ end
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
+| **name** | **String** | The unique name for this verification operation |  |
 | **match_criteria** | [**MatchCriteria**](MatchCriteria.md) | Match criteria to select requests - response pairs for size tests |  |
 
 ### Return type
@@ -453,7 +457,7 @@ No authorization required
 
 ## verify_size
 
-> <VerifyResult> verify_size(size, match_criteria)
+> <VerifyResult> verify_size(size, name, match_criteria)
 
 
 
@@ -466,12 +470,13 @@ require 'time'
 require 'browserup_proxy_client'
 
 api_instance = BrowserupProxy::BrowserUpProxyApi.new
-size = 56 # Integer | The size used for comparison
+size = 56 # Integer | The size used for comparison, in kilobytes
+name = 'name_example' # String | The unique name for this verification operation
 match_criteria = BrowserupProxy::MatchCriteria.new # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
 begin
   
-  result = api_instance.verify_size(size, match_criteria)
+  result = api_instance.verify_size(size, name, match_criteria)
   p result
 rescue BrowserupProxy::ApiError => e
   puts "Error when calling BrowserUpProxyApi->verify_size: #{e}"
@@ -482,12 +487,12 @@ end
 
 This returns an Array which contains the response data, status code and headers.
 
-> <Array(<VerifyResult>, Integer, Hash)> verify_size_with_http_info(size, match_criteria)
+> <Array(<VerifyResult>, Integer, Hash)> verify_size_with_http_info(size, name, match_criteria)
 
 ```ruby
 begin
   
-  data, status_code, headers = api_instance.verify_size_with_http_info(size, match_criteria)
+  data, status_code, headers = api_instance.verify_size_with_http_info(size, name, match_criteria)
   p status_code # => 2xx
   p headers # => { ... }
   p data # => <VerifyResult>
@@ -500,7 +505,8 @@ end
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **size** | **Integer** | The size used for comparison |  |
+| **size** | **Integer** | The size used for comparison, in kilobytes |  |
+| **name** | **String** | The unique name for this verification operation |  |
 | **match_criteria** | [**MatchCriteria**](MatchCriteria.md) | Match criteria to select requests - response pairs for size tests |  |
 
 ### Return type
@@ -519,7 +525,7 @@ No authorization required
 
 ## verify_sla
 
-> <VerifyResult> verify_sla(time, match_criteria)
+> <VerifyResult> verify_sla(time, name, match_criteria)
 
 
 
@@ -533,11 +539,12 @@ require 'browserup_proxy_client'
 
 api_instance = BrowserupProxy::BrowserUpProxyApi.new
 time = 56 # Integer | The time used for comparison
+name = 'name_example' # String | The unique name for this verification operation
 match_criteria = BrowserupProxy::MatchCriteria.new # MatchCriteria | Match criteria to select requests - response pairs for size tests
 
 begin
   
-  result = api_instance.verify_sla(time, match_criteria)
+  result = api_instance.verify_sla(time, name, match_criteria)
   p result
 rescue BrowserupProxy::ApiError => e
   puts "Error when calling BrowserUpProxyApi->verify_sla: #{e}"
@@ -548,12 +555,12 @@ end
 
 This returns an Array which contains the response data, status code and headers.
 
-> <Array(<VerifyResult>, Integer, Hash)> verify_sla_with_http_info(time, match_criteria)
+> <Array(<VerifyResult>, Integer, Hash)> verify_sla_with_http_info(time, name, match_criteria)
 
 ```ruby
 begin
   
-  data, status_code, headers = api_instance.verify_sla_with_http_info(time, match_criteria)
+  data, status_code, headers = api_instance.verify_sla_with_http_info(time, name, match_criteria)
   p status_code # => 2xx
   p headers # => { ... }
   p data # => <VerifyResult>
@@ -567,6 +574,7 @@ end
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
 | **time** | **Integer** | The time used for comparison |  |
+| **name** | **String** | The unique name for this verification operation |  |
 | **match_criteria** | [**MatchCriteria**](MatchCriteria.md) | Match criteria to select requests - response pairs for size tests |  |
 
 ### Return type

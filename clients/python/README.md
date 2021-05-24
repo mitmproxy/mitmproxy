@@ -1,6 +1,6 @@
 # BrowserUpProxyClient
 ___
-This is the REST API for controlling the BrowserUp Proxy. 
+This is the REST API for controlling the BrowserUp Proxy.
 The BrowserUp Proxy is a swiss army knife for automated testing that
 captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
 ___
@@ -89,10 +89,10 @@ Class | Method | HTTP request | Description
 *BrowserUpProxyApi* | [**healthcheck**](docs/BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 *BrowserUpProxyApi* | [**reset_har_log**](docs/BrowserUpProxyApi.md#reset_har_log) | **PUT** /har | 
 *BrowserUpProxyApi* | [**set_har_page**](docs/BrowserUpProxyApi.md#set_har_page) | **POST** /har/page | 
-*BrowserUpProxyApi* | [**verify_not_present**](docs/BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present | 
-*BrowserUpProxyApi* | [**verify_present**](docs/BrowserUpProxyApi.md#verify_present) | **POST** /verify/present | 
-*BrowserUpProxyApi* | [**verify_size**](docs/BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size} | 
-*BrowserUpProxyApi* | [**verify_sla**](docs/BrowserUpProxyApi.md#verify_sla) | **POST** /verify/sla/{time} | 
+*BrowserUpProxyApi* | [**verify_not_present**](docs/BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present/{name} | 
+*BrowserUpProxyApi* | [**verify_present**](docs/BrowserUpProxyApi.md#verify_present) | **POST** /verify/present/{name} | 
+*BrowserUpProxyApi* | [**verify_size**](docs/BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} | 
+*BrowserUpProxyApi* | [**verify_sla**](docs/BrowserUpProxyApi.md#verify_sla) | **POST** /verify/sla/{time}/{name} | 
 
 
 ## Documentation For Models

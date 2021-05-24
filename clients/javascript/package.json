@@ -6,7 +6,7 @@
   "main": "dist/BrowserUpProxyClient/index.js",
   "scripts": {
     "build": "babel src -d dist",
-    "prepack": "npm run build",
+    "prepare": "npm run build",
     "test": "mocha --require @babel/register --recursive"
   },
   "browser": {

@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -14,7 +14,6 @@
 import ApiClient from '../ApiClient';
 import EntryRequest from './EntryRequest';
 import EntryResponse from './EntryResponse';
-import OneOfAnyTypeAnyType from './OneOfAnyTypeAnyType';
 
 /**
  * The Entry model module.
@@ -25,7 +24,7 @@ class Entry {
     /**
      * Constructs a new <code>Entry</code>.
      * @alias module:BrowserUpProxyClient/model/Entry
-     * @param startedDateTime {Date} 
+     * @param startedDateTime {String} 
      * @param time {Number} 
      * @param request {module:BrowserUpProxyClient/model/EntryRequest} 
      * @param response {module:BrowserUpProxyClient/model/EntryResponse} 
@@ -66,7 +65,7 @@ class Entry {
                 obj['pageref'] = ApiClient.convertToType(data['pageref'], 'String');
             }
             if (data.hasOwnProperty('startedDateTime')) {
-                obj['startedDateTime'] = ApiClient.convertToType(data['startedDateTime'], 'Date');
+                obj['startedDateTime'] = ApiClient.convertToType(data['startedDateTime'], 'String');
             }
             if (data.hasOwnProperty('time')) {
                 obj['time'] = ApiClient.convertToType(data['time'], 'Number');
@@ -84,7 +83,7 @@ class Entry {
                 obj['timings'] = ApiClient.convertToType(data['timings'], Object);
             }
             if (data.hasOwnProperty('serverIPAddress')) {
-                obj['serverIPAddress'] = ApiClient.convertToType(data['serverIPAddress'], OneOfAnyTypeAnyType);
+                obj['serverIPAddress'] = ApiClient.convertToType(data['serverIPAddress'], 'String');
             }
             if (data.hasOwnProperty('connection')) {
                 obj['connection'] = ApiClient.convertToType(data['connection'], 'String');
@@ -105,7 +104,7 @@ class Entry {
 Entry.prototype['pageref'] = undefined;
 
 /**
- * @member {Date} startedDateTime
+ * @member {String} startedDateTime
  */
 Entry.prototype['startedDateTime'] = undefined;
 
@@ -135,7 +134,7 @@ Entry.prototype['cache'] = undefined;
 Entry.prototype['timings'] = undefined;
 
 /**
- * @member {module:BrowserUpProxyClient/model/OneOfAnyTypeAnyType} serverIPAddress
+ * @member {String} serverIPAddress
  */
 Entry.prototype['serverIPAddress'] = undefined;
 

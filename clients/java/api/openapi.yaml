@@ -1,8 +1,11 @@
 openapi: 3.0.3
 info:
-  description: "___\nThis is the REST API for controlling the BrowserUp Proxy. \n\
-    The BrowserUp Proxy is a swiss army knife for automated testing that\ncaptures\
-    \ HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.\n___\n"
+  description: |
+    ___
+    This is the REST API for controlling the BrowserUp Proxy.
+    The BrowserUp Proxy is a swiss army knife for automated testing that
+    captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests.
+    ___
   title: BrowserUp Proxy
   version: 1.0.0
   x-logo:
@@ -144,7 +147,7 @@ paths:
       description: Verify matching items in the captured traffic meet the size criteria
       operationId: verifySize
       parameters:
-      - description: The size used for comparison
+      - description: The size used for comparison, in kilobytes
         explode: false
         in: path
         name: size
@@ -244,8 +247,9 @@ components:
           type: string
       type: object
     MatchCriteria:
-      description: A set of criteria for filtering HTTP Requests and Responses. Criteria
-        are AND based, and use python regular expressions for string comparison
+      description: |-
+        A set of criteria for filtering HTTP Requests and Responses.
+                                 Criteria are AND based, and use python regular expressions for string comparison
       example:
         request_cookie: ""
         response_cookie: ""

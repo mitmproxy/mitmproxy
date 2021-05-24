@@ -1,7 +1,7 @@
 =begin
 #BrowserUp Proxy
 
-#___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+#___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
 
 The version of the OpenAPI document: 1.0.0
 
@@ -295,28 +295,39 @@ module BrowserupProxy
     end
 
     # Verify no matching items are present in the captured traffic
+    # @param name [String] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [VerifyResult]
-    def verify_not_present(match_criteria, opts = {})
-      data, _status_code, _headers = verify_not_present_with_http_info(match_criteria, opts)
+    def verify_not_present(name, match_criteria, opts = {})
+      data, _status_code, _headers = verify_not_present_with_http_info(name, match_criteria, opts)
       data
     end
 
     # Verify no matching items are present in the captured traffic
+    # @param name [String] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [Array<(VerifyResult, Integer, Hash)>] VerifyResult data, response status code and response headers
-    def verify_not_present_with_http_info(match_criteria, opts = {})
+    def verify_not_present_with_http_info(name, match_criteria, opts = {})
       if @api_client.config.debugging
         @api_client.config.logger.debug 'Calling API: BrowserUpProxyApi.verify_not_present ...'
       end
+      # verify the required parameter 'name' is set
+      if @api_client.config.client_side_validation && name.nil?
+        fail ArgumentError, "Missing the required parameter 'name' when calling BrowserUpProxyApi.verify_not_present"
+      end
+      pattern = Regexp.new(/[a-zA-Z0-9_]{4,16}/)
+      if @api_client.config.client_side_validation && name !~ pattern
+        fail ArgumentError, "invalid value for 'name' when calling BrowserUpProxyApi.verify_not_present, must conform to the pattern #{pattern}."
+      end
+
       # verify the required parameter 'match_criteria' is set
       if @api_client.config.client_side_validation && match_criteria.nil?
         fail ArgumentError, "Missing the required parameter 'match_criteria' when calling BrowserUpProxyApi.verify_not_present"
       end
       # resource path
-      local_var_path = '/verify/not_present'
+      local_var_path = '/verify/not_present/{name}'.sub('{' + 'name' + '}', CGI.escape(name.to_s))
 
       # query parameters
       query_params = opts[:query_params] || {}
@@ -358,28 +369,39 @@ module BrowserupProxy
     end
 
     # Verify at least one matching item is present in the captured traffic
+    # @param name [String] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [VerifyResult]
-    def verify_present(match_criteria, opts = {})
-      data, _status_code, _headers = verify_present_with_http_info(match_criteria, opts)
+    def verify_present(name, match_criteria, opts = {})
+      data, _status_code, _headers = verify_present_with_http_info(name, match_criteria, opts)
       data
     end
 
     # Verify at least one matching item is present in the captured traffic
+    # @param name [String] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [Array<(VerifyResult, Integer, Hash)>] VerifyResult data, response status code and response headers
-    def verify_present_with_http_info(match_criteria, opts = {})
+    def verify_present_with_http_info(name, match_criteria, opts = {})
       if @api_client.config.debugging
         @api_client.config.logger.debug 'Calling API: BrowserUpProxyApi.verify_present ...'
       end
+      # verify the required parameter 'name' is set
+      if @api_client.config.client_side_validation && name.nil?
+        fail ArgumentError, "Missing the required parameter 'name' when calling BrowserUpProxyApi.verify_present"
+      end
+      pattern = Regexp.new(/[a-zA-Z0-9_]{4,16}/)
+      if @api_client.config.client_side_validation && name !~ pattern
+        fail ArgumentError, "invalid value for 'name' when calling BrowserUpProxyApi.verify_present, must conform to the pattern #{pattern}."
+      end
+
       # verify the required parameter 'match_criteria' is set
       if @api_client.config.client_side_validation && match_criteria.nil?
         fail ArgumentError, "Missing the required parameter 'match_criteria' when calling BrowserUpProxyApi.verify_present"
       end
       # resource path
-      local_var_path = '/verify/present'
+      local_var_path = '/verify/present/{name}'.sub('{' + 'name' + '}', CGI.escape(name.to_s))
 
       # query parameters
       query_params = opts[:query_params] || {}
@@ -421,21 +443,23 @@ module BrowserupProxy
     end
 
     # Verify matching items in the captured traffic meet the size criteria
-    # @param size [Integer] The size used for comparison
+    # @param size [Integer] The size used for comparison, in kilobytes
+    # @param name [String] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [VerifyResult]
-    def verify_size(size, match_criteria, opts = {})
-      data, _status_code, _headers = verify_size_with_http_info(size, match_criteria, opts)
+    def verify_size(size, name, match_criteria, opts = {})
+      data, _status_code, _headers = verify_size_with_http_info(size, name, match_criteria, opts)
       data
     end
 
     # Verify matching items in the captured traffic meet the size criteria
-    # @param size [Integer] The size used for comparison
+    # @param size [Integer] The size used for comparison, in kilobytes
+    # @param name [String] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [Array<(VerifyResult, Integer, Hash)>] VerifyResult data, response status code and response headers
-    def verify_size_with_http_info(size, match_criteria, opts = {})
+    def verify_size_with_http_info(size, name, match_criteria, opts = {})
       if @api_client.config.debugging
         @api_client.config.logger.debug 'Calling API: BrowserUpProxyApi.verify_size ...'
       end
@@ -447,12 +471,21 @@ module BrowserupProxy
         fail ArgumentError, 'invalid value for "size" when calling BrowserUpProxyApi.verify_size, must be greater than or equal to 0.'
       end
 
+      # verify the required parameter 'name' is set
+      if @api_client.config.client_side_validation && name.nil?
+        fail ArgumentError, "Missing the required parameter 'name' when calling BrowserUpProxyApi.verify_size"
+      end
+      pattern = Regexp.new(/[a-zA-Z0-9_]{4,16}/)
+      if @api_client.config.client_side_validation && name !~ pattern
+        fail ArgumentError, "invalid value for 'name' when calling BrowserUpProxyApi.verify_size, must conform to the pattern #{pattern}."
+      end
+
       # verify the required parameter 'match_criteria' is set
       if @api_client.config.client_side_validation && match_criteria.nil?
         fail ArgumentError, "Missing the required parameter 'match_criteria' when calling BrowserUpProxyApi.verify_size"
       end
       # resource path
-      local_var_path = '/verify/size/{size}'.sub('{' + 'size' + '}', CGI.escape(size.to_s))
+      local_var_path = '/verify/size/{size}/{name}'.sub('{' + 'size' + '}', CGI.escape(size.to_s)).sub('{' + 'name' + '}', CGI.escape(name.to_s))
 
       # query parameters
       query_params = opts[:query_params] || {}
@@ -495,20 +528,22 @@ module BrowserupProxy
 
     # Verify each traffic item matching the criteria meets is below SLA time
     # @param time [Integer] The time used for comparison
+    # @param name [String] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [VerifyResult]
-    def verify_sla(time, match_criteria, opts = {})
-      data, _status_code, _headers = verify_sla_with_http_info(time, match_criteria, opts)
+    def verify_sla(time, name, match_criteria, opts = {})
+      data, _status_code, _headers = verify_sla_with_http_info(time, name, match_criteria, opts)
       data
     end
 
     # Verify each traffic item matching the criteria meets is below SLA time
     # @param time [Integer] The time used for comparison
+    # @param name [String] The unique name for this verification operation
     # @param match_criteria [MatchCriteria] Match criteria to select requests - response pairs for size tests
     # @param [Hash] opts the optional parameters
     # @return [Array<(VerifyResult, Integer, Hash)>] VerifyResult data, response status code and response headers
-    def verify_sla_with_http_info(time, match_criteria, opts = {})
+    def verify_sla_with_http_info(time, name, match_criteria, opts = {})
       if @api_client.config.debugging
         @api_client.config.logger.debug 'Calling API: BrowserUpProxyApi.verify_sla ...'
       end
@@ -520,12 +555,21 @@ module BrowserupProxy
         fail ArgumentError, 'invalid value for "time" when calling BrowserUpProxyApi.verify_sla, must be greater than or equal to 0.'
       end
 
+      # verify the required parameter 'name' is set
+      if @api_client.config.client_side_validation && name.nil?
+        fail ArgumentError, "Missing the required parameter 'name' when calling BrowserUpProxyApi.verify_sla"
+      end
+      pattern = Regexp.new(/[a-zA-Z0-9_]{4,16}/)
+      if @api_client.config.client_side_validation && name !~ pattern
+        fail ArgumentError, "invalid value for 'name' when calling BrowserUpProxyApi.verify_sla, must conform to the pattern #{pattern}."
+      end
+
       # verify the required parameter 'match_criteria' is set
       if @api_client.config.client_side_validation && match_criteria.nil?
         fail ArgumentError, "Missing the required parameter 'match_criteria' when calling BrowserUpProxyApi.verify_sla"
       end
       # resource path
-      local_var_path = '/verify/sla/{time}'.sub('{' + 'time' + '}', CGI.escape(time.to_s))
+      local_var_path = '/verify/sla/{time}/{name}'.sub('{' + 'time' + '}', CGI.escape(time.to_s)).sub('{' + 'name' + '}', CGI.escape(name.to_s))
 
       # query parameters
       query_params = opts[:query_params] || {}

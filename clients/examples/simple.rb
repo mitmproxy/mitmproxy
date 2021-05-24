@@ -15,12 +15,13 @@ proxy = Selenium::WebDriver::Proxy.new(http: "localhost:8080")
 caps = Selenium::WebDriver::Remote::Capabilities.chrome(:proxy => proxy)
 driver = Selenium::WebDriver.for :chrome, desired_capabilities: caps
 
-driver.navigate.to "http://www.yahoo.com"
-
-criteria = MatchCriteria.new({ content: 'Yahoo'})
+driver.navigate.to "https://www.yahoo.com"
+criteria = MatchCriteria.new({ 'content' => 'vaccine'})
 bp = BrowserUpProxyApi.new()
-result = bp.verify_present(criteria).result
-puts "Content present: #{result}"
-
+sleep(3)
 driver.quit
+result = bp.verify_present("CheckTitle", criteria).result
+puts "Content present: #{result.inspect}"
+
+
 Process.kill(pid)

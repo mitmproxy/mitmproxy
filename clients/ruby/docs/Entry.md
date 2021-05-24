@@ -11,7 +11,7 @@
 | **response** | [**EntryResponse**](EntryResponse.md) |  |  |
 | **cache** | **Object** |  |  |
 | **timings** | **Object** |  |  |
-| **server_ip_address** | [**OneOfAnyTypeAnyType**](OneOfAnyTypeAnyType.md) |  | [optional] |
+| **server_ip_address** | **String** |  | [optional] |
 | **connection** | **String** |  | [optional] |
 | **comment** | **String** |  | [optional] |
 

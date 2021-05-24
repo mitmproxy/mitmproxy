@@ -524,7 +524,7 @@ public class Example {
     defaultClient.setBasePath("http://localhost:8088");
 
     BrowserUpProxyApi apiInstance = new BrowserUpProxyApi(defaultClient);
-    Integer size = 56; // Integer | The size used for comparison
+    Integer size = 56; // Integer | The size used for comparison, in kilobytes
     String name = "name_example"; // String | The unique name for this verification operation
     MatchCriteria matchCriteria = new MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
     try {
@@ -545,7 +545,7 @@ public class Example {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **size** | **Integer**| The size used for comparison |
+ **size** | **Integer**| The size used for comparison, in kilobytes |
  **name** | **String**| The unique name for this verification operation |
  **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
 

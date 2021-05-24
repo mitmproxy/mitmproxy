@@ -46,5 +46,4 @@ lib/browserup_proxy_client/models/verify_result.rb
 lib/browserup_proxy_client/version.rb
 spec/api_client_spec.rb
 spec/configuration_spec.rb
-spec/models/verify_result_spec.rb
 spec/spec_helper.rb

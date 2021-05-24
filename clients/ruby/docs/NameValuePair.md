@@ -4,8 +4,8 @@
 
 | Name | Type | Description | Notes |
 | ---- | ---- | ----------- | ----- |
-| **name** | **String** | Name to match | [optional] |
 | **value** | **String** | Value to match | [optional] |
+| **name** | **String** | Name to match | [optional] |
 
 ## Example
 
@@ -13,8 +13,8 @@
 require 'browserup_proxy_client'
 
 instance = BrowserupProxy::NameValuePair.new(
-  name: null,
-  value: null
+  value: null,
+  name: null
 )
 ```
 

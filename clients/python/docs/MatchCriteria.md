@@ -1,6 +1,6 @@
 # MatchCriteria
 
-A set of criteria for filtering HTTP Requests and Responses. Criteria are AND based, and use python regular expressions for string comparison
+A set of criteria for filtering HTTP Requests and Responses.                          Criteria are AND based, and use python regular expressions for string comparison
 
 ## Properties
 Name | Type | Description | Notes

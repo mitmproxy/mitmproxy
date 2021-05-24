@@ -1,74 +1,28 @@
 # BrowserUpProxyClient.BrowserUpProxyApi
 
-All URIs are relative to *http://localhost:8080*
+All URIs are relative to *http://localhost:8088*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**clearAdditionalHeaders**](BrowserUpProxyApi.md#clearAdditionalHeaders) | **DELETE** /additional_headers | 
-[**clearAllowList**](BrowserUpProxyApi.md#clearAllowList) | **DELETE** /allowlist | 
-[**clearBasicAuthSettings**](BrowserUpProxyApi.md#clearBasicAuthSettings) | **DELETE** /auth_basic/{domain} | 
-[**getAdditionalHeaders**](BrowserUpProxyApi.md#getAdditionalHeaders) | **GET** /additional_headers | 
-[**getAllowList**](BrowserUpProxyApi.md#getAllowList) | **GET** /allowlist | 
-[**getBlockList**](BrowserUpProxyApi.md#getBlockList) | **GET** /blocklist | 
+[**addCustomHarFields**](BrowserUpProxyApi.md#addCustomHarFields) | **PUT** /har/page | 
 [**getHarLog**](BrowserUpProxyApi.md#getHarLog) | **GET** /har | 
-[**healthcheckGet**](BrowserUpProxyApi.md#healthcheckGet) | **GET** /healthcheck | 
+[**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 [**resetHarLog**](BrowserUpProxyApi.md#resetHarLog) | **PUT** /har | 
-[**setAdditionalHeaders**](BrowserUpProxyApi.md#setAdditionalHeaders) | **POST** /additional_headers | 
-[**setAllowList**](BrowserUpProxyApi.md#setAllowList) | **POST** /allowlist | 
-[**setBasicAuth**](BrowserUpProxyApi.md#setBasicAuth) | **POST** /auth_basic/{domain} | 
-[**setBlockList**](BrowserUpProxyApi.md#setBlockList) | **POST** /blocklist | 
-[**setHarPage**](BrowserUpProxyApi.md#setHarPage) | **PUT** /har/page | 
+[**setHarPage**](BrowserUpProxyApi.md#setHarPage) | **POST** /har/page | 
+[**verifyNotPresent**](BrowserUpProxyApi.md#verifyNotPresent) | **POST** /verify/not_present/{name} | 
+[**verifyPresent**](BrowserUpProxyApi.md#verifyPresent) | **POST** /verify/present/{name} | 
+[**verifySLA**](BrowserUpProxyApi.md#verifySLA) | **POST** /verify/sla/{time}/{name} | 
+[**verifySize**](BrowserUpProxyApi.md#verifySize) | **POST** /verify/size/{size}/{name} | 
 
 
 
-## clearAdditionalHeaders
+## addCustomHarFields
 
-> clearAdditionalHeaders()
-
-
-
-Clear the additional Headers
-
-### Example
-
-```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
-
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-apiInstance.clearAdditionalHeaders((error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-});
-```
-
-### Parameters
-
-This endpoint does not need any parameter.
-
-### Return type
-
-null (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: Not defined
-
-
-## clearAllowList
-
-> clearAllowList()
+> addCustomHarFields(opts)
 
 
 
-Clears the AllowList, which will turn-off allowlist based filtering
+Add custom fields to the current HAR.
 
 ### Example
 
@@ -76,49 +30,10 @@ Clears the AllowList, which will turn-off allowlist based filtering
 import BrowserUpProxyClient from 'browserup-proxy-client';
 
 let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-apiInstance.clearAllowList((error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-});
-```
-
-### Parameters
-
-This endpoint does not need any parameter.
-
-### Return type
-
-null (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: Not defined
-
-
-## clearBasicAuthSettings
-
-> clearBasicAuthSettings(domain)
-
-
-
-Clears Basic Auth for a domain, disabling Automatic Basic Auth for it.
-
-### Example
-
-```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
-
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-let domain = "domain_example"; // String | The domain for which to clear the basic auth settings
-apiInstance.clearBasicAuthSettings(domain, (error, data, response) => {
+let opts = {
+  'body': null // Object | 
+};
+apiInstance.addCustomHarFields(opts, (error, data, response) => {
   if (error) {
     console.error(error);
   } else {
@@ -132,7 +47,7 @@ apiInstance.clearBasicAuthSettings(domain, (error, data, response) => {
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **domain** | **String**| The domain for which to clear the basic auth settings | 
+ **body** | **Object**|  | [optional] 
 
 ### Return type
 
@@ -144,131 +59,8 @@ No authorization required
 
 ### HTTP request headers
 
-- **Content-Type**: Not defined
+- **Content-Type**: application/json
 - **Accept**: Not defined
-
-
-## getAdditionalHeaders
-
-> Headers getAdditionalHeaders()
-
-
-
-Get the current added Headers
-
-### Example
-
-```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
-
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-apiInstance.getAdditionalHeaders((error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully. Returned data: ' + data);
-  }
-});
-```
-
-### Parameters
-
-This endpoint does not need any parameter.
-
-### Return type
-
-[**Headers**](Headers.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-
-## getAllowList
-
-> AllowList getAllowList()
-
-
-
-Get an AllowList
-
-### Example
-
-```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
-
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-apiInstance.getAllowList((error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully. Returned data: ' + data);
-  }
-});
-```
-
-### Parameters
-
-This endpoint does not need any parameter.
-
-### Return type
-
-[**AllowList**](AllowList.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-
-## getBlockList
-
-> BlockList getBlockList()
-
-
-
-Get a blocklist
-
-### Example
-
-```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
-
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-apiInstance.getBlockList((error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully. Returned data: ' + data);
-  }
-});
-```
-
-### Parameters
-
-This endpoint does not need any parameter.
-
-### Return type
-
-[**BlockList**](BlockList.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
 
 
 ## getHarLog
@@ -312,9 +104,9 @@ No authorization required
 - **Accept**: application/json
 
 
-## healthcheckGet
+## healthcheck
 
-> healthcheckGet()
+> healthcheck()
 
 
 
@@ -326,7 +118,7 @@ Get the healthcheck
 import BrowserUpProxyClient from 'browserup-proxy-client';
 
 let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-apiInstance.healthcheckGet((error, data, response) => {
+apiInstance.healthcheck((error, data, response) => {
   if (error) {
     console.error(error);
   } else {
@@ -394,190 +186,6 @@ No authorization required
 - **Accept**: application/json
 
 
-## setAdditionalHeaders
-
-> Headers setAdditionalHeaders()
-
-
-
-Set additional headers to add to requests
-
-### Example
-
-```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
-
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-apiInstance.setAdditionalHeaders((error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully. Returned data: ' + data);
-  }
-});
-```
-
-### Parameters
-
-This endpoint does not need any parameter.
-
-### Return type
-
-[**Headers**](Headers.md)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: Not defined
-- **Accept**: application/json
-
-
-## setAllowList
-
-> setAllowList(opts)
-
-
-
-Sets an AllowList
-
-### Example
-
-```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
-
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-let opts = {
-  'allowList': new BrowserUpProxyClient.AllowList() // AllowList | 
-};
-apiInstance.setAllowList(opts, (error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-});
-```
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **allowList** | [**AllowList**](AllowList.md)|  | [optional] 
-
-### Return type
-
-null (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: Not defined
-
-
-## setBasicAuth
-
-> setBasicAuth(domain, opts)
-
-
-
-Enables automatic basic auth for a domain
-
-### Example
-
-```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
-
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-let domain = "domain_example"; // String | The domain for which this Basic Auth should be used
-let opts = {
-  'authBasic': new BrowserUpProxyClient.AuthBasic() // AuthBasic | 
-};
-apiInstance.setBasicAuth(domain, opts, (error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-});
-```
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **domain** | **String**| The domain for which this Basic Auth should be used | 
- **authBasic** | [**AuthBasic**](AuthBasic.md)|  | [optional] 
-
-### Return type
-
-null (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: Not defined
-
-
-## setBlockList
-
-> setBlockList(opts)
-
-
-
-Sets an BlockList
-
-### Example
-
-```javascript
-import BrowserUpProxyClient from 'browserup-proxy-client';
-
-let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
-let opts = {
-  'blockList': new BrowserUpProxyClient.BlockList() // BlockList | 
-};
-apiInstance.setBlockList(opts, (error, data, response) => {
-  if (error) {
-    console.error(error);
-  } else {
-    console.log('API called successfully.');
-  }
-});
-```
-
-### Parameters
-
-
-Name | Type | Description  | Notes
-------------- | ------------- | ------------- | -------------
- **blockList** | [**BlockList**](BlockList.md)|  | [optional] 
-
-### Return type
-
-null (empty response body)
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
-- **Content-Type**: application/json
-- **Accept**: Not defined
-
-
 ## setHarPage
 
 > Har setHarPage()
@@ -616,5 +224,197 @@ No authorization required
 ### HTTP request headers
 
 - **Content-Type**: Not defined
+- **Accept**: application/json
+
+
+## verifyNotPresent
+
+> VerifyResult verifyNotPresent(name, matchCriteria)
+
+
+
+Verify no matching items are present in the captured traffic
+
+### Example
+
+```javascript
+import BrowserUpProxyClient from 'browserup-proxy-client';
+
+let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let name = "name_example"; // String | The unique name for this verification operation
+let matchCriteria = new BrowserUpProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
+apiInstance.verifyNotPresent(name, matchCriteria, (error, data, response) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+});
+```
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **name** | **String**| The unique name for this verification operation | 
+ **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | 
+
+### Return type
+
+[**VerifyResult**](VerifyResult.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+
+## verifyPresent
+
+> VerifyResult verifyPresent(name, matchCriteria)
+
+
+
+Verify at least one matching item is present in the captured traffic
+
+### Example
+
+```javascript
+import BrowserUpProxyClient from 'browserup-proxy-client';
+
+let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let name = "name_example"; // String | The unique name for this verification operation
+let matchCriteria = new BrowserUpProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
+apiInstance.verifyPresent(name, matchCriteria, (error, data, response) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+});
+```
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **name** | **String**| The unique name for this verification operation | 
+ **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | 
+
+### Return type
+
+[**VerifyResult**](VerifyResult.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+
+## verifySLA
+
+> VerifyResult verifySLA(time, name, matchCriteria)
+
+
+
+Verify each traffic item matching the criteria meets is below SLA time
+
+### Example
+
+```javascript
+import BrowserUpProxyClient from 'browserup-proxy-client';
+
+let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let time = 56; // Number | The time used for comparison
+let name = "name_example"; // String | The unique name for this verification operation
+let matchCriteria = new BrowserUpProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
+apiInstance.verifySLA(time, name, matchCriteria, (error, data, response) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+});
+```
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **time** | **Number**| The time used for comparison | 
+ **name** | **String**| The unique name for this verification operation | 
+ **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | 
+
+### Return type
+
+[**VerifyResult**](VerifyResult.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
+- **Accept**: application/json
+
+
+## verifySize
+
+> VerifyResult verifySize(size, name, matchCriteria)
+
+
+
+Verify matching items in the captured traffic meet the size criteria
+
+### Example
+
+```javascript
+import BrowserUpProxyClient from 'browserup-proxy-client';
+
+let apiInstance = new BrowserUpProxyClient.BrowserUpProxyApi();
+let size = 56; // Number | The size used for comparison, in kilobytes
+let name = "name_example"; // String | The unique name for this verification operation
+let matchCriteria = new BrowserUpProxyClient.MatchCriteria(); // MatchCriteria | Match criteria to select requests - response pairs for size tests
+apiInstance.verifySize(size, name, matchCriteria, (error, data, response) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+});
+```
+
+### Parameters
+
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **size** | **Number**| The size used for comparison, in kilobytes | 
+ **name** | **String**| The unique name for this verification operation | 
+ **matchCriteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests | 
+
+### Return type
+
+[**VerifyResult**](VerifyResult.md)
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+- **Content-Type**: application/json
 - **Accept**: application/json
 

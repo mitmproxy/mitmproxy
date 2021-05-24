@@ -1,6 +1,6 @@
 /*
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -937,7 +937,7 @@ public class BrowserUpProxyApi {
     }
     /**
      * Build call for verifySize
-     * @param size The size used for comparison (required)
+     * @param size The size used for comparison, in kilobytes (required)
      * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @param _callback Callback for upload/download progress
@@ -1008,7 +1008,7 @@ public class BrowserUpProxyApi {
     /**
      * 
      * Verify matching items in the captured traffic meet the size criteria
-     * @param size The size used for comparison (required)
+     * @param size The size used for comparison, in kilobytes (required)
      * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @return VerifyResult
@@ -1027,7 +1027,7 @@ public class BrowserUpProxyApi {
     /**
      * 
      * Verify matching items in the captured traffic meet the size criteria
-     * @param size The size used for comparison (required)
+     * @param size The size used for comparison, in kilobytes (required)
      * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @return ApiResponse&lt;VerifyResult&gt;
@@ -1047,7 +1047,7 @@ public class BrowserUpProxyApi {
     /**
      *  (asynchronously)
      * Verify matching items in the captured traffic meet the size criteria
-     * @param size The size used for comparison (required)
+     * @param size The size used for comparison, in kilobytes (required)
      * @param name The unique name for this verification operation (required)
      * @param matchCriteria Match criteria to select requests - response pairs for size tests (required)
      * @param _callback The callback to be executed when the API call finishes

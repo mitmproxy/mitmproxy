@@ -1,6 +1,6 @@
 /**
  * BrowserUp Proxy
- * ___ This is the REST API for controlling the BrowserUp Proxy.  The BrowserUp Proxy is a swiss army knife for automated testing. It allows traffic capture in HAR files and manipulation.  It is also useful for Selenium/Cypress tests. ___ 
+ * ___ This is the REST API for controlling the BrowserUp Proxy. The BrowserUp Proxy is a swiss army knife for automated testing that captures HTTP traffic in HAR files. It is also useful for Selenium/Cypress tests. ___ 
  *
  * The version of the OpenAPI document: 1.0.0
  * 
@@ -13,11 +13,9 @@
 
 
 import ApiClient from "../ApiClient";
-import AllowList from '../model/AllowList';
-import AuthBasic from '../model/AuthBasic';
-import BlockList from '../model/BlockList';
 import Har from '../model/Har';
-import Headers from '../model/Headers';
+import MatchCriteria from '../model/MatchCriteria';
+import VerifyResult from '../model/VerifyResult';
 
 /**
 * BrowserUpProxy service.
@@ -39,19 +37,22 @@ export default class BrowserUpProxyApi {
 
 
     /**
-     * Callback function to receive the result of the clearAdditionalHeaders operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~clearAdditionalHeadersCallback
+     * Callback function to receive the result of the addCustomHarFields operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addCustomHarFieldsCallback
      * @param {String} error Error message, if any.
      * @param data This operation does not return a value.
      * @param {String} response The complete HTTP response.
      */
 
     /**
-     * Clear the additional Headers
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~clearAdditionalHeadersCallback} callback The callback function, accepting three arguments: error, data, response
+     * Add custom fields to the current HAR.
+     * @param {Object} opts Optional parameters
+     * @param {Object} opts.body 
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~addCustomHarFieldsCallback} callback The callback function, accepting three arguments: error, data, response
      */
-    clearAdditionalHeaders(callback) {
-      let postBody = null;
+    addCustomHarFields(opts, callback) {
+      opts = opts || {};
+      let postBody = opts['body'];
 
       let pathParams = {
       };
@@ -63,195 +64,11 @@ export default class BrowserUpProxyApi {
       };
 
       let authNames = [];
-      let contentTypes = [];
+      let contentTypes = ['application/json'];
       let accepts = [];
       let returnType = null;
       return this.apiClient.callApi(
-        '/additional_headers', 'DELETE',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the clearAllowList operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~clearAllowListCallback
-     * @param {String} error Error message, if any.
-     * @param data This operation does not return a value.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Clears the AllowList, which will turn-off allowlist based filtering
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~clearAllowListCallback} callback The callback function, accepting three arguments: error, data, response
-     */
-    clearAllowList(callback) {
-      let postBody = null;
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = [];
-      let accepts = [];
-      let returnType = null;
-      return this.apiClient.callApi(
-        '/allowlist', 'DELETE',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the clearBasicAuthSettings operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~clearBasicAuthSettingsCallback
-     * @param {String} error Error message, if any.
-     * @param data This operation does not return a value.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Clears Basic Auth for a domain, disabling Automatic Basic Auth for it.
-     * @param {String} domain The domain for which to clear the basic auth settings
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~clearBasicAuthSettingsCallback} callback The callback function, accepting three arguments: error, data, response
-     */
-    clearBasicAuthSettings(domain, callback) {
-      let postBody = null;
-      // verify the required parameter 'domain' is set
-      if (domain === undefined || domain === null) {
-        throw new Error("Missing the required parameter 'domain' when calling clearBasicAuthSettings");
-      }
-
-      let pathParams = {
-        'domain': domain
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = [];
-      let accepts = [];
-      let returnType = null;
-      return this.apiClient.callApi(
-        '/auth_basic/{domain}', 'DELETE',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the getAdditionalHeaders operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~getAdditionalHeadersCallback
-     * @param {String} error Error message, if any.
-     * @param {module:BrowserUpProxyClient/model/Headers} data The data returned by the service call.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Get the current added Headers
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~getAdditionalHeadersCallback} callback The callback function, accepting three arguments: error, data, response
-     * data is of type: {@link module:BrowserUpProxyClient/model/Headers}
-     */
-    getAdditionalHeaders(callback) {
-      let postBody = null;
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = [];
-      let accepts = ['application/json'];
-      let returnType = Headers;
-      return this.apiClient.callApi(
-        '/additional_headers', 'GET',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the getAllowList operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~getAllowListCallback
-     * @param {String} error Error message, if any.
-     * @param {module:BrowserUpProxyClient/model/AllowList} data The data returned by the service call.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Get an AllowList
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~getAllowListCallback} callback The callback function, accepting three arguments: error, data, response
-     * data is of type: {@link module:BrowserUpProxyClient/model/AllowList}
-     */
-    getAllowList(callback) {
-      let postBody = null;
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = [];
-      let accepts = ['application/json'];
-      let returnType = AllowList;
-      return this.apiClient.callApi(
-        '/allowlist', 'GET',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the getBlockList operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~getBlockListCallback
-     * @param {String} error Error message, if any.
-     * @param {module:BrowserUpProxyClient/model/BlockList} data The data returned by the service call.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Get a blocklist
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~getBlockListCallback} callback The callback function, accepting three arguments: error, data, response
-     * data is of type: {@link module:BrowserUpProxyClient/model/BlockList}
-     */
-    getBlockList(callback) {
-      let postBody = null;
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = [];
-      let accepts = ['application/json'];
-      let returnType = BlockList;
-      return this.apiClient.callApi(
-        '/blocklist', 'GET',
+        '/har/page', 'PUT',
         pathParams, queryParams, headerParams, formParams, postBody,
         authNames, contentTypes, accepts, returnType, null, callback
       );
@@ -294,8 +111,8 @@ export default class BrowserUpProxyApi {
     }
 
     /**
-     * Callback function to receive the result of the healthcheckGet operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~healthcheckGetCallback
+     * Callback function to receive the result of the healthcheck operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~healthcheckCallback
      * @param {String} error Error message, if any.
      * @param data This operation does not return a value.
      * @param {String} response The complete HTTP response.
@@ -303,9 +120,9 @@ export default class BrowserUpProxyApi {
 
     /**
      * Get the healthcheck
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~healthcheckGetCallback} callback The callback function, accepting three arguments: error, data, response
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~healthcheckCallback} callback The callback function, accepting three arguments: error, data, response
      */
-    healthcheckGet(callback) {
+    healthcheck(callback) {
       let postBody = null;
 
       let pathParams = {
@@ -365,162 +182,6 @@ export default class BrowserUpProxyApi {
     }
 
     /**
-     * Callback function to receive the result of the setAdditionalHeaders operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setAdditionalHeadersCallback
-     * @param {String} error Error message, if any.
-     * @param {module:BrowserUpProxyClient/model/Headers} data The data returned by the service call.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Set additional headers to add to requests
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setAdditionalHeadersCallback} callback The callback function, accepting three arguments: error, data, response
-     * data is of type: {@link module:BrowserUpProxyClient/model/Headers}
-     */
-    setAdditionalHeaders(callback) {
-      let postBody = null;
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = [];
-      let accepts = ['application/json'];
-      let returnType = Headers;
-      return this.apiClient.callApi(
-        '/additional_headers', 'POST',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the setAllowList operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setAllowListCallback
-     * @param {String} error Error message, if any.
-     * @param data This operation does not return a value.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Sets an AllowList
-     * @param {Object} opts Optional parameters
-     * @param {module:BrowserUpProxyClient/model/AllowList} opts.allowList 
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setAllowListCallback} callback The callback function, accepting three arguments: error, data, response
-     */
-    setAllowList(opts, callback) {
-      opts = opts || {};
-      let postBody = opts['allowList'];
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = ['application/json'];
-      let accepts = [];
-      let returnType = null;
-      return this.apiClient.callApi(
-        '/allowlist', 'POST',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the setBasicAuth operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setBasicAuthCallback
-     * @param {String} error Error message, if any.
-     * @param data This operation does not return a value.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Enables automatic basic auth for a domain
-     * @param {String} domain The domain for which this Basic Auth should be used
-     * @param {Object} opts Optional parameters
-     * @param {module:BrowserUpProxyClient/model/AuthBasic} opts.authBasic 
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setBasicAuthCallback} callback The callback function, accepting three arguments: error, data, response
-     */
-    setBasicAuth(domain, opts, callback) {
-      opts = opts || {};
-      let postBody = opts['authBasic'];
-      // verify the required parameter 'domain' is set
-      if (domain === undefined || domain === null) {
-        throw new Error("Missing the required parameter 'domain' when calling setBasicAuth");
-      }
-
-      let pathParams = {
-        'domain': domain
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = ['application/json'];
-      let accepts = [];
-      let returnType = null;
-      return this.apiClient.callApi(
-        '/auth_basic/{domain}', 'POST',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
-     * Callback function to receive the result of the setBlockList operation.
-     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setBlockListCallback
-     * @param {String} error Error message, if any.
-     * @param data This operation does not return a value.
-     * @param {String} response The complete HTTP response.
-     */
-
-    /**
-     * Sets an BlockList
-     * @param {Object} opts Optional parameters
-     * @param {module:BrowserUpProxyClient/model/BlockList} opts.blockList 
-     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setBlockListCallback} callback The callback function, accepting three arguments: error, data, response
-     */
-    setBlockList(opts, callback) {
-      opts = opts || {};
-      let postBody = opts['blockList'];
-
-      let pathParams = {
-      };
-      let queryParams = {
-      };
-      let headerParams = {
-      };
-      let formParams = {
-      };
-
-      let authNames = [];
-      let contentTypes = ['application/json'];
-      let accepts = [];
-      let returnType = null;
-      return this.apiClient.callApi(
-        '/blocklist', 'POST',
-        pathParams, queryParams, headerParams, formParams, postBody,
-        authNames, contentTypes, accepts, returnType, null, callback
-      );
-    }
-
-    /**
      * Callback function to receive the result of the setHarPage operation.
      * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~setHarPageCallback
      * @param {String} error Error message, if any.
@@ -550,7 +211,207 @@ export default class BrowserUpProxyApi {
       let accepts = ['application/json'];
       let returnType = Har;
       return this.apiClient.callApi(
-        '/har/page', 'PUT',
+        '/har/page', 'POST',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
+
+    /**
+     * Callback function to receive the result of the verifyNotPresent operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~verifyNotPresentCallback
+     * @param {String} error Error message, if any.
+     * @param {module:BrowserUpProxyClient/model/VerifyResult} data The data returned by the service call.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Verify no matching items are present in the captured traffic
+     * @param {String} name The unique name for this verification operation
+     * @param {module:BrowserUpProxyClient/model/MatchCriteria} matchCriteria Match criteria to select requests - response pairs for size tests
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~verifyNotPresentCallback} callback The callback function, accepting three arguments: error, data, response
+     * data is of type: {@link module:BrowserUpProxyClient/model/VerifyResult}
+     */
+    verifyNotPresent(name, matchCriteria, callback) {
+      let postBody = matchCriteria;
+      // verify the required parameter 'name' is set
+      if (name === undefined || name === null) {
+        throw new Error("Missing the required parameter 'name' when calling verifyNotPresent");
+      }
+      // verify the required parameter 'matchCriteria' is set
+      if (matchCriteria === undefined || matchCriteria === null) {
+        throw new Error("Missing the required parameter 'matchCriteria' when calling verifyNotPresent");
+      }
+
+      let pathParams = {
+        'name': name
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = ['application/json'];
+      let accepts = ['application/json'];
+      let returnType = VerifyResult;
+      return this.apiClient.callApi(
+        '/verify/not_present/{name}', 'POST',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
+
+    /**
+     * Callback function to receive the result of the verifyPresent operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~verifyPresentCallback
+     * @param {String} error Error message, if any.
+     * @param {module:BrowserUpProxyClient/model/VerifyResult} data The data returned by the service call.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Verify at least one matching item is present in the captured traffic
+     * @param {String} name The unique name for this verification operation
+     * @param {module:BrowserUpProxyClient/model/MatchCriteria} matchCriteria Match criteria to select requests - response pairs for size tests
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~verifyPresentCallback} callback The callback function, accepting three arguments: error, data, response
+     * data is of type: {@link module:BrowserUpProxyClient/model/VerifyResult}
+     */
+    verifyPresent(name, matchCriteria, callback) {
+      let postBody = matchCriteria;
+      // verify the required parameter 'name' is set
+      if (name === undefined || name === null) {
+        throw new Error("Missing the required parameter 'name' when calling verifyPresent");
+      }
+      // verify the required parameter 'matchCriteria' is set
+      if (matchCriteria === undefined || matchCriteria === null) {
+        throw new Error("Missing the required parameter 'matchCriteria' when calling verifyPresent");
+      }
+
+      let pathParams = {
+        'name': name
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = ['application/json'];
+      let accepts = ['application/json'];
+      let returnType = VerifyResult;
+      return this.apiClient.callApi(
+        '/verify/present/{name}', 'POST',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
+
+    /**
+     * Callback function to receive the result of the verifySLA operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~verifySLACallback
+     * @param {String} error Error message, if any.
+     * @param {module:BrowserUpProxyClient/model/VerifyResult} data The data returned by the service call.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Verify each traffic item matching the criteria meets is below SLA time
+     * @param {Number} time The time used for comparison
+     * @param {String} name The unique name for this verification operation
+     * @param {module:BrowserUpProxyClient/model/MatchCriteria} matchCriteria Match criteria to select requests - response pairs for size tests
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~verifySLACallback} callback The callback function, accepting three arguments: error, data, response
+     * data is of type: {@link module:BrowserUpProxyClient/model/VerifyResult}
+     */
+    verifySLA(time, name, matchCriteria, callback) {
+      let postBody = matchCriteria;
+      // verify the required parameter 'time' is set
+      if (time === undefined || time === null) {
+        throw new Error("Missing the required parameter 'time' when calling verifySLA");
+      }
+      // verify the required parameter 'name' is set
+      if (name === undefined || name === null) {
+        throw new Error("Missing the required parameter 'name' when calling verifySLA");
+      }
+      // verify the required parameter 'matchCriteria' is set
+      if (matchCriteria === undefined || matchCriteria === null) {
+        throw new Error("Missing the required parameter 'matchCriteria' when calling verifySLA");
+      }
+
+      let pathParams = {
+        'time': time,
+        'name': name
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = ['application/json'];
+      let accepts = ['application/json'];
+      let returnType = VerifyResult;
+      return this.apiClient.callApi(
+        '/verify/sla/{time}/{name}', 'POST',
+        pathParams, queryParams, headerParams, formParams, postBody,
+        authNames, contentTypes, accepts, returnType, null, callback
+      );
+    }
+
+    /**
+     * Callback function to receive the result of the verifySize operation.
+     * @callback module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~verifySizeCallback
+     * @param {String} error Error message, if any.
+     * @param {module:BrowserUpProxyClient/model/VerifyResult} data The data returned by the service call.
+     * @param {String} response The complete HTTP response.
+     */
+
+    /**
+     * Verify matching items in the captured traffic meet the size criteria
+     * @param {Number} size The size used for comparison, in kilobytes
+     * @param {String} name The unique name for this verification operation
+     * @param {module:BrowserUpProxyClient/model/MatchCriteria} matchCriteria Match criteria to select requests - response pairs for size tests
+     * @param {module:BrowserUpProxyClient/browserup-proxy-client/BrowserUpProxyApi~verifySizeCallback} callback The callback function, accepting three arguments: error, data, response
+     * data is of type: {@link module:BrowserUpProxyClient/model/VerifyResult}
+     */
+    verifySize(size, name, matchCriteria, callback) {
+      let postBody = matchCriteria;
+      // verify the required parameter 'size' is set
+      if (size === undefined || size === null) {
+        throw new Error("Missing the required parameter 'size' when calling verifySize");
+      }
+      // verify the required parameter 'name' is set
+      if (name === undefined || name === null) {
+        throw new Error("Missing the required parameter 'name' when calling verifySize");
+      }
+      // verify the required parameter 'matchCriteria' is set
+      if (matchCriteria === undefined || matchCriteria === null) {
+        throw new Error("Missing the required parameter 'matchCriteria' when calling verifySize");
+      }
+
+      let pathParams = {
+        'size': size,
+        'name': name
+      };
+      let queryParams = {
+      };
+      let headerParams = {
+      };
+      let formParams = {
+      };
+
+      let authNames = [];
+      let contentTypes = ['application/json'];
+      let accepts = ['application/json'];
+      let returnType = VerifyResult;
+      return this.apiClient.callApi(
+        '/verify/size/{size}/{name}', 'POST',
         pathParams, queryParams, headerParams, formParams, postBody,
         authNames, contentTypes, accepts, returnType, null, callback
       );

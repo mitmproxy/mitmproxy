@@ -9,10 +9,10 @@ Method | HTTP request | Description
 [**healthcheck**](BrowserUpProxyApi.md#healthcheck) | **GET** /healthcheck | 
 [**reset_har_log**](BrowserUpProxyApi.md#reset_har_log) | **PUT** /har | 
 [**set_har_page**](BrowserUpProxyApi.md#set_har_page) | **POST** /har/page | 
-[**verify_not_present**](BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present | 
-[**verify_present**](BrowserUpProxyApi.md#verify_present) | **POST** /verify/present | 
-[**verify_size**](BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size} | 
-[**verify_sla**](BrowserUpProxyApi.md#verify_sla) | **POST** /verify/sla/{time} | 
+[**verify_not_present**](BrowserUpProxyApi.md#verify_not_present) | **POST** /verify/not_present/{name} | 
+[**verify_present**](BrowserUpProxyApi.md#verify_present) | **POST** /verify/present/{name} | 
+[**verify_size**](BrowserUpProxyApi.md#verify_size) | **POST** /verify/size/{size}/{name} | 
+[**verify_sla**](BrowserUpProxyApi.md#verify_sla) | **POST** /verify/sla/{time}/{name} | 
 
 
 # **add_custom_har_fields**
@@ -317,7 +317,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **verify_not_present**
-> VerifyResult verify_not_present(match_criteria)
+> VerifyResult verify_not_present(name, match_criteria)
 
 
 
@@ -343,6 +343,7 @@ configuration = BrowserUpProxyClient.Configuration(
 with BrowserUpProxyClient.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
+    name = "HqXz" # str | The unique name for this verification operation
     match_criteria = MatchCriteria(
         url="url_example",
         page="page_example",
@@ -361,7 +362,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
 
     # example passing only required values which don't have defaults set
     try:
-        api_response = api_instance.verify_not_present(match_criteria)
+        api_response = api_instance.verify_not_present(name, match_criteria)
         pprint(api_response)
     except BrowserUpProxyClient.ApiException as e:
         print("Exception when calling BrowserUpProxyApi->verify_not_present: %s\n" % e)
@@ -372,6 +373,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **name** | **str**| The unique name for this verification operation |
  **match_criteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
 
 ### Return type
@@ -396,7 +398,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **verify_present**
-> VerifyResult verify_present(match_criteria)
+> VerifyResult verify_present(name, match_criteria)
 
 
 
@@ -422,6 +424,7 @@ configuration = BrowserUpProxyClient.Configuration(
 with BrowserUpProxyClient.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
+    name = "HqXz" # str | The unique name for this verification operation
     match_criteria = MatchCriteria(
         url="url_example",
         page="page_example",
@@ -440,7 +443,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
 
     # example passing only required values which don't have defaults set
     try:
-        api_response = api_instance.verify_present(match_criteria)
+        api_response = api_instance.verify_present(name, match_criteria)
         pprint(api_response)
     except BrowserUpProxyClient.ApiException as e:
         print("Exception when calling BrowserUpProxyApi->verify_present: %s\n" % e)
@@ -451,6 +454,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **name** | **str**| The unique name for this verification operation |
  **match_criteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
 
 ### Return type
@@ -475,7 +479,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **verify_size**
-> VerifyResult verify_size(size, match_criteria)
+> VerifyResult verify_size(size, name, match_criteria)
 
 
 
@@ -501,7 +505,8 @@ configuration = BrowserUpProxyClient.Configuration(
 with BrowserUpProxyClient.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
-    size = 0 # int | The size used for comparison
+    size = 0 # int | The size used for comparison, in kilobytes
+    name = "HqXz" # str | The unique name for this verification operation
     match_criteria = MatchCriteria(
         url="url_example",
         page="page_example",
@@ -520,7 +525,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
 
     # example passing only required values which don't have defaults set
     try:
-        api_response = api_instance.verify_size(size, match_criteria)
+        api_response = api_instance.verify_size(size, name, match_criteria)
         pprint(api_response)
     except BrowserUpProxyClient.ApiException as e:
         print("Exception when calling BrowserUpProxyApi->verify_size: %s\n" % e)
@@ -531,7 +536,8 @@ with BrowserUpProxyClient.ApiClient() as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **size** | **int**| The size used for comparison |
+ **size** | **int**| The size used for comparison, in kilobytes |
+ **name** | **str**| The unique name for this verification operation |
  **match_criteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
 
 ### Return type
@@ -556,7 +562,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **verify_sla**
-> VerifyResult verify_sla(time, match_criteria)
+> VerifyResult verify_sla(time, name, match_criteria)
 
 
 
@@ -583,6 +589,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = browser_up_proxy_api.BrowserUpProxyApi(api_client)
     time = 0 # int | The time used for comparison
+    name = "HqXz" # str | The unique name for this verification operation
     match_criteria = MatchCriteria(
         url="url_example",
         page="page_example",
@@ -601,7 +608,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
 
     # example passing only required values which don't have defaults set
     try:
-        api_response = api_instance.verify_sla(time, match_criteria)
+        api_response = api_instance.verify_sla(time, name, match_criteria)
         pprint(api_response)
     except BrowserUpProxyClient.ApiException as e:
         print("Exception when calling BrowserUpProxyApi->verify_sla: %s\n" % e)
@@ -613,6 +620,7 @@ with BrowserUpProxyClient.ApiClient() as api_client:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **time** | **int**| The time used for comparison |
+ **name** | **str**| The unique name for this verification operation |
  **match_criteria** | [**MatchCriteria**](MatchCriteria.md)| Match criteria to select requests - response pairs for size tests |
 
 ### Return type
