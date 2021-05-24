@@ -97,11 +97,11 @@ setup(
             "pydivert>=2.0.3,<2.2",
         ],
         'dev': [
-            "hypothesis>=5.8,<6.14",
+            "hypothesis>=5.8,<7",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
             "pyinstaller==4.3",
-            "pytest-asyncio>=0.10.0,<0.14,!=0.14",
+            "pytest-asyncio>=0.10.0,<0.16,!=0.14",
             "pytest-cov>=2.7.1,<3",
             "pytest-timeout>=1.3.3,<2",
             "pytest-xdist>=2.1.0,<3",
