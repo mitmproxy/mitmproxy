@@ -85,7 +85,7 @@ setup(
         "pyparsing>=2.4.2,<2.5",
         "pyperclip>=1.6.0,<1.9",
         "ruamel.yaml>=0.16,<0.18",
-        "sortedcontainers>=2.4,<2.5",
+        "sortedcontainers>=2.3,<2.5",
         "tornado>=4.3,<7",
         "urwid>=2.1.1,<2.2",
         "wsproto>=1.0,<1.1",
@@ -97,7 +97,7 @@ setup(
             "pydivert>=2.0.3,<2.2",
         ],
         'dev': [
-            "hypothesis>=6.13,<6.14",
+            "hypothesis>=5.8,<6.14",
             "parver>=0.1,<2.0",
             "pdoc>=4.0.0",
             "pyinstaller==4.3",
