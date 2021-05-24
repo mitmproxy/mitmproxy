@@ -34,12 +34,11 @@ class BrowserupProxyMaster(master.Master):
 
         self.addons.add(dumper.Dumper())
 
-        self.addons.add(har_capture_addon.HarCaptureAddOn())
-
+        self.addons.add(browserup_addons_manager.BrowserUpAddonsManagerAddOn(),
+                        har_capture_addon.HarCaptureAddOn(), latency_addon.LatencyAddOn())
+        print("-----------------------------> starting!!--------------")
         self.addons.add(
             keepserving.KeepServing(),
             readfile.ReadFileStdin(),
-            browserup_addons_manager.BrowserUpAddonsManagerAddOn(),
-            latency_addon.LatencyAddOn(),
             self.errorcheck
         )

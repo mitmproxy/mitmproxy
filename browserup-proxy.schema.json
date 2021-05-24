@@ -209,7 +209,7 @@
           {
             "in": "path",
             "name": "size",
-            "description": "The size used for comparison",
+            "description": "The size used for comparison, in kilobytes",
             "required": true,
             "schema": {
               "type": "integer",

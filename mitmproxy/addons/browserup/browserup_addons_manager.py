@@ -18,17 +18,18 @@ class BrowserUpAddonsManagerAddOn:
     initialized = False
 
     def load(self, l):
-        ctx.log.info('Loading addons manager add-on...')
+        ctx.log.info('Loading BrowserUpAddonsManagerAddOn')
         l.add_option(
             "addons_management_port", int, 8088, "REST api management port.",
         )
 
     def running(self):
+        ctx.log.info('Scanning for custom add-ons resources...')
         global initialized
         if not self.initialized and self.is_script_loader_initialized():
             ctx.log.info('Scanning for custom add-ons resources...')
             ctx.log.info('Starting falcon REST service...')
-            _thread.start_new_thread(self.start_falcon())
+            _thread.start_new_thread(self.start_falcon, ())
             initialized = True
 
     def is_script_loader_initialized(self):
@@ -111,6 +112,8 @@ ___
 
     def start_falcon(self):
         app = self.get_app()
+        print("Routes: ")
+        print(self.get_all_routes(app))
         with make_server('', ctx.options.addons_management_port, app) as httpd:
             print('Starting REST API management on port: {}'.format(ctx.options.addons_management_port))
             httpd.serve_forever()
@@ -120,4 +123,5 @@ ___
 
 addons = [
     HarCaptureAddOn(),
+    BrowserUpAddonsManagerAddOn()
 ]

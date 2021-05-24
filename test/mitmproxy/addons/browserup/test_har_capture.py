@@ -40,7 +40,7 @@ class TestHARCapture:
         with tempfile.TemporaryDirectory() as tmpdirname:
             print('Created temporary directory:', tmpdirname)
             file_path = os.path.join(tmpdirname, 'testbase64.har')
-            hc.save_har(file_path)
+            hc.save_current_har_to_path(file_path)
             with open(file_path) as inp:
                 har = json.load(inp)
             assert len(har["log"]["entries"]) == 1
@@ -52,7 +52,7 @@ class TestHARCapture:
         with tempfile.TemporaryDirectory() as tmpdirname:
             print('Created temporary directory:', tmpdirname)
             file_path = os.path.join(tmpdirname, 'testbase64.har')
-            hc.save_har(file_path)
+            hc.save_current_har_to_path(file_path)
             with open(file_path) as inp:
                 har = json.load(inp)
                 print(har)
@@ -85,7 +85,7 @@ class TestHARCapture:
         hc.response(f)
         with tempfile.TemporaryDirectory() as tmpdirname:
             file_path = os.path.join(tmpdirname, 'testbase64.har')
-            hc.save_har(file_path)
+            hc.save_current_har_to_path(file_path)
             with open(file_path) as inp:
                 har = json.load(inp)
                 assert len(har["log"]["entries"]) == 1

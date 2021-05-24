@@ -15,7 +15,7 @@ import mitmproxy.types
 
 
 CONF_DIR = "~/.mitmproxy"
-LISTEN_PORT = 9009
+LISTEN_PORT = 8080
 
 
 class Core:

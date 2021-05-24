@@ -142,10 +142,17 @@ class FlowCaptureMixin(object):
         if HarCaptureTypes.WEBSOCKET_MESSAGES in self.har_capture_types:
             har_entry = flow.get_har_entry()
             msg = flow.websocket.messages[-1]
+
+            data = msg.content
+            try:
+                data = data.decode("utf-8")
+            except (UnicodeDecodeError, AttributeError):
+                pass
+
             har_entry.setdefault("_webSocketMessages", []).append({
                 "type": 'send' if msg.from_client else 'receive',
                 "opcode": msg.type.value,
-                "data": msg.content,
+                "data": data,
                 "time": msg.timestamp
             })
             flow.set_har_entry(har_entry)
@@ -185,4 +192,7 @@ class FlowCaptureMixin(object):
         return host_port
 
     def diff_millis(self, ts_end, ts_start):
-        return round((ts_end - ts_start) * 1000)
+        if ts_end is None or ts_start is None:
+            return -1
+        else:
+            return round((ts_end - ts_start) * 1000)

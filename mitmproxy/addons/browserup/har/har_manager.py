@@ -6,6 +6,8 @@ from mitmproxy.addons.browserup.har.har_builder import HarBuilder
 from mitmproxy.addons.browserup.har.har_capture_types import HarCaptureTypes
 import json
 import copy
+import tempfile
+
 
 DEFAULT_PAGE_REF = "Default"
 DEFAULT_PAGE_TITLE = "Default"
@@ -261,7 +263,17 @@ class HarManagerMixin():
 
         return rv
 
-    def save_har(self, full_path):
+    def save_har(self, har):
+        json_dump: str = json.dumps(har, ensure_ascii=True, indent=2)
+
+        tmp_file = tempfile.NamedTemporaryFile(mode="w", prefix="har_dump_", delete=False)
+        tmp_file.write(json_dump)
+        tmp_file.flush()
+        tmp_file.close()
+
+        return tmp_file
+
+    def save_current_har_to_path(self, full_path):
         json_dump: str = json.dumps(self.har, indent=2)
 
         with open(full_path, "wb") as file:
