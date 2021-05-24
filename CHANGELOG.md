@@ -66,6 +66,7 @@ If you depend on these features, please raise your voice in
 * Fix parsing of certificate issuer/subject with escaped special characters (@Prinzhorn)
 * Customize markers with emoji, and filters: The `flow.mark` command may be used to mark a flow with either the default
   "red ball" marker, a single character, or an emoji like `:grapes:`. Use the `~marker` filter to filter on marker characters. (@rbdixon)
+* New `flow.comment` command to add a comment to the flow metadata (@rbdixon)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
