@@ -117,7 +117,7 @@ class FlowCaptureMixin(object):
                     har_response["content"]["text"] = base64.b64encode(flow.response.content).decode()
                     har_response["content"]["encoding"] = "base64"
             else:
-                har_response["content"]["text"] = flow.response.get_text(strict=False )
+                har_response["content"]["text"] = flow.response.get_text(strict=False)
 
         har_response["redirectURL"] = flow.response.headers.get('Location', '')
         har_response["headersSize"] = len(str(flow.response.headers))
