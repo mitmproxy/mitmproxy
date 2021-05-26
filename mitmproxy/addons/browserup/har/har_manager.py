@@ -266,8 +266,9 @@ class HarManagerMixin():
     def save_har(self, har):
         json_dump: str = json.dumps(har, ensure_ascii=True, indent=2)
 
-        tmp_file = tempfile.NamedTemporaryFile(mode="w", prefix="har_dump_", delete=False)
-        tmp_file.write(json_dump)
+        tmp_file = tempfile.NamedTemporaryFile(mode="wb", prefix="har_dump_", delete=False)
+        raw: bytes = json_dump.encode()
+        tmp_file.write(raw)
         tmp_file.flush()
         tmp_file.close()
 

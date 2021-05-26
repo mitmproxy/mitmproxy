@@ -114,12 +114,10 @@ class FlowCaptureMixin(object):
         if HarCaptureTypes.RESPONSE_CONTENT in self.har_capture_types:
             if strutils.is_mostly_bin(flow.response.content):
                 if HarCaptureTypes.RESPONSE_BINARY_CONTENT in self.har_capture_types:
-                    har_response["content"]["text"] = base64.b64encode(
-                        flow.response.content).decode()
+                    har_response["content"]["text"] = base64.b64encode(flow.response.content).decode()
                     har_response["content"]["encoding"] = "base64"
             else:
-                har_response["content"]["text"] = flow.response.get_text(
-                    strict=False)
+                har_response["content"]["text"] = flow.response.get_text(strict=False )
 
         har_response["redirectURL"] = flow.response.headers.get('Location', '')
         har_response["headersSize"] = len(str(flow.response.headers))
