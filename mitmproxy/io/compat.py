@@ -309,6 +309,12 @@ def convert_12_13(data):
     return data
 
 
+def convert_13_14(data):
+    data["version"] = 14
+    data["comment"] = ""
+    return data
+
+
 def _convert_dict_keys(o: Any) -> Any:
     if isinstance(o, dict):
         return {strutils.always_str(k): _convert_dict_keys(v) for k, v in o.items()}
@@ -369,6 +375,7 @@ converters = {
     10: convert_10_11,
     11: convert_11_12,
     12: convert_12_13,
+    13: convert_13_14,
 }
 
 

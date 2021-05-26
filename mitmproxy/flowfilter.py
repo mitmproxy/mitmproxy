@@ -425,6 +425,16 @@ class FMarker(_Rex):
         return self.re.search(f.marked)
 
 
+class FComment(_Rex):
+    code = "comment"
+    help = "Flow comment"
+    flags = re.MULTILINE
+    is_binary = False
+
+    def __call__(self, f):
+        return self.re.search(f.comment)
+
+
 class _Int(_Action):
 
     def __init__(self, num):
@@ -512,6 +522,7 @@ filter_rex: Sequence[Type[_Rex]] = [
     FUrl,
     FMeta,
     FMarker,
+    FComment,
 ]
 filter_int = [
     FCode

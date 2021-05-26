@@ -33,6 +33,10 @@ def flowdetails(state, flow: mitmproxy.flow.Flow):
         req = None
         resp = None
     metadata = flow.metadata
+    comment = flow.comment
+
+    if len(comment) > 0:
+        text.append(urwid.Text([("head", "Comment: "), ("text", comment)]))
 
     if metadata is not None and len(metadata) > 0:
         parts = [(str(k), repr(v)) for k, v in metadata.items()]

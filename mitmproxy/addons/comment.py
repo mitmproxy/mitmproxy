@@ -10,7 +10,7 @@ class Comment:
 
         updated = []
         for f in flow:
-            f.metadata["comment"] = comment
+            f.comment = comment
             updated.append(f)
 
         ctx.master.addons.trigger(UpdateHook(updated))

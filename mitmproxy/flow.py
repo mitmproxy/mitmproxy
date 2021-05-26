@@ -123,6 +123,7 @@ class Flow(stateobject.StateObject):
         self.marked: str = ""
         self.is_replay: typing.Optional[str] = None
         self.metadata: typing.Dict[str, typing.Any] = dict()
+        self.comment: str = ""
 
     _stateobject_attributes = dict(
         id=str,
@@ -134,6 +135,7 @@ class Flow(stateobject.StateObject):
         is_replay=str,
         marked=str,
         metadata=typing.Dict[str, typing.Any],
+        comment=str,
     )
 
     def get_state(self):
