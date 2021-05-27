@@ -4,6 +4,7 @@ import typing
 
 from mitmproxy import exceptions
 from mitmproxy import flow
+from mitmproxy.utils import emoji
 
 if typing.TYPE_CHECKING:  # pragma: no cover
     from mitmproxy.command import CommandManager
@@ -34,6 +35,10 @@ class CutSpec(typing.Sequence[str]):
 
 
 class Data(typing.Sequence[typing.Sequence[typing.Union[str, bytes]]]):
+    pass
+
+
+class Marker(str):
     pass
 
 
@@ -406,6 +411,29 @@ class _ChoiceType(_BaseType):
         return val in opts
 
 
+ALL_MARKERS = ['true', 'false'] + list(emoji.emoji)
+
+
+class _MarkerType(_BaseType):
+    typ = Marker
+    display = "marker"
+
+    def completion(self, manager: "CommandManager", t: Choice, s: str) -> typing.Sequence[str]:
+        return ALL_MARKERS
+
+    def parse(self, manager: "CommandManager", t: Choice, s: str) -> str:
+        if s not in ALL_MARKERS:
+            raise exceptions.TypeError("Invalid choice.")
+        if s == 'true':
+            return ":default:"
+        elif s == 'false':
+            return ""
+        return s
+
+    def is_valid(self, manager: "CommandManager", typ: typing.Any, val: str) -> bool:
+        return val in ALL_MARKERS
+
+
 class TypeManager:
     def __init__(self, *types):
         self.typemap = {}
@@ -428,6 +456,7 @@ CommandTypes = TypeManager(
     _FlowType,
     _FlowsType,
     _IntType,
+    _MarkerType,
     _PathType,
     _StrType,
     _StrSeqType,

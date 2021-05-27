@@ -124,6 +124,25 @@ def test_cutspec():
         assert len(ret) == len(b.valid_prefixes)
 
 
+def test_marker():
+    with taddons.context() as tctx:
+        b = mitmproxy.types._MarkerType()
+        assert b.parse(tctx.master.commands, mitmproxy.types.Marker, ":red_circle:") == ":red_circle:"
+        assert b.parse(tctx.master.commands, mitmproxy.types.Marker, "true") == ":default:"
+        assert b.parse(tctx.master.commands, mitmproxy.types.Marker, "false") == ""
+
+        with pytest.raises(mitmproxy.exceptions.TypeError):
+            b.parse(tctx.master.commands, mitmproxy.types.Marker, ":bogus:")
+
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Marker, "true") is True
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Marker, "false") is True
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Marker, "bogus") is False
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Marker, "X") is True
+        assert b.is_valid(tctx.master.commands, mitmproxy.types.Marker, ":red_circle:") is True
+        ret = b.completion(tctx.master.commands, mitmproxy.types.Marker, ":smil")
+        assert len(ret) > 10
+
+
 def test_arg():
     with taddons.context() as tctx:
         b = mitmproxy.types._ArgType()

@@ -34,7 +34,7 @@ class TestSerialize:
     def test_roundtrip(self):
         sio = io.BytesIO()
         f = tflow.tflow()
-        f.marked = True
+        f.marked = ":default:"
         f.request.content = bytes(range(256))
         w = mitmproxy.io.FlowWriter(sio)
         w.add(f)
