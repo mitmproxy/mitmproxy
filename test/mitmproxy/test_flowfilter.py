@@ -1,9 +1,7 @@
 import io
 import pytest
 from unittest.mock import patch
-
 from mitmproxy.test import tflow
-
 from mitmproxy import flowfilter, http
 
 
@@ -144,8 +142,15 @@ class TestMatchingHTTPFlow:
     def test_fmarked(self):
         q = self.req()
         assert not self.q("~marked", q)
-        q.marked = True
+        q.marked = ":default:"
         assert self.q("~marked", q)
+
+    def test_fmarker_char(self):
+        t = tflow.tflow()
+        t.marked = ":default:"
+        assert not self.q("~marker X", t)
+        t.marked = 'X'
+        assert self.q("~marker X", t)
 
     def test_head(self):
         q = self.req()

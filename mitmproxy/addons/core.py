@@ -2,7 +2,7 @@ import typing
 
 import os
 
-from mitmproxy.utils import human
+from mitmproxy.utils import emoji, human
 from mitmproxy import ctx, hooks
 from mitmproxy import exceptions
 from mitmproxy import command
@@ -103,15 +103,17 @@ class Core:
 
     # FIXME: this will become view.mark later
     @command.command("flow.mark")
-    def mark(self, flows: typing.Sequence[flow.Flow], boolean: bool) -> None:
+    def mark(self, flows: typing.Sequence[flow.Flow], marker: mitmproxy.types.Marker) -> None:
         """
             Mark flows.
         """
         updated = []
+        if marker not in emoji.emoji:
+            raise exceptions.CommandError(f"invalid marker value")
+
         for i in flows:
-            if i.marked != boolean:
-                i.marked = boolean
-                updated.append(i)
+            i.marked = marker
+            updated.append(i)
         ctx.master.addons.trigger(hooks.UpdateHook(updated))
 
     # FIXME: this will become view.mark.toggle later
@@ -121,7 +123,10 @@ class Core:
             Toggle mark for flows.
         """
         for i in flows:
-            i.marked = not i.marked
+            if i.marked:
+                i.marked = ""
+            else:
+                i.marked = ":default:"
         ctx.master.addons.trigger(hooks.UpdateHook(flows))
 
     @command.command("flow.kill")
