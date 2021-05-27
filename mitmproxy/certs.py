@@ -147,9 +147,9 @@ def _name_to_keyval(name: x509.Name) -> List[Tuple[str, str]]:
     parts = []
     for attr in name:
         # pyca cryptography <35.0.0 backwards compatiblity
-        if hasattr(name, "rfc4514_attribute_name"):
+        if hasattr(name, "rfc4514_attribute_name"):  # pragma: no cover
             k = attr.rfc4514_attribute_name  # type: ignore
-        else:
+        else:  # pragma: no cover
             k = attr.rfc4514_string().partition("=")[0]
         v = attr.value
         parts.append((k, v))
