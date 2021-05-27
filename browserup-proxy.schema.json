@@ -456,6 +456,143 @@
           }
         }
       },
+      "Har": {
+        "type": "object",
+        "required": [
+          "log"
+        ],
+        "properties": {
+          "log": {
+            "type": "object",
+            "externalDocs": {
+              "description": "HAR (HTTP Archive) Log Format",
+              "url": "http://www.softwareishard.com/blog/har-12-spec/"
+            },
+            "required": [
+              "version",
+              "creator",
+              "entries"
+            ],
+            "properties": {
+              "version": {
+                "type": "string"
+              },
+              "creator": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "version"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              },
+              "browser": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "version"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "comment": {
+                    "type": "string"
+                  }
+                }
+              },
+              "pages": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Page"
+                }
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Entry"
+                }
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "Header": {
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "Page": {
+        "type": "object",
+        "required": [
+          "startedDateTime",
+          "id",
+          "title",
+          "pageTimings"
+        ],
+        "properties": {
+          "startedDateTime": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "pageTimings": {
+            "type": "object",
+            "properties": {
+              "onContentLoad": {
+                "type": "number",
+                "minimum": -1
+              },
+              "onLoad": {
+                "type": "number",
+                "minimum": -1
+              },
+              "comment": {
+                "type": "string"
+              }
+            }
+          },
+          "comment": {
+            "type": "string"
+          }
+        }
+      },
+      "CustomHarData": {
+        "type": "object",
+        "minProperties": 1
+      },
       "Entry": {
         "type": "object",
         "required": [
@@ -833,144 +970,6 @@
           },
           "connection": {
             "type": "string"
-          },
-          "comment": {
-            "type": "string"
-          }
-        }
-      },
-      "Header": {
-        "type": "object",
-        "required": [
-          "name",
-          "value"
-        ],
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          },
-          "comment": {
-            "type": "string"
-          }
-        }
-      },
-      "Har": {
-        "type": "object",
-        "required": [
-          "log"
-        ],
-        "properties": {
-          "log": {
-            "type": "object",
-            "externalDocs": {
-              "description": "HAR (HTTP Archive) Log Format",
-              "url": "http://www.softwareishard.com/blog/har-12-spec/"
-            },
-            "required": [
-              "version",
-              "creator",
-              "entries"
-            ],
-            "properties": {
-              "version": {
-                "type": "string"
-              },
-              "creator": {
-                "type": "object",
-                "required": [
-                  "name",
-                  "version"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "version": {
-                    "type": "string"
-                  },
-                  "comment": {
-                    "type": "string"
-                  }
-                }
-              },
-              "browser": {
-                "type": "object",
-                "required": [
-                  "name",
-                  "version"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "version": {
-                    "type": "string"
-                  },
-                  "comment": {
-                    "type": "string"
-                  }
-                }
-              },
-              "pages": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/Page"
-                }
-              },
-              "entries": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/Entry"
-                }
-              },
-              "comment": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      },
-      "CustomHarData": {
-        "type": "object",
-        "minProperties": 1
-      },
-      "Page": {
-        "type": "object",
-        "required": [
-          "startedDateTime",
-          "id",
-          "title",
-          "pageTimings"
-        ],
-        "properties": {
-          "startedDateTime": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "id": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "pageTimings": {
-            "type": "object",
-            "properties": {
-              "onContentLoad": {
-                "type": "number",
-                "minimum": -1
-              },
-              "onLoad": {
-                "type": "number",
-                "minimum": -1
-              },
-              "comment": {
-                "type": "string"
-              }
-            }
           },
           "comment": {
             "type": "string"

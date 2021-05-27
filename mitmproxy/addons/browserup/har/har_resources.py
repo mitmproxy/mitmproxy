@@ -33,7 +33,7 @@ class RespondWithHarMixin:
     def respond_with_har(self, resp, har, har_file):
         resp.status = falcon.HTTP_200
         resp.content_type = falcon.MEDIA_JSON
-        resp.body = json.dumps({"path": har_file.name, "json": har}, ensure_ascii=False)
+        resp.body = json.dumps(har, ensure_ascii=False)
 
 
 class VerifyResponseMixin:

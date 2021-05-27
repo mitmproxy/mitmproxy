@@ -8,7 +8,7 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **pageref** | **String** |  |  [optional]
-**startedDateTime** | **String** |  | 
+**startedDateTime** | **OffsetDateTime** |  | 
 **time** | **BigDecimal** |  | 
 **request** | [**EntryRequest**](EntryRequest.md) |  | 
 **response** | [**EntryResponse**](EntryResponse.md) |  | 

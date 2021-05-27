@@ -239,11 +239,11 @@ components:
   schemas:
     NameValuePair:
       properties:
-        value:
-          description: Value to match
-          type: string
         name:
           description: Name to match
+          type: string
+        value:
+          description: Value to match
           type: string
       type: object
     MatchCriteria:
@@ -343,207 +343,6 @@ components:
           description: Name to match
           type: boolean
       type: object
-    Entry:
-      example:
-        startedDateTime: startedDateTime
-        request:
-          headers:
-          - name: name
-            comment: comment
-            value: value
-          - name: name
-            comment: comment
-            value: value
-          httpVersion: httpVersion
-          method: method
-          headersSize: 5
-          bodySize: 5
-          comment: comment
-          queryString:
-          - name: name
-            comment: comment
-            value: value
-          - name: name
-            comment: comment
-            value: value
-          postData: '{}'
-          url: https://openapi-generator.tech
-          cookies:
-          - path: path
-            expires: expires
-            domain: domain
-            name: name
-            comment: comment
-            httpOnly: true
-            secure: true
-            value: value
-          - path: path
-            expires: expires
-            domain: domain
-            name: name
-            comment: comment
-            httpOnly: true
-            secure: true
-            value: value
-        cache: '{}'
-        response:
-          headers:
-          - name: name
-            comment: comment
-            value: value
-          - name: name
-            comment: comment
-            value: value
-          httpVersion: httpVersion
-          redirectURL: redirectURL
-          statusText: statusText
-          headersSize: 3
-          bodySize: 2
-          comment: comment
-          cookies:
-          - path: path
-            expires: expires
-            domain: domain
-            name: name
-            comment: comment
-            httpOnly: true
-            secure: true
-            value: value
-          - path: path
-            expires: expires
-            domain: domain
-            name: name
-            comment: comment
-            httpOnly: true
-            secure: true
-            value: value
-          content:
-            size: 7
-            comment: comment
-            mimeType: mimeType
-            text: text
-            compression: 9
-            encoding: encoding
-          status: 2
-        serverIPAddress: serverIPAddress
-        timings: '{}'
-        connection: connection
-        comment: comment
-        time: 0.14658129805029452
-        pageref: pageref
-      properties:
-        pageref:
-          type: string
-        startedDateTime:
-          type: string
-        time:
-          minimum: 0
-          type: number
-        request:
-          $ref: '#/components/schemas/Entry_request'
-        response:
-          $ref: '#/components/schemas/Entry_response'
-        cache:
-          properties:
-            beforeRequest:
-              oneOf:
-              - type: "null"
-              - properties:
-                  expires:
-                    type: string
-                  lastAccess:
-                    type: string
-                  eTag:
-                    type: string
-                  hitCount:
-                    type: integer
-                  comment:
-                    type: string
-                required:
-                - eTag
-                - hitCount
-                - lastAccess
-                type: object
-            afterRequest:
-              oneOf:
-              - type: "null"
-              - properties:
-                  expires:
-                    type: string
-                  lastAccess:
-                    type: string
-                  eTag:
-                    type: string
-                  hitCount:
-                    type: integer
-                  comment:
-                    type: string
-                required:
-                - eTag
-                - hitCount
-                - lastAccess
-                type: object
-            comment:
-              type: string
-        timings:
-          properties:
-            dns:
-              minimum: -1
-              type: number
-            connect:
-              minimum: -1
-              type: number
-            blocked:
-              minimum: -1
-              type: number
-            send:
-              minimum: -1
-              type: number
-            wait:
-              minimum: -1
-              type: number
-            receive:
-              minimum: -1
-              type: number
-            ssl:
-              minimum: -1
-              type: number
-            comment:
-              type: string
-          required:
-          - receive
-          - send
-          - wait
-        serverIPAddress:
-          type: string
-        connection:
-          type: string
-        comment:
-          type: string
-      required:
-      - cache
-      - request
-      - response
-      - startedDateTime
-      - time
-      - timings
-      type: object
-    Header:
-      example:
-        name: name
-        comment: comment
-        value: value
-      properties:
-        name:
-          type: string
-        value:
-          type: string
-        comment:
-          type: string
-      required:
-      - name
-      - value
-      type: object
     Har:
       example:
         log:
@@ -552,7 +351,7 @@ components:
             comment: comment
             version: version
           entries:
-          - startedDateTime: startedDateTime
+          - startedDateTime: 2000-01-23T04:56:07.000+00:00
             request:
               headers:
               - name: name
@@ -638,7 +437,7 @@ components:
             comment: comment
             time: 0.14658129805029452
             pageref: pageref
-          - startedDateTime: startedDateTime
+          - startedDateTime: 2000-01-23T04:56:07.000+00:00
             request:
               headers:
               - name: name
@@ -753,8 +552,21 @@ components:
       required:
       - log
       type: object
-    CustomHarData:
-      minProperties: 1
+    Header:
+      example:
+        name: name
+        comment: comment
+        value: value
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+        comment:
+          type: string
+      required:
+      - name
+      - value
       type: object
     Page:
       example:
@@ -783,6 +595,453 @@ components:
       - pageTimings
       - startedDateTime
       - title
+      type: object
+    CustomHarData:
+      minProperties: 1
+      type: object
+    Entry:
+      example:
+        startedDateTime: 2000-01-23T04:56:07.000+00:00
+        request:
+          headers:
+          - name: name
+            comment: comment
+            value: value
+          - name: name
+            comment: comment
+            value: value
+          httpVersion: httpVersion
+          method: method
+          headersSize: 5
+          bodySize: 5
+          comment: comment
+          queryString:
+          - name: name
+            comment: comment
+            value: value
+          - name: name
+            comment: comment
+            value: value
+          postData: '{}'
+          url: https://openapi-generator.tech
+          cookies:
+          - path: path
+            expires: expires
+            domain: domain
+            name: name
+            comment: comment
+            httpOnly: true
+            secure: true
+            value: value
+          - path: path
+            expires: expires
+            domain: domain
+            name: name
+            comment: comment
+            httpOnly: true
+            secure: true
+            value: value
+        cache: '{}'
+        response:
+          headers:
+          - name: name
+            comment: comment
+            value: value
+          - name: name
+            comment: comment
+            value: value
+          httpVersion: httpVersion
+          redirectURL: redirectURL
+          statusText: statusText
+          headersSize: 3
+          bodySize: 2
+          comment: comment
+          cookies:
+          - path: path
+            expires: expires
+            domain: domain
+            name: name
+            comment: comment
+            httpOnly: true
+            secure: true
+            value: value
+          - path: path
+            expires: expires
+            domain: domain
+            name: name
+            comment: comment
+            httpOnly: true
+            secure: true
+            value: value
+          content:
+            size: 7
+            comment: comment
+            mimeType: mimeType
+            text: text
+            compression: 9
+            encoding: encoding
+          status: 2
+        serverIPAddress: serverIPAddress
+        timings: '{}'
+        connection: connection
+        comment: comment
+        time: 0.14658129805029452
+        pageref: pageref
+      properties:
+        pageref:
+          type: string
+        startedDateTime:
+          format: date-time
+          type: string
+        time:
+          minimum: 0
+          type: number
+        request:
+          $ref: '#/components/schemas/Entry_request'
+        response:
+          $ref: '#/components/schemas/Entry_response'
+        cache:
+          properties:
+            beforeRequest:
+              oneOf:
+              - type: "null"
+              - properties:
+                  expires:
+                    type: string
+                  lastAccess:
+                    type: string
+                  eTag:
+                    type: string
+                  hitCount:
+                    type: integer
+                  comment:
+                    type: string
+                required:
+                - eTag
+                - hitCount
+                - lastAccess
+                type: object
+            afterRequest:
+              oneOf:
+              - type: "null"
+              - properties:
+                  expires:
+                    type: string
+                  lastAccess:
+                    type: string
+                  eTag:
+                    type: string
+                  hitCount:
+                    type: integer
+                  comment:
+                    type: string
+                required:
+                - eTag
+                - hitCount
+                - lastAccess
+                type: object
+            comment:
+              type: string
+        timings:
+          properties:
+            dns:
+              minimum: -1
+              type: number
+            connect:
+              minimum: -1
+              type: number
+            blocked:
+              minimum: -1
+              type: number
+            send:
+              minimum: -1
+              type: number
+            wait:
+              minimum: -1
+              type: number
+            receive:
+              minimum: -1
+              type: number
+            ssl:
+              minimum: -1
+              type: number
+            comment:
+              type: string
+          required:
+          - receive
+          - send
+          - wait
+        serverIPAddress:
+          type: string
+        connection:
+          type: string
+        comment:
+          type: string
+      required:
+      - cache
+      - request
+      - response
+      - startedDateTime
+      - time
+      - timings
+      type: object
+    Har_log_creator:
+      example:
+        name: name
+        comment: comment
+        version: version
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        comment:
+          type: string
+      required:
+      - name
+      - version
+      type: object
+    Har_log:
+      example:
+        creator:
+          name: name
+          comment: comment
+          version: version
+        entries:
+        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          request:
+            headers:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            httpVersion: httpVersion
+            method: method
+            headersSize: 5
+            bodySize: 5
+            comment: comment
+            queryString:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            postData: '{}'
+            url: https://openapi-generator.tech
+            cookies:
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+          cache: '{}'
+          response:
+            headers:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            httpVersion: httpVersion
+            redirectURL: redirectURL
+            statusText: statusText
+            headersSize: 3
+            bodySize: 2
+            comment: comment
+            cookies:
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            content:
+              size: 7
+              comment: comment
+              mimeType: mimeType
+              text: text
+              compression: 9
+              encoding: encoding
+            status: 2
+          serverIPAddress: serverIPAddress
+          timings: '{}'
+          connection: connection
+          comment: comment
+          time: 0.14658129805029452
+          pageref: pageref
+        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          request:
+            headers:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            httpVersion: httpVersion
+            method: method
+            headersSize: 5
+            bodySize: 5
+            comment: comment
+            queryString:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            postData: '{}'
+            url: https://openapi-generator.tech
+            cookies:
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+          cache: '{}'
+          response:
+            headers:
+            - name: name
+              comment: comment
+              value: value
+            - name: name
+              comment: comment
+              value: value
+            httpVersion: httpVersion
+            redirectURL: redirectURL
+            statusText: statusText
+            headersSize: 3
+            bodySize: 2
+            comment: comment
+            cookies:
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            - path: path
+              expires: expires
+              domain: domain
+              name: name
+              comment: comment
+              httpOnly: true
+              secure: true
+              value: value
+            content:
+              size: 7
+              comment: comment
+              mimeType: mimeType
+              text: text
+              compression: 9
+              encoding: encoding
+            status: 2
+          serverIPAddress: serverIPAddress
+          timings: '{}'
+          connection: connection
+          comment: comment
+          time: 0.14658129805029452
+          pageref: pageref
+        pages:
+        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          pageTimings:
+            onContentLoad: -0.9199171809538988
+            onLoad: -0.3972543816929597
+            comment: comment
+          comment: comment
+          id: id
+          title: title
+        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          pageTimings:
+            onContentLoad: -0.9199171809538988
+            onLoad: -0.3972543816929597
+            comment: comment
+          comment: comment
+          id: id
+          title: title
+        browser:
+          name: name
+          comment: comment
+          version: version
+        comment: comment
+        version: version
+      externalDocs:
+        description: HAR (HTTP Archive) Log Format
+        url: http://www.softwareishard.com/blog/har-12-spec/
+      properties:
+        version:
+          type: string
+        creator:
+          $ref: '#/components/schemas/Har_log_creator'
+        browser:
+          $ref: '#/components/schemas/Har_log_creator'
+        pages:
+          items:
+            $ref: '#/components/schemas/Page'
+          type: array
+        entries:
+          items:
+            $ref: '#/components/schemas/Entry'
+          type: array
+        comment:
+          type: string
+      required:
+      - creator
+      - entries
+      - version
+      type: object
+    Page_pageTimings:
+      example:
+        onContentLoad: -0.9199171809538988
+        onLoad: -0.3972543816929597
+        comment: comment
+      properties:
+        onContentLoad:
+          minimum: -1
+          type: number
+        onLoad:
+          minimum: -1
+          type: number
+        comment:
+          type: string
       type: object
     Entry_request_cookies:
       example:
@@ -1031,263 +1290,5 @@ components:
       - redirectURL
       - status
       - statusText
-      type: object
-    Har_log_creator:
-      example:
-        name: name
-        comment: comment
-        version: version
-      properties:
-        name:
-          type: string
-        version:
-          type: string
-        comment:
-          type: string
-      required:
-      - name
-      - version
-      type: object
-    Har_log:
-      example:
-        creator:
-          name: name
-          comment: comment
-          version: version
-        entries:
-        - startedDateTime: startedDateTime
-          request:
-            headers:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            httpVersion: httpVersion
-            method: method
-            headersSize: 5
-            bodySize: 5
-            comment: comment
-            queryString:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            postData: '{}'
-            url: https://openapi-generator.tech
-            cookies:
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-          cache: '{}'
-          response:
-            headers:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            httpVersion: httpVersion
-            redirectURL: redirectURL
-            statusText: statusText
-            headersSize: 3
-            bodySize: 2
-            comment: comment
-            cookies:
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            content:
-              size: 7
-              comment: comment
-              mimeType: mimeType
-              text: text
-              compression: 9
-              encoding: encoding
-            status: 2
-          serverIPAddress: serverIPAddress
-          timings: '{}'
-          connection: connection
-          comment: comment
-          time: 0.14658129805029452
-          pageref: pageref
-        - startedDateTime: startedDateTime
-          request:
-            headers:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            httpVersion: httpVersion
-            method: method
-            headersSize: 5
-            bodySize: 5
-            comment: comment
-            queryString:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            postData: '{}'
-            url: https://openapi-generator.tech
-            cookies:
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-          cache: '{}'
-          response:
-            headers:
-            - name: name
-              comment: comment
-              value: value
-            - name: name
-              comment: comment
-              value: value
-            httpVersion: httpVersion
-            redirectURL: redirectURL
-            statusText: statusText
-            headersSize: 3
-            bodySize: 2
-            comment: comment
-            cookies:
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            - path: path
-              expires: expires
-              domain: domain
-              name: name
-              comment: comment
-              httpOnly: true
-              secure: true
-              value: value
-            content:
-              size: 7
-              comment: comment
-              mimeType: mimeType
-              text: text
-              compression: 9
-              encoding: encoding
-            status: 2
-          serverIPAddress: serverIPAddress
-          timings: '{}'
-          connection: connection
-          comment: comment
-          time: 0.14658129805029452
-          pageref: pageref
-        pages:
-        - startedDateTime: 2000-01-23T04:56:07.000+00:00
-          pageTimings:
-            onContentLoad: -0.9199171809538988
-            onLoad: -0.3972543816929597
-            comment: comment
-          comment: comment
-          id: id
-          title: title
-        - startedDateTime: 2000-01-23T04:56:07.000+00:00
-          pageTimings:
-            onContentLoad: -0.9199171809538988
-            onLoad: -0.3972543816929597
-            comment: comment
-          comment: comment
-          id: id
-          title: title
-        browser:
-          name: name
-          comment: comment
-          version: version
-        comment: comment
-        version: version
-      externalDocs:
-        description: HAR (HTTP Archive) Log Format
-        url: http://www.softwareishard.com/blog/har-12-spec/
-      properties:
-        version:
-          type: string
-        creator:
-          $ref: '#/components/schemas/Har_log_creator'
-        browser:
-          $ref: '#/components/schemas/Har_log_creator'
-        pages:
-          items:
-            $ref: '#/components/schemas/Page'
-          type: array
-        entries:
-          items:
-            $ref: '#/components/schemas/Entry'
-          type: array
-        comment:
-          type: string
-      required:
-      - creator
-      - entries
-      - version
-      type: object
-    Page_pageTimings:
-      example:
-        onContentLoad: -0.9199171809538988
-        onLoad: -0.3972543816929597
-        comment: comment
-      properties:
-        onContentLoad:
-          minimum: -1
-          type: number
-        onLoad:
-          minimum: -1
-          type: number
-        comment:
-          type: string
       type: object
 

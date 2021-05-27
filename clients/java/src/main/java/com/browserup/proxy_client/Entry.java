@@ -26,6 +26,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
 import java.math.BigDecimal;
+import org.threeten.bp.OffsetDateTime;
 
 /**
  * Entry
@@ -38,7 +39,7 @@ public class Entry {
 
   public static final String SERIALIZED_NAME_STARTED_DATE_TIME = "startedDateTime";
   @SerializedName(SERIALIZED_NAME_STARTED_DATE_TIME)
-  private String startedDateTime;
+  private OffsetDateTime startedDateTime;
 
   public static final String SERIALIZED_NAME_TIME = "time";
   @SerializedName(SERIALIZED_NAME_TIME)
@@ -96,7 +97,7 @@ public class Entry {
   }
 
 
-  public Entry startedDateTime(String startedDateTime) {
+  public Entry startedDateTime(OffsetDateTime startedDateTime) {
     
     this.startedDateTime = startedDateTime;
     return this;
@@ -108,12 +109,12 @@ public class Entry {
   **/
   @ApiModelProperty(required = true, value = "")
 
-  public String getStartedDateTime() {
+  public OffsetDateTime getStartedDateTime() {
     return startedDateTime;
   }
 
 
-  public void setStartedDateTime(String startedDateTime) {
+  public void setStartedDateTime(OffsetDateTime startedDateTime) {
     this.startedDateTime = startedDateTime;
   }
 

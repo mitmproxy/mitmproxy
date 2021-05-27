@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timezone
 
 
 class HarBuilder():
@@ -32,7 +33,7 @@ class HarBuilder():
         }
 
     @staticmethod
-    def page(title="", id="", started_date_time=datetime.utcnow().isoformat()):
+    def page(title="", id="", started_date_time=str(datetime.now(tz=timezone.utc).isoformat())):
         return {
             "title": title,
             "id": id,

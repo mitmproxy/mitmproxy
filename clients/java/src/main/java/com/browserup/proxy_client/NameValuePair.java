@@ -29,36 +29,13 @@ import java.io.IOException;
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen")
 public class NameValuePair {
-  public static final String SERIALIZED_NAME_VALUE = "value";
-  @SerializedName(SERIALIZED_NAME_VALUE)
-  private String value;
-
   public static final String SERIALIZED_NAME_NAME = "name";
   @SerializedName(SERIALIZED_NAME_NAME)
   private String name;
 
-
-  public NameValuePair value(String value) {
-    
-    this.value = value;
-    return this;
-  }
-
-   /**
-   * Value to match
-   * @return value
-  **/
-  @javax.annotation.Nullable
-  @ApiModelProperty(value = "Value to match")
-
-  public String getValue() {
-    return value;
-  }
-
-
-  public void setValue(String value) {
-    this.value = value;
-  }
+  public static final String SERIALIZED_NAME_VALUE = "value";
+  @SerializedName(SERIALIZED_NAME_VALUE)
+  private String value;
 
 
   public NameValuePair name(String name) {
@@ -84,6 +61,29 @@ public class NameValuePair {
   }
 
 
+  public NameValuePair value(String value) {
+    
+    this.value = value;
+    return this;
+  }
+
+   /**
+   * Value to match
+   * @return value
+  **/
+  @javax.annotation.Nullable
+  @ApiModelProperty(value = "Value to match")
+
+  public String getValue() {
+    return value;
+  }
+
+
+  public void setValue(String value) {
+    this.value = value;
+  }
+
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -93,21 +93,21 @@ public class NameValuePair {
       return false;
     }
     NameValuePair nameValuePair = (NameValuePair) o;
-    return Objects.equals(this.value, nameValuePair.value) &&
-        Objects.equals(this.name, nameValuePair.name);
+    return Objects.equals(this.name, nameValuePair.name) &&
+        Objects.equals(this.value, nameValuePair.value);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(value, name);
+    return Objects.hash(name, value);
   }
 
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append("class NameValuePair {\n");
-    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("    name: ").append(toIndentedString(name)).append("\n");
+    sb.append("    value: ").append(toIndentedString(value)).append("\n");
     sb.append("}");
     return sb.toString();
   }
