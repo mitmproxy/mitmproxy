@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+from cryptography import x509
+from cryptography.x509 import NameOID
 
 import pytest
 
@@ -239,3 +241,18 @@ class TestCert:
 
         assert dict(c.issuer).get('O') == 'DigiCert, Inc.'
         assert dict(c.subject).get('O') == 'GitHub, Inc.'
+
+    def test_multi_valued_rdns(self, tdata):
+        subject = x509.Name([
+            x509.RelativeDistinguishedName([
+                x509.NameAttribute(NameOID.TITLE, u'Test'),
+                x509.NameAttribute(NameOID.COMMON_NAME, u'Multivalue'),
+                x509.NameAttribute(NameOID.SURNAME, u'RDNs'),
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, u'TSLA'),
+            ]),
+            x509.RelativeDistinguishedName([
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, u'PyCA')
+            ]),
+        ])
+        expected = [('2.5.4.12', 'Test'), ('CN', 'Multivalue'), ('2.5.4.4', 'RDNs'), ('O', 'TSLA'), ('O', 'PyCA')]
+        assert(certs._name_to_keyval(subject)) == expected

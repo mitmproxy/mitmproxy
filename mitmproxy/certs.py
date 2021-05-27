@@ -12,7 +12,6 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa, dsa, ec
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509 import NameOID, ExtendedKeyUsageOID
-from cryptography.x509.name import _NAMEOID_TO_NAME
 
 import OpenSSL
 from mitmproxy.coretypes import serializable
@@ -147,8 +146,11 @@ class Cert(serializable.Serializable):
 def _name_to_keyval(name: x509.Name) -> List[Tuple[str, str]]:
     parts = []
     for attr in name:
-        # Use short attribute name if available, otherwise fall back to OID dotted string.
-        k = _NAMEOID_TO_NAME.get(attr.oid, attr.oid.dotted_string)
+        # pyca cryptography backwards compatiblity
+        if hasattr(name, "rfc4514_attribute_name"):
+            k = attr.rfc4514_attribute_name
+        else:
+            k = attr.rfc4514_string().partition("=")[0]
         v = attr.value
         parts.append((k, v))
     return parts
