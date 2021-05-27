@@ -3,6 +3,7 @@ import os
 import re
 import time
 import urllib.parse
+import json
 from dataclasses import dataclass
 from dataclasses import fields
 from email.utils import formatdate
@@ -18,6 +19,7 @@ from typing import Optional
 from typing import Tuple
 from typing import Union
 from typing import cast
+from typing import Any
 
 from mitmproxy import flow
 from mitmproxy.websocket import WebSocketData
@@ -498,6 +500,20 @@ class Message(serializable.Serializable):
         self.content = self.raw_content
         if "content-encoding" not in self.headers:
             raise ValueError("Invalid content encoding {}".format(repr(encoding)))
+
+    def json(self, **kwargs: Any) -> Optional[dict]:
+        """
+        Returns the JSON encoded content of the response, if any. If the body is empty
+        then `None` will be returned. `**kwargs` are optional arguments that will be
+        passed to `json.loads()`.
+
+        *Raises:*
+
+          - `json.decoder.JSONDecodeError`, if content can not be decoded as JSON.
+        """
+        if self.content:
+            return json.loads(self.content, **kwargs)
+        return None
 
 
 class Request(Message):

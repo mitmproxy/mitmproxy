@@ -1,5 +1,6 @@
 import email
 import time
+import json
 from unittest import mock
 
 import pytest
@@ -1144,3 +1145,21 @@ class TestMessageText:
         r.text = '\udcff'
         assert r.headers["content-type"] == "text/html; charset=utf-8"
         assert r.raw_content == b"\xFF"
+
+    def test_get_json(self):
+        req = treq(content=None)
+        assert req.json() is None
+
+        req = treq(content=b'')
+        assert req.json() is None
+
+        req = treq(content=b'{}')
+        assert req.json() == {}
+
+        req = treq(content=b'{"a": 1}')
+        assert req.json() == {"a": 1}
+
+        req = treq(content=b'{')
+
+        with pytest.raises(json.decoder.JSONDecodeError):
+            req.json()
