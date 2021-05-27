@@ -27,8 +27,8 @@ def get_chrome_executable() -> typing.Optional[str]:
 
 
 class Browser:
-    browser = None
-    tdir = None
+    browser: typing.List[subprocess.Popen] = []
+    tdir: typing.List[tempfile.TemporaryDirectory] = []
 
     @command.command("browser.start")
     def start(self) -> None:
@@ -36,23 +36,20 @@ class Browser:
             Start an isolated instance of Chrome that points to the currently
             running proxy.
         """
-        if self.browser:
-            if self.browser.poll() is None:
-                ctx.log.alert("Browser already running")
-                return
-            else:
-                self.done()
+        if len(self.browser) > 0:
+            ctx.log.alert("Starting additional browser")
 
         cmd = get_chrome_executable()
         if not cmd:
             ctx.log.alert("Your platform is not supported yet - please submit a patch.")
             return
 
-        self.tdir = tempfile.TemporaryDirectory()
-        self.browser = subprocess.Popen(
+        tdir = tempfile.TemporaryDirectory()
+        self.tdir.append(tdir)
+        self.browser.append(subprocess.Popen(
             [
                 cmd,
-                "--user-data-dir=%s" % str(self.tdir.name),
+                "--user-data-dir=%s" % str(tdir.name),
                 "--proxy-server={}:{}".format(
                     ctx.options.listen_host or "127.0.0.1",
                     ctx.options.listen_port
@@ -66,11 +63,12 @@ class Browser:
             ],
             stdout = subprocess.DEVNULL,
             stderr = subprocess.DEVNULL,
-        )
+        ))
 
     def done(self):
-        if self.browser:
-            self.browser.kill()
-            self.tdir.cleanup()
-        self.browser = None
-        self.tdir = None
+        for browser in self.browser:
+            browser.kill()
+        for tdir in self.tdir:
+            tdir.cleanup()
+        self.browser = []
+        self.tdir = []

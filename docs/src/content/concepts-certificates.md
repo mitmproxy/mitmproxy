@@ -37,6 +37,8 @@ documentation for some common platforms. The mitmproxy CA cert is located in
 - wget on the command line:  
   `wget -e https_proxy=127.0.0.1:8080 --ca-certificate ~/.mitmproxy/mitmproxy-ca-cert.pem https://example.com/`
 - [macOS](https://support.apple.com/guide/keychain-access/add-certificates-to-a-keychain-kyca2431/mac)
+- [macOS (automated)](https://www.dssw.co.uk/reference/security.html):
+  `sudo security add-trusted-cert -d -p ssl -p basic -k /Library/Keychains/System.keychain ~/.mitmproxy/mitmproxy-ca-cert.pem`
 - [Ubuntu/Debian]( https://askubuntu.com/questions/73287/how-do-i-install-a-root-certificate/94861#94861)
 - [Mozilla Firefox](https://wiki.mozilla.org/MozillaRootCertificate#Mozilla_Firefox)
 - [Chrome on Linux](https://stackoverflow.com/a/15076602/198996)
@@ -148,6 +150,27 @@ certificate authority by passing the `--set confdir=DIRECTORY` option to
 mitmproxy. Mitmproxy will then look for `mitmproxy-ca.pem` in the
 specified directory. If no such file exists, it will be generated
 automatically.
+
+The `mitmproxy-ca.pem` certificate file has to look roughly like this:
+
+    -----BEGIN PRIVATE KEY-----
+    <private key>
+    -----END PRIVATE KEY-----
+    -----BEGIN CERTIFICATE-----
+    <cert>
+    -----END CERTIFICATE-----
+
+When looking at the certificate with 
+`openssl x509 -noout -text -in ~/.mitmproxy/mitmproxy-ca.pem`
+it should have at least the following X509v3 extensions so mitmproxy can 
+use it to generate certificates:
+
+    X509v3 extensions:
+        X509v3 Key Usage: critical
+            Certificate Sign
+        X509v3 Basic Constraints: critical
+            CA:TRUE
+
 
 ## Using a client side certificate
 

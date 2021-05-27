@@ -476,6 +476,15 @@ class TestClientTLS:
         )
         assert not tctx.client.tls_established
 
+        # Make sure that an active server connection does not cause child layers to spawn.
+        client_layer.debug = ""
+        assert (
+            playbook
+            >> events.DataReceived(Server(None), b"data on other stream")
+            << commands.Log(">> DataReceived(server, b'data on other stream')", 'debug')
+            << commands.Log("Swallowing DataReceived(server, b'data on other stream') as handshake failed.", "debug")
+        )
+
     def test_mitmproxy_ca_is_untrusted(self, tctx: context.Context):
         """Test the scenario where the client doesn't trust the mitmproxy CA."""
         playbook, client_layer, tssl_client = make_client_tls_layer(tctx, sni=b"wrong.host.mitmproxy.org")

@@ -1,13 +1,12 @@
 ---
-title: "Install System CA on Android"
+title: "System CA on Android Emulator"
 menu:
     howto:
         weight: 4
 ---
 
 # Install System CA Certificate on Android Emulator
-
-[Since Android 7, apps ignore user certificates](https://android-developers.googleblog.com/2016/07/changes-to-trusted-certificate.html), unless they are configured to use them.
+Since Android 7, [apps ignore user provided certificates](https://android-developers.googleblog.com/2016/07/changes-to-trusted-certificate.html), unless they are configured to use them.
 As most applications do not explicitly opt in to use user certificates, we need to place our mitmproxy CA certificate in the system certificate store,
 in order to avoid having to patch each application, which we want to monitor.
 
@@ -15,76 +14,68 @@ Please note, that apps can decide to ignore the system certificate store and mai
 
 ## 1. Prerequisites
 
-- Emulator from Android SDK with proxy settings pointing to mitmproxy
+- [Android Studio/Android Sdk](https://developer.android.com/studio) is installed (tested with Version 4.1.3 for Linux 64-bit)
+- An Android Virtual Device (AVD) was created. Setup documentation available [here](https://developer.android.com/studio/run/managing-avds)
+  - The AVD must not run a production build (these will prevent you from using `adb root`)
+  - The proxy settings of the AVD are configured to use mitmproxy. Documentation [here](https://developer.android.com/studio/run/emulator-networking#proxy)
 
-- Mitmproxy CA certificate
-  - Usually located in `~/.mitmproxy/mitmproxy-ca-cert.cer`
+- Emulator and adb executables from Android Sdk have been added to $PATH variable
+  - emulator usually located at `/home/<your_user_name>/Android/Sdk/emulator/emulator` on Linux systems
+  - adb usually located at `/home/<your_user_name>/Android/Sdk/platform-tools/adb` on Linux systems
+  - I added these lines to my `.bashrc`
+  ``` bash
+  export PATH=$PATH:$HOME/Android/Sdk/platform-tools
+  export PATH=$PATH:$HOME/Android/Sdk/emulator
+  ```
+
+- Mitmproxy CA certificate has been created
+  - Usually located in `~/.mitmproxy/mitmproxy-ca-cert.cer` on Linux systems
   - If the folder is empty or does not exist, run `mitmproxy` in order to generate the certificates
 
 ## 2. Rename certificate
 
-Enter your certificate folder
+CA Certificates in Android are stored by the name of their hash, with a '0' as extension (Example: `c8450d0d.0`). It is necessary to figure out the hash of your CA certificate and copy it to a file with this hash as filename. Otherwise Android will ignore the certificate. 
+By default, the mitmproxy CA certificate is located in this file: `~/.mitmproxy/mitmproxy-ca-cert.cer`
 
-```bash
-cd ~/.mitmproxy/
-```
 
-- CA Certificates in Android are stored by the name of their hash, with a '0' as extension
-- Now generate the hash of your certificate
-  
-```bash
-openssl x509 -inform PEM -subject_hash_old -in mitmproxy-ca-cert.cer | head -1
-```
+### Instructions
 
-Lets assume, the output is `c8450d0d`
-
-We can now copy `mitmproxy-ca-cert.cer` to `c8450d0d.0` and our system certificate is ready to use
-
-```bash
-cp mitmproxy-ca-cert.cer c8450d0d.0
-```
+- Enter your certificate folder: `cd ~/.mitmproxy/`
+- Generate hash and copy certificate : ``hashed_name=`openssl x509 -inform PEM -subject_hash_old -in mitmproxy-ca-cert.cer | head -1` && cp mitmproxy-ca-cert.cer $hashed_name.0``
 
 ## 3. Insert certificate into system certificate store
 
-Note, that Android 9 (API LEVEL 28) was used to test the following steps and that the `emulator` executable is located in the Android SDK
+Now we have to place our CA certificate inside the system certificate store located at `/system/etc/security/cacerts/` in the Android filesystem. By default, the `/system` partition is mounted as read-only. The following steps describe how to gain write permissions on the `/system` partition and how to copy the certificate created in the previous step.
 
-- Start your android emulator.
-  - Get a list of your AVDs with `emulator -list-avds`
-  - Make sure to use the `-writable-system` option. Otherwise it will not be possible to write to `/system`
-  - Keep in mind, that the **emulator will load a clean system image when starting without `-writable-system` option**.
-  - This means you always have to start the emulator with `-writable-system` option in order to use your certificate
+### Instructions for API LEVEL > 28
+ Starting from API LEVEL 29 (Android 10), it seems to be impossible to mount the "/" partition as read-write. Google provided a [workaround for this issue](https://android.googlesource.com/platform/system/core/+/master/fs_mgr/README.overlayfs.md) using OverlayFS. Unfortunately, at the time of writing this (11. April 2021), the instructions in this workaround will result in your emulator getting stuck in a [boot loop](https://issuetracker.google.com/issues/144891973). Some smart guy on Stackoverflow [found a way](https://stackoverflow.com/questions/60867956/android-emulator-sdk-10-api-29-wont-start-after-remount-and-reboot) to get the `/system` directory writable anyway.
 
-```bash
-emulator -avd <avd_name_here> -writable-system
-```
+**Keep in mind:** You always have to start the emulator using the `-writable-system` option if you want to use your certificate. Otherwise Android will load a "clean" system image.
 
-- Restart adb as root
-  
-```bash
-adb root
-```
+Tested on emulators running API LEVEL 29 and 30
 
-- Get write access to `/system` on the device
-- In earlier versions (API LEVEL < 28) of Android you have to use `adb shell "mount -o rw,remount /system"`
-  
-```bash
-adb shell "mount -o rw,remount /"
-```
+ #### Instructions
+   - List your AVDs: `emulator -list-avds` (If this yields an empty list, create a new AVD in the Android Studio AVD Manager)
+   - Start the desired AVD: `emulator -avd <avd_name_here> -writable-system` (add `-show-kernel` flag for kernel logs)
+   - restart adb as root: `adb root`
+   - disable secure boot verification: `adb shell avbctl disable-verification`
+   - reboot device: `adb reboot`
+   - restart adb as root: `adb root`
+   - perform remount of partitions as read-write: `adb remount`. (If adb tells you that you need to reboot, reboot again `adb reboot` and run `adb remount` again.)
+   - push your renamed certificate from step 2: `adb push <path_to_certificate> /system/etc/security/cacerts`
+   - set certificate permissions: `adb shell chmod 664 /system/etc/security/cacerts/<name_of_pushed_certificate>`
+   - reboot device: `adb reboot`
 
-- Push your certificate to the system certificate store and set file permissions
-  
-```bash
-adb push c8450d0d.0 /system/etc/security/cacerts
-adb shell "chmod 664 /system/etc/security/cacerts/c8450d0d.0"
-```
+### Instructions for API LEVEL <= 28
 
-## 4. Reboot device and enjoy decrypted TLS traffic
+Tested on emulators running API LEVEL 26, 27 and 28
 
-- Reboot your device.
-  - You CA certificate should now be system trusted
+**Keep in mind:** You always have to start the emulator using the `-writable-system` option if you want to use your certificate. Otherwise Android will load a "clean" system image.
 
-```bash
-adb reboot
-```
-
-**Remember**: You **always** have to start the emulator using the `-writable-system` option in order to use your certificate
+   - List your AVDs: `emulator -list-avds` (If this yields an empty list, create a new AVD in the Android Studio AVD Manager)
+   - Start the desired AVD: `emulator -avd <avd_name_here> -writable-system` (add `-show-kernel` flag for kernel logs)
+   - restart adb as root: `adb root`
+   - perform remount of partitions as read-write: `adb remount`. (If adb tells you that you need to reboot, reboot again `adb reboot` and run `adb remount` again.)
+   - push your renamed certificate from step 2: `adb push <path_to_certificate> /system/etc/security/cacerts`
+   - set certificate permissions: `adb shell chmod 664 /system/etc/security/cacerts/<name_of_pushed_certificate>`
+   - reboot device: `adb reboot`

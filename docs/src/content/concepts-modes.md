@@ -46,6 +46,10 @@ connects to the target server.
 
 ## Transparent Proxy
 
+```shell
+mitmdump --mode transparent
+```
+
 In transparent mode, traffic is directed into a proxy at the network
 layer, without any client configuration required. This makes transparent
 proxying ideal for situations where you can't change client behaviour.
@@ -62,7 +66,7 @@ that Network Address Translation should not be applied before the
 traffic reaches mitmproxy, since this would remove the target
 information, leaving mitmproxy unable to determine the real destination.
 
-{{< figure src="/schematics/proxy-modes-transparent-wrong.png" title="Modes Transparent Wrong" >}}
+{{< figure src="/schematics/proxy-modes-transparent-wrong.png" >}}
 
 ### Common Configurations
 
@@ -135,6 +139,10 @@ most cases, the configuration will look like this:
 
 ## Reverse Proxy
 
+```shell
+mitmdump --mode reverse:https://example.com
+```
+
 mitmproxy is usually used with a client that uses the proxy to access
 the Internet. Using reverse proxy mode, you can use mitmproxy to act
 like a normal HTTP server:
@@ -195,6 +203,10 @@ through mitmproxy.
 
 ## Upstream Proxy
 
+```shell
+mitmdump --mode upstream:http://example.com:8081
+```
+
 If you want to chain proxies by adding mitmproxy in front of a different
 proxy appliance, you can use mitmproxy's upstream mode. In upstream
 mode, all requests are unconditionally transferred to an upstream proxy
@@ -209,4 +221,10 @@ tests).
 
 ## SOCKS Proxy
 
+```shell
+mitmdump --mode socks5
+```
+
 In this mode, mitmproxy acts as a SOCKS5 proxy.
+This is similar to the regular proxy mode, but using SOCKS5 instead of HTTP for connection establishment
+with the proxy.
