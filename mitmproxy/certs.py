@@ -148,7 +148,7 @@ def _name_to_keyval(name: x509.Name) -> List[Tuple[str, str]]:
     for attr in name:
         # pyca cryptography <35.0.0 backwards compatiblity
         if hasattr(name, "rfc4514_attribute_name"):
-            k = attr.rfc4514_attribute_name # type: ignore
+            k = attr.rfc4514_attribute_name  # type: ignore
         else:
             k = attr.rfc4514_string().partition("=")[0]
         v = attr.value
