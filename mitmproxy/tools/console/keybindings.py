@@ -66,6 +66,8 @@ class KeyListWalker(urwid.ListWalker):
         self.index = index
         self.focus_obj = self._get(self.index)
         keybinding_focus_change.send(binding.help or "")
+        self._modified()
+
 
     def get_next(self, pos):
         if pos >= len(self.bindings) - 1:
@@ -78,6 +80,12 @@ class KeyListWalker(urwid.ListWalker):
         if pos < 0:
             return None, None
         return self._get(pos), pos
+
+    def positions(self, reverse=False):
+        if reverse:
+            return reversed(range(len(self.bindings)))
+        else:
+            return range(len(self.bindings))
 
 
 class KeyList(urwid.ListBox):
