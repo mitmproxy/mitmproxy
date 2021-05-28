@@ -25,6 +25,7 @@ class TestParsing:
         assert flowfilter.parse("~replay")
         assert flowfilter.parse("~replayq")
         assert flowfilter.parse("~replays")
+        assert flowfilter.parse("~comment .")
         p = flowfilter.parse("~q ~c 10")
         self._dump(p)
         assert len(p.lst) == 2
@@ -614,6 +615,10 @@ class TestMatchingDummyFlow:
         assert not self.q("~u whatever", f)
 
         assert not self.q("~q", f)
+
+        assert not self.q("~comment .", f)
+        f.comment = "comment"
+        assert self.q("~comment .", f)
 
 
 @patch('traceback.extract_tb')

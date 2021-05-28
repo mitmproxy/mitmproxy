@@ -35,6 +35,8 @@ class TestSerialize:
         sio = io.BytesIO()
         f = tflow.tflow()
         f.marked = ":default:"
+        f.marked = True
+        f.comment = "test comment"
         f.request.content = bytes(range(256))
         w = mitmproxy.io.FlowWriter(sio)
         w.add(f)
