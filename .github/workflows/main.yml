@@ -13,6 +13,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           persist-credentials: false
+          path: mitmproxy
       - uses: TrueBrain/actions-flake8@9a43ff1b2c7b96f3edffc48a49973ce3de116ba1
         # mirrored at https://github.com/mitmproxy/mitmproxy/settings/actions
   lint-local:
