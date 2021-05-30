@@ -4,6 +4,8 @@ import { connect } from "react-redux"
 import FilterInput from "./FilterInput"
 import { update as updateSettings } from "../../ducks/settings"
 import { setFilter, setHighlight } from "../../ducks/flows"
+import * as flowsActions from "../../ducks/flows"
+import Button from "../common/Button"
 
 MainMenu.title = "Start"
 
@@ -13,6 +15,7 @@ export default function MainMenu() {
             <FlowFilterInput/>
             <HighlightInput/>
             <InterceptInput/>
+            <ResumeAll/>
         </div>
     )
 }
@@ -50,3 +53,21 @@ const HighlightInput = connect(
     }),
     { onChange: setHighlight }
 )(FilterInput);
+
+export function ResumeAll({resumeAll}) {
+    return (
+        <div className="menu-group">
+            <div className="menu-content">
+                <Button title="[a]ccept all"
+                        icon="fa-forward text-success" onClick={() => resumeAll()}>
+                    Resume All
+                </Button>
+            </div>
+        </div>
+    )
+}
+
+ResumeAll = connect(
+    null,
+    { resumeAll: flowsActions.resumeAll }
+)(ResumeAll)

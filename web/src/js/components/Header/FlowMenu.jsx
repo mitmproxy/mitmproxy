@@ -72,8 +72,6 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
                 <div className="menu-legend">Interception</div>
             </div>
             </HideInStatic>
-
-
         </div>
     )
 }

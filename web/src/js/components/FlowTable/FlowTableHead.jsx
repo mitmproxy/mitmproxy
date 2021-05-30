@@ -2,7 +2,7 @@ import React  from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames'
-import columns, {defaultColumnNames} from './FlowColumns'
+import {columns, defaultColumnNames} from './FlowColumns'
 
 import { setSort } from '../../ducks/flows'
 
@@ -16,10 +16,10 @@ FlowTableHead.propTypes = {
 export function getDisplayColumns(displayColumnNames) {
     let displayColumns = []
     if (typeof displayColumnNames == "undefined") {
-        return columns
+        return Object.values(columns)
     }
-    for (const column of columns) {
-        if (displayColumnNames.includes(column.name.slice(0,-6).toLowerCase())) {
+    for (const [name, column] of Object.entries(columns)) {
+        if (displayColumnNames.includes(name.slice(0,-6).toLowerCase())) {
             displayColumns.push(column)
         }
     }

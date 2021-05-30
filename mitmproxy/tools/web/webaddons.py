@@ -23,7 +23,7 @@ class WebAddon:
             "Web UI host."
         )
         loader.add_option(
-            "web_columns", Sequence[str], ["tls", "icon", "path", "method", "status", "size", "time"],
+            "web_columns", Sequence[str], ["tls", "icon", "path", "method", "status", "size", "time", "forward"],
             "Columns to show in the flow list"
         )
 

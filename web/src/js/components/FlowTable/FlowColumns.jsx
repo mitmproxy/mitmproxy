@@ -1,9 +1,12 @@
 import React, { Component } from 'react'
+import { connect } from 'react-redux'
 import classnames from 'classnames'
 import { RequestUtils, ResponseUtils } from '../../flow/utils.js'
 import { formatSize, formatTimeDelta, formatTimeStamp } from '../../utils.js'
+import * as flowsActions from "../../ducks/flows"
+import Button from "../common/Button"
 
-export const defaultColumnNames = ["tls", "icon", "path", "method", "status", "size", "time"]
+export const defaultColumnNames = ["tls", "icon", "path", "method", "status", "size", "time", "forward"]
 
 export function TLSColumn({ flow }) {
     return (
@@ -165,7 +168,27 @@ export function TimeStampColumn({ flow }) {
 TimeStampColumn.headerClass = 'col-timestamp'
 TimeStampColumn.headerName = 'TimeStamp'
 
-export default [
+export function ForwardColumn({ flow, resumeFlow }) {
+    return (
+        <td className="col-forward">
+            <Button title="forward flow" icon="fa-play text-success"
+                    onClick={() => resumeFlow(flow)}>
+            </Button>
+        </td>
+    )
+}
+
+ForwardColumn.headerClass = 'col-forward'
+ForwardColumn.headerName = 'Forward'
+
+ForwardColumn = connect(
+    null,
+    {
+        resumeFlow: flowsActions.resume,
+    }
+)(ForwardColumn)
+
+export const columns = {
     TLSColumn,
     IconColumn,
     PathColumn,
@@ -174,4 +197,5 @@ export default [
     TimeStampColumn,
     SizeColumn,
     TimeColumn,
-]
+    ForwardColumn,
+}

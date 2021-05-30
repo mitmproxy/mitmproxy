@@ -56,6 +56,12 @@ exports[`FlowTable Component should render correctly 1`] = `
         >
           Time
         </th>
+        <th
+          className="col-forward"
+          onClick={[Function]}
+        >
+          Forward
+        </th>
       </tr>
     </thead>
     <tbody>
