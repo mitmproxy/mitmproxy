@@ -82,5 +82,24 @@ exports[`MainMenu Component should render and connect to state 1`] = `
       value=""
     />
   </div>
+  <div
+    className="menu-group"
+  >
+    <div
+      className="menu-content"
+    >
+      <div
+        className="btn btn-default"
+        disabled={undefined}
+        onClick={[Function]}
+        title="[a]ccept all"
+      >
+        <i
+          className="fa fa-fw fa-forward text-success"
+        />
+        Resume All
+      </div>
+    </div>
+  </div>
 </div>
 `;
