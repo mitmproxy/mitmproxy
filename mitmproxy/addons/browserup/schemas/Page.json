@@ -8,8 +8,7 @@
   ],
   "properties": {
     "startedDateTime": {
-      "type": "string",
-      "format": "date-time"
+      "type": "string"
     },
     "id": {
       "type": "string"
