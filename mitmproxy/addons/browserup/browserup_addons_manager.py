@@ -1,4 +1,5 @@
 import _thread
+import asyncio
 import json
 
 import falcon
@@ -116,6 +117,8 @@ ___
         print(self.get_all_routes(app))
         with make_server('', ctx.options.addons_management_port, app) as httpd:
             print('Starting REST API management on port: {}'.format(ctx.options.addons_management_port))
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
             httpd.serve_forever()
 
             # https://marshmallow.readthedocs.io/en/stable/quickstart.html

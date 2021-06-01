@@ -343,6 +343,27 @@ components:
           description: Name to match
           type: boolean
       type: object
+    WebSocketMessage:
+      example:
+        data: data
+        time: 7.386281948385884
+        type: type
+        opcode: 4.145608029883936
+      properties:
+        type:
+          type: string
+        opcode:
+          type: number
+        data:
+          type: string
+        time:
+          type: number
+      required:
+      - data
+      - opcode
+      - time
+      - type
+      type: object
     Har:
       example:
         log:
@@ -351,7 +372,7 @@ components:
             comment: comment
             version: version
           entries:
-          - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          - startedDateTime: startedDateTime
             request:
               headers:
               - name: name
@@ -392,6 +413,15 @@ components:
                 secure: true
                 value: value
             cache: '{}'
+            _webSocketMessages:
+            - data: data
+              time: 7.386281948385884
+              type: type
+              opcode: 4.145608029883936
+            - data: data
+              time: 7.386281948385884
+              type: type
+              opcode: 4.145608029883936
             response:
               headers:
               - name: name
@@ -437,7 +467,7 @@ components:
             comment: comment
             time: 0.14658129805029452
             pageref: pageref
-          - startedDateTime: 2000-01-23T04:56:07.000+00:00
+          - startedDateTime: startedDateTime
             request:
               headers:
               - name: name
@@ -478,6 +508,15 @@ components:
                 secure: true
                 value: value
             cache: '{}'
+            _webSocketMessages:
+            - data: data
+              time: 7.386281948385884
+              type: type
+              opcode: 4.145608029883936
+            - data: data
+              time: 7.386281948385884
+              type: type
+              opcode: 4.145608029883936
             response:
               headers:
               - name: name
@@ -601,7 +640,7 @@ components:
       type: object
     Entry:
       example:
-        startedDateTime: 2000-01-23T04:56:07.000+00:00
+        startedDateTime: startedDateTime
         request:
           headers:
           - name: name
@@ -642,6 +681,15 @@ components:
             secure: true
             value: value
         cache: '{}'
+        _webSocketMessages:
+        - data: data
+          time: 7.386281948385884
+          type: type
+          opcode: 4.145608029883936
+        - data: data
+          time: 7.386281948385884
+          type: type
+          opcode: 4.145608029883936
         response:
           headers:
           - name: name
@@ -691,7 +739,6 @@ components:
         pageref:
           type: string
         startedDateTime:
-          format: date-time
           type: string
         time:
           minimum: 0
@@ -773,6 +820,10 @@ components:
           - wait
         serverIPAddress:
           type: string
+        _webSocketMessages:
+          items:
+            $ref: '#/components/schemas/WebSocketMessage'
+          type: array
         connection:
           type: string
         comment:
@@ -808,7 +859,7 @@ components:
           comment: comment
           version: version
         entries:
-        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+        - startedDateTime: startedDateTime
           request:
             headers:
             - name: name
@@ -849,6 +900,15 @@ components:
               secure: true
               value: value
           cache: '{}'
+          _webSocketMessages:
+          - data: data
+            time: 7.386281948385884
+            type: type
+            opcode: 4.145608029883936
+          - data: data
+            time: 7.386281948385884
+            type: type
+            opcode: 4.145608029883936
           response:
             headers:
             - name: name
@@ -894,7 +954,7 @@ components:
           comment: comment
           time: 0.14658129805029452
           pageref: pageref
-        - startedDateTime: 2000-01-23T04:56:07.000+00:00
+        - startedDateTime: startedDateTime
           request:
             headers:
             - name: name
@@ -935,6 +995,15 @@ components:
               secure: true
               value: value
           cache: '{}'
+          _webSocketMessages:
+          - data: data
+            time: 7.386281948385884
+            type: type
+            opcode: 4.145608029883936
+          - data: data
+            time: 7.386281948385884
+            type: type
+            opcode: 4.145608029883936
           response:
             headers:
             - name: name

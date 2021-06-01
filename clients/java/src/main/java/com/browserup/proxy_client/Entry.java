@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.Arrays;
 import com.browserup.proxy_client.EntryRequest;
 import com.browserup.proxy_client.EntryResponse;
+import com.browserup.proxy_client.WebSocketMessage;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
@@ -26,7 +27,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
 import java.math.BigDecimal;
-import org.threeten.bp.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Entry
@@ -39,7 +41,7 @@ public class Entry {
 
   public static final String SERIALIZED_NAME_STARTED_DATE_TIME = "startedDateTime";
   @SerializedName(SERIALIZED_NAME_STARTED_DATE_TIME)
-  private OffsetDateTime startedDateTime;
+  private String startedDateTime;
 
   public static final String SERIALIZED_NAME_TIME = "time";
   @SerializedName(SERIALIZED_NAME_TIME)
@@ -64,6 +66,10 @@ public class Entry {
   public static final String SERIALIZED_NAME_SERVER_I_P_ADDRESS = "serverIPAddress";
   @SerializedName(SERIALIZED_NAME_SERVER_I_P_ADDRESS)
   private String serverIPAddress;
+
+  public static final String SERIALIZED_NAME_WEB_SOCKET_MESSAGES = "_webSocketMessages";
+  @SerializedName(SERIALIZED_NAME_WEB_SOCKET_MESSAGES)
+  private List<WebSocketMessage> webSocketMessages = null;
 
   public static final String SERIALIZED_NAME_CONNECTION = "connection";
   @SerializedName(SERIALIZED_NAME_CONNECTION)
@@ -97,7 +103,7 @@ public class Entry {
   }
 
 
-  public Entry startedDateTime(OffsetDateTime startedDateTime) {
+  public Entry startedDateTime(String startedDateTime) {
     
     this.startedDateTime = startedDateTime;
     return this;
@@ -109,12 +115,12 @@ public class Entry {
   **/
   @ApiModelProperty(required = true, value = "")
 
-  public OffsetDateTime getStartedDateTime() {
+  public String getStartedDateTime() {
     return startedDateTime;
   }
 
 
-  public void setStartedDateTime(OffsetDateTime startedDateTime) {
+  public void setStartedDateTime(String startedDateTime) {
     this.startedDateTime = startedDateTime;
   }
 
@@ -253,6 +259,37 @@ public class Entry {
   }
 
 
+  public Entry webSocketMessages(List<WebSocketMessage> webSocketMessages) {
+    
+    this.webSocketMessages = webSocketMessages;
+    return this;
+  }
+
+  public Entry addWebSocketMessagesItem(WebSocketMessage webSocketMessagesItem) {
+    if (this.webSocketMessages == null) {
+      this.webSocketMessages = new ArrayList<WebSocketMessage>();
+    }
+    this.webSocketMessages.add(webSocketMessagesItem);
+    return this;
+  }
+
+   /**
+   * Get webSocketMessages
+   * @return webSocketMessages
+  **/
+  @javax.annotation.Nullable
+  @ApiModelProperty(value = "")
+
+  public List<WebSocketMessage> getWebSocketMessages() {
+    return webSocketMessages;
+  }
+
+
+  public void setWebSocketMessages(List<WebSocketMessage> webSocketMessages) {
+    this.webSocketMessages = webSocketMessages;
+  }
+
+
   public Entry connection(String connection) {
     
     this.connection = connection;
@@ -316,13 +353,14 @@ public class Entry {
         Objects.equals(this.cache, entry.cache) &&
         Objects.equals(this.timings, entry.timings) &&
         Objects.equals(this.serverIPAddress, entry.serverIPAddress) &&
+        Objects.equals(this.webSocketMessages, entry.webSocketMessages) &&
         Objects.equals(this.connection, entry.connection) &&
         Objects.equals(this.comment, entry.comment);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(pageref, startedDateTime, time, request, response, cache, timings, serverIPAddress, connection, comment);
+    return Objects.hash(pageref, startedDateTime, time, request, response, cache, timings, serverIPAddress, webSocketMessages, connection, comment);
   }
 
   @Override
@@ -337,6 +375,7 @@ public class Entry {
     sb.append("    cache: ").append(toIndentedString(cache)).append("\n");
     sb.append("    timings: ").append(toIndentedString(timings)).append("\n");
     sb.append("    serverIPAddress: ").append(toIndentedString(serverIPAddress)).append("\n");
+    sb.append("    webSocketMessages: ").append(toIndentedString(webSocketMessages)).append("\n");
     sb.append("    connection: ").append(toIndentedString(connection)).append("\n");
     sb.append("    comment: ").append(toIndentedString(comment)).append("\n");
     sb.append("}");

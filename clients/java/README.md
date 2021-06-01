@@ -138,6 +138,7 @@ Class | Method | HTTP request | Description
  - [Page](docs/Page.md)
  - [PagePageTimings](docs/PagePageTimings.md)
  - [VerifyResult](docs/VerifyResult.md)
+ - [WebSocketMessage](docs/WebSocketMessage.md)
 
 
 ## Documentation for Authorization
