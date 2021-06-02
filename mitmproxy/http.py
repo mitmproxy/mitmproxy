@@ -86,7 +86,7 @@ class Headers(multidict.MultiDict):  # type: ignore
     >>> h.fields
 
     Caveats:
-     - For use with the "Set-Cookie" header, either use `Response.cookies` or see `Headers.get_all`.
+     - For use with the "Set-Cookie" and "Cookie" header, either use `Response.cookies` or see `Headers.get_all`.
     """
 
     def __init__(self, fields: Iterable[Tuple[bytes, bytes]] = (), **headers):
@@ -142,9 +142,12 @@ class Headers(multidict.MultiDict):  # type: ignore
     def get_all(self, name: Union[str, bytes]) -> List[str]:
         """
         Like `Headers.get`, but does not fold multiple headers into a single one.
-        This is useful for Set-Cookie headers, which do not support folding.
+        This is useful for Set-Cookie and Cookie headers, which do not support folding.
 
-        *See also:* <https://tools.ietf.org/html/rfc7230#section-3.2.2>
+        *See also:*
+            <https://tools.ietf.org/html/rfc7230#section-3.2.2>
+            <https://datatracker.ietf.org/doc/html/rfc6265#section-5.4>
+            <https://datatracker.ietf.org/doc/html/rfc7540#section-8.1.2.5>
         """
         name = _always_bytes(name)
         return [
