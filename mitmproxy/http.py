@@ -145,9 +145,9 @@ class Headers(multidict.MultiDict):  # type: ignore
         This is useful for Set-Cookie and Cookie headers, which do not support folding.
 
         *See also:*
-            <https://tools.ietf.org/html/rfc7230#section-3.2.2>
-            <https://datatracker.ietf.org/doc/html/rfc6265#section-5.4>
-            <https://datatracker.ietf.org/doc/html/rfc7540#section-8.1.2.5>
+         - <https://tools.ietf.org/html/rfc7230#section-3.2.2>
+         - <https://datatracker.ietf.org/doc/html/rfc6265#section-5.4>
+         - <https://datatracker.ietf.org/doc/html/rfc7540#section-8.1.2.5>
         """
         name = _always_bytes(name)
         return [
