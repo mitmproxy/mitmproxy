@@ -6,6 +6,8 @@ import com.browserup.proxy.api.BrowserUpProxyApi;
 import com.browserup.proxy_client.ApiException;
 import com.browserup.proxy_client.Entry;
 import com.browserup.proxy_client.Har;
+import com.browserup.proxy_client.MatchCriteria;
+import com.browserup.proxy_client.VerifyResult;
 import com.browserup.proxy_client.WebSocketMessage;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import java.util.Collections;
@@ -76,6 +78,27 @@ class JavaClientTest {
         assertNotNull(webSocketMessage.getType());
       }
     }
+  }
+
+  @Test
+  void testSendRequestAndVerifyCriteria() {
+    // GIVEN
+    var targetUrl = "https://google.com";
+    var delayMs = 1000;
+
+    // WHEN
+    var har = sendRequestAndGetHar(targetUrl, delayMs);
+    VerifyResult verifyResult;
+    try {
+      verifyResult = new BrowserUpProxyApi()
+          .verifyPresent("URL verification", new MatchCriteria().url(targetUrl));
+    } catch (ApiException e) {
+      throw new RuntimeException(e);
+    }
+
+    // THEN
+    assertNotNull(verifyResult.getResult());
+    assertTrue(verifyResult.getResult(), "Expected to pass verification");
   }
 
   private Har sendRequestAndGetHar(String url, int delayMs) {
