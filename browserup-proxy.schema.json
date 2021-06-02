@@ -327,13 +327,13 @@
       "NameValuePair": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "Name to match"
-          },
           "value": {
             "type": "string",
             "description": "Value to match"
+          },
+          "name": {
+            "type": "string",
+            "description": "Name to match"
           }
         }
       },
@@ -456,6 +456,29 @@
           }
         }
       },
+      "WebSocketMessage": {
+        "type": "object",
+        "required": [
+          "type",
+          "opcode",
+          "data",
+          "time"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "opcode": {
+            "type": "number"
+          },
+          "data": {
+            "type": "string"
+          },
+          "time": {
+            "type": "number"
+          }
+        }
+      },
       "Har": {
         "type": "object",
         "required": [
@@ -560,7 +583,8 @@
         ],
         "properties": {
           "startedDateTime": {
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
           "id": {
             "type": "string"
@@ -967,6 +991,12 @@
           },
           "serverIPAddress": {
             "type": "string"
+          },
+          "_webSocketMessages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebSocketMessage"
+            }
           },
           "connection": {
             "type": "string"

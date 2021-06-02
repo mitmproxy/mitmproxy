@@ -21,39 +21,56 @@ import com.google.gson.stream.JsonWriter;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
+import java.math.BigDecimal;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
 
 /**
- * Model tests for NameValuePair
+ * Model tests for WebSocketMessage
  */
-public class NameValuePairTest {
-    private final NameValuePair model = new NameValuePair();
+public class WebSocketMessageTest {
+    private final WebSocketMessage model = new WebSocketMessage();
 
     /**
-     * Model tests for NameValuePair
+     * Model tests for WebSocketMessage
      */
     @Test
-    public void testNameValuePair() {
-        // TODO: test NameValuePair
+    public void testWebSocketMessage() {
+        // TODO: test WebSocketMessage
     }
 
     /**
-     * Test the property 'value'
+     * Test the property 'type'
      */
     @Test
-    public void valueTest() {
-        // TODO: test value
+    public void typeTest() {
+        // TODO: test type
     }
 
     /**
-     * Test the property 'name'
+     * Test the property 'opcode'
      */
     @Test
-    public void nameTest() {
-        // TODO: test name
+    public void opcodeTest() {
+        // TODO: test opcode
+    }
+
+    /**
+     * Test the property 'data'
+     */
+    @Test
+    public void dataTest() {
+        // TODO: test data
+    }
+
+    /**
+     * Test the property 'time'
+     */
+    @Test
+    public void timeTest() {
+        // TODO: test time
     }
 
 }

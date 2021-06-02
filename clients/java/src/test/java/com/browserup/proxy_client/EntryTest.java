@@ -15,6 +15,7 @@ package com.browserup.proxy_client;
 
 import com.browserup.proxy_client.EntryRequest;
 import com.browserup.proxy_client.EntryResponse;
+import com.browserup.proxy_client.WebSocketMessage;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
@@ -24,7 +25,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.IOException;
 import java.math.BigDecimal;
-import org.threeten.bp.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -106,6 +108,14 @@ public class EntryTest {
     @Test
     public void serverIPAddressTest() {
         // TODO: test serverIPAddress
+    }
+
+    /**
+     * Test the property 'webSocketMessages'
+     */
+    @Test
+    public void webSocketMessagesTest() {
+        // TODO: test webSocketMessages
     }
 
     /**
