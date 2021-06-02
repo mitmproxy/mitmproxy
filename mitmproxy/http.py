@@ -86,7 +86,7 @@ class Headers(multidict.MultiDict):  # type: ignore
     >>> h.fields
 
     Caveats:
-     - For use with the "Set-Cookie" and "Cookie" header, either use `Response.cookies` or see `Headers.get_all`.
+     - For use with the "Set-Cookie" and "Cookie" headers, either use `Response.cookies` or see `Headers.get_all`.
     """
 
     def __init__(self, fields: Iterable[Tuple[bytes, bytes]] = (), **headers):
