@@ -118,7 +118,7 @@ describe('Flowcolumns Components', () => {
         let store = TStore(),
             provider = renderer.create(
             <Provider store={store}>
-                <columns.ForwardColumn/>
+                <columns.ForwardColumn flow={tflow}/>
             </Provider>),
             tree = provider.toJSON()
         expect(tree).toMatchSnapshot()

@@ -3,18 +3,7 @@
 exports[`Flowcolumns Components should render ForwardColumn 1`] = `
 <td
   className="col-forward"
->
-  <div
-    className="btn btn-default"
-    disabled={undefined}
-    onClick={[Function]}
-    title="forward flow"
-  >
-    <i
-      className="fa fa-fw fa-play text-success"
-    />
-  </div>
-</td>
+/>
 `;
 
 exports[`Flowcolumns Components should render IconColumn 1`] = `

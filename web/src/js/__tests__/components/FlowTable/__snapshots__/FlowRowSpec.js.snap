@@ -50,17 +50,6 @@ exports[`FlowRow Component should render correctly 1`] = `
   </td>
   <td
     className="col-forward"
-  >
-    <div
-      className="btn btn-default"
-      disabled={undefined}
-      onClick={[Function]}
-      title="forward flow"
-    >
-      <i
-        className="fa fa-fw fa-play text-success"
-      />
-    </div>
-  </td>
+  />
 </tr>
 `;
