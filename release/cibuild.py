@@ -278,7 +278,6 @@ def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
     whl, = be.dist_dir.glob('mitmproxy-*-py3-none-any.whl')
     docker_build_dir = be.release_dir / "docker"
     shutil.copy(whl, docker_build_dir / whl.name)
-    
     subprocess.check_call([
         "docker",
         "buildx",
@@ -287,10 +286,7 @@ def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
         "--driver", "docker-container",
         "--name", "dcbuilder",
         "--use",
-    ],
-        cwd=docker_build_dir
-    )
-    
+    ])
     subprocess.check_call([
         "docker",
         "buildx",
