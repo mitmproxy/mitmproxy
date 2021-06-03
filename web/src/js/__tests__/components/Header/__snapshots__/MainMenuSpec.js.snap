@@ -5,82 +5,69 @@ exports[`MainMenu Component should render and connect to state 1`] = `
   className="menu-main"
 >
   <div
-    className="filter-input input-group"
+    className="menu-group"
   >
-    <span
-      className="input-group-addon"
+    <div
+      className="menu-content"
     >
-      <i
-        className="fa fa-fw fa-search"
-        style={
-          Object {
-            "color": "black",
-          }
-        }
-      />
-    </span>
-    <input
-      className="form-control"
-      onBlur={[Function]}
-      onChange={[Function]}
-      onFocus={[Function]}
-      onKeyDown={[Function]}
-      placeholder="Search"
-      type="text"
-      value="~u foo"
-    />
-  </div>
-  <div
-    className="filter-input input-group"
-  >
-    <span
-      className="input-group-addon"
+      <div
+        className="filter-input input-group"
+      >
+        <span
+          className="input-group-addon"
+        >
+          <i
+            className="fa fa-fw fa-search"
+            style={
+              Object {
+                "color": "black",
+              }
+            }
+          />
+        </span>
+        <input
+          className="form-control"
+          onBlur={[Function]}
+          onChange={[Function]}
+          onFocus={[Function]}
+          onKeyDown={[Function]}
+          placeholder="Search"
+          type="text"
+          value="~u foo"
+        />
+      </div>
+      <div
+        className="filter-input input-group"
+      >
+        <span
+          className="input-group-addon"
+        >
+          <i
+            className="fa fa-fw fa-tag"
+            style={
+              Object {
+                "color": "hsl(48, 100%, 50%)",
+              }
+            }
+          />
+        </span>
+        <input
+          className="form-control"
+          onBlur={[Function]}
+          onChange={[Function]}
+          onFocus={[Function]}
+          onKeyDown={[Function]}
+          placeholder="Highlight"
+          type="text"
+          value="~a bar"
+        />
+      </div>
+    </div>
+    <div
+      className="menu-legend"
     >
-      <i
-        className="fa fa-fw fa-tag"
-        style={
-          Object {
-            "color": "hsl(48, 100%, 50%)",
-          }
-        }
-      />
-    </span>
-    <input
-      className="form-control"
-      onBlur={[Function]}
-      onChange={[Function]}
-      onFocus={[Function]}
-      onKeyDown={[Function]}
-      placeholder="Highlight"
-      type="text"
-      value="~a bar"
-    />
-  </div>
-  <div
-    className="filter-input input-group"
-  >
-    <span
-      className="input-group-addon"
-    >
-      <i
-        className="fa fa-fw fa-pause"
-        style={
-          Object {
-            "color": "hsl(208, 56%, 53%)",
-          }
-        }
-      />
-    </span>
-    <input
-      className="form-control"
-      onBlur={[Function]}
-      onChange={[Function]}
-      onFocus={[Function]}
-      onKeyDown={[Function]}
-      placeholder="Intercept"
-      type="text"
-      value=""
-    />
+      search/filter
+    </div>
   </div>
   <div
     className="menu-group"
@@ -89,7 +76,33 @@ exports[`MainMenu Component should render and connect to state 1`] = `
       className="menu-content"
     >
       <div
-        className="btn btn-default"
+        className="filter-input input-group"
+      >
+        <span
+          className="input-group-addon"
+        >
+          <i
+            className="fa fa-fw fa-pause"
+            style={
+              Object {
+                "color": "hsl(208, 56%, 53%)",
+              }
+            }
+          />
+        </span>
+        <input
+          className="form-control"
+          onBlur={[Function]}
+          onChange={[Function]}
+          onFocus={[Function]}
+          onKeyDown={[Function]}
+          placeholder="Intercept"
+          type="text"
+          value=""
+        />
+      </div>
+      <div
+        className="resume-all btn btn-default"
         disabled={undefined}
         onClick={[Function]}
         title="[a]ccept all"
@@ -99,6 +112,11 @@ exports[`MainMenu Component should render and connect to state 1`] = `
         />
         Resume All
       </div>
+    </div>
+    <div
+      className="menu-legend"
+    >
+      intercept
     </div>
   </div>
 </div>

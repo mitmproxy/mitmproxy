@@ -22,7 +22,7 @@ export function FlowMenu({ flow, resumeFlow, killFlow, replayFlow, duplicateFlow
     if (!flow)
         return <div/>
     return (
-        <div>
+        <div className="flow-menu">
             <HideInStatic>
             <div className="menu-group">
                 <div className="menu-content">

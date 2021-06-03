@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`FlowMenu Component should connect to state 1`] = `
-<div>
+<div
+  className="flow-menu"
+>
   <div
     className="menu-group"
   >
@@ -115,7 +117,9 @@ exports[`FlowMenu Component should connect to state 1`] = `
 `;
 
 exports[`FlowMenu Component should render correctly with flow 1`] = `
-<div>
+<div
+  className="flow-menu"
+>
   <div
     className="menu-group"
   >

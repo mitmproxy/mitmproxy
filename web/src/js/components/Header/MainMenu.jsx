@@ -12,10 +12,21 @@ MainMenu.title = "Start"
 export default function MainMenu() {
     return (
         <div className="menu-main">
-            <FlowFilterInput/>
-            <HighlightInput/>
-            <InterceptInput/>
-            <ResumeAll/>
+            <div className="menu-group">
+                <div className="menu-content">
+                    <FlowFilterInput/>
+                    <HighlightInput/>
+                </div>
+                <div className="menu-legend">search/filter</div>
+            </div>
+
+            <div className="menu-group">
+                <div className="menu-content">
+                    <InterceptInput/>
+                    <ResumeAll/>
+                </div>
+                <div className="menu-legend">intercept</div>
+            </div>
         </div>
     )
 }
@@ -56,14 +67,10 @@ const HighlightInput = connect(
 
 export function ResumeAll({resumeAll}) {
     return (
-        <div className="menu-group">
-            <div className="menu-content">
-                <Button title="[a]ccept all"
-                        icon="fa-forward text-success" onClick={() => resumeAll()}>
+        <Button className="resume-all" title="[a]ccept all"
+                icon="fa-forward text-success" onClick={() => resumeAll()}>
                     Resume All
-                </Button>
-            </div>
-        </div>
+        </Button>
     )
 }
 

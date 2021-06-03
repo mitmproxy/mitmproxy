@@ -3,7 +3,7 @@
 @import (reference) "../../node_modules/bootstrap/less/mixins/labels.less";
 @import (reference) "../../node_modules/bootstrap/less/labels.less";
 
-@menu-height: 85px;
+@menu-height: 100px;
 
 header {
     padding-top: 6px;
@@ -28,6 +28,11 @@ header {
     vertical-align: top;
 }
 
+.flow-menu {
+    .make-row(@menu-main-gutter-width);
+    padding: 2px 5px;
+}
+
 .menu-content {
     height: @menu-height - @menu-legend-height;
     text-align: center;
@@ -44,6 +49,10 @@ header {
             display: block;
             margin: 0 auto 5px;
         }
+    }
+
+    > div.resume-all.btn.btn-default {
+        height: 50px;
     }
 }
 
@@ -84,11 +93,18 @@ header {
 @menu-main-gutter-width: 5px;
 .menu-main {
     .make-row(@menu-main-gutter-width);
+    display: flex;
     padding: 2px 5px;
+    .menu-group {
+        width: 100%;
+    }
+    .btn {
+        float: left;
+    }
 }
 
 .filter-input {
-    .make-sm-column(5, @menu-main-gutter-width);
+    width: 100%;
     padding: 2.5px;
 
     @media (max-width: @screen-xs-max) {
