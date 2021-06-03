@@ -5,6 +5,7 @@ from mitmproxy.addons import blocklist
 from mitmproxy.addons import browser
 from mitmproxy.addons import clientplayback
 from mitmproxy.addons import command_history
+from mitmproxy.addons import comment
 from mitmproxy.addons import core
 from mitmproxy.addons import cut
 from mitmproxy.addons import disable_h2c
@@ -37,6 +38,7 @@ def default_addons():
         anticomp.AntiComp(),
         clientplayback.ClientPlayback(),
         command_history.CommandHistory(),
+        comment.Comment(),
         cut.Cut(),
         disable_h2c.DisableH2C(),
         export.Export(),

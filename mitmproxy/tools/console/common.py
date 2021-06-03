@@ -10,7 +10,7 @@ import urwid.util
 
 from mitmproxy import flow
 from mitmproxy.http import HTTPFlow
-from mitmproxy.utils import human
+from mitmproxy.utils import human, emoji
 from mitmproxy.tcp import TCPFlow
 
 # Detect Windows Subsystem for Linux and Windows
@@ -159,6 +159,16 @@ def fixlen_r(s: str, maxlen: int) -> str:
         return s.rjust(maxlen)
     else:
         return SYMBOL_ELLIPSIS + s[len(s) - maxlen + len(SYMBOL_ELLIPSIS):]
+
+
+def render_marker(marker: str) -> str:
+    rendered = emoji.emoji.get(marker, SYMBOL_MARK)
+
+    # The marker can only be one glyph. Some emoji that use zero-width joiners (ZWJ)
+    # will not be rendered as a single glyph and instead will show
+    # multiple glyphs. Just use the first glyph as a fallback.
+    # https://emojipedia.org/emoji-zwj-sequence/
+    return rendered[0]
 
 
 class TruncatedText(urwid.Widget):
@@ -359,18 +369,18 @@ def format_left_indicators(
 def format_right_indicators(
         *,
         replay: bool,
-        marked: bool
+        marked: str,
 ):
     indicators: typing.List[typing.Union[str, typing.Tuple[str, str]]] = []
     if replay:
         indicators.append(("replay", SYMBOL_REPLAY))
     else:
         indicators.append(" ")
-    if marked:
-        indicators.append(("mark", SYMBOL_MARK))
+    if bool(marked):
+        indicators.append(("mark", render_marker(marked)))
     else:
-        indicators.append(" ")
-    return "fixed", 2, urwid.Text(indicators)
+        indicators.append("  ")
+    return "fixed", 3, urwid.Text(indicators)
 
 
 @lru_cache(maxsize=800)
@@ -378,7 +388,7 @@ def format_http_flow_list(
         *,
         render_mode: RenderMode,
         focused: bool,
-        marked: bool,
+        marked: str,
         is_replay: bool,
         request_method: str,
         request_scheme: str,
@@ -479,7 +489,7 @@ def format_http_flow_table(
         *,
         render_mode: RenderMode,
         focused: bool,
-        marked: bool,
+        marked: str,
         is_replay: typing.Optional[str],
         request_method: str,
         request_scheme: str,
@@ -574,7 +584,7 @@ def format_http_flow_table(
 
     items.append(format_right_indicators(
         replay=bool(is_replay),
-        marked=marked
+        marked=marked,
     ))
     return urwid.Columns(items, dividechars=1, min_width=15)
 
@@ -585,7 +595,7 @@ def format_tcp_flow(
         render_mode: RenderMode,
         focused: bool,
         timestamp_start: float,
-        marked: bool,
+        marked: str,
         client_address,
         server_address,
         total_size: int,

@@ -1,9 +1,7 @@
 import io
 import pytest
 from unittest.mock import patch
-
 from mitmproxy.test import tflow
-
 from mitmproxy import flowfilter, http
 
 
@@ -27,6 +25,7 @@ class TestParsing:
         assert flowfilter.parse("~replay")
         assert flowfilter.parse("~replayq")
         assert flowfilter.parse("~replays")
+        assert flowfilter.parse("~comment .")
         p = flowfilter.parse("~q ~c 10")
         self._dump(p)
         assert len(p.lst) == 2
@@ -144,8 +143,15 @@ class TestMatchingHTTPFlow:
     def test_fmarked(self):
         q = self.req()
         assert not self.q("~marked", q)
-        q.marked = True
+        q.marked = ":default:"
         assert self.q("~marked", q)
+
+    def test_fmarker_char(self):
+        t = tflow.tflow()
+        t.marked = ":default:"
+        assert not self.q("~marker X", t)
+        t.marked = 'X'
+        assert self.q("~marker X", t)
 
     def test_head(self):
         q = self.req()
@@ -609,6 +615,10 @@ class TestMatchingDummyFlow:
         assert not self.q("~u whatever", f)
 
         assert not self.q("~q", f)
+
+        assert not self.q("~comment .", f)
+        f.comment = "comment"
+        assert self.q("~comment .", f)
 
 
 @patch('traceback.extract_tb')
