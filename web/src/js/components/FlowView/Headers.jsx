@@ -2,6 +2,8 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import ReactDOM from 'react-dom'
 import ValueEditor from '../ValueEditor/ValueEditor'
+import CodeEditor from '../ContentView/CodeEditor'
+import Button from "../common/Button"
 import { Key } from '../../utils'
 
 export class HeaderEditor extends Component {
@@ -41,7 +43,33 @@ export class HeaderEditor extends Component {
     }
 }
 
+function reconstructHeader(headers) {
+    let content = ""
+    for (let header of headers) {
+        content += `${header[0]}: ${header[1]}\r\n`
+    }
+    return content
+}
+
+function splitHeader(content) {
+    let headers = content.split("\r\n").map((string) => string.split(": "))
+    return headers
+}
+
+function RawHeaderEditor(props) {
+    console.log(props)
+    return <CodeEditor content={ reconstructHeader(props.content) } onChange={ content => {
+        let headers = splitHeader(content);
+        console.log(props);
+        props.onEdit(headers);
+    }}/>
+}
+
 export default class Headers extends Component {
+    constructor(props) {
+        super(props)
+        this.state = {raw_edit: false}
+    }
 
     static propTypes = {
         onChange: PropTypes.func.isRequired,
@@ -119,36 +147,53 @@ export default class Headers extends Component {
     render() {
         const { message, readonly } = this.props
         if (message[this.props.type]) {
+            if (this.state.raw_edit) {
+                return (
+                    <div>
+                        <Button title="change mode"
+                            onClick={() => this.setState({raw_edit: !this.state.raw_edit})}>
+                                switch mode
+                        </Button>
+                        <RawHeaderEditor content={message[this.props.type]} onEdit={ this.props.onChange }/>
+                    </div>
+                )
+            }
             return (
-                <table className="header-table">
-                    <tbody>
-                    {message[this.props.type].map((header, i) => (
-                        <tr key={i}>
-                            <td className="header-name">
-                                <HeaderEditor
-                                    ref={`${i}-key`}
-                                    content={header[0]}
-                                    readonly={readonly}
-                                    onDone={val => this.onChange(i, 0, val)}
-                                    onRemove={event => this.onRemove(i, 0, event)}
-                                    onTab={event => this.onTab(i, 0, event)}
-                                />
-                                <span className="header-colon">:</span>
-                            </td>
-                            <td className="header-value">
-                                <HeaderEditor
-                                    ref={`${i}-value`}
-                                    content={header[1]}
-                                    readonly={readonly}
-                                    onDone={val => this.onChange(i, 1, val)}
-                                    onRemove={event => this.onRemove(i, 1, event)}
-                                    onTab={event => this.onTab(i, 1, event)}
-                                />
-                            </td>
-                        </tr>
-                    ))}
-                    </tbody>
-                </table>
+                <div>
+                    <Button title="change mode"
+                        onClick={() => this.setState({raw_edit: !this.state.raw_edit})}>
+                            switch mode
+                    </Button>
+                    <table className="header-table">
+                        <tbody>
+                        {message[this.props.type].map((header, i) => (
+                            <tr key={i}>
+                                <td className="header-name">
+                                    <HeaderEditor
+                                        ref={`${i}-key`}
+                                        content={header[0]}
+                                        readonly={readonly}
+                                        onDone={val => this.onChange(i, 0, val)}
+                                        onRemove={event => this.onRemove(i, 0, event)}
+                                        onTab={event => this.onTab(i, 0, event)}
+                                    />
+                                    <span className="header-colon">:</span>
+                                </td>
+                                <td className="header-value">
+                                    <HeaderEditor
+                                        ref={`${i}-value`}
+                                        content={header[1]}
+                                        readonly={readonly}
+                                        onDone={val => this.onChange(i, 1, val)}
+                                        onRemove={event => this.onRemove(i, 1, event)}
+                                        onTab={event => this.onTab(i, 1, event)}
+                                    />
+                                </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                </div>
             )
         } else {
             return (
