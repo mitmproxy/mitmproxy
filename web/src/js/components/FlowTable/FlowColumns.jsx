@@ -169,6 +169,9 @@ TimeStampColumn.headerClass = 'col-timestamp'
 TimeStampColumn.headerName = 'TimeStamp'
 
 export function ForwardColumn({ flow, resumeFlow }) {
+    if (!flow.intercepted) {
+        return <td className="col-forward"></td>
+    }
     return (
         <td className="col-forward">
             <Button title="forward flow" icon="fa-play text-success"
