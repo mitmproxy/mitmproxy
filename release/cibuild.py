@@ -280,7 +280,7 @@ def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
     shutil.copy(whl, docker_build_dir / whl.name)
     subprocess.check_call([
         "docker",
-        "buildx"
+        "buildx",
         "build",
         "--platform linux/amd64,linux/arm64,darwin/amd64,darwin/arm64",
         "--tag", be.docker_tag,
