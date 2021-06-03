@@ -5,6 +5,14 @@ import ValueEditor from '../ValueEditor/ValueEditor'
 import CodeEditor from '../ContentView/CodeEditor'
 import Button from "../common/Button"
 import { Key } from '../../utils'
+import { MessageUtils } from '../../flow/utils.js'
+
+function RawHeaderEditor({content, onChange}) {
+    return <CodeEditor content={ MessageUtils.reconstructRawHeader(content) } onChange={ content => {
+        let headers = MessageUtils.splitRawHeaderIntoArray(content.trim());
+        onChange(headers);
+    }}/>
+}
 
 export class HeaderEditor extends Component {
 
@@ -41,28 +49,6 @@ export class HeaderEditor extends Component {
                 break
         }
     }
-}
-
-function reconstructHeader(headers) {
-    let content = ""
-    for (let header of headers) {
-        content += `${header[0]}: ${header[1]}\r\n`
-    }
-    return content
-}
-
-function splitHeader(content) {
-    let headers = content.split("\r\n").map((string) => string.split(": "))
-    return headers
-}
-
-function RawHeaderEditor(props) {
-    console.log(props)
-    return <CodeEditor content={ reconstructHeader(props.content) } onChange={ content => {
-        let headers = splitHeader(content);
-        console.log(props);
-        props.onEdit(headers);
-    }}/>
 }
 
 export default class Headers extends Component {
@@ -147,23 +133,19 @@ export default class Headers extends Component {
     render() {
         const { message, readonly } = this.props
         if (message[this.props.type]) {
-            if (this.state.raw_edit) {
+            if (!readonly && this.state.raw_edit) {
                 return (
                     <div>
+                        <RawHeaderEditor content={message[this.props.type]} onChange={ this.props.onChange }/>
                         <Button title="change mode"
                             onClick={() => this.setState({raw_edit: !this.state.raw_edit})}>
                                 switch mode
                         </Button>
-                        <RawHeaderEditor content={message[this.props.type]} onEdit={ this.props.onChange }/>
                     </div>
                 )
             }
             return (
                 <div>
-                    <Button title="change mode"
-                        onClick={() => this.setState({raw_edit: !this.state.raw_edit})}>
-                            switch mode
-                    </Button>
                     <table className="header-table">
                         <tbody>
                         {message[this.props.type].map((header, i) => (
@@ -193,6 +175,10 @@ export default class Headers extends Component {
                         ))}
                         </tbody>
                     </table>
+                    {readonly ? null : <Button title="change mode"
+                            onClick={() => this.setState({raw_edit: !this.state.raw_edit})}>
+                                switch mode
+                    </Button>}
                 </div>
             )
         } else {
@@ -201,7 +187,7 @@ export default class Headers extends Component {
                     <tbody>
                     </tbody>
                 </table>
-            )  
+            )
         }
     }
 }

@@ -94,167 +94,171 @@ exports[`Request Component should render correctly 1`] = `
         />
       </div>
     </div>
-    <table
-      className="header-table"
-    >
-      <tbody>
-        <tr>
-          <td
-            className="header-name"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "header",
-                }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-            <span
-              className="header-colon"
+    <div>
+      <table
+        className="header-table"
+      >
+        <tbody>
+          <tr>
+            <td
+              className="header-name"
             >
-              :
-            </span>
-          </td>
-          <td
-            className="header-value"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "qvalue",
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "header",
+                  }
                 }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-          </td>
-        </tr>
-        <tr>
-          <td
-            className="header-name"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "content-length",
-                }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-            <span
-              className="header-colon"
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+              <span
+                className="header-colon"
+              >
+                :
+              </span>
+            </td>
+            <td
+              className="header-value"
             >
-              :
-            </span>
-          </td>
-          <td
-            className="header-value"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "7",
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "qvalue",
+                  }
                 }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td
+              className="header-name"
+            >
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "content-length",
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+              <span
+                className="header-colon"
+              >
+                :
+              </span>
+            </td>
+            <td
+              className="header-value"
+            >
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "7",
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <hr />
     <hr />
-    <table
-      className="header-table"
-    >
-      <tbody>
-        <tr>
-          <td
-            className="header-name"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "trailer",
-                }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-            <span
-              className="header-colon"
+    <div>
+      <table
+        className="header-table"
+      >
+        <tbody>
+          <tr>
+            <td
+              className="header-name"
             >
-              :
-            </span>
-          </td>
-          <td
-            className="header-value"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "qvalue",
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "trailer",
+                  }
                 }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+              <span
+                className="header-colon"
+              >
+                :
+              </span>
+            </td>
+            <td
+              className="header-value"
+            >
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "qvalue",
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </article>
   <footer>
     <div
@@ -413,167 +417,171 @@ exports[`Response Component should render correctly 1`] = `
         tabIndex={undefined}
       />
     </div>
-    <table
-      className="header-table"
-    >
-      <tbody>
-        <tr>
-          <td
-            className="header-name"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "header-response",
-                }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-            <span
-              className="header-colon"
+    <div>
+      <table
+        className="header-table"
+      >
+        <tbody>
+          <tr>
+            <td
+              className="header-name"
             >
-              :
-            </span>
-          </td>
-          <td
-            className="header-value"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "svalue",
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "header-response",
+                  }
                 }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-          </td>
-        </tr>
-        <tr>
-          <td
-            className="header-name"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "content-length",
-                }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-            <span
-              className="header-colon"
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+              <span
+                className="header-colon"
+              >
+                :
+              </span>
+            </td>
+            <td
+              className="header-value"
             >
-              :
-            </span>
-          </td>
-          <td
-            className="header-value"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "7",
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "svalue",
+                  }
                 }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td
+              className="header-name"
+            >
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "content-length",
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+              <span
+                className="header-colon"
+              >
+                :
+              </span>
+            </td>
+            <td
+              className="header-value"
+            >
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "7",
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
     <hr />
     <hr />
-    <table
-      className="header-table"
-    >
-      <tbody>
-        <tr>
-          <td
-            className="header-name"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "trailer",
-                }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-            <span
-              className="header-colon"
+    <div>
+      <table
+        className="header-table"
+      >
+        <tbody>
+          <tr>
+            <td
+              className="header-name"
             >
-              :
-            </span>
-          </td>
-          <td
-            className="header-value"
-          >
-            <div
-              className="inline-input readonly"
-              contentEditable={undefined}
-              dangerouslySetInnerHTML={
-                Object {
-                  "__html": "qvalue",
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "trailer",
+                  }
                 }
-              }
-              onBlur={[Function]}
-              onClick={[Function]}
-              onFocus={[Function]}
-              onInput={[Function]}
-              onKeyDown={[Function]}
-              onMouseDown={[Function]}
-              onPaste={[Function]}
-              tabIndex={undefined}
-            />
-          </td>
-        </tr>
-      </tbody>
-    </table>
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+              <span
+                className="header-colon"
+              >
+                :
+              </span>
+            </td>
+            <td
+              className="header-value"
+            >
+              <div
+                className="inline-input readonly"
+                contentEditable={undefined}
+                dangerouslySetInnerHTML={
+                  Object {
+                    "__html": "qvalue",
+                  }
+                }
+                onBlur={[Function]}
+                onClick={[Function]}
+                onFocus={[Function]}
+                onInput={[Function]}
+                onKeyDown={[Function]}
+                onMouseDown={[Function]}
+                onPaste={[Function]}
+                tabIndex={undefined}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </article>
   <footer>
     <div

@@ -50,6 +50,17 @@ export var MessageUtils = {
             message = "response";
         }
         return `./flows/${flow.id}/${message}/` + (view ? `content/${view}.json` : 'content.data');
+    },
+    reconstructRawHeader: function (headers) {
+        let content = ""
+        for (let header of headers) {
+            content += `${header[0]}: ${header[1]}\n`
+        }
+        return content
+    },
+    splitRawHeaderIntoArray: function (content) {
+        let headers = content.split("\n").map(header => header.split(": "))
+        return headers
     }
 };
 

@@ -21,108 +21,118 @@ exports[`HeaderEditor Component should render correctly 1`] = `
 `;
 
 exports[`Headers Component should handle correctly 1`] = `
-<table
-  className="header-table"
->
-  <tbody>
-    <tr>
-      <td
-        className="header-name"
-      >
-        <div
-          className="inline-input editable"
-          contentEditable={undefined}
-          dangerouslySetInnerHTML={
-            Object {
-              "__html": "k1",
-            }
-          }
-          onBlur={[Function]}
-          onClick={[Function]}
-          onFocus={[Function]}
-          onInput={[Function]}
-          onKeyDown={[Function]}
-          onMouseDown={[Function]}
-          onPaste={[Function]}
-          tabIndex={0}
-        />
-        <span
-          className="header-colon"
+<div>
+  <table
+    className="header-table"
+  >
+    <tbody>
+      <tr>
+        <td
+          className="header-name"
         >
-          :
-        </span>
-      </td>
-      <td
-        className="header-value"
-      >
-        <div
-          className="inline-input editable"
-          contentEditable={undefined}
-          dangerouslySetInnerHTML={
-            Object {
-              "__html": "v1",
+          <div
+            className="inline-input editable"
+            contentEditable={undefined}
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "k1",
+              }
             }
-          }
-          onBlur={[Function]}
-          onClick={[Function]}
-          onFocus={[Function]}
-          onInput={[Function]}
-          onKeyDown={[Function]}
-          onMouseDown={[Function]}
-          onPaste={[Function]}
-          tabIndex={0}
-        />
-      </td>
-    </tr>
-    <tr>
-      <td
-        className="header-name"
-      >
-        <div
-          className="inline-input editable"
-          contentEditable={undefined}
-          dangerouslySetInnerHTML={
-            Object {
-              "__html": "k2",
-            }
-          }
-          onBlur={[Function]}
-          onClick={[Function]}
-          onFocus={[Function]}
-          onInput={[Function]}
-          onKeyDown={[Function]}
-          onMouseDown={[Function]}
-          onPaste={[Function]}
-          tabIndex={0}
-        />
-        <span
-          className="header-colon"
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onInput={[Function]}
+            onKeyDown={[Function]}
+            onMouseDown={[Function]}
+            onPaste={[Function]}
+            tabIndex={0}
+          />
+          <span
+            className="header-colon"
+          >
+            :
+          </span>
+        </td>
+        <td
+          className="header-value"
         >
-          :
-        </span>
-      </td>
-      <td
-        className="header-value"
-      >
-        <div
-          className="inline-input editable"
-          contentEditable={undefined}
-          dangerouslySetInnerHTML={
-            Object {
-              "__html": "",
+          <div
+            className="inline-input editable"
+            contentEditable={undefined}
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "v1",
+              }
             }
-          }
-          onBlur={[Function]}
-          onClick={[Function]}
-          onFocus={[Function]}
-          onInput={[Function]}
-          onKeyDown={[Function]}
-          onMouseDown={[Function]}
-          onPaste={[Function]}
-          tabIndex={0}
-        />
-      </td>
-    </tr>
-  </tbody>
-</table>
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onInput={[Function]}
+            onKeyDown={[Function]}
+            onMouseDown={[Function]}
+            onPaste={[Function]}
+            tabIndex={0}
+          />
+        </td>
+      </tr>
+      <tr>
+        <td
+          className="header-name"
+        >
+          <div
+            className="inline-input editable"
+            contentEditable={undefined}
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "k2",
+              }
+            }
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onInput={[Function]}
+            onKeyDown={[Function]}
+            onMouseDown={[Function]}
+            onPaste={[Function]}
+            tabIndex={0}
+          />
+          <span
+            className="header-colon"
+          >
+            :
+          </span>
+        </td>
+        <td
+          className="header-value"
+        >
+          <div
+            className="inline-input editable"
+            contentEditable={undefined}
+            dangerouslySetInnerHTML={
+              Object {
+                "__html": "",
+              }
+            }
+            onBlur={[Function]}
+            onClick={[Function]}
+            onFocus={[Function]}
+            onInput={[Function]}
+            onKeyDown={[Function]}
+            onMouseDown={[Function]}
+            onPaste={[Function]}
+            tabIndex={0}
+          />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div
+    className="btn btn-default"
+    disabled={undefined}
+    onClick={[Function]}
+    title="change mode"
+  >
+    switch mode
+  </div>
+</div>
 `;
