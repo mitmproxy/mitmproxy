@@ -305,7 +305,7 @@ def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
         be.docker_tag,
         "mitmdump",
         "--version",
-    ], check=True, capture_output=True)
+    ], capture_output=True)
     print(r.stdout.decode())
     assert "Mitmproxy: " in r.stdout.decode()
 
