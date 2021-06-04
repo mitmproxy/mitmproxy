@@ -1,0 +1,2 @@
+link	description
+https://github.com/KOLANICH-tools/wsreplay.py	While mitmproxy is currently unable to replay websocket streams, I have created a simple and incomplete standalone (but depending on mitmproxy) tool to do this.
