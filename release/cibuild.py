@@ -325,13 +325,13 @@ def build_pyinstaller(be: BuildEnviron) -> None:  # pragma: no cover
                     "./windows-dir.spec"
                 ]
             )
-            for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
+            for tool in ["mitmproxy", "mitmdump", "mitmweb", "browserup-proxy"]:
                 click.echo(f"> {tool} --version")
                 executable = (PYINSTALLER_DIST / "onedir" / tool).with_suffix(".exe")
                 click.echo(subprocess.check_output([executable, "--version"]).decode())
 
     with be.archive(be.archive_path) as archive:
-        for tool in ["mitmproxy", "mitmdump", "mitmweb"]:
+        for tool in ["mitmproxy", "mitmdump", "mitmweb", "browserup-proxy"]:
             # We can't have a folder and a file with the same name.
             if tool == "mitmproxy":
                 tool = "mitmproxy_main"
