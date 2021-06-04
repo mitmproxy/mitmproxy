@@ -1148,10 +1148,12 @@ class TestMessageText:
 
     def test_get_json(self):
         req = treq(content=None)
-        assert req.json() is None
+        with pytest.raises(TypeError):
+            req.json()
 
         req = treq(content=b'')
-        assert req.json() is None
+        with pytest.raises(json.decoder.JSONDecodeError):
+            req.json()
 
         req = treq(content=b'{}')
         assert req.json() == {}
