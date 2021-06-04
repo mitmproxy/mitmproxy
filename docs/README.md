@@ -12,7 +12,3 @@ This directory houses the mitmproxy documentation available at <https://docs.mit
  1. Make sure the mitmproxy Python package is installed and the virtual python environment was activated. See [CONTRIBUTING.md](../CONTRIBUTING.md#development-setup) for details.
  2. Run `./build.py` to generate additional documentation source files.
  3. Now you can run `hugo server -D` in `./src`.
-
-## Editing CSS files
-
-This is required to modify CSS files. Instead of manually running `./build.py` and `hugo server -D` you can run `modd`. It will watch for changes.
