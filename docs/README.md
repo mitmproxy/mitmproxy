@@ -2,20 +2,17 @@
 
 This directory houses the mitmproxy documentation available at <https://docs.mitmproxy.org/>.
 
-## Quick Start
+## Prerequisites
 
  1. Install [hugo "extended"](https://gohugo.io/getting-started/installing/). 
- 2. Windows users: Depending on your git settings, you may need to manually create a symlink from
- /docs/src/examples to /examples.
- 3. Make sure the mitmproxy Python package is installed and the virtual python environment was activated. See [CONTRIBUTING.md](../CONTRIBUTING.md#development-setup) for details.
- 4. Run `./build.py` to generate additional documentation source files.
+ 2. Windows users: Depending on your git settings, you may need to manually create a symlink from `/docs/src/examples` to `/examples`.
 
-Now you can run `hugo server -D` in ./src.
+## Editing docs locally
 
-## Extended Install
+ 1. Make sure the mitmproxy Python package is installed and the virtual python environment was activated. See [CONTRIBUTING.md](../CONTRIBUTING.md#development-setup) for details.
+ 2. Run `./build.py` to generate additional documentation source files.
+ 3. Now you can run `hugo server -D` in `./src`.
 
-This is required to modify CSS files.
+## Editing CSS files
 
- 1. Install "extended" hugo version.
-
-You can now run `modd` in this directory instead of running hugo directly.
+This is required to modify CSS files. Instead of manually running `./build.py` and `hugo server -D` you can run `modd`. It will watch for changes.
