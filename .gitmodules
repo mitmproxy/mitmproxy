@@ -1,0 +1,4 @@
+[submodule "examples/contrib/wsreplay.py"]
+	path = examples/contrib/wsreplay
+	url = https://github.com/KOLANICH-tools/wsreplay.py
+	branch = master
