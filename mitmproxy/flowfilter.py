@@ -380,6 +380,7 @@ class FDst(_Rex):
         r = "{}:{}".format(f.server_conn.address[0], f.server_conn.address[1])
         return f.server_conn.address and self.re.search(r)
 
+
 class FDstIP(_Rex):
     code ="ip"
     help = "Match destination ip address"
