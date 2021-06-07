@@ -380,6 +380,16 @@ class FDst(_Rex):
         r = "{}:{}".format(f.server_conn.address[0], f.server_conn.address[1])
         return f.server_conn.address and self.re.search(r)
 
+class FDstIP(_Rex):
+    code ="ip"
+    help = "Match destination ip address"
+    is_binary = False
+
+    def __call__(self, f):
+        if not f.server_conn or not f.server_conn.ip_address:
+            return False
+        return f.server_conn.ip_address and self.re.search(f.server_conn.ip_address[0])
+
 
 class FReplay(_Action):
     code = "replay"
@@ -514,6 +524,7 @@ filter_rex: Sequence[Type[_Rex]] = [
     FContentTypeResponse,
     FDomain,
     FDst,
+    FDstIP,
     FHead,
     FHeadRequest,
     FHeadResponse,

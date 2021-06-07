@@ -48,5 +48,76 @@ exports[`FlowRow Component should render correctly 1`] = `
   >
     3s
   </td>
+  <div
+    className="dropdown pull-left btn btn-default"
+  >
+    <a
+      className="special"
+      href="#"
+      onClick={[Function]}
+    >
+      Actions
+    </a>
+    <ul
+      className="dropdown-menu"
+      role="menu"
+    >
+      <li>
+         
+        <a
+          href="#"
+          onClick={[Function]}
+        >
+          <i
+            className="fa fa-fw fa-plus"
+          />
+           Intercept 
+          address
+        </a>
+         
+      </li>
+      <li>
+         
+        <a
+          href="#"
+          onClick={[Function]}
+        >
+          <i
+            className="fa fa-fw fa-plus"
+          />
+           Intercept 
+          address/path
+        </a>
+         
+      </li>
+      <li>
+         
+        <a
+          href="#"
+          onClick={[Function]}
+        >
+          <i
+            className="fa fa-fw fa-plus"
+          />
+           Intercept all POST requests from this host
+        </a>
+         
+      </li>
+      <li>
+         
+        <a
+          href="#"
+          onClick={[Function]}
+        >
+          <i
+            className="fa fa-fw fa-plus"
+          />
+           Intercept all requests from 
+          192.168.0.1
+        </a>
+         
+      </li>
+    </ul>
+  </div>
 </tr>
 `;
