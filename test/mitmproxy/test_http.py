@@ -433,7 +433,6 @@ class TestRequestUtils:
         assert request.headers["Content-Type"].startswith('multipart/form-data')
         assert list(request.multipart_form.items()) == [(b"file", b"shell.jpg"), (b"file_size", b"1000")]
 
-
 class TestResponse:
 
     def test_simple(self):
