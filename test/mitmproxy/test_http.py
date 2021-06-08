@@ -433,6 +433,11 @@ class TestRequestUtils:
         assert request.headers["Content-Type"] == 'multipart/form-data'
         assert request.content is None
 
+        request = treq()
+        request.headers["Content-Type"] = 'multipart/form-data; boundary=foo'
+        request.multipart_form = [(b"file", b"shell.jpg"), (b"file_size", b"1000")]
+        assert request.headers["Content-Type"] == 'multipart/form-data; boundary=foo'
+
 
 class TestResponse:
 

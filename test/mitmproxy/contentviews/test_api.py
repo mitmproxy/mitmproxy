@@ -84,3 +84,23 @@ def test_get_message_content_view():
     r.content = None
     desc, lines, err = contentviews.get_message_content_view("raw", r, f)
     assert list(lines) == [[("error", "content missing")]]
+
+    r = tutils.treq(content=b"""
+-----------------------------b0undary
+Content-Disposition: form-data; name="text"
+
+foofoo
+-----------------------------b0undary
+Content-Disposition: form-data; name="file1"; filename="a.txt"
+Content-Type: text/plain
+
+barbar
+
+-----------------------------b0undary--
+""")
+    r.headers["content-type"] = "Content-Type: multipart/form-data; boundary=---------------------------b0undary"
+    desc, lines, err = contentviews.get_message_content_view("Multipart Form", r, f)
+    assert list(lines) == [
+            [('highlight', 'Form data:\n')],
+            [('header', 'text:  '), ('text', 'foofoo')],
+            [('header', 'file1: '), ('text', 'barbar')]]
