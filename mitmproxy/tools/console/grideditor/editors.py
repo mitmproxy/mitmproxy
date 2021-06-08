@@ -61,10 +61,17 @@ class RequestMultipartEditor(base.FocusEditor):
     ]
 
     def get_data(self, flow):
-
-        return flow.request.multipart_form.items(multi=True)
+        import mitmproxy.ctx as ctx
+        ctx.log.info(flow)
+        items = flow.request.multipart_form.items(multi=True)
+        # Convert items from bytes to strings
+        items = [(k.decode(), v.decode()) for (k, v) in items]
+        return items
 
     def set_data(self, vals, flow):
+        import mitmproxy.ctx as ctx
+        ctx.log.info(vals)
+        vals = [(k.encode(), v.encode()) for (k, v) in vals]
         flow.request.multipart_form = vals
 
 
