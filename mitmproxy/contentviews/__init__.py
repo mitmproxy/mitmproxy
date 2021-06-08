@@ -101,7 +101,7 @@ def get_message_content_view(
         http_message = message
         if ctype := message.headers.get("content-type"):
             if ct := http.parse_content_type(ctype):
-                content_type = http.assemble_content_type(ct[0], ct[1], ct[2])
+                content_type = f"{ct[0]}/{ct[1]}"
 
     description, lines, error = get_content_view(
         viewmode, content,
