@@ -35,6 +35,7 @@ If you depend on these features, please raise your voice in
 
 ### Full Changelog
 
+* Fix multipart forms losing `boundary` values on edit (@roytu)
 * New Proxy Core based on sans-io pattern (@mhils)
 * mitmproxy's command line interface now supports Windows (@mhils)
 * The `clientconnect`, `clientdisconnect`, `serverconnect`, `serverdisconnect`, and `log`
