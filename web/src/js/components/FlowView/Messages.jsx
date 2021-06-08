@@ -100,12 +100,6 @@ export class Request extends Component {
                     />
 
                     <hr/>
-                    <ContentView
-                        readonly={!isEdit}
-                        flow={flow}
-                        onContentChange={content => updateFlow({ request: {content}})}
-                        message={flow.request}/>
-                    
                     <hr/>
                     <Headers
                         message={flow.request}
@@ -152,12 +146,6 @@ export class Response extends Component {
                         onChange={headers => updateFlow({ response: { headers } })}
                     />
                     <hr/>
-                    <ContentView
-                        readonly={!isEdit}
-                        flow={flow}
-                        onContentChange={content => updateFlow({ response: {content}})}
-                        message={flow.response}
-                    />
                     <hr/>
                     <Headers
                         message={flow.response}
