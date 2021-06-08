@@ -944,7 +944,9 @@ class Request(Message):
 
     def _set_multipart_form(self, value):
         self.content = multipart.encode(self.headers, value)
-        self.headers["content-type"] = "multipart/form-data"
+        if "content-type" not in self.headers:
+            # Don't overwrite header if it already exists or it will destroy the boundary value
+            self.headers["content-type"] = "multipart/form-data"
 
     @property
     def multipart_form(self) -> multidict.MultiDictView[bytes, bytes]:
