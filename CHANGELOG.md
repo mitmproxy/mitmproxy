@@ -35,7 +35,6 @@ If you depend on these features, please raise your voice in
 
 ### Full Changelog
 
-* Fix multipart forms losing `boundary` values on edit (@roytu)
 * New Proxy Core based on sans-io pattern (@mhils)
 * mitmproxy's command line interface now supports Windows (@mhils)
 * The `clientconnect`, `clientdisconnect`, `serverconnect`, `serverdisconnect`, and `log`
@@ -68,6 +67,7 @@ If you depend on these features, please raise your voice in
 * Customize markers with emoji, and filters: The `flow.mark` command may be used to mark a flow with either the default
   "red ball" marker, a single character, or an emoji like `:grapes:`. Use the `~marker` filter to filter on marker characters. (@rbdixon)
 * New `flow.comment` command to add a comment to the flow. Add `~comment <regex>` filter syntax to search flow comments. (@rbdixon)
+* Fix multipart forms losing `boundary` values on edit (@roytu)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
