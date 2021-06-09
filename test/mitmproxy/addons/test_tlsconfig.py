@@ -190,8 +190,8 @@ class TestTlsConfig:
 
             assert_alpn(True, tls.HTTP_ALPNS + (b"foo",), tls.HTTP_ALPNS + (b"foo",))
             assert_alpn(False, tls.HTTP_ALPNS + (b"foo",), tls.HTTP1_ALPNS + (b"foo",))
-            assert_alpn(True, [], tls.HTTP_ALPNS)
-            assert_alpn(False, [], tls.HTTP1_ALPNS)
+            assert_alpn(True, [], [])
+            assert_alpn(False, [], [])
             ctx.client.timestamp_tls_setup = time.time()
             # make sure that we don't upgrade h1 to h2,
             # see comment in tlsconfig.py
