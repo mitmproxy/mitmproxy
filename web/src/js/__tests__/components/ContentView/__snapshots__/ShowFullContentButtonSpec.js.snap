@@ -6,9 +6,7 @@ exports[`ShowFullContentButton Component should render correctly 1`] = `
 <div>
   <div
     className="view-all-content-btn btn-xs btn btn-default"
-    disabled={undefined}
     onClick={[Function]}
-    title={undefined}
   >
     Show full content
   </div>

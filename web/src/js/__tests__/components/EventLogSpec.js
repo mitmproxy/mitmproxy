@@ -2,10 +2,9 @@ jest.mock('../../components/EventLog/EventList')
 
 import React from 'react'
 import renderer from 'react-test-renderer'
-import TestUtils from 'react-dom/test-utils'
-import EventLog, { PureEventLog } from '../../components/EventLog'
-import { Provider } from 'react-redux'
-import { TStore } from '../ducks/tutils'
+import EventLog, {PureEventLog} from '../../components/EventLog'
+import {Provider} from 'react-redux'
+import {TStore} from '../ducks/tutils'
 
 window.addEventListener = jest.fn()
 window.removeEventListener = jest.fn()
@@ -13,9 +12,9 @@ window.removeEventListener = jest.fn()
 describe('EventLog Component', () => {
     let store = TStore(),
         provider = renderer.create(
-        <Provider store={store}>
-            <EventLog/>
-        </Provider>),
+            <Provider store={store}>
+                <EventLog/>
+            </Provider>),
         tree = provider.toJSON()
 
     it('should connect to state and render correctly', () => {
@@ -30,7 +29,7 @@ describe('EventLog Component', () => {
     provider = renderer.create(
         <Provider store={store}><EventLog/></Provider>)
     let eventLog = provider.root.findByType(PureEventLog),
-        mockEvent = { preventDefault: jest.fn() }
+        mockEvent = {preventDefault: jest.fn()}
 
     it('should handle DragStart', () => {
         eventLog.instance.onDragStart(mockEvent)

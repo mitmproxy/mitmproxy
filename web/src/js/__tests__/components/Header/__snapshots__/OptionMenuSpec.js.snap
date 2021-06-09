@@ -10,7 +10,6 @@ exports[`OptionMenu Component should render correctly 1`] = `
     >
       <div
         className="btn btn-default"
-        disabled={undefined}
         onClick={[Function]}
         title="Open Options"
       >

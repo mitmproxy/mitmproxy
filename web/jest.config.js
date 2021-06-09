@@ -1,7 +1,8 @@
 process.env.TZ = 'UTC';
 
 module.exports = {
-    "testRegex": "__tests__/.*Spec.js$",
+    "testEnvironment": "jsdom",
+    "testRegex": "__tests__/.*Spec.(js|ts)x?$",
     "roots": [
         "<rootDir>/src/js"
     ],
@@ -13,6 +14,6 @@ module.exports = {
         "<rootDir>/src/js/filt/filt.js"
     ],
     "collectCoverageFrom": [
-        "src/js/**/*.{js,jsx}"
+        "src/js/**/*.{js,jsx,ts,tsx}"
     ]
 };

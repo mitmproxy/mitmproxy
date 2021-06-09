@@ -9,7 +9,7 @@ and activate your virtualenv environment before proceeding.**
 
 ## Testing
 
-- Run `yarn run test` to run the testsuite.
+- Run `yarn test` to run the test suite.
 
 ## Architecture
 
