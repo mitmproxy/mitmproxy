@@ -4,8 +4,6 @@ exports[`Button Component should be able to be disabled 1`] = `
 <div
   className="classname btn btn-default"
   disabled="true"
-  onClick={undefined}
-  title={undefined}
 >
   <a>
     foo
@@ -16,7 +14,6 @@ exports[`Button Component should be able to be disabled 1`] = `
 exports[`Button Component should render correctly 1`] = `
 <div
   className="classname btn btn-default"
-  disabled={undefined}
   onClick={[Function]}
   title="title"
 >

@@ -24,7 +24,6 @@ exports[`FilterInput Component should render correctly 1`] = `
     onKeyDown={[Function]}
     placeholder="bar"
     type="text"
-    value={undefined}
   />
 </div>
 `;

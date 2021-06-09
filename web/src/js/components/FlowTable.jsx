@@ -32,11 +32,11 @@ class FlowTable extends React.Component {
         this.onViewportUpdate = this.onViewportUpdate.bind(this)
     }
 
-    componentWillMount() {
+    UNSAFE_componentWillMount() {
         window.addEventListener('resize', this.onViewportUpdate)
     }
 
-    componentWillUnmount() {
+    UNSAFE_componentWillUnmount() {
         window.removeEventListener('resize', this.onViewportUpdate)
     }
 
@@ -69,7 +69,7 @@ class FlowTable extends React.Component {
         }
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.selected && nextProps.selected !== this.props.selected) {
             this.shouldScrollIntoView = true
         }
@@ -77,11 +77,11 @@ class FlowTable extends React.Component {
 
     onViewportUpdate() {
         const viewport = ReactDOM.findDOMNode(this)
-        const viewportTop = viewport.scrollTop
+        const viewportTop = viewport.scrollTop || 0
 
         const vScroll = calcVScroll({
             viewportTop,
-            viewportHeight: viewport.offsetHeight,
+            viewportHeight: viewport.offsetHeight || 0,
             itemCount: this.props.flows.length,
             rowHeight: this.props.rowHeight,
         })
@@ -103,7 +103,7 @@ class FlowTable extends React.Component {
                         <FlowTableHead />
                     </thead>
                     <tbody>
-                        <tr style={{ height: vScroll.paddingTop }}></tr>
+                        <tr style={{ height: vScroll.paddingTop }}/>
                         {flows.slice(vScroll.start, vScroll.end).map(flow => (
                             <FlowRow
                                 key={flow.id}
@@ -113,7 +113,7 @@ class FlowTable extends React.Component {
                                 onSelect={this.props.selectFlow}
                             />
                         ))}
-                        <tr style={{ height: vScroll.paddingBottom }}></tr>
+                        <tr style={{ height: vScroll.paddingBottom }}/>
                     </tbody>
                 </table>
             </div>

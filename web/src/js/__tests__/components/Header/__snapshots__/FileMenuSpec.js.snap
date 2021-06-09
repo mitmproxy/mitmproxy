@@ -31,10 +31,8 @@ exports[`FileMenu Component should render correctly 1`] = `
     <li>
        
       <a
-        className={undefined}
         href="#"
         onClick={[Function]}
-        title={undefined}
       >
         <i
           className="fa fa-fw fa-folder-open"

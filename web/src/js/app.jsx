@@ -26,7 +26,7 @@ const store = createStore(
 )
 
 useUrlState(store)
-if (MITMWEB_STATIC) {
+if (window.MITMWEB_STATIC) {
     window.backend = new StaticBackend(store)
 } else {
     window.backend = new WebSocketBackend(store)
