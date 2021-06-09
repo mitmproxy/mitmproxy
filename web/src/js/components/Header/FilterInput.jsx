@@ -106,7 +106,7 @@ export default class FilterInput extends Component {
         return (
             <div className={classnames('filter-input input-group', { 'has-error': !this.isValid() })}>
                 <span className="input-group-addon">
-                    <i className={'fa fa-fw fa-' + type} style={{ color }}></i>
+                    <i className={'fa fa-fw fa-' + type} style={{ color }}/>
                 </span>
                 <input
                     type="text"
@@ -123,7 +123,7 @@ export default class FilterInput extends Component {
                     <div className="popover bottom"
                          onMouseEnter={this.onMouseEnter}
                          onMouseLeave={this.onMouseLeave}>
-                        <div className="arrow"></div>
+                        <div className="arrow"/>
                         <div className="popover-content">
                         {this.getDesc()}
                         </div>
