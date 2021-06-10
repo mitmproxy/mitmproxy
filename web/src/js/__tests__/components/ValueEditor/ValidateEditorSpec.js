@@ -23,9 +23,9 @@ describe('ValidateEditor Component', () => {
             isValid: s => s.length == 3,
             content: "bar"
         }
-        validateEditor.componentWillReceiveProps(mockProps)
+        validateEditor.UNSAFE_componentWillReceiveProps(mockProps)
         expect(validateEditor.state.valid).toBeTruthy()
-        validateEditor.componentWillReceiveProps({...mockProps, content: "bars"})
+        validateEditor.UNSAFE_componentWillReceiveProps({...mockProps, content: "bars"})
         expect(validateEditor.state.valid).toBeFalsy()
 
     })

@@ -429,9 +429,9 @@ class TestRequestUtils:
 
     def test_set_multipart_form(self):
         request = treq()
-        request.multipart_form = [("file", "shell.jpg"), ("file_size", "1000")]
-        assert request.headers["Content-Type"] == 'multipart/form-data'
-        assert request.content is None
+        request.multipart_form = [(b"file", b"shell.jpg"), (b"file_size", b"1000")]
+        assert request.headers["Content-Type"].startswith('multipart/form-data')
+        assert list(request.multipart_form.items()) == [(b"file", b"shell.jpg"), (b"file_size", b"1000")]
 
 
 class TestResponse:

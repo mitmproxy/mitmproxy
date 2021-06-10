@@ -3,7 +3,6 @@
 exports[`ValidateEditor Component should render correctly 1`] = `
 <div
   className="inline-input editable has-success"
-  contentEditable={undefined}
   dangerouslySetInnerHTML={
     Object {
       "__html": "foo",

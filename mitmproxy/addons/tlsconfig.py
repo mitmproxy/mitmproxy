@@ -169,18 +169,19 @@ class TlsConfig:
         if not server.alpn_offers:
             if client.alpn_offers:
                 if ctx.options.http2:
+                    # We would perfectly support HTTP/1 -> HTTP/2, but we want to keep things on the same protocol
+                    # version. There are some edge cases where we want to mirror the regular server's behavior
+                    # accurately, for example header capitalization.
                     server.alpn_offers = tuple(client.alpn_offers)
                 else:
                     server.alpn_offers = tuple(x for x in client.alpn_offers if x != b"h2")
-            elif client.tls_established:
-                # We would perfectly support HTTP/1 -> HTTP/2, but we want to keep things on the same protocol version.
-                # There are some edge cases where we want to mirror the regular server's behavior accurately,
-                # for example header capitalization.
-                server.alpn_offers = []
-            elif ctx.options.http2:
-                server.alpn_offers = tls.HTTP_ALPNS
             else:
-                server.alpn_offers = tls.HTTP1_ALPNS
+                # We either have no client TLS or a client without ALPN.
+                # - If the client does use TLS but did not send an ALPN extension, we want to mirror that upstream.
+                # - If the client does not use TLS, there's no clear-cut answer. As a pragmatic approach, we also do
+                #   not send any ALPN extension in this case, which defaults to whatever protocol we are speaking
+                #   or falls back to HTTP.
+                server.alpn_offers = []
 
         if not server.cipher_list and ctx.options.ciphers_server:
             server.cipher_list = ctx.options.ciphers_server.split(":")
