@@ -1,11 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Flowcolumns Components should render ForwardColumn 1`] = `
-<td
-  className="col-forward"
-/>
-`;
-
 exports[`Flowcolumns Components should render IconColumn 1`] = `
 <td
   className="col-icon"
@@ -101,6 +95,22 @@ exports[`Flowcolumns Components should render MethodColumn 1`] = `
   className="col-method"
 >
   GET
+</td>
+`;
+
+exports[`Flowcolumns Components should render QuickActionsColumn 1`] = `
+<td
+  className="col-quickactions"
+>
+  <div>
+    <div
+      className="quickaction"
+    >
+      <i
+        className="fa fa-fw fa-ellipsis-h"
+      />
+    </div>
+  </div>
 </td>
 `;
 

@@ -45,10 +45,10 @@ exports[`FlowTableHead Component should connect to state 1`] = `
     Time
   </th>
   <th
-    className="col-forward"
+    className="col-quickactions"
     onClick={[Function]}
   >
-    Forward
+    
   </th>
 </tr>
 `;
@@ -104,10 +104,10 @@ exports[`FlowTableHead Component should render correctly 1`] = `
     Time
   </th>
   <th
-    className="col-forward"
+    className="col-quickactions"
     onClick={[Function]}
   >
-    Forward
+    
   </th>
 </tr>
 `;

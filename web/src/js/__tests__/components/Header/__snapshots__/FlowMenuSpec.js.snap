@@ -10,7 +10,7 @@ exports[`FlowMenu Component should connect to state 1`] = `
     <div
       className="menu-content"
     >
-      <div
+      <button
         className="btn btn-default"
         onClick={[Function]}
         title="[r]eplay flow"
@@ -19,8 +19,8 @@ exports[`FlowMenu Component should connect to state 1`] = `
           className="fa fa-fw fa-repeat text-primary"
         />
         Replay
-      </div>
-      <div
+      </button>
+      <button
         className="btn btn-default"
         onClick={[Function]}
         title="[D]uplicate flow"
@@ -29,8 +29,8 @@ exports[`FlowMenu Component should connect to state 1`] = `
           className="fa fa-fw fa-copy text-info"
         />
         Duplicate
-      </div>
-      <div
+      </button>
+      <button
         className="btn btn-default"
         disabled={true}
         title="revert changes to flow [V]"
@@ -39,8 +39,8 @@ exports[`FlowMenu Component should connect to state 1`] = `
           className="fa fa-fw fa-history text-warning"
         />
         Revert
-      </div>
-      <div
+      </button>
+      <button
         className="btn btn-default"
         onClick={[Function]}
         title="[d]elete flow"
@@ -49,7 +49,7 @@ exports[`FlowMenu Component should connect to state 1`] = `
           className="fa fa-fw fa-trash text-danger"
         />
         Delete
-      </div>
+      </button>
     </div>
     <div
       className="menu-legend"
@@ -63,7 +63,7 @@ exports[`FlowMenu Component should connect to state 1`] = `
     <div
       className="menu-content"
     >
-      <div
+      <button
         className="btn btn-default"
         onClick={[Function]}
         title="download"
@@ -72,7 +72,7 @@ exports[`FlowMenu Component should connect to state 1`] = `
           className="fa fa-fw fa-download"
         />
         Download
-      </div>
+      </button>
     </div>
     <div
       className="menu-legend"
@@ -86,7 +86,7 @@ exports[`FlowMenu Component should connect to state 1`] = `
     <div
       className="menu-content"
     >
-      <div
+      <button
         className="btn btn-default"
         disabled={true}
         title="[a]ccept intercepted flow"
@@ -95,8 +95,8 @@ exports[`FlowMenu Component should connect to state 1`] = `
           className="fa fa-fw fa-play text-success"
         />
         Resume
-      </div>
-      <div
+      </button>
+      <button
         className="btn btn-default"
         disabled={true}
         title="kill intercepted flow [x]"
@@ -105,7 +105,7 @@ exports[`FlowMenu Component should connect to state 1`] = `
           className="fa fa-fw fa-times text-danger"
         />
         Abort
-      </div>
+      </button>
     </div>
     <div
       className="menu-legend"
@@ -126,7 +126,7 @@ exports[`FlowMenu Component should render correctly with flow 1`] = `
     <div
       className="menu-content"
     >
-      <div
+      <button
         className="btn btn-default"
         onClick={[Function]}
         title="[r]eplay flow"
@@ -135,8 +135,8 @@ exports[`FlowMenu Component should render correctly with flow 1`] = `
           className="fa fa-fw fa-repeat text-primary"
         />
         Replay
-      </div>
-      <div
+      </button>
+      <button
         className="btn btn-default"
         onClick={[Function]}
         title="[D]uplicate flow"
@@ -145,8 +145,8 @@ exports[`FlowMenu Component should render correctly with flow 1`] = `
           className="fa fa-fw fa-copy text-info"
         />
         Duplicate
-      </div>
-      <div
+      </button>
+      <button
         className="btn btn-default"
         disabled={false}
         onClick={[Function]}
@@ -156,8 +156,8 @@ exports[`FlowMenu Component should render correctly with flow 1`] = `
           className="fa fa-fw fa-history text-warning"
         />
         Revert
-      </div>
-      <div
+      </button>
+      <button
         className="btn btn-default"
         onClick={[Function]}
         title="[d]elete flow"
@@ -166,7 +166,7 @@ exports[`FlowMenu Component should render correctly with flow 1`] = `
           className="fa fa-fw fa-trash text-danger"
         />
         Delete
-      </div>
+      </button>
     </div>
     <div
       className="menu-legend"
@@ -180,7 +180,7 @@ exports[`FlowMenu Component should render correctly with flow 1`] = `
     <div
       className="menu-content"
     >
-      <div
+      <button
         className="btn btn-default"
         onClick={[Function]}
         title="download"
@@ -189,7 +189,7 @@ exports[`FlowMenu Component should render correctly with flow 1`] = `
           className="fa fa-fw fa-download"
         />
         Download
-      </div>
+      </button>
     </div>
     <div
       className="menu-legend"
@@ -203,7 +203,7 @@ exports[`FlowMenu Component should render correctly with flow 1`] = `
     <div
       className="menu-content"
     >
-      <div
+      <button
         className="btn btn-default"
         disabled={false}
         onClick={[Function]}
@@ -213,8 +213,8 @@ exports[`FlowMenu Component should render correctly with flow 1`] = `
           className="fa fa-fw fa-play text-success"
         />
         Resume
-      </div>
-      <div
+      </button>
+      <button
         className="btn btn-default"
         disabled={false}
         onClick={[Function]}
@@ -224,7 +224,7 @@ exports[`FlowMenu Component should render correctly with flow 1`] = `
           className="fa fa-fw fa-times text-danger"
         />
         Abort
-      </div>
+      </button>
     </div>
     <div
       className="menu-legend"
