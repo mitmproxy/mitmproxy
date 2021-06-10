@@ -16,7 +16,7 @@ describe('FilterInput Component', () => {
     let filterInput = TestUtil.renderIntoDocument(
         <FilterInput type='foo' color='red' placeholder='bar' value='' onChange={jest.fn()}/>)
     it('should handle componentWillReceiveProps', () => {
-       filterInput.componentWillReceiveProps({value: 'foo'})
+       filterInput.UNSAFE_componentWillReceiveProps({value: 'foo'})
         expect(filterInput.state.value).toEqual('foo')
     })
 

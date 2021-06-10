@@ -48,6 +48,19 @@ exports[`FlowRow Component should render correctly 1`] = `
   >
     3s
   </td>
+  <td
+    className="col-quickactions"
+  >
+    <div>
+      <div
+        className="quickaction"
+      >
+        <i
+          className="fa fa-fw fa-ellipsis-h"
+        />
+      </div>
+    </div>
+  </td>
   <div
     className="dropdown pull-left btn btn-default"
   >
@@ -100,20 +113,6 @@ exports[`FlowRow Component should render correctly 1`] = `
             className="fa fa-fw fa-plus"
           />
            Intercept all POST requests from this host
-        </a>
-         
-      </li>
-      <li>
-         
-        <a
-          href="#"
-          onClick={[Function]}
-        >
-          <i
-            className="fa fa-fw fa-plus"
-          />
-           Intercept all requests from 
-          192.168.0.1
         </a>
          
       </li>
