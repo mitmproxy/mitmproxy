@@ -24,7 +24,7 @@ describe('Dropdown Component', () => {
     it('should handle open/close action', () => {
         document.body.addEventListener('click', ()=>{})
         let tree = dropup.toJSON(),
-            e = { preventDefault: jest.fn() }
+            e = { preventDefault: jest.fn(), stopPropagation: jest.fn() }
         tree.children[0].props.onClick(e)
         expect(tree).toMatchSnapshot()
 

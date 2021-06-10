@@ -12,7 +12,7 @@ ViewSelector.propTypes = {
 }
 
 export function ViewSelector ({contentViews, activeView, setContentView}){
-    let inner = <span> <b>View:</b> {activeView.toLowerCase()} <span className="caret"></span> </span>
+    let inner = <span> <b>View:</b> {activeView.toLowerCase()} <span className="caret"/> </span>
 
     return (
         <Dropdown dropup className="pull-left" btnClass="btn btn-default btn-xs" text={inner}>
@@ -28,7 +28,7 @@ export function ViewSelector ({contentViews, activeView, setContentView}){
 
 export default connect (
     state => ({
-        contentViews: state.settings.contentViews,
+        contentViews: state.settings.contentViews || [],
         activeView: state.ui.flow.contentView,
     }), {
         setContentView,

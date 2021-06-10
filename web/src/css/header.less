@@ -3,7 +3,7 @@
 @import (reference) "../../node_modules/bootstrap/less/mixins/labels.less";
 @import (reference) "../../node_modules/bootstrap/less/labels.less";
 
-@menu-height: 85px;
+@menu-height: 95px;
 
 header {
     padding-top: 6px;
@@ -20,17 +20,16 @@ header {
 }
 
 @menu-legend-height: 16px;
-@menu-group-hmargin: 3px;
+@menu-group-hmargin: 5px;
 .menu-group {
-    margin: 0 @menu-group-hmargin;
+    margin: 0 @menu-group-hmargin 0 (@menu-group-hmargin + 1px);
     display: inline-block;
     height: @menu-height;
-    vertical-align: top;
 }
 
 .menu-content {
     height: @menu-height - @menu-legend-height;
-    text-align: center;
+    display: flow-root;
 
     > .btn {
         height: @menu-height - @menu-legend-height;
@@ -43,6 +42,16 @@ header {
             font-size: 20px;
             display: block;
             margin: 0 auto 5px;
+        }
+    }
+
+    > .btn.btn-sm {
+        height: (@menu-height - @menu-legend-height)/3;
+        padding: 0 5px;
+        i {
+            display: inline-block;
+            font-size: 14px;
+            margin: 0;
         }
     }
 }
@@ -65,6 +74,7 @@ header {
 }
 
 .menu-legend {
+    color: #777;
     height: @menu-legend-height;
     text-align: center;
     font-size: 12px;
@@ -73,7 +83,7 @@ header {
 
 .menu-group + .menu-group:before {
     @space: 10px;
-    margin-left: -@menu-group-hmargin;
+    margin-left: -(@menu-group-hmargin + 1px);
     content: " ";
     border-left: solid 1px lighten(grey, 40%);
     margin-top: @space;
@@ -82,19 +92,20 @@ header {
 }
 
 @menu-main-gutter-width: 5px;
-.menu-main {
-    .make-row(@menu-main-gutter-width);
-    padding: 2px 5px;
+.main-menu {
+    display: flex;
+    .menu-group {
+        width: 50%;
+    }
+    .btn-sm {
+        margin-top: 6px;
+    }
 }
 
 .filter-input {
-    .make-sm-column(5, @menu-main-gutter-width);
-    padding: 2.5px;
+    margin: 4px 0;
 
     @media (max-width: @screen-xs-max) {
-
-        padding: 2px 2.5px;
-
         > .form-control, > .input-group-addon, > .input-group-btn > .btn {
             height: 23.5px;
             padding: 1px 5px;
