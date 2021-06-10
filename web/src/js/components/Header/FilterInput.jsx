@@ -25,7 +25,7 @@ export default class FilterInput extends Component {
         this.selectFilter = this.selectFilter.bind(this)
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         this.setState({ value: nextProps.value })
     }
 

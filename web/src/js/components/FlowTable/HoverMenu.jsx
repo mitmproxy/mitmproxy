@@ -35,23 +35,17 @@ class HoverMenu extends Component {
                     <i className="fa fa-fw fa-plus"></i>
                     &nbsp;Intercept {flow.request.host}
                 </a>
-                <a href="#" onClick={(e) =>{
+                { flow.request.path != "/" ? <a href="#" onClick={(e) =>{
                     this.onClick(e, flow.request.host + flow.request.path)
                 }}>
                     <i className="fa fa-fw fa-plus"></i>
                     &nbsp;Intercept {flow.request.host + flow.request.path}
-                </a>
+                </a> : null }
                 <a href="#" onClick={(e) =>{
                     this.onClick(e,  `~m POST & ${flow.request.host}`)
                 }}>
                     <i className="fa fa-fw fa-plus"></i>
                     &nbsp;Intercept all POST requests from this host
-                </a>
-                <a href="#" onClick={(e) =>{
-                    this.onClick(e,  `~ip ${flow.server_conn.ip_address[0]}`)
-                }}>
-                    <i className="fa fa-fw fa-plus"></i>
-                    &nbsp;Intercept all requests from {flow.server_conn.ip_address[0]}
                 </a>
             </Dropdown>
         )

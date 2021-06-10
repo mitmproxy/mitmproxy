@@ -111,16 +111,6 @@ function destination(regex){
     destinationFilter.desc = "destination address matches " + regex;
     return destinationFilter;
 }
-function ip(regex) {
-    regex = new RegExp(regex, "i");
-    function ipFilter(flow){
-    return (!!flow.server_conn.ip_address)
-           &&
-           regex.test(flow.server_conn.ip_address[0] + ":" + flow.server_conn.ip_address[1]);
-    }
-    ipFilter.desc = "destination ip address matches " + regex;
-    return ipFilter;
-}
 function errorFilter(flow){
     return !!flow.error;
 }
@@ -277,7 +267,6 @@ Expr
   / "~c" ws+ s:IntegerLiteral { return responseCode(s); }
   / "~d" ws+ s:StringLiteral { return domain(s); }
   / "~dst" ws+ s:StringLiteral { return destination(s); }
-  / "~ip" ws+ s:StringLiteral { return ip(s); }
   / "~e" { return errorFilter; }
   / "~h" ws+ s:StringLiteral { return header(s); }
   / "~hq" ws+ s:StringLiteral { return requestHeader(s); }

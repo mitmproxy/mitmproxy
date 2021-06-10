@@ -11,11 +11,11 @@ import Modal from './Modal/Modal'
 
 class ProxyAppMain extends Component {
 
-    componentWillMount() {
+    componentDidMount() {
         window.addEventListener('keydown', this.props.onKeyDown);
     }
 
-    componentWillUnmount() {
+    UNSAFE_componentWillUnmount() {
         window.removeEventListener('keydown', this.props.onKeyDown);
     }
 
