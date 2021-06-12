@@ -9,6 +9,7 @@ from mitmproxy import flow, http
 from mitmproxy.connection import Connection, Server
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import status_codes, url
+from mitmproxy.net.http.http1 import expected_http_body_size
 from mitmproxy.proxy import commands, events, layer, tunnel
 from mitmproxy.proxy.layers import tcp, tls, websocket
 from mitmproxy.proxy.layers.http import _upstream_proxy
@@ -194,6 +195,18 @@ class HttpStream(layer.Layer):
                 self.context.server.address[1],
             )
 
+        # determine if we already know that we want to stream the request body.
+        # we may also only realize this later while consuming the request body if the expected body size is unknown.
+        if self.context.options.stream_large_bodies and not event.end_stream:
+            max_size = human.parse_size(self.context.options.stream_large_bodies)
+            assert max_size is not None
+            try:
+                expected_size = expected_http_body_size(self.flow.request)
+            except ValueError:  # pragma: no cover
+                expected_size = None
+            if expected_size is not None and expected_size > max_size:
+                self.flow.request.stream = True
+
         yield HttpRequestHeadersHook(self.flow)
         if (yield from self.check_killed(True)):
             return
@@ -220,6 +233,7 @@ class HttpStream(layer.Layer):
             RequestHeaders(self.stream_id, self.flow.request, end_stream=False),
             self.context.server
         )
+        yield commands.Log(f"Streaming request to {self.flow.request.host}.")
         self.client_state = self.state_stream_request_body
 
     @expect(RequestData, RequestTrailers, RequestEndOfMessage)
@@ -256,6 +270,17 @@ class HttpStream(layer.Layer):
     def state_consume_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             self.request_body_buf += event.data
+
+            # Have we reached the threshold to stream the request?
+            if self.context.options.stream_large_bodies:
+                max_size = human.parse_size(self.context.options.stream_large_bodies)
+                assert max_size is not None
+                if len(self.request_body_buf) > max_size:
+                    self.flow.request.stream = True
+                    body_buf = self.request_body_buf
+                    self.request_body_buf = b""
+                    yield from self.start_request_stream()
+                    yield from self.handle_event(RequestData(event.stream_id, body_buf))
         elif isinstance(event, RequestTrailers):
             assert self.flow.request
             self.flow.request.trailers = event.trailers
@@ -292,14 +317,32 @@ class HttpStream(layer.Layer):
     @expect(ResponseHeaders)
     def state_wait_for_response_headers(self, event: ResponseHeaders) -> layer.CommandGenerator[None]:
         self.flow.response = event.response
+
+        # determine if we already know that we want to stream the response body.
+        # we may also only realize this later while consuming the response body if the expected body size is unknown.
+        if self.context.options.stream_large_bodies and not event.end_stream:
+            max_size = human.parse_size(self.context.options.stream_large_bodies)
+            assert max_size is not None
+            try:
+                expected_size = expected_http_body_size(self.flow.request, self.flow.response)
+            except ValueError:  # pragma: no cover
+                expected_size = None
+            if expected_size is not None and expected_size > max_size:
+                self.flow.response.stream = True
+
         yield HttpResponseHeadersHook(self.flow)
         if (yield from self.check_killed(True)):
             return
         elif self.flow.response.stream:
-            yield SendHttp(event, self.context.client)
-            self.server_state = self.state_stream_response_body
+            yield from self.start_response_stream()
         else:
             self.server_state = self.state_consume_response_body
+
+    def start_response_stream(self) -> layer.CommandGenerator[None]:
+        assert self.flow.response
+        yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response, end_stream=False), self.context.client)
+        yield commands.Log(f"Streaming response from {self.flow.request.host}.")
+        self.server_state = self.state_stream_response_body
 
     @expect(ResponseData, ResponseTrailers, ResponseEndOfMessage)
     def state_stream_response_body(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -321,6 +364,18 @@ class HttpStream(layer.Layer):
     def state_consume_response_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, ResponseData):
             self.response_body_buf += event.data
+
+            # Have we reached the threshold to stream the response?
+            if self.context.options.stream_large_bodies:
+                max_size = human.parse_size(self.context.options.stream_large_bodies)
+                assert max_size is not None
+                if len(self.response_body_buf) > max_size:
+                    assert self.flow.response
+                    self.flow.response.stream = True
+                    body_buf = self.response_body_buf
+                    self.response_body_buf = b""
+                    yield from self.start_response_stream()
+                    yield from self.handle_event(ResponseData(event.stream_id, body_buf))
         elif isinstance(event, ResponseTrailers):
             assert self.flow.response
             self.flow.response.trailers = event.trailers

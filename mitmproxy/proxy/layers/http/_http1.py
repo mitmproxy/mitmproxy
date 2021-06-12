@@ -235,7 +235,7 @@ class Http1Server(Http1Connection):
                 request_head = [bytes(x) for x in request_head]  # TODO: Make url.parse compatible with bytearrays
                 try:
                     self.request = http1.read_request_head(request_head)
-                    expected_body_size = http1.expected_http_body_size(self.request, expect_continue_as_0=False)
+                    expected_body_size = http1.expected_http_body_size(self.request)
                 except ValueError as e:
                     yield commands.Log(f"{human.format_address(self.conn.peername)}: {e}")
                     yield commands.CloseConnection(self.conn)

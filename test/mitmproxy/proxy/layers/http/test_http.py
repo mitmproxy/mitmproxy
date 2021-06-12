@@ -1,14 +1,14 @@
 import pytest
 
+from mitmproxy.connection import ConnectionState, Server
 from mitmproxy.flow import Error
 from mitmproxy.http import HTTPFlow, Response
 from mitmproxy.net.server_spec import ServerSpec
-from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy import layer
-from mitmproxy.proxy.commands import CloseConnection, OpenConnection, SendData, Log
-from mitmproxy.connection import ConnectionState, Server
+from mitmproxy.proxy.commands import CloseConnection, Log, OpenConnection, SendData
 from mitmproxy.proxy.events import ConnectionClosed, DataReceived
 from mitmproxy.proxy.layers import TCPLayer, http, tls
+from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.proxy.layers.tcp import TcpMessageInjected, TcpStartHook
 from mitmproxy.proxy.layers.websocket import WebsocketStartHook
 from mitmproxy.tcp import TCPFlow, TCPMessage
@@ -265,37 +265,100 @@ def test_disconnect_while_intercept(tctx):
     assert flow().server_conn == server2()
 
 
-def test_response_streaming(tctx):
+@pytest.mark.parametrize("why", ["body_size=0", "body_size=3", "addon"])
+@pytest.mark.parametrize("transfer_encoding", ["identity", "chunked"])
+def test_response_streaming(tctx, why, transfer_encoding):
     """Test HTTP response streaming"""
     server = Placeholder(Server)
     flow = Placeholder(HTTPFlow)
+    playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+
+    if why.startswith("body_size"):
+        tctx.options.stream_large_bodies = why.removeprefix("body_size=")
 
     def enable_streaming(flow: HTTPFlow):
-        flow.response.stream = lambda x: x.upper()
+        if why == "addon":
+            flow.response.stream = True
 
     assert (
-            Playbook(http.HttpLayer(tctx, HTTPMode.regular))
-            >> DataReceived(tctx.client, b"GET http://example.com/largefile HTTP/1.1\r\nHost: example.com\r\n\r\n")
-            << http.HttpRequestHeadersHook(flow)
-            >> reply()
-            << http.HttpRequestHook(flow)
-            >> reply()
-            << OpenConnection(server)
-            >> reply(None)
-            << SendData(server, b"GET /largefile HTTP/1.1\r\nHost: example.com\r\n\r\n")
-            >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nabc")
-            << http.HttpResponseHeadersHook(flow)
-            >> reply(side_effect=enable_streaming)
-            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 6\r\n\r\nABC")
-            >> DataReceived(server, b"def")
-            << SendData(tctx.client, b"DEF")
-            << http.HttpResponseHook(flow)
-            >> reply()
+        playbook
+        >> DataReceived(tctx.client, b"GET http://example.com/largefile HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        << http.HttpRequestHeadersHook(flow)
+        >> reply()
+        << http.HttpRequestHook(flow)
+        >> reply()
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(server, b"GET /largefile HTTP/1.1\r\nHost: example.com\r\n\r\n")
+        >> DataReceived(server, b"HTTP/1.1 200 OK\r\n")
+    )
+    if transfer_encoding == "identity":
+        playbook >> DataReceived(server, b"Content-Length: 6\r\n\r\n"
+                                         b"abc")
+    else:
+        playbook >> DataReceived(server, b"Transfer-Encoding: chunked\r\n\r\n"
+                                         b"3\r\nabc\r\n")
+
+    playbook << http.HttpResponseHeadersHook(flow)
+    playbook >> reply(side_effect=enable_streaming)
+
+    if transfer_encoding == "identity":
+        playbook << SendData(tctx.client, b"HTTP/1.1 200 OK\r\n"
+                                          b"Content-Length: 6\r\n\r\n"
+                                          b"abc")
+        playbook >> DataReceived(server, b"def")
+        playbook << SendData(tctx.client, b"def")
+    else:
+        if why == "body_size=3":
+            playbook >> DataReceived(server, b"3\r\ndef\r\n")
+            playbook << SendData(tctx.client, b"HTTP/1.1 200 OK\r\n"
+                                              b"Transfer-Encoding: chunked\r\n\r\n"
+                                              b"6\r\nabcdef\r\n")
+        else:
+            playbook << SendData(tctx.client, b"HTTP/1.1 200 OK\r\n"
+                                              b"Transfer-Encoding: chunked\r\n\r\n"
+                                              b"3\r\nabc\r\n")
+            playbook >> DataReceived(server, b"3\r\ndef\r\n")
+            playbook << SendData(tctx.client, b"3\r\ndef\r\n")
+        playbook >> DataReceived(server, b"0\r\n\r\n")
+
+    playbook << http.HttpResponseHook(flow)
+    playbook >> reply()
+
+    if transfer_encoding == "chunked":
+        playbook << SendData(tctx.client, b"0\r\n\r\n")
+
+    assert playbook
+
+
+def test_request_stream_modify(tctx):
+    """Test HTTP response streaming"""
+    server = Placeholder(Server)
+
+    def enable_streaming(flow: HTTPFlow):
+        flow.request.stream = lambda x: x.upper()
+
+    assert (
+        Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+        >> DataReceived(tctx.client, b"POST http://example.com/ HTTP/1.1\r\n"
+                                     b"Host: example.com\r\n"
+                                     b"Content-Length: 6\r\n\r\n"
+                                     b"abc")
+        << http.HttpRequestHeadersHook(Placeholder(HTTPFlow))
+        >> reply(side_effect=enable_streaming)
+        << OpenConnection(server)
+        >> reply(None)
+        << SendData(server, b"POST / HTTP/1.1\r\n"
+                            b"Host: example.com\r\n"
+                            b"Content-Length: 6\r\n\r\n"
+                            b"ABC")
     )
 
 
+@pytest.mark.parametrize("why", ["body_size=0", "body_size=3", "addon"])
+@pytest.mark.parametrize("transfer_encoding", ["identity", "chunked"])
 @pytest.mark.parametrize("response", ["normal response", "early response", "early close", "early kill"])
-def test_request_streaming(tctx, response):
+def test_request_streaming(tctx, why, transfer_encoding, response):
     """
     Test HTTP request streaming
 
@@ -305,55 +368,94 @@ def test_request_streaming(tctx, response):
     flow = Placeholder(HTTPFlow)
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
 
-    def enable_streaming(flow: HTTPFlow):
-        flow.request.stream = lambda x: x.upper()
+    if why.startswith("body_size"):
+        tctx.options.stream_large_bodies = why.removeprefix("body_size=")
 
-    assert (
-            playbook
-            >> DataReceived(tctx.client, b"POST http://example.com/ HTTP/1.1\r\n"
-                                         b"Host: example.com\r\n"
-                                         b"Content-Length: 6\r\n\r\n"
-                                         b"abc")
-            << http.HttpRequestHeadersHook(flow)
-            >> reply(side_effect=enable_streaming)
-            << OpenConnection(server)
-            >> reply(None)
-            << SendData(server, b"POST / HTTP/1.1\r\n"
-                                b"Host: example.com\r\n"
-                                b"Content-Length: 6\r\n\r\n"
-                                b"ABC")
-    )
+    def enable_streaming(flow: HTTPFlow):
+        if why == "addon":
+            flow.request.stream = True
+
+    playbook >> DataReceived(tctx.client, b"POST http://example.com/ HTTP/1.1\r\n"
+                                          b"Host: example.com\r\n")
+    if transfer_encoding == "identity":
+        playbook >> DataReceived(tctx.client, b"Content-Length: 9\r\n\r\n"
+                                              b"abc")
+    else:
+        playbook >> DataReceived(tctx.client, b"Transfer-Encoding: chunked\r\n\r\n"
+                                              b"3\r\nabc\r\n")
+
+    playbook << http.HttpRequestHeadersHook(flow)
+    playbook >> reply(side_effect=enable_streaming)
+
+    needs_more_data_before_open = (why == "body_size=3" and transfer_encoding == "chunked")
+    if needs_more_data_before_open:
+        playbook >> DataReceived(tctx.client, b"3\r\ndef\r\n")
+
+    playbook << OpenConnection(server)
+    playbook >> reply(None)
+    playbook << SendData(server, b"POST / HTTP/1.1\r\n"
+                                 b"Host: example.com\r\n")
+
+    if transfer_encoding == "identity":
+        playbook << SendData(server, b"Content-Length: 9\r\n\r\n"
+                                     b"abc")
+        playbook >> DataReceived(tctx.client, b"def")
+        playbook << SendData(server, b"def")
+    else:
+        if needs_more_data_before_open:
+            playbook << SendData(server, b"Transfer-Encoding: chunked\r\n\r\n"
+                                         b"6\r\nabcdef\r\n")
+        else:
+            playbook << SendData(server, b"Transfer-Encoding: chunked\r\n\r\n"
+                                         b"3\r\nabc\r\n")
+            playbook >> DataReceived(tctx.client, b"3\r\ndef\r\n")
+            playbook << SendData(server, b"3\r\ndef\r\n")
+
     if response == "normal response":
+        if transfer_encoding == "identity":
+            playbook >> DataReceived(tctx.client, b"ghi")
+            playbook << SendData(server, b"ghi")
+        else:
+            playbook >> DataReceived(tctx.client, b"3\r\nghi\r\n0\r\n\r\n")
+            playbook << SendData(server, b"3\r\nghi\r\n")
+
+        playbook << http.HttpRequestHook(flow)
+        playbook >> reply()
+        if transfer_encoding == "chunked":
+            playbook << SendData(server, b"0\r\n\r\n")
         assert (
-                playbook
-                >> DataReceived(tctx.client, b"def")
-                << SendData(server, b"DEF")
-                << http.HttpRequestHook(flow)
-                >> reply()
-                >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
-                << http.HttpResponseHeadersHook(flow)
-                >> reply()
-                << http.HttpResponseHook(flow)
-                >> reply()
-                << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+            playbook
+            >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+            << http.HttpResponseHeadersHook(flow)
+            >> reply()
+            << http.HttpResponseHook(flow)
+            >> reply()
+            << SendData(tctx.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
         )
     elif response == "early response":
         # We may receive a response before we have finished sending our request.
         # We continue sending unless the server closes the connection.
         # https://tools.ietf.org/html/rfc7231#section-6.5.11
         assert (
-                playbook
-                >> DataReceived(server, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
-                << http.HttpResponseHeadersHook(flow)
-                >> reply()
-                << http.HttpResponseHook(flow)
-                >> reply()
-                << SendData(tctx.client, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
-                >> DataReceived(tctx.client, b"def")
-                << SendData(server, b"DEF")
-                << http.HttpRequestHook(flow)
-                >> reply()
+            playbook
+            >> DataReceived(server, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
+            << http.HttpResponseHeadersHook(flow)
+            >> reply()
+            << http.HttpResponseHook(flow)
+            >> reply()
+            << SendData(tctx.client, b"HTTP/1.1 413 Request Entity Too Large\r\nContent-Length: 0\r\n\r\n")
         )
+        if transfer_encoding == "identity":
+            playbook >> DataReceived(tctx.client, b"ghi")
+            playbook << SendData(server, b"ghi")
+        else:
+            playbook >> DataReceived(tctx.client, b"3\r\nghi\r\n0\r\n\r\n")
+            playbook << SendData(server, b"3\r\nghi\r\n")
+        playbook << http.HttpRequestHook(flow)
+        playbook >> reply()
+        if transfer_encoding == "chunked":
+            playbook << SendData(server, b"0\r\n\r\n")
+        assert playbook
     elif response == "early close":
         assert (
                 playbook

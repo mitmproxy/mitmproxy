@@ -68,6 +68,7 @@ If you depend on these features, please raise your voice in
   "red ball" marker, a single character, or an emoji like `:grapes:`. Use the `~marker` filter to filter on marker characters. (@rbdixon)
 * New `flow.comment` command to add a comment to the flow. Add `~comment <regex>` filter syntax to search flow comments. (@rbdixon)
 * Fix multipart forms losing `boundary` values on edit (@roytu)
+* `Transfer-Encoding: chunked` HTTP message bodies are now retained if they are below the stream_large_bodies limit.
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
