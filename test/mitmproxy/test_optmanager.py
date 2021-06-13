@@ -1,4 +1,5 @@
 import copy
+import io
 import pytest
 import typing
 import argparse
@@ -239,11 +240,16 @@ def test_items():
 
 
 def test_serialize():
+    def serialize(opts: optmanager.OptManager, text: str, defaults: bool = False) -> str:
+        buf = io.StringIO()
+        optmanager.serialize(opts, buf, text, defaults)
+        return buf.getvalue()
+
     o = TD2()
     o.three = "set"
-    assert "dfour" in optmanager.serialize(o, None, defaults=True)
+    assert "dfour" in serialize(o, "", defaults=True)
 
-    data = optmanager.serialize(o, None)
+    data = serialize(o, "")
     assert "dfour" not in data
 
     o2 = TD2()
@@ -254,7 +260,7 @@ def test_serialize():
     t = """
         unknown: foo
     """
-    data = optmanager.serialize(o, t)
+    data = serialize(o, t)
     o2 = TD2()
     optmanager.load(o2, data)
     assert o2 == o
@@ -280,7 +286,9 @@ def test_serialize():
 
 def test_serialize_defaults():
     o = options.Options()
-    assert optmanager.serialize(o, None, defaults=True)
+    buf = io.StringIO()
+    optmanager.serialize(o, buf, "", defaults=True)
+    assert buf.getvalue()
 
 
 def test_saving(tmpdir):
@@ -348,7 +356,9 @@ def test_option():
 
 def test_dump_defaults():
     o = TTypes()
-    assert optmanager.dump_defaults(o)
+    buf = io.StringIO()
+    optmanager.dump_defaults(o, buf)
+    assert buf.getvalue()
 
 
 def test_dump_dicts():
