@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 import pytest
 
 from mitmproxy.addons.clientplayback import ClientPlayback, ReplayHandler
+from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.exceptions import CommandError, OptionsError
 from mitmproxy.connection import Address
 from mitmproxy.test import taddons, tflow
@@ -47,7 +48,8 @@ async def test_playback(mode):
         handler_ok.set()
 
     cp = ClientPlayback()
-    with taddons.context(cp) as tctx:
+    ps = Proxyserver()
+    with taddons.context(cp, ps) as tctx:
         async with tcp_server(handler) as addr:
 
             cp.running()
@@ -78,6 +80,7 @@ async def test_playback_crash(monkeypatch):
         cp.start_replay([tflow.tflow()])
         await tctx.master.await_log("Client replay has crashed!", level="error")
         assert cp.count() == 0
+        cp.done()
 
 
 def test_check():

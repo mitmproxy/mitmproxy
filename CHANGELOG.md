@@ -24,10 +24,9 @@ Mitmproxy has a completely new proxy core, fixing many longstanding issues:
   This greatly improves testing capabilities, prevents a wide array of race conditions, and increases
   proper isolation between layers.
 
-We wanted to bring these improvements out, so we have a few temporary regressions:
+We wanted to bring these improvements out, so we have a few regressions:
 
 * Support for HTTP/2 Push Promises has been dropped.
-* body_size_limit is currently unsupported.
 * upstream_auth is currently unsupported.
 
 If you depend on these features, please raise your voice in
@@ -68,6 +67,7 @@ If you depend on these features, please raise your voice in
   "red ball" marker, a single character, or an emoji like `:grapes:`. Use the `~marker` filter to filter on marker characters. (@rbdixon)
 * New `flow.comment` command to add a comment to the flow. Add `~comment <regex>` filter syntax to search flow comments. (@rbdixon)
 * Fix multipart forms losing `boundary` values on edit (@roytu)
+* `Transfer-Encoding: chunked` HTTP message bodies are now retained if they are below the stream_large_bodies limit.
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 

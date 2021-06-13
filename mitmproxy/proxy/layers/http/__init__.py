@@ -9,6 +9,7 @@ from mitmproxy import flow, http
 from mitmproxy.connection import Connection, Server
 from mitmproxy.net import server_spec
 from mitmproxy.net.http import status_codes, url
+from mitmproxy.net.http.http1 import expected_http_body_size
 from mitmproxy.proxy import commands, events, layer, tunnel
 from mitmproxy.proxy.layers import tcp, tls, websocket
 from mitmproxy.proxy.layers.http import _upstream_proxy
@@ -167,12 +168,12 @@ class HttpStream(layer.Layer):
             try:
                 host, port = url.parse_authority(self.flow.request.host_header or "", check=True)
             except ValueError:
-                self.flow.response = http.Response.make(
-                    400,
-                    "HTTP request has no host header, destination unknown."
+                yield SendHttp(
+                    ResponseProtocolError(self.stream_id, "HTTP request has no host header, destination unknown.", 400),
+                    self.context.client
                 )
                 self.client_state = self.state_errored
-                return (yield from self.send_response())
+                return
             else:
                 if port is None:
                     port = 443 if self.context.client.tls else 80
@@ -193,6 +194,9 @@ class HttpStream(layer.Layer):
                 self.context.server.address[0],
                 self.context.server.address[1],
             )
+
+        if not event.end_stream and (yield from self.check_body_size(True)):
+            return
 
         yield HttpRequestHeadersHook(self.flow)
         if (yield from self.check_killed(True)):
@@ -220,6 +224,7 @@ class HttpStream(layer.Layer):
             RequestHeaders(self.stream_id, self.flow.request, end_stream=False),
             self.context.server
         )
+        yield commands.Log(f"Streaming request to {self.flow.request.host}.")
         self.client_state = self.state_stream_request_body
 
     @expect(RequestData, RequestTrailers, RequestEndOfMessage)
@@ -256,6 +261,7 @@ class HttpStream(layer.Layer):
     def state_consume_request_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, RequestData):
             self.request_body_buf += event.data
+            yield from self.check_body_size(True)
         elif isinstance(event, RequestTrailers):
             assert self.flow.request
             self.flow.request.trailers = event.trailers
@@ -292,14 +298,24 @@ class HttpStream(layer.Layer):
     @expect(ResponseHeaders)
     def state_wait_for_response_headers(self, event: ResponseHeaders) -> layer.CommandGenerator[None]:
         self.flow.response = event.response
+
+        if not event.end_stream and (yield from self.check_body_size(False)):
+            return
+
         yield HttpResponseHeadersHook(self.flow)
         if (yield from self.check_killed(True)):
             return
+
         elif self.flow.response.stream:
-            yield SendHttp(event, self.context.client)
-            self.server_state = self.state_stream_response_body
+            yield from self.start_response_stream()
         else:
             self.server_state = self.state_consume_response_body
+
+    def start_response_stream(self) -> layer.CommandGenerator[None]:
+        assert self.flow.response
+        yield SendHttp(ResponseHeaders(self.stream_id, self.flow.response, end_stream=False), self.context.client)
+        yield commands.Log(f"Streaming response from {self.flow.request.host}.")
+        self.server_state = self.state_stream_response_body
 
     @expect(ResponseData, ResponseTrailers, ResponseEndOfMessage)
     def state_stream_response_body(self, event: events.Event) -> layer.CommandGenerator[None]:
@@ -321,6 +337,7 @@ class HttpStream(layer.Layer):
     def state_consume_response_body(self, event: events.Event) -> layer.CommandGenerator[None]:
         if isinstance(event, ResponseData):
             self.response_body_buf += event.data
+            yield from self.check_body_size(False)
         elif isinstance(event, ResponseTrailers):
             assert self.flow.response
             self.flow.response.trailers = event.trailers
@@ -380,6 +397,76 @@ class HttpStream(layer.Layer):
             yield from self.child_layer.handle_event(events.Start())
             self._handle_event = self.passthrough
             return
+
+    def check_body_size(self, request: bool) -> layer.CommandGenerator[bool]:
+        """
+        Check if the body size exceeds limits imposed by stream_large_bodies or body_size_limit.
+
+        Returns `True` if the body size exceeds body_size_limit and further processing should be stopped.
+        """
+        if not (self.context.options.stream_large_bodies or self.context.options.body_size_limit):
+            return False
+
+        # Step 1: Determine the expected body size. This can either come from a known content-length header,
+        # or from the amount of currently buffered bytes (e.g. for chunked encoding).
+        response = not request
+        expected_size: Optional[int]
+        # the 'late' case: we already started consuming the body
+        if request and self.request_body_buf:
+            expected_size = len(self.request_body_buf)
+        elif response and self.response_body_buf:
+            expected_size = len(self.response_body_buf)
+        else:
+            # the 'early' case: we have not started consuming the body
+            try:
+                expected_size = expected_http_body_size(self.flow.request, self.flow.response if response else None)
+            except ValueError:  # pragma: no cover
+                # we just don't stream/kill malformed content-length headers.
+                expected_size = None
+
+        if expected_size is None or expected_size <= 0:
+            return False
+
+        # Step 2: Do we need to abort this?
+        max_total_size = human.parse_size(self.context.options.body_size_limit)
+        if max_total_size is not None and expected_size > max_total_size:
+            if request and not self.request_body_buf:
+                yield HttpRequestHeadersHook(self.flow)
+            if response and not self.response_body_buf:
+                yield HttpResponseHeadersHook(self.flow)
+
+            err_msg = f"{'Request' if request else 'Response'} body exceeds mitmproxy's body_size_limit."
+            err_code = 413 if request else 502
+
+            self.flow.error = flow.Error(err_msg)
+            yield HttpErrorHook(self.flow)
+            yield SendHttp(ResponseProtocolError(self.stream_id, err_msg, err_code), self.context.client)
+            self.client_state = self.state_errored
+            if response:
+                yield SendHttp(RequestProtocolError(self.stream_id, err_msg, err_code), self.context.server)
+                self.server_state = self.state_errored
+            return True
+
+        # Step 3: Do we need to stream this?
+        max_stream_size = human.parse_size(self.context.options.stream_large_bodies)
+        if max_stream_size is not None and expected_size > max_stream_size:
+            if request:
+                self.flow.request.stream = True
+                if self.request_body_buf:
+                    # clear buffer and then fake a DataReceived event with everything we had in the buffer so far.
+                    body_buf = self.request_body_buf
+                    self.request_body_buf = b""
+                    yield from self.start_request_stream()
+                    yield from self.handle_event(RequestData(self.stream_id, body_buf))
+            if response:
+                assert self.flow.response
+                self.flow.response.stream = True
+                if self.response_body_buf:
+                    body_buf = self.response_body_buf
+                    self.response_body_buf = b""
+                    yield from self.start_response_stream()
+                    yield from self.handle_event(ResponseData(self.stream_id, body_buf))
+        return False
 
     def check_killed(self, emit_error_hook: bool) -> layer.CommandGenerator[bool]:
         killed_by_us = (
@@ -692,14 +779,16 @@ class HttpLayer(layer.Layer):
                         return
                     elif connection.error:
                         stream = self.command_sources.pop(event)
-                        yield from self.event_to_child(stream, GetHttpConnectionCompleted(event, (None, connection.error)))
+                        yield from self.event_to_child(stream,
+                                                       GetHttpConnectionCompleted(event, (None, connection.error)))
                         return
                     elif connection.connected:
                         # see "tricky multiplexing edge case" in make_http_connection for an explanation
                         h2_to_h1 = self.context.client.alpn == b"h2" and connection.alpn != b"h2"
                         if not h2_to_h1:
                             stream = self.command_sources.pop(event)
-                            yield from self.event_to_child(stream, GetHttpConnectionCompleted(event, (connection, None)))
+                            yield from self.event_to_child(stream,
+                                                           GetHttpConnectionCompleted(event, (connection, None)))
                             return
                     else:
                         pass  # the connection is at least half-closed already, we want a new one.
