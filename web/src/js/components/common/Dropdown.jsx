@@ -39,15 +39,17 @@ export default class Dropdown extends Component {
     }
 
     render() {
-        const {dropup, className, btnClass, text, children} = this.props
+        const {dropup, className, btnClass, text, icon, children, submenu} = this.props
         return (
             <div className={classnames((dropup ? 'dropup' : 'dropdown'), className, {open: this.state.open})}>
                 <a href='#' className={btnClass}
                    onClick={this.open}>
+                    {icon ? <i className={icon}/> : null}
                     {text}
                 </a>
                 <ul className="dropdown-menu" role="menu">
                     {children.map((item, i) => <li key={i}> {item} </li>)}
+                    {submenu}
                 </ul>
             </div>
         )

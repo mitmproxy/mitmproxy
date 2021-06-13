@@ -102,15 +102,7 @@ exports[`Flowcolumns Components should render QuickActionsColumn 1`] = `
 <td
   className="col-quickactions"
 >
-  <div>
-    <div
-      className="quickaction"
-    >
-      <i
-        className="fa fa-fw fa-ellipsis-h"
-      />
-    </div>
-  </div>
+  <div />
 </td>
 `;
 

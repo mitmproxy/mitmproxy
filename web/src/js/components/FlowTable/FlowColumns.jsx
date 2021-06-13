@@ -4,6 +4,7 @@ import classnames from 'classnames'
 import {RequestUtils, ResponseUtils} from '../../flow/utils.js'
 import {formatSize, formatTimeDelta, formatTimeStamp} from '../../utils.js'
 import * as flowActions from "../../ducks/flows";
+import HoverMenu from "./HoverMenu";
 
 export const defaultColumnNames = ["tls", "icon", "path", "method", "status", "size", "time"]
 
@@ -163,7 +164,7 @@ export function TimeStampColumn({flow}) {
 TimeStampColumn.headerClass = 'col-timestamp'
 TimeStampColumn.headerName = 'TimeStamp'
 
-export function QuickActionsColumn({flow}) {
+export function QuickActionsColumn({flow, selected}) {
     const dispatch = useDispatch()
 
     function resume(e) {
@@ -175,7 +176,9 @@ export function QuickActionsColumn({flow}) {
     return (
         <td className="col-quickactions">
             <div>
-                <div className="quickaction"><i className="fa fa-fw fa-ellipsis-h"/></div>
+                {selected ?
+                    <div className="quickaction"><HoverMenu /></div>
+                    : null}
                 {flow.intercepted
                     ? <div className="quickaction" onClick={resume}><i className="fa fa-fw fa-play text-success"/></div>
                     : null}

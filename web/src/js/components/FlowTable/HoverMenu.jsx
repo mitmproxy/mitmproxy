@@ -1,16 +1,12 @@
-import React, { Component } from 'react'
+import React, { Component, useCallback } from 'react'
 import { connect } from 'react-redux'
 import { update as updateSettings } from "../../ducks/settings"
 import Dropdown from '../common/Dropdown'
+import DropdownSubMenu from '../common/DropdownSubMenu'
 
-class HoverMenu extends Component {
-    constructor(props, context) {
-        super(props, context)
-    }
-
-    onClick(e, example) {
+let SubMenu = ({flow, intercept, updateSettings}) => {
+    const onClick = useCallback((e, example) => {
         e.preventDefault();
-        let intercept = this.props.intercept
         if (intercept && intercept.includes(example)) {
             return
         }
@@ -19,7 +15,46 @@ class HoverMenu extends Component {
         } else {
             intercept = `${intercept} | ${example}`
         }
-        this.props.updateSettings({ intercept })
+        updateSettings({ intercept })
+    }, [intercept])
+
+    return (
+        <DropdownSubMenu text="Intercept requests like this">
+            <a href="#" onClick={(e) =>{
+                onClick(e, flow.request.host)
+            }}>
+                <i className="fa fa-fw fa-plus"></i>
+                &nbsp;Intercept {flow.request.host}
+            </a>
+            { flow.request.path != "/" ? <a href="#" onClick={(e) =>{
+                onClick(e, flow.request.host + flow.request.path)
+            }}>
+                <i className="fa fa-fw fa-plus"></i>
+                &nbsp;Intercept {flow.request.host + flow.request.path}
+            </a> : null }
+            <a href="#" onClick={(e) =>{
+                onClick(e,  `~m POST & ${flow.request.host}`)
+            }}>
+                <i className="fa fa-fw fa-plus"></i>
+                &nbsp;Intercept all POST requests from this host
+            </a>
+        </DropdownSubMenu>
+    )
+}
+
+SubMenu = connect(
+    state => ({
+        flow: state.flows.byId[state.flows.selected[0]],
+        intercept: state.settings.intercept,
+    }),
+    {
+        updateSettings,
+    }
+)(SubMenu)
+
+class HoverMenu extends Component {
+    constructor(props, context) {
+        super(props, context)
     }
 
     render() {
@@ -28,24 +63,18 @@ class HoverMenu extends Component {
             return null
         }
         return (
-            <Dropdown className="pull-left btn btn-default" btnClass="special" icon="fa-ellipsis-v" text="Actions">
+            <Dropdown className="pull-right" btnClass="special" icon="fa fa-fw fa-ellipsis-h" submenu={<SubMenu />}>
                 <a href="#" onClick={(e) =>{
-                    this.onClick(e, flow.request.host)
+                    e.preventDefault()
                 }}>
                     <i className="fa fa-fw fa-plus"></i>
-                    &nbsp;Intercept {flow.request.host}
+                    &nbsp;Copy as Curl
                 </a>
-                { flow.request.path != "/" ? <a href="#" onClick={(e) =>{
-                    this.onClick(e, flow.request.host + flow.request.path)
-                }}>
-                    <i className="fa fa-fw fa-plus"></i>
-                    &nbsp;Intercept {flow.request.host + flow.request.path}
-                </a> : null }
                 <a href="#" onClick={(e) =>{
-                    this.onClick(e,  `~m POST & ${flow.request.host}`)
+                    e.preventDefault()
                 }}>
                     <i className="fa fa-fw fa-plus"></i>
-                    &nbsp;Intercept all POST requests from this host
+                    &nbsp;Download HAR
                 </a>
             </Dropdown>
         )
@@ -55,9 +84,6 @@ class HoverMenu extends Component {
 export default connect(
     state => ({
         flow: state.flows.byId[state.flows.selected[0]],
-        intercept: state.settings.intercept,
     }),
-    {
-        updateSettings,
-    }
+    null
 )(HoverMenu)

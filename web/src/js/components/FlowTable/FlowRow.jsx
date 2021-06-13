@@ -4,7 +4,6 @@ import classnames from 'classnames'
 import {defaultColumnNames} from './FlowColumns'
 import { pure } from '../../utils'
 import {getDisplayColumns} from './FlowTableHead'
-import HoverMenu from './HoverMenu'
 import { connect } from 'react-redux'
 
 FlowRow.propTypes = {
@@ -28,9 +27,8 @@ function FlowRow({ flow, selected, highlighted, onSelect, displayColumnNames }) 
     return (
         <tr className={className} onClick={() => onSelect(flow.id)}>
             {displayColumns.map(Column => (
-                <Column key={Column.name} flow={flow}/>
+                <Column key={Column.name} flow={flow} selected={selected}/>
             ))}
-            <HoverMenu/>
         </tr>
     )
 }
