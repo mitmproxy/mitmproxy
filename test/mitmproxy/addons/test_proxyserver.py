@@ -3,10 +3,11 @@ from contextlib import asynccontextmanager
 
 import pytest
 
+from mitmproxy import exceptions
 from mitmproxy.addons.proxyserver import Proxyserver
-from mitmproxy.proxy.layers.http import HTTPMode
-from mitmproxy.proxy import layers, server_hooks
 from mitmproxy.connection import Address
+from mitmproxy.proxy import layers, server_hooks
+from mitmproxy.proxy.layers.http import HTTPMode
 from mitmproxy.test import taddons, tflow
 from mitmproxy.test.tflow import tclient_conn, tserver_conn
 
@@ -175,3 +176,15 @@ def test_self_connect():
             server_hooks.ServerConnectionHookData(server, client)
         )
         assert server.error == "Stopped mitmproxy from recursively connecting to itself."
+
+
+def test_options():
+    ps = Proxyserver()
+    with taddons.context(ps) as tctx:
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, body_size_limit="invalid")
+        tctx.configure(ps, body_size_limit="1m")
+
+        with pytest.raises(exceptions.OptionsError):
+            tctx.configure(ps, stream_large_bodies="invalid")
+        tctx.configure(ps, stream_large_bodies="1m")

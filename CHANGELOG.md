@@ -24,10 +24,9 @@ Mitmproxy has a completely new proxy core, fixing many longstanding issues:
   This greatly improves testing capabilities, prevents a wide array of race conditions, and increases
   proper isolation between layers.
 
-We wanted to bring these improvements out, so we have a few temporary regressions:
+We wanted to bring these improvements out, so we have a few regressions:
 
 * Support for HTTP/2 Push Promises has been dropped.
-* body_size_limit is currently unsupported.
 * upstream_auth is currently unsupported.
 
 If you depend on these features, please raise your voice in

@@ -272,6 +272,10 @@ class Http1Client(Http1Connection):
         super().__init__(context, context.server)
 
     def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
+        if isinstance(event, RequestProtocolError):
+            yield commands.CloseConnection(self.conn)
+            return
+
         if not self.stream_id:
             assert isinstance(event, RequestHeaders)
             self.stream_id = event.stream_id
@@ -304,9 +308,6 @@ class Http1Client(Http1Connection):
             elif http1.expected_http_body_size(self.request, self.response) == -1:
                 yield commands.CloseConnection(self.conn, half_close=True)
             yield from self.mark_done(request=True)
-        elif isinstance(event, RequestProtocolError):
-            yield commands.CloseConnection(self.conn)
-            return
         else:
             raise AssertionError(f"Unexpected event: {event}")
 

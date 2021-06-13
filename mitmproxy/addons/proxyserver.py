@@ -99,6 +99,20 @@ class Proxyserver:
             """
         )
         loader.add_option(
+            "body_size_limit", Optional[str], None,
+            """
+            Byte size limit of HTTP request and response bodies. Understands
+            k/m/g suffixes, i.e. 3m for 3 megabytes.
+            """
+        )
+        loader.add_option(
+            "keep_host_header", bool, False,
+            """
+            Reverse Proxy: Keep the original host header instead of rewriting it
+            to the reverse proxy target.
+            """
+        )
+        loader.add_option(
             "proxy_debug", bool, False,
             "Enable debug logs in the proxy core.",
         )
@@ -110,13 +124,20 @@ class Proxyserver:
         self.configure(["listen_port"])
 
     def configure(self, updated):
-        if not self.is_running:
-            return
         if "stream_large_bodies" in updated:
             try:
                 human.parse_size(ctx.options.stream_large_bodies)
-            except ValueError as e:
-                raise exceptions.OptionsError(e)
+            except ValueError:
+                raise exceptions.OptionsError(f"Invalid stream_large_bodies specification: "
+                                              f"{ctx.options.stream_large_bodies}")
+        if "body_size_limit" in updated:
+            try:
+                human.parse_size(ctx.options.body_size_limit)
+            except ValueError:
+                raise exceptions.OptionsError(f"Invalid body_size_limit specification: "
+                                              f"{ctx.options.body_size_limit}")
+        if not self.is_running:
+            return
         if "mode" in updated and ctx.options.mode == "transparent":  # pragma: no cover
             platform.init_transparent_mode()
         if any(x in updated for x in ["server", "listen_host", "listen_port"]):

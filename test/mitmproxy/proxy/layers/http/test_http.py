@@ -274,7 +274,7 @@ def test_response_streaming(tctx, why, transfer_encoding):
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
 
     if why.startswith("body_size"):
-        tctx.options.stream_large_bodies = why.removeprefix("body_size=")
+        tctx.options.stream_large_bodies = why.replace("body_size=", "")
 
     def enable_streaming(flow: HTTPFlow):
         if why == "addon":
@@ -369,7 +369,7 @@ def test_request_streaming(tctx, why, transfer_encoding, response):
     playbook = Playbook(http.HttpLayer(tctx, HTTPMode.regular))
 
     if why.startswith("body_size"):
-        tctx.options.stream_large_bodies = why.removeprefix("body_size=")
+        tctx.options.stream_large_bodies = why.replace("body_size=", "")
 
     def enable_streaming(flow: HTTPFlow):
         if why == "addon":
@@ -483,6 +483,60 @@ def test_request_streaming(tctx, why, transfer_encoding, response):
         assert b"502 Bad Gateway" in err()
     else:  # pragma: no cover
         assert False
+
+
+@pytest.mark.parametrize("where", ["request", "response"])
+@pytest.mark.parametrize("transfer_encoding", ["identity", "chunked"])
+def test_body_size_limit(tctx, where, transfer_encoding):
+    """Test HTTP request body_size_limit"""
+    tctx.options.body_size_limit = "3"
+    err = Placeholder(bytes)
+    flow = Placeholder(HTTPFlow)
+
+    if transfer_encoding == "identity":
+        body = b"Content-Length: 6\r\n\r\nabcdef"
+    else:
+        body = b"Transfer-Encoding: chunked\r\n\r\n6\r\nabcdef"
+
+    if where == "request":
+        assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+            >> DataReceived(tctx.client, b"POST http://example.com/ HTTP/1.1\r\n"
+                                         b"Host: example.com\r\n" + body)
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpErrorHook(flow)
+            >> reply()
+            << SendData(tctx.client, err)
+            << CloseConnection(tctx.client)
+        )
+        assert b"413 Payload Too Large" in err()
+        assert b"body_size_limit" in err()
+    else:
+        server = Placeholder(Server)
+        assert (
+            Playbook(http.HttpLayer(tctx, HTTPMode.regular))
+            >> DataReceived(tctx.client, b"GET http://example.com/ HTTP/1.1\r\n"
+                                         b"Host: example.com\r\n\r\n")
+            << http.HttpRequestHeadersHook(flow)
+            >> reply()
+            << http.HttpRequestHook(flow)
+            >> reply()
+            << OpenConnection(server)
+            >> reply(None)
+            << SendData(server, b"GET / HTTP/1.1\r\n"
+                                b"Host: example.com\r\n\r\n")
+            >> DataReceived(server, b"HTTP/1.1 200 OK\r\n" + body)
+            << http.HttpResponseHeadersHook(flow)
+            >> reply()
+            << http.HttpErrorHook(flow)
+            >> reply()
+            << SendData(tctx.client, err)
+            << CloseConnection(tctx.client)
+            << CloseConnection(server)
+        )
+        assert b"502 Bad Gateway" in err()
+        assert b"body_size_limit" in err()
 
 
 @pytest.mark.parametrize("connect", [True, False])
@@ -763,14 +817,15 @@ def test_http_proxy_relative_request(tctx):
 
 def test_http_proxy_relative_request_no_host_header(tctx):
     """Test handling of a relative-form "GET /" in regular proxy mode, but without a host header."""
+    err = Placeholder(bytes)
     assert (
             Playbook(http.HttpLayer(tctx, HTTPMode.regular), hooks=False)
             >> DataReceived(tctx.client, b"GET / HTTP/1.1\r\n\r\n")
-            << SendData(tctx.client, b"HTTP/1.1 400 Bad Request\r\n"
-                                     b"content-length: 53\r\n"
-                                     b"\r\n"
-                                     b"HTTP request has no host header, destination unknown.")
+            << SendData(tctx.client, err)
+            << CloseConnection(tctx.client)
     )
+    assert b"400 Bad Request" in err()
+    assert b"HTTP request has no host header, destination unknown." in err()
 
 
 def test_http_expect(tctx):
