@@ -15,7 +15,7 @@ class ProxyAppMain extends Component {
         window.addEventListener('keydown', this.props.onKeyDown);
     }
 
-    UNSAFE_componentWillUnmount() {
+    componentWillUnmount() {
         window.removeEventListener('keydown', this.props.onKeyDown);
     }
 
