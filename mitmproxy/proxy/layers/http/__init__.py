@@ -564,17 +564,7 @@ class HttpStream(layer.Layer):
         yield from self.handle_connect_finish()
 
     def handle_connect_upstream(self):
-        assert self.context.server.via.scheme in ("http", "https")
-
-        http_proxy = Server(self.context.server.via.address)
-
-        stack = tunnel.LayerStack()
-        if self.context.server.via.scheme == "https":
-            http_proxy.sni = self.context.server.via.address[0]
-            stack /= tls.ServerTLSLayer(self.context, http_proxy)
-        stack /= _upstream_proxy.HttpUpstreamProxy(self.context, http_proxy, True)
-
-        self.child_layer = stack[0]
+        self.child_layer = _upstream_proxy.HttpUpstreamProxy.make(self.context, True)[0]
         yield from self.handle_connect_finish()
 
     def handle_connect_finish(self):
@@ -813,21 +803,15 @@ class HttpLayer(layer.Layer):
         if not can_use_context_connection:
 
             context.server = Server(event.address)
-            if event.tls:
-                context.server.sni = event.address[0]
 
             if event.via:
+                context.server.via = event.via
                 assert event.via.scheme in ("http", "https")
-                http_proxy = Server(event.via.address)
-
-                if event.via.scheme == "https":
-                    http_proxy.alpn_offers = tls.HTTP_ALPNS
-                    http_proxy.sni = event.via.address[0]
-                    stack /= tls.ServerTLSLayer(context, http_proxy)
-
-                send_connect = not (self.mode == HTTPMode.upstream and not event.tls)
-                stack /= _upstream_proxy.HttpUpstreamProxy(context, http_proxy, send_connect)
+                # We always send a CONNECT request, *except* for plaintext absolute-form HTTP requests in upstream mode.
+                send_connect = event.tls or self.mode != HTTPMode.upstream
+                stack /= _upstream_proxy.HttpUpstreamProxy.make(context, send_connect)
             if event.tls:
+                context.server.sni = event.address[0]
                 stack /= tls.ServerTLSLayer(context)
 
         stack /= HttpClient(context)
@@ -850,14 +834,9 @@ class HttpLayer(layer.Layer):
             stream = self.command_sources.pop(cmd)
             yield from self.event_to_child(stream, GetHttpConnectionCompleted(cmd, reply))
 
-            # Somewhat ugly edge case: If we do HTTP/2 -> HTTP/1 proxying we don't want
-            # to handle everything over a single connection.
-            # Tricky multiplexing edge case: Assume we are doing HTTP/2 -> HTTP/1 proxying,
-            #
-            # that receives two responses
-            # that neither have a content-length specified nor a chunked transfer encoding.
-            # We can't process these two flows to the same h1 connection as they would both have
-            # "read until eof" semantics. The only workaround left is to open a separate connection for each flow.
+            # Tricky multiplexing edge case: Assume we are doing HTTP/2 -> HTTP/1 proxying and the destination server
+            # only serves responses with HTTP read-until-EOF semantics. In this case we can't process two flows on the
+            # same connection. The only workaround left is to open a separate connection for each flow.
             if not command.err and self.context.client.alpn == b"h2" and command.connection.alpn != b"h2":
                 for cmd in waiting[1:]:
                     yield from self.get_connection(cmd, reuse=False)
