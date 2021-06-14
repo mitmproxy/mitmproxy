@@ -34,6 +34,7 @@ class HttpUpstreamProxy(tunnel.TunnelLayer):
     @classmethod
     def make(cls, ctx: context.Context, send_connect: bool) -> tunnel.LayerStack:
         spec = ctx.server.via
+        assert spec
         assert spec.scheme in ("http", "https")
 
         http_proxy = connection.Server(spec.address)

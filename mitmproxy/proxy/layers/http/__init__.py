@@ -20,7 +20,7 @@ from ._base import HttpCommand, HttpConnection, ReceiveHttp, StreamId
 from ._events import HttpEvent, RequestData, RequestEndOfMessage, RequestHeaders, RequestProtocolError, RequestTrailers, \
     ResponseData, ResponseEndOfMessage, ResponseHeaders, ResponseProtocolError, ResponseTrailers
 from ._hooks import HttpConnectHook, HttpErrorHook, HttpRequestHeadersHook, HttpRequestHook, HttpResponseHeadersHook, \
-    HttpResponseHook
+    HttpResponseHook, HttpConnectUpstreamHook  # noqa
 from ._http1 import Http1Client, Http1Connection, Http1Server
 from ._http2 import Http2Client, Http2Server
 from ...context import Context
