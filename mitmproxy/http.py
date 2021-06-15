@@ -501,7 +501,7 @@ class Message(serializable.Serializable):
         if "content-encoding" not in self.headers:
             raise ValueError("Invalid content encoding {}".format(repr(encoding)))
 
-    def json(self, **kwargs: Any) -> dict:
+    def json(self, **kwargs: Any) -> Any:
         """
         Returns the JSON encoded content of the response, if any.
         `**kwargs` are optional arguments that will be
@@ -510,14 +510,15 @@ class Message(serializable.Serializable):
         Will raise if the content can not be decoded and then parsed as JSON.
 
         *Raises:*
-         - `json.decoder.JSONDecodeError` if content can not be decoded as JSON.
-         - `TypeError` if the content is not str or bytes
+         - `json.decoder.JSONDecodeError` if content is not valid JSON.
+         - `TypeError` if the content is not available, for example because the response
+            has been streamed.
         """
         content = self.get_content(strict=False)
-        if isinstance(content, (str, bytes)):
-            return json.loads(content, **kwargs)
+        if content is None:
+            raise TypeError('Message content is not available.')
         else:
-            raise TypeError('content is not str or bytes')
+            return json.loads(content, **kwargs)
 
 
 class Request(Message):
