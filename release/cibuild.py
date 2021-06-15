@@ -215,7 +215,7 @@ class BuildEnviron:
     @property
     def should_upload_docker(self) -> bool:
         return all([
-            (self.is_prod_release or self.branch == "main"),
+            (self.is_prod_release or self.branch in ["main", "dockertest"]),
             self.should_build_docker,
             self.has_docker_creds,
         ])
