@@ -272,42 +272,34 @@ def build_wheel(be: BuildEnviron) -> None:  # pragma: no cover
     subprocess.check_call(["tox", "-e", "wheeltest", "--", whl])
 
 
+DOCKER_PLATFORMS = "linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6"
+DOCKER_PLATFORMS = "linux/amd64,linux/arm64"  # FIXME remove
+
 def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
     click.echo("Building Docker images...")
 
     whl, = be.dist_dir.glob('mitmproxy-*-py3-none-any.whl')
     docker_build_dir = be.release_dir / "docker"
     shutil.copy(whl, docker_build_dir / whl.name)
-    platforms = "linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6"
-    platforms = "linux/amd64,linux/arm64"  # FIXME remove
 
-    """
     subprocess.check_call([
-        "docker",
-        "buildx",
-        "create",
-        "--platform", platforms,
-        "--driver", "docker-container",
-        "--name", "dcbuilder",
-        "--use",
-    ])
-    print("build")
-    """
-    subprocess.check_call([
-        "docker",
-        "buildx",
-        "build",
-        "--platform", platforms,
-        # "--load",
+        "docker", "buildx", "build",
         "--tag", be.docker_tag,
+        "--platform", DOCKER_PLATFORMS,
         "--build-arg", f"MITMPROXY_WHEEL={whl.name}",
         "."
-    ],
-        cwd=docker_build_dir
-    )
-    print("run")
-    subprocess.run(["docker", "images"])
+    ], cwd=docker_build_dir)
     # smoke-test the newly built docker image
+
+    # build again without --platform but with --load to make the tag available,
+    # see https://github.com/docker/buildx/issues/59#issuecomment-616050491
+    subprocess.check_call([
+        "docker", "buildx", "build",
+        "--tag", be.docker_tag,
+        "--load",
+        "--build-arg", f"MITMPROXY_WHEEL={whl.name}",
+        "."
+    ], cwd=docker_build_dir)
     r = subprocess.run([
         "docker",
         "run",
@@ -534,7 +526,20 @@ def upload():  # pragma: no cover
             "-u", be.docker_username,
             "-p", be.docker_password,
         ])
-        subprocess.check_call(["docker", "push", be.docker_tag])
+
+        whl, = be.dist_dir.glob('mitmproxy-*-py3-none-any.whl')
+        docker_build_dir = be.release_dir / "docker"
+        shutil.copy(whl, docker_build_dir / whl.name)
+        # buildx is a bit weird in that we need to reinvoke build, but oh well.
+        subprocess.check_call([
+            "docker", "buildx", "build",
+            "--tag", be.docker_tag,
+            "--push",
+            "--platform", DOCKER_PLATFORMS,
+            "--build-arg", f"MITMPROXY_WHEEL={whl.name}",
+            "."
+        ], cwd=docker_build_dir)
+
         if be.is_prod_release:
             subprocess.check_call(["docker", "tag", be.docker_tag, "mitmproxy/mitmproxy:latest"])
             subprocess.check_call(["docker", "push", "mitmproxy/mitmproxy:latest"])

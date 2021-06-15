@@ -63,7 +63,7 @@ If you depend on these features, please raise your voice in
 * Improve readability of SHA256 fingerprint. (@wrekone)
 * Metadata and Replay Flow Filters: Flows may be filtered based on metadata and replay status. (@rbdixon)
 * Flow control: don't read connection data faster than it can be forwarded. (@hazcod)
-* Docker images for ARM64 architecture (@hazcod)
+* Docker images for ARM64 architecture (@hazcod, @mhils)
 * Fix parsing of certificate issuer/subject with escaped special characters (@Prinzhorn)
 * Customize markers with emoji, and filters: The `flow.mark` command may be used to mark a flow with either the default
   "red ball" marker, a single character, or an emoji like `:grapes:`. Use the `~marker` filter to filter on marker characters. (@rbdixon)
