@@ -196,6 +196,8 @@ jobs:
         with:
           name: binaries.linux
           path: release/dist
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
       - uses: docker/setup-buildx-action@v1
         with:
           install: true
