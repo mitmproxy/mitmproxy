@@ -272,7 +272,7 @@ def build_wheel(be: BuildEnviron) -> None:  # pragma: no cover
     subprocess.check_call(["tox", "-e", "wheeltest", "--", whl])
 
 
-DOCKER_PLATFORMS = "linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6"
+DOCKER_PLATFORMS = "linux/amd64,linux/arm64"
 
 
 def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
