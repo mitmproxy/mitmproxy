@@ -279,6 +279,8 @@ def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
     docker_build_dir = be.release_dir / "docker"
     shutil.copy(whl, docker_build_dir / whl.name)
     platforms = "linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6"
+    platforms = "linux/amd64,linux/arm64"  # FIXME remove
+
     """
     subprocess.check_call([
         "docker",
@@ -296,7 +298,7 @@ def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
         "buildx",
         "build",
         "--platform", platforms,
-        "--load",
+        # "--load",
         "--tag", be.docker_tag,
         "--build-arg", f"MITMPROXY_WHEEL={whl.name}",
         "."
