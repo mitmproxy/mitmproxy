@@ -275,6 +275,7 @@ def build_wheel(be: BuildEnviron) -> None:  # pragma: no cover
 DOCKER_PLATFORMS = "linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6"
 DOCKER_PLATFORMS = "linux/amd64,linux/arm64"  # FIXME remove
 
+
 def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
     click.echo("Building Docker images...")
 
@@ -307,7 +308,7 @@ def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
         be.docker_tag,
         "mitmdump",
         "--version",
-    ])
+    ], check=True, capture_output=True)
     print(r.stdout.decode())
     assert "Mitmproxy: " in r.stdout.decode()
 
