@@ -1,4 +1,4 @@
-FROM python:3.9-slim-buster
+FROM python:3.9-buster
 
 ARG MITMPROXY_WHEEL
 
