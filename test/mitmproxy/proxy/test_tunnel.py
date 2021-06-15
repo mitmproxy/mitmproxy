@@ -266,3 +266,8 @@ def test_layer_stack(tctx):
     stack /= b
     assert stack[0] == a
     assert a.child_layer is b
+
+    stack2 = tunnel.LayerStack()
+    stack2 /= TChildLayer(tctx)
+    stack2 /= stack
+    assert stack2[0].child_layer is a  # type: ignore
