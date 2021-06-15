@@ -278,20 +278,22 @@ def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
     whl, = be.dist_dir.glob('mitmproxy-*-py3-none-any.whl')
     docker_build_dir = be.release_dir / "docker"
     shutil.copy(whl, docker_build_dir / whl.name)
+    print("create")
     subprocess.check_call([
         "docker",
         "buildx",
         "create",
-        "--platform", "linux/amd64,linux/arm64,darwin/amd64,darwin/arm64",
+        "--platform", "linux/amd64,linux/arm64",
         "--driver", "docker-container",
         "--name", "dcbuilder",
         "--use",
     ])
+    print("build")
     subprocess.check_call([
         "docker",
         "buildx",
         "build",
-        "--platform", "linux/amd64,linux/arm64,darwin/amd64,darwin/arm64",
+        "--platform", "linux/amd64,linux/arm64",
         "--load",
         "--tag", be.docker_tag,
         "--build-arg", f"MITMPROXY_WHEEL={whl.name}",
@@ -299,6 +301,8 @@ def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
     ],
         cwd=docker_build_dir
     )
+    print("run")
+    subprocess.run(["docker", "images"])
     # smoke-test the newly built docker image
     r = subprocess.run([
         "docker",
