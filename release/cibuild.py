@@ -278,22 +278,24 @@ def build_docker_image(be: BuildEnviron) -> None:  # pragma: no cover
     whl, = be.dist_dir.glob('mitmproxy-*-py3-none-any.whl')
     docker_build_dir = be.release_dir / "docker"
     shutil.copy(whl, docker_build_dir / whl.name)
-    print("create")
+    platforms = "linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6"
+    """
     subprocess.check_call([
         "docker",
         "buildx",
         "create",
-        "--platform", "linux/amd64,linux/arm64",
+        "--platform", platforms,
         "--driver", "docker-container",
         "--name", "dcbuilder",
         "--use",
     ])
     print("build")
+    """
     subprocess.check_call([
         "docker",
         "buildx",
         "build",
-        "--platform", "linux/amd64,linux/arm64",
+        "--platform", platforms,
         "--load",
         "--tag", be.docker_tag,
         "--build-arg", f"MITMPROXY_WHEEL={whl.name}",

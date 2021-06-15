@@ -201,9 +201,6 @@ jobs:
       - uses: docker/setup-buildx-action@v1
         with:
           install: true
-        id: buildx
-      - name: Available platforms
-        run: echo ${{ steps.buildx.outputs.platforms }}
       - run: pip install -e .[dev]
       - run: python release/cibuild.py build
       - run: python release/cibuild.py upload
