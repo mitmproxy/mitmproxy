@@ -1,8 +1,8 @@
-import React, { Component } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
-import { connect } from 'react-redux'
-import { setContentView } from '../../ducks/ui/flow';
-import Dropdown from '../common/Dropdown'
+import {connect} from 'react-redux'
+import {setContentView} from '../../ducks/ui/flow';
+import Dropdown, {MenuItem} from '../common/Dropdown'
 
 
 ViewSelector.propTypes = {
@@ -11,22 +11,24 @@ ViewSelector.propTypes = {
     setContentView: PropTypes.func.isRequired
 }
 
-export function ViewSelector ({contentViews, activeView, setContentView}){
-    let inner = <span> <b>View:</b> {activeView.toLowerCase()} <span className="caret"/> </span>
+export function ViewSelector({contentViews, activeView, setContentView}) {
+    let inner = <span><b>View:</b> {activeView.toLowerCase()} <span className="caret"/></span>
 
     return (
-        <Dropdown dropup className="pull-left" btnClass="btn btn-default btn-xs" text={inner}>
+        <Dropdown
+            text={inner}
+            className="btn btn-default btn-xs pull-left"
+            options={{placement:"top-start"}}>
             {contentViews.map(name =>
-                <a href="#" key={name}  onClick={e => {e.preventDefault(); setContentView(name)}}>
+                <MenuItem key={name} onClick={() => setContentView(name)}>
                     {name.toLowerCase().replace('_', ' ')}
-                </a>
-                )
-            }
+                </MenuItem>
+            )}
         </Dropdown>
     )
 }
 
-export default connect (
+export default connect(
     state => ({
         contentViews: state.settings.contentViews || [],
         activeView: state.ui.flow.contentView,

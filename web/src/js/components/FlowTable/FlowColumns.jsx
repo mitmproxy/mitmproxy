@@ -1,10 +1,10 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react'
 import {useDispatch} from 'react-redux'
 import classnames from 'classnames'
 import {RequestUtils, ResponseUtils} from '../../flow/utils.js'
 import {formatSize, formatTimeDelta, formatTimeStamp} from '../../utils.js'
 import * as flowActions from "../../ducks/flows";
-import HoverMenu from "./HoverMenu";
+import Dropdown, {MenuItem, SubMenu} from "../common/Dropdown";
 
 export const defaultColumnNames = ["tls", "icon", "path", "method", "status", "size", "time"]
 
@@ -167,22 +167,29 @@ TimeStampColumn.headerName = 'TimeStamp'
 export function QuickActionsColumn({flow, selected}) {
     const dispatch = useDispatch()
 
-    function resume(e) {
-        dispatch(flowActions.resume(flow))
-        e.preventDefault()
-        e.stopPropagation()
+    let [open, setOpen] = useState(false)
+
+    let intercept = null;
+    if (flow.intercepted) {
+        intercept = <a href="#" className="quickaction" onClick={() => dispatch(flowActions.resume(flow))}>
+            <i className="fa fa-fw fa-play text-success"/>
+        </a>;
     }
 
     return (
-        <td className="col-quickactions">
+        <td className={classnames("col-quickactions", {hover: open})} onClick={(e) => e.stopPropagation()}>
             <div>
-                {selected ?
-                    <div className="quickaction"><HoverMenu /></div>
-                    : null}
-                {flow.intercepted
-                    ? <div className="quickaction" onClick={resume}><i className="fa fa-fw fa-play text-success"/></div>
-                    : null}
+                {intercept}
+                <Dropdown text={<i className="fa fa-fw fa-ellipsis-h"/>} className="quickaction" onOpen={setOpen} options={{placement: "bottom-end"}}>
+                    <MenuItem onClick={() => alert("Foo!")}>Foo</MenuItem>
+                    <SubMenu title="Bar">
+                        <MenuItem>Qux</MenuItem>
+                        <MenuItem>Quux</MenuItem>
+                    </SubMenu>
+                    <MenuItem>Baz</MenuItem>
+                </Dropdown>
             </div>
+
         </td>
     )
 }
