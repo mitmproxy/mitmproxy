@@ -115,9 +115,13 @@ class NextLayer:
         # 2. Check for TLS
         if client_tls:
             # client tls usually requires a server tls layer as parent layer, except:
-            #  - reverse proxy mode manages this itself.
             #  - a secure web proxy doesn't have a server part.
-            if s(modes.ReverseProxy) or s(modes.HttpProxy):
+            #  - reverse proxy mode manages this itself.
+            if (
+                s(modes.HttpProxy) or
+                s(modes.ReverseProxy) or
+                s(modes.ReverseProxy, layers.ServerTLSLayer)
+            ):
                 return layers.ClientTLSLayer(context)
             else:
                 # We already assign the next layer here os that ServerTLSLayer
@@ -127,11 +131,11 @@ class NextLayer:
                 return ret
 
         # 3. Setup the HTTP layer for a regular HTTP proxy or an upstream proxy.
-        if any([
-            s(modes.HttpProxy),
+        if (
+            s(modes.HttpProxy) or
             # or a "Secure Web Proxy", see https://www.chromium.org/developers/design-documents/secure-web-proxy
-            s(modes.HttpProxy, layers.ClientTLSLayer),
-        ]):
+            s(modes.HttpProxy, layers.ClientTLSLayer)
+        ):
             if ctx.options.mode == "regular":
                 return layers.HttpLayer(context, HTTPMode.regular)
             else:
