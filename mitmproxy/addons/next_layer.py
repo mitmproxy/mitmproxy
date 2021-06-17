@@ -131,11 +131,11 @@ class NextLayer:
                 return ret
 
         # 3. Setup the HTTP layer for a regular HTTP proxy or an upstream proxy.
-        if any([
-            s(modes.HttpProxy),
+        if (
+            s(modes.HttpProxy) or
             # or a "Secure Web Proxy", see https://www.chromium.org/developers/design-documents/secure-web-proxy
-            s(modes.HttpProxy, layers.ClientTLSLayer),
-        ]):
+            s(modes.HttpProxy, layers.ClientTLSLayer)
+        ):
             if ctx.options.mode == "regular":
                 return layers.HttpLayer(context, HTTPMode.regular)
             else:
