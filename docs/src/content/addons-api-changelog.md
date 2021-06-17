@@ -18,12 +18,12 @@ We've revised mitmproxy's connection-specific event hooks as part of the new pro
 [event hook documentation]({{< relref "addons-api#ConnectionEvents" >}}) for details. As the passed objects are slightly
 different now, we've also taken this opportunity to introduce a consistent event names:
 
-| mitmproxy 6 | mitmproxy 7 |
-|--|--|
-| `clientconnect` | `client_connected` |
+| mitmproxy 6        | mitmproxy 7           |
+| ------------------ | --------------------- |
+| `clientconnect`    | `client_connected`    |
 | `clientdisconnect` | `client_disconnected` |
-| ❌ | `server_connect` |
-| `serverconnect` | `server_connected` |
+| ❌                 | `server_connect`      |
+| `serverconnect`    | `server_connected`    |
 | `serverdisconnect` | `server_disconnected` |
 
 #### Logging
@@ -43,4 +43,4 @@ mitmproxy 6 had a custom WebSocketFlow class, which had
 [ugly co-dependencies with the related HTTPFlow](https://github.com/mitmproxy/mitmproxy/issues/4425). Long story short,
 WebSocketFlow is no more and instead HTTPFlow has a neat 
 [`.websocket` attribute]({{< relref "api/mitmproxy.http.md#HTTPFlow.websocket" >}}). All WebSocket flows are now passed
-the originating `HTTPFlow` with this attribute set.
+the originating `HTTPFlow` with this attribute set. As always, existing dumpfiles are automatically converted on load.
