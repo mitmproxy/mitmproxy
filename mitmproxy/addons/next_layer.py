@@ -115,9 +115,13 @@ class NextLayer:
         # 2. Check for TLS
         if client_tls:
             # client tls usually requires a server tls layer as parent layer, except:
-            #  - reverse proxy mode manages this itself.
             #  - a secure web proxy doesn't have a server part.
-            if s(modes.ReverseProxy) or s(modes.HttpProxy):
+            #  - reverse proxy mode manages this itself.
+            if (
+                s(modes.HttpProxy) or
+                s(modes.ReverseProxy) or
+                s(modes.ReverseProxy, layers.ServerTLSLayer)
+            ):
                 return layers.ClientTLSLayer(context)
             else:
                 # We already assign the next layer here os that ServerTLSLayer
