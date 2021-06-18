@@ -1,10 +1,11 @@
-import React, {useEffect, useState} from 'react'
+import React, {useCallback, useState} from 'react'
 import {useDispatch} from 'react-redux'
 import classnames from 'classnames'
 import {RequestUtils, ResponseUtils} from '../../flow/utils.js'
 import {formatSize, formatTimeDelta, formatTimeStamp} from '../../utils.js'
 import * as flowActions from "../../ducks/flows";
 import Dropdown, {MenuItem, SubMenu} from "../common/Dropdown";
+import { fetchApi } from "../../utils"
 
 export const defaultColumnNames = ["tls", "icon", "path", "method", "status", "size", "time"]
 
@@ -164,14 +165,38 @@ export function TimeStampColumn({flow}) {
 TimeStampColumn.headerClass = 'col-timestamp'
 TimeStampColumn.headerName = 'TimeStamp'
 
-export function QuickActionsColumn({flow, selected}) {
+export function QuickActionsColumn({flow, intercept, updateSettings, removeFlow, exportFlow}) {
+    const InterceptThis = useCallback((example) => {
+        if (intercept && intercept.includes(example)) {
+            return
+        }
+        if (!intercept) {
+            intercept = example
+        } else {
+            intercept = `${intercept} | ${example}`
+        }
+        dispatch(updateSettings({ intercept }))
+    }, [intercept])
+
+    const exportAsCURL = useCallback(() => {
+        if (!flow) {
+            return
+        }
+
+        fetchApi(`/flows/${flow.id}/export`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            navigator.clipboard.writeText(data.export)
+        })
+    }, [flow])
+
     const dispatch = useDispatch()
 
     let [open, setOpen] = useState(false)
 
-    let intercept = null;
+    let forwardIntercept = null;
     if (flow.intercepted) {
-        intercept = <a href="#" className="quickaction" onClick={() => dispatch(flowActions.resume(flow))}>
+        forwardIntercept = <a href="#" className="quickaction" onClick={() => dispatch(flowActions.resume(flow))}>
             <i className="fa fa-fw fa-play text-success"/>
         </a>;
     }
@@ -179,14 +204,23 @@ export function QuickActionsColumn({flow, selected}) {
     return (
         <td className={classnames("col-quickactions", {hover: open})} onClick={(e) => e.stopPropagation()}>
             <div>
-                {intercept}
+                {forwardIntercept}
                 <Dropdown text={<i className="fa fa-fw fa-ellipsis-h"/>} className="quickaction" onOpen={setOpen} options={{placement: "bottom-end"}}>
-                    <MenuItem onClick={() => alert("Foo!")}>Foo</MenuItem>
-                    <SubMenu title="Bar">
-                        <MenuItem>Qux</MenuItem>
-                        <MenuItem>Quux</MenuItem>
+                    <MenuItem onClick={() => exportAsCURL()}>Copy as cURL</MenuItem>
+                    <SubMenu title="Intercept requests like this">
+                        <MenuItem onClick={() =>{InterceptThis(flow.request.host)}}>
+                            Intercept {flow.request.host}
+                        </MenuItem>
+                        <MenuItem onClick={() =>{InterceptThis(flow.request.host + flow.request.path)}}>
+                            Intercept {flow.request.host + flow.request.path}
+                        </MenuItem>
+                        <MenuItem onClick={() =>{InterceptThis(`~m POST & ${flow.request.host}`)}}>
+                            Intercept all POST requests from this host
+                        </MenuItem>
                     </SubMenu>
-                    <MenuItem>Baz</MenuItem>
+                    <MenuItem onClick={() =>{dispatch(removeFlow(flow))}}>
+                        Delete
+                    </MenuItem>
                 </Dropdown>
             </div>
 

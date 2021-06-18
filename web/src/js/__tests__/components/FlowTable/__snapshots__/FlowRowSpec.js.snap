@@ -50,8 +50,19 @@ exports[`FlowRow Component should render correctly 1`] = `
   </td>
   <td
     className="col-quickactions"
+    onClick={[Function]}
   >
-    <div />
+    <div>
+      <a
+        className="quickaction"
+        href="#"
+        onClick={[Function]}
+      >
+        <i
+          className="fa fa-fw fa-ellipsis-h"
+        />
+      </a>
+    </div>
   </td>
 </tr>
 `;

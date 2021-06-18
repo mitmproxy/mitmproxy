@@ -101,8 +101,19 @@ exports[`Flowcolumns Components should render MethodColumn 1`] = `
 exports[`Flowcolumns Components should render QuickActionsColumn 1`] = `
 <td
   className="col-quickactions"
+  onClick={[Function]}
 >
-  <div />
+  <div>
+    <a
+      className="quickaction"
+      href="#"
+      onClick={[Function]}
+    >
+      <i
+        className="fa fa-fw fa-ellipsis-h"
+      />
+    </a>
+  </div>
 </td>
 `;
 

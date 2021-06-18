@@ -21,6 +21,7 @@ from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
 from mitmproxy.utils.strutils import always_str
+from mitmproxy.addons.export import curl_command
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
@@ -127,6 +128,11 @@ def logentry_to_json(e: log.LogEntry) -> dict:
         "level": e.level
     }
 
+
+def cURL_format_to_json(cURL: str):
+    return {
+        "export": cURL
+    }
 
 class APIError(tornado.web.HTTPError):
     pass
@@ -264,6 +270,12 @@ class DumpFlows(RequestHandler):
         for i in io.FlowReader(bio).stream():
             asyncio.ensure_future(self.master.load_flow(i))
         bio.close()
+
+
+class ExportFlow(RequestHandler):
+    def post(self, flow_id):
+        print(curl_command(self.flow))
+        self.write(cURL_format_to_json(curl_command(self.flow)))
 
 
 class ClearAll(RequestHandler):
@@ -536,6 +548,7 @@ class Application(tornado.web.Application):
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/export", ExportFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data", FlowContent),
                 (
                     r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",
