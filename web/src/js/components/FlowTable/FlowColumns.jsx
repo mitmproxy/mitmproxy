@@ -4,6 +4,7 @@ import classnames from 'classnames'
 import {RequestUtils, ResponseUtils} from '../../flow/utils.js'
 import {formatSize, formatTimeDelta, formatTimeStamp} from '../../utils.js'
 import * as flowActions from "../../ducks/flows";
+import { addInterceptFilter } from "../../ducks/settings"
 import Dropdown, {MenuItem, SubMenu} from "../common/Dropdown";
 import { fetchApi } from "../../utils"
 
@@ -165,18 +166,9 @@ export function TimeStampColumn({flow}) {
 TimeStampColumn.headerClass = 'col-timestamp'
 TimeStampColumn.headerName = 'TimeStamp'
 
-export function QuickActionsColumn({flow, intercept, updateSettings, removeFlow, exportFlow}) {
-    const InterceptThis = useCallback((example) => {
-        if (intercept && intercept.includes(example)) {
-            return
-        }
-        if (!intercept) {
-            intercept = example
-        } else {
-            intercept = `${intercept} | ${example}`
-        }
-        dispatch(updateSettings({ intercept }))
-    }, [intercept])
+export function QuickActionsColumn({flow, intercept}) {
+    const dispatch = useDispatch()
+    let [open, setOpen] = useState(false)
 
     const exportAsCURL = useCallback(() => {
         if (!flow) {
@@ -189,10 +181,6 @@ export function QuickActionsColumn({flow, intercept, updateSettings, removeFlow,
             navigator.clipboard.writeText(data.export)
         })
     }, [flow])
-
-    const dispatch = useDispatch()
-
-    let [open, setOpen] = useState(false)
 
     let forwardIntercept = null;
     if (flow.intercepted) {
@@ -208,17 +196,17 @@ export function QuickActionsColumn({flow, intercept, updateSettings, removeFlow,
                 <Dropdown text={<i className="fa fa-fw fa-ellipsis-h"/>} className="quickaction" onOpen={setOpen} options={{placement: "bottom-end"}}>
                     <MenuItem onClick={() => exportAsCURL()}>Copy as cURL</MenuItem>
                     <SubMenu title="Intercept requests like this">
-                        <MenuItem onClick={() =>{InterceptThis(flow.request.host)}}>
+                        <MenuItem onClick={() =>{dispatch(addInterceptFilter(flow.request.host))}}>
                             Intercept {flow.request.host}
                         </MenuItem>
-                        <MenuItem onClick={() =>{InterceptThis(flow.request.host + flow.request.path)}}>
+                        <MenuItem onClick={() =>{dispatch(addInterceptFilter(flow.request.host + flow.request.path))}}>
                             Intercept {flow.request.host + flow.request.path}
                         </MenuItem>
-                        <MenuItem onClick={() =>{InterceptThis(`~m POST & ${flow.request.host}`)}}>
+                        <MenuItem onClick={() =>{dispatch(addInterceptFilter(`~m POST & ${flow.request.host}`))}}>
                             Intercept all POST requests from this host
                         </MenuItem>
                     </SubMenu>
-                    <MenuItem onClick={() =>{dispatch(removeFlow(flow))}}>
+                    <MenuItem onClick={() =>{dispatch(flowActions.remove(flow))}}>
                         Delete
                     </MenuItem>
                 </Dropdown>

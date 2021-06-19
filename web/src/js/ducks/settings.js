@@ -29,3 +29,18 @@ export function update(settings) {
     fetchApi.put('/settings', settings)
     return { type: REQUEST_UPDATE }
 }
+
+export function addInterceptFilter(example) {
+    return (dispatch, getState) => {
+        let intercept = getState().settings.intercept;
+        if (intercept && intercept.includes(example)) {
+            return
+        }
+        if (!intercept) {
+            intercept = example
+        } else {
+            intercept = `${intercept} | ${example}`
+        }
+        dispatch(update({ intercept }));
+    }
+}

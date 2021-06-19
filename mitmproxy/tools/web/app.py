@@ -134,6 +134,7 @@ def cURL_format_to_json(cURL: str):
         "export": cURL
     }
 
+
 class APIError(tornado.web.HTTPError):
     pass
 
@@ -274,7 +275,6 @@ class DumpFlows(RequestHandler):
 
 class ExportFlow(RequestHandler):
     def post(self, flow_id):
-        print(curl_command(self.flow))
         self.write(cURL_format_to_json(curl_command(self.flow)))
 
 

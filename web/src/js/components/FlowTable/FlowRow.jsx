@@ -5,8 +5,6 @@ import {defaultColumnNames} from './FlowColumns'
 import { pure } from '../../utils'
 import {getDisplayColumns} from './FlowTableHead'
 import { connect } from 'react-redux'
-import { update as updateSettings } from "../../ducks/settings"
-import * as flowsActions from "../../ducks/flows"
 
 FlowRow.propTypes = {
     onSelect: PropTypes.func.isRequired,
@@ -15,7 +13,7 @@ FlowRow.propTypes = {
     selected: PropTypes.bool,
 }
 
-function FlowRow({ flow, selected, highlighted, onSelect, displayColumnNames, intercept, updateSettings, removeFlow }) {
+function FlowRow({ flow, selected, highlighted, onSelect, displayColumnNames, intercept}) {
     const className = classnames({
         'selected': selected,
         'highlighted': highlighted,
@@ -29,7 +27,7 @@ function FlowRow({ flow, selected, highlighted, onSelect, displayColumnNames, in
     return (
         <tr className={className} onClick={() => onSelect(flow.id)}>
             {displayColumns.map(Column => (
-                <Column key={Column.name} flow={flow} intercept={intercept} updateSettings={updateSettings} removeFlow={removeFlow} />
+                <Column key={Column.name} flow={flow} intercept={intercept}/>
             ))}
         </tr>
     )
@@ -39,9 +37,5 @@ export default connect(
     state => ({
         displayColumnNames: state.options["web_columns"] ? state.options["web_columns"].value : defaultColumnNames,
         intercept: state.settings.intercept,
-    }),
-    {
-        updateSettings,
-        removeFlow: flowsActions.remove,
-    }
+    })
 )(pure(FlowRow))
