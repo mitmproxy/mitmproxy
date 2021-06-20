@@ -13,7 +13,6 @@ import tornado.websocket
 
 import mitmproxy.flow
 import mitmproxy.tools.web.master  # noqa
-import mitmproxy.tools.console.master
 from mitmproxy import contentviews
 from mitmproxy import flowfilter
 from mitmproxy import http
