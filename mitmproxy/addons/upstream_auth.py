@@ -4,10 +4,11 @@ import base64
 
 from mitmproxy import exceptions
 from mitmproxy import ctx
+from mitmproxy import http
 from mitmproxy.utils import strutils
 
 
-def parse_upstream_auth(auth):
+def parse_upstream_auth(auth: str) -> bytes:
     pattern = re.compile(".+:")
     if pattern.search(auth) is None:
         raise exceptions.OptionsError(
@@ -16,7 +17,7 @@ def parse_upstream_auth(auth):
     return b"Basic" + b" " + base64.b64encode(strutils.always_bytes(auth))
 
 
-class UpstreamAuth():
+class UpstreamAuth:
     """
         This addon handles authentication to systems upstream from us for the
         upstream proxy and reverse proxy mode. There are 3 cases:
@@ -26,8 +27,7 @@ class UpstreamAuth():
         - Upstream proxy regular requests
         - Reverse proxy regular requests (CONNECT is invalid in this mode)
     """
-    def __init__(self):
-        self.auth = None
+    auth: typing.Optional[bytes] = None
 
     def load(self, loader):
         loader.add_option(
@@ -39,26 +39,19 @@ class UpstreamAuth():
         )
 
     def configure(self, updated):
-        # FIXME: We're doing this because our proxy core is terminally confused
-        # at the moment. Ideally, we should be able to check if we're in
-        # reverse proxy mode at the HTTP layer, so that scripts can put the
-        # proxy in reverse proxy mode for specific requests.
         if "upstream_auth" in updated:
             if ctx.options.upstream_auth is None:
                 self.auth = None
             else:
-                if ctx.options.upstream_auth:  # pragma: no cover
-                    ctx.log.warn("upstream_auth is currently nonfunctioning, "
-                                 "see https://github.com/mitmproxy/mitmproxy/issues/4348")
                 self.auth = parse_upstream_auth(ctx.options.upstream_auth)
 
-    def http_connect(self, f):
-        if self.auth and f.mode == "upstream":
+    def http_connect_upstream(self, f: http.HTTPFlow):
+        if self.auth:
             f.request.headers["Proxy-Authorization"] = self.auth
 
-    def requestheaders(self, f):
+    def requestheaders(self, f: http.HTTPFlow):
         if self.auth:
             if f.mode == "upstream" and not f.server_conn.via:
                 f.request.headers["Proxy-Authorization"] = self.auth
             elif ctx.options.mode.startswith("reverse"):
-                f.request.headers["Proxy-Authorization"] = self.auth
+                f.request.headers["Authorization"] = self.auth

@@ -4,7 +4,6 @@ import pytest
 from hypothesis import settings
 
 from mitmproxy import connection, options
-from mitmproxy.addons.core import Core
 from mitmproxy.addons.proxyserver import Proxyserver
 from mitmproxy.addons.termlog import TermLog
 from mitmproxy.proxy import context
@@ -15,7 +14,6 @@ def tctx() -> context.Context:
     opts = options.Options()
     Proxyserver().load(opts)
     TermLog().load(opts)
-    Core().load(opts)
     return context.Context(
         connection.Client(
             ("client", 1234),

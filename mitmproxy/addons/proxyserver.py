@@ -2,7 +2,7 @@ import asyncio
 import warnings
 from typing import Dict, Optional, Tuple
 
-from mitmproxy import command, controller, ctx, flow, http, log, master, options, platform, tcp, websocket
+from mitmproxy import command, controller, ctx, exceptions, flow, http, log, master, options, platform, tcp, websocket
 from mitmproxy.flow import Error, Flow
 from mitmproxy.proxy import commands, events, server_hooks
 from mitmproxy.proxy import server
@@ -91,6 +91,28 @@ class Proxyserver:
             choices=("eager", "lazy")
         )
         loader.add_option(
+            "stream_large_bodies", Optional[str], None,
+            """
+            Stream data to the client if response body exceeds the given
+            threshold. If streamed, the body will not be stored in any way.
+            Understands k/m/g suffixes, i.e. 3m for 3 megabytes.
+            """
+        )
+        loader.add_option(
+            "body_size_limit", Optional[str], None,
+            """
+            Byte size limit of HTTP request and response bodies. Understands
+            k/m/g suffixes, i.e. 3m for 3 megabytes.
+            """
+        )
+        loader.add_option(
+            "keep_host_header", bool, False,
+            """
+            Reverse Proxy: Keep the original host header instead of rewriting it
+            to the reverse proxy target.
+            """
+        )
+        loader.add_option(
             "proxy_debug", bool, False,
             "Enable debug logs in the proxy core.",
         )
@@ -102,6 +124,18 @@ class Proxyserver:
         self.configure(["listen_port"])
 
     def configure(self, updated):
+        if "stream_large_bodies" in updated:
+            try:
+                human.parse_size(ctx.options.stream_large_bodies)
+            except ValueError:
+                raise exceptions.OptionsError(f"Invalid stream_large_bodies specification: "
+                                              f"{ctx.options.stream_large_bodies}")
+        if "body_size_limit" in updated:
+            try:
+                human.parse_size(ctx.options.body_size_limit)
+            except ValueError:
+                raise exceptions.OptionsError(f"Invalid body_size_limit specification: "
+                                              f"{ctx.options.body_size_limit}")
         if not self.is_running:
             return
         if "mode" in updated and ctx.options.mode == "transparent":  # pragma: no cover

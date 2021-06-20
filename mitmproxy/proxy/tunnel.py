@@ -1,5 +1,5 @@
 from enum import Enum, auto
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 from mitmproxy import connection
 from mitmproxy.proxy import commands, context, events, layer
@@ -163,8 +163,13 @@ class LayerStack:
     def __getitem__(self, item: int) -> Layer:
         return self._stack.__getitem__(item)
 
-    def __truediv__(self, other: Layer) -> "LayerStack":
-        if self._stack:
-            self._stack[-1].child_layer = other  # type: ignore
-        self._stack.append(other)
+    def __truediv__(self, other: Union[Layer, "LayerStack"]) -> "LayerStack":
+        if isinstance(other, Layer):
+            if self._stack:
+                self._stack[-1].child_layer = other  # type: ignore
+            self._stack.append(other)
+        else:
+            if self._stack:
+                self._stack[-1].child_layer = other[0]  # type: ignore
+            self._stack.extend(other._stack)
         return self

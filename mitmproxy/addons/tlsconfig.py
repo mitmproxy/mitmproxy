@@ -24,14 +24,21 @@ DEFAULT_CIPHERS = (
 
 
 class AppData(TypedDict):
+    client_alpn: Optional[bytes]
     server_alpn: Optional[bytes]
     http2: bool
 
 
 def alpn_select_callback(conn: SSL.Connection, options: List[bytes]) -> Any:
     app_data: AppData = conn.get_app_data()
+    client_alpn = app_data["client_alpn"]
     server_alpn = app_data["server_alpn"]
     http2 = app_data["http2"]
+    if client_alpn is not None:
+        if client_alpn in options:
+            return client_alpn
+        else:
+            return SSL.NO_OVERLAPPING_PROTOCOLS
     if server_alpn and server_alpn in options:
         return server_alpn
     if server_alpn == b"":
@@ -148,6 +155,7 @@ class TlsConfig:
         )
         tls_start.ssl_conn = SSL.Connection(ssl_ctx)
         tls_start.ssl_conn.set_app_data(AppData(
+            client_alpn=client.alpn,
             server_alpn=server.alpn,
             http2=ctx.options.http2,
         ))

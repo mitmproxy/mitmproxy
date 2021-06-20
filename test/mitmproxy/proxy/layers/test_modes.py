@@ -55,9 +55,7 @@ def test_upstream_https(tctx):
     serverhello = Placeholder(bytes)
     request = Placeholder(bytes)
     tls_finished = Placeholder(bytes)
-    h2_client_settings_ack = Placeholder(bytes)
     response = Placeholder(bytes)
-    h2_server_settings_ack = Placeholder(bytes)
 
     assert (
         proxy1
@@ -67,7 +65,7 @@ def test_upstream_https(tctx):
         << OpenConnection(upstream)
         >> reply(None)
         << TlsStartHook(Placeholder())
-        >> reply_tls_start(alpn=b"h2")
+        >> reply_tls_start(alpn=b"http/1.1")
         << SendData(upstream, clienthello)
     )
     assert upstream().address == ("example.mitmproxy.org", 8081)
@@ -77,7 +75,7 @@ def test_upstream_https(tctx):
         << NextLayerHook(Placeholder(NextLayer))
         >> reply_next_layer(ClientTLSLayer)
         << TlsStartHook(Placeholder())
-        >> reply_tls_start(alpn=b"h2")
+        >> reply_tls_start(alpn=b"http/1.1")
         << SendData(tctx2.client, serverhello)
     )
     assert (
@@ -91,21 +89,18 @@ def test_upstream_https(tctx):
         << SendData(tctx2.client, tls_finished)
         << NextLayerHook(Placeholder(NextLayer))
         >> reply_next_layer(lambda ctx: http.HttpLayer(ctx, HTTPMode.regular))
-        << SendData(tctx2.client, h2_client_settings_ack)
         << OpenConnection(server)
         >> reply(None)
-        << SendData(server, b'GET / HTTP/1.1\r\nhost: example.com\r\n\r\n')
+        << SendData(server, b'GET / HTTP/1.1\r\nHost: example.com\r\n\r\n')
         >> DataReceived(server, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
-        << CloseConnection(server)
         << SendData(tctx2.client, response)
     )
     assert server().address == ("example.com", 80)
 
     assert (
         proxy1
-        >> DataReceived(upstream, tls_finished() + h2_client_settings_ack() + response())
-        << SendData(upstream, h2_server_settings_ack)
-        << SendData(tctx1.client, b"HTTP/1.1 200 OK\r\ncontent-length: 0\r\n\r\n")
+        >> DataReceived(upstream, tls_finished() + response())
+        << SendData(tctx1.client, b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
     )
 
 

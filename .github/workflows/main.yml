@@ -178,7 +178,7 @@ jobs:
 
   # Separate from everything else because slow.
   build-and-deploy-docker:
-    if: github.repository == 'mitmproxy/mitmproxy' && github.ref == 'refs/heads/main'
+    if: github.repository == 'mitmproxy/mitmproxy' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dockertest')
     environment: deploy-docker
     needs:
      - test
@@ -201,6 +201,8 @@ jobs:
         with:
           name: binaries.linux
           path: release/dist
+      - uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480
+      - uses: docker/setup-buildx-action@b1f1f719c7cd5364be7c82e366366da322d01f7c
       - run: pip install -e .[dev]
       - run: python release/cibuild.py build
       - run: python release/cibuild.py upload

@@ -11,7 +11,7 @@ def test_mitmweb(event_loop, tdata):
     main.mitmweb([
         "--no-web-open-browser",
         "-s", tdata.path(shutdown_script),
-        "-q", "-p", "0",
+        "-q", "-p", "0", "--web-port", "0",
     ])
 
 
