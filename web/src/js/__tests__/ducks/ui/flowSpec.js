@@ -19,7 +19,7 @@ describe('flow reducer', () => {
             displayLarge: false,
             viewDescription: '',
             showFullContent: false,
-            modifiedFlow: false,
+            modifiedFlow: undefined,
             contentView: 'Auto',
             tab: 'request',
             content: [],

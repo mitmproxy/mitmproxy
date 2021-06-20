@@ -42,7 +42,7 @@ describe('ContentLoader Component', () => {
 
     it('should handle componentWillReceiveProps', () => {
         contentLoader.updateContent = jest.fn()
-        contentLoader.componentWillReceiveProps({flow: tflow, message: tflow.request})
+        contentLoader.UNSAFE_componentWillReceiveProps({flow: tflow, message: tflow.request})
         expect(contentLoader.updateContent).toBeCalled()
     })
 

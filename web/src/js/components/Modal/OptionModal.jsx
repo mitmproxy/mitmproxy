@@ -9,7 +9,7 @@ function PureOptionHelp({help}){
     return <div className="help-block small">{help}</div>;
 }
 const OptionHelp = connect((state, {name}) => ({
-    help: state.options[name].help,
+    help: state.options_meta[name].help,
 }))(PureOptionHelp);
 
 function PureOptionError({error}){
@@ -41,8 +41,8 @@ export function PureOptionDefault({value, defaultVal}){
     }
 }
 const OptionDefault = connect((state, {name}) => ({
-    value: state.options[name].value,
-    defaultVal: state.options[name].default
+    value: state.options[name],
+    defaultVal: state.options_meta[name].default
 }))(PureOptionDefault)
 
 class PureOptionModal extends Component {
@@ -101,7 +101,7 @@ class PureOptionModal extends Component {
 
 export default connect(
     state => ({
-        options: Object.keys(state.options).sort()
+        options: Object.keys(state.options_meta).sort()
     }),
     {
         hideModal: modalAction.hideModal,

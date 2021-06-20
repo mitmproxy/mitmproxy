@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import { MessageUtils } from '../../flow/utils.js'
+import { MessageUtils } from '../../flow/utils'
 
 export default function withContentLoader(View) {
-    
+
     return class extends React.Component {
         static displayName = View.displayName || View.name
         static matches = View.matches
@@ -23,11 +23,11 @@ export default function withContentLoader(View) {
             }
         }
 
-        componentWillMount() {
+        componentDidMount() {
             this.updateContent(this.props)
         }
 
-        componentWillReceiveProps(nextProps) {
+        UNSAFE_componentWillReceiveProps(nextProps) {
             if (
                 nextProps.message.content !== this.props.message.content ||
                 nextProps.message.contentHash !== this.props.message.contentHash ||
@@ -51,7 +51,7 @@ export default function withContentLoader(View) {
             if (props.message.content !== undefined) {
                 return this.setState({request: undefined, content: props.message.content})
             }
-            if (props.message.contentLength === 0 || props.message.contentLength === null) {
+            if (props.message.contentLength === 0) {
                 return this.setState({request: undefined, content: ""})
             }
 

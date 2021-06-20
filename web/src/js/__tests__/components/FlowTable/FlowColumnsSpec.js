@@ -24,7 +24,8 @@ describe('Flowcolumns Components', () => {
     })
 
     it('should render IconColumn', () => {
-        let iconColumn = renderer.create(<IconColumn flow={tflow}/>),
+        let tflow = TFlow(),
+            iconColumn = renderer.create(<IconColumn flow={tflow}/>),
             tree = iconColumn.toJSON()
         // plain
         expect(tree).toMatchSnapshot()
@@ -76,7 +77,8 @@ describe('Flowcolumns Components', () => {
     })
 
     it('should render pathColumn', () => {
-        let pathColumn = renderer.create(<PathColumn flow={tflow}/>),
+        let tflow = TFlow(),
+            pathColumn = renderer.create(<PathColumn flow={tflow}/>),
             tree = pathColumn.toJSON()
         expect(tree).toMatchSnapshot()
 
@@ -100,14 +102,14 @@ describe('Flowcolumns Components', () => {
     })
 
     it('should render SizeColumn', () => {
-        tflow = TFlow()
         let sizeColumn = renderer.create(<SizeColumn flow={tflow}/>),
             tree = sizeColumn.toJSON()
         expect(tree).toMatchSnapshot()
     })
 
     it('should render TimeColumn', () => {
-        let timeColumn = renderer.create(<TimeColumn flow={tflow}/>),
+        let tflow = TFlow(),
+            timeColumn = renderer.create(<TimeColumn flow={tflow}/>),
             tree = timeColumn.toJSON()
         expect(tree).toMatchSnapshot()
 

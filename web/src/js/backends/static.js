@@ -12,7 +12,7 @@ export default class StaticBackend {
 
    onOpen() {
         this.fetchData("flows")
-        this.fetchData("settings")
+        this.fetchData("options")
         // this.fetchData("events") # TODO: Add events log to static viewer.
    }
 

@@ -20,8 +20,8 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
+from mitmproxy.addons import export
 from mitmproxy.utils.strutils import always_str
-from mitmproxy.addons.export import curl_command
 
 
 def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
@@ -30,6 +30,8 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
 
     Args:
         flow: The original flow.
+
+    Sync with web/src/flow.ts.
     """
     f = {
         "id": flow.id,
@@ -43,31 +45,42 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
     if flow.client_conn:
         f["client_conn"] = {
             "id": flow.client_conn.id,
-            "address": flow.client_conn.peername,
+            "peername": flow.client_conn.peername,
+            "sockname": flow.client_conn.sockname,
             "tls_established": flow.client_conn.tls_established,
+            "sni": flow.client_conn.sni,
+            "cipher": flow.client_conn.cipher,
+            "alpn": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
+            "tls_version": flow.client_conn.tls_version,
             "timestamp_start": flow.client_conn.timestamp_start,
             "timestamp_tls_setup": flow.client_conn.timestamp_tls_setup,
             "timestamp_end": flow.client_conn.timestamp_end,
-            "sni": flow.client_conn.sni,
+
+            # Legacy properties
+            "address": flow.client_conn.peername,
             "cipher_name": flow.client_conn.cipher,
             "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
-            "tls_version": flow.client_conn.tls_version,
         }
 
     if flow.server_conn:
         f["server_conn"] = {
             "id": flow.server_conn.id,
+            "peername": flow.server_conn.peername,
+            "sockname": flow.server_conn.sockname,
             "address": flow.server_conn.address,
-            "ip_address": flow.server_conn.peername,
-            "source_address": flow.server_conn.sockname,
             "tls_established": flow.server_conn.tls_established,
             "sni": flow.server_conn.sni,
-            "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
+            "cipher": flow.server_conn.cipher,
+            "alpn": always_str(flow.server_conn.alpn, "ascii", "backslashreplace"),
             "tls_version": flow.server_conn.tls_version,
             "timestamp_start": flow.server_conn.timestamp_start,
             "timestamp_tcp_setup": flow.server_conn.timestamp_tcp_setup,
             "timestamp_tls_setup": flow.server_conn.timestamp_tls_setup,
             "timestamp_end": flow.server_conn.timestamp_end,
+            # Legacy properties
+            "ip_address": flow.server_conn.peername,
+            "source_address": flow.server_conn.sockname,
+            "alpn_proto_negotiated": always_str(flow.server_conn.alpn, "ascii", "backslashreplace"),
         }
     if flow.error:
         f["error"] = flow.error.get_state()
@@ -126,12 +139,6 @@ def logentry_to_json(e: log.LogEntry) -> dict:
         "id": id(e),  # we just need some kind of id.
         "message": e.msg,
         "level": e.level
-    }
-
-
-def cURL_format_to_json(cURL: str):
-    return {
-        "export": cURL
     }
 
 
@@ -212,7 +219,7 @@ class IndexHandler(RequestHandler):
     def get(self):
         token = self.xsrf_token  # https://github.com/tornadoweb/tornado/issues/645
         assert token
-        self.render("index.html")
+        self.render("index.html", static=False, version=version.VERSION)
 
 
 class FilterHelp(RequestHandler):
@@ -274,8 +281,11 @@ class DumpFlows(RequestHandler):
 
 
 class ExportFlow(RequestHandler):
-    def post(self, flow_id):
-        self.write(cURL_format_to_json(curl_command(self.flow)))
+    def post(self, flow_id, format):
+        out = export.formats[format](self.flow)
+        self.write({
+            "export": always_str(out, "utf8", "backslashreplace")
+        })
 
 
 class ClearAll(RequestHandler):
@@ -448,42 +458,6 @@ class Events(RequestHandler):
         self.write([logentry_to_json(e) for e in self.master.events.data])
 
 
-class Settings(RequestHandler):
-    def get(self):
-        self.write(dict(
-            version=version.VERSION,
-            mode=str(self.master.options.mode),
-            intercept_active=self.master.options.intercept_active,
-            intercept=self.master.options.intercept,
-            showhost=self.master.options.showhost,
-            upstream_cert=self.master.options.upstream_cert,
-            rawtcp=self.master.options.rawtcp,
-            http2=self.master.options.http2,
-            websocket=self.master.options.websocket,
-            anticache=self.master.options.anticache,
-            anticomp=self.master.options.anticomp,
-            stickyauth=self.master.options.stickyauth,
-            stickycookie=self.master.options.stickycookie,
-            stream=self.master.options.stream_large_bodies,
-            contentViews=[v.name.replace(' ', '_') for v in contentviews.views],
-            listen_host=self.master.options.listen_host,
-            listen_port=self.master.options.listen_port,
-            server=self.master.options.server,
-        ))
-
-    def put(self):
-        update = self.json
-        allowed_options = {
-            "intercept", "showhost", "upstream_cert", "ssl_insecure",
-            "rawtcp", "http2", "websocket", "anticache", "anticomp",
-            "stickycookie", "stickyauth", "stream_large_bodies"
-        }
-        for k in update:
-            if k not in allowed_options:
-                raise APIError(400, f"Unknown setting {k}")
-        self.master.options.update(**update)
-
-
 class Options(RequestHandler):
     def get(self):
         self.write(optmanager.dump_dicts(self.master.options))
@@ -512,6 +486,17 @@ class DnsRebind(RequestHandler):
             reason="To protect against DNS rebinding, mitmweb can only be accessed by IP at the moment. "
                    "(https://github.com/mitmproxy/mitmproxy/issues/3234)"
         )
+
+
+class Conf(RequestHandler):
+    def get(self):
+        conf = {
+            "static": False,
+            "version": version.VERSION,
+            "contentViews": [v.name for v in contentviews.views]
+        }
+        self.write(f"MITMWEB_CONF = {json.dumps(conf)};")
+        self.set_header("content-type", "application/javascript")
 
 
 class Application(tornado.web.Application):
@@ -548,14 +533,14 @@ class Application(tornado.web.Application):
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/export", ExportFlow),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/export/(?P<format>[a-z][a-z_]+).json", ExportFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data", FlowContent),
                 (
                     r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",
                     FlowContentView),
-                (r"/settings(?:\.json)?", Settings),
                 (r"/clear", ClearAll),
                 (r"/options(?:\.json)?", Options),
-                (r"/options/save", SaveOptions)
+                (r"/options/save", SaveOptions),
+                (r"/conf\.js", Conf),
             ]
         )

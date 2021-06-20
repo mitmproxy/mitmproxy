@@ -1,11 +1,10 @@
 import React from 'react'
 import renderer from 'react-test-renderer'
-import { MenuToggle, SettingsToggle, EventlogToggle } from '../../../components/Header/MenuToggle'
-import { Provider } from 'react-redux'
-import { REQUEST_UPDATE } from '../../../ducks/settings'
-import { TStore } from '../../ducks/tutils'
-
-global.fetch = jest.fn()
+import {EventlogToggle, MenuToggle, OptionsToggle} from '../../../components/Header/MenuToggle'
+import {Provider} from 'react-redux'
+import {TStore} from '../../ducks/tutils'
+import * as optionsEditorActions from "../../../ducks/ui/optionsEditor"
+import {fireEvent, render, screen} from "../../test-utils"
 
 describe('MenuToggle Component', () => {
     it('should render correctly', () => {
@@ -19,37 +18,26 @@ describe('MenuToggle Component', () => {
     })
 })
 
-describe('SettingToggle Component', () => {
-    let store = TStore(),
-        provider = renderer.create(
-            <Provider store={store}>
-                <SettingsToggle setting='anticache'>
-                    <p>foo children</p>
-                </SettingsToggle>
-            </Provider>),
-        tree = provider.toJSON()
+test("OptionsToggle", async () => {
+    const store = TStore(),
+        {asFragment} = render(
+            <OptionsToggle name='anticache'>toggle anticache</OptionsToggle>,
+                {store}
+        );
 
-    it('should render and connect to state', () => {
-        expect(tree).toMatchSnapshot()
-    })
+    expect(asFragment()).toMatchSnapshot();
+    fireEvent.click(screen.getByText("toggle anticache"));
+    expect(store.getActions()).toEqual([optionsEditorActions.startUpdate("anticache", true)])
+});
 
-    it('should handle change', () => {
-        let menuToggle = tree.children[0].children[0]
-        menuToggle.props.onChange()
-        expect(store.getActions()).toEqual([{ type: REQUEST_UPDATE }])
-    })
-})
+test("EventlogToggle", async () => {
+    const {asFragment, store} = render(
+        <EventlogToggle/>
+    );
+    expect(asFragment()).toMatchSnapshot();
 
-describe('EventlogToggle Component', () => {
-    let store = TStore(),
-        changFn = jest.fn(),
-        provider = renderer.create(
-            <Provider store={store}>
-                <EventlogToggle value={false} onChange={changFn}/>
-            </Provider>
-        ),
-        tree = provider.toJSON()
-    it('should render and connect to state', () => {
-        expect(tree).toMatchSnapshot()
-    })
+    expect(store.getState().eventLog.visible).toBeTruthy();
+    fireEvent.click(screen.getByText("Display Event Log"));
+
+    expect(store.getState().eventLog.visible).toBeFalsy();
 })

@@ -3,8 +3,8 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 
 
-import { RequestUtils, isValidHttpVersion, parseUrl } from '../../flow/utils.js'
-import { formatTimeStamp } from '../../utils.js'
+import { RequestUtils, isValidHttpVersion, parseUrl } from '../../flow/utils'
+import { formatTimeStamp } from '../../utils'
 import ContentView from '../ContentView'
 import ContentViewOptions from '../ContentView/ContentViewOptions'
 import ValidateEditor from '../ValueEditor/ValidateEditor'

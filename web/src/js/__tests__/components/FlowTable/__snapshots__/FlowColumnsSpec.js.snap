@@ -110,7 +110,16 @@ exports[`Flowcolumns Components should render QuickActionsColumn 1`] = `
       onClick={[Function]}
     >
       <i
-        className="fa fa-fw fa-ellipsis-h"
+        className="fa fa-fw fa-repeat text-primary"
+      />
+    </a>
+    <a
+      className="quickaction"
+      href="#"
+      onClick={[Function]}
+    >
+      <i
+        className="fa fa-fw fa-ellipsis-h text-muted"
       />
     </a>
   </div>
@@ -130,15 +139,17 @@ exports[`Flowcolumns Components should render StatusColumn 1`] = `
   className="col-status"
   style={
     Object {
-      "color": "darkred",
+      "color": "darkgreen",
     }
   }
-/>
+>
+  200
+</td>
 `;
 
 exports[`Flowcolumns Components should render TLSColumn 1`] = `
 <td
-  className="col-tls col-tls-http"
+  className="col-tls col-tls-https"
 />
 `;
 

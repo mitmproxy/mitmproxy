@@ -32,7 +32,7 @@ export default class FilterDocs extends Component {
     render() {
         const { doc } = this.state
         return !doc ? (
-            <i className="fa fa-spinner fa-spin"></i>
+            <i className="fa fa-spinner fa-spin"/>
         ) : (
             <table className="table table-condensed">
                 <tbody>
@@ -46,7 +46,7 @@ export default class FilterDocs extends Component {
                         <td colSpan="2">
                             <a href="https://mitmproxy.org/docs/latest/concepts-filters/"
                                 target="_blank">
-                                <i className="fa fa-external-link"></i>
+                                <i className="fa fa-external-link"/>
                             &nbsp; mitmproxy docs</a>
                         </td>
                     </tr>

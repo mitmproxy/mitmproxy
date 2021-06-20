@@ -157,18 +157,6 @@ exports[`Details Component should render correctly 1`] = `
       </tr>
       <tr>
         <td>
-          <abbr
-            title="ALPN protocol negotiated"
-          >
-            ALPN:
-          </abbr>
-        </td>
-        <td>
-          http/1.1
-        </td>
-      </tr>
-      <tr>
-        <td>
           Resolved address:
         </td>
         <td>

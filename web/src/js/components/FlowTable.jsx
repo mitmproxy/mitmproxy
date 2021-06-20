@@ -8,13 +8,11 @@ import { calcVScroll } from './helpers/VirtualScroll'
 import FlowTableHead from './FlowTable/FlowTableHead'
 import FlowRow from './FlowTable/FlowRow'
 import Filt from "../filt/filt"
-import * as flowsActions from '../ducks/flows'
 
 
 class FlowTable extends React.Component {
 
     static propTypes = {
-        selectFlow: PropTypes.func.isRequired,
         flows: PropTypes.array.isRequired,
         rowHeight: PropTypes.number,
         highlight: PropTypes.string,
@@ -110,7 +108,6 @@ class FlowTable extends React.Component {
                                 flow={flow}
                                 selected={flow === selected}
                                 highlighted={isHighlighted(flow)}
-                                onSelect={this.props.selectFlow}
                             />
                         ))}
                         <tr style={{ height: vScroll.paddingBottom }}/>
@@ -128,8 +125,5 @@ export default connect(
         flows: state.flows.view,
         highlight: state.flows.highlight,
         selected: state.flows.byId[state.flows.selected[0]],
-    }),
-    {
-        selectFlow: flowsActions.select,
-    }
+    })
 )(PureFlowTable)
