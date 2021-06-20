@@ -68,6 +68,7 @@ If you depend on these features, please raise your voice in
   "red ball" marker, a single character, or an emoji like `:grapes:`. Use the `~marker` filter to filter on marker characters. (@rbdixon)
 * New `flow.comment` command to add a comment to the flow. Add `~comment <regex>` filter syntax to search flow comments. (@rbdixon)
 * Fix multipart forms losing `boundary` values on edit (@roytu)
+* Add command bar where we can use mitmproxy commands (@gorogoroumaru)
 * --- TODO: add new PRs above this line ---
 * ... and various other fixes, documentation improvements, dependency version bumps, etc.
 
