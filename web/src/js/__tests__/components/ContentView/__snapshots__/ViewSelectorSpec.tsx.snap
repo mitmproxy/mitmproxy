@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ViewSelector Component should render correctly 1`] = `
+<a
+  className="btn btn-default btn-xs pull-left"
+  href="#"
+  onClick={[Function]}
+>
+  <span>
+    <b>
+      View:
+    </b>
+     
+    auto
+     
+    <span
+      className="caret"
+    />
+  </span>
+</a>
+`;

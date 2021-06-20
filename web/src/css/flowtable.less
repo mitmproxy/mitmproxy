@@ -96,10 +96,6 @@
 
     .fa {
         line-height: inherit;
-
-        &.pull-right {
-            margin-left: 0;
-        }
     }
 
     .col-tls {
@@ -115,6 +111,10 @@
     }
 
     .col-path {
+        .fa {
+            margin-left: 0;
+        }
+
         .fa-repeat {
             color: green;
         }
@@ -192,5 +192,9 @@
 
     .col-quickactions .fa-play {
         transform: translate(1px, 2px);
+    }
+
+    .col-quickactions .fa-repeat {
+        transform: translate(-0px, 2px);
     }
 }

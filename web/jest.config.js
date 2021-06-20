@@ -1,19 +1,19 @@
 process.env.TZ = 'UTC';
 
 module.exports = {
-    "testEnvironment": "jsdom",
-    "testRegex": "__tests__/.*Spec.(js|ts)x?$",
-    "roots": [
+    testEnvironment: "jsdom",
+    testRegex: "__tests__/.*Spec.(js|ts)x?$",
+    roots: [
         "<rootDir>/src/js"
     ],
-    "unmockedModulePathPatterns": [
+    unmockedModulePathPatterns: [
         "react"
     ],
-    "coverageDirectory": "./coverage",
-    "coveragePathIgnorePatterns": [
+    coverageDirectory: "./coverage",
+    coveragePathIgnorePatterns: [
         "<rootDir>/src/js/filt/filt.js"
     ],
-    "collectCoverageFrom": [
+    collectCoverageFrom: [
         "src/js/**/*.{js,jsx,ts,tsx}"
-    ]
+    ],
 };

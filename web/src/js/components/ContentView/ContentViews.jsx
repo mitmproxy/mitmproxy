@@ -38,12 +38,12 @@ export class PureViewServer extends Component {
         setContent: PropTypes.func.isRequired
     }
 
-    componentWillMount(){
+    UNSAFE_componentWillMount(){
         this.setContentView(this.props)
     }
 
-    componentWillReceiveProps(nextProps){
-        if (nextProps.content != this.props.content) {
+    UNSAFE_componentWillReceiveProps(nextProps){
+        if (nextProps.content !== this.props.content) {
             this.setContentView(nextProps)
         }
     }
@@ -55,7 +55,7 @@ export class PureViewServer extends Component {
             this.data = {lines: [], description: err.message}
         }
 
-        props.setContentViewDescription(props.contentView != this.data.description ? this.data.description : '')
+        props.setContentViewDescription(props.contentView !== this.data.description ? this.data.description : '')
         props.setContent(this.data.lines)
     }
 

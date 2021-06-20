@@ -20,6 +20,7 @@ from mitmproxy import io
 from mitmproxy import log
 from mitmproxy import optmanager
 from mitmproxy import version
+from mitmproxy.addons import export
 from mitmproxy.utils.strutils import always_str
 from mitmproxy.addons.export import curl_command
 
@@ -30,6 +31,8 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
 
     Args:
         flow: The original flow.
+
+    Sync with web/src/flow.ts.
     """
     f = {
         "id": flow.id,
@@ -43,31 +46,42 @@ def flow_to_json(flow: mitmproxy.flow.Flow) -> dict:
     if flow.client_conn:
         f["client_conn"] = {
             "id": flow.client_conn.id,
-            "address": flow.client_conn.peername,
+            "peername": flow.client_conn.peername,
+            "sockname": flow.client_conn.sockname,
             "tls_established": flow.client_conn.tls_established,
+            "sni": flow.client_conn.sni,
+            "cipher": flow.client_conn.cipher,
+            "alpn": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
+            "tls_version": flow.client_conn.tls_version,
             "timestamp_start": flow.client_conn.timestamp_start,
             "timestamp_tls_setup": flow.client_conn.timestamp_tls_setup,
             "timestamp_end": flow.client_conn.timestamp_end,
-            "sni": flow.client_conn.sni,
+
+            # Legacy properties
+            "address": flow.client_conn.peername,
             "cipher_name": flow.client_conn.cipher,
             "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
-            "tls_version": flow.client_conn.tls_version,
         }
 
     if flow.server_conn:
         f["server_conn"] = {
             "id": flow.server_conn.id,
+            "peername": flow.server_conn.peername,
+            "sockname": flow.server_conn.sockname,
             "address": flow.server_conn.address,
-            "ip_address": flow.server_conn.peername,
-            "source_address": flow.server_conn.sockname,
             "tls_established": flow.server_conn.tls_established,
             "sni": flow.server_conn.sni,
-            "alpn_proto_negotiated": always_str(flow.client_conn.alpn, "ascii", "backslashreplace"),
+            "cipher": flow.server_conn.cipher,
+            "alpn": always_str(flow.server_conn.alpn, "ascii", "backslashreplace"),
             "tls_version": flow.server_conn.tls_version,
             "timestamp_start": flow.server_conn.timestamp_start,
             "timestamp_tcp_setup": flow.server_conn.timestamp_tcp_setup,
             "timestamp_tls_setup": flow.server_conn.timestamp_tls_setup,
             "timestamp_end": flow.server_conn.timestamp_end,
+            # Legacy properties
+            "ip_address": flow.server_conn.peername,
+            "source_address": flow.server_conn.sockname,
+            "alpn_proto_negotiated": always_str(flow.server_conn.alpn, "ascii", "backslashreplace"),
         }
     if flow.error:
         f["error"] = flow.error.get_state()
@@ -126,12 +140,6 @@ def logentry_to_json(e: log.LogEntry) -> dict:
         "id": id(e),  # we just need some kind of id.
         "message": e.msg,
         "level": e.level
-    }
-
-
-def cURL_format_to_json(cURL: str):
-    return {
-        "export": cURL
     }
 
 
@@ -274,8 +282,11 @@ class DumpFlows(RequestHandler):
 
 
 class ExportFlow(RequestHandler):
-    def post(self, flow_id):
-        self.write(cURL_format_to_json(curl_command(self.flow)))
+    def post(self, flow_id, format):
+        out = export.formats[format](self.flow)
+        self.write({
+            "export": always_str(out, "utf8", "backslashreplace")
+        })
 
 
 class ClearAll(RequestHandler):
@@ -548,7 +559,7 @@ class Application(tornado.web.Application):
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/duplicate", DuplicateFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/replay", ReplayFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/revert", RevertFlow),
-                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/export", ExportFlow),
+                (r"/flows/(?P<flow_id>[0-9a-f\-]+)/export/(?P<format>[a-z_]+).json", ExportFlow),
                 (r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content.data", FlowContent),
                 (
                     r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",

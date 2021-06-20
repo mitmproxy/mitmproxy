@@ -64,7 +64,7 @@ type DropdownProps = {
     className?: string,
     onOpen?: (boolean) => void
 }
-const Dropdown = ({text, children, options, className, onOpen, ...attrs}: DropdownProps) => {
+export default React.memo(function Dropdown({text, children, options, className, onOpen, ...attrs}: DropdownProps) {
 
     const [refElement, setRefElement] = useState(null);
     const [open, _setOpen] = useState(false);
@@ -106,9 +106,7 @@ const Dropdown = ({text, children, options, className, onOpen, ...attrs}: Dropdo
            onClick={() => setOpen(true)}
            {...attrs}>
             {text}
-
         </a>
         {contents}
     </>;
-}
-export default Dropdown;
+});

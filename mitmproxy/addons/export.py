@@ -134,7 +134,7 @@ formats = dict(
 )
 
 
-class Export():
+class Export:
     def load(self, loader):
         loader.add_option(
             "export_preserve_original_ip", bool, False,

@@ -242,64 +242,23 @@ exports[`Request Component should render correctly 1`] = `
     <div
       className="view-options"
     >
-      <div
-        className="dropup pull-left"
+      <a
+        className="btn btn-default btn-xs pull-left"
+        href="#"
+        onClick={[Function]}
       >
-        <a
-          className="btn btn-default btn-xs"
-          href="#"
-          onClick={[Function]}
-        >
-          <span>
-             
-            <b>
-              View:
-            </b>
-             
-            auto
-             
-            <span
-              className="caret"
-            />
-             
-          </span>
-        </a>
-        <ul
-          className="dropdown-menu"
-          role="menu"
-        >
-          <li>
-             
-            <a
-              href="#"
-              onClick={[Function]}
-            >
-              auto
-            </a>
-             
-          </li>
-          <li>
-             
-            <a
-              href="#"
-              onClick={[Function]}
-            >
-              raw
-            </a>
-             
-          </li>
-          <li>
-             
-            <a
-              href="#"
-              onClick={[Function]}
-            >
-              text
-            </a>
-             
-          </li>
-        </ul>
-      </div>
+        <span>
+          <b>
+            View:
+          </b>
+           
+          auto
+           
+          <span
+            className="caret"
+          />
+        </span>
+      </a>
        
       <a
         className="btn btn-default btn-xs"
@@ -543,64 +502,23 @@ exports[`Response Component should render correctly 1`] = `
     <div
       className="view-options"
     >
-      <div
-        className="dropup pull-left"
+      <a
+        className="btn btn-default btn-xs pull-left"
+        href="#"
+        onClick={[Function]}
       >
-        <a
-          className="btn btn-default btn-xs"
-          href="#"
-          onClick={[Function]}
-        >
-          <span>
-             
-            <b>
-              View:
-            </b>
-             
-            auto
-             
-            <span
-              className="caret"
-            />
-             
-          </span>
-        </a>
-        <ul
-          className="dropdown-menu"
-          role="menu"
-        >
-          <li>
-             
-            <a
-              href="#"
-              onClick={[Function]}
-            >
-              auto
-            </a>
-             
-          </li>
-          <li>
-             
-            <a
-              href="#"
-              onClick={[Function]}
-            >
-              raw
-            </a>
-             
-          </li>
-          <li>
-             
-            <a
-              href="#"
-              onClick={[Function]}
-            >
-              text
-            </a>
-             
-          </li>
-        </ul>
-      </div>
+        <span>
+          <b>
+            View:
+          </b>
+           
+          auto
+           
+          <span
+            className="caret"
+          />
+        </span>
+      </a>
        
       <a
         className="btn btn-default btn-xs"

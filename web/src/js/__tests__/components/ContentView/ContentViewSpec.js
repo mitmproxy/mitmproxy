@@ -53,7 +53,7 @@ describe('ViewServer Component', () => {
 
     it('should handle componentWillReceiveProps', () => {
         // case of fail to parse content
-        let viewSever = TestUtils.renderIntoDocument(
+        let viewServer = TestUtils.renderIntoDocument(
             <PureViewServer
                 showFullContent={true}
                 maxLines={10}
@@ -64,10 +64,10 @@ describe('ViewServer Component', () => {
                 content={JSON.stringify({lines: [['k1', 'v1']]})}
             />
         )
-        viewSever.componentWillReceiveProps({...viewSever.props, content: '{foo' })
+        viewServer.UNSAFE_componentWillReceiveProps({...viewServer.props, content: '{foo' })
         let e = ''
         try {JSON.parse('{foo') } catch(err){ e = err.message}
-        expect(viewSever.data).toEqual({ description: e, lines: [] })
+        expect(viewServer.data).toEqual({ description: e, lines: [] })
     })
 })
 

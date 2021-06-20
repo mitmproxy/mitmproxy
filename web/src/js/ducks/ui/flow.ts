@@ -1,7 +1,8 @@
-import * as flowsActions from '../flows'
-import { getDiff } from "../../utils"
-
+import {Reducer} from "redux";
 import _ from 'lodash'
+import * as flowsActions from '../flows'
+import {getDiff} from "../../utils"
+import {Flow} from "../../flow";
 
 export const SET_CONTENT_VIEW               = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
              DISPLAY_LARGE                  = 'UI_FLOWVIEW_DISPLAY_LARGE',
@@ -14,18 +15,29 @@ export const SET_CONTENT_VIEW               = 'UI_FLOWVIEW_SET_CONTENT_VIEW',
              SET_CONTENT                    = "UI_SET_CONTENT"
 
 
-const defaultState = {
+interface UiFlowState {
+    displayLarge: boolean
+    viewDescription: string
+    showFullContent: boolean
+    modifiedFlow?: Flow
+    contentView: string
+    tab: string
+    content: [style: string, text: string][][]
+    maxContentLines: number
+}
+
+const defaultState: UiFlowState = {
     displayLarge: false,
     viewDescription: '',
     showFullContent: false,
-    modifiedFlow: false,
+    modifiedFlow: undefined,
     contentView: 'Auto',
     tab: 'request',
     content: [],
     maxContentLines: 80,
 }
 
-export default function reducer(state = defaultState, action) {
+const reducer: Reducer<UiFlowState> = (state = defaultState, action): UiFlowState => {
     let wasInEditMode = state.modifiedFlow
 
     let content = action.content || state.content
@@ -50,7 +62,7 @@ export default function reducer(state = defaultState, action) {
         case flowsActions.SELECT:
             return {
                 ...state,
-                modifiedFlow: false,
+                modifiedFlow: undefined,
                 displayLarge: false,
                 contentView: (wasInEditMode ? 'Auto' : state.contentView),
                 showFullContent: isFullContentShown,
@@ -63,7 +75,7 @@ export default function reducer(state = defaultState, action) {
             if (action.data.id === state.modifiedFlow.id) {
                 return {
                     ...state,
-                    modifiedFlow: false,
+                    modifiedFlow: undefined,
                     displayLarge: false,
                     contentView: (wasInEditMode ? 'Auto' : state.contentView),
                     showFullContent: false
@@ -115,6 +127,7 @@ export default function reducer(state = defaultState, action) {
             return state
     }
 }
+export default reducer;
 
 export function setContentView(contentView) {
     return { type: SET_CONTENT_VIEW, contentView }

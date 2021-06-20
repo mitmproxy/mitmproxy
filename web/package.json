@@ -1,6 +1,7 @@
 {
     "name": "mitmproxy",
     "private": true,
+    "type": "module",
     "scripts": {
         "test": "jest --coverage",
         "build": "gulp prod",
@@ -31,6 +32,8 @@
         "@babel/preset-env": "^7.14.4",
         "@babel/preset-react": "^7.13.13",
         "@babel/preset-typescript": "^7.13.0",
+        "@testing-library/react": "^11.2.7",
+        "@types/jest": "^26.0.23",
         "babel-jest": "^27.0.2",
         "esbuild": "^0.12.8",
         "esbuild-jest": "^0.5.0",

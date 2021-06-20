@@ -1,32 +1,51 @@
-import React from 'react'
-import renderer from 'react-test-renderer'
-import Dropdown, { Divider } from '../../../components/common/Dropdown'
+import React from "react"
+import Dropdown, {Divider, MenuItem, SubMenu} from '../../../components/common/Dropdown'
+import {fireEvent, render, screen, waitFor} from '@testing-library/react'
 
-describe('Dropdown Component', () => {
-    let dropdown = renderer.create(<Dropdown text="open me">
-            <a href="#">1</a>
-            <a href="#">2</a>
-        </Dropdown>)
 
-    it('should render correctly', () => {
-        let tree = dropdown.toJSON()
-        expect(tree).toMatchSnapshot()
-    })
+test('Dropdown', async () => {
+    let onOpen = jest.fn();
+    const {asFragment} = render(
+        <Dropdown text="open me" onOpen={onOpen}>
+            <MenuItem onClick={() => 0}>click me</MenuItem>
+            <Divider/>
+            <MenuItem onClick={() => 0}>click me</MenuItem>
+        </Dropdown>
+    )
+    expect(asFragment()).toMatchSnapshot()
 
-    it('should handle open/close action', () => {
-        let tree = dropdown.toJSON(),
-            e = { preventDefault: jest.fn(), stopPropagation: jest.fn() }
-        tree.children[0].props.onClick(e)
-        expect(tree).toMatchSnapshot()
+    fireEvent.click(screen.getByText("open me"))
+    await waitFor(() => expect(onOpen).toBeCalledWith(true))
+    expect(asFragment()).toMatchSnapshot()
 
-        // click action when the state is open
-        tree.children[0].props.onClick(e)
+    onOpen.mockClear()
+    document.body.click()
+    await waitFor(() => expect(onOpen).toBeCalledWith(false))
+})
 
-        // open again
-        tree.children[0].props.onClick(e)
+test('SubMenu', async () => {
+    const {asFragment} = render(
+        <SubMenu title="submenu">
+            <MenuItem onClick={() => 0}>click me</MenuItem>
+        </SubMenu>
+    )
+    expect(asFragment()).toMatchSnapshot()
 
-        // close
-        document.body.click()
-        expect(tree).toMatchSnapshot()
-    })
+    fireEvent.mouseEnter(screen.getByText("submenu"))
+    let item = await waitFor(() => screen.getByText("click me"))
+    expect(asFragment()).toMatchSnapshot()
+
+    fireEvent.mouseLeave(screen.getByText("submenu"))
+    expect(screen.queryByText("click me")).toBeNull()
+    expect(asFragment()).toMatchSnapshot()
+})
+
+test('MenuItem', async () => {
+    let click = jest.fn();
+    const {asFragment} = render(
+        <MenuItem onClick={click}>click me</MenuItem>
+    )
+    expect(asFragment()).toMatchSnapshot()
+    fireEvent.click(screen.getByText("click me"))
+    expect(click).toBeCalled()
 })

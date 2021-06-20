@@ -6,7 +6,7 @@ exports[`FlowRow Component should render correctly 1`] = `
   onClick={[Function]}
 >
   <td
-    className="col-tls col-tls-http"
+    className="col-tls col-tls-https"
   />
   <td
     className="col-icon"
@@ -59,7 +59,16 @@ exports[`FlowRow Component should render correctly 1`] = `
         onClick={[Function]}
       >
         <i
-          className="fa fa-fw fa-ellipsis-h"
+          className="fa fa-fw fa-repeat text-primary"
+        />
+      </a>
+      <a
+        className="quickaction"
+        href="#"
+        onClick={[Function]}
+      >
+        <i
+          className="fa fa-fw fa-ellipsis-h text-muted"
         />
       </a>
     </div>
