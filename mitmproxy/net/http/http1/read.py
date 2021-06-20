@@ -40,13 +40,9 @@ def connection_close(http_version, headers):
 
 def expected_http_body_size(
         request: Request,
-        response: Optional[Response] = None,
-        expect_continue_as_0: bool = True
-):
+        response: Optional[Response] = None
+) -> Optional[int]:
     """
-        Args:
-            - expect_continue_as_0: If true, incorrectly predict a body size of 0 for requests which are waiting
-              for a 100 Continue response.
         Returns:
             The expected body length:
             - a positive integer, if the size is known in advance
@@ -62,8 +58,6 @@ def expected_http_body_size(
         headers = request.headers
         if request.method.upper() == "CONNECT":
             return 0
-        if expect_continue_as_0 and headers.get("expect", "").lower() == "100-continue":
-            return 0
     else:
         headers = response.headers
         if request.method.upper() == "HEAD":
@@ -75,8 +69,6 @@ def expected_http_body_size(
         if response.status_code in (204, 304):
             return 0
 
-    if "chunked" in headers.get("transfer-encoding", "").lower():
-        return None
     if "content-length" in headers:
         sizes = headers.get_all("content-length")
         different_content_length_headers = any(x != sizes[0] for x in sizes)
@@ -86,6 +78,8 @@ def expected_http_body_size(
         if size < 0:
             raise ValueError("Negative Content Length")
         return size
+    if "chunked" in headers.get("transfer-encoding", "").lower():
+        return None
     if not response:
         return 0
     return -1

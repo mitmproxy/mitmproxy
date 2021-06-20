@@ -434,7 +434,7 @@ class OptManager:
             raise ValueError("Unsupported option type: %s", o.typespec)
 
 
-def dump_defaults(opts):
+def dump_defaults(opts, out: typing.TextIO):
     """
         Dumps an annotated file with all options.
     """
@@ -453,7 +453,7 @@ def dump_defaults(opts):
 
         txt = "\n".join(textwrap.wrap(txt))
         s.yaml_set_comment_before_after_key(k, before="\n" + txt)
-    return ruamel.yaml.round_trip_dump(s)
+    return ruamel.yaml.YAML().dump(s, out)
 
 
 def dump_dicts(opts, keys: typing.List[str]=None):
@@ -482,7 +482,8 @@ def parse(text):
     if not text:
         return {}
     try:
-        data = ruamel.yaml.load(text, ruamel.yaml.RoundTripLoader)
+        yaml = ruamel.yaml.YAML(typ='unsafe', pure=True)
+        data = yaml.load(text)
     except ruamel.yaml.error.YAMLError as v:
         if hasattr(v, "problem_mark"):
             snip = v.problem_mark.get_snippet()
@@ -532,7 +533,7 @@ def load_paths(opts: OptManager, *paths: str) -> None:
                 )
 
 
-def serialize(opts: OptManager, text: str, defaults: bool = False) -> str:
+def serialize(opts: OptManager, file: typing.TextIO, text: str, defaults: bool = False) -> None:
     """
         Performs a round-trip serialization. If text is not None, it is
         treated as a previous serialization that should be modified
@@ -550,9 +551,8 @@ def serialize(opts: OptManager, text: str, defaults: bool = False) -> str:
     for k in list(data.keys()):
         if k not in opts._options:
             del data[k]
-    ret = ruamel.yaml.round_trip_dump(data)
-    assert ret
-    return ret
+
+    ruamel.yaml.YAML().dump(data, file)
 
 
 def save(opts: OptManager, path: str, defaults: bool =False) -> None:
@@ -572,6 +572,6 @@ def save(opts: OptManager, path: str, defaults: bool =False) -> None:
                 )
     else:
         data = ""
-    data = serialize(opts, data, defaults)
+
     with open(path, "wt", encoding="utf8") as f:
-        f.write(data)
+        serialize(opts, f, data, defaults)

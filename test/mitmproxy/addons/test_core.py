@@ -160,10 +160,6 @@ def test_options(tmpdir):
 def test_validation_simple():
     sa = core.Core()
     with taddons.context() as tctx:
-        with pytest.raises(exceptions.OptionsError):
-            tctx.configure(sa, body_size_limit = "invalid")
-        tctx.configure(sa, body_size_limit = "1m")
-
         with pytest.raises(exceptions.OptionsError, match="requires the upstream_cert option to be enabled"):
             tctx.configure(
                 sa,

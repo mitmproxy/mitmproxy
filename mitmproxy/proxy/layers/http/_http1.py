@@ -235,7 +235,7 @@ class Http1Server(Http1Connection):
                 request_head = [bytes(x) for x in request_head]  # TODO: Make url.parse compatible with bytearrays
                 try:
                     self.request = http1.read_request_head(request_head)
-                    expected_body_size = http1.expected_http_body_size(self.request, expect_continue_as_0=False)
+                    expected_body_size = http1.expected_http_body_size(self.request)
                 except ValueError as e:
                     yield commands.Log(f"{human.format_address(self.conn.peername)}: {e}")
                     yield commands.CloseConnection(self.conn)
@@ -272,6 +272,10 @@ class Http1Client(Http1Connection):
         super().__init__(context, context.server)
 
     def send(self, event: HttpEvent) -> layer.CommandGenerator[None]:
+        if isinstance(event, RequestProtocolError):
+            yield commands.CloseConnection(self.conn)
+            return
+
         if not self.stream_id:
             assert isinstance(event, RequestHeaders)
             self.stream_id = event.stream_id
@@ -304,9 +308,6 @@ class Http1Client(Http1Connection):
             elif http1.expected_http_body_size(self.request, self.response) == -1:
                 yield commands.CloseConnection(self.conn, half_close=True)
             yield from self.mark_done(request=True)
-        elif isinstance(event, RequestProtocolError):
-            yield commands.CloseConnection(self.conn)
-            return
         else:
             raise AssertionError(f"Unexpected event: {event}")
 

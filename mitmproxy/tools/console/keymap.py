@@ -2,6 +2,7 @@ import typing
 import os
 
 import ruamel.yaml
+import ruamel.yaml.error
 
 from mitmproxy import command
 from mitmproxy.tools.console import commandexecutor
@@ -217,8 +218,8 @@ class KeymapConfig:
 
     def parse(self, text):
         try:
-            data = ruamel.yaml.safe_load(text)
-        except ruamel.yaml.error.YAMLError as v:
+            data = ruamel.yaml.YAML(typ='safe', pure=True).load(text)
+        except ruamel.yaml.error.MarkedYAMLError as v:
             if hasattr(v, "problem_mark"):
                 snip = v.problem_mark.get_snippet()
                 raise KeyBindingError(
@@ -230,7 +231,7 @@ class KeymapConfig:
         if not data:
             return []
         if not isinstance(data, list):
-            raise KeyBindingError("Inalid keybinding config - expected a list of keys")
+            raise KeyBindingError("Invalid keybinding config - expected a list of keys")
 
         for k in data:
             unknown = k.keys() - keyAttrs.keys()

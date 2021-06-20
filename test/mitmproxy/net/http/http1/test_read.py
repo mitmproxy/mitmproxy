@@ -63,12 +63,6 @@ def test_expected_http_body_size():
     # Expect: 100-continue
     assert expected_http_body_size(
         treq(headers=Headers(expect="100-continue", content_length="42")),
-        expect_continue_as_0=True
-    ) == 0
-    # Expect: 100-continue
-    assert expected_http_body_size(
-        treq(headers=Headers(expect="100-continue", content_length="42")),
-        expect_continue_as_0=False
     ) == 42
 
     # http://tools.ietf.org/html/rfc7230#section-3.3
@@ -94,6 +88,9 @@ def test_expected_http_body_size():
     assert expected_http_body_size(
         treq(headers=Headers(transfer_encoding="chunked")),
     ) is None
+    assert expected_http_body_size(
+        treq(headers=Headers(transfer_encoding="chunked", content_length="42")),
+    ) == 42
 
     # explicit length
     for val in (b"foo", b"-7"):
