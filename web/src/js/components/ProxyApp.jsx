@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import { onKeyDown } from '../ducks/ui/keyboard'
 import MainView from './MainView'
 import Header from './Header'
+import CommandBar from './CommandBar'
 import EventLog from './EventLog'
 import Footer from './Footer'
 import Modal from './Modal/Modal'
@@ -25,6 +26,7 @@ class ProxyAppMain extends Component {
             <div id="container" tabIndex="0">
                 <Header/>
                 <MainView />
+                <CommandBar />
                 {showEventLog && (
                     <EventLog key="eventlog"/>
                 )}

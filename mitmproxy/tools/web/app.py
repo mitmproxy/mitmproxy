@@ -13,6 +13,7 @@ import tornado.websocket
 
 import mitmproxy.flow
 import mitmproxy.tools.web.master  # noqa
+import mitmproxy.tools.console.master
 from mitmproxy import contentviews
 from mitmproxy import flowfilter
 from mitmproxy import http
@@ -164,6 +165,10 @@ class RequestHandler(tornado.web.RequestHandler):
             return json.loads(self.request.body.decode())
         except Exception as e:
             raise APIError(400, "Malformed JSON: {}".format(str(e)))
+
+    @property
+    def command(self):
+        return json.loads(self.request.body.decode())["command"]
 
     @property
     def filecontents(self):
@@ -431,6 +436,15 @@ class FlowContentView(RequestHandler):
         ))
 
 
+class Commands(RequestHandler):
+    def post(self):
+        result = self.master.commands.execute(self.command)
+        if result is None:
+            self.write({"result": ""})
+            return
+        self.write({"result": str(result)})
+
+
 class Events(RequestHandler):
     def get(self):
         self.write([logentry_to_json(e) for e in self.master.events.data])
@@ -525,6 +539,7 @@ class Application(tornado.web.Application):
                 (r"/", IndexHandler),
                 (r"/filter-help(?:\.json)?", FilterHelp),
                 (r"/updates", ClientConnection),
+                (r"/commands", Commands),
                 (r"/events(?:\.json)?", Events),
                 (r"/flows(?:\.json)?", Flows),
                 (r"/flows/dump", DumpFlows),
