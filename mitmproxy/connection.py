@@ -293,6 +293,11 @@ class Server(Connection):
             local_port = ""
         return f"Server({human.format_address(self.address)}, state={self.state.name.lower()}{tls_state}{local_port})"
 
+    def __setattr__(self, name, value):
+        if name == "address" and self.__dict__.get("state", ConnectionState.CLOSED) is ConnectionState.OPEN:
+            raise RuntimeError("Cannot change server address on open connection.")
+        return super().__setattr__(name, value)
+
     def get_state(self):
         return {
             'address': self.address,
