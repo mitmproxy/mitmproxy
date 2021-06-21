@@ -1,12 +1,11 @@
 import React, {useState} from 'react'
 import {useDispatch} from 'react-redux'
 import classnames from 'classnames'
-import {RequestUtils, ResponseUtils} from '../../flow/utils.js'
-import {formatSize, formatTimeDelta, formatTimeStamp} from '../../utils.js'
+import {RequestUtils, ResponseUtils} from '../../flow/utils'
+import {fetchApi, formatSize, formatTimeDelta, formatTimeStamp} from '../../utils'
 import * as flowActions from "../../ducks/flows";
 import {addInterceptFilter} from "../../ducks/options"
 import Dropdown, {MenuItem, SubMenu} from "../common/Dropdown";
-import {fetchApi} from "../../utils"
 import {Flow} from "../../flow";
 
 

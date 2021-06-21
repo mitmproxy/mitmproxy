@@ -1,5 +1,5 @@
 import React from 'react'
-import { formatSize } from '../../utils.js'
+import { formatSize } from '../../utils'
 import UploadContentButton from './UploadContentButton'
 import DownloadContentButton from './DownloadContentButton'
 

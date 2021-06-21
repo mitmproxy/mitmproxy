@@ -1,8 +1,7 @@
 import React from 'react'
-import _ from 'lodash'
-import { formatTimeStamp, formatTimeDelta } from '../../utils.js'
+import {formatTimeDelta, formatTimeStamp} from '../../utils'
 
-export function TimeStamp({ t, deltaTo, title }) {
+export function TimeStamp({t, deltaTo, title}) {
     return t ? (
         <tr>
             <td>{title}:</td>
@@ -20,74 +19,74 @@ export function TimeStamp({ t, deltaTo, title }) {
     )
 }
 
-export function ConnectionInfo({ conn }) {
+export function ConnectionInfo({conn}) {
     return (
         <table className="connection-table">
             <tbody>
-                    <tr key="address">
-                    <td>Address:</td>
-                    <td>{conn.address.join(':')}</td>
+            <tr key="address">
+                <td>Address:</td>
+                <td>{conn.address.join(':')}</td>
+            </tr>
+            {conn.sni && (
+                <tr key="sni">
+                    <td><abbr title="TLS Server Name Indication">TLS SNI:</abbr></td>
+                    <td>{conn.sni}</td>
                 </tr>
-                {conn.sni && (
-                    <tr key="sni">
-                        <td><abbr title="TLS Server Name Indication">TLS SNI:</abbr></td>
-                        <td>{conn.sni}</td>
-                    </tr>
-                )}
-                {conn.tls_version && (
-                    <tr key="tls_version">
-                        <td>TLS version:</td>
-                        <td>{conn.tls_version}</td>
-                    </tr>
-                )}
-                {conn.cipher_name && (
-                    <tr key="cipher_name">
-                        <td>cipher name:</td>
-                        <td>{conn.cipher_name}</td>
-                    </tr>
-                )}
-                {conn.alpn_proto_negotiated && (
-                    <tr key="ALPN">
-                        <td><abbr title="ALPN protocol negotiated">ALPN:</abbr></td>
-                        <td>{conn.alpn_proto_negotiated}</td>
-                    </tr>
-                )}
-                {conn.ip_address && (
-                    <tr key="ip_address">
-                        <td>Resolved address:</td>
-                        <td>{conn.ip_address.join(':')}</td>
-                    </tr>
-                )}
-                {conn.source_address && (
-                    <tr key="source_address">
-                        <td>Source address:</td>
-                        <td>{conn.source_address.join(':')}</td>
-                    </tr>
-                )}
+            )}
+            {conn.tls_version && (
+                <tr key="tls_version">
+                    <td>TLS version:</td>
+                    <td>{conn.tls_version}</td>
+                </tr>
+            )}
+            {conn.cipher_name && (
+                <tr key="cipher_name">
+                    <td>cipher name:</td>
+                    <td>{conn.cipher_name}</td>
+                </tr>
+            )}
+            {conn.alpn_proto_negotiated && (
+                <tr key="ALPN">
+                    <td><abbr title="ALPN protocol negotiated">ALPN:</abbr></td>
+                    <td>{conn.alpn_proto_negotiated}</td>
+                </tr>
+            )}
+            {conn.ip_address && (
+                <tr key="ip_address">
+                    <td>Resolved address:</td>
+                    <td>{conn.ip_address.join(':')}</td>
+                </tr>
+            )}
+            {conn.source_address && (
+                <tr key="source_address">
+                    <td>Source address:</td>
+                    <td>{conn.source_address.join(':')}</td>
+                </tr>
+            )}
             </tbody>
         </table>
     )
 }
 
-export function CertificateInfo({ flow }) {
+export function CertificateInfo({flow}) {
     // @todo We should fetch human-readable certificate representation from the server
     return (
         <div>
             {flow.client_conn.cert && [
                 <h4 key="name">Client Certificate</h4>,
-                <pre key="value" style={{ maxHeight: 100 }}>{flow.client_conn.cert}</pre>
+                <pre key="value" style={{maxHeight: 100}}>{flow.client_conn.cert}</pre>
             ]}
 
             {flow.server_conn.cert && [
                 <h4 key="name">Server Certificate</h4>,
-                <pre key="value" style={{ maxHeight: 100 }}>{flow.server_conn.cert}</pre>
+                <pre key="value" style={{maxHeight: 100}}>{flow.server_conn.cert}</pre>
             ]}
         </div>
     )
 }
 
-export function Timing({ flow }) {
-    const { server_conn: sc, client_conn: cc, request: req, response: res } = flow
+export function Timing({flow}) {
+    const {server_conn: sc, client_conn: cc, request: req, response: res} = flow
 
     const timestamps = [
         {
@@ -133,26 +132,26 @@ export function Timing({ flow }) {
             <h4>Timing</h4>
             <table className="timing-table">
                 <tbody>
-                    {timestamps.filter(v => v).sort((a, b) => a.t - b.t).map(item => (
-                        <TimeStamp key={item.title} {...item}/>
-                    ))}
+                {timestamps.filter(v => v).sort((a, b) => a.t - b.t).map(item => (
+                    <TimeStamp key={item.title} {...item}/>
+                ))}
                 </tbody>
             </table>
         </div>
     )
 }
 
-export default function Details({ flow }) {
+export default function Details({flow}) {
     return (
         <section className="detail">
             <h4>Client Connection</h4>
             <ConnectionInfo conn={flow.client_conn}/>
 
             {flow.server_conn.address &&
-                    [
-                        <h4 key="sc">Server Connection</h4>,
-                        <ConnectionInfo key="sc-ci" conn={flow.server_conn}/>
-                    ]
+            [
+                <h4 key="sc">Server Connection</h4>,
+                <ConnectionInfo key="sc-ci" conn={flow.server_conn}/>
+            ]
             }
 
             <CertificateInfo flow={flow}/>
