@@ -5,6 +5,8 @@ import { Key, fetchApi } from '../utils.js'
 export default function CommandBar() {
     const [command, setCommand] = useState("")
     const [results, setResults] = useState([])
+    const [history, setHistory] = useState([])
+    const [currentPos, setCurrentPos] = useState(0)
 
     const onChange = (e) =>  {
         setCommand(e.target.value)
@@ -13,15 +15,32 @@ export default function CommandBar() {
     const onKeyDown = (e) => {
         if (e.keyCode === Key.ENTER) {
             const body = {"command": command}
+            const newHistory = Object.assign([], history)
+            newHistory.splice(currentPos, 0, command)
 
             fetchApi(`/commands`, {method: 'POST', body: JSON.stringify(body)})
             .then(response => response.json())
             .then(data => {
+                setHistory(newHistory)
+                setCurrentPos(currentPos + 1)
+
                 if (data.result == "") return
                 setResults([...results, {"id": results.length, "result": data.result}])
             })
 
             setCommand("")
+        }
+        if (e.keyCode === Key.UP) {
+            if (currentPos > 0) {
+                setCommand(history[currentPos - 1])
+                setCurrentPos(currentPos - 1)
+            }
+        }
+        if (e.keyCode === Key.DOWN) {
+            setCommand(history[currentPos])
+            if (currentPos < history.length -1) {
+                setCurrentPos(currentPos + 1)
+            }
         }
         e.stopPropagation()
     }
