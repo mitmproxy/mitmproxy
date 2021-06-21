@@ -3,7 +3,7 @@ import { connect } from "react-redux"
 import { EventlogToggle, OptionsToggle } from "./MenuToggle"
 import Button from "../common/Button"
 import DocsLink from "../common/DocsLink"
-import HideInStaticx from "../common/HideInStatic";
+import HideInStatic from "../common/HideInStatic";
 import * as modalActions from "../../ducks/ui/modal"
 
 OptionMenu.title = 'Options'
@@ -11,7 +11,7 @@ OptionMenu.title = 'Options'
 function OptionMenu({ openOptions }) {
     return (
         <div>
-            <HideInStaticx>
+            <HideInStatic>
                 <div className="menu-group">
                     <div className="menu-content">
                         <Button title="Open Options" icon="fa-cogs text-primary"
@@ -36,7 +36,7 @@ function OptionMenu({ openOptions }) {
                     </div>
                     <div className="menu-legend">Quick Options</div>
                 </div>
-            </HideInStaticx>
+            </HideInStatic>
 
             <div className="menu-group">
                 <div className="menu-content">

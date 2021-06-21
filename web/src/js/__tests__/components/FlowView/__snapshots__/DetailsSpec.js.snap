@@ -188,7 +188,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            2000-01-01 00:00:02.000
+            1999-12-31 23:00:02.000
             <span
               className="text-muted"
             >
@@ -204,7 +204,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            2000-01-01 00:00:03.000
+            1999-12-31 23:00:03.000
             <span
               className="text-muted"
             >
@@ -221,7 +221,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            2000-01-01 00:00:00.000
+            1999-12-31 23:00:00.000
             <span
               className="text-muted"
             >
@@ -238,7 +238,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            2000-01-01 00:00:00.000
+            1999-12-31 23:00:00.000
           </td>
         </tr>
         <tr>
@@ -247,7 +247,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            2000-01-01 00:00:01.000
+            1999-12-31 23:00:01.000
             <span
               className="text-muted"
             >
@@ -263,7 +263,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            2000-01-01 00:00:02.000
+            1999-12-31 23:00:02.000
             <span
               className="text-muted"
             >
@@ -279,7 +279,7 @@ exports[`Details Component should render correctly 1`] = `
             :
           </td>
           <td>
-            2000-01-01 00:00:03.000
+            1999-12-31 23:00:03.000
             <span
               className="text-muted"
             >
@@ -374,7 +374,7 @@ exports[`Details Component should render correctly when server address is missin
             :
           </td>
           <td>
-            2000-01-01 00:00:00.000
+            1999-12-31 23:00:00.000
             <span
               className="text-muted"
             >
@@ -391,7 +391,7 @@ exports[`Details Component should render correctly when server address is missin
             :
           </td>
           <td>
-            2000-01-01 00:00:00.000
+            1999-12-31 23:00:00.000
           </td>
         </tr>
         <tr>
@@ -400,7 +400,7 @@ exports[`Details Component should render correctly when server address is missin
             :
           </td>
           <td>
-            2000-01-01 00:00:01.000
+            1999-12-31 23:00:01.000
             <span
               className="text-muted"
             >
@@ -416,7 +416,7 @@ exports[`Details Component should render correctly when server address is missin
             :
           </td>
           <td>
-            2000-01-01 00:00:02.000
+            1999-12-31 23:00:02.000
             <span
               className="text-muted"
             >
@@ -432,7 +432,7 @@ exports[`Details Component should render correctly when server address is missin
             :
           </td>
           <td>
-            2000-01-01 00:00:03.000
+            1999-12-31 23:00:03.000
             <span
               className="text-muted"
             >
@@ -455,7 +455,7 @@ exports[`TimeStamp Component should render correctly 1`] = `
     :
   </td>
   <td>
-    2017-01-01 01:00:00.000
+    2017-01-01 00:00:00.000
     <span
       className="text-muted"
     >
@@ -484,7 +484,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          2000-01-01 00:00:02.000
+          1999-12-31 23:00:02.000
           <span
             className="text-muted"
           >
@@ -500,7 +500,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          2000-01-01 00:00:03.000
+          1999-12-31 23:00:03.000
           <span
             className="text-muted"
           >
@@ -517,7 +517,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          2000-01-01 00:00:00.000
+          1999-12-31 23:00:00.000
           <span
             className="text-muted"
           >
@@ -534,7 +534,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          2000-01-01 00:00:00.000
+          1999-12-31 23:00:00.000
         </td>
       </tr>
       <tr>
@@ -543,7 +543,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          2000-01-01 00:00:01.000
+          1999-12-31 23:00:01.000
           <span
             className="text-muted"
           >
@@ -559,7 +559,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          2000-01-01 00:00:02.000
+          1999-12-31 23:00:02.000
           <span
             className="text-muted"
           >
@@ -575,7 +575,7 @@ exports[`Timing Component should render correctly 1`] = `
           :
         </td>
         <td>
-          2000-01-01 00:00:03.000
+          1999-12-31 23:00:03.000
           <span
             className="text-muted"
           >

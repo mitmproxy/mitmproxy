@@ -3,7 +3,7 @@ import {useDispatch} from 'react-redux'
 import FileChooser from '../common/FileChooser'
 import Dropdown, {Divider, MenuItem} from '../common/Dropdown'
 import * as flowsActions from '../../ducks/flows'
-import HideInStaticx from "../common/HideInStatic";
+import HideInStatic from "../common/HideInStatic";
 
 
 export default React.memo(function FileMenu() {
@@ -30,14 +30,14 @@ export default React.memo(function FileMenu() {
             <MenuItem onClick={() => dispatch(flowsActions.download())}>
                 <i className="fa fa-fw fa-floppy-o"/>&nbsp;Save...
             </MenuItem>
-            <HideInStaticx>
+            <HideInStatic>
                 <Divider/>
                 <li>
                     <a href="http://mitm.it/" target="_blank">
                         <i className="fa fa-fw fa-external-link"/>&nbsp;Install Certificates...
                     </a>
                 </li>
-            </HideInStaticx>
+            </HideInStatic>
         </Dropdown>
     )
 });

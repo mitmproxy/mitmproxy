@@ -1,6 +1,6 @@
 import React from 'react'
 import {formatSize} from '../utils.js'
-import HideInStaticx from '../components/common/HideInStatic'
+import HideInStatic from '../components/common/HideInStatic'
 import {useAppSelector} from "../ducks";
 
 export default function Footer() {
@@ -49,14 +49,14 @@ export default function Footer() {
                 <span className="label label-success">stream: {formatSize(stream_large_bodies)}</span>
             )}
             <div className="pull-right">
-                <HideInStaticx>
+                <HideInStatic>
                     {
                         server && (
                             <span className="label label-primary" title="HTTP Proxy Server Address">
                         {listen_host || "*"}:{listen_port}
                     </span>)
                     }
-                </HideInStaticx>
+                </HideInStatic>
                 <span className="label label-info" title="Mitmproxy Version">
             {version}
             </span>

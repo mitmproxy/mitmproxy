@@ -458,42 +458,6 @@ class Events(RequestHandler):
         self.write([logentry_to_json(e) for e in self.master.events.data])
 
 
-class Settings(RequestHandler):
-    def get(self):
-        self.write(dict(
-            version=version.VERSION,
-            mode=str(self.master.options.mode),
-            intercept_active=self.master.options.intercept_active,
-            intercept=self.master.options.intercept,
-            showhost=self.master.options.showhost,
-            upstream_cert=self.master.options.upstream_cert,
-            rawtcp=self.master.options.rawtcp,
-            http2=self.master.options.http2,
-            websocket=self.master.options.websocket,
-            anticache=self.master.options.anticache,
-            anticomp=self.master.options.anticomp,
-            stickyauth=self.master.options.stickyauth,
-            stickycookie=self.master.options.stickycookie,
-            stream=self.master.options.stream_large_bodies,
-            contentViews=[v.name.replace(' ', '_') for v in contentviews.views],
-            listen_host=self.master.options.listen_host,
-            listen_port=self.master.options.listen_port,
-            server=self.master.options.server,
-        ))
-
-    def put(self):
-        update = self.json
-        allowed_options = {
-            "intercept", "showhost", "upstream_cert", "ssl_insecure",
-            "rawtcp", "http2", "websocket", "anticache", "anticomp",
-            "stickycookie", "stickyauth", "stream_large_bodies"
-        }
-        for k in update:
-            if k not in allowed_options:
-                raise APIError(400, f"Unknown setting {k}")
-        self.master.options.update(**update)
-
-
 class Options(RequestHandler):
     def get(self):
         self.write(optmanager.dump_dicts(self.master.options))
@@ -574,7 +538,6 @@ class Application(tornado.web.Application):
                 (
                     r"/flows/(?P<flow_id>[0-9a-f\-]+)/(?P<message>request|response)/content/(?P<content_view>[0-9a-zA-Z\-\_]+)(?:\.json)?",
                     FlowContentView),
-                (r"/settings(?:\.json)?", Settings),
                 (r"/clear", ClearAll),
                 (r"/options(?:\.json)?", Options),
                 (r"/options/save", SaveOptions),

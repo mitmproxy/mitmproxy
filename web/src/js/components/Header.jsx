@@ -8,7 +8,7 @@ import FileMenu from './Header/FileMenu'
 import FlowMenu from './Header/FlowMenu'
 import {setActiveMenu} from '../ducks/ui/header'
 import ConnectionIndicator from "./Header/ConnectionIndicator"
-import HideInStaticx from './common/HideInStatic'
+import HideInStatic from './common/HideInStatic'
 
 class Header extends Component {
     static entries = [MainMenu, OptionMenu]
@@ -41,9 +41,9 @@ class Header extends Component {
                             {Entry.title}
                         </a>
                     ))}
-                    <HideInStaticx>
+                    <HideInStatic>
                         <ConnectionIndicator/>
-                    </HideInStaticx>
+                    </HideInStatic>
                 </nav>
                 <div>
                     <Active/>

@@ -3,7 +3,6 @@ import io
 import json
 import json as _json
 import logging
-import os
 import re
 import sys
 import typing
@@ -271,13 +270,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         assert resp.code == 200
         assert get_json(resp)[0]["level"] == "info"
 
-    def test_settings(self):
-        assert get_json(self.fetch("/settings"))["mode"] == "regular"
-
-    def test_settings_update(self):
-        assert self.put_json("/settings", {"anticache": True}).code == 200
-        assert self.put_json("/settings", {"wtf": True}).code == 400
-
     def test_options(self):
         j = get_json(self.fetch("/options"))
         assert type(j) == dict
@@ -304,18 +296,8 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
         self.master.options.anticomp = True
 
         r1 = yield ws_client.read_message()
-        r2 = yield ws_client.read_message()
-        j1 = _json.loads(r1)
-        j2 = _json.loads(r2)
-        response = dict()
-        response[j1['resource']] = j1
-        response[j2['resource']] = j2
-        assert response['settings'] == {
-            "resource": "settings",
-            "cmd": "update",
-            "data": {"anticomp": True},
-        }
-        assert response['options'] == {
+        response = _json.loads(r1)
+        assert response == {
             "resource": "options",
             "cmd": "update",
             "data": {
@@ -359,7 +341,7 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
             f"    return {tflow_json}\n"
             "}"
         )
-        (Path(__file__) / "../../../../../web/src/js/__tests__/ducks/_tflow.ts").write_bytes(
+        (Path(__file__).parent / "../../../../web/src/js/__tests__/ducks/_tflow.ts").write_bytes(
             content.encode()
         )
 
@@ -397,6 +379,6 @@ class TestApp(tornado.testing.AsyncHTTPTestCase):
                 print(f"    {opt.name}: {json.dumps(opt.default)},".replace(": null", ": undefined"))
             print("}")
 
-        (Path(__file__) / "../../../../../web/src/js/ducks/_options_gen.ts").write_bytes(
+        (Path(__file__).parent / "../../../../web/src/js/ducks/_options_gen.ts").write_bytes(
             s.getvalue().encode()
         )

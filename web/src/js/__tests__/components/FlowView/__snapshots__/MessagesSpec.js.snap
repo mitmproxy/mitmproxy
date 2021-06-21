@@ -10,7 +10,7 @@ exports[`Error Component should render correctly 1`] = `
     error
     <div>
       <small>
-        2000-01-01 00:00:07.000
+        1999-12-31 23:00:07.000
       </small>
     </div>
   </div>
