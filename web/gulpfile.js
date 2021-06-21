@@ -84,7 +84,9 @@ function peg() {
     return gulp.src(peg_src, {base: "src/"})
         .pipe(plumber(handleError))
         .pipe(compilePeg())
-        .pipe(replace('module.exports = ', 'export default '))
+        .pipe(replace('module.exports = ',
+            'import * as flowutils from "../flow/utils"\n' +
+            'export default '))
         .pipe(gulp.dest("src/"));
 }
 

@@ -1,3 +1,4 @@
+import * as flowutils from "../flow/utils"
 export default (function() {
   "use strict";
 
@@ -1857,8 +1858,6 @@ export default (function() {
       return s0;
     }
 
-
-    var flowutils = require("../flow/utils.js");
 
     function or(first, second) {
         // Add explicit function names to ease debugging.

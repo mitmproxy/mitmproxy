@@ -1,8 +1,6 @@
 // PEG.js filter rules - see https://pegjs.org/
 
 {
-var flowutils = require("../flow/utils.js");
-
 function or(first, second) {
     // Add explicit function names to ease debugging.
     function orFilter() {
